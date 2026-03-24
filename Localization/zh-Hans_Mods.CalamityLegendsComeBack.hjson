@@ -1,0 +1,30 @@
+Items: {
+	Weapons: {
+		Magic: {
+			NewLegendSHPC: {
+				DisplayName: SHPC
+				Tooltip:
+					'''
+					多态能量投射装置
+					可通过灌注不同材料，将其转化为稳定的能量核心，并映射为对应的光球行为模型。
+					当前支持超过30种材料接入，每一种材料都将赋予光球不同的结构、反应与输出形式。
+					换言之——你提供“素材”，我负责“结果”。
+					当前弹药灌注为：
+					'''
+			}
+		}
+	}
+}
+
+Projectiles: {
+	Magic: {
+		NewLegendSHPB.DisplayName: New Legend S H P B
+		// NewLegendSHPE.DisplayName: New Legend S H P E
+	}
+
+	// Melee.EnergyCore_Spark.DisplayName: Energy Core_ Spark
+	// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+}
+
+SHPCAmmoPrompt: "[CLCB] 该物品可用作SHPC的弹药"
+SHPCAmmo1: "[CLCB] 释放电弧能量，命中后产生连锁反应｜充能次数：75"

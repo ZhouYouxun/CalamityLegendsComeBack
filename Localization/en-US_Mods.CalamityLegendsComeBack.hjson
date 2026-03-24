@@ -1,0 +1,29 @@
+Items: {
+	Weapons: {
+		Magic: {
+			NewLegendSHPC: {
+				DisplayName: SHPC
+				Tooltip:
+					'''
+					我们从未认识彼此，但我从未质疑过你的实力
+					你的旅途或将艰辛，或将坎坷
+					但无论如何，让我跟你走完旅途
+					当前弹药灌注为：
+					'''
+			}
+		}
+	}
+}
+
+Projectiles: {
+	Magic: {
+		NewLegendSHPB.DisplayName: New Legend S H P B
+		NewLegendSHPE.DisplayName: New Legend S H P E
+	}
+
+	Melee.EnergyCore_Spark.DisplayName: Energy Core_ Spark
+	PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+}
+
+SHPCAmmoPrompt: "[CLCB] 该物品可用作SHPC的弹药"
+SHPCAmmo1: "[CLCB] 释放电弧能量，命中后产生连锁反应｜充能次数：75"

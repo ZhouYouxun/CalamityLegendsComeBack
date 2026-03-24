@@ -1,0 +1,26 @@
+Modify this file with a description of your mod.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+NewLegendSHPC.cs：武器主控文件，负责读取弹药、决定当前效果并发射对应的能量球弹幕。
+NewLegendSHPB.cs：能量球核心弹幕文件，提供完整默认飞行、爆炸与视觉效果，并在关键节点调用Effect插件。
+
+NewLegendSHPV：未来可能的右键吸收文件
+右键的转移部分将会放在这里，可能还需要有一个
+NewLegendSHPD：右键吸收复制的载体
+
+RulesOfEffect.cs：效果规则基类，定义弹幕可被修改的统一入口（OnSpawn、AI、OnHit、OnKill、Draw等）。
+DefaultEffect.cs：默认空实现效果，作为所有效果的基础模板，未覆盖的行为全部走这里的空逻辑。
+EffectRegistry.cs：效果注册与映射中心，负责将弹药类型与Effect绑定，并在运行时提供对应效果实例。
