@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
     internal class EnergyCore_Spark : ModProjectile, ILocalizedModType, IModType
     {
-        public new string LocalizationCategory => "Projectiles.Melee";
+        public new string LocalizationCategory => "Projectiles.Magic";
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 

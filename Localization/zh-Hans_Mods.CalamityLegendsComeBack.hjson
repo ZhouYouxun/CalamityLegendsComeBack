@@ -16,15 +16,55 @@ Items: {
 	}
 }
 
+SHPCAmmoPrompt: "[CLCB] 该物品可用作SHPC的弹药"
+SHPCAmmo1: "[CLCB] 命中敌人释放大量电火花"
+SHPCAmmo2: "[CLCB] 命中敌人后释放5条连锁闪电弧"
+SHPCAmmo3: "[CLCB] 击中地面后产生毒气"
+SHPCAmmo4: "[CLCB] 能量耗尽后分裂成两个光球"
+SHPCAmmo5: "[CLCB]   "
+SHPCAmmo6: "[CLCB]   "
+SHPCAmmo7: "[CLCB]   "
+SHPCAmmo8: "[CLCB]   "
+SHPCAmmo9: "[CLCB]   "
+SHPCAmmo10: "[CLCB]   "
+SHPCAmmo11: "[CLCB]   "
+SHPCAmmo12: "[CLCB]   "
+SHPCAmmo13: "[CLCB]   "
+SHPCAmmo14: "[CLCB]   "
+SHPCAmmo15: "[CLCB]   "
+SHPCAmmo16: "[CLCB]   "
+SHPCAmmo17: "[CLCB]   "
+SHPCAmmo18: "[CLCB]   "
+SHPCAmmo19: "[CLCB]   "
+SHPCAmmo20: "[CLCB]   "
+SHPCAmmo21: "[CLCB]   "
+SHPCAmmo22: "[CLCB]   "
+SHPCAmmo23: "[CLCB]   "
+SHPCAmmo24: "[CLCB]   "
+SHPCAmmo25: "[CLCB]   "
+SHPCAmmo26: "[CLCB]   "
+SHPCAmmo27: "[CLCB]   "
+SHPCAmmo28: "[CLCB]   "
+SHPCAmmo29: "[CLCB]   "
+SHPCAmmo30: "[CLCB]   "
+SHPCAmmo31: "[CLCB]   "
+SHPCAmmo32: "[CLCB]   "
+SHPCAmmo33: "[CLCB]   "
+SHPCAmmo34: "[CLCB]   "
+SHPCAmmo35: "[CLCB]   "
+SHPCAmmo36: "[CLCB]   "
+SHPCAmmo37: "[CLCB]   "
+SHPCAmmo38: "[CLCB]   "
+SHPCAmmo39: "[CLCB]   "
+
 Projectiles: {
 	Magic: {
-		NewLegendSHPB.DisplayName: New Legend S H P B
+		// EnergyCore_Spark.DisplayName: Energy Core_ Spark
+		// EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
+		// EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
+		// NewLegendSHPB.DisplayName: New Legend S H P B
 		// NewLegendSHPE.DisplayName: New Legend S H P E
 	}
 
-	// Melee.EnergyCore_Spark.DisplayName: Energy Core_ Spark
 	// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
 }
-
-SHPCAmmoPrompt: "[CLCB] 该物品可用作SHPC的弹药"
-SHPCAmmo1: "[CLCB] 释放电弧能量，命中后产生连锁反应｜充能次数：75"

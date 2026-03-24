@@ -1,5 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
+using CalamityMod.Particles;
 using CalamityMod.Projectiles.Boss;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -36,6 +37,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+
+
+
+            // 消亡时释放爆炸特效
+            Particle blastRing = new CustomPulse(
+                projectile.Center, Vector2.Zero, Color.Khaki,
+                "CalamityLegendsComeBack/Weapons/SHPC/Effects/APreHardMode/IonizingRadiation",
+                Vector2.One * 0.33f, Main.rand.NextFloat(-10f, 10f),
+                0.07f, 0.33f, 30
+            );
+            GeneralParticleHandler.SpawnParticle(blastRing);
+
+
+
             int count = Main.rand.Next(9, 16); // 9~15个
 
             for (int i = 0; i < count; i++)

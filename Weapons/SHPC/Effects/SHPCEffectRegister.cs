@@ -1,6 +1,7 @@
 ﻿// SHPCEffectLoader.cs
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
@@ -22,6 +23,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new SulphuricScaleEffect()); // 硫磺鳞片
 
 
+            EffectRegistry.RegisterEffect(new EssenceofHavocEffect()); // 混沌精华
+            EffectRegistry.RegisterEffect(new EssenceofSunlightEffect()); // 日光精华
+            EffectRegistry.RegisterEffect(new EssenceofSnowEffect()); // 冰川精华
+
+            EffectRegistry.RegisterEffect(new TitanHeartEffect()); // 泰坦之星
+
+
+
+
+
+
+            
+
+
+
+
+
 
 
             // 以后就一直往这里加 ↓↓↓
@@ -31,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
 
 
-            
+
 
 
 
