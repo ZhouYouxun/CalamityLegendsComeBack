@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
-    internal class FragmentMeldBlobEffect
+    internal class TwistingNetherEffect
     {
     }
 }

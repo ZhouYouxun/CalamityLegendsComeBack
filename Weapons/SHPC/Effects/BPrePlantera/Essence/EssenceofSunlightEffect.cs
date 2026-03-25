@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
     public class EssenceofSunlightEffect : DefaultEffect
     {

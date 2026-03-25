@@ -39,6 +39,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             projectile.velocity *= 1.020408f;  // 抵消默认减速
 
+            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 1.8f);
+
         }
         public override bool OnTileCollide(Projectile projectile, Player owner, Vector2 oldVelocity)
         {

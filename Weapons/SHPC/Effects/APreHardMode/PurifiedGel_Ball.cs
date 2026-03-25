@@ -1,15 +1,26 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Terraria.Audio;
+using System;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
     public class PurifiedGel_Ball : ModProjectile
     {
+        // 自定义计时器
+        private int timer;
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
+            ProjectileID.Sets.TrailingMode[Projectile.type] = 1;
+        }
+
         public override void SetDefaults()
         {
             Projectile.width = 18;
@@ -19,135 +30,179 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.timeLeft = 300;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
+            Projectile.extraUpdates = 1;
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            SpriteBatch spriteBatch = Main.spriteBatch;
+            Texture2D tex = Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value;
+
+            // ===== Aerialite风格拖尾 =====
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                float interp = (float)Math.Cos(Projectile.timeLeft / 32f + Main.GlobalTimeWrappedHourly / 20f + i / (float)Projectile.oldPos.Length * MathHelper.Pi) * 0.5f + 0.5f;
+
+                Color color = Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), interp) * 0.45f;
+                color.A = 0;
+
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+
+                float intensity = MathHelper.Lerp(0.2f, 1f, 1f - i / (float)Projectile.oldPos.Length);
+
+                Vector2 scaleOuter = new Vector2(1.8f) * intensity;
+                Vector2 scaleInner = new Vector2(1.8f) * intensity * 0.7f;
+
+                Main.EntitySpriteDraw(tex, pos, null, color, Projectile.rotation, tex.Size() * 0.5f, scaleOuter * 0.6f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex, pos, null, color * 0.5f, Projectile.rotation, tex.Size() * 0.5f, scaleInner * 0.6f, SpriteEffects.None, 0);
+            }
+
+            // 本体
+            Main.EntitySpriteDraw(tex,
+                Projectile.Center - Main.screenPosition,
+                null,
+                lightColor,
+                Projectile.rotation,
+                tex.Size() * 0.5f,
+                Projectile.scale,
+                SpriteEffects.None,
+                0);
+
+            return false;
         }
 
         public override void AI()
         {
-            // ===== 自身旋转 =====
-            Projectile.rotation += 0.2f;
+            timer++;
 
-            // ===== 主题色（粉+蓝）=====
+            Projectile.rotation += 0.22f;
+
             Color pink = new Color(255, 140, 200);
             Color blue = new Color(120, 200, 255);
 
-            // ===== 双螺旋（核心）=====
-            float sine = (float)System.Math.Sin(Projectile.timeLeft * 0.6f);
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = forward.RotatedBy(MathHelper.Pi / 2f);
 
-            Vector2 offset = Projectile.velocity.SafeNormalize(Vector2.UnitX)
-                .RotatedBy(MathHelper.PiOver2) * sine * 12f;
+            // ===== 原有双螺旋（加强数学感）=====
+            float sine = (float)Math.Sin(timer * 0.45f);
+            float squeeze = (float)Math.Cos(timer * 0.7f) * 0.6f;
 
-            // 正螺旋
-            if (Main.rand.NextBool(2))
+            Vector2 offset = normal * sine * (10f + squeeze * 4f);
+
+            for (int i = 0; i < 2; i++)
             {
+                Vector2 pos = Projectile.Center + (i == 0 ? offset : -offset);
+
                 Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + offset,
+                    pos,
                     ModContent.DustType<SquashDust>(),
                     -Projectile.velocity * Main.rand.NextFloat(0.3f, 0.8f)
                 );
+
                 dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(1.8f, 2.2f);
+                dust.scale = Main.rand.NextFloat(1.7f, 2.2f);
                 dust.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
-                dust.fadeIn = 1.8f;
+                dust.fadeIn = 1.6f;
             }
 
-            // 反螺旋
+            // ===== Auric示波器结构（改色版）=====
+            int points = 2;
+            float amplitude = 5.5f;
+            float freq = 0.35f;
+
+            for (int i = 0; i < points; i++)
+            {
+                float t = timer + i * 0.4f;
+
+                float wave1 = MathF.Sin(t * freq) * amplitude;
+                float wave2 = MathF.Sin(t * freq + MathHelper.Pi) * amplitude;
+
+                Vector2 pos1 = Projectile.Center + normal * wave1 - forward * (i * 4f);
+                Vector2 pos2 = Projectile.Center + normal * wave2 - forward * (i * 4f);
+
+                Dust d1 = Dust.NewDustPerfect(pos1, DustID.GemDiamond, Vector2.Zero, 100, pink, 0.9f);
+                d1.noGravity = true;
+
+                Dust d2 = Dust.NewDustPerfect(pos2, DustID.GemDiamond, Vector2.Zero, 100, blue, 0.9f);
+                d2.noGravity = true;
+            }
+
+            // ===== 中轴能量火花 =====
             if (Main.rand.NextBool(2))
             {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center - offset,
-                    ModContent.DustType<SquashDust>(),
-                    -Projectile.velocity * Main.rand.NextFloat(0.3f, 0.8f)
+                PointParticle spark = new PointParticle(
+                    Projectile.Center,
+                    -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.8f, 2.5f),
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.7f, 1.1f),
+                    Main.rand.NextBool() ? pink : blue
                 );
-                dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(1.8f, 2.2f);
-                dust.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
-                dust.fadeIn = 1.8f;
+                GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            // ===== 辅助光点 =====
-            Vector2 randPos = Projectile.Center + Main.rand.NextVector2Circular(20, 20);
+            // ===== 轻量光点 =====
+            if (Main.rand.NextBool(2))
+            {
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(14f, 14f),
+                    DustID.GemDiamond,
+                    -Projectile.velocity * 0.2f
+                );
+                d.noGravity = true;
+                d.scale = Main.rand.NextFloat(0.5f, 0.8f);
+                d.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
+            }
 
-            Dust dust2 = Dust.NewDustPerfect(
-                randPos,
-                DustID.GemDiamond,
-                -Projectile.velocity * Main.rand.NextFloat(0.1f, 0.3f)
-            );
-            dust2.noGravity = true;
-            dust2.scale = Main.rand.NextFloat(0.6f, 0.9f);
-            dust2.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
+            // 光照
+            Lighting.AddLight(Projectile.Center, Color.Lerp(pink, blue, 0.5f).ToVector3() * 0.45f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // ===== 小型爆炸特效（参考电凝矛风格）=====
+            Vector2 pos = Projectile.Center;
 
-            // 环形电火花（两层）
-            int layers = 2;
-            float baseRadius = 20f;
-
-            for (int i = 0; i < layers; i++)
+            // ===== 爆炸环 =====
+            for (int i = 0; i < 16; i++)
             {
-                float radius = baseRadius + i * 18f;
-                float rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 7f);
 
-                for (int j = 0; j < 12; j++)
-                {
-                    float angle = rotation + MathHelper.TwoPi * j / 12f;
-                    Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(6f, 10f);
-
-                    Dust dust = Dust.NewDustPerfect(
-                        Projectile.Center,
-                        DustID.GemDiamond,
-                        velocity,
-                        80,
-                        Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat()),
-                        Main.rand.NextFloat(1.2f, 1.6f)
-                    );
-                    dust.noGravity = true;
-                }
+                Dust dust = Dust.NewDustPerfect(
+                    pos,
+                    DustID.GemDiamond,
+                    vel,
+                    80,
+                    Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat()),
+                    Main.rand.NextFloat(1.2f, 1.6f)
+                );
+                dust.noGravity = true;
             }
 
-            // 漩涡型粒子（核心感觉）
-            int sparkCount = 16;
-            float spiralRadius = 36f;
+            // ===== 螺旋粒子 =====
+            int count = 14;
+            float radius = 30f;
             float baseRot = Main.rand.NextFloat(MathHelper.TwoPi);
 
-            for (int i = 0; i < sparkCount; i++)
+            for (int i = 0; i < count; i++)
             {
-                float angle = baseRot + MathHelper.TwoPi * i / sparkCount;
+                float angle = baseRot + MathHelper.TwoPi * i / count;
 
-                Vector2 baseVec = angle.ToRotationVector2() * spiralRadius;
-                Vector2 perp = baseVec.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.UnitY);
-
-                Vector2 velocity = perp * Main.rand.NextFloat(2f, 4f);
+                Vector2 posOffset = angle.ToRotationVector2() * radius;
+                Vector2 vel = posOffset.RotatedBy(MathHelper.Pi / 2).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2f, 4f);
 
                 Particle spark = new SparkParticle(
-                    Projectile.Center + baseVec,
-                    velocity,
+                    pos + posOffset,
+                    vel,
                     false,
-                    35,
-                    1.2f,
+                    30,
+                    1.1f,
                     Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat())
                 );
 
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            // 音效
-            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.6f, Pitch = 0.4f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.6f, Pitch = 0.4f }, pos);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

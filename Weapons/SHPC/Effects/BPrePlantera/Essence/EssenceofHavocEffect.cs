@@ -7,7 +7,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityMod.Particles;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
     public class EssenceofHavocEffect : DefaultEffect
     {
@@ -96,8 +96,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             {
                 fallDelayTimer++;
 
-                // ⚠️ 这里就是你要改的X（X帧）
-                if (fallDelayTimer >= 2)
+                // ⚠️ 这里会在检测到敌人之后等待X帧在下落【确保二者对齐】
+                if (fallDelayTimer >= 1)
                 {
                     isFalling = true;
                 }

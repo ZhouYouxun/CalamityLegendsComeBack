@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ModLoader;
 using CalamityMod.Particles;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
     public class EssenceofSunlight_GNPC : GlobalNPC
     {

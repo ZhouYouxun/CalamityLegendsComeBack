@@ -66,4 +66,9 @@ Projectiles: {
 	}
 
 	PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+	Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
+	LivingShard_Healing.DisplayName: Living Shard_ Healing
+	FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
+	DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
+	UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
 }

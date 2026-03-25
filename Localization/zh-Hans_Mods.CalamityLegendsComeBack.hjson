@@ -21,9 +21,9 @@ SHPCAmmo1: "[CLCB] 命中敌人释放大量电火花"
 SHPCAmmo2: "[CLCB] 命中敌人后释放5条连锁闪电弧"
 SHPCAmmo3: "[CLCB] 击中地面后产生毒气"
 SHPCAmmo4: "[CLCB] 能量耗尽后分裂成两个光球"
-SHPCAmmo5: "[CLCB]   "
-SHPCAmmo6: "[CLCB]   "
-SHPCAmmo7: "[CLCB]   "
+SHPCAmmo5: "[CLCB] 瞄准并猛击正下方的敌人"
+SHPCAmmo6: "[CLCB] 爆炸时形成一片液氮区域"
+SHPCAmmo7: "[CLCB] 标记敌人并召唤天罚激光"
 SHPCAmmo8: "[CLCB]   "
 SHPCAmmo9: "[CLCB]   "
 SHPCAmmo10: "[CLCB]   "
@@ -31,17 +31,17 @@ SHPCAmmo11: "[CLCB]   "
 SHPCAmmo12: "[CLCB]   "
 SHPCAmmo13: "[CLCB]   "
 SHPCAmmo14: "[CLCB]   "
-SHPCAmmo15: "[CLCB]   "
-SHPCAmmo16: "[CLCB]   "
-SHPCAmmo17: "[CLCB]   "
-SHPCAmmo18: "[CLCB]   "
+SHPCAmmo15: "[CLCB] 反复追踪并回血"
+SHPCAmmo16: "[CLCB] 撞击后向四周释放静止的灵魂"
+SHPCAmmo17: "[CLCB] 持续粘在敌人表面造成多次伤害并弹跳"
+SHPCAmmo18: "[CLCB] 造成恐怖的瘟疫效果"
 SHPCAmmo19: "[CLCB]   "
 SHPCAmmo20: "[CLCB]   "
-SHPCAmmo21: "[CLCB]   "
-SHPCAmmo22: "[CLCB]   "
-SHPCAmmo23: "[CLCB]   "
-SHPCAmmo24: "[CLCB]   "
-SHPCAmmo25: "[CLCB]   "
+SHPCAmmo21: "[CLCB] 散射一连串日曜穿刺长矛"
+SHPCAmmo22: "[CLCB] 释放漩涡导弹"
+SHPCAmmo23: "[CLCB] 获得强追踪能力"
+SHPCAmmo24: "[CLCB] 可以自我再生"
+SHPCAmmo25: "[CLCB] 释放超大范围冥思爆炸"
 SHPCAmmo26: "[CLCB]   "
 SHPCAmmo27: "[CLCB]   "
 SHPCAmmo28: "[CLCB]   "
@@ -67,4 +67,9 @@ Projectiles: {
 	}
 
 	// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+	// Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
+	// LivingShard_Healing.DisplayName: Living Shard_ Healing
+	// FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
+	// DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
+	// UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
 }

@@ -22,7 +22,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
     public class NewLegendSHPC : LegendaryItem, ILocalizedModType
     {
         public override string Texture => "CalamityMod/Items/Weapons/Magic/SHPC";
-
         public new string LocalizationCategory => "Items.Weapons.Magic";
 
         // ==================== 音效部分（完整保留骨架） ====================
