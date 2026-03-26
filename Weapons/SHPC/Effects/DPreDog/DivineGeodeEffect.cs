@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             timer = 0;
 
             // 初始速度翻倍
-            projectile.velocity *= 2f;
+            projectile.velocity *= 4f;
 
             // 出生金色爆闪
             for (int i = 0; i < 12; i++)

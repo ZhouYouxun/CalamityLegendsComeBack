@@ -56,19 +56,21 @@ SHPCAmmo37: "[CLCB]   "
 SHPCAmmo38: "[CLCB]   "
 SHPCAmmo39: "[CLCB]   "
 
-Projectiles: {
-	Magic: {
-		EnergyCore_Spark.DisplayName: Energy Core_ Spark
-		EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
-		EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
-		NewLegendSHPB.DisplayName: New Legend S H P B
-		NewLegendSHPE.DisplayName: New Legend S H P E
-	}
 
-	PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-	Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
-	LivingShard_Healing.DisplayName: Living Shard_ Healing
-	FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
-	DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
-	UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
+Buffs: {
+	SHPCRight_DeBuff: {
+		DisplayName: S H P C Right_ De Buff
+		Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+	}
+}
+
+DeveloperItems: {
+	LAS17: {
+		LAS17PDebuff: {
+			DisplayName: L A S17 P Debuff
+			Description: Mods.CalamityLegendsComeBack.DeveloperItems.LAS17.LAS17PDebuff.Description
+		}
+
+		LAS17Proj.DisplayName: L A S17 Proj
+	}
 }

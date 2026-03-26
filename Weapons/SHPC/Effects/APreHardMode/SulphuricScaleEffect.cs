@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override Color ThemeColor => new Color(200, 255, 80);
         public override Color StartColor => new Color(230, 255, 120);
         public override Color EndColor => new Color(120, 180, 40);
-
+        public override float ExplosionPulseFactor => 0f;
         public override void AI(Projectile projectile, Player owner)
         {
             // ===== 模拟重力 =====
@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 projectile.Center, Vector2.Zero, Color.Khaki,
                 "CalamityLegendsComeBack/Weapons/SHPC/Effects/APreHardMode/IonizingRadiation",
                 Vector2.One * 0.33f, Main.rand.NextFloat(-10f, 10f),
-                0.07f, 0.33f, 30
+                0.07f, 0.43f, 30
             );
             GeneralParticleHandler.SpawnParticle(blastRing);
 

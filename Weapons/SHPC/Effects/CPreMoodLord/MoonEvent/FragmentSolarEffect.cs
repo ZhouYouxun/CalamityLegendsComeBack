@@ -29,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             shootTimer = 0;
             projectile.timeLeft = 50;
+            projectile.velocity *= 0.3f;
 
         }
 
@@ -76,6 +77,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     }
                 }
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
         // ================= OnHitNPC =================

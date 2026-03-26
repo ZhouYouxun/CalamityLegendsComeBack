@@ -24,6 +24,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override Color StartColor => new Color(180, 240, 255);
         public override Color EndColor => new Color(60, 140, 255);
 
+
+        public override void OnSpawn(Projectile projectile, Player owner)
+        {
+            // 提高更新频率（更丝滑）
+            projectile.extraUpdates = 1;
+        }
+
         public override void AI(Projectile projectile, Player owner)
         {
             // 抵消默认减速
@@ -74,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     velocity,
-                    ModContent.ProjectileType<ArcZap>(),
+                    ModContent.ProjectileType<StormlionMandible_ARC>(),
                     (int)(projectile.damage * 0.25f),
                     hit.Knockback,
                     projectile.owner,
@@ -86,21 +93,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
 		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
 		{
-			int projIndex = Projectile.NewProjectile(
-				projectile.GetSource_FromThis(),
-				projectile.Center,
-				Vector2.Zero,
-				ModContent.ProjectileType<NewLegendSHPE>(),
-				projectile.damage,
-				projectile.knockBack,
-				projectile.owner
-			);
+			//int projIndex = Projectile.NewProjectile(
+			//	projectile.GetSource_FromThis(),
+			//	projectile.Center,
+			//	Vector2.Zero,
+			//	ModContent.ProjectileType<NewLegendSHPE>(),
+			//	projectile.damage,
+			//	projectile.knockBack,
+			//	projectile.owner
+			//);
 
-			Projectile proj = Main.projectile[projIndex];
+			//Projectile proj = Main.projectile[projIndex];
 
-			// 手动修改范围
-			proj.width = 50;
-			proj.height = 50;
+			//// 手动修改范围
+			//proj.width = 50;
+			//proj.height = 50;
 		}
 
 

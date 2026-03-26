@@ -22,19 +22,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         public override float SquishyLightParticleFactor => 1.35f;
         public override float ExplosionPulseFactor => 1.35f;
 
-        // ===== 自定义状态 =====
-        private int fallDelayTimer; // 延迟计时
-        private bool detectedTarget; // 是否检测到目标
-        private bool isFalling; // 是否处于坠落状态
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            // ===== 重置状态（关键修复）=====【不然从第2发开始就零帧起手，开始直接下落】
-            fallDelayTimer = 0;
-            detectedTarget = false;
-            isFalling = false;
+            projectile.velocity *= 1.5f;
+            projectile.timeLeft = 140;
+
+            var gp = projectile.GetGlobalProjectile<EssenceofHavoc_GP>();
+            gp.fallDelayTimer = 0;
+            gp.detectedTarget = false;
+            gp.isFalling = false;
         }
+
         public override void AI(Projectile projectile, Player owner)
         {
+            var gp = projectile.GetGlobalProjectile<EssenceofHavoc_GP>();
+
             float gravity = 0.18f;
             float maxFallSpeed = 16f;
 
@@ -43,82 +45,69 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             if (projectile.velocity.Y > maxFallSpeed)
                 projectile.velocity.Y = maxFallSpeed;
 
-            // ===== 向下射线检测（20×16宽度，不穿墙）=====
-
-            float step = 16f; // 每次往下一个tile
-            float maxSteps = 60; // 最远检测（60格）
-
+            // ================= 正下方窄区域检测（修复点） =================
             NPC target = null;
 
-            for (int s = 0; s < maxSteps; s++)
-            {
-                Vector2 checkPos = projectile.Center + new Vector2(0f, s * step);
+            float maxDistance = 60f * 16f; // 60格
+            float maxHorizontal = 1f * 16f; // ⭐ 只允许 ±X格
 
-                // ===== 遇到方块直接停止 =====
-                if (Collision.SolidCollision(checkPos - new Vector2(10f, 10f), 20, 20))
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+
+                if (!npc.active || !npc.CanBeChasedBy())
+                    continue;
+
+                float dx = npc.Center.X - projectile.Center.X;
+                float dy = npc.Center.Y - projectile.Center.Y;
+
+                if (dy > 0 && dy < maxDistance && Math.Abs(dx) <= maxHorizontal)
                 {
+                    target = npc;
                     break;
                 }
-
-                // ===== 检测NPC（固定20×16范围）=====
-                Rectangle hitbox = new Rectangle(
-                    (int)checkPos.X - 10,
-                    (int)checkPos.Y - 8,
-                    20,
-                    16
-                );
-
-                for (int i = 0; i < Main.maxNPCs; i++)
-                {
-                    NPC npc = Main.npc[i];
-
-                    if (npc.active && !npc.friendly && npc.CanBeChasedBy())
-                    {
-                        if (npc.Hitbox.Intersects(hitbox))
-                        {
-                            target = npc;
-                            break;
-                        }
-                    }
-                }
-
-                if (target != null)
-                    break;
             }
 
-            // ===== 检测到目标 → 开始延迟计时 =====
-            if (target != null && !isFalling)
+            // ================= 触发冲刺 =================
+            if (target != null && !gp.isFalling)
             {
-                detectedTarget = true;
+                gp.detectedTarget = true;
             }
 
-            if (detectedTarget && !isFalling)
+            if (gp.detectedTarget && !gp.isFalling)
             {
-                fallDelayTimer++;
+                gp.fallDelayTimer++;
 
-                // ⚠️ 这里会在检测到敌人之后等待X帧在下落【确保二者对齐】
-                if (fallDelayTimer >= 1)
+                if (gp.fallDelayTimer >= 1)
                 {
-                    isFalling = true;
+                    gp.isFalling = true;
+
+                    // ⭐ 冲刺瞬间（比日光弱一点）
+                    projectile.velocity = new Vector2(0f, 12f);
+
+                    // ⭐ 只触发一次特效
+                    SpawnChargeBackEffect(projectile);
                 }
             }
 
-            // ===== 真正开始坠落 =====
-            if (isFalling)
+            // ================= 下坠 =================
+            if (gp.isFalling)
             {
                 projectile.velocity.X = 0f;
-                projectile.velocity.Y += 0.6f;
+                projectile.velocity.Y += 3.6f;
             }
 
             projectile.rotation = projectile.velocity.ToRotation();
 
-            projectile.velocity *= 1.020408f;
+            projectile.velocity *= 1.030408f;
         }
 
-        // ===== 坠落状态伤害强化 =====
+        // ===== 坠落伤害强化 =====
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (isFalling)
+            var gp = projectile.GetGlobalProjectile<EssenceofHavoc_GP>();
+
+            if (gp.isFalling)
             {
                 modifiers.SourceDamage *= 1.5f;
             }
@@ -131,76 +120,114 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // ===== 原爆炸 =====
-            int projIndex = Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<NewLegendSHPE>(),
-                projectile.damage,
-                projectile.knockBack,
-                projectile.owner
-            );
+            var gp = projectile.GetGlobalProjectile<EssenceofHavoc_GP>();
+            bool isFalling = gp.isFalling;
 
-            Projectile proj = Main.projectile[projIndex];
+            Vector2 dirX = Vector2.UnitX;
+            Vector2 dirY = Vector2.UnitY;
 
-            proj.width = 175;
-            proj.height = 175;
+            int layers = 10;
+            float baseSpeed = 6f;
 
-
-
+            for (int i = 0; i < layers; i++)
             {
-                // ===== 十字光束（核心结构）=====
+                float speed = baseSpeed + i * 1.8f;
+                float scale = (0.8f + i * 0.08f) * SquishyLightParticleFactor;
+                Color color = Color.Lerp(ThemeColor, Color.White, i / (float)layers);
+                int life = 28 + i * 2;
 
-                Vector2 dirX = Vector2.UnitX;
-                Vector2 dirY = Vector2.UnitY;
-
-                int layers = 10; // 层数（控制长度）
-                float baseSpeed = 6f;
-
-                for (int i = 0; i < layers; i++)
+                Vector2[] dirs =
                 {
-                    float speed = baseSpeed + i * 1.8f; // 速度递进（关键）
+                    dirX,
+                    -dirX,
+                    dirY,
+                    -dirY
+                };
 
-                    float scale = (0.8f + i * 0.08f) * SquishyLightParticleFactor;
+                foreach (var dir in dirs)
+                {
+                    SquishyLightParticle particle = new(
+                        projectile.Center,
+                        dir * speed,
+                        scale,
+                        color,
+                        life
+                    );
 
-                    Color color = Color.Lerp(ThemeColor, Color.White, i / (float)layers);
-
-                    int life = 28 + i * 2;
-
-                    // ===== 四个方向 =====
-                    Vector2[] dirs =
-                    {
-                        dirX,
-                        -dirX,
-                        dirY,
-                        -dirY
-                    };
-
-                    foreach (var dir in dirs)
-                    {
-                        SquishyLightParticle particle = new(
-                            projectile.Center,
-                            dir * speed,
-                            scale,
-                            color,
-                            life
-                        );
-
-                        GeneralParticleHandler.SpawnParticle(particle);
-                    }
+                    GeneralParticleHandler.SpawnParticle(particle);
                 }
             }
 
+            Vector2[] di1rs =
+            {
+                Vector2.UnitX,
+                -Vector2.UnitX,
+                Vector2.UnitY,
+                -Vector2.UnitY
+            };
 
+            float[] speeds = { 6f, 10f, 14f };
 
-
-
-
-
-
-
-
+            foreach (var dir in di1rs)
+            {
+                foreach (float spd in speeds)
+                {
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        dir * spd,
+                        ModContent.ProjectileType<EssenceofHavoc_INV>(),
+                        (int)(projectile.damage * (isFalling ? 1.2f : 0.5f)),
+                        projectile.knockBack,
+                        projectile.owner
+                    );
+                }
+            }
         }
+
+        // ================= 冲刺瞬间特效 =================
+        private void SpawnChargeBackEffect(Projectile projectile)
+        {
+            Vector2 back = -projectile.velocity.SafeNormalize(Vector2.UnitY);
+
+            for (int i = 0; i < 10; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 10f;
+
+                Vector2 dir = back.RotatedBy(angle) * Main.rand.NextFloat(2f, 5f);
+
+                SquishyLightParticle particle = new(
+                    projectile.Center,
+                    dir,
+                    Main.rand.NextFloat(1.2f, 1.6f),
+                    Color.Lerp(StartColor, EndColor, Main.rand.NextFloat()),
+                    16
+                );
+
+                GeneralParticleHandler.SpawnParticle(particle);
+            }
+
+            Particle pulse = new DirectionalPulseRing(
+                projectile.Center,
+                back * 2f,
+                ThemeColor,
+                new Vector2(1f, 3f),
+                projectile.rotation - (MathHelper.Pi / 4f),
+                0.25f,
+                0.02f,
+                22
+            );
+
+            GeneralParticleHandler.SpawnParticle(pulse);
+        }
+    }
+
+    public class EssenceofHavoc_GP : GlobalProjectile
+    {
+        public override bool InstancePerEntity => true;
+
+        public int fallDelayTimer;
+        public bool detectedTarget;
+        public bool isFalling;
     }
 }

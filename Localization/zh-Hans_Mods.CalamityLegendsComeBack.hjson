@@ -9,7 +9,15 @@ Items: {
 					可通过灌注不同材料，将其转化为稳定的能量核心，并映射为对应的光球行为模型。
 					当前支持超过30种材料接入，每一种材料都将赋予光球不同的结构、反应与输出形式。
 					换言之——你提供“素材”，我负责“结果”。
+
+					右键：高能连续输出模块  
+					维持射击以积累“热值”，可显著提升火力。  
+					过高的过热将灼烧自身，但可手动左键释放热量以维持稳定。
+					释放的能量将转化成追踪火箭弹。
+
 					当前弹药灌注为：
+					当前激光数量为：
+
 					'''
 			}
 		}
@@ -57,19 +65,23 @@ SHPCAmmo37: "[CLCB]   "
 SHPCAmmo38: "[CLCB]   "
 SHPCAmmo39: "[CLCB]   "
 
-Projectiles: {
-	Magic: {
-		// EnergyCore_Spark.DisplayName: Energy Core_ Spark
-		// EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
-		// EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
-		// NewLegendSHPB.DisplayName: New Legend S H P B
-		// NewLegendSHPE.DisplayName: New Legend S H P E
-	}
 
-	// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-	// Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
-	// LivingShard_Healing.DisplayName: Living Shard_ Healing
-	// FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
-	// DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
-	// UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
+
+
+Buffs: {
+	SHPCRight_DeBuff: {
+		// DisplayName: S H P C Right_ De Buff
+		// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+	}
+}
+
+DeveloperItems: {
+	LAS17: {
+		LAS17PDebuff: {
+			// DisplayName: L A S17 P Debuff
+			// Description: Mods.CalamityLegendsComeBack.DeveloperItems.LAS17.LAS17PDebuff.Description
+		}
+
+		// LAS17Proj.DisplayName: L A S17 Proj
+	}
 }

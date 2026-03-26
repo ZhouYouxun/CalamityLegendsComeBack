@@ -12,6 +12,9 @@
 	    <HintPath>..\..\ModReader\CalamityMod\CalamityMod.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="新文件夹\" />
+	</ItemGroup>
 
 	<!-- References -->
 

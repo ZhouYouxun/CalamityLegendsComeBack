@@ -57,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new BloodstoneCoreEffect()); // 血石核心 29
             EffectRegistry.RegisterEffect(new RuinousSoulEffect()); // 毁灭之灵 30
 
-            EffectRegistry.RegisterEffect(new NecroplasmEffect()); // 扭曲虚空 31
+            EffectRegistry.RegisterEffect(new TitanHeartEffect()); // 扭曲虚空 31
             EffectRegistry.RegisterEffect(new DarkPlasmaEffect()); // 暗离子体 32
 
 

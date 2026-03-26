@@ -1,8 +1,10 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
+using System.Collections.Generic;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
@@ -22,43 +24,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-			// 初始直接设为X帧
-			projectile.timeLeft = 30;
+            projectile.timeLeft = 30;
 
-			// 记录初始速度
-			projectile.ai[0] = projectile.velocity.X;
-			projectile.ai[1] = projectile.velocity.Y;
-		}
+            // 确保这个弹幕编号是“未触发”状态
+            releasedProjectiles.Remove(projectile.whoAmI);
+        }
 
-		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
+        private static readonly HashSet<int> releasedProjectiles = new();
+        public override void AI(Projectile projectile, Player owner)
+        {
+            // 剩余时间 <= 10 时开始检测，但只能触发一次
+            if (projectile.timeLeft <= 10 && !releasedProjectiles.Contains(projectile.whoAmI))
+            {
+                releasedProjectiles.Add(projectile.whoAmI);
+
+                // 直接用当前速度即可
+                // 因为你这里只有减速，没有转向，方向本身不会变
+                Vector2 baseVelocity = projectile.velocity;
+                float baseRot = baseVelocity.ToRotation();
+                float baseSpeed = baseVelocity.Length();
+
+                float angleOffset = MathHelper.ToRadians(15f);
+
+                for (int i = 0; i < 2; i++)
+                {
+                    float sign = i == 0 ? 1f : -1f;
+
+                    Vector2 velocity = baseRot.ToRotationVector2().RotatedBy(angleOffset * sign) * baseSpeed;
+
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        velocity,
+                        ModContent.ProjectileType<PurifiedGel_Ball>(),
+                        (int)(projectile.damage * 0.95f),
+                        projectile.knockBack,
+                        projectile.owner
+                    );
+                }
+            }
+        }
+
+
+        public override void OnKill(Projectile projectile, Player owner, int timeLeft)
 		{
-			// ===== 使用初始速度 =====
-			Vector2 baseVelocity = new Vector2(projectile.ai[0], projectile.ai[1]);
-			float baseRot = baseVelocity.ToRotation();
-			float baseSpeed = baseVelocity.Length();
-
-			// ===== 可直接写角度（单位：度）=====
-			float angleOffset = MathHelper.ToRadians(15f);
-
-			// ===== 循环生成左右两个 =====
-			for (int i = 0; i < 2; i++)
-			{
-				float sign = i == 0 ? 1f : -1f;
-
-				float rot = baseRot + angleOffset * sign;
-				Vector2 velocity = rot.ToRotationVector2() * baseSpeed;
-
-				Projectile.NewProjectile(
-					projectile.GetSource_FromThis(),
-					projectile.Center,
-					velocity,
-					ModContent.ProjectileType<PurifiedGel_Ball>(),
-					(int)(projectile.damage * 0.95f),
-					projectile.knockBack,
-					projectile.owner
-				);
-			}
+		
 		}
+
+
+
+
+
+
+
 
 
 

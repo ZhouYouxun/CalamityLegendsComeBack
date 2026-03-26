@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 1;
+            Projectile.penetrate = -1;
             Projectile.timeLeft = 90;
             Projectile.light = 0.45f;
             Projectile.scale = 0.9f;
@@ -183,6 +183,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void AI()
         {
+            Projectile.velocity *= 1.02f;
+
             lifeTimer++;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -422,5 +424,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 dust.noGravity = true;
             }
         }
+
+
+
+
+
+
+
+
+
     }
 }

@@ -1,4 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -19,8 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
         public override Color StartColor => new Color(52, 74, 112);
         public override Color EndColor => new Color(10, 14, 24);
 
-        public override float SquishyLightParticleFactor => 1.55f;
-        public override float ExplosionPulseFactor => 1.55f;
+        public override float SquishyLightParticleFactor => 0f;
+        public override float ExplosionPulseFactor => 0f;
 
         // ===== 每个弹幕各自的状态表 =====
         private readonly Dictionary<int, bool> stuckState = new();
@@ -118,10 +120,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             }
 
             stickVisualTimer[id]++;
-            orbitAngle[id] += 0.18f;
+            //orbitAngle[id] += 0.18f;
 
-            // 不是完全死死钉在中心，而是围着目标表面做一个小幅暗色环绕，更像“附着寄生”
-            Vector2 orbitOffset = new Vector2(18f, 0f).RotatedBy(orbitAngle[id]) + projectile.velocity.SafeNormalize(Vector2.UnitX) * 4f;
+            Vector2 stickDir = (projectile.Center - target.Center).SafeNormalize(Vector2.UnitY);
+            Vector2 orbitOffset = stickDir * 18f;
+            
             projectile.Center = target.Center + orbitOffset;
             projectile.velocity = Vector2.Zero;
             projectile.rotation += 0.22f;
@@ -138,10 +141,107 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             EnsureStateExists(id);
 
-            // ===== 每次造成伤害都释放一次深渊命中特效 =====
-            SpawnHitAbyssEffects(projectile, target);
+            // ================= 命中特效（强化版） =================
 
-            // ===== 第一次命中某个目标：进入粘附状态 =====
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            // 1. 深渊反冲烟（方向性）
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 vel = -forward * Main.rand.NextFloat(1.2f, 3.5f) + Main.rand.NextVector2Circular(1.2f, 1.2f);
+
+                HeavySmokeParticle smoke = new HeavySmokeParticle(
+                    target.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    vel,
+                    Color.Lerp(new Color(10, 14, 22), new Color(36, 58, 96), Main.rand.NextFloat()),
+                    Main.rand.Next(18, 30),
+                    Main.rand.NextFloat(0.5f, 0.9f),
+                    1f
+                );
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            // 2. 撕裂水刃（前后结构）
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 vel =
+                    forward * Main.rand.NextFloat(1f, 3f) +
+                    Main.rand.NextVector2Circular(1.5f, 1.5f);
+
+                WaterFlavoredParticle shard = new WaterFlavoredParticle(
+                    target.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    vel,
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.7f, 1.1f),
+                    Color.Lerp(new Color(26, 40, 74), new Color(72, 110, 164), Main.rand.NextFloat())
+                );
+                GeneralParticleHandler.SpawnParticle(shard);
+            }
+
+            // 3. 暗蓝闪烁（补层）
+            for (int i = 0; i < 5; i++)
+            {
+                AltSparkParticle spark = new AltSparkParticle(
+                    target.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    Main.rand.NextVector2Circular(2f, 2f),
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.9f, 1.4f),
+                    Color.Lerp(new Color(20, 30, 60), new Color(80, 120, 180), Main.rand.NextFloat()) * 0.5f
+                );
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            // 4. 原版Dust层（增强质感）
+            for (int i = 0; i < 8; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    target.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    Main.rand.NextBool() ? DustID.Water : DustID.BlueTorch,
+                    Main.rand.NextVector2Circular(2f, 2f),
+                    120,
+                    Color.Lerp(new Color(16, 24, 40), new Color(56, 86, 132), Main.rand.NextFloat()),
+                    Main.rand.NextFloat(1.0f, 1.4f)
+                );
+                dust.noGravity = true;
+            }
+
+            // ================= 你要求的爆环 =================
+
+            CustomPulse blastRing1 = new(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Blue,
+                "CalamityMod/Particles/FlameExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(-10, 10),
+                0.05f,
+                0.35f,
+                15
+            );
+            GeneralParticleHandler.SpawnParticle(blastRing1);
+
+            CustomPulse blastRing2 = new(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Blue,
+                "CalamityMod/Particles/FlameExplosion",
+                new Vector2(1f, 0.5f),
+                0f,
+                0.05f,
+                0.35f,
+                20
+            );
+            GeneralParticleHandler.SpawnParticle(blastRing2);
+
+            // ================= Debuff =================
+
+            target.AddBuff(ModContent.BuffType<CrushDepth>(), 320);
+            target.AddBuff(ModContent.BuffType<Eutrophication>(), 320);
+
+            // ================= 原逻辑（必须保留） =================
+
             if (!stuckState[id] || stuckTargetIndex[id] != target.whoAmI)
             {
                 stuckState[id] = true;
@@ -154,10 +254,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
                 return;
             }
 
-            // ===== 已经粘在当前目标上：累计命中次数 =====
             hitCountOnCurrentTarget[id]++;
 
-            // 每个目标累计 4 次伤害后，冲向下一个目标
             if (hitCountOnCurrentTarget[id] >= 4)
             {
                 int currentTarget = target.whoAmI;
@@ -174,7 +272,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
                 }
             }
         }
-
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             int id = projectile.whoAmI;

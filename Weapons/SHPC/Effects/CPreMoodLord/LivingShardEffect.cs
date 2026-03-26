@@ -31,12 +31,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             // 穿透
             projectile.penetrate = 6;
+            projectile.timeLeft = 300;
 
             // 初速度大幅提升
             projectile.velocity *= 2.5f;
         }
-
-        // ================= AI（诡异追踪）=================
+        private int hitCount;
+        private int postHitTimer;
         public override void AI(Projectile projectile, Player owner)
         {
             NPC target = projectile.Center.ClosestNPCAt(1200f);
@@ -47,39 +48,65 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             {
                 Vector2 desiredDir = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
 
-                // ===== 限制角速度（核心诡异感）=====
-                float maxTurn = MathHelper.ToRadians(3.2f);
+                // ================= 角速度逻辑 =================
+                float maxTurn;
+
+                if (hitCount == 0)
+                {
+                    // 第一次命中前
+                    maxTurn = MathHelper.ToRadians(2.7f);
+                }
+                else
+                {
+                    // 命中后：5.5 → 0.9（25帧线性下降）
+                    float t = MathHelper.Clamp(postHitTimer / 25f, 0f, 1f);
+
+                    float deg = MathHelper.Lerp(5.5f, 0.9f, t);
+                    maxTurn = MathHelper.ToRadians(deg);
+
+                    postHitTimer++;
+                }
 
                 float currentRot = projectile.velocity.ToRotation();
                 float targetRot = desiredDir.ToRotation();
 
                 float newRot = currentRot.AngleTowards(targetRot, maxTurn);
 
-                // ===== 随机扰动（关键）=====
+                // ===== 随机扰动 =====
                 newRot += Main.rand.NextFloat(-0.08f, 0.08f);
 
                 float speed = projectile.velocity.Length();
 
-                // ===== 速度保持稳定 =====
+                // ===== 速度稳定 =====
                 speed = MathHelper.Lerp(speed, 16f, 0.08f);
 
                 projectile.velocity = newRot.ToRotationVector2() * speed;
             }
 
-            // 抵消默认减速
-            projectile.velocity *= 1.020408f;
+            // ================= 速度层 =================
+            projectile.velocity *= 1.025f; // 常驻
+
+            if (hitCount > 0)
+            {
+                projectile.velocity *= 1.005f; // 第二层加速
+            }
         }
 
         // ================= OnHitNPC =================
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // ===== 吸血 =====
-            int heal = damageDone / 10;
-            if (heal > 0)
-            {
-                owner.statLife += heal;
-                owner.HealEffect(heal);
-            }
+
+            hitCount++;
+            postHitTimer = 0;
+
+
+            //// ===== 吸血 =====
+            //int heal = damageDone / 10;
+            //if (heal > 0)
+            //{
+            //    owner.statLife += heal;
+            //    owner.HealEffect(heal);
+            //}
 
             // ===== 释放额外弹幕 =====
             Projectile.NewProjectile(
@@ -93,88 +120,89 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             );
         }
 
-        // ================= OnKill =================
+
+
+
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 center = projectile.Center;
 
-            // ===== 魔法阵：主圆 =====
-            int count = 36;
-            float radius = 60f;
+            // ================= 1.主圆环（放射爆散） =================
+            int count = 12;
 
             for (int i = 0; i < count; i++)
             {
                 float angle = MathHelper.TwoPi * i / count;
 
-                Vector2 pos = center + angle.ToRotationVector2() * radius;
+                Vector2 dir = angle.ToRotationVector2();
+                Vector2 vel = dir * Main.rand.NextFloat(2f, 5f);
 
-                Particle p = new PointParticle(
-                    pos,
-                    Vector2.Zero,
-                    false,
-                    20,
-                    1.3f,
-                    Color.Lerp(StartColor, EndColor, i / (float)count)
-                );
-                GeneralParticleHandler.SpawnParticle(p);
-            }
-
-            // ===== 内圈旋转结构 =====
-            int inner = 18;
-            for (int i = 0; i < inner; i++)
-            {
-                float angle = MathHelper.TwoPi * i / inner + Main.rand.NextFloat(0.2f);
-
-                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(2f, 6f);
-
-                Particle spark = new SparkParticle(
+                SquishyLightParticle particle = new(
                     center,
                     vel,
-                    false,
-                    40,
-                    1.1f,
-                    Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.3f))
-                );
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-
-            // ===== 外扩脉冲 =====
-            for (int i = 0; i < 4; i++)
-            {
-                float rot = MathHelper.TwoPi / 4 * i;
-
-                Particle pulse = new DirectionalPulseRing(
-                    center,
-                    rot.ToRotationVector2() * 2f,
-                    ThemeColor,
-                    new Vector2(1.2f, 2.8f),
-                    rot,
-                    0.15f,
-                    0.05f,
+                    1.2f,
+                    Color.Lerp(Color.LimeGreen, Color.White, 0.3f),
                     18
                 );
-                GeneralParticleHandler.SpawnParticle(pulse);
+
+                GeneralParticleHandler.SpawnParticle(particle);
             }
 
-            // ===== 环形 Dust（补充结构）=====
-            for (int i = 0; i < 40; i++)
+            // ================= 2.椭圆 Dust X环 =================
+            int dustCount = 24;
+
+            float longAxis = 70f;   // ⭐ 长轴（你可以自己调）
+            float shortAxis = 30f;  // ⭐ 短轴（你可以自己调）
+            float speed = 3f;
+
+            for (int i = 0; i < dustCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / 40f;
+                float t = MathHelper.TwoPi * i / dustCount;
 
-                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(2f, 8f);
-
-                Dust d = Dust.NewDustPerfect(
-                    center,
-                    DustID.GreenTorch,
-                    vel,
-                    0,
-                    default,
-                    1.4f
+                // 椭圆1
+                Vector2 ellipse1 = new Vector2(
+                    (float)Math.Cos(t) * longAxis,
+                    (float)Math.Sin(t) * shortAxis
                 );
-                d.noGravity = true;
+
+                // 椭圆2（旋转90°形成X）
+                Vector2 ellipse2 = ellipse1.RotatedBy(MathHelper.Pi / 2f);
+
+                Vector2 dir1 = ellipse1.SafeNormalize(Vector2.UnitY);
+                Vector2 dir2 = ellipse2.SafeNormalize(Vector2.UnitY);
+
+                Vector2 vel1 = dir1 * speed;
+                Vector2 vel2 = dir2 * speed;
+
+                // Dust1
+                Dust d1 = Dust.NewDustPerfect(
+                    center + ellipse1,
+                    Main.rand.NextBool() ? 107 : 110,
+                    vel1,
+                    120,
+                    Main.rand.NextBool() ? Color.LightGreen : Color.LimeGreen,
+                    Main.rand.NextFloat(1.0f, 2.2f)
+                );
+                d1.noGravity = true;
+
+                // Dust2
+                Dust d2 = Dust.NewDustPerfect(
+                    center + ellipse2,
+                    Main.rand.NextBool() ? 107 : 110,
+                    vel2,
+                    120,
+                    Main.rand.NextBool() ? Color.LightGreen : Color.LimeGreen,
+                    Main.rand.NextFloat(1.0f, 2.2f)
+                );
+                d2.noGravity = true;
             }
         }
-    }
 
-  
+
+
+
+
+
+
+    }
 }

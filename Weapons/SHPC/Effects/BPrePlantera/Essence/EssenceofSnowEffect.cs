@@ -119,17 +119,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             {
                 Vector2 vel = forward.RotatedByRandom(0.5f) * Main.rand.NextFloat(1.5f, 4f);
 
-                Particle smokeL = new HeavySmokeParticle(
-                    projectile.Center + Main.rand.NextVector2Circular(10f, 6f),
-                    vel,
-                    Color.WhiteSmoke,
-                    18,
-                    Main.rand.NextFloat(0.9f, 1.6f),
-                    0.35f,
-                    Main.rand.NextFloat(-1f, 1f),
-                    false
-                );
-                GeneralParticleHandler.SpawnParticle(smokeL);
+                //Particle smokeL = new HeavySmokeParticle(
+                //    projectile.Center + Main.rand.NextVector2Circular(10f, 6f),
+                //    vel,
+                //    Color.WhiteSmoke,
+                //    18,
+                //    Main.rand.NextFloat(0.9f, 1.6f),
+                //    0.35f,
+                //    Main.rand.NextFloat(-1f, 1f),
+                //    false
+                //);
+                //GeneralParticleHandler.SpawnParticle(smokeL);
             }
 
             // ================= 冰雪 Dust =================

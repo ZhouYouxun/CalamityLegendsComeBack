@@ -1,7 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CalamityMod.Graphics.Primitives;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -11,6 +14,132 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
     {
         // ===== 自定义计数器（禁止用localAI）=====
         private int hitCount;
+        public override bool PreDraw(ref Color lightColor)
+        {
+            SpriteBatch sb = Main.spriteBatch;
+
+            Texture2D tex = ModContent.Request<Texture2D>(
+                Projectile.ModProjectile.Texture
+            ).Value;
+
+            Vector2 origin = tex.Size() * 0.5f;
+
+            // ======== 太阳黑子橙色调色盘 ========
+            Color[] firePalette = new Color[]
+            {
+        new Color(255, 200, 80),   // 金
+        new Color(255, 150, 40),   // 橙
+        new Color(255, 100, 30),   // 深橙
+        new Color(255, 60, 20),    // 红橙
+            };
+
+            // ======== EXO 风格：能量丝带拖尾（Primitive Trail） ========
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+                     DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+            // === 定义宽度函数 ===
+            float PrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
+            {
+                float w = Projectile.width * 3.55f;
+                w *= MathHelper.SmoothStep(
+                    0.5f,
+                    1.0f,
+                    Utils.GetLerpValue(0f, 0.25f, completionRatio, true)
+                );
+                return w;
+            }
+
+            // === 定义颜色函数 ===
+            Color PrimitiveTrailColor(float completionRatio, Vector2 vertexPos)
+            {
+                Color c = firePalette[
+                    (int)(completionRatio * firePalette.Length) % firePalette.Length
+                ];
+
+                c *= Projectile.Opacity * (1f - completionRatio);
+
+                float speedBoost =
+                    Utils.GetLerpValue(1f, 6f, Projectile.velocity.Length(), true);
+
+                c *= speedBoost;
+
+                c.A = 0;
+                return c;
+            }
+
+
+            // === 将 oldPos 整体往前移动到“弹幕前端” ===
+            Vector2 frontOffset = Projectile.velocity.SafeNormalize(Vector2.Zero) * (Projectile.width * 1.5f);
+
+            // 创建一个新的数组存前推后的 oldPos
+            Vector2[] shiftedOldPos = new Vector2[Projectile.oldPos.Length];
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                shiftedOldPos[i] = Projectile.oldPos[i] + frontOffset;
+            }
+
+
+            // === 偏移：让丝带稍微抬起（增强立体感）===
+            Vector2 PrimitiveOffsetFunction(float t, Vector2 vertexPos)
+            {
+                return Projectile.Size * 0.5f + Projectile.velocity.SafeNormalize(Vector2.Zero) * Projectile.scale * 2f;
+            }
+
+            // === 绘制能量丝带（关键）=====
+            GameShaders.Misc["CalamityMod:SideStreakTrail"].UseImage1("Images/Misc/Perlin");
+
+            PrimitiveRenderer.RenderTrail(
+                shiftedOldPos,
+                new(
+                    PrimitiveWidthFunction,
+                    PrimitiveTrailColor,
+                    PrimitiveOffsetFunction,
+                    shader: GameShaders.Misc["CalamityMod:SideStreakTrail"]
+                ),
+                60
+            );
+
+            // ======== 回到正常绘图（主体绘制） ========
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+                     DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+            // === 主体绘制 ===
+            {
+                Vector2 drawPos = Projectile.Center - Main.screenPosition;
+                sb.Draw(tex, drawPos, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+            }
+
+            // ======== 第二层：普通虚化拖尾（oldPos-based fade trail） ========
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+
+                // 透明度衰减
+                float fade = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+
+                Color c = new Color(255, 160, 60) * 0.35f * fade; // 柔和橙色虚光
+                c.A = 0;
+
+                float scale = Projectile.scale * (0.6f + fade * 0.4f);
+
+                Main.spriteBatch.Draw(
+                    tex,
+                    pos,
+                    null,
+                    c,
+                    Projectile.rotation,
+                    tex.Size() * 0.5f,
+                    scale,
+                    SpriteEffects.None,
+                    0f
+                );
+            }
+
+
+            return false;
+        }
 
         public override void SetDefaults()
         {

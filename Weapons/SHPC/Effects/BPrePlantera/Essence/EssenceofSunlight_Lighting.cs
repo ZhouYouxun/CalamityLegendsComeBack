@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
     public class EssenceofSunlight_Lighting : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Magic";
+        public new string LocalizationCategory => "Projectiles";
 
         // 透明贴图
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";

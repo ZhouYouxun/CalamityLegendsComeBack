@@ -178,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             // 绝对只朝左右之一释放
             Vector2 waveVelocity = forward.X >= 0f ? Vector2.UnitX : -Vector2.UnitX;
             // === 发射左右冲击波（核心逻辑）===
-            Vector2 spawnVelocity = waveVelocity * 14f; // 速度必须高，否则没有“冲击波”质感
+            Vector2 spawnVelocity = waveVelocity * 24f; // 速度必须高，否则没有“冲击波”质感
 
             int waveIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),

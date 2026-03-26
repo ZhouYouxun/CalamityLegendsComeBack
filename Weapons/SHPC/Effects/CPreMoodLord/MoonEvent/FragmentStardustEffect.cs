@@ -1,10 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 
@@ -13,10 +9,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
     public class FragmentStardustEffect : DefaultEffect
     {
         public override int EffectID => 24;
-
         public override int AmmoType => ItemID.FragmentStardust;
 
-        // ===== 星辰主题 =====
         public override Color ThemeColor => new Color(120, 180, 255);
         public override Color StartColor => new Color(180, 220, 255);
         public override Color EndColor => new Color(60, 120, 220);
@@ -24,11 +18,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override float SquishyLightParticleFactor => 1.55f;
         public override float ExplosionPulseFactor => 1.55f;
 
-        // ===== 自定义变量（禁止localAI）=====
+        // ===== 状态 =====
         private int splitDepth;
         private bool initialized;
         private bool hitEnemy;
         private float damageScale = 0.5f;
+
+        private int splitTimer; // 递归计时器
 
         private const int MaxDepth = 6;
 
@@ -38,21 +34,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             if (!initialized)
             {
                 projectile.timeLeft = 150;
-                splitDepth = 0;
                 initialized = true;
+
+                splitDepth = (int)projectile.ai[0];
+
+                // ⭐ 初始直接分裂一次（保证递归一定启动）
+                if (splitDepth < MaxDepth)
+                {
+                    Split(projectile);
+                }
             }
         }
 
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
-            // 持续减速
-            projectile.velocity *= 0.99f;
+            splitDepth = (int)projectile.ai[0];
 
-            // 伤害逐渐恢复
+            // ❌ 删除额外减速（避免停住被爆炸机制干掉）
+
+            // ===== 伤害缓慢恢复 =====
             damageScale = MathHelper.Lerp(damageScale, 1f, 0.02f);
 
-            // ===== 星辰粒子（数学感轻结构）=====
+            // ===== 星辰粒子 =====
             if (Main.rand.NextBool(2))
             {
                 Vector2 vel = Main.rand.NextVector2Circular(1.2f, 1.2f);
@@ -68,13 +72,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 d.noGravity = true;
             }
 
-            // ===== 接近消失 → 递归分裂 =====
-            if (projectile.timeLeft == 1 && !hitEnemy)
+            // ================= ⭐ 核心递归 =================
+            splitTimer++;
+
+            // ⭐ 更快触发，避免被爆炸抢先
+            if (!hitEnemy && splitDepth < MaxDepth && splitTimer >= 10)
             {
-                if (splitDepth < MaxDepth)
-                {
-                    Split(projectile);
-                }
+                splitTimer = 0;
+                Split(projectile);
             }
         }
 
@@ -87,12 +92,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnHitNPC =================
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            hitEnemy = true;
+            hitEnemy = true; // 命中后停止递归
         }
 
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            // 保持为空（递归完全由AI控制）
         }
 
         // ================= 核心递归 =================
@@ -119,27 +125,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 {
                     Projectile child = Main.projectile[projID];
 
-                    // ===== 继承递归层级 =====
-                    // ===== 用 ai[0] 传递递归层级 =====
-                    child.ai[0] = projectile.ai[0] + 1;
+                    // ===== 递归层级 =====
+                    int nextDepth = splitDepth + 1;
+                    child.ai[0] = nextDepth;
 
-                    // 初始伤害衰减（用 ai[1] 存）
-                    child.ai[1] = 0.5f;
+                    // ⭐ 关键：禁止子弹 proximity 爆炸（否则递归被打断）
+                    child.ai[1] = 0f;
 
-                    // ===== 子弹更短命（递归终止关键）=====
-                    child.timeLeft = Math.Max(30, projectile.timeLeft + 40 - splitDepth * 20);
+                    // ===== 生命周期控制 =====
+                    child.timeLeft = Math.Max(40, 100 - splitDepth * 12);
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-
     }
 }

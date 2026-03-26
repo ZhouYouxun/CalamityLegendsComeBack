@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
@@ -21,14 +22,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 {
     public class NewLegendSHPC : LegendaryItem, ILocalizedModType
     {
+        #region 基础属性和资源管理
+
         public override string Texture => "CalamityMod/Items/Weapons/Magic/SHPC";
         public new string LocalizationCategory => "Items.Weapons.Magic";
 
-        // ==================== 音效部分（完整保留骨架） ====================
+        // ==================== 音效部分 ====================
         public static readonly SoundStyle FireSound = new("CalamityMod/Sounds/Item/AnomalysNanogunMPFBShot");
         public static readonly SoundStyle VacuumStart = new SoundStyle("CalamityMod/Sounds/Item/SHPCVacuumStart") { Volume = 0.5f };
         public static readonly SoundStyle VacuumLoop = new SoundStyle("CalamityMod/Sounds/Item/SHPCVacuumLoop") { Volume = 0.5f };
         public static readonly SoundStyle VacuumEnd = new SoundStyle("CalamityMod/Sounds/Item/SHPCVacuumEnd") { Volume = 0.5f };
+
+        public static readonly SoundStyle RocketLaunch = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/解放者机甲左手火箭弹") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle LightningChainRelease = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/雷霆开火与换弹") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle EnergyMinigunFire = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle EnergyMinigunSpinUp = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效") { Volume = 1f, Pitch = 0f };
+
+        public static readonly SoundStyle MortarSentryShot = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/迫击哨戒炮单次攻击") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle FinalUltimatumExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/最后通牒爆炸") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle Eagle500kgExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/飞鹰500KG爆炸") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle AntiPersonnelMineExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/反步兵地雷爆炸") { Volume = 1f, Pitch = 0f };
+
 
         // ==================== 基础常量 ====================
         // 一颗弹药能灌注多少发
@@ -65,10 +79,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Item.autoReuse = true;
             Item.shoot = ModContent.ProjectileType<NewLegendSHPB>();
             Item.shootSpeed = 20f;
+            Item.channel = false;
 
             Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Pink;
         }
+
+        #endregion
+
+
+        #region 材料提取和使用
 
         // ==================== 通用工具函数 ====================
 
@@ -134,10 +154,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return Lang.GetItemNameValue(storedAmmoType);
         }
 
-        public override Vector2? HoldoutOffset() => new Vector2(-35f, -10f);
+        #endregion
 
-        // 右键暂时关闭
-        public override bool AltFunctionUse(Player player) => false;
+
+        #region 左右键通用开火核心逻辑
+
+        public override Vector2? HoldoutOffset() => new Vector2(-35f, -10f);
 
         public override void OnCreated(ItemCreationContext context)
         {
@@ -149,10 +171,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // ==================== 开火相关 ====================
         public override bool CanUseItem(Player player)
         {
-            // 右键先完全关闭，所以这里只保留左键逻辑
-            Item.channel = false;
-            Item.noUseGraphic = false;
-            Item.UseSound = FireSound;
+            if (player.altFunctionUse == 2)
+            {
+                Item.channel = true;         // ✅ 右键长按核心
+                Item.noUseGraphic = true;    // ✅ 不画物品（Holdout接管）
+                Item.UseSound = null;        // 可选
+            }
+            else
+            {
+                Item.channel = false;
+                Item.noUseGraphic = false;
+                Item.UseSound = FireSound;
+            }
 
             // 只要当前还有灌注次数，或者玩家包里还能找到可灌注弹药，就允许使用
             //return storedEffectPower > 0 || FindEffectAmmo(player) != -1;
@@ -207,7 +237,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            // 右键分支暂时关闭，只发射左键主能量球
+            // 右键 → 不发射左键弹幕
+            if (player.altFunctionUse == 2)
+            {
+                return false;
+            }
+
+            // 左键 → 正常发射
             Projectile.NewProjectile(
                 source,
                 position + new Vector2(0f, -10f) + velocity * 3f,
@@ -222,6 +258,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return false;
         }
 
+        #endregion
+
+
+        #region 背包UI [大概率不用动]
         // ==================== 背包UI显示 ====================
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
@@ -255,11 +295,73 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             );
         }
 
+        #endregion
+
+
+
+        #region 通用手持动画部分 [包括右键射击]
+
+        public override bool AltFunctionUse(Player player) => true;
+
+        // ===== 获取右键进度状态 =====
+        public int GetRightClickProgressState()
+        {
+            int state = 0;
+            if (NPC.downedMechBoss1)
+                state = 1;
+            if (DownedBossSystem.downedAstrumDeus)
+                state = 2;
+            if (DownedBossSystem.downedStormWeaver)
+                state = 3;
+            if (DownedBossSystem.downedExoMechs)
+                state = 4;
+            return state;
+        }
+
         // ==================== 手持动画部分（完整保留核心） ====================
         public override void HoldItem(Player player)
         {
-            // 鼠标世界坐标监听必须保留，动画和瞄准都靠它
+            // 鼠标监听（原有）
             player.Calamity().mouseWorldListener = true;
+
+            // ===== 关键：开启右键监听 =====
+            if (Main.myPlayer == player.whoAmI)
+                player.Calamity().rightClickListener = true;
+
+            // ===== 右键长按逻辑 =====
+            if (player.Calamity().mouseRight &&
+                player.whoAmI == Main.myPlayer &&
+                !Main.mapFullscreen &&
+                !Main.blockMouse)
+            {
+                // ===== 防止重复生成 =====
+                foreach (Projectile proj in Main.projectile)
+                {
+                    if (proj.active &&
+                        proj.owner == player.whoAmI &&
+                        proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>())
+                    {
+                        return;
+                    }
+                }
+
+                // ===== 生成右键 Holdout =====
+                Vector2 shootDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+
+                int projIndex = Projectile.NewProjectile(
+                    Item.GetSource_FromThis(),
+                    player.Center,
+                    shootDirection,
+                    ModContent.ProjectileType<SHPCRight_HoulOut>(),
+                    Item.damage,
+                    Item.knockBack,
+                    player.whoAmI,
+                    GetRightClickProgressState() // ai[0]
+                );
+            }       
+
+            if (player.itemAnimation > 0 && player.altFunctionUse != 2)
+                return;
         }
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
@@ -295,9 +397,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             float rotation = (player.Center - player.Calamity().mouseWorld).ToRotation() * player.gravDir + MathHelper.PiOver2;
             player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, rotation);
         }
+        #endregion
 
 
-
+        #region 传奇属性成长
         // ==================== 额外伤害修正（完整保留） ====================
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
@@ -315,7 +418,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 NPC.downedPlantBoss, // 世花
                 NPC.downedGolemBoss, // 石巨人
                 NPC.downedAncientCultist, // 拜月教徒
-                NPC.downedMoonlord, // 月总
+                NPC.downedMoonlord, // 月总                
                 DownedBossSystem.downedProvidence, // 亵渎天神
                 DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid, // 神使三兄弟
                 DownedBossSystem.downedPolterghast, // 幽花
@@ -365,8 +468,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         }
 
 
+        #endregion
 
 
+        #region 文本编排与拼接
 
         // ==================== Tooltip 文本部分 ====================
         public override void ModifyTooltips(List<TooltipLine> list)
@@ -396,9 +501,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 });
             }
         }
+        #endregion
 
 
+        #region 倒掉左键材料
 
+        // 背包里点击右键，倒掉左键材料
         public override bool CanRightClick()
         {
             return true; // 允许背包右键
@@ -421,11 +529,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return false; // ❗阻止右键把武器消耗掉
         }
 
+        #endregion
 
 
-
-
-
+        #region 不用管的
         // ==================== 合成表（先保留原版） ====================
         public override void AddRecipes()
         {
@@ -482,6 +589,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             storedAmmoType = reader.ReadInt32();
             storedEffectID = reader.ReadInt32();
         }
+
+        #endregion
     }
 }
 
