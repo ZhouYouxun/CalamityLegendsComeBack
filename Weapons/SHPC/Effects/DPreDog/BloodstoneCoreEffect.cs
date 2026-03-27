@@ -19,8 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override Color StartColor => new Color(255, 120, 120);
         public override Color EndColor => new Color(90, 0, 0);
 
-        public override float SquishyLightParticleFactor => 1.85f;
-        public override float ExplosionPulseFactor => 1.85f;
+        public override float SquishyLightParticleFactor => 0.85f;
+        public override float ExplosionPulseFactor => 1.05f;
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
@@ -41,37 +41,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
                     data.empowered = true;
                     data.linkedPlayerIndex = targetPlayer.whoAmI;
-
-                    for (int i = 0; i < 22; i++)
-                    {
-                        Vector2 dir = (projectile.Center - targetPlayer.Center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.45f);
-                        Vector2 velocity = dir * Main.rand.NextFloat(2f, 8f);
-
-                        Dust dust = Dust.NewDustPerfect(
-                            targetPlayer.Center + Main.rand.NextVector2Circular(18f, 18f),
-                            DustID.Blood,
-                            velocity,
-                            0,
-                            Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat()),
-                            Main.rand.NextFloat(1.1f, 1.8f)
-                        );
-                        dust.noGravity = true;
-                    }
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        Vector2 velocity = (projectile.Center - targetPlayer.Center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.3f) * Main.rand.NextFloat(1f, 4f);
-
-                        SquishyLightParticle particle = new(
-                            Vector2.Lerp(targetPlayer.Center, projectile.Center, Main.rand.NextFloat(0.1f, 0.35f)),
-                            velocity,
-                            Main.rand.NextFloat(0.45f, 0.9f),
-                            Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat()),
-                            Main.rand.Next(18, 28)
-                        );
-
-                        GeneralParticleHandler.SpawnParticle(particle);
-                    }
                 }
             }
         }
@@ -97,19 +66,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 dust.noGravity = true;
             }
 
-            if (Main.rand.NextBool(3))
-            {
-                SquishyLightParticle particle = new(
-                    projectile.Center,
-                    -projectile.velocity.RotatedByRandom(0.45f) * Main.rand.NextFloat(0.04f, 0.18f),
-                    Main.rand.NextFloat(0.4f, data.empowered ? 0.95f : 0.7f),
-                    Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat()),
-                    Main.rand.Next(12, 20)
-                );
-
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
-
             if (data.empowered && data.linkedPlayerIndex >= 0 && data.linkedPlayerIndex < Main.maxPlayers)
             {
                 Player linkedPlayer = Main.player[data.linkedPlayerIndex];
@@ -120,7 +76,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
         }
 
-        // ================= ModifyHitNPC =================
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
             BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
@@ -129,15 +84,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 modifiers.SourceDamage *= 1.2f;
         }
 
-        // ================= OnHitNPC =================
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
             BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
 
-            int count = data.empowered ? 18 : 10;
+            bool empowered = data.empowered;
+            Vector2 center = projectile.Center;
+
+            // ================= 命中特效（保留原有） =================
+            int count = empowered ? 18 : 10;
             for (int i = 0; i < count; i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, data.empowered ? 6f : 3.5f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, empowered ? 6f : 3.5f);
 
                 Dust dust = Dust.NewDustPerfect(
                     target.Center,
@@ -145,18 +103,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     velocity,
                     0,
                     Color.Lerp(ThemeColor, StartColor, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1f, data.empowered ? 1.8f : 1.25f)
+                    Main.rand.NextFloat(1f, empowered ? 1.8f : 1.25f)
                 );
                 dust.noGravity = true;
             }
-        }
 
-        // ================= OnKill =================
-        public override void OnKill(Projectile projectile, Player owner, int timeLeft)
-        {
-            BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
-
-            int explosionDamage = data.empowered ? (int)(projectile.damage * 1.6f) : (int)(projectile.damage * 0.95f);
+            // ================= 爆炸生成 =================
+            int explosionDamage = empowered ? (int)(projectile.damage * 1.6f) : (int)(projectile.damage * 0.95f);
 
             int projIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
@@ -169,76 +122,194 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             );
 
             Projectile proj = Main.projectile[projIndex];
-            proj.width = data.empowered ? 250 : 75;
-            proj.height = data.empowered ? 250 : 75;
+            int radius = empowered ? 260 : 90;
+            proj.width = radius;
+            proj.height = radius;
 
-            int dustCount = data.empowered ? 42 : 20;
-            float speedMin = data.empowered ? 2f : 1f;
-            float speedMax = data.empowered ? 8f : 4f;
+            // ================= 统计范围内敌人数量 =================
+            int enemyCount = 0;
 
-            for (int i = 0; i < dustCount; i++)
+            foreach (NPC npc in Main.ActiveNPCs)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(speedMin, speedMax);
+                if (!npc.active || npc.friendly || npc.lifeMax <= 5)
+                    continue;
 
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
-                    Main.rand.NextBool(2) ? DustID.Blood : DustID.RedTorch,
-                    velocity,
-                    0,
-                    Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.1f, data.empowered ? 2.2f : 1.5f)
-                );
-                dust.noGravity = true;
+                if (Vector2.Distance(center, npc.Center) <= radius * 0.5f)
+                {
+                    enemyCount++;
+                }
             }
 
-            int smokeCount = data.empowered ? 10 : 4;
+            // ================= 吸血计算（核心设计） =================
+            // 👉 单体 = 负收益，多目标 = 正收益
+            int healAmount = 0;
+
+            if (empowered)
+            {
+                if (enemyCount <= 1)
+                {
+                    healAmount = 18; // ❌ 明显亏（原本扣66）
+                }
+                else if (enemyCount == 2)
+                {
+                    healAmount = 36;
+                }
+                else if (enemyCount == 3)
+                {
+                    healAmount = 66; // ✔ 打平
+                }
+                else
+                {
+                    // 👉 超过3个开始爆发收益
+                    healAmount = 66 + (enemyCount - 3) * 28;
+                }
+
+                // ================= 应用回血 =================
+                owner.statLife += healAmount;
+                if (owner.statLife > owner.statLifeMax2)
+                    owner.statLife = owner.statLifeMax2;
+
+                owner.HealEffect(healAmount);
+
+                // ================= 吸血特效（完全保留） =================
+                Vector2 dir = (owner.Center - center).SafeNormalize(Vector2.UnitY);
+
+                for (int j = 0; j < 18; j++)
+                {
+                    float t = j / 18f;
+                    Vector2 pos = Vector2.Lerp(center, owner.Center, t);
+
+                    Dust d = Dust.NewDustPerfect(
+                        pos,
+                        Main.rand.NextBool(2) ? DustID.Blood : DustID.LifeDrain,
+                        dir * Main.rand.NextFloat(1f, 4f),
+                        0,
+                        Color.Lerp(new Color(255, 120, 120), new Color(200, 20, 20), Main.rand.NextFloat()),
+                        Main.rand.NextFloat(1f, 1.8f)
+                    );
+                    d.noGravity = true;
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public override void OnKill(Projectile projectile, Player owner, int timeLeft)
+        {
+            BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
+
+            // ================= 基础参数 =================
+            bool empowered = data.empowered;
+
+            // ================= 强度倍率 =================
+            float scaleFactor = empowered ? 1.8f : 1f;
+            int density = empowered ? 90 : 40;
+
+            Vector2 center = projectile.Center;
+
+            //// ================= ① 核心血爆脉冲 =================
+            //Particle corePulse = new CustomPulse(
+            //    center,
+            //    Vector2.Zero,
+            //    empowered ? new Color(255, 60, 60) : new Color(200, 40, 40),
+            //    "CalamityMod/Particles/DetailedExplosion",
+            //    Vector2.One * (1.2f * scaleFactor),
+            //    Main.rand.NextFloat(-0.3f, 0.3f),
+            //    0.05f,
+            //    0.4f * scaleFactor,
+            //    (int)(28 * scaleFactor),
+            //    false
+            //);
+            //GeneralParticleHandler.SpawnParticle(corePulse);
+
+            // ================= ② 阿基米德螺旋血爆 =================
+            float golden = MathHelper.ToRadians(137.5f);
+            for (int i = 0; i < density; i++)
+            {
+                float t = i * 0.25f;
+                float r = 3f + 0.35f * t;
+
+                Vector2 vel = (t + i * 0.1f).ToRotationVector2() * r * Main.rand.NextFloat(1.5f, 3.5f) * scaleFactor;
+
+                Dust d = Dust.NewDustPerfect(
+                    center,
+                    DustID.Blood,
+                    vel,
+                    0,
+                    Color.Lerp(new Color(255, 80, 80), new Color(120, 0, 0), Main.rand.NextFloat()),
+                    Main.rand.NextFloat(1.2f, 2.2f * scaleFactor)
+                );
+                d.noGravity = true;
+            }
+
+            // ================= ③ 玫瑰曲线血阵（核心宏伟结构） =================
+            int petals = empowered ? 90 : 45;
+            for (int i = 0; i < petals; i++)
+            {
+                float theta = MathHelper.TwoPi * i / petals;
+                float rose = 10f * (1 + 0.5f * (float)Math.Sin(6 * theta));
+
+                Vector2 vel = theta.ToRotationVector2() * rose * Main.rand.NextFloat(1.5f, 3.5f) * scaleFactor;
+
+                Dust d = Dust.NewDustPerfect(
+                    center,
+                    DustID.Blood,
+                    vel,
+                    0,
+                    Color.Red,
+                    Main.rand.NextFloat(1.4f, 2.4f * scaleFactor)
+                );
+                d.noGravity = true;
+            }
+
+            // ================= ④ 黄金角血刺（Bloodstone风格核心） =================
+            int spikes = empowered ? 70 : 30;
+            for (int i = 0; i < spikes; i++)
+            {
+                float angle = i * golden;
+
+                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(4f, 9f) * scaleFactor;
+
+                SparkParticle spark = new SparkParticle(
+                    center,
+                    vel,
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(1.6f, 3.2f * scaleFactor),
+                    Color.Lerp(Color.Red, Color.DarkRed, Main.rand.NextFloat())
+                );
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            // ================= ⑤ 血雾膨胀层 =================
+            int smokeCount = empowered ? 18 : 6;
             for (int i = 0; i < smokeCount; i++)
             {
                 Particle smoke = new HeavySmokeParticle(
-                    projectile.Center,
-                    Main.rand.NextVector2Circular(2.4f, 2.4f),
-                    Color.Lerp(new Color(80, 0, 0), ThemeColor, Main.rand.NextFloat()),
-                    Main.rand.Next(22, 36),
-                    Main.rand.NextFloat(0.8f, data.empowered ? 1.6f : 1.15f),
-                    0.35f,
-                    Main.rand.NextFloat(-0.04f, 0.04f),
+                    center,
+                    Main.rand.NextVector2Circular(3f, 3f),
+                    Color.Lerp(new Color(80, 0, 0), new Color(200, 30, 30), Main.rand.NextFloat()),
+                    Main.rand.Next(30, 50),
+                    Main.rand.NextFloat(1f, 2.2f * scaleFactor),
+                    0.4f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
                     true
                 );
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            Particle blastPulse = new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                data.empowered ? new Color(255, 50, 50) : new Color(180, 30, 30),
-                "CalamityMod/Particles/DetailedExplosion",
-                Vector2.One * (data.empowered ? 1.15f : 0.7f),
-                Main.rand.NextFloat(-0.3f, 0.3f),
-                0.03f,
-                data.empowered ? 0.3f : 0.18f,
-                data.empowered ? 28 : 18,
-                false
-            );
-            GeneralParticleHandler.SpawnParticle(blastPulse);
-
-            if (data.empowered)
-            {
-                for (int i = 0; i < Main.maxPlayers; i++)
-                {
-                    Player player = Main.player[i];
-                    if (!player.active || player.dead)
-                        continue;
-
-                    int healAmount = 66;
-                    player.statLife += healAmount;
-                    if (player.statLife > player.statLifeMax2)
-                        player.statLife = player.statLifeMax2;
-
-                    player.HealEffect(healAmount);
-
-                    CreateBloodReturn(projectile.Center, player.Center);
-                }
-            }
+          
         }
 
         private Player FindClosestValidPlayer(Vector2 center, float maxDistance)
@@ -275,7 +346,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             for (int i = 0; i <= steps; i++)
             {
-                if (Main.rand.NextBool(3))
+                if (Main.rand.NextBool(4))
                     continue;
 
                 float factor = i / (float)Math.Max(steps, 1);
@@ -291,63 +362,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 );
                 dust.noGravity = true;
             }
-
-            if (Main.rand.NextBool(2))
-            {
-                SquishyLightParticle particle = new(
-                    Vector2.Lerp(start, end, Main.rand.NextFloat()),
-                    direction * Main.rand.NextFloat(0.2f, 1f),
-                    Main.rand.NextFloat(0.45f, 0.85f),
-                    Color.Lerp(new Color(255, 110, 110), new Color(180, 20, 20), Main.rand.NextFloat()),
-                    Main.rand.Next(10, 18)
-                );
-
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
         }
 
-        private void CreateBloodReturn(Vector2 start, Vector2 end)
-        {
-            Vector2 toEnd = end - start;
-            float distance = toEnd.Length();
-            if (distance <= 8f)
-                return;
-
-            Vector2 direction = toEnd.SafeNormalize(Vector2.UnitY);
-            int steps = (int)(distance / 10f);
-
-            for (int i = 0; i <= steps; i++)
-            {
-                if (Main.rand.NextBool(2))
-                    continue;
-
-                float factor = i / (float)Math.Max(steps, 1);
-                Vector2 point = Vector2.Lerp(start, end, factor) + Main.rand.NextVector2Circular(4f, 4f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    point,
-                    Main.rand.NextBool(2) ? DustID.Blood : DustID.LifeDrain,
-                    direction * Main.rand.NextFloat(0.3f, 1.4f),
-                    0,
-                    Color.Lerp(new Color(255, 140, 140), new Color(180, 20, 20), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1f, 1.5f)
-                );
-                dust.noGravity = true;
-            }
-
-            for (int i = 0; i < 6; i++)
-            {
-                SquishyLightParticle particle = new(
-                    Vector2.Lerp(start, end, Main.rand.NextFloat()),
-                    direction.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.4f, 2.2f),
-                    Main.rand.NextFloat(0.5f, 1f),
-                    Color.Lerp(new Color(255, 130, 130), new Color(200, 30, 30), Main.rand.NextFloat()),
-                    Main.rand.Next(14, 24)
-                );
-
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
-        }
     }
 
     public class BloodstoneCoreEffectData : GlobalProjectile

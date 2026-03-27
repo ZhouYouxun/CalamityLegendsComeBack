@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override Vector2 GunTipPosition =>
             Projectile.Center + Vector2.UnitX.RotatedBy(Projectile.rotation) * 36f;
 
-        public override float MaxOffsetLengthFromArm => 55f;
+        public override float MaxOffsetLengthFromArm => 35f;
 
         #region ===== 基础状态 =====
 
@@ -90,9 +90,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             - Vector2.UnitY.RotatedBy(Projectile.rotation) * GunBackUpOffset;
 
         #endregion
+        private int currentEffectID;
         public override void OnSpawn(IEntitySource source)
         {
             ProgressState = (int)Projectile.ai[0];
+            currentEffectID = (int)Projectile.ai[1];
             InitializeProgressRules();
         }
         // ===== 根据进度初始化规则 =====
@@ -266,9 +268,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             stage--;
             stageTimer = 0;
-
-            reduceCooldown = 180;
-            fireStopTimer = 30;
+            
+            reduceCooldown = 300; // 降温的冷却时长
+            fireStopTimer = 60; // 停火时间
 
             OffsetLengthFromArm -= 18f;
 
@@ -486,23 +488,70 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             );
         }
 
+        // 散热时散发的火箭弹
         private void SpawnRockets()
         {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Item/AnomalysNanogunMPFBShot")
+                {
+                    Volume = 1f, // 👉 音量（默认1，可改）
+                    Pitch = 0f   // 👉 音调（默认0，可改）
+                },
+                GunTipPosition
+            );
+
+            Player player = Main.player[Projectile.owner];
+            NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
+
+            if (weapon == null)
+                return;
+
+            // ===== 扣除X发弹夹（只在右键触发时）=====
+            if (weapon.storedEffectPower > 0)
+            {
+                weapon.storedEffectPower -= 5;
+
+                if (weapon.storedEffectPower < 0)
+                    weapon.storedEffectPower = 0;
+            }
+
+            //int effectID = weapon.storedEffectID > 0 ? weapon.storedEffectID : -1;
+            int effectID = currentEffectID;
+
             Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
 
             for (int i = 0; i < 5; i++)
             {
-                float angle = MathHelper.Lerp(-0.3f, 0.3f, i / 4f);
+                float t = i / 4f; // 0~1
+
+                // ===== 对称角度（不变）=====
+                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
+
+                // ===== 距离中心的“偏移程度”（0在中间，1在两边）=====
+                float distFromCenter = Math.Abs(t - 0.5f) * 2f; // 0~1
+
+                // ===== 尖峰速度曲线（核心）=====
+                float speedFactor = 1f - distFromCenter; // 中间=1，两边=0
+
+                // 👉 再压一下，让尖峰更明显
+                speedFactor = (float)Math.Pow(speedFactor, 1.5f);
+
+                // ===== 最终速度 =====
+                float speed = MathHelper.Lerp(10f, 18f, speedFactor);
+                // 左右最慢≈6，中间最快≈14
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     GunTipPosition,
-                    dir.RotatedBy(angle) * 12f,
-                    ProjectileID.VortexBeaterRocket,
+                    dir.RotatedBy(angle) * speed,
+                    ModContent.ProjectileType<NewLegendSHPB>(),
                     Projectile.damage,
                     Projectile.knockBack,
-                    Projectile.owner
+                    Projectile.owner,
+                    effectID // ⭐ 现在是正确的
                 );
+                // 原先是漩涡火箭：ProjectileID.VortexBeaterRocket
+
             }
         }
 

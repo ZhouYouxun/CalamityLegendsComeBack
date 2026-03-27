@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override Color StartColor => new Color(20, 20, 20);
         public override Color EndColor => new Color(0, 0, 0);
 
-        public override float SquishyLightParticleFactor => 1.55f;
+        public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 1.55f;
 
         // ================= OnSpawn =================

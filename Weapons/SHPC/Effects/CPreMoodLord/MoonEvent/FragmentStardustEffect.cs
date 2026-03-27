@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 {
@@ -37,12 +38,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 initialized = true;
 
                 splitDepth = (int)projectile.ai[0];
-
-                // ⭐ 初始直接分裂一次（保证递归一定启动）
-                if (splitDepth < MaxDepth)
-                {
-                    Split(projectile);
-                }
             }
         }
 
@@ -72,15 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 d.noGravity = true;
             }
 
-            // ================= ⭐ 核心递归 =================
-            splitTimer++;
-
-            // ⭐ 更快触发，避免被爆炸抢先
-            if (!hitEnemy && splitDepth < MaxDepth && splitTimer >= 10)
-            {
-                splitTimer = 0;
-                Split(projectile);
-            }
+         
         }
 
         // ================= ModifyHitNPC =================
@@ -98,12 +85,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // 保持为空（递归完全由AI控制）
-        }
-
-        // ================= 核心递归 =================
-        private void Split(Projectile projectile)
-        {
             Vector2 baseDir = Main.rand.NextVector2Unit();
 
             for (int i = 0; i < 2; i++)
@@ -115,27 +96,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     velocity,
-                    projectile.type,
+                    ModContent.ProjectileType<FragmentStardust_Cell>(),
                     (int)(projectile.damage * 0.5f),
                     projectile.knockBack,
                     projectile.owner
                 );
 
-                if (Main.projectile.IndexInRange(projID))
-                {
-                    Projectile child = Main.projectile[projID];
+                //if (Main.projectile.IndexInRange(projID))
+                //{
+                //    Projectile child = Main.projectile[projID];
 
-                    // ===== 递归层级 =====
-                    int nextDepth = splitDepth + 1;
-                    child.ai[0] = nextDepth;
+                //    int nextDepth = splitDepth + 1;
 
-                    // ⭐ 关键：禁止子弹 proximity 爆炸（否则递归被打断）
-                    child.ai[1] = 0f;
+                //    // ===== 传递层级（必须！）=====
+                //    child.ai[0] = nextDepth;
 
-                    // ===== 生命周期控制 =====
-                    child.timeLeft = Math.Max(40, 100 - splitDepth * 12);
-                }
+                //    // ===== 生命周期用 nextDepth =====
+                //    child.timeLeft = Math.Max(40, 100 - nextDepth * 12);
+                //}
             }
         }
+
+
     }
 }

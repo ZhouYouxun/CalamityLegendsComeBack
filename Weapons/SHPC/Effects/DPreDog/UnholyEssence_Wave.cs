@@ -14,10 +14,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class UnholyEssence_Wave : ModProjectile
     {
-        // 使用自身贴图，如果你后面有专门贴图就直接放同名文件即可
-
-        // 自定义计时器，禁止使用 localAI
+        // 自定义计时器
         private int lifeTimer;
+        public override string Texture => "Terraria/Images/Projectile_0"; // 透明占位
 
         public override void SetStaticDefaults()
         {
@@ -28,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override void SetDefaults()
         {
             Projectile.width = 52;
-            Projectile.height = 52;
+            Projectile.height = 200;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
@@ -45,106 +44,118 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // ===== 前10帧不绘制 =====
+            if (lifeTimer < 10)
+                return true;
+
             SpriteBatch sb = Main.spriteBatch;
 
             Texture2D tex = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture).Value;
             Vector2 origin = tex.Size() * 0.5f;
 
-            // ======== 邪异黑绿调色盘 ========
-            Color[] unholyPalette = new Color[]
+            // ======== 亮黄色神圣调色盘 ========
+            Color[] palette = new Color[]
             {
-                new Color(210, 255, 180), // 浅绿高光
-                new Color(140, 255, 120), // 亮绿
-                new Color(70, 220, 90),   // 深绿
-                new Color(18, 28, 18),    // 黑绿核心
+                new Color(255, 255, 200), // 白金高光
+                new Color(255, 230, 120), // 亮黄
+                new Color(255, 180, 60),  // 橙黄
+                new Color(120, 80, 20),   // 暗金核心
             };
 
             sb.End();
-            sb.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.Additive,
-                SamplerState.LinearClamp,
-                DepthStencilState.None,
-                RasterizerState.CullNone,
-                null,
-                Main.GameViewMatrix.TransformationMatrix
-            );
+            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive);
 
-            // ======== Primitive 宽度函数 ========
-            float PrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
+            //float WidthFunc(float t, Vector2 v)
+            //{
+            //    float w = Projectile.width * 3.2f;
+            //    w *= MathHelper.Lerp(1f, 0.6f, t);
+            //    return w;
+            //}
+
+            //Color ColorFunc(float t, Vector2 v)
+            //{
+            //    int idx = (int)(t * (palette.Length - 1));
+            //    idx = Utils.Clamp(idx, 0, palette.Length - 1);
+
+            //    Color c = palette[idx];
+            //    c *= (1f - t) * Projectile.Opacity * 1.2f;
+            //    c.A = 0;
+            //    return c;
+            //}
+
+            //Vector2 offsetFunc(float t, Vector2 v)
+            //{
+            //    return Projectile.Size * 0.5f;
+            //}
+
+            // ===== 前推 oldPos 到弹幕前端 =====
+            Vector2 frontOffset = Projectile.velocity.SafeNormalize(Vector2.Zero) * (Projectile.width * 1.2f);
+
+            Vector2[] shiftedOldPos = new Vector2[Projectile.oldPos.Length];
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
-                float width = Projectile.width * 2.9f;
-
-                width *= MathHelper.SmoothStep(
-                    0.45f,
-                    1f,
-                    Utils.GetLerpValue(0f, 0.22f, completionRatio, true)
-                );
-
-                width *= MathHelper.Lerp(1f, 0.68f, completionRatio);
-                return width;
+                shiftedOldPos[i] = Projectile.oldPos[i] + frontOffset;
             }
 
-            // ======== Primitive 颜色函数 ========
-            Color PrimitiveTrailColor(float completionRatio, Vector2 vertexPos)
+            // ===== Shader（关键，不然永远是梯形）=====
+            GameShaders.Misc["CalamityMod:SideStreakTrail"].UseImage1("Images/Misc/Perlin");
+
+            // ===== 更宽 + 更圆润（无尖头）=====
+            float WidthFunc(float t, Vector2 v)
             {
-                int colorIndex = (int)(completionRatio * (unholyPalette.Length - 1));
-                colorIndex = Utils.Clamp(colorIndex, 0, unholyPalette.Length - 1);
+                // 👉 直接控制整体宽度（≈200px）
+                float baseWidth = 200f;
 
-                Color c = unholyPalette[colorIndex];
+                // 👉 使用更平滑的曲线（中段饱满）
+                float shape = (float)Math.Sin(t * MathHelper.Pi);
 
-                c *= Projectile.Opacity * (1f - completionRatio);
+                // 👉 提高指数，让两端更“钝”，不尖
+                shape = (float)Math.Pow(shape, 0.6f);
 
-                float speedBoost = Utils.GetLerpValue(4f, 16f, Projectile.velocity.Length(), true);
-                c *= MathHelper.Lerp(0.6f, 1.15f, speedBoost);
+                // 👉 再稍微抬高尾部，避免收成尖点
+                float tailLift = 0.25f; // 越大越不尖
+                shape = MathHelper.Lerp(tailLift, 1f, shape);
 
+                return baseWidth * shape;
+            }
+
+            // ===== 颜色函数（保持你原本）=====
+            Color ColorFunc(float t, Vector2 v)
+            {
+                int idx = (int)(t * (palette.Length - 1));
+                idx = Utils.Clamp(idx, 0, palette.Length - 1);
+
+                Color c = palette[idx];
+                c *= (1f - t) * Projectile.Opacity * 1.2f;
                 c.A = 0;
                 return c;
             }
 
-            // ======== 拖尾整体前推，让丝带更贴近前沿 ========
-            Vector2 frontOffset = Projectile.velocity.SafeNormalize(Vector2.UnitX) * (Projectile.width * 1.15f);
-            Vector2[] shiftedOldPos = new Vector2[Projectile.oldPos.Length];
-
-            for (int i = 0; i < Projectile.oldPos.Length; i++)
-                shiftedOldPos[i] = Projectile.oldPos[i] + frontOffset;
-
-            // ======== 偏移函数：略微抬升，增强“半月冲切感” ========
-            Vector2 PrimitiveOffsetFunction(float t, Vector2 vertexPos)
+            // ===== 偏移（稍微抬高）=====
+            Vector2 offsetFunc(float t, Vector2 v)
             {
-                Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                return Projectile.Size * 0.5f + forward * Projectile.scale * 2f;
+                return Projectile.Size * 0.5f
+                    + Projectile.velocity.SafeNormalize(Vector2.Zero) * 4f;
             }
 
-            GameShaders.Misc["CalamityMod:SideStreakTrail"].UseImage1("Images/Misc/Perlin");
-
+            // ===== 渲染 =====
             PrimitiveRenderer.RenderTrail(
                 shiftedOldPos,
                 new PrimitiveSettings(
-                    PrimitiveWidthFunction,
-                    PrimitiveTrailColor,
-                    PrimitiveOffsetFunction,
+                    WidthFunc,
+                    ColorFunc,
+                    offsetFunc,
                     shader: GameShaders.Misc["CalamityMod:SideStreakTrail"]
                 ),
                 60
             );
 
             sb.End();
-            sb.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                SamplerState.LinearClamp,
-                DepthStencilState.None,
-                RasterizerState.CullNone,
-                null,
-                Main.GameViewMatrix.TransformationMatrix
-            );
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
-            // ======== 主体绘制 ========
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
             Main.spriteBatch.Draw(
                 tex,
-                drawPos,
+                Projectile.Center - Main.screenPosition,
                 null,
                 lightColor,
                 Projectile.rotation,
@@ -154,160 +165,110 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 0f
             );
 
-            // ======== 第二层常规虚化拖尾 ========
-            for (int i = 0; i < Projectile.oldPos.Length; i++)
-            {
-                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                float fade = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-
-                Color c = Color.Lerp(new Color(20, 30, 20), new Color(120, 255, 120), fade) * 0.42f * fade;
-                c.A = 0;
-
-                float scale = Projectile.scale * (0.62f + fade * 0.38f);
-
-                Main.spriteBatch.Draw(
-                    tex,
-                    pos,
-                    null,
-                    c,
-                    Projectile.rotation,
-                    origin,
-                    scale,
-                    SpriteEffects.None,
-                    0f
-                );
-            }
-
             return false;
         }
 
         public override void AI()
         {
-            Projectile.velocity *= 1.02f;
-
             lifeTimer++;
 
+            Projectile.velocity *= 1.03f; // 更狂一点
+
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 backDir = -forward;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
-            // 轻微衰减，让它更像滑行的冲击波
-            Projectile.velocity *= 0.992f;
+            Lighting.AddLight(Projectile.Center, new Vector3(0.8f, 0.6f, 0.1f));
 
-            // 照明
-            Lighting.AddLight(Projectile.Center, new Vector3(0.12f, 0.42f, 0.12f) * 1.2f);
+            Vector2 head = Projectile.Center + forward * 20f;
 
-            // 波头位置
-            Vector2 headPos = Projectile.Center + forward * (Projectile.width * 0.45f);
+            float t = Main.GameUpdateCount * 0.2f;
+            float swing = (float)Math.Sin(t * 2.5f) * 8f;
 
-            // 数学节奏参数
-            float t = Main.GameUpdateCount * 0.14f;
-            float sideSwing = (float)Math.Sin(t * 2.2f) * 6f;
-            float pulse = (float)Math.Sin(t * 1.35f) * 0.5f + 0.5f;
-            float squeeze = (float)Math.Cos(t * 2.7f) * 2.2f;
 
-            // ================= 主体黑绿弧焰 =================
-            if (Main.rand.NextBool(2))
             {
-                for (int i = 0; i < 2; i++)
+
+                // ===== 在弹幕体积内随机取点 =====
+                Vector2 GetRandomPosInProjectile()
                 {
-                    Vector2 sideOffset = right * (sideSwing + Main.rand.NextFloat(-2f, 2f)) * 0.28f;
-                    Vector2 spawnPos = headPos + sideOffset;
-
-                    Vector2 vel = backDir.RotatedBy(Main.rand.NextFloat(-0.26f, 0.26f)) * Main.rand.NextFloat(0.8f, 2.7f);
-
-                    SquishyLightParticle flare = new SquishyLightParticle(
-                        spawnPos,
-                        vel,
-                        Main.rand.NextFloat(0.42f, 0.7f + pulse * 0.15f),
-                        Main.rand.NextBool(3) ? new Color(180, 255, 170) : new Color(80, 220, 100),
-                        Main.rand.Next(14, 24),
-                        1f,
-                        Main.rand.NextFloat(1.15f, 1.8f)
+                    return Projectile.Center + new Vector2(
+                        Main.rand.NextFloat(-Projectile.width * 0.5f, Projectile.width * 0.5f),
+                        Main.rand.NextFloat(-Projectile.height * 0.5f, Projectile.height * 0.5f)
                     );
-                    GeneralParticleHandler.SpawnParticle(flare);
                 }
-            }
 
-            // ================= 外沿邪雾 =================
-            if (Main.rand.NextBool(3))
-            {
-                Vector2 ringOffset = right * Main.rand.NextFloat(-10f, 10f) + forward * Main.rand.NextFloat(-4f, 4f);
-
-                WaterFlavoredParticle mist = new WaterFlavoredParticle(
-                    Projectile.Center + ringOffset,
-                    backDir * Main.rand.NextFloat(0.2f, 0.55f),
-                    false,
-                    Main.rand.Next(16, 24),
-                    0.65f + Main.rand.NextFloat(0.2f),
-                    Main.rand.NextBool(2) ? new Color(35, 60, 35) : new Color(90, 255, 120)
-                );
-                GeneralParticleHandler.SpawnParticle(mist);
-            }
-
-            // ================= 两侧交错火花，不照抄 Sunset 的喷流 =================
-            if (lifeTimer % 2 == 0)
-            {
-                Vector2 sideA = headPos + right * (4.5f + squeeze);
-                Vector2 sideB = headPos - right * (4.5f + squeeze);
-
-                Dust dustA = Dust.NewDustPerfect(
-                    sideA,
-                    Main.rand.NextBool(2) ? DustID.GreenTorch : DustID.GemEmerald,
-                    backDir * Main.rand.NextFloat(0.7f, 1.3f) + right * Main.rand.NextFloat(-0.35f, 0.35f),
-                    0,
-                    new Color(170, 255, 180),
-                    1.1f + pulse * 0.15f
-                );
-                dustA.noGravity = true;
-
-                Dust dustB = Dust.NewDustPerfect(
-                    sideB,
-                    Main.rand.NextBool(2) ? DustID.GreenTorch : DustID.GemEmerald,
-                    backDir * Main.rand.NextFloat(0.7f, 1.3f) - right * Main.rand.NextFloat(-0.35f, 0.35f),
-                    0,
-                    new Color(90, 220, 100),
-                    1.05f + pulse * 0.15f
-                );
-                dustB.noGravity = true;
-            }
-
-            // ================= 中轴高能点火花 =================
-            if (Main.rand.NextBool(2))
-            {
-                PointParticle spark = new PointParticle(
-                    headPos,
-                    backDir.RotatedByRandom(0.22f) * Main.rand.NextFloat(1.2f, 2.8f),
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.75f, 1.1f),
-                    Main.rand.NextBool(2) ? new Color(160, 255, 170) : new Color(60, 180, 80)
-                );
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-
-            // ================= 半月刀盘感：围绕主体做一小段弧线 Dust =================
-            if (lifeTimer % 3 == 0)
-            {
-                float baseAngle = Projectile.velocity.ToRotation();
-
-                for (int i = -1; i <= 1; i++)
+                // ===== 主体爆裂火焰（范围化 + 频率↑）=====
+                for (int i = 0; i < 6; i++) // 原来2 → 6
                 {
-                    float angle = baseAngle + i * 0.35f;
-                    Vector2 arcOffset = angle.ToRotationVector2() * (10f + pulse * 3f);
+                    Vector2 pos = GetRandomPosInProjectile();
 
-                    Dust arcDust = Dust.NewDustPerfect(
-                        Projectile.Center + arcOffset,
-                        DustID.GreenTorch,
-                        backDir * Main.rand.NextFloat(0.3f, 0.75f),
-                        0,
-                        new Color(140, 255, 140),
-                        1.0f
+                    Vector2 vel =
+                        (-forward).RotatedByRandom(0.5f)
+                        + right * Main.rand.NextFloat(-1.2f, 1.2f);
+
+                    vel *= Main.rand.NextFloat(1f, 4f);
+
+                    SquishyLightParticle p = new SquishyLightParticle(
+                        pos,
+                        vel,
+                        Main.rand.NextFloat(0.6f, 1.2f),
+                        Main.rand.NextBool() ? new Color(255, 230, 120) : new Color(255, 150, 60),
+                        Main.rand.Next(16, 26),
+                        1f,
+                        Main.rand.NextFloat(1.4f, 2.2f)
                     );
-                    arcDust.noGravity = true;
-                    arcDust.velocity *= 0.6f;
+                    GeneralParticleHandler.SpawnParticle(p);
+                }
+
+                // ===== 火花喷射（范围化 + 频率↑）=====
+                if (lifeTimer % 1 == 0) // 原来 %2 → 每帧
+                {
+                    for (int i = 0; i < 5; i++) // 原来2 → 5
+                    {
+                        Vector2 pos = GetRandomPosInProjectile();
+
+                        Vector2 vel =
+                            (-forward).RotatedByRandom(0.8f)
+                            + right * Main.rand.NextFloat(-1.5f, 1.5f);
+
+                        vel *= Main.rand.NextFloat(2f, 7f);
+
+                        Dust d = Dust.NewDustPerfect(
+                            pos,
+                            6,
+                            vel,
+                            0,
+                            new Color(255, 180, 60),
+                            Main.rand.NextFloat(1.3f, 2.0f)
+                        );
+                        d.noGravity = true;
+                    }
+                }
+
+                // ===== 中轴爆点（改为体积爆点）=====
+                if (Main.rand.NextBool(1)) // 原来 NextBool(2) → 更频繁
+                {
+                    for (int i = 0; i < 3; i++) // 原来1 → 3
+                    {
+                        Vector2 pos = GetRandomPosInProjectile();
+
+                        Vector2 vel =
+                            (-forward).RotatedByRandom(0.5f)
+                            + right * Main.rand.NextFloat(-1f, 1f);
+
+                        vel *= Main.rand.NextFloat(2f, 6f);
+
+                        PointParticle spark = new PointParticle(
+                            pos,
+                            vel,
+                            false,
+                            Main.rand.Next(10, 16),
+                            Main.rand.NextFloat(1f, 1.3f),
+                            new Color(255, 220, 100)
+                        );
+                        GeneralParticleHandler.SpawnParticle(spark);
+                    }
                 }
             }
         }
@@ -316,47 +277,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             Vector2 pos = Projectile.Center;
 
-            // ================= 爆心主爆 =================
-            Particle explosion = new DetailedExplosion(
-                pos,
-                Vector2.Zero,
-                new Color(80, 140, 80) * 0.9f,
-                Vector2.One,
-                Main.rand.NextFloat(-3f, 3f),
-                0.18f,
-                0.42f,
-                10
-            );
-            GeneralParticleHandler.SpawnParticle(explosion);
-
-            // ================= 黑绿脉冲环 =================
-            Particle pulse = new CustomPulse(
-                pos,
-                Vector2.Zero,
-                new Color(140, 255, 140),
-                "CalamityMod/Particles/BloomCircle",
-                Vector2.One * 1.15f,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.04f,
-                0.24f,
-                20,
-                true
-            );
-            GeneralParticleHandler.SpawnParticle(pulse);
-
-            // ================= 爆散火花 =================
-            for (int i = 0; i < 12; i++)
+            // ===== 更狂野爆炸 =====
+            for (int i = 0; i < 22; i++)
             {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 6f);
+                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 8f);
 
                 GlowSparkParticle spark = new GlowSparkParticle(
                     pos,
                     vel,
                     false,
-                    Main.rand.Next(8, 12),
-                    Main.rand.NextFloat(0.08f, 0.14f),
-                    Main.rand.NextBool(2) ? new Color(180, 255, 180) : new Color(70, 220, 90),
-                    new Vector2(1.9f, 0.45f),
+                    Main.rand.Next(10, 16),
+                    0.12f,
+                    Main.rand.NextBool() ? new Color(255, 240, 120) : new Color(255, 120, 60),
+                    new Vector2(2.2f, 0.5f),
                     true,
                     false,
                     1
@@ -364,37 +297,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            // ================= 爆心高光 =================
-            for (int i = 0; i < 6; i++)
-            {
-                SparkleParticle sparkle = new SparkleParticle(
-                    pos + Main.rand.NextVector2Circular(14f, 14f),
-                    Vector2.Zero,
-                    new Color(220, 255, 220),
-                    new Color(100, 255, 120),
-                    1.4f + Main.rand.NextFloat(0.35f),
-                    10 + Main.rand.Next(4),
-                    Main.rand.NextFloat(-0.05f, 0.05f),
-                    1.9f
-                );
-                GeneralParticleHandler.SpawnParticle(sparkle);
-            }
-
-            // ================= Dust 爆散 =================
-            for (int i = 0; i < 18; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    pos,
-                    Main.rand.NextBool(2) ? DustID.GreenTorch : DustID.GemEmerald,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5.8f),
-                    0,
-                    Main.rand.NextBool(2) ? new Color(170, 255, 170) : new Color(90, 220, 100),
-                    Main.rand.NextFloat(1f, 1.55f)
-                );
-                dust.noGravity = true;
-            }
-
-            // ================= 原地爆炸弹幕 =================
+            // 爆炸弹幕（保留）
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 pos,
@@ -405,33 +308,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile.owner
             );
 
-            Projectile.Kill();
+            //Projectile.Kill();
         }
 
         public override void OnKill(int timeLeft)
         {
-            // 死亡补一点收束余辉，避免空掉
-            for (int i = 0; i < 8; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    Main.rand.NextBool(2) ? DustID.GreenTorch : DustID.GemEmerald,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 3.4f),
-                    0,
-                    new Color(120, 255, 120),
-                    Main.rand.NextFloat(0.9f, 1.3f)
-                );
-                dust.noGravity = true;
-            }
+            // 清空
         }
-
-
-
-
-
-
-
-
-
     }
 }

@@ -56,7 +56,6 @@ SHPCAmmo37: "[CLCB]   "
 SHPCAmmo38: "[CLCB]   "
 SHPCAmmo39: "[CLCB]   "
 
-
 Buffs: {
 	SHPCRight_DeBuff: {
 		DisplayName: S H P C Right_ De Buff
@@ -73,4 +72,23 @@ DeveloperItems: {
 
 		LAS17Proj.DisplayName: L A S17 Proj
 	}
+}
+
+Projectiles: {
+	EnergyCore_Spark.DisplayName: Energy Core_ Spark
+	PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+	Typeless.StormlionMandible_ARC.DisplayName: Stormlion Mandible_ A R C
+	EssenceofHavoc_INV.DisplayName: Essenceof Havoc_ I N V
+	EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
+	EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
+	Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
+	LivingShard_Healing.DisplayName: Living Shard_ Healing
+	FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
+	DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
+	UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
+	NewLegendSHPB.DisplayName: New Legend S H P B
+	NewLegendSHPE.DisplayName: New Legend S H P E
+	SHPCRight_HoulOut.DisplayName: S H P C Right_ Houl Out
+	SHPCRight_Proj.DisplayName: S H P C Right_ Proj
+	FragmentStardust_Cell.DisplayName: Fragment Stardust_ Cell
 }

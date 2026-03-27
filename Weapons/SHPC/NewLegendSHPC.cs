@@ -192,6 +192,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override bool? UseItem(Player player)
         {
+            // ⭐ 右键：完全不参与弹药系统
+            if (player.altFunctionUse == 2)
+                return true;
+
             // 左键开火时先消耗一发内部灌注
             if (storedEffectPower > 0)
                 storedEffectPower--;
@@ -356,8 +360,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     Item.damage,
                     Item.knockBack,
                     player.whoAmI,
-                    GetRightClickProgressState() // ai[0]
-                );
+                    GetRightClickProgressState(),                 // ai[0]
+                    (storedEffectPower > 0 && storedEffectID > 0)
+                        ? storedEffectID
+                        : EffectRegistry.GetEffectIDByAmmo(FindEffectAmmo(player)));
             }       
 
             if (player.itemAnimation > 0 && player.altFunctionUse != 2)

@@ -218,59 +218,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
 
             // 光粒子散射特效
-if (Projectile.owner == Main.myPlayer && SquishyLightParticleFactor > 0f)
-{
-    // ===== SquishyLightParticle 爆散 =====
-    int particleCount = (int)(25 * SquishyLightParticleFactor);
+            if (Projectile.owner == Main.myPlayer && SquishyLightParticleFactor > 0f)
+            {
+                // ===== SquishyLightParticle 爆散 =====
+                int particleCount = (int)(25 * SquishyLightParticleFactor);
 
-    for (int i = 0; i < particleCount; i++)
-    {
-        Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(6f, 11f) * SquishyLightParticleFactor * 0.5f;
+                for (int i = 0; i < particleCount; i++)
+                {
+                    Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(6f, 11f) * SquishyLightParticleFactor * 0.5f;
 
-        float scale = Main.rand.NextFloat(0.8f, 1.4f) * SquishyLightParticleFactor * 0.5f;
+                    float scale = Main.rand.NextFloat(0.8f, 1.4f) * SquishyLightParticleFactor * 0.5f;
 
-        Color particleColor = Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat());
+                    Color particleColor = Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat());
 
-        int lifetime = Main.rand.Next(30, 45);
+                    int lifetime = Main.rand.Next(30, 45);
 
-        SquishyLightParticle particle = new(
-            Projectile.Center,
-            velocity,
-            scale,
-            particleColor,
-            lifetime
-        );
+                    SquishyLightParticle particle = new(
+                        Projectile.Center,
+                        velocity,
+                        scale,
+                        particleColor,
+                        lifetime
+                    );
 
-        GeneralParticleHandler.SpawnParticle(particle);
-    }
-}
+                    GeneralParticleHandler.SpawnParticle(particle);
+                }
+            }
 
 
-// 光球多层爆炸
-if (Projectile.owner == Main.myPlayer && ExplosionPulseFactor > 0f)
-{
-    // ===== 爆炸核心参数 =====
-    float startSize = 0.07f * ExplosionPulseFactor;
-    float endSize = 0.33f * ExplosionPulseFactor;
-    float num2 = Projectile.scale;
+            // 光球多层爆炸
+            if (Projectile.owner == Main.myPlayer && ExplosionPulseFactor > 0f)
+            {
+                // ===== 爆炸核心参数 =====
+                float startSize = 0.07f * ExplosionPulseFactor;
+                float endSize = 0.33f * ExplosionPulseFactor;
+                float num2 = Projectile.scale;
 
-    Color color = ThemeColor;
+                Color color = ThemeColor;
 
-    Particle p1 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
-        "CalamityMod/Particles/BloomCircle", Vector2.One * 0.33f, 
-        Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
-    GeneralParticleHandler.SpawnParticle(p1);
+                Particle p1 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
+                    "CalamityMod/Particles/BloomCircle", Vector2.One * 0.33f, 
+                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
+                GeneralParticleHandler.SpawnParticle(p1);
 
-    Particle p2 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
-        "CalamityMod/Particles/BloomRing", Vector2.One * 0.33f, 
-        Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
-    GeneralParticleHandler.SpawnParticle(p2);
+                Particle p2 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
+                    "CalamityMod/Particles/BloomRing", Vector2.One * 0.33f, 
+                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
+                GeneralParticleHandler.SpawnParticle(p2);
 
-    Particle p3 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
-        "CalamityMod/Particles/PlasmaExplosion", Vector2.One * 0.33f, 
-        Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
-    GeneralParticleHandler.SpawnParticle(p3);
-}
+                Particle p3 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
+                    "CalamityMod/Particles/PlasmaExplosion", Vector2.One * 0.33f, 
+                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
+                GeneralParticleHandler.SpawnParticle(p3);
+            }
 
 
             // 插件死亡逻辑

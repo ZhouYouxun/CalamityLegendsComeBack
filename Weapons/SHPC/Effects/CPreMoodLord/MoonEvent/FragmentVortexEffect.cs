@@ -1,5 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -31,11 +32,60 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             projectile.timeLeft = 25;
         }
 
+        private int fireTimer;
+        private float spiralAngle;
+
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
             // 抵消默认减速，尽量保持高速感
             projectile.velocity *= 1.020408f;
+
+
+            {
+                // ===== 单螺旋导弹释放 =====
+                fireTimer++;
+
+                if (fireTimer >= 2)
+                {
+                    fireTimer = 0;
+
+                    // ===== 后方方向 =====
+                    Vector2 backDir = -projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+                    // ===== 单螺旋角度（正弦摆动）=====
+                    float maxAngle = MathHelper.ToRadians(55f); // 左右摆幅（你可以调）
+                    spiralAngle += 0.28f; // 摆动速度
+
+                    float angleOffset = (float)Math.Sin(spiralAngle) * maxAngle;
+
+                    Vector2 shootDir = backDir.RotatedBy(angleOffset);
+
+                    Vector2 velocity = shootDir * 8.5f;
+
+                    int projID = Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        velocity,
+                        ProjectileID.VortexBeaterRocket,
+                        (int)(projectile.damage * 0.2f),
+                        1f,
+                        projectile.owner
+                    );
+
+                    if (Main.projectile.IndexInRange(projID))
+                    {
+                        Projectile missile = Main.projectile[projID];
+                        missile.friendly = true;
+                        missile.hostile = false;
+                        missile.usesLocalNPCImmunity = true;
+                        missile.localNPCHitCooldown = 10;
+                    }
+                }
+            }
+
+
+
 
             // 青绿色飞行粒子
             if (Main.rand.NextBool(2))
@@ -115,35 +165,67 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 dust.noGravity = true;
             }
 
-            // 平均朝正前方散射导弹
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            // 5发，更像“正前方扇区平均展开”
-            float[] angles = { -20f, -10f, 0f, 10f, 20f };
 
-            for (int i = 0; i < angles.Length; i++)
+
+
+
+
+
+
             {
-                Vector2 velocity = forward.RotatedBy(MathHelper.ToRadians(angles[i])) * 10f;
+                // ===== 前向导弹：傅里叶调制七发结构 =====
+                Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-                int projID = Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center,
-                    velocity,
-                    ProjectileID.VortexBeaterRocket,
-                    (int)(projectile.damage * 0.2f),
-                    1f,
-                    projectile.owner
-                );
+                // 基础对称索引（保证结构稳定）
+                float[] baseIndex = { -3f, -2f, -1f, 0f, 1f, 2f, 3f };
 
-                if (Main.projectile.IndexInRange(projID))
+                for (int i = 0; i < 7; i++)
                 {
-                    Projectile missile = Main.projectile[projID];
-                    missile.friendly = true;
-                    missile.hostile = false;
-                    missile.usesLocalNPCImmunity = true;
-                    missile.localNPCHitCooldown = 10;
+                    float t = baseIndex[i];
+
+                    // ===== 角度：线性项 + 正弦调制（傅里叶一阶）=====
+                    float baseAngle = t * 9f; // 基础展开（线性）
+                    float waveOffset = 6f * (float)Math.Sin(t * 1.3f); // 波形扰动
+
+                    float finalAngle = baseAngle + waveOffset;
+
+                    // ===== 方向 =====
+                    Vector2 dir = forward.RotatedBy(MathHelper.ToRadians(finalAngle));
+
+                    // ===== 速度：中心强，两侧弱（高斯分布感）=====
+                    float speedFactor = 1f - Math.Abs(t) / 3f; // [-3,3] → [0,1]
+                    float speed = MathHelper.Lerp(7.5f, 13f, speedFactor);
+
+                    Vector2 velocity = dir * speed;
+
+                    int projID = Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        velocity,
+                        ProjectileID.VortexBeaterRocket,
+                        (int)(projectile.damage * 0.2f),
+                        1f,
+                        projectile.owner
+                    );
+
+                    if (Main.projectile.IndexInRange(projID))
+                    {
+                        Projectile missile = Main.projectile[projID];
+                        missile.friendly = true;
+                        missile.hostile = false;
+                        missile.usesLocalNPCImmunity = true;
+                        missile.localNPCHitCooldown = 10;
+                    }
                 }
-            }
+            }           
+
+
+            
+
+
+
+
         }
     }
 }

@@ -390,18 +390,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(glow);
             }
 
-            // 小冲击波
-            Particle pulse = new DirectionalPulseRing(
-                Projectile.Center,
-                Projectile.velocity * 0.75f,
-                Color.Gold,
-                new Vector2(1f, 2.5f),
-                Projectile.rotation - MathHelper.PiOver4,
-                0.2f,
-                0.03f,
-                20
-            );
-            GeneralParticleHandler.SpawnParticle(pulse);
+            //// 小冲击波
+            //Particle pulse = new DirectionalPulseRing(
+            //    Projectile.Center,
+            //    Projectile.velocity * 0.75f,
+            //    Color.Gold,
+            //    new Vector2(1f, 2.5f),
+            //    Projectile.rotation - MathHelper.PiOver4,
+            //    0.2f,
+            //    0.03f,
+            //    20
+            //);
+            //GeneralParticleHandler.SpawnParticle(pulse);
         }
 
         #endregion

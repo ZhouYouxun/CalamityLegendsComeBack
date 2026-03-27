@@ -25,6 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.timeLeft = 120;
 
             Projectile.tileCollide = true;
+            Projectile.penetrate = 6;
 
             Projectile.extraUpdates = 10; // 高更新频率核心
 
@@ -44,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Color c2 = new Color(255, 200, 120);
 
             // Dust几何线
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 1; i++)
             {
                 Vector2 offset = Main.rand.NextVector2Circular(2f, 2f);
 
@@ -84,5 +85,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             return false;
         }
+
+
+
     }
 }
