@@ -17,10 +17,12 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Terraria.Localization;
+
 
 namespace CalamityLegendsComeBack.Weapons.SHPC
 {
-    public class NewLegendSHPC : LegendaryItem, ILocalizedModType
+    public class NewLegendSHPC : ModItem, ILocalizedModType
     {
         #region 基础属性和资源管理
 
@@ -61,7 +63,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 后坐力动画计数
         public int recoilProgress = 0;
 
-        public override Color? TooltipExtensionColor => new Color(31, 251, 255);
 
         public override void SetDefaults()
         {
@@ -479,33 +480,51 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region 文本编排与拼接
 
-        // ==================== Tooltip 文本部分 ====================
-        public override void ModifyTooltips(List<TooltipLine> list)
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            string currentAmmoName = storedEffectPower <= 0 ? "No Ammo Injected" : GetCurrentAmmoDisplayName();
+            // ===== 左键固定文案 =====
+            string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro");
 
-            if (Main.zenithWorld)
-            {
-                list.FindAndReplace("[GFB]", Lang.SupportGlyphs(this.GetLocalizedValue("TooltipGFB")));
-            }
-            else
-            {
-                // 这里沿用原版动态替换的结构
-                // 当前只显示“剩余灌注量 + 当前灌注弹药名”
-                string text = $"Injected Ammo: {currentAmmoName}\nStored Power: {storedEffectPower}";
-                list.FindAndReplace("[GFB]", text);
-            }
-
+            // ===== 左键弹药文案 =====
+            string ammoText = "";
             if (storedEffectID > 0)
             {
                 string key = $"Mods.CalamityLegendsComeBack.SHPCAmmo{storedEffectID}";
-                string text = Language.GetTextValue(key);
-
-                list.Add(new TooltipLine(Mod, "EffectAmmoInfo", text)
-                {
-                    OverrideColor = FindColorForCurrentEffect()
-                });
+                ammoText = Language.GetTextValue(key);
             }
+
+            // ===== 右键固定文案 =====
+            string rightIntro = this.GetLocalizedValue("SHPC_RightIntro");
+
+            // ===== 右键阶段 =====
+            int state = GetRightClickProgressState();
+            string rightStateText = this.GetLocalizedValue($"SHPCRight{state + 1}");
+
+            // ===== 最后一行 =====
+            string finalLine = this.GetLocalizedValue("SHPC_Final");
+
+            // ===== 传奇文本 =====
+            string legendaryText = this.GetLocalizedValue("LegendaryText");
+
+            // ===== Shift提示 =====
+            string shiftHint = this.GetLocalizedValue("LegendaryHint");
+
+            // ===== 明确检测 Shift 是否按下 =====
+            string legendarySection = shiftHint;
+            if (Main.keyState.PressingShift())
+                legendarySection = legendaryText;
+
+            // ===== 拼接 =====
+            string finalText =
+                leftIntro + "\n" +
+                ammoText + "\n\n" +
+                rightIntro + "\n" +
+                rightStateText + "\n\n" +
+                finalLine + "\n\n" +
+                legendarySection + "\n";
+
+            // ===== 替换 Tooltip =====
+            tooltips.FindAndReplace("[GFB]", finalText);
         }
         #endregion
 
@@ -520,15 +539,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void RightClick(Player player)
         {
-            // 清空灌注
+            // ===== 如果当前有装填 =====
+            if (storedEffectID > 0 && storedAmmoType > ItemID.None && storedEffectPower > 0)
+            {
+                // 获取当前弹药总容量（动态）
+                int maxShots = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
+
+                if (maxShots > 0)
+                {
+                    // 概率 = 当前剩余 / 总量
+                    float returnChance = storedEffectPower / (float)maxShots;
+
+                    // 判定是否返还
+                    if (Main.rand.NextFloat() < returnChance)
+                    {
+                        // 返还材料（1个）
+                        player.QuickSpawnItem(player.GetSource_FromThis(), storedAmmoType, 1);
+                    }
+                }
+            }
+
+            // ===== 清空灌注 =====
             storedEffectPower = 0;
             storedAmmoType = ItemID.None;
             storedEffectID = 0;
 
-            // 播放一个提示音（可选）
+            // ===== 音效 =====
             SoundEngine.PlaySound(SoundID.MenuClose, player.Center);
         }
-
 
         public override bool ConsumeItem(Player player)
         {

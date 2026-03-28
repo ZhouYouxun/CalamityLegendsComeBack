@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 
 
         }
-
+        public override bool EnableDefaultSlowdown => true;
         // 每帧AI（白卷）
         public override void AI(Projectile projectile, Player owner)
         {

@@ -6,6 +6,10 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
@@ -40,14 +44,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new DepthCellsEffect()); // 深渊细胞 17
             EffectRegistry.RegisterEffect(new PlagueCellEffect()); // 瘟疫罐 18
 
-            // 19、20 为跳过的灾厄尘和甲虫外壳
+            // 19、20 为跳过的灾厄尘和甲虫外壳[这个大概率不会有了]
 
             EffectRegistry.RegisterEffect(new FragmentSolarEffect()); // 日耀碎片 21
             EffectRegistry.RegisterEffect(new FragmentVortexEffect()); // 漩涡碎片 22
             EffectRegistry.RegisterEffect(new FragmentNebulaEffect()); // 星云碎片 23
             EffectRegistry.RegisterEffect(new FragmentStardustEffect()); // 星尘碎片 24
             EffectRegistry.RegisterEffect(new FragmentEntropyEffect()); // 冥思溶剂 25
-
 
 
             EffectRegistry.RegisterEffect(new UnholyEssenceEffect()); // 浊火精华 26
@@ -57,26 +60,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new BloodstoneCoreEffect()); // 血石核心 29
             EffectRegistry.RegisterEffect(new RuinousSoulEffect()); // 毁灭之灵 30
 
-            EffectRegistry.RegisterEffect(new TitanHeartEffect()); // 扭曲虚空 31
+            EffectRegistry.RegisterEffect(new TwistingNetherEffect()); // 扭曲虚空 31
             EffectRegistry.RegisterEffect(new DarkPlasmaEffect()); // 暗离子体 32
 
 
 
 
-
-
-
-            // 以后就一直往这里加 ↓↓↓
-            // EffectRegistry.RegisterEffect(new XXXEffect());
-            // EffectRegistry.RegisterEffect(new YYYEffect());
-
-
-
-
-
-
+            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 恒温能量 33
+            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 梦魇魔能 34
+            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 日蚀之阴 35
+            EffectRegistry.RegisterEffect(new AscendantSpiritEffect()); // 化神魂晶 36
+            EffectRegistry.RegisterEffect(new YharonSoulFragmentEffect()); // 龙魂碎片 37
+            EffectRegistry.RegisterEffect(new ExoPrismEffect()); // 星流棱晶 38
+            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 湮灭余烬 39
 
 
         }
+
+
+
+
+
+
     }
 }

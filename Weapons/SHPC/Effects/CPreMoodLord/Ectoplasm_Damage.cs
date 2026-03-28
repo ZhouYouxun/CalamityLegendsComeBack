@@ -7,8 +7,9 @@ using System;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 {
-    public class Ectoplasm_Damage : ModProjectile
+    public class Ectoplasm_Damage : ModProjectile, ILocalizedModType
     {
+        public new string LocalizationCategory => "Projectiles";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetStaticDefaults()

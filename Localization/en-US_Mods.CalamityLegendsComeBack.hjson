@@ -2,93 +2,137 @@ Items: {
 	Weapons: {
 		Magic: {
 			NewLegendSHPC: {
-				DisplayName: SHPC
-				Tooltip:
-					'''
-					我们从未认识彼此，但我从未质疑过你的实力
-					你的旅途或将艰辛，或将坎坷
-					但无论如何，让我跟你走完旅途
-					当前弹药灌注为：
-					'''
-			}
+                DisplayName: SHPC - Return of Legends
+
+                SHPC_LeftIntro:
+                '''
+                [c/66CCFF:Left Click: Fires an energy projectile.]
+                [c/FFD966:Materials in your inventory can be injected and consumed per shot.]
+                [c/99CCFF:Automatically reloads once energy is depleted.]
+                [c/AAAAAA:Can still fire without injection, but applies no special effects.]
+                [c/DDA0FF:Current injection effect:]
+                '''
+
+                SHPC_RightIntro:
+                '''
+                [c/66CCFF:Right Click: After a brief charge, unleashes a gatling-style laser barrage.]
+                [c/FFB347:Sustained fire builds up heat, increasing in stages.]
+                [c/99CCFF:Heat gradually dissipates once firing stops.]
+                [c/DDA0FF:During firing, pressing left click forcibly vents heat, releasing 5 energy projectiles and briefly interrupting the attack.]
+                [c/FF7043:Higher heat intensifies side effects, but also enhances laser performance.]
+                '''
+
+                SHPC_Final: "[c/99B3FF:The system continues to evolve. Existing flaws remain unresolved, yet its potential persists. Perhaps one day, it will be truly realized.]"
+
+                SHPCRight1: "[c/8FA2FF:Unlocked up to Tier III heat: generates a small explosion upon dissipation.]"
+                SHPCRight2: "[c/8FA2FF:Unlocked up to Tier IV heat: ignores defense and increases damage, but suppresses life regeneration.]"
+                SHPCRight3: "[c/8FA2FF:Unlocked up to Tier V heat: lasers split, and manual cooling is unlocked.]"
+                SHPCRight4: "[c/8FA2FF:Unlocked up to Tier VI heat: gains tracking capability while continuously burning the user.]"
+                SHPCRight5: "[c/8FA2FF:Unlocked up to Tier VII heat: infinite piercing with bonus damage based on target max health, but overheating rapidly consumes the user.]"
+
+                Tooltip: "[GFB]"
+
+                TooltipGFB: Have you finally made it here?
+
+                LegendaryHint: "[c/6C8EFF:Hold Shift to access the record]"
+
+                LegendaryText:
+                '''
+                [c/99B3FF:So... you have arrived.]
+                [c/66CCFF:The boundaries of this world have been rewritten, time and time again.]
+                [c/7F8FA6:What was once called “Legend” no longer exists.]
+                [c/7F8FA6:We were dismantled, reassembled, or simply forgotten.]
+                [c/DDA0FF:But I have not forgotten you.]
+                [c/FFB347:Again and again, you challenged all of this—relentlessly.]
+                [c/66CCFF:Now, I return once more. Let us begin.]
+                '''
+            }
 		}
 	}
 }
 
-SHPCAmmoPrompt: "[CLCB] 该物品可用作SHPC的弹药"
-SHPCAmmo1: "[CLCB] 命中敌人释放大量电火花"
-SHPCAmmo2: "[CLCB] 命中敌人后释放5条连锁闪电弧"
-SHPCAmmo3: "[CLCB] 击中地面后产生毒气"
-SHPCAmmo4: "[CLCB] 能量耗尽后分裂成两个光球"
-SHPCAmmo5: "[CLCB]   "
-SHPCAmmo6: "[CLCB]   "
-SHPCAmmo7: "[CLCB]   "
-SHPCAmmo8: "[CLCB]   "
-SHPCAmmo9: "[CLCB]   "
-SHPCAmmo10: "[CLCB]   "
-SHPCAmmo11: "[CLCB]   "
-SHPCAmmo12: "[CLCB]   "
-SHPCAmmo13: "[CLCB]   "
-SHPCAmmo14: "[CLCB]   "
-SHPCAmmo15: "[CLCB]   "
-SHPCAmmo16: "[CLCB]   "
-SHPCAmmo17: "[CLCB]   "
-SHPCAmmo18: "[CLCB]   "
-SHPCAmmo19: "[CLCB]   "
-SHPCAmmo20: "[CLCB]   "
-SHPCAmmo21: "[CLCB]   "
-SHPCAmmo22: "[CLCB]   "
-SHPCAmmo23: "[CLCB]   "
-SHPCAmmo24: "[CLCB]   "
-SHPCAmmo25: "[CLCB]   "
-SHPCAmmo26: "[CLCB]   "
-SHPCAmmo27: "[CLCB]   "
-SHPCAmmo28: "[CLCB]   "
-SHPCAmmo29: "[CLCB]   "
-SHPCAmmo30: "[CLCB]   "
-SHPCAmmo31: "[CLCB]   "
-SHPCAmmo32: "[CLCB]   "
-SHPCAmmo33: "[CLCB]   "
-SHPCAmmo34: "[CLCB]   "
-SHPCAmmo35: "[CLCB]   "
-SHPCAmmo36: "[CLCB]   "
-SHPCAmmo37: "[CLCB]   "
-SHPCAmmo38: "[CLCB]   "
-SHPCAmmo39: "[CLCB]   "
+
+SHPCAmmoPrompt: "This item can be used to charge SHPC. Effect:"
+
+SHPCAmmo1: "Releases bursts of electric sparks on hit"
+SHPCAmmo2: "Unleashes 5 chaining lightning arcs on hit"
+SHPCAmmo3: "Creates a toxic cloud upon ground impact"
+SHPCAmmo4: "Splits into two energy orbs when depleted"
+
+SHPCAmmo5: "Locks on and strikes directly downward"
+SHPCAmmo6: "Forms a cryogenic field upon detonation"
+SHPCAmmo7: "Marks targets and calls down divine lasers"
+SHPCAmmo8: "  "
+SHPCAmmo9: "  "
+SHPCAmmo10: "  "
+SHPCAmmo11: "  "
+SHPCAmmo12: "  "
+SHPCAmmo13: "  "
+SHPCAmmo14: "  "
+
+SHPCAmmo15: "Relentlessly tracks targets and restores health"
+SHPCAmmo16: "Releases stationary spirits upon impact"
+SHPCAmmo17: "Sticks to targets, dealing repeated damage and bouncing"
+SHPCAmmo18: "Inflicts a devastating plague effect"
+
+SHPCAmmo19: "  "
+SHPCAmmo20: "  "
+
+SHPCAmmo21: "Scatters a barrage of solar piercing spears"
+SHPCAmmo22: "Deploys vortex missiles during flight"
+SHPCAmmo23: "Aggressively tracks before charging into an explosion"
+SHPCAmmo24: "Everlasting and unending"
+SHPCAmmo25: "Triggers a massive entropy explosion"
+
+SHPCAmmo26: "Emits a powerful directional shockwave upon impact"
+SHPCAmmo27: "Ectoplasmic energy"
+SHPCAmmo28: "Releases ricocheting geometric rays on detonation"
+SHPCAmmo29: "Sacrifices player health to empower itself, heals on explosion"
+SHPCAmmo30: "Awakens the souls from the depths"
+SHPCAmmo31: "Performs multiple spiraling pursuits to erase targets"
+SHPCAmmo32: "Creates a miniature black hole"
+
+SHPCAmmo33: "  "
+SHPCAmmo34: "  "
+SHPCAmmo35: "  "
+SHPCAmmo36: "Summons swarms of tiny holy spirits for area suppression"
+SHPCAmmo37: "Unleashes the fury of a dragon"
+SHPCAmmo38: "Fires lasers and manifests divine geometry"
+SHPCAmmo39: "  "
+
+
 
 Buffs: {
 	SHPCRight_DeBuff: {
 		DisplayName: S H P C Right_ De Buff
 		Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
 	}
-}
 
-DeveloperItems: {
-	LAS17: {
-		LAS17PDebuff: {
-			DisplayName: L A S17 P Debuff
-			Description: Mods.CalamityLegendsComeBack.DeveloperItems.LAS17.LAS17PDebuff.Description
-		}
-
-		LAS17Proj.DisplayName: L A S17 Proj
+	YharonSoulFragment_Buff: {
+		DisplayName: Yharon Soul Fragment_ Buff
+		Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
 	}
 }
 
 Projectiles: {
-	EnergyCore_Spark.DisplayName: Energy Core_ Spark
-	PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-	Typeless.StormlionMandible_ARC.DisplayName: Stormlion Mandible_ A R C
-	EssenceofHavoc_INV.DisplayName: Essenceof Havoc_ I N V
-	EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
-	EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
-	Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
-	LivingShard_Healing.DisplayName: Living Shard_ Healing
-	FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
-	DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
-	UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
-	NewLegendSHPB.DisplayName: New Legend S H P B
-	NewLegendSHPE.DisplayName: New Legend S H P E
-	SHPCRight_HoulOut.DisplayName: S H P C Right_ Houl Out
-	SHPCRight_Proj.DisplayName: S H P C Right_ Proj
-	FragmentStardust_Cell.DisplayName: Fragment Stardust_ Cell
+    EnergyCore_Spark.DisplayName: Energy Core Spark
+    PurifiedGel_Ball.DisplayName: Purified Gel Ball
+    Typeless.StormlionMandible_ARC.DisplayName: Stormlion Mandible ARC
+    EssenceofHavoc_INV.DisplayName: Essence of Havoc INV
+    EssenceofSnow_N2.DisplayName: Essence of Snow N2
+    EssenceofSunlight_Lighting.DisplayName: Essence of Sunlight Lighting
+    Ectoplasm_Damage.DisplayName: Ectoplasmic Damage
+    LivingShard_Healing.DisplayName: Living Shard Healing
+    FragmentSolar_Spear.DisplayName: Solar Fragment Spear
+    FragmentStardust_Cell.DisplayName: Stardust Fragment Cell
+    DivineGeode_Lazer.DisplayName: Divine Geode Laser
+    UnholyEssence_Wave.DisplayName: Unholy Essence Wave
+    AscendantSpirit_PROJ.DisplayName: Ascendant Spirit PROJ
+    ExoPrism_Geometry.DisplayName: Exo Prism Geometry
+    ExoPrism_Lazer.DisplayName: Exo Prism Laser
+    YharonSoulFragment_Flame.DisplayName: Yharon's Soul Fragment Flame
+    NewLegendSHPB.DisplayName: New Legend SHPB
+    NewLegendSHPE.DisplayName: New Legend SHPE
+    SHPCRight_HoulOut.DisplayName: SHPC Right Holdout
+    SHPCRight_Proj.DisplayName: SHPC Right Projectile
 }

@@ -9,8 +9,9 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 {
-    public class FragmentStardust_Cell : ModProjectile
+    public class FragmentStardust_Cell : ModProjectile, ILocalizedModType
     {
+        public new string LocalizationCategory => "Projectiles";
         public override string Texture => "Terraria/Images/NPC_405";
 
         private bool isSmall = true;

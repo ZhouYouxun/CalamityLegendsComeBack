@@ -30,7 +30,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 
 
         }
-
+        // 是否启用默认减速（默认开启）
+        public virtual bool EnableDefaultSlowdown => true;
         // 每帧AI附加逻辑
         public virtual void AI(Projectile projectile, Player owner)
         {

@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override int AssociatedItemID => ModContent.ItemType<NewLegendSHPC>();
 
         public override Vector2 GunTipPosition =>
-            Projectile.Center + Vector2.UnitX.RotatedBy(Projectile.rotation) * 36f;
+            Projectile.Center + Vector2.UnitX.RotatedBy(Projectile.rotation) * 56f;
 
         public override float MaxOffsetLengthFromArm => 35f;
 
@@ -134,6 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     break;
             }
         }
+
         public override void HoldoutAI()
         {
             Player player = Main.player[Projectile.owner];
@@ -257,6 +258,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
 
             #endregion
+
+
+            #region ===== 魔力耗尽强制停火 =====
+
+            if (player.statMana <= 0)
+            {
+                // ===== 强制停火 =====
+                fireStopTimer = Math.Max(fireStopTimer, 2); // 持续停火
+                frameCounter = 0; // 防止继续触发Fire
+
+                // ===== 枪口向上喷烟 =====
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 smokeVel = -Vector2.UnitY.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
+                    float smokeScale = Main.rand.NextFloat(0.8f, 1.4f);
+
+                    SmallSmokeParticle smoke = new SmallSmokeParticle(
+                        GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
+                        smokeVel,
+                        Color.DimGray,
+                        Main.rand.NextBool() ? Color.SlateGray : Color.Black,
+                        smokeScale,
+                        100
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(smoke);
+                }
+
+                return; // ❗直接终止本帧AI（关键）
+            }
+
+            #endregion
         }
 
         #region ===== 核心技能：降温 =====
@@ -285,6 +318,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void Fire(Player player)
         {
+            player.statMana -= 2;
+
             //// ===== 调试：显示当前进度 =====
             //if (Main.myPlayer == player.whoAmI)
             //{
@@ -502,6 +537,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player player = Main.player[Projectile.owner];
             NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
+
+            player.statMana -= 150;
+
 
             if (weapon == null)
                 return;

@@ -82,7 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             SquishyLightParticleFactor = cachedEffect.SquishyLightParticleFactor;
             ExplosionPulseFactor = cachedEffect.ExplosionPulseFactor;
         }
-
+        // 是否启用默认减速（默认开启）
+        public virtual bool EnableDefaultSlowdown => true;
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
@@ -103,7 +104,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             // ===== 默认减速 =====
-            Projectile.velocity *= 0.98f;
+            if (CurrentEffect.EnableDefaultSlowdown)
+                Projectile.velocity *= 0.98f;
 
             // ===== 默认接近爆炸 =====
             float explodeRange = 250f;

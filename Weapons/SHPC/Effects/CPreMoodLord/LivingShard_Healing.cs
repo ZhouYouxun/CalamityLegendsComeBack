@@ -7,8 +7,9 @@ using System;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 {
-    public class LivingShard_Healing : ModProjectile
+    public class LivingShard_Healing : ModProjectile, ILocalizedModType
     {
+        public new string LocalizationCategory => "Projectiles";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         // ===== 自定义计时器（禁止用localAI）=====

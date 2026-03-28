@@ -12,8 +12,9 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
-    internal class UnholyEssence_Wave : ModProjectile
+    internal class UnholyEssence_Wave : ModProjectile, ILocalizedModType
     {
+        public new string LocalizationCategory => "Projectiles";
         // 自定义计时器
         private int lifeTimer;
         public override string Texture => "Terraria/Images/Projectile_0"; // 透明占位

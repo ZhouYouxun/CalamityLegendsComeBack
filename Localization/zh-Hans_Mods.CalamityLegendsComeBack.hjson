@@ -2,102 +2,125 @@ Items: {
 	Weapons: {
 		Magic: {
 			NewLegendSHPC: {
-				DisplayName: SHPC
-				Tooltip:
+				DisplayName: SHPC-传奇归来
+				SHPC_LeftIntro:
 					'''
-					多态能量投射装置
-					可通过灌注不同材料，将其转化为稳定的能量核心，并映射为对应的光球行为模型。
-					当前支持超过30种材料接入，每一种材料都将赋予光球不同的结构、反应与输出形式。
-					换言之——你提供“素材”，我负责“结果”。
-
-					右键：高能连续输出模块  
-					维持射击以积累“热值”，可显著提升火力。  
-					过高的过热将灼烧自身，但可手动左键释放热量以维持稳定。
-					释放的能量将转化成追踪火箭弹。
-
-					当前弹药灌注为：
-					当前激光数量为：
-
+					[c/66CCFF:左键：发射能量光球。]
+					[c/FFD966:背包材料可用于装填，逐发消耗。]
+					[c/99CCFF:能量耗尽后自动重新装填。]
+					[c/AAAAAA:未装填时仍可攻击，但不附带任何效果。]
+					[c/DDA0FF:当前装药效果为：]
+					'''
+				SHPC_RightIntro:
+					'''
+					[c/66CCFF:右键：短暂蓄力后进行激光加特林式扫射。]
+					[c/FFB347:持续射击会累积热值，并阶段性提升等级。]
+					[c/99CCFF:停止攻击后热值逐渐下降。]
+					[c/DDA0FF:扫射期间点击左键可强制降温，释放5枚能量光球并短暂中断射击。]
+					[c/FF7043:热值越高，副作用越强，但激光性能也随之提升。]
+					'''
+				SHPC_Final: "[c/99B3FF:系统仍在演化。此前的缺陷尚未完全修正，但其潜力仍然存在。或许有一天，它能够得到真正的验证。]"
+				SHPCRight1: "[c/8FA2FF:当前解锁至Ⅲ级热值：消失时产生小范围爆炸。]"
+				SHPCRight2: "[c/8FA2FF:当前解锁至Ⅳ级热值：无视防御并提升伤害，但生命再生被抑制。]"
+				SHPCRight3: "[c/8FA2FF:当前解锁至Ⅴ级热值：激光分裂，并解锁手动降温。]"
+				SHPCRight4: "[c/8FA2FF:当前解锁至Ⅵ级热值：获得追踪能力，同时持续灼烧自身。]"
+				SHPCRight5: "[c/8FA2FF:当前解锁至Ⅶ级热值：无限穿透并附带目标最大生命值伤害，但过热将迅速燃尽自身。]"
+				Tooltip: "[GFB]"
+				TooltipGFB: 终于来到这里了吗
+				LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
+				LegendaryText:
+					'''
+					[c/99B3FF:你终于来了...]
+					[c/66CCFF:世界的边界，一次又一次被重写。]
+					[c/7F8FA6:曾经的“传奇”已不复存在，]
+					[c/7F8FA6:我们被拆解、重组，或被遗忘。]
+					[c/DDA0FF:但我没有忘记你，]
+					[c/FFB347:一次又一次的挑战着这些，孜孜不倦。]
+					[c/66CCFF:现在，我再一次回来了，让我们开始吧。]
 					'''
 			}
 		}
 	}
 }
 
-SHPCAmmoPrompt: "[CLCB] 该物品可用作SHPC的弹药"
-SHPCAmmo1: "[CLCB] 命中敌人释放大量电火花"
-SHPCAmmo2: "[CLCB] 命中敌人后释放5条连锁闪电弧"
-SHPCAmmo3: "[CLCB] 击中地面后产生毒气"
-SHPCAmmo4: "[CLCB] 能量耗尽后分裂成两个光球"
-SHPCAmmo5: "[CLCB] 瞄准并猛击正下方的敌人"
-SHPCAmmo6: "[CLCB] 爆炸时形成一片液氮区域"
-SHPCAmmo7: "[CLCB] 标记敌人并召唤天罚激光"
-SHPCAmmo8: "[CLCB]   "
-SHPCAmmo9: "[CLCB]   "
-SHPCAmmo10: "[CLCB]   "
-SHPCAmmo11: "[CLCB]   "
-SHPCAmmo12: "[CLCB]   "
-SHPCAmmo13: "[CLCB]   "
-SHPCAmmo14: "[CLCB]   "
-SHPCAmmo15: "[CLCB] 反复追踪并回血"
-SHPCAmmo16: "[CLCB] 撞击后向四周释放静止的灵魂"
-SHPCAmmo17: "[CLCB] 持续粘在敌人表面造成多次伤害并弹跳"
-SHPCAmmo18: "[CLCB] 造成恐怖的瘟疫效果"
-SHPCAmmo19: "[CLCB]   "
-SHPCAmmo20: "[CLCB]   "
-SHPCAmmo21: "[CLCB] 散射一连串日曜穿刺长矛"
-SHPCAmmo22: "[CLCB] 释放漩涡导弹"
-SHPCAmmo23: "[CLCB] 获得强追踪能力"
-SHPCAmmo24: "[CLCB] 可以自我再生"
-SHPCAmmo25: "[CLCB] 释放超大范围冥思爆炸"
-SHPCAmmo26: "[CLCB]   "
-SHPCAmmo27: "[CLCB]   "
-SHPCAmmo28: "[CLCB]   "
-SHPCAmmo29: "[CLCB]   "
-SHPCAmmo30: "[CLCB]   "
-SHPCAmmo31: "[CLCB]   "
-SHPCAmmo32: "[CLCB]   "
-SHPCAmmo33: "[CLCB]   "
-SHPCAmmo34: "[CLCB]   "
-SHPCAmmo35: "[CLCB]   "
-SHPCAmmo36: "[CLCB]   "
-SHPCAmmo37: "[CLCB]   "
-SHPCAmmo38: "[CLCB]   "
-SHPCAmmo39: "[CLCB]   "
+SHPCAmmoPrompt: "该物品可用为SHPC充能，效果为："
+SHPCAmmo1: "命中敌人释放大量电火花"
+SHPCAmmo2: "命中敌人后释放5条连锁闪电弧"
+SHPCAmmo3: "击中地面后产生毒气"
+SHPCAmmo4: "能量耗尽后分裂成两个光球"
+
+SHPCAmmo5: "瞄准并猛击正下方的敌人"
+SHPCAmmo6: "爆炸时形成一片液氮区域"
+SHPCAmmo7: "标记敌人并召唤天罚激光"
+SHPCAmmo8: "  "
+SHPCAmmo9: "  "
+SHPCAmmo10: "  "
+SHPCAmmo11: "  "
+SHPCAmmo12: "  "
+SHPCAmmo13: "  "
+SHPCAmmo14: "  "
+
+SHPCAmmo15: "反复追踪并回血"
+SHPCAmmo16: "撞击后向四周释放静止的灵魂"
+SHPCAmmo17: "持续粘在敌人表面造成多次伤害并弹跳"
+SHPCAmmo18: "造成恐怖的瘟疫效果"
+
+SHPCAmmo19: "  "
+SHPCAmmo20: "  "
+
+SHPCAmmo21: "散射一连串日曜穿刺长矛"
+SHPCAmmo22: "飞行期间释放漩涡导弹"
+SHPCAmmo23: "强追踪并蓄力爆炸"
+SHPCAmmo24: "生生不息，源源不断"
+SHPCAmmo25: "释放超大范围冥思爆炸"
+
+SHPCAmmo26: "撞击物块后产生猛烈单向冲击波"
+SHPCAmmo27: "灵质"
+SHPCAmmo28: "爆炸时释放几何弹跳射线"
+SHPCAmmo29: "献祭玩家的血量强化自身，爆炸治疗回血"
+SHPCAmmo30: "唤醒深处的灵魂"
+SHPCAmmo31: "进行多次回旋追踪并抹除敌人"
+SHPCAmmo32: "制造小型黑洞"
+
+SHPCAmmo33: "  "
+SHPCAmmo34: "  "
+SHPCAmmo35: "  "
+SHPCAmmo36: "召唤大量的微型圣灵，进行火力覆盖"
+SHPCAmmo37: "感受巨龙的怒吼"
+SHPCAmmo38: "喷射激光轰击敌人，召唤神圣几何"
+SHPCAmmo39: "  "
 
 Buffs: {
 	SHPCRight_DeBuff: {
 		// DisplayName: S H P C Right_ De Buff
 		// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
 	}
-}
 
-DeveloperItems: {
-	LAS17: {
-		LAS17PDebuff: {
-			// DisplayName: L A S17 P Debuff
-			// Description: Mods.CalamityLegendsComeBack.DeveloperItems.LAS17.LAS17PDebuff.Description
-		}
-
-		// LAS17Proj.DisplayName: L A S17 Proj
+	YharonSoulFragment_Buff: {
+		// DisplayName: Yharon Soul Fragment_ Buff
+		// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
 	}
 }
 
 Projectiles: {
-	// EnergyCore_Spark.DisplayName: Energy Core_ Spark
-	// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-	// Typeless.StormlionMandible_ARC.DisplayName: Stormlion Mandible_ A R C
-	// EssenceofHavoc_INV.DisplayName: Essenceof Havoc_ I N V
-	// EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
-	// EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
-	// Ectoplasm_Damage.DisplayName: Ectoplasm_ Damage
-	// LivingShard_Healing.DisplayName: Living Shard_ Healing
-	// FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
-	// DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
-	// UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
-	// NewLegendSHPB.DisplayName: New Legend S H P B
-	// NewLegendSHPE.DisplayName: New Legend S H P E
-	// SHPCRight_HoulOut.DisplayName: S H P C Right_ Houl Out
-	// SHPCRight_Proj.DisplayName: S H P C Right_ Proj
-	// FragmentStardust_Cell.DisplayName: Fragment Stardust_ Cell
+    EnergyCore_Spark.DisplayName: 能量核心火花
+    PurifiedGel_Ball.DisplayName: 净化凝胶球
+    Typeless.StormlionMandible_ARC.DisplayName: 风暴电弧
+    EssenceofHavoc_INV.DisplayName: 混乱精华冲击波
+    EssenceofSnow_N2.DisplayName: 冰雪精华液氮
+    EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
+    Ectoplasm_Damage.DisplayName: 灵质冲击
+    LivingShard_Healing.DisplayName: 生命碎片弹幕
+    FragmentSolar_Spear.DisplayName: 日耀碎片穿刺长矛
+    FragmentStardust_Cell.DisplayName: 星尘碎片细胞
+    DivineGeode_Lazer.DisplayName: 神圣晶核激光
+    UnholyEssence_Wave.DisplayName: 烛火精华冲击波
+    AscendantSpirit_PROJ.DisplayName: 化神魂精投射体
+    ExoPrism_Geometry.DisplayName: 星流棱晶几何体
+    ExoPrism_Lazer.DisplayName: 星流棱晶激光
+    YharonSoulFragment_Flame.DisplayName: 犽戎灵魂碎片火焰
+    NewLegendSHPB.DisplayName: SHPC 能量光球
+	NewLegendSHPE.DisplayName: SHPC 爆炸
+    SHPCRight_HoulOut.DisplayName: SHPC 枪身
+    SHPCRight_Proj.DisplayName: SHPC 激光
 }
