@@ -105,8 +105,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 dust.noGravity = true;
             }
 
-            // ================= 爆散 3~9 个瘟疫蜜蜂（改为 BasicPlagueBee） =================
-            int beeCount = Main.rand.Next(3, 10);
+            // ================= 爆散 X 个瘟疫蜜蜂（改为 BasicPlagueBee） =================
+            int beeCount = Main.rand.Next(9, 15);
 
             for (int i = 0; i < beeCount; i++)
             {

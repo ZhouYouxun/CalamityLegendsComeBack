@@ -198,12 +198,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             Color GetExoColor()
             {
                 List<Color> eColors = new List<Color>()
-    {
-        Color.Lerp(Color.OrangeRed, Color.White, 0.28f),
-        Color.Lerp(Color.MediumTurquoise, Color.White, 0.28f),
-        Color.Lerp(Color.Orange, Color.White, 0.28f),
-        Color.Lerp(Color.LawnGreen, Color.White, 0.28f)
-    };
+            {
+                Color.Lerp(Color.OrangeRed, Color.White, 0.28f),
+                Color.Lerp(Color.MediumTurquoise, Color.White, 0.28f),
+                Color.Lerp(Color.Orange, Color.White, 0.28f),
+                Color.Lerp(Color.LawnGreen, Color.White, 0.28f)
+            };
 
                 float rate = Main.GlobalTimeWrappedHourly * 8f;
                 int colorIndex = (int)(rate / 2f % eColors.Count);
@@ -220,7 +220,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             float roll = t * (0.3f + Projectile.identity * 0.0011f);
             Matrix rot = Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
 
-            float size = 10f * 16f * sizeMultiplier;
+            float size = 2f * 16f * sizeMultiplier;
             float focal = 1000f;
             float zBias = 1000f;
 

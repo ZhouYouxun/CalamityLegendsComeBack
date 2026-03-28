@@ -8,12 +8,12 @@ Items: {
 					[c/66CCFF:左键：发射能量光球。]
 					[c/FFD966:背包材料可用于装填，逐发消耗。]
 					[c/99CCFF:能量耗尽后自动重新装填。]
-					[c/AAAAAA:未装填时仍可攻击，但不附带任何效果。]
+					[c/AAAAAA:未装药时仍可攻击，但不附带任何效果。]
 					[c/DDA0FF:当前装药效果为：]
 					'''
 				SHPC_RightIntro:
 					'''
-					[c/66CCFF:右键：短暂蓄力后进行激光加特林式扫射。]
+					[c/66CCFF:右键：短暂蓄力后进行激光扫射。]
 					[c/FFB347:持续射击会累积热值，并阶段性提升等级。]
 					[c/99CCFF:停止攻击后热值逐渐下降。]
 					[c/DDA0FF:扫射期间点击左键可强制降温，释放5枚能量光球并短暂中断射击。]
@@ -26,7 +26,7 @@ Items: {
 				SHPCRight4: "[c/8FA2FF:当前解锁至Ⅵ级热值：获得追踪能力，同时持续灼烧自身。]"
 				SHPCRight5: "[c/8FA2FF:当前解锁至Ⅶ级热值：无限穿透并附带目标最大生命值伤害，但过热将迅速燃尽自身。]"
 				Tooltip: "[GFB]"
-				TooltipGFB: 终于来到这里了吗
+				TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。
 				LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
 				LegendaryText:
 					'''
@@ -43,52 +43,46 @@ Items: {
 	}
 }
 
-SHPCAmmoPrompt: "该物品可用为SHPC充能，效果为："
-SHPCAmmo1: "命中敌人释放大量电火花"
-SHPCAmmo2: "命中敌人后释放5条连锁闪电弧"
-SHPCAmmo3: "击中地面后产生毒气"
-SHPCAmmo4: "能量耗尽后分裂成两个光球"
-
-SHPCAmmo5: "瞄准并猛击正下方的敌人"
-SHPCAmmo6: "爆炸时形成一片液氮区域"
-SHPCAmmo7: "标记敌人并召唤天罚激光"
-SHPCAmmo8: "  "
+SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
+SHPCAmmo1: 命中敌人释放大量电火花
+SHPCAmmo2: 命中敌人后释放5条连锁闪电弧
+SHPCAmmo3: 击中地面后产生毒气
+SHPCAmmo4: 能量耗尽后分裂成两个光球
+SHPCAmmo5: 瞄准并猛击正下方的敌人
+SHPCAmmo6: 爆炸时形成一片液氮区域
+SHPCAmmo7: 标记敌人并召唤天罚激光
+SHPCAmmo8: 把敌人崩飞
 SHPCAmmo9: "  "
 SHPCAmmo10: "  "
 SHPCAmmo11: "  "
 SHPCAmmo12: "  "
 SHPCAmmo13: "  "
 SHPCAmmo14: "  "
-
-SHPCAmmo15: "反复追踪并回血"
-SHPCAmmo16: "撞击后向四周释放静止的灵魂"
-SHPCAmmo17: "持续粘在敌人表面造成多次伤害并弹跳"
-SHPCAmmo18: "造成恐怖的瘟疫效果"
-
-SHPCAmmo19: "  "
-SHPCAmmo20: "  "
-
-SHPCAmmo21: "散射一连串日曜穿刺长矛"
-SHPCAmmo22: "飞行期间释放漩涡导弹"
-SHPCAmmo23: "强追踪并蓄力爆炸"
-SHPCAmmo24: "生生不息，源源不断"
-SHPCAmmo25: "释放超大范围冥思爆炸"
-
-SHPCAmmo26: "撞击物块后产生猛烈单向冲击波"
-SHPCAmmo27: "灵质"
-SHPCAmmo28: "爆炸时释放几何弹跳射线"
-SHPCAmmo29: "献祭玩家的血量强化自身，爆炸治疗回血"
-SHPCAmmo30: "唤醒深处的灵魂"
-SHPCAmmo31: "进行多次回旋追踪并抹除敌人"
-SHPCAmmo32: "制造小型黑洞"
-
-SHPCAmmo33: "  "
-SHPCAmmo34: "  "
-SHPCAmmo35: "  "
-SHPCAmmo36: "召唤大量的微型圣灵，进行火力覆盖"
-SHPCAmmo37: "感受巨龙的怒吼"
-SHPCAmmo38: "喷射激光轰击敌人，召唤神圣几何"
-SHPCAmmo39: "  "
+SHPCAmmo15: 反复追踪并回血
+SHPCAmmo16: 撞击后向四周释放静止的灵魂
+SHPCAmmo17: 持续粘在敌人表面造成多次伤害并弹跳
+SHPCAmmo18: 造成恐怖的瘟疫效果
+SHPCAmmo19: " 灾厄尘 "
+SHPCAmmo20: " ??? "
+SHPCAmmo21: 散射一连串日曜穿刺长矛
+SHPCAmmo22: 飞行期间释放漩涡导弹
+SHPCAmmo23: 强追踪并蓄力爆炸
+SHPCAmmo24: 生生不息，源源不断
+SHPCAmmo25: 释放超大范围冥思爆炸
+SHPCAmmo26: 撞击物块后产生猛烈单向冲击波
+SHPCAmmo27: " ??? "
+SHPCAmmo28: 爆炸时释放几何弹跳射线
+SHPCAmmo29: 献祭玩家的血量强化自身，爆炸治疗回血
+SHPCAmmo30: 唤醒深处的灵魂
+SHPCAmmo31: 灵质
+SHPCAmmo32: 制造小型黑洞
+SHPCAmmo33: 进行多次回旋追踪并抹除敌人
+SHPCAmmo34: 反弹并释放冰刺攻击
+SHPCAmmo35: " 梦魇魔能 "
+SHPCAmmo36: 召唤大量的微型圣灵，进行火力覆盖
+SHPCAmmo37: 感受巨龙的怒吼
+SHPCAmmo38: 喷射激光轰击敌人，召唤神圣几何
+SHPCAmmo39: " 湮灭余烬 "
 
 Buffs: {
 	SHPCRight_DeBuff: {
@@ -103,24 +97,26 @@ Buffs: {
 }
 
 Projectiles: {
-    EnergyCore_Spark.DisplayName: 能量核心火花
-    PurifiedGel_Ball.DisplayName: 净化凝胶球
-    Typeless.StormlionMandible_ARC.DisplayName: 风暴电弧
-    EssenceofHavoc_INV.DisplayName: 混乱精华冲击波
-    EssenceofSnow_N2.DisplayName: 冰雪精华液氮
-    EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
-    Ectoplasm_Damage.DisplayName: 灵质冲击
-    LivingShard_Healing.DisplayName: 生命碎片弹幕
-    FragmentSolar_Spear.DisplayName: 日耀碎片穿刺长矛
-    FragmentStardust_Cell.DisplayName: 星尘碎片细胞
-    DivineGeode_Lazer.DisplayName: 神圣晶核激光
-    UnholyEssence_Wave.DisplayName: 烛火精华冲击波
-    AscendantSpirit_PROJ.DisplayName: 化神魂精投射体
-    ExoPrism_Geometry.DisplayName: 星流棱晶几何体
-    ExoPrism_Lazer.DisplayName: 星流棱晶激光
-    YharonSoulFragment_Flame.DisplayName: 犽戎灵魂碎片火焰
-    NewLegendSHPB.DisplayName: SHPC 能量光球
+	EnergyCore_Spark.DisplayName: 能量核心火花
+	PurifiedGel_Ball.DisplayName: 净化凝胶球
+	Typeless.StormlionMandible_ARC.DisplayName: 风暴电弧
+	EssenceofHavoc_INV.DisplayName: 混乱精华冲击波
+	EssenceofSnow_N2.DisplayName: 冰雪精华液氮
+	EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
+	Ectoplasm_Damage.DisplayName: 灵质冲击
+	LivingShard_Healing.DisplayName: 生命碎片弹幕
+	FragmentSolar_Spear.DisplayName: 日耀碎片穿刺长矛
+	FragmentStardust_Cell.DisplayName: 星尘碎片细胞
+	DivineGeode_Lazer.DisplayName: 神圣晶核激光
+	UnholyEssence_Wave.DisplayName: 烛火精华冲击波
+	AscendantSpirit_PROJ.DisplayName: 化神魂精投射体
+	ExoPrism_Geometry.DisplayName: 星流棱晶几何体
+	ExoPrism_Lazer.DisplayName: 星流棱晶激光
+	YharonSoulFragment_Flame.DisplayName: 犽戎灵魂碎片火焰
+	NewLegendSHPB.DisplayName: SHPC 能量光球
 	NewLegendSHPE.DisplayName: SHPC 爆炸
-    SHPCRight_HoulOut.DisplayName: SHPC 枪身
-    SHPCRight_Proj.DisplayName: SHPC 激光
+	SHPCRight_HoulOut.DisplayName: SHPC 枪身
+	SHPCRight_Proj.DisplayName: SHPC 激光
 }
+
+// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

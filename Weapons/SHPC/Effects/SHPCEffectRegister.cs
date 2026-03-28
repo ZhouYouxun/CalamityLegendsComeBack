@@ -8,6 +8,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul;
 using Terraria.ModLoader;
@@ -66,13 +67,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
 
 
-            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 恒温能量 33
-            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 梦魇魔能 34
+            EffectRegistry.RegisterEffect(new EndothermicEnergyEffect()); // 恒温能量 33
+            EffectRegistry.RegisterEffect(new NightmareFuelEffect()); // 梦魇魔能 34
             //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 日蚀之阴 35
             EffectRegistry.RegisterEffect(new AscendantSpiritEffect()); // 化神魂晶 36
             EffectRegistry.RegisterEffect(new YharonSoulFragmentEffect()); // 龙魂碎片 37
             EffectRegistry.RegisterEffect(new ExoPrismEffect()); // 星流棱晶 38
-            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 湮灭余烬 39
+            EffectRegistry.RegisterEffect(new AshesofAnnEffect()); // 湮灭余烬 39
 
 
         }

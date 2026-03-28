@@ -4,6 +4,7 @@ using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
 using CalamityMod.Items.Weapons.Magic;
+using CalamityMod.Rarities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,9 +16,9 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using Terraria.Localization;
 
 
 namespace CalamityLegendsComeBack.Weapons.SHPC
@@ -83,7 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Item.channel = false;
 
             Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
-            Item.rare = ItemRarityID.Pink;
+            Item.rare = ModContent.RarityType<BurnishedAuric>();
+            //Item.rare = ItemRarityID.Pink;
         }
 
         #endregion
@@ -517,7 +519,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== 拼接 =====
             string finalText =
                 leftIntro + "\n" +
-                ammoText + "\n\n" +
+                ">>> " + ammoText + " <<<" + 
+                "\n\n" +
                 rightIntro + "\n" +
                 rightStateText + "\n\n" +
                 finalLine + "\n\n" +
@@ -583,11 +586,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             CreateRecipe()
                 .AddIngredient<PlasmaDriveCore>()
                 .AddIngredient<SuspiciousScrap>(4)
-                .AddRecipeGroup("AnyMythrilBar", 10)
-                .AddIngredient(ItemID.SoulofFright, 5)
-                .AddIngredient(ItemID.SoulofMight, 5)
-                .AddIngredient(ItemID.SoulofSight, 5)
-                .AddTile(TileID.MythrilAnvil)
+                //.AddRecipeGroup("AnyMythrilBar", 10)
+                //.AddIngredient(ItemID.SoulofFright, 5)
+                //.AddIngredient(ItemID.SoulofMight, 5)
+                //.AddIngredient(ItemID.SoulofSight, 5)
+                .AddTile(TileID.Anvils)
                 .Register();
         }
 

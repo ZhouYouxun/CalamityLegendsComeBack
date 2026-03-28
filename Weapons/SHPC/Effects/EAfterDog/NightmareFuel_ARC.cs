@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
 {
-    internal class DarksunFragmentEffect
+    internal class NightmareFuel_ARC
     {
     }
 }

@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             projectile.velocity *= 0.75f;
 
             projectile.penetrate = -1;
-            projectile.timeLeft *= 5;
+            projectile.timeLeft = 200;
         }
 
         public override void AI(Projectile projectile, Player owner)
