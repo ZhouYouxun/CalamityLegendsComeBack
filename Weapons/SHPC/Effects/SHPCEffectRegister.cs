@@ -31,14 +31,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new StormlionMandibleEffect()); // 风暴之颚
             EffectRegistry.RegisterEffect(new SulphuricScaleEffect()); // 硫磺鳞片
 
-
             EffectRegistry.RegisterEffect(new EssenceofHavocEffect()); // 混沌精华 5
             EffectRegistry.RegisterEffect(new EssenceofSnowEffect()); // 冰川精华 6
             EffectRegistry.RegisterEffect(new EssenceofSunlightEffect()); // 日光精华 7
 
             EffectRegistry.RegisterEffect(new TitanHeartEffect()); // 泰坦之星 8
 
-            // 9 10 11   12 13 14，为暂时未实现的六魂
+
+            EffectRegistry.RegisterEffect(new SoulofLightEffect());   // 光明之魂 9
+            EffectRegistry.RegisterEffect(new SoulofNightEffect());   // 暗影之魂 10
+            EffectRegistry.RegisterEffect(new SoulofFlightEffect());  // 飞翔之魂 11
+
+            EffectRegistry.RegisterEffect(new BossSoulofFrightEffect()); // 恐惧之魂 12
+            EffectRegistry.RegisterEffect(new BossSoulofMightEffect());  // 力量之魂 13
+            EffectRegistry.RegisterEffect(new BossSoulofSightEffect());  // 视觉之魂 14
+
 
             EffectRegistry.RegisterEffect(new LivingShardEffect()); // 生命碎片 15
             EffectRegistry.RegisterEffect(new EctoplasmEffect()); // 灵气 16
@@ -63,9 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             EffectRegistry.RegisterEffect(new TwistingNetherEffect()); // 扭曲虚空 31
             EffectRegistry.RegisterEffect(new DarkPlasmaEffect()); // 暗离子体 32
-
-
-
+            
 
             EffectRegistry.RegisterEffect(new EndothermicEnergyEffect()); // 恒温能量 33
             EffectRegistry.RegisterEffect(new NightmareFuelEffect()); // 梦魇魔能 34

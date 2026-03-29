@@ -268,23 +268,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 fireStopTimer = Math.Max(fireStopTimer, 2); // 持续停火
                 frameCounter = 0; // 防止继续触发Fire
 
-                // ===== 枪口向上喷烟 =====
-                for (int i = 0; i < 2; i++)
-                {
-                    Vector2 smokeVel = -Vector2.UnitY.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
-                    float smokeScale = Main.rand.NextFloat(0.8f, 1.4f);
+                //// ===== 枪口向上喷烟 =====
+                //for (int i = 0; i < 2; i++)
+                //{
+                //    Vector2 smokeVel = -Vector2.UnitY.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
+                //    float smokeScale = Main.rand.NextFloat(0.8f, 1.4f);
 
-                    SmallSmokeParticle smoke = new SmallSmokeParticle(
-                        GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
-                        smokeVel,
-                        Color.DimGray,
-                        Main.rand.NextBool() ? Color.SlateGray : Color.Black,
-                        smokeScale,
-                        100
-                    );
+                //    SmallSmokeParticle smoke = new SmallSmokeParticle(
+                //        GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
+                //        smokeVel,
+                //        Color.DimGray,
+                //        Main.rand.NextBool() ? Color.SlateGray : Color.Black,
+                //        smokeScale,
+                //        100
+                //    );
 
-                    GeneralParticleHandler.SpawnParticle(smoke);
-                }
+                //    GeneralParticleHandler.SpawnParticle(smoke);
+                //}
 
                 return; // ❗直接终止本帧AI（关键）
             }
@@ -397,18 +397,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void PlayStartupEffects()
         {
-            SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效"),
-                Projectile.Center
-            );
-        }           
+            bool zenith = Main.zenithWorld;
+
+            string path = zenith
+                ? "CalamityLegendsComeBack/Weapons/SHPC/M14拉枪"
+                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效";
+
+            SoundStyle style = new SoundStyle(path)
+            {
+                Volume = zenith ? 1.2f : 1f,
+                Pitch = zenith ? 0.1f : 0f
+            };
+
+            SoundEngine.PlaySound(style, Projectile.Center);
+        }
 
         private void PlayFireEffects(Vector2 direction)
         {
-            SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效"),
-                Projectile.Center
-            );
+            bool zenith = Main.zenithWorld;
+
+            string path = zenith
+                ? "CalamityLegendsComeBack/Weapons/SHPC/M14开枪"
+                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效";
+
+            SoundStyle style = new SoundStyle(path)
+            {
+                Volume = zenith ? 1.2f : 1f,
+                Pitch = zenith ? 0.1f : 0f
+            };
+
+            SoundEngine.PlaySound(style, Projectile.Center);
         }
 
         // 枪口特效

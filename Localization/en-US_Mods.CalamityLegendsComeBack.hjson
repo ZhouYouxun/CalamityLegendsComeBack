@@ -43,6 +43,111 @@ Items: {
 	}
 }
 
+Text: {
+	# ===== 默认台词（长时间无触发）=====
+	Default1: 当前环境：稳定。
+	Default2: 未检测到有效目标。
+	Default3: 系统处于低负载状态。
+	Default4: ……等待输入。
+	# ===== 长时间没有开火（Idle）=====
+	Idle1: 你似乎停下来了。
+	Idle2: 当前行为……效率偏低。
+	Idle3: 这段时间，没有可记录的数据。
+	Idle4: 需要我为你模拟一个目标吗？
+	# ===== 高伤害弹幕贴近 =====
+	DangerClose1: 偏差：约3像素。你居然活下来了。
+	DangerClose2: 危险程度：高。反应：尚可。
+	DangerClose3: ……这不是计划的一部分，对吧？
+	DangerClose4: 建议下次别再测试运气上限。
+	# ===== 残血警告（<=25% HP）=====
+	CriticalCondition1: 生命值已低于安全阈值。
+	CriticalCondition2: 当前状态：不适合继续鲁莽行为。
+	CriticalCondition3: 如果你现在死亡，我不会负责。
+	CriticalCondition4: 建议：治疗。立刻。
+	# ===== 小伤连续命中 =====
+	ChipDamage1: 多次微量损伤已记录。
+	ChipDamage2: 累计误差正在扩大。
+	ChipDamage3: 你正在被“慢性消耗”。
+	ChipDamage4: 建议提高规避质量。
+	# ===== 高额伤害 =====
+	HeavyDamage1: 检测到高强度受损。
+	HeavyDamage2: 冲击超过安全范围。
+	HeavyDamage3: 结构完整性下降。
+	HeavyDamage4: 建议立即调整策略。
+	# ===== 毁灭者 =====
+	DestroyerSpawn1: 我一直在等这个样本。
+	DestroyerSpawn2: 这不是第一次见到这种构造。
+	DestroyerSpawn3: 终于有机会进行完整分析了。
+	DestroyerSpawn4: 发现高价值目标，一举拿下它。
+	DestroyerDeath1: 样本已终止。
+	DestroyerDeath2: 结构分析完成。
+	DestroyerDeath3: 战斗数据已记录。
+	DestroyerDeath4: 结果符合预期。
+	# ===== 白金星舰 =====
+	AstrumAureusSpawn1: 他的设计，一眼就能认出来。
+	AstrumAureusSpawn2: ……这是他的风格。
+	AstrumAureusSpawn3: 成熟的工程方案。
+	AstrumAureusSpawn4: 同一套设计语言。
+	AstrumAureusDeath1: 设计终止。
+	AstrumAureusDeath2: 结构不再稳定。
+	AstrumAureusDeath3: 方案验证失败。
+	AstrumAureusDeath4: 数据收集完成。
+	# ===== 星神游龙 =====
+	AstrumDeusSpawn1: 手下败将罢了。
+	AstrumDeusSpawn2: 重复实验而已。
+	AstrumDeusSpawn3: 就像多年以前的那场战斗一样。
+	AstrumDeusSpawn4: 上吧，速战速决。
+	AstrumDeusDeath1: 即便再分裂，结果依旧一致。
+	AstrumDeusDeath2: 结局没有变化。
+	AstrumDeusDeath3: 实验再次完成。
+	AstrumDeusDeath4: 预测正确。
+	# ===== 风暴编织者 =====
+	StormWeaverSpawn1: 高速气流结构已锁定。
+	StormWeaverSpawn2: 能量流动异常。
+	StormWeaverSpawn3: 检测到持续风暴核心。
+	StormWeaverSpawn4: 目标机动性：极高。
+	StormWeaverDeath1: 风暴核心已瓦解。
+	StormWeaverDeath2: 能量流停止。
+	StormWeaverDeath3: 结构崩溃。
+	StormWeaverDeath4: 战斗数据已收录。
+	# ===== 双子（Apollo / Artemis）=====
+	ExoTwinsSpawn1: 双目标已锁定。
+	ExoTwinsSpawn2: 协同系统已启动。
+	ExoTwinsSpawn3: 复合威胁识别完成。
+	ExoTwinsSpawn4: 开始分析双重轨迹。
+	ExoTwinsDeath1: 最快的推进系统也不过如此。
+	ExoTwinsDeath2: 轨迹依然可以被预测。
+	ExoTwinsDeath3: 速度并不能修正决策误差。
+	ExoTwinsDeath4: 双目标已终止。
+	# ===== 塔纳托斯 =====
+	ThanatosSpawn1: 重型单位确认。
+	ThanatosSpawn2: 装甲厚度异常。
+	ThanatosSpawn3: 防御结构极端强化。
+	ThanatosSpawn4: 建议避免正面接触。
+	ThanatosDeath1: 这就是你引以为傲的防御结构吗？
+	ThanatosDeath2: 没有真正的绝对防御。
+	ThanatosDeath3: 装甲已被突破。
+	ThanatosDeath4: 结构完全失效。
+	# ===== 阿瑞斯 =====
+	AresSpawn1: 多武装单位已确认。
+	AresSpawn2: 火力系统正在展开。
+	AresSpawn3: 武器阵列已锁定。
+	AresSpawn4: 战斗模块加载完成。
+	AresDeath1: 多武装配置……但缺乏统一性。
+	AresDeath2: 你的系统很完整，但不够收敛。
+	AresDeath3: 复杂，并不等于最优解。
+	AresDeath4: 战术结构已崩溃。
+	# ===== 至尊灾厄 =====
+	CalamitasSpawn1: 究竟谁更胜一筹呢？
+	CalamitasSpawn2: 传说中的黑魔法掌控者？很有意思。
+	CalamitasSpawn3: 高威胁个体已锁定。
+	CalamitasSpawn4: 开始记录战斗。
+	CalamitasDeath1: 威胁已解除。
+	CalamitasDeath2: 数据采集完成。
+	CalamitasDeath3: 黑魔法样本已消失。
+	CalamitasDeath4: 结果已收录。
+}
+
 SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
 SHPCAmmo1: Releases bursts of electric sparks on hit
 SHPCAmmo2: Unleashes 5 chaining lightning arcs on hit
@@ -117,6 +222,11 @@ Projectiles: {
 	NewLegendSHPE.DisplayName: New Legend SHPE
 	SHPCRight_HoulOut.DisplayName: SHPC Right Holdout
 	SHPCRight_Proj.DisplayName: SHPC Right Projectile
+	NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+	NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
+	NewSHPS.DisplayName: New S H P S
+	BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
+	NewWeapons.BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

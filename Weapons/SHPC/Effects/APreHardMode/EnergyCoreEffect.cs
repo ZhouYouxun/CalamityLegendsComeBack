@@ -90,7 +90,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 					projectile.owner
 				);
 			}
-		}
+
+            int projIndex = Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                projectile.damage,
+                projectile.knockBack,
+                projectile.owner
+            );
+
+            Projectile proj = Main.projectile[projIndex];
+            proj.width = 75;
+            proj.height = 75;
+        }
 
 
 

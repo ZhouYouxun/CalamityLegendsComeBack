@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             Item.width = 124;
             Item.height = 52;
-            Item.damage = 117;
+            Item.damage = 11;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 15;
             Item.useAnimation = 60;
@@ -77,7 +77,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
             Item.knockBack = 3f;
-            Item.UseSound = FireSound;
+            if (Main.zenithWorld)
+            {
+                Item.UseSound = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/AWM开火")
+                {
+                    Volume = 1.5f,
+                    Pitch = 0.1f
+                };
+            }
+            else
+            {
+                Item.UseSound = FireSound;
+            }
             Item.autoReuse = true;
             Item.shoot = ModContent.ProjectileType<NewLegendSHPB>();
             Item.shootSpeed = 20f;
@@ -172,6 +183,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         }
 
         // ==================== 开火相关 ====================
+        // ===== 天顶世界三连发控制 =====
+        private int zenithBurstTimer;
+        private int zenithBurstCount;
         public override bool CanUseItem(Player player)
         {
             if (player.altFunctionUse == 2)
@@ -185,6 +199,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Item.channel = false;
                 Item.noUseGraphic = false;
                 Item.UseSound = FireSound;
+            }
+
+            // ===== 天顶世界三连发初始化 =====
+            if (Main.zenithWorld)
+            {
+                zenithBurstCount = 2; // 还要补两发（总共3发）
+                zenithBurstTimer = 8; // 间隔8帧
             }
 
             // 只要当前还有灌注次数，或者玩家包里还能找到可灌注弹药，就允许使用
@@ -328,6 +349,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // ==================== 手持动画部分（完整保留核心） ====================
         public override void HoldItem(Player player)
         {
+
+            // ===== 天顶世界三连发补射 =====
+            if (Main.zenithWorld && zenithBurstCount > 0)
+            {
+                zenithBurstTimer--;
+
+                if (zenithBurstTimer <= 0)
+                {
+                    Vector2 shootDirection = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
+                    Vector2 velocity = shootDirection * Item.shootSpeed;
+
+                    Projectile.NewProjectile(
+                        Item.GetSource_FromThis(),
+                        player.Center + new Vector2(0f, -10f) + velocity * 3f,
+                        velocity,
+                        ModContent.ProjectileType<NewLegendSHPB>(),
+                        GetCurrentRightDamage(player),
+                        Item.knockBack,
+                        player.whoAmI,
+                        storedEffectID > 0 ? storedEffectID : -1
+                    );
+
+                    zenithBurstCount--;
+                    zenithBurstTimer = 8; // 下一发间隔
+
+                    // ❗手动触发音效（否则不会响）
+                    SoundEngine.PlaySound(FireSound, player.Center);
+                }
+            }
+
             // 鼠标监听（原有）
             player.Calamity().mouseWorldListener = true;
 
@@ -410,6 +461,77 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
 
         #region 传奇属性成长
+
+
+        // ===== 右键基础伤害（固定表）=====
+        private int GetLegendaryRightBaseDamage(Player player)
+        {
+            bool[] downStages =
+            {
+                NPC.downedBoss1,
+                NPC.downedBoss2,
+                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,
+                NPC.downedBoss3,
+                DownedBossSystem.downedSlimeGod,
+                Main.hardMode,
+                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
+                DownedBossSystem.downedCalamitasClone,
+                NPC.downedPlantBoss,
+                NPC.downedGolemBoss,
+                NPC.downedAncientCultist,
+                NPC.downedMoonlord,
+                DownedBossSystem.downedProvidence,
+                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid,
+                DownedBossSystem.downedPolterghast,
+                DownedBossSystem.downedDoG,
+                DownedBossSystem.downedYharon,
+                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas,
+                DownedBossSystem.downedPrimordialWyrm
+            };
+
+            int[] stageDamage =
+            {
+                9,
+                14,
+                18,
+                19,
+                20,
+                25,
+                47,
+                64,
+                72,
+                86,
+                126,
+                279,
+                283,
+                293,
+                303,
+                748,
+                810,
+                9954,
+                12881
+            };
+
+            int finalDamage = 9;
+
+            for (int i = 0; i < downStages.Length; i++)
+            {
+                if (downStages[i])
+                    finalDamage = stageDamage[i];
+                else
+                    break;
+            }
+
+            return finalDamage;
+        }
+        // 应用右键最终伤害
+        private int GetCurrentRightDamage(Player player)
+        {
+            int baseDamage = GetLegendaryRightBaseDamage(player);
+            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
+        }
+
+
         // ==================== 额外伤害修正（完整保留） ====================
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
@@ -440,28 +562,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 对应每个阶段的目标面板伤害
             int[] stageDamage =
             {
-                117,  // 初始 / 克眼后
-                128,  // 世吞 / 克脑
-                140,  // 腐巢 / 宿主
-                154,  // 骷髅王
-                170,  // 史神
-                188,  // 肉后
-                210,  // 机械三王
-                236,  // 灾影
-                265,  // 世花
-                298,  // 石巨人
-                336,  // 拜月
-                380,  // 月总
-                430,  // 亵渎
-                488,  // 神使三兄弟
-                556,  // 幽花
-                638,  // 神吞
-                742,  // 犽戎
-                870,  // 星流 + 女巫
-                1020  // 始源妖龙
+                10,     // 8 ×1.25      初始 / 克眼后
+                16,     // 13 ×1.25     世吞 / 克脑
+                21,     // 17 ×1.25     腐巢 / 宿主
+                22,     // 18 ×1.25     骷髅王
+                23,     // 19 ×1.25     史神
+                28,     // 23 ×1.25     肉后
+                53,     // 43 ×1.25     机械三王
+                72,     // 58 ×1.25     灾影
+                81,     // 65 ×1.25     世花
+                96,     // 77 ×1.25     石巨人
+                140,    // 112 ×1.25    拜月
+                310,    // 248 ×1.25    月总
+                315,    // 252 ×1.25    亵渎
+                326,    // 261 ×1.25    神使三兄弟
+                337,    // 270 ×1.25    幽花
+                832,    // 666 ×1.25    神吞
+                901,    // 721 ×1.25    犽戎
+                11060,  // 8848 ×1.25   星流 + 女巫
+                14313   // 11451 ×1.25  始源妖龙
             };
 
-            int finalDamage = 117; // 默认初始面板伤害
+            int finalDamage = 10;
 
             // 从早到晚检查，取当前已到达的最高阶段面板
             for (int i = 0; i < downStages.Length; i++)

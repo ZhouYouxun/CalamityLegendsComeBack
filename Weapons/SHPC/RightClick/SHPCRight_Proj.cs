@@ -145,10 +145,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 modifiers.FinalDamage /= 1f - target.Calamity().DR;
             }
 
-            // Stage7：附加最大生命1%伤害
+            // Stage7：附加最大生命【1‰】伤害
             if (WeaponStage >= 7)
             {
-                modifiers.SourceDamage += target.lifeMax * 0.01f;
+                modifiers.SourceDamage += target.lifeMax * 0.001f;
             }
         }
 
@@ -180,7 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== Stage5：概率分裂 =====
             if (WeaponStage >= 5 && canSplit && Main.rand.NextBool(3))
             {
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     Vector2 velocity =
                         Projectile.velocity.RotatedByRandom(0.6f) *

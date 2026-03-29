@@ -38,8 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
         public override void SetDefaults()
         {
-            Projectile.width = 160;
-            Projectile.height = 160;
+            Projectile.width = Projectile.height = 80;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
@@ -48,6 +47,116 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             Projectile.localNPCHitCooldown = 10;
 
             EnsureGeometries();
+        }
+
+        // 根据 Faces 自动生成 Edges
+        private static int[,] BuildEdgesFromFaces(int[][] faces)
+        {
+            HashSet<(int, int)> edgeSet = new HashSet<(int, int)>();
+
+            for (int i = 0; i < faces.Length; i++)
+            {
+                int[] face = faces[i];
+                int count = face.Length;
+
+                for (int j = 0; j < count; j++)
+                {
+                    int a = face[j];
+                    int b = face[(j + 1) % count];
+
+                    // 统一顺序，避免重复边（a,b 和 b,a）
+                    if (a > b)
+                    {
+                        int temp = a;
+                        a = b;
+                        b = temp;
+                    }
+
+                    edgeSet.Add((a, b));
+                }
+            }
+
+            int[,] edges = new int[edgeSet.Count, 2];
+            int index = 0;
+
+            foreach (var e in edgeSet)
+            {
+                edges[index, 0] = e.Item1;
+                edges[index, 1] = e.Item2;
+                index++;
+            }
+
+            return edges;
+        }
+
+        // 随机生成几何体（作为第2号方案）
+        private static GeometryData GenerateRandomGeometry()
+        {
+            int pointCount = Main.rand.Next(6, 10); // 点数量控制一下，太多会乱
+
+            Vector3[] points = new Vector3[pointCount];
+
+            // ===== 随机点（球面分布）=====
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector3 v = new Vector3(
+                    Main.rand.NextFloat(-1f, 1f),
+                    Main.rand.NextFloat(-1f, 1f),
+                    Main.rand.NextFloat(-1f, 1f)
+                );
+
+                if (v.Length() < 0.001f)
+                    v = Vector3.UnitX;
+
+                v.Normalize();
+                points[i] = v;
+            }
+
+            // ===== 最近邻连线 =====
+            HashSet<(int, int)> edges = new HashSet<(int, int)>();
+
+            for (int i = 0; i < pointCount; i++)
+            {
+                List<(float dist, int index)> list = new List<(float, int)>();
+
+                for (int j = 0; j < pointCount; j++)
+                {
+                    if (i == j) continue;
+
+                    float d = Vector3.Distance(points[i], points[j]);
+                    list.Add((d, j));
+                }
+
+                list.Sort((a, b) => a.dist.CompareTo(b.dist));
+
+                int connectCount = Main.rand.Next(2, 4);
+
+                for (int k = 0; k < connectCount; k++)
+                {
+                    int j = list[k].index;
+
+                    int a = Math.Min(i, j);
+                    int b = Math.Max(i, j);
+
+                    edges.Add((a, b));
+                }
+            }
+
+            int[,] edgeArray = new int[edges.Count, 2];
+            int idx = 0;
+
+            foreach (var e in edges)
+            {
+                edgeArray[idx, 0] = e.Item1;
+                edgeArray[idx, 1] = e.Item2;
+                idx++;
+            }
+
+            return new GeometryData
+            {
+                Points = points,
+                Edges = edgeArray
+            };
         }
 
         // ================= 初始化几何体 =================
@@ -106,7 +215,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                     {1,2},{1,3},{2,3}
                 }
             });
+
+
+
+
+
+
+
+
+
+
+
+
         }
+        private GeometryData runtimeGeometry;
 
         // ================= OnSpawn 随机选择 =================
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -114,8 +236,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             EnsureGeometries();
 
             int safeMax = Math.Min(MaxGeometryType, geometries.Count - 1);
-            geometryType = Main.rand.Next(safeMax + 1);
+            geometryType = Main.rand.Next(3); // 固定3种：0,1,2
 
+            // 如果是随机方案（2号），动态替换
+            if (geometryType == 2)
+            {
+                runtimeGeometry = GenerateRandomGeometry();
+            }
             // 尺寸：0.5x ~ 2.0x
             sizeMultiplier = Main.rand.NextFloat(0.5f, 2f);
 
@@ -199,10 +326,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             {
                 List<Color> eColors = new List<Color>()
             {
-                Color.Lerp(Color.OrangeRed, Color.White, 0.28f),
-                Color.Lerp(Color.MediumTurquoise, Color.White, 0.28f),
-                Color.Lerp(Color.Orange, Color.White, 0.28f),
-                Color.Lerp(Color.LawnGreen, Color.White, 0.28f)
+                Color.Lerp(Color.OrangeRed, Color.White, 0.55f),
+                Color.Lerp(Color.MediumTurquoise, Color.White, 0.55f),
+                Color.Lerp(Color.Orange, Color.White, 0.55f),
+                Color.Lerp(Color.LawnGreen, Color.White, 0.55f)
             };
 
                 float rate = Main.GlobalTimeWrappedHourly * 8f;
@@ -231,7 +358,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                 return center + new Vector2(r.X, r.Y) * persp;
             }
 
-            GeometryData geo = geometries[geometryType];
+            GeometryData geo = geometryType == 2 ? runtimeGeometry : geometries[geometryType];
 
             Vector2[] projected = new Vector2[geo.Points.Length];
             for (int i = 0; i < geo.Points.Length; i++)

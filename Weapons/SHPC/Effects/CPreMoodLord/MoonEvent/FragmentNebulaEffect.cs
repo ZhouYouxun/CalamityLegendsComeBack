@@ -28,6 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnSpawn(Projectile projectile, Player owner)
         {
         }
+        public override bool EnableDefaultSlowdown => false;
 
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
@@ -35,25 +36,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             // ===== 简单追踪 =====
             NPC target = projectile.Center.ClosestNPCAt(900f);
 
-            if (target != null)
-            {
-                Vector2 desiredDir = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
+            Vector2 desiredDir = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
 
-                float currentRot = projectile.velocity.ToRotation();
-                float targetRot = desiredDir.ToRotation();
+            // ===== SHPB式追踪（强化1.25倍）=====
+            projectile.velocity = (
+                projectile.velocity * 17f +
+                desiredDir * (20f * 1.25f) // ← 这里就是强化
+            ) / 18f;
 
-                float newRot = currentRot.AngleTowards(targetRot, MathHelper.ToRadians(4f));
+            // ===== 保持速度稳定 =====
+            float speed = projectile.velocity.Length();
+            speed = MathHelper.Lerp(speed, 14f, 0.08f);
+            projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
 
-                float speed = projectile.velocity.Length();
-
-                // 稍微拉到稳定速度
-                speed = MathHelper.Lerp(speed, 14f, 0.08f);
-
-                projectile.velocity = newRot.ToRotationVector2() * speed;
-            }
-
-            // 抵消默认减速
-            projectile.velocity *= 1.03f;
 
             // ===== 星云拖尾 =====
             if (Main.rand.NextBool(2))

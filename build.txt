@@ -6,3 +6,4 @@ hideResources = false
 includeSource = true
 modReferences = CalamityMod
 sortAfter = CalamityMod
+homepage = https://github.com/ZhouYouxun/CalamityLegendsComeBack
