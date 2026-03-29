@@ -141,13 +141,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #region ===== 基础生存判定 =====
 
-            if (!player.active || player.dead)
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            if (player.HeldItem.type != AssociatedItemID)
+            if (!player.active || player.dead || player.HeldItem.type != AssociatedItemID)
             {
                 Projectile.Kill();
                 return;
@@ -299,6 +293,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (!AllowManualCool || reduceCooldown > 0 || stage <= 0)
                 return;
 
+            // ===== 降温音效 =====
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/AWM开火")
+                {
+                    Volume = 5.2f,
+                    Pitch = 0.2f
+                },
+                GunTipPosition
+            );
+
             stage--;
             stageTimer = 0;
             
@@ -363,7 +367,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 int projIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    GunTipPosition,
+                    GetSafeFirePosition(player) - Vector2.UnitX.RotatedBy(Projectile.rotation) * 22f,
                     velocity,
                     ModContent.ProjectileType<SHPCRight_Proj>(),
                     Projectile.damage,
@@ -389,6 +393,55 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             PlayFireEffects(Vector2.UnitX.RotatedBy(Projectile.rotation));
             PlayMuzzleEffect(Vector2.UnitX.RotatedBy(Projectile.rotation));
+        }
+
+        // ===== 安全开火位置判定 =====
+        private Vector2 GetSafeFirePosition(Player player)
+        {
+            Vector2 gunTip = GunTipPosition;
+
+            // ===== 1. 枪口在方块内 =====
+            if (Collision.SolidCollision(gunTip, 1, 1))
+                return Projectile.Center;
+
+            // ===== 2. 获取最近敌人 =====
+            NPC target = null;
+            float maxDetect = 300f;
+            float closestDist = maxDetect;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+
+                if (!npc.active || npc.friendly || npc.dontTakeDamage)
+                    continue;
+
+                float dist = Vector2.Distance(player.Center, npc.Center);
+
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    target = npc;
+                }
+            }
+
+            // ===== 3. 距离判定（贴脸）=====
+            float dangerRange = 56f; // 和你的枪口长度一致
+
+            if (target != null && closestDist < dangerRange)
+                return Projectile.Center;
+
+            // ===== 4. 敌人在枪口前方（防穿脸）=====
+            if (target != null)
+            {
+                float distToPlayer = Vector2.Distance(player.Center, target.Center);
+                float distToGunTip = Vector2.Distance(gunTip, target.Center);
+
+                if (distToPlayer < distToGunTip)
+                    return Projectile.Center;
+            }
+
+            return gunTip;
         }
 
         #endregion
@@ -437,7 +490,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             // 轻微前方偏移（贴近枪口）
-            Vector2 spawnPos = GunTipPosition + direction * Main.rand.NextFloat(2f, 6f);
+            Vector2 spawnPos = GetSafeFirePosition(Main.player[Projectile.owner]) + direction * Main.rand.NextFloat(2f, 6f);
 
             // 主体方向：沿射击方向
             Vector2 velocity =

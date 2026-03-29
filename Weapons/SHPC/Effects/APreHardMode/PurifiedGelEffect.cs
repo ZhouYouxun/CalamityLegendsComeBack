@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override Color StartColor => new Color(120, 200, 255); // 亮蓝
         public override Color EndColor => new Color(60, 120, 255);    // 深蓝
 
+
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             projectile.timeLeft = 30;

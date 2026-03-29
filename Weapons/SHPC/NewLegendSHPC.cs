@@ -274,7 +274,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 左键 → 正常发射
             Projectile.NewProjectile(
                 source,
-                position + new Vector2(0f, -10f) + velocity * 3f,
+                GetSafeFirePosition(player, velocity) + new Vector2(0f, -10f) ,
                 velocity,
                 ModContent.ProjectileType<NewLegendSHPB>(),
                 damage,
@@ -284,6 +284,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             );
 
             return false;
+        }
+
+        // ===== 左键安全开火位置 =====
+        private Vector2 GetSafeFirePosition(Player player, Vector2 velocity)
+        {
+            // ===== 构造“虚拟枪口” =====
+            Vector2 dir = velocity.SafeNormalize(Vector2.UnitX * player.direction);
+            float gunLength = 56f;
+
+            Vector2 gunTip = player.Center + dir * gunLength;
+
+            // ===== 1. 枪口卡墙 =====
+            if (Collision.SolidCollision(gunTip, 1, 1))
+                return player.Center;
+
+            // ===== 2. 找最近敌人 =====
+            NPC target = null;
+            float maxDetect = 300f;
+            float closestDist = maxDetect;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+
+                if (!npc.active || npc.friendly || npc.dontTakeDamage)
+                    continue;
+
+                float dist = Vector2.Distance(player.Center, npc.Center);
+
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    target = npc;
+                }
+            }
+
+            // ===== 3. 贴脸判定 =====
+            if (target != null && closestDist < gunLength)
+                return player.Center;
+
+            // ===== 4. 敌人在枪口前面 =====
+            if (target != null)
+            {
+                float distToPlayer = Vector2.Distance(player.Center, target.Center);
+                float distToGunTip = Vector2.Distance(gunTip, target.Center);
+
+                if (distToPlayer < distToGunTip)
+                    return player.Center;
+            }
+
+            return gunTip;
         }
 
         #endregion
@@ -411,7 +462,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     player.Center,
                     shootDirection,
                     ModContent.ProjectileType<SHPCRight_HoulOut>(),
-                    Item.damage,
+                    GetCurrentRightDamage(player),
                     Item.knockBack,
                     player.whoAmI,
                     GetRightClickProgressState(),                 // ai[0]
@@ -562,25 +613,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 对应每个阶段的目标面板伤害
             int[] stageDamage =
             {
-                10,     // 8 ×1.25      初始 / 克眼后
-                16,     // 13 ×1.25     世吞 / 克脑
-                21,     // 17 ×1.25     腐巢 / 宿主
-                22,     // 18 ×1.25     骷髅王
-                23,     // 19 ×1.25     史神
-                28,     // 23 ×1.25     肉后
-                53,     // 43 ×1.25     机械三王
-                72,     // 58 ×1.25     灾影
-                81,     // 65 ×1.25     世花
-                96,     // 77 ×1.25     石巨人
-                140,    // 112 ×1.25    拜月
-                310,    // 248 ×1.25    月总
-                315,    // 252 ×1.25    亵渎
-                326,    // 261 ×1.25    神使三兄弟
-                337,    // 270 ×1.25    幽花
-                832,    // 666 ×1.25    神吞
-                901,    // 721 ×1.25    犽戎
-                11060,  // 8848 ×1.25   星流 + 女巫
-                14313   // 11451 ×1.25  始源妖龙
+                15,     // 初始 / 克眼
+                24,     // 世吞 / 克脑
+                31,     // 腐巢 / 宿主
+                33,     // 骷髅王
+                34,     // 史莱姆之神
+                42,     // 肉山后
+                79,     // 机械三王
+                108,    // 灾影
+                121,    // 世花
+                144,    // 石巨人
+                210,    // 拜月教徒
+                465,    // 月总
+                472,    // 亵渎天神
+                489,    // 神使三兄弟
+                505,    // 幽花
+                1248,   // 神吞
+                1351,   // 犽戎
+                16590,  // 星流机甲 + 至尊灾厄
+                21469   // 始源妖龙
             };
 
             int finalDamage = 10;
@@ -703,18 +754,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region 不用管的
         // ==================== 合成表（先保留原版） ====================
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient<PlasmaDriveCore>()
-                .AddIngredient<SuspiciousScrap>(4)
-                //.AddRecipeGroup("AnyMythrilBar", 10)
-                //.AddIngredient(ItemID.SoulofFright, 5)
-                //.AddIngredient(ItemID.SoulofMight, 5)
-                //.AddIngredient(ItemID.SoulofSight, 5)
-                .AddTile(TileID.Anvils)
-                .Register();
-        }
+        //public override void AddRecipes()
+        //{
+        //    CreateRecipe()
+        //        .AddIngredient<PlasmaDriveCore>()
+        //        .AddIngredient<SuspiciousScrap>(4)
+        //        //.AddRecipeGroup("AnyMythrilBar", 10)
+        //        //.AddIngredient(ItemID.SoulofFright, 5)
+        //        //.AddIngredient(ItemID.SoulofMight, 5)
+        //        //.AddIngredient(ItemID.SoulofSight, 5)
+        //        .AddTile(TileID.Anvils)
+        //        .Register();
+        //}
 
         // ==================== 物品复制 / 存档 / 联机同步（完整保留） ====================
         public override ModItem Clone(Item item)

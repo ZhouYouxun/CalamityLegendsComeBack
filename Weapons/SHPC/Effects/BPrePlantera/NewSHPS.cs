@@ -26,9 +26,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             new Color(255, 120, 200),  // 0 光明之魂（亮粉）
             new Color(90, 0, 120),     // 1 黑暗之魂（暗紫）
             new Color(120, 200, 255),  // 2 飞翔之魂（天蓝）
-            new Color(255, 220, 80),
-            new Color(200, 120, 255),
-            new Color(255, 120, 200)
+            new Color(255, 60, 60),    // 3 恐惧之魂（赤红）
+            new Color(40, 80, 200),    // 4 力量之魂（深蓝）
+            new Color(120, 255, 120)   // 5 视觉之魂（荧光绿）
         };
 
         // ===== 可选：保留原版拾取灵魂烟雾逻辑入口 =====
@@ -79,6 +79,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // ai[1] = 绑定主弹幕ID
             boundMainProjectileID = (int)Projectile.ai[1];
+
+            // 让他平分角度，占满三个轨道
+            orbitOffset = (Projectile.whoAmI % 3) * MathHelper.TwoPi / 3f;
         }
 
         public override void AI()
@@ -126,11 +129,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         // =========================
         // ===== 预设0：光明之魂 =====
         // =========================
+        private bool hasDetached; // 是否已经进入冲锋状态（锁死）
+        private float orbitOffset; // 每个实例的初始相位偏移
         private void AI_Preset0()
         {
+            // ===== 如果已经脱离过，就永远冲锋 =====
+            if (hasDetached)
+            {
+                Projectile.velocity *= 1.01f;
+                return;
+            }
+
+            // ===== 正常绑定逻辑 =====
             if (Main.projectile.IndexInRange(boundMainProjectileID))
             {
                 Projectile mainProj = Main.projectile[boundMainProjectileID];
+
                 if (mainProj.active)
                 {
                     float a = 60f;
@@ -140,15 +154,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     ellipseRotation += 0.02f;
 
                     Vector2 ellipse = new Vector2(
-                        (float)Math.Cos(orbitAngle) * a,
-                        (float)Math.Sin(orbitAngle) * b
+                        (float)Math.Cos(orbitAngle + orbitOffset) * a,
+                        (float)Math.Sin(orbitAngle + orbitOffset) * b
                     ).RotatedBy(ellipseRotation);
 
                     Projectile.Center = mainProj.Center + ellipse;
 
                     Vector2 futurePos = mainProj.Center + new Vector2(
-                        (float)Math.Cos(orbitAngle + 0.1f) * a,
-                        (float)Math.Sin(orbitAngle + 0.1f) * b
+                        (float)Math.Cos(orbitAngle + orbitOffset + 0.1f) * a,
+                        (float)Math.Sin(orbitAngle + orbitOffset + 0.1f) * b
                     ).RotatedBy(ellipseRotation);
 
                     Projectile.velocity = futurePos - Projectile.Center;
@@ -156,7 +170,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 }
             }
 
-            // 失去绑定后正前方飞行并持续加速
+            // ===== 一旦进入这里 → 标记为永久脱离 =====
+            hasDetached = true;
+
+            // ===== 冲锋 =====
             Projectile.velocity *= 1.01f;
         }
 

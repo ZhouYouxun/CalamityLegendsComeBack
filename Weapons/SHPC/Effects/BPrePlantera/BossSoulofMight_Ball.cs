@@ -11,9 +11,10 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
-    internal class BossSoulofMight_Ball : ModProjectile, ILocalizedModType
+    public class BossSoulofMight_Ball : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityThrowingSpear/Weapons/NewWeapons/BPrePlantera/SHPCK/SHPCK";
+        //public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "Terraria/Images/Projectile_106";
 
         public new string LocalizationCategory => "Projectiles";
 

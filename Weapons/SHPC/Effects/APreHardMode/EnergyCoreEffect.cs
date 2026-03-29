@@ -61,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 		// 死亡时炸出6个电火花
 		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
 		{
-			int count = 6;
+			int count = 7;
 
 			// 随机整体旋转（避免每次都一样）
 			float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
@@ -77,8 +77,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 				float speed = Main.rand.NextFloat(4f, 8f);
 				Vector2 velocity = angle.ToRotationVector2() * speed;
 
-				// 伤害随机（0.12~0.20倍）
-				float damageFactor = Main.rand.NextFloat(0.12f, 0.20f);
+				// 伤害随机（0.X~0.Y倍）
+				float damageFactor = Main.rand.NextFloat(0.3f, 0.5f);
 
 				Projectile.NewProjectile(
 					projectile.GetSource_FromThis(),
