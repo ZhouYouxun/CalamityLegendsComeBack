@@ -376,8 +376,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #endregion
 
-
-
+        
         #region 通用手持动画部分 [包括右键射击]
 
         public override bool AltFunctionUse(Player player) => true;
@@ -443,6 +442,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 !Main.mapFullscreen &&
                 !Main.blockMouse)
             {
+                // 🔥 强制打断左键动画
+                //player.itemAnimation = 0;
+                //player.itemTime = 0;
+                //recoilProgress = 0;
+
                 // ===== 防止重复生成 =====
                 foreach (Projectile proj in Main.projectile)
                 {
@@ -477,6 +481,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
         {
+            //if (player.altFunctionUse == 2)
+            //    return;
+
             // 始终朝向鼠标
             player.ChangeDir(Math.Sign((player.Calamity().mouseWorld - player.Center).X));
 

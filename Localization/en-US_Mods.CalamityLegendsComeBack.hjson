@@ -227,6 +227,9 @@ Projectiles: {
 	NewSHPS.DisplayName: New S H P S
 	BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
 	NewWeapons.BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+	TeachingProjectile.DisplayName: Teaching Projectile
+	AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+	AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
