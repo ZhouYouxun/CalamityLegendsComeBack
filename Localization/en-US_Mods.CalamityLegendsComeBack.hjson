@@ -41,6 +41,11 @@ Items: {
 			}
 		}
 	}
+
+	NewLegendBrinyBaron: {
+		DisplayName: New Legend Briny Baron
+		Tooltip: ""
+	}
 }
 
 Text: {
@@ -230,6 +235,18 @@ Projectiles: {
 	TeachingProjectile.DisplayName: Teaching Projectile
 	AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
 	AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
+	BrinyBaron_EXP.DisplayName: Briny Baron_ E X P
+	BrinyBaron_LeftClick_HitSplash.DisplayName: Briny Baron_ Left Click_ Hit Splash
+	BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+	BrinyBaron_LeftClick_TrackingWaterBlade.DisplayName: Briny Baron_ Left Click_ Tracking Water Blade
+	BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+	BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+	BrinyBaron_SkillDashTornado_Tornado.DisplayName: Briny Baron_ Skill Dash Tornado_ Tornado
+	BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
+	BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+	BrinyBaron_SkillSlashDash_WaterBomb.DisplayName: Briny Baron_ Skill Slash Dash_ Water Bomb
+	BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
+	BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

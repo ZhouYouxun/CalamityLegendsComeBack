@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Recipe recipeYSF = Recipe.Create(ModContent.ItemType<YharonSoulFragment>(), 5);
             recipeYSF.AddIngredient(ModContent.ItemType<YharonSoulFragment>(), 1);
             recipeYSF.AddIngredient(ModContent.ItemType<AscendantSpiritEssence>(), 1);
-            recipeYSF.AddTile(TileID.WorkBenches);
+            recipeYSF.AddTile(TileID.LunarCraftingStation);
             recipeYSF.Register();
 
 
