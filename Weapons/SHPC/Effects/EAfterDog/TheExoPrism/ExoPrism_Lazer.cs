@@ -1,4 +1,5 @@
-﻿using CalamityMod.Particles;
+﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -113,6 +114,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
+
             // ================= 在敌人下方生成几何体 =================
 
             Vector2 baseCenter = target.Center + new Vector2(0f, 16f * 16f); // 下方16

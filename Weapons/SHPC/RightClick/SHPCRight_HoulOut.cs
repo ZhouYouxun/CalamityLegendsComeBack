@@ -253,7 +253,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #endregion
 
-
             #region ===== 魔力耗尽强制停火 =====
 
             if (player.statMana <= 0)
@@ -318,34 +317,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 功能逻辑 =====
+        #region ===== 开火逻辑 =====
 
         private void Fire(Player player)
         {
             player.statMana -= 2;
 
-            //// ===== 调试：显示当前进度 =====
-            //if (Main.myPlayer == player.whoAmI)
-            //{
-            //    string text = ProgressState switch
-            //    {
-            //        0 => "当前武器阶段：未击败任何关键Boss",
-            //        1 => "当前武器阶段：已击败毁灭者",
-            //        2 => "当前武器阶段：已击败星神游龙",
-            //        3 => "当前武器阶段：已击败风暴编织者",
-            //        4 => "当前武器阶段：已击败星流巨械",
-            //        _ => "未知阶段"
-            //    };
-
-            //    Main.NewText(text, Color.LimeGreen);
-            //}
-
-
-
-
             int count = LaserChainCount;
 
-            Vector2 baseVelocity = Vector2.UnitX.RotatedBy(Projectile.rotation) * 25f;
+            Vector2 fireDirection = Vector2.UnitX.RotatedBy(Projectile.rotation);
+            Vector2 baseVelocity = fireDirection * 25f;
 
             for (int i = 0; i < count; i++)
             {
@@ -367,7 +348,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 int projIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    GetSafeFirePosition(player) - Vector2.UnitX.RotatedBy(Projectile.rotation) * 22f,
+                    GetSafeFirePosition(player) - fireDirection * 22f,
                     velocity,
                     ModContent.ProjectileType<SHPCRight_Proj>(),
                     Projectile.damage,
@@ -386,13 +367,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (stage >= 4)
             {
                 player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3秒
-
-                // 传递当前热值（给Buff用）
-                //player.GetModPlayer<SHPCRight_Player>().HeatStage = stage;
             }
 
-            PlayFireEffects(Vector2.UnitX.RotatedBy(Projectile.rotation));
-            PlayMuzzleEffect(Vector2.UnitX.RotatedBy(Projectile.rotation));
+            PlayFireEffects(fireDirection);
+            PlayMuzzleEffect(player, fireDirection);
         }
 
         // ===== 安全开火位置判定 =====
@@ -442,6 +420,78 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             return gunTip;
+        }
+
+        // 枪口特效（轻量融合版：Apoctosis主味 + Hellborn碎屑 + Tau白烟）
+        private void PlayMuzzleEffect(Player player, Vector2 direction)
+        {
+            Vector2 muzzlePos = GetSafeFirePosition(player) + direction * 4f;
+
+            Color techBlue = new Color(90, 190, 255);
+            Color paleBlue = new Color(180, 235, 255);
+
+            // ===== 1. Apoctosis风格：细长能量线，散布更小，速度更快更远 =====
+            for (int i = 0; i < 2; i++)
+            {
+                Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.25f, 0.55f));
+
+                Vector2 lineVelocity =
+                    direction.RotatedByRandom(0.10f) *
+                    Main.rand.NextFloat(10f, 15f);
+
+                Particle line = new CustomSpark(
+                    muzzlePos,
+                    lineVelocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    10,
+                    Main.rand.NextFloat(0.028f, 0.04f),
+                    lineColor,
+                    new Vector2(1f, 0.7f),
+                    shrinkSpeed: 0.75f
+                );
+
+                GeneralParticleHandler.SpawnParticle(line);
+            }
+
+            // ===== 2. Hellborn风格：少量前喷碎屑，但改成科技蓝 =====
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 dustVelocity =
+                    direction.RotatedByRandom(0.16f) *
+                    Main.rand.NextFloat(2.4f, 6.2f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    muzzlePos + direction * Main.rand.NextFloat(0f, 2f),
+                    267
+                );
+
+                dust.velocity = dustVelocity;
+                dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.7f));
+                dust.scale = Main.rand.NextFloat(0.65f, 0.9f);
+                dust.noGravity = true;
+            }
+
+            // ===== 3. Tau风格：极轻微白烟，只留一点体积感 =====
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 smokeVelocity =
+                    direction.RotatedByRandom(0.22f) *
+                    Main.rand.NextFloat(1.8f, 4.2f);
+
+                Particle smoke = new HeavySmokeParticle(
+                    muzzlePos,
+                    smokeVelocity,
+                    Color.Lerp(Color.White, paleBlue, 0.35f),
+                    16,
+                    Main.rand.NextFloat(0.28f, 0.45f),
+                    0.45f,
+                    Main.rand.NextFloat(-0.1f, 0.1f),
+                    Main.rand.NextBool()
+                );
+
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
         }
 
         #endregion
@@ -629,6 +679,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
 
+            // ===== 火箭齐射枪口特效 =====
+            PlayRocketMuzzleEffect(player, dir);
+
             for (int i = 0; i < 5; i++)
             {
                 float t = i / 4f; // 0~1
@@ -693,6 +746,151 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             GeneralParticleHandler.SpawnParticle(smoke);
         }
+
+
+        // 火箭齐射枪口特效（与普通开火同源，但更宏伟，按扇形角度同步展开）
+        private void PlayRocketMuzzleEffect(Player player, Vector2 baseDirection)
+        {
+            Vector2 muzzlePos = GetSafeFirePosition(player) + baseDirection * 6f;
+
+            Color techBlue = new Color(90, 190, 255);
+            Color paleBlue = new Color(180, 235, 255);
+
+            // ===== 1. 中央爆能前涌：先给一个更强的主喷口 =====
+            for (int i = 0; i < 4; i++)
+            {
+                Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.3f, 0.65f));
+
+                Vector2 lineVelocity =
+                    baseDirection.RotatedByRandom(0.16f) *
+                    Main.rand.NextFloat(13f, 19f);
+
+                Particle line = new CustomSpark(
+                    muzzlePos,
+                    lineVelocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.04f, 0.055f),
+                    lineColor,
+                    new Vector2(1.25f, 0.8f),
+                    shrinkSpeed: 0.72f
+                );
+
+                GeneralParticleHandler.SpawnParticle(line);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                Vector2 dustVelocity =
+                    baseDirection.RotatedByRandom(0.24f) *
+                    Main.rand.NextFloat(3.5f, 8f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    muzzlePos + baseDirection * Main.rand.NextFloat(0f, 3f),
+                    267
+                );
+
+                dust.velocity = dustVelocity;
+                dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.8f));
+                dust.scale = Main.rand.NextFloat(0.8f, 1.1f);
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Vector2 smokeVelocity =
+                    baseDirection.RotatedByRandom(0.28f) *
+                    Main.rand.NextFloat(2.4f, 5.4f);
+
+                Particle smoke = new HeavySmokeParticle(
+                    muzzlePos,
+                    smokeVelocity,
+                    Color.Lerp(Color.White, paleBlue, 0.35f),
+                    18,
+                    Main.rand.NextFloat(0.38f, 0.58f),
+                    0.5f,
+                    Main.rand.NextFloat(-0.12f, 0.12f),
+                    Main.rand.NextBool()
+                );
+
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            // ===== 2. 跟随五发火箭角度，做同源分裂喷口 =====
+            for (int i = 0; i < 5; i++)
+            {
+                float t = i / 4f;
+                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
+
+                Vector2 laneDirection = baseDirection.RotatedBy(angle);
+                Vector2 lanePos = muzzlePos + laneDirection * Main.rand.NextFloat(2f, 5f);
+
+                // Apoctosis主味：每条分支各自带一条快速能量线
+                for (int j = 0; j < 2; j++)
+                {
+                    Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.25f, 0.55f));
+
+                    Vector2 lineVelocity =
+                        laneDirection.RotatedByRandom(0.08f) *
+                        Main.rand.NextFloat(11f, 17f);
+
+                    Particle laneLine = new CustomSpark(
+                        lanePos,
+                        lineVelocity,
+                        "CalamityMod/Particles/BloomLineSoftEdge",
+                        false,
+                        10,
+                        Main.rand.NextFloat(0.03f, 0.045f),
+                        lineColor,
+                        new Vector2(1.05f, 0.72f),
+                        shrinkSpeed: 0.75f
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(laneLine);
+                }
+
+                // Hellborn主味：少量蓝色碎屑跟着分叉出去
+                for (int j = 0; j < 2; j++)
+                {
+                    Vector2 dustVelocity =
+                        laneDirection.RotatedByRandom(0.14f) *
+                        Main.rand.NextFloat(2.8f, 6.8f);
+
+                    Dust dust = Dust.NewDustPerfect(
+                        lanePos,
+                        267
+                    );
+
+                    dust.velocity = dustVelocity;
+                    dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.75f));
+                    dust.scale = Main.rand.NextFloat(0.7f, 0.95f);
+                    dust.noGravity = true;
+                }
+
+                // Tau主味：每条分支只挂一点很轻的白烟
+                if (Main.rand.NextBool(2))
+                {
+                    Vector2 smokeVelocity =
+                        laneDirection.RotatedByRandom(0.18f) *
+                        Main.rand.NextFloat(1.8f, 4.4f);
+
+                    Particle smoke = new HeavySmokeParticle(
+                        lanePos,
+                        smokeVelocity,
+                        Color.Lerp(Color.White, paleBlue, 0.35f),
+                        16,
+                        Main.rand.NextFloat(0.26f, 0.42f),
+                        0.42f,
+                        Main.rand.NextFloat(-0.08f, 0.08f),
+                        Main.rand.NextBool()
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(smoke);
+                }
+            }
+        }
+
         private void TriggerStageEffect()
         {
             stageOutlineTimer = StageOutlineDuration;
@@ -774,7 +972,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         }
 
         #endregion
-
         public override void OnKill(int timeLeft)
         {
             stage = 0;

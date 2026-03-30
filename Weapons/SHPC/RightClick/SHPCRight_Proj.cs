@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         // 是否允许分裂（子弹用）
         private bool canSplit = true;
-
+        private int helixTimer;
         public override Color? GetAlpha(Color lightColor)
             => new Color(255, 235, 120, 0);
 
@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Projectile.localNPCHitCooldown = 14;
             Projectile.alpha = 255;
         }
-
+        private float baseSpeed;
         public override void OnSpawn(IEntitySource source)
         {
             // ===== 根据热值调整初速度倍率 =====
@@ -62,6 +62,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             };
 
             Projectile.velocity *= speedMultiplier;
+
+            baseSpeed = Projectile.velocity.Length();
 
             // 子弹标记（防止递归分裂）
             if (Projectile.ai[0] == 1f)
@@ -114,10 +116,61 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 penetratedSet = true;
             }
 
-            // 飞行特效：简单随机释放
-            if (Projectile.numUpdates == 0)
+            // 飞行特效：Stage3+ 才启用，且每真实帧只释放一次，避免过重
+            if (WeaponStage >= 3 && Projectile.numUpdates == 0)
             {
-                //SpawnFlightEffects();
+                helixTimer++;
+                SpawnHelixFlightEffects();
+            }
+        }
+
+        private void SpawnHelixFlightEffects()
+        {
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            // ===== 单螺旋：用单个 sin 波在弹道两侧摆动 =====
+            float wave = (float)Math.Sin(helixTimer * 0.42f);
+            Vector2 helixOffset = right * wave * 6f;
+            Vector2 spawnPos = Projectile.Center + helixOffset;
+
+            Color brightYellow = new Color(255, 235, 120);
+            Color hotYellow = Color.Lerp(brightYellow, Color.White, 0.35f);
+
+            // ===== 1. 同源碎屑：少量亮黄色 Dust =====
+            Dust dust = Dust.NewDustPerfect(
+                spawnPos,
+                267
+            );
+
+            dust.velocity =
+                forward * Main.rand.NextFloat(1.8f, 3.6f) +
+                right * wave * Main.rand.NextFloat(0.15f, 0.45f);
+
+            dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
+            dust.scale = Main.rand.NextFloat(0.62f, 0.82f);
+            dust.noGravity = true;
+
+            // ===== 2. 同源光学线：更克制，只偶尔喷一条 =====
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 lineVelocity =
+                    forward * Main.rand.NextFloat(5.5f, 8.5f) +
+                    right * wave * Main.rand.NextFloat(0.4f, 1.0f);
+
+                Particle line = new CustomSpark(
+                    spawnPos,
+                    lineVelocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    9,
+                    Main.rand.NextFloat(0.018f, 0.028f),
+                    hotYellow,
+                    new Vector2(0.9f, 0.62f),
+                    shrinkSpeed: 0.8f
+                );
+
+                GeneralParticleHandler.SpawnParticle(line);
             }
         }
 
@@ -178,13 +231,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // ===== Stage5：概率分裂 =====
-            if (WeaponStage >= 5 && canSplit && Main.rand.NextBool(3))
+            if (WeaponStage >= 5 && canSplit)
             {
-                for (int i = 0; i < 5; i++)
+                int splitCount = Main.rand.Next(0, 6); // 0~5 均匀分布
+
+                for (int i = 0; i < splitCount; i++)
                 {
                     Vector2 velocity =
-                        Projectile.velocity.RotatedByRandom(0.6f) *
-                        Main.rand.NextFloat(0.7f, 1.1f);
+                        Projectile.velocity.SafeNormalize(Vector2.UnitX)
+                            .RotatedByRandom(0.6f) *
+                        baseSpeed *
+                        Main.rand.NextFloat(0.9f, 1.05f);
 
                     int index = Projectile.NewProjectile(
                         Projectile.GetSource_FromThis(),
@@ -200,72 +257,74 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     if (Main.projectile[index].ModProjectile is SHPCRight_Proj p)
                     {
                         p.WeaponStage = WeaponStage;
+
                     }
+                    Main.projectile[index].tileCollide = false;
                 }
             }
 
             SpawnDeathEffects();
         }
 
-        #region 特效
+        #region 特效[已废弃]
 
-        private void SpawnFlightEffects()
-        {
-            int roll = Main.rand.Next(3);
+        //private void SpawnFlightEffects()
+        //{
+        //    int roll = Main.rand.Next(3);
 
-            if (roll == 0)
-            {
-                // 电能Dust
-                int lightDustCount = Main.rand.Next(1, 3);
-                for (int i = 0; i < lightDustCount; i++)
-                {
-                    Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 18f;
-                    Dust light = Dust.NewDustPerfect(dustSpawnPosition, 267);
-                    light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.5f, 1f));
-                    light.velocity = Main.rand.NextVector2Circular(4f, 4f);
-                    light.scale = Main.rand.NextFloat(0.75f, 1.05f);
-                    light.noGravity = true;
-                }
-            }
-            else if (roll == 1)
-            {
-                // 辉光球
-                Vector2 dir = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                Vector2 position = Projectile.Center + dir * Main.rand.NextFloat(4f, 10f);
-                Vector2 velocity = dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.5f, 2.2f);
+        //    if (roll == 0)
+        //    {
+        //        // 电能Dust
+        //        int lightDustCount = Main.rand.Next(1, 3);
+        //        for (int i = 0; i < lightDustCount; i++)
+        //        {
+        //            Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 18f;
+        //            Dust light = Dust.NewDustPerfect(dustSpawnPosition, 267);
+        //            light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.5f, 1f));
+        //            light.velocity = Main.rand.NextVector2Circular(4f, 4f);
+        //            light.scale = Main.rand.NextFloat(0.75f, 1.05f);
+        //            light.noGravity = true;
+        //        }
+        //    }
+        //    else if (roll == 1)
+        //    {
+        //        // 辉光球
+        //        Vector2 dir = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
+        //        Vector2 position = Projectile.Center + dir * Main.rand.NextFloat(4f, 10f);
+        //        Vector2 velocity = dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.5f, 2.2f);
 
-                Color glowColor = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.25f, 0.85f));
-                GlowOrbParticle glow = new GlowOrbParticle(
-                    position,
-                    velocity,
-                    false,
-                    18,
-                    Main.rand.NextFloat(0.6f, 0.9f),
-                    glowColor,
-                    true,
-                    true
-                );
-                GeneralParticleHandler.SpawnParticle(glow);
-            }
-            else
-            {
-                // 光芒粒子
-                Vector2 velocity = Main.rand.NextVector2Circular(1.2f, 1.2f);
-                float scale = Main.rand.NextFloat(0.2f, 0.4f);
-                Color particleColor = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.2f, 0.7f));
-                int lifetime = Main.rand.Next(10, 16);
+        //        Color glowColor = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.25f, 0.85f));
+        //        GlowOrbParticle glow = new GlowOrbParticle(
+        //            position,
+        //            velocity,
+        //            false,
+        //            18,
+        //            Main.rand.NextFloat(0.6f, 0.9f),
+        //            glowColor,
+        //            true,
+        //            true
+        //        );
+        //        GeneralParticleHandler.SpawnParticle(glow);
+        //    }
+        //    else
+        //    {
+        //        // 光芒粒子
+        //        Vector2 velocity = Main.rand.NextVector2Circular(1.2f, 1.2f);
+        //        float scale = Main.rand.NextFloat(0.2f, 0.4f);
+        //        Color particleColor = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.2f, 0.7f));
+        //        int lifetime = Main.rand.Next(10, 16);
 
-                SquishyLightParticle particle = new(
-                    Projectile.Center,
-                    velocity,
-                    scale,
-                    particleColor,
-                    lifetime
-                );
+        //        SquishyLightParticle particle = new(
+        //            Projectile.Center,
+        //            velocity,
+        //            scale,
+        //            particleColor,
+        //            lifetime
+        //        );
 
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
-        }
+        //        GeneralParticleHandler.SpawnParticle(particle);
+        //    }
+        //}
 
         private void SpawnHitEffects(NPC target)
         {
@@ -338,7 +397,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Vector2 outwardBase = Main.rand.NextVector2Unit();
 
             // 扩散Dust
-            int lightDustCount = 14;
+            int lightDustCount = 10;
             for (int i = 0; i < lightDustCount; i++)
             {
                 Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * Main.rand.NextFloat(0f, 10f);
@@ -350,7 +409,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // 扩散光芒粒子
-            int lightCount = 6;
+            int lightCount = 4;
             for (int i = 0; i < lightCount; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.2f, 4.2f);
@@ -370,7 +429,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // 扩散辉光球
-            int orbCount = 5;
+            int orbCount = 3;
             for (int i = 0; i < orbCount; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.4f, 3.5f);
@@ -404,7 +463,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             //GeneralParticleHandler.SpawnParticle(pulse);
         }
 
-        #endregion
+        #endregion[已废弃]
 
         public override void SendExtraAI(BinaryWriter writer)
         {

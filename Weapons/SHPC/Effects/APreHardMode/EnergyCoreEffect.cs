@@ -3,9 +3,12 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode;
 using CalamityMod.Items.Materials;
 using CalamityMod.Projectiles.Typeless;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Graphics.Effects;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 {
@@ -106,8 +109,96 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             proj.height = 75;
         }
 
+        public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
+        {
+            // ===== Rover Drive 同款：护盾轻微呼吸 =====
+            float scale = 0.15f + 0.03f * (0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.5f + projectile.whoAmI * 0.2f)) * 1.5f;
 
+            // ===== 护盾强度，这里固定视为满强度 =====
+            float shieldStrength = 1f;
 
+            // ===== 噪声缩放，同样不同步呼吸 =====
+            float noiseScale = MathHelper.Lerp(0.4f, 0.8f, (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.3f) * 0.5f + 0.5f);
 
-	}
+            // ===== 取 Rover Drive 同款 Shader =====
+            Effect shieldEffect = Filters.Scene["CalamityMod:RoverDriveShield"].GetShader().Shader;
+            shieldEffect.Parameters["time"].SetValue(Main.GlobalTimeWrappedHourly * 0.24f);
+            shieldEffect.Parameters["blowUpPower"].SetValue(2.5f);
+            shieldEffect.Parameters["blowUpSize"].SetValue(0.5f);
+            shieldEffect.Parameters["noiseScale"].SetValue(noiseScale);
+
+            // ===== 透明度逻辑：与 Rover 一致 =====
+            float baseShieldOpacity = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 2f);
+            float finalShieldOpacity = baseShieldOpacity * (0.5f + 0.5f * shieldStrength);
+            shieldEffect.Parameters["shieldOpacity"].SetValue(finalShieldOpacity);
+            shieldEffect.Parameters["shieldEdgeBlendStrenght"].SetValue(4f);
+
+            // ===== 颜色参数 =====
+            Color blueTint = new Color(51, 102, 255);
+            Color cyanTint = new Color(71, 202, 255);
+            Color wulfGreen = new Color(194, 255, 67) * 0.8f;
+            Color edgeColor = Color.Lerp(
+                Color.Lerp(blueTint, cyanTint, 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.2f)),
+                wulfGreen,
+                0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.2f + 1.2f)
+            );
+
+            Color shieldColor = blueTint;
+
+            shieldEffect.Parameters["shieldColor"].SetValue(shieldColor.ToVector3());
+            shieldEffect.Parameters["shieldEdgeColor"].SetValue(edgeColor.ToVector3());
+
+            // ===== 你的底图 =====
+            //Texture2D tex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/window_04").Value;
+            Texture2D tex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/FrozenCrust").Value;
+
+            // ===== 围绕弹幕中心，而不是围绕玩家 =====
+            float orbitRadius = 3f; // 公转半径（自己调）
+            float orbitSpeed = 1.2f;
+
+            Vector2 orbitOffset = (Main.GlobalTimeWrappedHourly * orbitSpeed).ToRotationVector2() * orbitRadius;
+
+            Vector2 pos = projectile.Center + orbitOffset - Main.screenPosition;
+
+            // ===== 额外旋转底图：如果你想让底噪声缓慢旋转，这里直接加进去 =====
+            float texRotation = Main.GlobalTimeWrappedHourly * 0.75f;
+
+            // ===== 为了套 Shader，临时切一次 Batch，再切回来 =====
+            spriteBatch.End();
+            spriteBatch.Begin(
+                SpriteSortMode.Immediate,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                shieldEffect,
+                Main.Transform
+            );
+
+            // ===== 关键：仍然是画一张方形噪声图，但由 Shader 把它处理成护盾投影感 =====
+            spriteBatch.Draw(
+                tex,
+                pos,
+                null,
+                Color.White,
+                texRotation,
+                tex.Size() / 2f,
+                scale,
+                SpriteEffects.None,
+                0f
+            );
+
+            spriteBatch.End();
+            spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.LinearClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.Transform
+            );
+        }
+
+    }
 }

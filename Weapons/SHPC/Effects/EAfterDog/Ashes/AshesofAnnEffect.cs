@@ -48,6 +48,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
+
+
+
             // 在敌人身上生成标记弹幕，伤害直接传递
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),

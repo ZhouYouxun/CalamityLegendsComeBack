@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
 using System;
@@ -50,7 +51,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             }
         }
 
-
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
+        }
 
     }
 }

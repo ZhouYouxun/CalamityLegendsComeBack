@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Items.Materials;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
@@ -40,5 +41,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
                 projectile.owner
             );
         }
+
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(ModContent.BuffType<Dragonfire>(), 300); // 龙焰
+        }
+
     }
 }

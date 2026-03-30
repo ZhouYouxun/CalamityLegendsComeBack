@@ -1,9 +1,10 @@
-﻿using System;
+﻿using CalamityMod.Buffs.DamageOverTime;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -35,6 +36,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         public override bool PreDraw(ref Color lightColor)
         {
             return false;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(ModContent.BuffType<VulnerabilityHex>(), 60);
         }
     }
 }

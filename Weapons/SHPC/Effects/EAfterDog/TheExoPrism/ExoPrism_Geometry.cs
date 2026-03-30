@@ -1,9 +1,11 @@
 ﻿using CalamityMod;
+using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -303,9 +305,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             if (Projectile.velocity.Length() > 0.1f)
                 Projectile.rotation = Projectile.velocity.ToRotation();
         }
-
         public override void OnKill(int timeLeft)
         {
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
         }
 
         // ================= 绘制 =================
