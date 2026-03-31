@@ -70,7 +70,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 
 
         }
+        // 光芒大小控制（默认与原行为一致）
+        public virtual float GlowScaleFactor => 1f;
 
+        // 光芒亮度控制（默认与原行为一致）
+        public virtual float GlowIntensityFactor => 0.9f;
         // 绘制前附加
         public virtual void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
         {

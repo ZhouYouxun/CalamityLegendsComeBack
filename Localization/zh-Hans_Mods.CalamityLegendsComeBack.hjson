@@ -179,7 +179,7 @@ AMMO: {
 	SHPCAmmo21: 散射一连串日曜穿刺长矛
 	SHPCAmmo22: 飞行期间释放漩涡导弹
 	SHPCAmmo23: 强追踪并蓄力爆炸
-	SHPCAmmo24: 生生不息且源源不断
+	SHPCAmmo24: "[NPC:406] >> [NPC:405] >> [NPC:406] >> [NPC:405] !!!"
 	SHPCAmmo25: 释放超大范围冥思爆炸
 	SHPCAmmo26: 撞击物块后产生猛烈单向冲击波
 	SHPCAmmo27: "[暂无该物品]"
@@ -252,6 +252,8 @@ Projectiles: {
 	// BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
 	// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
 	// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+	// ExoPrism_Light.DisplayName: Exo Prism_ Light
+	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

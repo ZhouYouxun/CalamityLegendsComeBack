@@ -81,6 +81,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 同步粒子系数（关键）
             SquishyLightParticleFactor = cachedEffect.SquishyLightParticleFactor;
             ExplosionPulseFactor = cachedEffect.ExplosionPulseFactor;
+
+            // 同步光芒控制
+            GlowScaleFactor = cachedEffect.GlowScaleFactor;
+            GlowIntensityFactor = cachedEffect.GlowIntensityFactor;
         }
         // 是否启用默认减速（默认开启）
         public virtual bool EnableDefaultSlowdown => true;
@@ -278,6 +282,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 插件死亡逻辑
             CurrentEffect.OnKill(Projectile, owner, timeLeft);
         }
+        // 光芒大小控制
+        public float GlowScaleFactor = 1f;
+
+        // 光芒亮度控制
+        public float GlowIntensityFactor = 1f;
 
         public override bool PreDraw(ref Color lightColor)
         {
@@ -292,6 +301,37 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
             Color drawColor = ThemeColor;
+
+
+
+            // 光芒绘制（可控开关）
+            if (GlowScaleFactor > 0f && GlowIntensityFactor > 0f)
+            {
+                Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+
+                // 主题色，否则白色
+                Color glowColor = ThemeColor == default ? Color.White : ThemeColor;
+
+                // 亮度控制
+                Color finalGlow = glowColor * GlowIntensityFactor;
+
+                Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+                Main.EntitySpriteDraw(
+                    bloomTex,
+                    drawPos,
+                    null,
+                    finalGlow,
+                    Projectile.rotation,
+                    bloomTex.Size() / 2f,
+                    Projectile.scale * 0.9f * GlowScaleFactor, // 大小控制
+                    SpriteEffects.None
+                );
+
+                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            }
+
+
 
             Main.spriteBatch.Draw(tex, drawPos, frame, drawColor, Projectile.rotation, frame.Size() / 2, Projectile.scale, SpriteEffects.None, 0f);
 

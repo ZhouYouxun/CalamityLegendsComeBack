@@ -9,6 +9,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using System.Collections.Generic;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 {
@@ -70,72 +71,222 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             );
             GeneralParticleHandler.SpawnParticle(blastRing);
 
+
+
+
+
             // ================= 生物危害图标主体 =================
             SpawnBiohazardDeathEffect(projectile);
 
-            // ================= 外围瘟疫炸散 Dust =================
-            for (int i = 0; i < 18; i++)
-            {
-                float angle = MathHelper.TwoPi / 18f * i;
-                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(3f, 10f);
 
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
-                    Main.rand.NextBool() ? DustID.GreenTorch : DustID.WhiteTorch,
-                    velocity,
-                    0,
-                    Color.DarkGreen,
-                    Main.rand.NextFloat(1.15f, 1.75f)
-                );
-                dust.noGravity = true;
+
+
+
+
+            // 尝试画一个生物危害图标？
+            {
+
+                // ================= 超大生物危害图标 Dust =================
+                {
+                    Vector2 center = projectile.Center;
+
+                    // 整体尺寸直接放大到原来两倍以上
+                    float coreRadius = 22f;          // 中心圆环半径
+                    float lobeCenterRadius = 78f;    // 三个大瓣中心距离
+                    float lobeOuterRadius = 46f;     // 每个大瓣外弧半径
+                    float lobeInnerRadius = 24f;     // 每个大瓣内切空半径
+                    float arcSpan = MathHelper.ToRadians(228f);
+
+                    int corePoints = 24;
+                    int outerArcPoints = 34;
+                    int innerArcPoints = 24;
+
+                    // ===== 中心核心环 =====
+                    for (int i = 0; i < corePoints; i++)
+                    {
+                        float angle = MathHelper.TwoPi * i / corePoints;
+                        Vector2 dir = angle.ToRotationVector2();
+                        Vector2 pos = center + dir * coreRadius;
+
+                        Dust dust = Dust.NewDustPerfect(
+                            pos,
+                            Main.rand.NextBool() ? DustID.GreenTorch : DustID.WhiteTorch,
+                            dir * Main.rand.NextFloat(1.2f, 2.8f),
+                            0,
+                            Color.Lerp(Color.LimeGreen, Color.White, 0.22f),
+                            Main.rand.NextFloat(1.25f, 1.65f)
+                        );
+                        dust.noGravity = true;
+                    }
+
+                    // ===== 中心圆内部再补一圈，保证图标核心更清晰 =====
+                    for (int i = 0; i < 14; i++)
+                    {
+                        float angle = MathHelper.TwoPi * i / 14f;
+                        Vector2 dir = angle.ToRotationVector2();
+                        Vector2 pos = center + dir * 12f;
+
+                        Dust dust = Dust.NewDustPerfect(
+                            pos,
+                            DustID.TerraBlade,
+                            dir * Main.rand.NextFloat(0.4f, 1.4f),
+                            0,
+                            Color.DarkGreen,
+                            Main.rand.NextFloat(1.0f, 1.25f)
+                        );
+                        dust.noGravity = true;
+                    }
+
+                    // ===== 三个大月牙瓣 =====
+                    for (int lobe = 0; lobe < 3; lobe++)
+                    {
+                        float baseAngle = MathHelper.TwoPi / 3f * lobe - MathHelper.PiOver2;
+                        Vector2 lobeCenter = center + baseAngle.ToRotationVector2() * lobeCenterRadius;
+
+                        // 外弧：亮色，形成清晰大瓣轮廓
+                        for (int i = 0; i < outerArcPoints; i++)
+                        {
+                            float t = i / (float)(outerArcPoints - 1);
+                            float angle = baseAngle + MathHelper.Pi + MathHelper.Lerp(-arcSpan * 0.5f, arcSpan * 0.5f, t);
+
+                            Vector2 pos = lobeCenter + angle.ToRotationVector2() * lobeOuterRadius;
+                            Vector2 dir = (pos - center).SafeNormalize(Vector2.UnitY);
+
+                            Dust dust = Dust.NewDustPerfect(
+                                pos,
+                                Main.rand.NextBool() ? DustID.GreenTorch : DustID.WhiteTorch,
+                                dir * Main.rand.NextFloat(2.0f, 4.6f),
+                                0,
+                                Main.rand.NextBool() ? Color.LimeGreen : new Color(190, 255, 150),
+                                Main.rand.NextFloat(1.25f, 1.7f)
+                            );
+                            dust.noGravity = true;
+                        }
+
+                        // 内弧：深色，挖出“月牙缺口”
+                        for (int i = 0; i < innerArcPoints; i++)
+                        {
+                            float t = i / (float)(innerArcPoints - 1);
+                            float angle = baseAngle + MathHelper.Pi + MathHelper.Lerp(-arcSpan * 0.36f, arcSpan * 0.36f, t);
+
+                            Vector2 pos = lobeCenter + angle.ToRotationVector2() * lobeInnerRadius;
+                            Vector2 dir = (pos - center).SafeNormalize(Vector2.UnitY);
+
+                            Dust dust = Dust.NewDustPerfect(
+                                pos,
+                                DustID.TerraBlade,
+                                dir * Main.rand.NextFloat(0.8f, 2.2f),
+                                0,
+                                Color.DarkGreen,
+                                Main.rand.NextFloat(1.0f, 1.3f)
+                            );
+                            dust.noGravity = true;
+                        }
+
+                        // 每个大瓣根部再补一个小亮点，增强“生物危害”标识辨识度
+                        for (int i = 0; i < 6; i++)
+                        {
+                            Vector2 dir = (lobeCenter - center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.28f);
+                            Vector2 pos = center + dir * Main.rand.NextFloat(34f, 52f);
+
+                            Dust dust = Dust.NewDustPerfect(
+                                pos,
+                                DustID.WhiteTorch,
+                                dir * Main.rand.NextFloat(0.8f, 2.0f),
+                                0,
+                                Color.Lerp(Color.White, Color.LimeGreen, Main.rand.NextFloat(0.35f, 0.75f)),
+                                Main.rand.NextFloat(1.1f, 1.45f)
+                            );
+                            dust.noGravity = true;
+                        }
+                    }
+
+                    // ===== 最外圈少量扩散颗粒，给整体增加“爆开”感，但不破坏图标 =====
+                    for (int i = 0; i < 20; i++)
+                    {
+                        float angle = MathHelper.TwoPi * i / 20f;
+                        Vector2 dir = angle.ToRotationVector2();
+                        Vector2 pos = center + dir * Main.rand.NextFloat(92f, 118f);
+
+                        Dust dust = Dust.NewDustPerfect(
+                            pos,
+                            Main.rand.NextBool() ? DustID.GreenTorch : DustID.WhiteTorch,
+                            dir * Main.rand.NextFloat(1.2f, 3.2f),
+                            0,
+                            Main.rand.NextBool() ? Color.DarkGreen : Color.LimeGreen,
+                            Main.rand.NextFloat(0.95f, 1.35f)
+                        );
+                        dust.noGravity = true;
+                    }
+                }
             }
 
-            for (int i = 0; i < 26; i++)
-            {
-                Vector2 velocity = Main.rand.NextVector2Circular(6f, 6f);
 
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center + Main.rand.NextVector2Circular(20f, 20f),
-                    Main.rand.NextBool() ? DustID.TerraBlade : DustID.GreenTorch,
-                    velocity,
-                    0,
-                    Main.rand.NextBool() ? Color.DarkGreen : Color.LimeGreen,
-                    Main.rand.NextFloat(1f, 1.5f)
-                );
-                dust.noGravity = true;
+
+
+
+
+
+
+
+
+
+            // ================= 搜索最近最多3个敌人并标记 =================
+            float searchRadius = 10f * 16f;
+            List<NPC> targets = new();
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(projectile))
+                    continue;
+
+                float dist = Vector2.Distance(projectile.Center, npc.Center);
+                if (dist <= searchRadius)
+                    targets.Add(npc);
             }
 
-            // ================= 爆散 X 个瘟疫蜜蜂（改为 BasicPlagueBee） =================
-            int beeCount = Main.rand.Next(9, 15);
+            // 按距离排序
+            targets.Sort((a, b) =>
+                Vector2.Distance(projectile.Center, a.Center)
+                    .CompareTo(Vector2.Distance(projectile.Center, b.Center))
+            );
 
-            for (int i = 0; i < beeCount; i++)
+            // 最多取3个
+            int spawnCount = Math.Min(3, targets.Count);
+
+            for (int i = 0; i < spawnCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / beeCount + Main.rand.NextFloat(-0.2f, 0.2f);
-                Vector2 dir = angle.ToRotationVector2();
-
-                Vector2 beeVelocity =
-                    dir * Main.rand.NextFloat(7f, 13f) +
-                    Main.rand.NextVector2Circular(1.2f, 1.2f);
-
-                Vector2 spawnPos = projectile.Center + dir * Main.rand.NextFloat(6f, 16f);
+                NPC target = targets[i];
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    spawnPos,
-                    beeVelocity,
-                    ModContent.ProjectileType<BasicPlagueBee>(),
-                    (int)(projectile.damage * 0.42f),
+                    target.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<PlagueCell_Marked>(),
+                    projectile.damage,
                     0f,
                     projectile.owner,
-                    0f,     // ai[0]：默认30帧后开始追踪伤害
-                    90f,    // ai[1]：瘟疫debuff时长
-                    2f      // ai[2]：粒子细节等级
+                    target.whoAmI // 用 ai[0] 传目标
                 );
             }
 
             // ================= 音效 =================
             SoundEngine.PlaySound(SoundID.Item14, projectile.Center);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // ================= 飞行特效 =================
         private void SpawnFlightEffects(Projectile projectile)

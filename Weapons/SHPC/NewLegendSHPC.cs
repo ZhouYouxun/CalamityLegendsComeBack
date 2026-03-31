@@ -671,7 +671,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             string ammoText = "";
             if (storedEffectID > 0)
             {
-                string key = $"Mods.CalamityLegendsComeBack.SHPCAmmo{storedEffectID}";
+                string key = $"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{storedEffectID}";
                 ammoText = Language.GetTextValue(key);
             }
 

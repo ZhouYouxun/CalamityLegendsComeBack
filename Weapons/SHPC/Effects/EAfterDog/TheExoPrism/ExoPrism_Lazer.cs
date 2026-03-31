@@ -184,19 +184,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                 return;
 
             // ================= 可调参数 =================
-            float particleSpacing = 28f;   // 采样间距，略稀一点，给几何结构留空间
-            int minPoints = 8;
-            int maxPoints = 26;
+            float particleSpacing = 13f; // 原来 28，这里直接翻倍以上采样密度，把中间空隙填满
+            int minPoints = 16;
+            int maxPoints = 52;
 
-            float bloomThickness = 0.95f;
-            int bloomLifetime = 14;
+            float bloomThickness = 0.92f;
+            int bloomLifetime = 10; // 原来 14，缩短约 30%
 
             Vector2 start = Projectile.Center;
-            Vector2 end = Projectile.Center + beamVector * Projectile.ai[0];
+            float beamLength = Projectile.ai[0];
             Vector2 normal = beamVector.RotatedBy(MathHelper.PiOver2);
 
             float globalTime = Main.GlobalTimeWrappedHourly;
-            float beamLength = Projectile.ai[0];
 
             // ================= EXO调色板（同源风格） =================
             Color[] exoPalette =
@@ -220,12 +219,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                 return Color.Lerp(currentColor, nextColor, lerpValue);
             }
 
-            // ================= 主外晕：整条激光只保留一条 =================
+            // ================= 主外晕：整条激光保留一条主光骨架 =================
             BloomLineVFX bloomLine = new BloomLineVFX(
                 start,
                 beamVector * beamLength,
                 bloomThickness,
-                Color.Lerp(Color.White, GetExoColor(0.15f), 0.55f) * (Projectile.Opacity * 0.30f),
+                Color.Lerp(Color.White, GetExoColor(0.15f), 0.58f) * (Projectile.Opacity * 0.30f),
                 bloomLifetime
             );
             GeneralParticleHandler.SpawnParticle(bloomLine);
@@ -236,169 +235,155 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             for (int i = 0; i < points; i++)
             {
                 float completion = points == 1 ? 0f : i / (float)(points - 1);
-                Vector2 basePos = Vector2.Lerp(start, end, completion);
+                Vector2 basePos = Vector2.Lerp(start, start + beamVector * beamLength, completion);
 
                 // =========================================================
-                // ① 双轨螺旋偏移
-                // 沿激光两侧做数学化摆动，形成“展开中的几何光轨”
+                // ① 单螺旋主轨
+                // 不是双边对称撒点，而是一条沿光束缠绕前进的主螺旋
                 // =========================================================
-                float phase = globalTime * 5.2f + completion * MathHelper.TwoPi * 3.1f + Projectile.identity * 0.17f;
-                float sideAmplitude = MathHelper.Lerp(3f, 10f, (float)Math.Sin(completion * MathHelper.Pi));
-                Vector2 sideOffsetA = normal * (float)Math.Sin(phase) * sideAmplitude;
-                Vector2 sideOffsetB = -sideOffsetA;
+                float profile = (float)Math.Sin(completion * MathHelper.Pi); // 中段最强，两端自然收束
+                float helixAmplitude = MathHelper.Lerp(2.4f, 9.2f, profile);
+                float helixPhase = globalTime * 8.8f + completion * MathHelper.TwoPi * 4.35f + Projectile.identity * 0.19f;
 
-                Vector2 posA = basePos + sideOffsetA;
-                Vector2 posB = basePos + sideOffsetB;
+                Vector2 helixOffset = normal * (float)Math.Sin(helixPhase) * helixAmplitude;
+                Vector2 helixPos = basePos + helixOffset;
 
-                Color beamColorA = GetExoColor(completion * 1.2f + 0.15f);
-                Color beamColorB = GetExoColor(completion * 1.2f + 0.65f);
+                // 颜色沿路径持续前进，每个采样点都错开一点
+                Color beamColor = GetExoColor(completion * 2.2f + 0.15f);
+                Color beamColor2 = GetExoColor(completion * 2.2f + 0.55f);
+                Color beamColor3 = GetExoColor(completion * 2.2f + 0.95f);
 
                 // =========================================================
-                // ② 轨道节点：SquishyLightParticle
-                // 两侧小节点，密度不高，但规律明确
+                // ② 高频侧节点：SquishyLightParticle
+                // 频率翻倍后改成几乎每点都补节点，但寿命缩短
                 // =========================================================
-                if (Main.rand.NextBool(2))
+                Vector2 nodeVelocity =
+                    (-beamVector * 0.55f + normal * (float)Math.Cos(helixPhase) * 0.75f) *
+                    MathHelper.Lerp(0.75f, 1.35f, profile);
+
+                SquishyLightParticle exoNode = new SquishyLightParticle(
+                    helixPos,
+                    nodeVelocity,
+                    0.20f,
+                    beamColor,
+                    14, // 原先 20，这里缩短约 30%
+                    opacity: 0.92f,
+                    squishStrenght: 1f,
+                    maxSquish: 2.55f,
+                    hueShift: 0f
+                );
+                GeneralParticleHandler.SpawnParticle(exoNode);
+
+                // =========================================================
+                // ③ 中轴骨架：SmallBloom 中轴亮刺
+                // 规律性更强，不用随机，让整条光束有明确“数学骨架”
+                // =========================================================
+                if ((i & 1) == 0)
                 {
-                    SquishyLightParticle exoNodeA = new SquishyLightParticle(
-                        posA,
-                        normal * Main.rand.NextFloat(0.35f, 1.1f),
-                        0.23f,
-                        beamColorA,
-                        20,
-                        opacity: 0.9f,
-                        squishStrenght: 1f,
-                        maxSquish: 2.8f,
-                        hueShift: 0f
-                    );
-                    GeneralParticleHandler.SpawnParticle(exoNodeA);
-                }
-
-                if (Main.rand.NextBool(2))
-                {
-                    SquishyLightParticle exoNodeB = new SquishyLightParticle(
-                        posB,
-                        -normal * Main.rand.NextFloat(0.35f, 1.1f),
-                        0.23f,
-                        beamColorB,
-                        20,
-                        opacity: 0.9f,
-                        squishStrenght: 1f,
-                        maxSquish: 2.8f,
-                        hueShift: 0f
-                    );
-                    GeneralParticleHandler.SpawnParticle(exoNodeB);
-                }
-
-                // =========================================================
-                // ③ 中轴亮刺：CustomSpark
-                // 像几何体投影中心线，强调“数学骨架”
-                // =========================================================
-                if (Main.rand.NextBool(3))
-                {
-                    Vector2 sparkDir = beamVector.RotatedByRandom(0.10f) * Main.rand.NextFloat(0.15f, 0.55f);
+                    float centerSwing = (float)Math.Sin(helixPhase * 0.5f) * (MathHelper.Pi / 14f);
+                    Vector2 centerDir = beamVector.RotatedBy(centerSwing) * 0.48f;
 
                     Particle centerSpark = new CustomSpark(
                         basePos,
-                        sparkDir,
+                        centerDir,
                         "CalamityMod/Particles/SmallBloom",
                         false,
-                        8,
-                        Main.rand.NextFloat(0.14f, 0.24f),
-                        Color.Lerp(Color.White, GetExoColor(completion + 0.33f), 0.7f),
+                        6, // 原先 8，缩短约 25%~30%
+                        0.17f,
+                        Color.Lerp(Color.White, beamColor2, 0.72f),
                         new Vector2(1f, 1f),
                         true,
                         true,
                         0f,
                         false,
                         false,
-                        0.20f
+                        0.16f
                     );
                     GeneralParticleHandler.SpawnParticle(centerSpark);
                 }
 
                 // =========================================================
-                // ④ 对称斜向切线：GlowSparkParticle
-                // 不是乱撒，而是两边镜像切出，保持几何感
+                // ④ 单螺旋切割：GlowSparkParticle
+                // 角度不是简单固定斜切，而是沿螺旋相位来回摆动，形成循环切割
                 // =========================================================
-                if (i % 3 == 0)
+                float cutSwing = (float)Math.Sin(helixPhase * 1.65f);
+                float cutAngle = cutSwing * (MathHelper.Pi / 3.6f); // 往复摆动角
+                Vector2 cutDir = beamVector.RotatedBy(cutAngle) * MathHelper.Lerp(1.55f, 2.95f, (cutSwing + 1f) * 0.5f);
+
+                Particle glowCut = new GlowSparkParticle(
+                    helixPos,
+                    cutDir,
+                    false,
+                    6, // 原先 8，缩短约 25%~30%
+                    0.022f,
+                    beamColor2,
+                    new Vector2(2.25f, 1f),
+                    true,
+                    false,
+                    1.18f
+                );
+                GeneralParticleHandler.SpawnParticle(glowCut);
+
+                // =========================================================
+                // ⑤ 数学节点：菱形四向节点
+                // 用规则四向 CustomSpark 替代 GenericSparkle，几何感会强很多
+                // =========================================================
+                if (i % 2 == 1)
                 {
-                    Vector2 tangentVelA = (beamVector + normal * 0.35f).SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(1.2f, 2.4f);
-                    Vector2 tangentVelB = (beamVector - normal * 0.35f).SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(1.2f, 2.4f);
+                    float nodeRotation = (float)Math.Sin(helixPhase * 0.55f) * (MathHelper.Pi / 6f);
+                    Vector2 nodeCenter = basePos + normal * (float)Math.Cos(helixPhase * 0.5f) * (helixAmplitude * 0.22f);
 
-                    Particle glowA = new GlowSparkParticle(
-                        posA,
-                        tangentVelA,
-                        false,
-                        8,
-                        Main.rand.NextFloat(0.010f, 0.015f) * 2f,
-                        beamColorA,
-                        new Vector2(2f, 1f),
-                        true,
-                        false,
-                        1.25f
-                    );
-                    GeneralParticleHandler.SpawnParticle(glowA);
+                    for (int k = 0; k < 4; k++)
+                    {
+                        float localAngle = nodeRotation + (MathHelper.PiOver2 * k);
+                        Vector2 localDir = beamVector.RotatedBy(localAngle) * (k % 2 == 0 ? 0.95f : 1.15f);
 
-                    Particle glowB = new GlowSparkParticle(
-                        posB,
-                        tangentVelB,
-                        false,
-                        8,
-                        Main.rand.NextFloat(0.010f, 0.015f) * 2f,
-                        beamColorB,
-                        new Vector2(2f, 1f),
-                        true,
-                        false,
-                        1.25f
-                    );
-                    GeneralParticleHandler.SpawnParticle(glowB);
+                        Particle diamondNode = new CustomSpark(
+                            nodeCenter,
+                            localDir,
+                            "CalamityMod/Particles/SmallBloom",
+                            false,
+                            5, // 更短，更密
+                            0.13f,
+                            GetExoColor(completion * 2.2f + k * 0.22f),
+                            new Vector2(1f, 1f),
+                            true,
+                            true,
+                            0f,
+                            false,
+                            false,
+                            0.14f
+                        );
+                        GeneralParticleHandler.SpawnParticle(diamondNode);
+                    }
                 }
 
                 // =========================================================
-                // ⑤ 端点火花：GenericSparkle
-                // 周期性在双轨中点附近放一点“星形数学节点”
+                // ⑥ 螺旋补切：第二道短切线
+                // 用更短、更浅的切线把前面空隙补满，让画面连续
                 // =========================================================
-                if (i % 4 == 1 && Main.rand.NextBool(2))
+                if (i % 3 != 1)
                 {
-                    Vector2 sparklePos = basePos + normal * (float)Math.Cos(phase * 0.8f) * (sideAmplitude * 0.35f);
+                    float backSwing = (float)Math.Cos(helixPhase * 1.35f);
+                    float backAngle = backSwing * (MathHelper.Pi / 5.5f);
+                    Vector2 backCutDir = (-beamVector).RotatedBy(backAngle) * 1.15f;
 
-                    GenericSparkle sparkle = new GenericSparkle(
-                        sparklePos,
-                        Vector2.Zero,
-                        beamColorA,
-                        Color.Lerp(Color.White, beamColorB, 0.45f),
-                        Main.rand.NextFloat(1.15f, 1.75f),
-                        7,
-                        Main.rand.NextFloat(-0.02f, 0.02f),
-                        1.55f
+                    Particle backCut = new GlowSparkParticle(
+                        helixPos - beamVector * 2f,
+                        backCutDir,
+                        false,
+                        5,
+                        0.015f,
+                        beamColor3,
+                        new Vector2(1.65f, 1f),
+                        true,
+                        false,
+                        1.10f
                     );
-                    GeneralParticleHandler.SpawnParticle(sparkle);
-                }
-
-                // =========================================================
-                // ⑥ 少量 RainbowTorch Dust
-                // 用最少量的 Dust 把同源色味道补回来
-                // =========================================================
-                if (Main.rand.NextBool(3))
-                {
-                    Vector2 dustPos = basePos + normal * Main.rand.NextFloatDirection() * Main.rand.NextFloat(1f, sideAmplitude * 0.5f);
-
-                    Dust exoDust = Dust.NewDustPerfect(
-                        dustPos,
-                        DustID.RainbowTorch,
-                        beamVector.RotatedByRandom(0.25f) * Main.rand.NextFloat(0.2f, 0.8f),
-                        0,
-                        GetExoColor(completion + Main.rand.NextFloat(0.5f)),
-                        Main.rand.NextFloat(0.8f, 1.2f)
-                    );
-                    exoDust.noGravity = true;
-                    exoDust.velocity *= 0.35f;
+                    GeneralParticleHandler.SpawnParticle(backCut);
                 }
             }
         }
-
-
-
 
 
 

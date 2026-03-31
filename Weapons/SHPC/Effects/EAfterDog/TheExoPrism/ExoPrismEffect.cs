@@ -28,28 +28,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         {
             Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * 12f;
 
-            // 随机散射 2~4 条
-            int laserCount = Main.rand.Next(2, 5);
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
 
-            for (int i = 0; i < laserCount; i++)
+            // ================= 左右两条平行 Light =================
+
+            for (int i = -1; i <= 1; i += 2)
             {
-                // ===== 多链：霰射感 =====
-                float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.15f;
-                float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.15f;
-
-                Vector2 velocity = new Vector2(speedX, speedY);
-
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center,
-                    velocity,
-                    ModContent.ProjectileType<ExoPrism_Lazer>(),
+                    projectile.Center + normal * (40f * i), // 左右±X0偏移
+                    forward * 7.5f,
+                    ModContent.ProjectileType<ExoPrism_Light>(),
                     projectile.damage,
                     projectile.knockBack,
                     owner.whoAmI
                 );
             }
+
+            // ================= 中轴激光 =================
+            Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center,
+                forward * 12f, // 保持直线高速
+                ModContent.ProjectileType<ExoPrism_Lazer>(),
+                projectile.damage,
+                projectile.knockBack,
+                owner.whoAmI
+            );
         }
+
+
+
+
+
+
+
+
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {

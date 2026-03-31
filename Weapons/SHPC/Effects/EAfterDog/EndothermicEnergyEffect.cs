@@ -76,145 +76,305 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
             // 冷色照明
             Lighting.AddLight(projectile.Center, Color.Lerp(StartColor, ThemeColor, 0.5f).ToVector3() * 0.52f);
 
+            // ================= 当 timeLeft 剩余 100 时，启动后撤与散射流程 =================
+            if (!state.IsRetreating && projectile.timeLeft <= 100)
+            {
+                Vector2 triggerForward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Vector2 triggerRight = triggerForward.RotatedBy(MathHelper.Pi / 2f);
+                float burstTime = (float)Main.GameUpdateCount * 0.19f + projectile.identity * 0.27f;
+
+                state.IsRetreating = true;
+                state.RetreatTimer = 0;
+                state.OriginalForward = triggerForward;
+
+                projectile.tileCollide = false;
+                projectile.penetrate = -1;
+                projectile.friendly = false;
+
+                // 往正后方快速飞行
+                projectile.velocity = -triggerForward * 18f;
+
+                // ================= 启动瞬间：极寒数学扇爆 =================
+
+                // 少量核心冷光，数量降低
+                for (int i = 0; i < 6; i++)
+                {
+                    float progress = i / 5f;
+                    float angleSpread = MathHelper.Lerp(-0.52f, 0.52f, progress);
+                    float wave = (float)Math.Sin(burstTime + progress * MathHelper.TwoPi) * 0.08f;
+
+                    Vector2 spawnPos =
+                        projectile.Center +
+                        triggerRight * MathHelper.Lerp(-8f, 8f, progress) +
+                        triggerForward * Main.rand.NextFloat(-3f, 5f);
+
+                    Vector2 particleVelocity =
+                        triggerForward.RotatedBy(angleSpread + wave) * Main.rand.NextFloat(4.2f, 8.4f);
+
+                    SquishyLightParticle particle = new(
+                        spawnPos,
+                        particleVelocity,
+                        Main.rand.NextFloat(0.72f, 1.05f),
+                        Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.35f, 0.85f)),
+                        Main.rand.Next(20, 30)
+                    );
+                    GeneralParticleHandler.SpawnParticle(particle);
+                }
+
+                // 主体使用 GlowSpark 做数学扇切
+                int glowCount = 14;
+                for (int i = 0; i < glowCount; i++)
+                {
+                    float progress = i / (float)(glowCount - 1);
+                    float angle = MathHelper.Lerp(-0.72f, 0.72f, progress);
+                    float wave = (float)Math.Sin(burstTime * 1.65f + progress * MathHelper.TwoPi * 1.5f) * 0.12f;
+
+                    Vector2 spawnPos =
+                        projectile.Center +
+                        triggerRight * MathHelper.Lerp(-10f, 10f, progress) +
+                        triggerForward * Main.rand.NextFloat(-2f, 4f);
+
+                    Vector2 sparkVelocity =
+                        triggerForward.RotatedBy(angle + wave) * Main.rand.NextFloat(4.8f, 9.6f) +
+                        triggerRight * (float)Math.Sin(burstTime + progress * 6f) * 0.35f;
+
+                    GlowSparkParticle spark = new GlowSparkParticle(
+                        spawnPos,
+                        sparkVelocity,
+                        false,
+                        Main.rand.Next(9, 13),
+                        Main.rand.NextFloat(0.020f, 0.032f),
+                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.18f, 0.58f)),
+                        new Vector2(1.9f, 1f),
+                        true,
+                        false,
+                        1.15f
+                    );
+                    GeneralParticleHandler.SpawnParticle(spark);
+                }
+
+                // 冰尘扇面：占比提高，强化极寒质感
+                int dustCount = 24;
+                for (int i = 0; i < dustCount; i++)
+                {
+                    float progress = i / (float)(dustCount - 1);
+                    float angle = MathHelper.Lerp(-0.78f, 0.78f, progress);
+                    float rose = 1f + 0.16f * (float)Math.Sin(progress * MathHelper.TwoPi * 3f + burstTime);
+
+                    Vector2 dustVelocity =
+                        triggerForward.RotatedBy(angle) * Main.rand.NextFloat(2.8f, 7.2f) * rose +
+                        triggerRight * (float)Math.Cos(burstTime + i * 0.35f) * 0.24f;
+
+                    Dust dust = Dust.NewDustPerfect(
+                        projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                        Main.rand.NextBool(2) ? DustID.IceTorch : DustID.GemDiamond,
+                        dustVelocity,
+                        0,
+                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.20f, 0.78f)),
+                        Main.rand.NextFloat(1.0f, 1.42f)
+                    );
+                    dust.noGravity = true;
+                }
+            }
+
+            // 更新阶段用最新的状态重新定义 forward / right
+            forward = state.IsRetreating ? state.OriginalForward : projectile.velocity.SafeNormalize(Vector2.UnitX);
+            right = forward.RotatedBy(MathHelper.Pi / 2f);
+
             if (!state.IsRetreating)
             {
-                // ================= 普通飞行冷系尾迹 =================
-                float t = Main.GameUpdateCount * 0.16f;
+                // ================= 普通飞行：减少光粒子，提升 GlowSpark + Dust 比例 =================
+                float t = (float)Main.GameUpdateCount * 0.18f + projectile.identity * 0.31f;
 
-                // 数学双侧冷光
-                for (int i = 0; i < 1; i++)
+                // 低频冷光主核：只保留少量
+                if (Main.rand.NextBool(4))
                 {
-                    float side = i == 0 ? -1f : 1f;
-                    float wave = (float)Math.Sin(t + projectile.identity * 0.37f + i * 1.2f) * 4.5f;
-
-                    Vector2 spawnPos = projectile.Center - safeDir * 6f + right * wave * side;
-                    Vector2 vel = -safeDir * Main.rand.NextFloat(0.6f, 1.8f) + right * side * Main.rand.NextFloat(0.1f, 0.45f);
-
-                    Color particleColor = Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.25f, 0.75f));
-                    float scale = Main.rand.NextFloat(0.7f, 1.15f);
-                    int lifetime = Main.rand.Next(20, 32);
+                    float wave = (float)Math.Sin(t * 1.15f) * 4.2f;
+                    Vector2 spawnPos = projectile.Center - forward * Main.rand.NextFloat(3f, 7f) + right * wave;
+                    Vector2 vel = -forward * Main.rand.NextFloat(0.45f, 1.15f) + right * (float)Math.Cos(t * 1.4f) * 0.16f;
 
                     SquishyLightParticle particle = new(
                         spawnPos,
                         vel,
-                        scale,
-                        particleColor,
-                        lifetime
+                        Main.rand.NextFloat(0.62f, 0.95f),
+                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.18f, 0.55f)),
+                        Main.rand.Next(18, 26)
                     );
-
                     GeneralParticleHandler.SpawnParticle(particle);
                 }
 
-                // 旋转雾环，频率别太高，保持“冷而轻”
-                if (Main.rand.NextBool(2))
+                // 双侧数学切线：以 GlowSpark 为主
+                for (int i = 0; i < 2; i++)
                 {
-                    float angle = t + projectile.identity * 0.21f;
-                    float radius = Main.rand.NextFloat(4f, 8f);
+                    float side = i == 0 ? -1f : 1f;
+                    float phase = t + i * 1.13f;
+                    float lateral = (float)Math.Sin(phase * 1.35f) * 5.2f;
 
-                    Vector2 pos = projectile.Center - safeDir * Main.rand.NextFloat(4f, 9f) + angle.ToRotationVector2() * radius;
-                    Vector2 vel = -safeDir * Main.rand.NextFloat(0.3f, 1.0f) + right * (float)Math.Sin(angle * 1.6f) * 0.45f;
+                    Vector2 spawnPos = projectile.Center - forward * Main.rand.NextFloat(4f, 8f) + right * lateral * side;
+                    Vector2 sparkVelocity =
+                        (-forward + right * side * 0.42f).SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(1.8f, 3.9f) +
+                        right * side * (float)Math.Cos(phase) * 0.22f;
+
+                    GlowSparkParticle spark = new GlowSparkParticle(
+                        spawnPos,
+                        sparkVelocity,
+                        false,
+                        Main.rand.Next(8, 11),
+                        Main.rand.NextFloat(0.016f, 0.024f),
+                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.15f, 0.50f)),
+                        new Vector2(1.8f, 1f),
+                        true,
+                        false,
+                        1.08f
+                    );
+                    GeneralParticleHandler.SpawnParticle(spark);
+                }
+
+                // 冰霜 Dust：用数学摆动把尾迹填密
+                for (int i = 0; i < 2; i++)
+                {
+                    float side = i == 0 ? -1f : 1f;
+                    float phase = t * 0.92f + i * 2.1f;
+                    Vector2 dustPos =
+                        projectile.Center
+                        - forward * Main.rand.NextFloat(4f, 10f)
+                        + right * (float)Math.Sin(phase) * Main.rand.NextFloat(2.5f, 5.5f) * side;
+
+                    Vector2 dustVel =
+                        (-forward).RotatedBy((float)Math.Sin(phase * 1.4f) * 0.14f) * Main.rand.NextFloat(0.9f, 2.4f) +
+                        right * side * Main.rand.NextFloat(0.08f, 0.36f);
+
+                    Dust dust = Dust.NewDustPerfect(
+                        dustPos,
+                        Main.rand.NextBool(2) ? DustID.IceTorch : DustID.GemDiamond,
+                        dustVel,
+                        0,
+                        Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.28f, 0.72f)),
+                        Main.rand.NextFloat(0.95f, 1.28f)
+                    );
+                    dust.noGravity = true;
+                }
+
+                // 少量冷雾，保留但降低存在感
+                if (Main.rand.NextBool(3))
+                {
+                    float angle = t * 0.85f;
+                    float radius = Main.rand.NextFloat(3f, 6f);
+
+                    Vector2 pos = projectile.Center - forward * Main.rand.NextFloat(4f, 8f) + angle.ToRotationVector2() * radius;
+                    Vector2 vel = -forward * Main.rand.NextFloat(0.25f, 0.75f) + right * (float)Math.Sin(angle * 1.5f) * 0.18f;
 
                     Particle mist = new MediumMistParticle(
                         pos,
                         vel,
                         Color.White,
                         Color.Transparent,
-                        Main.rand.NextFloat(0.5f, 0.9f),
-                        Main.rand.NextFloat(120f, 180f)
+                        Main.rand.NextFloat(0.42f, 0.68f),
+                        Main.rand.NextFloat(110f, 155f)
                     );
 
                     GeneralParticleHandler.SpawnParticle(mist);
                 }
-
-                // 少量冰尘补冷感
-                if (Main.rand.NextBool(3))
-                {
-                    Dust dust = Dust.NewDustPerfect(
-                        projectile.Center - safeDir * 5f + Main.rand.NextVector2Circular(3f, 3f),
-                        Main.rand.NextBool() ? DustID.IceTorch : DustID.GemDiamond,
-                        -safeDir * Main.rand.NextFloat(0.2f, 1.2f),
-                        0,
-                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat()),
-                        Main.rand.NextFloat(0.9f, 1.25f)
-                    );
-                    dust.noGravity = true;
-                }
             }
             else
             {
-                // ================= 命中后：快速后撤并减速 =================
+                // ================= 后撤阶段：时间到后触发，不再由命中直接触发 =================
                 state.RetreatTimer++;
 
                 // 后撤减速
                 projectile.velocity *= 0.92f;
 
                 float retreatProgress = Utils.GetLerpValue(0f, 18f, state.RetreatTimer, true);
-                float t = Main.GameUpdateCount * 0.22f + projectile.identity * 0.31f;
+                float t = (float)Main.GameUpdateCount * 0.24f + projectile.identity * 0.31f;
 
                 // 后撤方向：和原前方相反
                 Vector2 retreatDir = -state.OriginalForward;
                 Vector2 retreatRight = retreatDir.RotatedBy(MathHelper.Pi / 2f);
 
-                // 冷光尾迹：椭圆后喷
-                for (int i = 0; i < 3; i++)
+                // 冷光尾迹：减少 Squishy 数量
+                if (state.RetreatTimer % 2 == 0)
                 {
-                    float progress = i / 2f;
-                    float spread = MathHelper.Lerp(-0.55f, 0.55f, progress);
-                    float wave = (float)Math.Sin(t + progress * MathHelper.Pi) * 0.18f;
+                    for (int i = 0; i < 2; i++)
+                    {
+                        float progress = i / 1f;
+                        float spread = MathHelper.Lerp(-0.28f, 0.28f, progress);
+                        float wave = (float)Math.Sin(t + progress * MathHelper.Pi) * 0.12f;
+
+                        Vector2 spawnPos =
+                            projectile.Center
+                            - retreatDir * Main.rand.NextFloat(2f, 7f)
+                            + retreatRight * Main.rand.NextFloat(-4f, 4f);
+
+                        Vector2 vel =
+                            retreatDir.RotatedBy(spread + wave) * Main.rand.NextFloat(2.2f, 5.4f) +
+                            retreatRight * Main.rand.NextFloat(-0.28f, 0.28f);
+
+                        SquishyLightParticle particle = new(
+                            spawnPos,
+                            vel,
+                            Main.rand.NextFloat(0.72f, 1.06f),
+                            Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.32f, 0.82f)),
+                            Main.rand.Next(20, 30)
+                        );
+
+                        GeneralParticleHandler.SpawnParticle(particle);
+                    }
+                }
+
+                // 双侧冷切 GlowSpark：占比提高
+                for (int i = 0; i < 2; i++)
+                {
+                    float side = i == 0 ? -1f : 1f;
+                    float phase = t * 1.12f + i * 1.6f;
 
                     Vector2 spawnPos =
                         projectile.Center
-                        - retreatDir * Main.rand.NextFloat(2f, 8f)
-                        + retreatRight * Main.rand.NextFloat(-5f, 5f);
+                        - retreatDir * Main.rand.NextFloat(2f, 9f)
+                        + retreatRight * (float)Math.Sin(phase) * Main.rand.NextFloat(3f, 7f) * side;
 
-                    Vector2 vel =
-                        retreatDir.RotatedBy(spread + wave) * Main.rand.NextFloat(2.5f, 6.5f) +
-                        retreatRight * Main.rand.NextFloat(-0.4f, 0.4f);
+                    Vector2 sparkVel =
+                        (retreatDir + retreatRight * side * 0.55f).SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(1.8f, 4.2f) +
+                        retreatRight * side * (float)Math.Cos(phase * 1.35f) * 0.28f;
 
-                    Color particleColor = Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.35f, 0.9f));
-                    float scale = Main.rand.NextFloat(0.8f, 1.3f);
-                    int lifetime = Main.rand.Next(26, 40);
-
-                    SquishyLightParticle particle = new(
+                    GlowSparkParticle spark = new GlowSparkParticle(
                         spawnPos,
-                        vel,
-                        scale,
-                        particleColor,
-                        lifetime
+                        sparkVel,
+                        false,
+                        Main.rand.Next(8, 12),
+                        Main.rand.NextFloat(0.018f, 0.028f),
+                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.18f, 0.52f)),
+                        new Vector2(1.9f, 1f),
+                        true,
+                        false,
+                        1.10f
                     );
-
-                    GeneralParticleHandler.SpawnParticle(particle);
+                    GeneralParticleHandler.SpawnParticle(spark);
                 }
 
-                // 数学感雾流：以后撤方向为轴心做冷雾卷吸
-                if (state.RetreatTimer % 2 == 0)
+                // 极寒 Dust：数量提高，做成椭圆后喷
+                for (int i = 0; i < 3; i++)
                 {
-                    int amount = 2;
-                    for (int i = 0; i < amount; i++)
-                    {
-                        float ratio = i / (float)Math.Max(1, amount - 1);
-                        float angle = MathHelper.Lerp(-0.9f, 0.9f, ratio) + (float)Math.Sin(t + ratio * 4f) * 0.12f;
+                    float ratio = i / 2f;
+                    float angle = MathHelper.Lerp(-0.42f, 0.42f, ratio) + (float)Math.Sin(t + ratio * 4f) * 0.08f;
 
-                        Vector2 pos =
-                            projectile.Center
-                            - retreatDir * Main.rand.NextFloat(3f, 10f)
-                            + retreatRight * (float)Math.Sin(t * 1.35f + i * 1.7f) * 6f;
+                    Vector2 dustPos =
+                        projectile.Center
+                        - retreatDir * Main.rand.NextFloat(3f, 10f)
+                        + retreatRight * (float)Math.Sin(t * 1.28f + i * 1.3f) * 5.5f;
 
-                        Vector2 vel =
-                            retreatDir.RotatedBy(angle) * Main.rand.NextFloat(1.0f, 2.6f) +
-                            retreatRight * (float)Math.Cos(t + i) * 0.22f;
+                    Vector2 dustVel =
+                        retreatDir.RotatedBy(angle) * Main.rand.NextFloat(1.4f, 3.2f) +
+                        retreatRight * (float)Math.Cos(t + i) * 0.20f;
 
-                        Particle mist = new MediumMistParticle(
-                            pos,
-                            vel,
-                            Color.White,
-                            Color.Transparent,
-                            MathHelper.Lerp(0.55f, 0.9f, retreatProgress),
-                            Main.rand.NextFloat(140f, 210f)
-                        );
-
-                        GeneralParticleHandler.SpawnParticle(mist);
-                    }
+                    Dust dust = Dust.NewDustPerfect(
+                        dustPos,
+                        Main.rand.NextBool(2) ? DustID.IceTorch : DustID.GemDiamond,
+                        dustVel,
+                        0,
+                        Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.22f, 0.78f)),
+                        Main.rand.NextFloat(0.95f, 1.35f)
+                    );
+                    dust.noGravity = true;
                 }
 
                 // 后撤到一定距离后，朝“原前方”扇形散射
@@ -254,22 +414,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
                 modifiers.SourceDamage *= 0f;
             }
         }
-
-        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        public override bool OnTileCollide(Projectile projectile, Player owner, Vector2 oldVelocity)
         {
             EndothermicState state = GetState(projectile);
 
-            target.AddBuff(BuffID.Frostburn, 300);
-            target.AddBuff(BuffID.Chilled, 180);
-
-            // 只在第一次命中时触发“后撤→再散射”
+            // 已经进入后撤阶段就不再触发
             if (state.IsRetreating)
-                return;
+                return true;
+
+            // ================= 模拟“命中触发” =================
 
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 right = forward.RotatedBy(MathHelper.Pi / 2f);
 
-            // 记录原始正前方，后面散射要用
             state.IsRetreating = true;
             state.RetreatTimer = 0;
             state.OriginalForward = forward;
@@ -278,87 +434,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
             projectile.penetrate = -1;
             projectile.friendly = false;
 
-            // 往正后方快速飞行
-            projectile.velocity = -forward * 18f;
+            // 直接压缩到触发阶段
+            if (projectile.timeLeft > 100)
+                projectile.timeLeft = 100;
 
-            // ================= 命中时：往前喷射扇形冷爆 =================
-            float t = Main.GameUpdateCount * 0.19f;
+            // 往反方向弹开（比NPC命中略弱一点）
+            projectile.velocity = -forward * 14f;
 
-            // 冷光扇形：带波浪扰动的数学展开
-            int particleCount = 18;
-            for (int i = 0; i < particleCount; i++)
-            {
-                float progress = i / (float)(particleCount - 1);
-                float angleSpread = MathHelper.Lerp(-0.72f, 0.72f, progress);
-                float wave = (float)Math.Sin(t + progress * MathHelper.Pi * 2f) * 0.14f;
+            return false; // ❗不执行默认反弹/销毁
+        }
 
-                Vector2 ellipseOffset =
-                    right * Main.rand.NextFloat(-10f, 10f) +
-                    forward * Main.rand.NextFloat(-4f, 6f);
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            EndothermicState state = GetState(projectile);
 
-                Vector2 spawnPos = target.Center + ellipseOffset;
-                Vector2 velocity = forward.RotatedBy(angleSpread + wave) * Main.rand.NextFloat(4.5f, 10f);
+            target.AddBuff(BuffID.Frostburn, 300);
+            target.AddBuff(BuffID.Chilled, 180);
 
-                Color particleColor = Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.25f, 0.9f));
-                float scale = Main.rand.NextFloat(0.85f, 1.45f);
-                int lifetime = Main.rand.Next(24, 38);
-
-                SquishyLightParticle particle = new(
-                    spawnPos,
-                    velocity,
-                    scale,
-                    particleColor,
-                    lifetime
-                );
-
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
-
-            // 雾状扇面：玫瑰节奏 + 轻微旋涡
-            int mistCount = 10;
-            for (int i = 0; i < mistCount; i++)
-            {
-                float progress = i / (float)(mistCount - 1);
-                float angle = MathHelper.Lerp(-0.58f, 0.58f, progress);
-                float rose = 1f + 0.22f * (float)Math.Sin(progress * MathHelper.TwoPi * 3f + t);
-
-                Vector2 pos =
-                    target.Center +
-                    right * MathHelper.Lerp(-14f, 14f, progress) +
-                    forward * Main.rand.NextFloat(-4f, 8f);
-
-                Vector2 vel =
-                    forward.RotatedBy(angle) * Main.rand.NextFloat(1.2f, 3.2f) * rose +
-                    right * (float)Math.Sin(t + i * 0.7f) * 0.18f;
-
-                Particle mist = new MediumMistParticle(
-                    pos,
-                    vel,
-                    Color.White,
-                    Color.Transparent,
-                    Main.rand.NextFloat(0.65f, 1.0f),
-                    Main.rand.NextFloat(150f, 220f)
-                );
-
-                GeneralParticleHandler.SpawnParticle(mist);
-            }
-
-            // 前喷冰晶 Dust
-            for (int i = 0; i < 16; i++)
-            {
-                float angle = MathHelper.Lerp(-0.65f, 0.65f, i / 15f);
-                Vector2 dustVel = forward.RotatedBy(angle) * Main.rand.NextFloat(2f, 6f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    target.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    Main.rand.NextBool() ? DustID.IceTorch : DustID.GemDiamond,
-                    dustVel,
-                    0,
-                    Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.25f, 0.85f)),
-                    Main.rand.NextFloat(1.0f, 1.45f)
-                );
-                dust.noGravity = true;
-            }
+            // 第一次命中时，直接把剩余时间压到100
+            if (!state.IsRetreating && projectile.timeLeft > 100)
+                projectile.timeLeft = 100;
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)

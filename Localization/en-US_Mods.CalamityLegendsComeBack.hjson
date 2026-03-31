@@ -154,46 +154,46 @@ Text: {
 }
 
 AMMO: {
-	SHPCAmmoPrompt: "This item can be used to charge SHPC. Effect:"
-	SHPCAmmo1: "Bounces and releases bursts of electric sparks"
-	SHPCAmmo2: "Unleashes five chaining lightning arcs"
-	SHPCAmmo3: "Generates toxic gas upon ground impact"
-	SHPCAmmo4: "Splits into two energy orbs upon depletion"
-	SHPCAmmo5: "Targets and strikes enemies directly below"
-	SHPCAmmo6: "Creates a cryogenic zone upon detonation"
-	SHPCAmmo7: "Marks enemies and calls down a divine laser strike"
-	SHPCAmmo8: "Blasts enemies away with force"
-	SHPCAmmo9: "Summons high-damage Light Souls to orbit the projectile"
-	SHPCAmmo10: "Emits shadow souls that track enemies"
-	SHPCAmmo11: "Ascends skyward and bombards from above"
-	SHPCAmmo12: "Releases lingering Terror Souls that wander in place"
-	SHPCAmmo13: "Spawns three delayed explosive energy orbs"
-	SHPCAmmo14: "Longer flight results in a more powerful explosion"
-	SHPCAmmo15: "Tracks enemies while attempting to heal the player"
-	SHPCAmmo16: "Upon impact, releases stationary souls in all directions"
-	SHPCAmmo17: "Clings to enemies, dealing repeated damage"
-	SHPCAmmo18: "Triggers a plague-like nuclear explosion"
-	SHPCAmmo19: "Unleashes torrents of agonized crimson souls"
+	SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
+	SHPCAmmo1: Bounces and releases bursts of electric sparks
+	SHPCAmmo2: Unleashes five chaining lightning arcs
+	SHPCAmmo3: Generates toxic gas upon ground impact
+	SHPCAmmo4: Splits into two energy orbs upon depletion
+	SHPCAmmo5: Targets and strikes enemies directly below
+	SHPCAmmo6: Creates a cryogenic zone upon detonation
+	SHPCAmmo7: Marks enemies and calls down a divine laser strike
+	SHPCAmmo8: Blasts enemies away with force
+	SHPCAmmo9: Summons high-damage Light Souls to orbit the projectile
+	SHPCAmmo10: Emits shadow souls that track enemies
+	SHPCAmmo11: Ascends skyward and bombards from above
+	SHPCAmmo12: Releases lingering Terror Souls that wander in place
+	SHPCAmmo13: Spawns three delayed explosive energy orbs
+	SHPCAmmo14: Longer flight results in a more powerful explosion
+	SHPCAmmo15: Tracks enemies while attempting to heal the player
+	SHPCAmmo16: Upon impact, releases stationary souls in all directions
+	SHPCAmmo17: Clings to enemies, dealing repeated damage
+	SHPCAmmo18: Triggers a plague-like nuclear explosion
+	SHPCAmmo19: Unleashes torrents of agonized crimson souls
 	SHPCAmmo20: "[Beetle Husk – Not Implemented]"
-	SHPCAmmo21: "Fires a barrage of solar piercing lances"
-	SHPCAmmo22: "Releases vortex missiles during flight"
-	SHPCAmmo23: "Strong homing followed by a charged explosion"
-	SHPCAmmo24: "Endless and self-sustaining proliferation"
-	SHPCAmmo25: "Unleashes a massive void meditation explosion"
-	SHPCAmmo26: "Creates a violent directional shockwave upon tile impact"
+	SHPCAmmo21: Fires a barrage of solar piercing lances
+	SHPCAmmo22: Releases vortex missiles during flight
+	SHPCAmmo23: Strong homing followed by a charged explosion
+	SHPCAmmo24: Endless and self-sustaining proliferation
+	SHPCAmmo25: Unleashes a massive void meditation explosion
+	SHPCAmmo26: Creates a violent directional shockwave upon tile impact
 	SHPCAmmo27: "[Item Not Available]"
-	SHPCAmmo28: "Releases bouncing sacred geometric rays upon explosion"
-	SHPCAmmo29: "Sacrifices player health to empower itself; explosion restores life"
-	SHPCAmmo30: "Awakens the souls from the depths"
+	SHPCAmmo28: Releases bouncing sacred geometric rays upon explosion
+	SHPCAmmo29: Sacrifices player health to empower itself; explosion restores life
+	SHPCAmmo30: Awakens the souls from the depths
 	SHPCAmmo31: "[Ectoplasm – Not Implemented]"
-	SHPCAmmo32: "Generates a miniature black hole that pulls in enemies"
-	SHPCAmmo33: "Performs repeated lemniscate tracking to erase enemies"
-	SHPCAmmo34: "Ricochets and releases piercing ice spikes"
-	SHPCAmmo35: "Splits into nightmare laser beams"
-	SHPCAmmo36: "Summons numerous miniature holy spirits for area suppression"
-	SHPCAmmo37: "Channel the wrath of the dragon"
-	SHPCAmmo38: "Fires lasers to purge enemies and unleash fractal geometry"
-	SHPCAmmo39: "Annihilates all enemies within sight"
+	SHPCAmmo32: Generates a miniature black hole that pulls in enemies
+	SHPCAmmo33: Performs repeated lemniscate tracking to erase enemies
+	SHPCAmmo34: Ricochets and releases piercing ice spikes
+	SHPCAmmo35: Splits into nightmare laser beams
+	SHPCAmmo36: Summons numerous miniature holy spirits for area suppression
+	SHPCAmmo37: Channel the wrath of the dragon
+	SHPCAmmo38: Fires lasers to purge enemies and unleash fractal geometry
+	SHPCAmmo39: Annihilates all enemies within sight
 }
 
 Buffs: {
@@ -251,6 +251,8 @@ Projectiles: {
 	BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
 	AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
 	AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+	ExoPrism_Light.DisplayName: Exo Prism_ Light
+	PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

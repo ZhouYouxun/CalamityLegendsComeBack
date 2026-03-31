@@ -1,4 +1,5 @@
-﻿using CalamityMod.Items.TreasureBags.MiscGrabBags;
+﻿using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityMod.Items.TreasureBags.MiscGrabBags;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +9,9 @@ using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC
+namespace CalamityLegendsComeBack
 {
-    internal class GiveYouSHPC : GlobalItem
+    internal class GiveYouLWeapon : GlobalItem
     {
         public override bool AppliesToEntity(Item entity, bool lateInstantiation)
         {
@@ -27,6 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (item.type == ModContent.ItemType<StarterBag>())
             {
                 itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendSHPC>(), 1));
+
+
             }
         }
 
