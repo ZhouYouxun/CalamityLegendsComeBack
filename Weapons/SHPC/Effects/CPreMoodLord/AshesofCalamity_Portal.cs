@@ -176,12 +176,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             shootTimer++;
 
             if (shootDelay == 0)
-                shootDelay = Main.rand.Next(3, 8);
+                shootDelay = Main.rand.Next(8, 19);
 
             if (shootTimer >= shootDelay)
             {
                 shootTimer = 0;
-                shootDelay = Main.rand.Next(3, 8);
+                shootDelay = Main.rand.Next(8, 19);
 
                 Vector2 direction = Projectile.ai[0].ToRotationVector2();
 

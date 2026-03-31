@@ -22,13 +22,13 @@ namespace CalamityLegendsComeBack.AdditionalText
 
                 // 通用提示
                 tooltips.Add(new TooltipLine(Mod, "SHPCAmmoPrompt",
-                    Language.GetTextValue("Mods.CalamityLegendsComeBack.SHPCAmmoPrompt"))
+                    Language.GetTextValue("Mods.CalamityLegendsComeBack.AMMO.SHPCAmmoPrompt"))
                 {
                     OverrideColor = Microsoft.Xna.Framework.Color.LightSkyBlue
                 });
 
                 // 专属提示（如果存在）
-                string extraKey = $"Mods.CalamityLegendsComeBack.SHPCAmmo{effectID}";
+                string extraKey = $"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{effectID}";
                 string extraText = Language.GetTextValue(extraKey);
 
                 if (extraText != extraKey) // 防止没写本地化时显示key本身

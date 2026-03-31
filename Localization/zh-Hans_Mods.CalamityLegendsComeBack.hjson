@@ -154,46 +154,48 @@ Text: {
 	CalamitasDeath4: 结果已收录。
 }
 
-SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
-SHPCAmmo1: 命中敌人释放大量电火花
-SHPCAmmo2: 命中敌人后释放5条连锁闪电弧
-SHPCAmmo3: 击中地面后产生毒气
-SHPCAmmo4: 能量耗尽后分裂成两个光球
-SHPCAmmo5: 瞄准并猛击正下方的敌人
-SHPCAmmo6: 爆炸时形成一片液氮区域
-SHPCAmmo7: 标记敌人并召唤天罚激光
-SHPCAmmo8: 把敌人崩飞
-SHPCAmmo9: 呼唤光明之魂，围绕自身旋转
-SHPCAmmo10: 喷射暗影之魂，追踪敌人
-SHPCAmmo11: 翱翔于天空，并向下轰炸
-SHPCAmmo12: 在原地滞留游荡的恐惧之魂
-SHPCAmmo13: 释放三个光球并延迟爆炸
-SHPCAmmo14: 飞行的距离越远，越是会造成更猛烈的爆炸
-SHPCAmmo15: 反复追踪并回血
-SHPCAmmo16: 撞击后向四周释放静止的灵魂
-SHPCAmmo17: 持续粘在敌人表面造成多次伤害并弹跳
-SHPCAmmo18: 造成恐怖的瘟疫效果
-SHPCAmmo19: 痛苦的灵魂喷涌而出
-SHPCAmmo20: " ??? "
-SHPCAmmo21: 散射一连串日曜穿刺长矛
-SHPCAmmo22: 飞行期间释放漩涡导弹
-SHPCAmmo23: 强追踪并蓄力爆炸
-SHPCAmmo24: 生生不息，源源不断
-SHPCAmmo25: 释放超大范围冥思爆炸
-SHPCAmmo26: 撞击物块后产生猛烈单向冲击波
-SHPCAmmo27: " ??? "
-SHPCAmmo28: 爆炸时释放几何弹跳射线
-SHPCAmmo29: 献祭玩家的血量强化自身，爆炸治疗回血
-SHPCAmmo30: 唤醒深处的灵魂
-SHPCAmmo31: 灵质
-SHPCAmmo32: 制造小型黑洞
-SHPCAmmo33: 进行多次回旋追踪并抹除敌人
-SHPCAmmo34: 反弹并释放冰刺攻击
-SHPCAmmo35: 分裂成噩梦激光
-SHPCAmmo36: 召唤大量的微型圣灵，进行区域火力覆盖
-SHPCAmmo37: 感受巨龙的怒吼
-SHPCAmmo38: 喷射激光惩戒敌人，召唤分形几何
-SHPCAmmo39: 湮灭视线范围内的所有敌人
+AMMO: {
+	SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
+	SHPCAmmo1: 弹跳并释放大量电火花
+	SHPCAmmo2: 释放5条连锁闪电弧
+	SHPCAmmo3: 击中地面后产生毒气
+	SHPCAmmo4: 能量耗尽后分裂成两个光球
+	SHPCAmmo5: 瞄准并猛击正下方的敌人
+	SHPCAmmo6: 爆炸时形成一片液氮区域
+	SHPCAmmo7: 标记敌人并召唤天罚激光
+	SHPCAmmo8: 把敌人崩飞
+	SHPCAmmo9: 呼唤高伤害的光明之魂绕自身旋转
+	SHPCAmmo10: 喷射追踪敌人的暗影之魂
+	SHPCAmmo11: 翱翔于天空，并向下轰炸
+	SHPCAmmo12: 在原地滞留游荡的恐惧之魂
+	SHPCAmmo13: 释放三个延迟爆炸的能量光球
+	SHPCAmmo14: 持久的飞行能够造成更猛烈的爆炸
+	SHPCAmmo15: 追踪并尝试治疗玩家
+	SHPCAmmo16: 撞击后向四周释放静止的灵魂
+	SHPCAmmo17: 持续粘在敌人表面造成多次伤害
+	SHPCAmmo18: 制造瘟疫核爆
+	SHPCAmmo19: 痛苦的赤色灵魂喷涌而出
+	SHPCAmmo20: "[甲虫外壳 未实现]"
+	SHPCAmmo21: 散射一连串日曜穿刺长矛
+	SHPCAmmo22: 飞行期间释放漩涡导弹
+	SHPCAmmo23: 强追踪并蓄力爆炸
+	SHPCAmmo24: 生生不息且源源不断
+	SHPCAmmo25: 释放超大范围冥思爆炸
+	SHPCAmmo26: 撞击物块后产生猛烈单向冲击波
+	SHPCAmmo27: "[暂无该物品]"
+	SHPCAmmo28: 爆炸时释放神圣几何弹跳射线
+	SHPCAmmo29: 献祭玩家的血量强化自身，爆炸治疗回血
+	SHPCAmmo30: 唤醒深处的灵魂
+	SHPCAmmo31: "[灵质 未实现]"
+	SHPCAmmo32: 制造小型黑洞将敌人吸入
+	SHPCAmmo33: 进行多次双纽线追踪并抹除敌人
+	SHPCAmmo34: 反弹并释放冰刺攻击
+	SHPCAmmo35: 分裂成噩梦激光
+	SHPCAmmo36: 召唤大量的微型圣灵，进行区域火力覆盖
+	SHPCAmmo37: 感受巨龙的怒吼
+	SHPCAmmo38: 喷射激光惩戒敌人，释放分形几何
+	SHPCAmmo39: 湮灭目力所及的所有敌人
+}
 
 Buffs: {
 	SHPCRight_DeBuff: {
