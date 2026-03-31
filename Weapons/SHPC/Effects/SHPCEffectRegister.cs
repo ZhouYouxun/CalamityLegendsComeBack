@@ -53,6 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new PlagueCellEffect()); // 瘟疫罐 18
 
             // 19、20 为跳过的灾厄尘和甲虫外壳[这个大概率不会有了]
+            EffectRegistry.RegisterEffect(new AshesofCalamityEffect()); // 灾厄尘 19
+
+
 
             EffectRegistry.RegisterEffect(new FragmentSolarEffect()); // 日耀碎片 21
             EffectRegistry.RegisterEffect(new FragmentVortexEffect()); // 漩涡碎片 22

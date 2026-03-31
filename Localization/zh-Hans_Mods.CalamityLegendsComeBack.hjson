@@ -173,7 +173,7 @@ SHPCAmmo15: 反复追踪并回血
 SHPCAmmo16: 撞击后向四周释放静止的灵魂
 SHPCAmmo17: 持续粘在敌人表面造成多次伤害并弹跳
 SHPCAmmo18: 造成恐怖的瘟疫效果
-SHPCAmmo19: " 灾厄尘 "
+SHPCAmmo19: 痛苦的灵魂喷涌而出
 SHPCAmmo20: " ??? "
 SHPCAmmo21: 散射一连串日曜穿刺长矛
 SHPCAmmo22: 飞行期间释放漩涡导弹
@@ -248,6 +248,8 @@ Projectiles: {
 	// BrinyBaron_SkillSlashDash_WaterBomb.DisplayName: Briny Baron_ Skill Slash Dash_ Water Bomb
 	// BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
 	// BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
+	// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
+	// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

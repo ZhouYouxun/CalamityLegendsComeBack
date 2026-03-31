@@ -247,6 +247,8 @@ Projectiles: {
 	BrinyBaron_SkillSlashDash_WaterBomb.DisplayName: Briny Baron_ Skill Slash Dash_ Water Bomb
 	BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
 	BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
+	AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
+	AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
