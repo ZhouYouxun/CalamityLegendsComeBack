@@ -21,7 +21,7 @@ using Terraria.Audio;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
-    internal class TEM00LeftSuperLazer : BaseLaserbeamProjectile, ILocalizedModType
+    internal class SHPC_SuperLazer : BaseLaserbeamProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.NewWeapons.EAfterDog";
 
@@ -125,7 +125,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // 仍可保留你的Debuff
-            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
             SoundEngine.PlaySound(SoundID.Item132 with { Volume = 0.8f, Pitch = -0.0f }, Projectile.Center);
 
             //// 8帧节流，避免localNPCHitCooldown=1导致每帧都生成海量粒子
@@ -141,60 +140,86 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Vector2 nrm = dir.RotatedBy(MathHelper.PiOver2); // 法线（用于“方”感的左右分布）
 
             // ===== 颜色与随机工具 =====
-            Color coreC = new Color(120, 220, 255) * 1.45f; // 亮一些的科技蓝
-            Color edgeC = new Color(90, 200, 255) * 1.35f; // 稍暗边缘蓝
-            Color flashC = new Color(170, 235, 255) * 1.60f; // 接近白的电光蓝
+            Color coreC = new Color(120, 220, 255) * 1.42f;
+            Color edgeC = new Color(80, 190, 255) * 1.28f;
+            Color flashC = new Color(200, 245, 255) * 1.58f;
 
-            // ===== Ⅰ. 破碎环 =====
-            int ringCount = Main.rand.Next(24, 33); // 24~32
-            for (int i = 0; i < ringCount; i++)
+            float time = Main.GlobalTimeWrappedHourly * 7.5f + Projectile.identity * 0.21f;
+            int helixSamples = 8;
+            float impactRadius = 28f;
+
+            for (int i = 0; i < helixSamples; i++)
             {
-                float ang = MathHelper.TwoPi * i / ringCount + Main.rand.NextFloat(-0.08f, 0.08f);
-                Vector2 v = ang.ToRotationVector2() * Main.rand.NextFloat(4f, 10f);
-                SquareParticle sq = new SquareParticle(
-                    hitPos + v.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(4f, 12f), // 初始离散
-                    v,
-                    false,
-                    26 + Main.rand.Next(16),               // 26~41帧
-                    1.6f + Main.rand.NextFloat(0.9f),     // 1.6~2.5
-                    i % 3 == 0 ? flashC : edgeC
-                );
-                GeneralParticleHandler.SpawnParticle(sq);
+                float sample = i / (float)(helixSamples - 1f);
+                float envelope = 0.28f + 0.72f * (float)Math.Sin(sample * MathHelper.Pi);
+                float angle = time + sample * MathHelper.TwoPi * 1.55f;
+                float offset = (float)Math.Sin(angle) * impactRadius * envelope;
+
+                for (int strand = 0; strand < 2; strand++)
+                {
+                    float strandSign = strand == 0 ? 1f : -1f;
+                    Vector2 strandPos = hitPos + nrm * offset * strandSign;
+                    Vector2 swirlVelocity =
+                        nrm * strandSign * (3.4f + 4.4f * envelope) +
+                        dir * ((float)Math.Cos(angle + strand * MathHelper.Pi) * 3.6f);
+
+                    GlowSparkParticle spark = new GlowSparkParticle(
+                        strandPos,
+                        swirlVelocity,
+                        false,
+                        Main.rand.Next(9, 13),
+                        Main.rand.NextFloat(0.022f, 0.034f),
+                        Color.Lerp(edgeC, flashC, 0.35f + 0.45f * envelope),
+                        new Vector2(Main.rand.NextFloat(1.8f, 2.6f), Main.rand.NextFloat(0.26f, 0.45f)),
+                        true,
+                        false,
+                        1.08f);
+                    GeneralParticleHandler.SpawnParticle(spark);
+
+                    if (i % 2 == strand)
+                    {
+                        SquishyLightParticle light = new SquishyLightParticle(
+                            strandPos + Main.rand.NextVector2Circular(3f, 3f),
+                            swirlVelocity * 0.22f,
+                            Main.rand.NextFloat(0.28f, 0.42f),
+                            Color.Lerp(coreC, flashC, 0.45f + 0.35f * envelope),
+                            Main.rand.Next(12, 18));
+                        GeneralParticleHandler.SpawnParticle(light);
+                    }
+                }
             }
 
-            // ===== Ⅱ. 切削流（沿光束切线，强调“方截面”）=====
-            int shearCount = Main.rand.Next(10, 15); // 10~14
-            for (int i = 0; i < shearCount; i++)
+            int ruptureCount = 10;
+            for (int i = 0; i < ruptureCount; i++)
             {
-                // 在法线两侧，沿切线（±nrm）+少量dir抖动
-                float side = Main.rand.NextBool() ? 1f : -1f;
-                Vector2 vel = nrm * side * Main.rand.NextFloat(5f, 11f) + dir * Main.rand.NextFloat(-2.5f, 2.5f);
-                SquareParticle sq = new SquareParticle(
-                    hitPos + nrm * side * Main.rand.NextFloat(6f, 14f),
-                    vel,
+                float spread = i / (float)(ruptureCount - 1f) - 0.5f;
+                float outward = (float)Math.Sin((spread + 0.5f) * MathHelper.Pi);
+                Vector2 spawnPos = hitPos + nrm * spread * 42f;
+                Vector2 velocity =
+                    nrm * spread * Main.rand.NextFloat(5.2f, 9.4f) +
+                    dir * Main.rand.NextFloat(-3.8f, 3.8f) * outward;
+
+                SquareParticle shard = new SquareParticle(
+                    spawnPos,
+                    velocity,
                     false,
-                    22 + Main.rand.Next(10),               // 22~31帧
-                    1.7f + Main.rand.NextFloat(0.7f),     // 1.7~2.4
-                    edgeC
-                );
-                GeneralParticleHandler.SpawnParticle(sq);
+                    18 + Main.rand.Next(10),
+                    1.35f + Main.rand.NextFloat(0.7f),
+                    i % 3 == 0 ? flashC : edgeC);
+                GeneralParticleHandler.SpawnParticle(shard);
             }
 
-            // ===== Ⅲ. 核心碎片（高亮、短命、速度快）=====
-            int coreCount = Main.rand.Next(10, 15); // 10~14
-            for (int i = 0; i < coreCount; i++)
-            {
-                Vector2 v = Main.rand.NextVector2Circular(8f, 8f) + dir * Main.rand.NextFloat(2f, 6f);
-                SquareParticle sq = new SquareParticle(
-                    hitPos + Main.rand.NextVector2Circular(6f, 6f),
-                    v,
-                    false,
-                    14 + Main.rand.Next(6),                // 14~19帧
-                    1.4f + Main.rand.NextFloat(0.6f),     // 1.4~2.0
-                    flashC
-                );
-                GeneralParticleHandler.SpawnParticle(sq);
-            }
+            GlowOrbParticle orb = new GlowOrbParticle(
+                hitPos,
+                Vector2.Zero,
+                false,
+                7,
+                1.28f,
+                flashC,
+                true,
+                false,
+                true);
+            GeneralParticleHandler.SpawnParticle(orb);
 
             // 可选：轻音效（与小激光区分开）
             Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, hitPos);
@@ -205,6 +230,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             //if (impactVfxCooldown > 0) impactVfxCooldown--; // 递减命中爆破节流
 
+            if (Main.dedServ)
+                return;
 
             // ===== 科技蓝主光照 =====
             Lighting.AddLight(Projectile.Center, 0.10f, 0.28f, 0.55f); // 柔和科技蓝环境光
@@ -216,92 +243,92 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 nrm = dir.RotatedBy(MathHelper.PiOver2); // 右手法线（±就是两侧边缘）
             float halfWidth = (Projectile.scale * Projectile.width + 180f) * 0.5f; // 与 LaserWidthFunction 对齐（你的宽函数）
+            float time = Main.GlobalTimeWrappedHourly * 5.2f + Projectile.identity * 0.17f;
+            Color edgeColor = new Color(80, 190, 255) * 1.28f;
+            Color coreColor = new Color(130, 228, 255) * 1.34f;
+            Color flashColor = new Color(205, 245, 255) * 1.5f;
 
             // 沿着光束取样的步长（越小越密）
-            float step = 56f; // 经验值：适中密度（可 40~72 调整）
+            float step = 72f;
             int sampleCount = (int)(LaserLength / step);
-            sampleCount = Utils.Clamp(sampleCount, 3, 24); // 防失控
+            sampleCount = Utils.Clamp(sampleCount, 4, 18);
 
             // 末端位置（便于在端点加额外亮点）
             Vector2 endPos = Projectile.Center + dir * LaserLength;
 
-            // ===== 1) 光束“方边”——SquareParticle 落在两侧边缘 =====
             for (int i = 1; i <= sampleCount; i++)
             {
-                if (!Main.rand.NextBool(5)) // 1/5 概率生成（节流）
-                    continue;
+                float completion = i / (float)(sampleCount + 1);
+                Vector2 basePos = Vector2.Lerp(Projectile.Center, endPos, completion);
+                float envelope = 0.26f + 0.74f * (float)Math.Pow(Math.Sin(completion * MathHelper.Pi), 0.85f);
+                float localRadius = halfWidth * (0.48f + 0.2f * (float)Math.Sin(time * 0.72f + completion * 7.2f)) * envelope;
+                float helixPhase = time + completion * MathHelper.TwoPi * 2.45f;
 
-                float t = i / (float)(sampleCount + 1);
-                Vector2 basePos = Vector2.Lerp(Projectile.Center, endPos, t);
-
-                // 在 ±法线方向偏移到“边缘”，做几何轮廓
-                Vector2 leftEdge = basePos - nrm * halfWidth * Main.rand.NextFloat(0.88f, 1.08f);
-                Vector2 rightEdge = basePos + nrm * halfWidth * Main.rand.NextFloat(0.88f, 1.08f);
-
-                // 让方块粒子沿着“边缘切线”轻漂，像是能量流经棱边
-                Vector2 glideVelL = dir * Main.rand.NextFloat(0.4f, 1.0f) + nrm * Main.rand.NextFloat(-0.3f, 0.3f);
-                Vector2 glideVelR = dir * Main.rand.NextFloat(0.4f, 1.0f) + nrm * Main.rand.NextFloat(-0.3f, 0.3f);
-
-                // 左侧
-                SquareParticle sqL = new SquareParticle(
-                    leftEdge,
-                    glideVelL,
-                    false,
-                    24 + Main.rand.Next(8),             // 24~31 帧
-                    1.6f + Main.rand.NextFloat(0.7f),   // 1.6~2.3
-                    new Color(90, 200, 255) * 1.35f     // 科技蓝，略增亮
-                );
-                GeneralParticleHandler.SpawnParticle(sqL);
-
-                // 右侧
-                if (Main.rand.NextBool()) // 1/2 再补一侧，避免过密
+                for (int strand = 0; strand < 2; strand++)
                 {
-                    SquareParticle sqR = new SquareParticle(
-                        rightEdge,
-                        glideVelR,
+                    float strandPhase = helixPhase + strand * MathHelper.Pi;
+                    float lateral = (float)Math.Sin(strandPhase) * localRadius;
+                    float expansion = (float)Math.Cos(strandPhase) * (5f + 7f * envelope);
+                    Vector2 strandPos = basePos + nrm * lateral;
+                    Vector2 swirlVelocity =
+                        nrm * MathF.Sign(lateral == 0f ? 1f : lateral) * (0.9f + 1.8f * envelope) +
+                        dir * expansion * 0.18f;
+
+                    GlowSparkParticle spark = new GlowSparkParticle(
+                        strandPos,
+                        swirlVelocity,
                         false,
-                        24 + Main.rand.Next(8),
-                        1.6f + Main.rand.NextFloat(0.7f),
-                        new Color(90, 200, 255) * 1.35f
-                    );
-                    GeneralParticleHandler.SpawnParticle(sqR);
+                        Main.rand.Next(10, 14),
+                        Main.rand.NextFloat(0.02f, 0.03f),
+                        Color.Lerp(edgeColor, flashColor, 0.28f + 0.42f * envelope),
+                        new Vector2(1.9f + envelope * 0.8f, 0.28f + envelope * 0.14f),
+                        true,
+                        false,
+                        1.08f);
+                    GeneralParticleHandler.SpawnParticle(spark);
+
+                    if ((i + strand) % 2 == 0)
+                    {
+                        SquishyLightParticle light = new SquishyLightParticle(
+                            strandPos + nrm * Main.rand.NextFloat(-4f, 4f),
+                            swirlVelocity * 0.16f,
+                            Main.rand.NextFloat(0.24f, 0.38f) * (0.92f + envelope * 0.5f),
+                            Color.Lerp(coreColor, flashColor, 0.32f + 0.34f * envelope),
+                            Main.rand.Next(12, 18));
+                        GeneralParticleHandler.SpawnParticle(light);
+                    }
+                }
+
+                if (i % 3 == 1)
+                {
+                    GlowOrbParticle coreOrb = new GlowOrbParticle(
+                        basePos,
+                        Vector2.Zero,
+                        false,
+                        5,
+                        0.82f + envelope * 0.28f,
+                        Color.Lerp(coreColor, flashColor, 0.25f + 0.3f * envelope),
+                        true,
+                        false,
+                        true);
+                    GeneralParticleHandler.SpawnParticle(coreOrb);
                 }
             }
 
-            // ===== 2) 光束“脉冲核”——GlowOrb 沿中心线/端点闪烁 =====
-            // 中轴脉冲：稀疏而快消，体现能量跳动
             if (Main.rand.NextBool(3))
             {
-                float centerT = Main.rand.NextFloat(0.08f, 0.92f);
-                Vector2 pulsePos = Vector2.Lerp(Projectile.Center, endPos, centerT);
-                GlowOrbParticle orb = new GlowOrbParticle(
-                    pulsePos,
-                    Vector2.Zero,
-                    false,
-                    5,                    // 快速消散
-                    0.95f + Main.rand.NextFloat(0.25f),
-                    new Color(170, 235, 255), // 偏白的浅青蓝
-                    true,
-                    false,
-                    true
-                );
-                GeneralParticleHandler.SpawnParticle(orb);
-            }
-
-            // 端点高亮：每隔几帧给端点加一个“爆点”，强调终端能量
-            if (Main.rand.NextBool(4))
-            {
+                float endPhase = time + MathHelper.TwoPi * 0.25f;
+                Vector2 tipOffset = nrm * ((float)Math.Sin(endPhase) * halfWidth * 0.26f);
                 GlowOrbParticle tip = new GlowOrbParticle(
-                    endPos,
-                    -dir * Main.rand.NextFloat(0.25f, 0.6f), // 轻微回喷
+                    endPos + tipOffset,
+                    -dir * Main.rand.NextFloat(0.2f, 0.55f),
                     false,
                     7,
-                    1.15f + Main.rand.NextFloat(0.25f),
-                    new Color(120, 210, 255),
+                    1.05f + Main.rand.NextFloat(0.18f),
+                    Color.Lerp(coreColor, flashColor, 0.45f),
                     true,
                     false,
-                    true
-                );
+                    true);
                 GeneralParticleHandler.SpawnParticle(tip);
             }
         }

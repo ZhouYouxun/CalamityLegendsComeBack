@@ -48,6 +48,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         private bool startedHoming;
         private NPC target;
 
+        // ===== 力量之魂 =====
+        private int preset4State;
+        private int preset4StateTimer;
+        private float preset4OrbitRadius;
+        private float preset4OrbitAngle;
+        private float preset4AngularVelocity;
+        private float preset4OrbitTravel;
+        private float preset4TargetOrbitTravel;
+        private float preset4SpinDirection;
+        private float preset4WaveSeed;
+
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetStaticDefaults()
@@ -76,6 +87,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // 生命周期固定主题色
             themeColor = PresetColors[presetIndex];
+
+            if (presetIndex == 4)
+            {
+                themeColor = Color.Lerp(themeColor, new Color(70, 215, 255), 0.65f);
+                Projectile.timeLeft = Main.rand.Next(84, 112);
+                Projectile.extraUpdates = 1;
+                preset4SpinDirection = Main.rand.NextBool() ? 1f : -1f;
+                preset4OrbitAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+                preset4WaveSeed = Main.rand.NextFloat(MathHelper.TwoPi);
+                preset4TargetOrbitTravel = Main.rand.NextFloat(MathHelper.TwoPi * 2.25f, MathHelper.TwoPi * 3.4f);
+            }
 
             // ai[1] = 绑定主弹幕ID
             boundMainProjectileID = (int)Projectile.ai[1];
@@ -279,7 +301,120 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         // =========================
         // ===== 预设4：力量之魂 =====[这里留空，因为没有]
         // =========================
-        private void AI_Preset4() { }
+        private void AI_Preset4()
+        {
+            Projectile.extraUpdates = 1;
+            Projectile.scale = 0.92f + 0.12f * (0.5f + 0.5f * (float)Math.Sin(timer * 0.22f + preset4WaveSeed));
+
+            if (!Main.projectile.IndexInRange(boundMainProjectileID))
+            {
+                Projectile.velocity *= 0.98f;
+                if (Projectile.timeLeft > 24)
+                    Projectile.timeLeft = 24;
+                return;
+            }
+
+            Projectile boundProjectile = Main.projectile[boundMainProjectileID];
+            if (!boundProjectile.active)
+            {
+                Projectile.velocity *= 0.98f;
+                if (Projectile.timeLeft > 24)
+                    Projectile.timeLeft = 24;
+                return;
+            }
+
+            Vector2 boundForward = boundProjectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 gunTip = boundProjectile.Center + boundForward * 56f;
+            Vector2 toGunTip = gunTip - Projectile.Center;
+            float distanceToGunTip = toGunTip.Length();
+            Vector2 towardGunTip = toGunTip.SafeNormalize(boundForward);
+            Vector2 sideways = towardGunTip.RotatedBy(MathHelper.PiOver2 * preset4SpinDirection);
+
+            switch (preset4State)
+            {
+                case 0:
+                    preset4StateTimer++;
+
+                    float corkscrewA = (float)Math.Sin(timer * 0.37f + preset4WaveSeed);
+                    float corkscrewB = (float)Math.Cos(timer * 0.18f + preset4WaveSeed * 1.6f);
+                    float distanceFactor = Utils.GetLerpValue(220f, 30f, distanceToGunTip, true);
+                    float wantedSpeed = MathHelper.Lerp(7f, 22f, distanceFactor);
+                    float twistStrength = MathHelper.Lerp(13f, 3.5f, distanceFactor);
+
+                    Vector2 desiredVelocity =
+                        towardGunTip * wantedSpeed +
+                        sideways * (corkscrewA * twistStrength + corkscrewB * twistStrength * 0.55f) +
+                        boundForward * (2.5f * corkscrewB);
+
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.14f);
+
+                    if (distanceToGunTip < 42f || (preset4StateTimer > 18 && distanceToGunTip < 78f))
+                    {
+                        preset4State = 1;
+                        preset4StateTimer = 0;
+                        preset4OrbitRadius = MathHelper.Clamp(distanceToGunTip, 18f, 44f);
+                        preset4OrbitAngle = (Projectile.Center - gunTip).ToRotation();
+                        preset4AngularVelocity = 0.26f * preset4SpinDirection;
+                        preset4OrbitTravel = 0f;
+                    }
+                    break;
+
+                case 1:
+                    preset4StateTimer++;
+                    preset4OrbitRadius = MathHelper.Lerp(preset4OrbitRadius, 12f, 0.055f);
+                    preset4AngularVelocity = MathHelper.Lerp(
+                        preset4AngularVelocity,
+                        (0.44f + 0.06f * (float)Math.Sin(timer * 0.16f + preset4WaveSeed)) * preset4SpinDirection,
+                        0.08f);
+
+                    preset4OrbitAngle += preset4AngularVelocity;
+                    preset4OrbitTravel += Math.Abs(preset4AngularVelocity);
+
+                    Vector2 orbitOffset = new Vector2(preset4OrbitRadius, 0f).RotatedBy(preset4OrbitAngle);
+                    Vector2 orbitNormal = orbitOffset.SafeNormalize(Vector2.UnitX);
+                    Vector2 orbitTangent = orbitNormal.RotatedBy(MathHelper.PiOver2 * preset4SpinDirection);
+                    Vector2 desiredPosition =
+                        gunTip +
+                        orbitOffset +
+                        orbitTangent * ((float)Math.Sin(timer * 0.33f + preset4WaveSeed) * 5f) +
+                        boundForward * ((float)Math.Cos(timer * 0.27f + preset4WaveSeed) * 3f);
+
+                    Vector2 orbitVelocity =
+                        (desiredPosition - Projectile.Center) * 0.5f +
+                        orbitTangent * (5.5f + preset4OrbitRadius * 0.08f);
+
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, orbitVelocity, 0.18f);
+
+                    if (preset4OrbitTravel >= preset4TargetOrbitTravel || Projectile.timeLeft < 22)
+                    {
+                        preset4State = 2;
+                        preset4StateTimer = 0;
+                    }
+                    break;
+
+                case 2:
+                    preset4StateTimer++;
+
+                    float collapseInterpolant = Utils.GetLerpValue(0f, 18f, preset4StateTimer, true);
+                    float collapseTwist = MathHelper.Lerp(4.5f, 0f, collapseInterpolant);
+                    Vector2 collapseVelocity =
+                        towardGunTip * MathHelper.Lerp(10f, 24f, collapseInterpolant) +
+                        towardGunTip.RotatedBy(MathHelper.PiOver2 * preset4SpinDirection) *
+                        (float)Math.Sin(timer * 0.6f + preset4WaveSeed) *
+                        collapseTwist;
+
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, collapseVelocity, 0.22f);
+
+                    if (distanceToGunTip < 10f)
+                    {
+                        Projectile.Kill();
+                        return;
+                    }
+                    break;
+            }
+
+            Projectile.rotation = Projectile.velocity.ToRotation();
+        }
 
 
 

@@ -242,7 +242,11 @@ Projectiles: {
 
 	NewWeapons: {
 		// BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
-		// EAfterDog.TEM00LeftSuperLazer.DisplayName: T E M00 Left Super Lazer
+
+		EAfterDog: {
+			// TEM00LeftSuperLazer.DisplayName: T E M00 Left Super Lazer
+			// SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+		}
 	}
 
 	// TeachingProjectile.DisplayName: Teaching Projectile

@@ -535,9 +535,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
         {
-            //if (player.altFunctionUse == 2)
-            //    return;
-
             // 始终朝向鼠标
             player.ChangeDir(Math.Sign((player.Calamity().mouseWorld - player.Center).X));
 
@@ -545,6 +542,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Vector2 itemPosition = player.MountedCenter + itemRotation.ToRotationVector2() * 35f;
             Vector2 itemSize = new Vector2(Item.width, Item.height);
             Vector2 itemOrigin = new Vector2(-35f, 0f);
+
+            bool shouldHide = false;
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile proj = Main.projectile[i];
+                if (!proj.active || proj.owner != player.whoAmI)
+                    continue;
+
+                if (proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>() ||
+                    proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>())
+                {
+                    shouldHide = true;
+                    break;
+                }
+            }
+
+            // 如果右键Holdout或大招已经存在，就把残留贴图扔到世界左上角
+            if (shouldHide)
+            {
+                itemPosition = new Vector2(0f, 0f);
+            }
 
             // 左键后坐力动画：完整保留
             recoilProgress++;
