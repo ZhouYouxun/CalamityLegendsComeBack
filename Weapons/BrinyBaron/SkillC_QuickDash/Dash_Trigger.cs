@@ -2,6 +2,7 @@
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.GameInput;
@@ -13,53 +14,88 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
     internal class Dash_Trigger : ModPlayer
     {
         private int doubleTapTimer = 0;
+        private int lastTapDirection = 0;
+        public bool IsUsingSlashDash;
 
         public override void ResetEffects()
         {
             if (doubleTapTimer > 0)
                 doubleTapTimer--;
+            else
+                lastTapDirection = 0;
+
+            IsUsingSlashDash = false;
         }
 
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
             Player player = Player;
 
-            // =========================
-            // 条件：必须手持武器
-            // =========================
             if (player.HeldItem.type != ModContent.ItemType<NewLegendBrinyBaron>())
                 return;
 
-            // =========================
-            // 禁止条件：已有弹幕
-            // =========================
-            if (HasAnyActiveSkillProjectile(player))
+            if (HasAnyActiveSkillProjectile(player) || player.GetModPlayer<Dash_Trigger>().IsUsingSlashDash)
                 return;
 
             bool triggerDash = false;
+            int dashDirection = 0;
 
             // =========================
-            // 优先：专用冲刺键（如果你以后绑定）
+            // 神秘按键逻辑（优先级最高）
             // =========================
-            // 这里暂时留空，你以后可以加 Keybind
+            var keys = CalamityKeybinds.DashHotkey.GetAssignedKeysOrEmpty();
+            bool manualHotkeyBound = (keys?.Count ?? 0) > 0;
+            bool pressedManualHotkey = manualHotkeyBound && CalamityKeybinds.DashHotkey.JustPressed;
 
-            // =========================
-            // fallback：双击左右
-            // =========================
-            if (player.controlLeft && player.releaseLeft)
+            if (pressedManualHotkey)
             {
-                if (doubleTapTimer > 0)
-                    triggerDash = true;
-                else
-                    doubleTapTimer = 15;
+                // 优先用面向方向
+                dashDirection = player.direction;
+
+                // 如果方向异常，用鼠标兜底
+                if (dashDirection == 0)
+                {
+                    dashDirection = Main.MouseWorld.X > player.Center.X ? 1 : -1;
+                }
+
+                triggerDash = true;
             }
-
-            if (player.controlRight && player.releaseRight)
+            // =========================
+            // fallback：只有“未绑定”时才允许双击
+            // =========================
+            else if (!manualHotkeyBound)
             {
-                if (doubleTapTimer > 0)
-                    triggerDash = true;
-                else
-                    doubleTapTimer = 15;
+                // 同时按左右 → 锁死（什么都不做）
+                if (player.controlLeft && player.controlRight)
+                    return;
+
+                if (player.controlLeft && player.releaseLeft)
+                {
+                    if (doubleTapTimer > 0 && lastTapDirection == -1)
+                    {
+                        triggerDash = true;
+                        dashDirection = -1;
+                    }
+                    else
+                    {
+                        doubleTapTimer = 15;
+                        lastTapDirection = -1;
+                    }
+                }
+
+                if (player.controlRight && player.releaseRight)
+                {
+                    if (doubleTapTimer > 0 && lastTapDirection == 1)
+                    {
+                        triggerDash = true;
+                        dashDirection = 1;
+                    }
+                    else
+                    {
+                        doubleTapTimer = 15;
+                        lastTapDirection = 1;
+                    }
+                }
             }
 
             // =========================
@@ -67,23 +103,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             // =========================
             if (triggerDash)
             {
-                Vector2 dir = (Main.MouseWorld - player.Center).SafeNormalize(Vector2.UnitX);
+                doubleTapTimer = 0;
+                lastTapDirection = 0;
+
+                Vector2 dir = new Vector2(dashDirection, 0f);
 
                 Projectile.NewProjectile(
                     player.GetSource_FromThis(),
                     player.Center,
-                    dir * 1f,
+                    dir,
                     ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
                     player.GetWeaponDamage(player.HeldItem),
                     player.GetWeaponKnockback(player.HeldItem),
-                    player.whoAmI
+                    player.whoAmI,
+                    0f,
+                    dashDirection
                 );
             }
         }
 
-        // =========================
-        // 检测是否已有技能弹幕
-        // =========================
         private bool HasAnyActiveSkillProjectile(Player player)
         {
             int p1 = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();

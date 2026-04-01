@@ -1,9 +1,10 @@
+using CalamityLegendsComeBack.Weapons.BrinyBaron;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
-using CalamityLegendsComeBack.Weapons.BrinyBaron;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -159,7 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                 if (!dashStarted && time >= timeMax * 0.18f)
                 {
                     dashStarted = true;
-                    dashVelocity = dashDirection * 22f;
+                    dashVelocity = dashDirection * 2f;
                 }
 
                 if (dashStarted)
@@ -183,6 +184,37 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                         Dust d2 = Dust.NewDustPerfect(pos, DustID.Frost, vel * 0.7f);
                         d2.noGravity = true;
                         d2.scale = Main.rand.NextFloat(0.9f, 1.3f);
+                    }
+
+                    if (Main.rand.NextBool())
+                    {
+                        Vector2 forward = dashVelocity.SafeNormalize(dashDirection);
+                        Vector2 orbitAxis = forward.RotatedBy(MathHelper.PiOver2);
+                        float orbitPhase = time * 0.38f + Main.GlobalTimeWrappedHourly * 10f;
+                        float orbitOffset = (float)Math.Sin(orbitPhase) * 14f;
+
+                        Vector2 spawnPos = Owner.Center +
+                            (FinalRotation + MathHelper.ToRadians(-45f)).ToRotationVector2() * Main.rand.NextFloat(60f, 150f) +
+                            orbitAxis * orbitOffset;
+
+                        Vector2 sparkVel =
+                            -forward.RotatedByRandom(0.2f) * Main.rand.NextFloat(4.5f, 10f) +
+                            orbitAxis * (float)Math.Cos(orbitPhase) * Main.rand.NextFloat(1.5f, 3.5f) -
+                            Owner.velocity * 0.35f;
+
+                        GeneralParticleHandler.SpawnParticle(
+                            new CustomSpark(
+                                spawnPos,
+                                sparkVel,
+                                "CalamityMod/Particles/BloomCircle",
+                                false,
+                                18,
+                                Main.rand.NextFloat(0.35f, 0.7f) * Projectile.scale * 0.6f,
+                                Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                                new Vector2(1.2f, 0.6f),
+                                shrinkSpeed: 0.92f
+                            )
+                        );
                     }
                 }
 
@@ -213,31 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                 // 命中特效
                 // =========================
                 if (CanHit)
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        Vector2 vel = new Vector2(0f, 3f * -Projectile.ai[1] * Owner.direction)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
-
-                        Vector2 pos = Owner.Center +
-                            new Vector2(Main.rand.Next(5, 135), 0f)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
-
-                        GeneralParticleHandler.SpawnParticle(
-                            new CustomPulse(
-                                pos,
-                                -vel * Main.rand.NextFloat(1.1f, 3f),
-                                Color.Cyan,
-                                "CalamityMod/Particles/Sparkle",
-                                new Vector2(2f, 1f),
-                                vel.ToRotation(),
-                                Main.rand.NextFloat(0.4f, 1f),
-                                0.2f,
-                                23
-                            )
-                        );
-                    }
-                }
+                    SpawnSpinRushSlashEffects(time, timeMax);
 
                 Lighting.AddLight(Projectile.Center, new Vector3(0.05f, 0.23f, 0.32f) * fadeIn);
             }
@@ -246,25 +254,128 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
         }
 
+        private void SpawnSpinRushSlashEffects(float time, float timeMax)
+        {
+            float currentScale = Projectile.scale;
+            Vector2 forward = dashStarted ? dashVelocity.SafeNormalize(dashDirection) : dashDirection;
+            if (forward == Vector2.Zero)
+                forward = Vector2.UnitX * Owner.direction;
+
+            Vector2 orbitAxis = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 bladeDirection = (FinalRotation + MathHelper.ToRadians(-45f)).ToRotationVector2();
+            float progress = Utils.GetLerpValue(timeMax * 0.22f, timeMax * 0.9f, time, true);
+            float basePhase = time * 0.42f + Main.GlobalTimeWrappedHourly * 8.5f;
+            float orbitRadius = MathHelper.Lerp(10f, 24f, 0.5f + 0.5f * (float)Math.Sin(basePhase * 0.55f));
+
+            int pulseCount = progress > 0.55f ? 3 : 2;
+            for (int i = 0; i < pulseCount; i++)
+            {
+                float ratio = (i + 0.35f) / pulseCount;
+                float swirlAngle = basePhase + ratio * MathHelper.TwoPi * 1.35f;
+                float ringSin = (float)Math.Sin(swirlAngle);
+                float ringCos = (float)Math.Cos(swirlAngle);
+
+                Vector2 circularOffset =
+                    orbitAxis * ringSin * orbitRadius +
+                    forward * ringCos * orbitRadius * 0.4f;
+
+                Vector2 pos = Owner.Center +
+                    bladeDirection * MathHelper.Lerp(34f, 145f, ratio) +
+                    circularOffset;
+
+                Vector2 vel =
+                    -forward.RotatedByRandom(0.18f) * Main.rand.NextFloat(4.5f, 10.5f) +
+                    orbitAxis * ringCos * Main.rand.NextFloat(1.4f, 4.4f) -
+                    Owner.velocity * 0.2f;
+
+                GeneralParticleHandler.SpawnParticle(
+                    new CustomPulse(
+                        pos,
+                        vel,
+                        Main.rand.NextBool(3) ? Color.DeepSkyBlue : Color.Cyan,
+                        "CalamityMod/Particles/Sparkle",
+                        new Vector2(2f, 1f),
+                        vel.ToRotation(),
+                        Main.rand.NextFloat(0.55f, 1.05f) * currentScale,
+                        0.2f,
+                        23
+                    )
+                );
+
+                if (Main.rand.NextBool(2))
+                {
+                    GlowOrbParticle orb = new GlowOrbParticle(
+                        pos - circularOffset * 0.18f,
+                        vel * 0.08f,
+                        false,
+                        5,
+                        Main.rand.NextFloat(0.72f, 1f) * currentScale,
+                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                        true,
+                        false,
+                        true
+                    );
+                    GeneralParticleHandler.SpawnParticle(orb);
+                }
+
+                if (Main.rand.NextBool(3))
+                {
+                    CritSpark spark = new CritSpark(
+                        pos,
+                        vel * 0.35f + Owner.velocity * 0.15f,
+                        Color.White,
+                        Color.LightBlue,
+                        Main.rand.NextFloat(0.8f, 1.1f) * currentScale,
+                        16
+                    );
+                    GeneralParticleHandler.SpawnParticle(spark);
+                }
+            }
+
+            int sparkCount = progress > 0.45f ? 2 : 1;
+            for (int i = 0; i < sparkCount; i++)
+            {
+                float length = Main.rand.NextFloat(80f, 320f) * currentScale;
+                float spiralOffset = (float)Math.Sin(basePhase + i * MathHelper.Pi) * orbitRadius * 0.65f;
+
+                Vector2 spawnPos = Owner.Center +
+                    new Vector2(length, 0f).RotatedBy(FinalRotation + MathHelper.ToRadians(-45f)) +
+                    orbitAxis * spiralOffset;
+
+                Vector2 vel =
+                    -forward.RotatedByRandom(0.25f) * Main.rand.NextFloat(6f, 18f) -
+                    Owner.velocity * 0.7f +
+                    orbitAxis * (float)Math.Cos(basePhase + i * MathHelper.Pi) * Main.rand.NextFloat(2f, 5f);
+
+                GeneralParticleHandler.SpawnParticle(
+                    new CustomSpark(
+                        spawnPos,
+                        vel,
+                        "CalamityMod/Particles/BloomCircle",
+                        false,
+                        18,
+                        Main.rand.NextFloat(0.4f, 0.8f) * currentScale * 0.6f,
+                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                        new Vector2(1.2f, 0.6f),
+                        shrinkSpeed: 0.92f
+                    )
+                );
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             if ((useAnim > 0 || DrawUnconditionally) && Owner.ItemAnimationActive)
             {
                 var tex = ModContent.Request<Texture2D>(Texture);
-                var swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey");
 
-                float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
 
-                Main.EntitySpriteDraw(
-                    swoosh.Value,
-                    Owner.Center - Main.screenPosition,
-                    null,
-                    Color.Cyan * fadeIn,
-                    Projectile.rotation + MathHelper.PiOver4 * Owner.direction + RotationOffset * 1.75f,
-                    swoosh.Size() * 0.5f,
-                    Projectile.scale * 2.1f,
-                    SpriteEffects.None
-                );
+                Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey");
+
+                float r = FlipAsSword ? MathHelper.ToRadians(90) : 0f;
+
+                Main.EntitySpriteDraw(swoosh.Value, Owner.Center - Main.screenPosition, null, Color.Turquoise with { A = 0 } * (float)Math.Pow(fadeIn, 3), Projectile.rotation + MathHelper.PiOver4 * Owner.direction + RotationOffset * 1.75f, swoosh.Size() * 0.5f, Projectile.scale * 2f, spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None));
+
 
                 Main.EntitySpriteDraw(
                     tex.Value,

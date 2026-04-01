@@ -1,6 +1,7 @@
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.LeftClick;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -44,7 +45,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         }
 
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
-        public override Vector2 SpriteOrigin => new Vector2(1f, 117f);
+
+        // 雄祖之护 贴图：124×124（正方形）
+        // 雄祖之护 原点：(0, 124)
+        // 月炎之锋 贴图：100×118（非正方形）
+        // 月炎之锋 原点：(0, 118) 那我这个100×102
+        // 我们的贴图是100×102，因此：
+        public override Vector2 SpriteOrigin => new Vector2(0f, 102f);
 
         public Vector2 mousePos;
         public Vector2 aimVel;
@@ -165,9 +172,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         Owner.direction = 1;
                 }
 
+                // 转动速度的核心
                 Projectile.rotation = Projectile.rotation.AngleLerp(
                     Owner.AngleTo(mousePos) + MathHelper.ToRadians(45f),
-                    0.1f
+                    0.35f // 更改转动速度的快慢
                 );
 
                 // =========================
@@ -183,6 +191,47 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 }
             }
 
+
+
+
+            // =========================
+            // 手臂抓取角度（贴手校准）
+            // =========================
+            // 雄祖之护（GrandDad）：
+            // - 贴图：124×124（正方形）
+            // - 原点：(0, 124)
+            // - ArmRotationOffset：-140°（完全贴手，无偏移）
+            //
+            // 月炎之锋（StellarStriker）：
+            // - 贴图：100×118（非正方形）
+            // - 原点：(0, 118)
+            // - ArmRotationOffset：-140°（依然贴手，说明该值是“标准模板角度”）
+            //
+            // 我们当前武器：
+            // - 贴图：100×102（非正方形）
+            // - 原点：(0, 102)
+            // - 当前问题：
+            //   已经通过 SpriteOrigin 修正了“旋转轴”
+            //   但由于贴图高度缩短，刀柄在贴图中的相对位置发生变化
+            //   → 导致玩家手抓点与刀柄存在固定偏移
+            //
+            // 结论：
+            // - ArmRotationOffset = -140° 是“标准武器模板值”
+            // - 但当贴图高度变化（尤其变短）时：
+            //   需要微调这个角度，让“手抓刀柄”重新对齐
+            //
+            // 调整方向：
+            // - 如果刀“离手偏远” → 提高角度（-140 → -130）
+            // - 如果刀“压进身体” → 降低角度（-140 → -150）
+            //
+            // 当前武器建议微调范围：
+            // -135° ~ -145°
+            //
+            // ⚠️ 注意：
+            // - 这里不是控制挥舞轨迹（RotationOffset）
+            // - 这里只控制“手抓刀的位置”
+            //
+            // =========================
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
         }
@@ -204,6 +253,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Projectile.ai[1] = -Projectile.ai[1];
                 }
 
+
+
+                // 这里决定的是整体的挥动角度，角度越大，挥动的角度越大
+                // GrandDad：ToRadians(120f
+                // StellarStriker：ToRadians(-45f
                 RotationOffset = MathHelper.Lerp(
                     RotationOffset,
                     MathHelper.ToRadians(120f * Projectile.ai[1] * Owner.direction * (1f + (Utils.GetLerpValue(useAnim * 0.8f, useAnim, Animation, true) * 0.35f))),
@@ -461,6 +515,39 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (giantSlashing)
             {
                 giantTimer++;
+
+                {
+                    // =========================
+                    // 巨大化挥砍：海洋喷射尾迹（持续）
+                    // =========================
+                    Vector2 forward = Vector2.One.RotatedBy(Projectile.rotation + RotationOffset + MathHelper.ToRadians(90f));
+
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float length = Main.rand.NextFloat(80f, 320f) * currentScale;
+
+                        Vector2 spawnPos = Owner.Center +
+                            new Vector2(length, 0f).RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+
+                        Vector2 vel =
+                            -forward.RotatedByRandom(0.25f) * Main.rand.NextFloat(6f, 18f)
+                            - Owner.velocity * 0.7f;
+
+                        GeneralParticleHandler.SpawnParticle(
+                            new CustomSpark(
+                                spawnPos,
+                                vel,
+                                "CalamityMod/Particles/BloomCircle",
+                                false,
+                                18,
+                                Main.rand.NextFloat(0.4f, 0.8f) * currentScale * 0.6f,
+                                Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                                new Vector2(1.2f, 0.6f),
+                                shrinkSpeed: 0.92f
+                            )
+                        );
+                    }
+                }
                 float slashDuration = useAnim - (useAnim / 3f);
                 float slashProgress = Utils.GetLerpValue(0f, slashDuration, giantTimer, true);
 
@@ -672,6 +759,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (CurrentComboStage == 4)
+                Owner.GetModPlayer<BBEXPlayer>().AddTide();
+
             if ((target.life <= 0 && target.realLife == -1) && Projectile.numHits > 0)
                 Projectile.numHits -= 1;
 

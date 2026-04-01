@@ -36,6 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
         // ai[0]：第几次挥砍，0=第一刀，1=第二刀
         // =========================
         private int SwingIndex => (int)Projectile.ai[0];
+        private int DashDirection => Projectile.ai[1] == -1f ? -1 : 1;
 
         private bool trailFXTriggered = false;
         private bool particlesSpawned = false;
@@ -50,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             Projectile.extraUpdates = 3;
             Projectile.noEnchantmentVisuals = true;
             Projectile.Opacity = 0.2f;
-            Projectile.width = Projectile.height = 54;
+            Projectile.width = Projectile.height = 100;
             Projectile.scale = 1.25f;
             Projectile.DamageType = DamageClass.Melee;
         }
@@ -67,7 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             CooldownTime = (int)(StandardSwingTime * (float)animMax / baseUseTime);
             swingTime = (int)(StandardCooldownTime * (float)animMax / baseUseTime);
 
-            OffsetDistance = 36;
+            OffsetDistance = 64;
             RotateInStartup = 0.8f;
             RotateInCooldown = 0f;
 
@@ -79,11 +80,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             dashStarted = false;
             spawnedFollowup = false;
             dashVelocity = Vector2.Zero;
+
+            if (Projectile.ai[1] != -1f && Projectile.ai[1] != 1f)
+                Projectile.ai[1] = player.direction == -1 ? -1f : 1f;
+
+            Projectile.spriteDirection = DashDirection;
+            Projectile.direction = DashDirection;
+            player.direction = DashDirection;
         }
 
         public override void AdditionalAI()
         {
             Player player = Main.player[Projectile.owner];
+
+            // 标记当前玩家正在冲刺（只影响自己，不影响多人）
+            player.GetModPlayer<Dash_Trigger>().IsUsingSlashDash = true;
+            Vector2 fireDirection = new Vector2(DashDirection, 0f);
+
+            Projectile.spriteDirection = DashDirection;
+            Projectile.direction = DashDirection;
+            player.direction = DashDirection;
+
+            //Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // =========================
             // 前摇：几乎照搬 Lucrecia primary
@@ -104,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 {
                     if (timer % 8 == 0)
                     {
-                        Vector2 pos = player.MountedCenter + Projectile.rotation.ToRotationVector2() * 60f;
+                        Vector2 pos = player.MountedCenter + Projectile.rotation.ToRotationVector2() * 110f;
                         Particle sparkle = new CritSpark(
                             pos,
                             new Vector2(7f, 0f).RotatedBy(Projectile.rotation),
@@ -137,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 Projectile.scale = baseScale * MathHelper.Lerp(0.85f, 0.625f, CooldownCompletion);
 
                 // 给玩家一点减速收刀感
-                player.velocity *= 0.92f;
+                player.velocity *= 0.89f;
 
                 // 第一刀快结束时，自动生成第二刀
                 if (!spawnedFollowup && SwingIndex == 0 && CooldownCompletion >= 0.82f && Main.myPlayer == Projectile.owner)
@@ -145,13 +163,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                     Projectile.NewProjectile(
                         Projectile.GetSource_FromThis(),
                         player.MountedCenter,
-                        Vector2.Zero,
+                        fireDirection,
                         Type,
                         Projectile.damage,
                         Projectile.knockBack,
                         Projectile.owner,
                         1f,
-                        0f
+                        DashDirection
                     );
 
                     spawnedFollowup = true;
@@ -164,19 +182,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             // =========================
             else if (inSwing)
             {
-                Vector2 mousePosition = Main.MouseWorld;
-                Vector2 fireDirection = (mousePosition - player.MountedCenter).SafeNormalize(Vector2.UnitX);
-
                 if (!trailFXTriggered)
                 {
                     Vector2 shootDir = fireDirection * 10f;
-                    int dir = -Math.Sign(mousePosition.X == 0f ? 1f : mousePosition.X);
-                    float scale = lineCollisionLength / 550f;
+                    int dir = -DashDirection;
+                    float scale = lineCollisionLength / 500f;
 
                     Color swipeColor = SwingIndex == 0 ? Color.DeepSkyBlue * 0.9f : Color.Cyan * 0.85f;
 
                     Particle swipe = new CustomSpark(
-                        player.MountedCenter - shootDir * 4f,
+                        player.MountedCenter - shootDir * 8f,
                         shootDir.RotatedBy(0.075f * (dir * (SwingIndex % 2 == 0 ? 1 : -1))) * 1.22f,
                         "CalamityMod/Particles/VerticalSmearLarge",
                         false,
@@ -218,11 +233,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 float t = MathHelper.Clamp(SwingCompletion, 0f, 1f);
                 float easedMovement = MathF.Pow(t, 0.4f);
                 float parabola = 1f - MathF.Pow(easedMovement - 0.5f, 2f) * 4f;
-                OffsetDistance = (int)MathHelper.Lerp(36f * 1f, 36f * 1.435f, parabola);
+                OffsetDistance = (int)MathHelper.Lerp(64f * 1f, 64f * 1.435f, parabola);
 
                 float upPhase = easedMovement <= 0.5f ? easedMovement * 0.5f : (1f - easedMovement) * 0.5f;
                 float scaleEase = MathF.Pow(upPhase, 2.6f);
-                Projectile.scale = baseScale * MathHelper.Lerp(0.8f, 1.4f, scaleEase);
+                Projectile.scale = baseScale * MathHelper.Lerp(0.9f, 1.6f, scaleEase);
 
                 // =========================
                 // 每次挥砍开始都给一次大冲刺，并且带加速度
@@ -243,7 +258,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 // 冲刺期间的海蓝拖尾
                 if (timer % 3 == 0)
                 {
-                    Vector2 sprayPos = player.Center - fireDirection * Main.rand.NextFloat(12f, 28f);
+                    Vector2 sprayPos = player.Center - fireDirection * Main.rand.NextFloat(22f, 50f);
                     Vector2 sprayVel = (-fireDirection).RotatedByRandom(0.75f) * Main.rand.NextFloat(3f, 10f);
 
                     Dust water = Dust.NewDustPerfect(sprayPos, DustID.Water, sprayVel);
@@ -261,7 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 if (t > 0.05f && t < 0.5f && timer % 5 == 0)
                 {
                     SparkParticle orb = new SparkParticle(
-                        player.Center + fireDirection * 3f,
+                        player.Center + fireDirection * 6f,
                         (fireDirection * 14f).RotatedByRandom(1f),
                         true,
                         16,
@@ -299,7 +314,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 Lighting.AddLight(Projectile.Center, 0.05f, 0.24f, 0.34f);
             }
 
-            base.AdditionalAI();
+            //base.AdditionalAI();
         }
 
         public override float SwingFunction()

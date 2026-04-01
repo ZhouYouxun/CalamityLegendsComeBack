@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region 基础属性和资源管理
 
         public override string Texture => "CalamityMod/Items/Weapons/Magic/SHPC";
-        public new string LocalizationCategory => "Items.Weapons.Magic";
+        public new string LocalizationCategory => "Items.Weapons";
 
         // ==================== 音效部分 ====================
         public static readonly SoundStyle FireSound = new("CalamityMod/Sounds/Item/AnomalysNanogunMPFBShot");

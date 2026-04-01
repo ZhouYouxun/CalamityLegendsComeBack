@@ -1,17 +1,44 @@
 using Terraria;
 using Terraria.ModLoader;
-
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
 {
     internal class BBEXPlayer : ModPlayer
     {
-        public const int TideMax = 3;
-
         public int TideValue;
-        public bool TideFull => TideValue >= TideMax;
+        public int CurrentTideMax
+        {
+            get
+            {
+                int value = 2; // 初始值改成2
+
+                if (Main.hardMode)
+                    value++;
+
+                if (CalamityMod.DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
+                    value++;
+
+                if (NPC.downedFishron)
+                    value++;
+
+                if (NPC.downedMoonlord)
+                    value++;
+
+                if (CalamityMod.DownedBossSystem.downedPolterghast)
+                    value++;
+
+                if (CalamityMod.DownedBossSystem.downedYharon)
+                    value++;
+
+                return value;
+            }
+        }
+
+        public bool TideFull => TideValue >= CurrentTideMax;
 
         public override void ResetEffects()
         {
+            if (TideValue > CurrentTideMax)
+                TideValue = CurrentTideMax;
         }
 
         public void AddTide(int amount = 1)
@@ -20,8 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
                 return;
 
             TideValue += amount;
-            if (TideValue > TideMax)
-                TideValue = TideMax;
+            if (TideValue > CurrentTideMax)
+                TideValue = CurrentTideMax;
         }
 
         public void ResetTide()

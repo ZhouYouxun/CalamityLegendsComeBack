@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
     internal class BBEXCoolDown : CooldownHandler
     {
         private float AdjustedCompletion =>
-            instance.player.GetModPlayer<BBEXPlayer>().TideValue / (float)BBEXPlayer.TideMax;
+            instance.player.GetModPlayer<BBEXPlayer>().TideValue / (float)instance.player.GetModPlayer<BBEXPlayer>().CurrentTideMax;
         private Color TextColor => Color.AliceBlue;
         private Color TextBorderColor => Color.Black;
 

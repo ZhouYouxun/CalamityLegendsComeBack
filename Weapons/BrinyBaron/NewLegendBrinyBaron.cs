@@ -3,8 +3,11 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.LeftClick;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
+using CalamityMod.World;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -15,6 +18,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     public class NewLegendBrinyBaron : ModItem
     {
+        private bool CanUseDashTornado => NPC.downedBoss1 || Main.hardMode;
+        private bool CanUseSpinRush => Main.hardMode;
+
         public override void SetDefaults()
         {
             Item.width = 120;
@@ -31,11 +37,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Item.knockBack = 6f;
             Item.autoReuse = true;
 
+
             Item.channel = true;
             Item.shoot = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
             Item.noUseGraphic = true;
             Item.noMelee = true;
-            Item.useStyle = ItemUseStyleID.Shoot;
+            Item.useStyle = ItemUseStyleID.Swing;
 
             Item.shootSpeed = 16f;
             Item.rare = ItemRarityID.Pink;
@@ -48,16 +55,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             if (player.altFunctionUse == 2)
             {
+                if (!CanUseDashTornado && !CanUseSpinRush)
+                    return false;
+
                 BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
+                int spinRushType = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
+                int dashType = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
+
                 Item.useTime = 24;
                 Item.useAnimation = 24;
-                Item.channel = false;
-                Item.noUseGraphic = false;
+                Item.shoot = CanUseSpinRush && tidePlayer.TideFull ? spinRushType : dashType;
+                Item.channel = Item.shoot == dashType;
+                Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
-                Item.shoot = tidePlayer.TideFull
-                    ? ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>()
-                    : ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
                 Item.shootSpeed = 16f;
                 Item.UseSound = SoundID.Item39;
             }
@@ -83,10 +94,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
             // =========================
-            // 右键：手里剑逻辑保持原样
+            // 右键：保持原样
             // =========================
             if (player.altFunctionUse == 2)
-                return true;
+            {
+                if (type == ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>())
+                    return true;
+
+                Vector2 shootVelocity = velocity.SafeNormalize(Vector2.UnitX * player.direction);
+                Projectile.NewProjectile(source, position, shootVelocity, type, damage, knockback, player.whoAmI);
+                return false;
+            }
 
             // =========================
             // 左键：永远只允许存在一个 Holdout
@@ -94,6 +112,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             int holdoutType = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
             if (player.ownedProjectileCounts[holdoutType] > 0)
                 return false;
+
+            return true;
+        }
+
+        public override bool CanShoot(Player player)
+        {
+            if (player.altFunctionUse != 2)
+                return player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] <= 0;
+
+            int dashType = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
+            int spinRushType = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
+            foreach (Projectile projectile in Main.projectile)
+            {
+                if (!projectile.active || projectile.owner != player.whoAmI)
+                    continue;
+
+                if (projectile.type == dashType || projectile.type == spinRushType)
+                    return false;
+            }
 
             return true;
         }
@@ -106,14 +143,166 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
 
+            if (Main.myPlayer == player.whoAmI)
+                player.Calamity().rightClickListener = true;
+
             if (player.Calamity().cooldowns.TryGetValue(BBEXCoolDown.ID, out var cooldown))
                 cooldown.timeLeft = tidePlayer.TideValue;
             else
                 player.AddCooldown(BBEXCoolDown.ID, tidePlayer.TideValue);
+
+
+            // ===== 大招释放 =====
+            if (KeybindSystem.LegendarySkill.JustPressed && NPC.downedFishron && tidePlayer.TideFull)
+            {
+                // 防止重复生成
+                foreach (Projectile proj in Main.projectile)
+                {
+                    if (proj.active && proj.owner == player.whoAmI &&
+                        proj.type == ModContent.ProjectileType<BrinyBaron_SkillSuperCharge_SuperDash>())
+                    {
+                        return;
+                    }
+                }
+
+                Vector2 dir = (Main.MouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
+
+                Projectile.NewProjectile(
+                    Item.GetSource_FromThis(),
+                    player.Center,
+                    dir,
+                    ModContent.ProjectileType<BrinyBaron_SkillSuperCharge_SuperDash>(),
+                    Item.damage * 5,
+                    Item.knockBack,
+                    player.whoAmI
+                );
+
+                // 清空潮汐
+                tidePlayer.TideValue = 0;
+            }
         }
 
         public override void AddRecipes()
         {
         }
+
+        #region 传奇属性成长
+
+        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
+        {
+            bool[] downStages =
+            {
+                NPC.downedBoss1,
+                NPC.downedBoss2,                
+                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,
+                NPC.downedBoss3,
+                DownedBossSystem.downedSlimeGod,
+                Main.hardMode,
+                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
+                DownedBossSystem.downedCalamitasClone,
+                NPC.downedPlantBoss,
+                NPC.downedFishron,
+                NPC.downedAncientCultist,
+                NPC.downedMoonlord,
+                DownedBossSystem.downedProvidence,
+                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid,
+                DownedBossSystem.downedPolterghast,
+                DownedBossSystem.downedDoG,
+                DownedBossSystem.downedYharon,
+                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas,
+                DownedBossSystem.downedPrimordialWyrm
+            };
+
+            int[] stageDamage =
+            {
+                15,
+                24,
+                31,
+                33,
+                34,
+                42,
+                79,
+                108,
+                121,
+                144,
+                210,
+                465,
+                472,
+                489,
+                505,
+                1248,
+                1351,
+                16590,
+                21469
+            };
+
+            int finalDamage = 10;
+
+            for (int i = 0; i < downStages.Length; i++)
+            {
+                if (downStages[i])
+                    finalDamage = stageDamage[i];
+                else
+                    break;
+            }
+
+            damage.Base = finalDamage;
+        }
+
+        #endregion
+
+
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            Player player = Main.LocalPlayer;
+            BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
+
+            // ===== 左键 =====
+            string left = this.GetLocalizedValue("BB_Left");
+
+            // ===== 潮汐 =====
+            string tide = this.GetLocalizedValue("BB_Tide") + tidePlayer.TideValue;
+
+            // ===== 右键通用 =====
+            string right = this.GetLocalizedValue("BB_Right");
+
+            // ===== Dash解锁 =====
+            string dash1 = NPC.downedBoss1
+                ? this.GetLocalizedValue("Dash1_Unlock")
+                : this.GetLocalizedValue("Dash1_Lock");
+
+            string dash2 = Main.hardMode
+                ? this.GetLocalizedValue("Dash2_Unlock")
+                : this.GetLocalizedValue("Dash2_Lock");
+
+            string dash3 = NPC.downedMechBoss2
+                ? this.GetLocalizedValue("Dash3_Unlock")
+                : this.GetLocalizedValue("Dash3_Lock");
+
+            string dash4 = NPC.downedFishron
+                ? this.GetLocalizedValue("Dash4_Unlock")
+                : this.GetLocalizedValue("Dash4_Lock");
+
+            // ===== 最终文本 =====
+            string final = this.GetLocalizedValue("BB_Final");
+
+            // ===== 拼接 =====
+            string finalText =
+                left + "\n\n" +
+                tide + "\n" +
+                right + "\n" +
+                dash1 + "\n" +
+                dash2 + "\n" +
+                dash3 + "\n" +
+                dash4 + "\n\n" +
+                final;
+
+            tooltips.FindAndReplace("[GFB]", finalText);
+        }
+
+
+
+
     }
 }
