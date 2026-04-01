@@ -209,6 +209,11 @@ Buffs: {
 	}
 }
 
+Keybinds: {
+	LegendarySkill: 传奇技能
+	// Mods.CalamityLegendsComeBack.Keybinds.LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
+}
+
 Projectiles: {
 	EnergyCore_Spark.DisplayName: 能量核心火花
 	PurifiedGel_Ball.DisplayName: 净化凝胶球
@@ -234,7 +239,12 @@ Projectiles: {
 	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	// NewSHPS.DisplayName: New S H P S
 	// BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
-	// NewWeapons.BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+
+	NewWeapons: {
+		// BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+		// EAfterDog.TEM00LeftSuperLazer.DisplayName: T E M00 Left Super Lazer
+	}
+
 	// TeachingProjectile.DisplayName: Teaching Projectile
 	// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
 	// AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
@@ -254,6 +264,7 @@ Projectiles: {
 	// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
 	// ExoPrism_Light.DisplayName: Exo Prism_ Light
 	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

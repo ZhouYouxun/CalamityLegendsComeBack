@@ -304,6 +304,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
 
 
+            Main.spriteBatch.Draw(tex, drawPos, frame, drawColor, Projectile.rotation, frame.Size() / 2, Projectile.scale, SpriteEffects.None, 0f);
+
+
             // 光芒绘制（可控开关）
             if (GlowScaleFactor > 0f && GlowIntensityFactor > 0f)
             {
@@ -333,7 +336,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
 
 
-            Main.spriteBatch.Draw(tex, drawPos, frame, drawColor, Projectile.rotation, frame.Size() / 2, Projectile.scale, SpriteEffects.None, 0f);
 
             // 插件后绘制
             CurrentEffect.PostDraw(Projectile, owner, Main.spriteBatch);

@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityMod;
 using CalamityMod.Items;
@@ -271,6 +272,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return false;
             }
 
+            var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+            if (exPlayer.EXValue >= NewLegend_EXPlayer.EXMax &&
+                KeybindSystem.LegendarySkill.Current)
+            {
+                return false;
+            }
+
             // 左键 → 正常发射
             Projectile.NewProjectile(
                 source,
@@ -282,6 +290,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 player.whoAmI,
                 storedEffectID > 0 ? storedEffectID : -1
             );
+
+            exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.05f);
+
+            if (exPlayer.EXValue > NewLegend_EXPlayer.EXMax)
+                exPlayer.EXValue = NewLegend_EXPlayer.EXMax;
 
             return false;
         }
@@ -399,6 +413,46 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // ==================== 手持动画部分（完整保留核心） ====================
         public override void HoldItem(Player player)
         {
+            // ===== EX条UI同步 =====
+            var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+
+            if (player.Calamity().cooldowns.TryGetValue(SHPC_EXCooldown.ID, out var cooldown))
+            {
+                cooldown.timeLeft = exPlayer.EXValue;
+            }
+            else
+            {
+                player.AddCooldown(SHPC_EXCooldown.ID, 0);
+            }
+
+            // ===== EX技能释放 =====
+            if (KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.EXMax)
+            {
+                // 防止重复生成
+                foreach (Projectile proj in Main.projectile)
+                {
+                    if (proj.active && proj.owner == player.whoAmI &&
+                        proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>())
+                    {
+                        return;
+                    }
+                }
+
+                Vector2 dir = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
+
+                Projectile.NewProjectile(
+                    Item.GetSource_FromThis(),
+                    player.Center,
+                    dir,
+                    ModContent.ProjectileType<NL_SHPC_EXWeapon>(),
+                    Item.damage * 5, // 先简单倍率
+                    Item.knockBack,
+                    player.whoAmI
+                );
+
+                // 清空EX条（如果你之后想改，可以删这句）
+                exPlayer.EXValue = 0;
+            }
 
             // ===== 天顶世界三连发补射 =====
             if (Main.zenithWorld && zenithBurstCount > 0)
