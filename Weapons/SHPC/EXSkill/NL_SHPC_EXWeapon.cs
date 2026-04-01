@@ -1,8 +1,10 @@
-using System;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityMod;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Utilities;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -17,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private Player Owner => Main.player[Projectile.owner];
         private Vector2 GunTip => Projectile.Center + Projectile.velocity * 56f;
         private bool IsDischarging => state == 2;
-        private float HoldoutRecoilOffset => MathHelper.Clamp(47f - timer * 2f, 0f, 47f);
+        private float HoldoutRecoilOffset => MathHelper.Clamp(24f - timer * 1.2f, 0f, 47f);
 
         private int state;
         // 0 = 蓄力
@@ -81,9 +83,44 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         #region Phase 1 Charge
 
+        // 播音
+        private SlotId ChargeSoundSlot;
+        private int chargeSoundTimer;
         private void ChargePhase()
         {
-            timer++;
+            
+            
+            // ================= 蓄力循环音 =================
+            timer++; // ← 提前！！！
+
+            float chargeFactor = Utils.GetLerpValue(0f, ChargeTime, timer, true);
+
+            // 只在第一次创建
+            if (ChargeSoundSlot == default)
+            {
+                ChargeSoundSlot = SoundEngine.PlaySound(
+                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/预热转枪阶段")
+                    {
+                        Volume = 1.0f,
+                        IsLooped = true
+                    },
+                    Projectile.Center
+                );
+            }
+
+            // 每2帧更新一次（关键）
+            if (timer % 2 == 0 && SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var sound))
+            {
+                sound.Position = Projectile.Center;
+
+                // 音量：1 → 5
+                sound.Volume = 1.0f + chargeFactor * 4.0f;
+
+                // 音调：稍微收一点，不要太抖
+                sound.Pitch = -0.2f + chargeFactor * 0.6f;
+            }
+
+
             SpawnBurstEffect(timer / (float)ChargeTime);
 
             if (timer < ChargeTime)
@@ -91,7 +128,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             state = 1;
             timer = 0;
-            SoundEngine.PlaySound(SoundID.Item122, Projectile.Center);
+
+            // 停止蓄力循环音
+            if (SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var s))
+                s?.Stop();
+
+            // 播放蓄力完成音
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/电弧发射器-蓄力结束")
+                {
+                    Volume = 1.2f,
+                    Pitch = 0f
+                },
+                Projectile.Center
+            );
         }
 
         #endregion
@@ -118,9 +168,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         #region Phase 3 Laser
 
+        private SlotId LaserSoundSlot;
+        private int laserSoundTimer;
+
         private void LaserPhase()
         {
             timer++;
+
+            // ================= 激光循环音效（武器级） =================
+            laserSoundTimer++;
+
+            float lifeFactor = Utils.GetLerpValue(0f, LaserTime, laserSoundTimer, true);
+
+            // 初始化（只播一次）
+            if (LaserSoundSlot == default)
+            {
+                LaserSoundSlot = SoundEngine.PlaySound(
+                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/激光大炮开火一小段")
+                    {
+                        Volume = 1.0f,
+                        IsLooped = true
+                    },
+                    Projectile.Center
+                );
+            }
+
+            // 每2帧更新（防抖）
+            if (laserSoundTimer % 2 == 0 && SoundEngine.TryGetActiveSound(LaserSoundSlot, out var sound))
+            {
+                sound.Position = Projectile.Center;
+
+                // 音量：1 → 4
+                sound.Volume = 1.0f + lifeFactor * 3.0f;
+
+                // 音调
+                sound.Pitch = -0.4f * lifeFactor;
+            }
 
             if (Main.myPlayer == Projectile.owner)
             {
@@ -136,10 +219,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 Main.projectile[laser].ai[0] = Projectile.whoAmI;
             }
 
-            Owner.velocity -= Projectile.velocity * 0.6f;
+            Owner.velocity -= Projectile.velocity * 0.15f;
 
             if (timer < LaserTime)
                 return;
+
+            // 停止激光音
+            if (SoundEngine.TryGetActiveSound(LaserSoundSlot, out var s))
+                s?.Stop();
+
+            LaserSoundSlot = default;
+            laserSoundTimer = 0;
 
             state = 3;
             timer = 0;
@@ -221,9 +311,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     Projectile.netUpdate = true;
             }
 
-            Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
-            Projectile.Center = armPosition + Projectile.velocity * HoldoutRecoilOffset + new Vector2(0f, 5f);
-            Projectile.rotation = Projectile.velocity.ToRotation() + (Projectile.direction == -1 ? MathHelper.Pi : 0f);
+            //Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
+            float recoil = IsDischarging ? 0f : HoldoutRecoilOffset;
+
+            Projectile.Center = armPosition + Projectile.velocity * recoil + new Vector2(0f, 5f);
+            Projectile.rotation = Projectile.velocity.ToRotation();
+
             Projectile.spriteDirection = Projectile.direction;
 
             if (Owner.CantUseHoldout() || IsDischarging)
@@ -240,6 +333,65 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         }
 
         #endregion
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value;
+
+            Vector2 drawPos = Projectile.Center - Main.screenPosition;
+            Vector2 origin = texture.Size() * 0.5f;
+
+            bool facingLeft = Projectile.velocity.X < 0f;
+
+            SpriteEffects effects = facingLeft ? SpriteEffects.FlipVertically : SpriteEffects.None;
+
+            float rotation = Projectile.rotation;
+
+
+            // ===== 白色叠加（蓄力阶段）=====
+            if (state == 0)
+            {
+                float chargeFactor = Utils.GetLerpValue(0f, ChargeTime, timer, true);
+
+                // 强度：越蓄越猛
+                float intensity = chargeFactor;
+
+                // 偏移范围：越蓄越大
+                float offset = 4f + chargeFactor * 10f;
+
+                int drawCount = 1 + (int)(chargeFactor * 3f); // 最多叠4层
+
+                for (int i = 0; i < drawCount; i++)
+                {
+                    Vector2 randOffset = Main.rand.NextVector2Circular(offset, offset) * intensity;
+
+                    Main.EntitySpriteDraw(
+                        texture,
+                        drawPos + randOffset,
+                        null,
+                        Color.White * intensity * 0.7f,
+                        rotation,
+                        origin,
+                        Projectile.scale,
+                        effects,
+                        0
+                    );
+                }
+            }
+
+            Main.EntitySpriteDraw(
+                texture,
+                drawPos,
+                null,
+                Projectile.GetAlpha(lightColor),
+                rotation,
+                origin,
+                Projectile.scale,
+                effects,
+                0);
+
+            return false;
+        }
 
         #region Visual Effects
 

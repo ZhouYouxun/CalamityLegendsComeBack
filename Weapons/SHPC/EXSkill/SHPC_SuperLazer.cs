@@ -1,23 +1,25 @@
-﻿using CalamityMod.Buffs.StatDebuffs;
+﻿using CalamityMod;
+using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Graphics.Primitives;
+using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
-using CalamityMod;
-using Microsoft.Xna.Framework.Graphics;
+using CalamityMod.Projectiles.Ranged;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using ReLogic.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria;
+using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria;
-using CalamityMod.Particles;
-using Terraria.DataStructures;
-using CalamityMod.Buffs.DamageOverTime;
-using Terraria.Audio;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
@@ -85,8 +87,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (ownerProj != null && ownerProj.active && ownerProj.type == exType)
             {
                 // 绑定到父弹幕的“枪口”位置与朝向（与你原实现一致）
-                Projectile.Center = ownerProj.Center + (ownerProj.rotation - MathHelper.PiOver4).ToRotationVector2() * 18f;
-                Projectile.rotation = (ownerProj.rotation );
+                Vector2 dir = ownerProj.velocity.SafeNormalize(Vector2.UnitX);
+
+                Projectile.Center = ownerProj.Center + dir * 18f;
+                Projectile.rotation = dir.ToRotation();
 
                 // --------- 关键：只要父弹幕存在，就不断刷新自身寿命，确保永远不死 ---------
                 // 这里把 timeLeft 设为 2，基类/引擎会每帧调用 AttachToSomething 并把 timeLeft 再设回 2
@@ -225,89 +229,167 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, hitPos);
         }
 
-
+        private SlotId LaserSoundSlot;
+        private int soundTimer;
         public override void ExtraBehavior()
         {
-            //if (impactVfxCooldown > 0) impactVfxCooldown--; // 递减命中爆破节流
-
             if (Main.dedServ)
                 return;
 
-            // ===== 科技蓝主光照 =====
-            Lighting.AddLight(Projectile.Center, 0.10f, 0.28f, 0.55f); // 柔和科技蓝环境光
-
-            // ===== 预计算束体信息 =====
+            // 基础光照
+            Lighting.AddLight(Projectile.Center, 0.10f, 0.28f, 0.55f);
+        
             if (Projectile.velocity == Vector2.Zero)
-                return; // 安全保护：没有方向时不生成粒子
+                return;
 
             Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-            Vector2 nrm = dir.RotatedBy(MathHelper.PiOver2); // 右手法线（±就是两侧边缘）
-            float halfWidth = (Projectile.scale * Projectile.width + 180f) * 0.5f; // 与 LaserWidthFunction 对齐（你的宽函数）
-            float time = Main.GlobalTimeWrappedHourly * 5.2f + Projectile.identity * 0.17f;
-            Color edgeColor = new Color(80, 190, 255) * 1.28f;
-            Color coreColor = new Color(130, 228, 255) * 1.34f;
-            Color flashColor = new Color(205, 245, 255) * 1.5f;
+            Vector2 nrm = dir.RotatedBy(MathHelper.PiOver2);
+            float time = Main.GlobalTimeWrappedHourly;
 
-            // 沿着光束取样的步长（越小越密）
-            float step = 72f;
-            int sampleCount = (int)(LaserLength / step);
-            sampleCount = Utils.Clamp(sampleCount, 4, 18);
-
-            // 末端位置（便于在端点加额外亮点）
+            // 光束理论半宽
+            float halfWidth = (Projectile.scale * Projectile.width + 180f) * 0.5f;
             Vector2 endPos = Projectile.Center + dir * LaserLength;
 
-            for (int i = 1; i <= sampleCount; i++)
+            // 颜色层次
+            Color edgeColor = new Color(80, 190, 255) * 1.12f;
+            Color coreColor = new Color(130, 228, 255) * 1.18f;
+            Color flashColor = new Color(205, 245, 255) * 1.30f;
+
+            // 间隔目标：约 8 像素
+            // 但给一个上限，避免满长度时粒子量炸掉
+            const float spacing = 8f;
+            int sampleCount = (int)(LaserLength / spacing);
+            sampleCount = Utils.Clamp(sampleCount, 48, 180);
+
+            for (int i = 0; i <= sampleCount; i++)
             {
-                float completion = i / (float)(sampleCount + 1);
+                float completion = i / (float)sampleCount;
+
+                // 基础采样点：沿光束线性推进
                 Vector2 basePos = Vector2.Lerp(Projectile.Center, endPos, completion);
-                float envelope = 0.26f + 0.74f * (float)Math.Pow(Math.Sin(completion * MathHelper.Pi), 0.85f);
-                float localRadius = halfWidth * (0.48f + 0.2f * (float)Math.Sin(time * 0.72f + completion * 7.2f)) * envelope;
-                float helixPhase = time + completion * MathHelper.TwoPi * 2.45f;
 
-                for (int strand = 0; strand < 2; strand++)
+                // 中段更饱满，两端更收
+                float envelope = 0.24f + 0.76f * (float)Math.Pow(Math.Sin(completion * MathHelper.Pi), 0.88f);
+
+                // =========================
+                // 1. 中轴波纹：给“每组之间”持续变化
+                // =========================
+                float centerWave =
+                    (float)Math.Sin(time * 9.2f - completion * 22f + Projectile.identity * 0.31f) *
+                    (2.0f + 4.5f * envelope);
+
+                basePos += nrm * centerWave;
+
+                // =========================
+                // 2. 线性代数变换：把单位圆点做缩放+旋转，形成动态椭圆螺旋轨道
+                // =========================
+                float orbitPhase = time * 7.4f + completion * MathHelper.TwoPi * 5.2f + Projectile.identity * 0.17f;
+                float matrixRotation =
+                    time * 1.15f +
+                    completion * MathHelper.TwoPi * 2.8f +
+                    (float)Math.Sin(time * 2.6f + completion * 11f) * 0.22f;
+
+                float scaleX =
+                    halfWidth * (0.085f + 0.10f * envelope) *
+                    (0.92f + 0.08f * (float)Math.Sin(time * 4.1f + completion * 15f));
+
+                float scaleY =
+                    (2.8f + 6.0f * envelope) *
+                    (0.90f + 0.10f * (float)Math.Cos(time * 3.4f - completion * 13f));
+
+                Matrix transform =
+                    Matrix.CreateScale(scaleX, scaleY, 1f) *
+                    Matrix.CreateRotationZ(matrixRotation);
+
+                Vector2 unitCirclePoint = new Vector2(
+                    (float)Math.Cos(orbitPhase),
+                    (float)Math.Sin(orbitPhase));
+
+                Vector2 ellipsePoint = Vector2.Transform(unitCirclePoint, transform);
+
+                // 把局部椭圆坐标投影到世界空间：
+                // X 轴映射到法线，Y 轴映射到光束方向
+                Vector2 worldOffset = nrm * ellipsePoint.X + dir * ellipsePoint.Y;
+
+                Vector2 primaryPos = basePos + worldOffset;
+                Vector2 secondaryPos = basePos - worldOffset * 0.92f;
+
+                float sineSign = (float)Math.Sin(orbitPhase) >= 0f ? 1f : -1f;
+                Vector2 swirlDir = worldOffset.SafeNormalize(nrm).RotatedBy(MathHelper.PiOver2 * sineSign);
+
+                // =========================
+                // 3. 主细火花：每个采样点都生成，形成非常密的连续感
+                // =========================
+                GlowSparkParticle primarySpark = new GlowSparkParticle(
+                    primaryPos,
+                    swirlDir * (0.30f + 0.55f * envelope) + dir * (0.12f + 0.25f * envelope),
+                    false,
+                    Main.rand.Next(7, 10),
+                    Main.rand.NextFloat(0.012f, 0.018f),
+                    Color.Lerp(edgeColor, flashColor, 0.22f + 0.25f * envelope),
+                    new Vector2(
+                        Main.rand.NextFloat(1.00f, 1.35f),
+                        Main.rand.NextFloat(0.14f, 0.22f)),
+                    true,
+                    false,
+                    1.02f);
+                GeneralParticleHandler.SpawnParticle(primarySpark);
+
+                // =========================
+                // 4. 副轨火花：隔点补一次，做双股但不塞满
+                // =========================
+                if (i % 2 == 0)
                 {
-                    float strandPhase = helixPhase + strand * MathHelper.Pi;
-                    float lateral = (float)Math.Sin(strandPhase) * localRadius;
-                    float expansion = (float)Math.Cos(strandPhase) * (5f + 7f * envelope);
-                    Vector2 strandPos = basePos + nrm * lateral;
-                    Vector2 swirlVelocity =
-                        nrm * MathF.Sign(lateral == 0f ? 1f : lateral) * (0.9f + 1.8f * envelope) +
-                        dir * expansion * 0.18f;
-
-                    GlowSparkParticle spark = new GlowSparkParticle(
-                        strandPos,
-                        swirlVelocity,
+                    GlowSparkParticle secondarySpark = new GlowSparkParticle(
+                        secondaryPos,
+                        -swirlDir * (0.22f + 0.40f * envelope) + dir * (0.08f + 0.20f * envelope),
                         false,
-                        Main.rand.Next(10, 14),
-                        Main.rand.NextFloat(0.02f, 0.03f),
-                        Color.Lerp(edgeColor, flashColor, 0.28f + 0.42f * envelope),
-                        new Vector2(1.9f + envelope * 0.8f, 0.28f + envelope * 0.14f),
+                        Main.rand.Next(6, 9),
+                        Main.rand.NextFloat(0.010f, 0.016f),
+                        Color.Lerp(coreColor, flashColor, 0.16f + 0.20f * envelope),
+                        new Vector2(
+                            Main.rand.NextFloat(0.90f, 1.20f),
+                            Main.rand.NextFloat(0.12f, 0.18f)),
                         true,
                         false,
-                        1.08f);
-                    GeneralParticleHandler.SpawnParticle(spark);
-
-                    if ((i + strand) % 2 == 0)
-                    {
-                        SquishyLightParticle light = new SquishyLightParticle(
-                            strandPos + nrm * Main.rand.NextFloat(-4f, 4f),
-                            swirlVelocity * 0.16f,
-                            Main.rand.NextFloat(0.24f, 0.38f) * (0.92f + envelope * 0.5f),
-                            Color.Lerp(coreColor, flashColor, 0.32f + 0.34f * envelope),
-                            Main.rand.Next(12, 18));
-                        GeneralParticleHandler.SpawnParticle(light);
-                    }
+                        1.01f);
+                    GeneralParticleHandler.SpawnParticle(secondarySpark);
                 }
 
-                if (i % 3 == 1)
+                // =========================
+                // 5. 柔光节点：降低频率，但参数持续变化，不再像老版本那样“隔很大一团”
+                // =========================
+                if (i % 4 == 0)
                 {
+                    float lightDrift =
+                        (float)Math.Cos(time * 6.5f + completion * 17f) *
+                        (1.4f + 2.2f * envelope);
+
+                    SquishyLightParticle light = new SquishyLightParticle(
+                        basePos + nrm * lightDrift,
+                        dir * 0.06f + swirlDir * 0.08f,
+                        Main.rand.NextFloat(0.12f, 0.20f) * (0.90f + envelope * 0.35f),
+                        Color.Lerp(coreColor, flashColor, 0.20f + 0.18f * envelope),
+                        Main.rand.Next(9, 13));
+                    GeneralParticleHandler.SpawnParticle(light);
+                }
+
+                // =========================
+                // 6. 中轴核心点：每 6 个采样点一个，但会跟着波纹轻微摆动
+                // =========================
+                if (i % 6 == 0)
+                {
+                    float orbOffset =
+                        (float)Math.Sin(time * 5.1f - completion * 19f + Projectile.identity * 0.29f) *
+                        (1.0f + 2.6f * envelope);
+
                     GlowOrbParticle coreOrb = new GlowOrbParticle(
-                        basePos,
+                        basePos + nrm * orbOffset,
                         Vector2.Zero,
                         false,
-                        5,
-                        0.82f + envelope * 0.28f,
-                        Color.Lerp(coreColor, flashColor, 0.25f + 0.3f * envelope),
+                        4,
+                        0.46f + envelope * 0.14f,
+                        Color.Lerp(coreColor, flashColor, 0.16f + 0.16f * envelope),
                         true,
                         false,
                         true);
@@ -315,24 +397,41 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 }
             }
 
-            if (Main.rand.NextBool(3))
+            // =========================
+            // 末端：保留，但做得更精致，不要一大坨
+            // =========================
+            float tipPhase = time * 8.4f + Projectile.identity * 0.23f;
+            Vector2 tipWaveOffset = nrm * ((float)Math.Sin(tipPhase) * halfWidth * 0.12f);
+
+            GlowOrbParticle tipOrb = new GlowOrbParticle(
+                endPos + tipWaveOffset,
+                -dir * Main.rand.NextFloat(0.08f, 0.18f),
+                false,
+                5,
+                0.82f + Main.rand.NextFloat(0.08f),
+                Color.Lerp(coreColor, flashColor, 0.34f),
+                true,
+                false,
+                true);
+            GeneralParticleHandler.SpawnParticle(tipOrb);
+
+            if (Main.rand.NextBool(2))
             {
-                float endPhase = time + MathHelper.TwoPi * 0.25f;
-                Vector2 tipOffset = nrm * ((float)Math.Sin(endPhase) * halfWidth * 0.26f);
-                GlowOrbParticle tip = new GlowOrbParticle(
-                    endPos + tipOffset,
-                    -dir * Main.rand.NextFloat(0.2f, 0.55f),
+                Vector2 tipSide = nrm * ((float)Math.Cos(tipPhase * 1.37f) * halfWidth * 0.16f);
+                GlowSparkParticle tipSpark = new GlowSparkParticle(
+                    endPos + tipSide,
+                    tipSide.SafeNormalize(nrm) * 0.35f - dir * 0.12f,
                     false,
-                    7,
-                    1.05f + Main.rand.NextFloat(0.18f),
-                    Color.Lerp(coreColor, flashColor, 0.45f),
+                    Main.rand.Next(7, 10),
+                    Main.rand.NextFloat(0.013f, 0.018f),
+                    Color.Lerp(edgeColor, flashColor, 0.30f),
+                    new Vector2(Main.rand.NextFloat(1.10f, 1.45f), Main.rand.NextFloat(0.15f, 0.22f)),
                     true,
                     false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(tip);
+                    1.03f);
+                GeneralParticleHandler.SpawnParticle(tipSpark);
             }
         }
-
 
         public float LaserWidthFunction(float completionRatio, Vector2 vertexPos) => Projectile.scale * Projectile.width + 180;
 

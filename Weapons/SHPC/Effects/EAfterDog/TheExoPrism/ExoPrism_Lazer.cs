@@ -138,6 +138,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                 Projectile.knockBack,
                 Projectile.owner
             );
+
+
+            // ================= 上方激光（ExoPrism_Light） =================
+
+            // 上方距离：比下方更远一点（比如 24格）
+            Vector2 topCenter = target.Center - new Vector2(0f, 24f * 16f);
+
+            // 同样做一个随机圆分布
+            float radiusTop = 12f * 16f;
+            Vector2 topOffset = Main.rand.NextVector2Circular(radiusTop, radiusTop);
+            Vector2 spawnPosTop = topCenter + topOffset;
+
+            // 向目标射下来
+            Vector2 velocityTop = (target.Center - spawnPosTop).SafeNormalize(Vector2.UnitY) * 12f;
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosTop,
+                velocityTop,
+                ModContent.ProjectileType<ExoPrism_Light>(), // ← 你的光线类型
+                (int)(Projectile.damage * 1.6f), // 稍微低一点，避免太爆
+                Projectile.knockBack,
+                Projectile.owner
+            );
         }
         public override bool PreDraw(ref Color lightColor)
         {

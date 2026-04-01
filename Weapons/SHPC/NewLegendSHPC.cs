@@ -292,7 +292,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             );
 
             exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.05f);
+            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.55f); // 记得改回0:05
 
             if (exPlayer.EXValue > NewLegend_EXPlayer.EXMax)
                 exPlayer.EXValue = NewLegend_EXPlayer.EXMax;

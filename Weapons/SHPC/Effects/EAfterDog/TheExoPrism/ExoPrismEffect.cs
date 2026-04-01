@@ -35,15 +35,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
             for (int i = -1; i <= 1; i += 2)
             {
-                Projectile.NewProjectile(
+                int projIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center + normal * (40f * i), // 左右±X0偏移
+                    projectile.Center + normal * (40f * i),
                     forward * 7.5f,
                     ModContent.ProjectileType<ExoPrism_Light>(),
                     projectile.damage,
                     projectile.knockBack,
                     owner.whoAmI
                 );
+
+                if (Main.projectile.IndexInRange(projIndex))
+                {
+                    Main.projectile[projIndex].tileCollide = false; // 强制穿墙
+                }
             }
 
             // ================= 中轴激光 =================

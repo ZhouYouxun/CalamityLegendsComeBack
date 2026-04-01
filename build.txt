@@ -1,6 +1,6 @@
 displayName = CalamityLegendsComeBack
 author = 南鸢北笙&VectorChaos&剃刀刃台风
-version = 0.0.1
+version = 0.0.2
 hideCode = false
 hideResources = false
 includeSource = true
