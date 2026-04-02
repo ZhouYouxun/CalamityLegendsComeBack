@@ -48,7 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
 
             EffectRegistry.RegisterEffect(new LivingShardEffect()); // 生命碎片 15
-            EffectRegistry.RegisterEffect(new EctoplasmEffect()); // 灵气 16
+            //EffectRegistry.RegisterEffect(new EctoplasmEffect()); // 灵气 16
             EffectRegistry.RegisterEffect(new DepthCellsEffect()); // 深渊细胞 17
             EffectRegistry.RegisterEffect(new PlagueCellEffect()); // 瘟疫罐 18
 

@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.LeftClick;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
 using CalamityMod.World;
@@ -13,11 +14,13 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Localization;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
-    public class NewLegendBrinyBaron : ModItem
+    public class NewLegendBrinyBaron : ModItem, ILocalizedModType
     {
+        public new string LocalizationCategory => "Items.Weapons";
         private bool CanUseDashTornado => NPC.downedBoss1 || Main.hardMode;
         private bool CanUseSpinRush => Main.hardMode;
 
@@ -65,7 +68,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 Item.useTime = 24;
                 Item.useAnimation = 24;
                 Item.shoot = CanUseSpinRush && tidePlayer.TideFull ? spinRushType : dashType;
+
                 Item.channel = Item.shoot == dashType;
+                Item.channel = false;
+
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
@@ -75,10 +81,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             else
             {
                 // =========================
-                // 左键：保持和 GrandDad 一样的 Holdout 武器配置
+                // 左键：可以参考 GrandDad【以及更多其他特殊剑】 一样的 Holdout 武器配置
                 // =========================
-                Item.useTime = 60;
-                Item.useAnimation = 60;
+                Item.useTime = 20;
+                Item.useAnimation = 20;
                 Item.channel = true;
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
@@ -99,7 +105,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (player.altFunctionUse == 2)
             {
                 if (type == ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>())
-                    return true;
+                {
+                    Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
+                    return false;
+                }
+
 
                 Vector2 shootVelocity = velocity.SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(source, position, shootVelocity, type, damage, knockback, player.whoAmI);
@@ -153,8 +163,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
 
             // ===== 大招释放 =====
-            if (KeybindSystem.LegendarySkill.JustPressed && NPC.downedFishron && tidePlayer.TideFull)
+            //if (KeybindSystem.LegendarySkill.JustPressed && NPC.downedFishron && tidePlayer.TideFull)
+            if (KeybindSystem.LegendarySkill.JustPressed) // 测试用，记得删
             {
+
                 // 防止重复生成
                 foreach (Projectile proj in Main.projectile)
                 {
@@ -287,16 +299,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             // ===== 最终文本 =====
             string final = this.GetLocalizedValue("BB_Final");
 
+            // ===== 传奇文本 =====
+            string legendaryText = this.GetLocalizedValue("LegendaryText");
+
+            // ===== Shift提示 =====
+            string shiftHint = this.GetLocalizedValue("LegendaryHint");
+
+            // ===== Shift切换 =====
+            string legendarySection = shiftHint;
+            if (Main.keyState.PressingShift())
+                legendarySection = legendaryText;
+
             // ===== 拼接 =====
             string finalText =
-                left + "\n\n" +
-                tide + "\n" +
-                right + "\n" +
-                dash1 + "\n" +
-                dash2 + "\n" +
-                dash3 + "\n" +
-                dash4 + "\n\n" +
-                final;
+               left + "\n\n" +
+               tide + "\n" +
+               right + "\n" +
+               dash1 + "\n" +
+               dash2 + "\n" +
+               dash3 + "\n" +
+               dash4 + "\n\n" +
+               final + "\n\n" +
+               legendarySection + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
         }
@@ -304,5 +328,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
 
 
+        // 背包里右键手动开关快刀斩
+        public override bool CanRightClick()
+        {
+            return true;
+        }
+
+        public override void RightClick(Player player)
+        {
+            var dashPlayer = player.GetModPlayer<Dash_Trigger>();
+
+            // 切换开关
+            dashPlayer.DashEnabled = !dashPlayer.DashEnabled;
+
+            // 音效
+            SoundEngine.PlaySound(SoundID.MenuTick, player.Center);
+        }
+
+
+        public override bool ConsumeItem(Player player)
+        {
+            return false; // ❗阻止右键把武器消耗掉
+        }
     }
 }

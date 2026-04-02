@@ -30,47 +30,63 @@ Items: {
 			LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
 			LegendaryText:
 				'''
-				[c/99B3FF:你终于来了...]
-				[c/66CCFF:世界的边界，一次又一次被重写。]
-				[c/7F8FA6:曾经的“传奇”已不复存在，]
-				[c/7F8FA6:我们被拆解、重组，或被遗忘。]
-				[c/DDA0FF:但我没有忘记你，]
-				[c/FFB347:一次又一次的挑战着这些，孜孜不倦。]
-				[c/66CCFF:现在，我再一次回来了，让我们开始吧。]
+				[c/99B3FF:最初的方案过于依赖单一能源，但结果证明，这种设计注定无法稳定运行。]
+				[c/66CCFF:新的结构不再局限于灵魂，任何具备能量密度的材料都被纳入测试范围。]
+				[c/7F8FA6:不同输入带来的响应差异极大，部分组合甚至呈现出异常的放大效应。]
+				[c/DDA0FF:控制系统因此被重新设计，能量在完全约束前即被强制释放。]
+				[c/FFB347:理论上，这种装置不再受弹药类型限制，但它真正的极限仍无人知晓。]
 				'''
 		}
-	}
 
-	NewLegendBrinyBaron: {
-		DisplayName: 海爵剑-传奇归来
-		BB_Left:
+		NewLegendBrinyBaron: {
+			DisplayName: 海爵剑·传奇归来
+
+			BB_Left:
 			'''
-			左键：进行多段挥舞循环。
-			前3段进行正常挥砍，第4段甩出水能手里剑。
-			最后一段将剑刃巨大化进行大范围切割。
-			巨大化攻击将为你积攒潮汐值
+			[c/66CCFF:左键：展开连续斩击，节奏逐步加速。]
+			[c/7F8FA6:前三段为稳定挥砍，用以压制与试探敌人。]
+			[c/99CCFF:第四段释放水能飞刃，延伸攻击范围。]
+			[c/DDA0FF:终段引发巨刃显现，对前方区域进行强力回斩。]
+			[c/FFB347:每一次重斩，都会引导潮汐之力汇聚于剑刃。]
 			'''
-		BB_Tide: 当前潮汐值上限为：
-		BB_Right:
+			BB_Tide: 当前潮汐值：
+			BB_Right:
 			'''
-			右键执行冲刺
-			若潮汐值为满，则进行强而有力的回旋冲刺
-			若不为满，则进行常规线性冲刺
+			[c/66CCFF:右键：以高速突进撕裂战场。]
+			[c/7F8FA6:未充盈时，进行直线突刺，用于切入或脱离。]
+			[c/DDA0FF:潮汐充盈时，转化为回旋冲刺，持续撕裂路径上的一切。]
+			[c/FFB347:冲刺即是进攻，也是唯一的生存手段。]
 			'''
-		Dash1_Unlock: 你需要击败克苏鲁之眼，才能解锁该冲刺
-		Dash1_Lock: 按住右键进行短而快的突破性冲刺，撞到敌人造成伤害并弹回
-		Dash2_Unlock: 你需要击败肉山才能解锁该冲刺
-		Dash2_Lock: 按住右键进行中距离的回旋冲刺，切割碰到的敌人
-		Dash3_Unlock: 你需要击败双子魔眼才能解锁该冲刺
-		Dash3_Lock: 双击左右键或按下冲刺键向左或右进行两次快刀斩
-		Dash4_Unlock: 你需要击败猪龙鱼公爵，才能解锁该冲刺
-		Dash4_Lock: 按住技能按键，能够进行大招攻击
-		BB_Final:
+			Dash1_Unlock: [c/66FFAA:已解锁：基础突进]
+			Dash1_Lock: [c/7F8FA6:短距离高速突刺，命中目标后迅速反弹。]
+			Dash2_Unlock: [c/66FFAA:已解锁：回旋切割]
+			Dash2_Lock: [c/DDA0FF:中距离回旋冲刺，对路径敌人持续切割。]
+			Dash3_Unlock: [c/66FFAA:已解锁：连续斩返]
+			Dash3_Lock: [c/99CCFF:快速折返斩击，可在战场中多次位移。]
+			Dash4_Unlock: [c/66FFAA:已解锁：潮汐爆发]
+			Dash4_Lock: [c/FFB347:释放全部潮汐之力，发动毁灭性突袭。]
+			BB_Final:
 			'''
-			在背包里对武器点击右键
-			可手动开关快刀斩模式
+			[c/DDA0FF:在背包中右键点击武器]
+			[c/FFB347:可切换快刀斩模式，改变作战节奏]
 			'''
-		// Tooltip: ""
+			Tooltip: "[GFB]"
+			TooltipGFB: [c/6C8EFF:你已踏入浪潮深处。]
+			LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
+			LegendaryText:
+			'''
+			[c/66CCFF:他曾立于浪潮之巅，以速度撕裂整片海域。]
+			[c/7F8FA6:没有防御，没有迟疑，只有不断向前的斩击。]
+			[c/99CCFF:海水在他脚下翻涌，如同回应他的意志。]
+			[c/DDA0FF:每一次冲刺，都是对极限的再一次突破。]
+			[c/FFB347:敌人无法预判他的轨迹，也无法承受他的锋芒。]
+			[c/66CCFF:当你看见他时，战斗早已结束。]
+			[c/7F8FA6:他们称那不是战斗，而是一场席卷一切的潮汐。]
+			[c/DDA0FF:来去之间，只留下被切割的空间与沉寂的海面。]
+			[c/FFB347:这把剑记录的不只是力量，而是一种信念。]
+			[c/99CCFF:向前，直到世界无法承受你的速度。]
+			'''
+		}
 	}
 }
 
@@ -189,6 +205,7 @@ Projectiles: {
 	// ExoPrism_Light.DisplayName: Exo Prism_ Light
 	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+	// Necroplasm_Damage.DisplayName: Necroplasm_ Damage
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

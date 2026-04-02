@@ -66,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (!initialized)
                 InitializeDash(owner);
 
-            if ((!owner.channel || owner.noItems) && dashState == 0)
+            if ((!Main.mouseRight || owner.noItems) && dashState == 0)
             {
                 Projectile.Kill();
                 return;

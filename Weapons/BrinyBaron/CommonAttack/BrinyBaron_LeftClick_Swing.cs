@@ -1,7 +1,9 @@
-using CalamityMod.Particles;
-using CalamityMod.Projectiles.BaseProjectiles;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.LeftClick;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+using CalamityMod;
+using CalamityMod.Particles;
+using CalamityMod.Projectiles.BaseProjectiles;
+using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -17,18 +19,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
         public override int AssignedItemID => ModContent.ItemType<NewLegendBrinyBaron>();
 
+        // =========================
+        // Exposed Tuning
+        // =========================
+        private const float DefaultNormalModeScale = 0.5f;
+        private const float DefaultGiantModeScale = 1.2f;
+        private const int DefaultGiantGrowFrames = 15;
+        private const int DefaultGiantShrinkFrames = 15;
+
+        private const float MinLegendaryScaleMultiplier = 1f;
+        private const float MaxLegendaryScaleMultiplier = 4f;
+
+        private const float BaseHitboxOutset = 125f;
+        private static readonly Vector2 BaseHitboxSize = new Vector2(190f, 190f);
+        private const float NormalSwooshScale = 0.6f;
+        private const float StageFourSwooshScale = 0.75f;
+        private const float GiantSwooshScale = 1.35f;
+
         // 0/1/2 = 前三刀普通攻击，3 = 第四刀普通攻击+手里剑，4 = 第五刀巨大化攻击
         private int CurrentComboStage => swingCount % 5;
+        private bool IsGiantComboStage => CurrentComboStage == 4;
+        private float CurrentVisualScale => currentScale;
+        private float CurrentSwooshScaleMultiplier => IsGiantComboStage ? GiantSwooshScale : (CurrentComboStage == 3 ? StageFourSwooshScale : NormalSwooshScale);
+        private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
 
         public override float HitboxOutset
         {
             get
             {
-                if (CurrentComboStage == 4)
-                    return 125f * currentScale;
-                if (CurrentComboStage == 3)
-                    return 125f;
-                return 125f;
+                return BaseHitboxOutset * CurrentVisualScale;
             }
         }
 
@@ -36,11 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             get
             {
-                if (CurrentComboStage == 4)
-                    return new Vector2(190f, 190f) * currentScale;
-                if (CurrentComboStage == 3)
-                    return new Vector2(190f, 190f);
-                return new Vector2(190f, 190f);
+                return BaseHitboxSize * CurrentVisualScale;
             }
         }
 
@@ -68,13 +83,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private bool spawnedStage4Projectiles = false;
 
         // 第五刀巨大化专属流程
-        private const int GiantGrowFrames = 15;
-        private const int GiantShrinkFrames = 15;
         private bool giantGrowing = false;
         private bool giantSlashing = false;
         private bool giantShrinking = false;
         private int giantTimer = 0;
-        private float currentScale = 1f;
+        private float normalModeScale = DefaultNormalModeScale;
+        private float giantModeScale = DefaultGiantModeScale;
+        private int giantGrowFrames = DefaultGiantGrowFrames;
+        private int giantShrinkFrames = DefaultGiantShrinkFrames;
+        private int legendaryGrowthTier = 0;
+        private float currentScale = DefaultNormalModeScale;
 
         public override void SetDefaults()
         {
@@ -86,9 +104,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void WhenSpawned()
         {
+            InitializeLegendaryGrowthValues();
+
             Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
             Projectile.knockBack = 0f;
-            Projectile.scale = 1f;
+            SetCurrentScale(normalModeScale);
             Projectile.ai[1] = -1f;
 
             mousePos = Main.MouseWorld;
@@ -106,6 +126,128 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void ResetStyle()
         {
             CanHit = false;
+        }
+
+        // =========================
+        // Scale And Placement Helpers
+        // =========================
+        private void InitializeLegendaryGrowthValues()
+        {
+            legendaryGrowthTier = ResolveLegendaryGrowthTier();
+
+            float scaleMultiplier = MathHelper.Lerp(
+                MinLegendaryScaleMultiplier,
+                MaxLegendaryScaleMultiplier,
+                legendaryGrowthTier / 5f);
+
+            normalModeScale = DefaultNormalModeScale * scaleMultiplier;
+            giantModeScale = DefaultGiantModeScale * scaleMultiplier;
+            giantGrowFrames = DefaultGiantGrowFrames;
+            giantShrinkFrames = DefaultGiantShrinkFrames;
+        }
+
+        private int ResolveLegendaryGrowthTier()
+        {
+            bool[] growthStages =
+            {
+                NPC.downedBoss2,
+                DownedBossSystem.downedSlimeGod,
+                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
+                NPC.downedMoonlord,
+                DownedBossSystem.downedDoG,
+                DownedBossSystem.downedPrimordialWyrm,
+            };
+
+            int tier = 0;
+            for (int i = 0; i < growthStages.Length; i++)
+            {
+                if (growthStages[i])
+                    tier = i;
+            }
+
+            return tier;
+        }
+
+        private void SetCurrentScale(float scale)
+        {
+            currentScale = scale;
+            Projectile.scale = scale;
+        }
+
+        private float ScaleDistance(float value) => value * CurrentVisualScale;
+
+        private Vector2 GetSlashOffset(float distance)
+        {
+            return new Vector2(ScaleDistance(distance), 0f).RotatedBy(SlashAngle);
+        }
+
+        private Vector2 GetRandomSlashPosition(float minDistance, float maxDistance)
+        {
+            return Owner.Center + GetSlashOffset(Main.rand.NextFloat(minDistance, maxDistance));
+        }
+
+        private static float EvaluateFluidSwingProgress(float progress)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+
+            float smootherStep = progress * progress * progress * (progress * (progress * 6f - 15f) + 10f);
+            float sineEase = 0.5f - 0.5f * (float)System.Math.Cos(progress * MathHelper.Pi);
+            return MathHelper.Lerp(sineEase, smootherStep, 0.65f);
+        }
+
+        private static float EvaluateFluidTurnLerp(float progress, float minLerp, float maxLerp)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+            float speedPulse = (float)System.Math.Sin(progress * MathHelper.Pi);
+            return MathHelper.Lerp(minLerp, maxLerp, speedPulse);
+        }
+
+        private void ApplyFluidRotation(float targetDegrees, float progress, float minLerp, float maxLerp)
+        {
+            RotationOffset = MathHelper.Lerp(
+                RotationOffset,
+                MathHelper.ToRadians(targetDegrees),
+                EvaluateFluidTurnLerp(progress, minLerp, maxLerp));
+        }
+
+        private void ResetSwingState()
+        {
+            giantGrowing = false;
+            giantSlashing = false;
+            giantShrinking = false;
+            giantTimer = 0;
+            SetCurrentScale(normalModeScale);
+        }
+
+        private void SpawnSwingScaleAccent(float distance, float intensity)
+        {
+            if (!CanHit)
+                return;
+
+            float wave = (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 8f + AnimationProgress * 0.35f);
+            Vector2 slashDirection = SlashAngle.ToRotationVector2();
+            Vector2 perpendicular = slashDirection.RotatedBy(MathHelper.PiOver2);
+            Vector2 accentCenter = Owner.Center + GetSlashOffset(distance);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector2 accentPosition = accentCenter + perpendicular * side * ScaleDistance(8f + 4f * wave);
+                Vector2 accentVelocity = slashDirection * (1.2f + 0.25f * intensity) + perpendicular * side * 0.25f;
+
+                GeneralParticleHandler.SpawnParticle(
+                    new GlowOrbParticle(
+                        accentPosition,
+                        accentVelocity,
+                        false,
+                        12,
+                        CurrentVisualScale * (0.35f + 0.1f * intensity),
+                        side < 0 ? Color.DeepSkyBlue : Color.Cyan,
+                        true,
+                        false,
+                        true
+                    )
+                );
+            }
         }
 
         public override void UseStyle()
@@ -148,12 +290,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 spawnedStage4Projectiles = false;
 
                 // 第五刀状态重置
-                giantGrowing = false;
-                giantSlashing = false;
-                giantShrinking = false;
-                giantTimer = 0;
-                currentScale = 1f;
-                Projectile.scale = 1f;
+                ResetSwingState();
             }
             else
             {
@@ -175,13 +312,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 // 转动速度的核心
                 Projectile.rotation = Projectile.rotation.AngleLerp(
                     Owner.AngleTo(mousePos) + MathHelper.ToRadians(45f),
-                    0.35f // 更改转动速度的快慢
+                    0.5f // 更改转动速度的快慢
                 );
 
                 // =========================
                 // 第五刀：放大 → 挥砍 → 缩小
                 // =========================
-                if (CurrentComboStage == 4)
+                if (IsGiantComboStage)
                 {
                     DoGiantSwing();
                 }
@@ -236,10 +373,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
         }
 
+        // =========================
+        // Normal Swing
+        // =========================
         private void DoNormalSwing()
         {
-            Projectile.scale = 1f;
-            currentScale = 1f;
+            SetCurrentScale(normalModeScale);
 
             if (AnimationProgress < (useAnim / 1.5f))
             {
@@ -258,10 +397,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 // 这里决定的是整体的挥动角度，角度越大，挥动的角度越大
                 // GrandDad：ToRadians(120f
                 // StellarStriker：ToRadians(-45f
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(120f * Projectile.ai[1] * Owner.direction * (1f + (Utils.GetLerpValue(useAnim * 0.8f, useAnim, Animation, true) * 0.35f))),
-                    0.2f
+                float windupProgress = Utils.GetLerpValue(0f, useAnim / 1.5f, AnimationProgress, true);
+                float windupEase = EvaluateFluidSwingProgress(windupProgress);
+                float windupStartAngle = 18f * Projectile.ai[1] * Owner.direction;
+                float windupEndAngle = 120f * Projectile.ai[1] * Owner.direction * (1f + (Utils.GetLerpValue(useAnim * 0.8f, useAnim, Animation, true) * 0.35f));
+
+                ApplyFluidRotation(
+                    MathHelper.Lerp(windupStartAngle, windupEndAngle, windupEase),
+                    windupProgress,
+                    0.08f,
+                    0.26f
                 );
             }
             else
@@ -271,6 +416,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                 float time = AnimationProgress - (useAnim / 3f);
                 float timeMax = useAnim - (useAnim / 3f);
+                float linearSlashProgress = Utils.GetLerpValue(0f, timeMax, time, true);
+                float slashProgress = EvaluateFluidSwingProgress(linearSlashProgress);
 
                 if (time >= (int)(timeMax * 0.4f) && swingSound)
                 {
@@ -304,9 +451,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         Vector2 particleVel = new Vector2(0f, 10f * -Projectile.ai[1] * Owner.direction)
                             .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
 
-                        Vector2 particlePos = Owner.Center +
-                            new Vector2(Main.rand.Next(30, CurrentComboStage == 3 ? 210 : 165), 0f)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+                        Vector2 particlePos = GetRandomSlashPosition(30f, CurrentComboStage == 3 ? 210f : 165f);
 
                         GeneralParticleHandler.SpawnParticle(
                             new LineParticle(
@@ -314,7 +459,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                 -particleVel.RotatedByRandom(0.2f) * 2f,
                                 false,
                                 19,
-                                Main.rand.NextFloat(0.5f, 1f),
+                                Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
                                 Main.rand.NextBool(4) ? Color.DeepSkyBlue : Color.Cyan
                             )
                         );
@@ -325,7 +470,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                 -particleVel.RotatedByRandom(0.2f) * 2f,
                                 Main.rand.NextBool(4) ? Color.MediumBlue : Color.Teal,
                                 23,
-                                Main.rand.NextFloat(0.5f, 1f),
+                                Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
                                 0.65f
                             )
                         );
@@ -343,7 +488,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                             Projectile.NewProjectile(
                                 Projectile.GetSource_FromThis(),
-                                Owner.Center + shootDir * 24f,
+                                Owner.Center + shootDir * ScaleDistance(24f),
                                 velocity,
                                 ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
                                 Projectile.damage,
@@ -360,16 +505,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     CanHit = false;
                 }
 
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(
-                        MathHelper.Lerp(
-                            150f * Projectile.ai[1] * Owner.direction,
-                            120f * -Projectile.ai[1] * Owner.direction,
-                            Utils.GetLerpValue(0f, 1f, time / timeMax, true)
-                        )
+                ApplyFluidRotation(
+                    MathHelper.Lerp(
+                        150f * Projectile.ai[1] * Owner.direction,
+                        120f * -Projectile.ai[1] * Owner.direction,
+                        slashProgress
                     ),
-                    0.2f
+                    linearSlashProgress,
+                    0.12f,
+                    0.34f
                 );
 
                 if (time >= timeMax)
@@ -380,14 +524,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                 if (CanHit)
                 {
-                    int dustDistance = CurrentComboStage == 3 ? 225 : 180;
+                    float dustDistance = CurrentComboStage == 3 ? 225f : 180f;
 
                     for (int i = 0; i < 6; i++)
                     {
-                        Vector2 spawnPos = Owner.Center +
-                            new Vector2(dustDistance, 0f)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f))
-                            .RotatedByRandom(0.3f);
+                        Vector2 spawnPos = Owner.Center + GetSlashOffset(dustDistance).RotatedByRandom(0.3f);
 
                         if (Main.rand.NextBool(3))
                         {
@@ -397,7 +538,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                 Vector2.Zero,
                                 0,
                                 default,
-                                Main.rand.NextFloat(1.15f, 1.5f)
+                                Main.rand.NextFloat(1.15f, 1.5f) * CurrentVisualScale
                             );
                             dust.noGravity = true;
                             dust.color = Color.DeepSkyBlue;
@@ -408,7 +549,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                     Vector2.Zero,
                                     false,
                                     23,
-                                    Main.rand.NextFloat(0.5f, 1f),
+                                    Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
                                     Color.DarkBlue,
                                     false,
                                     false,
@@ -424,7 +565,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                 Vector2.Zero,
                                 0,
                                 default,
-                                Main.rand.NextFloat(1.15f, 1.5f)
+                                Main.rand.NextFloat(1.15f, 1.5f) * CurrentVisualScale
                             );
                             dust.noGravity = true;
                             dust.color = Color.Cyan;
@@ -435,7 +576,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                     Vector2.Zero,
                                     false,
                                     23,
-                                    Main.rand.NextFloat(0.5f, 1f),
+                                    Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
                                     Main.rand.NextBool(4) ? Color.DeepSkyBlue : Color.Cyan
                                 )
                             );
@@ -449,22 +590,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                             .RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
 
                         Dust dust2 = Dust.NewDustPerfect(
-                            Owner.Center +
-                            new Vector2(dustDistance + 5f, 0f)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f))
-                            .RotatedByRandom(0.3f),
+                            Owner.Center + GetSlashOffset(dustDistance + 5f).RotatedByRandom(0.3f),
                             DustID.FireworksRGB,
                             dustVel * Main.rand.NextFloat(0.1f, 0.5f)
                         );
 
-                        dust2.scale = Main.rand.NextFloat(0.55f, 1.05f);
+                        dust2.scale = Main.rand.NextFloat(0.55f, 1.05f) * CurrentVisualScale;
                         dust2.noGravity = true;
                         dust2.color = Main.rand.NextBool(3) ? Color.LightSeaGreen : Color.Aqua;
                     }
+
+                    SpawnSwingScaleAccent(dustDistance, CurrentComboStage == 3 ? 1.25f : 1f);
                 }
             }
         }
 
+        // =========================
+        // Giant Swing
+        // =========================
         private void DoGiantSwing()
         {
             if (!finalFlip)
@@ -475,8 +618,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             {
                 giantGrowing = true;
                 giantTimer = 0;
-                currentScale = 1f;
-                Projectile.scale = 1f;
+                SetCurrentScale(normalModeScale);
                 CanHit = false;
                 postSwing = false;
                 swingSound = true;
@@ -486,22 +628,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (giantGrowing)
             {
                 giantTimer++;
-                float growProgress = Utils.GetLerpValue(0f, GiantGrowFrames, giantTimer, true);
+                float growProgress = EvaluateFluidSwingProgress(Utils.GetLerpValue(0f, giantGrowFrames, giantTimer, true));
 
-                currentScale = MathHelper.Lerp(1f, 2.4f, growProgress);
-                Projectile.scale = currentScale;
+                SetCurrentScale(MathHelper.Lerp(normalModeScale, giantModeScale, growProgress));
                 CanHit = false;
                 postSwing = false;
 
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(120f * Projectile.ai[1] * Owner.direction),
-                    0.2f
+                ApplyFluidRotation(
+                    MathHelper.Lerp(
+                        20f * Projectile.ai[1] * Owner.direction,
+                        120f * Projectile.ai[1] * Owner.direction,
+                        growProgress
+                    ),
+                    growProgress,
+                    0.08f,
+                    0.24f
                 );
 
                 SpawnGiantChargeParticles(growProgress);
 
-                if (giantTimer >= GiantGrowFrames)
+                if (giantTimer >= giantGrowFrames)
                 {
                     giantGrowing = false;
                     giantSlashing = true;
@@ -524,7 +670,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                     for (int i = 0; i < 5; i++)
                     {
-                        float length = Main.rand.NextFloat(80f, 320f) * currentScale;
+                        float length = ScaleDistance(Main.rand.NextFloat(80f, 320f));
 
                         Vector2 spawnPos = Owner.Center +
                             new Vector2(length, 0f).RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
@@ -540,7 +686,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                 "CalamityMod/Particles/BloomCircle",
                                 false,
                                 18,
-                                Main.rand.NextFloat(0.4f, 0.8f) * currentScale * 0.6f,
+                                Main.rand.NextFloat(0.4f, 0.8f) * CurrentVisualScale * 0.6f,
                                 Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
                                 new Vector2(1.2f, 0.6f),
                                 shrinkSpeed: 0.92f
@@ -549,7 +695,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     }
                 }
                 float slashDuration = useAnim - (useAnim / 3f);
-                float slashProgress = Utils.GetLerpValue(0f, slashDuration, giantTimer, true);
+                float linearSlashProgress = Utils.GetLerpValue(0f, slashDuration, giantTimer, true);
+                float slashProgress = EvaluateFluidSwingProgress(linearSlashProgress);
 
                 if (slashProgress >= 0.4f && swingSound)
                 {
@@ -574,28 +721,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     swingSound = false;
                 }
 
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(
-                        MathHelper.Lerp(
-                            150f * Projectile.ai[1] * Owner.direction,
-                            120f * -Projectile.ai[1] * Owner.direction,
-                            slashProgress
-                        )
+                ApplyFluidRotation(
+                    MathHelper.Lerp(
+                        150f * Projectile.ai[1] * Owner.direction,
+                        120f * -Projectile.ai[1] * Owner.direction,
+                        slashProgress
                     ),
-                    0.2f
+                    linearSlashProgress,
+                    0.11f,
+                    0.32f
                 );
 
-                if (slashProgress > 0.4f && slashProgress < 0.7f)
+                if (linearSlashProgress > 0.4f && linearSlashProgress < 0.7f)
                 {
                     CanHit = true;
                     postSwing = true;
                     SpawnGiantSlashParticles();
+                    SpawnSwingScaleAccent(220f, 1.5f);
                 }
                 else
                 {
                     CanHit = false;
-                    postSwing = slashProgress < 0.75f;
+                    postSwing = linearSlashProgress < 0.75f;
                 }
 
                 if (giantTimer >= slashDuration)
@@ -614,34 +761,40 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (giantShrinking)
             {
                 giantTimer++;
-                float shrinkProgress = Utils.GetLerpValue(0f, GiantShrinkFrames, giantTimer, true);
+                float shrinkProgress = EvaluateFluidSwingProgress(Utils.GetLerpValue(0f, giantShrinkFrames, giantTimer, true));
 
-                currentScale = MathHelper.Lerp(2.4f, 1f, shrinkProgress);
-                Projectile.scale = currentScale;
+                SetCurrentScale(MathHelper.Lerp(giantModeScale, normalModeScale, shrinkProgress));
                 CanHit = false;
                 postSwing = false;
 
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(120f * -Projectile.ai[1] * Owner.direction),
-                    0.2f
+                ApplyFluidRotation(
+                    MathHelper.Lerp(
+                        120f * -Projectile.ai[1] * Owner.direction,
+                        30f * -Projectile.ai[1] * Owner.direction,
+                        shrinkProgress
+                    ),
+                    shrinkProgress,
+                    0.08f,
+                    0.24f
                 );
 
                 SpawnGiantShrinkParticles(shrinkProgress);
 
-                if (giantTimer >= GiantShrinkFrames)
+                if (giantTimer >= giantShrinkFrames)
                 {
                     giantShrinking = false;
-                    currentScale = 1f;
-                    Projectile.scale = 1f;
+                    SetCurrentScale(normalModeScale);
                     doSwing = false;
                 }
             }
         }
 
+        // =========================
+        // Effects
+        // =========================
         private void SpawnGiantChargeParticles(float growProgress)
         {
-            float scaledDistance = MathHelper.Lerp(120f, 260f, growProgress);
+            float scaledDistance = ScaleDistance(MathHelper.Lerp(120f, 260f, growProgress));
 
             for (int i = 0; i < 3; i++)
             {
@@ -649,8 +802,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
 
                 Vector2 particlePos = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(30f, scaledDistance), 0f)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+                    new Vector2(Main.rand.NextFloat(30f * CurrentVisualScale, scaledDistance), 0f)
+                    .RotatedBy(SlashAngle);
 
                 GeneralParticleHandler.SpawnParticle(
                     new LineParticle(
@@ -658,7 +811,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         -particleVel.RotatedByRandom(0.2f) * MathHelper.Lerp(1.2f, 2.2f, growProgress),
                         false,
                         19,
-                        Main.rand.NextFloat(0.6f, 1.2f) * currentScale * 0.6f,
+                        Main.rand.NextFloat(0.6f, 1.2f) * CurrentVisualScale * 0.6f,
                         Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan
                     )
                 );
@@ -669,20 +822,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     -particleVel.RotatedByRandom(0.25f) * Main.rand.NextFloat(0.4f, 1.1f)
                 );
                 frost.noGravity = true;
-                frost.scale = Main.rand.NextFloat(1.0f, 1.6f) * currentScale * 0.5f;
+                frost.scale = Main.rand.NextFloat(1.0f, 1.6f) * CurrentVisualScale * 0.5f;
                 frost.color = Color.Aqua;
             }
         }
 
         private void SpawnGiantSlashParticles()
         {
-            float dustDistance = 180f * currentScale;
+            float dustDistance = ScaleDistance(180f);
 
             for (int i = 0; i < 8; i++)
             {
                 Vector2 spawnPos = Owner.Center +
                     new Vector2(dustDistance, 0f)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f))
+                    .RotatedBy(SlashAngle)
                     .RotatedByRandom(0.3f);
 
                 Dust dust = Dust.NewDustPerfect(
@@ -691,7 +844,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Vector2.One.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(0.3f, 1.1f)
                 );
                 dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(1.3f, 2.4f) * currentScale * 0.5f;
+                dust.scale = Main.rand.NextFloat(1.3f, 2.4f) * CurrentVisualScale * 0.5f;
                 dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
             }
 
@@ -702,8 +855,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     .RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
 
                 Vector2 placement = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(120f, 520f), 0f)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+                    new Vector2(Main.rand.NextFloat(120f * CurrentVisualScale, 520f * CurrentVisualScale), 0f)
+                    .RotatedBy(SlashAngle);
 
                 GeneralParticleHandler.SpawnParticle(
                     new CustomSpark(
@@ -712,7 +865,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         "CalamityMod/Particles/BloomCircle",
                         false,
                         33,
-                        Main.rand.NextFloat(0.45f, 0.7f) * currentScale * 0.5f,
+                        Main.rand.NextFloat(0.45f, 0.7f) * CurrentVisualScale * 0.5f,
                         Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
                         new Vector2(1f, 1f),
                         shrinkSpeed: 0.1f
@@ -723,8 +876,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             for (int i = 0; i < 3; i++)
             {
                 Vector2 beamPos = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(160f, 560f), 0f)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+                    new Vector2(Main.rand.NextFloat(160f * CurrentVisualScale, 560f * CurrentVisualScale), 0f)
+                    .RotatedBy(SlashAngle);
 
                 Vector2 beamVel = -Vector2.UnitY
                     .RotatedBy(FinalRotation)
@@ -733,7 +886,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                 Dust gem = Dust.NewDustPerfect(beamPos, DustID.GemSapphire, beamVel);
                 gem.noGravity = true;
-                gem.scale = Main.rand.NextFloat(1.5f, 2.6f) * currentScale * 0.45f;
+                gem.scale = Main.rand.NextFloat(1.5f, 2.6f) * CurrentVisualScale * 0.45f;
                 gem.color = Color.DeepSkyBlue;
             }
         }
@@ -743,8 +896,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (Main.rand.NextBool(2))
             {
                 Vector2 particlePos = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(40f, 180f * currentScale), 0f)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+                    new Vector2(Main.rand.NextFloat(40f * CurrentVisualScale, 180f * CurrentVisualScale), 0f)
+                    .RotatedBy(SlashAngle);
 
                 Dust dust = Dust.NewDustPerfect(
                     particlePos,
@@ -752,7 +905,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Main.rand.NextVector2Circular(1.5f, 1.5f)
                 );
                 dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(0.9f, 1.5f) * MathHelper.Lerp(1.2f, 0.6f, shrinkProgress);
+                dust.scale = Main.rand.NextFloat(0.9f, 1.5f) * MathHelper.Lerp(1.2f, 0.6f, shrinkProgress) * CurrentVisualScale;
                 dust.color = Color.Cyan;
             }
         }
@@ -800,7 +953,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     vel,
                     0,
                     default,
-                    Main.rand.NextFloat(1.15f, 1.8f) * currentScale
+                    Main.rand.NextFloat(1.15f, 1.8f) * CurrentVisualScale
                 );
                 dust.noGravity = true;
                 dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
@@ -825,7 +978,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge");
 
                 float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
-                float drawScale = CurrentComboStage == 4 ? currentScale : 1f;
+                float drawScale = CurrentVisualScale;
 
                 if (Animation > useAnim * 0.2f || giantGrowing || giantSlashing || giantShrinking)
                 {
@@ -836,7 +989,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         Color.DeepSkyBlue with { A = 0 } * fadeIn * 0.65f,
                         (FinalRotation + MathHelper.ToRadians(45f)) + MathHelper.ToRadians(Projectile.ai[1] == 1 ? -90f : 90f) * -Owner.direction,
                         swoosh.Size() * 0.5f,
-                        drawScale * (CurrentComboStage == 4 ? 1.35f : (CurrentComboStage == 3 ? 0.75f : 0.6f)),
+                        drawScale * CurrentSwooshScaleMultiplier,
                         SpriteEffects.None
                     );
                 }

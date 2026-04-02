@@ -1,13 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using System;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
-    public class Ectoplasm_Damage : ModProjectile, ILocalizedModType
+    internal class Necroplasm_Damage : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -36,6 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         // ===== 飞行逻辑：纯减速 =====
         public override void AI()
         {
+            timer++; // 计时器
             Projectile.velocity *= 0.95f;
         }
 
@@ -54,8 +59,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     ) * 0.5f + 0.5f;
 
                 Color color = Color.Lerp(
-                    new Color(120, 200, 255),
-                    new Color(80, 140, 220),
+                    new Color(255, 80, 180),
+                    new Color(200, 40, 140),
                     colorInterpolation
                 ) * 0.8f;
 
@@ -126,10 +131,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         public override void OnKill(int timeLeft) { }
 
 
+        private int timer;
 
-
-
-
-
+        public override bool? CanDamage()
+        {
+            if (timer < 20)
+                return false;
+            return null;
+        }
     }
 }

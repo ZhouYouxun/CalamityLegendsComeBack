@@ -38,23 +38,39 @@ Items: {
 				[c/66CCFF:Now, I return once more. Let us begin.]
 				'''
 		}
-	}
 
-	NewLegendBrinyBaron: {
-		DisplayName: New Legend Briny Baron
-		BB_Left: "  "
-		BB_Tide: "  "
-		BB_Right: "  "
-		Dash1_Unlock: "  "
-		Dash1_Lock: "  "
-		Dash2_Unlock: "  "
-		Dash2_Lock: "  "
-		Dash3_Unlock: "  "
-		Dash3_Lock: "  "
-		Dash4_Unlock: "  "
-		Dash4_Lock: "  "
-		BB_Final: "  "
-		Tooltip: ""
+		NewLegendBrinyBaron: {
+			DisplayName: 海爵剑-传奇归来
+			BB_Left:
+				'''
+				左键：进行多段挥舞循环。
+				前3段进行正常挥砍，第4段甩出水能手里剑。
+				最后一段将剑刃巨大化进行大范围切割。
+				巨大化攻击将为你积攒潮汐值
+				'''
+			BB_Tide: 当前潮汐值上限为：
+			BB_Right:
+				'''
+				右键执行冲刺
+				若潮汐值为满，则进行强而有力的回旋冲刺
+				若不为满，则进行常规线性冲刺
+				'''
+			Dash1_Unlock: 你需要击败克苏鲁之眼，才能解锁该冲刺
+			Dash1_Lock: 按住右键进行短而快的突破性冲刺，撞到敌人造成伤害并弹回
+			Dash2_Unlock: 你需要击败肉山才能解锁该冲刺
+			Dash2_Lock: 按住右键进行中距离的回旋冲刺，切割碰到的敌人
+			Dash3_Unlock: 你需要击败双子魔眼才能解锁该冲刺
+			Dash3_Lock: 双击左右键或按下冲刺键向左或右进行两次快刀斩
+			Dash4_Unlock: 你需要击败猪龙鱼公爵，才能解锁该冲刺
+			Dash4_Lock: 按住技能按键，能够进行大招攻击
+			BB_Final:
+				'''
+				在背包里对武器点击右键
+				可手动开关快刀斩模式
+				'''
+			Tooltip: "[GFB]"
+			TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。
+		}
 	}
 }
 
@@ -173,6 +189,7 @@ Projectiles: {
 	ExoPrism_Light.DisplayName: Exo Prism_ Light
 	PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 	NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+	Necroplasm_Damage.DisplayName: Necroplasm_ Damage
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

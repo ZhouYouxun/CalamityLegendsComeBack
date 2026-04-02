@@ -15,39 +15,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override int AmmoType => ModContent.ItemType<Necroplasm>();
 
-        public override Color ThemeColor => new Color(40, 40, 40);
-        public override Color StartColor => new Color(120, 120, 120);
-        public override Color EndColor => new Color(5, 5, 5);
+        // ===== 全部改成亮粉 =====
+        public override Color ThemeColor => new Color(255, 80, 180);
+        public override Color StartColor => new Color(255, 120, 200);
+        public override Color EndColor => new Color(200, 40, 140);
 
         public override float SquishyLightParticleFactor => 1.85f;
         public override float ExplosionPulseFactor => 1.85f;
 
         private float sinTimer;
+        private int timer;
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             sinTimer = 0f;
+            timer = 0;
 
-            // 穿透5次
             projectile.penetrate = 5;
 
-            // 初始速度1.5倍
-            projectile.velocity *= 1.5f;
+            // 初始更快一点
+            projectile.velocity *= 1.8f;
         }
 
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
-            // 抵消减速
-            projectile.velocity *= 1.02f;
+            timer++;
 
-            // === ∞式追踪核心（来自 EternityHoming）===
+            // 抵消减速（更快）
+            projectile.velocity *= 1.04f;
+
+            // ===== 强化追踪 =====
             NPC target = projectile.Center.ClosestNPCAt(3000f);
             if (target != null)
             {
                 Vector2 desired = projectile.SafeDirectionTo(target.Center);
-                projectile.velocity = (projectile.velocity * 7f + desired * 10f) / 8f;
+                projectile.velocity = (projectile.velocity * 5f + desired * 16f) / 6f;
+            }
+
+            // ===== 每6帧释放子弹 =====
+            if (timer % 6 == 0)
+            {
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<Necroplasm_Damage>(),
+                    (int)(projectile.damage * 0.5f),
+                    0f,
+                    projectile.owner
+                );
             }
 
             // === ∞视觉 ===
@@ -62,11 +80,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             Vector2 offset = normal * pulse * radius;
 
-            // 左右双轨
             CreateVoidDust(projectile.Center + offset);
             CreateVoidDust(projectile.Center - offset);
 
-            // 中心弱粒子（增加层次）
             if (Main.rand.NextBool(3))
             {
                 SquishyLightParticle p = new(
@@ -79,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 GeneralParticleHandler.SpawnParticle(p);
             }
 
-            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.25f);
+            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.35f);
         }
 
         // ================= ModifyHitNPC =================
@@ -95,7 +111,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // ===== 大型爆炸 =====
+            // ===== 原爆炸保留 =====
             int projIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
@@ -107,18 +123,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             );
 
             Projectile proj = Main.projectile[projIndex];
-
             proj.width = 250;
             proj.height = 250;
 
-            // 黑暗爆散
+            // ===== 新：分裂6个 =====
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 8f);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<Necroplasm_Damage>(),
+                    (int)(projectile.damage * Main.rand.NextFloat(0.8f, 1.2f)),
+                    0f,
+                    projectile.owner
+                );
+            }
+
+            // ===== 粉色爆散 =====
             for (int i = 0; i < 36; i++)
             {
                 Vector2 dir = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f);
 
                 Dust dust = Dust.NewDustPerfect(
                     projectile.Center,
-                    DustID.Shadowflame,
+                    DustID.FireworkFountain_Pink,
                     dir,
                     0,
                     Color.Lerp(StartColor, EndColor, Main.rand.NextFloat()),
@@ -127,11 +158,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 dust.noGravity = true;
             }
 
-            // 虚空脉冲
             Particle pulse = new CustomPulse(
                 projectile.Center,
                 Vector2.Zero,
-                new Color(30, 30, 30),
+                ThemeColor,
                 "CalamityMod/Particles/BloomCircle",
                 Vector2.One * 1.2f,
                 Main.rand.NextFloat(MathHelper.TwoPi),
@@ -148,10 +178,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             Dust dust = Dust.NewDustPerfect(
                 pos,
-                DustID.Shadowflame,
+                DustID.FireworkFountain_Pink,
                 Vector2.Zero,
                 0,
-                Color.Lerp(new Color(80, 80, 80), new Color(10, 10, 10), Main.rand.NextFloat()),
+                Color.Lerp(StartColor, EndColor, Main.rand.NextFloat()),
                 Main.rand.NextFloat(1.1f, 1.6f)
             );
             dust.noGravity = true;
