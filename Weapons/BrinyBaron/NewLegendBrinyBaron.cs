@@ -8,6 +8,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
 using CalamityMod.World;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
@@ -67,7 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
                 Item.useTime = 24;
                 Item.useAnimation = 24;
-                Item.shoot = CanUseSpinRush && tidePlayer.TideFull ? spinRushType : dashType;
+                Item.shoot = tidePlayer.TideFull ? spinRushType : dashType;
 
                 Item.channel = Item.shoot == dashType;
                 Item.channel = false;
@@ -107,6 +108,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 if (type == ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>())
                 {
                     Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
+                    BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
+                    tidePlayer.TideValue = Math.Max(0, tidePlayer.TideValue - 1);
                     return false;
                 }
 

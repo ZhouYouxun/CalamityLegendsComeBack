@@ -26,10 +26,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 {
     public class NewLegendSHPC : ModItem, ILocalizedModType
     {
-        #region 基础属性和资源管理
+        #region ===== 基础信息与运行时状态 =====
 
+        #region ===== 资源与本地化 =====
         public override string Texture => "CalamityMod/Items/Weapons/Magic/SHPC";
         public new string LocalizationCategory => "Items.Weapons";
+        #endregion
+
+        #region ===== 音效资源 =====
 
         // ==================== 音效部分 ====================
         public static readonly SoundStyle FireSound = new("CalamityMod/Sounds/Item/AnomalysNanogunMPFBShot");
@@ -46,7 +50,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public static readonly SoundStyle FinalUltimatumExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/最后通牒爆炸") { Volume = 1f, Pitch = 0f };
         public static readonly SoundStyle Eagle500kgExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/飞鹰500KG爆炸") { Volume = 1f, Pitch = 0f };
         public static readonly SoundStyle AntiPersonnelMineExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/反步兵地雷爆炸") { Volume = 1f, Pitch = 0f };
+        #endregion
 
+        #region ===== 灌注与动画状态 =====
 
         // ==================== 基础常量 ====================
         // 一颗弹药能灌注多少发
@@ -64,8 +70,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         // 后坐力动画计数
         public int recoilProgress = 0;
+        #endregion
+
+        #region ===== 天顶世界补射状态 =====
+        // ===== 天顶世界三连发控制 =====
+        private int zenithBurstTimer;
+        private int zenithBurstCount;
+        #endregion
+        #endregion
 
 
+        #region ===== 基础物品设定 =====
         public override void SetDefaults()
         {
             Item.width = 124;
@@ -99,13 +114,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Item.rare = ModContent.RarityType<BurnishedAuric>();
             //Item.rare = ItemRarityID.Pink;
         }
-
         #endregion
 
 
-        #region 材料提取和使用
+        #region ===== 灌注读取与通用查询 =====
 
-        // ==================== 通用工具函数 ====================
+        #region ===== 弹药与效果查询 =====
 
         // 查找当前玩家背包/弹药栏中，是否存在一个“被注册表认可的灌注弹药”
         // 现在虽然你只会注册 EnergyCore_Effect 对应的那一种，
@@ -168,12 +182,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             return Lang.GetItemNameValue(storedAmmoType);
         }
-
+        #endregion
         #endregion
 
 
-        #region 左右键通用开火核心逻辑
+        #region ===== 左键开火与通用发射流程 =====
 
+        #region ===== 创建与手持偏移 =====
         public override Vector2? HoldoutOffset() => new Vector2(-35f, -10f);
 
         public override void OnCreated(ItemCreationContext context)
@@ -182,11 +197,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (context is RecipeItemCreationContext)
                 storedEffectPower = EffectRegistry.GetEffectByID(-1).ShotsPerAmmo;
         }
+        #endregion
 
-        // ==================== 开火相关 ====================
-        // ===== 天顶世界三连发控制 =====
-        private int zenithBurstTimer;
-        private int zenithBurstCount;
+        #region ===== 使用条件与消耗 =====
         public override bool CanUseItem(Player player)
         {
             if (player.altFunctionUse == 2)
@@ -252,7 +265,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             return base.UseItem(player);
         }
+        #endregion
 
+        #region ===== 使用参数覆写 =====
         public override void ModifyManaCost(Player player, ref float reduce, ref float mult)
         {
             // 右键暂不做，这里先保持左键默认耗蓝
@@ -263,7 +278,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 右键暂不做，保留默认速度
             return 1f;
         }
+        #endregion
 
+        #region ===== 左键发射与安全枪口 =====
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
             // 右键 → 不发射左键弹幕
@@ -350,11 +367,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             return gunTip;
         }
-
+        #endregion
         #endregion
 
 
-        #region 背包UI [大概率不用动]
+        #region ===== 背包 UI 显示 =====
         // ==================== 背包UI显示 ====================
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
@@ -387,12 +404,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 scale * 2.5f
             );
         }
-
         #endregion
 
         
-        #region 通用手持动画部分 [包括右键射击]
+        #region ===== 手持表现、右键监听与 EX 技能 =====
 
+        #region ===== 右键入口与阶段查询 =====
         public override bool AltFunctionUse(Player player) => true;
 
         // ===== 获取右键进度状态 =====
@@ -409,8 +426,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 state = 4;
             return state;
         }
+        #endregion
 
-        // ==================== 手持动画部分（完整保留核心） ====================
+        #region ===== HoldItem 主流程 =====
         public override void HoldItem(Player player)
         {
             // ===== EX条UI同步 =====
@@ -532,7 +550,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (player.itemAnimation > 0 && player.altFunctionUse != 2)
                 return;
         }
+        #endregion
 
+        #region ===== 手持绘制与前臂姿态 =====
         public override void UseStyle(Player player, Rectangle heldItemFrame)
         {
             // 始终朝向鼠标
@@ -589,10 +609,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, rotation);
         }
         #endregion
+        #endregion
 
 
-        #region 传奇属性成长
+        #region ===== 传奇成长与伤害覆盖 =====
 
+        #region ===== 右键阶段伤害 =====
 
         // ===== 右键基础伤害（固定表）=====
         private int GetLegendaryRightBaseDamage(Player player)
@@ -661,7 +683,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int baseDamage = GetLegendaryRightBaseDamage(player);
             return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
         }
+        #endregion
 
+        #region ===== 左键传奇伤害覆写 =====
 
         // ==================== 额外伤害修正（完整保留） ====================
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -728,12 +752,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 直接覆写面板基础伤害
             damage.Base = finalDamage;
         }
-
-
+        #endregion
         #endregion
 
 
-        #region 文本编排与拼接
+        #region ===== Tooltip 文本拼接 =====
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
@@ -785,14 +808,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
 
 
-        #region 倒掉左键材料
+        #region ===== 背包右键清空灌注 =====
 
+        #region ===== 背包右键入口 =====
         // 背包里点击右键，倒掉左键材料
         public override bool CanRightClick()
         {
             return true; // 允许背包右键
         }
+        #endregion
 
+        #region ===== 清空与返还逻辑 =====
         public override void RightClick(Player player)
         {
             // ===== 如果当前有装填 =====
@@ -823,16 +849,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== 音效 =====
             SoundEngine.PlaySound(SoundID.MenuClose, player.Center);
         }
+        #endregion
 
+        #region ===== 阻止物品自身被消耗 =====
         public override bool ConsumeItem(Player player)
         {
             return false; // ❗阻止右键把武器消耗掉
         }
-
+        #endregion
         #endregion
 
 
-        #region 不用管的
+        #region ===== 克隆、存档与联机同步 =====
+
+        #region ===== 预留合成表 =====
         // ==================== 合成表（先保留原版） ====================
         //public override void AddRecipes()
         //{
@@ -846,7 +876,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         //        .AddTile(TileID.Anvils)
         //        .Register();
         //}
+        #endregion
 
+        #region ===== 复制、存档与网络同步 =====
         // ==================== 物品复制 / 存档 / 联机同步（完整保留） ====================
         public override ModItem Clone(Item item)
         {
@@ -889,7 +921,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             storedAmmoType = reader.ReadInt32();
             storedEffectID = reader.ReadInt32();
         }
-
+        #endregion
         #endregion
     }
 }

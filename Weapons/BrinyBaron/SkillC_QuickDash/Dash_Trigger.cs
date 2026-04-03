@@ -14,17 +14,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 {
     internal class Dash_Trigger : ModPlayer
     {
-        private const int BaseDoubleTapWindow = 15;
-        private const int FishronDoubleTapWindow = 13;
-        private const int BoomerDukeDoubleTapWindow = 11;
-        private const int YharonDoubleTapWindow = 9;
-
-        private const float BaseDashDamageMultiplier = 1f;
-        private const float FishronDashDamageMultiplier = 1.18f;
-        private const float BoomerDukeDashDamageMultiplier = 1.38f;
-        private const float YharonDashDamageMultiplier = 1.65f;
+        private const int DoubleTapInputWindow = 15;
+        private const int DashBaseDamage = 650;
 
         private int doubleTapTimer = 0;
+        private int dashCooldownTimer = 0;
         private int lastTapDirection = 0;
         public bool IsUsingSlashDash;
         public bool DashEnabled = true; // 默认开启
@@ -35,6 +29,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 doubleTapTimer--;
             else
                 lastTapDirection = 0;
+
+            if (dashCooldownTimer > 0)
+                dashCooldownTimer--;
 
             IsUsingSlashDash = false;
         }
@@ -50,6 +47,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 return;
 
             if (HasAnyActiveSkillProjectile(player) || player.GetModPlayer<Dash_Trigger>().IsUsingSlashDash)
+                return;
+
+            if (dashCooldownTimer > 0)
                 return;
 
             bool triggerDash = false;
@@ -94,7 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                     }
                     else
                     {
-                        doubleTapTimer = growthProfile.DoubleTapWindow;
+                        doubleTapTimer = DoubleTapInputWindow;
                         lastTapDirection = -1;
                     }
                 }
@@ -108,7 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                     }
                     else
                     {
-                        doubleTapTimer = growthProfile.DoubleTapWindow;
+                        doubleTapTimer = DoubleTapInputWindow;
                         lastTapDirection = 1;
                     }
                 }
@@ -121,10 +121,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             {
                 doubleTapTimer = 0;
                 lastTapDirection = 0;
+                dashCooldownTimer = growthProfile.DashCooldown;
 
                 Vector2 dir = new Vector2(dashDirection, 0f);
-                int dashDamage = player.GetWeaponDamage(player.HeldItem);
-                dashDamage = (int)(dashDamage * growthProfile.DamageMultiplier);
+                int dashBaseDamage = (int)(DashBaseDamage * growthProfile.BaseDamageMultiplier);
+                int dashDamage = (int)player.GetTotalDamage(player.HeldItem.DamageType).ApplyTo(dashBaseDamage);
 
                 Projectile.NewProjectile(
                     player.GetSource_FromThis(),
@@ -142,22 +143,37 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
         private DashGrowthProfile ResolveDashGrowthProfile()
         {
-            if (DownedBossSystem.downedYharon)
+            DashGrowthProfile profile = BuildDashGrowthProfile(
+                baseDamageMultiplier: 1f,
+                dashCooldown: 60 * 3);
+
+            if (NPC.downedFishron)
             {
-                return new DashGrowthProfile(YharonDoubleTapWindow, YharonDashDamageMultiplier);
+                profile = BuildDashGrowthProfile(
+                    baseDamageMultiplier: 1.25f,
+                    dashCooldown: 60 * 2 + 30);
             }
 
             if (DownedBossSystem.downedBoomerDuke)
             {
-                return new DashGrowthProfile(BoomerDukeDoubleTapWindow, BoomerDukeDashDamageMultiplier);
+                profile = BuildDashGrowthProfile(
+                    baseDamageMultiplier: 1.55f,
+                    dashCooldown: 60 * 2);
             }
 
-            if (NPC.downedFishron)
+            if (DownedBossSystem.downedYharon)
             {
-                return new DashGrowthProfile(FishronDoubleTapWindow, FishronDashDamageMultiplier);
+                profile = BuildDashGrowthProfile(
+                    baseDamageMultiplier: 2f,
+                    dashCooldown: 60 + 30);
             }
 
-            return new DashGrowthProfile(BaseDoubleTapWindow, BaseDashDamageMultiplier);
+            return profile;
+        }
+
+        private DashGrowthProfile BuildDashGrowthProfile(float baseDamageMultiplier, int dashCooldown)
+        {
+            return new DashGrowthProfile(baseDamageMultiplier, dashCooldown);
         }
 
         private bool HasAnyActiveSkillProjectile(Player player)
@@ -183,13 +199,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
         private struct DashGrowthProfile
         {
-            public int DoubleTapWindow;
-            public float DamageMultiplier;
+            public float BaseDamageMultiplier;
+            public int DashCooldown;
 
-            public DashGrowthProfile(int doubleTapWindow, float damageMultiplier)
+            public DashGrowthProfile(float baseDamageMultiplier, int dashCooldown)
             {
-                DoubleTapWindow = doubleTapWindow;
-                DamageMultiplier = damageMultiplier;
+                BaseDamageMultiplier = baseDamageMultiplier;
+                DashCooldown = dashCooldown;
             }
         }
     }

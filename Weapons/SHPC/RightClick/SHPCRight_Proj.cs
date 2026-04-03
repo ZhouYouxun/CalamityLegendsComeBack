@@ -233,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== Stage5：概率分裂 =====
             if (WeaponStage >= 5 && canSplit)
             {
-                int splitCount = Main.rand.Next(0, 6); // 0~5 均匀分布
+                int splitCount = Main.rand.Next(0, 3); // 0~ 均匀分布
 
                 for (int i = 0; i < splitCount; i++)
                 {
@@ -260,6 +260,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                     }
                     Main.projectile[index].tileCollide = false;
+                    Main.projectile[index].timeLeft = 100; // 分裂子弹寿命固定为100
                 }
             }
 

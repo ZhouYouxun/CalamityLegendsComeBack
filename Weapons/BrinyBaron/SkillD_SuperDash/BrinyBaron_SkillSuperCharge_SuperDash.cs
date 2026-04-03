@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -17,13 +18,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const int DashTime = 90;
         private const float DashSpeed = 27.5f;
         private const float ChargeAimTurnRate = 0.13f;
+        private const float ReadyAimTurnRate = 0.24f;
         private const float DashTurnRate = MathHelper.Pi / 180f;
         private const float HoldDistanceCharge = 20f;
+        private const float HoldDistanceReady = 24f;
         private const float HoldDistanceDash = 24f;
         private const int SupportStarMinInterval = 2;
         private const int SupportStarMaxInterval = 6;
         private const float SupportStarDashDamageFactor = 0.28f;
         private const float SupportStarImpactDamageFactor = 0.42f;
+        private const float ImpactSlashDamageFactor = 0.34f;
+        private const float ImpactSlashScale = 1.35f;
         private const float GoldenAngle = 2.39996323f;
 
         private Player Owner => Main.player[Projectile.owner];
@@ -32,7 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private Vector2 WeaponTip => Projectile.Center + BladeDirection * 52f;
 
         private int timer;
+        private int dashTimer;
         private bool initialized;
+        private bool chargeReady;
         private bool isDashing;
         private int hitFeedbackCooldown;
         private int supportStarCooldown;
@@ -44,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Projectile.height = 96;
             Projectile.friendly = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = ChargeTime + DashTime + 30;
+            Projectile.timeLeft = 3600;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.netImportant = true;
@@ -71,29 +78,43 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             ReadSyncedDirection(owner);
 
-            timer++;
             if (hitFeedbackCooldown > 0)
                 hitFeedbackCooldown--;
 
             if (!isDashing)
             {
-                UpdateChargeAim(owner);
-                UpdateHeldBlade(owner, false);
-
-                owner.velocity *= 0.82f;
                 Projectile.velocity = Vector2.Zero;
                 Projectile.friendly = false;
 
-                SpawnChargeFunnelEffects(owner);
-                Lighting.AddLight(WeaponTip, 0.08f, 0.28f, 0.38f);
+                if (!chargeReady)
+                {
+                    timer++;
+                    UpdateChargeAim(owner);
+                    UpdateHeldBlade(owner, false, false);
 
-                if (timer >= ChargeTime)
-                    StartDash(owner);
+                    owner.velocity *= 0.82f;
+                    SpawnChargeFunnelEffects(owner);
+                    Lighting.AddLight(WeaponTip, 0.08f, 0.28f, 0.38f);
+
+                    if (timer >= ChargeTime)
+                        EnterReadyState(owner);
+                }
+                else
+                {
+                    UpdateReadyAim(owner);
+                    UpdateHeldBlade(owner, false, true);
+
+                    owner.velocity *= 0.88f;
+                    SpawnReadyHoldEffects();
+                    Lighting.AddLight(WeaponTip, 0.1f, 0.32f, 0.44f);
+                    TryStartDashFromLeftClick(owner);
+                }
             }
             else
             {
+                dashTimer++;
                 UpdateDashTurning(owner);
-                UpdateHeldBlade(owner, true);
+                UpdateHeldBlade(owner, true, false);
 
                 Projectile.friendly = true;
                 Projectile.velocity = AimDirection * DashSpeed;
@@ -103,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 TrySpawnDashSupportStars(owner);
                 Lighting.AddLight(WeaponTip, 0.12f, 0.34f, 0.5f);
 
-                if (DashTimer >= DashTime)
+                if (dashTimer >= DashTime)
                     Projectile.Kill();
             }
         }
@@ -118,8 +139,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Projectile.scale = 1f;
 
             timer = 0;
+            dashTimer = 0;
             hitFeedbackCooldown = 0;
             supportStarCooldown = 0;
+            chargeReady = false;
             isDashing = false;
             initialized = true;
         }
@@ -130,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             return Vector2.UnitX * direction;
         }
 
-        private int DashTimer => Math.Max(0, timer - ChargeTime);
+        private int DashTimer => dashTimer;
 
         private void ReadSyncedDirection(Player owner)
         {
@@ -180,26 +203,39 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             RotateToward(targetDirection, DashTurnRate);
         }
 
-        private void UpdateHeldBlade(Player owner, bool dashing)
+        private void UpdateReadyAim(Player owner)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 targetDirection = (Main.MouseWorld - owner.MountedCenter).SafeNormalize(AimDirection);
+            RotateToward(targetDirection, ReadyAimTurnRate);
+        }
+
+        private void UpdateHeldBlade(Player owner, bool dashing, bool readyState)
         {
             Vector2 armPosition = owner.RotatedRelativePoint(owner.MountedCenter, true);
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            float chargeProgress = Utils.GetLerpValue(0f, ChargeTime, timer, true);
+            float chargeProgress = chargeReady ? 1f : Utils.GetLerpValue(0f, ChargeTime, timer, true);
             float swayA = (float)Math.Sin(timer * 0.34f + Projectile.identity * 0.11f);
             float swayB = (float)Math.Cos(timer * 0.57f + Projectile.identity * 0.08f);
-            float swayAngle = dashing ? 0f : MathHelper.ToRadians((1.25f + chargeProgress * 3.75f) * swayA);
-            float sideSway = dashing ? 0f : swayA * (4f + chargeProgress * 8f);
-            float depthSway = dashing ? 0f : swayB * (2f + chargeProgress * 4.5f);
-            float holdDistance = (dashing ? HoldDistanceDash : HoldDistanceCharge) + depthSway + chargeProgress * (dashing ? 0f : 8f);
+            float swayAngle = dashing ? 0f : readyState ? 0f : MathHelper.ToRadians((1.25f + chargeProgress * 3.75f) * swayA);
+            float sideSway = dashing ? 0f : readyState ? 0f : swayA * (4f + chargeProgress * 8f);
+            float depthSway = dashing ? 0f : readyState ? 0f : swayB * (2f + chargeProgress * 4.5f);
+            float holdDistance = readyState
+                ? HoldDistanceReady
+                : (dashing ? HoldDistanceDash : HoldDistanceCharge) + depthSway + chargeProgress * (dashing ? 0f : 8f);
 
             Projectile.Center = armPosition + forward * holdDistance + right * sideSway + new Vector2(0f, 6f);
-            if (!dashing && chargeProgress > 0.72f)
+            if (!dashing && !readyState && chargeProgress > 0.72f)
                 Projectile.Center += Main.rand.NextVector2Circular(1.5f, 1.5f) * chargeProgress;
 
             Projectile.rotation = forward.ToRotation() + MathHelper.PiOver4 + swayAngle;
-            Projectile.scale = dashing
+            Projectile.scale = readyState
+                ? 1.08f
+                : dashing
                 ? 1.08f
                 : 1f + chargeProgress * 0.12f + 0.02f * swayB;
 
@@ -214,9 +250,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
         }
 
+        private void EnterReadyState(Player owner)
+        {
+            chargeReady = true;
+            Projectile.friendly = false;
+            Projectile.velocity = Vector2.Zero;
+            owner.velocity *= 0.7f;
+
+            SoundEngine.PlaySound(SoundID.Item29 with
+            {
+                Volume = 0.85f,
+                Pitch = -0.05f
+            }, WeaponTip);
+
+            SpawnChargeReadyBurst();
+        }
+
+        private void TryStartDashFromLeftClick(Player owner)
+        {
+            if (Main.myPlayer != Projectile.owner || !Main.mouseLeft || !Main.mouseLeftRelease || owner.mouseInterface || Main.blockMouse || Main.mapFullscreen)
+                return;
+
+            StartDash(owner);
+        }
+
         private void StartDash(Player owner)
         {
+            chargeReady = false;
             isDashing = true;
+            dashTimer = 0;
             Projectile.friendly = true;
             Projectile.velocity = AimDirection * DashSpeed;
             owner.velocity = Projectile.velocity;
@@ -244,34 +306,39 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             float chargeProgress = Utils.GetLerpValue(0f, ChargeTime, timer, true);
             Vector2 ownerCenter = owner.RotatedRelativePoint(owner.MountedCenter, true);
-            Vector2 forward = BladeDirection;
+            Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 tip = WeaponTip;
+            Vector2 lowerFocus = owner.Bottom + Vector2.UnitY * MathHelper.Lerp(26f, 48f, chargeProgress);
 
             float pulseA = 0.5f + 0.5f * (float)Math.Sin(timer * 0.31f);
             float pulseB = 0.5f + 0.5f * (float)Math.Cos(timer * 0.17f + 1.2f);
             float pulseC = 0.5f + 0.5f * (float)Math.Sin(timer * 0.46f + pulseB * MathHelper.TwoPi);
 
-            int funnelLanes = 3 + (chargeProgress > 0.55f ? 1 : 0);
+            int funnelLanes = 5 + (chargeProgress > 0.55f ? 2 : 0);
             for (int lane = 0; lane < funnelLanes; lane++)
             {
-                float laneAngle = timer * 0.24f + lane * MathHelper.TwoPi / funnelLanes + Projectile.identity * 0.17f;
-                float ellipseRadius = MathHelper.Lerp(34f, 108f, 0.2f + 0.8f * (0.5f + 0.5f * (float)Math.Sin(laneAngle * 1.23f + pulseA * 2.4f)));
-                float depth = MathHelper.Lerp(18f, 56f, 0.5f + 0.5f * (float)Math.Cos(laneAngle * 0.93f - pulseB * 2.2f));
+                float laneRatio = lane / (float)Math.Max(1, funnelLanes - 1);
+                float side = MathHelper.Lerp(-1f, 1f, laneRatio);
+                float spiral = timer * 0.22f + lane * 0.74f + Projectile.identity * 0.17f;
+                float verticalDepth = MathHelper.Lerp(18f, 92f, 0.35f + 0.65f * pulseB);
+                float horizontalSpread = MathHelper.Lerp(26f, 92f, chargeProgress) * (0.45f + 0.55f * (0.5f + 0.5f * (float)Math.Sin(spiral)));
 
                 Vector2 spawnPosition =
-                    ownerCenter +
-                    right * ((float)Math.Sin(laneAngle) * ellipseRadius) +
-                    forward * (-(24f + depth + ellipseRadius * 0.28f) + (float)Math.Cos(laneAngle * 1.41f) * 12f) +
+                    lowerFocus +
+                    right * side * horizontalSpread +
+                    Vector2.UnitY * Main.rand.NextFloat(-6f, 14f) -
+                    forward * Main.rand.NextFloat(8f, 24f) +
+                    right * (float)Math.Sin(spiral * 1.5f) * 18f +
                     Main.rand.NextVector2Circular(4f, 4f);
 
                 Vector2 toTip = tip - spawnPosition;
                 Vector2 inward = toTip.SafeNormalize(forward);
-                Vector2 curl = inward.RotatedBy(MathHelper.PiOver2 * (lane % 2 == 0 ? 1f : -1f));
+                Vector2 curl = inward.RotatedBy(MathHelper.PiOver2 * (side >= 0f ? 1f : -1f));
                 Vector2 flowVelocity =
-                    inward * MathHelper.Lerp(2.8f, 9.4f, chargeProgress) +
-                    curl * MathHelper.Lerp(1.4f, 5.8f, chargeProgress) * (0.45f + 0.55f * pulseB) +
-                    forward * (0.4f + 2.2f * pulseC) +
+                    inward * MathHelper.Lerp(4.6f, 13.2f, chargeProgress) +
+                    curl * MathHelper.Lerp(2f, 6.8f, chargeProgress) * (0.42f + 0.58f * pulseA) +
+                    -Vector2.UnitY * MathHelper.Lerp(0.4f, 2.8f, chargeProgress) +
                     owner.velocity * 0.08f;
 
                 Dust water = Dust.NewDustPerfect(
@@ -331,6 +398,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 }
             }
 
+            int directAbsorbers = 2 + (chargeProgress > 0.4f ? 1 : 0);
+            for (int i = 0; i < directAbsorbers; i++)
+            {
+                Vector2 absorberSpawn =
+                    lowerFocus +
+                    right * Main.rand.NextFloat(-48f, 48f) +
+                    Vector2.UnitY * Main.rand.NextFloat(-4f, 20f) +
+                    Main.rand.NextVector2Circular(5f, 5f);
+
+                Vector2 absorberVelocity = (tip - absorberSpawn).SafeNormalize(forward) * Main.rand.NextFloat(6f, 12.5f);
+
+                WaterFlavoredParticle mist = new WaterFlavoredParticle(
+                    absorberSpawn,
+                    absorberVelocity * 0.55f,
+                    false,
+                    Main.rand.Next(20, 28),
+                    0.95f + Main.rand.NextFloat(0.35f),
+                    Color.LightBlue * 0.92f);
+                GeneralParticleHandler.SpawnParticle(mist);
+            }
+
             if (timer % 2 == 0)
             {
                 Vector2 sparkVelocity = forward.RotatedBy(Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)) * Main.rand.NextFloat(4.5f, 7.5f);
@@ -385,6 +473,83 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     0.014f,
                     10);
                 GeneralParticleHandler.SpawnParticle(tipPulse);
+            }
+        }
+
+        private void SpawnChargeReadyBurst()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = AimDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 tip = WeaponTip;
+
+            for (int i = 0; i < 16; i++)
+            {
+                float t = i / 15f;
+                Vector2 burstVelocity =
+                    forward.RotatedBy(MathHelper.Lerp(-0.75f, 0.75f, t)) * Main.rand.NextFloat(3.5f, 8.5f) +
+                    right * MathHelper.Lerp(-2f, 2f, t);
+
+                Dust water = Dust.NewDustPerfect(tip, DustID.Water, burstVelocity, 100, new Color(80, 185, 255), Main.rand.NextFloat(1.05f, 1.45f));
+                water.noGravity = true;
+
+                if (i % 2 == 0)
+                {
+                    Dust frost = Dust.NewDustPerfect(tip, DustID.Frost, burstVelocity * 0.68f, 100, new Color(215, 250, 255), Main.rand.NextFloat(0.95f, 1.2f));
+                    frost.noGravity = true;
+                }
+            }
+
+            GlowOrbParticle orb = new GlowOrbParticle(
+                tip,
+                Vector2.Zero,
+                false,
+                9,
+                1.15f,
+                new Color(110, 225, 255),
+                true,
+                false,
+                true);
+            GeneralParticleHandler.SpawnParticle(orb);
+        }
+
+        private void SpawnReadyHoldEffects()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = AimDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 tip = WeaponTip;
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 orbitPos = tip - forward * Main.rand.NextFloat(2f, 8f) + right * Main.rand.NextFloat(-3f, 3f);
+                GlowOrbParticle orb = new GlowOrbParticle(
+                    orbitPos,
+                    Vector2.Zero,
+                    false,
+                    6,
+                    0.82f + Main.rand.NextFloat(0.18f),
+                    Color.Lerp(new Color(65, 180, 255), Color.White, 0.32f),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(orb);
+            }
+
+            if ((Main.GameUpdateCount + Projectile.identity) % 6 == 0)
+            {
+                CritSpark spark = new CritSpark(
+                    tip + Main.rand.NextVector2Circular(3f, 3f),
+                    forward.RotatedBy(Main.rand.NextFloat(-0.35f, 0.35f)) * Main.rand.NextFloat(3.2f, 5.6f),
+                    Color.White,
+                    Color.LightBlue,
+                    0.9f,
+                    12);
+                GeneralParticleHandler.SpawnParticle(spark);
             }
         }
 
@@ -686,6 +851,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             SpawnImpactBurst(impactCenter, majorImpact);
             SpawnImpactStars(impactCenter, majorImpact);
+            SpawnImpactSlash(impactCenter);
             ApplyImpactScreenShake(impactCenter, majorImpact ? 32f : 12f);
 
             if (majorImpact)
@@ -694,6 +860,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
                 PlayImpactSounds(impactCenter);
             }
+        }
+
+        private void SpawnImpactSlash(Vector2 impactCenter)
+        {
+            if (Main.myPlayer != Projectile.owner || !isDashing)
+                return;
+
+            Vector2 slashVelocity = Projectile.velocity.SafeNormalize(AimDirection) * 8f;
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                impactCenter,
+                slashVelocity,
+                ModContent.ProjectileType<BBSwing_Slash>(),
+                Math.Max(1, (int)(Projectile.damage * ImpactSlashDamageFactor)),
+                Projectile.knockBack * 0.45f,
+                Projectile.owner,
+                ImpactSlashScale,
+                Main.rand.NextFloat(-0.26f, 0.26f));
         }
 
         private void ApplyImpactScreenShake(Vector2 impactCenter, float shakePower)

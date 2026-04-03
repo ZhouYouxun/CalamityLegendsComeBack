@@ -1,6 +1,7 @@
 ﻿using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Typeless;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -48,45 +50,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 
             {
                 Vector2 forward = fixedMouseDirection.Value;
+                Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+                float fanHalfAngle = MathHelper.ToRadians(52f);
+                float edgeCompression = 0.68f;
 
-                // ================= 主体 Dust：龙息喷射 =================
+                // ================= 主体 Dust：巨大扇形龙息喷射 =================
                 for (int i = 0; i < Main.rand.Next(150, 171); i++)
                 {
-                    float angle = MathHelper.ToRadians(-45f + Main.rand.NextFloat(90f)); // 主喷射扇形
-                    Vector2 velocity = forward.RotatedBy(angle) * Main.rand.NextFloat(10f, 40f);
+                    float fanT = Main.rand.NextFloat(-1f, 1f);
+                    float curvedT = (float)Math.Sin(fanT * MathHelper.PiOver2) * edgeCompression;
+                    float angle = fanHalfAngle * curvedT;
+                    float axialSpeed = Main.rand.NextFloat(18f, 46f);
+                    float lateralSpeed = fanT * Main.rand.NextFloat(2.5f, 10.5f);
+                    Vector2 spawnOffset = right * fanT * Main.rand.NextFloat(8f, 26f) + forward * Main.rand.NextFloat(0f, 10f);
+                    Vector2 velocity = forward.RotatedBy(angle) * axialSpeed + right * lateralSpeed;
 
                     int dustType = Main.rand.Next(3) switch
                     {
-                        0 => 6,   // 火焰
-                        1 => 244, // 高亮火焰
-                        _ => 31   // 烟雾
+                        0 => 6,
+                        1 => 244,
+                        _ => 31
                     };
 
-                    Dust dust = Dust.NewDustPerfect(
-                        Projectile.Center,
-                        dustType,
-                        velocity,
-                        100,
-                        default,
-                        Main.rand.NextFloat(3.5f, 6.0f) * Main.rand.NextFloat(0.8f, 1.35f)
-                    );
-                    dust.noGravity = true;
+                    //Dust dust = Dust.NewDustPerfect(
+                    //    Projectile.Center + spawnOffset,
+                    //    dustType,
+                    //    velocity,
+                    //    100,
+                    //    default,
+                    //    Main.rand.NextFloat(4.2f, 7.6f) * Main.rand.NextFloat(0.9f, 1.35f)
+                    //);
+                    //dust.noGravity = true;
+
                 }
 
-                // ================= CustomSpark：辅助高亮核心喷流 =================
-                for (int i = 0; i < 4; i++)
+                // ================= CustomSpark：与主喷流同构的大型核心火束 =================
+                for (int i = 0; i < 9; i++)
                 {
-                    Vector2 sparkVelocity = forward.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.9f, 2.2f);
+                    float fanT = Main.rand.NextFloat(-1f, 1f);
+                    float angle = fanHalfAngle * fanT * 0.72f;
+                    Vector2 sparkVelocity = forward.RotatedBy(angle) * Main.rand.NextFloat(14f, 28f) + right * fanT * Main.rand.NextFloat(1.8f, 5.4f);
+                    Vector2 sparkOffset = right * fanT * Main.rand.NextFloat(4f, 18f) + forward * Main.rand.NextFloat(4f, 14f);
 
                     Particle beamCore = new CustomSpark(
-                        Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                        Projectile.Center + sparkOffset,
                         sparkVelocity,
                         "CalamityMod/Particles/SmallBloom",
                         false,
-                        10,
-                        Main.rand.NextFloat(0.12f, 0.22f),
-                        Main.rand.NextBool(3) ? Color.OrangeRed : Color.Lerp(Color.Orange, Color.White, 0.3f),
-                        new Vector2(1f, 1f),
+                        Main.rand.Next(12, 18),
+                        Main.rand.NextFloat(0.26f, 0.42f),
+                        Main.rand.NextBool(3) ? Color.OrangeRed : Color.Lerp(Color.Orange, Color.White, 0.45f),
+                        new Vector2(Main.rand.NextFloat(1.6f, 2.5f), Main.rand.NextFloat(1.1f, 1.7f)),
                         true,
                         false,
                         0f,
@@ -97,42 +111,47 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
                     GeneralParticleHandler.SpawnParticle(beamCore);
                 }
 
-                // ================= SparkParticle：前方火星 =================
-                if (Main.rand.NextBool(2))
+                // ================= SparkParticle：巨大扇面外缘火星 =================
+                if (Main.rand.NextBool())
                 {
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 7; i++)
                     {
-                        Vector2 sparkPos = Projectile.Center + Main.rand.NextVector2Circular(10f, 10f);
-                        Vector2 sparkVel = forward.RotatedByRandom(0.45f) * Main.rand.NextFloat(4f, 12f);
+                        float fanT = Main.rand.NextFloat(-1f, 1f);
+                        float angle = fanHalfAngle * fanT * 0.94f;
+                        Vector2 sparkPos = Projectile.Center + right * fanT * Main.rand.NextFloat(10f, 24f) + forward * Main.rand.NextFloat(6f, 18f);
+                        Vector2 sparkVel = forward.RotatedBy(angle) * Main.rand.NextFloat(12f, 24f) + right * fanT * Main.rand.NextFloat(2f, 7f);
 
                         SparkParticle spark = new SparkParticle(
                             sparkPos,
                             sparkVel,
                             false,
-                            Main.rand.Next(12, 20),
-                            Main.rand.NextFloat(0.5f, 0.9f),
+                            Main.rand.Next(14, 24),
+                            Main.rand.NextFloat(0.8f, 1.35f),
                             Main.rand.NextBool() ? Color.DarkOrange : Color.OrangeRed
                         );
                         GeneralParticleHandler.SpawnParticle(spark);
                     }
                 }
 
-                // ================= GlowSparkParticle：细长亮火丝 =================
-                if (Main.rand.NextBool(2))
+                // ================= GlowSparkParticle：巨大扇形细长炽焰丝 =================
+                if (Main.rand.NextBool())
                 {
-                    for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < 5; i++)
                     {
-                        Vector2 glowVel = forward.RotatedByRandom(0.28f) * Main.rand.NextFloat(5f, 14f);
+                        float fanT = Main.rand.NextFloat(-1f, 1f);
+                        float angle = fanHalfAngle * fanT * 0.8f;
+                        Vector2 glowOffset = right * fanT * Main.rand.NextFloat(6f, 20f) + forward * Main.rand.NextFloat(5f, 16f);
+                        Vector2 glowVel = forward.RotatedBy(angle) * Main.rand.NextFloat(16f, 30f) + right * fanT * Main.rand.NextFloat(2.5f, 7.5f);
 
-                        float glowScale = Main.rand.NextFloat(0.0075f, 0.014f) * 2f;
+                        float glowScale = Main.rand.NextFloat(0.02f, 0.038f);
                         Particle glowSpark = new GlowSparkParticle(
-                            Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                            Projectile.Center + glowOffset,
                             glowVel,
                             false,
-                            8,
+                            Main.rand.Next(9, 14),
                             glowScale,
                             Main.rand.NextBool() ? Color.DarkOrange : Color.OrangeRed,
-                            new Vector2(2f, 1f),
+                            new Vector2(Main.rand.NextFloat(3.2f, 4.6f), Main.rand.NextFloat(1.0f, 1.35f)),
                             true,
                             false,
                             1.3f
@@ -176,10 +195,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
         public override void OnSpawn(IEntitySource source)
         {
             // 屏幕震动效果
-            float shakePower = 1.5f; // 设置震动强度
+            float shakePower = 5.5f; // 设置震动强度
             float distanceFactor = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true); // 距离衰减
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceFactor);
 
+
+
+            // 播放音效
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/轨道炮攻击-仅开火")
+                {
+                    Volume = 1.1f,
+                    Pitch = 0.1f
+                },
+                Projectile.Center
+            );
 
 
             base.OnSpawn(source);
@@ -212,14 +242,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 
             target.AddBuff(ModContent.BuffType<YharonSoulFragment_Buff>(), 300);
 
-
-
-
-
-
-
-
-
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<FuckYou>(),
+                (int)(Projectile.damage * 1.15f),
+                Projectile.knockBack,
+                Projectile.owner
+            );
 
 
             // ================= 命中特效：向上方约5度扇形猛烈喷射 =================

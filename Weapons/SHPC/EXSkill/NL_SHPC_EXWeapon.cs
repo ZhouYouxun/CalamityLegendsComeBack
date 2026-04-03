@@ -219,6 +219,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 Main.projectile[laser].ai[0] = Projectile.whoAmI;
             }
 
+            SpawnLaserMuzzleStorm(lifeFactor);
+
             Owner.velocity -= Projectile.velocity * 0.15f;
 
             if (timer < LaserTime)
@@ -394,6 +396,106 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         }
 
         #region Visual Effects
+
+        private void SpawnLaserMuzzleStorm(float lifeFactor)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 center = GunTip;
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            float fanHalfAngle = MathHelper.ToRadians(60f);
+            float muzzleRadius = 32f;
+
+            Color lineColorA = Color.Lerp(new Color(90, 200, 255), Color.White, 0.32f + lifeFactor * 0.18f);
+            Color lineColorB = Color.Lerp(new Color(120, 235, 255), Color.White, 0.44f + lifeFactor * 0.22f);
+            Color pointColor = Color.Lerp(new Color(135, 228, 255), Color.White, 0.2f + lifeFactor * 0.18f);
+
+            int lineCount = 16;
+            int glowCount = 10;
+            int pointCount = 8;
+
+            for (int i = 0; i < lineCount; i++)
+            {
+                float fanT = Main.rand.NextFloat(-1f, 1f);
+                float angle = fanHalfAngle * fanT;
+                float radial = muzzleRadius * (float)Math.Sqrt(Main.rand.NextFloat());
+                Vector2 lanePos =
+                    center +
+                    forward * Main.rand.NextFloat(2f, muzzleRadius * 0.65f) +
+                    right * fanT * radial +
+                    Main.rand.NextVector2Circular(1.5f, 1.5f);
+
+                Vector2 lineVelocity =
+                    forward.RotatedBy(angle) * Main.rand.NextFloat(14f, 27f) +
+                    right * fanT * Main.rand.NextFloat(0.8f, 4.4f);
+
+                Color lineColor = Main.rand.NextBool() ? lineColorA : lineColorB;
+                Particle line = new CustomSpark(
+                    lanePos,
+                    lineVelocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(7, 11),
+                    Main.rand.NextFloat(0.032f, 0.048f),
+                    lineColor,
+                    new Vector2(Main.rand.NextFloat(1.1f, 1.55f), Main.rand.NextFloat(0.62f, 0.86f)),
+                    shrinkSpeed: 0.75f
+                );
+
+                GeneralParticleHandler.SpawnParticle(line);
+            }
+
+            for (int i = 0; i < glowCount; i++)
+            {
+                float fanT = Main.rand.NextFloat(-1f, 1f);
+                float angle = fanHalfAngle * fanT * Main.rand.NextFloat(0.75f, 1f);
+                float radial = muzzleRadius * Main.rand.NextFloat(0.18f, 0.95f);
+                Vector2 glowPos =
+                    center +
+                    forward * Main.rand.NextFloat(0f, muzzleRadius * 0.45f) +
+                    right * fanT * radial;
+
+                Vector2 glowVelocity =
+                    forward.RotatedBy(angle) * Main.rand.NextFloat(10f, 21f) +
+                    right * fanT * Main.rand.NextFloat(0.3f, 2.6f);
+
+                GlowSparkParticle spark = new GlowSparkParticle(
+                    glowPos,
+                    glowVelocity,
+                    false,
+                    Main.rand.Next(6, 10),
+                    Main.rand.NextFloat(0.08f, 0.14f),
+                    Main.rand.NextBool() ? Color.White : lineColorB,
+                    new Vector2(Main.rand.NextFloat(2.4f, 3.6f), Main.rand.NextFloat(0.46f, 0.72f)),
+                    true);
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            for (int i = 0; i < pointCount; i++)
+            {
+                float fanT = Main.rand.NextFloat(-1f, 1f);
+                float angle = fanHalfAngle * fanT * Main.rand.NextFloat(0.65f, 1f);
+                Vector2 pointPos =
+                    center +
+                    Main.rand.NextVector2Circular(muzzleRadius * 0.45f, muzzleRadius * 0.45f) +
+                    forward * Main.rand.NextFloat(2f, 12f);
+
+                Vector2 pointVelocity =
+                    forward.RotatedBy(angle) * Main.rand.NextFloat(12f, 24f) +
+                    right * fanT * Main.rand.NextFloat(0.5f, 3.5f);
+
+                PointParticle point = new PointParticle(
+                    pointPos,
+                    pointVelocity,
+                    false,
+                    Main.rand.Next(8, 12),
+                    Main.rand.NextFloat(0.85f, 1.25f),
+                    pointColor);
+                GeneralParticleHandler.SpawnParticle(point);
+            }
+        }
 
         private void SpawnBurstEffect(float progress)
         {
@@ -658,8 +760,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     Color.Lerp(coldBlue, brightBlue, 0.5f + 0.35f * pulseC),
                     new Vector2(0.45f + 0.08f * pulseB, 1.15f + 0.28f * pulseA),
                     Projectile.rotation,
-                    0.11f + pulseB * 0.02f,
-                    0.015f,
+                    0.51f + pulseB * 0.02f,
+                    0.035f,
                     12);
 
                 Particle backPulse = new DirectionalPulseRing(
@@ -668,7 +770,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     Color.Lerp(coldBlue, new Color(90, 210, 255), 0.45f + 0.35f * pulseA) * 0.9f,
                     new Vector2(0.4f + 0.06f * pulseC, 0.95f + 0.24f * pulseB),
                     Projectile.rotation,
-                    0.09f + pulseA * 0.018f,
+                    0.19f + pulseA * 0.018f,
                     0.013f,
                     10);
 

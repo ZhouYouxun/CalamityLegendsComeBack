@@ -82,13 +82,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== Stage6 叠加 =====
             if (stage >= 6)
             {
-                // TODO: Stage6 特效
+                ApplyStage6PanicBurn(player);
             }
 
             // ===== Stage7 叠加 =====
             if (stage >= 7)
             {
-                // TODO: Stage7 特效
+                ApplyStage7Meltdown(player);
             }
         }
 
@@ -151,6 +151,138 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 );
 
                 GeneralParticleHandler.SpawnParticle(spark);
+            }
+        }
+
+        private void ApplyStage6PanicBurn(Player player)
+        {
+            Vector2 center = player.Center;
+            Vector2 panicSource = center + new Vector2(
+                Main.rand.NextFloat(-player.width * 0.55f, player.width * 0.55f),
+                Main.rand.NextFloat(-player.height * 0.58f, player.height * 0.18f));
+
+            Vector2 upwardBurst = new Vector2(
+                Main.rand.NextFloat(-1.3f, 1.3f),
+                Main.rand.NextFloat(-4.6f, -2.2f));
+
+            if (Main.rand.NextBool())
+            {
+                SquishyLightParticle panicFlame = new(
+                    panicSource,
+                    upwardBurst.RotatedByRandom(0.65f),
+                    Main.rand.NextFloat(0.52f, 0.88f),
+                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.35f, 0.95f)),
+                    Main.rand.Next(14, 24),
+                    1f,
+                    Main.rand.NextFloat(1.7f, 2.5f)
+                );
+                GeneralParticleHandler.SpawnParticle(panicFlame);
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust flash = Dust.NewDustPerfect(
+                    panicSource,
+                    Main.rand.NextBool() ? DustID.Torch : DustID.InfernoFork,
+                    upwardBurst.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.6f, 3.4f),
+                    0,
+                    Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat(0.25f, 0.9f)),
+                    Main.rand.NextFloat(1.25f, 2.1f));
+                flash.noGravity = true;
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 sideKick = new Vector2(Main.rand.NextBool() ? -1f : 1f, 0f) * Main.rand.NextFloat(0.9f, 2.2f);
+                PointParticle panicSpark = new PointParticle(
+                    panicSource,
+                    upwardBurst * 0.42f + sideKick,
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(1.15f, 1.55f),
+                    Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.12f, 0.28f)));
+                GeneralParticleHandler.SpawnParticle(panicSpark);
+            }
+
+            if (Main.rand.NextBool(5))
+            {
+                GlowOrbParticle heatCore = new GlowOrbParticle(
+                    center + Main.rand.NextVector2Circular(player.width * 0.18f, player.height * 0.22f),
+                    upwardBurst * 0.08f,
+                    false,
+                    Main.rand.Next(7, 10),
+                    Main.rand.NextFloat(0.36f, 0.54f),
+                    Color.Lerp(Color.OrangeRed, Color.Gold, Main.rand.NextFloat(0.35f, 0.75f)),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(heatCore);
+            }
+        }
+
+        private void ApplyStage7Meltdown(Player player)
+        {
+            Vector2 center = player.Center;
+            Vector2 bodyCore = center + new Vector2(
+                Main.rand.NextFloat(-player.width * 0.62f, player.width * 0.62f),
+                Main.rand.NextFloat(-player.height * 0.68f, player.height * 0.26f));
+
+            for (int i = 0; i < 2; i++)
+            {
+                float fanT = Main.rand.NextFloat(-1f, 1f);
+                Vector2 eruptionVelocity = new Vector2(
+                    fanT * Main.rand.NextFloat(1.8f, 4.2f),
+                    Main.rand.NextFloat(-6.8f, -3.4f));
+
+                SquishyLightParticle meltdownFlame = new(
+                    bodyCore + new Vector2(fanT * player.width * 0.18f, Main.rand.NextFloat(-player.height * 0.18f, player.height * 0.12f)),
+                    eruptionVelocity.RotatedByRandom(0.8f),
+                    Main.rand.NextFloat(0.72f, 1.18f),
+                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.45f, 0.98f)),
+                    Main.rand.Next(18, 30),
+                    1f,
+                    Main.rand.NextFloat(2.3f, 3.4f)
+                );
+                GeneralParticleHandler.SpawnParticle(meltdownFlame);
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Dust infernoDust = Dust.NewDustPerfect(
+                    bodyCore + Main.rand.NextVector2Circular(player.width * 0.24f, player.height * 0.3f),
+                    Main.rand.NextBool() ? DustID.Torch : DustID.InfernoFork,
+                    new Vector2(Main.rand.NextFloat(-2.8f, 2.8f), Main.rand.NextFloat(-6.2f, -2.6f)).RotatedByRandom(0.7f),
+                    0,
+                    Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.08f, 0.22f)),
+                    Main.rand.NextFloat(1.65f, 2.75f));
+                infernoDust.noGravity = true;
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                PointParticle panicFlash = new PointParticle(
+                    bodyCore + Main.rand.NextVector2Circular(player.width * 0.12f, player.height * 0.16f),
+                    new Vector2(Main.rand.NextFloat(-2.6f, 2.6f), Main.rand.NextFloat(-3.8f, -1.6f)),
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(1.5f, 2f),
+                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.25f, 0.65f)));
+                GeneralParticleHandler.SpawnParticle(panicFlash);
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GlowOrbParticle overloadPulse = new GlowOrbParticle(
+                    center + Main.rand.NextVector2Circular(player.width * 0.22f, player.height * 0.28f),
+                    new Vector2(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-0.9f, -0.15f)),
+                    false,
+                    Main.rand.Next(8, 12),
+                    Main.rand.NextFloat(0.48f, 0.7f),
+                    Color.Lerp(Color.Red, Color.Gold, Main.rand.NextFloat(0.45f, 0.85f)),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(overloadPulse);
             }
         }
 

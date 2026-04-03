@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         {
             // ===== 穿透次数 =====
             projectile.penetrate = 6;
+            projectile.timeLeft = 80;
         }
 
         public override void AI(Projectile projectile, Player owner)
@@ -35,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             // ===== 每3帧往下发射 =====
             if (spawnTimer % 3 == 0)
             {
-                Projectile.NewProjectile(
+                int index = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     new Vector2(0f, 6f),
@@ -43,8 +44,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     projectile.damage,
                     projectile.knockBack,
                     projectile.owner,
-                    2 // preset2
+                    2
                 );
+
+                Main.projectile[index].timeLeft = 80; // 设置寿命
             }
 
             // ===== 重力逻辑（你原本的）=====

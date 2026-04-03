@@ -40,36 +40,8 @@ Items: {
 		}
 
 		NewLegendBrinyBaron: {
-			DisplayName: 海爵剑-传奇归来
-			BB_Left:
-				'''
-				左键：进行多段挥舞循环。
-				前3段进行正常挥砍，第4段甩出水能手里剑。
-				最后一段将剑刃巨大化进行大范围切割。
-				巨大化攻击将为你积攒潮汐值
-				'''
-			BB_Tide: 当前潮汐值上限为：
-			BB_Right:
-				'''
-				右键执行冲刺
-				若潮汐值为满，则进行强而有力的回旋冲刺
-				若不为满，则进行常规线性冲刺
-				'''
-			Dash1_Unlock: 你需要击败克苏鲁之眼，才能解锁该冲刺
-			Dash1_Lock: 按住右键进行短而快的突破性冲刺，撞到敌人造成伤害并弹回
-			Dash2_Unlock: 你需要击败肉山才能解锁该冲刺
-			Dash2_Lock: 按住右键进行中距离的回旋冲刺，切割碰到的敌人
-			Dash3_Unlock: 你需要击败双子魔眼才能解锁该冲刺
-			Dash3_Lock: 双击左右键或按下冲刺键向左或右进行两次快刀斩
-			Dash4_Unlock: 你需要击败猪龙鱼公爵，才能解锁该冲刺
-			Dash4_Lock: 按住技能按键，能够进行大招攻击
-			BB_Final:
-				'''
-				在背包里对武器点击右键
-				可手动开关快刀斩模式
-				'''
-			Tooltip: "[GFB]"
-			TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。
+			DisplayName: New Legend Briny Baron
+			Tooltip: ""
 		}
 	}
 }
@@ -115,6 +87,7 @@ AMMO: {
 	SHPCAmmo37: Channel the wrath of the dragon
 	SHPCAmmo38: Fires lasers to purge enemies and unleash fractal geometry
 	SHPCAmmo39: Annihilates all enemies within sight
+	SHPCAmmo40: 喷射出大量的电磁光球
 }
 
 Buffs: {
@@ -159,16 +132,6 @@ Projectiles: {
 	NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	NewSHPS.DisplayName: New S H P S
 	BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
-
-	NewWeapons: {
-		BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
-
-		EAfterDog: {
-			TEM00LeftSuperLazer.DisplayName: T E M00 Left Super Lazer
-			SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
-		}
-	}
-
 	TeachingProjectile.DisplayName: Teaching Projectile
 	AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
 	AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
@@ -190,6 +153,16 @@ Projectiles: {
 	PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 	NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 	Necroplasm_Damage.DisplayName: Necroplasm_ Damage
+	BBSD_Star.DisplayName: B B S D_ Star
+	ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+
+	NewWeapons: {
+		DPreDog.BBSwing_Slash.DisplayName: B B Swing_ Slash
+		BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+		EAfterDog.SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+	}
+
+	BBSwing_Wave.DisplayName: B B Swing_ Wave
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod;
 using CalamityMod.Dusts;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
@@ -70,6 +71,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
             Vector2 center = target.Center;
+
+            // ================= 崩飞效果 =================
+            if (target.CanBeMoved(true))
+            {
+                // 👉 方向：沿弹幕方向击飞
+                Vector2 launchVel = projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+                // 👉 力度：原版30的80%
+                float launchPower = 30f * 0.8f;
+
+                target.noTileCollide = false;
+                target.knockBackResist = 1f;
+
+                target.MoveNPC(launchVel, launchPower * 0.5f, true);
+
+                // ================= 屏幕震动 =================
+                float shakePower = 10f;
+                float distanceFactor = Utils.GetLerpValue(1000f, 0f, projectile.Distance(Main.LocalPlayer.Center), true);
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower =
+                    Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceFactor);
+            }
+
+
+
+
 
             // ================= 第一层：核心爆闪 =================
             for (int i = 0; i < 10; i++)

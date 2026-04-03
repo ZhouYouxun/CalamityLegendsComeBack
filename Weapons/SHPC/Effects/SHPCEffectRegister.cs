@@ -84,6 +84,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new AshesofAnnEffect()); // 湮灭余烬 39
 
 
+
+            EffectRegistry.RegisterEffect(new ArmoredShellEffect()); // 装甲外壳，[补充] 40
+
+            
+
+
+
         }
 
 

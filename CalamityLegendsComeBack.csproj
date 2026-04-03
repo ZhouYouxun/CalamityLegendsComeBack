@@ -14,6 +14,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Sound\" />
+	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
 	  <Folder Include="新文件夹\" />
 	</ItemGroup>
 

@@ -1,10 +1,11 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron;
+using System;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -16,378 +17,511 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
         public override int AssignedItemID => ModContent.ItemType<NewLegendBrinyBaron>();
-
-        public override float HitboxOutset => 115f;
-        public override Vector2 HitboxSize => new Vector2(175f, 175f);
+        public override float HitboxOutset => 110f * Projectile.scale;
+        public override Vector2 HitboxSize => new Vector2(190f, 190f) * Projectile.scale;
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
-        public override Vector2 SpriteOrigin => new Vector2(0f, 120f);
+        public override Vector2 SpriteOrigin => new(0f, 102f);
 
-        private Vector2 mousePos;
-        private Vector2 aimVel;
+        private const int ChargeFrames = 32;
+        private const int DashFrames = 32;
+        private const float DashStartSpeed = 18f;
+        private const float DashTopSpeed = 36f;
+        private const float ChargeDistance = 18f;
+        private const float ChargeDistanceMax = 28f;
+        private const float DashHoldDistance = 14f;
+        private const float DashSwooshScale = 1.18f;
 
-        private bool doSwing = true;
-        private bool postSwing = false;
-        private bool finalFlip = false;
-        private bool swingSound = true;
+        private const int ChargeState = 0;
+        private const int DashState = 1;
 
-        private float fadeIn = 0f;
-        private int useAnim;
+        private Vector2 lockedDirection = Vector2.UnitX;
+        private int stateTimer;
+        private int currentState;
+        private float fadeIn;
+        private float oceanPhase;
+        private bool chargeFullEffectsPlayed;
+        private bool dashStarted;
+        private bool dashImpactPlayed;
+        private Vector2 dashVelocity;
 
-        // 冲刺
-        private bool dashStarted = false;
-        private Vector2 dashVelocity = Vector2.Zero;
-        private Vector2 dashDirection = Vector2.UnitX;
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
             base.SetDefaults();
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 10;
             Projectile.DamageType = DamageClass.Melee;
+            Projectile.timeLeft = ChargeFrames + DashFrames + 90;
+            Projectile.scale = 1f;
         }
 
         public override void WhenSpawned()
         {
-            Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
+            IgnoreActiveAnimation = true;
+            DrawUnconditionally = true;
             Projectile.knockBack = 0f;
-            Projectile.scale = 1f;
             Projectile.ai[1] = -1f;
+            Projectile.scale = 1f;
 
-            mousePos = Main.MouseWorld;
-            aimVel = (Owner.Center - Main.MouseWorld).SafeNormalize(Vector2.UnitX) * 65f;
-            useAnim = Owner.itemAnimationMax;
+            lockedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            if (lockedDirection == Vector2.Zero)
+                lockedDirection = (Owner.Calamity().mouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
 
-            Owner.direction = mousePos.X < Owner.Center.X ? -1 : 1;
-            FlipAsSword = (Owner.Center - Main.MouseWorld).SafeNormalize(Vector2.UnitX).X > 0f;
-        }
+            currentState = ChargeState;
+            stateTimer = 0;
+            fadeIn = 0f;
+            oceanPhase = Main.rand.NextFloat(MathHelper.TwoPi);
+            chargeFullEffectsPlayed = false;
+            dashStarted = false;
+            dashImpactPlayed = false;
+            dashVelocity = Vector2.Zero;
 
-        public override void ResetStyle()
-        {
-            CanHit = false;
+            Owner.direction = lockedDirection.X >= 0f ? 1 : -1;
+            FlipAsSword = Owner.direction == -1;
+            Projectile.rotation = lockedDirection.ToRotation() + MathHelper.ToRadians(45f);
+            RotationOffset = MathHelper.ToRadians(110f * Owner.direction);
+            Offset = lockedDirection * ChargeDistance;
         }
 
         public override void UseStyle()
         {
-            AnimationProgress = Animation % useAnim;
-            DrawUnconditionally = false;
+            Owner.itemAnimation = 2;
+            Owner.itemTime = 2;
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.ChangeDir(lockedDirection.X >= 0f ? 1 : -1);
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffset);
+            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffsetBack);
+            Owner.Calamity().mouseWorldListener = true;
+            Owner.Calamity().rightClickListener = true;
 
-            mousePos = (CanHit || postSwing) ? Owner.Center - aimVel : Main.MouseWorld;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
+            oceanPhase += 0.22f;
 
-            fadeIn = CanHit
-                ? MathHelper.Lerp(fadeIn, 1f, 0.12f)
-                : MathHelper.Lerp(fadeIn, 0f, 0.16f);
-
-            if (!doSwing)
+            switch (currentState)
             {
-                Projectile.Kill();
-                return;
-            }
-
-            if (!CanHit && !postSwing)
-                Owner.direction = mousePos.X < Owner.Center.X ? -1 : 1;
-            else
-                Owner.direction = (Owner.Center - aimVel).X < Owner.Center.X ? -1 : 1;
-
-            Projectile.rotation = Projectile.rotation.AngleLerp(
-                Owner.AngleTo(mousePos) + MathHelper.ToRadians(Owner.direction == -1 ? 0f : 120f),
-                0.1f
-            );
-
-            // =========================
-            // 前摇
-            // =========================
-            if (AnimationProgress < (useAnim / 3))
-            {
-                aimVel = (Owner.Center - Main.MouseWorld).SafeNormalize(Vector2.UnitX) * 65f;
-                dashDirection = (Main.MouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX);
-
-                CanHit = false;
-                postSwing = false;
-
-                if (AnimationProgress == 0)
-                    swingSound = true;
-
-                RotationOffset = RotationOffset.AngleLerp(
-                    MathHelper.ToRadians(-45f * Projectile.ai[1] * Owner.direction),
-                    0.2f
-                );
-
-                if (Main.rand.NextBool(2))
-                {
-                    Vector2 vel = new Vector2(0f, 3f * -Projectile.ai[1] * Owner.direction)
-                        .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
-
-                    Vector2 pos = Owner.Center +
-                        new Vector2(Main.rand.Next(10, 135), 0f)
-                        .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
-
-                    GeneralParticleHandler.SpawnParticle(
-                        new CustomPulse(
-                            pos,
-                            vel * Main.rand.NextFloat(0.8f, 1.2f),
-                            Main.rand.NextBool(4) ? Color.DeepSkyBlue : Color.Cyan,
-                            "CalamityMod/Particles/HealingPlus",
-                            new Vector2(1f),
-                            Main.rand.NextFloat(-2f, 2f),
-                            Main.rand.NextFloat(0.8f, 1.2f),
-                            0.2f,
-                            23
-                        )
-                    );
-                }
-            }
-            else
-            {
-                if (!finalFlip)
-                    FlipAsSword = Owner.direction < 0;
-
-                float time = AnimationProgress - (useAnim / 8f);
-                float timeMax = useAnim - (useAnim / 8f);
-
-                // =========================
-                // 音效
-                // =========================
-                if (time >= timeMax * 0.3f && swingSound)
-                {
-                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.8f, Pitch = 0.25f }, Projectile.Center);
-                    SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.65f, Pitch = 0.1f }, Projectile.Center);
-                    swingSound = false;
-                }
-
-                // =========================
-                // 冲刺 + 加速
-                // =========================
-                if (!dashStarted && time >= timeMax * 0.18f)
-                {
-                    dashStarted = true;
-                    dashVelocity = dashDirection * 2f;
-                }
-
-                if (dashStarted)
-                {
-                    dashVelocity += dashDirection * 1.45f;
-
-                    if (dashVelocity.Length() > 42f)
-                        dashVelocity = dashVelocity.SafeNormalize(Vector2.UnitX) * 42f;
-
-                    Owner.velocity = dashVelocity;
-
-                    for (int i = 0; i < 2; i++)
-                    {
-                        Vector2 pos = Owner.Center - dashVelocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(10f, 35f);
-                        Vector2 vel = -dashVelocity.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.1f, 0.25f);
-
-                        Dust d1 = Dust.NewDustPerfect(pos, DustID.Water, vel);
-                        d1.noGravity = true;
-                        d1.scale = Main.rand.NextFloat(1.1f, 1.5f);
-
-                        Dust d2 = Dust.NewDustPerfect(pos, DustID.Frost, vel * 0.7f);
-                        d2.noGravity = true;
-                        d2.scale = Main.rand.NextFloat(0.9f, 1.3f);
-                    }
-
-                    if (Main.rand.NextBool())
-                    {
-                        Vector2 forward = dashVelocity.SafeNormalize(dashDirection);
-                        Vector2 orbitAxis = forward.RotatedBy(MathHelper.PiOver2);
-                        float orbitPhase = time * 0.38f + Main.GlobalTimeWrappedHourly * 10f;
-                        float orbitOffset = (float)Math.Sin(orbitPhase) * 14f;
-
-                        Vector2 spawnPos = Owner.Center +
-                            (FinalRotation + MathHelper.ToRadians(-45f)).ToRotationVector2() * Main.rand.NextFloat(60f, 150f) +
-                            orbitAxis * orbitOffset;
-
-                        Vector2 sparkVel =
-                            -forward.RotatedByRandom(0.2f) * Main.rand.NextFloat(4.5f, 10f) +
-                            orbitAxis * (float)Math.Cos(orbitPhase) * Main.rand.NextFloat(1.5f, 3.5f) -
-                            Owner.velocity * 0.35f;
-
-                        GeneralParticleHandler.SpawnParticle(
-                            new CustomSpark(
-                                spawnPos,
-                                sparkVel,
-                                "CalamityMod/Particles/BloomCircle",
-                                false,
-                                18,
-                                Main.rand.NextFloat(0.35f, 0.7f) * Projectile.scale * 0.6f,
-                                Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
-                                new Vector2(1.2f, 0.6f),
-                                shrinkSpeed: 0.92f
-                            )
-                        );
-                    }
-                }
-
-                // =========================
-                // 回旋斩核心（比原版更大角度）
-                // =========================
-                CanHit = time > timeMax * 0.22f && time < timeMax * 0.9f;
-
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(
-                        MathHelper.Lerp(
-                            -45f * Projectile.ai[1] * Owner.direction,
-                            465f * -Projectile.ai[1] * Owner.direction,
-                            Utils.GetLerpValue(0f, 1f, time / timeMax, true)
-                        )
-                    ),
-                    0.2f
-                );
-
-                if (time >= timeMax)
-                    doSwing = false;
-
-                if (time < timeMax * 0.88f)
-                    postSwing = true;
-
-                // =========================
-                // 命中特效
-                // =========================
-                if (CanHit)
-                    SpawnSpinRushSlashEffects(time, timeMax);
-
-                Lighting.AddLight(Projectile.Center, new Vector3(0.05f, 0.23f, 0.32f) * fadeIn);
+                case ChargeState:
+                    DoChargeState();
+                    break;
+                case DashState:
+                    DoDashState();
+                    break;
             }
 
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
+            Lighting.AddLight(Projectile.Center, 0.05f, 0.22f, 0.3f);
         }
 
-        private void SpawnSpinRushSlashEffects(float time, float timeMax)
+        private void DoChargeState()
         {
-            float currentScale = Projectile.scale;
-            Vector2 forward = dashStarted ? dashVelocity.SafeNormalize(dashDirection) : dashDirection;
-            if (forward == Vector2.Zero)
-                forward = Vector2.UnitX * Owner.direction;
-
-            Vector2 orbitAxis = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 bladeDirection = (FinalRotation + MathHelper.ToRadians(-45f)).ToRotationVector2();
-            float progress = Utils.GetLerpValue(timeMax * 0.22f, timeMax * 0.9f, time, true);
-            float basePhase = time * 0.42f + Main.GlobalTimeWrappedHourly * 8.5f;
-            float orbitRadius = MathHelper.Lerp(10f, 24f, 0.5f + 0.5f * (float)Math.Sin(basePhase * 0.55f));
-
-            int pulseCount = progress > 0.55f ? 3 : 2;
-            for (int i = 0; i < pulseCount; i++)
+            if (!IsChargeHeld())
             {
-                float ratio = (i + 0.35f) / pulseCount;
-                float swirlAngle = basePhase + ratio * MathHelper.TwoPi * 1.35f;
-                float ringSin = (float)Math.Sin(swirlAngle);
-                float ringCos = (float)Math.Cos(swirlAngle);
+                SpawnChargeCancelBurst();
+                Projectile.Kill();
+                return;
+            }
 
-                Vector2 circularOffset =
-                    orbitAxis * ringSin * orbitRadius +
-                    forward * ringCos * orbitRadius * 0.4f;
+            stateTimer++;
+            CanHit = false;
+            Projectile.velocity = Vector2.Zero;
+            AbsolutePosition = Vector2.Zero;
 
-                Vector2 pos = Owner.Center +
-                    bladeDirection * MathHelper.Lerp(34f, 145f, ratio) +
-                    circularOffset;
+            Vector2 aimWorld = Owner.Calamity().mouseWorld;
+            Vector2 targetDirection = (aimWorld - Owner.Center).SafeNormalize(lockedDirection);
+            lockedDirection = Vector2.Lerp(lockedDirection, targetDirection, 0.18f).SafeNormalize(targetDirection);
 
-                Vector2 vel =
-                    -forward.RotatedByRandom(0.18f) * Main.rand.NextFloat(4.5f, 10.5f) +
-                    orbitAxis * ringCos * Main.rand.NextFloat(1.4f, 4.4f) -
-                    Owner.velocity * 0.2f;
+            float chargeProgress = Utils.GetLerpValue(0f, ChargeFrames, stateTimer, true);
+            float easedCharge = EvaluateFluidCharge(chargeProgress);
+            float chargeDistance = MathHelper.Lerp(ChargeDistance, ChargeDistanceMax, easedCharge);
+            float swayAngle = MathHelper.ToRadians(14f * (float)Math.Sin(oceanPhase * 1.25f));
 
-                GeneralParticleHandler.SpawnParticle(
-                    new CustomPulse(
-                        pos,
-                        vel,
-                        Main.rand.NextBool(3) ? Color.DeepSkyBlue : Color.Cyan,
-                        "CalamityMod/Particles/Sparkle",
-                        new Vector2(2f, 1f),
-                        vel.ToRotation(),
-                        Main.rand.NextFloat(0.55f, 1.05f) * currentScale,
-                        0.2f,
-                        23
-                    )
-                );
+            Offset = lockedDirection * chargeDistance;
+            Projectile.rotation = Projectile.rotation.AngleLerp(lockedDirection.ToRotation() + MathHelper.ToRadians(45f), 0.22f);
+            RotationOffset = MathHelper.Lerp(
+                RotationOffset,
+                MathHelper.ToRadians(MathHelper.Lerp(40f, 118f, easedCharge) * -Owner.direction + MathHelper.ToDegrees(swayAngle)),
+                0.16f);
 
-                if (Main.rand.NextBool(2))
+            FlipAsSword = lockedDirection.X < 0f;
+            fadeIn = MathHelper.Lerp(fadeIn, 0.92f, 0.12f);
+
+            SpawnChargeParticles(easedCharge);
+
+            if (stateTimer >= ChargeFrames && !chargeFullEffectsPlayed)
+            {
+                chargeFullEffectsPlayed = true;
+                SpawnChargeReadyBurst();
+                StartDash();
+            }
+        }
+
+        private void StartDash()
+        {
+            currentState = DashState;
+            stateTimer = 0;
+            CanHit = false;
+            dashStarted = true;
+            Offset = lockedDirection * DashHoldDistance;
+            AbsolutePosition = Vector2.Zero;
+            dashVelocity = lockedDirection * DashStartSpeed;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.netUpdate = true;
+
+            SoundEngine.PlaySound(SoundID.Item122 with
+            {
+                Volume = 0.95f,
+                Pitch = -0.18f
+            }, Projectile.Center);
+
+            SoundEngine.PlaySound(SoundID.Item84 with
+            {
+                Volume = 0.7f,
+                Pitch = -0.25f
+            }, Projectile.Center);
+        }
+
+        private void DoDashState()
+        {
+            stateTimer++;
+
+            float dashProgress = Utils.GetLerpValue(0f, DashFrames, stateTimer, true);
+            float easedDash = EvaluateFluidCharge(dashProgress);
+            float dashSpeed = MathHelper.Lerp(DashStartSpeed, DashTopSpeed, easedDash);
+            float spinDegrees = MathHelper.Lerp(135f, 915f, dashProgress) * -Owner.direction;
+
+            dashVelocity = lockedDirection * dashSpeed;
+            Projectile.velocity = Vector2.Zero;
+            AbsolutePosition = Vector2.Zero;
+            Offset = lockedDirection * DashHoldDistance;
+            Owner.Center += dashVelocity;
+            Owner.velocity = dashVelocity;
+
+            Projectile.rotation = Projectile.rotation.AngleLerp(lockedDirection.ToRotation() + MathHelper.ToRadians(45f), 0.35f);
+            RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(spinDegrees), 0.26f);
+            FlipAsSword = lockedDirection.X < 0f;
+            fadeIn = MathHelper.Lerp(fadeIn, 1f, 0.2f);
+
+            CanHit = stateTimer >= 3 && stateTimer <= DashFrames - 3;
+            SpawnDashTrailEffects(easedDash);
+
+            if (stateTimer >= DashFrames)
+                Projectile.Kill();
+        }
+
+        private bool IsChargeHeld()
+        {
+            if (Owner.whoAmI != Main.myPlayer)
+                return true;
+
+            return Owner.Calamity().mouseRight &&
+                   !Owner.noItems &&
+                   !Owner.CCed &&
+                   !Owner.mouseInterface &&
+                   !Main.mapFullscreen &&
+                   !Main.blockMouse;
+        }
+
+        private static float EvaluateFluidCharge(float progress)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+            float smootherStep = progress * progress * progress * (progress * (progress * 6f - 15f) + 10f);
+            float sineEase = 0.5f - 0.5f * (float)Math.Cos(progress * MathHelper.Pi);
+            return MathHelper.Lerp(sineEase, smootherStep, 0.7f);
+        }
+
+        private void SpawnChargeParticles(float chargeProgress)
+        {
+            Vector2 forward = lockedDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 bladeTip = Projectile.Center + forward * 74f * Projectile.scale;
+
+            if (stateTimer % 2 == 0)
+            {
+                for (int i = 0; i < 3; i++)
                 {
-                    GlowOrbParticle orb = new GlowOrbParticle(
-                        pos - circularOffset * 0.18f,
-                        vel * 0.08f,
+                    float side = i - 1f;
+                    float spiral = oceanPhase * 1.8f + i * 0.8f;
+                    Vector2 spawnPos = bladeTip - forward * MathHelper.Lerp(22f, 68f, chargeProgress) + right * (float)Math.Sin(spiral) * MathHelper.Lerp(6f, 18f, chargeProgress) * side;
+                    Vector2 travelVelocity = (bladeTip - spawnPos).SafeNormalize(forward) * Main.rand.NextFloat(1.8f, 4.4f);
+
+                    Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, travelVelocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(0.95f, 1.25f));
+                    water.noGravity = true;
+
+                    if (Main.rand.NextBool(2))
+                    {
+                        Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, travelVelocity * 0.68f, 100, new Color(220, 250, 255), Main.rand.NextFloat(0.8f, 1.05f));
+                        frost.noGravity = true;
+                    }
+                }
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(
+                    new GlowOrbParticle(
+                        bladeTip + Main.rand.NextVector2Circular(6f, 6f),
+                        Main.rand.NextVector2Circular(0.4f, 0.4f),
                         false,
-                        5,
-                        Main.rand.NextFloat(0.72f, 1f) * currentScale,
-                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                        7,
+                        MathHelper.Lerp(0.45f, 0.85f, chargeProgress),
+                        Main.rand.NextBool() ? Color.Cyan : Color.DeepSkyBlue,
                         true,
                         false,
-                        true
-                    );
-                    GeneralParticleHandler.SpawnParticle(orb);
-                }
+                        true));
+            }
+        }
 
-                if (Main.rand.NextBool(3))
+        private void SpawnChargeReadyBurst()
+        {
+            Vector2 forward = lockedDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 burstCenter = Owner.Center + forward * 70f;
+
+            for (int i = 0; i < 20; i++)
+            {
+                float ratio = i / 19f;
+                float angle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, ratio);
+                Vector2 velocity = forward.RotatedBy(angle * 0.35f) * Main.rand.NextFloat(4f, 10f) + right * (float)Math.Sin(angle * 2f) * Main.rand.NextFloat(0.5f, 2.8f);
+
+                Dust water = Dust.NewDustPerfect(burstCenter, DustID.Water, velocity, 100, new Color(65, 170, 255), Main.rand.NextFloat(1.1f, 1.45f));
+                water.noGravity = true;
+
+                if (i % 2 == 0)
                 {
-                    CritSpark spark = new CritSpark(
-                        pos,
-                        vel * 0.35f + Owner.velocity * 0.15f,
-                        Color.White,
-                        Color.LightBlue,
-                        Main.rand.NextFloat(0.8f, 1.1f) * currentScale,
-                        16
-                    );
-                    GeneralParticleHandler.SpawnParticle(spark);
+                    Dust frost = Dust.NewDustPerfect(burstCenter, DustID.Frost, velocity * 0.65f, 100, new Color(210, 250, 255), Main.rand.NextFloat(0.95f, 1.2f));
+                    frost.noGravity = true;
                 }
             }
 
-            int sparkCount = progress > 0.45f ? 2 : 1;
-            for (int i = 0; i < sparkCount; i++)
+            for (int i = 0; i < 5; i++)
             {
-                float length = Main.rand.NextFloat(80f, 320f) * currentScale;
-                float spiralOffset = (float)Math.Sin(basePhase + i * MathHelper.Pi) * orbitRadius * 0.65f;
+                Vector2 crossVelocity = forward.RotatedBy(MathHelper.ToRadians(-25f + 12.5f * i)) * 6.4f;
+                GeneralParticleHandler.SpawnParticle(
+                    new SparkParticle(
+                        burstCenter - forward * 6f,
+                        crossVelocity,
+                        false,
+                        6,
+                        1.5f,
+                        i % 2 == 0 ? Color.DeepSkyBlue : Color.Cyan,
+                        true));
+            }
 
-                Vector2 spawnPos = Owner.Center +
-                    new Vector2(length, 0f).RotatedBy(FinalRotation + MathHelper.ToRadians(-45f)) +
-                    orbitAxis * spiralOffset;
+            GeneralParticleHandler.SpawnParticle(
+                new HeavySmokeParticle(
+                    burstCenter,
+                    -forward * 1.8f,
+                    Color.WhiteSmoke,
+                    22,
+                    1.1f,
+                    0.35f,
+                    Main.rand.NextFloat(-0.04f, 0.04f),
+                    false));
 
-                Vector2 vel =
-                    -forward.RotatedByRandom(0.25f) * Main.rand.NextFloat(6f, 18f) -
-                    Owner.velocity * 0.7f +
-                    orbitAxis * (float)Math.Cos(basePhase + i * MathHelper.Pi) * Main.rand.NextFloat(2f, 5f);
+            ApplyScreenShake(7f);
+        }
 
+        private void SpawnChargeCancelBurst()
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 dustVelocity = Main.rand.NextVector2Circular(1.6f, 1.6f);
+                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, dustVelocity, 100, new Color(90, 175, 255), Main.rand.NextFloat(0.8f, 1.05f));
+                water.noGravity = true;
+            }
+        }
+
+        private void SpawnDashTrailEffects(float dashProgress)
+        {
+            Vector2 forward = dashVelocity.SafeNormalize(lockedDirection);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 lead = Projectile.Center + forward * 54f;
+
+            for (int i = 0; i < 3; i++)
+            {
+                float side = i - 1f;
+                float helix = oceanPhase * 2.3f + i * 0.85f;
+                Vector2 spawnPos = Projectile.Center - forward * (18f + i * 10f) + right * side * (12f + 6f * (float)Math.Sin(helix));
+                Vector2 velocity = -forward * Main.rand.NextFloat(2.4f, 5.8f) + right * side * Main.rand.NextFloat(0.4f, 2f);
+
+                Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, velocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(0.95f, 1.3f));
+                water.noGravity = true;
+
+                if (i != 1)
+                {
+                    Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, velocity * 0.62f, 100, new Color(210, 250, 255), Main.rand.NextFloat(0.82f, 1.08f));
+                    frost.noGravity = true;
+                }
+            }
+
+            if (stateTimer % 3 == 0)
+            {
                 GeneralParticleHandler.SpawnParticle(
                     new CustomSpark(
-                        spawnPos,
-                        vel,
+                        lead,
+                        forward * Main.rand.NextFloat(0.2f, 0.8f),
                         "CalamityMod/Particles/BloomCircle",
                         false,
-                        18,
-                        Main.rand.NextFloat(0.4f, 0.8f) * currentScale * 0.6f,
+                        14,
+                        MathHelper.Lerp(0.35f, 0.58f, dashProgress),
                         Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
-                        new Vector2(1.2f, 0.6f),
-                        shrinkSpeed: 0.92f
-                    )
-                );
+                        new Vector2(1.4f, 0.6f),
+                        true,
+                        false,
+                        0f,
+                        false,
+                        false,
+                        0.18f));
             }
+        }
+
+        private void SpawnHitEffects(NPC target)
+        {
+            Vector2 forward = dashVelocity.SafeNormalize(lockedDirection);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < 18; i++)
+            {
+                float angle = MathHelper.Lerp(-MathHelper.ToRadians(70f), MathHelper.ToRadians(70f), i / 17f);
+                Vector2 sprayVelocity = forward.RotatedBy(angle) * Main.rand.NextFloat(5f, 12f) + right * (float)Math.Sin(i * 0.7f) * Main.rand.NextFloat(0.5f, 3f);
+
+                Dust water = Dust.NewDustPerfect(target.Center, DustID.Water, sprayVelocity, 100, new Color(75, 175, 255), Main.rand.NextFloat(1.1f, 1.5f));
+                water.noGravity = true;
+
+                if (i % 2 == 0)
+                {
+                    Dust frost = Dust.NewDustPerfect(target.Center, DustID.Frost, sprayVelocity * 0.7f, 100, new Color(220, 250, 255), Main.rand.NextFloat(0.95f, 1.25f));
+                    frost.noGravity = true;
+                }
+            }
+
+            GeneralParticleHandler.SpawnParticle(
+                new HeavySmokeParticle(
+                    target.Center,
+                    -forward * 1.4f,
+                    Color.WhiteSmoke,
+                    24,
+                    1.2f,
+                    0.4f,
+                    Main.rand.NextFloat(-0.06f, 0.06f),
+                    false));
+
+            ApplyScreenShake(9f);
+        }
+
+        private void ApplyScreenShake(float power)
+        {
+            float distanceFactor = Utils.GetLerpValue(1200f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower,
+                power * distanceFactor);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(BuffID.Frostburn, 180);
+            Owner.GetModPlayer<BBEXPlayer>().AddTide();
+
+            if (!dashImpactPlayed)
+            {
+                dashImpactPlayed = true;
+                SpawnHitEffects(target);
+
+                SoundEngine.PlaySound(SoundID.Item14 with
+                {
+                    Volume = 0.55f,
+                    Pitch = 0.15f
+                }, target.Center);
+
+                SoundEngine.PlaySound(SoundID.Splash with
+                {
+                    Volume = 0.75f,
+                    Pitch = -0.1f
+                }, target.Center);
+            }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (dashStarted && Owner.active && !Owner.dead)
+                Owner.velocity *= 0.82f;
+
+            dashVelocity = Vector2.Zero;
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if ((useAnim > 0 || DrawUnconditionally) && Owner.ItemAnimationActive)
+            Asset<Texture2D> tex = ModContent.Request<Texture2D>(Texture);
+            Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge");
+
+            float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
+            Vector2 drawPos = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+            SpriteEffects effects = spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+
+            if (currentState == DashState)
             {
-                var tex = ModContent.Request<Texture2D>(Texture);
+                for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+                {
+                    if (Projectile.oldPos[i] == Vector2.Zero)
+                        continue;
 
+                    float factor = 1f - i / (float)Projectile.oldPos.Length;
+                    Color trailColor = Color.Lerp(new Color(35, 95, 145, 0), new Color(140, 235, 255, 0), factor) * factor * 0.55f;
 
-                Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey");
-
-                float r = FlipAsSword ? MathHelper.ToRadians(90) : 0f;
-
-                Main.EntitySpriteDraw(swoosh.Value, Owner.Center - Main.screenPosition, null, Color.Turquoise with { A = 0 } * (float)Math.Pow(fadeIn, 3), Projectile.rotation + MathHelper.PiOver4 * Owner.direction + RotationOffset * 1.75f, swoosh.Size() * 0.5f, Projectile.scale * 2f, spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None));
-
+                    Main.EntitySpriteDraw(
+                        tex.Value,
+                        Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
+                        tex.Frame(1, FrameCount, 0, Frame),
+                        trailColor,
+                        Projectile.rotation + RotationOffset + r,
+                        FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
+                        Projectile.scale,
+                        effects,
+                        0);
+                }
 
                 Main.EntitySpriteDraw(
-                    tex.Value,
-                    Projectile.Center - Main.screenPosition,
+                    swoosh.Value,
+                    drawPos,
                     null,
-                    lightColor,
-                    Projectile.rotation + RotationOffset + r,
-                    SpriteOrigin,
-                    Projectile.scale,
-                    SpriteEffects.None
-                );
+                    Color.DeepSkyBlue with { A = 0 } * fadeIn * 0.68f,
+                    FinalRotation + MathHelper.ToRadians(135f),
+                    swoosh.Size() * 0.5f,
+                    Projectile.scale * DashSwooshScale,
+                    SpriteEffects.None,
+                    0);
             }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 drawOffset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * 4f * fadeIn;
+                Main.EntitySpriteDraw(
+                    tex.Value,
+                    drawPos + drawOffset,
+                    tex.Frame(1, FrameCount, 0, Frame),
+                    Color.Aqua with { A = 0 } * 0.11f * fadeIn,
+                    Projectile.rotation + RotationOffset + r,
+                    FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
+                    Projectile.scale,
+                    effects,
+                    0);
+            }
+
+            Main.EntitySpriteDraw(
+                tex.Value,
+                drawPos,
+                tex.Frame(1, FrameCount, 0, Frame),
+                lightColor,
+                Projectile.rotation + RotationOffset + r,
+                FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
+                Projectile.scale,
+                effects,
+                0);
 
             return false;
         }

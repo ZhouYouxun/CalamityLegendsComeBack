@@ -90,7 +90,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             - Vector2.UnitY.RotatedBy(Projectile.rotation) * GunBackUpOffset;
 
         #endregion
+
+        #region ===== 额外数据 =====
+
         private int currentEffectID;
+
+        #endregion
+
+        #region ===== 初始化 =====
         public override void OnSpawn(IEntitySource source)
         {
             ProgressState = (int)Projectile.ai[0];
@@ -135,6 +142,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
         }
 
+        #endregion
+
+        #region ===== 主AI =====
+
         public override void HoldoutAI()
         {
             Player player = Main.player[Projectile.owner];
@@ -172,7 +183,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (spawnDelay > 0)
             {
                 if (spawnDelay == 15)
-                    PlayStartupEffects();
+                    PlayStartupSound();
 
                 spawnDelay--;
                 return;
@@ -195,7 +206,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (fireStopTimer > 0)
             {
                 fireStopTimer--;
-                SpawnCoolingSmoke();
+                SpawnCoolingVentMist();
             }
             else if (frameCounter >= 5)
             {
@@ -213,8 +224,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 stage++;
                 stageTimer = 0;
-                TriggerStageEffect();
-                PlayStageUpEffects();
+                TriggerStageOutlinePulse();
+                SpawnStageUpEnergyBurst();
             }
 
             #endregion
@@ -285,6 +296,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #endregion
         }
 
+        #endregion
+
         #region ===== 核心技能：降温 =====
 
         public void TryReduceHeat()
@@ -310,8 +323,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             OffsetLengthFromArm -= 18f;
 
-            PlayReduceEffects();
-            SpawnRockets();
+            PlayManualCooldownSound();
+            FireCooldownRocketSalvo();
         }
 
 
@@ -321,6 +334,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void Fire(Player player)
         {
+
             player.statMana -= 2;
 
             int count = LaserChainCount;
@@ -369,11 +383,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3秒
             }
 
-            PlayFireEffects(fireDirection);
-            PlayMuzzleEffect(player, fireDirection);
+            PlayNormalFireSound();
+            SpawnNormalShotMuzzleEffect(player, Vector2.UnitX.RotatedBy(Projectile.rotation));
         }
 
-        // ===== 安全开火位置判定 =====
+        #endregion
+
+        #region ===== 开火辅助 =====
+
         private Vector2 GetSafeFirePosition(Player player)
         {
             Vector2 gunTip = GunTipPosition;
@@ -422,480 +439,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             return gunTip;
         }
 
-        // 枪口特效（轻量融合版：Apoctosis主味 + Hellborn碎屑 + Tau白烟）
-        private void PlayMuzzleEffect(Player player, Vector2 direction)
-        {
-            Vector2 muzzlePos = GetSafeFirePosition(player) + direction * 4f;
-
-            Color techBlue = new Color(90, 190, 255);
-            Color paleBlue = new Color(180, 235, 255);
-
-            // ===== 1. Apoctosis风格：细长能量线，散布更小，速度更快更远 =====
-            for (int i = 0; i < 2; i++)
-            {
-                Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.25f, 0.55f));
-
-                Vector2 lineVelocity =
-                    direction.RotatedByRandom(0.10f) *
-                    Main.rand.NextFloat(10f, 15f);
-
-                Particle line = new CustomSpark(
-                    muzzlePos,
-                    lineVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    10,
-                    Main.rand.NextFloat(0.028f, 0.04f),
-                    lineColor,
-                    new Vector2(1f, 0.7f),
-                    shrinkSpeed: 0.75f
-                );
-
-                GeneralParticleHandler.SpawnParticle(line);
-            }
-
-            // ===== 2. Hellborn风格：少量前喷碎屑，但改成科技蓝 =====
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 dustVelocity =
-                    direction.RotatedByRandom(0.16f) *
-                    Main.rand.NextFloat(2.4f, 6.2f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    muzzlePos + direction * Main.rand.NextFloat(0f, 2f),
-                    267
-                );
-
-                dust.velocity = dustVelocity;
-                dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.7f));
-                dust.scale = Main.rand.NextFloat(0.65f, 0.9f);
-                dust.noGravity = true;
-            }
-
-            // ===== 3. Tau风格：极轻微白烟，只留一点体积感 =====
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 smokeVelocity =
-                    direction.RotatedByRandom(0.22f) *
-                    Main.rand.NextFloat(1.8f, 4.2f);
-
-                Particle smoke = new HeavySmokeParticle(
-                    muzzlePos,
-                    smokeVelocity,
-                    Color.Lerp(Color.White, paleBlue, 0.35f),
-                    16,
-                    Main.rand.NextFloat(0.28f, 0.45f),
-                    0.45f,
-                    Main.rand.NextFloat(-0.1f, 0.1f),
-                    Main.rand.NextBool()
-                );
-
-                GeneralParticleHandler.SpawnParticle(smoke);
-            }
-        }
-
-        #endregion
-
-        #region ===== 特效封装 =====
-
-        private void PlayStartupEffects()
-        {
-            bool zenith = Main.zenithWorld;
-
-            string path = zenith
-                ? "CalamityLegendsComeBack/Weapons/SHPC/M14拉枪"
-                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效";
-
-            SoundStyle style = new SoundStyle(path)
-            {
-                Volume = zenith ? 1.2f : 1f,
-                Pitch = zenith ? 0.1f : 0f
-            };
-
-            SoundEngine.PlaySound(style, Projectile.Center);
-        }
-
-        private void PlayFireEffects(Vector2 direction)
-        {
-            bool zenith = Main.zenithWorld;
-
-            string path = zenith
-                ? "CalamityLegendsComeBack/Weapons/SHPC/M14开枪"
-                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效";
-
-            SoundStyle style = new SoundStyle(path)
-            {
-                Volume = zenith ? 1.2f : 1f,
-                Pitch = zenith ? 0.1f : 0f
-            };
-
-            SoundEngine.PlaySound(style, Projectile.Center);
-        }
-
-        // 枪口特效
-        private void PlayMuzzleEffect(Vector2 direction)
-        {
-            // 控制极低密度（核心）
-            if (!Main.rand.NextBool(2))
-                return;
-
-            // 轻微前方偏移（贴近枪口）
-            Vector2 spawnPos = GetSafeFirePosition(Main.player[Projectile.owner]) + direction * Main.rand.NextFloat(2f, 6f);
-
-            // 主体方向：沿射击方向
-            Vector2 velocity =
-                direction.RotatedByRandom(0.08f) *
-                Main.rand.NextFloat(1.5f, 3.2f);
-
-            Dust dust = Dust.NewDustPerfect(spawnPos, 267);
-
-            dust.velocity = velocity;
-
-            // 科幻感颜色（白→金微过渡）
-            dust.color = Color.Lerp(Color.White, Color.Gold, Main.rand.NextFloat(0.2f, 0.6f));
-
-            // 小而精致
-            dust.scale = Main.rand.NextFloat(0.6f, 0.9f);
-
-            dust.noGravity = true;
-        }
-
-        // ===== 阶段升级特效（枪口电能上升）=====
-        private void PlayStageUpEffects()
-        {
-            // ===== 音效 =====
-            SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/迫击哨戒炮单次攻击")
-                {
-                    Volume = 5.2f,
-                    Pitch = 0.2f
-                },
-                GunTipPosition
-            );
-
-            // ===== 电能Dust上升 =====
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 upward = -Vector2.UnitY.RotatedByRandom(0.4f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
-                    267
-                );
-
-                dust.velocity = upward * Main.rand.NextFloat(3f, 7f);
-                dust.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.4f, 1f));
-                dust.scale = Main.rand.NextFloat(1.0f, 1.4f);
-                dust.noGravity = true;
-            }
-
-            // ===== 光芒粒子（上升核心）=====
-            for (int i = 0; i < 4; i++)
-            {
-                Vector2 velocity =
-                    -Vector2.UnitY.RotatedByRandom(0.5f) *
-                    Main.rand.NextFloat(1.5f, 3.5f);
-
-                float scale = Main.rand.NextFloat(0.4f, 0.7f);
-                Color color = Color.Lerp(Color.Orange, Color.White, Main.rand.NextFloat(0.3f, 0.8f));
-
-                SquishyLightParticle particle = new(
-                    GunTipPosition,
-                    velocity,
-                    scale,
-                    color,
-                    Main.rand.Next(16, 24)
-                );
-
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
-
-            // ===== 辉光球（能量核心上升）=====
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 velocity =
-                    -Vector2.UnitY.RotatedByRandom(0.6f) *
-                    Main.rand.NextFloat(1f, 2.5f);
-
-                GlowOrbParticle glow = new GlowOrbParticle(
-                    GunTipPosition + Main.rand.NextVector2Circular(4f, 4f),
-                    velocity,
-                    false,
-                    18,
-                    Main.rand.NextFloat(0.7f, 1.0f),
-                    Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.3f, 0.8f)),
-                    true,
-                    true
-                );
-
-                GeneralParticleHandler.SpawnParticle(glow);
-            }
-        }
-
-        private void PlayReduceEffects()
-        {
-            SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/解放者机甲左手火箭弹")
-                {
-                    Volume = 2.7f,
-                    Pitch = 0.2f
-                },
-                Projectile.Center
-            );
-        }
-
-        // 散热时散发的火箭弹
-        private void SpawnRockets()
-        {
-            SoundEngine.PlaySound(
-                new SoundStyle("CalamityMod/Sounds/Item/AnomalysNanogunMPFBShot")
-                {
-                    Volume = 1f, // 👉 音量（默认1，可改）
-                    Pitch = 0f   // 👉 音调（默认0，可改）
-                },
-                GunTipPosition
-            );
-
-            Player player = Main.player[Projectile.owner];
-            NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
-
-            player.statMana -= 150;
-
-
-            if (weapon == null)
-                return;
-
-            // ===== 扣除X发弹夹（只在右键触发时）=====
-            if (weapon.storedEffectPower > 0)
-            {
-                weapon.storedEffectPower -= 5;
-
-                if (weapon.storedEffectPower < 0)
-                    weapon.storedEffectPower = 0;
-            }
-
-            //int effectID = weapon.storedEffectID > 0 ? weapon.storedEffectID : -1;
-            int effectID = currentEffectID;
-
-            Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
-
-            // ===== 火箭齐射枪口特效 =====
-            PlayRocketMuzzleEffect(player, dir);
-
-            for (int i = 0; i < 5; i++)
-            {
-                float t = i / 4f; // 0~1
-
-                // ===== 对称角度（不变）=====
-                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
-
-                // ===== 距离中心的“偏移程度”（0在中间，1在两边）=====
-                float distFromCenter = Math.Abs(t - 0.5f) * 2f; // 0~1
-
-                // ===== 尖峰速度曲线（核心）=====
-                float speedFactor = 1f - distFromCenter; // 中间=1，两边=0
-
-                // 👉 再压一下，让尖峰更明显
-                speedFactor = (float)Math.Pow(speedFactor, 1.5f);
-
-                // ===== 最终速度 =====
-                float speed = MathHelper.Lerp(10f, 18f, speedFactor);
-                // 左右最慢≈6，中间最快≈14
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    GunTipPosition,
-                    dir.RotatedBy(angle) * speed,
-                    ModContent.ProjectileType<NewLegendSHPB>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    effectID // ⭐ 现在是正确的
-                );
-                // 原先是漩涡火箭：ProjectileID.VortexBeaterRocket
-
-            }
-        }
-
-        // ===== 散热喷气（斜后方，高压版）=====
-        private void SpawnCoolingSmoke()
-        {
-            // 控制频率（更密一点）
-            if (!Main.rand.NextBool(1))
-                return;
-
-            Vector2 forward = Vector2.UnitX.RotatedBy(Projectile.rotation);
-            Vector2 back = -forward;
-
-            // 👉 核心：斜后方喷（不是纯后）
-            Vector2 direction =
-                back.RotatedBy(Main.rand.NextFloat(-0.4f, 0.4f)); // 扇形
-
-            // 👉 更强的喷射力度（比Tau猛）
-            Vector2 velocity =
-                direction * Main.rand.NextFloat(5f, 11f);
-
-            Particle smoke = new MediumMistParticle(
-                GunBackPosition + Main.rand.NextVector2Circular(6f, 6f),
-                velocity,
-                Color.White,          // 白烟
-                Color.Transparent,
-                Main.rand.NextFloat(0.7f, 1.2f),
-                Main.rand.NextFloat(180f, 220f) // 持续时间
-            );
-
-            GeneralParticleHandler.SpawnParticle(smoke);
-        }
-
-
-        // 火箭齐射枪口特效（与普通开火同源，但更宏伟，按扇形角度同步展开）
-        private void PlayRocketMuzzleEffect(Player player, Vector2 baseDirection)
-        {
-            Vector2 muzzlePos = GetSafeFirePosition(player) + baseDirection * 6f;
-
-            Color techBlue = new Color(90, 190, 255);
-            Color paleBlue = new Color(180, 235, 255);
-
-            // ===== 1. 中央爆能前涌：先给一个更强的主喷口 =====
-            for (int i = 0; i < 4; i++)
-            {
-                Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.3f, 0.65f));
-
-                Vector2 lineVelocity =
-                    baseDirection.RotatedByRandom(0.16f) *
-                    Main.rand.NextFloat(13f, 19f);
-
-                Particle line = new CustomSpark(
-                    muzzlePos,
-                    lineVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.04f, 0.055f),
-                    lineColor,
-                    new Vector2(1.25f, 0.8f),
-                    shrinkSpeed: 0.72f
-                );
-
-                GeneralParticleHandler.SpawnParticle(line);
-            }
-
-            for (int i = 0; i < 5; i++)
-            {
-                Vector2 dustVelocity =
-                    baseDirection.RotatedByRandom(0.24f) *
-                    Main.rand.NextFloat(3.5f, 8f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    muzzlePos + baseDirection * Main.rand.NextFloat(0f, 3f),
-                    267
-                );
-
-                dust.velocity = dustVelocity;
-                dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.8f));
-                dust.scale = Main.rand.NextFloat(0.8f, 1.1f);
-                dust.noGravity = true;
-            }
-
-            for (int i = 0; i < 2; i++)
-            {
-                Vector2 smokeVelocity =
-                    baseDirection.RotatedByRandom(0.28f) *
-                    Main.rand.NextFloat(2.4f, 5.4f);
-
-                Particle smoke = new HeavySmokeParticle(
-                    muzzlePos,
-                    smokeVelocity,
-                    Color.Lerp(Color.White, paleBlue, 0.35f),
-                    18,
-                    Main.rand.NextFloat(0.38f, 0.58f),
-                    0.5f,
-                    Main.rand.NextFloat(-0.12f, 0.12f),
-                    Main.rand.NextBool()
-                );
-
-                GeneralParticleHandler.SpawnParticle(smoke);
-            }
-
-            // ===== 2. 跟随五发火箭角度，做同源分裂喷口 =====
-            for (int i = 0; i < 5; i++)
-            {
-                float t = i / 4f;
-                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
-
-                Vector2 laneDirection = baseDirection.RotatedBy(angle);
-                Vector2 lanePos = muzzlePos + laneDirection * Main.rand.NextFloat(2f, 5f);
-
-                // Apoctosis主味：每条分支各自带一条快速能量线
-                for (int j = 0; j < 2; j++)
-                {
-                    Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.25f, 0.55f));
-
-                    Vector2 lineVelocity =
-                        laneDirection.RotatedByRandom(0.08f) *
-                        Main.rand.NextFloat(11f, 17f);
-
-                    Particle laneLine = new CustomSpark(
-                        lanePos,
-                        lineVelocity,
-                        "CalamityMod/Particles/BloomLineSoftEdge",
-                        false,
-                        10,
-                        Main.rand.NextFloat(0.03f, 0.045f),
-                        lineColor,
-                        new Vector2(1.05f, 0.72f),
-                        shrinkSpeed: 0.75f
-                    );
-
-                    GeneralParticleHandler.SpawnParticle(laneLine);
-                }
-
-                // Hellborn主味：少量蓝色碎屑跟着分叉出去
-                for (int j = 0; j < 2; j++)
-                {
-                    Vector2 dustVelocity =
-                        laneDirection.RotatedByRandom(0.14f) *
-                        Main.rand.NextFloat(2.8f, 6.8f);
-
-                    Dust dust = Dust.NewDustPerfect(
-                        lanePos,
-                        267
-                    );
-
-                    dust.velocity = dustVelocity;
-                    dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.75f));
-                    dust.scale = Main.rand.NextFloat(0.7f, 0.95f);
-                    dust.noGravity = true;
-                }
-
-                // Tau主味：每条分支只挂一点很轻的白烟
-                if (Main.rand.NextBool(2))
-                {
-                    Vector2 smokeVelocity =
-                        laneDirection.RotatedByRandom(0.18f) *
-                        Main.rand.NextFloat(1.8f, 4.4f);
-
-                    Particle smoke = new HeavySmokeParticle(
-                        lanePos,
-                        smokeVelocity,
-                        Color.Lerp(Color.White, paleBlue, 0.35f),
-                        16,
-                        Main.rand.NextFloat(0.26f, 0.42f),
-                        0.42f,
-                        Main.rand.NextFloat(-0.08f, 0.08f),
-                        Main.rand.NextBool()
-                    );
-
-                    GeneralParticleHandler.SpawnParticle(smoke);
-                }
-            }
-        }
-
-        private void TriggerStageEffect()
-        {
-            stageOutlineTimer = StageOutlineDuration;
-        }
-
         #endregion
 
         #region ===== 绘制 =====
@@ -928,11 +471,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 // 画 4 个方向的描边（十字）
                 Vector2[] offsets =
                 {
-            new Vector2( outlineStrength, 0),
-            new Vector2(-outlineStrength, 0),
-            new Vector2(0,  outlineStrength),
-            new Vector2(0, -outlineStrength),
-        };
+                    new Vector2( outlineStrength, 0),
+                    new Vector2(-outlineStrength, 0),
+                    new Vector2(0,  outlineStrength),
+                    new Vector2(0, -outlineStrength),
+                };
 
                 foreach (var off in offsets)
                 {
@@ -954,9 +497,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             // 👉我们只要绘制阶段充能条，不影响主视觉
             if (Main.myPlayer == Projectile.owner)
-            {
-                var barBG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
-                var barFG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            {          
+                var barBG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;
+                var barFG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarFront").Value;
 
                 Vector2 drawPos = Owner.Center - Main.screenPosition + new Vector2(0, -56f) - barBG.Size() / 1.5f;
                 Rectangle frameCrop = new Rectangle(0, 0, (int)(barFG.Width * visualProgress), barFG.Height);
@@ -969,6 +512,557 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             return base.PreDraw(ref lightColor);
+        }
+
+        #endregion
+
+        #region ===== 音效 =====
+
+        private void PlayStartupSound()
+        {
+            bool zenith = Main.zenithWorld;
+
+            string path = zenith
+                ? "CalamityLegendsComeBack/Weapons/SHPC/M14拉枪"
+                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效";
+
+            SoundStyle style = new SoundStyle(path)
+            {
+                Volume = zenith ? 1.2f : 1f,
+                Pitch = zenith ? 0.1f : 0f
+            };
+
+            SoundEngine.PlaySound(style, Projectile.Center);
+        }
+
+        private void PlayNormalFireSound()
+        {
+            bool zenith = Main.zenithWorld;
+
+            string path = zenith
+                ? "CalamityLegendsComeBack/Weapons/SHPC/M14开枪"
+                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效";
+
+            SoundStyle style = new SoundStyle(path)
+            {
+                Volume = zenith ? 1.2f : 1f,
+                Pitch = zenith ? 0.1f : 0f
+            };
+
+            SoundEngine.PlaySound(style, Projectile.Center);
+        }
+
+        private void PlayStageUpSound()
+        {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/迫击哨戒炮单次攻击")
+                {
+                    Volume = 5.2f,
+                    Pitch = 0.2f
+                },
+                GunTipPosition
+            );
+        }
+
+        private void PlayManualCooldownSound()
+        {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/解放者机甲左手火箭弹")
+                {
+                    Volume = 2.7f,
+                    Pitch = 0.2f
+                },
+                Projectile.Center
+            );
+        }
+
+        private void PlayRocketSalvoSound()
+        {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Item/AnomalysNanogunMPFBShot")
+                {
+                    Volume = 1f,
+                    Pitch = 0f
+                },
+                GunTipPosition
+            );
+        }
+
+        #endregion
+
+        #region ===== 特效：阶段与状态 =====
+
+        private void TriggerStageOutlinePulse()
+        {
+            stageOutlineTimer = StageOutlineDuration;
+        }
+
+        private void SpawnStageUpEnergyBurst()
+        {
+            PlayStageUpSound();
+
+            for (int i = 0; i < 12; i++)
+            {
+                Vector2 upward = -Vector2.UnitY.RotatedByRandom(0.4f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
+                    267
+                );
+
+                dust.velocity = upward * Main.rand.NextFloat(3f, 7f);
+                dust.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.4f, 1f));
+                dust.scale = Main.rand.NextFloat(1.0f, 1.4f);
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 velocity =
+                    -Vector2.UnitY.RotatedByRandom(0.5f) *
+                    Main.rand.NextFloat(1.5f, 3.5f);
+
+                float scale = Main.rand.NextFloat(0.4f, 0.7f);
+                Color color = Color.Lerp(Color.Orange, Color.White, Main.rand.NextFloat(0.3f, 0.8f));
+
+                SquishyLightParticle particle = new(
+                    GunTipPosition,
+                    velocity,
+                    scale,
+                    color,
+                    Main.rand.Next(16, 24)
+                );
+
+                GeneralParticleHandler.SpawnParticle(particle);
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 velocity =
+                    -Vector2.UnitY.RotatedByRandom(0.6f) *
+                    Main.rand.NextFloat(1f, 2.5f);
+
+                GlowOrbParticle glow = new GlowOrbParticle(
+                    GunTipPosition + Main.rand.NextVector2Circular(4f, 4f),
+                    velocity,
+                    false,
+                    18,
+                    Main.rand.NextFloat(0.7f, 1.0f),
+                    Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.3f, 0.8f)),
+                    true,
+                    true
+                );
+
+                GeneralParticleHandler.SpawnParticle(glow);
+            }
+        }
+
+        private void SpawnCoolingVentMist()
+        {
+            if (frameCounter % 3 != 0)
+                return;
+
+            Vector2 forward = Vector2.UnitX.RotatedBy(Projectile.rotation);
+            Vector2 back = -forward;
+            float baseAngle = back.ToRotation();
+            float angleOffset = MathHelper.Pi / 9f;
+            float finalAngle = forward.X > 0f ? baseAngle - angleOffset : baseAngle + angleOffset;
+
+            Vector2 direction = finalAngle.ToRotationVector2();
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            Vector2 spawnPos =
+                GunBackPosition
+                + forward * Main.rand.NextFloat(-10f, 4f)
+                + right * Main.rand.NextFloat(-6f, 6f);
+
+            direction = direction.RotatedBy(Main.rand.NextFloat(-0.08f, 0.08f));
+
+            Particle smoke = new MediumMistParticle(
+                spawnPos,
+                direction * Main.rand.NextFloat(5f, 11f),
+                Color.White,
+                Color.Transparent,
+                Main.rand.NextFloat(0.7f, 1.2f),
+                Main.rand.NextFloat(180f, 220f)
+            );
+
+            GeneralParticleHandler.SpawnParticle(smoke);
+        }
+
+        #endregion
+
+        #region ===== 特效：普通开火 =====
+
+        private void SpawnNormalShotMuzzleEffect(Player player, Vector2 direction)
+        {
+            //Vector2 muzzlePos = GetSafeFirePosition(player) + direction * 4f;
+            Vector2 muzzlePos = GunTipPosition + direction * 4f;
+            Vector2 right = direction.RotatedBy(MathHelper.PiOver2);
+
+            // 当前激光数量固定只会是 1~4，这里顺手钳一下
+            int laserCount = Math.Max(1, Math.Min(LaserChainCount, 4));
+            float heatInterpolant = MathHelper.Clamp(stage / 7f, 0f, 1f);
+
+            Color techBlue = new Color(90, 190, 255);
+            Color paleBlue = new Color(180, 235, 255);
+            Color hotWhite = Color.Lerp(paleBlue, Color.White, 0.35f + heatInterpolant * 0.45f);
+
+            // ================= BloomLineSoftEdge：数量 = 激光数量 × 2 =================
+            // 设计思路：
+            // 1条激光 -> 2条平行前冲
+            // 2~4条激光 -> 每条“激光通道”各自带 2 条平行线，并整体按 fire 的风格展开成扇形
+
+            // 👉 基础扇形（贴近原始fire）
+            float baseFanAngle = laserCount == 1
+                ? 0f
+                : MathHelper.Lerp(0.04f, 0.13f, (laserCount - 2f) / 2f);
+
+            // 👉 特效扇形：比激光更大（+20%）并且额外增强一点可见性
+            float fanAngle = baseFanAngle * 1.2f + MathHelper.Lerp(0f, 0.035f, heatInterpolant);
+
+            float pairSpacing = MathHelper.Lerp(1.1f, 3.2f, heatInterpolant);
+            float forwardSpeed = MathHelper.Lerp(7.2f, 14.6f, heatInterpolant);
+            int lineLifetime = (int)MathHelper.Lerp(7f, 11f, heatInterpolant);
+            float lineScale = MathHelper.Lerp(0.024f, 0.042f, heatInterpolant);
+            Vector2 lineStretch = new Vector2(
+                MathHelper.Lerp(0.88f, 1.32f, heatInterpolant),
+                MathHelper.Lerp(0.56f, 0.86f, heatInterpolant)
+            );
+
+            for (int i = 0; i < laserCount; i++)
+            {
+                float laneT = laserCount == 1 ? 0.5f : i / (float)(laserCount - 1);
+                float laneAngle = laserCount == 1 ? 0f : MathHelper.Lerp(-fanAngle, fanAngle, laneT);
+
+                Vector2 laneDirection = direction.RotatedBy(laneAngle);
+                Vector2 laneRight = laneDirection.RotatedBy(MathHelper.PiOver2);
+
+                // 中心通道略强，边缘稍弱，形成更稳定的秩序感
+                float centerWeight = laserCount == 1 ? 1f : 1f - Math.Abs(laneT - 0.5f) * 0.35f;
+
+                for (int side = -1; side <= 1; side += 2)
+                {
+
+
+                    // 起点就在枪口稍微前一点，保证一定能看到
+                    Vector2 spawnPos =
+                        muzzlePos
+                        + laneDirection * Main.rand.NextFloat(0.8f, 2.2f)
+                        + laneRight * (pairSpacing * 0.5f * side);
+
+                    // 前进速度：明显更快，但不离谱
+                    Vector2 velocity =
+                        laneDirection * Main.rand.NextFloat(forwardSpeed * 1.1f, forwardSpeed * 1.4f)
+                        + laneRight * (0.12f * side);
+
+                    // 颜色：直接亮一点，不再压太狠
+                    Color lineColor = Color.Lerp(
+                        techBlue,
+                        hotWhite,
+                        0.55f + heatInterpolant * 0.35f
+                    );
+
+                    // 生命周期稍微拉长一点，但别太长
+                    int lifetime = (int)(lineLifetime * 1.2f);
+
+                    // 拉伸：强调“线”的感觉
+                    Vector2 stretch = new Vector2(
+                        lineStretch.X * 1.2f,
+                        lineStretch.Y * 0.9f
+                    );
+
+                    // 👉 不用fadeIn，直接给一点透明度控制
+                    Particle line = new CustomSpark(
+                        spawnPos,
+                        velocity,
+                        "CalamityMod/Particles/BloomLineSoftEdge",
+                        false,
+                        lifetime,
+                        Main.rand.NextFloat(lineScale * 0.95f, lineScale * 1.1f),
+                        lineColor * 0.85f,   // 稍微透明，但不是看不见
+                        stretch,
+                        shrinkSpeed: 0.65f   // 稍慢一点，让尾巴更明显
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(line);
+
+
+                }
+            }
+
+
+
+
+            // ================= Dust：强化喷射（角度更大+速度更高+数量更密） =================
+            int dustCount = 30 + (int)Math.Round(heatInterpolant * 10f);
+
+            float dustForwardBase = MathHelper.Lerp(4.5f, 10.5f, heatInterpolant);
+            float dustSideBase = MathHelper.Lerp(1.2f, 4.2f, heatInterpolant);
+
+            // 👉 比激光扇形再大X0%
+            float dustFanAngle = fanAngle * 1.7f + MathHelper.Lerp(0f, 0.06f, heatInterpolant);
+
+            for (int i = 0; i < dustCount; i++)
+            {
+                float t = dustCount == 1 ? 0.5f : i / (float)(dustCount - 1);
+
+                // 扇形角度分布（核心喷射感来源）
+                float angle = MathHelper.Lerp(-dustFanAngle, dustFanAngle, t);
+                Vector2 dir = direction.RotatedBy(angle);
+                Vector2 dirRight = dir.RotatedBy(MathHelper.PiOver2);
+
+                // 中间更强，两侧稍弱
+                float centerWeight = 3f - Math.Abs(t - 0.5f) * 1.2f;
+
+                Vector2 dustVelocity =
+                    dir * dustForwardBase * Main.rand.NextFloat(0.9f, 1.3f) * centerWeight +
+                    dirRight * Main.rand.NextFloat(-dustSideBase, dustSideBase) * 0.75f;
+
+                Vector2 dustSpawnPos =
+                    muzzlePos
+                    + dir * Main.rand.NextFloat(0.4f, 2.8f)
+                    + dirRight * Main.rand.NextFloat(-1.6f, 1.6f);
+
+                Dust dust = Dust.NewDustPerfect(dustSpawnPos, 267);
+                dust.velocity = dustVelocity;
+                dust.color = Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.25f, 0.85f));
+                dust.scale = Main.rand.NextFloat(
+                    MathHelper.Lerp(0.7f, 0.9f, heatInterpolant),
+                    MathHelper.Lerp(1.2f, 1.6f, heatInterpolant)
+                );
+                dust.noGravity = true;
+            }
+
+
+
+            // ================= GlowOrb：强化主喷流（明显前冲+更集中） =================
+            int glowCount = 15 + (int)Math.Round(heatInterpolant * 4f);
+
+            // 👉 同样扩角（但比dust略收一点，形成层次）
+            float glowFanAngle = fanAngle * 1.2f;
+
+            for (int i = 0; i < glowCount; i++)
+            {
+                float t = glowCount == 1 ? 0.5f : i / (float)(glowCount - 1);
+                float angleOffset = MathHelper.Lerp(-glowFanAngle, glowFanAngle, t);
+
+                Vector2 glowDirection = direction.RotatedBy(angleOffset);
+
+                float centerWeight = 3f - Math.Abs(t - 0.5f) * 0.5f;
+
+                Vector2 glowVelocity = glowDirection * Main.rand.NextFloat(
+                    MathHelper.Lerp(2.5f, 4.5f, heatInterpolant),
+                    MathHelper.Lerp(5.5f, 8.5f, heatInterpolant)
+                ) * centerWeight;
+
+                GlowOrbParticle glow = new GlowOrbParticle(
+                    muzzlePos + glowDirection * Main.rand.NextFloat(0.5f, 3.2f),
+                    glowVelocity,
+                    false,
+                    20 + (int)(heatInterpolant * 10f),
+                    Main.rand.NextFloat(
+                        MathHelper.Lerp(0.7f, 0.95f, heatInterpolant),
+                        MathHelper.Lerp(1.1f, 1.6f, heatInterpolant)
+                    ),
+                    Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.4f, 0.9f)),
+                    true,
+                    true
+                );
+
+                GeneralParticleHandler.SpawnParticle(glow);
+            }
+
+
+            // 记住了，这个叫：“中心偏置喷流模型（Center-biased jet distribution）”
+
+
+
+
+
+
+        }
+
+        #endregion
+
+        #region ===== 特效：火箭齐射 =====
+
+        private void FireCooldownRocketSalvo()
+        {
+            PlayRocketSalvoSound();
+
+            Player player = Main.player[Projectile.owner];
+            NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
+
+            player.statMana -= 150;
+
+            if (weapon == null)
+                return;
+
+            if (weapon.storedEffectPower > 0)
+            {
+                weapon.storedEffectPower -= 5;
+
+                if (weapon.storedEffectPower < 0)
+                    weapon.storedEffectPower = 0;
+            }
+
+            int effectID = currentEffectID;
+            Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
+
+            float shakePower = 20f;
+            float distanceFactor = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower,
+                shakePower * distanceFactor);
+
+            player.velocity -= dir * 3.2f;
+
+            SpawnNormalShotMuzzleEffect(player, dir);
+            SpawnRocketSalvoMuzzleEffect(player, dir);
+
+            for (int i = 0; i < 5; i++)
+            {
+                float t = i / 4f;
+                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
+                float distFromCenter = Math.Abs(t - 0.5f) * 2f;
+                float speedFactor = (float)Math.Pow(1f - distFromCenter, 1.5f);
+                float speed = MathHelper.Lerp(10f, 18f, speedFactor);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    GunTipPosition,
+                    dir.RotatedBy(angle) * speed,
+                    ModContent.ProjectileType<NewLegendSHPB>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    effectID
+                );
+            }
+        }
+
+        private void SpawnRocketSalvoMuzzleEffect(Player player, Vector2 baseDirection)
+        {
+            Vector2 muzzlePos = GetSafeFirePosition(player) + baseDirection * 6f;
+
+            Color techBlue = new Color(90, 190, 255);
+            Color paleBlue = new Color(180, 235, 255);
+
+            for (int i = 0; i < 4; i++)
+            {
+                Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.3f, 0.65f));
+                Vector2 lineVelocity = baseDirection.RotatedByRandom(0.16f) * Main.rand.NextFloat(13f, 19f);
+
+                Particle line = new CustomSpark(
+                    muzzlePos,
+                    lineVelocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.04f, 0.055f),
+                    lineColor,
+                    new Vector2(1.25f, 0.8f),
+                    shrinkSpeed: 0.72f
+                );
+
+                GeneralParticleHandler.SpawnParticle(line);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                Vector2 dustVelocity = baseDirection.RotatedByRandom(0.24f) * Main.rand.NextFloat(3.5f, 8f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    muzzlePos + baseDirection * Main.rand.NextFloat(0f, 3f),
+                    267
+                );
+
+                dust.velocity = dustVelocity;
+                dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.8f));
+                dust.scale = Main.rand.NextFloat(0.8f, 1.1f);
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Vector2 smokeVelocity = baseDirection.RotatedByRandom(0.28f) * Main.rand.NextFloat(2.4f, 5.4f);
+
+                Particle smoke = new HeavySmokeParticle(
+                    muzzlePos,
+                    smokeVelocity,
+                    Color.Lerp(Color.White, paleBlue, 0.35f),
+                    18,
+                    Main.rand.NextFloat(0.38f, 0.58f),
+                    0.5f,
+                    Main.rand.NextFloat(-0.12f, 0.12f),
+                    Main.rand.NextBool()
+                );
+
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                float t = i / 4f;
+                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
+
+                Vector2 laneDirection = baseDirection.RotatedBy(angle);
+                Vector2 lanePos = muzzlePos + laneDirection * Main.rand.NextFloat(2f, 5f);
+
+                for (int j = 0; j < 2; j++)
+                {
+                    Color lineColor = Color.Lerp(techBlue, Color.White, Main.rand.NextFloat(0.25f, 0.55f));
+                    Vector2 lineVelocity = laneDirection.RotatedByRandom(0.08f) * Main.rand.NextFloat(11f, 17f);
+
+                    Particle laneLine = new CustomSpark(
+                        lanePos,
+                        lineVelocity,
+                        "CalamityMod/Particles/BloomLineSoftEdge",
+                        false,
+                        10,
+                        Main.rand.NextFloat(0.03f, 0.045f),
+                        lineColor,
+                        new Vector2(1.05f, 0.72f),
+                        shrinkSpeed: 0.75f
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(laneLine);
+                }
+
+                for (int j = 0; j < 2; j++)
+                {
+                    Vector2 dustVelocity = laneDirection.RotatedByRandom(0.14f) * Main.rand.NextFloat(2.8f, 6.8f);
+
+                    Dust dust = Dust.NewDustPerfect(
+                        lanePos,
+                        267
+                    );
+
+                    dust.velocity = dustVelocity;
+                    dust.color = Color.Lerp(techBlue, paleBlue, Main.rand.NextFloat(0.2f, 0.75f));
+                    dust.scale = Main.rand.NextFloat(0.7f, 0.95f);
+                    dust.noGravity = true;
+                }
+
+                if (Main.rand.NextBool(2))
+                {
+                    Vector2 smokeVelocity = laneDirection.RotatedByRandom(0.18f) * Main.rand.NextFloat(1.8f, 4.4f);
+
+                    Particle smoke = new HeavySmokeParticle(
+                        lanePos,
+                        smokeVelocity,
+                        Color.Lerp(Color.White, paleBlue, 0.35f),
+                        16,
+                        Main.rand.NextFloat(0.26f, 0.42f),
+                        0.42f,
+                        Main.rand.NextFloat(-0.08f, 0.08f),
+                        Main.rand.NextBool()
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(smoke);
+                }
+            }
         }
 
         #endregion

@@ -245,6 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 nrm = dir.RotatedBy(MathHelper.PiOver2);
             float time = Main.GlobalTimeWrappedHourly;
+            const int intervalScale = 3;
 
             // 光束理论半宽
             float halfWidth = (Projectile.scale * Projectile.width + 180f) * 0.5f;
@@ -257,9 +258,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             // 间隔目标：约 8 像素
             // 但给一个上限，避免满长度时粒子量炸掉
-            const float spacing = 8f;
+            const float spacing = 8f * intervalScale;
             int sampleCount = (int)(LaserLength / spacing);
             sampleCount = Utils.Clamp(sampleCount, 48, 180);
+
+            if ((Main.GameUpdateCount + Projectile.identity) % 1 == 0)
+            {
+                Particle pulse = new DirectionalPulseRing(
+                    Projectile.Center,
+                    Projectile.velocity * 0.75f,
+                    Color.Lerp(coreColor, flashColor, 0.4f),
+                    new Vector2(1f, 2.5f),
+                    Projectile.rotation,
+                    0.2f * 7f,
+                    0.03f * 7f,
+                    20);
+                GeneralParticleHandler.SpawnParticle(pulse);
+            }
 
             for (int i = 0; i <= sampleCount; i++)
             {
@@ -338,7 +353,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 // =========================
                 // 4. 副轨火花：隔点补一次，做双股但不塞满
                 // =========================
-                if (i % 2 == 0)
+                if (i % (2 * intervalScale) == 0)
                 {
                     GlowSparkParticle secondarySpark = new GlowSparkParticle(
                         secondaryPos,
@@ -359,7 +374,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 // =========================
                 // 5. 柔光节点：降低频率，但参数持续变化，不再像老版本那样“隔很大一团”
                 // =========================
-                if (i % 4 == 0)
+                if (i % (4 * intervalScale) == 0)
                 {
                     float lightDrift =
                         (float)Math.Cos(time * 6.5f + completion * 17f) *
@@ -377,7 +392,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 // =========================
                 // 6. 中轴核心点：每 6 个采样点一个，但会跟着波纹轻微摆动
                 // =========================
-                if (i % 6 == 0)
+                if (i % (6 * intervalScale) == 0)
                 {
                     float orbOffset =
                         (float)Math.Sin(time * 5.1f - completion * 19f + Projectile.identity * 0.29f) *
@@ -415,7 +430,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 true);
             GeneralParticleHandler.SpawnParticle(tipOrb);
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(2 * intervalScale))
             {
                 Vector2 tipSide = nrm * ((float)Math.Cos(tipPhase * 1.37f) * halfWidth * 0.16f);
                 GlowSparkParticle tipSpark = new GlowSparkParticle(

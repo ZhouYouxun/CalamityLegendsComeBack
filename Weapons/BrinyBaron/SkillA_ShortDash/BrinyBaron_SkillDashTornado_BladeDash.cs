@@ -1,9 +1,15 @@
+using System;
+using System.Collections.Generic;
+using CalamityMod;
+using CalamityMod.Enums;
+using CalamityMod.Graphics.Primitives;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,12 +19,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
 
-        private const int PrepareTime = 10;
+        private const int PrepareTime = 22;
         private const int DashTimeMax = 26;
         private const int ReboundTimeMax = 12;
+        private const int DashHistoryLength = 8;
+        private const int HelixTrailLength = 42;
 
         private const float DashSpeed = 28f;
         private const float ReboundSpeed = 18f;
+        private const float ReadyBladeDistance = 28f;
+        private const float DashBladeDistance = 20f;
+        private const float ReboundBladeDistance = 18f;
 
         private int dashState;
         private int stateTimer;
@@ -26,7 +37,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private float bladeRotation;
         private bool initialized;
         private bool hasBounced;
+        private bool canceledCharge;
         private float oceanPhase;
+        private readonly List<Vector2> dashDirectionHistory = new();
+        private readonly List<Vector2> helixTrailLeft = new();
+        private readonly List<Vector2> helixTrailRight = new();
+        private int helixTrailTimer;
 
         public override void SetStaticDefaults()
         {
@@ -40,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.height = 72;
             Projectile.friendly = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = PrepareTime + DashTimeMax + ReboundTimeMax + 20;
+            Projectile.timeLeft = PrepareTime + DashTimeMax + ReboundTimeMax + 40;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.netImportant = true;
@@ -66,11 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (!initialized)
                 InitializeDash(owner);
 
-            if ((!Main.mouseRight || owner.noItems) && dashState == 0)
-            {
-                Projectile.Kill();
-                return;
-            }
+            owner.Calamity().mouseWorldListener = true;
+            owner.Calamity().rightClickListener = true;
 
             MaintainOwnerState(owner);
             Projectile.rotation = bladeRotation;
@@ -95,7 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             lockedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
             if (lockedDirection == Vector2.Zero)
-                lockedDirection = (Main.MouseWorld - owner.Center).SafeNormalize(Vector2.UnitX * owner.direction);
+                lockedDirection = (owner.Calamity().mouseWorld - owner.Center).SafeNormalize(Vector2.UnitX * owner.direction);
 
             Projectile.velocity = Vector2.Zero;
             Projectile.Center = owner.MountedCenter + lockedDirection * 18f;
@@ -104,7 +117,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             dashState = 0;
             stateTimer = 0;
             hasBounced = false;
+            canceledCharge = false;
             oceanPhase = 0f;
+            helixTrailTimer = 0;
+            dashDirectionHistory.Clear();
+            helixTrailLeft.Clear();
+            helixTrailRight.Clear();
             initialized = true;
 
             SoundEngine.PlaySound(SoundID.Item73 with
@@ -118,15 +136,32 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void DoPreparePhase(Player owner)
         {
+            if (!IsChargeHeld(owner))
+            {
+                canceledCharge = true;
+                SpawnCanceledChargeBurst();
+                Projectile.Kill();
+                return;
+            }
+
             stateTimer++;
             Projectile.velocity = Vector2.Zero;
-            Projectile.Center = owner.MountedCenter + lockedDirection * 18f;
+
+            Vector2 aimDirection = (owner.Calamity().mouseWorld - owner.MountedCenter).SafeNormalize(lockedDirection);
+            lockedDirection = Vector2.Lerp(lockedDirection, aimDirection, 0.18f).SafeNormalize(aimDirection);
+
+            float chargeProgress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
+            Projectile.Center = owner.MountedCenter + lockedDirection * MathHelper.Lerp(18f, ReadyBladeDistance, chargeProgress);
+            bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             if (stateTimer % 2 == 0)
                 SpawnPrepareTrail();
 
             if (stateTimer >= PrepareTime)
+            {
+                SpawnChargeReadyBurst();
                 StartDash(owner);
+            }
         }
 
         private void StartDash(Player owner)
@@ -138,6 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.friendly = true;
             Projectile.velocity = lockedDirection * DashSpeed;
             owner.velocity = Projectile.velocity;
+            RecordDashDirection(lockedDirection);
             Projectile.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Item39 with
@@ -154,7 +190,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             stateTimer++;
             Projectile.velocity = lockedDirection * DashSpeed;
             owner.velocity = Projectile.velocity;
-            owner.Center = Projectile.Center;
+            Projectile.Center = owner.MountedCenter + lockedDirection * DashBladeDistance;
+            bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
+
+            RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
+            UpdateHelixTrail(16f);
 
             SpawnOceanTrail();
             SpawnForwardWakeJets();
@@ -173,8 +213,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             float speedFactor = MathHelper.Lerp(1f, 0.55f, stateTimer / (float)ReboundTimeMax);
             Projectile.velocity = lockedDirection * ReboundSpeed * speedFactor;
             owner.velocity = Projectile.velocity;
-            owner.Center = Projectile.Center;
+            Projectile.Center = owner.MountedCenter + lockedDirection * ReboundBladeDistance;
+            bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
+            UpdateHelixTrail(11f * speedFactor);
             SpawnReboundTrail();
 
             if (stateTimer % 3 == 0)
@@ -213,16 +255,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             stateTimer = 0;
             target.AddBuff(BuffID.Frostburn, 180);
 
-            Vector2 awayFromTarget = (Projectile.Center - target.Center).SafeNormalize(-lockedDirection);
-            float offsetAngle = MathHelper.ToRadians(Main.rand.NextBool() ? 16f : -16f);
-            lockedDirection = awayFromTarget.RotatedBy(offsetAngle);
+            Vector2 reliableDashDirection = GetReliableDashDirection();
+            float offsetAngle = MathHelper.ToRadians(Main.rand.NextFloat(-12f, 12f));
+            lockedDirection = (-reliableDashDirection).RotatedBy(offsetAngle).SafeNormalize(-lockedDirection);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             Projectile.friendly = false;
             Projectile.velocity = lockedDirection * ReboundSpeed;
             Projectile.netUpdate = true;
 
-            SpawnBounceBurst(target.Center, awayFromTarget);
+            SpawnBounceBurst(target.Center, reliableDashDirection);
+            ApplyScreenShake(10f);
 
             SoundEngine.PlaySound(SoundID.Item71 with
             {
@@ -233,8 +276,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         public override void OnKill(int timeLeft)
         {
+            if (canceledCharge)
+                return;
+
             Player owner = Main.player[Projectile.owner];
-            if (owner.active && !owner.dead)
+            if (owner.active && !owner.dead && dashState != 0)
                 owner.velocity *= 0.85f;
 
             SpawnEndBurst();
@@ -244,6 +290,60 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 Volume = 0.45f,
                 Pitch = -0.15f
             }, Projectile.Center);
+        }
+
+        private bool IsChargeHeld(Player owner)
+        {
+            if (owner.whoAmI != Main.myPlayer)
+                return true;
+
+            return owner.Calamity().mouseRight &&
+                   !owner.noItems &&
+                   !owner.CCed &&
+                   !owner.mouseInterface &&
+                   !Main.mapFullscreen &&
+                   !Main.blockMouse;
+        }
+
+        private void RecordDashDirection(Vector2 direction)
+        {
+            if (direction == Vector2.Zero)
+                return;
+
+            dashDirectionHistory.Add(direction);
+            if (dashDirectionHistory.Count > DashHistoryLength)
+                dashDirectionHistory.RemoveAt(0);
+        }
+
+        private Vector2 GetReliableDashDirection()
+        {
+            if (dashDirectionHistory.Count == 0)
+                return lockedDirection;
+
+            Vector2 sum = Vector2.Zero;
+            foreach (Vector2 direction in dashDirectionHistory)
+                sum += direction;
+
+            return sum.SafeNormalize(lockedDirection);
+        }
+
+        private void UpdateHelixTrail(float amplitude)
+        {
+            helixTrailTimer++;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(lockedDirection);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            float sineWave = (float)Math.Cos(helixTrailTimer * 0.38f);
+            Vector2 offset = right * amplitude * sineWave;
+            Vector2 basePoint = Projectile.Center - forward * 16f;
+
+            helixTrailLeft.Add(basePoint + offset);
+            helixTrailRight.Add(basePoint - offset);
+
+            if (helixTrailLeft.Count > HelixTrailLength)
+                helixTrailLeft.RemoveAt(0);
+            if (helixTrailRight.Count > HelixTrailLength)
+                helixTrailRight.RemoveAt(0);
         }
 
         private void SpawnStartBurst()
@@ -257,6 +357,52 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
                 Dust frost = Dust.NewDustPerfect(Projectile.Center, DustID.Frost, burstVel * 0.7f, 100, new Color(180, 240, 255), Main.rand.NextFloat(0.9f, 1.2f));
                 frost.noGravity = true;
+            }
+        }
+
+        private void SpawnChargeReadyBurst()
+        {
+            Vector2 forward = lockedDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < 24; i++)
+            {
+                float ratio = i / 23f;
+                float angle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, ratio);
+                Vector2 velocity = forward.RotatedBy(angle * 0.45f) * Main.rand.NextFloat(4.8f, 11f) + right * (float)Math.Sin(angle * 3f) * Main.rand.NextFloat(0.5f, 3.2f);
+
+                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, velocity, 100, new Color(70, 175, 255), Main.rand.NextFloat(1.1f, 1.45f));
+                water.noGravity = true;
+
+                if (i % 2 == 0)
+                {
+                    Dust frost = Dust.NewDustPerfect(Projectile.Center, DustID.Frost, velocity * 0.68f, 100, new Color(215, 248, 255), Main.rand.NextFloat(0.9f, 1.2f));
+                    frost.noGravity = true;
+                }
+            }
+
+            ApplyScreenShake(7f);
+
+            SoundEngine.PlaySound(SoundID.Item122 with
+            {
+                Volume = 0.85f,
+                Pitch = -0.22f
+            }, Projectile.Center);
+
+            SoundEngine.PlaySound(SoundID.Splash with
+            {
+                Volume = 0.65f,
+                Pitch = -0.15f
+            }, Projectile.Center);
+        }
+
+        private void SpawnCanceledChargeBurst()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 burstVel = Main.rand.NextVector2Circular(1.8f, 1.8f);
+                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, burstVel, 100, new Color(95, 180, 255), Main.rand.NextFloat(0.8f, 1.05f));
+                water.noGravity = true;
             }
         }
 
@@ -288,24 +434,44 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             Vector2 forward = lockedDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 bladeTip = Projectile.Center + forward * 36f;
+            float progress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 4; i++)
             {
-                float lengthBack = 10f + i * 10f;
-                float width = 9f - i * 2f;
-                float sinOffset = (float)System.Math.Sin(oceanPhase + i * 0.9f) * width;
-
-                Vector2 spawnPos = Projectile.Center - forward * lengthBack + right * sinOffset;
-                Vector2 dustVel = (Projectile.Center - spawnPos).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.2f, 2.2f);
+                float side = MathHelper.Lerp(-1f, 1f, i / 3f);
+                float lanePhase = oceanPhase * 1.3f + i * 0.85f;
+                float lateralRadius = MathHelper.Lerp(10f, 24f, progress) * (0.7f + 0.3f * (float)Math.Sin(lanePhase));
+                float backDistance = MathHelper.Lerp(20f, 58f, progress) + 8f * (float)Math.Cos(lanePhase * 0.8f);
+                Vector2 spawnPos =
+                    bladeTip -
+                    forward * backDistance +
+                    right * side * lateralRadius +
+                    Main.rand.NextVector2Circular(3f, 3f);
+                Vector2 toBlade = (bladeTip - spawnPos).SafeNormalize(forward);
+                Vector2 curl = toBlade.RotatedBy(MathHelper.PiOver2 * Math.Sign(side == 0f ? 1f : side));
+                Vector2 dustVel =
+                    toBlade * Main.rand.NextFloat(2.6f, 5.4f) +
+                    curl * Main.rand.NextFloat(0.8f, 2.2f) +
+                    ownerVelocityInfluence();
 
                 Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, dustVel, 100, new Color(80, 165, 255), Main.rand.NextFloat(0.95f, 1.2f));
                 water.noGravity = true;
+                water.fadeIn = 1.08f;
+
+                Dust frost = Dust.NewDustPerfect(spawnPos - toBlade * 4f, DustID.Frost, dustVel * 0.65f, 100, new Color(185, 240, 255), Main.rand.NextFloat(0.85f, 1.05f));
+                frost.noGravity = true;
 
                 if (Main.rand.NextBool(2))
                 {
-                    Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, dustVel * 0.65f, 100, new Color(185, 240, 255), Main.rand.NextFloat(0.85f, 1.05f));
-                    frost.noGravity = true;
+                    Dust gem = Dust.NewDustPerfect(spawnPos + curl * 4f, DustID.GemSapphire, dustVel * 0.42f, 100, new Color(120, 220, 255), Main.rand.NextFloat(0.85f, 1.1f));
+                    gem.noGravity = true;
                 }
+            }
+
+            Vector2 ownerVelocityInfluence()
+            {
+                return Main.player[Projectile.owner].velocity * 0.08f;
             }
         }
 
@@ -318,8 +484,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             {
                 float backDistance = 18f + i * 14f;
                 float waveWidth = 10f + i * 3f;
-                float waveA = (float)System.Math.Sin(oceanPhase + i * 0.8f) * waveWidth;
-                float waveB = (float)System.Math.Sin(oceanPhase + MathHelper.Pi + i * 0.8f) * waveWidth;
+                float waveA = (float)Math.Sin(oceanPhase + i * 0.8f) * waveWidth;
+                float waveB = (float)Math.Sin(oceanPhase + MathHelper.Pi + i * 0.8f) * waveWidth;
 
                 Vector2 posA = Projectile.Center - forward * backDistance + right * waveA;
                 Vector2 posB = Projectile.Center - forward * backDistance + right * waveB;
@@ -357,15 +523,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             Vector2 forward = lockedDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            float leadDistance = 54f + 12f * (float)System.Math.Sin(oceanPhase * 0.9f);
+            float leadDistance = 54f + 12f * (float)Math.Sin(oceanPhase * 0.9f);
             Vector2 leadPoint = Projectile.Center + forward * leadDistance;
 
             for (int i = 0; i < 2; i++)
             {
                 float side = i == 0 ? -1f : 1f;
                 float phase = oceanPhase * 1.35f + i * MathHelper.Pi;
-                float sideOffset = side * (16f + 7f * (float)System.Math.Sin(phase));
-                float forwardOffset = 10f + 6f * (float)System.Math.Cos(phase * 0.85f);
+                float sideOffset = side * (16f + 7f * (float)Math.Sin(phase));
+                float forwardOffset = 10f + 6f * (float)Math.Cos(phase * 0.85f);
 
                 Vector2 spawnPos = leadPoint + right * sideOffset + forward * forwardOffset;
                 Vector2 sprayDirection = (right * side * 0.88f + forward * 0.36f).SafeNormalize(right * side);
@@ -396,7 +562,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             for (int i = 0; i < 3; i++)
             {
                 float backDistance = 10f + i * 10f;
-                float sideOffset = Main.rand.NextFloat(-12f, 12f) + (float)System.Math.Sin(oceanPhase + i) * 6f;
+                float sideOffset = Main.rand.NextFloat(-12f, 12f) + (float)Math.Sin(oceanPhase + i) * 6f;
 
                 Vector2 spawnPos = Projectile.Center - forward * backDistance + right * sideOffset;
                 Vector2 dustVel = -forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.8f, 4.5f);
@@ -433,15 +599,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }
         }
 
-        private void SpawnBounceBurst(Vector2 center, Vector2 awayDirection)
+        private void SpawnBounceBurst(Vector2 center, Vector2 dashDirection)
         {
-            Vector2 right = awayDirection.RotatedBy(MathHelper.PiOver2);
+            Vector2 reboundDirection = (-dashDirection).SafeNormalize(-lockedDirection);
+            Vector2 right = reboundDirection.RotatedBy(MathHelper.PiOver2);
 
             for (int i = 0; i < 20; i++)
             {
                 float factor = i / 19f;
                 float angle = MathHelper.Lerp(-MathHelper.ToRadians(55f), MathHelper.ToRadians(55f), factor);
-                Vector2 dir = awayDirection.RotatedBy(angle);
+                Vector2 dir = reboundDirection.RotatedBy(angle);
                 Vector2 burstVel = dir * MathHelper.Lerp(4.5f, 10f, factor);
 
                 Dust water = Dust.NewDustPerfect(center, DustID.Water, burstVel, 100, new Color(70, 170, 255), Main.rand.NextFloat(1.15f, 1.45f));
@@ -457,7 +624,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             for (int i = 0; i < 16; i++)
             {
                 float side = MathHelper.Lerp(-1f, 1f, i / 15f);
-                Vector2 burstVel = right * side * Main.rand.NextFloat(2f, 7f) + awayDirection * Main.rand.NextFloat(1.5f, 4.2f);
+                Vector2 burstVel = right * side * Main.rand.NextFloat(2f, 7f) + reboundDirection * Main.rand.NextFloat(1.5f, 4.2f);
 
                 Dust water = Dust.NewDustPerfect(center + right * side * 10f, DustID.Water, burstVel, 100, new Color(90, 185, 255), Main.rand.NextFloat(1f, 1.3f));
                 water.noGravity = true;
@@ -483,8 +650,89 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }
         }
 
+        private void ApplyScreenShake(float power)
+        {
+            float distanceFactor = Utils.GetLerpValue(1200f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower,
+                power * distanceFactor);
+        }
+
+        private float HelixWidthFunction(float completionRatio, Vector2 vertexPos)
+        {
+            return MathHelper.Lerp(16f, 0f, completionRatio) * Projectile.scale;
+        }
+
+        private Color LeftHelixColorFunction(float completionRatio, Vector2 vertexPos)
+        {
+            float alpha = -4f * completionRatio * (completionRatio - 1f);
+            return new Color(40, 180, 255, 0) * alpha * 0.85f;
+        }
+
+        private Color RightHelixColorFunction(float completionRatio, Vector2 vertexPos)
+        {
+            float alpha = -4f * completionRatio * (completionRatio - 1f);
+            return new Color(190, 250, 255, 0) * alpha * 0.85f;
+        }
+
+        private bool IsRenderableTrailPoint(Vector2 point)
+        {
+            return !float.IsNaN(point.X) &&
+                   !float.IsNaN(point.Y) &&
+                   !float.IsInfinity(point.X) &&
+                   !float.IsInfinity(point.Y) &&
+                   point != Vector2.Zero;
+        }
+
+        private List<Vector2> BuildRenderableTrail(List<Vector2> sourceTrail)
+        {
+            List<Vector2> renderTrail = new(sourceTrail.Count);
+            Vector2 previousPoint = Vector2.Zero;
+            bool hasPreviousPoint = false;
+
+            foreach (Vector2 point in sourceTrail)
+            {
+                if (!IsRenderableTrailPoint(point))
+                    continue;
+
+                if (hasPreviousPoint && Vector2.DistanceSquared(previousPoint, point) <= 0.25f)
+                    continue;
+
+                renderTrail.Add(point);
+                previousPoint = point;
+                hasPreviousPoint = true;
+            }
+
+            return renderTrail;
+        }
+
+        private void DrawHelixTrails()
+        {
+            if (dashState == 0)
+                return;
+
+            List<Vector2> leftTrail = BuildRenderableTrail(helixTrailLeft);
+            List<Vector2> rightTrail = BuildRenderableTrail(helixTrailRight);
+
+            if (leftTrail.Count < 8 || rightTrail.Count < 8)
+                return;
+
+            MiscShaderData trailShader = GameShaders.Misc["CalamityMod:TrailStreak"];
+            trailShader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+
+            PrimitiveRenderer.RenderTrail(
+                leftTrail,
+                new PrimitiveSettings(HelixWidthFunction, LeftHelixColorFunction, (_, _) => Projectile.Size * 0.5f, pixelate: false, shader: trailShader));
+
+            PrimitiveRenderer.RenderTrail(
+                rightTrail,
+                new PrimitiveSettings(HelixWidthFunction, RightHelixColorFunction, (_, _) => Projectile.Size * 0.5f, pixelate: false, shader: trailShader));
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
+            DrawHelixTrails();
+
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 origin = new(texture.Width * 0.5f, texture.Height * 0.5f);
 

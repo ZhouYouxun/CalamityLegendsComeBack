@@ -14,8 +14,8 @@ Items: {
 			SHPC_RightIntro:
 				'''
 				[c/66CCFF:右键：短暂蓄力后进行激光扫射。]
-				[c/FFB347:持续射击会累积热值，并阶段性提升等级。]
-				[c/99CCFF:停止攻击后热值逐渐下降。]
+				[c/FFB347:持续射击会累积热值，视游戏阶段性提升最高可达等级。]
+				[c/99CCFF:停止攻击后热值逐渐下降,不手持该武器可清空热值。]
 				[c/DDA0FF:扫射期间点击左键可强制降温，释放5枚能量光球并短暂中断射击。]
 				[c/FF7043:热值越高，副作用越强，但激光性能也随之提升。]
 				'''
@@ -27,65 +27,24 @@ Items: {
 			SHPCRight5: "[c/8FA2FF:当前解锁至Ⅶ级热值：无限穿透并附带目标最大生命值伤害，但过热将迅速燃尽自身。]"
 			Tooltip: "[GFB]"
 			TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。
-			LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
+			LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
 			LegendaryText:
 				'''
-				[c/99B3FF:最初的方案过于依赖单一能源，但结果证明，这种设计注定无法稳定运行。]
-				[c/66CCFF:新的结构不再局限于灵魂，任何具备能量密度的材料都被纳入测试范围。]
-				[c/7F8FA6:不同输入带来的响应差异极大，部分组合甚至呈现出异常的放大效应。]
-				[c/DDA0FF:控制系统因此被重新设计，能量在完全约束前即被强制释放。]
-				[c/FFB347:理论上，这种装置不再受弹药类型限制，但它真正的极限仍无人知晓。]
+				[c/66E6FF:最初的方案过于依赖单一能源，但结果证明，这种设计注定无法稳定运行。]
+				[c/66E6FF:新的结构不再局限于灵魂，任何具备能量密度的材料都被纳入测试范围。]
+				[c/66E6FF:不同输入带来的响应差异极大，部分组合甚至呈现出异常的放大效应。]
+				[c/66E6FF:控制系统因此被重新设计，能量在完全约束前即被强制释放。]
+				[c/66E6FF:理论上，这种装置不再受弹药类型限制，但它真正的极限仍无人知晓。]
+				[c/66E6FF:扫射模式下，原有的灵魂依赖被彻底剔除，结构被迫重构为更原始的热能驱动形式。]
+				[c/66E6FF:为维持输出稳定，散热系统被重新定义，出现了新的热失控效应。]
+				[c/66E6FF:随着持续运作，系统将不可避免地进入过热区间，并以此换取更高的释放效率。]
+				[c/66E6FF:若操作者无法及时干预，这种“优化”将反过来燃尽自身。]
 				'''
 		}
 
 		NewLegendBrinyBaron: {
-			DisplayName: 海爵剑·传奇归来
-
-			BB_Left:
-			'''
-			[c/66CCFF:左键：展开连续斩击，节奏逐步加速。]
-			[c/7F8FA6:前三段为稳定挥砍，用以压制与试探敌人。]
-			[c/99CCFF:第四段释放水能飞刃，延伸攻击范围。]
-			[c/DDA0FF:终段引发巨刃显现，对前方区域进行强力回斩。]
-			[c/FFB347:每一次重斩，都会引导潮汐之力汇聚于剑刃。]
-			'''
-			BB_Tide: 当前潮汐值：
-			BB_Right:
-			'''
-			[c/66CCFF:右键：以高速突进撕裂战场。]
-			[c/7F8FA6:未充盈时，进行直线突刺，用于切入或脱离。]
-			[c/DDA0FF:潮汐充盈时，转化为回旋冲刺，持续撕裂路径上的一切。]
-			[c/FFB347:冲刺即是进攻，也是唯一的生存手段。]
-			'''
-			Dash1_Unlock: [c/66FFAA:已解锁：基础突进]
-			Dash1_Lock: [c/7F8FA6:短距离高速突刺，命中目标后迅速反弹。]
-			Dash2_Unlock: [c/66FFAA:已解锁：回旋切割]
-			Dash2_Lock: [c/DDA0FF:中距离回旋冲刺，对路径敌人持续切割。]
-			Dash3_Unlock: [c/66FFAA:已解锁：连续斩返]
-			Dash3_Lock: [c/99CCFF:快速折返斩击，可在战场中多次位移。]
-			Dash4_Unlock: [c/66FFAA:已解锁：潮汐爆发]
-			Dash4_Lock: [c/FFB347:释放全部潮汐之力，发动毁灭性突袭。]
-			BB_Final:
-			'''
-			[c/DDA0FF:在背包中右键点击武器]
-			[c/FFB347:可切换快刀斩模式，改变作战节奏]
-			'''
-			Tooltip: "[GFB]"
-			TooltipGFB: [c/6C8EFF:你已踏入浪潮深处。]
-			LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
-			LegendaryText:
-			'''
-			[c/66CCFF:他曾立于浪潮之巅，以速度撕裂整片海域。]
-			[c/7F8FA6:没有防御，没有迟疑，只有不断向前的斩击。]
-			[c/99CCFF:海水在他脚下翻涌，如同回应他的意志。]
-			[c/DDA0FF:每一次冲刺，都是对极限的再一次突破。]
-			[c/FFB347:敌人无法预判他的轨迹，也无法承受他的锋芒。]
-			[c/66CCFF:当你看见他时，战斗早已结束。]
-			[c/7F8FA6:他们称那不是战斗，而是一场席卷一切的潮汐。]
-			[c/DDA0FF:来去之间，只留下被切割的空间与沉寂的海面。]
-			[c/FFB347:这把剑记录的不只是力量，而是一种信念。]
-			[c/99CCFF:向前，直到世界无法承受你的速度。]
-			'''
+			// DisplayName: New Legend Briny Baron
+			// Tooltip: ""
 		}
 	}
 }
@@ -122,7 +81,7 @@ AMMO: {
 	SHPCAmmo28: 爆炸时释放神圣几何弹跳射线
 	SHPCAmmo29: 献祭玩家的血量强化自身，爆炸治疗回血
 	SHPCAmmo30: 唤醒深处的灵魂
-	SHPCAmmo31: "[灵质 未实现]"
+	SHPCAmmo31: 痛苦的赤色灵魂喷涌而出
 	SHPCAmmo32: 制造小型黑洞将敌人吸入
 	SHPCAmmo33: 进行多次双纽线追踪并抹除敌人
 	SHPCAmmo34: 反弹并释放冰刺攻击
@@ -131,6 +90,7 @@ AMMO: {
 	SHPCAmmo37: 感受巨龙的怒吼
 	SHPCAmmo38: 喷射激光惩戒敌人，释放分形几何
 	SHPCAmmo39: 湮灭目力所及的所有敌人
+	SHPCAmmo40: 喷射出大量的电磁光球
 }
 
 Buffs: {
@@ -175,16 +135,6 @@ Projectiles: {
 	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	// NewSHPS.DisplayName: New S H P S
 	// BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
-
-	NewWeapons: {
-		// BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
-
-		EAfterDog: {
-			// TEM00LeftSuperLazer.DisplayName: T E M00 Left Super Lazer
-			// SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
-		}
-	}
-
 	// TeachingProjectile.DisplayName: Teaching Projectile
 	// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
 	// AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
@@ -206,6 +156,16 @@ Projectiles: {
 	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 	// Necroplasm_Damage.DisplayName: Necroplasm_ Damage
+	// BBSD_Star.DisplayName: B B S D_ Star
+	// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+
+	NewWeapons: {
+		// DPreDog.BBSwing_Slash.DisplayName: B B Swing_ Slash
+		// BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+		// EAfterDog.SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+	}
+
+	// BBSwing_Wave.DisplayName: B B Swing_ Wave
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
