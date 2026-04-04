@@ -15,17 +15,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
 {
     public class BrinyBaron_SkillSpinRush_SpinBlade : BaseCustomUseStyleProjectile
     {
+        private const int BaseSquareSize = 23 * 16 * 2;
+
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
         public override int AssignedItemID => ModContent.ItemType<NewLegendBrinyBaron>();
-        public override float HitboxOutset => 110f * Projectile.scale;
-        public override Vector2 HitboxSize => new Vector2(190f, 190f) * Projectile.scale;
+        public override float HitboxOutset => 110f * VisualScale;
+        public override Vector2 HitboxSize => new Vector2(190f, 190f) * VisualScale;
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
         public override Vector2 SpriteOrigin => new(0f, 102f);
 
         private const int ChargeFrames = 32;
         private const int DashFrames = 32;
-        private const float DashStartSpeed = 18f;
-        private const float DashTopSpeed = 36f;
+        private const float DashStartSpeed = 8f;
+        private const float DashTopSpeed = 23f;
         private const float ChargeDistance = 18f;
         private const float ChargeDistanceMax = 28f;
         private const float DashHoldDistance = 14f;
@@ -43,6 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         private bool dashStarted;
         private bool dashImpactPlayed;
         private Vector2 dashVelocity;
+        private float VisualScale => Projectile.width / (float)BaseSquareSize;
 
         public override void SetStaticDefaults()
         {
@@ -53,6 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         public override void SetDefaults()
         {
             base.SetDefaults();
+            Projectile.width = BaseSquareSize;
+            Projectile.height = BaseSquareSize;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
             Projectile.DamageType = DamageClass.Melee;
@@ -66,7 +71,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             DrawUnconditionally = true;
             Projectile.knockBack = 0f;
             Projectile.ai[1] = -1f;
-            Projectile.scale = 1f;
+            Projectile.height = Projectile.width = Math.Max(1, Math.Max(Projectile.width, Projectile.height));
+            Projectile.scale = VisualScale;
 
             lockedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             if (lockedDirection == Vector2.Zero)
@@ -85,7 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             FlipAsSword = Owner.direction == -1;
             Projectile.rotation = lockedDirection.ToRotation() + MathHelper.ToRadians(45f);
             RotationOffset = MathHelper.ToRadians(110f * Owner.direction);
-            Offset = lockedDirection * ChargeDistance;
+            Offset = Vector2.Zero; 
         }
 
         public override void UseStyle()
@@ -101,6 +107,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
 
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
             oceanPhase += 0.22f;
+            Projectile.height = Projectile.width = Math.Max(1, Math.Max(Projectile.width, Projectile.height));
+            Projectile.scale = VisualScale;
 
             switch (currentState)
             {
@@ -140,7 +148,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             float chargeDistance = MathHelper.Lerp(ChargeDistance, ChargeDistanceMax, easedCharge);
             float swayAngle = MathHelper.ToRadians(14f * (float)Math.Sin(oceanPhase * 1.25f));
 
-            Offset = lockedDirection * chargeDistance;
+            
+            Offset = Vector2.Zero; // 改后（锁死贴手）
             Projectile.rotation = Projectile.rotation.AngleLerp(lockedDirection.ToRotation() + MathHelper.ToRadians(45f), 0.22f);
             RotationOffset = MathHelper.Lerp(
                 RotationOffset,
@@ -166,7 +175,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             stateTimer = 0;
             CanHit = false;
             dashStarted = true;
-            Offset = lockedDirection * DashHoldDistance;
+            Offset = Vector2.Zero;
             AbsolutePosition = Vector2.Zero;
             dashVelocity = lockedDirection * DashStartSpeed;
             Projectile.velocity = Vector2.Zero;
@@ -197,7 +206,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             dashVelocity = lockedDirection * dashSpeed;
             Projectile.velocity = Vector2.Zero;
             AbsolutePosition = Vector2.Zero;
-            Offset = lockedDirection * DashHoldDistance;
+            Offset = Vector2.Zero;
             Owner.Center += dashVelocity;
             Owner.velocity = dashVelocity;
 
@@ -238,7 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         {
             Vector2 forward = lockedDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 bladeTip = Projectile.Center + forward * 74f * Projectile.scale;
+            Vector2 bladeTip = Projectile.Center + forward * 74f * VisualScale;
 
             if (stateTimer % 2 == 0)
             {
@@ -249,12 +258,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                     Vector2 spawnPos = bladeTip - forward * MathHelper.Lerp(22f, 68f, chargeProgress) + right * (float)Math.Sin(spiral) * MathHelper.Lerp(6f, 18f, chargeProgress) * side;
                     Vector2 travelVelocity = (bladeTip - spawnPos).SafeNormalize(forward) * Main.rand.NextFloat(1.8f, 4.4f);
 
-                    Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, travelVelocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(0.95f, 1.25f));
+                    Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, travelVelocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(0.95f, 1.25f) * VisualScale);
                     water.noGravity = true;
 
                     if (Main.rand.NextBool(2))
                     {
-                        Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, travelVelocity * 0.68f, 100, new Color(220, 250, 255), Main.rand.NextFloat(0.8f, 1.05f));
+                        Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, travelVelocity * 0.68f, 100, new Color(220, 250, 255), Main.rand.NextFloat(0.8f, 1.05f) * VisualScale);
                         frost.noGravity = true;
                     }
                 }
@@ -268,7 +277,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                         Main.rand.NextVector2Circular(0.4f, 0.4f),
                         false,
                         7,
-                        MathHelper.Lerp(0.45f, 0.85f, chargeProgress),
+                        MathHelper.Lerp(0.45f, 0.85f, chargeProgress) * VisualScale,
                         Main.rand.NextBool() ? Color.Cyan : Color.DeepSkyBlue,
                         true,
                         false,
@@ -280,7 +289,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         {
             Vector2 forward = lockedDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 burstCenter = Owner.Center + forward * 70f;
+            Vector2 burstCenter = Owner.Center + forward * 70f * VisualScale;
 
             for (int i = 0; i < 20; i++)
             {
@@ -288,12 +297,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                 float angle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, ratio);
                 Vector2 velocity = forward.RotatedBy(angle * 0.35f) * Main.rand.NextFloat(4f, 10f) + right * (float)Math.Sin(angle * 2f) * Main.rand.NextFloat(0.5f, 2.8f);
 
-                Dust water = Dust.NewDustPerfect(burstCenter, DustID.Water, velocity, 100, new Color(65, 170, 255), Main.rand.NextFloat(1.1f, 1.45f));
+                Dust water = Dust.NewDustPerfect(burstCenter, DustID.Water, velocity, 100, new Color(65, 170, 255), Main.rand.NextFloat(1.1f, 1.45f) * VisualScale);
                 water.noGravity = true;
 
                 if (i % 2 == 0)
                 {
-                    Dust frost = Dust.NewDustPerfect(burstCenter, DustID.Frost, velocity * 0.65f, 100, new Color(210, 250, 255), Main.rand.NextFloat(0.95f, 1.2f));
+                    Dust frost = Dust.NewDustPerfect(burstCenter, DustID.Frost, velocity * 0.65f, 100, new Color(210, 250, 255), Main.rand.NextFloat(0.95f, 1.2f) * VisualScale);
                     frost.noGravity = true;
                 }
             }
@@ -307,7 +316,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                         crossVelocity,
                         false,
                         6,
-                        1.5f,
+                        1.5f * VisualScale,
                         i % 2 == 0 ? Color.DeepSkyBlue : Color.Cyan,
                         true));
             }
@@ -318,7 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                     -forward * 1.8f,
                     Color.WhiteSmoke,
                     22,
-                    1.1f,
+                    1.1f * VisualScale,
                     0.35f,
                     Main.rand.NextFloat(-0.04f, 0.04f),
                     false));
@@ -331,7 +340,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             for (int i = 0; i < 6; i++)
             {
                 Vector2 dustVelocity = Main.rand.NextVector2Circular(1.6f, 1.6f);
-                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, dustVelocity, 100, new Color(90, 175, 255), Main.rand.NextFloat(0.8f, 1.05f));
+                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, dustVelocity, 100, new Color(90, 175, 255), Main.rand.NextFloat(0.8f, 1.05f) * VisualScale);
                 water.noGravity = true;
             }
         }
@@ -340,21 +349,21 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         {
             Vector2 forward = dashVelocity.SafeNormalize(lockedDirection);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 lead = Projectile.Center + forward * 54f;
+            Vector2 lead = Projectile.Center + forward * 54f * VisualScale;
 
             for (int i = 0; i < 3; i++)
             {
                 float side = i - 1f;
                 float helix = oceanPhase * 2.3f + i * 0.85f;
-                Vector2 spawnPos = Projectile.Center - forward * (18f + i * 10f) + right * side * (12f + 6f * (float)Math.Sin(helix));
+                Vector2 spawnPos = Projectile.Center - forward * (18f + i * 10f) * VisualScale + right * side * (12f + 6f * (float)Math.Sin(helix)) * VisualScale;
                 Vector2 velocity = -forward * Main.rand.NextFloat(2.4f, 5.8f) + right * side * Main.rand.NextFloat(0.4f, 2f);
 
-                Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, velocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(0.95f, 1.3f));
+                Dust water = Dust.NewDustPerfect(spawnPos, DustID.Water, velocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(0.95f, 1.3f) * VisualScale);
                 water.noGravity = true;
 
                 if (i != 1)
                 {
-                    Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, velocity * 0.62f, 100, new Color(210, 250, 255), Main.rand.NextFloat(0.82f, 1.08f));
+                    Dust frost = Dust.NewDustPerfect(spawnPos, DustID.Frost, velocity * 0.62f, 100, new Color(210, 250, 255), Main.rand.NextFloat(0.82f, 1.08f) * VisualScale);
                     frost.noGravity = true;
                 }
             }
@@ -368,7 +377,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                         "CalamityMod/Particles/BloomCircle",
                         false,
                         14,
-                        MathHelper.Lerp(0.35f, 0.58f, dashProgress),
+                        MathHelper.Lerp(0.35f, 0.58f, dashProgress) * VisualScale,
                         Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
                         new Vector2(1.4f, 0.6f),
                         true,
@@ -390,12 +399,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                 float angle = MathHelper.Lerp(-MathHelper.ToRadians(70f), MathHelper.ToRadians(70f), i / 17f);
                 Vector2 sprayVelocity = forward.RotatedBy(angle) * Main.rand.NextFloat(5f, 12f) + right * (float)Math.Sin(i * 0.7f) * Main.rand.NextFloat(0.5f, 3f);
 
-                Dust water = Dust.NewDustPerfect(target.Center, DustID.Water, sprayVelocity, 100, new Color(75, 175, 255), Main.rand.NextFloat(1.1f, 1.5f));
+                Dust water = Dust.NewDustPerfect(target.Center, DustID.Water, sprayVelocity, 100, new Color(75, 175, 255), Main.rand.NextFloat(1.1f, 1.5f) * VisualScale);
                 water.noGravity = true;
 
                 if (i % 2 == 0)
                 {
-                    Dust frost = Dust.NewDustPerfect(target.Center, DustID.Frost, sprayVelocity * 0.7f, 100, new Color(220, 250, 255), Main.rand.NextFloat(0.95f, 1.25f));
+                    Dust frost = Dust.NewDustPerfect(target.Center, DustID.Frost, sprayVelocity * 0.7f, 100, new Color(220, 250, 255), Main.rand.NextFloat(0.95f, 1.25f) * VisualScale);
                     frost.noGravity = true;
                 }
             }
@@ -406,7 +415,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                     -forward * 1.4f,
                     Color.WhiteSmoke,
                     24,
-                    1.2f,
+                    1.2f * VisualScale,
                     0.4f,
                     Main.rand.NextFloat(-0.06f, 0.06f),
                     false));
@@ -480,7 +489,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                         trailColor,
                         Projectile.rotation + RotationOffset + r,
                         FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
-                        Projectile.scale,
+                        VisualScale,
                         effects,
                         0);
                 }
@@ -492,14 +501,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                     Color.DeepSkyBlue with { A = 0 } * fadeIn * 0.68f,
                     FinalRotation + MathHelper.ToRadians(135f),
                     swoosh.Size() * 0.5f,
-                    Projectile.scale * DashSwooshScale,
+                    VisualScale * DashSwooshScale,
                     SpriteEffects.None,
                     0);
             }
 
             for (int i = 0; i < 18; i++)
             {
-                Vector2 drawOffset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * 4f * fadeIn;
+                Vector2 drawOffset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * 4f * fadeIn * VisualScale;
                 Main.EntitySpriteDraw(
                     tex.Value,
                     drawPos + drawOffset,
@@ -507,7 +516,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                     Color.Aqua with { A = 0 } * 0.11f * fadeIn,
                     Projectile.rotation + RotationOffset + r,
                     FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
-                    Projectile.scale,
+                    VisualScale,
                     effects,
                     0);
             }
@@ -519,7 +528,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
                 lightColor,
                 Projectile.rotation + RotationOffset + r,
                 FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
-                Projectile.scale,
+                VisualScale,
                 effects,
                 0);
 

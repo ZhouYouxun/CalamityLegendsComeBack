@@ -1,12 +1,13 @@
 ﻿using CalamityMod.Items.Materials;
+using CalamityMod.Items.Placeables.FurnitureMonolith;
 using CalamityMod.Items.Weapons;
 using CalamityMod.Items.Weapons.Summon;
+using CalamityMod.NPCs.PlagueEnemies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CalamityMod.Items.Placeables.FurnitureMonolith;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -46,12 +47,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
 
 
+
+
             // 泰坦之心
             Recipe recipe5 = Recipe.Create(ModContent.ItemType<TitanHeart> (), 2);
             recipe5.AddIngredient(ModContent.ItemType<SulphuricScale>(), 1);
             recipe5.AddIngredient(ModContent.ItemType<AstralMonolith>(), 5);
             recipe5.AddTile(TileID.WorkBenches);
             recipe5.Register();
+
 
 
 
@@ -70,33 +74,90 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 冰精华 EssenceofEleum + 冰块 → 2个精华
             Recipe recipeEE = Recipe.Create(ModContent.ItemType<EssenceofEleum>(), 2);
             recipeEE.AddIngredient(ModContent.ItemType<EssenceofEleum>(), 1);
-            recipeEE.AddIngredient(ItemID.IceBlock, 100);
+            recipeEE.AddIngredient(ItemID.IceBlock, 50);
             recipeEE.AddTile(TileID.WorkBenches);
             recipeEE.Register();
 
             // 日光精华 EssenceofSunlight + 日盘砖 → 2个精华
             Recipe recipeES = Recipe.Create(ModContent.ItemType<EssenceofSunlight>(), 2);
             recipeES.AddIngredient(ModContent.ItemType<EssenceofSunlight>(), 1);
-            recipeES.AddIngredient(ItemID.SunplateBlock, 100);
+            recipeES.AddIngredient(ItemID.SunplateBlock, 50);
             recipeES.AddTile(TileID.WorkBenches);
             recipeES.Register();
 
             // 混乱精华 EssenceofHavoc + 灰烬块 → 2个精华
             Recipe recipeEH = Recipe.Create(ModContent.ItemType<EssenceofHavoc>(), 2);
             recipeEH.AddIngredient(ModContent.ItemType<EssenceofHavoc>(), 1);
-            recipeEH.AddIngredient(ItemID.AshBlock, 100);
+            recipeEH.AddIngredient(ItemID.AshBlock, 50);
             recipeEH.AddTile(TileID.WorkBenches);
             recipeEH.Register();
 
 
-            // ================= 生命碎片 =================
+
+
+
+            // ================= 花后 =================
 
             // 生命碎片 LivingShard + 生命水晶 → 2个
             Recipe recipeLS = Recipe.Create(ModContent.ItemType<LivingShard>(), 2);
             recipeLS.AddIngredient(ModContent.ItemType<LivingShard>(), 1);
             recipeLS.AddIngredient(ItemID.LifeCrystal, 1);
-            recipeLS.AddTile(TileID.WorkBenches);
+            recipeLS.AddTile(TileID.MythrilAnvil);
             recipeLS.Register();
+
+            // 瘟疫细胞罐
+            Recipe recipePC = Recipe.Create(ModContent.ItemType<PlagueCellCanister>(), 2);
+            recipePC.AddIngredient(ModContent.ItemType<PlagueCellCanister>(), 1);
+            recipePC.AddIngredient(ItemID.Nanites, 50);
+            recipePC.AddTile(TileID.MythrilAnvil);
+            recipePC.Register();
+
+            // 灾厄尘
+            Recipe recipeZC = Recipe.Create(ModContent.ItemType<AshesofCalamity>(), 2);
+            recipeZC.AddIngredient(ModContent.ItemType<AshesofCalamity>(), 1);
+            recipeZC.AddIngredient(ItemID.AshBlock, 50);
+            recipeZC.AddIngredient(ItemID.LavaBucket, 1);
+            recipeZC.AddTile(TileID.MythrilAnvil);
+            recipeZC.Register();
+
+
+
+
+            // ================= 天界碎片互转 =================
+
+            // 星云碎片（Nebula）
+            Recipe nebula = Recipe.Create(ItemID.FragmentNebula, 4);
+            nebula.AddIngredient(ItemID.FragmentSolar, 1);
+            nebula.AddIngredient(ItemID.FragmentVortex, 1);
+            nebula.AddIngredient(ItemID.FragmentStardust, 1);
+            nebula.AddTile(TileID.LunarCraftingStation);
+            nebula.Register();
+
+            // 日耀碎片（Solar）
+            Recipe solar = Recipe.Create(ItemID.FragmentSolar, 4);
+            solar.AddIngredient(ItemID.FragmentNebula, 1);
+            solar.AddIngredient(ItemID.FragmentVortex, 1);
+            solar.AddIngredient(ItemID.FragmentStardust, 1);
+            solar.AddTile(TileID.LunarCraftingStation);
+            solar.Register();
+
+            // 星旋碎片（Vortex）
+            Recipe vortex = Recipe.Create(ItemID.FragmentVortex, 4);
+            vortex.AddIngredient(ItemID.FragmentNebula, 1);
+            vortex.AddIngredient(ItemID.FragmentSolar, 1);
+            vortex.AddIngredient(ItemID.FragmentStardust, 1);
+            vortex.AddTile(TileID.LunarCraftingStation);
+            vortex.Register();
+
+            // 星尘碎片（Stardust）
+            Recipe stardust = Recipe.Create(ItemID.FragmentStardust, 4);
+            stardust.AddIngredient(ItemID.FragmentNebula, 1);
+            stardust.AddIngredient(ItemID.FragmentSolar, 1);
+            stardust.AddIngredient(ItemID.FragmentVortex, 1);
+            stardust.AddTile(TileID.LunarCraftingStation);
+            stardust.Register();
+
+
 
 
             // ================= 神圣晶石 =================
@@ -105,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Recipe recipeDG = Recipe.Create(ModContent.ItemType<DivineGeode>(), 2);
             recipeDG.AddIngredient(ModContent.ItemType<DivineGeode>(), 1);
             recipeDG.AddIngredient(ModContent.ItemType<UnholyEssence>(), 2);
-            recipeDG.AddTile(TileID.WorkBenches);
+            recipeDG.AddTile(TileID.LunarCraftingStation);
             recipeDG.Register();
 
 
@@ -117,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             recipeTN.AddIngredient(ItemID.Paintbrush, 1);
             recipeTN.AddIngredient(ItemID.BlackPaint, 150);
             recipeTN.AddIngredient(ItemID.ShadowPaint, 150);
-            recipeTN.AddTile(TileID.WorkBenches);
+            recipeTN.AddTile(TileID.LunarCraftingStation);
             recipeTN.Register();
 
             // 暗离子体 DarkPlasma + 画笔 + 黑漆 + 负色漆 → 2个
@@ -126,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             recipeDP.AddIngredient(ItemID.Paintbrush, 1);
             recipeDP.AddIngredient(ItemID.BlackPaint, 150);
             recipeDP.AddIngredient(ItemID.NegativePaint, 150);
-            recipeDP.AddTile(TileID.WorkBenches);
+            recipeDP.AddTile(TileID.LunarCraftingStation);
             recipeDP.Register();
 
 

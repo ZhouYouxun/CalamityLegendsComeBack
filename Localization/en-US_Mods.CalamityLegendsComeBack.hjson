@@ -44,6 +44,11 @@ Items: {
 			Tooltip: ""
 		}
 	}
+
+	BBTest: {
+		DisplayName: B B Test
+		Tooltip: ""
+	}
 }
 
 AMMO: {
@@ -163,6 +168,9 @@ Projectiles: {
 	}
 
 	BBSwing_Wave.DisplayName: B B Swing_ Wave
+	BBShuriken_Light.DisplayName: B B Shuriken_ Light
+	BBSwing_INV.DisplayName: B B Swing_ I N V
+	BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

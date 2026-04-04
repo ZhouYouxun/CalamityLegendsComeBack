@@ -1,15 +1,12 @@
 using System;
-using System.Collections.Generic;
 using CalamityMod;
 using CalamityMod.Enums;
-using CalamityMod.Graphics.Primitives;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -23,8 +20,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private const int DashTimeMax = 26;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
-        private const int HelixTrailLength = 42;
-
         private const float DashSpeed = 28f;
         private const float ReboundSpeed = 18f;
         private const float ReadyBladeDistance = 28f;
@@ -39,10 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool hasBounced;
         private bool canceledCharge;
         private float oceanPhase;
-        private readonly List<Vector2> dashDirectionHistory = new();
-        private readonly List<Vector2> helixTrailLeft = new();
-        private readonly List<Vector2> helixTrailRight = new();
-        private int helixTrailTimer;
+        private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
 
         public override void SetStaticDefaults()
         {
@@ -107,8 +99,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private void InitializeDash(Player owner)
         {
             lockedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
-            if (lockedDirection == Vector2.Zero)
-                lockedDirection = (owner.Calamity().mouseWorld - owner.Center).SafeNormalize(Vector2.UnitX * owner.direction);
 
             Projectile.velocity = Vector2.Zero;
             Projectile.Center = owner.MountedCenter + lockedDirection * 18f;
@@ -119,10 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = false;
             canceledCharge = false;
             oceanPhase = 0f;
-            helixTrailTimer = 0;
             dashDirectionHistory.Clear();
-            helixTrailLeft.Clear();
-            helixTrailRight.Clear();
             initialized = true;
 
             SoundEngine.PlaySound(SoundID.Item73 with
@@ -171,9 +158,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = false;
 
             Projectile.friendly = true;
+            Projectile.Center = owner.MountedCenter + lockedDirection * DashBladeDistance;
             Projectile.velocity = lockedDirection * DashSpeed;
-            owner.velocity = Projectile.velocity;
-            RecordDashDirection(lockedDirection);
+            SyncOwnerToProjectile(owner, DashBladeDistance);
+            RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
             Projectile.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Item39 with
@@ -189,13 +177,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             stateTimer++;
             Projectile.velocity = lockedDirection * DashSpeed;
-            owner.velocity = Projectile.velocity;
-            Projectile.Center = owner.MountedCenter + lockedDirection * DashBladeDistance;
+            Projectile.Center += Projectile.velocity;
+            SyncOwnerToProjectile(owner, DashBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
-            UpdateHelixTrail(16f);
-
             SpawnOceanTrail();
             SpawnForwardWakeJets();
 
@@ -212,11 +198,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             float speedFactor = MathHelper.Lerp(1f, 0.55f, stateTimer / (float)ReboundTimeMax);
             Projectile.velocity = lockedDirection * ReboundSpeed * speedFactor;
-            owner.velocity = Projectile.velocity;
-            Projectile.Center = owner.MountedCenter + lockedDirection * ReboundBladeDistance;
+            Projectile.Center += Projectile.velocity;
+            SyncOwnerToProjectile(owner, ReboundBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
-            UpdateHelixTrail(11f * speedFactor);
             SpawnReboundTrail();
 
             if (stateTimer % 3 == 0)
@@ -235,6 +220,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             float armRotation = lockedDirection.ToRotation() - MathHelper.PiOver2;
             owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
+        }
+
+        private void SyncOwnerToProjectile(Player owner, float bladeDistance)
+        {
+            Vector2 mountedCenterOffset = owner.MountedCenter - owner.Center;
+            Vector2 desiredMountedCenter = Projectile.Center - lockedDirection * bladeDistance;
+            owner.Center = desiredMountedCenter - mountedCenterOffset;
+            owner.velocity = Projectile.velocity;
         }
 
         public override bool? CanHitNPC(NPC target)
@@ -325,25 +318,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 sum += direction;
 
             return sum.SafeNormalize(lockedDirection);
-        }
-
-        private void UpdateHelixTrail(float amplitude)
-        {
-            helixTrailTimer++;
-
-            Vector2 forward = Projectile.velocity.SafeNormalize(lockedDirection);
-            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            float sineWave = (float)Math.Cos(helixTrailTimer * 0.38f);
-            Vector2 offset = right * amplitude * sineWave;
-            Vector2 basePoint = Projectile.Center - forward * 16f;
-
-            helixTrailLeft.Add(basePoint + offset);
-            helixTrailRight.Add(basePoint - offset);
-
-            if (helixTrailLeft.Count > HelixTrailLength)
-                helixTrailLeft.RemoveAt(0);
-            if (helixTrailRight.Count > HelixTrailLength)
-                helixTrailRight.RemoveAt(0);
         }
 
         private void SpawnStartBurst()
@@ -658,81 +632,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 power * distanceFactor);
         }
 
-        private float HelixWidthFunction(float completionRatio, Vector2 vertexPos)
-        {
-            return MathHelper.Lerp(16f, 0f, completionRatio) * Projectile.scale;
-        }
-
-        private Color LeftHelixColorFunction(float completionRatio, Vector2 vertexPos)
-        {
-            float alpha = -4f * completionRatio * (completionRatio - 1f);
-            return new Color(40, 180, 255, 0) * alpha * 0.85f;
-        }
-
-        private Color RightHelixColorFunction(float completionRatio, Vector2 vertexPos)
-        {
-            float alpha = -4f * completionRatio * (completionRatio - 1f);
-            return new Color(190, 250, 255, 0) * alpha * 0.85f;
-        }
-
-        private bool IsRenderableTrailPoint(Vector2 point)
-        {
-            return !float.IsNaN(point.X) &&
-                   !float.IsNaN(point.Y) &&
-                   !float.IsInfinity(point.X) &&
-                   !float.IsInfinity(point.Y) &&
-                   point != Vector2.Zero;
-        }
-
-        private List<Vector2> BuildRenderableTrail(List<Vector2> sourceTrail)
-        {
-            List<Vector2> renderTrail = new(sourceTrail.Count);
-            Vector2 previousPoint = Vector2.Zero;
-            bool hasPreviousPoint = false;
-
-            foreach (Vector2 point in sourceTrail)
-            {
-                if (!IsRenderableTrailPoint(point))
-                    continue;
-
-                if (hasPreviousPoint && Vector2.DistanceSquared(previousPoint, point) <= 0.25f)
-                    continue;
-
-                renderTrail.Add(point);
-                previousPoint = point;
-                hasPreviousPoint = true;
-            }
-
-            return renderTrail;
-        }
-
-        private void DrawHelixTrails()
-        {
-            if (dashState == 0)
-                return;
-
-            List<Vector2> leftTrail = BuildRenderableTrail(helixTrailLeft);
-            List<Vector2> rightTrail = BuildRenderableTrail(helixTrailRight);
-
-            if (leftTrail.Count < 8 || rightTrail.Count < 8)
-                return;
-
-            MiscShaderData trailShader = GameShaders.Misc["CalamityMod:TrailStreak"];
-            trailShader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-
-            PrimitiveRenderer.RenderTrail(
-                leftTrail,
-                new PrimitiveSettings(HelixWidthFunction, LeftHelixColorFunction, (_, _) => Projectile.Size * 0.5f, pixelate: false, shader: trailShader));
-
-            PrimitiveRenderer.RenderTrail(
-                rightTrail,
-                new PrimitiveSettings(HelixWidthFunction, RightHelixColorFunction, (_, _) => Projectile.Size * 0.5f, pixelate: false, shader: trailShader));
-        }
-
         public override bool PreDraw(ref Color lightColor)
         {
-            DrawHelixTrails();
-
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 origin = new(texture.Width * 0.5f, texture.Height * 0.5f);
 

@@ -283,6 +283,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 左键发射与安全枪口 =====
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
+
+            // ❌ 新增：左键冷却锁
+            if (leftClickCooldown > 0)
+                return false;
+
             // 右键 → 不发射左键弹幕
             if (player.altFunctionUse == 2)
             {
@@ -307,7 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 player.whoAmI,
                 storedEffectID > 0 ? storedEffectID : -1
             );
-
+            leftClickCooldown = Item.useTime; // 60帧锁死
             exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
             exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.55f); // 记得改回0:05
 
@@ -429,8 +434,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
 
         #region ===== HoldItem 主流程 =====
+        // 左键独立冷却
+        private int leftClickCooldown = 0;
         public override void HoldItem(Player player)
         {
+            if (leftClickCooldown > 0)
+                leftClickCooldown--;
+
             // ===== EX条UI同步 =====
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
 

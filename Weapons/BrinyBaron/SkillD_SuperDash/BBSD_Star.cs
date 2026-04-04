@@ -172,88 +172,51 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 forward = Projectile.velocity.SafeNormalize(-Vector2.UnitY);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             float orbitPhase = frameCounter * 0.34f + phaseOffset;
+            float helixRadius = 8f;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(frameCounter * 0.28f + pulseOffset);
 
-            Vector2 spiralOffset =
-                right * ((float)Math.Sin(orbitPhase) * 10f) +
-                forward * ((float)Math.Cos(orbitPhase * 1.4f) * 4f);
+            Vector2 firstHelix =
+                right * ((float)Math.Sin(orbitPhase) * helixRadius) +
+                forward * ((float)Math.Cos(orbitPhase) * 3f);
+            Vector2 secondHelix =
+                right * ((float)Math.Sin(orbitPhase + MathHelper.Pi) * helixRadius) +
+                forward * ((float)Math.Cos(orbitPhase + MathHelper.Pi) * 3f);
 
-            if (Main.rand.NextBool(2))
-            {
-                Dust water = Dust.NewDustPerfect(
-                    Projectile.Center + spiralOffset,
-                    DustID.Water,
-                    -forward * Main.rand.NextFloat(0.35f, 1.6f) + right * Main.rand.NextFloat(-0.8f, 0.8f),
-                    100,
-                    Color.Lerp(new Color(60, 165, 255), new Color(145, 235, 255), pulse),
-                    Main.rand.NextFloat(0.9f, 1.2f));
-                water.noGravity = true;
-                water.fadeIn = 1.1f;
-            }
+            GlowOrbParticle firstOrb = new GlowOrbParticle(
+                Projectile.Center + firstHelix,
+                right * ((float)Math.Cos(orbitPhase) * 0.2f),
+                false,
+                9,
+                0.68f + pulse * 0.22f,
+                Color.Lerp(new Color(70, 185, 255), Color.White, 0.35f + 0.25f * pulse),
+                true,
+                false,
+                true);
+            GeneralParticleHandler.SpawnParticle(firstOrb);
 
-            if (Main.rand.NextBool(3))
-            {
-                Dust frost = Dust.NewDustPerfect(
-                    Projectile.Center - spiralOffset * 0.45f,
-                    DustID.Frost,
-                    -forward * Main.rand.NextFloat(0.2f, 1f),
-                    100,
-                    Color.Lerp(new Color(195, 245, 255), Color.White, pulse),
-                    Main.rand.NextFloat(0.75f, 1.05f));
-                frost.noGravity = true;
-            }
+            GlowOrbParticle secondOrb = new GlowOrbParticle(
+                Projectile.Center + secondHelix,
+                -right * ((float)Math.Cos(orbitPhase) * 0.2f),
+                false,
+                9,
+                0.68f + (1f - pulse) * 0.22f,
+                Color.Lerp(new Color(100, 220, 255), Color.White, 0.28f + 0.28f * (1f - pulse)),
+                true,
+                false,
+                true);
+            GeneralParticleHandler.SpawnParticle(secondOrb);
 
             if (frameCounter % 2 == 0)
             {
-                GlowOrbParticle orb = new GlowOrbParticle(
-                    Projectile.Center + spiralOffset * 0.6f,
-                    right * ((float)Math.Cos(orbitPhase) * 0.35f),
-                    false,
-                    10,
-                    0.72f + pulse * 0.25f,
-                    Color.Lerp(new Color(70, 185, 255), Color.White, 0.35f + 0.3f * pulse),
-                    true,
-                    false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(orb);
-            }
-
-            if (frameCounter % 3 == 0)
-            {
-                Vector2 lineVelocity = -forward * Main.rand.NextFloat(3f, 6.5f) + right * Main.rand.NextFloat(-1.3f, 1.3f);
-                SparkParticle sparkLine = new SparkParticle(
-                    Projectile.Center - lineVelocity / 0.18f,
-                    lineVelocity * 0.01f,
-                    false,
-                    6,
-                    1.35f,
-                    Color.Lerp(Color.SeaGreen, Color.DeepSkyBlue, pulse),
-                    true);
-                GeneralParticleHandler.SpawnParticle(sparkLine);
-            }
-
-            if (frameCounter % 4 == 0)
-            {
-                WaterFlavoredParticle mist = new WaterFlavoredParticle(
-                    Projectile.Center - forward * 4f + right * Main.rand.NextFloat(-4f, 4f),
-                    -forward * Main.rand.NextFloat(0.35f, 1.8f) + right * Main.rand.NextFloat(-0.55f, 0.55f),
-                    false,
-                    Main.rand.Next(20, 28),
-                    0.82f + Main.rand.NextFloat(0.24f),
-                    Color.LightBlue * 0.92f);
-                GeneralParticleHandler.SpawnParticle(mist);
-            }
-
-            if (frameCounter % 6 == 0)
-            {
-                CritSpark spark = new CritSpark(
-                    Projectile.Center + spiralOffset * 0.3f,
-                    forward.RotatedBy(Main.rand.NextFloat(-0.55f, 0.55f)) * Main.rand.NextFloat(3.2f, 6.4f),
-                    Color.White,
-                    Color.LightBlue,
-                    0.82f + pulse * 0.22f,
-                    12 + Main.rand.Next(5));
-                GeneralParticleHandler.SpawnParticle(spark);
+                Dust water = Dust.NewDustPerfect(
+                    Projectile.Center - forward * 4f,
+                    DustID.Water,
+                    -forward * Main.rand.NextFloat(0.4f, 1.6f),
+                    100,
+                    new Color(90, 205, 255),
+                    Main.rand.NextFloat(0.85f, 1.15f));
+                water.noGravity = true;
+                water.fadeIn = 1.08f;
             }
         }
 

@@ -19,6 +19,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+
+
+
+
+
             // ===== 爆8个灵魂（保留不变）=====
             for (int i = 0; i < 8; i++)
             {
@@ -27,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center,
+                    projectile.Center + Main.rand.NextVector2Circular(80f, 80f),
                     dir * speed,
                     ModContent.ProjectileType<NewSHPS>(),
                     projectile.damage,
@@ -36,6 +41,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     3 // preset3
                 );
             }
+
+
+
+
+
+
+
+
+
 
             // ===== 骷髅头主体：向外大范围爆散 =====
             for (int i = 0; i < 12; i++)

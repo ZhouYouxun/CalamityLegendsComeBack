@@ -351,6 +351,86 @@ namespace CalamityLegendsComeBack
 
 
 
+                // 14.辉光拖尾火花---------------------------------
+                // GlowSparkParticle 比普通火花更亮、更细、更适合表现高能尾迹
+                // 常用于喷口火花、热束切边、光束拖尾、神圣/魔焰高亮边缘
+                GlowSparkParticle glowSpark = new GlowSparkParticle(
+                    Projectile.Center,
+                    Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.35f) * Main.rand.NextFloat(2f, 5f),
+                    false,
+                    14,
+                    0.22f,
+                    Color.Gold,
+                    new Vector2(1.8f, 0.45f),
+                    true,
+                    false
+                );
+                GeneralParticleHandler.SpawnParticle(glowSpark);
+
+                // 15.自定义光线火花---------------------------------
+                // CustomSpark 是“吃贴图的线状粒子”，适合喷枪、能量划痕、刀气切线、激光边缘
+                // 对新手来说最重要的就是 3 个参数：贴图路径、scale、stretch
+                Particle customLine = new CustomSpark(
+                    Projectile.Center,
+                    Projectile.velocity * 0.15f,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    20,
+                    0.9f,
+                    Color.Orange * 0.85f,
+                    new Vector2(2.8f, 0.7f),
+                    shrinkSpeed: 0.65f
+                );
+                GeneralParticleHandler.SpawnParticle(customLine);
+
+                // 16.柔雾粒子---------------------------------
+                // MediumMistParticle 比 HeavySmokeParticle 更轻、更柔和，适合寒气、薄雾、液氮云层、魔焰尾烟
+                // 想要“大块柔雾”就优先用它；想要“厚重烟团”再用 HeavySmokeParticle
+                Particle mediumMist = new MediumMistParticle(
+                    Projectile.Center,
+                    new Vector2(
+                        Main.rand.NextFloat(-1.2f, 1.2f),
+                        Main.rand.NextFloat(-4f, -1.5f)
+                    ),
+                    Color.White,
+                    Color.Transparent,
+                    Main.rand.NextFloat(0.7f, 1.1f),
+                    Main.rand.NextFloat(180f, 240f)
+                );
+                GeneralParticleHandler.SpawnParticle(mediumMist);
+
+                // 17.小型烟团---------------------------------
+                // SmallSmokeParticle 是一个短命、小体积的烟雾粒子
+                // 适合灰烬、喷焰尾气、爆点边缘、燃烧残影
+                SmallSmokeParticle smallSmoke = new SmallSmokeParticle(
+                    Projectile.Center,
+                    Projectile.velocity * 0.12f + Main.rand.NextVector2Circular(1.1f, 1.1f),
+                    Color.DarkGray,
+                    Color.Black,
+                    Main.rand.NextFloat(0.45f, 0.75f),
+                    Main.rand.Next(30, 50)
+                );
+                GeneralParticleHandler.SpawnParticle(smallSmoke);
+
+                // 18.闪电裂片---------------------------------
+                // BoltParticle 比 CrackParticle 更像“飞出去的一小段电弧”
+                // 适合电击、击穿、装甲裂闪、短促放电
+                BoltParticle bolt = new BoltParticle(
+                    Projectile.Center,
+                    Projectile.velocity.SafeNormalize(Vector2.UnitX) * 3f,
+                    false,
+                    12,
+                    0.55f,
+                    Color.Yellow,
+                    new Vector2(0.45f, 0.85f),
+                    true
+                );
+                GeneralParticleHandler.SpawnParticle(bolt);
+
+
+
+
+
 
             }
 
@@ -505,6 +585,19 @@ namespace CalamityLegendsComeBack
                 // 13.宇宙 Metaball 🌌---------------------------------
                 // 原灾示范：宇宙暗流三叉戟命中后的紫色烟雾
                 // 适用于宇宙能量残留、黑洞边缘、深渊气场
+                // 14.灾厄魔焰 Metaball---------------------------------
+                // 这是 AshesofCalamity_Soul 里那种“像活着一样往前推的红色火团”
+                // 推荐写法是每帧少量生成，让它自己融合成一团持续前冲的能量体
+                // 新手记忆法：
+                // 1. 生成位置稍微放在弹幕前方
+                // 2. 初速度只给很小的扰动
+                // 3. 再叠一点 GlowOrbParticle，观感会非常漂亮
+                CalamitasMetaball.SpawnParticle(
+                    Projectile.Center + Projectile.velocity,
+                    Main.rand.NextVector2Circular(2f, 2f),
+                    64f
+                );
+
                 StreamGougeMetaball.SpawnParticle(
                     Projectile.Center, // 粒子生成位置（弹幕中心）
                     Vector2.Zero, // 粒子速度（静止）

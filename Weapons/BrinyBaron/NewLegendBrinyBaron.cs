@@ -1,5 +1,4 @@
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.LeftClick;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
@@ -48,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Item.noMelee = true;
             Item.useStyle = ItemUseStyleID.Swing;
 
-            Item.shootSpeed = 16f;
+            Item.shootSpeed = 0f;
             Item.rare = ItemRarityID.Pink;
             Item.UseSound = null;
         }
@@ -76,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
-                Item.shootSpeed = 16f;
+                Item.shootSpeed = 0f;
                 Item.UseSound = SoundID.Item39;
             }
             else
@@ -84,14 +83,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 // =========================
                 // 左键：可以参考 GrandDad【以及更多其他特殊剑】 一样的 Holdout 武器配置
                 // =========================
-                Item.useTime = 20;
-                Item.useAnimation = 20;
+                Item.useTime = Item.useAnimation = 25;
                 Item.channel = true;
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
                 Item.shoot = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
-                Item.shootSpeed = 16f;
+                Item.shootSpeed = 0f;
                 Item.UseSound = null;
             }
 
@@ -118,6 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 Projectile.NewProjectile(source, position, shootVelocity, type, damage, knockback, player.whoAmI);
                 return false;
             }
+
 
             // =========================
             // 左键：永远只允许存在一个 Holdout
