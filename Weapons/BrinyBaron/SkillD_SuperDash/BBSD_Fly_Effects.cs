@@ -7,8 +7,8 @@ using Terraria.ID;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
-    // Owns the active dash visuals after the charge has been released.
-    // This file focuses on propulsion, support-star launch accents, and the finishing burst when the dash ends.
+    // Owns the active propulsion language while the dash is underway.
+    // The emphasis is on restrained rear exhaust and thin streamlines hugging the blade.
     internal static class BBSD_Fly_Effects
     {
         internal static void SpawnDashStartBurst(Projectile projectile, Vector2 bladeDirection, Vector2 weaponTip)
@@ -16,36 +16,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
-            Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
+            Vector2 forward = bladeDirection.SafeNormalize((projectile.rotation - MathHelper.PiOver4).ToRotationVector2());
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 rear = projectile.Center - forward * 20f;
 
-            for (int i = 0; i < 22; i++)
-            {
-                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f).RotatedBy(visualForward.ToRotation()) * Main.rand.NextFloat(5f, 18f);
+            SpawnRearPropulsionStreams(rear, forward, right, 1.2f, 0);
+            SpawnBladeEdgeStreams(weaponTip, forward, right, 0.85f, 0);
 
-                Dust water = Dust.NewDustPerfect(weaponTip, DustID.Water, burstVelocity, 100, new Color(70, 175, 255), Main.rand.NextFloat(1.15f, 1.8f));
-                water.noGravity = true;
-
-                if (i % 2 == 0)
-                {
-                    Dust frost = Dust.NewDustPerfect(weaponTip, DustID.Frost, burstVelocity * 0.72f, 100, new Color(210, 248, 255), Main.rand.NextFloat(0.95f, 1.35f));
-                    frost.noGravity = true;
-                }
-            }
-
-            SpawnRearRocketJet(projectile, projectile.Center - visualForward * 20f, visualForward, visualRight, 1.2f, 0);
-
-            GlowOrbParticle orb = new GlowOrbParticle(
-                weaponTip,
-                Vector2.Zero,
-                false,
-                8,
-                1.2f,
-                new Color(110, 225, 255),
-                true,
-                false,
-                true);
-            GeneralParticleHandler.SpawnParticle(orb);
+            DirectionalPulseRing rearPulse = new DirectionalPulseRing(
+                rear,
+                -forward * 0.3f,
+                new Color(90, 205, 255),
+                new Vector2(0.55f, 1.35f),
+                (-forward).ToRotation(),
+                0.16f,
+                0.015f,
+                13);
+            GeneralParticleHandler.SpawnParticle(rearPulse);
         }
 
         internal static void SpawnDashWakeEffects(Projectile projectile, Player owner, Vector2 bladeDirection, Vector2 weaponTip, int dashTimer)
@@ -53,69 +40,50 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
-            Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
-            Vector2 rear = projectile.Center - visualForward * 22f;
+            Vector2 forward = bladeDirection.SafeNormalize((projectile.rotation - MathHelper.PiOver4).ToRotationVector2());
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 rear = projectile.Center - forward * 22f;
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(dashTimer * 0.34f);
+            float intensity = 0.74f + pulse * 0.22f;
 
-            float pulseA = 0.5f + 0.5f * (float)Math.Sin(dashTimer * 0.4f);
-            float pulseB = 0.5f + 0.5f * (float)Math.Cos(dashTimer * 0.27f + 0.6f);
-            float rocketIntensity = 0.8f + pulseA * 0.35f;
+            SpawnRearPropulsionStreams(rear, forward, right, intensity, dashTimer);
+            SpawnBladeEdgeStreams(weaponTip, forward, right, 0.58f + pulse * 0.16f, dashTimer);
 
-            SpawnRearRocketJet(projectile, rear, visualForward, visualRight, rocketIntensity, dashTimer);
-
-            for (int side = -1; side <= 1; side += 2)
+            if (dashTimer % 4 == 0)
             {
-                float ribbonPhase = dashTimer * 0.42f + side * 0.9f + projectile.identity * 0.14f;
-                float ribbonOffset = side * (6f + 4f * (float)Math.Sin(ribbonPhase * 1.35f));
-                Vector2 spawnPosition = rear - visualForward * Main.rand.NextFloat(10f, 30f) + visualRight * ribbonOffset;
-                Vector2 wakeVelocity =
-                    -visualForward * Main.rand.NextFloat(5.5f, 11.5f) +
-                    visualRight * side * Main.rand.NextFloat(0.5f, 2f) +
-                    owner.velocity * 0.14f;
-
-                Dust water = Dust.NewDustPerfect(spawnPosition, DustID.Water, wakeVelocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(1.05f, 1.45f));
-                water.noGravity = true;
-
-                if (Main.rand.NextBool(2))
-                {
-                    Dust frost = Dust.NewDustPerfect(spawnPosition, DustID.Frost, wakeVelocity * 0.72f, 100, new Color(205, 246, 255), Main.rand.NextFloat(0.9f, 1.2f));
-                    frost.noGravity = true;
-                }
+                DirectionalPulseRing pulseRing = new DirectionalPulseRing(
+                    rear - forward * 2f,
+                    -forward * (0.22f + pulse * 0.1f),
+                    Color.Lerp(new Color(75, 188, 255), Color.White, 0.28f + pulse * 0.2f),
+                    new Vector2(0.42f, 1.08f + pulse * 0.18f),
+                    (-forward).ToRotation(),
+                    0.1f,
+                    0.012f,
+                    10);
+                GeneralParticleHandler.SpawnParticle(pulseRing);
             }
 
-            if (dashTimer % 2 == 0)
-            {
-                WaterFlavoredParticle mist = new WaterFlavoredParticle(
-                    rear + visualRight * Main.rand.NextFloat(-8f, 8f),
-                    -visualForward * Main.rand.NextFloat(3.5f, 6.8f) + visualRight * Main.rand.NextFloat(-1.4f, 1.4f),
-                    false,
-                    Main.rand.Next(20, 28),
-                    0.9f + Main.rand.NextFloat(0.25f),
-                    Color.LightBlue * 0.94f);
-                GeneralParticleHandler.SpawnParticle(mist);
-            }
-
-            if (dashTimer % 5 == 0)
+            if (Main.rand.NextBool(3))
             {
                 GlowOrbParticle orb = new GlowOrbParticle(
-                    weaponTip - visualForward * Main.rand.NextFloat(4f, 10f),
-                    owner.velocity * 0.05f,
+                    weaponTip - forward * Main.rand.NextFloat(2f, 8f) + right * Main.rand.NextFloat(-3f, 3f),
+                    owner.velocity * 0.03f,
                     false,
                     5,
-                    0.85f + pulseA * 0.25f,
-                    Color.Lerp(new Color(65, 180, 255), Color.White, 0.35f + 0.35f * pulseB),
+                    0.5f + pulse * 0.12f,
+                    Color.Lerp(new Color(70, 185, 255), Color.White, 0.32f),
                     true,
                     false,
                     true);
                 GeneralParticleHandler.SpawnParticle(orb);
             }
 
-            if (dashTimer % 12 == 0)
+            if (dashTimer % 18 == 0)
             {
                 SoundEngine.PlaySound(SoundID.Item88 with
                 {
-                    Volume = 0.4f,
-                    Pitch = -0.25f + pulseA * 0.15f
+                    Volume = 0.28f,
+                    Pitch = -0.32f
                 }, projectile.Center);
             }
         }
@@ -125,24 +93,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Dust water = Dust.NewDustPerfect(
-                spawnPosition,
-                DustID.Water,
-                launchVelocity * 0.28f,
-                100,
-                new Color(70, 175, 255),
-                Main.rand.NextFloat(1f, 1.35f) * intensity);
-            water.noGravity = true;
-            water.fadeIn = 1.08f;
+            Vector2 forward = launchVelocity.SafeNormalize(-Vector2.UnitY);
 
-            Dust frost = Dust.NewDustPerfect(
+            Particle line = new CustomSpark(
                 spawnPosition,
-                DustID.Frost,
-                launchVelocity * 0.2f,
-                100,
-                new Color(210, 248, 255),
-                Main.rand.NextFloat(0.85f, 1.15f) * intensity);
-            frost.noGravity = true;
+                forward * Main.rand.NextFloat(3.5f, 6.5f) * intensity,
+                "CalamityMod/Particles/BloomLineSoftEdge",
+                false,
+                8,
+                0.045f * intensity,
+                new Color(95, 210, 255) * 0.74f,
+                new Vector2(1.5f, 0.4f),
+                shrinkSpeed: 0.74f);
+            GeneralParticleHandler.SpawnParticle(line);
 
             if (Main.rand.NextBool(2))
             {
@@ -150,14 +113,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     spawnPosition,
                     Vector2.Zero,
                     false,
-                    6 + Main.rand.Next(3),
-                    0.7f + Main.rand.NextFloat(0.2f) * intensity,
-                    Color.Lerp(new Color(65, 185, 255), Color.White, 0.35f),
+                    5,
+                    0.42f + 0.14f * intensity,
+                    Color.Lerp(new Color(90, 205, 255), Color.White, 0.34f),
                     true,
                     false,
                     true);
                 GeneralParticleHandler.SpawnParticle(orb);
             }
+
+            Dust dust = Dust.NewDustPerfect(
+                spawnPosition,
+                Main.rand.NextBool() ? DustID.Water : DustID.Frost,
+                launchVelocity * 0.22f,
+                100,
+                new Color(95, 210, 255),
+                Main.rand.NextFloat(0.65f, 0.95f) * intensity);
+            dust.noGravity = true;
         }
 
         internal static void SpawnOnKillEffects(Projectile projectile, Vector2 bladeDirection)
@@ -165,114 +137,138 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
+            Vector2 forward = bladeDirection.SafeNormalize((projectile.rotation - MathHelper.PiOver4).ToRotationVector2());
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 10; i++)
             {
-                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f).RotatedBy(visualForward.ToRotation()) * Main.rand.NextFloat(5f, 16f);
+                float spread = MathHelper.Lerp(-0.75f, 0.75f, i / 9f);
+                Vector2 velocity =
+                    forward.RotatedBy(spread) * Main.rand.NextFloat(3.5f, 8.5f) +
+                    right * spread * 2.8f;
 
-                Dust water = Dust.NewDustPerfect(projectile.Center, DustID.Water, burstVelocity, 100, new Color(70, 170, 255), Main.rand.NextFloat(1.15f, 1.75f));
-                water.noGravity = true;
+                Particle line = new CustomSpark(
+                    projectile.Center,
+                    velocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(8, 12),
+                    Main.rand.NextFloat(0.05f, 0.075f),
+                    Color.Lerp(new Color(85, 200, 255), Color.White, 0.28f) * 0.72f,
+                    new Vector2(1.75f, 0.42f),
+                    shrinkSpeed: 0.72f);
+                GeneralParticleHandler.SpawnParticle(line);
 
-                if (i % 2 == 0)
+                Dust dust = Dust.NewDustPerfect(
+                    projectile.Center,
+                    Main.rand.NextBool() ? DustID.Water : DustID.Frost,
+                    velocity * 0.45f,
+                    100,
+                    new Color(105, 220, 255),
+                    Main.rand.NextFloat(0.72f, 1.02f));
+                dust.noGravity = true;
+            }
+
+            DirectionalPulseRing pulse = new DirectionalPulseRing(
+                projectile.Center,
+                forward * 0.18f,
+                new Color(90, 205, 255),
+                new Vector2(0.7f, 1.55f),
+                forward.ToRotation(),
+                0.15f,
+                0.016f,
+                14);
+            GeneralParticleHandler.SpawnParticle(pulse);
+
+            SoundEngine.PlaySound(SoundID.Item74 with
+            {
+                Volume = 0.85f,
+                Pitch = -0.34f
+            }, projectile.Center);
+        }
+
+        // Rear exhaust stays behind the dash and keeps a clean, rocket-like silhouette.
+        private static void SpawnRearPropulsionStreams(Vector2 rear, Vector2 forward, Vector2 right, float intensity, int timer)
+        {
+            float[] branchAngles = { 0f, -0.22f, 0.22f };
+            float[] branchOffsets = { 0f, -6.5f, 6.5f };
+            float[] branchWeights = { 1f, 0.78f, 0.78f };
+
+            for (int i = 0; i < branchAngles.Length; i++)
+            {
+                float weight = branchWeights[i];
+                float sway = (float)Math.Sin(timer * 0.24f + i * 1.1f) * (0.35f + 0.45f * intensity);
+                Vector2 direction = (-forward).RotatedBy(branchAngles[i] + sway * 0.01f);
+                Vector2 spawnPosition =
+                    rear +
+                    right * branchOffsets[i] +
+                    right * sway +
+                    Main.rand.NextVector2Circular(1.1f, 1.1f);
+
+                Particle line = new CustomSpark(
+                    spawnPosition,
+                    direction * Main.rand.NextFloat(8.5f, 14.5f) * (0.8f + weight * 0.28f) * intensity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(8, 12),
+                    Main.rand.NextFloat(0.05f, 0.078f) * (0.85f + weight * 0.2f) * intensity,
+                    Color.Lerp(new Color(85, 200, 255), Color.White, 0.22f + weight * 0.2f) * 0.76f,
+                    new Vector2(1.75f + weight * 0.4f, 0.38f + weight * 0.04f),
+                    shrinkSpeed: 0.74f);
+                GeneralParticleHandler.SpawnParticle(line);
+
+                if ((timer + i) % 3 == 0)
                 {
-                    Dust frost = Dust.NewDustPerfect(projectile.Center, DustID.Frost, burstVelocity * 0.72f, 100, new Color(210, 245, 255), Main.rand.NextFloat(0.9f, 1.35f));
-                    frost.noGravity = true;
+                    Dust dust = Dust.NewDustPerfect(
+                        spawnPosition,
+                        Main.rand.NextBool() ? DustID.Water : DustID.Frost,
+                        direction * Main.rand.NextFloat(1.8f, 3.4f),
+                        100,
+                        new Color(95, 210, 255),
+                        Main.rand.NextFloat(0.65f, 0.92f));
+                    dust.noGravity = true;
                 }
             }
 
-            for (int i = 0; i < 3; i++)
+            if (Main.rand.NextBool(2))
             {
                 GlowOrbParticle orb = new GlowOrbParticle(
-                    projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    Main.rand.NextVector2Circular(1f, 1f),
+                    rear - forward * 2f,
+                    -forward * 0.12f,
                     false,
-                    6,
-                    0.95f + Main.rand.NextFloat(0.3f),
-                    new Color(90, 205, 255),
+                    5,
+                    0.42f + intensity * 0.1f,
+                    Color.Lerp(new Color(90, 205, 255), Color.White, 0.3f),
                     true,
                     false,
                     true);
                 GeneralParticleHandler.SpawnParticle(orb);
             }
-
-            SoundEngine.PlaySound(SoundID.Item74 with
-            {
-                Volume = 1.15f,
-                Pitch = -0.3f
-            }, projectile.Center);
         }
 
-        private static void SpawnRearRocketJet(Projectile projectile, Vector2 exhaustOrigin, Vector2 visualForward, Vector2 visualRight, float intensity, int timer)
+        // Thin body lines keep the blade visually tied into the exhaust without making the whole dash noisy.
+        private static void SpawnBladeEdgeStreams(Vector2 weaponTip, Vector2 forward, Vector2 right, float intensity, int timer)
         {
-            float[] branchOffsets =
+            for (int side = -1; side <= 1; side += 2)
             {
-                -0.36f,
-                0f,
-                0.36f
-            };
+                float oscillation = (float)Math.Sin(timer * 0.32f + side * 0.9f) * 1.5f;
+                Vector2 spawnPosition =
+                    weaponTip -
+                    forward * Main.rand.NextFloat(3f, 11f) +
+                    right * side * (4f + oscillation);
 
-            float[] branchWeights =
-            {
-                0.72f,
-                1f,
-                0.72f
-            };
-
-            for (int branchIndex = 0; branchIndex < branchOffsets.Length; branchIndex++)
-            {
-                float branchOffset = branchOffsets[branchIndex];
-                float branchWeight = branchWeights[branchIndex];
-                Vector2 branchDirection = (-visualForward).RotatedBy(branchOffset);
-                int lineCount = branchIndex == 1 ? 3 : 2;
-
-                for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
-                {
-                    float localT = lineCount == 1 ? 0f : lineIndex / (float)(lineCount - 1);
-                    float centered = localT * 2f - 1f;
-                    Vector2 spawnPosition =
-                        exhaustOrigin +
-                        visualRight * branchOffset * 9f +
-                        visualRight * centered * 2.6f +
-                        Main.rand.NextVector2Circular(1.8f, 1.8f);
-
-                    Particle line = new CustomSpark(
-                        spawnPosition,
-                        branchDirection.RotatedBy(centered * 0.05f) * Main.rand.NextFloat(7f, 15f) * (0.75f + branchWeight * 0.35f) * intensity,
-                        "CalamityMod/Particles/BloomLineSoftEdge",
-                        false,
-                        Main.rand.Next(12, 18),
-                        Main.rand.NextFloat(0.1f, 0.16f) * (0.78f + branchWeight * 0.5f) * intensity,
-                        Color.Lerp(new Color(90, 205, 255), Color.White, 0.28f + 0.3f * branchWeight) * 0.86f,
-                        new Vector2(1.9f + branchWeight * 1.25f, 0.34f + branchWeight * 0.06f),
-                        shrinkSpeed: 0.7f);
-                    GeneralParticleHandler.SpawnParticle(line);
-                }
-
-                if ((timer + branchIndex) % 2 == 0)
-                {
-                    WaterFlavoredParticle mist = new WaterFlavoredParticle(
-                        exhaustOrigin + visualRight * branchOffset * 7f,
-                        branchDirection * Main.rand.NextFloat(2.6f, 5.2f) * intensity,
-                        false,
-                        Main.rand.Next(18, 24),
-                        0.82f + Main.rand.NextFloat(0.2f),
-                        Color.LightBlue * 0.92f);
-                    GeneralParticleHandler.SpawnParticle(mist);
-                }
+                Particle line = new CustomSpark(
+                    spawnPosition,
+                    -forward * Main.rand.NextFloat(4.5f, 8f) * intensity + right * side * Main.rand.NextFloat(0.25f, 0.9f),
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(7, 10),
+                    Main.rand.NextFloat(0.034f, 0.052f) * intensity,
+                    new Color(95, 210, 255) * 0.58f,
+                    new Vector2(1.35f, 0.34f),
+                    shrinkSpeed: 0.78f);
+                GeneralParticleHandler.SpawnParticle(line);
             }
-
-            GlowOrbParticle orb = new GlowOrbParticle(
-                exhaustOrigin - visualForward * 3f,
-                -visualForward * 0.18f,
-                false,
-                5,
-                0.72f + intensity * 0.25f,
-                Color.Lerp(new Color(90, 205, 255), Color.White, 0.42f),
-                true,
-                false,
-                true);
-            GeneralParticleHandler.SpawnParticle(orb);
         }
     }
 }

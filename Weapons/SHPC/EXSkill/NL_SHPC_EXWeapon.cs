@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (ChargeSoundSlot == default)
             {
                 ChargeSoundSlot = SoundEngine.PlaySound(
-                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/预热转枪阶段")
+                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/蜃景大招正在蓄力")
                     {
                         Volume = 1.0f,
                         IsLooped = true
@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             // 播放蓄力完成音
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/电弧发射器-蓄力结束")
+                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/蜃景大招准备就绪")
                 {
                     Volume = 1.2f,
                     Pitch = 0f
@@ -184,9 +184,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (LaserSoundSlot == default)
             {
                 LaserSoundSlot = SoundEngine.PlaySound(
-                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/激光大炮开火一小段")
+                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/蜃景大招发射")
                     {
-                        Volume = 1.0f,
+                        Volume = 9.0f,
                         IsLooped = true
                     },
                     Projectile.Center

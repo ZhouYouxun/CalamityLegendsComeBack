@@ -161,63 +161,82 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             float visualRadius = Projectile.width * 0.5f; // ⭐ 完全绑定尺寸
 
             float t = Main.GameUpdateCount * 0.2f;
-            float sway = (float)Math.Sin(t * 2.4f) * MathHelper.Lerp(4f, 12f, 1f - speedRatio);
+            float sway = (float)Math.Sin(t * 2.4f) * MathHelper.Lerp(3f, 9f, 1f - speedRatio);
 
-            Vector2 wakeAnchor = Projectile.Center - forward * (visualRadius * 0.25f);
+            Vector2 wakeAnchor = Projectile.Center - forward * MathHelper.Lerp(visualRadius * 0.08f, visualRadius * 0.22f, speedRatio);
+            float edgeDistance = visualRadius * MathHelper.Lerp(0.74f, 0.9f, speedRatio);
+            float fillDistance = visualRadius * 0.88f;
 
-            for (int side = -1; side <= 1; side += 2)
+            if (lifeTimer % 3 == 0)
             {
-                Vector2 laneOffset = right * side * (visualRadius * 0.25f + sway * 0.35f);
-                Vector2 lanePos = wakeAnchor + laneOffset;
-
-                Vector2 laneVelocity =
-                    -forward * MathHelper.Lerp(1.8f, 4.8f, speedRatio) +
-                    right * side * MathHelper.Lerp(0.7f, 1.9f, speedRatio);
-
-                GlowOrbParticle wakeOrb = new GlowOrbParticle(
-                    lanePos,
-                    laneVelocity,
-                    false,
-                    Main.rand.Next(8, 13),
-                    MathHelper.Lerp(0.42f, 0.8f, speedRatio),
-                    side < 0 ? new Color(70, 180, 255) : new Color(185, 245, 255),
-                    true,
-                    false,
-                    true
-                );
-                GeneralParticleHandler.SpawnParticle(wakeOrb);
-
-                if (lifeTimer % 2 == 0)
+                for (int side = -1; side <= 1; side += 2)
                 {
+                    Vector2 edgePos = wakeAnchor + right * side * (edgeDistance + sway * 0.3f);
+                    Vector2 edgeVelocity =
+                        -forward * MathHelper.Lerp(1.6f, 4.2f, speedRatio) +
+                        right * side * MathHelper.Lerp(0.5f, 1.55f, speedRatio);
+
+                    GlowOrbParticle wakeOrb = new GlowOrbParticle(
+                        edgePos,
+                        edgeVelocity,
+                        false,
+                        Main.rand.Next(9, 14),
+                        MathHelper.Lerp(0.38f, 0.72f, speedRatio),
+                        side < 0 ? new Color(70, 180, 255) : new Color(185, 245, 255),
+                        true,
+                        false,
+                        true
+                    );
+                    GeneralParticleHandler.SpawnParticle(wakeOrb);
+                }
+            }
+
+            if (lifeTimer % 2 == 0)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    float band = (float)Math.Sqrt(Main.rand.NextFloat());
+                    float sideBias = Main.rand.NextFloatDirection();
+                    Vector2 dustPos =
+                        wakeAnchor
+                        + right * sideBias * fillDistance * MathHelper.Lerp(0.18f, 1f, band)
+                        - forward * Main.rand.NextFloat(visualRadius * 0.04f, visualRadius * 0.2f);
+
+                    Vector2 dustVelocity =
+                        -forward * Main.rand.NextFloat(1f, MathHelper.Lerp(2f, 4.2f, speedRatio))
+                        + right * sideBias * Main.rand.NextFloat(0.1f, 1.15f);
+
                     Dust wakeDust = Dust.NewDustPerfect(
-                        lanePos + Main.rand.NextVector2Circular(visualRadius * 0.1f, visualRadius * 0.1f),
-                        Main.rand.NextBool(3) ? DustID.Water : DustID.Frost,
-                        laneVelocity * Main.rand.NextFloat(0.75f, 1.1f),
+                        dustPos,
+                        Main.rand.NextBool(4) ? DustID.Frost : DustID.Water,
+                        dustVelocity,
                         0,
-                        new Color(120, 220, 255),
-                        MathHelper.Lerp(0.9f, 1.3f, speedRatio)
+                        Color.Lerp(new Color(105, 205, 255), new Color(215, 248, 255), Main.rand.NextFloat(0.15f, 0.9f)),
+                        MathHelper.Lerp(0.85f, 1.18f, speedRatio) * Main.rand.NextFloat(0.9f, 1.08f)
                     );
                     wakeDust.noGravity = true;
                 }
             }
 
-            if (speedRatio < 0.65f)
+            if (speedRatio < 0.72f && lifeTimer % 4 == 0)
             {
+                float driftBand = Main.rand.NextFloatDirection();
                 Vector2 driftPos =
                     wakeAnchor
-                    - forward * (visualRadius * 0.2f)
-                    + right * sway * 0.55f;
+                    + right * driftBand * visualRadius * Main.rand.NextFloat(0.25f, 0.8f)
+                    - forward * Main.rand.NextFloat(visualRadius * 0.12f, visualRadius * 0.3f)
+                    + right * sway * 0.4f;
 
                 Vector2 driftVelocity =
-                    -forward * MathHelper.Lerp(0.45f, 1.25f, speedRatio)
-                    + right * sway * 0.03f;
+                    -forward * MathHelper.Lerp(0.45f, 1.35f, speedRatio)
+                    + right * driftBand * Main.rand.NextFloat(0.08f, 0.45f);
 
                 GlowOrbParticle slowOrb = new GlowOrbParticle(
                     driftPos,
                     driftVelocity,
                     false,
                     Main.rand.Next(10, 15),
-                    MathHelper.Lerp(0.38f, 0.62f, 1f - speedRatio),
+                    MathHelper.Lerp(0.32f, 0.56f, 1f - speedRatio),
                     Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
                     true,
                     false,
@@ -225,18 +244,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 );
                 GeneralParticleHandler.SpawnParticle(slowOrb);
 
-                if (lifeTimer % 3 == 0)
-                {
-                    Dust slowDust = Dust.NewDustPerfect(
-                        driftPos + Main.rand.NextVector2Circular(visualRadius * 0.15f, visualRadius * 0.15f),
-                        DustID.Water,
-                        driftVelocity.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.7f, 1.15f),
-                        0,
-                        new Color(195, 245, 255),
-                        MathHelper.Lerp(0.9f, 1.35f, 1f - speedRatio)
-                    );
-                    slowDust.noGravity = true;
-                }
+                Dust slowDust = Dust.NewDustPerfect(
+                    driftPos + Main.rand.NextVector2Circular(visualRadius * 0.08f, visualRadius * 0.08f),
+                    DustID.Water,
+                    driftVelocity.RotatedByRandom(0.24f) * Main.rand.NextFloat(0.8f, 1.1f),
+                    0,
+                    new Color(195, 245, 255),
+                    MathHelper.Lerp(0.82f, 1.12f, 1f - speedRatio)
+                );
+                slowDust.noGravity = true;
             }
         }
 

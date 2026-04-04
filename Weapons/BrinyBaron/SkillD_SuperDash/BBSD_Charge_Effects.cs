@@ -6,38 +6,66 @@ using Terraria.ID;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
-    // Owns the per-frame visuals before the dash actually starts.
-    // This file handles both the charging buildup and the quiet ready-hold state after charge completes.
+    // Owns the stable buildup before the dash releases.
+    // The shape language is fixed: one center stream, two mirrored -45 degree streams, and two mirrored +45 degree streams.
     internal static class BBSD_Charge_Effects
     {
         private const int ChargeTime = 90;
-        private const float CustomSparkIntensity = 0.15f;
+
+        private static readonly float[] StreamAngles =
+        {
+            0f,
+            -MathHelper.PiOver4,
+            -MathHelper.PiOver4,
+            MathHelper.PiOver4,
+            MathHelper.PiOver4
+        };
+
+        private static readonly float[] StreamOffsets =
+        {
+            0f,
+            -4.5f,
+            -9f,
+            4.5f,
+            9f
+        };
+
+        private static readonly float[] StreamWeights =
+        {
+            1f,
+            0.82f,
+            0.68f,
+            0.82f,
+            0.68f
+        };
+
+        private static Vector2 BladeForward(Projectile projectile) => (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
 
         internal static void SpawnChargeEffects(Projectile projectile, Player owner, Vector2 weaponTip, int timer)
         {
             if (Main.dedServ)
                 return;
 
-            float chargeProgress = Utils.GetLerpValue(0f, ChargeTime, timer, true);
-            float intensity = 0.24f + 0.76f * (1f - (float)Math.Pow(1f - chargeProgress, 2.35f));
-            Vector2 visualForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
-            Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
+            float progress = Utils.GetLerpValue(0f, ChargeTime, timer, true);
+            float intensity = 0.34f + progress * 0.66f;
+            Vector2 forward = BladeForward(projectile);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            SpawnChargeFunnel(projectile, owner, weaponTip, visualForward, intensity, timer);
-            SpawnTriJetBurst(weaponTip, visualForward, visualRight, intensity, 0.44f + 0.56f * chargeProgress, timer, false);
+            SpawnFrontStreams(weaponTip, forward, right, intensity, timer, readyState: false);
+            SpawnCondensedCore(weaponTip, forward, right, intensity, timer, readyState: false);
 
             if (timer % 5 == 0)
             {
-                DirectionalPulseRing tipPulse = new DirectionalPulseRing(
-                    weaponTip + visualForward * 2f,
-                    visualForward * (0.12f + intensity * 0.24f),
-                    Color.Lerp(new Color(70, 180, 255), Color.White, 0.35f + intensity * 0.28f),
-                    new Vector2(0.35f + intensity * 0.18f, 1f + intensity * 0.5f),
-                    projectile.rotation,
-                    0.08f + intensity * 0.05f,
+                DirectionalPulseRing pulse = new DirectionalPulseRing(
+                    weaponTip + forward * (4f + intensity * 4f),
+                    forward * (0.16f + intensity * 0.12f),
+                    Color.Lerp(new Color(70, 190, 255), Color.White, 0.32f + intensity * 0.25f),
+                    new Vector2(0.34f + intensity * 0.08f, 0.92f + intensity * 0.26f),
+                    forward.ToRotation(),
+                    0.08f + intensity * 0.02f,
                     0.014f,
-                    10 + (int)(intensity * 6f));
-                GeneralParticleHandler.SpawnParticle(tipPulse);
+                    9 + (int)(intensity * 3f));
+                GeneralParticleHandler.SpawnParticle(pulse);
             }
         }
 
@@ -46,174 +74,115 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 visualForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
-            Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
+            Vector2 forward = BladeForward(projectile);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(readyTimer * 0.22f);
-            float intensity = 0.7f + pulse * 0.14f;
+            float intensity = 0.66f + pulse * 0.16f;
 
-            SpawnTriJetBurst(weaponTip, visualForward, visualRight, intensity, 0.84f, readyTimer, true);
+            SpawnFrontStreams(weaponTip, forward, right, intensity, readyTimer, readyState: true);
+            SpawnCondensedCore(weaponTip, forward, right, intensity, readyTimer, readyState: true);
 
-            if (Main.rand.NextBool(2))
+            if (readyTimer % 6 == 0)
+            {
+                DirectionalPulseRing pulseRing = new DirectionalPulseRing(
+                    weaponTip + forward * 8f,
+                    forward * (0.16f + pulse * 0.08f),
+                    Color.Lerp(new Color(90, 210, 255), Color.White, 0.45f),
+                    new Vector2(0.38f, 1.08f + pulse * 0.18f),
+                    forward.ToRotation(),
+                    0.1f,
+                    0.013f,
+                    11);
+                GeneralParticleHandler.SpawnParticle(pulseRing);
+            }
+        }
+
+        // Emits the five main lanes every frame, with the center lane carrying the most weight.
+        private static void SpawnFrontStreams(Vector2 weaponTip, Vector2 forward, Vector2 right, float intensity, int timer, bool readyState)
+        {
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(timer * (readyState ? 0.18f : 0.24f));
+            float stability = readyState ? 0.12f : 0.3f;
+
+            for (int i = 0; i < StreamAngles.Length; i++)
+            {
+                float weight = StreamWeights[i];
+                float laneWave = readyState
+                    ? (float)Math.Sin(timer * 0.16f + i * 0.8f) * 0.45f
+                    : (float)Math.Sin(timer * 0.18f + i * 0.92f) * (0.55f + intensity * 1.15f);
+
+                Vector2 laneDirection = forward.RotatedBy(StreamAngles[i] + laneWave * 0.008f * stability);
+                Vector2 spawnPosition =
+                    weaponTip +
+                    right * StreamOffsets[i] * (0.85f + intensity * 0.12f) +
+                    right * laneWave +
+                    forward * Main.rand.NextFloat(1.5f, 6.5f + intensity * 5f) +
+                    Main.rand.NextVector2Circular(0.85f, 0.85f);
+
+                float speed = MathHelper.Lerp(7f, 13.5f, intensity) * (0.72f + weight * 0.34f) * MathHelper.Lerp(0.92f, 1.06f, pulse);
+                float scale = MathHelper.Lerp(0.052f, 0.088f, intensity) * (0.82f + weight * 0.22f) * (readyState ? 0.85f : 1f);
+                int lifetime = 9 + (int)(4f * intensity + weight * 2f);
+                Color lineColor = Color.Lerp(new Color(76, 196, 255), Color.White, 0.26f + weight * 0.26f + pulse * 0.08f);
+
+                Particle line = new CustomSpark(
+                    spawnPosition,
+                    laneDirection * speed,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    lifetime,
+                    scale,
+                    lineColor * (readyState ? 0.74f : 0.84f),
+                    new Vector2(
+                        1.65f + weight * 0.52f + intensity * 0.55f,
+                        0.42f + weight * 0.05f),
+                    shrinkSpeed: readyState ? 0.76f : 0.7f);
+                GeneralParticleHandler.SpawnParticle(line);
+
+                if ((timer + i) % (readyState ? 4 : 3) == 0)
+                {
+                    Dust dust = Dust.NewDustPerfect(
+                        spawnPosition,
+                        Main.rand.NextBool() ? DustID.Water : DustID.Frost,
+                        laneDirection * Main.rand.NextFloat(1.2f, 2.8f) * (0.55f + weight * 0.3f),
+                        100,
+                        i == 0 ? new Color(100, 220, 255) : new Color(205, 248, 255),
+                        Main.rand.NextFloat(0.6f, 0.9f) * (0.7f + intensity * 0.25f));
+                    dust.noGravity = true;
+                }
+            }
+        }
+
+        // Keeps the charge rooted at the muzzle so the five streams feel focused instead of noisy.
+        private static void SpawnCondensedCore(Vector2 weaponTip, Vector2 forward, Vector2 right, float intensity, int timer, bool readyState)
+        {
+            float coreRadius = readyState ? 2.2f : 3.8f;
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(timer * 0.28f);
+
+            if (Main.rand.NextBool(readyState ? 3 : 2))
             {
                 GlowOrbParticle orb = new GlowOrbParticle(
-                    weaponTip + visualForward * Main.rand.NextFloat(6f, 16f) + visualRight * Main.rand.NextFloat(-5f, 5f),
-                    visualForward * Main.rand.NextFloat(0.12f, 0.4f),
+                    weaponTip - forward * Main.rand.NextFloat(0f, 3f) + Main.rand.NextVector2Circular(coreRadius, coreRadius),
+                    forward * Main.rand.NextFloat(0.08f, 0.38f),
                     false,
-                    7,
-                    0.78f + Main.rand.NextFloat(0.18f),
-                    Color.Lerp(new Color(95, 210, 255), Color.White, 0.45f),
+                    6,
+                    0.46f + intensity * 0.16f + pulse * 0.05f,
+                    Color.Lerp(new Color(105, 220, 255), Color.White, 0.42f),
                     true,
                     false,
                     true);
                 GeneralParticleHandler.SpawnParticle(orb);
             }
 
-            if (readyTimer % 6 == 0)
+            if (readyState && timer % 5 == 0)
             {
                 CritSpark spark = new CritSpark(
-                    weaponTip + visualForward * Main.rand.NextFloat(10f, 22f) + visualRight * Main.rand.NextFloat(-6f, 6f),
-                    visualForward.RotatedBy(Main.rand.NextFloat(-0.12f, 0.12f)) * Main.rand.NextFloat(4.2f, 7.2f),
+                    weaponTip + forward * Main.rand.NextFloat(4f, 10f) + right * Main.rand.NextFloat(-3f, 3f),
+                    forward.RotatedBy(Main.rand.NextFloat(-0.08f, 0.08f)) * Main.rand.NextFloat(2.6f, 4.8f),
                     Color.White,
                     Color.LightBlue,
-                    0.9f,
-                    14);
+                    0.62f,
+                    10);
                 GeneralParticleHandler.SpawnParticle(spark);
             }
-        }
-
-        private static void SpawnChargeFunnel(Projectile projectile, Player owner, Vector2 weaponTip, Vector2 bladeForward, float intensity, int timer)
-        {
-            Vector2 right = bladeForward.RotatedBy(MathHelper.PiOver2);
-            Vector2 lowerFocus = owner.Bottom + Vector2.UnitY * MathHelper.Lerp(24f, 46f, intensity);
-            int laneCount = 4 + (int)Math.Round(intensity * 3f);
-
-            for (int lane = 0; lane < laneCount; lane++)
-            {
-                float laneRatio = lane / (float)Math.Max(1, laneCount - 1);
-                float side = MathHelper.Lerp(-1f, 1f, laneRatio);
-                float spiral = timer * 0.24f + lane * 0.7f + projectile.identity * 0.17f;
-                float spread = MathHelper.Lerp(18f, 84f, intensity) * (0.42f + 0.58f * (0.5f + 0.5f * (float)Math.Sin(spiral)));
-
-                Vector2 spawnPosition =
-                    lowerFocus +
-                    right * side * spread +
-                    Vector2.UnitY * Main.rand.NextFloat(-6f, 12f) -
-                    bladeForward * Main.rand.NextFloat(8f, 22f) +
-                    right * (float)Math.Sin(spiral * 1.35f) * 16f +
-                    Main.rand.NextVector2Circular(3f, 3f);
-
-                Vector2 inward = (weaponTip - spawnPosition).SafeNormalize(bladeForward);
-                Vector2 curl = inward.RotatedBy(MathHelper.PiOver2 * (side >= 0f ? 1f : -1f));
-                Vector2 flowVelocity =
-                    inward * MathHelper.Lerp(4.2f, 11.8f, intensity) +
-                    curl * MathHelper.Lerp(1.8f, 5.2f, intensity) +
-                    owner.velocity * 0.08f;
-
-                Dust water = Dust.NewDustPerfect(
-                    spawnPosition,
-                    DustID.Water,
-                    flowVelocity,
-                    100,
-                    Color.Lerp(new Color(60, 160, 255), new Color(150, 235, 255), 0.35f + 0.35f * intensity),
-                    Main.rand.NextFloat(0.95f, 1.35f));
-                water.noGravity = true;
-                water.fadeIn = 1.08f;
-
-                if ((timer + lane) % 2 == 0)
-                {
-                    WaterFlavoredParticle mist = new WaterFlavoredParticle(
-                        spawnPosition,
-                        flowVelocity * 0.48f,
-                        false,
-                        Main.rand.Next(18, 24),
-                        0.84f + Main.rand.NextFloat(0.2f),
-                        Color.LightBlue * 0.92f);
-                    GeneralParticleHandler.SpawnParticle(mist);
-                }
-            }
-        }
-
-        private static void SpawnTriJetBurst(Vector2 weaponTip, Vector2 visualForward, Vector2 visualRight, float intensity, float stability, int timer, bool stableReadyJet)
-        {
-            float clampedIntensity = MathHelper.Clamp(intensity, 0f, 1.4f);
-            float pulse = 0.5f + 0.5f * (float)Math.Sin(timer * (stableReadyJet ? 0.18f : 0.27f));
-            float lineLength = MathHelper.Lerp(10f, 34f, clampedIntensity) * MathHelper.Lerp(0.9f, 1.12f, pulse) * CustomSparkIntensity;
-            float lineScale = MathHelper.Lerp(0.08f, 0.22f, clampedIntensity) * CustomSparkIntensity;
-            float lineLifetime = MathHelper.Lerp(11f, 20f, clampedIntensity) * 0.4f;
-
-            float[] branchAngles =
-            {
-                -MathHelper.PiOver4,
-                0f,
-                MathHelper.PiOver4
-            };
-
-            float[] branchWeights =
-            {
-                0.6f,
-                1f,
-                0.6f
-            };
-
-            for (int branchIndex = 0; branchIndex < branchAngles.Length; branchIndex++)
-            {
-                float branchAngle = branchAngles[branchIndex];
-                float branchWeight = branchWeights[branchIndex];
-                int lineCount = 1;
-
-                for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
-                {
-                    float localT = lineCount == 1 ? 0f : lineIndex / (float)(lineCount - 1);
-                    float centered = localT * 2f - 1f;
-                    float wobble = centered * MathHelper.Lerp(0.028f, 0.085f, stability);
-                    Vector2 branchDirection = visualForward.RotatedBy(branchAngle + wobble);
-                    Vector2 spawnPosition =
-                        weaponTip +
-                        visualForward * Main.rand.NextFloat(2f, 7f + clampedIntensity * 10f) +
-                        visualRight * (float)Math.Sin(branchAngle) * Main.rand.NextFloat(0f, 5f) +
-                        Main.rand.NextVector2Circular(1.5f, 1.5f);
-
-                    Vector2 velocity = branchDirection * (lineLength * (0.55f + branchWeight * 0.45f));
-                    Color lineColor = Color.Lerp(new Color(95, 210, 255), Color.White, 0.35f + 0.35f * branchWeight);
-                    Vector2 stretch = new Vector2(
-                        (1.8f + clampedIntensity * 2.2f + branchWeight * 0.7f) * 0.25f,
-                        (0.34f + branchWeight * 0.08f) * 0.45f);
-
-                    Particle line = new CustomSpark(
-                        spawnPosition,
-                        velocity,
-                        "CalamityMod/Particles/BloomLineSoftEdge",
-                        false,
-                        (int)(lineLifetime + branchWeight * 4f),
-                        lineScale * (0.9f + branchWeight * 0.75f),
-                        lineColor * (stableReadyJet ? 0.9f : 0.84f) * CustomSparkIntensity,
-                        stretch,
-                        shrinkSpeed: stableReadyJet ? 0.72f : 0.64f);
-                    GeneralParticleHandler.SpawnParticle(line);
-                }
-
-                Vector2 branchCoreDirection = visualForward.RotatedBy(branchAngle);
-                Dust water = Dust.NewDustPerfect(
-                    weaponTip + branchCoreDirection * Main.rand.NextFloat(2f, 8f),
-                    DustID.Water,
-                    branchCoreDirection * Main.rand.NextFloat(3f, 8f) * (0.65f + branchWeight * 0.45f),
-                    100,
-                    Color.Lerp(new Color(80, 195, 255), Color.White, 0.25f + 0.35f * branchWeight),
-                    Main.rand.NextFloat(0.85f, 1.22f) * (0.8f + branchWeight * 0.3f));
-                water.noGravity = true;
-            }
-
-            GlowOrbParticle orb = new GlowOrbParticle(
-                weaponTip + visualForward * MathHelper.Lerp(6f, 16f, clampedIntensity),
-                visualForward * MathHelper.Lerp(0.16f, 0.48f, clampedIntensity),
-                false,
-                6,
-                0.64f + clampedIntensity * 0.38f,
-                Color.Lerp(new Color(90, 205, 255), Color.White, 0.45f),
-                true,
-                false,
-                true);
-            GeneralParticleHandler.SpawnParticle(orb);
         }
     }
 }

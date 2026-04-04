@@ -253,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 if (dashVelocity.Length() > maxDashSpeed)
                     dashVelocity = dashVelocity.SafeNormalize(Vector2.UnitX) * maxDashSpeed;
 
-                player.velocity = dashVelocity;
+                player.velocity.X = dashVelocity.X;
 
                 // 冲刺期间的海蓝拖尾
                 if (timer % 3 == 0)

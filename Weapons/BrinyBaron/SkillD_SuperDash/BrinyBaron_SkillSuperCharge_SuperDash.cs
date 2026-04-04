@@ -213,28 +213,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         {
             Vector2 armPosition = owner.RotatedRelativePoint(owner.MountedCenter, true);
             Vector2 forward = AimDirection;
-            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
             float chargeProgress = chargeReady ? 1f : Utils.GetLerpValue(0f, ChargeTime, timer, true);
-            float swayA = (float)Math.Sin(timer * 0.34f + Projectile.identity * 0.11f);
-            float swayB = (float)Math.Cos(timer * 0.57f + Projectile.identity * 0.08f);
-            float swayAngle = dashing ? 0f : readyState ? 0f : MathHelper.ToRadians((1.25f + chargeProgress * 3.75f) * swayA);
-            float sideSway = dashing ? 0f : readyState ? 0f : swayA * (4f + chargeProgress * 8f);
-            float depthSway = dashing ? 0f : readyState ? 0f : swayB * (2f + chargeProgress * 4.5f);
             float holdDistance = readyState
                 ? HoldDistanceReady
-                : (dashing ? HoldDistanceDash : HoldDistanceCharge) + depthSway + chargeProgress * (dashing ? 0f : 8f);
+                : (dashing ? HoldDistanceDash : HoldDistanceCharge) + chargeProgress * (dashing ? 0f : 8f);
 
-            Projectile.Center = armPosition + forward * holdDistance + right * sideSway + new Vector2(0f, 6f);
-            if (!dashing && !readyState && chargeProgress > 0.72f)
-                Projectile.Center += Main.rand.NextVector2Circular(1.5f, 1.5f) * chargeProgress;
+            Projectile.Center = armPosition + forward * holdDistance + new Vector2(0f, 6f);
 
-            Projectile.rotation = forward.ToRotation() + MathHelper.PiOver4 + swayAngle;
+            Projectile.rotation = forward.ToRotation() + MathHelper.PiOver4;
             Projectile.scale = readyState
                 ? 1.08f
                 : dashing
                 ? 1.08f
-                : 1f + chargeProgress * 0.12f + 0.02f * swayB;
+                : 1f + chargeProgress * 0.08f;
 
             Projectile.direction = forward.X >= 0f ? 1 : -1;
             owner.ChangeDir(Projectile.direction);
@@ -243,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             owner.itemAnimation = 2;
             owner.itemRotation = (forward * owner.direction).ToRotation();
 
-            float armRotation = forward.ToRotation() - MathHelper.PiOver2 + swayAngle * 0.35f;
+            float armRotation = forward.ToRotation() - MathHelper.PiOver2;
             owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
         }
 

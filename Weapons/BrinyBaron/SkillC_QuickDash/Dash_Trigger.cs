@@ -145,27 +145,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
         {
             DashGrowthProfile profile = BuildDashGrowthProfile(
                 baseDamageMultiplier: 1f,
-                dashCooldown: 60 * 3);
+                dashCooldown: 60 * 2);
 
             if (NPC.downedFishron)
             {
                 profile = BuildDashGrowthProfile(
                     baseDamageMultiplier: 1.25f,
-                    dashCooldown: 60 * 2 + 30);
+                    dashCooldown: 60 + 60);
             }
 
             if (DownedBossSystem.downedBoomerDuke)
             {
                 profile = BuildDashGrowthProfile(
                     baseDamageMultiplier: 1.55f,
-                    dashCooldown: 60 * 2);
+                    dashCooldown: 60 + 30);
             }
 
             if (DownedBossSystem.downedYharon)
             {
                 profile = BuildDashGrowthProfile(
                     baseDamageMultiplier: 2f,
-                    dashCooldown: 60 + 30);
+                    dashCooldown: 60 + 0);
             }
 
             return profile;

@@ -174,3 +174,4 @@ Projectiles: {
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+Cooldowns.SHPC_EX: SHPC冷却

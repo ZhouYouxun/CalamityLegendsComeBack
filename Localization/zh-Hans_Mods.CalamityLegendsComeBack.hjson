@@ -18,6 +18,7 @@ Items: {
 				[c/99CCFF:停止攻击后热值逐渐下降,不手持该武器可清空热值。]
 				[c/DDA0FF:扫射期间点击左键可强制降温，释放5枚能量光球并短暂中断射击。]
 				[c/FF7043:热值越高，副作用越强，但激光性能也随之提升。]
+				[c/66CCFF:自带魔力续杯的效果，您无需准备[][i:555]]
 				'''
 			SHPC_Final: "[c/99B3FF:系统仍在演化。此前的缺陷尚未完全修正，但其潜力仍然存在。或许有一天，它能够得到真正的验证。]"
 			SHPCRight1: "[c/8FA2FF:当前解锁至Ⅲ级热值：消失时产生小范围爆炸。]"
@@ -177,3 +178,4 @@ Projectiles: {
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+Cooldowns.SHPC_EX: SHPC冷却

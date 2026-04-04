@@ -1,4 +1,3 @@
-using System;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
@@ -10,8 +9,8 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
-    // Owns all enemy-hit feedback for the super dash.
-    // The visuals are intentionally biased toward the current facing direction so the impact keeps flowing with the dash.
+    // Owns all enemy-hit feedback for the dash.
+    // The burst now keeps flowing forward along the dash vector instead of exploding equally in every direction.
     internal static class BBSD_Hit_Effects
     {
         internal static void SpawnImpactStars(Projectile projectile, Vector2 aimDirection, float goldenAngle, float supportStarImpactDamageFactor, float supportStarDashDamageFactor, Vector2 impactCenter, bool majorImpact)
@@ -19,29 +18,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.myPlayer != projectile.owner)
                 return;
 
-            Vector2 forward = projectile.rotation.ToRotationVector2();
+            Vector2 forward = projectile.velocity.SafeNormalize(aimDirection);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             int starCount = majorImpact ? 8 : 4;
             float damageFactor = majorImpact ? supportStarImpactDamageFactor : supportStarDashDamageFactor;
-            int starDamage = Math.Max(1, (int)(projectile.damage * damageFactor));
+            int starDamage = System.Math.Max(1, (int)(projectile.damage * damageFactor));
 
             for (int i = 0; i < starCount; i++)
             {
                 float t = (i + 0.5f) / starCount;
                 float spiralAngle = i * goldenAngle;
-                float spiralRadius = MathHelper.Lerp(4f, 20f, (float)Math.Sqrt(t));
+                float spiralRadius = MathHelper.Lerp(4f, 18f, (float)System.Math.Sqrt(t));
 
                 Vector2 spiralOffset =
-                    right * ((float)Math.Sin(spiralAngle) * spiralRadius) +
-                    forward * ((float)Math.Cos(spiralAngle) * spiralRadius * 0.35f);
+                    right * ((float)System.Math.Sin(spiralAngle) * spiralRadius) +
+                    forward * ((float)System.Math.Cos(spiralAngle) * spiralRadius * 0.4f);
 
                 Vector2 launchDirection = (
                     forward * 1.2f +
-                    right * ((float)Math.Sin(spiralAngle) * 0.42f) +
-                    spiralOffset.SafeNormalize(forward) * 0.35f +
-                    Main.rand.NextVector2Circular(0.08f, 0.08f)).SafeNormalize(forward);
+                    right * ((float)System.Math.Sin(spiralAngle) * 0.38f) +
+                    spiralOffset.SafeNormalize(forward) * 0.3f +
+                    Main.rand.NextVector2Circular(0.06f, 0.06f)).SafeNormalize(forward);
 
-                Vector2 launchVelocity = launchDirection * Main.rand.NextFloat(10f, 17f);
+                Vector2 launchVelocity = launchDirection * Main.rand.NextFloat(10f, 16f);
                 Vector2 spawnPosition = impactCenter + spiralOffset + Main.rand.NextVector2Circular(2f, 2f);
 
                 Projectile.NewProjectile(
@@ -53,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     projectile.knockBack * 0.35f,
                     projectile.owner);
 
-                BBSD_Fly_Effects.SpawnSupportStarLaunchEffects(spawnPosition, launchVelocity, majorImpact ? 1.15f : 0.82f);
+                BBSD_Fly_Effects.SpawnSupportStarLaunchEffects(spawnPosition, launchVelocity, majorImpact ? 1f : 0.76f);
             }
         }
 
@@ -68,11 +67,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 impactCenter,
                 slashVelocity,
                 ModContent.ProjectileType<BBSwing_Slash>(),
-                Math.Max(1, (int)(projectile.damage * impactSlashDamageFactor)),
+                System.Math.Max(1, (int)(projectile.damage * impactSlashDamageFactor)),
                 projectile.knockBack * 0.45f,
                 projectile.owner,
                 impactSlashScale,
-                Main.rand.NextFloat(-0.26f, 0.26f));
+                Main.rand.NextFloat(-0.2f, 0.2f));
         }
 
         internal static void ApplyImpactScreenShake(Vector2 impactCenter, float shakePower)
@@ -81,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
 
             float distanceFactor = Utils.GetLerpValue(1400f, 0f, Vector2.Distance(impactCenter, Main.LocalPlayer.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = System.Math.Max(
                 Main.LocalPlayer.Calamity().GeneralScreenShakePower,
                 shakePower * distanceFactor);
         }
@@ -93,26 +92,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             SoundEngine.PlaySound(SoundID.Item14 with
             {
-                Volume = 1.2f,
-                Pitch = -0.22f
-            }, impactCenter);
-
-            SoundEngine.PlaySound(SoundID.Item74 with
-            {
-                Volume = 1.05f,
-                Pitch = -0.34f
+                Volume = 1.15f,
+                Pitch = -0.26f
             }, impactCenter);
 
             SoundEngine.PlaySound(SoundID.Splash with
             {
-                Volume = 1.15f,
-                Pitch = -0.16f
+                Volume = 1.1f,
+                Pitch = -0.12f
             }, impactCenter);
 
             SoundEngine.PlaySound(SoundID.Item88 with
             {
-                Volume = 0.75f,
-                Pitch = -0.32f
+                Volume = 0.62f,
+                Pitch = -0.34f
             }, impactCenter);
         }
 
@@ -121,203 +114,146 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 forward = projectile.rotation.ToRotationVector2();
+            Vector2 forward = projectile.velocity.SafeNormalize(aimDirection);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            float intensity = majorImpact ? 1f : 0.7f;
+            float intensity = majorImpact ? 1f : 0.72f;
 
-            SpawnImpactForwardBloom(impactCenter, forward, right, intensity, majorImpact);
-            SpawnImpactDustGeometry(owner, projectile, forward, right, timer, impactCenter, intensity, majorImpact);
-            SpawnImpactParticleGeometry(owner, impactCenter, forward, right, intensity, majorImpact);
-            SpawnImpactAftermath(projectile, impactCenter, forward, right, intensity, majorImpact);
+            SpawnImpactFan(impactCenter, forward, intensity, majorImpact);
+            SpawnImpactPulse(impactCenter, forward, intensity, majorImpact);
+            SpawnImpactOrbs(impactCenter, forward, right, intensity, timer);
+            SpawnImpactDust(impactCenter, forward, right, intensity, majorImpact);
         }
 
-        private static void SpawnImpactForwardBloom(Vector2 impactCenter, Vector2 forward, Vector2 right, float intensity, bool majorImpact)
+        // The impact cone stays narrow and directional so the dash keeps "carrying through" the target.
+        private static void SpawnImpactFan(Vector2 impactCenter, Vector2 forward, float intensity, bool majorImpact)
         {
-            float[] branchAngles =
-            {
-                -0.48f,
-                0f,
-                0.48f
-            };
+            float[] branchAngles = { -0.42f, -0.18f, 0f, 0.18f, 0.42f };
+            float[] branchWeights = { 0.62f, 0.8f, 1f, 0.8f, 0.62f };
 
-            float[] branchWeights =
+            for (int i = 0; i < branchAngles.Length; i++)
             {
-                0.68f,
-                1f,
-                0.68f
-            };
+                int lineCount = majorImpact && i == 2 ? 2 : 1;
 
-            for (int branchIndex = 0; branchIndex < branchAngles.Length; branchIndex++)
-            {
-                float branchAngle = branchAngles[branchIndex];
-                float branchWeight = branchWeights[branchIndex];
-                int lineCount = majorImpact ? (branchIndex == 1 ? 5 : 3) : (branchIndex == 1 ? 3 : 2);
-
-                for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
+                for (int j = 0; j < lineCount; j++)
                 {
-                    float localT = lineCount == 1 ? 0f : lineIndex / (float)(lineCount - 1);
-                    float centered = localT * 2f - 1f;
-                    Vector2 direction = forward.RotatedBy(branchAngle + centered * 0.055f);
+                    float local = lineCount == 1 ? 0f : j * 2f - 1f;
+                    Vector2 direction = forward.RotatedBy(branchAngles[i] + local * 0.05f);
 
                     Particle line = new CustomSpark(
-                        impactCenter + forward * Main.rand.NextFloat(0f, 8f) + right * centered * 3f,
-                        direction * Main.rand.NextFloat(10f, 18f) * (0.72f + branchWeight * 0.42f) * intensity,
+                        impactCenter + forward * Main.rand.NextFloat(0f, 6f) + direction.RotatedBy(MathHelper.PiOver2) * local * 2f,
+                        direction * Main.rand.NextFloat(10f, 17f) * (0.74f + branchWeights[i] * 0.34f) * intensity,
                         "CalamityMod/Particles/BloomLineSoftEdge",
                         false,
-                        Main.rand.Next(13, 20),
-                        Main.rand.NextFloat(0.1f, 0.18f) * (0.8f + branchWeight * 0.8f) * intensity,
-                        Color.Lerp(new Color(105, 220, 255), Color.White, 0.4f + 0.25f * branchWeight) * 0.9f,
-                        new Vector2(1.95f + branchWeight * 1.35f, 0.36f + branchWeight * 0.06f),
-                        shrinkSpeed: 0.68f);
+                        Main.rand.Next(8, 12),
+                        Main.rand.NextFloat(0.055f, 0.085f) * (0.8f + branchWeights[i] * 0.25f) * intensity,
+                        Color.Lerp(new Color(95, 215, 255), Color.White, 0.34f + branchWeights[i] * 0.24f) * 0.78f,
+                        new Vector2(1.8f + branchWeights[i] * 0.5f, 0.42f + branchWeights[i] * 0.05f),
+                        shrinkSpeed: 0.7f);
                     GeneralParticleHandler.SpawnParticle(line);
                 }
             }
         }
 
-        private static void SpawnImpactDustGeometry(Player owner, Projectile projectile, Vector2 forward, Vector2 right, int timer, Vector2 impactCenter, float intensity, bool majorImpact)
+        private static void SpawnImpactPulse(Vector2 impactCenter, Vector2 forward, float intensity, bool majorImpact)
         {
-            int coneCount = majorImpact ? 22 : 14;
-            for (int i = 0; i < coneCount; i++)
+            DirectionalPulseRing frontPulse = new DirectionalPulseRing(
+                impactCenter + forward * 4f,
+                forward * (0.35f + intensity * 0.14f),
+                Color.Lerp(new Color(85, 205, 255), Color.White, 0.42f),
+                new Vector2(0.5f + intensity * 0.08f, 1.32f + intensity * 0.4f),
+                forward.ToRotation(),
+                0.12f + intensity * 0.03f,
+                0.015f,
+                majorImpact ? 14 : 11);
+            GeneralParticleHandler.SpawnParticle(frontPulse);
+
+            if (majorImpact)
             {
-                float t = i / (float)Math.Max(1, coneCount - 1);
-                float centered = t * 2f - 1f;
-                float centralFocus = 1f - Math.Abs(centered);
-                float wave = (float)Math.Sin(t * MathHelper.TwoPi * 2.2f + timer * 0.16f) * 0.04f;
-                float coneOffset = MathHelper.Lerp(-0.58f, 0.58f, t) + wave;
-                float speed = MathHelper.Lerp(8f, 24f, (float)Math.Sqrt(Math.Max(0f, centralFocus))) * intensity;
-                Vector2 jetVelocity =
-                    forward.RotatedBy(coneOffset) * speed +
-                    right * centered * 2f +
-                    owner.velocity * 0.14f;
-
-                Dust water = Dust.NewDustPerfect(
-                    impactCenter + right * centered * 5f,
-                    DustID.Water,
-                    jetVelocity,
-                    100,
-                    new Color(75, 180, 255),
-                    Main.rand.NextFloat(1.05f, 1.6f) * intensity);
-                water.noGravity = true;
-                water.fadeIn = 1.12f;
-
-                if (i % 2 == 0)
-                {
-                    Dust frost = Dust.NewDustPerfect(
-                        impactCenter + forward * 2f,
-                        DustID.Frost,
-                        jetVelocity * 0.72f,
-                        100,
-                        new Color(210, 248, 255),
-                        Main.rand.NextFloat(0.9f, 1.25f) * intensity);
-                    frost.noGravity = true;
-                }
+                DirectionalPulseRing secondPulse = new DirectionalPulseRing(
+                    impactCenter - forward * 2f,
+                    forward * 0.2f,
+                    new Color(80, 195, 255) * 0.82f,
+                    new Vector2(0.44f, 1.05f),
+                    forward.ToRotation(),
+                    0.1f,
+                    0.012f,
+                    10);
+                GeneralParticleHandler.SpawnParticle(secondPulse);
             }
         }
 
-        private static void SpawnImpactParticleGeometry(Player owner, Vector2 impactCenter, Vector2 forward, Vector2 right, float intensity, bool majorImpact)
+        private static void SpawnImpactOrbs(Vector2 impactCenter, Vector2 forward, Vector2 right, float intensity, int timer)
         {
-            int pulseCount = majorImpact ? 3 : 2;
-            for (int i = 0; i < pulseCount; i++)
+            for (int side = -1; side <= 1; side += 2)
             {
-                DirectionalPulseRing pulse = new DirectionalPulseRing(
-                    impactCenter - forward * (2f + i * 4f),
-                    forward * (0.42f + i * 0.16f),
-                    Color.Lerp(new Color(70, 190, 255), Color.White, 0.28f + i * 0.18f),
-                    new Vector2(0.55f + i * 0.12f, 1.4f + i * 0.45f),
-                    forward.ToRotation(),
-                    0.14f + i * 0.04f,
-                    0.016f,
-                    11 + i * 3);
-                GeneralParticleHandler.SpawnParticle(pulse);
-            }
-
-            int helixPoints = majorImpact ? 12 : 8;
-            for (int arm = 0; arm < 2; arm++)
-            {
-                float sign = arm == 0 ? 1f : -1f;
-                for (int i = 0; i < helixPoints; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    float t = i / (float)Math.Max(1, helixPoints - 1);
-                    float theta = sign * t * MathHelper.TwoPi * 0.9f;
-                    float radius = MathHelper.Lerp(4f, 26f, t) * intensity;
+                    float t = i / 2f;
+                    float wave = (float)System.Math.Sin(timer * 0.18f + side * 0.9f + i * 0.75f);
                     Vector2 position =
                         impactCenter +
-                        forward * MathHelper.Lerp(4f, 28f, t) +
-                        right * (float)Math.Sin(theta) * radius;
+                        forward * MathHelper.Lerp(4f, 20f, t) +
+                        right * side * (3f + 8f * t + wave * 1.6f);
 
                     GlowOrbParticle orb = new GlowOrbParticle(
                         position,
-                        forward * Main.rand.NextFloat(0.15f, 0.8f) + right * sign * Main.rand.NextFloat(0.05f, 0.3f),
+                        forward * Main.rand.NextFloat(0.08f, 0.4f) + right * side * Main.rand.NextFloat(0.02f, 0.12f),
                         false,
-                        7,
-                        0.8f + (1f - t) * 0.3f * intensity,
-                        Color.Lerp(new Color(70, 185, 255), Color.White, 0.3f + 0.4f * t),
+                        6,
+                        0.5f + (1f - t) * 0.18f * intensity,
+                        Color.Lerp(new Color(85, 200, 255), Color.White, 0.28f + t * 0.3f),
                         true,
                         false,
                         true);
                     GeneralParticleHandler.SpawnParticle(orb);
                 }
             }
-
-            int sparkCount = majorImpact ? 7 : 4;
-            for (int i = 0; i < sparkCount; i++)
-            {
-                float side = MathHelper.Lerp(-0.42f, 0.42f, i / (float)Math.Max(1, sparkCount - 1));
-                CritSpark spark = new CritSpark(
-                    impactCenter + forward * Main.rand.NextFloat(2f, 9f) + right * side * 8f,
-                    forward.RotatedBy(side) * Main.rand.NextFloat(5f, 9f) * intensity + owner.velocity * 0.08f,
-                    Color.White,
-                    Color.LightBlue,
-                    Main.rand.NextFloat(0.9f, 1.25f) * intensity,
-                    13 + Main.rand.Next(6));
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
         }
 
-        private static void SpawnImpactAftermath(Projectile projectile, Vector2 impactCenter, Vector2 forward, Vector2 right, float intensity, bool majorImpact)
+        private static void SpawnImpactDust(Vector2 impactCenter, Vector2 forward, Vector2 right, float intensity, bool majorImpact)
         {
-            int smokeCount = majorImpact ? 5 : 3;
-            for (int i = 0; i < smokeCount; i++)
+            int dustCount = majorImpact ? 12 : 8;
+
+            for (int i = 0; i < dustCount; i++)
             {
-                HeavySmokeParticle smoke = new HeavySmokeParticle(
-                    impactCenter + Main.rand.NextVector2Circular(6f, 6f),
-                    forward * Main.rand.NextFloat(0.5f, 2.2f) + right * Main.rand.NextFloat(-1.5f, 1.5f),
-                    Color.WhiteSmoke,
-                    18 + Main.rand.Next(5),
-                    Main.rand.NextFloat(0.9f, 1.35f) * intensity,
-                    0.35f,
-                    Main.rand.NextFloat(-0.3f, 0.3f),
-                    false);
-                GeneralParticleHandler.SpawnParticle(smoke);
+                float spread = MathHelper.Lerp(-0.46f, 0.46f, i / (float)System.Math.Max(1, dustCount - 1));
+                Vector2 velocity =
+                    forward.RotatedBy(spread) * Main.rand.NextFloat(5f, 11f) * intensity +
+                    right * spread * 3.2f;
+
+                Dust water = Dust.NewDustPerfect(
+                    impactCenter + right * spread * 5f,
+                    DustID.Water,
+                    velocity,
+                    100,
+                    new Color(85, 200, 255),
+                    Main.rand.NextFloat(0.75f, 1.12f) * intensity);
+                water.noGravity = true;
+
+                if (i % 2 == 0)
+                {
+                    Dust frost = Dust.NewDustPerfect(
+                        impactCenter + forward * 2f,
+                        DustID.Frost,
+                        velocity * 0.65f,
+                        100,
+                        new Color(215, 248, 255),
+                        Main.rand.NextFloat(0.68f, 0.96f) * intensity);
+                    frost.noGravity = true;
+                }
             }
 
-            int bloodCount = majorImpact ? 5 : 3;
-            for (int i = 0; i < bloodCount; i++)
+            int critCount = majorImpact ? 4 : 2;
+            for (int i = 0; i < critCount; i++)
             {
-                Vector2 bloodVelocity =
-                    forward.RotatedBy(Main.rand.NextFloat(-0.45f, 0.45f)) * Main.rand.NextFloat(4f, 10f) * intensity +
-                    right * Main.rand.NextFloat(-1.8f, 1.8f);
-
-                BloodParticle blood = new BloodParticle(
-                    impactCenter + Main.rand.NextVector2Circular(6f, 6f),
-                    bloodVelocity,
-                    Main.rand.Next(18, 30),
-                    Main.rand.NextFloat(0.72f, 1.1f) * intensity,
-                    Color.Lerp(new Color(90, 12, 26), new Color(170, 32, 55), Main.rand.NextFloat()));
-                GeneralParticleHandler.SpawnParticle(blood);
-            }
-
-            int bubbleCount = majorImpact ? 6 : 3;
-            for (int i = 0; i < bubbleCount; i++)
-            {
-                Gore bubble = Gore.NewGorePerfect(
-                    projectile.GetSource_FromAI(),
-                    impactCenter + Main.rand.NextVector2Circular(8f, 8f),
-                    forward * Main.rand.NextFloat(0.8f, 2.8f) + Main.rand.NextVector2Circular(1.1f, 1.1f),
-                    411);
-                bubble.timeLeft = 6 + Main.rand.Next(7);
-                bubble.scale = Main.rand.NextFloat(0.6f, 0.85f) * intensity;
-                bubble.type = Main.rand.NextBool(3) ? 412 : 411;
+                CritSpark spark = new CritSpark(
+                    impactCenter + forward * Main.rand.NextFloat(2f, 10f) + right * Main.rand.NextFloat(-4f, 4f),
+                    forward.RotatedBy(Main.rand.NextFloat(-0.18f, 0.18f)) * Main.rand.NextFloat(4f, 7f),
+                    Color.White,
+                    Color.LightBlue,
+                    Main.rand.NextFloat(0.55f, 0.82f) * intensity,
+                    10 + Main.rand.Next(4));
+                GeneralParticleHandler.SpawnParticle(spark);
             }
         }
     }

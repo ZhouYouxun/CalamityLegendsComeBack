@@ -265,33 +265,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #endregion
 
             #region ===== 魔力耗尽强制停火 =====
+            // 每帧都尝试触发魔力花（关键）
+            player.CheckMana(player.HeldItem, 0, true, false);
 
-            if (player.statMana <= 0)
-            {
-                // ===== 强制停火 =====
-                fireStopTimer = Math.Max(fireStopTimer, 2); // 持续停火
-                frameCounter = 0; // 防止继续触发Fire
+            //if (player.statMana <= 0)
+            //{
+            //    // ===== 强制停火 =====
+            //    fireStopTimer = Math.Max(fireStopTimer, 2); // 持续停火
+            //    frameCounter = 0; // 防止继续触发Fire
 
-                //// ===== 枪口向上喷烟 =====
-                //for (int i = 0; i < 2; i++)
-                //{
-                //    Vector2 smokeVel = -Vector2.UnitY.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
-                //    float smokeScale = Main.rand.NextFloat(0.8f, 1.4f);
+            //    //// ===== 枪口向上喷烟 =====
+            //    //for (int i = 0; i < 2; i++)
+            //    //{
+            //    //    Vector2 smokeVel = -Vector2.UnitY.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
+            //    //    float smokeScale = Main.rand.NextFloat(0.8f, 1.4f);
 
-                //    SmallSmokeParticle smoke = new SmallSmokeParticle(
-                //        GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
-                //        smokeVel,
-                //        Color.DimGray,
-                //        Main.rand.NextBool() ? Color.SlateGray : Color.Black,
-                //        smokeScale,
-                //        100
-                //    );
+            //    //    SmallSmokeParticle smoke = new SmallSmokeParticle(
+            //    //        GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
+            //    //        smokeVel,
+            //    //        Color.DimGray,
+            //    //        Main.rand.NextBool() ? Color.SlateGray : Color.Black,
+            //    //        smokeScale,
+            //    //        100
+            //    //    );
 
-                //    GeneralParticleHandler.SpawnParticle(smoke);
-                //}
+            //    //    GeneralParticleHandler.SpawnParticle(smoke);
+            //    //}
 
-                return; // ❗直接终止本帧AI（关键）
-            }
+            //    return; // ❗直接终止本帧AI（关键）
+            //}
 
             #endregion
         }
@@ -335,7 +337,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void Fire(Player player)
         {
 
-            player.statMana -= 2;
+            if (!player.CheckMana(player.HeldItem, 2, true, false))
+            {
+                // 蓝不够 → 停火
+                fireStopTimer = Math.Max(fireStopTimer, 2);
+                frameCounter = 0;
+                return;
+            }
 
             int count = LaserChainCount;
 
@@ -894,7 +902,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Player player = Main.player[Projectile.owner];
             NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
 
-            player.statMana -= 150;
+            player.CheckMana(player.HeldItem, 150, true, false);
 
             if (weapon == null)
                 return;
