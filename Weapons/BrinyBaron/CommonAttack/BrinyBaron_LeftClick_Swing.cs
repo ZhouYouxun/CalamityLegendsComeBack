@@ -28,10 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float NormalSwooshScale = 0.6f;
         private const float StageFourSwooshScale = 0.75f;
         private const float GiantSwooshScale = 1.35f;
-        private const float SmallSlashScale = 0.82f;
-        private const float GiantSlashScale = 1.55f;
-        private const float SmallSlashDamageFactor = 0.28f;
-        private const float GiantSlashDamageFactor = 0.34f;
 
         // 0/1/2 = 前三刀普通攻击，3 = 第四刀普通攻击+手里剑，4 = 第五刀巨大化攻击
         private int CurrentComboStage => swingCount % 5;
@@ -1078,55 +1074,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             float slashProgress = EvaluateEarthStyleSwingProgress((progress - fullSpinPortion) / (1f - fullSpinPortion));
             return MathHelper.Lerp(loopEndAngle, slashEndAngle, slashProgress);
-        }
-
-        private void SpawnHitSlashBurst(NPC target)
-        {
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            if (CurrentComboStage == 4)
-            {
-                float[] angleOffsets =
-                {
-                    MathHelper.ToRadians(-20f),
-                    0f,
-                    MathHelper.ToRadians(20f)
-                };
-
-                for (int i = 0; i < angleOffsets.Length; i++)
-                {
-                    Vector2 slashDirection = SlashAngle.ToRotationVector2().RotatedBy(angleOffsets[i]);
-                    Vector2 spawnOffset = slashDirection.RotatedBy(MathHelper.PiOver2) * ((i - 1) * 10f * CurrentVisualScale);
-
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        target.Center + spawnOffset,
-                        slashDirection * (6.5f + i * 0.6f),
-                        ModContent.ProjectileType<BBSwing_Slash>(),
-                        Math.Max(1, (int)(Projectile.damage * GiantSlashDamageFactor)),
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        GiantSlashScale * CurrentVisualScale,
-                        angleOffsets[i]
-                    );
-                }
-
-                return;
-            }
-
-            Vector2 smallSlashDirection = SlashAngle.ToRotationVector2();
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                target.Center,
-                smallSlashDirection * 6f,
-                ModContent.ProjectileType<BBSwing_Slash>(),
-                Math.Max(1, (int)(Projectile.damage * SmallSlashDamageFactor)),
-                Projectile.knockBack,
-                Projectile.owner,
-                SmallSlashScale * CurrentVisualScale,
-                0f
-            );
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

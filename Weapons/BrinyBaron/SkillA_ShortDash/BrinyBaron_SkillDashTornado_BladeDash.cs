@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.friendly = false;
             Projectile.penetrate = -1;
             Projectile.timeLeft = PrepareTime + DashTimeMax + ReboundTimeMax + 40;
-            Projectile.tileCollide = false;
+            Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.netImportant = true;
             Projectile.usesLocalNPCImmunity = true;

@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float HomingRange = 920f;
         private const float BaseSpeed = 12.5f;
         private const float HomingLerp = 0.085f;
+        private const float EffectIntensity = 0.4f;
 
         private float orbitSeed;
 
@@ -64,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
-            Lighting.AddLight(Projectile.Center, 0.08f, 0.28f, 0.42f);
+            Lighting.AddLight(Projectile.Center, 0.08f * EffectIntensity, 0.28f * EffectIntensity, 0.42f * EffectIntensity);
 
             SpawnFlightEffects();
         }
@@ -76,10 +77,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             float wave = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 12f + orbitSeed);
             Vector2 wakeCenter = Projectile.Center - forward * 12f;
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(5))
             {
-                Vector2 wakePos = wakeCenter + right * wave * 6f + Main.rand.NextVector2Circular(3f, 3f);
-                Vector2 wakeVelocity = -forward * Main.rand.NextFloat(1.2f, 2.8f) + right * wave * 0.35f;
+                Vector2 wakePos = wakeCenter + right * wave * (6f * EffectIntensity) + Main.rand.NextVector2Circular(3f * EffectIntensity, 3f * EffectIntensity);
+                Vector2 wakeVelocity = -forward * Main.rand.NextFloat(1.2f, 2.8f) * EffectIntensity + right * wave * 0.35f * EffectIntensity;
 
                 Dust water = Dust.NewDustPerfect(
                     wakePos,
@@ -87,10 +88,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     wakeVelocity,
                     100,
                     new Color(80, 190, 255),
-                    Main.rand.NextFloat(0.95f, 1.3f));
+                    Main.rand.NextFloat(0.95f, 1.3f) * EffectIntensity);
                 water.noGravity = true;
 
-                if (Main.rand.NextBool())
+                if (Main.rand.NextBool(3))
                 {
                     Dust frost = Dust.NewDustPerfect(
                         wakePos,
@@ -98,19 +99,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         wakeVelocity * 0.72f,
                         100,
                         new Color(215, 248, 255),
-                        Main.rand.NextFloat(0.85f, 1.15f));
+                        Main.rand.NextFloat(0.85f, 1.15f) * EffectIntensity);
                     frost.noGravity = true;
                 }
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(8))
             {
                 GlowOrbParticle orb = new GlowOrbParticle(
-                    wakeCenter + right * wave * 8f,
-                    -forward * 0.18f,
+                    wakeCenter + right * wave * (8f * EffectIntensity),
+                    -forward * 0.18f * EffectIntensity,
                     false,
                     8,
-                    0.48f,
+                    0.48f * EffectIntensity,
                     Color.Lerp(new Color(70, 180, 255), Color.White, 0.32f),
                     true,
                     false,
@@ -118,16 +119,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 GeneralParticleHandler.SpawnParticle(orb);
             }
 
-            if (Main.rand.NextBool(4))
+            if (Main.rand.NextBool(10))
             {
                 GlowSparkParticle spark = new GlowSparkParticle(
-                    Projectile.Center + right * Main.rand.NextFloat(-5f, 5f),
-                    forward.RotatedBy(Main.rand.NextFloat(-0.4f, 0.4f)) * Main.rand.NextFloat(1.8f, 4.2f),
+                    Projectile.Center + right * Main.rand.NextFloat(-5f, 5f) * EffectIntensity,
+                    forward.RotatedBy(Main.rand.NextFloat(-0.4f, 0.4f)) * Main.rand.NextFloat(1.8f, 4.2f) * EffectIntensity,
                     false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.18f, 0.26f),
+                    Main.rand.Next(6, 10),
+                    Main.rand.NextFloat(0.18f, 0.26f) * EffectIntensity,
                     Main.rand.NextBool() ? Color.Cyan : Color.LightSkyBlue,
-                    new Vector2(1.6f, 0.42f),
+                    new Vector2(1.6f, 0.42f) * EffectIntensity,
                     true,
                     false);
                 GeneralParticleHandler.SpawnParticle(spark);
@@ -136,27 +137,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnKill(int timeLeft)
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 5; i++)
             {
-                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 6.5f);
+                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 6.5f) * EffectIntensity;
 
-                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, burstVelocity, 100, new Color(80, 190, 255), Main.rand.NextFloat(1f, 1.45f));
+                Dust water = Dust.NewDustPerfect(Projectile.Center, DustID.Water, burstVelocity, 100, new Color(80, 190, 255), Main.rand.NextFloat(1f, 1.45f) * EffectIntensity);
                 water.noGravity = true;
 
-                Dust frost = Dust.NewDustPerfect(Projectile.Center, DustID.Frost, burstVelocity * 0.72f, 100, new Color(215, 248, 255), Main.rand.NextFloat(0.95f, 1.2f));
+                Dust frost = Dust.NewDustPerfect(Projectile.Center, DustID.Frost, burstVelocity * 0.72f, 100, new Color(215, 248, 255), Main.rand.NextFloat(0.95f, 1.2f) * EffectIntensity);
                 frost.noGravity = true;
             }
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 2; i++)
             {
                 GlowSparkParticle spark = new GlowSparkParticle(
                     Projectile.Center,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 5.2f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 5.2f) * EffectIntensity,
                     false,
-                    14,
-                    0.24f,
+                    10,
+                    0.24f * EffectIntensity,
                     Main.rand.NextBool() ? Color.Cyan : Color.LightSkyBlue,
-                    new Vector2(1.7f, 0.45f),
+                    new Vector2(1.7f, 0.45f) * EffectIntensity,
                     true,
                     false);
                 GeneralParticleHandler.SpawnParticle(spark);
@@ -177,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     continue;
 
                 float factor = 1f - i / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(new Color(45, 150, 255, 0), new Color(220, 250, 255, 0), factor) * factor * 0.45f;
+                Color trailColor = Color.Lerp(new Color(45, 150, 255, 0), new Color(220, 250, 255, 0), factor) * factor * 0.45f * EffectIntensity;
                 Main.EntitySpriteDraw(
                     ringTex,
                     oldPos + Projectile.Size * 0.5f - Main.screenPosition,
@@ -185,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     trailColor,
                     Projectile.rotation,
                     origin,
-                    0.34f + factor * 0.22f,
+                    (0.34f + factor * 0.22f) * MathHelper.Lerp(0.75f, 1f, EffectIntensity),
                     SpriteEffects.None,
                     0);
             }
@@ -193,8 +194,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             for (int i = 0; i < 4; i++)
             {
                 float angle = MathHelper.TwoPi * i / 4f + Main.GlobalTimeWrappedHourly * (0.75f + i * 0.08f);
-                Color ringColor = Color.Lerp(new Color(70, 180, 255, 0), Color.White, 0.25f + i * 0.12f) * (0.45f + i * 0.08f);
-                float scale = (0.26f + 0.04f * i) * pulse;
+                Color ringColor = Color.Lerp(new Color(70, 180, 255, 0), Color.White, 0.25f + i * 0.12f) * (0.45f + i * 0.08f) * EffectIntensity;
+                float scale = (0.26f + 0.04f * i) * pulse * MathHelper.Lerp(0.75f, 1f, EffectIntensity);
 
                 Main.EntitySpriteDraw(
                     ringTex,

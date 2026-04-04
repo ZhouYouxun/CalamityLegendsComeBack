@@ -9,12 +9,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     // The branch layout is deliberately symmetric: a dominant center lance with two weaker +/-45 degree side lances.
     internal static class BBSD_Ready_Effects
     {
+        private const float CustomSparkIntensity = 0.15f;
+
         internal static void SpawnChargeReadyBurst(Projectile projectile, Vector2 weaponTip)
         {
             if (Main.dedServ)
                 return;
 
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
+            Vector2 visualForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
             Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
 
             SpawnForwardJetBurst(projectile, weaponTip, 2.15f);
@@ -75,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         private static void SpawnForwardJetBurst(Projectile projectile, Vector2 weaponTip, float intensity)
         {
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
+            Vector2 visualForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
             Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
 
             float[] branchAngles =
@@ -96,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             {
                 float branchAngle = branchAngles[branchIndex];
                 float branchWeight = branchWeights[branchIndex];
-                int lineCount = branchIndex == 1 ? 7 : 4;
+                int lineCount = branchIndex == 1 ? 2 : 1;
 
                 for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
                 {
@@ -112,13 +114,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
                     Particle line = new CustomSpark(
                         spawnPosition,
-                        branchDirection * Main.rand.NextFloat(11f, 20f) * (0.72f + branchWeight * 0.45f) * intensity,
+                        branchDirection * Main.rand.NextFloat(11f, 20f) * (0.72f + branchWeight * 0.45f) * intensity * CustomSparkIntensity,
                         "CalamityMod/Particles/BloomLineSoftEdge",
                         false,
-                        Main.rand.Next(15, 22),
-                        Main.rand.NextFloat(0.14f, 0.22f) * (0.8f + branchWeight * 0.95f) * intensity,
-                        Color.Lerp(new Color(105, 220, 255), Color.White, 0.42f + 0.3f * branchWeight) * 0.92f,
-                        new Vector2(2.15f + branchWeight * 1.65f, 0.42f + branchWeight * 0.08f),
+                        Main.rand.Next(6, 10),
+                        Main.rand.NextFloat(0.14f, 0.22f) * (0.8f + branchWeight * 0.95f) * intensity * CustomSparkIntensity,
+                        Color.Lerp(new Color(105, 220, 255), Color.White, 0.42f + 0.3f * branchWeight) * 0.92f * CustomSparkIntensity,
+                        new Vector2((2.15f + branchWeight * 1.65f) * 0.25f, (0.42f + branchWeight * 0.08f) * 0.45f),
                         shrinkSpeed: 0.66f);
                     GeneralParticleHandler.SpawnParticle(line);
                 }

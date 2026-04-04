@@ -11,6 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     internal static class BBSD_Charge_Effects
     {
         private const int ChargeTime = 90;
+        private const float CustomSparkIntensity = 0.15f;
 
         internal static void SpawnChargeEffects(Projectile projectile, Player owner, Vector2 weaponTip, int timer)
         {
@@ -19,11 +20,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             float chargeProgress = Utils.GetLerpValue(0f, ChargeTime, timer, true);
             float intensity = 0.24f + 0.76f * (1f - (float)Math.Pow(1f - chargeProgress, 2.35f));
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
+            Vector2 visualForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
             Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
-            Vector2 bladeForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
 
-            SpawnChargeFunnel(projectile, owner, weaponTip, bladeForward, intensity, timer);
+            SpawnChargeFunnel(projectile, owner, weaponTip, visualForward, intensity, timer);
             SpawnTriJetBurst(weaponTip, visualForward, visualRight, intensity, 0.44f + 0.56f * chargeProgress, timer, false);
 
             if (timer % 5 == 0)
@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 visualForward = projectile.rotation.ToRotationVector2();
+            Vector2 visualForward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
             Vector2 visualRight = visualForward.RotatedBy(MathHelper.PiOver2);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(readyTimer * 0.22f);
             float intensity = 0.7f + pulse * 0.14f;
@@ -137,9 +137,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         {
             float clampedIntensity = MathHelper.Clamp(intensity, 0f, 1.4f);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(timer * (stableReadyJet ? 0.18f : 0.27f));
-            float lineLength = MathHelper.Lerp(10f, 34f, clampedIntensity) * MathHelper.Lerp(0.9f, 1.12f, pulse);
-            float lineScale = MathHelper.Lerp(0.08f, 0.22f, clampedIntensity);
-            float lineLifetime = MathHelper.Lerp(11f, 20f, clampedIntensity);
+            float lineLength = MathHelper.Lerp(10f, 34f, clampedIntensity) * MathHelper.Lerp(0.9f, 1.12f, pulse) * CustomSparkIntensity;
+            float lineScale = MathHelper.Lerp(0.08f, 0.22f, clampedIntensity) * CustomSparkIntensity;
+            float lineLifetime = MathHelper.Lerp(11f, 20f, clampedIntensity) * 0.4f;
 
             float[] branchAngles =
             {
@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             {
                 float branchAngle = branchAngles[branchIndex];
                 float branchWeight = branchWeights[branchIndex];
-                int lineCount = branchIndex == 1 ? 3 : 2;
+                int lineCount = 1;
 
                 for (int lineIndex = 0; lineIndex < lineCount; lineIndex++)
                 {
@@ -176,8 +176,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     Vector2 velocity = branchDirection * (lineLength * (0.55f + branchWeight * 0.45f));
                     Color lineColor = Color.Lerp(new Color(95, 210, 255), Color.White, 0.35f + 0.35f * branchWeight);
                     Vector2 stretch = new Vector2(
-                        1.8f + clampedIntensity * 2.2f + branchWeight * 0.7f,
-                        0.34f + branchWeight * 0.08f);
+                        (1.8f + clampedIntensity * 2.2f + branchWeight * 0.7f) * 0.25f,
+                        (0.34f + branchWeight * 0.08f) * 0.45f);
 
                     Particle line = new CustomSpark(
                         spawnPosition,
@@ -186,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                         false,
                         (int)(lineLifetime + branchWeight * 4f),
                         lineScale * (0.9f + branchWeight * 0.75f),
-                        lineColor * (stableReadyJet ? 0.9f : 0.84f),
+                        lineColor * (stableReadyJet ? 0.9f : 0.84f) * CustomSparkIntensity,
                         stretch,
                         shrinkSpeed: stableReadyJet ? 0.72f : 0.64f);
                     GeneralParticleHandler.SpawnParticle(line);

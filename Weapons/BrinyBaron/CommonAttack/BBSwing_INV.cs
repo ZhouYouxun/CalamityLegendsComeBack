@@ -11,8 +11,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBSwing_INV : ModProjectile, ILocalizedModType
     {
-        private const float SmallSlashScale = 0.82f;
-        private const float GiantSlashScale = 1.55f;
+        private const float SmallSlashScale = 0.41f;
+        private const float GiantSlashScale = 0.775f;
         private const float SmallSlashDamageFactor = 0.28f;
         private const float GiantSlashDamageFactor = 0.34f;
 
