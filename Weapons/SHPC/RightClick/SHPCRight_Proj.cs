@@ -1,11 +1,16 @@
 ﻿using CalamityMod;
+using CalamityMod.Enums;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -26,11 +31,125 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override Color? GetAlpha(Color lightColor)
             => new Color(255, 235, 120, 0);
 
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 16;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
-            Projectile.DrawBeam(200f, 3f, lightColor);
+            //Projectile.DrawBeam(200f, 3f, lightColor);
+            //return false;
+
+            Vector2[] trailPoints = BuildTrailPoints();
+            if (trailPoints.Length < 2)
+                return true;
+
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak")
+            );
+
+            PrimitiveRenderer.RenderTrail(
+                trailPoints,
+                new PrimitiveSettings(
+                    TrailWidthFunction,
+                    TrailColorFunction,
+                    TrailOffsetFunction,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]
+                ),
+                trailPoints.Length * 2
+            );
+
+            Vector2[] coreTrail = trailPoints.Take(Math.Min(9, trailPoints.Length)).ToArray();
+
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak")
+            );
+
+            PrimitiveRenderer.RenderTrail(
+                coreTrail,
+                new PrimitiveSettings(
+                    TrailCoreWidthFunction,
+                    TrailCoreColorFunction,
+                    TrailOffsetFunction,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]
+                ),
+                coreTrail.Length * 2
+            );
+
             return false;
         }
+
+        private Vector2[] BuildTrailPoints()
+        {
+            Vector2[] trailPoints = Projectile.oldPos
+                .Where(pos => pos != Vector2.Zero)
+                .Select(pos => pos + Projectile.Size * 0.5f)
+                .ToArray();
+
+            if (trailPoints.Length == 0)
+                return new Vector2[] { Projectile.Center - Projectile.velocity, Projectile.Center };
+
+            if (trailPoints[0] != Projectile.Center)
+                trailPoints = new[] { Projectile.Center }.Concat(trailPoints).ToArray();
+
+            return trailPoints;
+        }
+
+        private Vector2 TrailOffsetFunction(float completion, Vector2 _)
+        {
+            float lateralWave = (float)Math.Sin(completion * MathHelper.Pi * 1.15f + Main.GlobalTimeWrappedHourly * 10f) * 0.6f;
+            return Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * lateralWave;
+        }
+
+        private float TrailWidthFunction(float completion, Vector2 _)
+        {
+            float maxBodyWidth = Projectile.scale * 15f;
+            float curveRatio = 0.18f;
+
+            if (completion < curveRatio)
+                return MathF.Sin(completion / curveRatio * MathHelper.PiOver2) * maxBodyWidth + curveRatio;
+
+            return Utils.Remap(completion, curveRatio, 1f, maxBodyWidth, 0f);
+        }
+
+        private Color TrailColorFunction(float completion, Vector2 _)
+        {
+            Color headColor = new Color(255, 236, 125);
+            Color midColor = new Color(255, 214, 72);
+            float opacity = Projectile.Opacity * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true);
+            Color bodyColor = Color.Lerp(headColor, midColor, completion * 0.65f) * opacity;
+            Color tipColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.74f, 1f, completion, true));
+            tipColor.A = 0;
+            return Color.Lerp(bodyColor, tipColor, completion);
+        }
+
+        private float TrailCoreWidthFunction(float completion, Vector2 _)
+        {
+            float maxBodyWidth = Projectile.scale * 8.5f;
+            float curveRatio = 0.18f;
+
+            if (completion < curveRatio)
+                return MathF.Sin(completion / curveRatio * MathHelper.PiOver2) * maxBodyWidth + curveRatio;
+
+            return Utils.Remap(completion, curveRatio, 1f, maxBodyWidth, 0f);
+        }
+
+        private Color TrailCoreColorFunction(float completion, Vector2 _)
+        {
+            float opacity = Projectile.Opacity * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true);
+            Color bodyColor = Color.Lerp(Color.White, new Color(255, 250, 210), completion * 0.5f) * opacity;
+            Color tipColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.78f, 1f, completion, true));
+            tipColor.A = 0;
+            return Color.Lerp(bodyColor, tipColor, completion);
+        }
+
+
 
         public override void SetDefaults()
         {
@@ -475,5 +594,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             WeaponStage = reader.ReadInt32();
         }
+
+
     }
 }

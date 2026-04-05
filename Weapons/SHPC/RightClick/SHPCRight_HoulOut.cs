@@ -11,6 +11,8 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
+using CalamityLegendsComeBack.Weapons.SHPC;
+
 namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal class SHPCRight_HoulOut : RightClickHoldoutBase, ILocalizedModType
@@ -152,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #region ===== 基础生存判定 =====
 
-            if (!player.active || player.dead || player.HeldItem.type != AssociatedItemID)
+            if (!player.active || player.dead || (player.HeldItem.type != AssociatedItemID && player.HeldItem.type != ModContent.ItemType<NewLegendSHPC>()))
             {
                 Projectile.Kill();
                 return;
@@ -333,7 +335,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
 
         #region ===== 开火逻辑 =====
-
+        private int spiralCounter;
         private void Fire(Player player)
         {
 
@@ -362,10 +364,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 // ===== 多链：霰射感 =====
                 else
                 {
-                    float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.05f;
-                    float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.05f;
+                    // 原本：完全随机【前面的逻辑】
+                    //float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.05f;
+                    //float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.05f;
+                    //velocity = new Vector2(speedX, speedY);
 
-                    velocity = new Vector2(speedX, speedY);
+                    float t = spiralCounter * 0.15f; // 时间参数（调速度）
+
+                    // ===== 固定扇形 =====
+                    float spread = MathHelper.Lerp(-0.15f, 0.15f, i / (float)(count - 1));
+                    Vector2 baseDir = baseVelocity.RotatedBy(spread);
+
+                    // ===== 螺旋扰动（每条都有独立相位）=====
+                    float phase = i * 1.2f; // 每条错开
+                    float offset = (float)Math.Sin(t + phase) * 0.12f;
+
+                    // 👉 最终方向：在自己轨道上摆动
+                    velocity = baseDir.RotatedBy(offset);
                 }
 
                 int projIndex = Projectile.NewProjectile(
@@ -391,6 +406,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3秒
             }
 
+            spiralCounter++;
             PlayNormalFireSound();
             SpawnNormalShotMuzzleEffect(player, Vector2.UnitX.RotatedBy(Projectile.rotation));
         }
@@ -901,18 +917,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player player = Main.player[Projectile.owner];
             NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
+            NewLegendSHPC testWeapon = player.HeldItem.ModItem as NewLegendSHPC;
 
             player.CheckMana(player.HeldItem, 150, true, false);
 
-            if (weapon == null)
+            if (weapon == null && testWeapon == null)
                 return;
 
-            if (weapon.storedEffectPower > 0)
+            if (weapon != null && weapon.storedEffectPower > 0)
             {
                 weapon.storedEffectPower -= 5;
 
                 if (weapon.storedEffectPower < 0)
                     weapon.storedEffectPower = 0;
+            }
+
+            if (testWeapon != null && testWeapon.storedEffectPower > 0)
+            {
+                testWeapon.storedEffectPower -= 5;
+
+                if (testWeapon.storedEffectPower < 0)
+                    testWeapon.storedEffectPower = 0;
             }
 
             int effectID = currentEffectID;
