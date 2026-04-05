@@ -522,7 +522,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (player.Calamity().mouseRight &&
                 player.whoAmI == Main.myPlayer &&
                 !Main.mapFullscreen &&
-                !Main.blockMouse)
+                !Main.blockMouse &&
+                !(Main.playerInventory && Main.HoverItem.type == Item.type)) // ❗新增
             {
                 // 🔥 强制打断左键动画
                 //player.itemAnimation = 0;
