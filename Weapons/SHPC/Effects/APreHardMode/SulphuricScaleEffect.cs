@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.Center,
                     velocity,
                     projType,
-                    (int)(projectile.damage * 0.1f),
+                    (int)(projectile.damage * 0.3f),
                     projectile.knockBack,
                     projectile.owner
                 );

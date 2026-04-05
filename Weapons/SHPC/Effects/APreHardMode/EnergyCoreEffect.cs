@@ -81,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 				Vector2 velocity = angle.ToRotationVector2() * speed;
 
 				// 伤害随机（0.X~0.Y倍）
-				float damageFactor = Main.rand.NextFloat(0.3f, 0.5f);
+				float damageFactor = Main.rand.NextFloat(0.25f, 0.4f);
 
 				Projectile.NewProjectile(
 					projectile.GetSource_FromThis(),
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
                 projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                projectile.damage,
+                (int)(projectile.damage * 0.8f),
                 projectile.knockBack,
                 projectile.owner
             );
