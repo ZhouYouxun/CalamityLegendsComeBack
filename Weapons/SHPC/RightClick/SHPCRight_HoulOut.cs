@@ -365,22 +365,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 else
                 {
                     // 原本：完全随机【前面的逻辑】
-                    //float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.05f;
-                    //float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.05f;
-                    //velocity = new Vector2(speedX, speedY);
+                    float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.05f;
+                    float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.05f;
+                    velocity = new Vector2(speedX, speedY);
 
-                    float t = spiralCounter * 0.15f; // 时间参数（调速度）
 
-                    float maxAngle = MathHelper.Pi / 180f * 4f;   // 主扇形 ±X°
-                    float waveAngle = MathHelper.Pi / 180f * 1f;  // 螺旋扰动 ±Y°
 
-                    float spread = MathHelper.Lerp(-maxAngle, maxAngle, i / (float)(count - 1));
-                    Vector2 baseDir = baseVelocity.RotatedBy(spread);
+                    //float t = spiralCounter * 0.15f; // 时间参数（调速度）
 
-                    float phase = i * 1.2f;
-                    float offset = (float)Math.Sin(t + phase) * waveAngle;
+                    //float maxAngle = MathHelper.Pi / 180f * 4f;   // 主扇形 ±X°
+                    //float waveAngle = MathHelper.Pi / 180f * 1f;  // 螺旋扰动 ±Y°
 
-                    velocity = baseDir.RotatedBy(offset);
+                    //float spread = MathHelper.Lerp(-maxAngle, maxAngle, i / (float)(count - 1));
+                    //Vector2 baseDir = baseVelocity.RotatedBy(spread);
+
+                    //float phase = i * 1.2f;
+                    //float offset = (float)Math.Sin(t + phase) * waveAngle;
+
+                    //velocity = baseDir.RotatedBy(offset);
                 }
 
                 int projIndex = Projectile.NewProjectile(

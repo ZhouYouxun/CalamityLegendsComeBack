@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
@@ -435,6 +436,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnKill =================
         public override void OnKill(int timeLeft)
         {
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.8f, Pitch = 0.08f }, Projectile.Center);
             // 死亡也补一个爆炸
             SpawnSolarExplosion();
         }

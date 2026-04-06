@@ -36,7 +36,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             // ===== 简单追踪 =====
             NPC target = projectile.Center.ClosestNPCAt(900f);
 
-            Vector2 desiredDir = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
+            Vector2 desiredDir = target != null && target.active
+                ? (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX)
+                : projectile.velocity.SafeNormalize(Vector2.UnitX);
 
             // ===== SHPB式追踪（强化1.25倍）=====
             projectile.velocity = (

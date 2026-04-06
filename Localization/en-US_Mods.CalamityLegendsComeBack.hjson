@@ -18,7 +18,6 @@ Items: {
 				[c/99CCFF:Heat gradually dissipates after ceasing fire, and is fully cleared when the weapon is unequipped.]
 				[c/DDA0FF:During firing, pressing left click forcibly vents heat, releasing 5 energy spheres and briefly interrupting the attack.]
 				[c/FF7043:Higher heat increases both side effects and laser damage output.]
-				[c/66CCFF:Includes built-in mana restoration; no potions required [][i:555]]
 				'''
 			SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
 			SHPCRight1: "[c/8FA2FF:Unlocked up to Heat Level III: projectiles create a small explosion upon dissipation.]"
@@ -242,6 +241,7 @@ Projectiles: {
 	YC_Left_Drone.DisplayName: Crystal Left Drone
 	YC_Right_Drone.DisplayName: Crystal Right Drone
 	YC_Right_TrackerLaser.DisplayName: Crystal Tracker Laser
+	FragmentEntropyExplosion.DisplayName: Fragment Entropy Explosion
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
