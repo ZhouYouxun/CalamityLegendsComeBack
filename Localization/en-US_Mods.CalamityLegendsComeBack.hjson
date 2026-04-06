@@ -4,38 +4,48 @@ Items: {
 			DisplayName: SHPC - Return of Legends
 			SHPC_LeftIntro:
 				'''
-				[c/66CCFF:Left Click: Fires an energy projectile.]
-				[c/FFD966:Materials in your inventory can be injected and consumed per shot.]
-				[c/99CCFF:Automatically reloads once energy is depleted.]
-				[c/AAAAAA:Can still fire without injection, but applies no special effects.]
-				[c/DDA0FF:Current injection effect:]
+				[c/66CCFF:Left Click: Fires an energy sphere.]
+				[c/FFD966:Materials in your inventory can be used as ammunition; different materials provide different capacities.]
+				[c/99CCFF:Automatically reloads once the current charge is depleted.]
+				[c/AAAAAA:Can still fire without any loaded material, but no additional effects will be applied.]
+				[c/99CCFF:Right-click the item in your inventory to purge the current load, with a chance to recover the material.]
+				[c/DDA0FF:Current loaded effect:]
 				'''
 			SHPC_RightIntro:
 				'''
-				[c/66CCFF:Right Click: After a brief charge, unleashes a gatling-style laser barrage.]
-				[c/FFB347:Sustained fire builds up heat, increasing in stages.]
-				[c/99CCFF:Heat gradually dissipates once firing stops.]
-				[c/DDA0FF:During firing, pressing left click forcibly vents heat, releasing 5 energy projectiles and briefly interrupting the attack.]
-				[c/FF7043:Higher heat intensifies side effects, but also enhances laser performance.]
+				[c/66CCFF:Right Click: After a brief charge, unleashes a sustained laser barrage.]
+				[c/FFB347:Continuous firing builds up heat, with the maximum level scaling with game progression.]
+				[c/99CCFF:Heat gradually dissipates after ceasing fire, and is fully cleared when the weapon is unequipped.]
+				[c/DDA0FF:During firing, pressing left click forcibly vents heat, releasing 5 energy spheres and briefly interrupting the attack.]
+				[c/FF7043:Higher heat increases both side effects and laser damage output.]
+				[c/66CCFF:Includes built-in mana restoration; no potions required [][i:555]]
 				'''
-			SHPC_Final: "[c/99B3FF:The system continues to evolve. Existing flaws remain unresolved, yet its potential persists. Perhaps one day, it will be truly realized.]"
-			SHPCRight1: "[c/8FA2FF:Unlocked up to Tier III heat: generates a small explosion upon dissipation.]"
-			SHPCRight2: "[c/8FA2FF:Unlocked up to Tier IV heat: ignores defense and increases damage, but suppresses life regeneration.]"
-			SHPCRight3: "[c/8FA2FF:Unlocked up to Tier V heat: lasers split, and manual cooling is unlocked.]"
-			SHPCRight4: "[c/8FA2FF:Unlocked up to Tier VI heat: gains tracking capability while continuously burning the user.]"
-			SHPCRight5: "[c/8FA2FF:Unlocked up to Tier VII heat: infinite piercing with bonus damage based on target max health, but overheating rapidly consumes the user.]"
+			SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
+			SHPCRight1: "[c/8FA2FF:Unlocked up to Heat Level III: projectiles create a small explosion upon dissipation.]"
+			SHPCRight2: "[c/8FA2FF:Unlocked up to Heat Level IV: ignores defense and significantly increases damage, but suppresses life regeneration.]"
+			SHPCRight3: "[c/8FA2FF:Unlocked up to Heat Level V: projectiles split upon termination, and manual cooling becomes available.]"
+			SHPCRight4: "[c/8FA2FF:Unlocked up to Heat Level VI: further enhances projectile performance and piercing capability, while continuously burning the user.]"
+			SHPCRight5: "[c/8FA2FF:Unlocked up to Heat Level VII: grants infinite piercing and bonus damage based on target max health, but overheating rapidly drains the user.]"
+			SHPC_EXHint:
+				'''
+				[c/66CCFF:While holding the weapon and remaining stationary, the system gradually accumulates energy, up to a maximum of 60.]
+				[c/FFD966:Once fully charged, press [{0}] to activate the ultimate mode.]
+				[c/FF7043:After a brief charge, unleash a colossal laser that pierces through everything.]
+				'''
 			Tooltip: "[GFB]"
-			TooltipGFB: Have you finally made it here?
-			LegendaryHint: "[c/6C8EFF:Hold Shift to access the record]"
+			TooltipGFB: Have you finally arrived here?
+			LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 			LegendaryText:
 				'''
-				[c/99B3FF:So... you have arrived.]
-				[c/66CCFF:The boundaries of this world have been rewritten, time and time again.]
-				[c/7F8FA6:What was once called “Legend” no longer exists.]
-				[c/7F8FA6:We were dismantled, reassembled, or simply forgotten.]
-				[c/DDA0FF:But I have not forgotten you.]
-				[c/FFB347:Again and again, you challenged all of this—relentlessly.]
-				[c/66CCFF:Now, I return once more. Let us begin.]
+				[c/66E6FF:The initial design relied too heavily on a single energy source, and was ultimately deemed unstable.]
+				[c/66E6FF:The revised system no longer depends on souls; any material with sufficient energy density is now viable.]
+				[c/66E6FF:Different inputs produce drastically varied responses, with some combinations exhibiting anomalous amplification.]
+				[c/66E6FF:The control system was redesigned accordingly, forcing premature release before full containment.]
+				[c/66E6FF:In theory, this device is no longer limited by ammunition type—yet its true limits remain unknown.]
+				[c/66E6FF:In barrage mode, all prior reliance on soul-based energy has been eliminated, replaced by a more primitive thermal drive.]
+				[c/66E6FF:To stabilize output, the cooling system was redefined, giving rise to new thermal instability effects.]
+				[c/66E6FF:With continued operation, the system will inevitably enter an overheat state, trading safety for greater output efficiency.]
+				[c/66E6FF:Without timely intervention, this “optimization” will ultimately consume the operator.]
 				'''
 		}
 
@@ -85,6 +95,16 @@ Items: {
 				[c/FFB347:这把剑记录的不只是力量，而是一种信念。]
 				[c/99CCFF:向前，直到世界无法承受你的速度。]
 				'''
+		}
+
+		NewLegendYharimsCrystal: {
+			DisplayName: Yharim's Crystal
+			Tooltip: ""
+		}
+
+		NewLegendSHPCTest: {
+			DisplayName: New Legend S H P C Test
+			Tooltip: ""
 		}
 	}
 
@@ -214,7 +234,19 @@ Projectiles: {
 	BBShuriken_Light.DisplayName: B B Shuriken_ Light
 	BBSwing_INV.DisplayName: B B Swing_ I N V
 	BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
+	YC_LeftHoldOut.DisplayName: Crystal Holdout Left
+	YC_RightHoldOut.DisplayName: Crystal Holdout Right
+	YC_EX_VIP.DisplayName: Crystal EX Anchor
+	YC_EX_Drone.DisplayName: Crystal EX Drone
+	YC_CBeam.DisplayName: Crystal Beam
+	YC_Left_Drone.DisplayName: Crystal Left Drone
+	YC_Right_Drone.DisplayName: Crystal Right Drone
+	YC_Right_TrackerLaser.DisplayName: Crystal Tracker Laser
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
-Cooldowns.SHPC_EX: SHPC冷却
+
+Cooldowns: {
+	SHPC_EX: SHPC冷却
+	YC_EX: Crystal EX Cooldown
+}

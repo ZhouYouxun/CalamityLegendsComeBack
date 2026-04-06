@@ -6,6 +6,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+using CalamityMod;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
@@ -57,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void SpawnHitSlashBurst(NPC target)
         {
-            if (Main.myPlayer != Projectile.owner)
+            if (Main.myPlayer != Projectile.owner || !Main.hardMode)
                 return;
 
             if (IsGiantSwing)
@@ -139,7 +140,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (IsGiantSwing)
+            {
                 Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().AddTide();
+                Main.player[Projectile.owner].SetScreenshake(12f);
+            }
 
             for (int i = 0; i < 6; i++)
             {

@@ -1,6 +1,7 @@
 using System;
 using CalamityMod;
 using CalamityMod.Enums;
+using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -34,6 +35,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool hasBounced;
         private bool canceledCharge;
         private float oceanPhase;
+        private float dashSpeedMultiplier;
+        private float contactDamageMultiplier;
+        private bool enemyReboundUnlocked;
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
 
         public override void SetStaticDefaults()
@@ -109,6 +113,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = false;
             canceledCharge = false;
             oceanPhase = 0f;
+            DashGrowthProfile growthProfile = ResolveDashGrowthProfile();
+            dashSpeedMultiplier = growthProfile.SpeedMultiplier;
+            contactDamageMultiplier = growthProfile.ContactDamageMultiplier;
+            enemyReboundUnlocked = growthProfile.EnemyReboundUnlocked;
+            Projectile.damage = Math.Max(1, (int)Math.Round(Projectile.damage * contactDamageMultiplier));
             dashDirectionHistory.Clear();
             initialized = true;
 
@@ -159,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Projectile.friendly = true;
             Projectile.Center = owner.MountedCenter + lockedDirection * DashBladeDistance;
-            Projectile.velocity = lockedDirection * DashSpeed;
+            Projectile.velocity = lockedDirection * (DashSpeed * dashSpeedMultiplier);
             SyncOwnerToProjectile(owner, DashBladeDistance);
             RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
             Projectile.netUpdate = true;
@@ -176,7 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private void DoDashPhase(Player owner)
         {
             stateTimer++;
-            Projectile.velocity = lockedDirection * DashSpeed;
+            Projectile.velocity = lockedDirection * (DashSpeed * dashSpeedMultiplier);
             Projectile.Center += Projectile.velocity;
             SyncOwnerToProjectile(owner, DashBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
@@ -243,28 +252,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (dashState != 1 || hasBounced)
                 return;
 
-            hasBounced = true;
-            dashState = 2;
-            stateTimer = 0;
             target.AddBuff(BuffID.Frostburn, 180);
 
-            Vector2 reliableDashDirection = GetReliableDashDirection();
-            float offsetAngle = MathHelper.ToRadians(Main.rand.NextFloat(-12f, 12f));
-            lockedDirection = (-reliableDashDirection).RotatedBy(offsetAngle).SafeNormalize(-lockedDirection);
-            bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
-
-            Projectile.friendly = false;
-            Projectile.velocity = lockedDirection * ReboundSpeed;
-            Projectile.netUpdate = true;
-
-            SpawnBounceBurst(target.Center, reliableDashDirection);
-            ApplyScreenShake(10f);
-
-            SoundEngine.PlaySound(SoundID.Item71 with
+            if (!enemyReboundUnlocked)
             {
-                Volume = 0.85f,
-                Pitch = -0.1f
-            }, target.Center);
+                Projectile.Kill();
+                return;
+            }
+
+            StartRebound(target.Center);
+        }
+
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            if (dashState != 1 || hasBounced)
+                return true;
+
+            Vector2 collisionCenter = Projectile.Center - oldVelocity.SafeNormalize(lockedDirection) * 8f;
+            StartRebound(collisionCenter);
+            return false;
         }
 
         public override void OnKill(int timeLeft)
@@ -318,6 +324,64 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 sum += direction;
 
             return sum.SafeNormalize(lockedDirection);
+        }
+
+        private DashGrowthProfile ResolveDashGrowthProfile()
+        {
+            DashGrowthProfile profile = new(speedMultiplier: 0.5f, contactDamageMultiplier: 1f, enemyReboundUnlocked: false);
+
+            if (Main.hardMode)
+                profile = new DashGrowthProfile(speedMultiplier: 0.68f, contactDamageMultiplier: 1f, enemyReboundUnlocked: true);
+
+            if (DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
+                profile = new DashGrowthProfile(speedMultiplier: 0.75f, contactDamageMultiplier: 1f, enemyReboundUnlocked: true);
+
+            if (NPC.downedFishron)
+                profile = new DashGrowthProfile(speedMultiplier: 1f, contactDamageMultiplier: 2f, enemyReboundUnlocked: true);
+
+            if (DownedBossSystem.downedBoomerDuke)
+                profile = new DashGrowthProfile(speedMultiplier: 1.2f, contactDamageMultiplier: 2f, enemyReboundUnlocked: true);
+
+            return profile;
+        }
+
+        private readonly struct DashGrowthProfile
+        {
+            public readonly float SpeedMultiplier;
+            public readonly float ContactDamageMultiplier;
+            public readonly bool EnemyReboundUnlocked;
+
+            public DashGrowthProfile(float speedMultiplier, float contactDamageMultiplier, bool enemyReboundUnlocked)
+            {
+                SpeedMultiplier = speedMultiplier;
+                ContactDamageMultiplier = contactDamageMultiplier;
+                EnemyReboundUnlocked = enemyReboundUnlocked;
+            }
+        }
+
+        private void StartRebound(Vector2 impactCenter)
+        {
+            hasBounced = true;
+            dashState = 2;
+            stateTimer = 0;
+
+            Vector2 reliableDashDirection = GetReliableDashDirection();
+            float offsetAngle = MathHelper.ToRadians(Main.rand.NextFloat(-12f, 12f));
+            lockedDirection = (-reliableDashDirection).RotatedBy(offsetAngle).SafeNormalize(-lockedDirection);
+            bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
+
+            Projectile.friendly = false;
+            Projectile.velocity = lockedDirection * ReboundSpeed;
+            Projectile.netUpdate = true;
+
+            SpawnBounceBurst(impactCenter, reliableDashDirection);
+            ApplyScreenShake(10f);
+
+            SoundEngine.PlaySound(SoundID.Item71 with
+            {
+                Volume = 0.85f,
+                Pitch = -0.1f
+            }, impactCenter);
         }
 
         private void SpawnStartBurst()

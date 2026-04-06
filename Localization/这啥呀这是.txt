@@ -1,0 +1,237 @@
+Items: {
+	Weapons: {
+		NewLegendSHPC: {
+			DisplayName: SHPC-浼犲褰掓潵
+			SHPC_LeftIntro:
+				'''
+				[c/66CCFF:宸﹂敭锛氬彂灏勮兘閲忓厜鐞冦€俔
+				[c/FFD966:鑳屽寘鏉愭枡鍙敤浜庤濉紝閮ㄥ垎鏉愭枡瑁呰嵂閲忎笉鍚屻€俔
+				[c/99CCFF:鑳介噺鑰楀敖鍚庤嚜鍔ㄩ噸鏂拌濉€俔
+				[c/AAAAAA:鏈鑽椂浠嶅彲鏀诲嚮锛屼絾涓嶉檮甯︿换浣曟晥鏋溿€俔
+				[c/99CCFF:瀵规鍣ㄧ偣鍑诲彸閿紝鍙互灏嗙幇鏈夌殑瑁呰嵂鍊掑嚭骞舵鐜囪繑杩樸€俔
+				[c/DDA0FF:褰撳墠瑁呰嵂鏁堟灉涓猴細]
+				'''
+			SHPC_RightIntro:
+				'''
+				[c/66CCFF:鍙抽敭锛氱煭鏆傝搫鍔涘悗杩涜婵€鍏夋壂灏勩€俔
+				[c/FFB347:鎸佺画灏勫嚮浼氱疮绉儹鍊硷紝瑙嗘父鎴忛樁娈垫€ф彁鍗囨渶楂樺彲杈剧瓑绾с€俔
+				[c/99CCFF:鍋滄鏀诲嚮鍚庣儹鍊奸€愭笎涓嬮檷,涓嶆墜鎸佽姝﹀櫒鍙竻绌虹儹鍊笺€俔
+				[c/DDA0FF:鎵皠鏈熼棿鐐瑰嚮宸﹂敭鍙己鍒堕檷娓╋紝閲婃斁5鏋氳兘閲忓厜鐞冨苟鐭殏涓柇灏勫嚮銆俔
+				[c/FF7043:鐑€艰秺楂橈紝鍓綔鐢ㄨ秺寮猴紝浣嗘縺鍏夋€ц兘涔熼殢涔嬫彁鍗囥€俔
+				[c/66CCFF:鑷甫榄斿姏缁澂鐨勬晥鏋滐紝鎮ㄦ棤闇€鍑嗗[][i:555]]
+				'''
+			SHPC_Final: "[c/99B3FF:绯荤粺浠嶅湪婕斿寲銆傛鍓嶇殑缂洪櫡灏氭湭瀹屽叏淇锛屼絾鍏舵綔鍔涗粛鐒跺瓨鍦ㄣ€傛垨璁告湁涓€澶╋紝瀹冭兘澶熷緱鍒扮湡姝ｇ殑楠岃瘉銆俔"
+			SHPCRight1: "[c/8FA2FF:褰撳墠瑙ｉ攣鑷斥參绾х儹鍊硷細娑堝け鏃朵骇鐢熷皬鑼冨洿鐖嗙偢銆俔"
+			SHPCRight2: "[c/8FA2FF:褰撳墠瑙ｉ攣鑷斥叄绾х儹鍊硷細鏃犺闃插尽骞舵彁鍗囦激瀹筹紝浣嗙敓鍛藉啀鐢熻鎶戝埗銆俔"
+			SHPCRight3: "[c/8FA2FF:褰撳墠瑙ｉ攣鑷斥叅绾х儹鍊硷細婵€鍏夊垎瑁傦紝骞惰В閿佹墜鍔ㄩ檷娓┿€俔"
+			SHPCRight4: "[c/8FA2FF:褰撳墠瑙ｉ攣鑷斥叆绾х儹鍊硷細鑾峰緱杩借釜鑳藉姏锛屽悓鏃舵寔缁伡鐑ц嚜韬€俔"
+			SHPCRight5: "[c/8FA2FF:褰撳墠瑙ｉ攣鑷斥叇绾х儹鍊硷細鏃犻檺绌块€忓苟闄勫甫鐩爣鏈€澶х敓鍛藉€间激瀹筹紝浣嗚繃鐑皢杩呴€熺噧灏借嚜韬€俔"
+			Tooltip: "[GFB]"
+			TooltipGFB: 缁堜簬鏉ュ埌杩欓噷浜嗗悧锛熻繖涓檶鐢熷張鐔熸倝鐨勪笘鐣屻€?
+			LegendaryHint: "[c/BABABA:鎸変綇Shift閿互璇诲彇璁板綍]"
+			LegendaryText:
+				'''
+				[c/66E6FF:鏈€鍒濈殑鏂规杩囦簬渚濊禆鍗曚竴鑳芥簮锛屼絾缁撴灉璇佹槑锛岃繖绉嶈璁℃敞瀹氭棤娉曠ǔ瀹氳繍琛屻€俔
+				[c/66E6FF:鏂扮殑缁撴瀯涓嶅啀灞€闄愪簬鐏甸瓊锛屼换浣曞叿澶囪兘閲忓瘑搴︾殑鏉愭枡閮借绾冲叆娴嬭瘯鑼冨洿銆俔
+				[c/66E6FF:涓嶅悓杈撳叆甯︽潵鐨勫搷搴斿樊寮傛瀬澶э紝閮ㄥ垎缁勫悎鐢氳嚦鍛堢幇鍑哄紓甯哥殑鏀惧ぇ鏁堝簲銆俔
+				[c/66E6FF:鎺у埗绯荤粺鍥犳琚噸鏂拌璁★紝鑳介噺鍦ㄥ畬鍏ㄧ害鏉熷墠鍗宠寮哄埗閲婃斁銆俔
+				[c/66E6FF:鐞嗚涓婏紝杩欑瑁呯疆涓嶅啀鍙楀脊鑽被鍨嬮檺鍒讹紝浣嗗畠鐪熸鐨勬瀬闄愪粛鏃犱汉鐭ユ檽銆俔
+				[c/66E6FF:鎵皠妯″紡涓嬶紝鍘熸湁鐨勭伒榄備緷璧栬褰诲簳鍓旈櫎锛岀粨鏋勮杩噸鏋勪负鏇村師濮嬬殑鐑兘椹卞姩褰㈠紡銆俔
+				[c/66E6FF:涓虹淮鎸佽緭鍑虹ǔ瀹氾紝鏁ｇ儹绯荤粺琚噸鏂板畾涔夛紝鍑虹幇浜嗘柊鐨勭儹澶辨帶鏁堝簲銆俔
+				[c/66E6FF:闅忕潃鎸佺画杩愪綔锛岀郴缁熷皢涓嶅彲閬垮厤鍦拌繘鍏ヨ繃鐑尯闂达紝骞朵互姝ゆ崲鍙栨洿楂樼殑閲婃斁鏁堢巼銆俔
+				[c/66E6FF:鑻ユ搷浣滆€呮棤娉曞強鏃跺共棰勶紝杩欑鈥滀紭鍖栤€濆皢鍙嶈繃鏉ョ噧灏借嚜韬€俔
+				'''
+		}
+
+		NewLegendBrinyBaron: {
+			DisplayName: 娴风埖鍓?浼犲褰掓潵
+			Tooltip: "[GFB]"
+			BB_Left:
+				'''
+				[c/66CCFF:宸﹂敭锛氬睍寮€杩炵画鏂╁嚮锛岃妭濂忛€愭鍔犻€熴€俔
+				[c/7F8FA6:鍓嶄笁娈典负绋冲畾鎸ョ爫锛岀敤浠ュ帇鍒朵笌璇曟帰鏁屼汉銆俔
+				[c/99CCFF:绗洓娈甸噴鏀炬按鑳介鍒冿紝寤朵几鏀诲嚮鑼冨洿銆俔
+				[c/DDA0FF:缁堟寮曞彂宸ㄥ垉鏄剧幇锛屽鍓嶆柟鍖哄煙杩涜寮哄姏鍥炴柀銆俔
+				[c/FFB347:姣忎竴娆￠噸鏂╋紝閮戒細寮曞娼睈涔嬪姏姹囪仛浜庡墤鍒冦€俔
+				'''
+			BB_Tide: "[c/4FAEFF:褰撳墠娼睈鍊硷細]"
+			BB_Right:
+				'''
+				[c/66CCFF:鍙抽敭锛氫互楂橀€熺獊杩涙挄瑁傛垬鍦恒€俔
+				[c/7F8FA6:鏈厖鐩堟椂锛岃繘琛岀洿绾跨獊鍒猴紝鐢ㄤ簬鍒囧叆鎴栬劚绂汇€俔
+				[c/DDA0FF:娼睈鍏呯泩鏃讹紝杞寲涓哄洖鏃嬪啿鍒猴紝鎸佺画鎾曡璺緞涓婄殑涓€鍒囥€俔
+				[c/FFB347:鍐插埡鍗虫槸杩涙敾锛屼篃鏄敮涓€鐨勭敓瀛樻墜娈点€俔
+				'''
+			Dash1_Unlock: "[c/66FFAA:宸茶В閿侊細鍩虹绐佽繘]"
+			Dash1_Lock: "[c/7F8FA6:鐭窛绂婚珮閫熺獊鍒猴紝鍛戒腑鐩爣鍚庤繀閫熷弽寮广€俔"
+			Dash2_Unlock: "[c/66FFAA:宸茶В閿侊細鍥炴棆鍒囧壊]"
+			Dash2_Lock: "[c/DDA0FF:涓窛绂诲洖鏃嬪啿鍒猴紝瀵硅矾寰勬晫浜烘寔缁垏鍓层€俔"
+			Dash3_Unlock: "[c/66FFAA:宸茶В閿侊細杩炵画鏂╄繑]"
+			Dash3_Lock: "[c/99CCFF:蹇€熸姌杩旀柀鍑伙紝鍙湪鎴樺満涓娆′綅绉汇€俔"
+			Dash4_Unlock: "[c/66FFAA:宸茶В閿侊細娼睈鐖嗗彂]"
+			Dash4_Lock: "[c/FFB347:閲婃斁鍏ㄩ儴娼睈涔嬪姏锛屽彂鍔ㄦ瘉鐏€х獊琚€俔"
+			BB_Final:
+				'''
+				[c/DDA0FF:鍦ㄨ儗鍖呬腑鍙抽敭鐐瑰嚮姝﹀櫒]
+				[c/FFB347:鍙垏鎹㈠揩鍒€鏂╂ā寮忥紝鏀瑰彉浣滄垬鑺傚]
+				'''
+			LegendaryHint: "[c/6C8EFF:鎸変綇Shift閿互璇诲彇璁板綍]"
+			LegendaryText:
+				'''
+				[c/66CCFF:浠栨浘绔嬩簬娴疆涔嬪穮锛屼互閫熷害鎾曡鏁寸墖娴峰煙銆俔
+				[c/7F8FA6:娌℃湁闃插尽锛屾病鏈夎繜鐤戯紝鍙湁涓嶆柇鍚戝墠鐨勬柀鍑汇€俔
+				[c/99CCFF:娴锋按鍦ㄤ粬鑴氫笅缈绘秾锛屽鍚屽洖搴斾粬鐨勬剰蹇椼€俔
+				[c/DDA0FF:姣忎竴娆″啿鍒猴紝閮芥槸瀵规瀬闄愮殑鍐嶄竴娆＄獊鐮淬€俔
+				[c/FFB347:鏁屼汉鏃犳硶棰勫垽浠栫殑杞ㄨ抗锛屼篃鏃犳硶鎵垮彈浠栫殑閿嬭姃銆俔
+				[c/66CCFF:褰撲綘鐪嬭浠栨椂锛屾垬鏂楁棭宸茬粨鏉熴€俔
+				[c/7F8FA6:浠栦滑绉伴偅涓嶆槸鎴樻枟锛岃€屾槸涓€鍦哄腑鍗蜂竴鍒囩殑娼睈銆俔
+				[c/DDA0FF:鏉ュ幓涔嬮棿锛屽彧鐣欎笅琚垏鍓茬殑绌洪棿涓庢矇瀵傜殑娴烽潰銆俔
+				[c/FFB347:杩欐妸鍓戣褰曠殑涓嶅彧鏄姏閲忥紝鑰屾槸涓€绉嶄俊蹇点€俔
+				[c/99CCFF:鍚戝墠锛岀洿鍒颁笘鐣屾棤娉曟壙鍙椾綘鐨勯€熷害銆俔
+				'''
+		}
+	}
+
+	BBTest: {
+		// DisplayName: B B Test
+		// Tooltip: ""
+	}
+}
+
+AMMO: {
+	SHPCAmmoPrompt: 璇ョ墿鍝佸彲鐢ㄤ负SHPC鍏呰兘锛屾晥鏋滀负锛?
+	SHPCAmmo1: 寮硅烦骞堕噴鏀惧ぇ閲忕數鐏姳
+	SHPCAmmo2: 閲婃斁5鏉¤繛閿侀棯鐢靛姬
+	SHPCAmmo3: 鍑讳腑鍦伴潰鍚庝骇鐢熸瘨姘?
+	SHPCAmmo4: 鑳介噺鑰楀敖鍚庡垎瑁傛垚涓や釜鍏夌悆
+	SHPCAmmo5: 鐬勫噯骞剁寷鍑绘涓嬫柟鐨勬晫浜?
+	SHPCAmmo6: 鐖嗙偢鏃跺舰鎴愪竴鐗囨恫姘尯鍩?
+	SHPCAmmo7: 鏍囪鏁屼汉骞跺彫鍞ゅぉ缃氭縺鍏?
+	SHPCAmmo8: 鎶婃晫浜哄穿椋?
+	SHPCAmmo9: 鍛煎敜楂樹激瀹崇殑鍏夋槑涔嬮瓊缁曡嚜韬棆杞?
+	SHPCAmmo10: 鍠峰皠杩借釜鏁屼汉鐨勬殫褰变箣榄?
+	SHPCAmmo11: 缈辩繑浜庡ぉ绌猴紝骞跺悜涓嬭桨鐐?
+	SHPCAmmo12: 鍦ㄥ師鍦版粸鐣欐父鑽＄殑鎭愭儳涔嬮瓊
+	SHPCAmmo13: 閲婃斁涓変釜寤惰繜鐖嗙偢鐨勮兘閲忓厜鐞?
+	SHPCAmmo14: 鎸佷箙鐨勯琛岃兘澶熼€犳垚鏇寸寷鐑堢殑鐖嗙偢
+	SHPCAmmo15: 杩借釜骞跺皾璇曟不鐤楃帺瀹?
+	SHPCAmmo16: 鎾炲嚮鍚庡悜鍥涘懆閲婃斁闈欐鐨勭伒榄?
+	SHPCAmmo17: 鎸佺画绮樺湪鏁屼汉琛ㄩ潰閫犳垚澶氭浼ゅ
+	SHPCAmmo18: 鍒堕€犵槦鐤牳鐖?
+	SHPCAmmo19: 鐥涜嫤鐨勮丹鑹茬伒榄傚柗娑岃€屽嚭
+	SHPCAmmo20: "[鐢茶櫕澶栧３ 鏈疄鐜癩"
+	SHPCAmmo21: 鏁ｅ皠涓€杩炰覆鏃ユ洔绌垮埡闀跨煕
+	SHPCAmmo22: 椋炶鏈熼棿閲婃斁婕╂丁瀵煎脊
+	SHPCAmmo23: 寮鸿拷韪苟钃勫姏鐖嗙偢
+	SHPCAmmo24: "[NPC:406] >> [NPC:405] >> [NPC:406] >> [NPC:405] !!!"
+	SHPCAmmo25: 閲婃斁瓒呭ぇ鑼冨洿鍐ユ€濈垎鐐?
+	SHPCAmmo26: 鎾炲嚮鐗╁潡鍚庝骇鐢熺寷鐑堝崟鍚戝啿鍑绘尝
+	SHPCAmmo27: "[鏆傛棤璇ョ墿鍝乚"
+	SHPCAmmo28: 鐖嗙偢鏃堕噴鏀剧鍦ｅ嚑浣曞脊璺冲皠绾?
+	SHPCAmmo29: 鐚キ鐜╁鐨勮閲忓己鍖栬嚜韬紝鐖嗙偢娌荤枟鍥炶
+	SHPCAmmo30: 鍞ら啋娣卞鐨勭伒榄?
+	SHPCAmmo31: 鐥涜嫤鐨勮丹鑹茬伒榄傚柗娑岃€屽嚭
+	SHPCAmmo32: 鍒堕€犲皬鍨嬮粦娲炲皢鏁屼汉鍚稿叆
+	SHPCAmmo33: 杩涜澶氭鍙岀航绾胯拷韪苟鎶归櫎鏁屼汉
+	SHPCAmmo34: 鍙嶅脊骞堕噴鏀惧啺鍒烘敾鍑?
+	SHPCAmmo35: 鍒嗚鎴愬櫓姊︽縺鍏?
+	SHPCAmmo36: 鍙敜澶ч噺鐨勫井鍨嬪湥鐏碉紝杩涜鍖哄煙鐏姏瑕嗙洊
+	SHPCAmmo37: 鎰熷彈宸ㄩ緳鐨勬€掑惣
+	SHPCAmmo38: 鍠峰皠婵€鍏夋儵鎴掓晫浜猴紝閲婃斁鍒嗗舰鍑犱綍
+	SHPCAmmo39: 婀伃鐩姏鎵€鍙婄殑鎵€鏈夋晫浜?
+	SHPCAmmo40: 鍠峰皠鍑哄ぇ閲忕殑鐢电鍏夌悆
+}
+
+Buffs: {
+	SHPCRight_DeBuff: {
+		// DisplayName: S H P C Right_ De Buff
+		// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+	}
+
+	YharonSoulFragment_Buff: {
+		// DisplayName: Yharon Soul Fragment_ Buff
+		// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+	}
+}
+
+Keybinds: {
+	LegendarySkill: 浼犲鎶€鑳?
+	Mods.CalamityLegendsComeBack.Keybinds.LegendarySkill.DisplayName: 浼犲鎶€鑳?
+}
+
+Projectiles: {
+	EnergyCore_Spark.DisplayName: 鑳介噺鏍稿績鐏姳
+	PurifiedGel_Ball.DisplayName: 鍑€鍖栧嚌鑳剁悆
+	Typeless.StormlionMandible_ARC.DisplayName: 椋庢毚鐢靛姬
+	EssenceofHavoc_INV.DisplayName: 娣蜂贡绮惧崕鍐插嚮娉?
+	EssenceofSnow_N2.DisplayName: 鍐伴洩绮惧崕娑叉爱
+	EssenceofSunlight_Lighting.DisplayName: 鏃ュ厜绮惧崕闂數
+	Ectoplasm_Damage.DisplayName: 鐏佃川鍐插嚮
+	LivingShard_Healing.DisplayName: 鐢熷懡纰庣墖寮瑰箷
+	FragmentSolar_Spear.DisplayName: 鏃ヨ€€纰庣墖绌垮埡闀跨煕
+	FragmentStardust_Cell.DisplayName: 鏄熷皹纰庣墖缁嗚優
+	DivineGeode_Lazer.DisplayName: 绁炲湥鏅舵牳婵€鍏?
+	UnholyEssence_Wave.DisplayName: 鐑涚伀绮惧崕鍐插嚮娉?
+	AscendantSpirit_PROJ.DisplayName: 鍖栫榄傜簿鎶曞皠浣?
+	ExoPrism_Geometry.DisplayName: 鏄熸祦妫辨櫠鍑犱綍浣?
+	ExoPrism_Lazer.DisplayName: 鏄熸祦妫辨櫠婵€鍏?
+	YharonSoulFragment_Flame.DisplayName: 鐘芥垘鐏甸瓊纰庣墖鐏劙
+	NewLegendSHPB.DisplayName: SHPC 鑳介噺鍏夌悆
+	NewLegendSHPE.DisplayName: SHPC 鐖嗙偢
+	SHPCRight_HoulOut.DisplayName: SHPC 鏋韩
+	SHPCRight_Proj.DisplayName: SHPC 婵€鍏?
+	// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
+	// NewSHPS.DisplayName: New S H P S
+	// BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
+	// TeachingProjectile.DisplayName: Teaching Projectile
+	// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+	// AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
+	// BrinyBaron_EXP.DisplayName: Briny Baron_ E X P
+	// BrinyBaron_LeftClick_HitSplash.DisplayName: Briny Baron_ Left Click_ Hit Splash
+	// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+	// BrinyBaron_LeftClick_TrackingWaterBlade.DisplayName: Briny Baron_ Left Click_ Tracking Water Blade
+	// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+	// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+	// BrinyBaron_SkillDashTornado_Tornado.DisplayName: Briny Baron_ Skill Dash Tornado_ Tornado
+	// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
+	// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+	// BrinyBaron_SkillSlashDash_WaterBomb.DisplayName: Briny Baron_ Skill Slash Dash_ Water Bomb
+	// BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
+	// BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
+	// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
+	// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+	// ExoPrism_Light.DisplayName: Exo Prism_ Light
+	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+	// Necroplasm_Damage.DisplayName: Necroplasm_ Damage
+	// BBSD_Star.DisplayName: B B S D_ Star
+	// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+
+	NewWeapons: {
+		// DPreDog.BBSwing_Slash.DisplayName: B B Swing_ Slash
+		// BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+		// EAfterDog.SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+	}
+
+	// BBSwing_Wave.DisplayName: B B Swing_ Wave
+	// BBShuriken_Light.DisplayName: B B Shuriken_ Light
+	// BBSwing_INV.DisplayName: B B Swing_ I N V
+	// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
+}
+
+// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+Cooldowns.SHPC_EX: SHPC鍐峰嵈
+Cooldowns.YC_EX: 晶簇EX冷却
+Items.Weapons.NewLegendYharimsCrystal.DisplayName: 亚利姆水晶
+Projectiles.YC_LeftHoldOut.DisplayName: 水晶左手持
+Projectiles.YC_RightHoldOut.DisplayName: 水晶右手持
+Projectiles.YC_EX_VIP.DisplayName: 水晶EX中枢
+Projectiles.YC_EX_Drone.DisplayName: 水晶EX无人机
+Projectiles.YC_EX_Laser.DisplayName: 水晶EX激光
+Projectiles.YC_Left_Drone.DisplayName: 水晶左无人机
+Projectiles.YC_Left_Laser.DisplayName: 水晶左激光
+Projectiles.YC_Right_Drone.DisplayName: 水晶右无人机
+Projectiles.YC_Right_TrackerLaser.DisplayName: 水晶追踪激光
+Projectiles.YC_Right_DronePulseLaser.DisplayName: 水晶脉冲激光
+Projectiles.YC_Right_Beam.DisplayName: 水晶右贯穿激光

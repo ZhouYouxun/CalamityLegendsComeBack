@@ -311,7 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             // ===== 降温音效 =====
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/AWM开火")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/AWM开火")
                 {
                     Volume = 5.2f,
                     Pitch = 0.2f
@@ -371,15 +371,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                     float t = spiralCounter * 0.15f; // 时间参数（调速度）
 
-                    // ===== 固定扇形 =====
-                    float spread = MathHelper.Lerp(-0.15f, 0.15f, i / (float)(count - 1));
+                    float maxAngle = MathHelper.Pi / 180f * 4f;   // 主扇形 ±X°
+                    float waveAngle = MathHelper.Pi / 180f * 1f;  // 螺旋扰动 ±Y°
+
+                    float spread = MathHelper.Lerp(-maxAngle, maxAngle, i / (float)(count - 1));
                     Vector2 baseDir = baseVelocity.RotatedBy(spread);
 
-                    // ===== 螺旋扰动（每条都有独立相位）=====
-                    float phase = i * 1.2f; // 每条错开
-                    float offset = (float)Math.Sin(t + phase) * 0.12f;
+                    float phase = i * 1.2f;
+                    float offset = (float)Math.Sin(t + phase) * waveAngle;
 
-                    // 👉 最终方向：在自己轨道上摆动
                     velocity = baseDir.RotatedBy(offset);
                 }
 
@@ -547,8 +547,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             bool zenith = Main.zenithWorld;
 
             string path = zenith
-                ? "CalamityLegendsComeBack/Weapons/SHPC/M14拉枪"
-                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效";
+                ? "CalamityLegendsComeBack/Sound/SHPC/M14拉枪"
+                : "CalamityLegendsComeBack/Sound/SHPC/双刃镰启动音效";
 
             SoundStyle style = new SoundStyle(path)
             {
@@ -564,8 +564,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             bool zenith = Main.zenithWorld;
 
             string path = zenith
-                ? "CalamityLegendsComeBack/Weapons/SHPC/M14开枪"
-                : "CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效";
+                ? "CalamityLegendsComeBack/Sound/SHPC/M14开枪"
+                : "CalamityLegendsComeBack/Sound/SHPC/双刃镰开火音效";
 
             SoundStyle style = new SoundStyle(path)
             {
@@ -579,7 +579,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void PlayStageUpSound()
         {
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/迫击哨戒炮单次攻击")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/迫击哨戒炮单次攻击")
                 {
                     Volume = 5.2f,
                     Pitch = 0.2f
@@ -591,7 +591,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void PlayManualCooldownSound()
         {
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/解放者机甲左手火箭弹")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/解放者机甲左手火箭弹")
                 {
                     Volume = 2.7f,
                     Pitch = 0.2f
@@ -1106,3 +1106,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         }
     }
 }
+

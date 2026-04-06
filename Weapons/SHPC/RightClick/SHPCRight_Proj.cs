@@ -39,8 +39,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override bool PreDraw(ref Color lightColor)
         {
-            //Projectile.DrawBeam(200f, 3f, lightColor);
-            //return false;
+            Projectile.DrawBeam(200f, 3f, lightColor);
+            return false;
 
             Vector2[] trailPoints = BuildTrailPoints();
             if (trailPoints.Length < 2)

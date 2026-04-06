@@ -10,9 +10,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         // 两分钟攒满：2 × 60 × 60 = 7200帧
         public const int EXMax = 7200;
+        public const int EXDisplayMax = 60;
+        public const int FramesPerDisplayUnit = EXMax / EXDisplayMax;
 
         // 是否已满
         public bool EXFull => EXValue >= EXMax;
+        public int EXDisplayValue => Utils.Clamp(EXValue / FramesPerDisplayUnit, 0, EXDisplayMax);
+        public bool EXUnlocked => NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3;
 
         public override void ResetEffects()
         {
@@ -21,6 +25,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public override void PostUpdate()
         {
+            if (!EXUnlocked)
+            {
+                EXValue = 0;
+                return;
+            }
+
             // 检测当前是否手持 SHPC
             bool holdingSHPC = Player.HeldItem != null &&
                                !Player.HeldItem.IsAir &&
@@ -28,7 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             if (holdingSHPC)
             {
-                // 手持：正常增长
+                // 手持：每帧增长1，满值正好需要 7200 帧（两分钟）
                 if (EXValue < EXMax)
                     EXValue++;
             }
@@ -41,10 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     EXValue = 0;
             }
 
-            // 手持时逐渐积攒
-            if (EXValue < EXMax)
-                EXValue++;
-            else
+            if (EXValue > EXMax)
                 EXValue = EXMax;
         }
 

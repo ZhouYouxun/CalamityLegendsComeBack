@@ -203,7 +203,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 
             // 播放音效
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/轨道炮攻击-仅开火")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/轨道炮攻击-仅开火")
                 {
                     Volume = 1.1f,
                     Pitch = 0.1f
@@ -331,3 +331,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 
     }
 }
+

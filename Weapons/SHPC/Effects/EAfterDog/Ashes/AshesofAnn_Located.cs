@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private void CreateUltimateAshExplosionFX(Vector2 center)
         {
             // 爆炸音效
-            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/最后通牒爆炸")
+            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸")
             {
                 Volume = 1.35f,
                 Pitch = -0.08f,

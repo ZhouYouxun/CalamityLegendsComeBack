@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.Cooldowns;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,44 +9,42 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using static CalamityMod.CalamityUtils;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
+namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 {
-    public class SHPC_EXCooldown : CooldownHandler
+    internal class YCEXCoolDown : CooldownHandler
     {
-        // 当前进度（0~1）
-        private float AdjustedCompletion => instance.timeLeft / (float)NewLegend_EXPlayer.EXMax;
-        private int DisplayValue => Utils.Clamp(instance.timeLeft / NewLegend_EXPlayer.FramesPerDisplayUnit, 0, NewLegend_EXPlayer.EXDisplayMax);
+        private YCEXPlayer ExPlayer => instance.player.GetModPlayer<YCEXPlayer>();
+        private float AdjustedCompletion => MathHelper.Clamp(ExPlayer.DisplayCompletion, 0f, 1f);
+        private int DisplayValue => ExPlayer.DisplayValue;
 
         private Color TextColor => Color.AliceBlue;
-        private Color TextBorderColor = Color.Black;
+        private Color TextBorderColor => Color.Black;
 
-        // ✅ 唯一ID（必须改）
-        public static new string ID => "SHPC_EX";
+        public static new string ID => "YharimsCrystal_EX";
 
-        // ❌ 不自动下降（因为这是能量条）
         public override bool CanTickDown => false;
 
-        // ✅ 只有手持SHPC时才显示
         public override bool ShouldDisplay =>
-            instance.player.HeldItem.type == ModContent.ItemType<NewLegendSHPC>() &&
-            instance.player.GetModPlayer<NewLegend_EXPlayer>().EXUnlocked;
+            instance.player.HeldItem.type == ModContent.ItemType<NewLegendYharimsCrystal>();
 
-        // 名字（可后续本地化）
         public override LocalizedText DisplayName =>
-            Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.SHPC_EX");
+            Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.YC_EX");
 
-        // 贴图（先用占位，不影响功能）
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/EXSkill/YCEXCoolDown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/EXSkill/YCEXCoolDownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/EXSkill/YCEXCoolDownOverlay";
 
-        public override Color OutlineColor => Color.DarkSlateGray;
+        public override Color OutlineColor => Color.Black;
 
         public override Color CooldownStartColor =>
-            Color.Lerp(Color.Cyan, Color.DarkSlateGray, instance.Completion);
+            ExPlayer.IsCoolingDown
+                ? Color.Lerp(new Color(120, 52, 22), new Color(220, 150, 65), AdjustedCompletion)
+                : Color.Lerp(new Color(155, 110, 32), new Color(255, 208, 90), AdjustedCompletion);
 
         public override Color CooldownEndColor =>
-            Color.Lerp(Color.White, Color.DarkSlateGray, instance.Completion);
+            ExPlayer.IsCoolingDown
+                ? Color.Lerp(new Color(28, 18, 12), new Color(150, 82, 35), AdjustedCompletion)
+                : Color.Lerp(new Color(255, 235, 165), Color.White, AdjustedCompletion);
 
         public override void ApplyBarShaders(float opacity)
         {
@@ -61,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             base.DrawExpanded(spriteBatch, position, opacity, scale);
 
-            Vector2 textOffset = new Vector2(DisplayValue > 9 ? -11f : -6f, 10f);
+            Vector2 textOffset = new Vector2(DisplayValue > 99 ? -15f : DisplayValue > 9 ? -11f : -6f, 10f);
 
             DrawBorderStringEightWay(
                 spriteBatch,
@@ -70,8 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 position + textOffset * scale,
                 TextColor,
                 TextBorderColor,
-                scale
-            );
+                scale);
         }
 
         public override void DrawCompact(SpriteBatch spriteBatch, Vector2 position, float opacity, float scale)
@@ -80,13 +77,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Texture2D outline = ModContent.Request<Texture2D>(OutlineTexture).Value;
             Texture2D overlay = ModContent.Request<Texture2D>(OverlayTexture).Value;
 
-            // 外框
-            spriteBatch.Draw(outline, position, null, OutlineColor * opacity, 0, outline.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(outline, position, null, OutlineColor * opacity, 0f, outline.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(sprite, position, null, Color.White * opacity, 0f, sprite.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
-            // 图标
-            spriteBatch.Draw(sprite, position, null, Color.White * opacity, 0, sprite.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-
-            // 进度遮罩
             int lostHeight = (int)Math.Ceiling(overlay.Height * AdjustedCompletion);
             Rectangle crop = new Rectangle(0, lostHeight, overlay.Width, overlay.Height - lostHeight);
 
@@ -95,15 +88,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 position + Vector2.UnitY * lostHeight * scale,
                 crop,
                 OutlineColor * opacity * 0.9f,
-                0,
+                0f,
                 sprite.Size() * 0.5f,
                 scale,
                 SpriteEffects.None,
-                0f
-            );
+                0f);
 
-            // 数字
-            Vector2 textOffset = new Vector2(DisplayValue > 9 ? -11f : -6f, 10f);
+            Vector2 textOffset = new Vector2(DisplayValue > 99 ? -15f : DisplayValue > 9 ? -11f : -6f, 10f);
 
             DrawBorderStringEightWay(
                 spriteBatch,
@@ -112,8 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 position + textOffset * scale,
                 TextColor,
                 TextBorderColor,
-                scale
-            );
+                scale);
         }
     }
 }

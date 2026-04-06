@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Projectiles.Melee;
 using CalamityMod.World;
@@ -38,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private int stuckTargetIndex = -1;
         private int stickTimer;
         private int sliceEffectTimer;
+        private int slicesPerformed;
         private int soundTimer;
         private Vector2 stickOffsetFromTarget;
 
@@ -63,8 +65,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             stuckTargetIndex = -1;
             stickTimer = 0;
             sliceEffectTimer = 0;
+            slicesPerformed = 0;
             soundTimer = 0;
             stickOffsetFromTarget = Vector2.Zero;
+            Projectile.penetrate = HighestUnlockedStage == 0 ? 1 : -1;
         }
 
         public override void AI()
@@ -109,6 +113,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             if (HighestUnlockedStage >= 3)
                 BBShuriken_BoomerDuke_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale);
 
+            if (HighestUnlockedStage == 0)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             if (!stuckInTarget)
             {
                 stuckInTarget = true;
@@ -119,6 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 Projectile.timeLeft = 90;
                 stickTimer = 0;
                 sliceEffectTimer = 0;
+                slicesPerformed = 0;
                 Projectile.direction = Projectile.direction == 0 ? (Main.rand.NextBool() ? 1 : -1) : Projectile.direction;
                 Projectile.netUpdate = true;
 
@@ -139,6 +150,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         public override void OnKill(int timeLeft)
         {
             BBShuriken_Initial_Effects.SpawnDeathBurst(Projectile, SizeScale);
+
+            if (HighestUnlockedStage >= 2 && Main.myPlayer == Projectile.owner)
+            {
+                int projIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<NewLegendSHPE>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner);
+
+                if (Main.projectile.IndexInRange(projIndex))
+                {
+                    Projectile proj = Main.projectile[projIndex];
+                    proj.width = 50;
+                    proj.height = 50;
+                    proj.DamageType = DamageClass.Melee;
+                    proj.Center = Projectile.Center;
+                    proj.netUpdate = true;
+                }
+            }
 
             if (HighestUnlockedStage >= 3 && Main.myPlayer == Projectile.owner)
             {
@@ -294,7 +327,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             if (sliceEffectTimer >= 8)
             {
                 sliceEffectTimer = 0;
+                slicesPerformed++;
                 BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, HighestUnlockedStage);
+                TrySpawnStickySlash(target);
 
                 if (soundTimer <= 0)
                 {
@@ -306,10 +341,50 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
                     soundTimer = 8;
                 }
+
+                if (slicesPerformed >= GetMaxStickySlices())
+                {
+                    Projectile.Kill();
+                    return;
+                }
             }
 
             if (stickTimer >= StickyLifetime)
                 Projectile.Kill();
+        }
+
+        private int GetMaxStickySlices()
+        {
+            return HighestUnlockedStage switch
+            {
+                1 => 3,
+                2 => 4,
+                3 => 5,
+                _ => 0
+            };
+        }
+
+        private void TrySpawnStickySlash(NPC target)
+        {
+            if (HighestUnlockedStage < 2 || Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 slashDirection = target.velocity.LengthSquared() > 1f
+                ? target.velocity.SafeNormalize(Vector2.UnitX)
+                : (target.Center - Projectile.Center).SafeNormalize(Projectile.rotation.ToRotationVector2());
+
+            slashDirection = slashDirection.RotatedByRandom(0.6f);
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center + Main.rand.NextVector2Circular(12f, 12f),
+                slashDirection * Main.rand.NextFloat(5.2f, 6.8f),
+                ModContent.ProjectileType<BBSwing_Slash>(),
+                Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                Projectile.knockBack * 0.4f,
+                Projectile.owner,
+                0.9f + HighestUnlockedStage * 0.08f,
+                Main.rand.NextFloat(-0.3f, 0.3f));
         }
 
         private NPC FindNearestTarget(float maxDistance)

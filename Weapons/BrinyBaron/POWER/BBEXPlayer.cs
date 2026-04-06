@@ -1,4 +1,4 @@
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
 {
@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         {
             get
             {
-                int value = 2; // ��ʼֵ�ĳ�2
+                int value = 2; // 初始值改成2
 
                 if (Main.hardMode)
                     value++;
@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
                 if (NPC.downedMoonlord)
                     value++;
 
-                if (CalamityMod.DownedBossSystem.downedPolterghast)
+                if (CalamityMod.DownedBossSystem.downedBoomerDuke)
                     value++;
 
                 if (CalamityMod.DownedBossSystem.downedYharon)

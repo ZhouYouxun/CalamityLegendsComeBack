@@ -145,10 +145,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             BladeGrowthProfile profile = BuildBladeGrowthProfile(
                 growthTier: 0,
-                bladeScale: 0.5f,
+                bladeScale: 0.35f,
                 giantScaleFactor: 2.4f,
-                giantGrowFrames: 30,
-                giantShrinkFrames: 30);
+                giantGrowFrames: 42,
+                giantShrinkFrames: 38);
+
+            if (NPC.downedBoss1)
+            {
+                profile = BuildBladeGrowthProfile(
+                    growthTier: 0,
+                    bladeScale: 0.45f,
+                    giantScaleFactor: 2.4f,
+                    giantGrowFrames: 42,
+                    giantShrinkFrames: 38);
+            }
+
+            if (Main.hardMode)
+            {
+                profile = BuildBladeGrowthProfile(
+                    growthTier: 0,
+                    bladeScale: 0.5f,
+                    giantScaleFactor: 2.4f,
+                    giantGrowFrames: 42,
+                    giantShrinkFrames: 38);
+            }
 
             if (NPC.downedFishron)
             {
@@ -156,8 +176,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     growthTier: 1,
                     bladeScale: 0.62f,
                     giantScaleFactor: 2.4f,
-                    giantGrowFrames: 30,
-                    giantShrinkFrames: 30);
+                    giantGrowFrames: 42,
+                    giantShrinkFrames: 38);
             }
 
             if (DownedBossSystem.downedBoomerDuke)
@@ -166,8 +186,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     growthTier: 2,
                     bladeScale: 0.76f,
                     giantScaleFactor: 2.4f,
-                    giantGrowFrames: 30,
-                    giantShrinkFrames: 30);
+                    giantGrowFrames: 42,
+                    giantShrinkFrames: 38);
             }
 
             if (DownedBossSystem.downedYharon)
@@ -176,8 +196,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     growthTier: 3,
                     bladeScale: 0.92f,
                     giantScaleFactor: 2.4f,
-                    giantGrowFrames: 30,
-                    giantShrinkFrames: 30);
+                    giantGrowFrames: 42,
+                    giantShrinkFrames: 38);
             }
 
             return profile;
@@ -569,11 +589,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     if (CurrentComboStage == 3 && !spawnedStage4Projectiles && Main.myPlayer == Projectile.owner)
                     {
                         Vector2 shootDir = (Main.MouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX);
+                        int tideValue = Owner.GetModPlayer<BBEXPlayer>().TideValue;
+                        int shurikenCount = 3 + tideValue / 2;
 
-                        for (int i = 0; i < 3; i++)
+                        for (int i = 0; i < shurikenCount; i++)
                         {
-                            float speed = 12f + i * 3.5f;
-                            Vector2 velocity = shootDir.RotatedByRandom(0.08f) * speed;
+                            float progress = shurikenCount <= 1 ? 0.5f : i / (float)(shurikenCount - 1);
+                            float spread = MathHelper.Lerp(-0.2f, 0.2f, progress);
+                            float speed = 12f + i * 1.8f;
+                            Vector2 velocity = shootDir.RotatedBy(spread).RotatedByRandom(0.04f) * speed;
 
                             Projectile.NewProjectile(
                                 Projectile.GetSource_FromThis(),
@@ -762,20 +786,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                     // 主喷射尾迹：更密、更跟手、更像沿刀路拖出来的高能尾流
                     Vector2 trailStart = Owner.Center + slashDirection * ScaleDistance(78f);
-                    for (int i = 0; i < 9; i++)
+                    for (int i = 0; i < 14; i++)
                     {
                         // 沿着刀路依次排开，而不是完全随机散点
-                        float step = ScaleDistance(16f + i * 14f);
+                        float step = ScaleDistance(12f + i * 12f);
                         Vector2 spawnPos =
                             trailStart +
                             slashDirection * step -
-                            backwardDirection * ScaleDistance(i * 8f) +
-                            Main.rand.NextVector2Circular(5f, 5f) * CurrentVisualScale;
+                            backwardDirection * ScaleDistance(i * 6f) +
+                            Main.rand.NextVector2Circular(7f, 7f) * CurrentVisualScale;
 
                         // 主尾流：扩散更小，速度更收敛，但数量更多
                         Vector2 vel =
-                            -backwardDirection.RotatedByRandom(0.09f) * Main.rand.NextFloat(6.5f, 11.5f) -
-                            Owner.velocity * 0.82f;
+                            -backwardDirection.RotatedByRandom(0.11f) * Main.rand.NextFloat(8f, 15f) -
+                            Owner.velocity * 0.88f;
 
                         GeneralParticleHandler.SpawnParticle(
                             new CustomSpark(
@@ -783,11 +807,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                 vel,
                                 "CalamityMod/Particles/BloomCircle",
                                 false,
-                                18,
-                                Main.rand.NextFloat(0.32f, 0.55f) * CurrentVisualScale,
+                                24,
+                                Main.rand.NextFloat(0.4f, 0.65f) * CurrentVisualScale,
                                 Main.rand.NextBool(3) ? Color.DeepSkyBlue : Color.Cyan,
-                                new Vector2(1.05f, 0.52f),
-                                shrinkSpeed: 0.94f
+                                new Vector2(1.2f, 0.58f),
+                                shrinkSpeed: 0.92f
                             )
                         );
                     }
@@ -801,16 +825,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                             slashDirection * ScaleDistance(132f) +
                             sideDirection * ScaleDistance(10f);
 
-                        for (int j = 0; j < 3; j++)
+                        for (int j = 0; j < 4; j++)
                         {
                             Vector2 sideSpawnPos =
                                 sideStart +
-                                sideDirection * ScaleDistance(j * 10f) +
-                                Main.rand.NextVector2Circular(3f, 3f) * CurrentVisualScale;
+                                sideDirection * ScaleDistance(j * 11f) +
+                                Main.rand.NextVector2Circular(4f, 4f) * CurrentVisualScale;
 
                             Vector2 sideVel =
-                                sideDirection.RotatedByRandom(0.06f) * Main.rand.NextFloat(3.8f, 6.2f) -
-                                Owner.velocity * 0.35f;
+                                sideDirection.RotatedByRandom(0.08f) * Main.rand.NextFloat(4.6f, 7.4f) -
+                                Owner.velocity * 0.4f;
 
                             GeneralParticleHandler.SpawnParticle(
                                 new CustomSpark(
@@ -818,11 +842,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                                     sideVel,
                                     "CalamityMod/Particles/BloomCircle",
                                     false,
-                                    12,
-                                    Main.rand.NextFloat(0.16f, 0.24f) * CurrentVisualScale,
+                                    16,
+                                    Main.rand.NextFloat(0.18f, 0.3f) * CurrentVisualScale,
                                     side > 0 ? Color.Cyan : Color.DeepSkyBlue,
-                                    new Vector2(0.72f, 0.36f),
-                                    shrinkSpeed: 0.965f
+                                    new Vector2(0.82f, 0.38f),
+                                    shrinkSpeed: 0.955f
                                 )
                             );
                         }
@@ -947,7 +971,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             float scaledDistance = ScaleDistance(MathHelper.Lerp(120f, 260f, growProgress));
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 5; i++)
             {
                 Vector2 particleVel = new Vector2(0f, 8f * -Projectile.ai[1] * Owner.direction)
                     .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
@@ -982,7 +1006,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             float dustDistance = ScaleDistance(180f);
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
             {
                 Vector2 spawnPos = Owner.Center +
                     new Vector2(dustDistance, 0f)
@@ -999,7 +1023,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
             }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 6; i++)
             {
                 float randRot = Main.rand.NextFloat(-20f, -100f);
                 Vector2 dustVel = new Vector2(0f, 11f * -Projectile.ai[1] * Owner.direction)
@@ -1024,7 +1048,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 );
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 Vector2 beamPos = Owner.Center +
                     new Vector2(Main.rand.NextFloat(160f * CurrentVisualScale, 560f * CurrentVisualScale), 0f)
@@ -1044,7 +1068,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void SpawnGiantShrinkParticles(float shrinkProgress)
         {
-            if (Main.rand.NextBool(2))
+            for (int i = 0; i < 2; i++)
             {
                 Vector2 particlePos = Owner.Center +
                     new Vector2(Main.rand.NextFloat(40f * CurrentVisualScale, 180f * CurrentVisualScale), 0f)

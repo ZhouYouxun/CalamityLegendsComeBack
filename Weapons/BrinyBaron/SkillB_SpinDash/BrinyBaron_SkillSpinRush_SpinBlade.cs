@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
+using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -24,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
         public override Vector2 SpriteOrigin => new(0f, 102f);
 
-        private const int ChargeFrames = 32;
+        private const int ChargeFrames = 16;
         private const int DashFrames = 32;
         private const float DashStartSpeed = 8f;
         private const float DashTopSpeed = 23f;
@@ -45,6 +46,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         private bool dashStarted;
         private bool dashImpactPlayed;
         private Vector2 dashVelocity;
+        private float growthSizeMultiplier;
+        private float growthSpeedMultiplier;
         private float VisualScale => Projectile.width / (float)BaseSquareSize;
 
         public override void SetStaticDefaults()
@@ -86,6 +89,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             dashStarted = false;
             dashImpactPlayed = false;
             dashVelocity = Vector2.Zero;
+            SpinRushGrowthProfile growthProfile = ResolveGrowthProfile();
+            growthSizeMultiplier = growthProfile.SizeMultiplier;
+            growthSpeedMultiplier = growthProfile.SpeedMultiplier;
+            ApplyGrowthScale();
 
             Owner.direction = lockedDirection.X >= 0f ? 1 : -1;
             FlipAsSword = Owner.direction == -1;
@@ -177,7 +184,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             dashStarted = true;
             Offset = Vector2.Zero;
             AbsolutePosition = Vector2.Zero;
-            dashVelocity = lockedDirection * DashStartSpeed;
+            dashVelocity = lockedDirection * (DashStartSpeed * growthSpeedMultiplier);
             Projectile.velocity = Vector2.Zero;
             Projectile.netUpdate = true;
 
@@ -200,7 +207,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
 
             float dashProgress = Utils.GetLerpValue(0f, DashFrames, stateTimer, true);
             float easedDash = EvaluateFluidCharge(dashProgress);
-            float dashSpeed = MathHelper.Lerp(DashStartSpeed, DashTopSpeed, easedDash);
+            float dashSpeed = MathHelper.Lerp(DashStartSpeed, DashTopSpeed, easedDash) * growthSpeedMultiplier;
             float spinDegrees = MathHelper.Lerp(135f, 915f, dashProgress) * -Owner.direction;
 
             dashVelocity = lockedDirection * dashSpeed;
@@ -241,6 +248,44 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             float smootherStep = progress * progress * progress * (progress * (progress * 6f - 15f) + 10f);
             float sineEase = 0.5f - 0.5f * (float)Math.Cos(progress * MathHelper.Pi);
             return MathHelper.Lerp(sineEase, smootherStep, 0.7f);
+        }
+
+        private SpinRushGrowthProfile ResolveGrowthProfile()
+        {
+            SpinRushGrowthProfile profile = new(sizeMultiplier: 1f, speedMultiplier: 1f);
+
+            if (NPC.downedFishron)
+                profile = new SpinRushGrowthProfile(sizeMultiplier: 1.2f, speedMultiplier: 1.15f);
+
+            if (DownedBossSystem.downedBoomerDuke)
+                profile = new SpinRushGrowthProfile(sizeMultiplier: 1.5f, speedMultiplier: 1.25f);
+
+            if (DownedBossSystem.downedYharon)
+                profile = new SpinRushGrowthProfile(sizeMultiplier: 1.75f, speedMultiplier: 1.35f);
+
+            return profile;
+        }
+
+        private void ApplyGrowthScale()
+        {
+            Vector2 center = Projectile.Center;
+            int scaledSize = Math.Max(1, (int)Math.Round(BaseSquareSize * 0.35f * growthSizeMultiplier));
+            Projectile.width = scaledSize;
+            Projectile.height = scaledSize;
+            Projectile.scale = VisualScale;
+            Projectile.Center = center;
+        }
+
+        private readonly struct SpinRushGrowthProfile
+        {
+            public readonly float SizeMultiplier;
+            public readonly float SpeedMultiplier;
+
+            public SpinRushGrowthProfile(float sizeMultiplier, float speedMultiplier)
+            {
+                SizeMultiplier = sizeMultiplier;
+                SpeedMultiplier = speedMultiplier;
+            }
         }
 
         private void SpawnChargeParticles(float chargeProgress)

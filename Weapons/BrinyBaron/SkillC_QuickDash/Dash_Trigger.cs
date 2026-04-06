@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
 using CalamityMod.World;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.GameInput;
 using Terraria.ID;
@@ -39,11 +40,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
             Player player = Player;
+            BrinyBaronFocusModePlayer focusPlayer = player.GetModPlayer<BrinyBaronFocusModePlayer>();
 
             if (!DashEnabled)
                 return;
 
             if (player.HeldItem.type != ModContent.ItemType<NewLegendBrinyBaron>())
+                return;
+
+            if (!Main.hardMode)
                 return;
 
             if (HasAnyActiveSkillProjectile(player) || player.GetModPlayer<Dash_Trigger>().IsUsingSlashDash)
@@ -121,10 +126,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             {
                 doubleTapTimer = 0;
                 lastTapDirection = 0;
-                dashCooldownTimer = growthProfile.DashCooldown;
+                dashCooldownTimer = focusPlayer.IsFocusModeActive
+                    ? Math.Max(1, growthProfile.DashCooldown / 2)
+                    : growthProfile.DashCooldown;
 
                 Vector2 dir = new Vector2(dashDirection, 0f);
                 int dashBaseDamage = (int)(DashBaseDamage * growthProfile.BaseDamageMultiplier);
+                if (focusPlayer.IsFocusModeActive)
+                    dashBaseDamage *= 5;
+
                 int dashDamage = (int)player.GetTotalDamage(player.HeldItem.DamageType).ApplyTo(dashBaseDamage);
 
                 Projectile.NewProjectile(

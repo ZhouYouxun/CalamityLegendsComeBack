@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Import tModLoader mod properties -->
 	<Import Project="..\tModLoader.targets" />
@@ -13,8 +13,13 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Sound\" />
+	  <Folder Include="Sound\SHPC\" />
+	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
+	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="Weapons\BrinyBaron\CommonAttack\参考文献\**\*.cs" />
 	</ItemGroup>
 
 	<!-- References -->

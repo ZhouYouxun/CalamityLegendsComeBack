@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
+﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -88,8 +88,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private int chargeSoundTimer;
         private void ChargePhase()
         {
-            
-            
+
+
             // ================= 蓄力循环音 =================
             timer++; // ← 提前！！！
 
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (ChargeSoundSlot == default)
             {
                 ChargeSoundSlot = SoundEngine.PlaySound(
-                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/蜃景大招正在蓄力")
+                    new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/蜃景大招正在蓄力")
                     {
                         Volume = 1.0f,
                         IsLooped = true
@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             // 播放蓄力完成音
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/蜃景大招准备就绪")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/蜃景大招准备就绪")
                 {
                     Volume = 1.2f,
                     Pitch = 0f
@@ -184,7 +184,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (LaserSoundSlot == default)
             {
                 LaserSoundSlot = SoundEngine.PlaySound(
-                    new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/蜃景大招发射")
+                    new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/蜃景大招发射")
                     {
                         Volume = 9.0f,
                         IsLooped = true

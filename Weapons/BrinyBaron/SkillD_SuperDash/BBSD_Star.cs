@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -6,6 +7,7 @@ using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -28,10 +30,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private float phaseOffset;
         private float pulseOffset;
         private float swirlDirection;
+        private Color mainColor;
+        private Color accentColor;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 14;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 18;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
@@ -57,6 +61,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             phaseOffset = Main.rand.NextFloat(0f, MathHelper.TwoPi);
             pulseOffset = Main.rand.NextFloat(0f, MathHelper.TwoPi);
             swirlDirection = Main.rand.NextBool() ? 1f : -1f;
+            mainColor = Color.Lerp(new Color(255, 229, 145), Color.White, Main.rand.NextFloat(0.1f, 0.38f));
+            accentColor = Color.Lerp(new Color(105, 205, 255), new Color(255, 245, 185), Main.rand.NextFloat(0.28f, 0.72f));
 
             if (Projectile.velocity.LengthSquared() < 0.01f)
                 Projectile.velocity = -Vector2.UnitY * MinSpeed;
@@ -84,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             UpdateMotion();
             SpawnFlightEffects();
-            Lighting.AddLight(Projectile.Center, 0.05f, 0.22f, 0.34f);
+            Lighting.AddLight(Projectile.Center, 0.11f, 0.24f, 0.33f);
         }
 
         private void UpdateMotion()
@@ -124,7 +130,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             cachedTargetIndex = FindBestTargetIndex();
             targetRefreshCooldown = 6;
-
             return IsTargetValid(cachedTargetIndex) ? Main.npc[cachedTargetIndex] : null;
         }
 
@@ -182,41 +187,61 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 right * ((float)Math.Sin(orbitPhase + MathHelper.Pi) * helixRadius) +
                 forward * ((float)Math.Cos(orbitPhase + MathHelper.Pi) * 3f);
 
-            GlowOrbParticle firstOrb = new GlowOrbParticle(
-                Projectile.Center + firstHelix,
-                right * ((float)Math.Cos(orbitPhase) * 0.2f),
-                false,
-                9,
-                0.68f + pulse * 0.22f,
-                Color.Lerp(new Color(70, 185, 255), Color.White, 0.35f + 0.25f * pulse),
-                true,
-                false,
-                true);
-            GeneralParticleHandler.SpawnParticle(firstOrb);
+            GeneralParticleHandler.SpawnParticle(
+                new GlowOrbParticle(
+                    Projectile.Center + firstHelix,
+                    right * ((float)Math.Cos(orbitPhase) * 0.2f),
+                    false,
+                    9,
+                    0.7f + pulse * 0.24f,
+                    Color.Lerp(accentColor, Color.White, 0.22f + 0.35f * pulse),
+                    true,
+                    false,
+                    true));
 
-            GlowOrbParticle secondOrb = new GlowOrbParticle(
-                Projectile.Center + secondHelix,
-                -right * ((float)Math.Cos(orbitPhase) * 0.2f),
-                false,
-                9,
-                0.68f + (1f - pulse) * 0.22f,
-                Color.Lerp(new Color(100, 220, 255), Color.White, 0.28f + 0.28f * (1f - pulse)),
-                true,
-                false,
-                true);
-            GeneralParticleHandler.SpawnParticle(secondOrb);
+            GeneralParticleHandler.SpawnParticle(
+                new GlowOrbParticle(
+                    Projectile.Center + secondHelix,
+                    -right * ((float)Math.Cos(orbitPhase) * 0.2f),
+                    false,
+                    9,
+                    0.68f + (1f - pulse) * 0.24f,
+                    Color.Lerp(mainColor, Color.White, 0.2f + 0.35f * (1f - pulse)),
+                    true,
+                    false,
+                    true));
 
             if (frameCounter % 2 == 0)
             {
-                Dust water = Dust.NewDustPerfect(
-                    Projectile.Center - forward * 4f,
-                    DustID.Water,
-                    -forward * Main.rand.NextFloat(0.4f, 1.6f),
+                Dust wakeDust = Dust.NewDustPerfect(
+                    Projectile.Center - forward * 5f,
+                    Main.rand.NextBool(3) ? DustID.Frost : DustID.YellowTorch,
+                    -forward * Main.rand.NextFloat(0.6f, 1.8f),
                     100,
-                    new Color(90, 205, 255),
+                    Color.Lerp(accentColor, mainColor, Main.rand.NextFloat()),
                     Main.rand.NextFloat(0.85f, 1.15f));
-                water.noGravity = true;
-                water.fadeIn = 1.08f;
+                wakeDust.noGravity = true;
+                wakeDust.fadeIn = 1.08f;
+            }
+
+            if (frameCounter % 6 == 0)
+            {
+                Vector2 backgroundPos =
+                    Projectile.Center -
+                    forward * Main.rand.NextFloat(8f, 22f) +
+                    right * Main.rand.NextFloat(-16f, 16f);
+
+                GeneralParticleHandler.SpawnParticle(
+                    new GlowOrbParticle(
+                        backgroundPos,
+                        -forward * Main.rand.NextFloat(0.2f, 0.8f),
+                        false,
+                        12,
+                        Main.rand.NextFloat(0.24f, 0.42f),
+                        Color.Lerp(mainColor, Color.White, 0.3f),
+                        true,
+                        false,
+                        true));
             }
         }
 
@@ -251,7 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     DustID.Water,
                     direction * Main.rand.NextFloat(3.5f, 8f) * intensity,
                     100,
-                    new Color(75, 180, 255),
+                    accentColor,
                     Main.rand.NextFloat(0.95f, 1.35f) * intensity);
                 water.noGravity = true;
 
@@ -262,7 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                         DustID.Frost,
                         direction * Main.rand.NextFloat(2.2f, 5.5f) * intensity,
                         100,
-                        new Color(210, 248, 255),
+                        mainColor,
                         Main.rand.NextFloat(0.8f, 1.15f) * intensity);
                     frost.noGravity = true;
                 }
@@ -278,17 +303,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     float radius = MathHelper.Lerp(6f, 26f, t) * intensity;
                     Vector2 position = center + theta.ToRotationVector2() * radius;
 
-                    GlowOrbParticle orb = new GlowOrbParticle(
-                        position,
-                        Vector2.Zero,
-                        false,
-                        8 + Main.rand.Next(4),
-                        0.75f + (1f - t) * 0.35f * intensity,
-                        Color.Lerp(new Color(70, 185, 255), Color.White, 0.25f + 0.45f * t),
-                        true,
-                        false,
-                        true);
-                    GeneralParticleHandler.SpawnParticle(orb);
+                    GeneralParticleHandler.SpawnParticle(
+                        new GlowOrbParticle(
+                            position,
+                            Vector2.Zero,
+                            false,
+                            8 + Main.rand.Next(4),
+                            0.75f + (1f - t) * 0.35f * intensity,
+                            Color.Lerp(accentColor, Color.White, 0.22f + 0.45f * t),
+                            true,
+                            false,
+                            true));
                 }
             }
 
@@ -297,7 +322,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 DirectionalPulseRing pulse = new DirectionalPulseRing(
                     center,
                     Vector2.Zero,
-                    Color.Lerp(new Color(70, 190, 255), Color.White, 0.22f + i * 0.2f),
+                    Color.Lerp(accentColor, Color.White, 0.22f + i * 0.2f),
                     new Vector2(0.55f + i * 0.08f, 1.25f + i * 0.2f),
                     forward.ToRotation(),
                     0.1f + i * 0.03f,
@@ -307,13 +332,48 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             }
         }
 
+        private float TrailWidthFunction(float completionRatio, Vector2 vertexPosition)
+        {
+            float width = 22f * Projectile.scale;
+            float envelope = (float)Math.Sin(completionRatio * MathHelper.Pi);
+            envelope = (float)Math.Pow(envelope, 0.65f);
+            return MathHelper.Lerp(2f, width, envelope);
+        }
+
+        private Color TrailColorFunction(float completionRatio, Vector2 vertexPosition)
+        {
+            float fadeToEnd = Utils.GetLerpValue(0f, 0.82f, completionRatio, true);
+            Color baseColor = Color.Lerp(mainColor, accentColor, 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6f + completionRatio * 4f));
+            Color color = Color.Lerp(baseColor, Color.White, Utils.GetLerpValue(0f, 0.22f, completionRatio, true) * 0.45f);
+            color *= fadeToEnd * 0.95f;
+            color.A = 0;
+            return color;
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Melee/StarofJudgement").Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ringTexture = TextureAssets.Extra[89].Value;
-            Vector2 origin = ringTexture.Size() * 0.5f;
+            Vector2 starOrigin = starTexture.Size() * 0.5f;
+            Vector2 bloomOrigin = bloomTexture.Size() * 0.5f;
+            Vector2 ringOrigin = ringTexture.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            float time = Main.GlobalTimeWrappedHourly * 8f + pulseOffset;
-            float pulse = 1f + 0.1f * (float)Math.Sin(time);
+            float pulse = 1f + 0.11f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f + pulseOffset);
+
+            Vector2[] trailPositions = new Vector2[Projectile.oldPos.Length];
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+                trailPositions[i] = Projectile.oldPos[i] == Vector2.Zero ? Projectile.Center : Projectile.oldPos[i] + Projectile.Size * 0.5f;
+
+            GameShaders.Misc["CalamityMod:TrailStreak"].UseImage1("Images/Misc/Perlin");
+            PrimitiveRenderer.RenderTrail(
+                trailPositions,
+                new PrimitiveSettings(
+                    TrailWidthFunction,
+                    TrailColorFunction,
+                    (completionRatio, vertexPos) => Vector2.Zero,
+                    shader: GameShaders.Misc["CalamityMod:TrailStreak"]),
+                40);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
@@ -324,76 +384,73 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
                 Vector2 trailPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(new Color(55, 150, 255, 0), new Color(175, 245, 255, 0), t) * (0.42f * t);
+                Color ghostColor = Color.Lerp(accentColor, mainColor, 0.5f) * (0.18f + 0.3f * t);
+                ghostColor.A = 0;
 
                 Main.spriteBatch.Draw(
-                    ringTexture,
+                    starTexture,
                     trailPos,
                     null,
-                    trailColor,
+                    ghostColor,
                     Projectile.rotation,
-                    origin,
-                    new Vector2(0.55f, 0.55f) * Projectile.scale * (0.7f + 0.45f * t),
+                    starOrigin,
+                    Projectile.scale * (0.4f + 0.35f * t),
                     SpriteEffects.None,
                     0f);
             }
 
-            Color crossColor = new Color(85, 195, 255, 0) * 0.95f;
-            Color diagonalColor = new Color(215, 250, 255, 0) * 0.75f;
-            Color coreColor = new Color(130, 225, 255, 0) * 1.05f;
-
             Main.spriteBatch.Draw(
-                ringTexture,
+                bloomTexture,
                 drawPosition,
                 null,
-                crossColor,
-                Projectile.rotation,
-                origin,
-                new Vector2(1.7f, 0.24f) * Projectile.scale * pulse,
-                SpriteEffects.None,
-                0f);
-
-            Main.spriteBatch.Draw(
-                ringTexture,
-                drawPosition,
-                null,
-                crossColor,
-                Projectile.rotation + MathHelper.PiOver2,
-                origin,
-                new Vector2(1.45f, 0.22f) * Projectile.scale * pulse,
-                SpriteEffects.None,
-                0f);
-
-            Main.spriteBatch.Draw(
-                ringTexture,
-                drawPosition,
-                null,
-                diagonalColor,
-                Projectile.rotation + MathHelper.PiOver4,
-                origin,
-                new Vector2(1.1f, 0.16f) * Projectile.scale * pulse,
-                SpriteEffects.None,
-                0f);
-
-            Main.spriteBatch.Draw(
-                ringTexture,
-                drawPosition,
-                null,
-                diagonalColor,
-                Projectile.rotation - MathHelper.PiOver4,
-                origin,
-                new Vector2(1.1f, 0.16f) * Projectile.scale * pulse,
-                SpriteEffects.None,
-                0f);
-
-            Main.spriteBatch.Draw(
-                ringTexture,
-                drawPosition,
-                null,
-                coreColor,
+                accentColor * 0.4f,
                 0f,
-                origin,
-                new Vector2(0.62f, 0.62f) * Projectile.scale * (0.95f + 0.08f * pulse),
+                bloomOrigin,
+                Projectile.scale * new Vector2(1.5f, 1.5f) * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.spriteBatch.Draw(
+                ringTexture,
+                drawPosition,
+                null,
+                mainColor * 0.46f,
+                Projectile.rotation,
+                ringOrigin,
+                Projectile.scale * new Vector2(1.5f, 0.23f) * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.spriteBatch.Draw(
+                ringTexture,
+                drawPosition,
+                null,
+                accentColor * 0.42f,
+                Projectile.rotation + MathHelper.PiOver2,
+                ringOrigin,
+                Projectile.scale * new Vector2(1.3f, 0.2f) * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.spriteBatch.Draw(
+                starTexture,
+                drawPosition,
+                null,
+                Color.Lerp(mainColor, Color.White, 0.18f) with { A = 0 },
+                Projectile.rotation,
+                starOrigin,
+                Projectile.scale * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.spriteBatch.Draw(
+                starTexture,
+                drawPosition,
+                null,
+                Color.White with { A = 0 },
+                Projectile.rotation,
+                starOrigin,
+                Projectile.scale * 0.74f * pulse,
                 SpriteEffects.None,
                 0f);
 

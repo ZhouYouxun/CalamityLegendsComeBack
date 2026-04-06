@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -41,15 +42,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public static readonly SoundStyle VacuumLoop = new SoundStyle("CalamityMod/Sounds/Item/SHPCVacuumLoop") { Volume = 0.5f };
         public static readonly SoundStyle VacuumEnd = new SoundStyle("CalamityMod/Sounds/Item/SHPCVacuumEnd") { Volume = 0.5f };
 
-        public static readonly SoundStyle RocketLaunch = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/解放者机甲左手火箭弹") { Volume = 1f, Pitch = 0f };
-        public static readonly SoundStyle LightningChainRelease = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/雷霆开火与换弹") { Volume = 1f, Pitch = 0f };
-        public static readonly SoundStyle EnergyMinigunFire = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/双刃镰开火音效") { Volume = 1f, Pitch = 0f };
-        public static readonly SoundStyle EnergyMinigunSpinUp = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/双刃镰启动音效") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle RocketLaunch = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/解放者机甲左手火箭弹") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle LightningChainRelease = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/雷霆开火与换弹") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle EnergyMinigunFire = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/双刃镰开火音效") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle EnergyMinigunSpinUp = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/双刃镰启动音效") { Volume = 1f, Pitch = 0f };
 
-        public static readonly SoundStyle MortarSentryShot = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/迫击哨戒炮单次攻击") { Volume = 1f, Pitch = 0f };
-        public static readonly SoundStyle FinalUltimatumExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/最后通牒爆炸") { Volume = 1f, Pitch = 0f };
-        public static readonly SoundStyle Eagle500kgExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/飞鹰500KG爆炸") { Volume = 1f, Pitch = 0f };
-        public static readonly SoundStyle AntiPersonnelMineExplosion = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/反步兵地雷爆炸") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle MortarSentryShot = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/迫击哨戒炮单次攻击") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle FinalUltimatumExplosion = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle Eagle500kgExplosion = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/飞鹰500KG爆炸") { Volume = 1f, Pitch = 0f };
+        public static readonly SoundStyle AntiPersonnelMineExplosion = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/反步兵地雷爆炸") { Volume = 1f, Pitch = 0f };
         #endregion
 
         #region ===== 灌注与动画状态 =====
@@ -95,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Item.knockBack = 3f;
             if (Main.zenithWorld)
             {
-                Item.UseSound = new SoundStyle("CalamityLegendsComeBack/Weapons/SHPC/AWM开火")
+                Item.UseSound = new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/AWM开火")
                 {
                     Volume = 1.5f,
                     Pitch = 0.1f
@@ -314,7 +315,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             );
             leftClickCooldown = Item.useTime; // 60帧锁死
             exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.55f); // 记得改回0:05
+            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.025f); // 左键对大技能的充能效果
 
             if (exPlayer.EXValue > NewLegend_EXPlayer.EXMax)
                 exPlayer.EXValue = NewLegend_EXPlayer.EXMax;
@@ -443,18 +444,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== EX条UI同步 =====
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+            bool exUnlocked = exPlayer.EXUnlocked;
 
-            if (player.Calamity().cooldowns.TryGetValue(SHPC_EXCooldown.ID, out var cooldown))
+            if (exUnlocked)
             {
-                cooldown.timeLeft = exPlayer.EXValue;
-            }
-            else
-            {
-                player.AddCooldown(SHPC_EXCooldown.ID, 0);
+                if (player.Calamity().cooldowns.TryGetValue(SHPC_EXCooldown.ID, out var cooldown))
+                {
+                    cooldown.timeLeft = exPlayer.EXValue;
+                }
+                else
+                {
+                    player.AddCooldown(SHPC_EXCooldown.ID, 0);
+                }
             }
 
             // ===== EX技能释放 =====
-            if (KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.EXMax)
+            if (exUnlocked && KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.EXMax)
             {
                 // 防止重复生成
                 foreach (Projectile proj in Main.projectile)
@@ -803,6 +808,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (Main.keyState.PressingShift())
                 legendarySection = legendaryText;
 
+            string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            string exHint = string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText);
+
             // ===== 拼接 =====
             string finalText =
                 leftIntro + "\n" +
@@ -810,6 +818,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 "\n\n" +
                 rightIntro + "\n" +
                 rightStateText + "\n\n" +
+                exHint + "\n\n" +
                 finalLine + "\n\n" +
                 legendarySection + "\n";
 
@@ -936,6 +945,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
     }
 }
+
 
 
 
