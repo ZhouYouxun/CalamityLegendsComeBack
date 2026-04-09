@@ -5,11 +5,14 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
+namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
     public class YC_LeftHoldOut : ModProjectile, ILocalizedModType
     {
-        public const int LeftDroneCount = 7;
+        public const int FrigateCount = 8;
+        public const int LaserCruiserCount = 4;
+        public const int MissileBattleshipCount = 2;
+        public const int RepairShipCount = 1;
         public const float MaxLaserOffsetDegrees = 10f;
         private const float AnimationRampMax = 180f;
         private const int SoundInterval = 20;
@@ -168,18 +171,60 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             DronesSpawnedFlag = 1f;
             KillOwnedLeftProjectiles();
 
-            for (int i = 0; i < LeftDroneCount; i++)
+            for (int i = 0; i < FrigateCount; i++)
             {
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center,
                     ForwardDirection,
-                    ModContent.ProjectileType<YC_Left_Drone>(),
+                    ModContent.ProjectileType<YC_Left_Frigate>(),
                     Projectile.damage,
                     Projectile.knockBack,
                     Projectile.owner,
                     i,
-                    i);
+                    Projectile.whoAmI);
+            }
+
+            for (int i = 0; i < LaserCruiserCount; i++)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    ForwardDirection,
+                    ModContent.ProjectileType<YC_Left_LaserCruiser>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    i,
+                    Projectile.whoAmI);
+            }
+
+            for (int i = 0; i < MissileBattleshipCount; i++)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    ForwardDirection,
+                    ModContent.ProjectileType<YC_Left_MissileBattleship>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    i,
+                    Projectile.whoAmI);
+            }
+
+            for (int i = 0; i < RepairShipCount; i++)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    ForwardDirection,
+                    ModContent.ProjectileType<YC_Left_RepairShip>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    i,
+                    Projectile.whoAmI);
             }
 
             Projectile.netUpdate = true;
@@ -193,7 +238,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 if (!other.active || other.owner != Projectile.owner)
                     continue;
 
-                if (other.type == ModContent.ProjectileType<YC_Left_Drone>())
+                if (YC_LeftSquadronHelper.IsLeftOwnedProjectileType(other.type))
                 {
                     other.Kill();
                     continue;

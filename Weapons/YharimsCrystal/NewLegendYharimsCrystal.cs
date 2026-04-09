@@ -1,4 +1,6 @@
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft;
+using YCRight = CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -15,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public new string LocalizationCategory => "Items.Weapons";
 
         private static int LeftHoldoutType => ModContent.ProjectileType<YC_LeftHoldOut>();
-        private static int RightHoldoutType => ModContent.ProjectileType<YC_RightHoldOut>();
+        private static int RightHoldoutType => ModContent.ProjectileType<YCRight.YC_RightHoldOut>();
         private static int VipType => ModContent.ProjectileType<YC_EX_VIP>();
 
         public override void SetDefaults()

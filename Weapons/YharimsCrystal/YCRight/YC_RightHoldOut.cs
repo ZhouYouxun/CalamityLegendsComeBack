@@ -6,13 +6,16 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
+namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
     public class YC_RightHoldOut : ModProjectile, ILocalizedModType
     {
         public const float MaxTargetRange = 100f * 16f;
         public const float TargetConeDegrees = 45f;
-        public const int RightDroneCount = 6;
+        public const int RightDroneCount = 8;
+        public const int LaserCruiserCount = 4;
+        public const int BattleshipCount = 2;
+        public const int RepairShipCount = 1;
 
         private const float AnimationRampMax = 180f;
         private const int SoundInterval = 20;
@@ -20,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private const int GroupPauseCooldown = 34;
         private const int CyclePauseCooldown = 46;
 
-        private bool dronesSpawned;
+        private bool shipsSpawned;
         private int attackCooldown;
         private int attackStep;
         private float holdFrameCounter;
@@ -70,7 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             holdFrameCounter++;
             UpdateHoldout();
             UpdateAnimation();
-            EnsureDronesExist();
+            EnsureShipsExist();
             RunAttackPattern();
         }
 
@@ -153,26 +156,32 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             }
         }
 
-        private void EnsureDronesExist()
+        private void EnsureShipsExist()
         {
-            if (dronesSpawned || Projectile.owner != Main.myPlayer)
+            if (shipsSpawned || Projectile.owner != Main.myPlayer)
                 return;
 
-            dronesSpawned = true;
-            KillBoundDronesOnly();
+            shipsSpawned = true;
+            KillBoundRightProjectiles();
 
             for (int i = 0; i < RightDroneCount; i++)
             {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    ForwardDirection,
-                    ModContent.ProjectileType<YC_Right_Drone>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    i,
-                    Projectile.whoAmI);
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, ForwardDirection, ModContent.ProjectileType<YC_Right_Drone>(), Projectile.damage, Projectile.knockBack, Projectile.owner, i, Projectile.whoAmI);
+            }
+
+            for (int i = 0; i < LaserCruiserCount; i++)
+            {
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, ForwardDirection, ModContent.ProjectileType<YC_Right_LaserCruiser>(), Projectile.damage, Projectile.knockBack, Projectile.owner, i, Projectile.whoAmI);
+            }
+
+            for (int i = 0; i < BattleshipCount; i++)
+            {
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, ForwardDirection, ModContent.ProjectileType<YC_Right_Battleship>(), Projectile.damage, Projectile.knockBack, Projectile.owner, i, Projectile.whoAmI);
+            }
+
+            for (int i = 0; i < RepairShipCount; i++)
+            {
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, ForwardDirection, ModContent.ProjectileType<YC_Right_RepairShip>(), Projectile.damage, Projectile.knockBack, Projectile.owner, i, Projectile.whoAmI);
             }
         }
 
@@ -207,7 +216,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         private void FireAAttack()
         {
-            NPC target = ChooseRandomVisibleTarget();
+            NPC target = ChooseVisibleTargetAhead();
             Vector2 forward = ForwardDirection;
             Vector2 start = Projectile.Center + forward * 18f;
             int targetIndex = target?.whoAmI ?? -1;
@@ -255,12 +264,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.34f, Pitch = -0.15f }, start);
         }
 
-        private NPC ChooseRandomVisibleTarget()
+        private NPC ChooseVisibleTargetAhead()
         {
             List<NPC> targets = new();
             Vector2 forward = ForwardDirection;
             float maxDistanceSquared = MaxTargetRange * MaxTargetRange;
-            float maxAngle = MathHelper.ToRadians(TargetConeDegrees);
+            float maxAngle = MathHelper.ToRadians(TargetConeDegrees) * 0.5f;
 
             for (int i = 0; i < Main.maxNPCs; i++)
             {
@@ -281,15 +290,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 targets.Add(npc);
             }
 
-            if (targets.Count <= 0)
-                return null;
-
-            return targets[Main.rand.Next(targets.Count)];
+            return targets.Count <= 0 ? null : targets[Main.rand.Next(targets.Count)];
         }
 
         private void KillBoundRightProjectiles()
         {
-            List<int> boundDroneIndices = new();
+            List<int> beamAnchorIndices = new() { Projectile.whoAmI };
 
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
@@ -297,47 +303,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 if (!other.active || other.owner != Projectile.owner)
                     continue;
 
-                if (other.type == ModContent.ProjectileType<YC_Right_Drone>() && (int)other.ai[1] == Projectile.whoAmI)
-                {
-                    boundDroneIndices.Add(other.whoAmI);
-                    other.Kill();
-                }
+                if (!YC_RightHelper.IsOwnedRightProjectileType(other.type))
+                    continue;
+
+                beamAnchorIndices.Add(other.whoAmI);
+                other.Kill();
             }
 
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile other = Main.projectile[i];
-                if (!other.active || other.owner != Projectile.owner)
+                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_CBeam>())
                     continue;
 
-                if (other.type == ModContent.ProjectileType<YC_Right_TrackerLaser>())
-                {
-                    other.Kill();
-                    continue;
-                }
+                YC_CBeam.BeamAnchorKind kind = (YC_CBeam.BeamAnchorKind)(int)other.ai[1];
+                int anchorIndex = (int)other.ai[0];
+                bool killForHoldout = kind == YC_CBeam.BeamAnchorKind.RightHoldout && anchorIndex == Projectile.whoAmI;
+                bool killForShip = kind == YC_CBeam.BeamAnchorKind.RightDrone && beamAnchorIndices.Contains(anchorIndex);
 
-                if (other.type == ModContent.ProjectileType<YC_CBeam>())
-                {
-                    YC_CBeam.BeamAnchorKind kind = (YC_CBeam.BeamAnchorKind)(int)other.ai[1];
-                    int anchorIndex = (int)other.ai[0];
-                    bool killForHoldout = kind == YC_CBeam.BeamAnchorKind.RightHoldout && anchorIndex == Projectile.whoAmI;
-                    bool killForDrone = kind == YC_CBeam.BeamAnchorKind.RightDrone && boundDroneIndices.Contains(anchorIndex);
-
-                    if (killForHoldout || killForDrone)
-                        other.Kill();
-                }
-            }
-        }
-
-        private void KillBoundDronesOnly()
-        {
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile other = Main.projectile[i];
-                if (!other.active || other.owner != Projectile.owner)
-                    continue;
-
-                if (other.type == ModContent.ProjectileType<YC_Right_Drone>() && (int)other.ai[1] == Projectile.whoAmI)
+                if (killForHoldout || killForShip)
                     other.Kill();
             }
         }

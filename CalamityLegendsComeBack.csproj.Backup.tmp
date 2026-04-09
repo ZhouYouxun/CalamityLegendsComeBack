@@ -18,12 +18,11 @@
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
 	  <Folder Include="Weapons\BlossomFlux\SpecialArrow\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
+	  <Folder Include="Weapons\YharimsCrystal\YCRight\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Compile Remove="Weapons\BrinyBaron\CommonAttack\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\参考文献\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\维修战舰参考\**\*.cs" />
 	</ItemGroup>
 
 	<!-- References -->

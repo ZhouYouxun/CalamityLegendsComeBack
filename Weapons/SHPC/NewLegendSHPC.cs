@@ -712,7 +712,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 NPC.downedBoss1, // 克眼
                 NPC.downedBoss2, // 世吞 / 克脑
                 DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator, // 腐巢 / 宿主
-                NPC.downedBoss3, // 骷髅王
+                NPC.downedBoss3, // 骷髅王                
                 DownedBossSystem.downedSlimeGod, // 史莱姆之神
                 Main.hardMode, // 肉山后
                 NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3, // 机械三王

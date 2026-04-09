@@ -22,10 +22,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         }
 
         public const int DroneTotal = 7;
+        public const int LaserCruiserTotal = 4;
+        public const int BattleshipTotal = 2;
+        public const int TotalWarshipCount = DroneTotal + LaserCruiserTotal + BattleshipTotal;
         public const int DroneChargeTime = 120;
-        public const int LaserChargeTime = 10 * 60;
         public const int LaserFireTime = 15 * 60;
-        private const int SpawnInterval = 15;
+        private const int SpawnInterval = 12;
         private const int CleanupInterval = 18;
 
         private readonly int[] rainbowSpawnOrder = new int[DroneTotal];
@@ -109,7 +111,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 if (!other.active || other.owner != Projectile.owner)
                     continue;
 
-                if (other.type == ModContent.ProjectileType<YC_EX_Drone>())
+                if (YC_EXHelper.IsOwnedExWarshipType(other.type))
+                {
+                    other.Kill();
+                    continue;
+                }
+
+                if (YC_EXHelper.IsOwnedExSupportProjectile(other))
                 {
                     other.Kill();
                     continue;
@@ -131,10 +139,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            if (CurrentStateTimer % SpawnInterval == 0 && CountOwnedDrones() < DroneTotal)
-                SpawnDrone(owner, CountOwnedDrones());
+            if (CurrentStateTimer % SpawnInterval == 0 && CountOwnedWarships() < TotalWarshipCount)
+                SpawnWarship(owner, CountOwnedWarships());
 
-            if (CountOwnedDrones() >= DroneTotal)
+            if (CountOwnedWarships() >= TotalWarshipCount)
                 SetState(EXVipState.DroneCharge);
         }
 
@@ -170,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             StateTimer++;
             EmitFiringFX(owner, CurrentStateTimer);
 
-            if (Projectile.owner == Main.myPlayer && CurrentStateTimer >= LaserChargeTime + LaserFireTime)
+            if (Projectile.owner == Main.myPlayer && CurrentStateTimer >= LaserFireTime)
                 SetState(EXVipState.Cleanup);
         }
 
@@ -183,7 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
             if (CurrentStateTimer % CleanupInterval == 0)
             {
-                if (!TryKillNextDrone())
+                if (!TryKillNextWarship())
                     Projectile.Kill();
             }
         }
@@ -204,24 +212,60 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             }
         }
 
-        private void SpawnDrone(Player owner, int slotIndex)
+        private void SpawnWarship(Player owner, int slotIndex)
         {
-            int colorIndex = rainbowSpawnOrder[slotIndex % DroneTotal];
+            if (slotIndex < DroneTotal)
+            {
+                int colorIndex = rainbowSpawnOrder[slotIndex % DroneTotal];
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    owner.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<YC_EX_Drone>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    slotIndex,
+                    colorIndex);
+
+                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.2f, Pitch = 0.15f + slotIndex * 0.02f }, owner.Center);
+                return;
+            }
+
+            if (slotIndex < DroneTotal + LaserCruiserTotal)
+            {
+                int cruiserSlot = slotIndex - DroneTotal;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    owner.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<YC_EX_LaserCruiser>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    cruiserSlot,
+                    0f);
+
+                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.22f, Pitch = 0.02f + cruiserSlot * 0.03f }, owner.Center);
+                return;
+            }
+
+            int battleshipSlot = slotIndex - DroneTotal - LaserCruiserTotal;
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 owner.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<YC_EX_Drone>(),
+                ModContent.ProjectileType<YC_EX_Battleship>(),
                 Projectile.damage,
                 Projectile.knockBack,
                 Projectile.owner,
-                slotIndex,
-                colorIndex);
+                battleshipSlot,
+                0f);
 
-            SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.2f, Pitch = 0.15f + slotIndex * 0.02f }, owner.Center);
+            SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.24f, Pitch = -0.08f + battleshipSlot * 0.05f }, owner.Center);
         }
 
-        private int CountOwnedDrones()
+        private int CountOwnedWarships()
         {
             int count = 0;
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -229,7 +273,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 Projectile other = Main.projectile[i];
                 if (other.active &&
                     other.owner == Projectile.owner &&
-                    other.type == ModContent.ProjectileType<YC_EX_Drone>())
+                    YC_EXHelper.IsOwnedExWarshipType(other.type))
                 {
                     count++;
                 }
@@ -238,26 +282,42 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             return count;
         }
 
-        private bool TryKillNextDrone()
+        private bool TryKillNextWarship()
         {
-            List<Projectile> drones = new();
+            List<Projectile> warships = new();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile other = Main.projectile[i];
                 if (other.active &&
                     other.owner == Projectile.owner &&
-                    other.type == ModContent.ProjectileType<YC_EX_Drone>())
+                    YC_EXHelper.IsOwnedExWarshipType(other.type))
                 {
-                    drones.Add(other);
+                    warships.Add(other);
                 }
             }
 
-            drones.Sort((a, b) => a.ai[0].CompareTo(b.ai[0]));
-            if (drones.Count <= 0)
+            warships.Sort((a, b) =>
+            {
+                int priorityCompare = GetCleanupPriority(a).CompareTo(GetCleanupPriority(b));
+                return priorityCompare != 0 ? priorityCompare : ((int)b.ai[0]).CompareTo((int)a.ai[0]);
+            });
+
+            if (warships.Count <= 0)
                 return false;
 
-            drones[0].Kill();
+            warships[0].Kill();
             return true;
+        }
+
+        private static int GetCleanupPriority(Projectile projectile)
+        {
+            if (projectile.type == ModContent.ProjectileType<YC_EX_Battleship>())
+                return 0;
+
+            if (projectile.type == ModContent.ProjectileType<YC_EX_LaserCruiser>())
+                return 1;
+
+            return 2;
         }
 
         private void SetState(EXVipState newState)

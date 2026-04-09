@@ -7,6 +7,8 @@ using Terraria.Enums;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft;
+using YCRight = CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 {
@@ -199,6 +201,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             Vector2 fallbackDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * Main.player[Projectile.owner].direction);
             desiredDirection = desiredDirection.SafeNormalize(fallbackDirection);
 
+            if (AnchorKind == BeamAnchorKind.LeftDrone && sourceProjectile.ModProjectile is IYCLeftBeamSource leftBeamSource)
+            {
+                ConfiguredLength = leftBeamSource.GetBeamLength(ConfiguredLength, ForwardOffset);
+                TurnRateRadians = leftBeamSource.GetBeamTurnRateRadians(TurnRateRadians);
+            }
+
             if (Projectile.velocity == Vector2.Zero)
                 Projectile.velocity = desiredDirection;
             else if (TurnRateRadians > 0f)
@@ -228,6 +236,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 end,
                 BeamWidth,
                 ref collisionPoint);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (AnchorKind != BeamAnchorKind.LeftDrone || SourceIndex < 0 || SourceIndex >= Main.maxProjectiles)
+                return;
+
+            Projectile source = Main.projectile[SourceIndex];
+            if (!source.active || source.owner != Projectile.owner)
+                return;
+
+            if (source.ModProjectile is IYCLeftBeamSource leftBeamSource)
+                leftBeamSource.OnLeftBeamHit(target, hit, damageDone, Projectile);
         }
 
         public override void CutTiles()
@@ -309,18 +330,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             switch (AnchorKind)
             {
                 case BeamAnchorKind.LeftDrone:
-                    if (source.type != ModContent.ProjectileType<YC_Left_Drone>() || source.ModProjectile is not YC_Left_Drone leftDrone)
+                    if (source.ModProjectile is not IYCLeftBeamSource leftDrone)
                         return false;
 
                     desiredDirection = leftDrone.DesiredAimDirection.SafeNormalize(leftDrone.ForwardDirection);
                     break;
 
                 case BeamAnchorKind.ExDrone:
-                    if (source.type != ModContent.ProjectileType<YC_EX_Drone>())
+                    if (source.ModProjectile is not IYCEXBeamSource exBeamSource)
                         return false;
 
                     Player exOwner = Main.player[source.owner];
-                    Vector2 outward = source.velocity.SafeNormalize((source.Center - exOwner.Center).SafeNormalize(Vector2.UnitY));
+                    Vector2 outward = exBeamSource.CurrentForwardDirection.SafeNormalize((source.Center - exOwner.Center).SafeNormalize(Vector2.UnitY));
                     NPC nearestTarget = FindNearestTarget(source.Center, ConfiguredLength);
                     desiredDirection = nearestTarget != null
                         ? (nearestTarget.Center - source.Center).SafeNormalize(outward)
@@ -328,14 +349,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                     break;
 
                 case BeamAnchorKind.RightDrone:
-                    if (source.type != ModContent.ProjectileType<YC_Right_Drone>() || source.ModProjectile is not YC_Right_Drone rightDrone)
+                    if (source.ModProjectile is not YCRight.IYCRightBeamSource rightDrone)
                         return false;
 
-                    desiredDirection = rightDrone.CurrentForwardDirection.SafeNormalize(source.velocity);
+                    desiredDirection = rightDrone.CurrentForwardDirection.SafeNormalize(source.velocity.SafeNormalize(Vector2.UnitX));
                     break;
 
                 case BeamAnchorKind.RightHoldout:
-                    if (source.type != ModContent.ProjectileType<YC_RightHoldOut>() || source.ModProjectile is not YC_RightHoldOut rightHoldout)
+                    if (source.type != ModContent.ProjectileType<YCRight.YC_RightHoldOut>() || source.ModProjectile is not YCRight.YC_RightHoldOut rightHoldout)
                         return false;
 
                     desiredDirection = rightHoldout.ForwardDirection;

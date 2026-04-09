@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
+namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
     public class YC_Right_TrackerLaser : ModProjectile, ILocalizedModType
     {
@@ -61,13 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(
-                targetHitbox.TopLeft(),
-                targetHitbox.Size(),
-                LaserStart,
-                LaserEnd,
-                14f,
-                ref collisionPoint);
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), LaserStart, LaserEnd, 14f, ref collisionPoint);
         }
 
         public override void DrawBehind(int index, System.Collections.Generic.List<int> behindNPCsAndTiles, System.Collections.Generic.List<int> behindNPCs, System.Collections.Generic.List<int> behindProjectiles, System.Collections.Generic.List<int> overPlayers, System.Collections.Generic.List<int> overWiresUI)
@@ -84,9 +78,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             Texture2D glowTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float distance = Vector2.Distance(LaserStart, LaserEnd);
             Vector2 direction = Vector2.Normalize(LaserEnd - LaserStart);
-            int drawSeparation = 10;
 
-            for (int i = drawSeparation; i < distance - drawSeparation; i += drawSeparation)
+            for (int i = 10; i < distance - 10; i += 10)
             {
                 float completion = MathHelper.Lerp(0.8f, 3f, 1f - i / distance);
                 Vector2 drawPosition = LaserStart - Main.screenPosition + direction * i;
@@ -108,28 +101,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 }
             }
 
-            Main.EntitySpriteDraw(
-                glowTex,
-                LaserStart - Main.screenPosition,
-                null,
-                new Color(255, 228, 150, 0),
-                Projectile.rotation,
-                glowTex.Size() * 0.5f,
-                0.28f * Fade,
-                SpriteEffects.None,
-                0f);
-
-            Main.EntitySpriteDraw(
-                glowTex,
-                LaserStart - Main.screenPosition,
-                null,
-                new Color(255, 255, 255, 0) * 0.65f,
-                Projectile.rotation,
-                glowTex.Size() * 0.5f,
-                0.14f * Fade,
-                SpriteEffects.None,
-                0f);
-
+            Main.EntitySpriteDraw(glowTex, LaserStart - Main.screenPosition, null, new Color(255, 228, 150, 0), Projectile.rotation, glowTex.Size() * 0.5f, 0.28f * Fade, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(glowTex, LaserStart - Main.screenPosition, null, new Color(255, 255, 255, 0) * 0.65f, Projectile.rotation, glowTex.Size() * 0.5f, 0.14f * Fade, SpriteEffects.None, 0f);
             return false;
         }
     }

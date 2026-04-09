@@ -96,6 +96,62 @@ Items: {
 				'''
 		}
 
+		NewLegendBlossomFlux: {
+			DisplayName: BlossomFlux - Return of Legends
+			Tooltip: "[GFB]"
+			BF_Left:
+				'''
+				[c/66CCFF:Left Click: Repeats four rapid double-bursts on a 15-frame rhythm.]
+				[c/99CCFF:Each A shot fires 3 parallel arrows using the player's current ammo; turret mode greatly accelerates this cycle.]
+				[c/DDA0FF:After the fourth double-burst, a chloroplast is released 9 frames later based on the current doctrine.]
+				'''
+			BF_Preset: "[c/7BE495:Current doctrine: {0}]"
+			PresetName0: Breakthrough
+			PresetName1: Recovery
+			PresetName2: Reconnaissance
+			PresetName3: Bombardment
+			PresetName4: Plague
+			PresetLeft0: "[c/8BE89A:Breakthrough Left: The chloroplast pierces rapidly and snaps toward the next target after impact.]"
+			PresetLeft1: "[c/8BE89A:Recovery Left: The chloroplast flows back to the player and heals on contact.]"
+			PresetLeft2: "[c/8BE89A:Reconnaissance Left: The chloroplast applies a 0.5 second short mark that increases all players' damage against the target.]"
+			PresetLeft3: "[c/8BE89A:Bombardment Left: The chloroplast creates a small blast on impact.]"
+			PresetLeft4: "[c/8BE89A:Dissemination Left: The chloroplast intermittently releases plague mist while traveling.]"
+			BF_Right:
+				'''
+				[c/F7D87C:Right Click: Tap to open the tactical panel; clicking an icon swaps doctrine and closes the panel immediately.]
+				[c/F7D87C:Holding past 0.3 seconds enters the charge holdout for the current doctrine; it only fires if you release after a full charge.]
+				[c/F7D87C:A fully charged special arrow deals far more damage than the normal left-click arrows.]
+				'''
+			PresetRight0: "[c/F4D57A:Breakthrough Right: Fires a fully charged special arrow that ricochets and then homes in.]"
+			PresetRight1: "[c/F4D57A:Recovery Right: Fires a fully charged restorative arrow that loops back to heal the player.]"
+			PresetRight2: "[c/F4D57A:Reconnaissance Right: Fires a scanning arrow; marked targets are weakly homed by normal left-click arrows and detonated.]"
+			PresetRight3: "[c/F4D57A:Bombardment Right: Fires a charged arrow that calls down the player's current ammo from above after impact.]"
+			PresetRight4: "[c/F4D57A:Dissemination Right: Fires a sticky plague arrow that keeps venting toxic clouds.]"
+			BF_Passive: "[c/9AEF9E:Passive: While held, green piercing rain-shards periodically descend from above the side you are facing. Inventory right click toggles it; current state: {0}.]"
+			PassiveStateOn: "[c/7BFFB7:On]"
+			PassiveStateOff: "[c/F0D070:Off]"
+			PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
+			PresetUnlock1: "[c/7BFFB7:Recovery: unlocked and selectable in the tactical panel.]"
+			PresetLock1: "[c/9A9A9A:Recovery: unlocked after Queen Bee.]"
+			PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked; also enables the passive rain and its inventory toggle.]"
+			PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode, together with the passive rain.]"
+			PresetUnlock3: "[c/7BFFB7:Bombardment: unlocked and selectable in the tactical panel.]"
+			PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Plantera.]"
+			PresetUnlock4: "[c/7BFFB7:Dissemination: unlocked and selectable in the tactical panel.]"
+			PresetLock4: "[c/9A9A9A:Dissemination: unlocked after the Plaguebringer Goliath.]"
+			BF_Ultimate: "[c/7BFFB7:Press [{0}] to enter turret mode. After 5 seconds, press it again to leave. While active, you cannot move or switch weapons, but both fire modes are heavily empowered.]"
+			BF_UltimateLocked: "[c/9A9A9A:Legendary Skill: Turret mode unlocks after Queen Bee.]"
+			BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
+			LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+			LegendaryText:
+				'''
+				[c/66E6FF:It began as an attempt to make burst fire faster.]
+				[c/66E6FF:Later, its maker realized the real answer was not speed alone, but the thing that kept growing in the wake of every volley.]
+				[c/66E6FF:So five doctrines were split from one trunk, the chloroplast was pinned to the last beat of each burst, and turret mode became the moment the whole bow roots itself in place and forces the battlefield to answer back.]
+				[c/66E6FF:Its legend is still growing, but the rhythm is already clear: burst, burst, then bloom.]
+				'''
+		}
+
 		NewLegendYharimsCrystal: {
 			DisplayName: Yharim's Crystal
 			Tooltip: ""
@@ -222,6 +278,7 @@ Projectiles: {
 	Necroplasm_Damage.DisplayName: Necroplasm_ Damage
 	BBSD_Star.DisplayName: B B S D_ Star
 	ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+	BlossomFluxChloroplast.DisplayName: Chloroplast
 
 	NewWeapons: {
 		DPreDog.BBSwing_Slash.DisplayName: B B Swing_ Slash
@@ -236,17 +293,44 @@ Projectiles: {
 	YC_LeftHoldOut.DisplayName: Crystal Holdout Left
 	YC_RightHoldOut.DisplayName: Crystal Holdout Right
 	YC_EX_VIP.DisplayName: Crystal EX Anchor
-	YC_EX_Drone.DisplayName: Crystal EX Drone
+	YC_EX_Drone.DisplayName: Crystal EX Frigate
+	YC_EX_LaserCruiser.DisplayName: Crystal EX Laser Cruiser
+	YC_EX_Battleship.DisplayName: Crystal EX Battleship
 	YC_CBeam.DisplayName: Crystal Beam
+	YC_Left_Frigate.DisplayName: Crystal Frigate
+	YC_Left_LaserCruiser.DisplayName: Crystal Laser Cruiser
+	YC_Left_MissileBattleship.DisplayName: Crystal Missile Battleship
+	YC_Left_RepairShip.DisplayName: Crystal Repair Ship
+	YC_Left_FakeLazer.DisplayName: Crystal Faux Laser
+	YC_Left_Rocket.DisplayName: Crystal Homing Rocket
+	YC_Left_RepairBolt.DisplayName: Crystal Repair Bolt
 	YC_Left_Drone.DisplayName: Crystal Left Drone
 	YC_Right_Drone.DisplayName: Crystal Right Drone
+	YC_Right_LaserCruiser.DisplayName: Crystal Right Laser Cruiser
+	YC_Right_Battleship.DisplayName: Crystal Right Battleship
+	YC_Right_RepairShip.DisplayName: Crystal Right Repair Ship
+	YC_Right_RepairShield.DisplayName: Crystal Repair Shield
+	YC_Right_HeavyBolt.DisplayName: Crystal Heavy Bolt
 	YC_Right_TrackerLaser.DisplayName: Crystal Tracker Laser
 	FragmentEntropyExplosion.DisplayName: Fragment Entropy Explosion
+	BFPassiveRain.DisplayName: B F Passive Rain
+	BFRight_HoldOut.DisplayName: B F Right_ Hold Out
+	BFSelectionPanel.DisplayName: B F Selection Panel
+	BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+	BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+	BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+	BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+	BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+	BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+	BFFuckyouExplosion.DisplayName: B F Fuckyou Explosion
+	BFTurretAimBeam.DisplayName: B F Turret Aim Beam
+	BFTurretVine.DisplayName: B F Turret Vine
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 Cooldowns: {
 	SHPC_EX: SHPC冷却
+	BlossomFlux_EX: BlossomFlux Turret Cooldown
 	YC_EX: Crystal EX Cooldown
 }
