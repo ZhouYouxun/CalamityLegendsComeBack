@@ -22,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
     public class NewLegendBrinyBaron : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        private bool CanUseDashTornado => NPC.downedBoss1 || Main.hardMode;
-        private bool CanUseSpinRush => Main.hardMode;
+        private bool CanUseDashTornado => BB_Balance.CanUseShortDash;
+        private bool CanUseSpinRush => BB_Balance.CanUseSpinRush;
 
         public override void SetDefaults()
         {
@@ -173,7 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             // ===== 大招释放 =====
             //if (KeybindSystem.LegendarySkill.JustPressed && NPC.downedFishron && tidePlayer.TideFull)
-            if (KeybindSystem.LegendarySkill.JustPressed) // 测试用，记得删
+            if (KeybindSystem.LegendarySkill.JustPressed && BB_Balance.CanActivateSuperDash(tidePlayer)) // 测试用，记得删
             {
 
                 // 防止重复生成
@@ -310,19 +310,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             string right = this.GetLocalizedValue("BB_Right");
 
             // ===== Dash解锁 =====
-            string dash1 = NPC.downedBoss1
+            string dash1 = BB_Balance.CanUseShortDash
                 ? this.GetLocalizedValue("Dash1_Unlock")
                 : this.GetLocalizedValue("Dash1_Lock");
 
-            string dash2 = Main.hardMode
+            string dash2 = BB_Balance.CanUseSpinRush
                 ? this.GetLocalizedValue("Dash2_Unlock")
                 : this.GetLocalizedValue("Dash2_Lock");
 
-            string dash3 = NPC.downedMechBoss2
+            string dash3 = BB_Balance.CanUseQuickDash
                 ? this.GetLocalizedValue("Dash3_Unlock")
                 : this.GetLocalizedValue("Dash3_Lock");
 
-            string dash4 = NPC.downedFishron
+            string dash4 = BB_Balance.HasDesignedSuperDashUnlock
                 ? this.GetLocalizedValue("Dash4_Unlock")
                 : this.GetLocalizedValue("Dash4_Lock");
 

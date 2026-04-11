@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         public override void PostUpdate()
         {
             int tideValue = Player.GetModPlayer<BBEXPlayer>().TideValue;
-            float targetStrength = MathHelper.Clamp(tideValue / 8f, 0f, 1f);
+            float targetStrength = MathHelper.Clamp(tideValue / (float)BB_Balance.MaxTideCap, 0f, 1f);
             visualStrength = MathHelper.Lerp(visualStrength, targetStrength, 0.12f);
 
             if (visualStrength <= 0.02f || Main.dedServ)

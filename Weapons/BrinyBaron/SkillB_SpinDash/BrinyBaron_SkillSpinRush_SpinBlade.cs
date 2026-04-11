@@ -3,7 +3,6 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -89,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             dashStarted = false;
             dashImpactPlayed = false;
             dashVelocity = Vector2.Zero;
-            SpinRushGrowthProfile growthProfile = ResolveGrowthProfile();
+            BB_Balance.SpinRushProfile growthProfile = ResolveGrowthProfile();
             growthSizeMultiplier = growthProfile.SizeMultiplier;
             growthSpeedMultiplier = growthProfile.SpeedMultiplier;
             ApplyGrowthScale();
@@ -250,20 +249,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             return MathHelper.Lerp(sineEase, smootherStep, 0.7f);
         }
 
-        private SpinRushGrowthProfile ResolveGrowthProfile()
+        private BB_Balance.SpinRushProfile ResolveGrowthProfile()
         {
-            SpinRushGrowthProfile profile = new(sizeMultiplier: 1f, speedMultiplier: 1f);
-
-            if (NPC.downedFishron)
-                profile = new SpinRushGrowthProfile(sizeMultiplier: 1.2f, speedMultiplier: 1.15f);
-
-            if (DownedBossSystem.downedBoomerDuke)
-                profile = new SpinRushGrowthProfile(sizeMultiplier: 1.5f, speedMultiplier: 1.25f);
-
-            if (DownedBossSystem.downedYharon)
-                profile = new SpinRushGrowthProfile(sizeMultiplier: 1.75f, speedMultiplier: 1.35f);
-
-            return profile;
+            return BB_Balance.GetSpinRushProfile();
         }
 
         private void ApplyGrowthScale()
@@ -274,18 +262,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             Projectile.height = scaledSize;
             Projectile.scale = VisualScale;
             Projectile.Center = center;
-        }
-
-        private readonly struct SpinRushGrowthProfile
-        {
-            public readonly float SizeMultiplier;
-            public readonly float SpeedMultiplier;
-
-            public SpinRushGrowthProfile(float sizeMultiplier, float speedMultiplier)
-            {
-                SizeMultiplier = sizeMultiplier;
-                SpeedMultiplier = speedMultiplier;
-            }
         }
 
         private void SpawnChargeParticles(float chargeProgress)

@@ -3,7 +3,6 @@ using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Typeless;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -23,13 +22,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int lifeTimer;
         private float initialSpeed;
 
-        private int HighestUnlockedStage =>
-            DownedBossSystem.downedBoomerDuke ? 3 :
-            NPC.downedFishron ? 2 :
-            Main.hardMode ? 1 : 0;
-
         private int SpawnStage => (int)Projectile.localAI[0];
-        private float StageScale => 1f + SpawnStage * 0.16f;
+        private BB_Balance.WaveProfile waveProfile;
+        private float StageScale => waveProfile.SizeScale;
         private float StageIntensity => 1f + SpawnStage * 0.26f;
 
         public override string Texture => "Terraria/Images/Projectile_0";
@@ -140,7 +135,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             initialSpeed = Projectile.velocity.Length();
-            Projectile.localAI[0] = HighestUnlockedStage;
+            waveProfile = BB_Balance.GetWaveProfile();
+            Projectile.localAI[0] = waveProfile.GrowthTier;
             ApplyStageStats();
         }
 
@@ -148,8 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             lifeTimer++;
 
-            float drag = SpawnStage >= 3 ? 0.994f : SpawnStage >= 2 ? 0.993f : SpawnStage >= 1 ? 0.992f : 0.99f;
-            Projectile.velocity *= drag;
+            Projectile.velocity *= waveProfile.SpeedDrag;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
@@ -312,7 +307,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.width = size;
             Projectile.height = size;
             Projectile.scale = 0.9f + SpawnStage * 0.06f;
-            Projectile.tileCollide = SpawnStage < 1;
+            Projectile.tileCollide = waveProfile.TileCollide;
             Projectile.Center = center;
         }
 
@@ -339,7 +334,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Vector2.UnitY * Main.rand.NextFloat(0.2f, 1.1f)).SafeNormalize(-forward) *
                     Main.rand.NextFloat(6.2f, 9.4f);
 
-                int starDamage = Math.Max(1, (int)(Projectile.damage * (SpawnStage >= 3 ? 0.24f : 0.18f)));
+                int starDamage = Math.Max(1, (int)(Projectile.damage * waveProfile.TrailingStarDamageFactor));
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPos,

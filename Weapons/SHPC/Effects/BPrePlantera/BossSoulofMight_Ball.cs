@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public ref float Time => ref Projectile.ai[0];
         public override void SetStaticDefaults()
         {
+            Main.projFrames[Type] = 5;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
@@ -38,7 +39,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         {
             // 模仿SeraphimProjectile的PreDraw方法
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value;
-            Vector2 origin = texture.Size() * 0.5f;
+            int frameHeight = texture.Height / Main.projFrames[Type];
+            Rectangle frame = new Rectangle(0, frameHeight * Projectile.frame, texture.Width, frameHeight);
+            Vector2 origin = frame.Size() * 0.5f;
             Vector2 baseDrawPosition = Projectile.Center - Main.screenPosition;
 
             // 逐渐消失的光效
@@ -53,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             for (int i = 0; i < 18; i++)
             {
                 Vector2 drawPosition = baseDrawPosition + (MathHelper.TwoPi * i / 18f).ToRotationVector2() * (1f - Projectile.Opacity) * 16f;
-                Main.EntitySpriteDraw(texture, drawPosition, null, afterimageLightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, drawPosition, frame, afterimageLightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             }
 
             // 绘制特殊的残影效果
@@ -61,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             {
                 Vector2 drawPosition = baseDrawPosition - Projectile.velocity * i * 0.3f;
                 Color afterimageColor = mainColor * (1f - i / 8f);
-                Main.EntitySpriteDraw(texture, drawPosition, null, afterimageColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, drawPosition, frame, afterimageColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             }
 
             return false; // 不使用默认绘制
@@ -87,6 +90,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void AI()
         {
+            Projectile.frameCounter++;
+            Projectile.frame = Projectile.frameCounter / 4 % Main.projFrames[Type];
+
             // 保持弹幕旋转（对于倾斜走向的弹幕而言）
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 

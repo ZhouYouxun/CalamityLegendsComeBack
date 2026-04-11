@@ -199,8 +199,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     );
                 }
 
-                // ===== 主体爆裂火焰（范围化 + 频率↑）=====
-                for (int i = 0; i < 6; i++) // 原来2 → 6
+                // ===== 主体发光：保留，但压低密度，做成波体发热感 =====
+                for (int i = 0; i < 3; i++)
                 {
                     Vector2 pos = GetRandomPosInProjectile();
 
@@ -208,65 +208,97 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                         (-forward).RotatedByRandom(0.5f)
                         + right * Main.rand.NextFloat(-1.2f, 1.2f);
 
-                    vel *= Main.rand.NextFloat(1f, 4f);
+                    vel *= Main.rand.NextFloat(0.9f, 2.8f);
 
                     SquishyLightParticle p = new SquishyLightParticle(
                         pos,
                         vel,
-                        Main.rand.NextFloat(0.6f, 1.2f),
+                        Main.rand.NextFloat(0.5f, 0.95f),
                         Main.rand.NextBool() ? new Color(255, 230, 120) : new Color(255, 150, 60),
-                        Main.rand.Next(16, 26),
+                        Main.rand.Next(14, 22),
                         1f,
-                        Main.rand.NextFloat(1.4f, 2.2f)
+                        Main.rand.NextFloat(1.1f, 1.75f)
                     );
                     GeneralParticleHandler.SpawnParticle(p);
                 }
 
-                // ===== 火花喷射（范围化 + 频率↑）=====
-                if (lifeTimer % 1 == 0) // 原来 %2 → 每帧
+                // ===== 新增 VelChangingSpark：前方生成，再回拉向波体 =====
+                if (lifeTimer % 2 == 0)
                 {
-                    for (int i = 0; i < 5; i++) // 原来2 → 5
+                    Vector2 forwardDir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                    Vector2 fakePlayerPos = Projectile.Center + forwardDir * 220f;
+                    Vector2 sparkPos = fakePlayerPos - forwardDir * 220f * Utils.GetLerpValue(0, 200, 32f);
+
+                    float intensity = 2.2f;
+                    float sizeBonus = 1.8f;
+                    int particleLevel = 3;
+
+                    for (int d = 0; d < particleLevel; d++)
                     {
-                        Vector2 pos = GetRandomPosInProjectile();
+                        Color color = Main.rand.NextBool()
+                            ? Color.Goldenrod
+                            : Color.Lerp(Color.OrangeRed, Color.Orange, Main.rand.NextFloat());
 
-                        Vector2 vel =
-                            (-forward).RotatedByRandom(0.8f)
-                            + right * Main.rand.NextFloat(-1.5f, 1.5f);
+                        float velAdjust = Main.rand.NextFloat(4f, 10f) * intensity * sizeBonus;
+                        Vector2 endVel = (Projectile.Center - sparkPos).SafeNormalize(Vector2.UnitX) * velAdjust;
+                        Vector2 startVel = endVel.RotatedByRandom(0.6f * intensity);
 
-                        vel *= Main.rand.NextFloat(2f, 7f);
-
-                        Dust d = Dust.NewDustPerfect(
-                            pos,
-                            6,
-                            vel,
+                        Particle sparks = new VelChangingSpark(
+                            sparkPos + Main.rand.NextVector2Circular(14f, 14f),
+                            startVel,
+                            endVel,
+                            "CalamityMod/Particles/SmallBloom",
+                            Main.rand.Next(18, 23),
+                            Main.rand.NextFloat(0.1f, 0.25f) * sizeBonus,
+                            color * 0.75f,
+                            new Vector2(0.7f, 1f),
+                            true,
+                            false,
                             0,
-                            new Color(255, 180, 60),
-                            Main.rand.NextFloat(1.3f, 2.0f)
+                            false,
+                            0.45f,
+                            0.1f
                         );
-                        d.noGravity = true;
+                        GeneralParticleHandler.SpawnParticle(sparks);
+
+                        if (Main.rand.NextBool())
+                        {
+                            Dust dust = Dust.NewDustPerfect(
+                                sparkPos + Main.rand.NextVector2Circular(10f, 10f),
+                                57,
+                                startVel * Main.rand.NextFloat(0.35f, 0.6f),
+                                0,
+                                color,
+                                Main.rand.NextFloat(0.5f, 0.9f) * Math.Min(sizeBonus, 1.3f)
+                            );
+                            dust.noGravity = true;
+                            dust.noLightEmittence = true;
+                        }
                     }
                 }
 
-                // ===== 中轴爆点（改为体积爆点）=====
-                if (Main.rand.NextBool(1)) // 原来 NextBool(2) → 更频繁
+                // ===== 尖刺火花：保留少量，作为波缘刺感 =====
+                if (lifeTimer % 2 == 0)
                 {
-                    for (int i = 0; i < 3; i++) // 原来1 → 3
+                    for (int i = 0; i < 2; i++)
                     {
                         Vector2 pos = GetRandomPosInProjectile();
 
                         Vector2 vel =
-                            (-forward).RotatedByRandom(0.5f)
-                            + right * Main.rand.NextFloat(-1f, 1f);
+                            (-forward).RotatedByRandom(0.4f)
+                            + right * Main.rand.NextFloat(-0.8f, 0.8f);
 
-                        vel *= Main.rand.NextFloat(2f, 6f);
+                        vel *= Main.rand.NextFloat(1.8f, 4.5f);
 
                         PointParticle spark = new PointParticle(
                             pos,
                             vel,
                             false,
-                            Main.rand.Next(10, 16),
-                            Main.rand.NextFloat(1f, 1.3f),
-                            new Color(255, 220, 100)
+                            Main.rand.Next(9, 14),
+                            Main.rand.NextFloat(0.9f, 1.15f),
+                            Main.rand.NextBool()
+                                ? new Color(255, 220, 100)
+                                : new Color(255, 170, 80)
                         );
                         GeneralParticleHandler.SpawnParticle(spark);
                     }

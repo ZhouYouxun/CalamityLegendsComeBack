@@ -1,5 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
+using CalamityLegendsComeBack.Weapons.SHPC.Passive;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityMod;
 using CalamityMod.Items;
@@ -439,6 +440,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private int leftClickCooldown = 0;
         public override void HoldItem(Player player)
         {
+            player.GetModPlayer<SHPCPassivePlayer>().SetHoldingSHPC();
+
             if (leftClickCooldown > 0)
                 leftClickCooldown--;
 

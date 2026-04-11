@@ -12,11 +12,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBSwing_INV : ModProjectile, ILocalizedModType
     {
-        private const float SmallSlashScale = 0.41f;
-        private const float GiantSlashScale = 0.775f;
-        private const float SmallSlashDamageFactor = 0.28f;
-        private const float GiantSlashDamageFactor = 0.34f;
-
         public new string LocalizationCategory => "Projectiles";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -58,7 +53,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void SpawnHitSlashBurst(NPC target)
         {
-            if (Main.myPlayer != Projectile.owner || !Main.hardMode)
+            BB_Balance.SwingHitEffectProfile swingProfile = BB_Balance.GetSwingHitEffectProfile();
+            if (Main.myPlayer != Projectile.owner || !swingProfile.SlashBurstUnlocked)
                 return;
 
             if (IsGiantSwing)
@@ -80,10 +76,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         target.Center + spawnOffset,
                         slashDirection * (6.5f + i * 0.6f),
                         ModContent.ProjectileType<BBSwing_Slash>(),
-                        Math.Max(1, (int)(Projectile.damage * GiantSlashDamageFactor)),
+                        Math.Max(1, (int)(Projectile.damage * swingProfile.GiantSlashDamageFactor)),
                         Projectile.knockBack,
                         Projectile.owner,
-                        GiantSlashScale * SwingVisualScale,
+                        swingProfile.GiantSlashScale * SwingVisualScale,
                         angleOffsets[i]
                     );
                 }
@@ -97,10 +93,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 target.Center,
                 smallSlashDirection * 6f,
                 ModContent.ProjectileType<BBSwing_Slash>(),
-                Math.Max(1, (int)(Projectile.damage * SmallSlashDamageFactor)),
+                Math.Max(1, (int)(Projectile.damage * swingProfile.SmallSlashDamageFactor)),
                 Projectile.knockBack,
                 Projectile.owner,
-                SmallSlashScale * SwingVisualScale,
+                swingProfile.SmallSlashScale * SwingVisualScale,
                 0f
             );
         }
@@ -110,11 +106,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (!IsGiantSwing || Main.myPlayer != Projectile.owner)
                 return;
 
-            const int laserCount = 3;
-            const float laserSpeed = 18f;
-            const float laserDamageFactor = 0.5f;
+            BB_Balance.SwingHitEffectProfile swingProfile = BB_Balance.GetSwingHitEffectProfile();
 
-            for (int i = 0; i < laserCount; i++)
+            for (int i = 0; i < swingProfile.GiantLaserCount; i++)
             {
                 Vector2 impactPoint = target.Top + new Vector2(
                     Main.rand.NextFloat(-26f, 26f),
@@ -124,14 +118,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Main.rand.NextFloat(-110f, 110f),
                     Main.rand.NextFloat(-260f, -160f));
 
-                Vector2 velocity = (impactPoint - spawnPoint).SafeNormalize(Vector2.UnitY) * laserSpeed;
+                Vector2 velocity = (impactPoint - spawnPoint).SafeNormalize(Vector2.UnitY) * swingProfile.GiantLaserSpeed;
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPoint,
                     velocity,
                     ModContent.ProjectileType<BBShuriken_Lazer>(),
-                    Math.Max(1, (int)(Projectile.damage * laserDamageFactor)),
+                    Math.Max(1, (int)(Projectile.damage * swingProfile.GiantLaserDamageFactor)),
                     Projectile.knockBack * 0.65f,
                     Projectile.owner);
             }

@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void SetStaticDefaults()
         {
+            Main.projFrames[Type] = 8;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 1;
         }
@@ -37,6 +38,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         {
             SpriteBatch spriteBatch = Main.spriteBatch;
             Texture2D tex = Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value;
+            int frameHeight = tex.Height / Main.projFrames[Type];
+            Rectangle frame = new Rectangle(0, frameHeight * Projectile.frame, tex.Width, frameHeight);
+            Vector2 frameOrigin = new Vector2(tex.Width * 0.5f, frameHeight * 0.5f);
 
             // ===== Aerialite风格拖尾 =====
             for (int i = 0; i < Projectile.oldPos.Length; i++)
@@ -53,17 +57,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Vector2 scaleOuter = new Vector2(1.8f) * intensity;
                 Vector2 scaleInner = new Vector2(1.8f) * intensity * 0.7f;
 
-                Main.EntitySpriteDraw(tex, pos, null, color, Projectile.rotation, tex.Size() * 0.5f, scaleOuter * 0.6f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(tex, pos, null, color * 0.5f, Projectile.rotation, tex.Size() * 0.5f, scaleInner * 0.6f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex, pos, frame, color, Projectile.rotation, frameOrigin, scaleOuter * 0.6f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex, pos, frame, color * 0.5f, Projectile.rotation, frameOrigin, scaleInner * 0.6f, SpriteEffects.None, 0);
             }
 
             // 本体
             Main.EntitySpriteDraw(tex,
                 Projectile.Center - Main.screenPosition,
-                null,
+                frame,
                 lightColor,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
+                frameOrigin,
                 Projectile.scale,
                 SpriteEffects.None,
                 0);
@@ -74,6 +78,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override void AI()
         {
             timer++;
+            Projectile.frameCounter++;
+            Projectile.frame = Projectile.frameCounter / 3 % Main.projFrames[Type];
 
             Projectile.rotation += 0.22f;
 

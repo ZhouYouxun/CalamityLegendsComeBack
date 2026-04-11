@@ -4,7 +4,6 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -132,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         // =========================
         private void InitializeLegendaryGrowthValues()
         {
-            BladeGrowthProfile growthProfile = ResolveBladeGrowthProfile();
+            BB_Balance.BladeGrowthProfile growthProfile = ResolveBladeGrowthProfile();
 
             legendaryGrowthTier = growthProfile.GrowthTier;
             normalModeScale = growthProfile.BladeScale;
@@ -141,71 +140,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             giantShrinkFrames = growthProfile.GiantShrinkFrames;
         }
 
-        private BladeGrowthProfile ResolveBladeGrowthProfile()
+        private BB_Balance.BladeGrowthProfile ResolveBladeGrowthProfile()
         {
-            BladeGrowthProfile profile = BuildBladeGrowthProfile(
-                growthTier: 0,
-                bladeScale: 0.35f,
-                giantScaleFactor: 2.4f,
-                giantGrowFrames: 42,
-                giantShrinkFrames: 38);
-
-            if (NPC.downedBoss1)
-            {
-                profile = BuildBladeGrowthProfile(
-                    growthTier: 0,
-                    bladeScale: 0.45f,
-                    giantScaleFactor: 2.4f,
-                    giantGrowFrames: 42,
-                    giantShrinkFrames: 38);
-            }
-
-            if (Main.hardMode)
-            {
-                profile = BuildBladeGrowthProfile(
-                    growthTier: 0,
-                    bladeScale: 0.5f,
-                    giantScaleFactor: 2.4f,
-                    giantGrowFrames: 42,
-                    giantShrinkFrames: 38);
-            }
-
-            if (NPC.downedFishron)
-            {
-                profile = BuildBladeGrowthProfile(
-                    growthTier: 1,
-                    bladeScale: 0.62f,
-                    giantScaleFactor: 2.4f,
-                    giantGrowFrames: 42,
-                    giantShrinkFrames: 38);
-            }
-
-            if (DownedBossSystem.downedBoomerDuke)
-            {
-                profile = BuildBladeGrowthProfile(
-                    growthTier: 2,
-                    bladeScale: 0.76f,
-                    giantScaleFactor: 2.4f,
-                    giantGrowFrames: 42,
-                    giantShrinkFrames: 38);
-            }
-
-            if (DownedBossSystem.downedYharon)
-            {
-                profile = BuildBladeGrowthProfile(
-                    growthTier: 3,
-                    bladeScale: 0.92f,
-                    giantScaleFactor: 2.4f,
-                    giantGrowFrames: 42,
-                    giantShrinkFrames: 38);
-            }
-
-            return profile;
-        }
-
-        private static BladeGrowthProfile BuildBladeGrowthProfile(int growthTier, float bladeScale, float giantScaleFactor, int giantGrowFrames, int giantShrinkFrames)
-        {
-            return new BladeGrowthProfile(growthTier, bladeScale, giantScaleFactor, giantGrowFrames, giantShrinkFrames);
+            return BB_Balance.GetBladeGrowthProfile();
         }
 
         private void SetCurrentScale(float scale)
@@ -590,7 +527,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     {
                         Vector2 shootDir = (Main.MouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX);
                         int tideValue = Owner.GetModPlayer<BBEXPlayer>().TideValue;
-                        int shurikenCount = 3 + tideValue / 2;
+                        int shurikenCount = BB_Balance.GetShurikenVolleyCount(tideValue);
 
                         for (int i = 0; i < shurikenCount; i++)
                         {
@@ -1210,22 +1147,5 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             return false;
         }
 
-        private readonly struct BladeGrowthProfile
-        {
-            public readonly int GrowthTier;
-            public readonly float BladeScale;
-            public readonly float GiantScaleFactor;
-            public readonly int GiantGrowFrames;
-            public readonly int GiantShrinkFrames;
-
-            public BladeGrowthProfile(int growthTier, float bladeScale, float giantScaleFactor, int giantGrowFrames, int giantShrinkFrames)
-            {
-                GrowthTier = growthTier;
-                BladeScale = bladeScale;
-                GiantScaleFactor = giantScaleFactor;
-                GiantGrowFrames = giantGrowFrames;
-                GiantShrinkFrames = giantShrinkFrames;
-            }
-        }
     }
 }

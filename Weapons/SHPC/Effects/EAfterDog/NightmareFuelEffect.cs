@@ -19,11 +19,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
 
+        // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.Kill();
+            var gp = projectile.GetGlobalProjectile<NightmareFuel_GP>();
+
+            // 标记第一帧
+            gp.firstFrame = true;
         }
 
+        // ================= AI =================
+        public override void AI(Projectile projectile, Player owner)
+        {
+            var gp = projectile.GetGlobalProjectile<NightmareFuel_GP>();
+
+            // 第一帧直接自杀
+            if (gp.firstFrame)
+            {
+                gp.firstFrame = false;
+                projectile.Kill();
+                return;
+            }
+        }
+
+        // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * 12f;
@@ -37,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
                 projectile.damage,
                 projectile.knockBack,
                 owner.whoAmI,
+                projectile.ai[0], // ✅ 继承EffectID
                 0f
             );
 
@@ -49,6 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
                 projectile.damage,
                 projectile.knockBack,
                 owner.whoAmI,
+                projectile.ai[0], // ✅ 继承EffectID
                 -1f
             );
 
@@ -61,6 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
                 projectile.damage,
                 projectile.knockBack,
                 owner.whoAmI,
+                projectile.ai[0], // ✅ 继承EffectID
                 1f
             );
         }
@@ -72,5 +94,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
         }
+    }
+
+    // ================= 独立实例数据 =================
+    public class NightmareFuel_GP : GlobalProjectile
+    {
+        public override bool InstancePerEntity => true;
+
+        public bool firstFrame;
     }
 }

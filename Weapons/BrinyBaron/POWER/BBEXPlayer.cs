@@ -9,27 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         {
             get
             {
-                int value = 2; // 初始值改成2
-
-                if (Main.hardMode)
-                    value++;
-
-                if (CalamityMod.DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
-                    value++;
-
-                if (NPC.downedFishron)
-                    value++;
-
-                if (NPC.downedMoonlord)
-                    value++;
-
-                if (CalamityMod.DownedBossSystem.downedBoomerDuke)
-                    value++;
-
-                if (CalamityMod.DownedBossSystem.downedYharon)
-                    value++;
-
-                return value;
+                return BB_Balance.GetCurrentTideMax();
             }
         }
 

@@ -91,7 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             // ===== 起始位置：上方 + 左右随机偏移 =====
             Vector2 spawnPos = target.Center
-                               + new Vector2(Main.rand.NextFloat(-6f, 6f) * 16f, -16f * 16f);
+                               + new Vector2(Main.rand.NextFloat(-16f, 16f) * 16f, -36f * 16f);
 
             // ===== 精准指向目标（不是垂直）=====
             Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 10f;

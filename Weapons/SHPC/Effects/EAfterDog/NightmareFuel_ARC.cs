@@ -253,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
         private Color scytheColor = Color.BlueViolet;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
+        private int rotationDirection; // +1 或 -1，出生时固定
         public override void SetDefaults()
         {
             Projectile.width = 44;
@@ -274,6 +274,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
         {
             initialized = true;
             scytheColor = Main.rand.NextBool() ? Color.MediumOrchid : Color.Lerp(Color.DeepPink, Color.Orange, 0.5f);
+            rotationDirection = Main.rand.NextBool() ? 1 : -1;
         }
 
         public override void AI()
@@ -314,7 +315,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
                 }
             }
 
-            Projectile.rotation += 0.32f * Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
+            Projectile.rotation += 0.32f * rotationDirection;
 
             Lighting.AddLight(Projectile.Center, scytheColor.ToVector3() * 0.48f);
 

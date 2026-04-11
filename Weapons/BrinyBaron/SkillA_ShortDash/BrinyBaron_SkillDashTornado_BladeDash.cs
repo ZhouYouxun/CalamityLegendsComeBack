@@ -1,7 +1,6 @@
 using System;
 using CalamityMod;
 using CalamityMod.Enums;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -113,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = false;
             canceledCharge = false;
             oceanPhase = 0f;
-            DashGrowthProfile growthProfile = ResolveDashGrowthProfile();
+            BB_Balance.ShortDashProfile growthProfile = ResolveDashGrowthProfile();
             dashSpeedMultiplier = growthProfile.SpeedMultiplier;
             contactDamageMultiplier = growthProfile.ContactDamageMultiplier;
             enemyReboundUnlocked = growthProfile.EnemyReboundUnlocked;
@@ -326,37 +325,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             return sum.SafeNormalize(lockedDirection);
         }
 
-        private DashGrowthProfile ResolveDashGrowthProfile()
+        private BB_Balance.ShortDashProfile ResolveDashGrowthProfile()
         {
-            DashGrowthProfile profile = new(speedMultiplier: 0.5f, contactDamageMultiplier: 1f, enemyReboundUnlocked: false);
-
-            if (Main.hardMode)
-                profile = new DashGrowthProfile(speedMultiplier: 0.68f, contactDamageMultiplier: 1f, enemyReboundUnlocked: true);
-
-            if (DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
-                profile = new DashGrowthProfile(speedMultiplier: 0.75f, contactDamageMultiplier: 1f, enemyReboundUnlocked: true);
-
-            if (NPC.downedFishron)
-                profile = new DashGrowthProfile(speedMultiplier: 1f, contactDamageMultiplier: 2f, enemyReboundUnlocked: true);
-
-            if (DownedBossSystem.downedBoomerDuke)
-                profile = new DashGrowthProfile(speedMultiplier: 1.2f, contactDamageMultiplier: 2f, enemyReboundUnlocked: true);
-
-            return profile;
-        }
-
-        private readonly struct DashGrowthProfile
-        {
-            public readonly float SpeedMultiplier;
-            public readonly float ContactDamageMultiplier;
-            public readonly bool EnemyReboundUnlocked;
-
-            public DashGrowthProfile(float speedMultiplier, float contactDamageMultiplier, bool enemyReboundUnlocked)
-            {
-                SpeedMultiplier = speedMultiplier;
-                ContactDamageMultiplier = contactDamageMultiplier;
-                EnemyReboundUnlocked = enemyReboundUnlocked;
-            }
+            return BB_Balance.GetShortDashProfile();
         }
 
         private void StartRebound(Vector2 impactCenter)

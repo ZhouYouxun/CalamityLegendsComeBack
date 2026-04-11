@@ -22,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override Color StartColor => new Color(150, 190, 255);  // 高亮（发光边缘）
         public override Color EndColor => new Color(20, 40, 120);      // 深蓝（阴影/核心）
 
-        public override float SquishyLightParticleFactor => 0f;
-        public override float ExplosionPulseFactor => 0f;
+        public override float SquishyLightParticleFactor => 0.01f;
+        public override float ExplosionPulseFactor => 0.01f;
         public override bool EnableDefaultSlowdown => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)

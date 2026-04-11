@@ -5,7 +5,6 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Projectiles.Melee;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -24,16 +23,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const int BaseSize = 50;
         private const int StickyLifetime = 72;
 
-        private int HighestUnlockedStage =>
-            DownedBossSystem.downedBoomerDuke ? 3 :
-            NPC.downedFishron ? 2 :
-            Main.hardMode ? 1 : 0;
-
         private float SizeScale => Projectile.width / (float)BaseSize;
         private float Radius => Projectile.width * 0.5f;
         private bool TideEmpowered => Main.player.IndexInRange(Projectile.owner) &&
                                       Main.player[Projectile.owner].active &&
                                       Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().TideFull;
+        private BB_Balance.ShurikenProfile shurikenProfile;
 
         private bool stuckInTarget;
         private int stuckTargetIndex = -1;
@@ -68,7 +63,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             slicesPerformed = 0;
             soundTimer = 0;
             stickOffsetFromTarget = Vector2.Zero;
-            Projectile.penetrate = HighestUnlockedStage == 0 ? 1 : -1;
+            shurikenProfile = BB_Balance.GetShurikenProfile();
+            Projectile.penetrate = shurikenProfile.Penetrate;
         }
 
         public override void AI()
@@ -105,15 +101,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
             Vector2 hitForward = Projectile.velocity.SafeNormalize((target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX));
 
-            BBShuriken_Initial_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale, HighestUnlockedStage);
+            BBShuriken_Initial_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale, shurikenProfile.GrowthTier);
 
-            if (HighestUnlockedStage >= 2)
+            if (shurikenProfile.GrowthTier >= 2)
                 BBShuriken_Fishron_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale);
 
-            if (HighestUnlockedStage >= 3)
+            if (shurikenProfile.GrowthTier >= 3)
                 BBShuriken_BoomerDuke_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale);
 
-            if (HighestUnlockedStage == 0)
+            if (!shurikenProfile.CanStick)
             {
                 Projectile.Kill();
                 return;
@@ -141,7 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             }
             else
             {
-                BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, HighestUnlockedStage);
+                BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, shurikenProfile.GrowthTier);
             }
         }
 
@@ -151,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         {
             BBShuriken_Initial_Effects.SpawnDeathBurst(Projectile, SizeScale);
 
-            if (HighestUnlockedStage >= 2 && Main.myPlayer == Projectile.owner)
+            if (shurikenProfile.SpawnsShpcExplosionOnDeath && Main.myPlayer == Projectile.owner)
             {
                 int projIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -173,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 }
             }
 
-            if (HighestUnlockedStage >= 3 && Main.myPlayer == Projectile.owner)
+            if (shurikenProfile.SpawnsCrossLightsOnDeath && Main.myPlayer == Projectile.owner)
             {
                 Vector2 baseVelocity = Projectile.oldVelocity.LengthSquared() > 1f ? Projectile.oldVelocity : Projectile.velocity;
                 float launchSpeed = Math.Max(baseVelocity.Length(), 8f);
@@ -226,7 +222,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         {
             Texture2D projectileTexture = TextureAssets.Projectile[Type].Value;
 
-            if (HighestUnlockedStage >= 1)
+            if (shurikenProfile.GrowthTier >= 1)
                 BBShuriken_Hardmode_Effects.DrawRotatingCopies(Projectile, projectileTexture);
 
             BBShuriken_Initial_Effects.DrawOutlineAndBody(Projectile, projectileTexture, lightColor);
@@ -235,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         public override void PostDraw(Color lightColor)
         {
-            if (HighestUnlockedStage >= 3)
+            if (shurikenProfile.GrowthTier >= 3)
                 BBShuriken_BoomerDuke_Effects.DrawBladeDisc(Projectile);
         }
 
@@ -259,7 +255,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private void HandleFlightMovement()
         {
-            NPC target = TideEmpowered ? FindNearestTarget(900f + HighestUnlockedStage * 140f) : null;
+            NPC target = TideEmpowered ? FindNearestTarget(shurikenProfile.TideHomingRange) : null;
 
             if (TideEmpowered && target != null && target.active)
             {
@@ -267,11 +263,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
                 Projectile.velocity = (
                     Projectile.velocity * 17f +
-                    desiredDir * (20f * 1.25f)
-                ) / 18f;
+                    desiredDir * shurikenProfile.TideHomingTargetWeight
+                ) / shurikenProfile.TideHomingTotalWeight;
 
                 float speed = Projectile.velocity.Length();
-                speed = MathHelper.Lerp(speed, 14f, 0.08f);
+                speed = MathHelper.Lerp(speed, shurikenProfile.TideHomingFinalSpeed, shurikenProfile.TideHomingFinalSpeedLerp);
                 Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
             }
             else
@@ -279,23 +275,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 if (Projectile.velocity.LengthSquared() <= 0.01f)
                     Projectile.velocity = Vector2.UnitX * (Projectile.direction == 0 ? 8f : 8f * Projectile.direction);
 
-                Projectile.velocity *= 1.01f;
+                Projectile.velocity *= shurikenProfile.NonEmpoweredAcceleration;
             }
 
             if (Projectile.velocity.X != 0f)
                 Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
 
-            Projectile.rotation += (Projectile.direction <= 0 ? -1f : 1f) * (0.55f + HighestUnlockedStage * 0.04f);
+            Projectile.rotation += (Projectile.direction <= 0 ? -1f : 1f) * shurikenProfile.RotationSpeed;
         }
 
         private void SpawnUnlockedFlightEffects()
         {
             BBShuriken_Initial_Effects.SpawnFlight(Projectile, SizeScale);
 
-            if (HighestUnlockedStage >= 2)
+            if (shurikenProfile.GrowthTier >= 2)
                 BBShuriken_Fishron_Effects.SpawnFlight(Projectile, SizeScale);
 
-            if (HighestUnlockedStage >= 3)
+            if (shurikenProfile.GrowthTier >= 3)
                 BBShuriken_BoomerDuke_Effects.SpawnFlight(Projectile, SizeScale);
         }
 
@@ -322,13 +318,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             stickTimer++;
             sliceEffectTimer++;
 
-            BBShuriken_Initial_Effects.SpawnStickyAmbient(Projectile, target, SizeScale, HighestUnlockedStage);
+            BBShuriken_Initial_Effects.SpawnStickyAmbient(Projectile, target, SizeScale, shurikenProfile.GrowthTier);
 
             if (sliceEffectTimer >= 8)
             {
                 sliceEffectTimer = 0;
                 slicesPerformed++;
-                BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, HighestUnlockedStage);
+                BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, shurikenProfile.GrowthTier);
                 TrySpawnStickySlash(target);
 
                 if (soundTimer <= 0)
@@ -355,18 +351,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private int GetMaxStickySlices()
         {
-            return HighestUnlockedStage switch
-            {
-                1 => 3,
-                2 => 4,
-                3 => 5,
-                _ => 0
-            };
+            return shurikenProfile.StickySliceCount;
         }
 
         private void TrySpawnStickySlash(NPC target)
         {
-            if (HighestUnlockedStage < 2 || Main.myPlayer != Projectile.owner)
+            if (!shurikenProfile.UnlocksStickySlash || Main.myPlayer != Projectile.owner)
                 return;
 
             Vector2 slashDirection = target.velocity.LengthSquared() > 1f
@@ -380,10 +370,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 target.Center + Main.rand.NextVector2Circular(12f, 12f),
                 slashDirection * Main.rand.NextFloat(5.2f, 6.8f),
                 ModContent.ProjectileType<BBSwing_Slash>(),
-                Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                Math.Max(1, (int)(Projectile.damage * shurikenProfile.StickySlashDamageFactor)),
                 Projectile.knockBack * 0.4f,
                 Projectile.owner,
-                0.9f + HighestUnlockedStage * 0.08f,
+                shurikenProfile.StickySlashScale,
                 Main.rand.NextFloat(-0.3f, 0.3f));
         }
 

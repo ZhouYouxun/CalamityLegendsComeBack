@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Projectile.tileCollide = false;
             Projectile.timeLeft = 180000;
             Projectile.usesLocalNPCImmunity = true; // 弹幕使用本地无敌帧
-            Projectile.localNPCHitCooldown = 1; // 无敌帧冷却时间为1帧
+            Projectile.localNPCHitCooldown = 2; // 无敌帧冷却时间为1帧
         }
 
 
@@ -226,7 +226,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             GeneralParticleHandler.SpawnParticle(orb);
 
             // 可选：轻音效（与小激光区分开）
-            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, hitPos);
+            SoundEngine.PlaySound(SoundID.Item122, hitPos);
         }
 
         private SlotId LaserSoundSlot;
@@ -262,7 +262,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             int sampleCount = (int)(LaserLength / spacing);
             sampleCount = Utils.Clamp(sampleCount, 48, 180);
 
-            if ((Main.GameUpdateCount + Projectile.identity) % 1 == 0)
+            if ((Main.GameUpdateCount + Projectile.identity) % 2 == 0)
             {
                 Particle pulse = new DirectionalPulseRing(
                     Projectile.Center,
@@ -348,7 +348,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     true,
                     false,
                     1.02f);
-                GeneralParticleHandler.SpawnParticle(primarySpark);
+                //GeneralParticleHandler.SpawnParticle(primarySpark);
 
                 // =========================
                 // 4. 副轨火花：隔点补一次，做双股但不塞满
@@ -368,7 +368,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                         true,
                         false,
                         1.01f);
-                    GeneralParticleHandler.SpawnParticle(secondarySpark);
+                    //GeneralParticleHandler.SpawnParticle(secondarySpark);
                 }
 
                 // =========================
@@ -386,7 +386,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                         Main.rand.NextFloat(0.12f, 0.20f) * (0.90f + envelope * 0.35f),
                         Color.Lerp(coreColor, flashColor, 0.20f + 0.18f * envelope),
                         Main.rand.Next(9, 13));
-                    GeneralParticleHandler.SpawnParticle(light);
+                    //GeneralParticleHandler.SpawnParticle(light);
                 }
 
                 // =========================
@@ -408,7 +408,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                         true,
                         false,
                         true);
-                    GeneralParticleHandler.SpawnParticle(coreOrb);
+                    //GeneralParticleHandler.SpawnParticle(coreOrb);
                 }
             }
 
@@ -428,7 +428,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 true,
                 false,
                 true);
-            GeneralParticleHandler.SpawnParticle(tipOrb);
+            //GeneralParticleHandler.SpawnParticle(tipOrb);
 
             if (Main.rand.NextBool(2 * intervalScale))
             {
@@ -444,7 +444,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     true,
                     false,
                     1.03f);
-                GeneralParticleHandler.SpawnParticle(tipSpark);
+                //GeneralParticleHandler.SpawnParticle(tipSpark);
             }
         }
 

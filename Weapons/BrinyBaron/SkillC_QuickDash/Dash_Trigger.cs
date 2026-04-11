@@ -3,7 +3,6 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -48,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             if (player.HeldItem.type != ModContent.ItemType<NewLegendBrinyBaron>())
                 return;
 
-            if (!Main.hardMode)
+            if (!BB_Balance.CanUseQuickDash)
                 return;
 
             if (HasAnyActiveSkillProjectile(player) || player.GetModPlayer<Dash_Trigger>().IsUsingSlashDash)
@@ -59,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
             bool triggerDash = false;
             int dashDirection = 0;
-            DashGrowthProfile growthProfile = ResolveDashGrowthProfile();
+            BB_Balance.QuickDashProfile growthProfile = ResolveDashGrowthProfile();
 
             // =========================
             // 神秘按键逻辑（优先级最高）
@@ -151,39 +150,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             }
         }
 
-        private DashGrowthProfile ResolveDashGrowthProfile()
+        private BB_Balance.QuickDashProfile ResolveDashGrowthProfile()
         {
-            DashGrowthProfile profile = BuildDashGrowthProfile(
-                baseDamageMultiplier: 1f,
-                dashCooldown: 60 * 2);
-
-            if (NPC.downedFishron)
-            {
-                profile = BuildDashGrowthProfile(
-                    baseDamageMultiplier: 1.25f,
-                    dashCooldown: 60 + 60);
-            }
-
-            if (DownedBossSystem.downedBoomerDuke)
-            {
-                profile = BuildDashGrowthProfile(
-                    baseDamageMultiplier: 1.55f,
-                    dashCooldown: 60 + 30);
-            }
-
-            if (DownedBossSystem.downedYharon)
-            {
-                profile = BuildDashGrowthProfile(
-                    baseDamageMultiplier: 2f,
-                    dashCooldown: 60 + 0);
-            }
-
-            return profile;
-        }
-
-        private DashGrowthProfile BuildDashGrowthProfile(float baseDamageMultiplier, int dashCooldown)
-        {
-            return new DashGrowthProfile(baseDamageMultiplier, dashCooldown);
+            return BB_Balance.GetQuickDashProfile();
         }
 
         private bool HasAnyActiveSkillProjectile(Player player)
@@ -207,16 +176,5 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             return false;
         }
 
-        private struct DashGrowthProfile
-        {
-            public float BaseDamageMultiplier;
-            public int DashCooldown;
-
-            public DashGrowthProfile(float baseDamageMultiplier, int dashCooldown)
-            {
-                BaseDamageMultiplier = baseDamageMultiplier;
-                DashCooldown = dashCooldown;
-            }
-        }
     }
 }

@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // 泰坦之心
             Recipe recipe5 = Recipe.Create(ModContent.ItemType<TitanHeart> (), 2);
-            recipe5.AddIngredient(ModContent.ItemType<SulphuricScale>(), 1);
+            recipe5.AddIngredient(ModContent.ItemType<TitanHeart>(), 1);
             recipe5.AddIngredient(ModContent.ItemType<AstralMonolith>(), 5);
             recipe5.AddTile(TileID.WorkBenches);
             recipe5.Register();
