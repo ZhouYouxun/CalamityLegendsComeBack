@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.GameContent;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
@@ -24,25 +23,43 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             if (intensity <= 0f)
                 return;
 
-            Texture2D texture = ModContent.Request<Texture2D>("Terraria/Images/Extra_89").Value;
+            Texture2D texture = ModContent.Request<Texture2D>("Terraria/Images/Extra_98").Value;
 
             Vector2 eyeCenter = GetEyeCenter(drawInfo, player);
             Vector2 drawPosition = eyeCenter - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
-            float pulse = 0.92f + 0.12f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 8f);
-            float scale = (0.34f + 0.08f * intensity) * pulse;
+            float time = Main.GlobalTimeWrappedHourly;
+            float pulse = 0.96f + 0.16f * (float)System.Math.Sin(time * 8f);
+            float flash = 0.55f + 0.45f * (float)System.Math.Sin(time * 18f + player.whoAmI * 0.9f);
+            float scale = (0.4f + 0.1f * intensity) * pulse;
             SpriteEffects effects = player.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            Color glowColor = new Color(110, 220, 255, 0) * (0.55f * intensity);
-            float rotation = player.velocity.X * 0.01f;
+            Color glowColor = Color.Lerp(new Color(110, 220, 255, 0), new Color(190, 255, 255, 0), flash) * (0.95f * intensity);
+            Color coreColor = Color.Lerp(new Color(170, 245, 255, 0), Color.White, 0.45f + flash * 0.35f) * (1.05f * intensity);
 
+            float jitterRadiusPrimary = 4f + 6f * intensity;
+            float jitterRadiusSecondary = 3f + 5f * intensity;
+            Vector2 jitterPrimary = new Vector2(
+                (float)System.Math.Sin(time * 21f + player.whoAmI * 0.7f),
+                (float)System.Math.Cos(time * 17f + player.whoAmI * 0.43f)) * jitterRadiusPrimary;
+            Vector2 jitterSecondary = new Vector2(
+                (float)System.Math.Cos(time * 19f + player.whoAmI * 0.61f),
+                (float)System.Math.Sin(time * 23f + player.whoAmI * 0.35f)) * jitterRadiusSecondary;
+
+            float baseRotation = player.velocity.X * 0.01f;
+            DrawGlowPair(drawInfo, texture, drawPosition + jitterPrimary, origin, glowColor, coreColor, baseRotation, scale, effects);
+            DrawGlowPair(drawInfo, texture, drawPosition + jitterSecondary, origin, glowColor * 0.8f, coreColor * 0.92f, baseRotation + MathHelper.PiOver2, scale * 0.96f, effects);
+        }
+
+        private static void DrawGlowPair(PlayerDrawSet drawInfo, Texture2D texture, Vector2 drawPosition, Vector2 origin, Color glowColor, Color coreColor, float rotation, float scale, SpriteEffects effects)
+        {
             DrawData backGlow = new DrawData(
                 texture,
                 drawPosition,
                 null,
-                glowColor * 0.75f,
+                glowColor,
                 rotation,
                 origin,
-                scale * 1.3f,
+                scale * 1.42f,
                 effects,
                 0);
             backGlow.shader = drawInfo.cHead;
@@ -52,10 +69,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 texture,
                 drawPosition,
                 null,
-                Color.White * (0.7f * intensity),
+                coreColor,
                 rotation,
                 origin,
-                scale,
+                scale * 1.05f,
                 effects,
                 0);
             coreGlow.shader = drawInfo.cHead;

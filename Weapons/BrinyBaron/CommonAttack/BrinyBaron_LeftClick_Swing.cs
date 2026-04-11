@@ -87,6 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int legendaryGrowthTier = 0;
         private float currentScale = 0.5f;
         private bool spawnedInvisibleSwingHitbox = false;
+        private float giantHoldRotationOffset = 0f;
 
         public override void SetDefaults()
         {
@@ -240,6 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             spawnedNormalSwingWave = false;
             spawnedInvisibleSwingHitbox = false;
             SetCurrentScale(normalModeScale);
+            giantHoldRotationOffset = RotationOffset;
         }
 
         private void SpawnNormalSwingWave()
@@ -674,6 +676,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 CanHit = false;
                 postSwing = false;
                 swingSound = true;
+                giantHoldRotationOffset = RotationOffset;
             }
 
             // 放大阶段
@@ -685,17 +688,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 SetCurrentScale(MathHelper.Lerp(normalModeScale, giantModeScale, growProgress));
                 CanHit = false;
                 postSwing = false;
-
-                ApplyEarthStyleRotation(
-                    MathHelper.Lerp(
-                        24f * Projectile.ai[1] * Owner.direction,
-                        118f * Projectile.ai[1] * Owner.direction,
-                        growProgress
-                    ),
-                    growProgress,
-                    0.18f,
-                    0.2f
-                );
+                RotationOffset = giantHoldRotationOffset;
 
                 SpawnGiantChargeParticles(growProgress);
 

@@ -16,8 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
 
-        private const int PrepareTime = 22;
-        private const int DashTimeMax = 26;
+        private const int PrepareTime = 0;
+        private const int DashTimeMax = 45;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
         private const float DashSpeed = 28f;
@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.Center = owner.MountedCenter + lockedDirection * 18f;
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
-            dashState = 0;
+            dashState = 1;
             stateTimer = 0;
             hasBounced = false;
             canceledCharge = false;
@@ -127,6 +127,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }, Projectile.Center);
 
             SpawnStartBurst();
+            SpawnChargeReadyBurst();
+            StartDash(owner);
         }
 
         private void DoPreparePhase(Player owner)
@@ -184,12 +186,22 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private void DoDashPhase(Player owner)
         {
             stateTimer++;
-            Projectile.velocity = lockedDirection * (DashSpeed * dashSpeedMultiplier);
-            Projectile.Center += Projectile.velocity;
+            Vector2 desiredVelocity = lockedDirection * (DashSpeed * dashSpeedMultiplier);
+            Vector2 actualVelocity = ResolveSlidingVelocity(owner, desiredVelocity);
+
+            Projectile.velocity = actualVelocity;
+            if (actualVelocity.LengthSquared() <= 0.01f)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            lockedDirection = actualVelocity.SafeNormalize(lockedDirection);
+            Projectile.Center += actualVelocity;
             SyncOwnerToProjectile(owner, DashBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
-            RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
+            RecordDashDirection(actualVelocity.SafeNormalize(lockedDirection));
             SpawnOceanTrail();
             SpawnForwardWakeJets();
 
@@ -264,11 +276,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            if (dashState != 1 || hasBounced)
-                return true;
-
-            Vector2 collisionCenter = Projectile.Center - oldVelocity.SafeNormalize(lockedDirection) * 8f;
-            StartRebound(collisionCenter);
             return false;
         }
 
@@ -328,6 +335,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private BB_Balance.ShortDashProfile ResolveDashGrowthProfile()
         {
             return BB_Balance.GetShortDashProfile();
+        }
+
+        private Vector2 ResolveSlidingVelocity(Player owner, Vector2 desiredVelocity)
+        {
+            Vector2 adjustedVelocity = Collision.TileCollision(owner.position, desiredVelocity, owner.width, owner.height, false, false, (int)owner.gravDir);
+
+            if (adjustedVelocity.X != desiredVelocity.X || adjustedVelocity.Y != desiredVelocity.Y)
+            {
+                if (adjustedVelocity.LengthSquared() > 0.01f)
+                    return adjustedVelocity;
+
+                Vector2 horizontalSlide = new Vector2(desiredVelocity.X, 0f);
+                Vector2 verticalSlide = new Vector2(0f, desiredVelocity.Y);
+
+                Vector2 horizontalAdjusted = Collision.TileCollision(owner.position, horizontalSlide, owner.width, owner.height, false, false, (int)owner.gravDir);
+                if (horizontalAdjusted.LengthSquared() > 0.01f)
+                    return horizontalAdjusted;
+
+                Vector2 verticalAdjusted = Collision.TileCollision(owner.position, verticalSlide, owner.width, owner.height, false, false, (int)owner.gravDir);
+                if (verticalAdjusted.LengthSquared() > 0.01f)
+                    return verticalAdjusted;
+            }
+
+            return adjustedVelocity;
         }
 
         private void StartRebound(Vector2 impactCenter)
@@ -670,7 +701,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D glowBlade = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowBlade").Value;
             Vector2 origin = new(texture.Width * 0.5f, texture.Height * 0.5f);
+            Vector2 glowOrigin = new(glowBlade.Width * 0.5f, glowBlade.Height);
+            Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
+            Vector2 drawCenter = Projectile.Center - Main.screenPosition;
+            float glowLength = MathHelper.Lerp(0.85f, 1.45f, Utils.GetLerpValue(0f, DashTimeMax, stateTimer, true));
+            Vector2 rearGlowScale = new Vector2(0.9f, glowLength) * Projectile.scale * 0.055f;
+            Vector2 frontGlowScale = new Vector2(0.72f, glowLength * 0.9f) * Projectile.scale * 0.05f;
+            Color rearGlowColor = new Color(38, 170, 255, 0) * 0.5f;
+            Color frontGlowColor = new Color(155, 240, 255, 0) * 0.62f;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(
+                glowBlade,
+                drawCenter - forward * 6f,
+                null,
+                rearGlowColor,
+                bladeRotation + MathHelper.PiOver2,
+                glowOrigin,
+                rearGlowScale,
+                SpriteEffects.None,
+                0);
 
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
@@ -694,9 +748,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 );
             }
 
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
             Main.EntitySpriteDraw(
                 texture,
-                Projectile.Center - Main.screenPosition,
+                drawCenter,
                 null,
                 lightColor,
                 bladeRotation,
@@ -705,6 +762,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 SpriteEffects.None,
                 0
             );
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(
+                glowBlade,
+                drawCenter + forward * 2f,
+                null,
+                frontGlowColor,
+                bladeRotation + MathHelper.PiOver2,
+                glowOrigin,
+                frontGlowScale,
+                SpriteEffects.None,
+                0);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             return false;
         }

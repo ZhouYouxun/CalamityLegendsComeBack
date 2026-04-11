@@ -440,7 +440,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private int leftClickCooldown = 0;
         public override void HoldItem(Player player)
         {
-            player.GetModPlayer<SHPCPassivePlayer>().SetHoldingSHPC();
+            // 当你找到这里，并且试图去找被动技能Passive在主武器代码里的锚点时，你就说明找到了，就是这句话，只是很难翻到而已
+            // player.GetModPlayer<SHPCPassivePlayer>().SetHoldingSHPC();
 
             if (leftClickCooldown > 0)
                 leftClickCooldown--;

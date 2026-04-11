@@ -141,99 +141,114 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             EnsureStateExists(id);
 
-            // ================= 命中特效（强化版） =================
+            // ================= 命中特效（仅视觉翻新，逻辑不动） =================
 
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            float spinOffset = Main.rand.NextFloat(MathHelper.TwoPi);
+            int orbitBurstCount = Main.rand.Next(4, 7);
 
-            // 1. 深渊反冲烟（方向性）
-            for (int i = 0; i < 6; i++)
-            {
-                Vector2 vel = -forward * Main.rand.NextFloat(1.2f, 3.5f) + Main.rand.NextVector2Circular(1.2f, 1.2f);
+            Color abyssDark = new Color(10, 14, 24);
+            Color abyssBlue = new Color(38, 70, 118);
+            Color abyssBright = new Color(86, 132, 186);
 
-                HeavySmokeParticle smoke = new HeavySmokeParticle(
-                    target.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    vel,
-                    Color.Lerp(new Color(10, 14, 22), new Color(36, 58, 96), Main.rand.NextFloat()),
-                    Main.rand.Next(18, 30),
-                    Main.rand.NextFloat(0.5f, 0.9f),
-                    1f
-                );
-                GeneralParticleHandler.SpawnParticle(smoke);
-            }
-
-            // 2. 撕裂水刃（前后结构）
-            for (int i = 0; i < 10; i++)
-            {
-                Vector2 vel =
-                    forward * Main.rand.NextFloat(1f, 3f) +
-                    Main.rand.NextVector2Circular(1.5f, 1.5f);
-
-                WaterFlavoredParticle shard = new WaterFlavoredParticle(
-                    target.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    vel,
-                    false,
-                    Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.7f, 1.1f),
-                    Color.Lerp(new Color(26, 40, 74), new Color(72, 110, 164), Main.rand.NextFloat())
-                );
-                GeneralParticleHandler.SpawnParticle(shard);
-            }
-
-            // 3. 暗蓝闪烁（补层）
-            for (int i = 0; i < 5; i++)
-            {
-                AltSparkParticle spark = new AltSparkParticle(
-                    target.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.9f, 1.4f),
-                    Color.Lerp(new Color(20, 30, 60), new Color(80, 120, 180), Main.rand.NextFloat()) * 0.5f
-                );
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-
-            // 4. 原版Dust层（增强质感）
-            for (int i = 0; i < 8; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    target.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    Main.rand.NextBool() ? DustID.Water : DustID.BlueTorch,
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    120,
-                    Color.Lerp(new Color(16, 24, 40), new Color(56, 86, 132), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.0f, 1.4f)
-                );
-                dust.noGravity = true;
-            }
-
-            // ================= 你要求的爆环 =================
-
+            // 1. 深渊冲击环：固定结构里带少量随机角度，保持“有序但不死板”
             CustomPulse blastRing1 = new(
                 projectile.Center,
                 Vector2.Zero,
-                Color.Blue,
+                Color.Lerp(abyssBlue, abyssBright, 0.35f) * 0.9f,
                 "CalamityMod/Particles/FlameExplosion",
-                Vector2.One,
-                Main.rand.NextFloat(-10, 10),
+                new Vector2(1.15f, 0.7f),
+                Main.rand.NextFloat(-0.45f, 0.45f),
                 0.05f,
-                0.35f,
-                15
+                0.34f,
+                18
             );
             GeneralParticleHandler.SpawnParticle(blastRing1);
 
             CustomPulse blastRing2 = new(
                 projectile.Center,
                 Vector2.Zero,
-                Color.Blue,
+                Color.Lerp(abyssDark, abyssBlue, 0.55f) * 0.85f,
                 "CalamityMod/Particles/FlameExplosion",
-                new Vector2(1f, 0.5f),
-                0f,
-                0.05f,
-                0.35f,
-                20
+                new Vector2(0.8f, 1.25f),
+                Main.rand.NextFloat(-0.7f, 0.7f),
+                0.04f,
+                0.28f,
+                22
             );
             GeneralParticleHandler.SpawnParticle(blastRing2);
+
+            // 2. 环状暗潮烟：按圆周分布，但每颗有轻微偏移，像海沟压强炸开
+            for (int i = 0; i < orbitBurstCount; i++)
+            {
+                float angle = spinOffset + MathHelper.TwoPi * i / orbitBurstCount;
+                Vector2 orbitDirection = angle.ToRotationVector2();
+                Vector2 spawnPos = target.Center + orbitDirection * Main.rand.NextFloat(10f, 16f);
+                Vector2 vel = orbitDirection * Main.rand.NextFloat(1.2f, 2.8f) - forward * Main.rand.NextFloat(0.3f, 1.1f);
+
+                HeavySmokeParticle smoke = new HeavySmokeParticle(
+                    spawnPos,
+                    vel,
+                    Color.Lerp(abyssDark, abyssBlue, Main.rand.NextFloat(0.2f, 0.75f)),
+                    Main.rand.Next(22, 34),
+                    Main.rand.NextFloat(0.45f, 0.75f),
+                    0.95f
+                );
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            // 3. 水刃碎屑：顺着一个旋向喷开，既随机又带结构感
+            for (int i = 0; i < orbitBurstCount * 2; i++)
+            {
+                float ratio = i / (float)(orbitBurstCount * 2);
+                float angle = spinOffset + MathHelper.TwoPi * ratio;
+                Vector2 swirlDir = angle.ToRotationVector2();
+                Vector2 vel =
+                    swirlDir * Main.rand.NextFloat(1.8f, 3.6f) +
+                    forward * Main.rand.NextFloat(0.6f, 1.8f) +
+                    right * Main.rand.NextFloat(-0.9f, 0.9f);
+
+                WaterFlavoredParticle shard = new WaterFlavoredParticle(
+                    target.Center + swirlDir * Main.rand.NextFloat(4f, 10f),
+                    vel,
+                    false,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.7f, 1f),
+                    Color.Lerp(abyssBlue, abyssBright, Main.rand.NextFloat())
+                );
+                GeneralParticleHandler.SpawnParticle(shard);
+            }
+
+            // 4. 中心幽闪：数量不多，作为深渊发光核心
+            for (int i = 0; i < 4; i++)
+            {
+                AltSparkParticle spark = new AltSparkParticle(
+                    target.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    Main.rand.NextVector2Circular(1.6f, 1.6f) - forward * 0.35f,
+                    false,
+                    14,
+                    Main.rand.NextFloat(0.95f, 1.35f),
+                    Color.Lerp(abyssBlue, Color.White, Main.rand.NextFloat(0.2f, 0.45f)) * 0.42f
+                );
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            // 5. Dust 收尾：维持稳定可见度和一点粗粝感
+            for (int i = 0; i < 10; i++)
+            {
+                float angle = spinOffset + MathHelper.TwoPi * i / 10f;
+                Vector2 ringDir = angle.ToRotationVector2();
+                Dust dust = Dust.NewDustPerfect(
+                    target.Center + ringDir * Main.rand.NextFloat(6f, 13f),
+                    Main.rand.NextBool() ? DustID.Water : DustID.BlueTorch,
+                    ringDir * Main.rand.NextFloat(0.9f, 2.3f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                    120,
+                    Color.Lerp(abyssDark, abyssBright, Main.rand.NextFloat(0.3f, 0.85f)),
+                    Main.rand.NextFloat(0.9f, 1.35f)
+                );
+                dust.noGravity = true;
+            }
 
             // ================= Debuff =================
 

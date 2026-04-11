@@ -325,6 +325,9 @@ Projectiles: {
 	// BFFuckyouExplosion.DisplayName: B F Fuckyou Explosion
 	// BFTurretAimBeam.DisplayName: B F Turret Aim Beam
 	// BFTurretVine.DisplayName: B F Turret Vine
+	// SHPCPassiveOrb.DisplayName: S H P C Passive Orb
+	// Misc.SHPCPassiveOrb.DisplayName: S H P C Passive Orb
+	// EndothermicEnergy_Shadow.DisplayName: Endothermic Energy_ Shadow
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

@@ -16,7 +16,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
-    internal class SHPCRight_Proj : ModProjectile, ILocalizedModType
+    internal class SHPCRight_Proj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         public new string LocalizationCategory => "Projectiles";
         public override string Texture => "CalamityMod/Projectiles/LaserProj";
@@ -39,12 +39,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Projectile.DrawBeam(200f, 3f, lightColor);
-            return false;
+            // Projectile.DrawBeam(200f, 3f, lightColor);
+            // return false;
 
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Rectangle frame = texture.Frame();
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Color drawColor = GetAlpha(lightColor) ?? lightColor;
+
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                frame,
+                drawColor * Projectile.Opacity,
+                Projectile.rotation,
+                frame.Size() * 0.5f,
+                Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
+            return false;
+        }
+
+        public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
+        {
             Vector2[] trailPoints = BuildTrailPoints();
             if (trailPoints.Length < 2)
-                return true;
+                return;
 
             GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak")
@@ -64,6 +85,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             );
 
             Vector2[] coreTrail = trailPoints.Take(Math.Min(9, trailPoints.Length)).ToArray();
+            if (coreTrail.Length < 2)
+                return;
 
             GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak")
@@ -81,8 +104,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 ),
                 coreTrail.Length * 2
             );
-
-            return false;
         }
 
         private Vector2[] BuildTrailPoints()

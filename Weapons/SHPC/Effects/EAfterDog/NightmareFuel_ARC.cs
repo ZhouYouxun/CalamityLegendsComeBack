@@ -15,9 +15,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
         private int lockedTargetIndex = -1;
         private bool hasSpawnedScythe;
         private Color arcColor = Color.MediumOrchid;
+        private int curveDirection;
 
-        // 曲线方向：-1 左弧，0 直线，1 右弧
-        private int CurveDirection => (int)MathHelper.Clamp(Projectile.ai[0], -1f, 1f);
+        // 曲线方向：每个实例出生时固定成 -1 或 1
+        private int CurveDirection => curveDirection;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -39,13 +40,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
+            curveDirection = Main.rand.NextBool() ? -1 : 1;
+
             // 左右双色：模仿魔王剑的双色风格
             if (CurveDirection < 0)
                 arcColor = Color.MediumOrchid;
             else if (CurveDirection > 0)
                 arcColor = Color.Lerp(Color.DeepPink, Color.Orange, 0.5f);
-            else
-                arcColor = Color.Lerp(Color.MediumOrchid, Color.BlueViolet, 0.5f);
 
             lockedTargetIndex = FindInitialTarget(1600f);
 

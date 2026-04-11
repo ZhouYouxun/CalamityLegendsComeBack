@@ -5,7 +5,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     internal static class BB_Balance
     {
-        private static readonly float[] BladeScales = { 0.35f, 0.45f, 0.5f, 0.62f, 0.76f, 0.92f };
+        private static float[] BladeScales => new float[] { 0.35f, 0.45f, 0.5f, 0.62f, 0.76f, 0.92f };
+        
         private static readonly float[] BladeGiantScaleFactors = { 2.4f, 2.4f, 2.4f, 2.4f, 2.4f, 2.4f };
         private static readonly int[] BladeGiantGrowFrames = { 42, 42, 42, 42, 42, 42 };
         private static readonly int[] BladeGiantShrinkFrames = { 38, 38, 38, 38, 38, 38 };
