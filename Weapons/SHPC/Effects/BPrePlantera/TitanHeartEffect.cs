@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void SetDefaults(Projectile projectile)
         {
-            //// ===== 基础强化 =====
+            //// ===== 基础强化 =====e
 
             //// 放大体积（命中体感更强）
             //projectile.width = (int)(projectile.width * 1.6f);
@@ -56,6 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             projectile.width = 250;
             projectile.height = 250;
 
+            projectile.scale = 3f;
+
             projectile.Center = center;
 
             // ===== 穿透（关键修复点）=====
@@ -66,10 +68,51 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // ===== 伤害削弱 =====
             projectile.damage = (int)(projectile.damage * 0.55f);
+
+            if (Main.myPlayer == projectile.owner)
+            {
+                int bigInvIndex = Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<TitanHeart_BigINV>(),
+                    projectile.damage,
+                    projectile.knockBack,
+                    projectile.owner,
+                    projectile.whoAmI
+                );
+
+                projectile.localAI[0] = bigInvIndex + 1;
+            }
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
+            if (Main.myPlayer == projectile.owner)
+            {
+                int bigInvIndex = (int)projectile.localAI[0] - 1;
+                bool boundInactive =
+                    !Main.projectile.IndexInRange(bigInvIndex) ||
+                    !Main.projectile[bigInvIndex].active ||
+                    Main.projectile[bigInvIndex].type != ModContent.ProjectileType<TitanHeart_BigINV>();
+
+                if (boundInactive)
+                {
+                    int newIndex = Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<TitanHeart_BigINV>(),
+                        projectile.damage,
+                        projectile.knockBack,
+                        projectile.owner,
+                        projectile.whoAmI
+                    );
+
+                    projectile.localAI[0] = newIndex + 1;
+                }
+            }
+
             // 以弹幕中心为圆心，生成每隔 90 度分布的一圈旋转刀光。
             float spinPhase = Main.GlobalTimeWrappedHourly * 12f + projectile.identity * 0.37f;
             float orbitRadius = 11f;

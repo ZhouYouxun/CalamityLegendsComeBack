@@ -194,25 +194,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 Pitch = 0.25f
             }, Projectile.Center);
 
-            for (int i = 0; i < 9; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
-                dust.scale = Main.rand.NextFloat(1.15f, 1.8f) * Projectile.scale;
-                dust.velocity = forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(4.5f, 7.5f);
-                dust.noGravity = true;
-                dust.color = Color.Lerp(TechBlueDeep, TechBlueBright, Main.rand.NextFloat());
-                dust.fadeIn = 1f;
-            }
+            //for (int i = 0; i < 9; i++)
+            //{
+            //    Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+            //    dust.scale = Main.rand.NextFloat(1.15f, 1.8f) * Projectile.scale;
+            //    dust.velocity = forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(4.5f, 7.5f);
+            //    dust.noGravity = true;
+            //    dust.color = Color.Lerp(TechBlueDeep, TechBlueBright, Main.rand.NextFloat());
+            //    dust.fadeIn = 1f;
+            //}
 
-            for (int i = 0; i < 6; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
-                dust.scale = Main.rand.NextFloat(1.15f, 1.75f) * Projectile.scale;
-                dust.velocity = forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(6f, 8.5f);
-                dust.noGravity = true;
-                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
-                dust.fadeIn = 0.35f;
-            }
+            //for (int i = 0; i < 6; i++)
+            //{
+            //    Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
+            //    dust.scale = Main.rand.NextFloat(1.15f, 1.75f) * Projectile.scale;
+            //    dust.velocity = forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(6f, 8.5f);
+            //    dust.noGravity = true;
+            //    dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+            //    dust.fadeIn = 0.35f;
+            //}
 
             Particle coreBurst = new CustomPulse(
                 Projectile.Center,
@@ -243,25 +243,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 Pitch = 0.55f
             }, Projectile.Center);
 
-            for (int i = 0; i < 6; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
-                dust.scale = Main.rand.NextFloat(1.1f, 1.7f) * Projectile.scale;
-                dust.velocity = direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(4.5f, 8f);
-                dust.noGravity = true;
-                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
-                dust.fadeIn = 1f;
-            }
+            //for (int i = 0; i < 6; i++)
+            //{
+            //    Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+            //    dust.scale = Main.rand.NextFloat(1.1f, 1.7f) * Projectile.scale;
+            //    dust.velocity = direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(4.5f, 8f);
+            //    dust.noGravity = true;
+            //    dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+            //    dust.fadeIn = 1f;
+            //}
 
-            for (int i = 0; i < 4; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
-                dust.scale = Main.rand.NextFloat(1.25f, 1.85f) * Projectile.scale;
-                dust.velocity = direction.RotatedByRandom(0.4f) * Main.rand.NextFloat(5f, 8.5f);
-                dust.noGravity = true;
-                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat(0.2f, 0.85f));
-                dust.fadeIn = 0.35f;
-            }
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
+            //    dust.scale = Main.rand.NextFloat(1.25f, 1.85f) * Projectile.scale;
+            //    dust.velocity = direction.RotatedByRandom(0.4f) * Main.rand.NextFloat(5f, 8.5f);
+            //    dust.noGravity = true;
+            //    dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat(0.2f, 0.85f));
+            //    dust.fadeIn = 0.35f;
+            //}
         }
 
         private void SpawnFlightTrail(Player owner, float targetDist, float squash)
@@ -286,15 +286,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 shrinkSpeed: 0.2f * squash);
             GeneralParticleHandler.SpawnParticle(trail);
 
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
-                dust.scale = Main.rand.NextFloat(0.85f, 1.15f) * Projectile.scale;
-                dust.velocity = Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.4f, 0.4f);
-                dust.noGravity = true;
-                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
-                dust.fadeIn = 0.9f;
-            }
+            //if (Main.rand.NextBool(2))
+            //{
+            //    Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+            //    dust.scale = Main.rand.NextFloat(0.85f, 1.15f) * Projectile.scale;
+            //    dust.velocity = Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.4f, 0.4f);
+            //    dust.noGravity = true;
+            //    dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+            //    dust.fadeIn = 0.9f;
+            //}
 
             if (FlightState == 1f && Main.rand.NextBool(3))
             {
