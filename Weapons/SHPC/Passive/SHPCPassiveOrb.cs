@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         private int timesItCanHit = 1;
         public bool startAttackEffects = true;
         public int attackTime = 160;
+        private float previousFlightState = -1f;
 
         private Vector2 orbitAnchorCenter;
         private Vector2 orbitStartOffset;
@@ -56,30 +57,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             Player owner = Main.player[Projectile.owner];
             float targetDist = Vector2.Distance(owner.Center, Projectile.Center);
 
-            //if (onSpawn)
-            //{
-            //    for (int i = 0; i <= 8; i++)
-            //    {
-            //        Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
-            //        dust.scale = Main.rand.NextFloat(1.2f, 1.9f) * Projectile.scale;
-            //        dust.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.5f) * Main.rand.NextFloat(5f, 7f);
-            //        dust.noGravity = true;
-            //        dust.color = Color.Lerp(TechBlueDeep, TechBlue, Main.rand.NextFloat());
-            //        dust.fadeIn = 1f;
-            //    }
-
-            //    for (int i = 0; i <= 6; i++)
-            //    {
-            //        Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
-            //        dust.scale = Main.rand.NextFloat(1.2f, 1.9f) * Projectile.scale;
-            //        dust.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.3f) * Main.rand.NextFloat(7f, 9f);
-            //        dust.noGravity = true;
-            //        dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
-            //        dust.fadeIn = 0.3f;
-            //    }
-
-            //    onSpawn = false;
-            //}
+            if (onSpawn)
+            {
+                SpawnSpawnEffects();
+                onSpawn = false;
+            }
 
             if (time >= attackTime)
             {
@@ -119,23 +101,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 Projectile.velocity *= Projectile.numHits > 0 ? 0.955f : 0.97f;
             }
 
-            float squash = Utils.GetLerpValue(1, 3, Projectile.velocity.Length(), true);
-            if (targetDist < 1400f && squash > 0.2f)
+            if (previousFlightState != FlightState)
             {
-                Particle trail = new CustomSpark(
-                    Projectile.Center,
-                    Projectile.velocity * 0.01f,
-                    "CalamityMod/Particles/DualTrail",
-                    false,
-                    13,
-                    0.075f * Projectile.scale,
-                    Color.Lerp(TechBlueDeep, TechBlueBright, 0.5f) * 0.6f * squash,
-                    new Vector2(1 - 0.15f * squash, 1.5f),
-                    true,
-                    false,
-                    shrinkSpeed: 0.2f * squash);
-                GeneralParticleHandler.SpawnParticle(trail);
+                SpawnFlightStateSwapEffects(owner, previousFlightState, FlightState);
+                previousFlightState = FlightState;
             }
+
+            float squash = Utils.GetLerpValue(1, 3, Projectile.velocity.Length(), true);
+            SpawnFlightTrail(owner, targetDist, squash);
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             time++;
@@ -211,18 +184,188 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             orbitDirection = Main.rand.NextBool() ? 1 : -1;
         }
 
+        private void SpawnSpawnEffects()
+        {
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            SoundEngine.PlaySound(SoundID.DD2_DarkMageCastHeal with
+            {
+                Volume = 1.25f,
+                Pitch = 0.25f
+            }, Projectile.Center);
+
+            for (int i = 0; i < 9; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+                dust.scale = Main.rand.NextFloat(1.15f, 1.8f) * Projectile.scale;
+                dust.velocity = forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(4.5f, 7.5f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(TechBlueDeep, TechBlueBright, Main.rand.NextFloat());
+                dust.fadeIn = 1f;
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
+                dust.scale = Main.rand.NextFloat(1.15f, 1.75f) * Projectile.scale;
+                dust.velocity = forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(6f, 8.5f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+                dust.fadeIn = 0.35f;
+            }
+
+            Particle coreBurst = new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(TechBlue, TechBlueBright, 0.45f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-0.15f, 0.15f),
+                0.42f,
+                0.05f,
+                18,
+                true);
+            GeneralParticleHandler.SpawnParticle(coreBurst);
+        }
+
+        private void SpawnFlightStateSwapEffects(Player owner, float oldState, float newState)
+        {
+            if (oldState < 0f)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            if (newState == 1f)
+                direction = (owner.Center - Projectile.Center).SafeNormalize(direction);
+
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/PulseSound")
+            {
+                Volume = 0.18f,
+                Pitch = 0.55f
+            }, Projectile.Center);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+                dust.scale = Main.rand.NextFloat(1.1f, 1.7f) * Projectile.scale;
+                dust.velocity = direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(4.5f, 8f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+                dust.fadeIn = 1f;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SquashDust>());
+                dust.scale = Main.rand.NextFloat(1.25f, 1.85f) * Projectile.scale;
+                dust.velocity = direction.RotatedByRandom(0.4f) * Main.rand.NextFloat(5f, 8.5f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat(0.2f, 0.85f));
+                dust.fadeIn = 0.35f;
+            }
+        }
+
+        private void SpawnFlightTrail(Player owner, float targetDist, float squash)
+        {
+            if (targetDist >= 1400f || squash <= 0.2f || time <= 5f)
+                return;
+
+            float stretchBoost = Utils.GetLerpValue(10f, 16f, Projectile.velocity.Length(), true);
+            Color trailColor = Color.Lerp(TechBlueDeep, TechBlueBright, 0.58f) * 0.62f * squash;
+
+            Particle trail = new CustomSpark(
+                Projectile.Center,
+                Projectile.velocity * 0.01f,
+                "CalamityMod/Particles/DualTrail",
+                false,
+                13,
+                0.075f * Projectile.scale,
+                trailColor,
+                new Vector2(1f - 0.15f * squash, 1.3f + stretchBoost * 1.5f),
+                true,
+                false,
+                shrinkSpeed: 0.2f * squash);
+            GeneralParticleHandler.SpawnParticle(trail);
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+                dust.scale = Main.rand.NextFloat(0.85f, 1.15f) * Projectile.scale;
+                dust.velocity = Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.4f, 0.4f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+                dust.fadeIn = 0.9f;
+            }
+
+            if (FlightState == 1f && Main.rand.NextBool(3))
+            {
+                Vector2 orbitDirectionNow = (Projectile.Center - owner.Center).SafeNormalize(Vector2.UnitY);
+                Particle orbitSpark = new CustomSpark(
+                    Projectile.Center + orbitDirectionNow * Main.rand.NextFloat(4f, 10f),
+                    Projectile.velocity * 0.015f + orbitDirectionNow.RotatedBy(MathHelper.PiOver2 * orbitDirection) * Main.rand.NextFloat(0.8f, 1.4f),
+                    "CalamityLegendsComeBack/Texture/KsTexture/window_04",
+                    false,
+                    9,
+                    0.08f * Projectile.scale,
+                    Color.Lerp(TechBlue, Color.White, 0.35f) * 0.68f,
+                    new Vector2(0.55f, 1.45f),
+                    glowCenter: true,
+                    shrinkSpeed: 0.8f,
+                    glowCenterScale: 0.85f,
+                    glowOpacity: 0.6f);
+                GeneralParticleHandler.SpawnParticle(orbitSpark);
+            }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SoundEngine.PlaySound(SoundID.Item27 with
+            {
+                Volume = 0.45f,
+                Pitch = 0.35f
+            }, Projectile.Center);
+
+            for (int i = 0; i < 8; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric);
+                dust.scale = Main.rand.NextFloat(1f, 1.6f) * Projectile.scale;
+                dust.velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 7f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(TechBlue, TechBlueBright, Main.rand.NextFloat());
+                dust.fadeIn = 1f;
+            }
+
+            Particle vanishPulse = new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(TechBlue, Color.White, 0.28f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-0.08f, 0.08f),
+                0.34f,
+                0.04f,
+                16,
+                true);
+            GeneralParticleHandler.SpawnParticle(vanishPulse);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Asset<Texture2D> orb = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");
             Vector2 squash = new Vector2(Utils.Remap(Projectile.velocity.Length(), 5, 10, 1, 0.6f), Utils.Remap(Projectile.velocity.Length(), 5, 10, 1, 2f));
             float timeleftFade = (float)Math.Pow(Utils.GetLerpValue(0, 40 * Projectile.extraUpdates, Projectile.timeLeft, true), 5);
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f + Projectile.identity * 0.31f);
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 7; i++)
             {
-                Color orbColor = Color.Lerp(TechBlue, Color.White, i * 0.07f) with { A = 0 } * 0.5f;
-                Vector2 scale = Projectile.scale * timeleftFade * squash * (0.05f + i * 0.01f) * 3;
+                Color orbColor = Color.Lerp(TechBlue, Color.White, i * 0.08f) with { A = 0 } * (0.42f + pulse * 0.08f);
+                Vector2 scale = Projectile.scale * timeleftFade * squash * (0.045f + i * 0.012f) * (3f + pulse * 0.25f);
                 Main.EntitySpriteDraw(orb.Value, Projectile.Center - Main.screenPosition, null, orbColor, Projectile.rotation, orb.Size() * 0.5f, scale, SpriteEffects.None);
             }
+
+            Asset<Texture2D> line = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/window_04");
+            Color coreColor = Color.Lerp(TechBlueBright, Color.White, 0.25f) * 0.7f * timeleftFade;
+            Vector2 coreScale = new Vector2(0.2f, 0.42f + pulse * 0.08f) * Projectile.scale;
+            Main.EntitySpriteDraw(line.Value, Projectile.Center - Main.screenPosition, null, coreColor, Projectile.rotation, line.Size() * 0.5f, coreScale, SpriteEffects.None);
 
             return false;
         }
