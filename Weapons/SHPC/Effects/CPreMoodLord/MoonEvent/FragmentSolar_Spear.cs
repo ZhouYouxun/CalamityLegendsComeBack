@@ -18,11 +18,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public new string LocalizationCategory => "Projectiles";
         // ===== 自定义计数器（禁止用localAI）=====
         private int hitCount;
+        private int visualTimer;
 
 
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (visualTimer < 10)
+                return false;
+
             SpriteBatch sb = Main.spriteBatch;
 
             Texture2D tex = ModContent.Request<Texture2D>(
@@ -250,11 +254,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnSpawn =================
         public override void OnSpawn(IEntitySource source)
         {
+            visualTimer = 0;
         }
 
         // ================= AI =================
         public override void AI()
         {
+            if (Projectile.numUpdates == 0)
+                visualTimer++;
+
             // 基础旋转（长矛感）
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
@@ -301,16 +309,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         Vector2 spawnPos = Projectile.Center - forward * Main.rand.NextFloat(4f, 14f) + Main.rand.NextVector2Circular(2f, 2f);
                         Vector2 velocity = backward * Main.rand.NextFloat(2.5f, 6.5f) + Main.rand.NextVector2Circular(1.2f, 1.2f);
 
-                        Dust d = Dust.NewDustPerfect(
-                            spawnPos,
-                            DustID.SolarFlare,
-                            velocity,
-                            0,
-                            default,
-                            Main.rand.NextFloat(1.15f, 1.9f)
-                        );
-                        d.noGravity = true;
-                        d.fadeIn = 0.35f;
+                        //Dust d = Dust.NewDustPerfect(
+                        //    spawnPos,
+                        //    DustID.Smoke,
+                        //    velocity,
+                        //    0,
+                        //    Color.Lerp(Color.Gray, Color.DarkGray, Main.rand.NextFloat(0.2f, 0.8f)),
+                        //    Main.rand.NextFloat(1.15f, 1.9f)
+                        //);
+                        //d.noGravity = true;
+                        //d.fadeIn = 0.35f;
                     }
                 }
 
@@ -329,10 +337,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                             DustID.Torch,
                             velocity,
                             0,
-                            Color.Lerp(Color.Orange, Color.Yellow, Main.rand.NextFloat()),
-                            Main.rand.NextFloat(1.0f, 1.55f)
+                            Color.Lerp(new Color(255, 135, 40), new Color(255, 210, 105), Main.rand.NextFloat()),
+                            Main.rand.NextFloat(1.5f, 2.7f)
                         );
                         d.noGravity = true;
+                        d.fadeIn = 2.5f;
                     }
                 }
 
@@ -358,7 +367,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                             false,
                             Main.rand.Next(16, 24),
                             Main.rand.NextFloat(0.85f, 1.2f),
-                            Color.Lerp(new Color(255, 230, 120), new Color(255, 110, 30), 0.5f + 0.5f * (float)Math.Sin(t + i * 0.9f)),
+                            Color.Lerp(new Color(255, 230, 125), new Color(255, 120, 35), 0.5f + 0.5f * (float)Math.Sin(t + i * 0.9f)),
                             new Vector2(Main.rand.NextFloat(1.1f, 1.45f), Main.rand.NextFloat(0.28f, 0.5f)),
                             true,
                             false,
@@ -380,13 +389,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
                     Dust frontFlash = Dust.NewDustPerfect(
                         frontPos,
-                        DustID.SolarFlare,
+                        DustID.Torch,
                         velocity,
                         0,
-                        Color.Lerp(Color.White, Color.Yellow, 0.65f),
-                        Main.rand.NextFloat(0.9f, 1.35f)
+                        Color.Lerp(Color.White, new Color(255, 215, 110), 0.65f),
+                        Main.rand.NextFloat(1.2f, 1.9f)
                     );
                     frontFlash.noGravity = true;
+                    frontFlash.fadeIn = 2.5f;
                 }
 
                 // 5. 动态照明：中心偏白，外圈偏橙
@@ -461,14 +471,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
                 Dust core = Dust.NewDustPerfect(
                     center + Main.rand.NextVector2Circular(4f, 4f),
-                    DustID.SolarFlare,
+                    DustID.Torch,
                     vel,
                     0,
-                    Color.Lerp(Color.White, Color.Yellow, Main.rand.NextFloat(0.35f, 0.75f)),
-                    Main.rand.NextFloat(1.5f, 2.35f)
+                    Color.Lerp(Color.White, new Color(255, 215, 110), Main.rand.NextFloat(0.35f, 0.75f)),
+                    Main.rand.NextFloat(1.5f, 2.7f)
                 );
                 core.noGravity = true;
-                core.fadeIn = 0.45f;
+                core.fadeIn = 2.5f;
             }
 
             // ===== 第二层：高速放射火矛，做出“爆炸像恒星喷流” =====
@@ -480,14 +490,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 // 主射流
                 Dust jet = Dust.NewDustPerfect(
                     center,
-                    DustID.SolarFlare,
+                    DustID.Torch,
                     dir * Main.rand.NextFloat(8f, 15f),
                     0,
                     Color.Lerp(new Color(255, 235, 150), new Color(255, 120, 35), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.4f, 2.2f)
+                    Main.rand.NextFloat(1.6f, 2.7f)
                 );
                 jet.noGravity = true;
-                jet.fadeIn = 0.3f;
+                jet.fadeIn = 2.5f;
 
                 // 副火花，贴着主射流喷
                 Dust jetSpark = Dust.NewDustPerfect(
@@ -509,13 +519,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
                 Dust ring = Dust.NewDustPerfect(
                     center + dir * 10f,
-                    DustID.SolarFlare,
+                    DustID.Torch,
                     dir * Main.rand.NextFloat(3f, 6f),
                     0,
                     Color.Lerp(new Color(255, 180, 70), new Color(255, 80, 20), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.2f, 1.8f)
+                    Main.rand.NextFloat(1.4f, 2.2f)
                 );
                 ring.noGravity = true;
+                ring.fadeIn = 2.5f;
             }
 
             // ===== 第四层：高温气泡爆裂感，用 CustomSpark 做太阳表面鼓泡炸开 =====
@@ -533,7 +544,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     false,
                     Main.rand.Next(18, 28),
                     Main.rand.NextFloat(0.95f, 1.35f),
-                    Color.Lerp(new Color(255, 245, 170), new Color(255, 115, 25), 0.5f + 0.5f * (float)Math.Sin(t + i * 0.4f)),
+                    Color.Lerp(new Color(255, 240, 165), new Color(255, 115, 25), 0.5f + 0.5f * (float)Math.Sin(t + i * 0.4f)),
                     new Vector2(Main.rand.NextFloat(1.25f, 1.7f), Main.rand.NextFloat(0.32f, 0.55f)),
                     true,
                     false,
@@ -557,9 +568,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     vel,
                     0,
                     Color.Lerp(Color.Yellow, Color.OrangeRed, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(0.9f, 1.35f)
+                    Main.rand.NextFloat(1.1f, 1.6f)
                 );
                 ember.noGravity = true;
+                ember.fadeIn = 2.5f;
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 smokeVelocity = Vector2.UnitX.RotatedByRandom(Math.PI).RotatedBy(Projectile.velocity.ToRotation()) * Main.rand.NextFloat(2.4f, 6.2f);
+                Dust smoke = Dust.NewDustPerfect(
+                    center,
+                    DustID.Smoke,
+                    smokeVelocity,
+                    0,
+                    Color.Lerp(Color.Gray, Color.DarkGray, Main.rand.NextFloat(0.15f, 0.7f)),
+                    Main.rand.NextFloat(1.2f, 1.65f));
+                smoke.noGravity = true;
             }
         }
 

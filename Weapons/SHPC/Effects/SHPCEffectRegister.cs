@@ -9,7 +9,9 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicEnergy;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFuel;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul;
 using Terraria.ModLoader;
 

@@ -328,6 +328,7 @@ Projectiles: {
 	// SHPCPassiveOrb.DisplayName: S H P C Passive Orb
 	// Misc.SHPCPassiveOrb.DisplayName: S H P C Passive Orb
 	// EndothermicEnergy_Shadow.DisplayName: Endothermic Energy_ Shadow
+	// EndothermicEnergy_Copy.DisplayName: Endothermic Energy_ Copy
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

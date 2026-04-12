@@ -47,16 +47,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Color drawColor = GetAlpha(lightColor) ?? lightColor;
 
-            Main.EntitySpriteDraw(
-                texture,
-                drawPosition,
-                frame,
-                drawColor * Projectile.Opacity,
-                Projectile.rotation,
-                frame.Size() * 0.5f,
-                Projectile.scale,
-                SpriteEffects.None,
-                0f);
+            //Main.EntitySpriteDraw(
+            //    texture,
+            //    drawPosition,
+            //    frame,
+            //    drawColor * Projectile.Opacity,
+            //    Projectile.rotation,
+            //    frame.Size() * 0.5f,
+            //    Projectile.scale,
+            //    SpriteEffects.None,
+            //    0f);
 
             return false;
         }

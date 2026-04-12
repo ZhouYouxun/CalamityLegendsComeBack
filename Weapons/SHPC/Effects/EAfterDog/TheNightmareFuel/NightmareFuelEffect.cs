@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFuel
 {
     internal class NightmareFuelEffect : DefaultEffect
     {

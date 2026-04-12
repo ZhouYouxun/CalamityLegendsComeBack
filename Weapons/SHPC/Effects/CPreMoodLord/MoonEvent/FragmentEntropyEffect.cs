@@ -99,23 +99,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            // Central accretion core.
-            if (projectile.timeLeft % 10 == 0)
-            {
-                CustomPulse corePulse = new(
-                    projectile.Center,
-                    Vector2.Zero,
-                    new Color(12, 12, 12),
-                    "CalamityMod/Particles/SmallBloom",
-                    Vector2.One,
-                    Main.rand.NextFloat(-0.15f, 0.15f),
-                    0.45f + scaleFactor * 0.3f,
-                    0f,
-                    14,
-                    false
-                );
-                GeneralParticleHandler.SpawnParticle(corePulse);
-            }
+            //// Central accretion core.
+            //if (projectile.timeLeft % 10 == 0)
+            //{
+            //    CustomPulse corePulse = new(
+            //        projectile.Center,
+            //        Vector2.Zero,
+            //        new Color(12, 12, 12),
+            //        "CalamityMod/Particles/SmallBloom",
+            //        Vector2.One,
+            //        Main.rand.NextFloat(-0.15f, 0.15f),
+            //        0.45f + scaleFactor * 0.3f,
+            //        0f,
+            //        14,
+            //        false
+            //    );
+            //    GeneralParticleHandler.SpawnParticle(corePulse);
+            //}
 
             if (Main.rand.NextBool(5))
             {

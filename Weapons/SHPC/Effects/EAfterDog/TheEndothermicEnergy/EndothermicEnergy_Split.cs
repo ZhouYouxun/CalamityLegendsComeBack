@@ -10,7 +10,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicEnergy
 {
     internal class EndothermicEnergy_Split : ModProjectile, ILocalizedModType
     {

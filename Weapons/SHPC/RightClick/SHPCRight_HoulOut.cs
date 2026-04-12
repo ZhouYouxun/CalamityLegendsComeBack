@@ -1,17 +1,17 @@
-﻿using CalamityMod;
+﻿using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
-
-using CalamityLegendsComeBack.Weapons.SHPC;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
@@ -298,6 +298,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             //}
 
             #endregion
+
+
+            // 普通开火特效的额外模块，必须得放在这【可能有点难找，但是你懂的，有些】
+            if (normalShotFXLastCenter == Vector2.Zero)
+                normalShotFXLastCenter = GunTipPosition;
+
+            Vector2 normalShotDelta = GunTipPosition - normalShotFXLastCenter;
+            normalShotFXLastCenter = GunTipPosition;
+
+            for (int i = normalShotFXParticles.Count - 1; i >= 0; i--)
+            {
+                Particle p = normalShotFXParticles[i];
+
+                if (p.Time >= p.Lifetime)
+                {
+                    normalShotFXParticles.RemoveAt(i);
+                    continue;
+                }
+
+                p.Position += normalShotDelta * 0.45f;
+            }
         }
 
         #endregion
@@ -719,14 +740,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
 
         #region ===== 特效：普通开火 =====
-
+        private Vector2 normalShotFXLastCenter = Vector2.Zero;
+        private readonly List<Particle> normalShotFXParticles = new();
         private void SpawnNormalShotMuzzleEffect(Player player, Vector2 direction)
         {
-            //Vector2 muzzlePos = GetSafeFirePosition(player) + direction * 4f;
             Vector2 muzzlePos = GunTipPosition + direction * 4f;
             Vector2 right = direction.RotatedBy(MathHelper.PiOver2);
 
-            // 当前激光数量固定只会是 1~4，这里顺手钳一下
             int laserCount = Math.Max(1, Math.Min(LaserChainCount, 4));
             float heatInterpolant = MathHelper.Clamp(stage / 7f, 0f, 1f);
 
@@ -734,28 +754,89 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Color paleBlue = new Color(180, 235, 255);
             Color hotWhite = Color.Lerp(paleBlue, Color.White, 0.35f + heatInterpolant * 0.45f);
 
-            // ================= BloomLineSoftEdge：数量 = 激光数量 × 2 =================
-            // 设计思路：
-            // 1条激光 -> 2条平行前冲
-            // 2~4条激光 -> 每条“激光通道”各自带 2 条平行线，并整体按 fire 的风格展开成扇形
-
-            // 👉 基础扇形（贴近原始fire）
             float baseFanAngle = laserCount == 1
                 ? 0f
-                : MathHelper.Lerp(0.04f, 0.13f, (laserCount - 2f) / 2f);
+                : MathHelper.Lerp(0.03f, 0.11f, (laserCount - 2f) / 2f);
 
-            // 👉 特效扇形：比激光更大（+20%）并且额外增强一点可见性
-            float fanAngle = baseFanAngle * 1.2f + MathHelper.Lerp(0f, 0.035f, heatInterpolant);
+            float fanAngle = baseFanAngle * 1.15f + MathHelper.Lerp(0f, 0.02f, heatInterpolant);
 
-            float pairSpacing = MathHelper.Lerp(1.1f, 3.2f, heatInterpolant);
-            float forwardSpeed = MathHelper.Lerp(7.2f, 14.6f, heatInterpolant);
-            int lineLifetime = (int)MathHelper.Lerp(7f, 11f, heatInterpolant);
-            float lineScale = MathHelper.Lerp(0.024f, 0.042f, heatInterpolant);
-            Vector2 lineStretch = new Vector2(
-                MathHelper.Lerp(0.88f, 1.32f, heatInterpolant),
-                MathHelper.Lerp(0.56f, 0.86f, heatInterpolant)
-            );
+            float sideSpacing = MathHelper.Lerp(1.2f, 2.4f, heatInterpolant);
+            float forwardSpeed = MathHelper.Lerp(8.5f, 13.5f, heatInterpolant);
+            float sparkFollowFactor = 0.45f;
 
+            // =========================
+            // 1. 陪跑层：GlowOrbParticle（保留）
+            // =========================
+            int glowCount = 6 + laserCount * 2;
+            for (int i = 0; i < glowCount; i++)
+            {
+                float t = glowCount == 1 ? 0.5f : i / (float)(glowCount - 1);
+                float angleOffset = MathHelper.Lerp(-fanAngle * 0.8f, fanAngle * 0.8f, t);
+
+                Vector2 glowDir = direction.RotatedBy(angleOffset);
+                Vector2 glowSpawnPos =
+                    muzzlePos +
+                    glowDir * Main.rand.NextFloat(0.8f, 2.8f) +
+                    right * Main.rand.NextFloat(-1.8f, 1.8f);
+
+                Vector2 glowVelocity = glowDir * Main.rand.NextFloat(
+                    MathHelper.Lerp(2.2f, 3.2f, heatInterpolant),
+                    MathHelper.Lerp(4.2f, 6.8f, heatInterpolant));
+
+                GlowOrbParticle glow = new GlowOrbParticle(
+                    glowSpawnPos,
+                    glowVelocity,
+                    false,
+                    16 + (int)(heatInterpolant * 8f),
+                    Main.rand.NextFloat(
+                        MathHelper.Lerp(0.55f, 0.72f, heatInterpolant),
+                        MathHelper.Lerp(0.85f, 1.15f, heatInterpolant)),
+                    Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.35f, 0.8f)),
+                    true,
+                    true
+                );
+
+                GeneralParticleHandler.SpawnParticle(glow);
+                normalShotFXParticles.Add(glow);
+            }
+
+            // =========================
+            // 2. 陪跑层：Dust（保留）
+            // =========================
+            int dustCount = 10 + laserCount * 4;
+            for (int i = 0; i < dustCount; i++)
+            {
+                float t = dustCount == 1 ? 0.5f : i / (float)(dustCount - 1);
+                float angleOffset = MathHelper.Lerp(-fanAngle * 1.25f, fanAngle * 1.25f, t);
+
+                Vector2 dustDir = direction.RotatedBy(angleOffset);
+                Vector2 dustRight = dustDir.RotatedBy(MathHelper.PiOver2);
+
+                Vector2 dustSpawnPos =
+                    muzzlePos +
+                    dustDir * Main.rand.NextFloat(0.4f, 2.4f) +
+                    dustRight * Main.rand.NextFloat(-1.4f, 1.4f);
+
+                Vector2 dustVelocity =
+                    dustDir * Main.rand.NextFloat(
+                        MathHelper.Lerp(3.5f, 5.5f, heatInterpolant),
+                        MathHelper.Lerp(6.5f, 10.5f, heatInterpolant)) +
+                    dustRight * Main.rand.NextFloat(
+                        -MathHelper.Lerp(0.6f, 1.4f, heatInterpolant),
+                         MathHelper.Lerp(0.6f, 1.4f, heatInterpolant));
+
+                Dust dust = Dust.NewDustPerfect(dustSpawnPos, 267);
+                dust.velocity = dustVelocity;
+                dust.color = Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.2f, 0.75f));
+                dust.scale = Main.rand.NextFloat(
+                    MathHelper.Lerp(0.72f, 0.92f, heatInterpolant),
+                    MathHelper.Lerp(1.05f, 1.35f, heatInterpolant));
+                dust.noGravity = true;
+            }
+
+            // =========================
+            // 3. 核心层：中轴科技蓝 CustomSpark
+            // =========================
             for (int i = 0; i < laserCount; i++)
             {
                 float laneT = laserCount == 1 ? 0.5f : i / (float)(laserCount - 1);
@@ -764,149 +845,81 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Vector2 laneDirection = direction.RotatedBy(laneAngle);
                 Vector2 laneRight = laneDirection.RotatedBy(MathHelper.PiOver2);
 
-                // 中心通道略强，边缘稍弱，形成更稳定的秩序感
-                float centerWeight = laserCount == 1 ? 1f : 1f - Math.Abs(laneT - 0.5f) * 0.35f;
+                float centerWeight = laserCount == 1 ? 1f : 1f - Math.Abs(laneT - 0.5f) * 0.28f;
+                Vector2 laneOrigin = muzzlePos + laneDirection * Main.rand.NextFloat(0.8f, 2f);
 
+                // 每条激光通道的中心主线
+                Particle centerLine = new CustomSpark(
+                    laneOrigin,
+                    laneDirection * Main.rand.NextFloat(
+                        MathHelper.Lerp(10.5f, 12.5f, heatInterpolant),
+                        MathHelper.Lerp(14.5f, 18f, heatInterpolant)),
+                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
+                    false,
+                    8 + (int)(heatInterpolant * 3f),
+                    MathHelper.Lerp(0.05f, 0.075f, heatInterpolant) * centerWeight,
+                    Color.Lerp(techBlue, hotWhite, 0.28f + 0.18f * heatInterpolant) * 0.92f,
+                    new Vector2(
+                        MathHelper.Lerp(0.52f, 0.66f, heatInterpolant),
+                        MathHelper.Lerp(1.35f, 1.9f, heatInterpolant)),
+                    glowCenter: true,
+                    shrinkSpeed: 0.8f,
+                    glowCenterScale: 0.92f,
+                    glowOpacity: 0.72f
+                );
+                GeneralParticleHandler.SpawnParticle(centerLine);
+                normalShotFXParticles.Add(centerLine);
+
+                // 每条通道两侧再补两条细陪跑线，但仍然走同路径
                 for (int side = -1; side <= 1; side += 2)
                 {
+                    Vector2 sideSpawnPos = laneOrigin + laneRight * side * sideSpacing;
 
-
-                    // 起点就在枪口稍微前一点，保证一定能看到
-                    Vector2 spawnPos =
-                        muzzlePos
-                        + laneDirection * Main.rand.NextFloat(0.8f, 2.2f)
-                        + laneRight * (pairSpacing * 0.5f * side);
-
-                    // 前进速度：明显更快，但不离谱
-                    Vector2 velocity =
-                        laneDirection * Main.rand.NextFloat(forwardSpeed * 1.1f, forwardSpeed * 1.4f)
-                        + laneRight * (0.12f * side);
-
-                    // 颜色：直接亮一点，不再压太狠
-                    Color lineColor = Color.Lerp(
-                        techBlue,
-                        hotWhite,
-                        0.55f + heatInterpolant * 0.35f
-                    );
-
-                    // 生命周期稍微拉长一点，但别太长
-                    int lifetime = (int)(lineLifetime * 1.2f);
-
-                    // 拉伸：强调“线”的感觉
-                    Vector2 stretch = new Vector2(
-                        lineStretch.X * 1.2f,
-                        lineStretch.Y * 0.9f
-                    );
-
-                    // 👉 不用fadeIn，直接给一点透明度控制
-                    Particle line = new CustomSpark(
-                        spawnPos,
-                        velocity,
-                        "CalamityMod/Particles/BloomLineSoftEdge",
+                    Particle sideLine = new CustomSpark(
+                        sideSpawnPos,
+                        laneDirection * Main.rand.NextFloat(
+                            MathHelper.Lerp(9.2f, 11.5f, heatInterpolant),
+                            MathHelper.Lerp(13f, 16.5f, heatInterpolant))
+                        + laneRight * side * 0.18f,
+                        "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
                         false,
-                        lifetime,
-                        Main.rand.NextFloat(lineScale * 0.95f, lineScale * 1.1f),
-                        lineColor * 0.85f,   // 稍微透明，但不是看不见
-                        stretch,
-                        shrinkSpeed: 0.65f   // 稍慢一点，让尾巴更明显
+                        7 + (int)(heatInterpolant * 2f),
+                        MathHelper.Lerp(0.036f, 0.052f, heatInterpolant) * centerWeight,
+                        Color.Lerp(techBlue, paleBlue, 0.42f) * 0.72f,
+                        new Vector2(
+                            MathHelper.Lerp(0.46f, 0.56f, heatInterpolant),
+                            MathHelper.Lerp(1.05f, 1.45f, heatInterpolant)),
+                        glowCenter: true,
+                        shrinkSpeed: 0.9f,
+                        glowCenterScale: 0.88f,
+                        glowOpacity: 0.62f
                     );
-
-                    GeneralParticleHandler.SpawnParticle(line);
-
-
+                    GeneralParticleHandler.SpawnParticle(sideLine);
+                    normalShotFXParticles.Add(sideLine);
                 }
             }
 
-
-
-
-            // ================= Dust：强化喷射（角度更大+速度更高+数量更密） =================
-            int dustCount = 30 + (int)Math.Round(heatInterpolant * 10f);
-
-            float dustForwardBase = MathHelper.Lerp(4.5f, 10.5f, heatInterpolant);
-            float dustSideBase = MathHelper.Lerp(1.2f, 4.2f, heatInterpolant);
-
-            // 👉 比激光扇形再大X0%
-            float dustFanAngle = fanAngle * 1.7f + MathHelper.Lerp(0f, 0.06f, heatInterpolant);
-
-            for (int i = 0; i < dustCount; i++)
-            {
-                float t = dustCount == 1 ? 0.5f : i / (float)(dustCount - 1);
-
-                // 扇形角度分布（核心喷射感来源）
-                float angle = MathHelper.Lerp(-dustFanAngle, dustFanAngle, t);
-                Vector2 dir = direction.RotatedBy(angle);
-                Vector2 dirRight = dir.RotatedBy(MathHelper.PiOver2);
-
-                // 中间更强，两侧稍弱
-                float centerWeight = 3f - Math.Abs(t - 0.5f) * 1.2f;
-
-                Vector2 dustVelocity =
-                    dir * dustForwardBase * Main.rand.NextFloat(0.9f, 1.3f) * centerWeight +
-                    dirRight * Main.rand.NextFloat(-dustSideBase, dustSideBase) * 0.75f;
-
-                Vector2 dustSpawnPos =
-                    muzzlePos
-                    + dir * Main.rand.NextFloat(0.4f, 2.8f)
-                    + dirRight * Main.rand.NextFloat(-1.6f, 1.6f);
-
-                Dust dust = Dust.NewDustPerfect(dustSpawnPos, 267);
-                dust.velocity = dustVelocity;
-                dust.color = Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.25f, 0.85f));
-                dust.scale = Main.rand.NextFloat(
-                    MathHelper.Lerp(0.7f, 0.9f, heatInterpolant),
-                    MathHelper.Lerp(1.2f, 1.6f, heatInterpolant)
-                );
-                dust.noGravity = true;
-            }
-
-
-
-            // ================= GlowOrb：强化主喷流（明显前冲+更集中） =================
-            int glowCount = 15 + (int)Math.Round(heatInterpolant * 4f);
-
-            // 👉 同样扩角（但比dust略收一点，形成层次）
-            float glowFanAngle = fanAngle * 1.2f;
-
-            for (int i = 0; i < glowCount; i++)
-            {
-                float t = glowCount == 1 ? 0.5f : i / (float)(glowCount - 1);
-                float angleOffset = MathHelper.Lerp(-glowFanAngle, glowFanAngle, t);
-
-                Vector2 glowDirection = direction.RotatedBy(angleOffset);
-
-                float centerWeight = 3f - Math.Abs(t - 0.5f) * 0.5f;
-
-                Vector2 glowVelocity = glowDirection * Main.rand.NextFloat(
-                    MathHelper.Lerp(2.5f, 4.5f, heatInterpolant),
-                    MathHelper.Lerp(5.5f, 8.5f, heatInterpolant)
-                ) * centerWeight;
-
-                GlowOrbParticle glow = new GlowOrbParticle(
-                    muzzlePos + glowDirection * Main.rand.NextFloat(0.5f, 3.2f),
-                    glowVelocity,
-                    false,
-                    20 + (int)(heatInterpolant * 10f),
-                    Main.rand.NextFloat(
-                        MathHelper.Lerp(0.7f, 0.95f, heatInterpolant),
-                        MathHelper.Lerp(1.1f, 1.6f, heatInterpolant)
-                    ),
-                    Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.4f, 0.9f)),
-                    true,
-                    true
-                );
-
-                GeneralParticleHandler.SpawnParticle(glow);
-            }
-
-
-            // 记住了，这个叫：“中心偏置喷流模型（Center-biased jet distribution）”
-
-
-
-
-
-
+            // =========================
+            // 4. 中轴前端补一个亮芯
+            // =========================
+            Particle coreFlash = new CustomSpark(
+                muzzlePos + direction * Main.rand.NextFloat(1.2f, 3.5f),
+                direction * Main.rand.NextFloat(
+                    MathHelper.Lerp(4.5f, 5.8f, heatInterpolant),
+                    MathHelper.Lerp(6.8f, 8.2f, heatInterpolant)),
+                "CalamityLegendsComeBack/Texture/KsTexture/window_04",
+                false,
+                10,
+                MathHelper.Lerp(0.11f, 0.16f, heatInterpolant),
+                Color.Lerp(techBlue, hotWhite, 0.55f) * 1.15f,
+                new Vector2(0.58f, 1.75f),
+                glowCenter: true,
+                shrinkSpeed: 1.05f,
+                glowCenterScale: 0.95f,
+                glowOpacity: 0.78f
+            );
+            GeneralParticleHandler.SpawnParticle(coreFlash);
+            normalShotFXParticles.Add(coreFlash);
         }
 
         #endregion

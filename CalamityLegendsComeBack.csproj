@@ -17,6 +17,7 @@
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
 	  <Folder Include="Weapons\BlossomFlux\SpecialArrow\" />
+	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\MoonEvent\参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
 	</ItemGroup>
 	<ItemGroup>

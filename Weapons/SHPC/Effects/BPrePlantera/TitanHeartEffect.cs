@@ -2,6 +2,7 @@
 using CalamityMod;
 using CalamityMod.Dusts;
 using CalamityMod.Items.Materials;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -12,6 +13,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     public class TitanHeartEffect : DefaultEffect
     {
+        private const string GlowBladeTexture = "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade";
+
         public override int EffectID => 8;
 
         // 真实物品ID（不再占位）
@@ -50,8 +53,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             // ===== 放大体积 =====
             Vector2 center = projectile.Center;
 
-            projectile.width = (int)(projectile.width * 1.6f);
-            projectile.height = (int)(projectile.height * 1.6f);
+            projectile.width = 250;
+            projectile.height = 250;
 
             projectile.Center = center;
 
@@ -65,8 +68,72 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             projectile.damage = (int)(projectile.damage * 0.55f);
         }
 
+        public override void AI(Projectile projectile, Player owner)
+        {
+            // 以弹幕中心为圆心，生成每隔 90 度分布的一圈旋转刀光。
+            float spinPhase = Main.GlobalTimeWrappedHourly * 12f + projectile.identity * 0.37f;
+            float orbitRadius = 11f;
+            Color sparkColor = Color.Lerp(ThemeColor, StartColor, 0.35f) * 0.96f;
 
 
+
+
+
+            for (int i = 0; i < 4; i++)
+            {
+                // =========================
+                // 基础角度（四等分90°）
+                // =========================
+                float angle = spinPhase + MathHelper.PiOver2 * i;
+
+                // =========================
+                // 径向方向（决定位置 + 视觉朝向）
+                // =========================
+                Vector2 radialDirection = angle.ToRotationVector2();
+
+                // =========================
+                // 切线方向（决定旋转运动）
+                // =========================
+                Vector2 tangentialVelocity = radialDirection.RotatedBy(MathHelper.PiOver2) * 1.55f;
+
+                // =========================
+                // 生成位置（圆周上）
+                // =========================
+                Vector2 sparkCenter = projectile.Center + radialDirection * orbitRadius;
+
+                // =========================
+                // 最终速度（旋转 + 轻微跟随本体）
+                // =========================
+                Vector2 finalVelocity = tangentialVelocity + projectile.velocity * 0.03f;
+
+                // =========================
+                // 计算修正旋转（关键）
+                // 👉 让贴图朝“径向”，而不是朝“速度”
+                // =========================
+                float extraRot = radialDirection.ToRotation() - finalVelocity.ToRotation();
+
+                Particle customLine = new CustomSpark(
+                    sparkCenter,
+                    finalVelocity,
+                    GlowBladeTexture,
+                    false,
+                    2,
+                    0.16f,
+                    sparkColor,
+                    new Vector2(0.56f, 1.15f), // 👉 已压短
+                    glowCenter: true,
+                    shrinkSpeed: 1.2f,
+                    glowCenterScale: 0.92f,
+                    glowOpacity: 0.72f,
+                    extraRotation: extraRot
+                );
+
+                GeneralParticleHandler.SpawnParticle(customLine);
+            }
+
+
+
+        }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
