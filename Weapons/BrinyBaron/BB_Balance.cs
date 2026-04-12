@@ -5,8 +5,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     internal static class BB_Balance
     {
-        private static float[] BladeScales => new float[] { 0.35f, 0.45f, 0.5f, 0.62f, 0.76f, 0.92f };
-        
+        private static float[] BladeScales => new float[] { 0.75f, 1.05f, 1.35f, 1.65f, 1.95f, 2.25f };
+
         private static readonly float[] BladeGiantScaleFactors = { 2.4f, 2.4f, 2.4f, 2.4f, 2.4f, 2.4f };
         private static readonly int[] BladeGiantGrowFrames = { 42, 42, 42, 42, 42, 42 };
         private static readonly int[] BladeGiantShrinkFrames = { 38, 38, 38, 38, 38, 38 };
@@ -18,11 +18,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         private static readonly int[] TideMaxValues = { 2, 3, 4, 5, 6, 7, 8 };
 
-        private static readonly float[] ShortDashSpeedMultipliers = { 0.5f, 0.68f, 0.75f, 1f, 1.2f };
+        private static readonly float[] ShortDashSpeedMultipliers = { 0.5f, 0.575f, 0.65f, 0.725f, 0.8f };
         private static readonly float[] ShortDashContactDamageMultipliers = { 1f, 1f, 1f, 2f, 2f };
         private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
 
-        private static readonly float[] SpinRushSizeMultipliers = { 1f, 1.2f, 1.5f, 1.75f };
+        private static readonly float[] SpinRushSizeMultipliers = { 1f, 1.2f, 1.5f, 2.75f };
         private static readonly float[] SpinRushSpeedMultipliers = { 1f, 1.15f, 1.25f, 1.35f };
 
         private static readonly float[] QuickDashBaseDamageMultipliers = { 1f, 1.25f, 1.55f, 2f };

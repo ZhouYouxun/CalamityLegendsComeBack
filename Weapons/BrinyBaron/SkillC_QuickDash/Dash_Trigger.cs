@@ -125,6 +125,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             {
                 doubleTapTimer = 0;
                 lastTapDirection = 0;
+                IsUsingSlashDash = true;
                 dashCooldownTimer = focusPlayer.IsFocusModeActive
                     ? Math.Max(1, growthProfile.DashCooldown / 2)
                     : growthProfile.DashCooldown;

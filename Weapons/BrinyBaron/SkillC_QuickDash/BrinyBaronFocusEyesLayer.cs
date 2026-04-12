@@ -36,18 +36,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             Color glowColor = Color.Lerp(new Color(110, 220, 255, 0), new Color(190, 255, 255, 0), flash) * (0.95f * intensity);
             Color coreColor = Color.Lerp(new Color(170, 245, 255, 0), Color.White, 0.45f + flash * 0.35f) * (1.05f * intensity);
 
-            float jitterRadiusPrimary = 4f + 6f * intensity;
-            float jitterRadiusSecondary = 3f + 5f * intensity;
-            Vector2 jitterPrimary = new Vector2(
-                (float)System.Math.Sin(time * 21f + player.whoAmI * 0.7f),
-                (float)System.Math.Cos(time * 17f + player.whoAmI * 0.43f)) * jitterRadiusPrimary;
-            Vector2 jitterSecondary = new Vector2(
-                (float)System.Math.Cos(time * 19f + player.whoAmI * 0.61f),
-                (float)System.Math.Sin(time * 23f + player.whoAmI * 0.35f)) * jitterRadiusSecondary;
+            //float jitterRadiusPrimary = 4f + 6f * intensity;
+            //float jitterRadiusSecondary = 3f + 5f * intensity;
+            //Vector2 jitterPrimary = new Vector2(
+            //    (float)System.Math.Sin(time * 21f + player.whoAmI * 0.7f),
+            //    (float)System.Math.Cos(time * 17f + player.whoAmI * 0.43f)) * jitterRadiusPrimary;
+            //Vector2 jitterSecondary = new Vector2(
+            //    (float)System.Math.Cos(time * 19f + player.whoAmI * 0.61f),
+            //    (float)System.Math.Sin(time * 23f + player.whoAmI * 0.35f)) * jitterRadiusSecondary;
 
             float baseRotation = player.velocity.X * 0.01f;
-            DrawGlowPair(drawInfo, texture, drawPosition + jitterPrimary, origin, glowColor, coreColor, baseRotation, scale, effects);
-            DrawGlowPair(drawInfo, texture, drawPosition + jitterSecondary, origin, glowColor * 0.8f, coreColor * 0.92f, baseRotation + MathHelper.PiOver2, scale * 0.96f, effects);
+            DrawGlowPair(drawInfo, texture, drawPosition, origin, glowColor, coreColor, baseRotation, scale, effects);
+            DrawGlowPair(drawInfo, texture, drawPosition, origin, glowColor * 0.85f, coreColor * 0.9f, baseRotation + MathHelper.PiOver2, scale * 0.95f, effects);
+        
         }
 
         private static void DrawGlowPair(PlayerDrawSet drawInfo, Texture2D texture, Vector2 drawPosition, Vector2 origin, Color glowColor, Color coreColor, float rotation, float scale, SpriteEffects effects)
@@ -81,10 +82,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
         private static Vector2 GetEyeCenter(PlayerDrawSet drawInfo, Player player)
         {
-            Vector2 headCenter = player.headPosition + player.MountedCenter + new Vector2(0f, player.gfxOffY - 18f);
-            float horizontalOffset = player.direction * 6f;
-            float verticalOffset = player.gravDir == 1f ? -2f : 2f;
+            Vector2 headCenter = player.headPosition + player.MountedCenter + new Vector2(
+                0f,
+                player.gfxOffY - 18f - 4f // ⭐这里改：整体上下（推荐先改这里）
+            );
 
+            // ⭐这里改：左右（6f是默认眼睛位置）
+            float horizontalOffset = player.direction * (1f + 2f);
+
+            // ⭐这里改：上下微调（-2f是默认）
+            float offset = -16f; // ⭐只改这个数（整体偏移强度）
+            float verticalOffset = (player.gravDir == 1f ? -2f : 2f) - offset;
+
+            // ⭐一般不用动
             if (player.gravDir == -1f)
                 headCenter.Y += 8f;
 

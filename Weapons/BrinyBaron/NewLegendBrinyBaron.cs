@@ -62,6 +62,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 if (!CanUseDashTornado && !CanUseSpinRush)
                     return false;
 
+                BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                if (!dashCooldown.CanUseDash)
+                    return false;
+
                 BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
                 int spinRushType = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
                 int dashType = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
@@ -104,9 +108,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             // =========================
             if (player.altFunctionUse == 2)
             {
+                BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+
                 if (type == ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>())
                 {
                     Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
+                    dashCooldown.StartCooldown();
                     BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
                     tidePlayer.TideValue = Math.Max(0, tidePlayer.TideValue - 1);
                     return false;
@@ -115,6 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
                 Vector2 shootVelocity = velocity.SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(source, position, shootVelocity, type, damage, knockback, player.whoAmI);
+                dashCooldown.StartCooldown();
                 return false;
             }
 
@@ -206,22 +214,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
+            BrinyBaronRightClickDashCooldownPlayer dashCooldown = Main.LocalPlayer.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
             BBSuperDashCooldownPlayer superDashCooldown = Main.LocalPlayer.GetModPlayer<BBSuperDashCooldownPlayer>();
-            if (!superDashCooldown.IsCoolingDown)
-                return;
 
             Texture2D barBackground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
             Texture2D barForeground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
-            float progress = superDashCooldown.CooldownCompletion;
-
-            Rectangle frameCrop = new Rectangle(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
             Vector2 barOrigin = barBackground.Size() * 0.5f;
-            Vector2 drawPos = position + Vector2.UnitY * scale * (frame.Height - 20f);
             Vector2 totalScale = Vector2.One * scale * 3.34f;
-            Color barColor = new Color(255, 225, 110);
 
-            spriteBatch.Draw(barBackground, drawPos, null, barColor * 0.55f, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
-            spriteBatch.Draw(barForeground, drawPos, frameCrop, barColor, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
+            if (dashCooldown.IsCoolingDown)
+            {
+                float progress = dashCooldown.CooldownCompletion;
+                Rectangle frameCrop = new Rectangle(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
+                Vector2 drawPos = position + Vector2.UnitY * scale * (frame.Height - 20f);
+                Color barColor = new Color(92, 210, 255);
+
+                spriteBatch.Draw(barBackground, drawPos, null, barColor * 0.55f, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(barForeground, drawPos, frameCrop, barColor, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
+            }
+
+            if (!superDashCooldown.IsCoolingDown)
+                return;
+
+            float superProgress = superDashCooldown.CooldownCompletion;
+            Rectangle superFrameCrop = new Rectangle(0, 0, (int)(barForeground.Width * superProgress), barForeground.Height);
+            Vector2 superDrawPos = position + Vector2.UnitY * scale * (frame.Height - (dashCooldown.IsCoolingDown ? 8f : 20f));
+            Color superBarColor = new Color(255, 225, 110);
+
+            spriteBatch.Draw(barBackground, superDrawPos, null, superBarColor * 0.55f, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(barForeground, superDrawPos, superFrameCrop, superBarColor, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
         }
 
         public override void AddRecipes()

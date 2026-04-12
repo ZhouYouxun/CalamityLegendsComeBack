@@ -87,6 +87,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             Projectile.spriteDirection = DashDirection;
             Projectile.direction = DashDirection;
             player.direction = DashDirection;
+
+
+
+
+            float swingDirection = DashDirection;
+            if (SwingIndex == 1)
+                swingDirection *= -1f;
+
+            float startAngle = -swingWidth / 2.15f;
+            float startRotationOffset = MathHelper.ToRadians(startAngle * -swingDirection);
+
+            // 让弹幕出生第一帧就处于挥砍起始角度
+            Projectile.rotation = (player.MountedCenter - Projectile.Center).ToRotation() + startRotationOffset;
+
+            // 如果你的基类绘制还吃 spriteDirection，这句也一起稳住
+            Projectile.spriteDirection = DashDirection;
+            Projectile.direction = DashDirection;
+            player.direction = DashDirection;
         }
 
         public override void AdditionalAI()
@@ -114,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 dashStarted = false;
                 dashVelocity = Vector2.Zero;
 
-                Projectile.Opacity += 0.02f;
+                Projectile.Opacity = MathHelper.Lerp(0f, 1f, StartupCompletion);
                 Projectile.scale = baseScale * MathHelper.Lerp(0.625f, 0.8f, StartupCompletion);
 
                 // 海蓝版启动闪光和抹刀光
@@ -151,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             // =========================
             else if (inCooldown)
             {
-                Projectile.Opacity -= 0.1f;
+                Projectile.Opacity = MathHelper.Lerp(1f, 0f, CooldownCompletion);
                 Projectile.scale = baseScale * MathHelper.Lerp(0.85f, 0.625f, CooldownCompletion);
 
                 // 给玩家一点减速收刀感

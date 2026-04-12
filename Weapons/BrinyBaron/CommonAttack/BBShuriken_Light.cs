@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 150;
+            Projectile.timeLeft = 100;
             Projectile.extraUpdates = 1;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
@@ -50,18 +50,38 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (Projectile.velocity.LengthSquared() < 0.01f)
                 Projectile.velocity = Vector2.UnitY * -BaseSpeed;
         }
-
+        float maxTurnAngle;
         public override void AI()
         {
+            float t = Utils.GetLerpValue(0f, 60f, Projectile.timeLeft, true);
+            float maxTurnAngle = MathHelper.Lerp(0.05f, MathHelper.Pi, 1f - t);
+
             NPC target = FindNearestTarget(HomingRange);
             if (target != null)
             {
                 Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * Math.Max(BaseSpeed, Projectile.velocity.Length());
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, HomingLerp);
+                Vector2 currentDir = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+                Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+
+                // 当前方向 → 目标方向的角度差
+                float angle = currentDir.AngleTo(desiredDir);
+
+                // 限制最大转向角
+                float clampedAngle = MathHelper.Clamp(angle, -maxTurnAngle, maxTurnAngle);
+
+                // 计算旋转方向（左还是右）
+                float cross = currentDir.X * desiredDir.Y - currentDir.Y * desiredDir.X;
+                float sign = Math.Sign(cross);
+
+                // 应用旋转
+                Vector2 newDir = currentDir.RotatedBy(clampedAngle * sign);
+
+                // 重新设置速度
+                Projectile.velocity = newDir * Math.Max(BaseSpeed, Projectile.velocity.Length());
             }
             else
             {
-                Projectile.velocity *= 0.9925f;
+                Projectile.velocity *= 0.9825f;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;

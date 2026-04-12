@@ -707,81 +707,93 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             {
                 giantTimer++;
 
+
+                // 然后是巨大化攻击的特效部分
                 {
-                    // =========================
-                    // 巨大化挥砍：主喷射尾迹 + 两侧45°辅喷流
-                    // =========================
                     Vector2 slashDirection = (FinalRotation + MathHelper.ToRadians(-45f)).ToRotationVector2();
-                    Vector2 backwardDirection = (Projectile.rotation + RotationOffset + MathHelper.ToRadians(90f)).ToRotationVector2();
+                    Vector2 right = slashDirection.RotatedBy(MathHelper.PiOver2);
 
-                    // 主喷射尾迹：更密、更跟手、更像沿刀路拖出来的高能尾流
-                    Vector2 trailStart = Owner.Center + slashDirection * ScaleDistance(78f);
-                    for (int i = 0; i < 14; i++)
+                    float sideWave = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
+
+                    // =========================
+                    // 核心中心闪光（稳定锚点）
+                    // =========================
+                    Particle centerFlare = new CustomSpark(
+                        Projectile.Center + right * sideWave * ScaleDistance(150f),
+                        slashDirection * 0.02f,
+                        "CalamityLegendsComeBack/Texture/KsTexture/window_04",
+                        false,
+                        10,
+                        0.26f * CurrentVisualScale,
+                        new Color(160, 242, 255) * 1.96f,
+                        new Vector2(0.56f, 2.15f),
+                        glowCenter: true,
+                        shrinkSpeed: 1.2f,
+                        glowCenterScale: 0.92f,
+                        glowOpacity: 0.72f
+                    );
+                    //GeneralParticleHandler.SpawnParticle(centerFlare);
+
+                    // =========================
+                    // 刀身线（贴刀，不超前）
+                    // =========================
+                    Vector2 tip = Owner.Center + slashDirection * ScaleDistance(120f);
+
+                    Particle customLine = new CustomSpark(
+                        tip + right * sideWave * ScaleDistance(6f),
+                        slashDirection * 0.03f,
+                        "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
+                        false,
+                        2,
+                        0.16f * CurrentVisualScale,
+                        new Color(160, 242, 255) * 0.96f,
+                        new Vector2(0.56f, 1.2f), // 👉 已压短
+                        glowCenter: true,
+                        shrinkSpeed: 1.2f,
+                        glowCenterScale: 0.92f,
+                        glowOpacity: 0.72f
+                    );
+                    GeneralParticleHandler.SpawnParticle(customLine);
+
+                    // =========================
+                    // 中间填充（轻量 BloomCircle，不外扩）
+                    // =========================
+                    for (int i = 0; i < 6; i++)
                     {
-                        // 沿着刀路依次排开，而不是完全随机散点
-                        float step = ScaleDistance(12f + i * 12f);
-                        Vector2 spawnPos =
-                            trailStart +
-                            slashDirection * step -
-                            backwardDirection * ScaleDistance(i * 6f) +
-                            Main.rand.NextVector2Circular(7f, 7f) * CurrentVisualScale;
+                        float t = i / 5f;
 
-                        // 主尾流：扩散更小，速度更收敛，但数量更多
+                        Vector2 pos =
+                            Owner.Center +
+                            slashDirection * ScaleDistance(40f + t * 80f) +
+                            right * Main.rand.NextFloat(-6f, 6f) * CurrentVisualScale;
+
                         Vector2 vel =
-                            -backwardDirection.RotatedByRandom(0.11f) * Main.rand.NextFloat(8f, 15f) -
-                            Owner.velocity * 0.88f;
+                            -slashDirection * Main.rand.NextFloat(1f, 3f) +
+                            right * Main.rand.NextFloat(-1f, 1f);
 
                         GeneralParticleHandler.SpawnParticle(
                             new CustomSpark(
-                                spawnPos,
+                                pos,
                                 vel,
                                 "CalamityMod/Particles/BloomCircle",
                                 false,
-                                24,
-                                Main.rand.NextFloat(0.4f, 0.65f) * CurrentVisualScale,
-                                Main.rand.NextBool(3) ? Color.DeepSkyBlue : Color.Cyan,
-                                new Vector2(1.2f, 0.58f),
-                                shrinkSpeed: 0.92f
+                                14,
+                                Main.rand.NextFloat(0.18f, 0.32f) * CurrentVisualScale,
+                                Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                                new Vector2(0.9f, 0.5f), // 👉 扁平一点
+                                shrinkSpeed: 0.95f
                             )
                         );
                     }
-
-                    // 两侧45°辅喷流：很小、很短，只做点缀
-                    for (int side = -1; side <= 1; side += 2)
-                    {
-                        Vector2 sideDirection = (-backwardDirection).RotatedBy(MathHelper.ToRadians(45f) * side);
-                        Vector2 sideStart =
-                            Owner.Center +
-                            slashDirection * ScaleDistance(132f) +
-                            sideDirection * ScaleDistance(10f);
-
-                        for (int j = 0; j < 4; j++)
-                        {
-                            Vector2 sideSpawnPos =
-                                sideStart +
-                                sideDirection * ScaleDistance(j * 11f) +
-                                Main.rand.NextVector2Circular(4f, 4f) * CurrentVisualScale;
-
-                            Vector2 sideVel =
-                                sideDirection.RotatedByRandom(0.08f) * Main.rand.NextFloat(4.6f, 7.4f) -
-                                Owner.velocity * 0.4f;
-
-                            GeneralParticleHandler.SpawnParticle(
-                                new CustomSpark(
-                                    sideSpawnPos,
-                                    sideVel,
-                                    "CalamityMod/Particles/BloomCircle",
-                                    false,
-                                    16,
-                                    Main.rand.NextFloat(0.18f, 0.3f) * CurrentVisualScale,
-                                    side > 0 ? Color.Cyan : Color.DeepSkyBlue,
-                                    new Vector2(0.82f, 0.38f),
-                                    shrinkSpeed: 0.955f
-                                )
-                            );
-                        }
-                    }
                 }
+
+
+
+
+
+
+
+
 
 
 
@@ -899,120 +911,120 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         // =========================
         private void SpawnGiantChargeParticles(float growProgress)
         {
-            float scaledDistance = ScaleDistance(MathHelper.Lerp(120f, 260f, growProgress));
+            //float scaledDistance = ScaleDistance(MathHelper.Lerp(120f, 260f, growProgress));
 
-            for (int i = 0; i < 5; i++)
-            {
-                Vector2 particleVel = new Vector2(0f, 8f * -Projectile.ai[1] * Owner.direction)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    Vector2 particleVel = new Vector2(0f, 8f * -Projectile.ai[1] * Owner.direction)
+            //        .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
 
-                Vector2 particlePos = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(30f * CurrentVisualScale, scaledDistance), 0f)
-                    .RotatedBy(SlashAngle);
+            //    Vector2 particlePos = Owner.Center +
+            //        new Vector2(Main.rand.NextFloat(30f * CurrentVisualScale, scaledDistance), 0f)
+            //        .RotatedBy(SlashAngle);
 
-                GeneralParticleHandler.SpawnParticle(
-                    new LineParticle(
-                        particlePos,
-                        -particleVel.RotatedByRandom(0.2f) * MathHelper.Lerp(1.2f, 2.2f, growProgress),
-                        false,
-                        19,
-                        Main.rand.NextFloat(0.6f, 1.2f) * CurrentVisualScale * 0.6f,
-                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan
-                    )
-                );
+            //    GeneralParticleHandler.SpawnParticle(
+            //        new LineParticle(
+            //            particlePos,
+            //            -particleVel.RotatedByRandom(0.2f) * MathHelper.Lerp(1.2f, 2.2f, growProgress),
+            //            false,
+            //            19,
+            //            Main.rand.NextFloat(0.6f, 1.2f) * CurrentVisualScale * 0.6f,
+            //            Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan
+            //        )
+            //    );
 
-                Dust frost = Dust.NewDustPerfect(
-                    particlePos,
-                    DustID.Frost,
-                    -particleVel.RotatedByRandom(0.25f) * Main.rand.NextFloat(0.4f, 1.1f)
-                );
-                frost.noGravity = true;
-                frost.scale = Main.rand.NextFloat(1.0f, 1.6f) * CurrentVisualScale * 0.5f;
-                frost.color = Color.Aqua;
-            }
+            //    Dust frost = Dust.NewDustPerfect(
+            //        particlePos,
+            //        DustID.Frost,
+            //        -particleVel.RotatedByRandom(0.25f) * Main.rand.NextFloat(0.4f, 1.1f)
+            //    );
+            //    frost.noGravity = true;
+            //    frost.scale = Main.rand.NextFloat(1.0f, 1.6f) * CurrentVisualScale * 0.5f;
+            //    frost.color = Color.Aqua;
+            //}
         }
 
         private void SpawnGiantSlashParticles()
         {
-            float dustDistance = ScaleDistance(180f);
+            //float dustDistance = ScaleDistance(180f);
 
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 spawnPos = Owner.Center +
-                    new Vector2(dustDistance, 0f)
-                    .RotatedBy(SlashAngle)
-                    .RotatedByRandom(0.3f);
+            //for (int i = 0; i < 12; i++)
+            //{
+            //    Vector2 spawnPos = Owner.Center +
+            //        new Vector2(dustDistance, 0f)
+            //        .RotatedBy(SlashAngle)
+            //        .RotatedByRandom(0.3f);
 
-                Dust dust = Dust.NewDustPerfect(
-                    spawnPos,
-                    Main.rand.NextBool() ? DustID.GemSapphire : DustID.Frost,
-                    Vector2.One.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(0.3f, 1.1f)
-                );
-                dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(1.3f, 2.4f) * CurrentVisualScale * 0.5f;
-                dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
-            }
+            //    Dust dust = Dust.NewDustPerfect(
+            //        spawnPos,
+            //        Main.rand.NextBool() ? DustID.GemSapphire : DustID.Frost,
+            //        Vector2.One.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(0.3f, 1.1f)
+            //    );
+            //    dust.noGravity = true;
+            //    dust.scale = Main.rand.NextFloat(1.3f, 2.4f) * CurrentVisualScale * 0.5f;
+            //    dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
+            //}
 
-            for (int i = 0; i < 6; i++)
-            {
-                float randRot = Main.rand.NextFloat(-20f, -100f);
-                Vector2 dustVel = new Vector2(0f, 11f * -Projectile.ai[1] * Owner.direction)
-                    .RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
+            //for (int i = 0; i < 6; i++)
+            //{
+            //    float randRot = Main.rand.NextFloat(-20f, -100f);
+            //    Vector2 dustVel = new Vector2(0f, 11f * -Projectile.ai[1] * Owner.direction)
+            //        .RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
 
-                Vector2 placement = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(120f * CurrentVisualScale, 520f * CurrentVisualScale), 0f)
-                    .RotatedBy(SlashAngle);
+            //    Vector2 placement = Owner.Center +
+            //        new Vector2(Main.rand.NextFloat(120f * CurrentVisualScale, 520f * CurrentVisualScale), 0f)
+            //        .RotatedBy(SlashAngle);
 
-                GeneralParticleHandler.SpawnParticle(
-                    new CustomSpark(
-                        placement,
-                        dustVel,
-                        "CalamityMod/Particles/BloomCircle",
-                        false,
-                        33,
-                        Main.rand.NextFloat(0.45f, 0.7f) * CurrentVisualScale * 0.5f,
-                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
-                        new Vector2(1f, 1f),
-                        shrinkSpeed: 0.1f
-                    )
-                );
-            }
+            //    GeneralParticleHandler.SpawnParticle(
+            //        new CustomSpark(
+            //            placement,
+            //            dustVel,
+            //            "CalamityMod/Particles/BloomCircle",
+            //            false,
+            //            33,
+            //            Main.rand.NextFloat(0.45f, 0.7f) * CurrentVisualScale * 0.5f,
+            //            Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+            //            new Vector2(1f, 1f),
+            //            shrinkSpeed: 0.1f
+            //        )
+            //    );
+            //}
 
-            for (int i = 0; i < 4; i++)
-            {
-                Vector2 beamPos = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(160f * CurrentVisualScale, 560f * CurrentVisualScale), 0f)
-                    .RotatedBy(SlashAngle);
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    Vector2 beamPos = Owner.Center +
+            //        new Vector2(Main.rand.NextFloat(160f * CurrentVisualScale, 560f * CurrentVisualScale), 0f)
+            //        .RotatedBy(SlashAngle);
 
-                Vector2 beamVel = -Vector2.UnitY
-                    .RotatedBy(FinalRotation)
-                    .RotatedByRandom(0.3f)
-                    * Main.rand.NextFloat(10f, 20f);
+            //    Vector2 beamVel = -Vector2.UnitY
+            //        .RotatedBy(FinalRotation)
+            //        .RotatedByRandom(0.3f)
+            //        * Main.rand.NextFloat(10f, 20f);
 
-                Dust gem = Dust.NewDustPerfect(beamPos, DustID.GemSapphire, beamVel);
-                gem.noGravity = true;
-                gem.scale = Main.rand.NextFloat(1.5f, 2.6f) * CurrentVisualScale * 0.45f;
-                gem.color = Color.DeepSkyBlue;
-            }
+            //    Dust gem = Dust.NewDustPerfect(beamPos, DustID.GemSapphire, beamVel);
+            //    gem.noGravity = true;
+            //    gem.scale = Main.rand.NextFloat(1.5f, 2.6f) * CurrentVisualScale * 0.45f;
+            //    gem.color = Color.DeepSkyBlue;
+            //}
         }
 
         private void SpawnGiantShrinkParticles(float shrinkProgress)
         {
-            for (int i = 0; i < 2; i++)
-            {
-                Vector2 particlePos = Owner.Center +
-                    new Vector2(Main.rand.NextFloat(40f * CurrentVisualScale, 180f * CurrentVisualScale), 0f)
-                    .RotatedBy(SlashAngle);
+            //for (int i = 0; i < 2; i++)
+            //{
+            //    Vector2 particlePos = Owner.Center +
+            //        new Vector2(Main.rand.NextFloat(40f * CurrentVisualScale, 180f * CurrentVisualScale), 0f)
+            //        .RotatedBy(SlashAngle);
 
-                Dust dust = Dust.NewDustPerfect(
-                    particlePos,
-                    DustID.Water,
-                    Main.rand.NextVector2Circular(1.5f, 1.5f)
-                );
-                dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(0.9f, 1.5f) * MathHelper.Lerp(1.2f, 0.6f, shrinkProgress) * CurrentVisualScale;
-                dust.color = Color.Cyan;
-            }
+            //    Dust dust = Dust.NewDustPerfect(
+            //        particlePos,
+            //        DustID.Water,
+            //        Main.rand.NextVector2Circular(1.5f, 1.5f)
+            //    );
+            //    dust.noGravity = true;
+            //    dust.scale = Main.rand.NextFloat(0.9f, 1.5f) * MathHelper.Lerp(1.2f, 0.6f, shrinkProgress) * CurrentVisualScale;
+            //    dust.color = Color.Cyan;
+            //}
         }
 
         private static float ResolveGiantSlashRotationDegrees(float startAngle, float loopEndAngle, float slashEndAngle, float progress)
@@ -1054,6 +1066,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
                 float drawScale = CurrentVisualScale;
                 SpriteEffects drawEffects = spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                float giantBodyOpacity = 1f;
+                float giantGhostOpacity = 0f;
+
+                if (IsGiantComboStage)
+                {
+                    if (giantGrowing)
+                    {
+                        float growProgress = Utils.GetLerpValue(0f, giantGrowFrames, giantTimer, true);
+                        giantBodyOpacity = MathHelper.Lerp(1f, 0f, growProgress);
+                        giantGhostOpacity = growProgress;
+                    }
+                    else if (giantSlashing)
+                    {
+                        giantBodyOpacity = 0f;
+                        giantGhostOpacity = 1f;
+                    }
+                    else if (giantShrinking)
+                    {
+                        float shrinkProgress = Utils.GetLerpValue(0f, giantShrinkFrames, giantTimer, true);
+                        giantBodyOpacity = MathHelper.Lerp(0f, 1f, shrinkProgress);
+                        giantGhostOpacity = 1f - shrinkProgress;
+                    }
+                    else if (CurrentComboStage == 4)
+                    {
+                        giantGhostOpacity = 1f;
+                    }
+                }
+
+                Color bladeDrawColor = lightColor * giantBodyOpacity;
 
                 if (Animation > useAnim * 0.2f || giantGrowing || giantSlashing || giantShrinking)
                 {
@@ -1071,11 +1112,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                 if (giantGrowing || giantSlashing || giantShrinking || CurrentComboStage == 4)
                 {
+                    Color ghostMainColor = Color.Lerp(Color.DeepSkyBlue, Color.Cyan, 0.35f);
+
                     for (int i = 0; i < 20; i++)
                     {
                         float ringRotation = MathHelper.TwoPi * i / 20f;
-                        Vector2 drawOffset = ringRotation.ToRotationVector2() * 6.5f * drawScale * fadeIn;
-                        Color auraColor = Color.Lerp(Color.DeepSkyBlue, Color.White, 0.18f) with { A = 0 } * 0.17f * fadeIn;
+                        Vector2 drawOffset = ringRotation.ToRotationVector2() * 6f * fadeIn;
+                        Color auraColor = ghostMainColor with { A = 0 } * 0.15f * fadeIn * giantGhostOpacity;
 
                         Main.EntitySpriteDraw(
                             earthGhost.Value,
@@ -1085,24 +1128,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                             Projectile.rotation + RotationOffset + r,
                             FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
                             Projectile.scale,
-                            drawEffects
-                        );
-                    }
-
-                    for (int i = 0; i < 12; i++)
-                    {
-                        float ringRotation = MathHelper.TwoPi * i / 12f;
-                        Vector2 drawOffset = ringRotation.ToRotationVector2() * 11f * drawScale * fadeIn;
-                        Color auraColor = Color.Lerp(Color.Cyan, Color.White, 0.32f) with { A = 0 } * 0.11f * fadeIn;
-
-                        Main.EntitySpriteDraw(
-                            earthGhost.Value,
-                            Projectile.Center - Main.screenPosition + drawOffset + new Vector2(0f, Owner.gfxOffY),
-                            earthGhost.Value.Frame(1, FrameCount, 0, Frame),
-                            auraColor,
-                            Projectile.rotation + RotationOffset + r,
-                            FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
-                            Projectile.scale * 1.04f,
                             drawEffects
                         );
                     }
@@ -1129,7 +1154,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     tex.Value,
                     Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY),
                     tex.Frame(1, FrameCount, 0, Frame),
-                    lightColor,
+                    bladeDrawColor,
                     Projectile.rotation + RotationOffset + r,
                     FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
                     Projectile.scale,
