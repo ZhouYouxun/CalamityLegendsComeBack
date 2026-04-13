@@ -18,6 +18,7 @@
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
 	  <Folder Include="Weapons\BlossomFlux\SpecialArrow\" />
+	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\MoonEvent\参考文献\" />
 	  <Folder Include="Weapons\SHPC\RightClick\枪身特效参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />

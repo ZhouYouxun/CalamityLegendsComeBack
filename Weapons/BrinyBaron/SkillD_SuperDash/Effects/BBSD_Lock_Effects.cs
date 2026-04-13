@@ -96,34 +96,33 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
 
             Vector2 direction = (endWorld - startWorld).SafeNormalize(Vector2.UnitX);
-            for (float step = 12f; step < distance - 12f; step += 12f)
-            {
-                float completion = step / distance;
-                float pulse = 0.75f + 0.25f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 22f - completion * 8f);
-                Vector2 drawPosition = startWorld - Main.screenPosition + direction * step;
+            Vector2 midPoint = Vector2.Lerp(startWorld, endWorld, 0.5f) - Main.screenPosition;
+            float beamRotation = direction.ToRotation();
+            float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
+            Vector2 outerScale = new Vector2(distance / lineTex.Width, 0.22f * pulse);
+            Vector2 innerScale = new Vector2(distance / lineTex.Width, 0.12f * pulse);
 
-                Main.EntitySpriteDraw(
-                    lineTex,
-                    drawPosition,
-                    null,
-                    new Color(125, 220, 255, 0) * opacity * 0.75f,
-                    direction.ToRotation() + MathHelper.PiOver2,
-                    lineTex.Size() * 0.5f,
-                    new Vector2(0.011f * pulse, 0.96f),
-                    SpriteEffects.None,
-                    0f);
+            Main.EntitySpriteDraw(
+                lineTex,
+                midPoint,
+                null,
+                new Color(125, 220, 255, 0) * opacity * 0.82f,
+                beamRotation,
+                new Vector2(lineTex.Width * 0.5f, lineTex.Height * 0.5f),
+                outerScale,
+                SpriteEffects.None,
+                0f);
 
-                Main.EntitySpriteDraw(
-                    lineTex,
-                    drawPosition,
-                    null,
-                    new Color(255, 245, 205, 0) * opacity * 0.42f,
-                    direction.ToRotation() + MathHelper.PiOver2,
-                    lineTex.Size() * 0.5f,
-                    new Vector2(0.006f * pulse, 0.72f),
-                    SpriteEffects.None,
-                    0f);
-            }
+            Main.EntitySpriteDraw(
+                lineTex,
+                midPoint,
+                null,
+                new Color(255, 245, 205, 0) * opacity * 0.48f,
+                beamRotation,
+                new Vector2(lineTex.Width * 0.5f, lineTex.Height * 0.5f),
+                innerScale,
+                SpriteEffects.None,
+                0f);
 
             Main.EntitySpriteDraw(glowTex, startWorld - Main.screenPosition, null, new Color(145, 230, 255, 0) * opacity, 0f, glowTex.Size() * 0.5f, 0.24f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(glowTex, endWorld - Main.screenPosition, null, new Color(255, 234, 140, 0) * opacity, 0f, glowTex.Size() * 0.5f, 0.32f, SpriteEffects.None, 0f);

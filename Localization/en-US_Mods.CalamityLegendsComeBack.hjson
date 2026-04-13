@@ -40,11 +40,11 @@ Items: {
 				[c/66E6FF:The revised system no longer depends on souls; any material with sufficient energy density is now viable.]
 				[c/66E6FF:Different inputs produce drastically varied responses, with some combinations exhibiting anomalous amplification.]
 				[c/66E6FF:The control system was redesigned accordingly, forcing premature release before full containment.]
-				[c/66E6FF:In theory, this device is no longer limited by ammunition type—yet its true limits remain unknown.]
+				[c/66E6FF:In theory, this device is no longer limited by ammunition type鈥攜et its true limits remain unknown.]
 				[c/66E6FF:In barrage mode, all prior reliance on soul-based energy has been eliminated, replaced by a more primitive thermal drive.]
 				[c/66E6FF:To stabilize output, the cooling system was redefined, giving rise to new thermal instability effects.]
 				[c/66E6FF:With continued operation, the system will inevitably enter an overheat state, trading safety for greater output efficiency.]
-				[c/66E6FF:Without timely intervention, this “optimization” will ultimately consume the operator.]
+				[c/66E6FF:Without timely intervention, this 鈥渙ptimization鈥?will ultimately consume the operator.]
 				'''
 		}
 
@@ -185,7 +185,7 @@ AMMO: {
 	SHPCAmmo17: Clings to enemies, dealing repeated damage
 	SHPCAmmo18: Triggers a plague-like nuclear explosion
 	SHPCAmmo19: Unleashes torrents of agonized crimson souls
-	SHPCAmmo20: "[Beetle Husk – Not Implemented]"
+	SHPCAmmo20: "[Beetle Husk 鈥?Not Implemented]"
 	SHPCAmmo21: Fires a barrage of solar piercing lances
 	SHPCAmmo22: Releases vortex missiles during flight
 	SHPCAmmo23: Strong homing followed by a charged explosion
@@ -196,7 +196,7 @@ AMMO: {
 	SHPCAmmo28: Releases bouncing sacred geometric rays upon explosion
 	SHPCAmmo29: Sacrifices player health to empower itself; explosion restores life
 	SHPCAmmo30: Awakens the souls from the depths
-	SHPCAmmo31: "[Ectoplasm – Not Implemented]"
+	SHPCAmmo31: "[Ectoplasm 鈥?Not Implemented]"
 	SHPCAmmo32: Generates a miniature black hole that pulls in enemies
 	SHPCAmmo33: Performs repeated lemniscate tracking to erase enemies
 	SHPCAmmo34: Ricochets and releases piercing ice spikes
@@ -205,7 +205,7 @@ AMMO: {
 	SHPCAmmo37: Channel the wrath of the dragon
 	SHPCAmmo38: Fires lasers to purge enemies and unleash fractal geometry
 	SHPCAmmo39: Annihilates all enemies within sight
-	SHPCAmmo40: 喷射出大量的电磁光球
+	SHPCAmmo40: 鍠峰皠鍑哄ぇ閲忕殑鐢电鍏夌悆
 }
 
 Buffs: {
@@ -227,9 +227,9 @@ Keybinds: {
 
 Projectiles: {
 	BlossomFlux: {
-		BlossomFluxChloroplast.DisplayName: Chloroplast
+		BlossomFluxChloroplast.DisplayName: Chloroplast Drone
 		BFPassiveRain.DisplayName: Passive Arrow Rain
-		BFRight_HoldOut.DisplayName: BlossomFlux Holdout
+		BFRight_HoldOut.DisplayName: Blossomflux Holdout
 		BFSelectionPanel.DisplayName: Tactical Selection Panel
 		BFArrow_ABreak.DisplayName: Breakthrough Arrow
 		BFArrow_BRecov.DisplayName: Recovery Arrow
@@ -253,9 +253,9 @@ Projectiles: {
 		BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
 		BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
 		BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Rebound Slash
-		BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Tidal Burst
-		BBSD_Star.DisplayName: Super Dash Star
-		BBSD_Final_INV.DisplayName: B B S D_ Final_ I N V
+		Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Final Tide Execution
+		BBSD_Star.DisplayName: Final Tide Star
+		BBSD_Final_INV.DisplayName: Final Tide Brand
 	}
 
 	SHPC: {
@@ -298,35 +298,35 @@ Projectiles: {
 		NL_SHPC_EXWeapon.DisplayName: SHPC EX Super Laser
 		PlagueCell_Marked.DisplayName: Marked Plague Cell
 		SHPCPassiveOrb.DisplayName: SHPC Passive Orb
-		SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
-		TwistingNether_BlackSLASH.DisplayName: Twisting Nether_ Black S L A S H
-		TwistingNether_Blade.DisplayName: Twisting Nether_ Blade
-		TwistingNether_Shadow.DisplayName: Twisting Nether_ Shadow
+		SHPC_SuperLazer.DisplayName: SHPC Super Laser
+		TwistingNether_BlackSLASH.DisplayName: Twisting Nether Dark Slash
+		TwistingNether_Blade.DisplayName: Twisting Nether Blade
+		TwistingNether_Shadow.DisplayName: Twisting Nether Shadow
 	}
 
 	YharimsCrystal: {
-		YC_LeftHoldOut.DisplayName: Crystal Left Holdout
-		YC_RightHoldOut.DisplayName: Crystal Right Holdout
-		YC_EX_VIP.DisplayName: Crystal EX Core
-		YC_EX_Drone.DisplayName: Crystal EX Frigate
-		YC_EX_LaserCruiser.DisplayName: Crystal EX Laser Cruiser
-		YC_EX_Battleship.DisplayName: Crystal EX Battleship
-		YC_CBeam.DisplayName: Crystal Main Beam
-		YC_Left_Frigate.DisplayName: Crystal Left Frigate
-		YC_Left_LaserCruiser.DisplayName: Crystal Left Laser Cruiser
-		YC_Left_MissileBattleship.DisplayName: Crystal Left Missile Battleship
-		YC_Left_RepairShip.DisplayName: Crystal Left Repair Ship
-		YC_Left_FakeLazer.DisplayName: Crystal Faux Laser
-		YC_Left_Rocket.DisplayName: Crystal Homing Rocket
-		YC_Left_RepairBolt.DisplayName: Crystal Repair Bolt
-		YC_Left_Drone.DisplayName: Crystal Left Drone
-		YC_Right_Drone.DisplayName: Crystal Right Drone
-		YC_Right_LaserCruiser.DisplayName: Crystal Right Laser Cruiser
-		YC_Right_Battleship.DisplayName: Crystal Right Battleship
-		YC_Right_RepairShip.DisplayName: Crystal Right Repair Ship
-		YC_Right_RepairShield.DisplayName: Crystal Repair Shield
-		YC_Right_HeavyBolt.DisplayName: Crystal Heavy Bolt
-		YC_Right_TrackerLaser.DisplayName: Crystal Tracker Laser
+		YC_LeftHoldOut.DisplayName: Tyrant Crystal Left Formation
+		YC_RightHoldOut.DisplayName: Tyrant Crystal Right Formation
+		YC_EX_VIP.DisplayName: Tyrant Crystal EX Command Ship
+		YC_EX_Drone.DisplayName: Tyrant Crystal EX Frigate
+		YC_EX_LaserCruiser.DisplayName: Tyrant Crystal EX Cruiser
+		YC_EX_Battleship.DisplayName: Tyrant Crystal EX Battleship
+		YC_CBeam.DisplayName: Tyrant Crystal Main Beam
+		YC_Left_Frigate.DisplayName: Port Frigate
+		YC_Left_LaserCruiser.DisplayName: Port Cruiser
+		YC_Left_MissileBattleship.DisplayName: Port Battleship
+		YC_Left_RepairShip.DisplayName: Rear Repair Ship
+		YC_Left_FakeLazer.DisplayName: Decoy Laser
+		YC_Left_Rocket.DisplayName: Shipborne Homing Missile
+		YC_Left_RepairBolt.DisplayName: Repair Bolt
+		YC_Left_Drone.DisplayName: Port Drone
+		YC_Right_Drone.DisplayName: Starboard Drone
+		YC_Right_LaserCruiser.DisplayName: Starboard Cruiser
+		YC_Right_Battleship.DisplayName: Starboard Battleship
+		YC_Right_RepairShip.DisplayName: Starboard Repair Ship
+		YC_Right_RepairShield.DisplayName: Repair Shield
+		YC_Right_HeavyBolt.DisplayName: Heavy Bolt
+		YC_Right_TrackerLaser.DisplayName: Tracking Laser
 		ApolloRocket.DisplayName: Apollo Rocket
 		ChickenRocket.DisplayName: Chicken Rocket
 		CosmicViperHomingRocket.DisplayName: Cosmic Viper Homing Rocket
@@ -341,14 +341,14 @@ Projectiles: {
 		RainbowRocket.DisplayName: Rainbow Rocket
 		RocketFire.DisplayName: Rocket Flame
 		ScorchedEarthRocket.DisplayName: Scorched Earth Rocket
-		ScorpioLargeRocket.DisplayName: Scorpio Large Rocket
+		ScorpioLargeRocket.DisplayName: Scorpio Heavy Rocket
 		ScorpioRocket.DisplayName: Scorpio Rocket
 		SeaDragonRocket.DisplayName: Sea Dragon Rocket
 		MirrorBladeSlash.DisplayName: Mirror Blade Slash
-		MirrorBladeSlashCreator.DisplayName: Mirror Blade Slash Creator
-		YC_WarshipArtilleryShell.DisplayName: Y C_ Warship Artillery Shell
-		YC_WarshipMissile.DisplayName: Y C_ Warship Missile
-		YC_WarshipPulse.DisplayName: Y C_ Warship Pulse
+		MirrorBladeSlashCreator.DisplayName: Mirror Blade Slash Emitter
+		YC_WarshipArtilleryShell.DisplayName: Warship Artillery Shell
+		YC_WarshipMissile.DisplayName: Warship Missile
+		YC_WarshipPulse.DisplayName: Warship Pulse
 	}
 
 	TeachingProjectile.DisplayName: Teaching Projectile
@@ -370,7 +370,7 @@ Projectiles: {
 	BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
 	BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
 	BBSD_Star.DisplayName: B B S D_ Star
-	BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
+	Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
 	PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
 	NewSHPS.DisplayName: New S H P S
 	AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
@@ -387,7 +387,7 @@ Projectiles: {
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 Cooldowns: {
-	SHPC_EX: SHPC冷却
+	SHPC_EX: SHPC鍐峰嵈
 	BlossomFlux_EX: BlossomFlux Turret Cooldown
 	YC_EX: Crystal EX Cooldown
 	BrinyBaron_SuperDash: Briny Baron Finisher
