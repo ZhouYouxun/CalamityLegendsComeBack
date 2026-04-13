@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Magic;
@@ -8,7 +8,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 {
     internal class ArmoredShellEffect : DefaultEffect
     {
@@ -308,6 +308,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
     // ================= 每个弹幕独立记录第一帧状态 =================
     public class ArmoredShell_GP : GlobalProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;

@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 {
     public class BrinyBaron_SkillSlashDash_SlashDash : BaseSwordHoldoutProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override bool useMeleeSpeed => true;
         public override bool useMeleeSize => false;
         public override int swingWidth => 310;

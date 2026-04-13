@@ -1,4 +1,4 @@
-﻿//using System;
+//using System;
 //using CalamityMod.Dusts;
 //using CalamityMod.Particles;
 //using Microsoft.Xna.Framework;
@@ -13,7 +13,7 @@
 //{
 //    public class PulsePistolShot : ModProjectile, ILocalizedModType
 //    {
-//        public new string LocalizationCategory => "Projectiles.Misc";
+//        public new string LocalizationCategory => "Projectiles.SHPC";
 //        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 //        public ref float time => ref Projectile.ai[0];
 //        public bool onSpawn = true;

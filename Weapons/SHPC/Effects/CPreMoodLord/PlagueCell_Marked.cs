@@ -1,4 +1,4 @@
-﻿using CalamityMod.Projectiles.Ranged;
+using CalamityMod.Projectiles.Ranged;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 {
     public class PlagueCell_Marked : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetDefaults()
@@ -96,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             // ===== 精准指向目标（不是垂直）=====
             Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 10f;
 
-            Projectile.NewProjectile(
+            int projID = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPos,
                 velocity,
@@ -106,6 +107,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Projectile.owner,
                 ItemID.RocketI
             );
+
+            if (Main.projectile.IndexInRange(projID))
+            {
+                Projectile missile = Main.projectile[projID];
+                missile.friendly = true;
+                missile.hostile = false;
+                missile.DamageType = DamageClass.Magic;
+                missile.usesLocalNPCImmunity = true;
+                missile.localNPCHitCooldown = 10;
+            }
         }
 
 

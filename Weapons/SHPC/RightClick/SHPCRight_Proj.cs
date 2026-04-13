@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal class SHPCRight_Proj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/LaserProj";
 
         public int WeaponStage;

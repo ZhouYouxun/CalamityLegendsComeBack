@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
 {
     public class BrinyBaron_SkillSpinRush_SpinBlade : BaseCustomUseStyleProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         private const int BaseSquareSize = 23 * 16 * 2;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";

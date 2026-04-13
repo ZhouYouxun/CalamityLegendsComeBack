@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
             Strike
         }
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCLeft/YC_Left_Rocket";
 
         private ref float PhaseValue => ref Projectile.ai[0];

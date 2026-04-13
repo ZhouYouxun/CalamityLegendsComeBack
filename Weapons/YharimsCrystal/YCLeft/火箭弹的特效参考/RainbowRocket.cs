@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.DataStructures;
 using CalamityMod.Graphics.Primitives;
 using Microsoft.Xna.Framework;
@@ -12,7 +12,7 @@ namespace CalamityMod.Projectiles.Magic
 {
     public class RainbowRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Magic";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public enum PartyCannonExplosionType
         {
             Pink = 0,

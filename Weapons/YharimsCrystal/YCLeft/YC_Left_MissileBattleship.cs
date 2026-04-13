@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -9,7 +8,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
     public class YC_Left_MissileBattleship : YC_LeftWarshipBase
     {
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         private bool timerInitialized;
+
+        private ref float AttackTimer => ref Projectile.localAI[0];
 
         protected override Color AccentColor => new(255, 130, 88);
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCLeft/YC_Left_MissileBattleship";
@@ -19,41 +21,33 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
         protected override float ScaleAmplitude => 0.04f;
         protected override float LightStrength => 0.42f;
 
-        private ref float AttackTimer => ref Projectile.localAI[0];
-        private ref float BurstCounter => ref Projectile.localAI[1];
-
         protected override Vector2 CalculateLocalOffset(float globalTime)
         {
             float sideSign = SlotIndex == 0 ? -1f : 1f;
-            float phase = globalTime * 1.35f + SlotIndex * MathHelper.Pi;
-
-            float sideOffset = sideSign * (126f + (float)Math.Sin(phase * 0.9f) * 22f);
-            float forwardOffset = 148f + (float)Math.Cos(phase * 1.15f) * 20f;
+            float sideOffset = sideSign * 138f;
+            float forwardOffset = (float)System.Math.Sin(globalTime * 1.6f + SlotIndex * 1.2f) * 4f;
             return new Vector2(sideOffset, forwardOffset);
         }
 
         protected override Vector2 CalculateDesiredAimDirection(YC_LeftHoldOut holdout, Projectile holdoutProjectile)
         {
             Vector2 baseForward = holdout.ForwardDirection;
-            Vector2 aim = GetManualAimOrDefault(holdout, baseForward);
 
-            if (!holdout.ManualAimMode)
-            {
-                NPC target = YC_LeftSquadronHelper.FindPriorityTarget(Owner, Projectile.Center, 1250f, baseForward, 80f);
-                if (target != null)
-                    aim = (target.Center - Projectile.Center).SafeNormalize(baseForward);
-                else
-                    aim = baseForward.RotatedBy(MathHelper.ToRadians(CurrentLocalOffset.X > 0f ? 4f : -4f));
-            }
+            if (holdout.ManualAimMode)
+                return GetManualAimOrDefault(holdout, baseForward);
 
-            return aim;
+            NPC target = YC_LeftSquadronHelper.FindPriorityTarget(Owner, Projectile.Center, 1900f, baseForward, 70f, false);
+            if (target != null)
+                return (target.Center - Projectile.Center).SafeNormalize(baseForward);
+
+            return baseForward.RotatedBy(MathHelper.ToRadians(CurrentLocalOffset.X > 0f ? 2.5f : -2.5f));
         }
 
         protected override void UpdateAttack(YC_LeftHoldOut holdout, Projectile holdoutProjectile)
         {
             if (!timerInitialized)
             {
-                AttackTimer = 8f + SlotIndex * 10f;
+                AttackTimer = SlotIndex == 0 ? 10f : 34f;
                 timerInitialized = true;
             }
 
@@ -66,48 +60,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            if (ManualAimActive)
-            {
-                Vector2 launchDirection = DesiredAimDirection;
-                Vector2 manualRightDirection = ForwardDirection.RotatedBy(MathHelper.PiOver2);
+            Vector2 fireDirection = DesiredAimDirection.SafeNormalize(ForwardDirection);
+            if (ManualAimActive && Projectile.owner == Main.myPlayer)
+                fireDirection = (Main.MouseWorld - Projectile.Center).SafeNormalize(fireDirection);
 
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center + launchDirection * 18f + manualRightDirection * (CurrentLocalOffset.X > 0f ? 6f : -6f),
-                    launchDirection * Main.rand.NextFloat(12f, 13.5f),
-                    ModContent.ProjectileType<YC_Left_Rocket>(),
-                    (int)(Projectile.damage * 1.15f),
-                    Projectile.knockBack + 0.5f,
-                    Projectile.owner);
-
-                EmitMuzzleBurst(launchDirection, AccentColor, 4.2f, 5);
-                SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.17f, Pitch = -0.08f + SlotIndex * 0.05f }, Projectile.Center);
-
-                BurstCounter = 0f;
-                AttackTimer = 5f;
-                return;
-            }
-
-            NPC target = YC_LeftSquadronHelper.FindPriorityTarget(Owner, Projectile.Center, 1450f, DesiredAimDirection, 95f, false);
-            Vector2 rightDirection = ForwardDirection.RotatedBy(MathHelper.PiOver2);
-            Vector2 rocketDirection = target != null
-                ? Vector2.Lerp(DesiredAimDirection, (target.Center - Projectile.Center).SafeNormalize(DesiredAimDirection), 0.42f).SafeNormalize(DesiredAimDirection)
-                : DesiredAimDirection;
+            float trackingStrength = ManualAimActive ? 0.08f : 0.03f;
+            float muzzleOffset = 22f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center + rocketDirection * 18f + rightDirection * (CurrentLocalOffset.X > 0f ? 6f : -6f),
-                rocketDirection * Main.rand.NextFloat(11.5f, 13.5f),
-                ModContent.ProjectileType<YC_Left_Rocket>(),
-                (int)(Projectile.damage * 1.15f),
-                Projectile.knockBack + 0.5f,
-                Projectile.owner);
+                Projectile.Center + fireDirection * muzzleOffset,
+                fireDirection * (ManualAimActive ? 18.5f : 16.5f),
+                ModContent.ProjectileType<YC_WarshipArtilleryShell>(),
+                (int)(Projectile.damage * 2.35f),
+                Projectile.knockBack + 1.1f,
+                Projectile.owner,
+                trackingStrength,
+                0f);
 
-            EmitMuzzleBurst(rocketDirection, AccentColor, 4.2f, 6);
-            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.2f, Pitch = -0.12f + SlotIndex * 0.05f }, Projectile.Center);
-
-            BurstCounter++;
-            AttackTimer = BurstCounter % 3f == 0f ? 28f : 10f;
+            EmitMuzzleBurst(fireDirection, AccentColor, 5f, 8);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.26f, Pitch = -0.3f + SlotIndex * 0.08f }, Projectile.Center);
+            AttackTimer = ManualAimActive ? 36f : 52f;
         }
     }
 }

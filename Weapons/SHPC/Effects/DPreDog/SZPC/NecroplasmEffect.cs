@@ -7,7 +7,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 {
     public class NecroplasmEffect : DefaultEffect
     {

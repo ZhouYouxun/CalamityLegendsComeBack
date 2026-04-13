@@ -16,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     public class BrinyBaron_LeftClick_Swing : BaseCustomUseStyleProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
         public override int AssignedItemID => ModContent.ItemType<NewLegendBrinyBaron>();
 

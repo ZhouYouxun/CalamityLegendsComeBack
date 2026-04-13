@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
     public class YC_Left_FakeLazer : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetStaticDefaults()

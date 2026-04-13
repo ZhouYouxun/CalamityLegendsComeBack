@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 {
     internal class ExoPrism_Lazer : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
 
         // 这些参数不再用 const，而是字段，便于 OnSpawn 调整
         private int Lifetime;

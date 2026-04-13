@@ -8,22 +8,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
     public class YC_Right_Battleship : YC_RightWarshipBase
     {
-        private const float DetectionRange = 112f * 16f;
-        private const float DetectionConeDegrees = 13f;
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         private static readonly Vector2[] RelativeOffsets =
         {
-            new(-84f, -70f),
-            new(84f, -70f)
+            new(-110f, -96f),
+            new(110f, -96f)
         };
 
         private static readonly float[] AngleOffsetsDegrees =
         {
-            -2.5f,
-            2.5f
+            -3f,
+            3f
         };
 
-        private int fireCooldown;
+        private bool timerInitialized;
+        private ref float AttackTimer => ref Projectile.localAI[0];
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCRight/YC_Right_Battleship";
         protected override Color AccentColor => new(255, 145, 105);
@@ -37,24 +37,35 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 
         protected override void UpdateAttack(YC_RightHoldOut holdout, Projectile holdoutProjectile)
         {
-            if (fireCooldown > 0)
-                fireCooldown--;
+            if (!timerInitialized)
+            {
+                AttackTimer = SlotIndex == 0 ? 8f : 30f;
+                timerInitialized = true;
+            }
 
-            if (Projectile.owner != Main.myPlayer || fireCooldown > 0 || FindTargetAhead(DetectionRange, DetectionConeDegrees, false) == null)
+            if (AttackTimer > 0f)
+            {
+                AttackTimer--;
+                return;
+            }
+
+            if (Projectile.owner != Main.myPlayer)
                 return;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center + CurrentForwardDirection * 20f,
-                CurrentForwardDirection * 18f,
-                ModContent.ProjectileType<YC_Right_HeavyBolt>(),
-                (int)(Projectile.damage * 1.9f),
-                Projectile.knockBack + 1f,
-                Projectile.owner);
+                Projectile.Center + CurrentForwardDirection * 22f,
+                CurrentForwardDirection * 19f,
+                ModContent.ProjectileType<YC_WarshipArtilleryShell>(),
+                (int)(Projectile.damage * 2.35f),
+                Projectile.knockBack + 1.2f,
+                Projectile.owner,
+                0.08f,
+                0f);
 
-            EmitMuzzleBurst(CurrentForwardDirection, AccentColor, 4.8f, 7);
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.22f, Pitch = -0.22f + SlotIndex * 0.07f }, Projectile.Center);
-            fireCooldown = 24;
+            EmitMuzzleBurst(CurrentForwardDirection, AccentColor, 5f, 8);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.26f, Pitch = -0.28f + SlotIndex * 0.08f }, Projectile.Center);
+            AttackTimer = 32f;
         }
     }
 }

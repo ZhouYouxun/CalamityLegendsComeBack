@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,6 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 {
     internal class ExoPrism_Geometry : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "Terraria/Images/Projectile_1";
 
         private int geometryType;

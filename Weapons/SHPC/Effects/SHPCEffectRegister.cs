@@ -6,6 +6,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes;

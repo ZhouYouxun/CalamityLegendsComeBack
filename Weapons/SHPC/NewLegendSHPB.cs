@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
 
         public ref float ExplodeTimer => ref Projectile.ai[2];
 

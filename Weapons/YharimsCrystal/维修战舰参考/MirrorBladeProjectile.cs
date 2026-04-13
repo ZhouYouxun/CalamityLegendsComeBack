@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Items.Weapons.Melee;
@@ -17,7 +17,7 @@ namespace CalamityMod.Projectiles.Melee
 
     public class MirrorBladeProjectile : BaseSwordHoldoutProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Melee";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public Player Owner => Main.player[Projectile.owner];
         public override int swingWidth => 200;
         public override Item BaseItem => ModContent.GetModItem(ModContent.ItemType<MirrorBlade>()).Item;

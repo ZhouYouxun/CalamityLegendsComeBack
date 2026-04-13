@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     // B 战术右键箭：先输出，再折返寻找血线最低的队友完成治疗。
     internal class BFArrow_BRecov : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         private int hitCounter;
         private int storedHeal = 3;
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -14,9 +14,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
     public class BossSoulofMight_Ball : ModProjectile, ILocalizedModType
     {
         //public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-        public override string Texture => "Terraria/Images/Projectile_106";
+        //public override string Texture => "Terraria/Images/Projectile_106";
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
 
 
 

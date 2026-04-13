@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 {
     public class BrinyBaron_RightClick_Shuriken : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityMod/Projectiles/TornadoProj";
 
         private const int BaseSize = 50;

@@ -8,17 +8,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
     public class YC_Right_LaserCruiser : YC_RightWarshipBase, IYCRightBeamSource
     {
-        private const int BeamDuration = 28;
-        private const int BeamCooldown = 82;
-        private const float DetectionRange = 92f * 16f;
-        private const float DetectionConeDegrees = 10f;
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         private static readonly Vector2[] RelativeOffsets =
         {
-            new(-88f, -12f),
-            new(-110f, -34f),
-            new(88f, -12f),
-            new(110f, -34f)
+            new(-96f, -18f),
+            new(-128f, -54f),
+            new(96f, -18f),
+            new(128f, -54f)
         };
 
         private static readonly float[] AngleOffsetsDegrees =
@@ -29,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             6.5f
         };
 
-        private int fireCooldown;
+        private ref float MissileTimer => ref Projectile.localAI[0];
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCRight/YC_Right_LaserCruiser";
         protected override Color AccentColor => new(255, 204, 118);
@@ -44,35 +41,43 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 
         protected override void UpdateAttack(YC_RightHoldOut holdout, Projectile holdoutProjectile)
         {
-            if (fireCooldown > 0)
-                fireCooldown--;
+            EnsurePersistentBeam(
+                (int)(Projectile.damage * 1.38f),
+                24f,
+                1800f,
+                new Color(255, 220, 145),
+                Color.White,
+                22f,
+                8,
+                4);
 
-            if (Projectile.owner != Main.myPlayer || fireCooldown > 0 || FindTargetAhead(DetectionRange, DetectionConeDegrees) == null)
+            if (MissileTimer > 0f)
+                MissileTimer--;
+
+            if (Projectile.owner != Main.myPlayer || MissileTimer > 0f)
                 return;
 
-            YC_CBeam.SpawnBeam(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center + CurrentForwardDirection * 18f,
-                CurrentForwardDirection,
-                (int)(Projectile.damage * 1.5f),
-                Projectile.knockBack,
-                Projectile.owner,
-                Projectile.whoAmI,
-                YC_CBeam.BeamAnchorKind.RightDrone,
-                DetectionRange,
-                18f,
-                BeamDuration,
-                false,
-                true,
-                new Color(255, 192, 88),
-                Color.White,
-                18f,
-                0f,
-                2,
-                8);
+            Vector2 right = CurrentForwardDirection.RotatedBy(MathHelper.PiOver2);
+            float sideSign = CurrentForwardDirection.X >= 0f ? 1f : -1f;
 
-            fireCooldown = BeamDuration + BeamCooldown;
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.2f, Pitch = -0.12f + SlotIndex * 0.02f }, Projectile.Center);
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Vector2 launchDirection = CurrentForwardDirection.RotatedBy(MathHelper.ToRadians(i * 3f));
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + CurrentForwardDirection * 20f + right * (sideSign * 7f + i * 5f),
+                    launchDirection * Main.rand.NextFloat(10.2f, 12.2f),
+                    ModContent.ProjectileType<YC_WarshipMissile>(),
+                    (int)(Projectile.damage * 0.94f),
+                    Projectile.knockBack + 0.45f,
+                    Projectile.owner,
+                    0.08f,
+                    0f);
+            }
+
+            EmitMuzzleBurst(CurrentForwardDirection, AccentColor, 4.6f, 6);
+            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.22f, Pitch = -0.06f + SlotIndex * 0.03f }, Projectile.Center);
+            MissileTimer = 46f;
         }
     }
 }

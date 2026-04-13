@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
         protected virtual float IdleDustScale => 0.95f;
         protected virtual int IdleDustInterval => 9;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         protected Player Owner => Main.player[Projectile.owner];
         protected Vector2 CurrentLocalOffset { get; private set; }

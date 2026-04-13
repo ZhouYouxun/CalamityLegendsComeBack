@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
 using System;
@@ -224,6 +224,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
     public class EssenceofHavoc_GP : GlobalProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public int fallDelayTimer;

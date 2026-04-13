@@ -1,4 +1,4 @@
-﻿//using System;
+//using System;
 //using CalamityMod.Dusts;
 //using CalamityMod.Items.Weapons.DraedonsArsenal;
 //using CalamityMod.Particles;
@@ -14,7 +14,7 @@
 //{
 //    public class PulseGrenadeOrb : ModProjectile, ILocalizedModType
 //    {
-//        public new string LocalizationCategory => "Projectiles.Misc";
+//        public new string LocalizationCategory => "Projectiles.SHPC";
 //        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 //        public Player Owner => Main.player[Projectile.owner];
 //        public ref float time => ref Projectile.ai[0];

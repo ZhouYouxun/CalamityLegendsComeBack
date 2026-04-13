@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -7,7 +7,7 @@ namespace CalamityMod.Projectiles.Ranged
 {
     public class ScorchedEarthRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Ranged";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override void SetStaticDefaults()
         {
             Main.projFrames[Projectile.type] = 10;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +10,7 @@ namespace CalamityMod.Projectiles.Ranged
 {
     public class GoliathRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Ranged";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         private ref float RocketType => ref Projectile.ai[0];
 
         public override void SetDefaults()

@@ -10,6 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     // 散播箭的毒气子弹幕，主要承担滞留区域和持续伤害。
     internal class BFArrow_EPlagueGas : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Variant => ref Projectile.ai[0];

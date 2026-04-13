@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBSwing_Slash : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.NewWeapons.DPreDog";
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "Terraria/Images/Extra_98";
 
         private const int Lifetime = 24;

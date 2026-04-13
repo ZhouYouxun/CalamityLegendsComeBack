@@ -161,7 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
             int p1 = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
             int p2 = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
             int p3 = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
-            int p4 = ModContent.ProjectileType<BrinyBaron_SkillSuperCharge_SuperDash>();
+            int p4 = ModContent.ProjectileType<Z_BrinyBaron_SkillSuperCharge_SuperDash>();
 
             for (int i = 0; i < Main.maxProjectiles; i++)
             {

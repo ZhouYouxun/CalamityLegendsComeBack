@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         protected virtual float LightStrength => 0.45f;
         protected virtual int IdleDustInterval => 10;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         protected Player Owner => Main.player[Projectile.owner];
         public int SlotIndex => (int)Projectile.ai[0];
@@ -139,8 +139,44 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                     Projectile.Center + direction * 10f,
                     direction.RotatedByRandom(0.25f) * Main.rand.NextFloat(speed * 0.55f, speed),
                     Color.Lerp(AccentColor, Color.White, Main.rand.NextFloat(0.2f, 0.55f)),
-                    Main.rand.NextFloat(0.85f, 1.15f));
+                Main.rand.NextFloat(0.85f, 1.15f));
             }
+        }
+
+        protected void EnsurePersistentBeam(
+            int beamDamage,
+            float beamWidth,
+            float beamLength,
+            Color outerColor,
+            Color innerColor,
+            float forwardOffset,
+            int hitCooldown,
+            int damageDelayFrames = 0)
+        {
+            if (Projectile.owner != Main.myPlayer || HasPersistentBeam())
+                return;
+
+            YC_CBeam.SpawnBeam(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center + CurrentForwardDirection * forwardOffset,
+                CurrentForwardDirection,
+                beamDamage,
+                Projectile.knockBack,
+                Projectile.owner,
+                Projectile.whoAmI,
+                YC_CBeam.BeamAnchorKind.ExDrone,
+                beamLength,
+                beamWidth,
+                0,
+                true,
+                false,
+                outerColor,
+                innerColor,
+                forwardOffset,
+                0f,
+                -1,
+                hitCooldown,
+                damageDelayFrames);
         }
 
         protected abstract void HandleFiringState(YC_EX_VIP vip, int timer);
@@ -151,6 +187,24 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         protected virtual void KillOwnedAttackProjectiles()
         {
+        }
+
+        protected bool HasPersistentBeam()
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_CBeam>())
+                    continue;
+
+                if ((int)other.ai[0] == Projectile.whoAmI &&
+                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.ExDrone)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         protected void KillAnchoredBeams()

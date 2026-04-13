@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private bool readyBurstPlayed;
         private bool releasedShot;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/NewLegendBlossomFlux";
         public override int AssociatedItemID => ModContent.ItemType<NewLegendBlossomFlux>();
 

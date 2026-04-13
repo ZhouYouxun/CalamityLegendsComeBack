@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Typeless;
@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 {
     internal class YharonSoulFragment_Flame : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj"; // 使用透明贴图
 

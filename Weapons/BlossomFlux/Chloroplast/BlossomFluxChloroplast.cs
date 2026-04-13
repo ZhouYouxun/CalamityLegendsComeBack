@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         };
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/Chloroplast/BlossomFluxChloroplast";
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
 
         public ref float Preset => ref Projectile.ai[0];
         public ref float Timer => ref Projectile.ai[1];

@@ -16,39 +16,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         public int CooldownDuration { get; private set; } = NoBossCooldown;
 
         private bool cooldownActive;
-        private bool bossPresentLastTick;
 
         public bool IsCoolingDown => cooldownActive && CooldownTimer < CooldownDuration;
         public bool CanUseSuperDash => !IsCoolingDown;
         public float CooldownCompletion => !IsCoolingDown || CooldownDuration <= 0 ? 1f : CooldownTimer / (float)CooldownDuration;
+        public int RemainingFrames => IsCoolingDown ? CooldownDuration - CooldownTimer : 0;
 
         public override void Initialize()
         {
-            CooldownDuration = NoBossCooldown;
-            CooldownTimer = CooldownDuration;
-            cooldownActive = false;
-            bossPresentLastTick = false;
+            ResetState();
         }
 
         public override void UpdateDead()
         {
-            CooldownDuration = NoBossCooldown;
-            CooldownTimer = CooldownDuration;
-            cooldownActive = false;
-            bossPresentLastTick = false;
+            ResetState();
         }
 
         public override void PostUpdate()
         {
-            bool hasBrinyBaron = HasBrinyBaronInInventory();
-            bool bossPresent = hasBrinyBaron && AnyBossAlive();
-
-            if (hasBrinyBaron && bossPresent && !bossPresentLastTick)
-                RestartCooldown(BossCooldown);
-
-            bossPresentLastTick = bossPresent;
-
-            if (!hasBrinyBaron || !IsCoolingDown)
+            if (!IsCoolingDown)
                 return;
 
             CooldownTimer++;
@@ -70,6 +56,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             CooldownDuration = duration;
             CooldownTimer = 0;
             cooldownActive = true;
+        }
+
+        private void ResetState()
+        {
+            CooldownDuration = NoBossCooldown;
+            CooldownTimer = CooldownDuration;
+            cooldownActive = false;
         }
 
         private void PlayCooldownReadyFeedback()
@@ -95,22 +88,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     Main.rand.NextFloat(1.05f, 1.45f));
                 glow.noGravity = true;
             }
-        }
-
-        private bool HasBrinyBaronInInventory()
-        {
-            int targetType = ModContent.ItemType<NewLegendBrinyBaron>();
-
-            if (Player.HeldItem.type == targetType)
-                return true;
-
-            for (int i = 0; i < Player.inventory.Length; i++)
-            {
-                if (Player.inventory[i].type == targetType)
-                    return true;
-            }
-
-            return false;
         }
 
         private static bool AnyBossAlive()

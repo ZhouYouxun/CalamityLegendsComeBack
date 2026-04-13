@@ -10,6 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBShuriken_Lazer : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         private const int FlightLifetime = 28;
         private const int LaserExtraUpdates = 12;
 

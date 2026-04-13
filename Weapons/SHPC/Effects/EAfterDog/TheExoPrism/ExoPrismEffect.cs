@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
@@ -88,6 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
     // ================= 独立实例数据 =================
     public class ExoPrism_GP : GlobalProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;

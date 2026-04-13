@@ -10,6 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.TurretMode
     // 炮台形态的预瞄线，只负责高速绘制准星，不承担伤害判定。
     internal sealed class BFTurretAimBeam : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         private const float MaxBeamLength = 2200f;
 
         private float BeamLength

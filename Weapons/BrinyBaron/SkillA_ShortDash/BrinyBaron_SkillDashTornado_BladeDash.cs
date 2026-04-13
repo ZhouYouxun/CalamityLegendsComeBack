@@ -14,6 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 {
     public class BrinyBaron_SkillDashTornado_BladeDash : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
 
         private const int PrepareTime = 0;

@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 {
     public class FragmentStardust_Cell : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "Terraria/Images/NPC_405";
 
         private bool isSmall = true;

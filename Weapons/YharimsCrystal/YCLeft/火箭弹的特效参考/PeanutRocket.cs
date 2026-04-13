@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -8,7 +8,7 @@ namespace CalamityMod.Projectiles.Boss
 {
     public class PeanutRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Boss";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/Ranged/HighExplosivePeanutShell";
 
         public override void SetStaticDefaults()

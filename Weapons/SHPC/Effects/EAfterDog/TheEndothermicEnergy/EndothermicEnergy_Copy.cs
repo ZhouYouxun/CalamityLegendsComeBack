@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         private readonly System.Collections.Generic.Dictionary<int, EndothermicCopyState> projectileStates = new();
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private EndothermicCopyState GetState()

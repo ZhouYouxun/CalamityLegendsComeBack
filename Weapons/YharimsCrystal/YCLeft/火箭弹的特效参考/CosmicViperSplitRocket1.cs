@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -8,7 +8,7 @@ namespace CalamityMod.Projectiles.Summon
 {
     public class CosmicViperSplitRocket1 : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Summon";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.MinionShot[Projectile.type] = true;

@@ -3,12 +3,12 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
-using YCRight = CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 {
     public class YC_EX_Battleship : YC_EX_WarshipBase
     {
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         private int fireCooldown;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/EXSkill/YC_EX_Battleship";
@@ -40,17 +40,17 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center + fireDirection * 22f,
-                fireDirection * 18f,
-                ModContent.ProjectileType<YCRight.YC_Right_HeavyBolt>(),
-                (int)(Projectile.damage * 1.9f),
-                Projectile.knockBack + 1f,
+                fireDirection * 19.5f,
+                ModContent.ProjectileType<YC_WarshipArtilleryShell>(),
+                (int)(Projectile.damage * 2.45f),
+                Projectile.knockBack + 1.2f,
                 Projectile.owner,
-                Projectile.whoAmI,
+                0.085f,
                 1f);
 
-            EmitMuzzleBurst(fireDirection, 7, 4.8f);
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.24f, Pitch = -0.24f + SlotIndex * 0.08f }, Projectile.Center);
-            fireCooldown = 12;
+            EmitMuzzleBurst(fireDirection, 8, 5f);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.28f, Pitch = -0.26f + SlotIndex * 0.08f }, Projectile.Center);
+            fireCooldown = SlotIndex == 0 ? 16 : 24;
         }
 
         protected override void KillOwnedAttackProjectiles()
@@ -58,10 +58,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile other = Main.projectile[i];
-                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YCRight.YC_Right_HeavyBolt>())
+                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_WarshipArtilleryShell>())
                     continue;
 
-                if (other.ai[1] == 1f && (int)other.ai[0] == Projectile.whoAmI)
+                if (other.ai[1] == 1f)
                     other.Kill();
             }
         }

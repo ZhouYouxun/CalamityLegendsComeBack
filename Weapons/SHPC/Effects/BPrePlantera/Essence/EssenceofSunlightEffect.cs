@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
@@ -189,6 +189,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
     // ================= 每个弹幕独立状态 =================
     public class EssenceofSunlight_GP : GlobalProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true; // ⭐ 必须
 
         public int chargeTimer;

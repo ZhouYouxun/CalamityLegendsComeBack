@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
     {
         private const float Range = YC_RightHoldOut.MaxTargetRange;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private Vector2 LaserStart => Projectile.Center;

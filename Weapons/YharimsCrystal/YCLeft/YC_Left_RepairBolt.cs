@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
     public class YC_Left_RepairBolt : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.ai[0];

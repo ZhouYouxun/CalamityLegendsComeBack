@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     // E 战术右键箭：扎附在目标或地形后，持续朝周围排出毒云。
     internal class BFArrow_EPlague : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         private int gasTimer;
         private Vector2 stickOffset;
 

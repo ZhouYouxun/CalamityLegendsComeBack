@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBSwing_Wave : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
 
         private const int BaseSize = 200;
 
@@ -180,7 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (SpawnStage < 2 || Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner)
                 return;
 
-            int starInterval = SpawnStage >= 3 ? 7 : 10;
+            int starInterval = SpawnStage >= 3 ? 23 : 33;
             if (lifeTimer % starInterval != 0)
                 return;
 

@@ -1,4 +1,4 @@
-﻿using CalamityMod.Graphics.Primitives;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 {
     public class FragmentSolar_Spear : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         // ===== 自定义计数器（禁止用localAI）=====
         private int hitCount;
         private int visualTimer;

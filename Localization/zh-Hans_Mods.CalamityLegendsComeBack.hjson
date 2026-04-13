@@ -54,9 +54,9 @@ Items: {
 			BB_Left:
 				'''
 				[c/66CCFF:左键：展开连续斩击，节奏逐步加速。]
-				[c/7F8FA6:前三段为稳定挥砍，用以压制与试探敌人。]
-				[c/99CCFF:第四段释放水能飞刃，延伸攻击范围。]
-				[c/DDA0FF:终段引发巨刃显现，对前方区域进行强力回斩。]
+				[c/7F8FA6:前三段为稳定挥砍，用于压制与试探敌人。]
+				[c/99CCFF:第四段释放水刃飞潮，延伸攻击范围。]
+				[c/DDA0FF:最终段引发巨刃显现，对前方区域进行强力回斩。]
 				[c/FFB347:每一次重斩，都会引导潮汐之力汇聚于剑刃。]
 				'''
 			BB_Tide: "[c/4FAEFF:当前潮汐值：]"
@@ -68,36 +68,31 @@ Items: {
 				[c/FFB347:冲刺即是进攻，也是唯一的生存手段。]
 				'''
 			Dash1_Unlock: "[c/66FFAA:已解锁：基础突进]"
-			Dash1_Lock: "[c/7F8FA6:短距离高速突刺，命中目标后迅速反弹。]"
+			Dash1_Lock: "[c/7F8FA6:暂未解锁，需击败克苏鲁之眼]"
 			Dash2_Unlock: "[c/66FFAA:已解锁：回旋切割]"
-			Dash2_Lock: "[c/DDA0FF:中距离回旋冲刺，对路径敌人持续切割。]"
+			Dash2_Lock: "[c/DDA0FF:暂未解锁，需击败血肉之墙]"
 			Dash3_Unlock: "[c/66FFAA:已解锁：连续斩返]"
-			Dash3_Lock: "[c/99CCFF:快速折返斩击，可在战场中多次位移。]"
-			Dash4_Unlock: "[c/66FFAA:已解锁：潮汐爆发]"
-			Dash4_Lock: "[c/FFB347:释放全部潮汐之力，发动毁灭性突袭。]"
-			BB_Final:
-				'''
-				[c/DDA0FF:在背包中右键点击武器]
-				[c/FFB347:可切换快刀斩模式，改变作战节奏]
-				'''
+			Dash3_Lock: "[c/99CCFF:暂未解锁，需击败血肉之墙]"
+			BB_Passive: "[c/9AEF9E:快刀斩被动：{0}。背包右键可切换。]"
+			PassiveStateOn: "[c/7BFFB7:开启]"
+			PassiveStateOff: "[c/F0D070:关闭]"
+			Dash4_Unlock: "[c/66FFAA:已解锁：潮狱处刑]"
+			Dash4_Lock: "[c/FFB347:暂未解锁，需击败猪鲨公爵]"
+			BB_Final: "[c/9FD8A2:满潮锁魂，左键宣判，直至目标被潮锋反复处刑。]"
 			LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
 			LegendaryText:
 				'''
-				[c/66CCFF:他曾立于浪潮之巅，以速度撕裂整片海域。]
-				[c/7F8FA6:没有防御，没有迟疑，只有不断向前的斩击。]
-				[c/99CCFF:海水在他脚下翻涌，如同回应他的意志。]
-				[c/DDA0FF:每一次冲刺，都是对极限的再一次突破。]
-				[c/FFB347:敌人无法预判他的轨迹，也无法承受他的锋芒。]
-				[c/66CCFF:当你看见他时，战斗早已结束。]
-				[c/7F8FA6:他们称那不是战斗，而是一场席卷一切的潮汐。]
-				[c/DDA0FF:来去之间，只留下被切割的空间与沉寂的海面。]
-				[c/FFB347:这把剑记录的不只是力量，而是一种信念。]
-				[c/99CCFF:向前，直到世界无法承受你的速度。]
+				[c/66CCFF:潮汐被灌满的那一刻，整把剑才真正开始狩猎。]
+				[c/7F8FA6:它先沿着鼠标搜寻最值得处刑的目标，再把整片战场一并拖入判决。]
+				[c/99CCFF:锁定一旦完成，逃跑与换位都只是把死亡的角度改得更难看。]
+				[c/DDA0FF:左键落下的瞬间，持剑者会从目标周围反复现身，将其穿透、回斩、再度现身。]
+				[c/FFB347:最后留下的印记不会立刻散去，它会贴着猎物继续书写余下的处刑。]
+				[c/66CCFF:当海潮终于退下时，敌人与路径上的旁观者往往已经一起碎裂。]
 				'''
 		}
 
 		NewLegendBlossomFlux: {
-			DisplayName: BlossomFlux·传奇归来
+			DisplayName: 叶流-传奇归来
 			Tooltip: "[GFB]"
 			BF_Left:
 				'''
@@ -231,91 +226,133 @@ Keybinds: {
 }
 
 Projectiles: {
-	EnergyCore_Spark.DisplayName: 能量核心火花
-	PurifiedGel_Ball.DisplayName: 净化凝胶球
-	Typeless.StormlionMandible_ARC.DisplayName: 风暴电弧
-	EssenceofHavoc_INV.DisplayName: 混乱精华冲击波
-	EssenceofSnow_N2.DisplayName: 冰雪精华液氮
-	EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
-	Ectoplasm_Damage.DisplayName: 灵质冲击
-	LivingShard_Healing.DisplayName: 生命碎片弹幕
-	FragmentSolar_Spear.DisplayName: 日耀碎片穿刺长矛
-	FragmentStardust_Cell.DisplayName: 星尘碎片细胞
-	DivineGeode_Lazer.DisplayName: 神圣晶核激光
-	UnholyEssence_Wave.DisplayName: 烛火精华冲击波
-	AscendantSpirit_PROJ.DisplayName: 化神魂精投射体
-	ExoPrism_Geometry.DisplayName: 星流棱晶几何体
-	ExoPrism_Lazer.DisplayName: 星流棱晶激光
-	YharonSoulFragment_Flame.DisplayName: 犽戎灵魂碎片火焰
-	NewLegendSHPB.DisplayName: SHPC 能量光球
-	NewLegendSHPE.DisplayName: SHPC 爆炸
-	SHPCRight_HoulOut.DisplayName: SHPC 枪身
-	SHPCRight_Proj.DisplayName: SHPC 激光
-	// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
-	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
-	// NewSHPS.DisplayName: New S H P S
-	// BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
-	// TeachingProjectile.DisplayName: Teaching Projectile
-	// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
-	// AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
-	// BrinyBaron_EXP.DisplayName: Briny Baron_ E X P
-	// BrinyBaron_LeftClick_HitSplash.DisplayName: Briny Baron_ Left Click_ Hit Splash
-	// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
-	// BrinyBaron_LeftClick_TrackingWaterBlade.DisplayName: Briny Baron_ Left Click_ Tracking Water Blade
-	// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
-	// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
-	// BrinyBaron_SkillDashTornado_Tornado.DisplayName: Briny Baron_ Skill Dash Tornado_ Tornado
-	// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
-	// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
-	// BrinyBaron_SkillSlashDash_WaterBomb.DisplayName: Briny Baron_ Skill Slash Dash_ Water Bomb
-	// BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
-	// BrinyBaron_SkillSuperCharge_WaterMist.DisplayName: Briny Baron_ Skill Super Charge_ Water Mist
-	// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
-	// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
-	// ExoPrism_Light.DisplayName: Exo Prism_ Light
-	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
-	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
-	// Necroplasm_Damage.DisplayName: Necroplasm_ Damage
-	// BBSD_Star.DisplayName: B B S D_ Star
-	// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
-	BlossomFluxChloroplast.DisplayName: 叶绿体
-
-	NewWeapons: {
-		// DPreDog.BBSwing_Slash.DisplayName: B B Swing_ Slash
-		// BPrePlantera.BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
-		// EAfterDog.SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+	BlossomFlux: {
+		// BlossomFluxChloroplast.DisplayName: Chloroplast
+		// BFPassiveRain.DisplayName: Passive Arrow Rain
+		// BFRight_HoldOut.DisplayName: BlossomFlux Holdout
+		// BFSelectionPanel.DisplayName: Tactical Selection Panel
+		// BFArrow_ABreak.DisplayName: Breakthrough Arrow
+		// BFArrow_BRecov.DisplayName: Recovery Arrow
+		// BFArrow_CDetec.DisplayName: Detection Arrow
+		// BFArrow_DBomb.DisplayName: Bombardment Arrow
+		// BFArrow_EPlague.DisplayName: Plague Arrow
+		// BFArrow_EPlagueGas.DisplayName: Plague Gas
+		// BFFuckyouExplosion.DisplayName: Bloomburst Explosion
+		// BFTurretAimBeam.DisplayName: Turret Aim Beam
+		// BFTurretVine.DisplayName: Turret Vine
 	}
 
-	// BBSwing_Wave.DisplayName: B B Swing_ Wave
-	// BBShuriken_Light.DisplayName: B B Shuriken_ Light
-	// BBSwing_INV.DisplayName: B B Swing_ I N V
-	// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
-	YC_LeftHoldOut.DisplayName: 水晶左手持
-	YC_RightHoldOut.DisplayName: 水晶右手持
-	YC_EX_VIP.DisplayName: 水晶 EX 核心
-	YC_EX_Drone.DisplayName: 水晶 EX 护卫舰
-	YC_EX_LaserCruiser.DisplayName: 水晶 EX 激光巡洋舰
-	YC_EX_Battleship.DisplayName: 水晶 EX 战列舰
-	YC_CBeam.DisplayName: 水晶激光
-	YC_Left_Frigate.DisplayName: 水晶小型护卫舰
-	YC_Left_LaserCruiser.DisplayName: 水晶激光巡洋舰
-	YC_Left_MissileBattleship.DisplayName: 水晶导弹战列舰
-	YC_Left_RepairShip.DisplayName: 水晶维修舰
-	YC_Left_FakeLazer.DisplayName: 水晶假激光
-	YC_Left_Rocket.DisplayName: 水晶追踪导弹
-	YC_Left_RepairBolt.DisplayName: 水晶维修脉冲
-	YC_Left_Drone.DisplayName: 水晶左无人机
-	YC_Right_Drone.DisplayName: 水晶右无人机
-	YC_Right_LaserCruiser.DisplayName: 水晶右激光巡洋舰
-	YC_Right_Battleship.DisplayName: 水晶右战列舰
-	YC_Right_RepairShip.DisplayName: 水晶右维修舰
-	YC_Right_RepairShield.DisplayName: 水晶维修护盾
-	YC_Right_HeavyBolt.DisplayName: 水晶重型光矢
-	YC_Right_TrackerLaser.DisplayName: 水晶追踪伪激光
-	// FragmentEntropyExplosion.DisplayName: Fragment Entropy Explosion
+	BrinyBaron: {
+		// BBSwing_Wave.DisplayName: Tidal Wave Slash
+		// BBShuriken_Light.DisplayName: Tidal Shuriken Flash
+		// BBSwing_INV.DisplayName: Giant Slash Hitbox
+		// BBSwing_Slash.DisplayName: Tidal Slash
+		// BBShuriken_Lazer.DisplayName: Waterblade Laser
+		// BrinyBaron_LeftClick_Swing.DisplayName: Baron Combo Slash
+		// BrinyBaron_RightClick_Shuriken.DisplayName: Baron Shuriken
+		// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
+		// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
+		// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Rebound Slash
+		// BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Tidal Burst
+		// BBSD_Star.DisplayName: Super Dash Star
+		// BBSD_Final_INV.DisplayName: B B S D_ Final_ I N V
+	}
+
+	SHPC: {
+		// EnergyCore_Spark.DisplayName: Energy Core Spark
+		// PurifiedGel_Ball.DisplayName: Purified Gel Orb
+		// StormlionMandible_ARC.DisplayName: Stormlion Arc
+		// BossSoulofMight_Ball.DisplayName: Soul of Might Orb
+		// BossSoulofMight_EXP.DisplayName: Soul of Might Burst
+		// TitanHeart_BigINV.DisplayName: Titan Heart Phantom Core
+		// EssenceofHavoc_INV.DisplayName: Essence of Havoc Shockwave
+		// EssenceofSnow_N2.DisplayName: Essence of Snow Nitrogen
+		// EssenceofSunlight_Lighting.DisplayName: Essence of Sunlight Bolt
+		// NewSHPS.DisplayName: SHPS Support Core
+		// AshesofCalamity_Portal.DisplayName: Ashes of Calamity Portal
+		// AshesofCalamity_Soul.DisplayName: Ashes of Calamity Soul
+		// LivingShard_Healing.DisplayName: Living Shard Heal
+		// FragmentEntropyExplosion.DisplayName: Entropy Fragment Explosion
+		// FragmentSolar_Spear.DisplayName: Solar Fragment Spear
+		// FragmentStardust_Cell.DisplayName: Stardust Fragment Cell
+		// DivineGeode_Lazer.DisplayName: Divine Geode Laser
+		// ArmoredShell_Ball.DisplayName: Armored Shell Orb
+		// Necroplasm_Damage.DisplayName: Necroplasm Burst
+		// UnholyEssence_Wave.DisplayName: Unholy Essence Wave
+		// AscendantSpirit_PROJ.DisplayName: Ascendant Spirit Projectile
+		// AshesofAnn_Located.DisplayName: Ashes of Ann Locator
+		// AshesofAnn_SuperEXP.DisplayName: Ashes of Ann Super Burst
+		// EndothermicEnergy_Copy.DisplayName: Endothermic Energy Copy
+		// EndothermicEnergy_Shadow.DisplayName: Endothermic Energy Shadow
+		// EndothermicEnergy_Split.DisplayName: Endothermic Energy Split
+		// ExoPrism_Geometry.DisplayName: Exo Prism Geometry
+		// ExoPrism_Lazer.DisplayName: Exo Prism Laser
+		// ExoPrism_Light.DisplayName: Exo Prism Radiance
+		// NightmareFuel_ARC.DisplayName: Nightmare Fuel Arc
+		// NightmareFuel_Scythe.DisplayName: Nightmare Fuel Scythe
+		// YharonSoulFragment_Flame.DisplayName: Yharon Soul Fragment Flame
+		// NewLegendSHPB.DisplayName: SHPC Energy Orb
+		// NewLegendSHPE.DisplayName: SHPC Explosion
+		// SHPCRight_HoulOut.DisplayName: SHPC Holdout
+		// SHPCRight_Proj.DisplayName: SHPC Main Beam
+		// NL_SHPC_EXWeapon.DisplayName: SHPC EX Super Laser
+		// PlagueCell_Marked.DisplayName: Marked Plague Cell
+		// SHPCPassiveOrb.DisplayName: SHPC Passive Orb
+		// SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+		// TwistingNether_BlackSLASH.DisplayName: Twisting Nether_ Black S L A S H
+		// TwistingNether_Blade.DisplayName: Twisting Nether_ Blade
+		// TwistingNether_Shadow.DisplayName: Twisting Nether_ Shadow
+	}
+
+	YharimsCrystal: {
+		// YC_LeftHoldOut.DisplayName: Crystal Left Holdout
+		// YC_RightHoldOut.DisplayName: Crystal Right Holdout
+		// YC_EX_VIP.DisplayName: Crystal EX Core
+		// YC_EX_Drone.DisplayName: Crystal EX Frigate
+		// YC_EX_LaserCruiser.DisplayName: Crystal EX Laser Cruiser
+		// YC_EX_Battleship.DisplayName: Crystal EX Battleship
+		// YC_CBeam.DisplayName: Crystal Main Beam
+		// YC_Left_Frigate.DisplayName: Crystal Left Frigate
+		// YC_Left_LaserCruiser.DisplayName: Crystal Left Laser Cruiser
+		// YC_Left_MissileBattleship.DisplayName: Crystal Left Missile Battleship
+		// YC_Left_RepairShip.DisplayName: Crystal Left Repair Ship
+		// YC_Left_FakeLazer.DisplayName: Crystal Faux Laser
+		// YC_Left_Rocket.DisplayName: Crystal Homing Rocket
+		// YC_Left_RepairBolt.DisplayName: Crystal Repair Bolt
+		// YC_Left_Drone.DisplayName: Crystal Left Drone
+		// YC_Right_Drone.DisplayName: Crystal Right Drone
+		// YC_Right_LaserCruiser.DisplayName: Crystal Right Laser Cruiser
+		// YC_Right_Battleship.DisplayName: Crystal Right Battleship
+		// YC_Right_RepairShip.DisplayName: Crystal Right Repair Ship
+		// YC_Right_RepairShield.DisplayName: Crystal Repair Shield
+		// YC_Right_HeavyBolt.DisplayName: Crystal Heavy Bolt
+		// YC_Right_TrackerLaser.DisplayName: Crystal Tracker Laser
+		// ApolloRocket.DisplayName: Apollo Rocket
+		// ChickenRocket.DisplayName: Chicken Rocket
+		// CosmicViperHomingRocket.DisplayName: Cosmic Viper Homing Rocket
+		// CosmicViperSplitRocket1.DisplayName: Cosmic Viper Split Rocket
+		// CosmicViperSplittingRocket.DisplayName: Cosmic Viper Splitting Rocket
+		// GoliathRocket.DisplayName: Goliath Rocket
+		// MagnomalyRocket.DisplayName: Magnomaly Rocket
+		// MK2RocketHoming.DisplayName: MK2 Homing Rocket
+		// MK2RocketNormal.DisplayName: MK2 Rocket
+		// PeanutRocket.DisplayName: Peanut Rocket
+		// PrismRocket.DisplayName: Prism Rocket
+		// RainbowRocket.DisplayName: Rainbow Rocket
+		// RocketFire.DisplayName: Rocket Flame
+		// ScorchedEarthRocket.DisplayName: Scorched Earth Rocket
+		// ScorpioLargeRocket.DisplayName: Scorpio Large Rocket
+		// ScorpioRocket.DisplayName: Scorpio Rocket
+		// SeaDragonRocket.DisplayName: Sea Dragon Rocket
+		// MirrorBladeSlash.DisplayName: Mirror Blade Slash
+		// MirrorBladeSlashCreator.DisplayName: Mirror Blade Slash Creator
+		// YC_WarshipArtilleryShell.DisplayName: Y C_ Warship Artillery Shell
+		// YC_WarshipMissile.DisplayName: Y C_ Warship Missile
+		// YC_WarshipPulse.DisplayName: Y C_ Warship Pulse
+	}
+
+	// TeachingProjectile.DisplayName: Teaching Projectile
 	// BFPassiveRain.DisplayName: B F Passive Rain
-	// BFRight_HoldOut.DisplayName: B F Right_ Hold Out
-	// BFSelectionPanel.DisplayName: B F Selection Panel
 	// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
 	// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
 	// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
@@ -325,10 +362,26 @@ Projectiles: {
 	// BFFuckyouExplosion.DisplayName: B F Fuckyou Explosion
 	// BFTurretAimBeam.DisplayName: B F Turret Aim Beam
 	// BFTurretVine.DisplayName: B F Turret Vine
-	// SHPCPassiveOrb.DisplayName: S H P C Passive Orb
-	// Misc.SHPCPassiveOrb.DisplayName: S H P C Passive Orb
-	// EndothermicEnergy_Shadow.DisplayName: Endothermic Energy_ Shadow
-	// EndothermicEnergy_Copy.DisplayName: Endothermic Energy_ Copy
+	// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
+	// BBShuriken_Light.DisplayName: B B Shuriken_ Light
+	// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+	// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+	// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+	// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
+	// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+	// BBSD_Star.DisplayName: B B S D_ Star
+	// BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Briny Baron_ Skill Super Charge_ Super Dash
+	PurifiedGel_Ball.DisplayName: 净化凝胶球
+	// NewSHPS.DisplayName: New S H P S
+	// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
+	// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+	// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+	// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+	// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+	ExoPrism_Geometry.DisplayName: 星流棱晶几何体
+	// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
+	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
@@ -337,4 +390,5 @@ Cooldowns: {
 	SHPC_EX: SHPC冷却
 	BlossomFlux_EX: BlossomFlux 炮台切换
 	YC_EX: 水晶 EX 冷却
+	BrinyBaron_SuperDash: 海爵终结冲刺
 }

@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
     public class YC_Right_HeavyBolt : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCRight/YC_Right_HeavyBolt";
 
         public override void SetStaticDefaults()

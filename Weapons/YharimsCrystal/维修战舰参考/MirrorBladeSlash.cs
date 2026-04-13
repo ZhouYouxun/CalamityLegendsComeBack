@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -9,7 +9,7 @@ namespace CalamityMod.Projectiles.Melee
 {
     public class MirrorBladeSlash : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Melee";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         public override string Texture => "CalamityMod/Projectiles/Melee/ExobeamSlash";
 

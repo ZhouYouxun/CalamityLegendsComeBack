@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
     internal class StormlionMandible_ARC : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Typeless";
+        public new string LocalizationCategory => "Projectiles.SHPC";
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 

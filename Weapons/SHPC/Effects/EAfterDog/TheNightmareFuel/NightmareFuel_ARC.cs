@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
 {
     internal class NightmareFuel_ARC : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义状态：禁止用 localAI 当计数器
         private bool initialized;
         private int timer;
@@ -246,6 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
 
     internal class NightmareFuel_Scythe : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义状态：禁止 localAI 计数
         private bool initialized;
         private int timer;

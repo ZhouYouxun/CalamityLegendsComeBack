@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using CalamityMod.Events;
 using CalamityMod.World;
@@ -13,7 +13,7 @@ namespace CalamityMod.Projectiles.Boss
 {
     public class ApolloRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Boss";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override void SetStaticDefaults()
         {
             Main.projFrames[Projectile.type] = 5;

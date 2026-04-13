@@ -9,9 +9,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
     public class YC_LeftHoldOut : ModProjectile, ILocalizedModType
     {
-        public const int FrigateCount = 8;
+        public const int FrigateCount = 6;
         public const int LaserCruiserCount = 4;
-        public const int MissileBattleshipCount = 2;
+        public const int BattleshipCount = 2;
         public const int RepairShipCount = 1;
         public const float MaxLaserOffsetDegrees = 10f;
         private const float AnimationRampMax = 180f;
@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
         private ref float DronesSpawnedFlag => ref Projectile.localAI[1];
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YharimsCrystalPrism";
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         private Player Owner => Main.player[Projectile.owner];
         public bool ManualAimMode => ManualAimModeFlag == 1f;
@@ -199,7 +199,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
                     Projectile.whoAmI);
             }
 
-            for (int i = 0; i < MissileBattleshipCount; i++)
+            for (int i = 0; i < BattleshipCount; i++)
             {
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),

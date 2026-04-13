@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private const float GiantLaserSpeed = 18f;
         private const float GiantLaserDamageFactor = 0.5f;
 
-        public static bool SuperDashUsesTestUnlock = true;
+        public static bool SuperDashUsesTestUnlock = false;
         public static bool SuperDashRequiresFishron = true;
         public static bool SuperDashRequiresFullTide = true;
 

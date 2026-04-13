@@ -8,36 +8,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
     public class YC_Right_Drone : YC_RightWarshipBase, IYCRightBeamSource
     {
-        private const int BeamDuration = 18;
-        private const int BeamCooldown = 56;
-        private const float DetectionRange = 70f * 16f;
-        private const float DetectionConeDegrees = 8f;
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         private static readonly Vector2[] RelativeOffsets =
         {
-            new(-18f, -4f),
-            new(-32f, -16f),
-            new(-48f, -30f),
-            new(-66f, -46f),
-            new(18f, -4f),
-            new(32f, -16f),
-            new(48f, -30f),
-            new(66f, -46f)
+            new(-24f, 12f),
+            new(-48f, -10f),
+            new(-74f, -34f),
+            new(24f, 12f),
+            new(48f, -10f),
+            new(74f, -34f)
         };
 
         private static readonly float[] AngleOffsetsDegrees =
         {
-            -1.5f,
-            -3.5f,
-            -6f,
-            -8.5f,
-            1.5f,
-            3.5f,
-            6f,
-            8.5f
+            -2f,
+            -4.5f,
+            -7.5f,
+            2f,
+            4.5f,
+            7.5f
         };
 
-        private int fireCooldown;
+        private ref float AttackTimer => ref Projectile.localAI[0];
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCRight/YC_Right_Drone";
         protected override Color AccentColor => new(255, 238, 178);
@@ -52,35 +45,52 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 
         protected override void UpdateAttack(YC_RightHoldOut holdout, Projectile holdoutProjectile)
         {
-            if (fireCooldown > 0)
-                fireCooldown--;
+            if (AttackTimer > 0f)
+                AttackTimer--;
 
-            if (Projectile.owner != Main.myPlayer || fireCooldown > 0 || FindTargetAhead(DetectionRange, DetectionConeDegrees) == null)
+            if (Projectile.owner != Main.myPlayer || AttackTimer > 0f)
                 return;
 
             YC_CBeam.SpawnBeam(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center + CurrentForwardDirection * 14f,
+                Projectile.Center + CurrentForwardDirection * 18f,
                 CurrentForwardDirection,
-                Projectile.damage,
+                (int)(Projectile.damage * 1.05f),
                 Projectile.knockBack,
                 Projectile.owner,
                 Projectile.whoAmI,
                 YC_CBeam.BeamAnchorKind.RightDrone,
-                DetectionRange,
-                10f,
-                BeamDuration,
+                1680f,
+                14f,
+                16,
                 false,
                 false,
                 AccentColor,
                 Color.White,
-                14f,
+                18f,
                 0f,
-                1,
-                -1);
+                -1,
+                12,
+                2);
 
-            fireCooldown = BeamDuration + BeamCooldown;
-            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.12f, Pitch = -0.18f + SlotIndex * 0.03f }, Projectile.Center);
+            Vector2 pulseSpawn = Projectile.owner == Main.myPlayer
+                ? Main.MouseWorld
+                : Projectile.Center + CurrentForwardDirection * 28f;
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                pulseSpawn,
+                CurrentForwardDirection * 8.2f,
+                ModContent.ProjectileType<YC_WarshipPulse>(),
+                (int)(Projectile.damage * 0.72f),
+                Projectile.knockBack * 0.45f,
+                Projectile.owner,
+                1.15f,
+                0f);
+
+            EmitMuzzleBurst(CurrentForwardDirection, AccentColor, 4f, 5);
+            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.14f, Pitch = -0.16f + SlotIndex * 0.03f }, Projectile.Center);
+            AttackTimer = 18f;
         }
     }
 }

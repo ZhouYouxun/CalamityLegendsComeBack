@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         private ref float StateTimer => ref Projectile.ai[1];
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         public EXVipState CurrentState => (EXVipState)(int)State;
         public int CurrentStateTimer => (int)StateTimer;

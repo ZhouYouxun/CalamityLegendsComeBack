@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal partial class SHPCRight_HoulOut : RightClickHoldoutBase, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Items/Weapons/Magic/SHPC";
         public override int AssociatedItemID => ModContent.ItemType<NewLegendSHPC>();
 

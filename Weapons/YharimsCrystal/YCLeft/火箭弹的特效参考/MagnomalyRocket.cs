@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -9,7 +9,7 @@ namespace CalamityMod.Projectiles.Ranged
 {
     public class MagnomalyRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Ranged";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         private bool spawnedAura = false;
         public override void SetStaticDefaults()
         {

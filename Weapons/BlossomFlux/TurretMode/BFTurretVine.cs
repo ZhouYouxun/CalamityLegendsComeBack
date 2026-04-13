@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.TurretMode
     // 炮台期间周期性甩出的藤蔓，用来补足范围骚扰与场面感。
     internal sealed class BFTurretVine : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public const int TotalSegments = 8;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";

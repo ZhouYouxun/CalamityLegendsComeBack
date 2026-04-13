@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
     internal class BBSD_Star : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "Terraria/Images/Extra_89";
 
         private const int StartupFrames = 30;

@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 
         private static readonly float[] ShieldArcDegrees = { -42f, -21f, 0f, 21f, 42f };
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float CooldownTimer => ref Projectile.localAI[0];

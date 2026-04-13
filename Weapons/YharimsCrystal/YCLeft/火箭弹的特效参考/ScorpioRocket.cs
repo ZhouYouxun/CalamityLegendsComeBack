@@ -1,4 +1,4 @@
-﻿using CalamityMod.Graphics.Primitives;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +15,7 @@ namespace CalamityMod.Projectiles.Ranged
 {
     public class ScorpioRocket : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Ranged";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         public ref float RocketID => ref Projectile.ai[0];
         public ref float ProjectileSpeed => ref Projectile.ai[1];

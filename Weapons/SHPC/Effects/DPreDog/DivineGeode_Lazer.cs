@@ -1,4 +1,4 @@
-﻿using CalamityMod.Dusts;
+using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     public class DivineGeode_Lazer : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         private int timer;
 
         public override string Texture => "Terraria/Images/Projectile_0"; // 透明占位

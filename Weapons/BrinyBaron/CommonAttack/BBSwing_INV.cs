@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBSwing_INV : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private int SquareSize => Projectile.ai[0] > 0f ? (int)Projectile.ai[0] : 150;

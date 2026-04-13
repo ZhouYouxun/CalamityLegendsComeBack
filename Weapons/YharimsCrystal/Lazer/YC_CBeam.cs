@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private int elapsedTime;
         private bool lifetimeInitialized;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public int SourceIndex => (int)Projectile.ai[0];

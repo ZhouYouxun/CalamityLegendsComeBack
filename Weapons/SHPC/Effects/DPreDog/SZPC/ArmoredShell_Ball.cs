@@ -9,10 +9,11 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using static CalamityMod.CalamityUtils;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 {
     internal class ArmoredShell_Ball : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         private const float ExplosionLifetime = 10f;
         private const float ExplosionMaxScale = 2.35f;
 

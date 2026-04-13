@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     // C 战术右键箭：负责扫描、标记，并在命中后扎附在敌人身上。
     internal class BFArrow_CDetec : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         private const float ScanGrowthPerFrame = 3.2f;
         private const float MaxScanRadius = 220f;
 

@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
     internal class BFArrow_ABreak : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         // A 战术右键箭：先弹射开路，再在飞行后段自动追猎。
         private ref float BounceCounter => ref Projectile.ai[0];
         private ref float FlightTimer => ref Projectile.localAI[0];

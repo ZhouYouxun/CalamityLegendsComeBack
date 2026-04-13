@@ -70,7 +70,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         public static bool IsOwnedExSupportProjectile(Projectile projectile)
         {
-            return projectile.type == ModContent.ProjectileType<YCRight.YC_Right_HeavyBolt>() && projectile.ai[1] == 1f;
+            return (projectile.type == ModContent.ProjectileType<YCRight.YC_Right_HeavyBolt>() && projectile.ai[1] == 1f) ||
+                   (projectile.type == ModContent.ProjectileType<YC_WarshipMissile>() && projectile.ai[1] == 1f) ||
+                   (projectile.type == ModContent.ProjectileType<YC_WarshipArtilleryShell>() && projectile.ai[1] == 1f) ||
+                   (projectile.type == ModContent.ProjectileType<YC_WarshipPulse>() && projectile.ai[1] == 1f);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Graphics.Primitives;
@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
     internal class SHPC_SuperLazer : BaseLaserbeamProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.NewWeapons.EAfterDog";
+        public new string LocalizationCategory => "Projectiles.SHPC";
 
         public int OwnerIndex
         {

@@ -1,4 +1,4 @@
-﻿using CalamityMod.Items.Weapons.Melee;
+using CalamityMod.Items.Weapons.Melee;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -7,7 +7,7 @@ namespace CalamityMod.Projectiles.Melee
 {
     public class MirrorBladeSlashCreator : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.Melee";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         public NPC Target => Main.npc[(int)Projectile.ai[0]];
 

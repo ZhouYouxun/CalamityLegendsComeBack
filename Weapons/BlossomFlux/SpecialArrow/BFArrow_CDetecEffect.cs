@@ -8,6 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     // 侦查效果挂在普通箭上，让左键常态箭学会优先追踪并触发补爆。
     internal class BFArrow_CDetecEffect : GlobalProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override bool InstancePerEntity => true;
 
         public bool BlossomFluxLeftArrow;

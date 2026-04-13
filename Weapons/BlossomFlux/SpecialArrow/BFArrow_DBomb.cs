@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     // D 战术右键箭：命中后把玩家当前箭雨从天上持续砸下来。
     internal class BFArrow_DBomb : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         private int rainCounter;
         private int storedAmmoType = ProjectileID.WoodenArrowFriendly;
         private float storedAmmoSpeed = 14f;

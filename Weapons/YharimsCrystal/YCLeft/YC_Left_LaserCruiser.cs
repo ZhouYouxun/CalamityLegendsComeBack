@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -9,14 +8,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
     public class YC_Left_LaserCruiser : YC_LeftWarshipBase, IYCLeftBeamSource
     {
-        private const float BeamLength = 1600f;
-        private const float BeamWidth = 18f;
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
+
+        private const float BeamLength = 1640f;
         private const float BeamForwardOffset = 24f;
-        private const float BeamTurnRate = 0.022f;
+        private const float BeamTurnRate = 0.024f;
 
-        private bool spawnSoundPlayed;
+        private bool lastManualState;
+        private ref float MissileTimer => ref Projectile.localAI[0];
 
-        protected override Color AccentColor => new(255, 220, 130);
+        protected override Color AccentColor => new(255, 218, 128);
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCLeft/YC_Left_LaserCruiser";
 
         protected override float PositionLerp => 0.18f;
@@ -27,11 +28,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
         protected override Vector2 CalculateLocalOffset(float globalTime)
         {
             float sideSign = SlotIndex % 2 == 0 ? -1f : 1f;
-            float columnIndex = SlotIndex / 2f;
-            float phase = globalTime * 1.95f + SlotIndex * 0.8f;
-
-            float sideOffset = sideSign * (92f + columnIndex * 16f + (float)Math.Cos(phase) * 12f);
-            float forwardOffset = 116f + columnIndex * 12f + (float)Math.Sin(phase * 1.2f) * 24f;
+            float row = SlotIndex / 2f;
+            float sideOffset = sideSign * (86f + row * 32f);
+            float forwardOffset = 44f - row * 40f;
             return new Vector2(sideOffset, forwardOffset);
         }
 
@@ -42,10 +41,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 
             if (!holdout.ManualAimMode)
             {
-                float sideRatio = MathHelper.Clamp(CurrentLocalOffset.X / 150f, -1f, 1f);
-                float disciplinedOffset = MathHelper.ToRadians(4f) * sideRatio;
-                float sweep = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 1.5f + SlotIndex) * 0.025f;
-                aim = baseForward.RotatedBy(disciplinedOffset + sweep);
+                NPC target = YC_LeftSquadronHelper.FindPriorityTarget(Owner, Projectile.Center, 1650f, baseForward, 90f, false);
+                if (target != null)
+                    aim = (target.Center - Projectile.Center).SafeNormalize(baseForward);
+                else
+                    aim = baseForward.RotatedBy(MathHelper.ToRadians(CurrentLocalOffset.X > 0f ? 3.5f : -3.5f));
             }
 
             return aim;
@@ -53,47 +53,62 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 
         protected override void UpdateAttack(YC_LeftHoldOut holdout, Projectile holdoutProjectile)
         {
+            if (lastManualState != ManualAimActive)
+            {
+                KillPersistentBeam();
+                lastManualState = ManualAimActive;
+            }
+
             EnsurePersistentBeam(
-                (int)(Projectile.damage * 1.45f),
-                BeamWidth,
-                BeamLength,
-                new Color(255, 192, 88),
+                (int)(Projectile.damage * 1.28f),
+                ManualAimActive ? 24f : 17f,
+                ManualAimActive ? 1820f : BeamLength,
+                ManualAimActive ? new Color(255, 236, 162) : new Color(255, 198, 96),
                 Color.White,
                 BeamForwardOffset,
-                BeamTurnRate,
-                10,
-                5);
+                ManualAimActive ? 0.008f : BeamTurnRate,
+                ManualAimActive ? 8 : 10,
+                4);
 
-            if (!spawnSoundPlayed && Projectile.owner == Main.myPlayer && HasPersistentBeam())
+            if (MissileTimer > 0f)
+                MissileTimer--;
+
+            if (MissileTimer > 0f || Projectile.owner != Main.myPlayer)
+                return;
+
+            float homingTurnRate = ManualAimActive ? 0.08f : 0.045f;
+            Vector2 fireDirection = DesiredAimDirection.SafeNormalize(ForwardDirection);
+            Vector2 right = ForwardDirection.RotatedBy(MathHelper.PiOver2);
+            float sideSign = CurrentLocalOffset.X >= 0f ? 1f : -1f;
+
+            for (int i = -1; i <= 1; i += 2)
             {
-                spawnSoundPlayed = true;
-                SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.18f, Pitch = -0.18f + SlotIndex * 0.03f }, Projectile.Center);
+                Vector2 launchDirection = fireDirection.RotatedBy(MathHelper.ToRadians(i * (ManualAimActive ? 3f : 6f)));
+                Vector2 spawnPosition = Projectile.Center + fireDirection * 18f + right * (sideSign * 6f + i * 5f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    launchDirection * Main.rand.NextFloat(9.5f, 11.5f),
+                    ModContent.ProjectileType<YC_WarshipMissile>(),
+                    (int)(Projectile.damage * 0.92f),
+                    Projectile.knockBack + 0.4f,
+                    Projectile.owner,
+                    homingTurnRate,
+                    0f);
             }
+
+            EmitMuzzleBurst(fireDirection, AccentColor, 4.5f, 6);
+            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.2f, Pitch = -0.1f + SlotIndex * 0.04f }, Projectile.Center);
+            MissileTimer = ManualAimActive ? 52f : 82f;
         }
 
         public void OnLeftBeamHit(NPC target, NPC.HitInfo hit, int damageDone, Projectile beamProjectile)
         {
-            if (Projectile.owner != Main.myPlayer || !target.active)
-                return;
-
-            Vector2 fallbackDirection = beamProjectile.velocity.SafeNormalize(ForwardDirection);
-            NPC chainedTarget = YC_LeftSquadronHelper.FindPriorityTarget(Owner, target.Center, 520f, fallbackDirection, 110f, false);
-            Vector2 fakeLaserDirection = chainedTarget != null && chainedTarget.whoAmI != target.whoAmI
-                ? (chainedTarget.Center - target.Center).SafeNormalize(fallbackDirection)
-                : fallbackDirection.RotatedByRandom(0.24f);
-
-            Projectile.NewProjectile(
-                beamProjectile.GetSource_FromThis(),
-                target.Center,
-                fakeLaserDirection * Main.rand.NextFloat(11f, 15f),
-                ModContent.ProjectileType<YC_Left_FakeLazer>(),
-                Math.Max(1, (int)(beamProjectile.damage * 0.42f)),
-                beamProjectile.knockBack * 0.35f,
-                beamProjectile.owner);
         }
 
-        public float GetBeamLength(float defaultLength, float forwardOffset) => GetManualAimBeamLength(BeamLength, BeamForwardOffset);
+        public float GetBeamLength(float defaultLength, float forwardOffset) => GetManualAimBeamLength(defaultLength, forwardOffset);
 
-        public float GetBeamTurnRateRadians(float defaultTurnRateRadians) => ManualAimActive ? 0f : BeamTurnRate;
+        public float GetBeamTurnRateRadians(float defaultTurnRateRadians) => ManualAimActive ? 0.008f : defaultTurnRateRadians;
     }
 }

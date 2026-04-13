@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.DataStructures;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     internal class NewSHPS : ModProjectile, IPixelatedPrimitiveRenderer
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         private int presetIndex;
         private Color themeColor;
         private int timer;

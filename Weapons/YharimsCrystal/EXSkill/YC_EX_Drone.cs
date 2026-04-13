@@ -8,7 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 {
     public class YC_EX_Drone : YC_EX_WarshipBase
     {
-        private bool laserSpawned;
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
+        private ref float AttackTimer => ref Projectile.localAI[0];
 
         public int ColorIndex => (int)Projectile.ai[1];
 
@@ -37,37 +38,53 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         protected override void OnStateChanged(YC_EX_VIP.EXVipState newState)
         {
             if (newState != YC_EX_VIP.EXVipState.Firing)
-                laserSpawned = false;
+                AttackTimer = 0f;
         }
 
         protected override void HandleFiringState(YC_EX_VIP vip, int timer)
         {
-            if (laserSpawned || Projectile.owner != Main.myPlayer)
+            if (AttackTimer > 0f)
+                AttackTimer--;
+
+            if (Projectile.owner != Main.myPlayer || AttackTimer > 0f)
                 return;
 
-            laserSpawned = true;
             YC_CBeam.SpawnBeam(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center + CurrentForwardDirection * 24f,
+                Projectile.Center + CurrentForwardDirection * 18f,
                 CurrentForwardDirection,
-                Projectile.damage,
+                (int)(Projectile.damage * 1.12f),
                 Projectile.knockBack,
                 Projectile.owner,
                 Projectile.whoAmI,
                 YC_CBeam.BeamAnchorKind.ExDrone,
-                1650f,
+                1720f,
                 16f,
-                YC_EX_VIP.LaserFireTime,
+                16,
                 false,
                 false,
                 AccentColor,
                 Color.White,
-                24f,
+                18f,
                 0f,
                 -1,
-                12);
+                12,
+                2);
 
-            SoundEngine.PlaySound(SoundID.Item68 with { Volume = 0.4f, Pitch = -0.2f + ColorIndex * 0.03f }, Projectile.Center);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center + CurrentForwardDirection * 22f,
+                CurrentForwardDirection * 8.4f,
+                ModContent.ProjectileType<YC_WarshipPulse>(),
+                (int)(Projectile.damage * 0.75f),
+                Projectile.knockBack * 0.45f,
+                Projectile.owner,
+                1.18f,
+                1f);
+
+            EmitMuzzleBurst(CurrentForwardDirection, 6, 4f);
+            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.14f, Pitch = -0.18f + ColorIndex * 0.03f }, Projectile.Center);
+            AttackTimer = 16f;
         }
     }
 }

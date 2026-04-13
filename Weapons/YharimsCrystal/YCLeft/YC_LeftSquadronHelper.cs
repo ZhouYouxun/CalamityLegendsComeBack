@@ -81,7 +81,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
                    projectileType == ModContent.ProjectileType<YC_Left_RepairShip>() ||
                    projectileType == ModContent.ProjectileType<YC_Left_Rocket>() ||
                    projectileType == ModContent.ProjectileType<YC_Left_FakeLazer>() ||
-                   projectileType == ModContent.ProjectileType<YC_Left_RepairBolt>();
+                   projectileType == ModContent.ProjectileType<YC_Left_RepairBolt>() ||
+                   projectileType == ModContent.ProjectileType<YC_WarshipPulse>() ||
+                   projectileType == ModContent.ProjectileType<YC_WarshipMissile>() ||
+                   projectileType == ModContent.ProjectileType<YC_WarshipArtilleryShell>();
         }
 
         public static void EmitTechDust(Vector2 center, Vector2 motion, Color color, float scale = 1f, int dustType = DustID.RainbowTorch)

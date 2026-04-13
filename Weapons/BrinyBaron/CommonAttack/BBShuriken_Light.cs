@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 {
     internal class BBShuriken_Light : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "Terraria/Images/Extra_89";
 
         private const float HomingRange = 920f;

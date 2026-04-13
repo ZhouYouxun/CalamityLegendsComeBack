@@ -12,24 +12,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
     {
         public const float MaxTargetRange = 100f * 16f;
         public const float TargetConeDegrees = 45f;
-        public const int RightDroneCount = 8;
+        public const int RightDroneCount = 6;
         public const int LaserCruiserCount = 4;
         public const int BattleshipCount = 2;
         public const int RepairShipCount = 1;
 
         private const float AnimationRampMax = 180f;
         private const int SoundInterval = 20;
-        private const int AAttackCooldown = 10;
-        private const int GroupPauseCooldown = 34;
-        private const int CyclePauseCooldown = 46;
-
         private bool shipsSpawned;
-        private int attackCooldown;
-        private int attackStep;
         private float holdFrameCounter;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YharimsCrystalPrism";
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         private Player Owner => Main.player[Projectile.owner];
         public Vector2 ForwardDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
@@ -74,7 +68,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             UpdateHoldout();
             UpdateAnimation();
             EnsureShipsExist();
-            RunAttackPattern();
         }
 
         public override void OnKill(int timeLeft)
@@ -183,114 +176,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             {
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, ForwardDirection, ModContent.ProjectileType<YC_Right_RepairShip>(), Projectile.damage, Projectile.knockBack, Projectile.owner, i, Projectile.whoAmI);
             }
-        }
-
-        private void RunAttackPattern()
-        {
-            if (attackCooldown > 0)
-            {
-                attackCooldown--;
-                return;
-            }
-
-            if (Projectile.owner != Main.myPlayer)
-                return;
-
-            int currentStep = attackStep;
-            bool fireB = currentStep % 5 == 4;
-
-            if (fireB)
-                FireBAttack();
-            else
-                FireAAttack();
-
-            attackStep = (attackStep + 1) % 10;
-
-            if (!fireB)
-                attackCooldown = AAttackCooldown;
-            else if (currentStep == 4)
-                attackCooldown = GroupPauseCooldown;
-            else
-                attackCooldown = CyclePauseCooldown;
-        }
-
-        private void FireAAttack()
-        {
-            NPC target = ChooseVisibleTargetAhead();
-            Vector2 forward = ForwardDirection;
-            Vector2 start = Projectile.Center + forward * 18f;
-            int targetIndex = target?.whoAmI ?? -1;
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                start,
-                forward,
-                ModContent.ProjectileType<YC_Right_TrackerLaser>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner,
-                targetIndex,
-                0f);
-
-            SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.24f, Pitch = 0.2f }, start);
-        }
-
-        private void FireBAttack()
-        {
-            Vector2 forward = ForwardDirection;
-            Vector2 start = Projectile.Center + forward * 20f;
-
-            YC_CBeam.SpawnBeam(
-                Projectile.GetSource_FromThis(),
-                start,
-                forward,
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner,
-                Projectile.whoAmI,
-                YC_CBeam.BeamAnchorKind.RightHoldout,
-                MaxTargetRange,
-                24f,
-                28,
-                false,
-                true,
-                new Color(255, 198, 96),
-                Color.White,
-                24f,
-                0f,
-                -1,
-                6);
-
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.34f, Pitch = -0.15f }, start);
-        }
-
-        private NPC ChooseVisibleTargetAhead()
-        {
-            List<NPC> targets = new();
-            Vector2 forward = ForwardDirection;
-            float maxDistanceSquared = MaxTargetRange * MaxTargetRange;
-            float maxAngle = MathHelper.ToRadians(TargetConeDegrees) * 0.5f;
-
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-                if (!npc.CanBeChasedBy(Projectile))
-                    continue;
-
-                Vector2 toNpc = npc.Center - Projectile.Center;
-                if (toNpc.LengthSquared() > maxDistanceSquared)
-                    continue;
-
-                if (System.Math.Abs(MathHelper.WrapAngle(forward.ToRotation() - toNpc.ToRotation())) > maxAngle)
-                    continue;
-
-                if (!Collision.CanHitLine(Projectile.Center, 1, 1, npc.Center, 1, 1))
-                    continue;
-
-                targets.Add(npc);
-            }
-
-            return targets.Count <= 0 ? null : targets[Main.rand.Next(targets.Count)];
         }
 
         private void KillBoundRightProjectiles()

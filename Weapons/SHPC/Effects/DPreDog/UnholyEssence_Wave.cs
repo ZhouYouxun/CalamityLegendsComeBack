@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Typeless;
@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class UnholyEssence_Wave : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义计时器
         private int lifeTimer;
         public override string Texture => "Terraria/Images/Projectile_0"; // 透明占位

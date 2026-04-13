@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -14,6 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
     internal class NL_SHPC_EXWeapon : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         #region Defaults And Simple Members
 
         private Player Owner => Main.player[Projectile.owner];

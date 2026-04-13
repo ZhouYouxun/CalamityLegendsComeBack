@@ -16,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
     // 肉山后解锁的常态天降弹幕，主视觉是绿色 primitive trail，本体只做一颗很小的核心。
     internal sealed class BFPassiveRain : ModProjectile, IPixelatedPrimitiveRenderer
     {
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetStaticDefaults()

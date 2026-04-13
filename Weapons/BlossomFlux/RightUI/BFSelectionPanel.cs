@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         private bool offsetInitialized;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/RightUI/BF_Panel";
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.BlossomFlux";
 
         private bool FadeOut
         {

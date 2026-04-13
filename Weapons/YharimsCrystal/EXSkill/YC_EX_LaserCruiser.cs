@@ -8,7 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 {
     public class YC_EX_LaserCruiser : YC_EX_WarshipBase
     {
-        private bool laserSpawned;
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
+        private ref float MissileTimer => ref Projectile.localAI[0];
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/EXSkill/YC_EX_LaserCruiser";
 
@@ -24,37 +25,62 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         protected override void OnStateChanged(YC_EX_VIP.EXVipState newState)
         {
             if (newState != YC_EX_VIP.EXVipState.Firing)
-                laserSpawned = false;
+            {
+                MissileTimer = 0f;
+                KillAnchoredBeams();
+            }
         }
 
         protected override void HandleFiringState(YC_EX_VIP vip, int timer)
         {
-            if (laserSpawned || Projectile.owner != Main.myPlayer)
-                return;
-
-            laserSpawned = true;
-            YC_CBeam.SpawnBeam(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center + CurrentForwardDirection * 24f,
-                CurrentForwardDirection,
+            EnsurePersistentBeam(
                 (int)(Projectile.damage * 1.55f),
-                Projectile.knockBack,
-                Projectile.owner,
-                Projectile.whoAmI,
-                YC_CBeam.BeamAnchorKind.ExDrone,
-                1760f,
-                24f,
-                YC_EX_VIP.LaserFireTime,
-                false,
-                false,
-                AccentColor,
+                26f,
+                1820f,
+                new Color(255, 225, 145),
                 Color.White,
                 24f,
-                0f,
-                -1,
-                10);
+                8,
+                4);
 
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.34f, Pitch = -0.14f + SlotIndex * 0.04f }, Projectile.Center);
+            if (MissileTimer > 0f)
+                MissileTimer--;
+
+            if (Projectile.owner != Main.myPlayer || MissileTimer > 0f)
+                return;
+
+            Vector2 right = CurrentForwardDirection.RotatedBy(MathHelper.PiOver2);
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Vector2 launchDirection = CurrentForwardDirection.RotatedBy(MathHelper.ToRadians(i * 2.5f));
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + CurrentForwardDirection * 22f + right * (i * 7f),
+                    launchDirection * Main.rand.NextFloat(10.8f, 12.8f),
+                    ModContent.ProjectileType<YC_WarshipMissile>(),
+                    (int)(Projectile.damage * 0.96f),
+                    Projectile.knockBack + 0.45f,
+                    Projectile.owner,
+                    0.085f,
+                    1f);
+            }
+
+            EmitMuzzleBurst(CurrentForwardDirection, 7, 4.8f);
+            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.23f, Pitch = -0.08f + SlotIndex * 0.03f }, Projectile.Center);
+            MissileTimer = 42f;
+        }
+
+        protected override void KillOwnedAttackProjectiles()
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_WarshipMissile>())
+                    continue;
+
+                if (other.ai[1] == 1f)
+                    other.Kill();
+            }
         }
     }
 }

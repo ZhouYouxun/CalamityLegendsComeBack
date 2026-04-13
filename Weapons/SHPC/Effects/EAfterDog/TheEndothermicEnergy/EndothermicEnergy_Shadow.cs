@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         private static readonly Color FrostBlue = new(150, 205, 255);
         private static readonly Color FrostDeep = new(72, 120, 210);
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public ref float Timer => ref Projectile.ai[0];

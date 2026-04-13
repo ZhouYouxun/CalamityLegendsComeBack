@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
         protected virtual float LightStrength => 0.4f;
         protected virtual int IdleDustInterval => 10;
 
-        public new string LocalizationCategory => "Projectiles";
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         protected Player Owner => Main.player[Projectile.owner];
 
@@ -67,6 +67,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             Lighting.AddLight(Projectile.Center, AccentColor.ToVector3() * LightStrength);
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            KillPersistentBeam();
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
@@ -109,6 +114,42 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             return YC_RightHelper.FindTargetAhead(Projectile, Projectile.Center, CurrentForwardDirection, range, coneDegrees, requireLineOfSight);
         }
 
+        protected void EnsurePersistentBeam(
+            int beamDamage,
+            float beamWidth,
+            float beamLength,
+            Color outerColor,
+            Color innerColor,
+            float forwardOffset,
+            int hitCooldown,
+            int damageDelayFrames = 0)
+        {
+            if (Projectile.owner != Main.myPlayer || HasActiveBeam())
+                return;
+
+            YC_CBeam.SpawnBeam(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center + CurrentForwardDirection * forwardOffset,
+                CurrentForwardDirection,
+                beamDamage,
+                Projectile.knockBack,
+                Projectile.owner,
+                Projectile.whoAmI,
+                YC_CBeam.BeamAnchorKind.RightDrone,
+                beamLength,
+                beamWidth,
+                0,
+                true,
+                false,
+                outerColor,
+                innerColor,
+                forwardOffset,
+                0f,
+                -1,
+                hitCooldown,
+                damageDelayFrames);
+        }
+
         protected bool HasActiveBeam()
         {
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -125,6 +166,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             }
 
             return false;
+        }
+
+        protected void KillPersistentBeam()
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_CBeam>())
+                    continue;
+
+                if ((int)other.ai[0] == Projectile.whoAmI &&
+                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.RightDrone)
+                {
+                    other.Kill();
+                }
+            }
         }
 
         protected void EmitMuzzleBurst(Vector2 direction, Color color, float speed, int dustCount)

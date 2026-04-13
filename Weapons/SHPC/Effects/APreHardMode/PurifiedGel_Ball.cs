@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
     public class PurifiedGel_Ball : ModProjectile
     {
+        public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义计时器
         private int timer;
 

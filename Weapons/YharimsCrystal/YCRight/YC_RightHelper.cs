@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using YCLeft = CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
@@ -87,7 +88,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
                    projectileType == ModContent.ProjectileType<YC_Right_RepairShip>() ||
                    projectileType == ModContent.ProjectileType<YC_Right_RepairShield>() ||
                    projectileType == ModContent.ProjectileType<YC_Right_TrackerLaser>() ||
-                   projectileType == ModContent.ProjectileType<YC_Right_HeavyBolt>();
+                   projectileType == ModContent.ProjectileType<YC_Right_HeavyBolt>() ||
+                   projectileType == ModContent.ProjectileType<YCLeft.YC_Left_RepairBolt>() ||
+                   projectileType == ModContent.ProjectileType<YC_WarshipPulse>() ||
+                   projectileType == ModContent.ProjectileType<YC_WarshipMissile>() ||
+                   projectileType == ModContent.ProjectileType<YC_WarshipArtilleryShell>();
         }
     }
 }

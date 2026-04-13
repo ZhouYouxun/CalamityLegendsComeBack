@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         private static readonly Color TechBlueBright = new(160, 245, 255);
         private static readonly Color TechBlueDeep = new(28, 88, 200);
 
-        public new string LocalizationCategory => "Projectiles.Misc";
+        public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public ref float time => ref Projectile.ai[0];
         public bool onSpawn = true;
