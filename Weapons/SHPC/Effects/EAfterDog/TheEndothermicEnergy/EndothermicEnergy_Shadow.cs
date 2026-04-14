@@ -137,48 +137,110 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 );
             }
 
+            Vector2 forward = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            float goldenAngle = MathHelper.TwoPi * 0.38196601125f;
+
+            // ===== 主中心轴：冰霜脉冲核心 =====
             for (int i = 0; i < 3; i++)
             {
-                Particle bloom = new CustomPulse(
+                Particle corePulse = new CustomPulse(
                     Projectile.Center,
                     Vector2.Zero,
-                    i == 0 ? FrostWhite * 0.8f : Color.Lerp(FrostBlue, FrostDeep, i * 0.35f) * 0.65f,
-                    "CalamityMod/Particles/LargeBloom",
-                    new Vector2(1f, 1.25f),
+                    i == 0 ? FrostWhite * 0.8f : Color.Lerp(FrostBlue, FrostDeep, i * 0.38f) * 0.72f,
+                    "CalamityLegendsComeBack/Texture/Myown/christmas512",
+                    new Vector2(0.85f, 0.85f),
                     Main.rand.NextFloat(-0.35f, 0.35f),
-                    0.4f - i * 0.08f,
-                    0f,
-                    16
+                    0.024f + i * 0.004f,
+                    0.095f + i * 0.012f,
+                    16 + i * 2
                 );
-                GeneralParticleHandler.SpawnParticle(bloom);
+                GeneralParticleHandler.SpawnParticle(corePulse);
             }
 
-            for (int i = 0; i < 12; i++)
+            // ===== 冰晶爆感：小十字星沿前向和外环炸开 =====
+            for (int i = 0; i < 18; i++)
             {
-                GlowSparkParticle spark = new GlowSparkParticle(
+                Vector2 direction = i < 8
+                    ? forward.RotatedBy(MathHelper.Lerp(-0.9f, 0.9f, i / 7f))
+                    : Main.rand.NextVector2CircularEdge(1f, 1f);
+                Vector2 sparkVelocity = direction.RotatedBy(Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)) * Main.rand.NextFloat(3.6f, 6.4f);
+                CritSpark spark = new CritSpark(
                     Projectile.Center,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 7f),
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.02f, 0.035f),
-                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.2f, 0.75f)),
-                    new Vector2(1.9f, 1f),
-                    true,
-                    false,
-                    1.08f
+                    sparkVelocity,
+                    FrostWhite,
+                    Color.Lerp(FrostBlue, FrostDeep, Main.rand.NextFloat(0.2f, 0.7f)),
+                    Main.rand.NextFloat(0.72f, 0.95f),
+                    Main.rand.Next(12, 18)
                 );
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            for (int i = 0; i < 18; i++)
+            // ===== 爆炸感：高能边缘拖尾 =====
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 glowVelocity = forward.RotatedByRandom(1.1f) * Main.rand.NextFloat(2.2f, 5.8f);
+                GlowSparkParticle glowSpark = new GlowSparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    glowVelocity,
+                    false,
+                    Main.rand.Next(12, 18),
+                    Main.rand.NextFloat(0.16f, 0.25f),
+                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.15f, 0.75f)),
+                    new Vector2(1.8f, 0.45f),
+                    true,
+                    false
+                );
+                GeneralParticleHandler.SpawnParticle(glowSpark);
+            }
+
+            // ===== 迷雾感：轻柔寒气云层 =====
+            for (int i = 0; i < 16; i++)
+            {
+                Vector2 mistVelocity = new Vector2(
+                    Main.rand.NextFloat(-1.1f, 1.1f),
+                    Main.rand.NextFloat(-2.8f, -0.8f)).RotatedByRandom(0.75f);
+                Particle mediumMist = new MediumMistParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(14f, 14f),
+                    mistVelocity,
+                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.2f, 0.7f)) * 0.75f,
+                    Color.Transparent,
+                    Main.rand.NextFloat(0.45f, 0.72f),
+                    Main.rand.NextFloat(140f, 190f)
+                );
+                GeneralParticleHandler.SpawnParticle(mediumMist);
+            }
+
+            // ===== 复杂层次：黄金角冰环 =====
+            for (int i = 0; i < 24; i++)
+            {
+                float t = i + 1f;
+                float angle = goldenAngle * t;
+                float radius = 5.6f * (float)Math.Sqrt(t) * 3.2f;
+                Vector2 offset = angle.ToRotationVector2() * radius;
+                Vector2 tangential = offset.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * (1.4f + t * 0.05f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + offset,
+                    Main.rand.NextBool() ? DustID.IceTorch : DustID.GemDiamond,
+                    tangential + forward * Main.rand.NextFloat(0.8f, 2.2f),
+                    0,
+                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.15f, 0.85f)),
+                    Main.rand.NextFloat(0.8f, 1.1f)
+                );
+                dust.noGravity = true;
+                dust.fadeIn = 0.35f;
+            }
+
+            // ===== 末端收束：小型白核终闪 =====
+            for (int i = 0; i < 10; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center,
-                    Main.rand.NextBool() ? DustID.IceTorch : DustID.GemDiamond,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 6.5f),
+                    DustID.GemDiamond,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 4.8f),
                     0,
-                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1f, 1.35f)
+                    FrostWhite,
+                    Main.rand.NextFloat(0.9f, 1.2f)
                 );
                 dust.noGravity = true;
             }

@@ -5,6 +5,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
     internal static class BBSuperDashTargeting
     {
+        // ===== 鼠标附近优先，但 Boss 永远压过普通怪 =====
         private const float MaxFocusDistance = 3200f;
         private const float CurrentTargetBonus = 160f;
 
@@ -37,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
                 if (npc.boss)
                 {
+                    // ===== 多个 Boss 时，谁离鼠标更近就优先锁谁 =====
                     if (distanceToFocus < bestBossDistance)
                     {
                         bestBossDistance = distanceToFocus;
@@ -46,6 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     continue;
                 }
 
+                // ===== 普通怪综合考虑血量、鼠标距离和玩家距离 =====
                 float score =
                     npc.lifeMax * 0.72f -
                     distanceToFocus * 1.15f -

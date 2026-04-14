@@ -267,35 +267,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float pulse = 0.85f + 0.15f * (float)Math.Sin(BaseTimer * 0.22f);
 
-            Main.EntitySpriteDraw(
-                smearTexture.Value,
-                drawPosition,
-                null,
-                Color.Lerp(VoidPurple, DarkPurple, 0.4f) * 0.45f,
-                Projectile.rotation + MathHelper.PiOver2,
-                smearTexture.Size() * 0.5f,
-                new Vector2(0.36f, 1.2f) * pulse,
-                SpriteEffects.None);
+            //Main.EntitySpriteDraw(
+            //    smearTexture.Value,
+            //    drawPosition,
+            //    null,
+            //    Color.Lerp(VoidPurple, DarkPurple, 0.4f) * 0.45f,
+            //    Projectile.rotation + MathHelper.PiOver2,
+            //    smearTexture.Size() * 0.5f,
+            //    new Vector2(0.36f, 1.2f) * pulse,
+            //    SpriteEffects.None);
 
-            Main.EntitySpriteDraw(
-                bloomTexture.Value,
-                drawPosition,
-                null,
-                Color.Lerp(VoidPurple, DeepBlack, 0.25f) * 0.55f,
-                0f,
-                bloomTexture.Size() * 0.5f,
-                0.46f * pulse,
-                SpriteEffects.None);
+            //Main.EntitySpriteDraw(
+            //    bloomTexture.Value,
+            //    drawPosition,
+            //    null,
+            //    Color.Lerp(VoidPurple, DeepBlack, 0.25f) * 0.55f,
+            //    0f,
+            //    bloomTexture.Size() * 0.5f,
+            //    0.46f * pulse,
+            //    SpriteEffects.None);
 
-            Main.EntitySpriteDraw(
-                bloomTexture.Value,
-                drawPosition,
-                null,
-                Color.White * 0.18f,
-                0f,
-                bloomTexture.Size() * 0.5f,
-                0.18f * pulse,
-                SpriteEffects.None);
+            //Main.EntitySpriteDraw(
+            //    bloomTexture.Value,
+            //    drawPosition,
+            //    null,
+            //    Color.White * 0.18f,
+            //    0f,
+            //    bloomTexture.Size() * 0.5f,
+            //    0.18f * pulse,
+            //    SpriteEffects.None);
 
             return false;
         }

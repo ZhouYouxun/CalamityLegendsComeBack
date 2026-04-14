@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
     internal class BBSD_Final_INV : ModProjectile, ILocalizedModType
     {
+        // ===== 终结刻印：挂在目标身上，定时追砍 =====
         private const int Lifetime = 60;
         private const int SlashInterval = 5;
         private const float SlashScale = 3.1f;
@@ -62,6 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         private void ReleaseFinalSlash(NPC target, int sequenceIndex)
         {
+            // ===== 每 5 帧补一道超大 Slash =====
             float wave = (sequenceIndex - 1) * 0.58f;
             float slashRotation = BaseRotation + wave;
             Vector2 slashDirection = slashRotation.ToRotationVector2();

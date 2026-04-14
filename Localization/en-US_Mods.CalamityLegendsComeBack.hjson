@@ -382,6 +382,7 @@ Projectiles: {
 	NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
 	NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+	BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

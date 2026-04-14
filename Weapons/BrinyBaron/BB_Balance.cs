@@ -5,6 +5,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     internal static class BB_Balance
     {
+        // =========================
+        // 基础成长表：左键体积与巨大化时长
+        // =========================
         private static float[] BladeScales => new float[] { 0.75f, 1.05f, 1.35f, 1.65f, 1.95f, 2.25f };
 
         private static readonly float[] BladeGiantScaleFactors = { 2.4f, 2.4f, 2.4f, 2.4f, 2.4f, 2.4f };
@@ -55,6 +58,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private const float GiantLaserSpeed = 18f;
         private const float GiantLaserDamageFactor = 0.5f;
 
+        // =========================
+        // 大招开关：方便设计期单独放宽条件
+        // =========================
         public static bool SuperDashUsesTestUnlock = false;
         public static bool SuperDashRequiresFishron = true;
         public static bool SuperDashRequiresFullTide = true;
@@ -66,6 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public static bool CanUseQuickDash => Main.hardMode;
         public static bool HasDesignedSuperDashUnlock => !SuperDashRequiresFishron || NPC.downedFishron;
 
+        // ===== 这里统一计算大招是否允许触发 =====
         public static bool CanActivateSuperDash(BBEXPlayer tidePlayer)
         {
             if (SuperDashUsesTestUnlock)
@@ -143,6 +150,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             return new SwingHitEffectProfile(Main.hardMode, SmallSlashScale, GiantSlashScale, SmallSlashDamageFactor, GiantSlashDamageFactor, GiantLaserCount, GiantLaserSpeed, GiantLaserDamageFactor);
         }
 
+        #region 成长阶段判定
+
+        // ===== 每一类技能都在这里读取自己的成长档位 =====
         private static int GetBladeGrowthTier()
         {
             if (CalamityMod.DownedBossSystem.downedYharon)
@@ -231,6 +241,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 return 1;
             return 0;
         }
+
+        #endregion
 
         internal readonly struct BladeGrowthProfile
         {

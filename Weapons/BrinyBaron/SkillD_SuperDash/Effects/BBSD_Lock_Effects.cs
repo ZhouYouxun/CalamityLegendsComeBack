@@ -52,38 +52,60 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 beamTarget = target?.Center ?? focusPoint;
             Vector2 ownerCenter = owner.MountedCenter;
             Vector2 beamDirection = (beamTarget - ownerCenter).SafeNormalize(Vector2.UnitX);
-            Vector2 midpoint = Vector2.Lerp(ownerCenter, beamTarget, 0.5f);
+            Vector2 tipDirection = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
+            Vector2 weaponTip = projectile.Center + tipDirection * (42f * projectile.scale);
 
             if (timer % 3 == 0)
             {
                 Particle beamSpark = new CustomSpark(
-                    midpoint + Main.rand.NextVector2Circular(12f, 12f),
-                    beamDirection * Main.rand.NextFloat(0.6f, 1.8f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    weaponTip + Main.rand.NextVector2Circular(4f, 4f),
+                    beamDirection * Main.rand.NextFloat(0.45f, 1.15f),
+                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
                     false,
-                    10,
-                    0.12f,
+                    8,
+                    0.14f,
                     new Color(150, 235, 255) * 0.88f,
-                    new Vector2(0.8f, 2.8f),
+                    new Vector2(0.52f, 1.2f),
                     glowCenter: true,
-                    shrinkSpeed: 0.72f,
+                    shrinkSpeed: 0.9f,
                     glowCenterScale: 0.92f,
                     glowOpacity: 0.62f);
                 GeneralParticleHandler.SpawnParticle(beamSpark);
-            }
 
-            if (timer % 5 == 0)
-            {
                 DirectionalPulseRing focusRing = new DirectionalPulseRing(
-                    beamTarget,
-                    Vector2.Zero,
-                    targetLocked ? new Color(255, 228, 140) : new Color(98, 208, 255),
-                    new Vector2(0.55f, 1.1f),
-                    timer * 0.05f,
-                    0.09f,
-                    0.014f,
-                    11);
+                    weaponTip - beamDirection * (8f + (timer % 4) * 14f),
+                    -beamDirection * 1.15f,
+                    targetLocked ? new Color(120, 220, 255) : new Color(98, 208, 255),
+                    new Vector2(1.75f, 4.8f),
+                    beamDirection.ToRotation() - MathHelper.PiOver2,
+                    0.32f,
+                    0.045f,
+                    14);
                 GeneralParticleHandler.SpawnParticle(focusRing);
+
+                Vector2 smokeBase = weaponTip - beamDirection * (14f + (timer % 5) * 12f);
+                Vector2 smokeVelocity = -beamDirection.RotatedBy(Math.Sin(timer * 0.42f) * 0.12f) * 2.1f;
+                GeneralParticleHandler.SpawnParticle(
+                    new HeavySmokeParticle(
+                        smokeBase,
+                        smokeVelocity,
+                        targetLocked ? new Color(70, 146, 196) : new Color(74, 156, 188),
+                        23,
+                        0.88f,
+                        0.65f
+                    )
+                );
+
+                GeneralParticleHandler.SpawnParticle(
+                    new HeavySmokeParticle(
+                        smokeBase + beamDirection.RotatedBy(MathHelper.PiOver2) * 10f,
+                        smokeVelocity.RotatedBy(0.18f) * 0.9f,
+                        targetLocked ? new Color(108, 214, 255) : new Color(115, 220, 255),
+                        23,
+                        0.66f,
+                        0.65f
+                    )
+                );
             }
         }
 
@@ -96,33 +118,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
 
             Vector2 direction = (endWorld - startWorld).SafeNormalize(Vector2.UnitX);
-            Vector2 midPoint = Vector2.Lerp(startWorld, endWorld, 0.5f) - Main.screenPosition;
-            float beamRotation = direction.ToRotation();
-            float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
-            Vector2 outerScale = new Vector2(distance / lineTex.Width, 0.22f * pulse);
-            Vector2 innerScale = new Vector2(distance / lineTex.Width, 0.12f * pulse);
+            float pulse = 0.8f + 0.2f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
 
-            Main.EntitySpriteDraw(
-                lineTex,
-                midPoint,
-                null,
-                new Color(125, 220, 255, 0) * opacity * 0.82f,
-                beamRotation,
-                new Vector2(lineTex.Width * 0.5f, lineTex.Height * 0.5f),
-                outerScale,
-                SpriteEffects.None,
-                0f);
+            for (int i = 10; i < distance - 10f; i += 10)
+            {
+                float completion = MathHelper.Lerp(0.9f, 2.6f, 1f - i / distance);
+                Vector2 drawPosition = startWorld - Main.screenPosition + direction * i;
 
-            Main.EntitySpriteDraw(
-                lineTex,
-                midPoint,
-                null,
-                new Color(255, 245, 205, 0) * opacity * 0.48f,
-                beamRotation,
-                new Vector2(lineTex.Width * 0.5f, lineTex.Height * 0.5f),
-                innerScale,
-                SpriteEffects.None,
-                0f);
+                for (int layer = 0; layer < 2; layer++)
+                {
+                    Color color = layer == 0 ? new Color(95, 210, 255, 0) : new Color(255, 245, 205, 0);
+                    float width = layer == 0 ? 0.92f : 0.3f;
+                    Main.EntitySpriteDraw(
+                        lineTex,
+                        drawPosition,
+                        null,
+                        color * opacity,
+                        direction.ToRotation() + MathHelper.PiOver2,
+                        lineTex.Size() * 0.5f,
+                        new Vector2(width * completion * MathHelper.Max(pulse, 0.28f), 1.08f) * 0.01f,
+                        SpriteEffects.None,
+                        0f);
+                }
+            }
 
             Main.EntitySpriteDraw(glowTex, startWorld - Main.screenPosition, null, new Color(145, 230, 255, 0) * opacity, 0f, glowTex.Size() * 0.5f, 0.24f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(glowTex, endWorld - Main.screenPosition, null, new Color(255, 234, 140, 0) * opacity, 0f, glowTex.Size() * 0.5f, 0.32f, SpriteEffects.None, 0f);
@@ -131,11 +149,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         internal static void DrawTargetingReticle(Vector2 focusPoint, NPC target, bool targetLocked)
         {
             Texture2D glowTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Texture2D magic03 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
+            Texture2D magic04 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_04").Value;
             Vector2 drawPosition = (target?.Center ?? focusPoint) - Main.screenPosition;
             float pulse = 0.75f + 0.25f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f);
             Color outerColor = targetLocked ? new Color(255, 226, 126, 0) : new Color(125, 225, 255, 0);
             Color innerColor = targetLocked ? new Color(255, 255, 255, 0) : new Color(220, 250, 255, 0);
+            Color magicColor = new Color(255, 232, 120, 0) * 0.92f;
 
             Main.EntitySpriteDraw(glowTex, drawPosition, null, outerColor * 0.55f, 0f, glowTex.Size() * 0.5f, 0.34f * pulse, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(glowTex, drawPosition, null, innerColor * 0.42f, 0f, glowTex.Size() * 0.5f, 0.18f * pulse, SpriteEffects.None, 0f);
@@ -146,10 +166,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 float angle = Main.GlobalTimeWrappedHourly * 2f + MathHelper.PiOver2 * i;
                 Vector2 offset = angle.ToRotationVector2() * ringRadius;
                 Main.EntitySpriteDraw(glowTex, drawPosition + offset, null, outerColor * 0.75f, angle, glowTex.Size() * 0.5f, 0.08f, SpriteEffects.None, 0f);
-
-                Vector2 lineScale = i % 2 == 0 ? new Vector2(ringRadius * 2f, 2f) : new Vector2(2f, ringRadius * 2f);
-                Main.EntitySpriteDraw(pixel, drawPosition, null, innerColor * 0.2f, 0f, new Vector2(0.5f, 0.5f), lineScale, SpriteEffects.None, 0f);
             }
+
+            Main.EntitySpriteDraw(
+                magic03,
+                drawPosition,
+                null,
+                magicColor,
+                Main.GlobalTimeWrappedHourly * 0.8f,
+                magic03.Size() * 0.5f,
+                0.5f,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                magic04,
+                drawPosition,
+                null,
+                magicColor * 0.95f,
+                -Main.GlobalTimeWrappedHourly * 0.65f,
+                magic04.Size() * 0.5f,
+                0.5f,
+                SpriteEffects.FlipHorizontally,
+                0f);
         }
     }
 }

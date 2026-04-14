@@ -13,6 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
     internal class BBSuperDashCooldownHandler : CooldownHandler
     {
+        // ===== 这里负责大招冷却图标的圆环显示 =====
         private BBSuperDashCooldownPlayer CooldownPlayer => instance.player.GetModPlayer<BBSuperDashCooldownPlayer>();
         private float AdjustedCompletion => CooldownPlayer.CooldownCompletion;
         private Color TextColor => Color.LightGoldenrodYellow;
@@ -42,6 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         public override void ApplyBarShaders(float opacity)
         {
+            // ===== 复用原灾的圆形冷却着色器 =====
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseOpacity(opacity);
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseSaturation(AdjustedCompletion);
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseColor(CooldownStartColor);

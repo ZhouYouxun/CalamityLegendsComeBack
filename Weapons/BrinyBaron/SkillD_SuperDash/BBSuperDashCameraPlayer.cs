@@ -1,3 +1,4 @@
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -7,9 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     internal class BBSuperDashCameraPlayer : ModPlayer
     {
         private bool cameraLocked;
-        private bool focusInitialized;
         private int targetNpcIndex = -1;
-        private Vector2 smoothedFocus;
+        private float impactShakePower;
 
         public override void Initialize()
         {
@@ -41,21 +41,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
             }
 
-            Vector2 targetCenter = Main.npc[targetNpcIndex].Center;
-            Vector2 desiredFocus = Vector2.Lerp(targetCenter, Player.Center, 0.1f);
-            if (!focusInitialized)
+            Vector2 focus = Main.npc[targetNpcIndex].Center;
+            Main.screenPosition = focus - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
+
+            float totalShake = impactShakePower + Player.Calamity().GeneralScreenShakePower * 0.35f;
+            if (totalShake > 0.05f)
             {
-                smoothedFocus = desiredFocus;
-                focusInitialized = true;
+                Main.screenPosition += Main.rand.NextVector2Circular(totalShake, totalShake);
+                impactShakePower *= 0.82f;
             }
             else
-            {
-                float distance = Vector2.Distance(smoothedFocus, desiredFocus);
-                float smoothing = MathHelper.Lerp(0.08f, 0.2f, Utils.GetLerpValue(32f, 280f, distance, true));
-                smoothedFocus = Vector2.SmoothStep(smoothedFocus, desiredFocus, smoothing);
-            }
+                impactShakePower = 0f;
 
-            Main.screenPosition = smoothedFocus - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
             Main.screenPosition.X = MathHelper.Clamp(Main.screenPosition.X, 0f, Main.maxTilesX * 16f - Main.screenWidth);
             Main.screenPosition.Y = MathHelper.Clamp(Main.screenPosition.Y, 0f, Main.maxTilesY * 16f - Main.screenHeight);
         }
@@ -72,9 +69,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         public void ClearLock()
         {
             cameraLocked = false;
-            focusInitialized = false;
             targetNpcIndex = -1;
-            smoothedFocus = Vector2.Zero;
+            impactShakePower = 0f;
+        }
+
+        public void AddImpactShake(float power)
+        {
+            if (Player.whoAmI != Main.myPlayer)
+                return;
+
+            impactShakePower = MathHelper.Max(impactShakePower, power);
         }
 
         private bool HasActiveSuperDashProjectile()

@@ -13,24 +13,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.dedServ)
                 return;
 
-            Vector2 right = dashDirection.RotatedBy(MathHelper.PiOver2);
-            for (int side = -1; side <= 1; side += 2)
-            {
-                Particle bladeSpark = new CustomSpark(
-                    strikeStart + right * side * 22f,
-                    dashDirection * Main.rand.NextFloat(3.5f, 6.2f) + right * side * Main.rand.NextFloat(1.2f, 2.2f),
-                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
-                    false,
-                    8,
-                    0.2f,
-                    new Color(165, 245, 255) * 1.15f,
-                    new Vector2(0.58f, 2.65f),
-                    glowCenter: true,
-                    shrinkSpeed: 0.95f,
-                    glowCenterScale: 0.96f,
-                    glowOpacity: 0.72f);
-                GeneralParticleHandler.SpawnParticle(bladeSpark);
-            }
+            Particle bladeSpark = new CustomSpark(
+                strikeStart,
+                dashDirection * 5.2f,
+                "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
+                false,
+                8,
+                0.2f,
+                new Color(165, 245, 255) * 1.15f,
+                new Vector2(0.58f, 2.65f),
+                glowCenter: true,
+                shrinkSpeed: 0.95f,
+                glowCenterScale: 0.96f,
+                glowOpacity: 0.72f);
+            GeneralParticleHandler.SpawnParticle(bladeSpark);
 
             DirectionalPulseRing launch = new DirectionalPulseRing(
                 strikeStart,
