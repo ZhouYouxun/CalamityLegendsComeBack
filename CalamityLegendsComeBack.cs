@@ -351,6 +351,19 @@ namespace CalamityLegendsComeBack
 
 
 
+                // 这边需要补充的：
+
+                // 阴险穿刺者的弹射特效有一个
+
+
+
+                // 元素方舟的多种特效，应该在这补充一下
+
+
+
+
+
+
                 // 14.辉光拖尾火花---------------------------------
                 // GlowSparkParticle 比普通火花更亮、更细、更适合表现高能尾迹
                 // 常用于喷口火花、热束切边、光束拖尾、神圣/魔焰高亮边缘
@@ -366,6 +379,7 @@ namespace CalamityLegendsComeBack
                     false
                 );
                 GeneralParticleHandler.SpawnParticle(glowSpark);
+
 
                 // 15.自定义光线火花---------------------------------
                 // CustomSpark 是“吃贴图的线状粒子”，适合喷枪、能量划痕、刀气切线、激光边缘
@@ -383,6 +397,7 @@ namespace CalamityLegendsComeBack
                 );
                 GeneralParticleHandler.SpawnParticle(customLine);
 
+
                 // 16.柔雾粒子---------------------------------
                 // MediumMistParticle 比 HeavySmokeParticle 更轻、更柔和，适合寒气、薄雾、液氮云层、魔焰尾烟
                 // 想要“大块柔雾”就优先用它；想要“厚重烟团”再用 HeavySmokeParticle
@@ -399,6 +414,7 @@ namespace CalamityLegendsComeBack
                 );
                 GeneralParticleHandler.SpawnParticle(mediumMist);
 
+
                 // 17.小型烟团---------------------------------
                 // SmallSmokeParticle 是一个短命、小体积的烟雾粒子
                 // 适合灰烬、喷焰尾气、爆点边缘、燃烧残影
@@ -411,6 +427,7 @@ namespace CalamityLegendsComeBack
                     Main.rand.Next(30, 50)
                 );
                 GeneralParticleHandler.SpawnParticle(smallSmoke);
+
 
                 // 18.闪电裂片---------------------------------
                 // BoltParticle 比 CrackParticle 更像“飞出去的一小段电弧”

@@ -74,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             if (firstSubstep)
             {
                 BladeCounter++;
-                if (BladeCounter >= 10f && Projectile.owner == Main.myPlayer)
+                if (BladeCounter >= 3f && Projectile.owner == Main.myPlayer)
                 {
                     BladeCounter = 0f;
                     Projectile.NewProjectile(

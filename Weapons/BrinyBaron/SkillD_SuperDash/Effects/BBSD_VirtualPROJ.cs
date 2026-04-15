@@ -90,21 +90,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             motionTimer += 1f / (Projectile.extraUpdates + 1f);
 
-            Vector2 forward = (boundProjectile.rotation - MathHelper.PiOver4).ToRotationVector2();
-            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            float lifeProgress = Utils.GetLerpValue(60f, 0f, Projectile.timeLeft, true);
-            float speedFactor = MathHelper.SmoothStep(0.18f, 1f, lifeProgress);
-            float theta = phaseOffset + motionTimer * MathHelper.Lerp(0.45f, 3.4f, speedFactor) * swirlDirection;
-            float axialTravel = MathHelper.Lerp(0f, 960f, lifeProgress);
-            float radius = MathHelper.Lerp(160f, 24f, lifeProgress);
-            float localY = (float)Math.Sin(theta) * radius;
-            float localZ = (float)Math.Cos(theta * 0.9f + phaseOffset) * radius * 0.72f;
-            float perspective = 1f / (1f + Math.Max(localZ + 140f, 0f) * 0.0045f);
-            Vector2 targetCenter =
-                boundProjectile.Center +
-                forward * axialTravel +
-                right * localY * perspective +
-                new Vector2(0f, -localZ * 0.48f);
+            Player owner = Main.player[Projectile.owner];
+
+            // ===== 目标：玩家（你要枪口也可以改这里）=====
+            Vector2 target = owner.MountedCenter;
+
+            // ===== 基础追踪方向 =====
+            Vector2 toTarget = target - Projectile.Center;
+            Vector2 dir = toTarget.SafeNormalize(Vector2.UnitY);
+
+            // ===== 螺旋参数 =====
+            float dist = toTarget.Length();
+            float speed = MathHelper.Lerp(6f, 20f, Utils.GetLerpValue(600f, 60f, dist, true));
+
+            // 螺旋角度（时间驱动）
+            float theta = phaseOffset + motionTimer * 8f * swirlDirection;
+
+            // 螺旋半径（越近越小）
+            float radius = MathHelper.Lerp(60f, 6f, Utils.GetLerpValue(600f, 60f, dist, true));
+
+            // 垂直方向（围绕运动方向旋转）
+            Vector2 normal = dir.RotatedBy(MathHelper.PiOver2);
+
+            // ===== 螺旋偏移 =====
+            Vector2 spiralOffset =
+                normal * (float)Math.Sin(theta) * radius +
+                dir.RotatedBy(MathHelper.PiOver2) * (float)Math.Cos(theta) * radius * 0.6f;
+
+            // ===== 最终目标点 =====
+            Vector2 targetCenter = target + spiralOffset;
 
             if (Projectile.Center == Vector2.Zero)
                 Projectile.Center = targetCenter;
@@ -114,9 +128,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Projectile.velocity.LengthSquared() > 0.01f)
                 Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
-            Projectile.scale = (0.055f + (1f - lifeProgress) * 0.05f) * MathHelper.Lerp(0.72f, 1.08f, perspective);
+            float lifeProgress = Utils.GetLerpValue(60f, 0f, Projectile.timeLeft, true);
+            float speedFactor = MathHelper.Lerp(0.2f, 1f, Utils.GetLerpValue(560f, 40f, dist, true));
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            Projectile.scale = MathHelper.Lerp(0.11f, 0.055f, lifeProgress) * MathHelper.Lerp(1.08f, 0.72f, Utils.GetLerpValue(420f, 30f, dist, true));
             SpawnFlightEffects(forward, right, theta, speedFactor);
             TrySpawnBurst(forward);
+
             Lighting.AddLight(Projectile.Center, 0.16f, 0.46f, 0.72f);
         }
 

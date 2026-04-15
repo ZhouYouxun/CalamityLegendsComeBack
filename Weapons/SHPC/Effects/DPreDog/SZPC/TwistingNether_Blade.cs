@@ -260,11 +260,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             for (int i = 0; i < 5; i++)
             {
                 Vector2 afterimageOffset = -Projectile.velocity.SafeNormalize(Vector2.UnitY) * i * 10f;
+
+                Color drawColor = Color.Lerp(BladePurple, Color.White, i / 5f);
+                drawColor.A = 0; // ❗防止黑底混色
+
                 Main.EntitySpriteDraw(
                     smearTexture.Value,
                     drawPosition + afterimageOffset,
                     null,
-                    Color.Lerp(BladePurple, BladeDark, i / 5f) * (0.42f - i * 0.06f) * Projectile.Opacity,
+                    drawColor * (0.55f - i * 0.07f) * Projectile.Opacity,
                     Projectile.rotation,
                     smearTexture.Size() * 0.5f,
                     new Vector2(0.22f + i * 0.025f, 1f + i * 0.08f),

@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Accssory.SHPC.RemembranceCore;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.Passive;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
@@ -297,29 +298,60 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            if (exPlayer.EXValue >= NewLegend_EXPlayer.EXMax &&
+            if (exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player) &&
                 KeybindSystem.LegendarySkill.Current)
             {
                 return false;
             }
 
-            // 左键 → 正常发射
-            Projectile.NewProjectile(
-                source,
-                GetSafeFirePosition(player, velocity) + new Vector2(0f, -10f) ,
-                velocity,
-                ModContent.ProjectileType<NewLegendSHPB>(),
-                damage,
-                knockback,
-                player.whoAmI,
-                storedEffectID > 0 ? storedEffectID : -1
-            );
+            bool tripleScatter = player.GetModPlayer<RemembranceCorePlayer>().RemembranceCoreEquipped;
+            if (tripleScatter)
+            {
+                float[] spreadAngles =
+                {
+                    MathHelper.ToRadians(-5f),
+                    0f,
+                    MathHelper.ToRadians(5f)
+                };
+
+                int scatterDamage = Math.Max(1, (int)(damage * 0.33f));
+
+                foreach (float angle in spreadAngles)
+                {
+                    Vector2 shotVelocity = velocity.RotatedBy(angle);
+
+                    Projectile.NewProjectile(
+                        source,
+                        GetSafeFirePosition(player, shotVelocity) + new Vector2(0f, -10f),
+                        shotVelocity,
+                        ModContent.ProjectileType<NewLegendSHPB>(),
+                        scatterDamage,
+                        knockback,
+                        player.whoAmI,
+                        storedEffectID > 0 ? storedEffectID : -1
+                    );
+                }
+            }
+            else
+            {
+                Projectile.NewProjectile(
+                    source,
+                    GetSafeFirePosition(player, velocity) + new Vector2(0f, -10f),
+                    velocity,
+                    ModContent.ProjectileType<NewLegendSHPB>(),
+                    damage,
+                    knockback,
+                    player.whoAmI,
+                    storedEffectID > 0 ? storedEffectID : -1
+                );
+            }
             leftClickCooldown = Item.useTime; // 60帧锁死
             exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.025f); // 左键对大技能的充能效果
+            int currentMaxEX = NewLegend_EXPlayer.GetCurrentEXMax(player);
+            exPlayer.EXValue += (int)(currentMaxEX * 0.025f); // 左键对大技能的充能效果
 
-            if (exPlayer.EXValue > NewLegend_EXPlayer.EXMax)
-                exPlayer.EXValue = NewLegend_EXPlayer.EXMax;
+            if (exPlayer.EXValue > currentMaxEX)
+                exPlayer.EXValue = currentMaxEX;
 
             return false;
         }
@@ -463,7 +495,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             // ===== EX技能释放 =====
-            if (exUnlocked && KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.EXMax)
+            if (exUnlocked && KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
             {
                 // 防止重复生成
                 foreach (Projectile proj in Main.projectile)
@@ -664,25 +696,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             int[] stageDamage =
             {
+                4,
+                4,
+                4,
                 7,
-                9,
-                11,
-                13,
-                15,
-                20,
-                27,
-                32,
-                40,
-                48,
-                60,
-                80,
-                96,
-                110,
+                7,
+                34,
+                34,
+                34,
+                45,
+                45,
+                45,
+                63,
+                73,
+                73,
+                73,
+                90,
                 125,
-                150,
-                200,
-                320,
-                420
+                188,
+                1667
             };
 
             int finalDamage = 9;
@@ -734,28 +766,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 DownedBossSystem.downedPrimordialWyrm // 始源妖龙
             };
 
-            // 对应每个阶段的目标面板伤害
             int[] stageDamage =
             {
-                15,     // 初始 / 克眼
-                21,     // 世吞 / 克脑
-                26,     // 腐巢 / 宿主
-                31,     // 骷髅王
-                34,     // 史莱姆之神
-                42,     // 肉山后
-                63,     // 机械三王
-                76,     // 灾影
-                91,     // 世花
-                109,    // 石巨人
-                120,    // 拜月教徒
-                180,    // 月总
-                216,    // 亵渎天神
-                238,    // 神使三兄弟
-                285,    // 幽花
-                410,    // 神吞
-                512,    // 犽戎
-                768,    // 星流机甲 + 至尊灾厄
-                1000   // 始源妖龙
+                16,     // 初始 / 克眼
+                16,     // 世吞 / 克脑
+                16,     // 腐巢 / 宿主
+                26,     // 骷髅王
+                26,     // 史莱姆之神
+                135,    // 肉山后
+                135,    // 机械三王
+                135,    // 灾影
+                180,    // 世花
+                180,    // 石巨人
+                180,    // 拜月教徒
+                250,    // 月总
+                290,    // 亵渎天神
+                290,    // 神使三兄弟
+                290,    // 幽花
+                360,    // 神吞
+                500,    // 犽戎
+                750,    // 星流机甲 + 至尊灾厄
+                6666    // 始源妖龙
             };
 
             int finalDamage = 10;

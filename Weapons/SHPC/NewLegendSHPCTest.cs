@@ -145,7 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return false;
 
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            if (exPlayer.EXValue >= NewLegend_EXPlayer.EXMax && KeybindSystem.LegendarySkill.Current)
+            if (exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player) && KeybindSystem.LegendarySkill.Current)
                 return false;
 
             Projectile.NewProjectile(
@@ -160,9 +160,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             );
 
             leftClickCooldown = Item.useTime;
-            exPlayer.EXValue += (int)(NewLegend_EXPlayer.EXMax * 0.55f);
-            if (exPlayer.EXValue > NewLegend_EXPlayer.EXMax)
-                exPlayer.EXValue = NewLegend_EXPlayer.EXMax;
+            int currentMaxEX = NewLegend_EXPlayer.GetCurrentEXMax(player);
+            exPlayer.EXValue += (int)(currentMaxEX * 0.55f);
+            if (exPlayer.EXValue > currentMaxEX)
+                exPlayer.EXValue = currentMaxEX;
 
             return false;
         }
@@ -259,7 +260,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             else
                 player.AddCooldown(SHPC_EXCooldown.ID, 0);
 
-            if (KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.EXMax)
+            if (KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
             {
                 foreach (Projectile proj in Main.projectile)
                 {

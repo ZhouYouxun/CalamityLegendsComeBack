@@ -229,6 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             OffsetLengthFromArm -= 2f;
 
+            ApplyRecoilRotation();
 
             float targetProgress;
 
@@ -317,6 +318,76 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
 
         #region ===== 核心技能：降温 =====
+        // ===== 后坐力 =====TryReduceHeat
+        private int recoilFrame;
+        private bool recoilActive;
+        private const int RecoilRaiseTime = 6;   // 抬枪：快
+        private const int RecoilHoldTime = 2;    // 顶点短停
+        private const int RecoilReturnTime = 5;  // 收回：快
+        private const float RecoilAngle = 0.72f; // 抬高角度，自行调
+
+        private void ApplyRecoilRotation()
+        {
+            if (!recoilActive)
+                return;
+
+            // ===== 每帧都重新读取“基础瞄准角” =====
+            // 这样回程时不会绕圈，而是始终朝当前鼠标方向收回
+            Vector2 aimDir = (Main.MouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX);
+            float baseAimRotation = aimDir.ToRotation();
+
+            float recoilSide = aimDir.X >= 0f ? -1f : 1f;
+            float recoilOffset;
+
+            if (recoilFrame < RecoilRaiseTime)
+            {
+                // 先快后慢：EaseOut
+                float t = recoilFrame / (float)RecoilRaiseTime;
+                float eased = 1f - (1f - t) * (1f - t);
+                recoilOffset = recoilSide * RecoilAngle * eased;
+            }
+            else if (recoilFrame < RecoilRaiseTime + RecoilHoldTime)
+            {
+                // 顶点短暂停顿
+                recoilOffset = recoilSide * RecoilAngle;
+            }
+            else if (recoilFrame < RecoilRaiseTime + RecoilHoldTime + RecoilReturnTime)
+            {
+                // 快速收回：时间短，视觉上就是“嗖”一下压回去
+                float t = (recoilFrame - RecoilRaiseTime - RecoilHoldTime) / (float)RecoilReturnTime;
+                float eased = t * t; // 开头快，后面贴近终点时更稳
+                recoilOffset = MathHelper.Lerp(recoilSide * RecoilAngle, 0f, eased);
+            }
+            else
+            {
+                recoilActive = false;
+                recoilFrame = 0;
+                return;
+            }
+
+            float finalRotation = baseAimRotation + recoilOffset;
+
+            Projectile.rotation = finalRotation;
+            Projectile.velocity = finalRotation.ToRotationVector2();
+
+            int direction = Math.Sign(aimDir.X);
+            if (direction == 0)
+                direction = Owner.direction;
+
+            Projectile.spriteDirection = direction;
+            Owner.ChangeDir(direction);
+
+            // ===== 手臂也同步到这个新角度，否则会有一帧不跟 =====
+            Owner.itemRotation = (Projectile.velocity * direction).ToRotation();
+
+            float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir +
+                                (Owner.gravDir == -1 ? MathHelper.Pi : 0f);
+
+            Owner.SetCompositeArmFront(true, FrontArmStretch, armRotation + ExtraFrontArmRotation * direction);
+            Owner.SetCompositeArmBack(true, BackArmStretch, armRotation + ExtraBackArmRotation * direction);
+
+            recoilFrame++;
+        }
 
         public void TryReduceHeat()
         {
@@ -340,6 +411,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             fireStopTimer = 60; // 停火时间
 
             OffsetLengthFromArm -= 18f;
+
+            // ===== 抬枪后坐力：启动三段式动画 =====
+            recoilActive = true;
+            recoilFrame = 0;
 
             PlayManualCooldownSound();
             FireCooldownRocketSalvo();

@@ -521,19 +521,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Projectile.netUpdate = true;
 
             Vector2 strikeDirection = lockedDirection.SafeNormalize(DefaultDirection);
-            int slashDamage = Math.Max(1, (int)(Projectile.damage * StrikeSlashDamageFactor));
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                target.Center,
-                strikeDirection * 7f,
-                ModContent.ProjectileType<BBSwing_Slash>(),
-                slashDamage,
-                Projectile.knockBack,
-                Projectile.owner,
-                StrikeSlashScale,
-                Main.rand.NextFloat(-0.2f, 0.2f));
-
             if (Main.myPlayer == Projectile.owner && strikeIndex == totalStrikes - 1)
             {
                 Projectile.NewProjectile(

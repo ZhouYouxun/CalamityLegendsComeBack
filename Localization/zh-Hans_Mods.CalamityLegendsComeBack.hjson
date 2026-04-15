@@ -162,6 +162,26 @@ Items: {
 		// DisplayName: B B Test
 		// Tooltip: ""
 	}
+
+	OverchargeCore: {
+		DisplayName: S-OVR：过载充能限制解除器
+		Tooltip: 大招超级激光的最大充能减半，但是玩家的生命回复也减半
+	}
+
+	RemembranceCore: {
+		DisplayName: S-MLD：多重链路分发器
+		Tooltip: 左键能一下子散射出三个能量光球，但每个的伤害降为33%
+	}
+
+	ResonanceCore: {
+		DisplayName: S-RSU：相位共振防护单元
+		Tooltip: 手持SHPC时展开一层护盾，15秒冷却，可减半一次伤害
+	}
+
+	TargetingCore: {
+		DisplayName: S-TAC：战术锁定校准模块
+		Tooltip: 让右键的激光获得很弱的追踪能力
+	}
 }
 
 AMMO: {
@@ -302,6 +322,8 @@ Projectiles: {
 		TwistingNether_BlackSLASH.DisplayName: 扭曲虚空暗斩
 		TwistingNether_Blade.DisplayName: 扭曲虚空之刃
 		TwistingNether_Shadow.DisplayName: 扭曲虚空残影
+		// ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
+		// SHPC_SLINV.DisplayName: S H P C_ S L I N V
 	}
 
 	YharimsCrystal: {
@@ -383,6 +405,7 @@ Projectiles: {
 	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 	// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+	// ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

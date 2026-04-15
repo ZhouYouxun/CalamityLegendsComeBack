@@ -162,6 +162,26 @@ Items: {
 		DisplayName: B B Test
 		Tooltip: ""
 	}
+
+	OverchargeCore: {
+		DisplayName: Overcharge Core
+		Tooltip: ""
+	}
+
+	RemembranceCore: {
+		DisplayName: Remembrance Core
+		Tooltip: ""
+	}
+
+	ResonanceCore: {
+		DisplayName: Resonance Core
+		Tooltip: ""
+	}
+
+	TargetingCore: {
+		DisplayName: Targeting Core
+		Tooltip: ""
+	}
 }
 
 AMMO: {
@@ -302,6 +322,8 @@ Projectiles: {
 		TwistingNether_BlackSLASH.DisplayName: Twisting Nether Dark Slash
 		TwistingNether_Blade.DisplayName: Twisting Nether Blade
 		TwistingNether_Shadow.DisplayName: Twisting Nether Shadow
+		ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
+		SHPC_SLINV.DisplayName: S H P C_ S L I N V
 	}
 
 	YharimsCrystal: {
@@ -383,6 +405,7 @@ Projectiles: {
 	NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 	BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+	ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

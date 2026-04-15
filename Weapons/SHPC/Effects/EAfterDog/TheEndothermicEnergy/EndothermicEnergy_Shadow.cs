@@ -157,55 +157,65 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(corePulse);
             }
 
-            // ===== 冰晶爆感：小十字星沿前向和外环炸开 =====
-            for (int i = 0; i < 18; i++)
+            // ===== 外层主扩散：把大范围炸开交给 CritSpark =====
+            for (int i = 0; i < 24; i++)
             {
-                Vector2 direction = i < 8
-                    ? forward.RotatedBy(MathHelper.Lerp(-0.9f, 0.9f, i / 7f))
+                Vector2 direction = i < 10
+                    ? forward.RotatedBy(MathHelper.Lerp(-1.05f, 1.05f, i / 9f))
                     : Main.rand.NextVector2CircularEdge(1f, 1f);
-                Vector2 sparkVelocity = direction.RotatedBy(Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)) * Main.rand.NextFloat(3.6f, 6.4f);
+
+                Vector2 sparkVelocity = direction.RotatedBy(Main.rand.NextFloat(-0.22f, 0.22f)) * Main.rand.NextFloat(4.8f, 8.4f);
                 CritSpark spark = new CritSpark(
-                    Projectile.Center,
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
                     sparkVelocity,
                     FrostWhite,
-                    Color.Lerp(FrostBlue, FrostDeep, Main.rand.NextFloat(0.2f, 0.7f)),
-                    Main.rand.NextFloat(0.72f, 0.95f),
-                    Main.rand.Next(12, 18)
+                    Color.Lerp(FrostBlue, FrostDeep, Main.rand.NextFloat(0.2f, 0.85f)),
+                    Main.rand.NextFloat(0.8f, 1.08f),
+                    Main.rand.Next(14, 22)
                 );
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            // ===== 爆炸感：高能边缘拖尾 =====
-            for (int i = 0; i < 20; i++)
+            // ===== 中心柔和核：小圆旋转，不再抢戏 =====
+            for (int i = 0; i < 12; i++)
             {
-                Vector2 glowVelocity = forward.RotatedByRandom(1.1f) * Main.rand.NextFloat(2.2f, 5.8f);
+                float angle = MathHelper.TwoPi * i / 12f + Main.rand.NextFloat(-0.12f, 0.12f);
+                float radius = Main.rand.NextFloat(3f, 6f);
+                Vector2 offset = angle.ToRotationVector2() * radius;
+
+                // 沿圆周切线回旋，再轻微向内收，形成一个小型旋转光核
+                Vector2 tangent = offset.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2 * (i % 2 == 0 ? 1f : -1f)) * Main.rand.NextFloat(0.9f, 1.6f);
+                Vector2 inward = -offset.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0.12f, 0.32f);
+                Vector2 glowVelocity = tangent + inward + forward * Main.rand.NextFloat(0.15f, 0.55f);
+
                 GlowSparkParticle glowSpark = new GlowSparkParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    Projectile.Center + offset,
                     glowVelocity,
                     false,
-                    Main.rand.Next(12, 18),
-                    Main.rand.NextFloat(0.16f, 0.25f),
-                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.15f, 0.75f)),
-                    new Vector2(1.8f, 0.45f),
+                    Main.rand.Next(10, 14),
+                    Main.rand.NextFloat(0.05f, 0.085f),
+                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.18f, 0.55f)) * 0.82f,
+                    new Vector2(0.62f, 0.62f),
                     true,
-                    false
+                    false,
+                    0.78f
                 );
                 GeneralParticleHandler.SpawnParticle(glowSpark);
             }
 
-            // ===== 迷雾感：轻柔寒气云层 =====
-            for (int i = 0; i < 16; i++)
+            // ===== 雾层接管外扩：范围更大，但更轻 =====
+            for (int i = 0; i < 22; i++)
             {
-                Vector2 mistVelocity = new Vector2(
-                    Main.rand.NextFloat(-1.1f, 1.1f),
-                    Main.rand.NextFloat(-2.8f, -0.8f)).RotatedByRandom(0.75f);
+                Vector2 mistDirection = Main.rand.NextVector2CircularEdge(1f, 1f).RotatedByRandom(0.45f);
+                Vector2 mistVelocity = mistDirection * Main.rand.NextFloat(1.8f, 4.6f) + forward * Main.rand.NextFloat(0.6f, 2.2f);
+
                 Particle mediumMist = new MediumMistParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(14f, 14f),
+                    Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
                     mistVelocity,
-                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.2f, 0.7f)) * 0.75f,
+                    Color.Lerp(FrostWhite, FrostBlue, Main.rand.NextFloat(0.18f, 0.68f)) * 0.62f,
                     Color.Transparent,
-                    Main.rand.NextFloat(0.45f, 0.72f),
-                    Main.rand.NextFloat(140f, 190f)
+                    Main.rand.NextFloat(0.56f, 0.86f),
+                    Main.rand.NextFloat(150f, 220f)
                 );
                 GeneralParticleHandler.SpawnParticle(mediumMist);
             }
@@ -245,7 +255,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 dust.noGravity = true;
             }
         }
-
         public override bool PreDraw(ref Color lightColor)
         {
             Asset<Texture2D> bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");

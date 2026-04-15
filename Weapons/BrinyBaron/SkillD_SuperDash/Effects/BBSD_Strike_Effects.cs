@@ -1,8 +1,10 @@
 using System;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
@@ -10,155 +12,118 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     {
         internal static void SpawnStrikeLaunchEffects(Projectile projectile, Vector2 strikeStart, Vector2 targetCenter, Vector2 dashDirection, int strikeIndex)
         {
-            if (Main.dedServ)
-                return;
-
-            Particle bladeSpark = new CustomSpark(
-                strikeStart,
-                dashDirection * 5.2f,
-                "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
-                false,
-                8,
-                0.2f,
-                new Color(165, 245, 255) * 1.15f,
-                new Vector2(0.58f, 2.65f),
-                glowCenter: true,
-                shrinkSpeed: 0.95f,
-                glowCenterScale: 0.96f,
-                glowOpacity: 0.72f);
-            GeneralParticleHandler.SpawnParticle(bladeSpark);
-
-            DirectionalPulseRing launch = new DirectionalPulseRing(
-                strikeStart,
-                dashDirection * 0.5f,
-                Color.Lerp(new Color(115, 224, 255), Color.White, 0.26f),
-                new Vector2(0.42f, 1.82f),
-                dashDirection.ToRotation(),
-                0.16f,
-                0.02f,
-                12);
-            GeneralParticleHandler.SpawnParticle(launch);
         }
 
         internal static void SpawnStrikeTravelEffects(Projectile projectile, Vector2 previousCenter, Vector2 currentCenter, Vector2 dashDirection, int phaseTimer, int strikeIndex)
         {
-            if (Main.dedServ)
-                return;
-
-            Vector2 right = dashDirection.RotatedBy(MathHelper.PiOver2);
-            Vector2 midPoint = Vector2.Lerp(previousCenter, currentCenter, 0.5f);
-
-            Particle core = new CustomSpark(
-                projectile.Center,
-                projectile.velocity * 0.02f,
-                "CalamityLegendsComeBack/Texture/KsTexture/window_04",
-                false,
-                6,
-                0.22f,
-                new Color(165, 244, 255) * 1.9f,
-                new Vector2(0.6f, 2.2f),
-                glowCenter: true,
-                shrinkSpeed: 1.1f,
-                glowCenterScale: 0.94f,
-                glowOpacity: 0.72f);
-            GeneralParticleHandler.SpawnParticle(core);
-
-            for (int side = -1; side <= 1; side += 2)
-            {
-                if ((phaseTimer + (side > 0 ? 0 : 1)) % 2 != 0)
-                    continue;
-
-                Particle wing = new CustomSpark(
-                    midPoint + right * side * Main.rand.NextFloat(8f, 18f),
-                    projectile.velocity * 0.03f + right * side * Main.rand.NextFloat(0.45f, 1.2f),
-                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
-                    false,
-                    5,
-                    0.16f,
-                    new Color(150, 235, 255) * 0.92f,
-                    new Vector2(0.54f, 2.4f),
-                    glowCenter: true,
-                    shrinkSpeed: 1.15f,
-                    glowCenterScale: 0.9f,
-                    glowOpacity: 0.68f);
-                GeneralParticleHandler.SpawnParticle(wing);
-            }
-
-            if (phaseTimer % 2 == 0)
-            {
-                DirectionalPulseRing trail = new DirectionalPulseRing(
-                    currentCenter,
-                    projectile.velocity * 0.05f,
-                    new Color(105, 214, 255),
-                    new Vector2(0.36f, 1.5f),
-                    dashDirection.ToRotation(),
-                    0.12f,
-                    0.018f,
-                    8);
-                GeneralParticleHandler.SpawnParticle(trail);
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust splash = Dust.NewDustPerfect(
-                    midPoint + right * Main.rand.NextFloat(-16f, 16f),
-                    Main.rand.NextBool() ? DustID.Water : DustID.Frost,
-                    projectile.velocity * 0.05f + right * Main.rand.NextFloat(-1.25f, 1.25f),
-                    100,
-                    new Color(180, 244, 255),
-                    Main.rand.NextFloat(0.92f, 1.18f));
-                splash.noGravity = true;
-            }
         }
 
         internal static void SpawnStrikeImpactEffects(Projectile projectile, Vector2 impactCenter, Vector2 dashDirection, int strikeIndex, int totalStrikes)
         {
+            Vector2 forward = dashDirection.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            if (Main.myPlayer == projectile.owner)
+            {
+                float[] slashOffsets = { -0.28f, 0f, 0.28f };
+                foreach (float rotationOffset in slashOffsets)
+                {
+                    Vector2 slashVelocity = forward.RotatedBy(rotationOffset) * 7f;
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        impactCenter + slashVelocity * 0.65f,
+                        slashVelocity,
+                        ModContent.ProjectileType<BBSwing_Slash>(),
+                        Math.Max(1, projectile.damage),
+                        projectile.knockBack,
+                        projectile.owner,
+                        1f,
+                        Main.rand.NextFloat(-0.12f, 0.12f));
+                }
+
+                Vector2 starSpawnCenter = impactCenter - forward * 84f;
+                for (int i = 0; i < 4; i++)
+                {
+                    float t = i / 3f;
+                    float spread = MathHelper.Lerp(-0.26f, 0.26f, t);
+                    Vector2 spawnPos = starSpawnCenter + right * MathHelper.Lerp(-42f, 42f, t);
+                    Vector2 starVelocity = forward.RotatedBy(spread) * Main.rand.NextFloat(7.4f, 10.6f);
+
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        spawnPos,
+                        starVelocity,
+                        ModContent.ProjectileType<BBSD_Star>(),
+                        Math.Max(1, projectile.damage),
+                        projectile.knockBack,
+                        projectile.owner);
+                }
+            }
+
             if (Main.dedServ)
                 return;
 
-            Vector2 right = dashDirection.RotatedBy(MathHelper.PiOver2);
-            for (int i = 0; i < 3; i++)
-            {
-                DirectionalPulseRing impact = new DirectionalPulseRing(
-                    impactCenter,
-                    dashDirection * (0.18f + i * 0.05f),
-                    Color.Lerp(new Color(255, 220, 130), Color.White, 0.25f),
-                    new Vector2(0.56f + i * 0.08f, 1.48f + i * 0.18f),
-                    dashDirection.ToRotation() + i * 0.1f,
-                    0.12f + i * 0.02f,
-                    0.022f,
-                    12 + i * 2);
-                GeneralParticleHandler.SpawnParticle(impact);
-            }
+            float burst = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 14f + strikeIndex * 0.8f);
 
             for (int side = -1; side <= 1; side += 2)
             {
-                Particle finisher = new CustomSpark(
-                    impactCenter + right * side * 18f,
-                    dashDirection * Main.rand.NextFloat(2.2f, 4.8f) + right * side * Main.rand.NextFloat(1.8f, 3.4f),
-                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
-                    false,
-                    10,
-                    0.22f,
-                    new Color(255, 240, 185) * 1.08f,
-                    new Vector2(0.64f, 2.9f),
-                    glowCenter: true,
-                    shrinkSpeed: 0.86f,
-                    glowCenterScale: 1f,
-                    glowOpacity: 0.76f);
-                GeneralParticleHandler.SpawnParticle(finisher);
+                for (int i = 0; i < 6; i++)
+                {
+                    float speedRatio = i / 5f;
+                    Vector2 edgePos =
+                        impactCenter -
+                        forward * MathHelper.Lerp(10f, 58f, speedRatio) +
+                        right * side * MathHelper.Lerp(8f, 36f, speedRatio);
+                    Vector2 edgeVelocity =
+                        forward * MathHelper.Lerp(0.6f, 3.8f, speedRatio) +
+                        right * side * MathHelper.Lerp(0.8f, 2.6f, speedRatio);
+
+                    GlowOrbParticle wakeOrb = new GlowOrbParticle(
+                        edgePos,
+                        edgeVelocity,
+                        false,
+                        Main.rand.Next(9, 15),
+                        MathHelper.Lerp(0.4f, 0.76f, speedRatio) * (1f + burst * 0.08f),
+                        side < 0 ? new Color(70, 180, 255) : new Color(185, 245, 255),
+                        true,
+                        false,
+                        true);
+                    GeneralParticleHandler.SpawnParticle(wakeOrb);
+                }
             }
 
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 3; i++)
             {
-                Dust burst = Dust.NewDustPerfect(
+                Color pulseColor = i switch
+                {
+                    0 => new Color(80, 205, 255),
+                    1 => new Color(170, 240, 255),
+                    _ => new Color(255, 245, 205)
+                };
+
+                Particle bolt = new CustomPulse(
+                    impactCenter,
+                    Vector2.Zero,
+                    pulseColor,
+                    "CalamityMod/Particles/HighResFoggyCircleHardEdge",
+                    new Vector2(1.2f + i * 0.2f, 1f + i * 0.12f),
+                    Main.rand.NextFloat(-10f, 10f),
+                    0.03f + i * 0.012f,
+                    0.16f + i * 0.04f,
+                    16 + i * 3);
+                GeneralParticleHandler.SpawnParticle(bolt);
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Dust burstDust = Dust.NewDustPerfect(
                     impactCenter,
                     Main.rand.NextBool(3) ? DustID.YellowTorch : DustID.Frost,
-                    dashDirection.RotatedByRandom(0.8f) * Main.rand.NextFloat(2.4f, 7.8f),
+                    forward.RotatedByRandom(0.95f) * Main.rand.NextFloat(2.8f, 8.6f),
                     100,
-                    new Color(255, 228, 150),
-                    Main.rand.NextFloat(1.05f, 1.45f));
-                burst.noGravity = true;
+                    Color.Lerp(new Color(110, 214, 255), new Color(255, 230, 165), Main.rand.NextFloat()),
+                    Main.rand.NextFloat(1f, 1.42f));
+                burstDust.noGravity = true;
             }
         }
 

@@ -1,0 +1,18 @@
+Calamity Legends Come Back
+Version {ModVersion} (tModLoader {tMLVersion})
+
+========================
+Changelog
+========================
+
+[新增]
+- 添加传奇武器：SHPC
+- 实现完整成长体系
+- 添加多弹药行为系统
+
+[改动]
+- 优化部分特效表现
+- 调整能量系统逻辑
+
+[修复]
+- 修复若干已知问题

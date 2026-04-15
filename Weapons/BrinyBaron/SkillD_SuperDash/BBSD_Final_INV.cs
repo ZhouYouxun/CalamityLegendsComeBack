@@ -96,18 +96,21 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             for (int i = 0; i < 4; i++)
             {
-                float angle = Projectile.rotation + MathHelper.PiOver2 * i;
-                Vector2 offset = angle.ToRotationVector2() * OrbitRadius * (0.85f + pulse * 0.18f);
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                float radius = OrbitRadius * Main.rand.NextFloat(0.6f, 1.2f) * (0.85f + pulse * 0.18f);
+                Vector2 offset = angle.ToRotationVector2() * radius;
+                Vector2 randomDrift = Main.rand.NextVector2Circular(0.45f, 0.45f);
 
                 Particle marker = new CustomSpark(
                     target.Center + offset,
-                    target.velocity * 0.04f,
+                    target.velocity * 0.04f + randomDrift,
                     "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
                     false,
                     6,
                     0.16f,
                     new Color(180, 244, 255) * 1.05f,
                     new Vector2(0.56f, 2.6f),
+                    extraRotation: angle + Main.rand.NextFloat(-0.55f, 0.55f),
                     glowCenter: true,
                     shrinkSpeed: 0.95f,
                     glowCenterScale: 0.92f,

@@ -115,6 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
+            TryAttachLazerMark(target);
 
             // ================= 在敌人下方生成几何体 =================
 
@@ -163,6 +164,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                 Projectile.owner
             );
         }
+        private void TryAttachLazerMark(NPC target)
+        {
+            int markerType = ModContent.ProjectileType<ExoPrism_LazerMark>();
+
+            foreach (Projectile proj in Main.ActiveProjectiles)
+            {
+                if (!proj.active || proj.owner != Projectile.owner || proj.type != markerType)
+                    continue;
+
+                if ((int)proj.ai[0] == target.whoAmI)
+                    return;
+            }
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                markerType,
+                0,
+                0f,
+                Projectile.owner,
+                target.whoAmI);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             if (beamVector == Vector2.Zero || Projectile.velocity != Vector2.Zero)

@@ -171,6 +171,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         private SlotId LaserSoundSlot;
         private int laserSoundTimer;
+        private const int SpiralInvBurstCount = 8;
+        private const float SpiralInvMinSpeed = 72f;
+        private const float SpiralInvMaxSpeed = 118f;
 
         private void LaserPhase()
         {
@@ -218,6 +221,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     Projectile.owner);
 
                 Main.projectile[laser].ai[0] = Projectile.whoAmI;
+
+                SpawnSpiralInvs();
             }
 
             SpawnLaserMuzzleStorm(lifeFactor);
@@ -236,6 +241,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             state = 3;
             timer = 0;
+        }
+
+        private void SpawnSpiralInvs()
+        {
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            for (int i = 0; i < SpiralInvBurstCount; i++)
+            {
+                float spawnOffset = Main.rand.NextFloat(0f, 26f);
+                float speed = Main.rand.NextFloat(SpiralInvMinSpeed, SpiralInvMaxSpeed);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    GunTip,
+                    forward * speed,
+                    ModContent.ProjectileType<SHPC_SLINV>(),
+                    Projectile.damage,
+                    0f,
+                    Projectile.owner,
+                    Projectile.whoAmI,
+                    spawnOffset);
+            }
         }
 
         #endregion

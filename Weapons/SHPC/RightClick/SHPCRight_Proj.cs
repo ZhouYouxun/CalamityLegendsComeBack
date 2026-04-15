@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.SHPC.TargetingCore;
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -212,6 +213,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void AI()
         {
+            ApplyWeakHoming();
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
             if (Projectile.alpha > 0)
@@ -262,6 +264,51 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 helixTimer++;
                 SpawnHelixFlightEffects();
             }
+        }
+
+        private void ApplyWeakHoming()
+        {
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead || !owner.GetModPlayer<TargetingCorePlayer>().TargetingCoreEquipped)
+                return;
+
+            NPC target = FindHomingTarget(420f);
+            if (target == null)
+                return;
+
+            float speed = Projectile.velocity.Length();
+            if (speed <= 0f)
+                return;
+
+            Vector2 desiredDirection = Projectile.DirectionTo(target.Center);
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 newDirection = Vector2.Lerp(currentDirection, desiredDirection, 0.04f).SafeNormalize(currentDirection);
+            Projectile.velocity = newDirection * speed;
+        }
+
+        private NPC FindHomingTarget(float maxRange)
+        {
+            NPC target = null;
+            float bestDistance = maxRange;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile, false))
+                    continue;
+
+                float distance = Vector2.Distance(Projectile.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                Vector2 toTarget = npc.Center - Projectile.Center;
+                if (Vector2.Dot(Projectile.velocity.SafeNormalize(Vector2.UnitX), toTarget.SafeNormalize(Vector2.UnitX)) < 0.2f)
+                    continue;
+
+                bestDistance = distance;
+                target = npc;
+            }
+
+            return target;
         }
 
         private void SpawnHelixFlightEffects()

@@ -14,8 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
     public class SHPC_EXCooldown : CooldownHandler
     {
         // 当前进度（0~1）
-        private float AdjustedCompletion => instance.timeLeft / (float)NewLegend_EXPlayer.EXMax;
-        private int DisplayValue => Utils.Clamp(instance.timeLeft / NewLegend_EXPlayer.FramesPerDisplayUnit, 0, NewLegend_EXPlayer.EXDisplayMax);
+        private float AdjustedCompletion => instance.timeLeft / (float)NewLegend_EXPlayer.GetCurrentEXMax(instance.player);
+        private int DisplayValue => Utils.Clamp(instance.timeLeft / NewLegend_EXPlayer.GetFramesPerDisplayUnit(instance.player), 0, NewLegend_EXPlayer.EXDisplayMax);
 
         private Color TextColor => Color.AliceBlue;
         private Color TextBorderColor = Color.Black;
