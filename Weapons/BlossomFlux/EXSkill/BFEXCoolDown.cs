@@ -1,4 +1,6 @@
 using System;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
 using CalamityMod.Cooldowns;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,25 +10,24 @@ using Terraria.Graphics.Shaders;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using static CalamityMod.CalamityUtils;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 {
-    // BlossomFlux 专属的大招条显示，负责把 0 到 5 的蓄积直接映射到冷却 UI。
     internal class BFEXCoolDown : CooldownHandler
     {
-        private float AdjustedCompletion => instance.timeLeft / (float)BFEXPlayer.MaxChargeFrames;
-        private int DisplayValue => Utils.Clamp(instance.timeLeft / BFEXPlayer.FramesPerDisplayUnit, 0, BFEXPlayer.UltimateDisplayMax);
+        private float ChargeCompletion => MathHelper.Clamp(1f - instance.timeLeft / (float)BFEXPlayer.UltimateCooldownFrames, 0f, 1f);
+        private int DisplayValue => instance.timeLeft <= 0 ? 0 : (int)Math.Ceiling(instance.timeLeft / 60f);
+        private Color PresetColor => BFArrowCommon.GetPresetColor(instance.player.GetModPlayer<BFRightUIPlayer>().CurrentPreset);
 
-        private Color TextColor => new Color(220, 255, 220);
+        private Color TextColor => Color.Lerp(new Color(216, 255, 216), Color.White, 0.35f);
         private Color TextBorderColor => Color.Black;
 
         public static new string ID => "BlossomFlux_EX";
         public override bool CanTickDown => false;
 
         public override bool ShouldDisplay =>
-            instance.player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
-            instance.player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked;
+            instance.player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked &&
+            (instance.player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() || instance.timeLeft > 0);
 
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.BlossomFlux_EX");
@@ -35,18 +36,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BlossomFlux/EXSkill/BFEXCoolDownOutline";
         public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BlossomFlux/EXSkill/BFEXCoolDownOverlay";
 
-        public override Color OutlineColor => new Color(26, 58, 28);
+        public override Color OutlineColor => Color.Lerp(PresetColor, Color.Black, 0.65f);
 
         public override Color CooldownStartColor =>
-            Color.Lerp(new Color(102, 214, 140), new Color(34, 102, 56), instance.Completion);
+            Color.Lerp(PresetColor, Color.White, 0.18f + ChargeCompletion * 0.12f);
 
         public override Color CooldownEndColor =>
-            Color.Lerp(new Color(212, 255, 196), new Color(50, 120, 58), instance.Completion);
+            Color.Lerp(Color.Lerp(PresetColor, Color.White, 0.45f), Color.White, ChargeCompletion * 0.18f);
 
         public override void ApplyBarShaders(float opacity)
         {
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseOpacity(opacity);
-            GameShaders.Misc["CalamityMod:CircularBarShader"].UseSaturation(AdjustedCompletion);
+            GameShaders.Misc["CalamityMod:CircularBarShader"].UseSaturation(ChargeCompletion);
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseColor(CooldownStartColor);
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseSecondaryColor(CooldownEndColor);
             GameShaders.Misc["CalamityMod:CircularBarShader"].Apply();
@@ -75,19 +76,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             spriteBatch.Draw(outline, position, null, OutlineColor * opacity, 0f, outline.Size() * 0.5f, scale, SpriteEffects.None, 0f);
             spriteBatch.Draw(sprite, position, null, Color.White * opacity, 0f, sprite.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
-            int lostHeight = (int)Math.Ceiling(overlay.Height * AdjustedCompletion);
-            Rectangle crop = new Rectangle(0, lostHeight, overlay.Width, overlay.Height - lostHeight);
+            int filledHeight = Utils.Clamp((int)Math.Ceiling(overlay.Height * ChargeCompletion), 0, overlay.Height);
+            if (filledHeight > 0)
+            {
+                int topTrim = overlay.Height - filledHeight;
+                Rectangle crop = new Rectangle(0, topTrim, overlay.Width, filledHeight);
 
-            spriteBatch.Draw(
-                overlay,
-                position + Vector2.UnitY * lostHeight * scale,
-                crop,
-                OutlineColor * opacity * 0.9f,
-                0f,
-                sprite.Size() * 0.5f,
-                scale,
-                SpriteEffects.None,
-                0f);
+                spriteBatch.Draw(
+                    overlay,
+                    position + Vector2.UnitY * topTrim * scale,
+                    crop,
+                    OutlineColor * opacity * 0.9f,
+                    0f,
+                    sprite.Size() * 0.5f,
+                    scale,
+                    SpriteEffects.None,
+                    0f);
+            }
 
             DrawBorderStringEightWay(
                 spriteBatch,

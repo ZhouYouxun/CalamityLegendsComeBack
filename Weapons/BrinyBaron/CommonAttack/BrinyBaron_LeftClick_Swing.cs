@@ -28,6 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float NormalSwooshScale = 0.6f;
         private const float StageFourSwooshScale = 0.75f;
         private const float GiantSwooshScale = 1.35f;
+        private const float GiantSlashDurationMultiplier = 1.7f;
 
         // 0/1/2 = 前三刀普通攻击，3 = 第四刀普通攻击+手里剑，4 = 第五刀巨大化攻击
         private int CurrentComboStage => swingCount % 5;
@@ -168,10 +169,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             int squareSize = GetInvisibleHitboxSize();
             float encodedScale = IsGiantComboStage ? -CurrentVisualScale : CurrentVisualScale;
-            Vector2 spawnCenter = Owner.Center;
+            Vector2 spawnCenter;
 
-            Vector2 spawnDirection = (Main.MouseWorld - Projectile.Center).SafeNormalize(SlashAngle.ToRotationVector2());
-            spawnCenter = Projectile.Center + spawnDirection * (squareSize * 0.5f);
+            if (IsGiantComboStage)
+            {
+                spawnCenter = Owner.Center;
+            }
+            else
+            {
+                Vector2 spawnDirection = (Main.MouseWorld - Projectile.Center).SafeNormalize(SlashAngle.ToRotationVector2());
+                spawnCenter = Projectile.Center + spawnDirection * (squareSize * 0.5f);
+            }
 
             int projectileIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -217,6 +225,34 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             progress = MathHelper.Clamp(progress, 0f, 1f);
             float easedProgress = CalamityUtils.ExpInOutEasing(progress, 1);
             return MathHelper.Lerp(minLerp * 2f, maxLerp, easedProgress);
+        }
+
+        private static float EvaluateGiantSlashProgress(float progress)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+
+            const float fastStartTime = 0.24f;
+            const float middleEndTime = 0.76f;
+            const float fastStartCoverage = 0.33f;
+            const float middleCoverage = 0.78f;
+
+            if (progress <= fastStartTime)
+            {
+                float startProgress = progress / fastStartTime;
+                startProgress = 1f - (float)Math.Pow(1f - startProgress, 1.55f);
+                return MathHelper.Lerp(0f, fastStartCoverage, startProgress);
+            }
+
+            if (progress <= middleEndTime)
+            {
+                float middleProgress = Utils.GetLerpValue(fastStartTime, middleEndTime, progress, true);
+                middleProgress = middleProgress * middleProgress * (3f - 2f * middleProgress);
+                return MathHelper.Lerp(fastStartCoverage, middleCoverage, middleProgress);
+            }
+
+            float endProgress = Utils.GetLerpValue(middleEndTime, 1f, progress, true);
+            endProgress = CalamityUtils.ExpInOutEasing(endProgress, 1);
+            return MathHelper.Lerp(middleCoverage, 1f, endProgress);
         }
 
         private void ApplyEarthStyleRotation(float targetDegrees, float progress, float minLerp, float maxLerp, bool forceAngleLerp = false)
@@ -461,7 +497,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 float time = AnimationProgress - (useAnim / 3f);
                 float timeMax = useAnim - (useAnim / 3f);
                 float linearSlashProgress = Utils.GetLerpValue(0f, timeMax, time, true);
-                float slashProgress = EvaluateEarthStyleSwingProgress(linearSlashProgress);
+                float slashProgress = EvaluateGiantSlashProgress(linearSlashProgress);
                 TrySpawnInvisibleSwingHitbox(linearSlashProgress);
 
                 if (time >= (int)(timeMax * 0.4f) && swingSound)
@@ -802,14 +838,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 float timeMax = Owner.itemAnimationMax * 1.2f; // Earth 第1下：useAnim=2倍，挥砍段=0.6useAnim，所以最终=1.2倍 itemAnimationMax
 
 
+                timeMax *= GiantSlashDurationMultiplier;
                 float linearSlashProgress = Utils.GetLerpValue(0f, timeMax, time, true);
 
-                float slashProgress = CalamityUtils.ExpInOutEasing(time / timeMax, 1);
+                float slashProgress = EvaluateEarthStyleSwingProgress(linearSlashProgress);
                 
                 TrySpawnInvisibleSwingHitbox(linearSlashProgress);
 
-                float start = 150f * Projectile.ai[1] * Owner.direction;
-                float end = 120f * -Projectile.ai[1] * Owner.direction;
+                float swingDirection = Projectile.ai[1] * Owner.direction;
+                float start = 150f * swingDirection;
+                float end = start - 360f * swingDirection;
 
                 if (time >= (int)(timeMax * 0.4f) && swingSound)
                 {
@@ -833,22 +871,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                     swingSound = false;
                 }
-
-
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians(MathHelper.Lerp(start, end, slashProgress)),
-                    0.2f
-                );
-
-                if (time > timeMax * 0.8f)
-                {
-                    RotationOffset = Utils.AngleLerp(
-                        RotationOffset,
-                        MathHelper.ToRadians(MathHelper.Lerp(start, end, slashProgress)),
-                        0.2f
-                    );
-                }
+                RotationOffset = MathHelper.ToRadians(MathHelper.Lerp(start, end, slashProgress));
 
                 if (time > (int)(timeMax * 0.45f) && time < (int)(timeMax * 0.9f))
                 {
@@ -885,16 +908,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 CanHit = false;
                 postSwing = false;
 
-                ApplyEarthStyleRotation(
-                    MathHelper.Lerp(
-                        120f * -Projectile.ai[1] * Owner.direction,
-                        28f * -Projectile.ai[1] * Owner.direction,
-                        shrinkProgress
-                    ),
-                    shrinkProgress,
-                    0.18f,
-                    0.2f
-                );
+                float swingDirection = Projectile.ai[1] * Owner.direction;
+                float slashEnd = 150f * swingDirection - 360f * swingDirection;
+                float shrinkEnd = 28f * -swingDirection;
+                RotationOffset = MathHelper.ToRadians(MathHelper.Lerp(slashEnd, shrinkEnd, shrinkProgress));
 
                 SpawnGiantShrinkParticles(shrinkProgress);
 
@@ -1075,8 +1092,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     if (giantGrowing)
                     {
                         float growProgress = Utils.GetLerpValue(0f, giantGrowFrames, giantTimer, true);
-                        giantBodyOpacity = MathHelper.Lerp(1f, 0f, growProgress);
-                        giantGhostOpacity = growProgress;
+                        float vanishProgress = Utils.GetLerpValue(0f, 0.28f, growProgress, true);
+                        giantBodyOpacity = 1f - vanishProgress;
+                        giantGhostOpacity = vanishProgress >= 1f ? 1f : 0f;
                     }
                     else if (giantSlashing)
                     {
@@ -1086,8 +1104,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     else if (giantShrinking)
                     {
                         float shrinkProgress = Utils.GetLerpValue(0f, giantShrinkFrames, giantTimer, true);
-                        giantBodyOpacity = MathHelper.Lerp(0f, 1f, shrinkProgress);
-                        giantGhostOpacity = 1f - shrinkProgress;
+                        giantBodyOpacity = Utils.GetLerpValue(0.18f, 1f, shrinkProgress, true);
+                        giantGhostOpacity = 1f - Utils.GetLerpValue(0f, 0.22f, shrinkProgress, true);
                     }
                     else if (CurrentComboStage == 4)
                     {

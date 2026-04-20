@@ -1,15 +1,15 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityMod;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 {
-    // 右键输入状态和当前战术都保存在玩家身上，切武器不丢，死亡后再重置。
     internal class BFRightUIPlayer : ModPlayer
     {
-        public const int TapThresholdFrames = 18;
+        public const int TapThresholdFrames = 9;
 
         private int rightPressFrames;
         private bool trackingRightPress;
@@ -23,6 +23,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         public bool LongHoldReleasedThisFrame { get; private set; }
         public bool LongHoldReachedThisFrame { get; private set; }
 
+        public int RightPressFrames => rightPressFrames;
+        public bool TrackingRightPress => trackingRightPress;
+        public float RightHoldProgress => MathHelper.Clamp(rightPressFrames / (float)TapThresholdFrames, 0f, 1f);
+        public bool ShowRightHoldBar => trackingRightPress && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool LongHoldActive => trackingRightPress && rightPressFrames > TapThresholdFrames;
         public bool PassiveRainUnlocked => Main.hardMode;
         public bool UltimateUnlocked => NPC.downedQueenBee;
@@ -73,10 +77,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
             bool validRightInput =
                 Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
+                !Player.noItems &&
+                !Player.CCed &&
                 !selectionPanelOpen &&
                 Player.Calamity().mouseRight &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
+                !Player.mouseInterface &&
                 !(Main.playerInventory && Main.HoverItem.type == Player.HeldItem.type);
 
             if (validRightInput)

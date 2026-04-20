@@ -10,17 +10,17 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 {
-        internal class BFSelectionPanel : ModProjectile, ILocalizedModType
-        {
-            private const float IconScale = 0.75f;
+    internal class BFSelectionPanel : ModProjectile, ILocalizedModType
+    {
+        private const float IconScale = 0.75f;
 
         private static readonly Vector2[] IconOffsets =
         {
-            new(-56f, 0f),
-            new(-28f, 0f),
-            new(0f, 0f),
-            new(28f, 0f),
-            new(56f, 0f)
+            new(0f, -58f),
+            new(55f, -18f),
+            new(34f, 48f),
+            new(-34f, 48f),
+            new(-55f, -18f)
         };
 
         private sealed class IconState
@@ -124,8 +124,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
         public override void SetDefaults()
         {
-            Projectile.width = 170;
-            Projectile.height = 62;
+            Projectile.width = 150;
+            Projectile.height = 150;
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 2;
@@ -145,7 +145,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 return;
             }
 
-            // 面板本质上仍然是一个弹幕，只在手持本武器时保留。
             if (owner.HeldItem.type != ModContent.ItemType<NewLegendBlossomFlux>())
                 FadeOut = true;
 
@@ -170,21 +169,34 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
             Player owner = Main.player[Projectile.owner];
             BFRightUIPlayer rightUIPlayer = owner.GetModPlayer<BFRightUIPlayer>();
-            Texture2D panelTexture = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 drawPosition = (owner.Center + playerOffset - Main.screenPosition).Floor();
+            Texture2D outerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/flower_015").Value;
+            Texture2D innerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
+            Color outerColor = new Color(82, 175, 110, 0) * (0.36f * Projectile.Opacity);
+            Color innerColor = new Color(182, 255, 190, 0) * (0.28f * Projectile.Opacity);
 
             Main.EntitySpriteDraw(
-                panelTexture,
+                outerRing,
                 drawPosition,
                 null,
-                Projectile.GetAlpha(Color.White),
-                0f,
-                panelTexture.Size() * 0.5f,
-                Projectile.scale,
+                outerColor,
+                Main.GlobalTimeWrappedHourly * 0.8f,
+                outerRing.Size() * 0.5f,
+                0.22f * Projectile.scale,
                 SpriteEffects.None,
                 0f);
 
-            // 这里按你的要求固定使用单帧贴图，不再适配 EXO 那套多帧按钮逻辑。
+            Main.EntitySpriteDraw(
+                innerRing,
+                drawPosition,
+                null,
+                innerColor,
+                -Main.GlobalTimeWrappedHourly * 0.55f,
+                innerRing.Size() * 0.5f,
+                0.42f * Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
             Vector2 frameSize = icons[0].IconTexture.Size();
             bool hoveringOverAnySlot = false;
             bool clickedOutside = Main.mouseLeft && Main.mouseLeftRelease;

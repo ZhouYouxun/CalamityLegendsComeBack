@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
@@ -63,6 +64,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         public override void SetStaticDefaults()
         {
             Main.projFrames[Type] = 5;
+            ProjectileID.Sets.TrailCacheLength[Type] = 8;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
@@ -90,6 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             Timer++;
             AnimateFrames();
+            ChloroplastCommon.FaceForward(Projectile);
             CurrentPresetBehavior.AI(Projectile);
         }
 

@@ -71,18 +71,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 for (int i = 0; i < 4; i++)
                 {
                     float t = i / 3f;
-                    float arc = MathHelper.Lerp(0.22f, 0.92f, t) * arm;
-                    Vector2 smokeVelocity = forward.RotatedBy(arc) * MathHelper.Lerp(1.1f, 3.1f, t) + right * arm * (0.28f + 0.42f * t);
-                    Vector2 smokePos = tip + forward * (6f + 12f * t);
+                    float arc = MathHelper.Lerp(0.16f, 0.78f, t) * arm;
+                    Vector2 flareVelocity = forward.RotatedBy(arc) * MathHelper.Lerp(1.2f, 3.2f, t) + right * arm * (0.2f + 0.35f * t);
+                    Vector2 flarePos = tip + forward * (6f + 12f * t);
 
                     GeneralParticleHandler.SpawnParticle(
-                        new HeavySmokeParticle(
-                            smokePos,
-                            smokeVelocity,
-                            Color.Lerp(new Color(82, 160, 210), new Color(255, 218, 116), t * 0.45f),
-                            23,
-                            MathHelper.Lerp(0.44f, 0.78f, t),
-                            0.65f));
+                        new LineParticle(
+                            flarePos,
+                            flareVelocity,
+                            false,
+                            12,
+                            MathHelper.Lerp(0.18f, 0.34f, 1f - t),
+                            Color.Lerp(new Color(98, 196, 255), new Color(255, 236, 166), t * 0.42f)));
+
+                    GeneralParticleHandler.SpawnParticle(
+                        new GlowOrbParticle(
+                            flarePos + right * arm * (2f + 4f * t),
+                            flareVelocity * 0.16f,
+                            false,
+                            10,
+                            MathHelper.Lerp(0.2f, 0.12f, t),
+                            Color.Lerp(new Color(125, 228, 255), Color.White, 0.3f),
+                            true,
+                            false,
+                            true));
                 }
             }
         }

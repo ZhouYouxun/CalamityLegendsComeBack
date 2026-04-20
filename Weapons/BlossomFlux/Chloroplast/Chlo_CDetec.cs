@@ -27,18 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         public override void AI(Projectile projectile)
         {
             Lighting.AddLight(projectile.Center, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.34f);
-
-            if (Main.rand.NextBool(3))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
-                    DustID.RedTorch,
-                    Main.rand.NextVector2Circular(0.45f, 0.45f),
-                    100,
-                    ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec),
-                    Main.rand.NextFloat(0.8f, 1.05f));
-                dust.noGravity = true;
-            }
+            ChloroplastCommon.EmitTrail(projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 0.98f);
         }
 
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
@@ -48,12 +37,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             if (projectile.owner == Main.myPlayer)
                 SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.32f, Pitch = 0.3f }, target.Center);
 
-            ChloroplastCommon.SimpleBurst(projectile, DustID.RedTorch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec), 10, 1f, 3.8f, 0.8f, 1.15f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 12, 1f, 3.8f, 0.8f, 1.15f);
         }
 
         public override void OnKill(Projectile projectile, int timeLeft)
         {
-            ChloroplastCommon.SimpleBurst(projectile, DustID.RedTorch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec), 10, 1.1f, 3.4f, 0.8f, 1.05f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 10, 1.1f, 3.4f, 0.8f, 1.05f);
         }
 
         public override bool OnTileCollide(Projectile projectile, Vector2 oldVelocity)
@@ -68,8 +57,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public override bool PreDraw(Projectile projectile, ref Color lightColor)
         {
-            ChloroplastCommon.DrawGlow(projectile, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec), 1.03f, 0.28f);
-            return true;
+            ChloroplastCommon.DrawPresetProjectile(projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, lightColor, 1.03f);
+            return false;
         }
     }
 }

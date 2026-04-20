@@ -47,6 +47,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
         private Vector2 dashVelocity = Vector2.Zero;
 
+        private static void ApplyDashSpeed(Player player, Vector2 dashDirection, float targetSpeed)
+        {
+            dashDirection = dashDirection.SafeNormalize(Vector2.UnitX);
+            float currentSpeed = Vector2.Dot(player.velocity, dashDirection);
+            player.velocity += dashDirection * (targetSpeed - currentSpeed);
+        }
+
         public override void Defaults()
         {
             Projectile.extraUpdates = 3;
@@ -174,7 +181,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 Projectile.scale = baseScale * MathHelper.Lerp(0.85f, 0.625f, CooldownCompletion);
 
                 // 给玩家一点减速收刀感
-                player.velocity *= 0.89f;
+                float slowedDashSpeed = Math.Max(0f, Vector2.Dot(player.velocity, fireDirection) * 0.89f);
+                ApplyDashSpeed(player, fireDirection, slowedDashSpeed);
 
                 // 第一刀快结束时，自动生成第二刀
                 if (!spawnedFollowup && SwingIndex == 0 && CooldownCompletion >= 0.82f && Main.myPlayer == Projectile.owner)
@@ -264,15 +272,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 if (!dashStarted)
                 {
                     dashStarted = true;
-                    dashVelocity = fireDirection * 24f;
+                    float startupDashSpeed = Math.Max(0f, Vector2.Dot(player.velocity, fireDirection)) + 24f;
+                    dashVelocity = fireDirection * startupDashSpeed;
                 }
 
-                dashVelocity += fireDirection * 1.9f;
+                float dashSpeed = Math.Max(0f, Vector2.Dot(dashVelocity, fireDirection)) + 1.9f;
                 float maxDashSpeed = 54f;
-                if (dashVelocity.Length() > maxDashSpeed)
-                    dashVelocity = dashVelocity.SafeNormalize(Vector2.UnitX) * maxDashSpeed;
+                dashSpeed = Math.Min(dashSpeed, maxDashSpeed);
+                dashVelocity = fireDirection * dashSpeed;
 
-                player.velocity.X = dashVelocity.X;
+                ApplyDashSpeed(player, fireDirection, dashSpeed);
 
                 // 冲刺期间的海蓝拖尾
                 if (timer % 3 == 0)
@@ -411,8 +420,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
         public override bool PreDraw(ref Color lightColor)
         {
-            lightColor = Color.White;
-            return base.PreDraw(ref lightColor);
+            return false;
         }
     }
 }

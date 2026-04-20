@@ -27,18 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         public override void AI(Projectile projectile)
         {
             Lighting.AddLight(projectile.Center, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague).ToVector3() * 0.34f);
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    DustID.GreenTorch,
-                    Main.rand.NextVector2Circular(0.45f, 0.45f),
-                    100,
-                    ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague),
-                    Main.rand.NextFloat(0.8f, 1.15f));
-                dust.noGravity = true;
-            }
+            ChloroplastCommon.EmitTrail(projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.02f);
 
             if ((int)projectile.ai[1] % 24 == 0 && projectile.owner == Main.myPlayer)
             {
@@ -60,13 +49,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             target.AddBuff(BuffID.Poisoned, 180);
             target.AddBuff(BuffID.Venom, 120);
-            ChloroplastCommon.SimpleBurst(projectile, DustID.GreenTorch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague), 10, 1f, 3.6f, 0.8f, 1.15f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 1f, 3.6f, 0.8f, 1.15f);
             SoundEngine.PlaySound(SoundID.NPCHit18 with { Volume = 0.28f, Pitch = -0.2f }, target.Center);
         }
 
         public override void OnKill(Projectile projectile, int timeLeft)
         {
-            ChloroplastCommon.SimpleBurst(projectile, DustID.GreenTorch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague), 12, 1f, 3.8f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 1f, 3.8f);
         }
 
         public override bool OnTileCollide(Projectile projectile, Vector2 oldVelocity)
@@ -81,8 +70,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public override bool PreDraw(Projectile projectile, ref Color lightColor)
         {
-            ChloroplastCommon.DrawGlow(projectile, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague), 1.04f, 0.28f);
-            return true;
+            ChloroplastCommon.DrawPresetProjectile(projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, lightColor, 1.04f);
+            return false;
         }
     }
 }

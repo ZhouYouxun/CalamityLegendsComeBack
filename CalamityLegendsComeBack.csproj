@@ -17,14 +17,16 @@
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
 	  <Folder Include="Weapons\BlossomFlux\SpecialArrow\" />
+	  <Folder Include="Weapons\BlossomFlux\特效总和参考\5 “散播”特效参考\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\MoonEvent\参考文献\" />
 	  <Folder Include="Weapons\SHPC\RightClick\枪身特效参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
+	  <Folder Include="Weapons\Z_Miao\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Compile Remove="Weapons\BrinyBaron\CommonAttack\参考文献\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\参考文献\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\特效总和参考\**\*.cs" />
 	  <Compile Remove="Weapons\SHPC\Effects\DPreDog\SZPC\TwistingNether的参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />

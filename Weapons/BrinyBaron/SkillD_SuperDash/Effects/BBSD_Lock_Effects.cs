@@ -83,29 +83,34 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     14);
                 GeneralParticleHandler.SpawnParticle(focusRing);
 
-                Vector2 smokeBase = weaponTip - beamDirection * (14f + (timer % 5) * 12f);
-                Vector2 smokeVelocity = -beamDirection.RotatedBy(Math.Sin(timer * 0.42f) * 0.12f) * 2.1f;
-                GeneralParticleHandler.SpawnParticle(
-                    new HeavySmokeParticle(
-                        smokeBase,
-                        smokeVelocity,
-                        targetLocked ? new Color(70, 146, 196) : new Color(74, 156, 188),
-                        23,
-                        0.88f,
-                        0.65f
-                    )
-                );
+                Vector2 ribbonBase = weaponTip - beamDirection * (14f + (timer % 5) * 12f);
+                float ribbonPhase = timer * 0.26f;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector2 ribbonOffset = tipDirection.RotatedBy(MathHelper.PiOver2) * side * (3f + 2.6f * (float)Math.Sin(ribbonPhase + side * 0.6f));
+                    Vector2 ribbonVelocity = -beamDirection * 1.65f + ribbonOffset * 0.05f;
 
-                GeneralParticleHandler.SpawnParticle(
-                    new HeavySmokeParticle(
-                        smokeBase + beamDirection.RotatedBy(MathHelper.PiOver2) * 10f,
-                        smokeVelocity.RotatedBy(0.18f) * 0.9f,
-                        targetLocked ? new Color(108, 214, 255) : new Color(115, 220, 255),
-                        23,
-                        0.66f,
-                        0.65f
-                    )
-                );
+                    GeneralParticleHandler.SpawnParticle(
+                        new LineParticle(
+                            ribbonBase + ribbonOffset,
+                            ribbonVelocity,
+                            false,
+                            9,
+                            0.18f,
+                            targetLocked ? new Color(118, 222, 255) : new Color(92, 206, 255)));
+
+                    GeneralParticleHandler.SpawnParticle(
+                        new GlowOrbParticle(
+                            ribbonBase + ribbonOffset * 1.2f,
+                            ribbonVelocity * 0.18f,
+                            false,
+                            8,
+                            0.14f,
+                            targetLocked ? new Color(255, 236, 156) : new Color(215, 248, 255),
+                            true,
+                            false,
+                            true));
+                }
             }
         }
 

@@ -20,8 +20,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         public static int FindBestTargetIndex(Player owner, Vector2 focusPoint, int currentTargetIndex = -1)
         {
+            float maxRange = MaxFocusDistance;
+
             int bestBoss = -1;
             float bestBossDistance = float.MaxValue;
+
             int bestNormal = -1;
             float bestNormalScore = float.MinValue;
 
@@ -31,28 +34,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     continue;
 
                 NPC npc = Main.npc[i];
-                float distanceToFocus = Vector2.Distance(npc.Center, focusPoint);
+
                 float distanceToOwner = Vector2.Distance(npc.Center, owner.Center);
-                if (distanceToFocus > MaxFocusDistance && distanceToOwner > MaxFocusDistance)
+
+                // ❗只以玩家为中心
+                if (distanceToOwner > maxRange)
                     continue;
 
+                // ===== Boss优先 =====
                 if (npc.boss)
                 {
-                    // ===== 多个 Boss 时，谁离鼠标更近就优先锁谁 =====
-                    if (distanceToFocus < bestBossDistance)
+                    if (distanceToOwner < bestBossDistance)
                     {
-                        bestBossDistance = distanceToFocus;
+                        bestBossDistance = distanceToOwner;
                         bestBoss = i;
                     }
-
                     continue;
                 }
 
-                // ===== 普通怪综合考虑血量、鼠标距离和玩家距离 =====
+                // ===== 普通怪评分（去掉鼠标）=====
                 float score =
                     npc.lifeMax * 0.72f -
-                    distanceToFocus * 1.15f -
-                    distanceToOwner * 0.24f;
+                    distanceToOwner * 0.9f;
 
                 if (i == currentTargetIndex)
                     score += CurrentTargetBonus;
@@ -66,5 +69,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             return bestBoss >= 0 ? bestBoss : bestNormal;
         }
+
+
+
+
+
+
+
+
+
+
+
     }
 }

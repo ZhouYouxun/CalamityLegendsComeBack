@@ -1,47 +1,57 @@
 using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 {
-    // 记录 BlossomFlux 的传奇槽蓄积，每秒长 1 层，触发后清空。
     internal class BFEXPlayer : ModPlayer
     {
-        public const int UltimateDisplayMax = 5;
+        public const int UltimateCooldownSeconds = 20;
         public const int FramesPerDisplayUnit = 60;
-        public const int MaxChargeFrames = UltimateDisplayMax * FramesPerDisplayUnit;
+        public const int UltimateCooldownFrames = UltimateCooldownSeconds * FramesPerDisplayUnit;
 
-        public int UltimateChargeFrames;
+        public int UltimateCooldownTimer;
 
-        public int DisplayValue => Utils.Clamp(UltimateChargeFrames / FramesPerDisplayUnit, 0, UltimateDisplayMax);
-        public bool CanTriggerUltimate => Player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked && UltimateChargeFrames >= MaxChargeFrames;
+        public int DisplayFrames => UltimateCooldownTimer;
+        public int DisplayValue => UltimateCooldownTimer <= 0 ? 0 : (int)System.Math.Ceiling(UltimateCooldownTimer / (float)FramesPerDisplayUnit);
+        public bool CanTriggerUltimate => Player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked && UltimateCooldownTimer <= 0;
 
         public override void ResetEffects()
         {
-            if (UltimateChargeFrames > MaxChargeFrames)
-                UltimateChargeFrames = MaxChargeFrames;
+            if (UltimateCooldownTimer < 0)
+                UltimateCooldownTimer = 0;
+            else if (UltimateCooldownTimer > UltimateCooldownFrames)
+                UltimateCooldownTimer = UltimateCooldownFrames;
         }
 
         public override void PostUpdate()
         {
             if (!Player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked)
             {
-                UltimateChargeFrames = 0;
+                UltimateCooldownTimer = 0;
                 return;
             }
 
-            if (UltimateChargeFrames < MaxChargeFrames)
-                UltimateChargeFrames++;
+            if (UltimateCooldownTimer > 0)
+            {
+                UltimateCooldownTimer--;
+                if (UltimateCooldownTimer == 0 && Player.whoAmI == Main.myPlayer)
+                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.6f, Pitch = 0.32f }, Player.Center);
+            }
         }
 
-        public void ConsumeUltimateCharge()
+        public void StartUltimateCooldown()
         {
-            UltimateChargeFrames = 0;
+            UltimateCooldownTimer = UltimateCooldownFrames;
+            if (Player.whoAmI == Main.myPlayer)
+                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.62f, Pitch = -0.05f }, Player.Center);
         }
 
-        public void FillUltimateCharge()
+        public void ResetUltimateCooldown()
         {
-            UltimateChargeFrames = MaxChargeFrames;
+            UltimateCooldownTimer = 0;
         }
     }
 }

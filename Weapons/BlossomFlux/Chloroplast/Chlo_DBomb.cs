@@ -26,18 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         public override void AI(Projectile projectile)
         {
             Lighting.AddLight(projectile.Center, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb).ToVector3() * 0.34f);
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
-                    DustID.Torch,
-                    -projectile.velocity * 0.06f + Main.rand.NextVector2Circular(0.5f, 0.5f),
-                    100,
-                    ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb),
-                    Main.rand.NextFloat(0.85f, 1.15f));
-                dust.noGravity = true;
-            }
+            ChloroplastCommon.EmitTrail(projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 1.04f);
         }
 
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
@@ -51,12 +40,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
                 projectile.knockBack * 0.5f,
                 projectile.owner);
 
-            ChloroplastCommon.SimpleBurst(projectile, DustID.Torch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb), 12, 1.1f, 4.2f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 14, 1.1f, 4.2f);
         }
 
         public override void OnKill(Projectile projectile, int timeLeft)
         {
-            ChloroplastCommon.SimpleBurst(projectile, DustID.Torch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb), 10, 1.1f, 3.6f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 12, 1.1f, 3.6f);
         }
 
         public override bool OnTileCollide(Projectile projectile, Vector2 oldVelocity)
@@ -71,8 +60,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public override bool PreDraw(Projectile projectile, ref Color lightColor)
         {
-            ChloroplastCommon.DrawGlow(projectile, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb), 1.03f, 0.28f);
-            return true;
+            ChloroplastCommon.DrawPresetProjectile(projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, lightColor, 1.03f);
+            return false;
         }
     }
 }

@@ -1,4 +1,6 @@
+using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -13,8 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     internal class BFArrow_CDetec : ModProjectile
     {
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
-        private const float ScanGrowthPerFrame = 3.2f;
-        private const float MaxScanRadius = 220f;
+        private const float ScanGrowthPerFrame = 3.8f;
+        private const float MaxScanRadius = 240f;
 
         private ref float State => ref Projectile.ai[0];
         private ref float AttachedNpcIndex => ref Projectile.ai[1];
@@ -40,26 +42,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void AI()
         {
             LifeTimer++;
-            Lighting.AddLight(Projectile.Center, new Color(255, 92, 92).ToVector3() * 0.46f);
+            Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.46f);
 
             if (State == 0f)
             {
                 BFArrowCommon.FaceForward(Projectile);
+                Projectile.velocity *= 1.0035f;
                 ScanRadius = MathHelper.Clamp(ScanRadius <= 0f ? 24f : ScanRadius + ScanGrowthPerFrame, 24f, MaxScanRadius);
+                BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.02f);
 
-                if (Main.rand.NextBool(2))
-                {
-                    Dust dust = Dust.NewDustPerfect(
-                        Projectile.Center,
-                        DustID.RedTorch,
-                        -Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.7f, 0.7f),
-                        100,
-                        new Color(255, 92, 92),
-                        Main.rand.NextFloat(0.85f, 1.1f));
-                    dust.noGravity = true;
-                }
-
-                if ((int)LifeTimer % 7 == 0)
+                if ((int)LifeTimer % 6 == 0)
                 {
                     if (Projectile.owner == Main.myPlayer)
                         SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.18f, Pitch = 0.45f }, Projectile.Center);
@@ -111,6 +103,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.netUpdate = true;
             Projectile.timeLeft = Utils.Clamp(Projectile.timeLeft, 180, 270);
 
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 10, 0.8f, 2.8f, 0.8f, 1.1f);
+            SpawnReconLockFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.45f, Pitch = 0.15f }, target.Center);
         }
 
@@ -130,17 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnKill(int timeLeft)
         {
-            for (int i = 0; i < 12; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.RedTorch,
-                    Main.rand.NextVector2CircularEdge(3f, 3f) * Main.rand.NextFloat(1.1f, 4.5f),
-                    100,
-                    new Color(255, 96, 96),
-                    Main.rand.NextFloat(0.85f, 1.2f));
-                dust.noGravity = true;
-            }
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 12, 1.1f, 4.5f, 0.85f, 1.2f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -149,7 +133,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             {
                 Texture2D circleTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
                 float scale = ScanRadius * 2f / circleTexture.Width;
-                Color ringColor = new Color(255, 90, 90, 0) * 0.22f;
+                Color ringColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec) * 0.22f;
 
                 Main.EntitySpriteDraw(
                     circleTexture,
@@ -174,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     0);
             }
 
-            BFArrowCommon.DrawAfterimagesThenProjectile(Projectile, lightColor);
+            BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_CDetec);
             return false;
         }
 
@@ -197,7 +181,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
 
             if (foundNewTarget && Projectile.owner == Main.myPlayer)
+            {
+                SpawnReconLockFX(Projectile.Center, 0.8f);
                 SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.28f, Pitch = 0.35f }, Projectile.Center);
+            }
+        }
+
+        private void SpawnReconLockFX(Vector2 center, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            BloomLineVFX lineA = new(center - Vector2.UnitX * 18f, Vector2.UnitX * 36f, 1.2f * intensity, mainColor, 12);
+            BloomLineVFX lineB = new(center - Vector2.UnitY * 18f, Vector2.UnitY * 36f, 1.05f * intensity, Color.White, 10);
+            GeneralParticleHandler.SpawnParticle(lineA);
+            GeneralParticleHandler.SpawnParticle(lineB);
+
+            GenericSparkle scanFlash = new(
+                center,
+                Vector2.Zero,
+                mainColor,
+                Color.White,
+                1.05f * intensity,
+                8,
+                0f,
+                1.3f);
+            GeneralParticleHandler.SpawnParticle(scanFlash);
         }
     }
 }

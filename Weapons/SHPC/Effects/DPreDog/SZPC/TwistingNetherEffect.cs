@@ -36,16 +36,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            Vector2 spawnVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Max(projectile.velocity.Length(), 16f);
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                spawnVelocity,
-                ModContent.ProjectileType<TwistingNether_Shadow>(),
-                projectile.damage,
-                projectile.knockBack,
-                projectile.owner
-            );
+            // 基础方向
+            Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Max(projectile.velocity.Length(), 16f);
+
+            // 生成3个，角度微随机（±5度）
+            for (int i = 0; i < 3; i++)
+            {
+                float randomAngle = MathHelper.ToRadians(Main.rand.NextFloat(-5f, 5f)); // 关键：±5度
+                Vector2 newVelocity = baseVelocity.RotatedBy(randomAngle);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    newVelocity,
+                    ModContent.ProjectileType<TwistingNether_Blade>(),
+                    projectile.damage,
+                    projectile.knockBack,
+                    projectile.owner
+                );
+            }
         }
+
+
+
     }
 }

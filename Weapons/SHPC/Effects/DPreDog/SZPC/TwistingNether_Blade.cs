@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -18,118 +19,74 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        public ref float TargetIndex => ref Projectile.ai[0];
-        public ref float State => ref Projectile.ai[1];
-        public ref float SpawnOrder => ref Projectile.ai[2];
+        // 飞行计时器
+        private int flightTimer;
 
-        public ref float Timer => ref Projectile.localAI[0];
-        public ref float HelixAngle => ref Projectile.localAI[1];
+        // 螺旋尾迹角度
+        private float helixAngle;
 
-        private const int HiddenState = 0;
-        private const int DiveState = 1;
+        // 脉冲光效角度
+        private float pulseAngle;
 
         public override void SetDefaults()
         {
-            Projectile.width = 28;
-            Projectile.height = 28;
+            Projectile.width = Projectile.height = 150;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = 1;
+            Projectile.penetrate = 5;
             Projectile.timeLeft = 240;
-            Projectile.extraUpdates = 3;
-            Projectile.Opacity = 0f;
+            Projectile.extraUpdates = 2;
+            Projectile.Opacity = 1f;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 18;
         }
 
         public override bool? CanCutTiles() => false;
 
-        public override void AI()
+        public override void OnSpawn(IEntitySource source)
         {
-            bool firstSubstep = Projectile.numUpdates == 0;
-            if (firstSubstep)
-                Timer++;
+            // 保证生成后必定立刻进入直线飞行
+            if (Projectile.velocity.LengthSquared() < 0.001f)
+                Projectile.velocity = -Vector2.UnitY * 24f;
 
-            if (State == HiddenState)
-                DoHiddenState(firstSubstep);
-            else
-                DoDiveState(firstSubstep);
-        }
-
-        private void DoHiddenState(bool firstSubstep)
-        {
-            Projectile.velocity *= 0.94f;
-            Projectile.Opacity = 0f;
-
-            if (!Main.dedServ && firstSubstep)
-            {
-                float chargePulse = 0.5f + 0.5f * (float)Math.Sin(Timer * 0.22f);
-                Vector2 ringOffset = (Timer * 0.24f).ToRotationVector2() * (8f + chargePulse * 10f);
-
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                    Projectile.Center,
-                    Vector2.Zero,
-                    Color.Lerp(BladeDark, BladePurple, chargePulse) * 0.45f,
-                    "CalamityMod/Particles/LargeBloom",
-                    new Vector2(0.8f, 1.4f),
-                    Main.rand.NextFloat(-0.15f, 0.15f),
-                    0.18f + chargePulse * 0.08f,
-                    0f,
-                    8,
-                    false));
-
-                Dust warningDust = Dust.NewDustPerfect(
-                    Projectile.Center + ringOffset,
-                    Main.rand.NextBool() ? DustID.Shadowflame : DustID.PurpleTorch,
-                    (-ringOffset).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.3f, 1.2f),
-                    0,
-                    Color.Lerp(BladePurple, Color.White, 0.2f),
-                    Main.rand.NextFloat(0.9f, 1.3f));
-                warningDust.noGravity = true;
-            }
-
-            int delay = 18 + ((int)SpawnOrder % 3) * 10;
-            if (Timer < delay)
-                return;
-
-            NPC target = FindNearestTarget(1500f);
-            Vector2 destination = target?.Center ?? (Projectile.Center + Vector2.UnitY * 400f);
-            Vector2 desiredVelocity = (destination - Projectile.Center).SafeNormalize(Vector2.UnitY) * 24f;
-
-            Projectile.velocity = desiredVelocity;
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.Opacity = 1f;
-            Timer = 0f;
-            State = DiveState;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            // 给每一发一点点不同的初始相位，避免视觉完全重叠
+            helixAngle = Projectile.identity * 0.37f;
+            pulseAngle = Projectile.identity * 0.21f;
 
             SoundEngine.PlaySound(SoundID.Item104 with { Pitch = -0.25f, Volume = 0.55f }, Projectile.Center);
         }
 
-        private void DoDiveState(bool firstSubstep)
+        public override void AI()
         {
-            NPC target = FindNearestTarget(1500f);
-            if (target != null)
+            bool firstSubstep = Projectile.numUpdates == 0;
+
+            if (firstSubstep)
             {
-                Vector2 desiredVelocity = (target.Center + target.velocity * 8f - Projectile.Center).SafeNormalize(Vector2.UnitY) * 26f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.07f);
+                flightTimer++;
+                helixAngle += 0.28f;
+                pulseAngle += 0.16f;
             }
 
+            // 永远只保留二阶段：不减速、不追踪、不制导，纯直线飞行
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Projectile.Opacity = MathHelper.Lerp(Projectile.Opacity, 1f, 0.24f);
+            Projectile.Opacity = 1f;
 
             if (!Main.dedServ)
-                SpawnDiveEffects(firstSubstep);
+                SpawnFlightEffects(firstSubstep);
         }
 
-        private void SpawnDiveEffects(bool firstSubstep)
+        private void SpawnFlightEffects(bool firstSubstep)
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            HelixAngle += 0.28f;
 
-            float spiralOffsetAmount = 12f + (float)Math.Sin(HelixAngle) * 6f;
+            // 二阶段原本的螺旋拖尾
+            float spiralOffsetAmount = 12f + (float)Math.Sin(helixAngle) * 6f;
             Vector2 spiralOffset = side * spiralOffsetAmount;
 
             GeneralParticleHandler.SpawnParticle(new CustomSpark(
@@ -168,6 +125,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                         Main.rand.Next(10, 16),
                         Main.rand.NextFloat(0.65f, 1f),
                         Color.Lerp(BladePurple, BladeDark, Main.rand.NextFloat(0.2f, 0.7f))));
+                }
+
+                // 把原一阶段的“蓄能感”脉冲并到现在的直线飞行里
+                if (flightTimer % 4 == 0)
+                {
+                    float chargePulse = 0.5f + 0.5f * (float)Math.Sin(pulseAngle);
+                    Vector2 ringOffset = (pulseAngle * 1.55f).ToRotationVector2() * (8f + chargePulse * 10f);
+
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                        Projectile.Center,
+                        Vector2.Zero,
+                        Color.Lerp(BladeDark, BladePurple, chargePulse) * 0.45f,
+                        "CalamityMod/Particles/LargeBloom",
+                        new Vector2(0.8f, 1.4f),
+                        Main.rand.NextFloat(-0.15f, 0.15f),
+                        0.18f + chargePulse * 0.08f,
+                        0f,
+                        8,
+                        false));
+
+                    Dust warningDust = Dust.NewDustPerfect(
+                        Projectile.Center + ringOffset,
+                        Main.rand.NextBool() ? DustID.Shadowflame : DustID.PurpleTorch,
+                        (-ringOffset).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.3f, 1.2f),
+                        0,
+                        Color.Lerp(BladePurple, Color.White, 0.2f),
+                        Main.rand.NextFloat(0.9f, 1.3f));
+                    warningDust.noGravity = true;
                 }
             }
         }
@@ -218,43 +203,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             }
         }
 
-        private NPC FindNearestTarget(float maxDistance)
-        {
-            if (Main.npc.IndexInRange((int)TargetIndex))
-            {
-                NPC cachedTarget = Main.npc[(int)TargetIndex];
-                if (cachedTarget.active && cachedTarget.CanBeChasedBy())
-                    return cachedTarget;
-            }
-
-            NPC nearestTarget = null;
-            float nearestDistance = maxDistance;
-
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-                if (!npc.active || !npc.CanBeChasedBy())
-                    continue;
-
-                float distance = Vector2.Distance(Projectile.Center, npc.Center);
-                if (distance < nearestDistance)
-                {
-                    nearestDistance = distance;
-                    nearestTarget = npc;
-                }
-            }
-
-            TargetIndex = nearestTarget?.whoAmI ?? -1;
-            return nearestTarget;
-        }
-
         public override bool PreDraw(ref Color lightColor)
         {
-            if (State == HiddenState || Main.dedServ)
+            if (Main.dedServ)
                 return false;
 
             Asset<Texture2D> smearTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearRagged");
             Asset<Texture2D> bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");
+            Asset<Texture2D> largeBloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/LargeBloom");
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
             for (int i = 0; i < 5; i++)
@@ -262,7 +218,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 Vector2 afterimageOffset = -Projectile.velocity.SafeNormalize(Vector2.UnitY) * i * 10f;
 
                 Color drawColor = Color.Lerp(BladePurple, Color.White, i / 5f);
-                drawColor.A = 0; // ❗防止黑底混色
+                drawColor.A = 0;
 
                 Main.EntitySpriteDraw(
                     smearTexture.Value,
@@ -275,6 +231,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     SpriteEffects.None);
             }
 
+            // 补一层更大的紫色脉冲，让现在的二阶段更像“高速穿刺中的蓄能体”
+            Main.EntitySpriteDraw(
+                largeBloomTexture.Value,
+                drawPosition,
+                null,
+                BladePurple * 0.22f * Projectile.Opacity,
+                0f,
+                largeBloomTexture.Size() * 0.5f,
+                new Vector2(0.35f, 0.75f),
+                SpriteEffects.None);
+
+            float centerPulseScale = 0.18f + 0.04f * (float)Math.Sin(pulseAngle);
+
             Main.EntitySpriteDraw(
                 bloomTexture.Value,
                 drawPosition,
@@ -282,7 +251,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 Color.White * 0.18f * Projectile.Opacity,
                 0f,
                 bloomTexture.Size() * 0.5f,
-                0.18f,
+                centerPulseScale,
                 SpriteEffects.None);
 
             return false;

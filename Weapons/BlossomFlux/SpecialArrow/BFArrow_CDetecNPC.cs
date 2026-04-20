@@ -82,8 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (intensity <= 0f)
                 return;
 
-            drawColor = Color.Lerp(drawColor, new Color(255, 80, 80), 0.45f * intensity);
-            Lighting.AddLight(npc.Center, new Vector3(0.4f, 0.05f, 0.05f) * intensity);
+            drawColor = Color.Lerp(drawColor, new Color(112, 225, 255), 0.45f * intensity);
+            Lighting.AddLight(npc.Center, new Vector3(0.08f, 0.34f, 0.4f) * intensity);
         }
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -97,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 origin = frame.Size() * 0.5f;
             Vector2 drawPosition = npc.Center - screenPos + new Vector2(0f, npc.gfxOffY);
             SpriteEffects effects = npc.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            Color outlineColor = new Color(255, 55, 55, 0) * (0.22f + 0.26f * intensity);
+            Color outlineColor = new Color(100, 220, 255, 0) * (0.22f + 0.26f * intensity);
 
             Vector2[] offsets =
             {

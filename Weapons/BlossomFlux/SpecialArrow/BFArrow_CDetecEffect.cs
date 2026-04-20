@@ -45,9 +45,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (Vector2.Distance(projectile.Center, priorityTarget.Center) > 1400f)
                 return;
 
-            float speed = System.Math.Max(projectile.velocity.Length(), 8f);
-            BFArrowCommon.WeakHomeTowards(projectile, priorityTarget, 30f, speed);
-            BFArrowCommon.MaintainSpeed(projectile, speed, 0.09f);
+            float speed = System.Math.Max(projectile.velocity.Length(), 12f);
+            BFArrowCommon.DirectHomeTowards(projectile, priorityTarget, 0.28f, speed + 1.5f);
+            BFArrowCommon.MaintainSpeed(projectile, speed + 1.5f, 0.18f);
         }
 
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)

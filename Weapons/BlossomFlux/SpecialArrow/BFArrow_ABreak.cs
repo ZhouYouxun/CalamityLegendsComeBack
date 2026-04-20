@@ -1,4 +1,6 @@
+using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -30,32 +32,22 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             FlightTimer++;
             BFArrowCommon.FaceForward(Projectile);
-            Lighting.AddLight(Projectile.Center, new Color(132, 255, 132).ToVector3() * 0.45f);
+            Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak).ToVector3() * 0.45f);
+            BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 1.05f);
+            EmitBreakthroughFlightFX();
 
-            if (Main.rand.NextBool(2))
+            if (FlightTimer >= 18f)
             {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.Grass,
-                    -Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.4f, 0.4f),
-                    100,
-                    new Color(132, 255, 132),
-                    Main.rand.NextFloat(0.85f, 1.2f));
-                dust.noGravity = true;
-            }
-
-            if (FlightTimer >= 24f)
-            {
-                NPC target = Projectile.Center.ClosestNPCAt(950f);
+                NPC target = Projectile.Center.ClosestNPCAt(1020f);
                 if (target != null)
                 {
-                    BFArrowCommon.WeakHomeTowards(Projectile, target, 18f, 19f);
-                    BFArrowCommon.MaintainSpeed(Projectile, 19f, 0.08f);
+                    BFArrowCommon.DirectHomeTowards(Projectile, target, 0.22f, 21f);
+                    BFArrowCommon.MaintainSpeed(Projectile, 21f, 0.14f);
                 }
             }
             else
             {
-                Projectile.velocity *= 1.003f;
+                Projectile.velocity *= 1.006f;
             }
         }
 
@@ -65,46 +57,43 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (BFArrowCommon.Bounce(Projectile, oldVelocity, ref BounceCounter, 3, 0.98f))
                 return true;
 
-            for (int i = 0; i < 8; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.GrassBlades,
-                    Main.rand.NextVector2Circular(2.2f, 2.2f),
-                    100,
-                    new Color(132, 255, 132),
-                    Main.rand.NextFloat(0.85f, 1.3f));
-                dust.noGravity = true;
-            }
-
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 10, 0.9f, 2.8f, 0.8f, 1.25f);
             return false;
         }
 
         public override void OnKill(int timeLeft)
         {
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(3f, 3f) * Main.rand.NextFloat(1.2f, 4.8f);
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.Grass,
-                    velocity,
-                    100,
-                    new Color(150, 255, 150),
-                    Main.rand.NextFloat(1f, 1.35f));
-                dust.noGravity = true;
-            }
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 14, 1.2f, 4.8f, 1f, 1.35f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 8, 0.9f, 2.6f, 0.8f, 1.15f);
             SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = 0.25f }, target.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            BFArrowCommon.DrawAfterimagesThenProjectile(Projectile, lightColor);
+            BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_ABreak);
             return false;
+        }
+
+        private void EmitBreakthroughFlightFX()
+        {
+            if (Main.dedServ || (int)FlightTimer % 6 != 0)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            DirectionalPulseRing pulse = new(
+                Projectile.Center + direction * 8f,
+                Projectile.velocity * 0.05f,
+                Color.Lerp(BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak), Color.White, 0.2f),
+                new Vector2(0.72f, 1.85f),
+                direction.ToRotation(),
+                0.14f,
+                0.04f,
+                10);
+            GeneralParticleHandler.SpawnParticle(pulse);
         }
     }
 }

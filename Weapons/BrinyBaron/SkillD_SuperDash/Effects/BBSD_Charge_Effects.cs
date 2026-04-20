@@ -16,9 +16,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 forward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 tip = projectile.Center + forward * (46f * projectile.scale);
-            float swing = (float)Math.Sin(timer * 0.18f) * MathHelper.Lerp(0.16f, 0.62f, chargeCompletion);
-            float fanArc = MathHelper.Lerp(0.18f, 0.45f, chargeCompletion);
-            Color blueColor = Color.Lerp(new Color(92, 204, 255), Color.White, 0.2f + chargeCompletion * 0.18f);
+            float spin = timer * 0.22f;
+            float helixRadius = MathHelper.Lerp(10f, 30f, chargeCompletion);
+            float helixLength = MathHelper.Lerp(18f, 68f, chargeCompletion);
+            Color blueColor = Color.Lerp(new Color(88, 210, 255), Color.White, 0.18f + chargeCompletion * 0.22f);
+            Color accentColor = Color.Lerp(new Color(84, 168, 255), new Color(220, 252, 255), 0.55f);
             string[] starTextures =
             {
                 "CalamityLegendsComeBack/Texture/KsTexture/star_01",
@@ -33,69 +35,93 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             for (int side = -1; side <= 1; side += 2)
             {
-                Vector2 pointerDirection = forward.RotatedBy(swing + fanArc * 0.75f * side);
-                GeneralParticleHandler.SpawnParticle(
-                    new CustomSpark(
-                        tip + right * side * Main.rand.NextFloat(1f, 3f),
-                        pointerDirection * Main.rand.NextFloat(1.8f, 4.2f),
-                        "CalamityLegendsComeBack/Texture/KsTexture/star_09",
-                        false,
-                        10,
-                        0.2f + chargeCompletion * 0.04f,
-                        blueColor * 0.95f,
-                        Vector2.One,
-                        glowCenter: true,
-                        shrinkSpeed: 0.58f,
-                        glowCenterScale: 0.86f,
-                        glowOpacity: 0.58f));
+                for (int step = 0; step < 3; step++)
+                {
+                    float t = step / 2f;
+                    float localSpin = spin + side * (0.55f + t * 1.2f);
+                    float localRadius = MathHelper.Lerp(helixRadius, helixRadius * 0.38f, t);
+                    Vector2 helixOffset =
+                        -forward * (8f + helixLength * t) +
+                        right * side * (float)Math.Sin(localSpin) * localRadius;
+                    Vector2 helixPos = tip + helixOffset;
+                    Vector2 tangentVelocity =
+                        -forward * MathHelper.Lerp(0.4f, 0.95f, t) +
+                        right * side * (float)Math.Cos(localSpin) * MathHelper.Lerp(0.18f, 0.5f, chargeCompletion);
+                    string randomStar = starTextures[(timer + step + (side > 0 ? 2 : 0)) % starTextures.Length];
+
+                    GeneralParticleHandler.SpawnParticle(
+                        new CustomSpark(
+                            helixPos,
+                            tangentVelocity,
+                            randomStar,
+                            false,
+                            10,
+                            MathHelper.Lerp(0.12f, 0.2f, 1f - t) + chargeCompletion * 0.04f,
+                            Color.Lerp(blueColor, accentColor, t * 0.55f),
+                            new Vector2(0.9f, 0.9f),
+                            glowCenter: true,
+                            shrinkSpeed: 0.58f,
+                            glowCenterScale: 0.8f,
+                            glowOpacity: 0.54f));
+
+                    GeneralParticleHandler.SpawnParticle(
+                        new GlowOrbParticle(
+                            helixPos,
+                            tangentVelocity * 0.28f,
+                            false,
+                            8,
+                            MathHelper.Lerp(0.22f, 0.12f, t) + chargeCompletion * 0.04f,
+                            Color.Lerp(blueColor, Color.White, 0.28f),
+                            true,
+                            false,
+                            true));
+                }
             }
 
-            for (int i = 0; i < 2; i++)
+            if (timer % 5 == 0)
             {
-                string randomStar = starTextures[Main.rand.Next(starTextures.Length)];
-                Vector2 sprayDirection = forward.RotatedBy(swing + Main.rand.NextFloat(-fanArc, fanArc));
+                float pulseStretch = MathHelper.Lerp(1.15f, 2.35f, chargeCompletion);
                 GeneralParticleHandler.SpawnParticle(
-                    new CustomSpark(
-                        tip + right * Main.rand.NextFloat(-4f, 4f),
-                        sprayDirection * Main.rand.NextFloat(1.4f, 3.8f),
-                        randomStar,
-                        false,
-                        9,
-                        Main.rand.NextFloat(0.16f, 0.22f) + chargeCompletion * 0.03f,
-                        blueColor * Main.rand.NextFloat(0.78f, 1f),
-                        Vector2.One,
-                        glowCenter: true,
-                        shrinkSpeed: 0.62f,
-                        glowCenterScale: 0.82f,
-                        glowOpacity: 0.52f));
+                    new DirectionalPulseRing(
+                        tip - forward * MathHelper.Lerp(6f, 18f, chargeCompletion),
+                        -forward * 0.55f,
+                        new Color(94, 214, 255),
+                        new Vector2(0.72f, pulseStretch),
+                        forward.ToRotation() - MathHelper.PiOver2,
+                        0.14f,
+                        0.02f,
+                        12));
             }
 
-            if (Main.myPlayer == projectile.owner && timer % 2 == 0)
+            if (Main.myPlayer == projectile.owner && timer % 4 == 0)
             {
-                Vector2 spawnDirection = forward.RotatedByRandom(0.65f);
+                float spawnAngle = timer * 0.47f + Main.rand.NextFloat(-0.22f, 0.22f);
+                Vector2 spawnDirection = spawnAngle.ToRotationVector2();
                 Projectile.NewProjectile(
                     projectile.GetSource_FromAI(),
-                    tip + spawnDirection * 160f,
-                    spawnDirection * 0.2f,
+                    owner.MountedCenter + spawnDirection * BBSD_VirtualPROJ.SpawnRingRadius,
+                    Vector2.Zero,
                     ModContent.ProjectileType<BBSD_VirtualPROJ>(),
                     0,
                     0f,
                     projectile.owner,
                     projectile.whoAmI,
-                    Main.rand.NextFloat(MathHelper.TwoPi));
+                    spawnAngle);
             }
 
             if (timer % 6 == 0)
             {
                 Vector2 searchAnchor = target?.Center ?? focusPoint;
+                float beamSample = 0.18f + 0.1f * (0.5f + 0.5f * (float)Math.Sin(timer * 0.12f));
+                Vector2 samplePos = Vector2.Lerp(tip, searchAnchor, beamSample) + right * (float)Math.Sin(spin * 0.8f) * MathHelper.Lerp(3f, 11f, chargeCompletion);
                 GeneralParticleHandler.SpawnParticle(
                     new GlowOrbParticle(
-                        Vector2.Lerp(tip, searchAnchor, 0.2f + 0.08f * (float)Math.Sin(timer * 0.11f)),
+                        samplePos,
                         Vector2.Zero,
                         false,
-                        8,
-                        0.32f + chargeCompletion * 0.08f,
-                        new Color(108, 212, 255),
+                        9,
+                        0.24f + chargeCompletion * 0.08f,
+                        accentColor,
                         true,
                         false,
                         true));

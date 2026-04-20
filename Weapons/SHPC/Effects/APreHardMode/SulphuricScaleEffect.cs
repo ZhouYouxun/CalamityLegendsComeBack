@@ -65,12 +65,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Particle blastRing = new CustomPulse(
                 projectile.Center,
                 Vector2.Zero,
-                new Color(150, 215, 88),
+                new Color(150, 215, 88) * 1.25f,
                 "CalamityLegendsComeBack/Texture/Myown/IonizingRadiation",
                 Vector2.One * 0.18f,
                 Main.rand.NextFloat(-6f, 6f),
-                0.03f,
-                0.16f,
+                0.13f,
+                0.76f,
                 20,
                 true,
                 0.75f
@@ -86,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Vector2.One * 0.18f,
                 0f,
                 0.13f,
-                0.34f,
+                0.54f,
                 16,
                 true
             );

@@ -30,17 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
             if (projectile.localAI[0] == 0f)
             {
-                if (Main.rand.NextBool(2))
-                {
-                    Dust dust = Dust.NewDustPerfect(
-                        projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                        DustID.GemEmerald,
-                        -projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.5f, 0.5f),
-                        100,
-                        ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov),
-                        Main.rand.NextFloat(0.85f, 1.15f));
-                    dust.noGravity = true;
-                }
+                ChloroplastCommon.EmitTrail(projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 1.08f);
 
                 if (projectile.ai[1] >= 20f || projectile.timeLeft < 85)
                     BeginReturn(projectile);
@@ -61,17 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             Vector2 desiredVelocity = (owner.Center - projectile.Center).SafeNormalize(Vector2.UnitY) * 13.5f;
             projectile.velocity = Vector2.Lerp(projectile.velocity, desiredVelocity, 0.12f);
 
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
-                    DustID.GreenTorch,
-                    Main.rand.NextVector2Circular(0.45f, 0.45f),
-                    100,
-                    ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov),
-                    Main.rand.NextFloat(0.9f, 1.2f));
-                dust.noGravity = true;
-            }
+            ChloroplastCommon.EmitTrail(projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 0.92f);
 
             if (projectile.Hitbox.Intersects(owner.Hitbox))
             {
@@ -89,13 +69,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
         {
             projectile.localAI[1] = Utils.Clamp(projectile.localAI[1] + 2f + damageDone / 60f, 3f, 10f);
-            ChloroplastCommon.SimpleBurst(projectile, DustID.GemEmerald, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov), 8, 1f, 3.4f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 10, 1f, 3.4f);
             BeginReturn(projectile);
         }
 
         public override void OnKill(Projectile projectile, int timeLeft)
         {
-            ChloroplastCommon.SimpleBurst(projectile, DustID.GreenTorch, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov), 12, 1f, 3.4f);
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 12, 1f, 3.4f);
         }
 
         public override bool OnTileCollide(Projectile projectile, Vector2 oldVelocity)
@@ -111,8 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public override bool PreDraw(Projectile projectile, ref Color lightColor)
         {
-            ChloroplastCommon.DrawGlow(projectile, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov), 1.04f, 0.3f);
-            return true;
+            ChloroplastCommon.DrawPresetProjectile(projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, lightColor, 1.04f);
+            return false;
         }
 
         private static void BeginReturn(Projectile projectile)
@@ -125,6 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             projectile.tileCollide = false;
             projectile.timeLeft = Utils.Clamp(projectile.timeLeft, 90, 150);
             projectile.netUpdate = true;
+            ChloroplastCommon.EmitBurst(projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 8, 0.8f, 2.6f, 0.8f, 1.1f);
         }
     }
 }

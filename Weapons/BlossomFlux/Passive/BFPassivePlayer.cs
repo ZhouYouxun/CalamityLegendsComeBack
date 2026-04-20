@@ -1,18 +1,32 @@
-using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.TurretMode;
-using Microsoft.Xna.Framework;
+using CalamityMod;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
 {
-    // 手持 BlossomFlux 时负责周期性降下被动弹幕；背包右键只改这里的开关状态。
     internal sealed class BFPassivePlayer : ModPlayer
     {
+        public const int PassiveCooldownFrames = 150 * 60;
+        public const int FinalStandDurationFrames = 15 * 60;
+
         private bool holdingBlossomFlux;
-        private int passiveReleaseTimer;
+
+        public int PassiveCooldownTimer;
+        public int FinalStandTimer;
+
+        public bool PassiveUnlocked => Main.hardMode;
+        public bool FinalStandActive => FinalStandTimer > 0;
+        public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer <= 0 && !FinalStandActive;
+        public bool ShouldShowCooldownDisplay =>
+            (holdingBlossomFlux && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() && PassiveUnlocked) ||
+            FinalStandActive ||
+            PassiveCooldownTimer > 0;
+
+        public int DisplayFrames => FinalStandActive ? FinalStandTimer : PassiveCooldownTimer;
+        public int RemainingSeconds => DisplayFrames <= 0 ? 0 : (int)System.Math.Ceiling(DisplayFrames / 60f);
 
         public override void ResetEffects()
         {
@@ -22,32 +36,46 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
         public override void UpdateDead()
         {
             holdingBlossomFlux = false;
-            passiveReleaseTimer = 0;
+            FinalStandTimer = 0;
+            SyncPassiveDisplay();
         }
 
         public override void PostUpdate()
         {
-            if (!holdingBlossomFlux || Player.HeldItem.type != ModContent.ItemType<NewLegendBlossomFlux>())
+            if (PassiveCooldownTimer > 0)
             {
-                passiveReleaseTimer = 0;
-                return;
+                PassiveCooldownTimer--;
+                if (PassiveCooldownTimer == 0 && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
+                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
             }
 
-            BFRightUIPlayer rightUIPlayer = Player.GetModPlayer<BFRightUIPlayer>();
-            if (!rightUIPlayer.PassiveRainUnlocked || !rightUIPlayer.PassiveRainEnabled)
+            if (FinalStandTimer > 0)
             {
-                passiveReleaseTimer = 0;
-                return;
+                FinalStandTimer--;
+                if (FinalStandTimer == 0 && Player.active && !Player.dead)
+                    ResolveFinalStandSurvival();
             }
 
-            if (Player.whoAmI != Main.myPlayer)
+            SyncPassiveDisplay();
+        }
+
+        public override void ModifyHurt(ref Player.HurtModifiers modifiers)
+        {
+            if (!FinalStandActive)
                 return;
 
-            if (++passiveReleaseTimer < GetPassiveReleaseRate())
-                return;
+            modifiers.ModifyHurtInfo += ForceFinalStandDeath;
+        }
 
-            passiveReleaseTimer = Main.rand.Next(-5, 6);
-            ReleasePassiveRain();
+        public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
+        {
+            if (!CanTriggerFinalStand())
+                return true;
+
+            TriggerFinalStand();
+            playSound = false;
+            genGore = false;
+            return false;
         }
 
         public void SetHoldingBlossomFlux()
@@ -55,38 +83,73 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
             holdingBlossomFlux = true;
         }
 
-        private int GetPassiveReleaseRate()
+        public void SyncPassiveDisplay()
         {
-            return Player.GetModPlayer<BFTurretModePlayer>().TurretModeActive ? 22 : 34;
+            if (!PassiveUnlocked && PassiveCooldownTimer <= 0 && !FinalStandActive)
+            {
+                if (Player.Calamity().cooldowns.TryGetValue(BFPassiveCoolDown.ID, out var hiddenCooldown))
+                    hiddenCooldown.timeLeft = 0;
+
+                return;
+            }
+
+            int displayFrames = DisplayFrames;
+            if (Player.Calamity().cooldowns.TryGetValue(BFPassiveCoolDown.ID, out var cooldown))
+            {
+                cooldown.timeLeft = displayFrames;
+            }
+            else
+            {
+                Player.AddCooldown(BFPassiveCoolDown.ID, displayFrames);
+            }
         }
 
-        private void ReleasePassiveRain()
+        private bool CanTriggerFinalStand()
         {
-            int burstCount = Main.rand.Next(2, 4);
-            for (int i = 0; i < burstCount; i++)
-                SpawnSingleRainShard(i, burstCount);
-
-            SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = -0.35f }, Player.Center);
+            return holdingBlossomFlux &&
+                   Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
+                   PassiveUnlocked &&
+                   PassiveCooldownTimer <= 0 &&
+                   FinalStandTimer <= 0;
         }
 
-        private void SpawnSingleRainShard(int index, int burstCount)
+        private void TriggerFinalStand()
         {
-            float horizontalOffset = MathHelper.Lerp(150f, 240f, Main.rand.NextFloat()) * Player.direction;
-            float verticalOffset = Main.rand.NextFloat(-360f, -280f);
-            Vector2 spawnPosition = Player.Center + new Vector2(horizontalOffset, verticalOffset);
+            int healAmount = Player.statLifeMax2 - Player.statLife;
+            Player.statLife = Player.statLifeMax2;
+            if (healAmount > 0)
+                Player.HealEffect(healAmount, true);
 
-            float spread = burstCount <= 1 ? 0f : MathHelper.Lerp(-0.14f, 0.14f, index / (float)(burstCount - 1));
-            Vector2 velocity = new Vector2(Player.direction * Main.rand.NextFloat(3.5f, 5.5f), Main.rand.NextFloat(8.5f, 11.5f)).RotatedBy(spread);
-            int damage = (int)(Player.GetWeaponDamage(Player.HeldItem) * (Player.GetModPlayer<BFTurretModePlayer>().TurretModeActive ? 0.78f : 0.62f));
+            FinalStandTimer = FinalStandDurationFrames;
+            PassiveCooldownTimer = PassiveCooldownFrames;
+            Player.immune = true;
+            Player.immuneNoBlink = true;
+            Player.immuneTime = System.Math.Max(Player.immuneTime, 45);
 
-            Projectile.NewProjectile(
-                Player.GetSource_FromThis(),
-                spawnPosition,
-                velocity,
-                ModContent.ProjectileType<BFPassiveRain>(),
-                damage,
-                1.1f,
-                Player.whoAmI);
+            if (Player.whoAmI == Main.myPlayer)
+            {
+                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.75f, Pitch = -0.2f }, Player.Center);
+                SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.65f, Pitch = -0.08f }, Player.Center);
+            }
+        }
+
+        private void ResolveFinalStandSurvival()
+        {
+            int targetLife = Player.statLifeMax2 / 2;
+            if (Player.statLife < targetLife)
+            {
+                int healAmount = targetLife - Player.statLife;
+                Player.statLife = targetLife;
+                Player.HealEffect(healAmount, true);
+            }
+
+            if (Player.whoAmI == Main.myPlayer)
+                SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.58f, Pitch = 0.22f }, Player.Center);
+        }
+
+        private void ForceFinalStandDeath(ref Player.HurtInfo info)
+        {
+            info.Damage = System.Math.Max(info.Damage, Player.statLife + Player.statLifeMax2 + 1);
         }
     }
 }

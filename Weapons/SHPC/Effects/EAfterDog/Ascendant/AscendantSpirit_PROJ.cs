@@ -165,8 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         }
 
         // ===== 保持默认 =====
-        public override bool? CanDamage() => Projectile.localAI[0] < 20 ? false : null;
-
+        public override bool? CanDamage() => true;
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) =>
             modifiers.SourceDamage.Flat += 0f;
     }

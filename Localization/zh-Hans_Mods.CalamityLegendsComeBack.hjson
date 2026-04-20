@@ -97,8 +97,8 @@ Items: {
 			BF_Left:
 				'''
 				[c/66CCFF:左键：以 15 帧为一组节奏，连续打出 4 轮快速二连发。]
-				[c/99CCFF:每次 A 都会平行射出 3 支玩家当前的箭；炮台形态下这一整套节奏会明显加快。]
-				[c/DDA0FF:第四轮二连发结束后，再延迟 9 帧补射 1 枚依照当前战术生成的叶绿体。]
+				[c/99CCFF:每轮都会平行射出 3 支玩家当前的箭。]
+				[c/DDA0FF:第四轮二连发结束后，会根据当前战术补出 1 枚叶绿体。]
 				'''
 			BF_Preset: "[c/7BE495:当前战术：{0}]"
 			PresetName0: 突破
@@ -114,7 +114,7 @@ Items: {
 			BF_Right:
 				'''
 				[c/F7D87C:右键单点：展开战术面板，点击图标后立刻切换战术并关闭面板。]
-				[c/F7D87C:右键按住超过 0.3 秒会进入当前战术对应的蓄力 HoldOut；必须蓄满后松手才会发射。]
+				[c/F7D87C:右键按住超过 0.15 秒会进入当前战术对应的蓄力 HoldOut；必须蓄满后松手才会发射。]
 				[c/F7D87C:蓄满后的特种箭伤害会显著高于左键常态箭。]
 				'''
 			PresetRight0: "[c/F4D57A:突破·右键：蓄满后射出弹射并追踪的特种箭，用来撕开正面缺口。]"
@@ -122,20 +122,21 @@ Items: {
 			PresetRight2: "[c/F4D57A:侦查·右键：蓄满后射出扫描箭，标记者会被左键常态箭优先弱追踪并触发爆炸。]"
 			PresetRight3: "[c/F4D57A:轰炸·右键：蓄满后射出轰炸箭，命中后会持续从天上降下玩家当前箭矢。]"
 			PresetRight4: "[c/F4D57A:散播·右键：蓄满后射出可扎附的散播箭，持续释放瘟疫毒气。]"
-			BF_Passive: "[c/9AEF9E:被动：手持时会在面前上空周期性降下绿色穿刺弹幕；背包右键可切换，当前：{0}。]"
-			PassiveStateOn: "[c/7BFFB7:开启]"
-			PassiveStateOff: "[c/F0D070:关闭]"
-			PassiveStateLocked: "[c/9A9A9A:肉山后解锁]"
+			BF_Passive: "[c/9AEF9E:被动：手持时若受到致命伤害，则会进入 15 秒的不死阶段并瞬间回满血；该阶段内再受任何伤害都会直接死亡。若撑过这 15 秒，则至少回复到半血。当前状态：{0}。]"
+			PassiveStateReady: "[c/7BFFB7:已就绪]"
+			PassiveStateActive: "[c/FF9B8B:不死阶段中]"
+			PassiveStateCooldown: "[c/F0D070:冷却 {0} 秒]"
+			PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
 			PresetUnlock1: "[c/7BFFB7:复苏：已解锁，可在战术面板中选择。]"
 			PresetLock1: "[c/9A9A9A:复苏：击败蜂王后解锁。]"
-			PresetUnlock2: "[c/7BFFB7:侦查：已解锁，同时开放被动天降与其背包右键开关。]"
-			PresetLock2: "[c/9A9A9A:侦查：肉山后解锁，同时开启被动天降。]"
+			PresetUnlock2: "[c/7BFFB7:侦查：已解锁，可在战术面板中选择。]"
+			PresetLock2: "[c/9A9A9A:侦查：困难模式后解锁。]"
 			PresetUnlock3: "[c/7BFFB7:轰炸：已解锁，可在战术面板中选择。]"
 			PresetLock3: "[c/9A9A9A:轰炸：击败世纪之花后解锁。]"
 			PresetUnlock4: "[c/7BFFB7:散播：已解锁，可在战术面板中选择。]"
 			PresetLock4: "[c/9A9A9A:散播：击败歌莉娅后解锁。]"
-			BF_Ultimate: "[c/7BFFB7:按下[{0}]进入炮台形态；5 秒后才能再次按键退出。炮台期间无法移动或切武器，但左右键会被大幅强化。]"
-			BF_UltimateLocked: "[c/9A9A9A:传奇键：击败蜂王后解锁炮台形态。]"
+			BF_Ultimate: "[c/7BFFB7:按下[{0}]会在当前位置展开一个持续 15 秒的大招立场。该立场冷却 20 秒，并会随当前战术变化效果。]"
+			BF_UltimateLocked: "[c/9A9A9A:传奇键：击败蜂王后解锁大招立场。]"
 			BF_Final: "[c/9FD8A2:弓弦已经鸣动，林叶正在回应。]"
 			LegendaryHint: "[c/BABABA:按住Shift键以读取传奇记录]"
 			LegendaryText:
@@ -154,6 +155,32 @@ Items: {
 
 		NewLegendSHPCTest: {
 			// DisplayName: New Legend S H P C Test
+			// Tooltip: ""
+		}
+
+		Ranged: {
+			HeavenlyGale: {
+				// DisplayName: Heavenly Gale
+				// Tooltip: ""
+			}
+		}
+
+		DraedonsArsenal: {
+			ShortCircuit: {
+				// DisplayName: Short Circuit
+				// Tooltip: ""
+			}
+		}
+
+		Melee: {
+			CosmicDischarge: {
+				// DisplayName: Cosmic Discharge
+				// Tooltip: ""
+			}
+		}
+
+		NewLegendCosmicDischarge: {
+			// DisplayName: New Legend Cosmic Discharge
 			// Tooltip: ""
 		}
 	}
@@ -260,6 +287,8 @@ Projectiles: {
 		BFFuckyouExplosion.DisplayName: 绽裂爆轰
 		BFTurretAimBeam.DisplayName: 炮塔瞄准光束
 		BFTurretVine.DisplayName: 炮塔藤蔓
+		// NewLegendBlossomFluxHoldOut.DisplayName: New Legend Blossom Flux Hold Out
+		// BFUltimateField.DisplayName: B F Ultimate Field
 	}
 
 	BrinyBaron: {
@@ -276,6 +305,7 @@ Projectiles: {
 		Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 终潮处刑
 		BBSD_Star.DisplayName: 终潮星刃
 		BBSD_Final_INV.DisplayName: 终潮刻印
+		// BBASD_Lighting.DisplayName: B B A S D_ Lighting
 	}
 
 	SHPC: {
@@ -406,13 +436,44 @@ Projectiles: {
 	// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 	// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
 	// ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
+
+	Ranged: {
+		// HeavenlyGaleProj.DisplayName: Heavenly Gale Proj
+		// ShortCircuitShot.DisplayName: Short Circuit Shot
+		// ShortCircuitExplosion.DisplayName: Short Circuit Explosion
+		// FlakKrakenProjectile.DisplayName: Flak Kraken Projectile
+	}
+
+	// Misc.ShortCircuitHook.DisplayName: Short Circuit Hook
+
+	Melee: {
+		// CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
+		// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
+		// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
+		// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
+		// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
+		// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
+		// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+		// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
+		// AbyssBladeProjectile.DisplayName: Abyss Blade Projectile
+		// AbyssBladeSplitProjectile.DisplayName: Abyss Blade Split Projectile
+	}
+
+	Magic: {
+		// HadalUrnIsopod.DisplayName: Hadal Urn Isopod
+		// HadalUrnJellyfish.DisplayName: Hadal Urn Jellyfish
+		// HadalUrnLamprey.DisplayName: Hadal Urn Lamprey
+		// HadalUrnStarfish.DisplayName: Hadal Urn Starfish
+		// HadalUrnStarfishShard.DisplayName: Hadal Urn Starfish Shard
+	}
 }
 
 // Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 Cooldowns: {
 	SHPC_EX: SHPC鍐峰嵈
-	BlossomFlux_EX: BlossomFlux 鐐彴鍒囨崲
+	BlossomFlux_EX: BlossomFlux 大招立场
+	BlossomFlux_Passive: BlossomFlux 不死被动
 	YC_EX: 姘存櫠 EX 鍐峰嵈
 	BrinyBaron_SuperDash: 娴风埖缁堢粨鍐插埡
 }

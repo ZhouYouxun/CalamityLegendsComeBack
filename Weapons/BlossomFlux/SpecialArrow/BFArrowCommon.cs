@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -9,9 +10,11 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
-    // 五种特种箭共用的基础工具，统一处理朝向、拖影和默认箭矢参数。
     internal static class BFArrowCommon
     {
+        private const string ArrowBeamTexture = "CalamityMod/Particles/GlowBlade";
+        private const string ArrowOverlayTexture = "CalamityMod/Items/Ammo/VanquisherArrowGlow";
+
         public static void SetBaseArrowDefaults(Projectile projectile, int width = 14, int height = 34, int timeLeft = 180, int penetrate = 1, int extraUpdates = 1, bool tileCollide = true)
         {
             projectile.width = width;
@@ -54,6 +57,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             projectile.velocity = (projectile.velocity * (inertia - 1f) + desiredVelocity) / inertia;
         }
 
+        public static void DirectHomeTowards(Projectile projectile, NPC target, float responsiveness = 0.2f, float targetSpeed = -1f)
+        {
+            if (target is null || !target.active)
+                return;
+
+            float speed = targetSpeed > 0f ? targetSpeed : System.Math.Max(projectile.velocity.Length(), 10f);
+            Vector2 aimPoint = target.Center + target.velocity * 0.18f;
+            Vector2 desiredVelocity = (aimPoint - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
+            projectile.velocity = Vector2.Lerp(projectile.velocity, desiredVelocity, MathHelper.Clamp(responsiveness, 0.01f, 1f));
+
+            if (projectile.velocity.LengthSquared() < 0.01f)
+                projectile.velocity = desiredVelocity;
+        }
+
         public static bool Bounce(Projectile projectile, Vector2 oldVelocity, ref float bounceCounter, int maxBounces, float velocityRetention = 1f)
         {
             bounceCounter++;
@@ -70,10 +87,393 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             return false;
         }
 
-        public static void DrawAfterimagesThenProjectile(Projectile projectile, Color lightColor, float scale = 1f)
+        public static void EmitPresetTrail(Projectile projectile, BlossomFluxChloroplastPresetType preset, float intensity = 1f)
         {
-            CalamityUtils.DrawAfterimagesCentered(projectile, ProjectileID.Sets.TrailingMode[projectile.type], lightColor, 1);
-            DrawProjectile(projectile, TextureAssets.Projectile[projectile.type].Value, projectile.GetAlpha(lightColor), projectile.rotation, projectile.scale * scale);
+            if (!Main.rand.NextBool(2))
+                return;
+
+            Color mainColor = GetPresetColor(preset);
+            Color accentColor = GetPresetAccentColor(preset);
+            Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            Vector2 spawnPosition = projectile.Center - projectile.velocity * 0.12f + normal * Main.rand.NextFloat(-4f, 4f);
+
+            Dust dust = Dust.NewDustPerfect(
+                spawnPosition,
+                GetPresetDustType(preset),
+                -projectile.velocity * 0.06f + Main.rand.NextVector2Circular(0.7f, 0.7f),
+                100,
+                Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.12f, 0.5f)),
+                Main.rand.NextFloat(0.85f, 1.2f) * intensity);
+            dust.noGravity = true;
+
+            if (!Main.rand.NextBool(4))
+                return;
+
+            Dust sparkle = Dust.NewDustPerfect(
+                projectile.Center + normal * Main.rand.NextFloat(-2.5f, 2.5f),
+                DustID.TerraBlade,
+                direction.RotatedByRandom(0.24f) * Main.rand.NextFloat(0.45f, 1.4f),
+                100,
+                accentColor,
+                Main.rand.NextFloat(0.7f, 1f) * intensity);
+            sparkle.noGravity = true;
+
+            if (Main.dedServ || !Main.rand.NextBool(5))
+                return;
+
+            switch (preset)
+            {
+                case BlossomFluxChloroplastPresetType.Chlo_ABreak:
+                {
+                    CustomSpark bladeAccent = new(
+                        projectile.Center - direction * 7f + normal * Main.rand.NextFloat(-3f, 3f),
+                        projectile.velocity * 0.02f,
+                        ArrowBeamTexture,
+                        false,
+                        8,
+                        0.12f * intensity,
+                        Color.Lerp(mainColor, accentColor, 0.35f),
+                        new Vector2(0.42f, 1.7f),
+                        glowCenter: true,
+                        shrinkSpeed: 1.06f,
+                        glowCenterScale: 0.82f,
+                        glowOpacity: 0.75f);
+                    GeneralParticleHandler.SpawnParticle(bladeAccent);
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_BRecov:
+                {
+                    GlowOrbParticle recoveryOrb = new(
+                        projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                        -projectile.velocity * 0.03f + Main.rand.NextVector2Circular(0.2f, 0.2f),
+                        false,
+                        10,
+                        0.34f * intensity,
+                        Color.Lerp(mainColor, Color.White, 0.35f),
+                        true,
+                        false,
+                        true);
+                    GeneralParticleHandler.SpawnParticle(recoveryOrb);
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_CDetec:
+                {
+                    CritSpark reconSpark = new(
+                        projectile.Center + normal * Main.rand.NextFloat(-4f, 4f),
+                        direction.RotatedByRandom(0.16f) * Main.rand.NextFloat(1.4f, 2.4f),
+                        Color.White,
+                        accentColor,
+                        0.62f * intensity,
+                        12);
+                    GeneralParticleHandler.SpawnParticle(reconSpark);
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_DBomb:
+                {
+                    GlowOrbParticle emberOrb = new(
+                        projectile.Center + normal * Main.rand.NextFloat(-5f, 5f),
+                        -direction * Main.rand.NextFloat(0.4f, 1.1f) + Main.rand.NextVector2Circular(0.25f, 0.25f),
+                        false,
+                        8,
+                        0.36f * intensity,
+                        Color.Lerp(mainColor, accentColor, 0.4f),
+                        true,
+                        false,
+                        true);
+                    GeneralParticleHandler.SpawnParticle(emberOrb);
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_EPlague:
+                {
+                    HeavySmokeParticle plagueSmoke = new(
+                        projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                        -projectile.velocity * 0.02f + Main.rand.NextVector2Circular(0.18f, 0.18f),
+                        Color.Lerp(mainColor, accentColor, 0.25f),
+                        12,
+                        0.42f * intensity,
+                        0.45f,
+                        Main.rand.NextFloat(-0.04f, 0.04f),
+                        false);
+                    GeneralParticleHandler.SpawnParticle(plagueSmoke);
+                    break;
+                }
+            }
+        }
+
+        public static void EmitPresetBurst(Projectile projectile, BlossomFluxChloroplastPresetType preset, int amount, float speedMin, float speedMax, float scaleMin = 0.9f, float scaleMax = 1.3f)
+        {
+            Color mainColor = GetPresetColor(preset);
+            Color accentColor = GetPresetAccentColor(preset);
+            int dustType = GetPresetDustType(preset);
+
+            for (int i = 0; i < amount; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(3f, 3f) * Main.rand.NextFloat(speedMin, speedMax);
+                Dust dust = Dust.NewDustPerfect(
+                    projectile.Center,
+                    dustType,
+                    velocity,
+                    100,
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.12f, 0.48f)),
+                    Main.rand.NextFloat(scaleMin, scaleMax));
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < amount / 4; i++)
+            {
+                Dust sparkle = Dust.NewDustPerfect(
+                    projectile.Center,
+                    DustID.TerraBlade,
+                    Main.rand.NextVector2CircularEdge(2.4f, 2.4f) * Main.rand.NextFloat(speedMin * 0.45f, speedMax * 0.8f),
+                    100,
+                    accentColor,
+                    Main.rand.NextFloat(0.75f, 1.05f));
+                sparkle.noGravity = true;
+            }
+
+            if (Main.dedServ)
+                return;
+
+            float intensity = MathHelper.Clamp(amount / 12f, 0.7f, 1.5f);
+            Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+
+            switch (preset)
+            {
+                case BlossomFluxChloroplastPresetType.Chlo_ABreak:
+                {
+                    DirectionalPulseRing pulse = new(
+                        projectile.Center,
+                        projectile.velocity * 0.06f,
+                        Color.Lerp(mainColor, accentColor, 0.2f),
+                        new Vector2(0.76f, 2.2f),
+                        direction.ToRotation(),
+                        0.2f * intensity,
+                        0.045f,
+                        14);
+                    GeneralParticleHandler.SpawnParticle(pulse);
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        GenericSparkle sparkleBurst = new(
+                            projectile.Center + normal * (i == 0 ? -6f : 6f),
+                            Main.rand.NextVector2Circular(0.4f, 0.4f),
+                            accentColor,
+                            Color.White,
+                            1.2f * intensity,
+                            8,
+                            Main.rand.NextFloat(-0.06f, 0.06f),
+                            1.4f);
+                        GeneralParticleHandler.SpawnParticle(sparkleBurst);
+                    }
+
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_BRecov:
+                {
+                    DirectionalPulseRing pulse = new(
+                        projectile.Center,
+                        Vector2.Zero,
+                        Color.Lerp(mainColor, Color.White, 0.25f),
+                        Vector2.One,
+                        0f,
+                        0.18f * intensity,
+                        0.038f,
+                        16);
+                    GeneralParticleHandler.SpawnParticle(pulse);
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        GlowOrbParticle orb = new(
+                            projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                            Main.rand.NextVector2Circular(0.9f, 0.9f),
+                            false,
+                            12,
+                            Main.rand.NextFloat(0.28f, 0.42f) * intensity,
+                            Color.Lerp(mainColor, Color.White, 0.35f),
+                            true,
+                            false,
+                            true);
+                        GeneralParticleHandler.SpawnParticle(orb);
+                    }
+
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_CDetec:
+                {
+                    BloomLineVFX lineA = new(projectile.Center - direction * 18f, direction * 36f, 1.15f * intensity, accentColor, 12);
+                    BloomLineVFX lineB = new(projectile.Center - normal * 16f, normal * 32f, 0.9f * intensity, mainColor, 10);
+                    GeneralParticleHandler.SpawnParticle(lineA);
+                    GeneralParticleHandler.SpawnParticle(lineB);
+
+                    GenericSparkle scanFlash = new(
+                        projectile.Center,
+                        Vector2.Zero,
+                        accentColor,
+                        Color.White,
+                        1.1f * intensity,
+                        8,
+                        0f,
+                        1.35f);
+                    GeneralParticleHandler.SpawnParticle(scanFlash);
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_DBomb:
+                {
+                    DetailedExplosion explosion = new(
+                        projectile.Center,
+                        Vector2.Zero,
+                        Color.Lerp(mainColor, accentColor, 0.25f),
+                        Vector2.One,
+                        Main.rand.NextFloat(-0.25f, 0.25f),
+                        0f,
+                        0.22f * intensity,
+                        12);
+                    GeneralParticleHandler.SpawnParticle(explosion);
+
+                    HeavySmokeParticle smoke = new(
+                        projectile.Center,
+                        Main.rand.NextVector2Circular(0.4f, 0.4f),
+                        Color.Lerp(mainColor, Color.Black, 0.2f),
+                        18,
+                        0.62f * intensity,
+                        0.65f,
+                        Main.rand.NextFloat(-0.05f, 0.05f),
+                        true);
+                    GeneralParticleHandler.SpawnParticle(smoke);
+                    break;
+                }
+
+                case BlossomFluxChloroplastPresetType.Chlo_EPlague:
+                {
+                    DirectionalPulseRing pulse = new(
+                        projectile.Center,
+                        Vector2.Zero,
+                        Color.Lerp(mainColor, accentColor, 0.25f),
+                        new Vector2(1.12f, 1.3f),
+                        Main.rand.NextFloat(-0.25f, 0.25f),
+                        0.17f * intensity,
+                        0.036f,
+                        15);
+                    GeneralParticleHandler.SpawnParticle(pulse);
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        HeavySmokeParticle smoke = new(
+                            projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                            Main.rand.NextVector2Circular(0.45f, 0.45f) + new Vector2(0f, -0.12f),
+                            Color.Lerp(mainColor, accentColor, 0.3f),
+                            16,
+                            0.55f * intensity,
+                            0.58f,
+                            Main.rand.NextFloat(-0.04f, 0.04f),
+                            false);
+                        GeneralParticleHandler.SpawnParticle(smoke);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        public static void DrawPresetArrow(Projectile projectile, Color lightColor, BlossomFluxChloroplastPresetType preset, float scale = 1f, bool drawAfterimages = true)
+        {
+            Texture2D texture = TextureAssets.Projectile[projectile.type].Value;
+            Texture2D glowBlade = ModContent.Request<Texture2D>(ArrowBeamTexture).Value;
+            Texture2D arrowGlow = ModContent.Request<Texture2D>(ArrowOverlayTexture).Value;
+            Color mainColor = projectile.GetAlpha(GetPresetColor(preset));
+            Color accentColor = projectile.GetAlpha(GetPresetAccentColor(preset));
+            Vector2 drawPosition = projectile.Center - Main.screenPosition;
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitY);
+            float pulse = 1f + 0.08f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 8f + projectile.identity * 0.37f);
+            float beamRotation = forward.ToRotation() + MathHelper.PiOver2;
+            Vector2 beamOrigin = new(glowBlade.Width * 0.5f, glowBlade.Height);
+            Vector2 beamAnchor = drawPosition - forward * 7f;
+            Vector2 outerBeamScale = new Vector2(0.88f, 1.35f) * projectile.scale * scale * 0.04f * pulse;
+            Vector2 innerBeamScale = new Vector2(0.54f, 1.08f) * projectile.scale * scale * 0.04f * pulse;
+            Vector2 overlayScale = new Vector2(
+                texture.Width / (float)arrowGlow.Width,
+                texture.Height / (float)arrowGlow.Height) * projectile.scale * scale;
+
+            if (drawAfterimages)
+            {
+                for (int i = 0; i < projectile.oldPos.Length; i++)
+                {
+                    float completion = 1f - i / (float)projectile.oldPos.Length;
+                    if (completion <= 0f)
+                        continue;
+
+                    Main.EntitySpriteDraw(
+                        texture,
+                        projectile.oldPos[i] + projectile.Size * 0.5f - Main.screenPosition,
+                        null,
+                        mainColor * (0.12f * completion),
+                        projectile.oldRot[i],
+                        texture.Size() * 0.5f,
+                        projectile.scale * scale * MathHelper.Lerp(0.82f, 1f, completion),
+                        SpriteEffects.None,
+                        0);
+                }
+            }
+
+            BeginAdditiveBatch();
+            Main.EntitySpriteDraw(
+                glowBlade,
+                beamAnchor,
+                null,
+                mainColor * 0.65f,
+                beamRotation,
+                beamOrigin,
+                outerBeamScale,
+                SpriteEffects.None,
+                0);
+
+            Main.EntitySpriteDraw(
+                glowBlade,
+                beamAnchor + forward * 2f,
+                null,
+                accentColor * 0.42f,
+                beamRotation,
+                beamOrigin,
+                innerBeamScale,
+                SpriteEffects.None,
+                0);
+
+            BeginAlphaBatch();
+
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                null,
+                projectile.GetAlpha(lightColor),
+                projectile.rotation,
+                texture.Size() * 0.5f,
+                projectile.scale * scale,
+                SpriteEffects.None,
+                0);
+
+            BeginAdditiveBatch();
+
+            Main.EntitySpriteDraw(
+                arrowGlow,
+                drawPosition,
+                null,
+                Color.Lerp(mainColor, Color.White, 0.32f) * 0.82f,
+                projectile.rotation,
+                arrowGlow.Size() * 0.5f,
+                overlayScale,
+                SpriteEffects.None,
+                0);
+
+            BeginAlphaBatch();
         }
 
         public static void DrawProjectile(Projectile projectile, Texture2D texture, Color color, float rotation, float scale = 1f)
@@ -98,7 +498,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         }
 
         public static bool InBounds(int index, int max) => index >= 0 && index < max;
-
         public static bool InBounds(float index, int max) => index >= 0f && index < max;
 
         public static bool TryPickBlossomFluxAmmo(Player player, out int projectileType, out float speed, out int damage, out float knockback, bool dontConsume = true)
@@ -143,14 +542,34 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             _ => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_ABreak"
         };
 
-        public static Color GetPresetColor(BlossomFluxChloroplastPresetType preset) => preset switch
+        public static Color GetPresetColor(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetColor(preset);
+        public static Color GetPresetAccentColor(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetAccentColor(preset);
+        public static int GetPresetDustType(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetDustType(preset);
+
+        private static void BeginAdditiveBatch()
         {
-            BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(140, 255, 140),
-            BlossomFluxChloroplastPresetType.Chlo_BRecov => new Color(120, 255, 184),
-            BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(255, 92, 92),
-            BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(255, 188, 96),
-            BlossomFluxChloroplastPresetType.Chlo_EPlague => new Color(172, 228, 92),
-            _ => Color.White
-        };
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+        }
+
+        private static void BeginAlphaBatch()
+        {
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+        }
     }
 }

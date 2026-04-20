@@ -97,8 +97,8 @@ Items: {
 			BF_Left:
 				'''
 				[c/66CCFF:Left Click: Repeats four rapid double-bursts on a 15-frame rhythm.]
-				[c/99CCFF:Each A shot fires 3 parallel arrows using the player's current ammo; turret mode greatly accelerates this cycle.]
-				[c/DDA0FF:After the fourth double-burst, a chloroplast is released 9 frames later based on the current doctrine.]
+				[c/99CCFF:Each burst fires 3 parallel arrows using the player's current ammo.]
+				[c/DDA0FF:After the fourth double-burst, a chloroplast blooms shortly afterward based on the current doctrine.]
 				'''
 			BF_Preset: "[c/7BE495:Current doctrine: {0}]"
 			PresetName0: Breakthrough
@@ -114,7 +114,7 @@ Items: {
 			BF_Right:
 				'''
 				[c/F7D87C:Right Click: Tap to open the tactical panel; clicking an icon swaps doctrine and closes the panel immediately.]
-				[c/F7D87C:Holding past 0.3 seconds enters the charge holdout for the current doctrine; it only fires if you release after a full charge.]
+				[c/F7D87C:Holding past 0.15 seconds enters the charge holdout for the current doctrine; it only fires if you release after a full charge.]
 				[c/F7D87C:A fully charged special arrow deals far more damage than the normal left-click arrows.]
 				'''
 			PresetRight0: "[c/F4D57A:Breakthrough Right: Fires a fully charged special arrow that ricochets and then homes in.]"
@@ -122,20 +122,21 @@ Items: {
 			PresetRight2: "[c/F4D57A:Reconnaissance Right: Fires a scanning arrow; marked targets are weakly homed by normal left-click arrows and detonated.]"
 			PresetRight3: "[c/F4D57A:Bombardment Right: Fires a charged arrow that calls down the player's current ammo from above after impact.]"
 			PresetRight4: "[c/F4D57A:Dissemination Right: Fires a sticky plague arrow that keeps venting toxic clouds.]"
-			BF_Passive: "[c/9AEF9E:Passive: While held, green piercing rain-shards periodically descend from above the side you are facing. Inventory right click toggles it; current state: {0}.]"
-			PassiveStateOn: "[c/7BFFB7:On]"
-			PassiveStateOff: "[c/F0D070:Off]"
+			BF_Passive: "[c/9AEF9E:Passive: While held, a lethal hit instead triggers a 15-second final-stand and fully restores life. During that state, any further hit kills you instantly. Surviving it restores you to at least half life. Current state: {0}.]"
+			PassiveStateReady: "[c/7BFFB7:Ready]"
+			PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
+			PassiveStateCooldown: "[c/F0D070:Cooldown {0}s]"
 			PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
 			PresetUnlock1: "[c/7BFFB7:Recovery: unlocked and selectable in the tactical panel.]"
 			PresetLock1: "[c/9A9A9A:Recovery: unlocked after Queen Bee.]"
-			PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked; also enables the passive rain and its inventory toggle.]"
-			PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode, together with the passive rain.]"
+			PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked and selectable in the tactical panel.]"
+			PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode.]"
 			PresetUnlock3: "[c/7BFFB7:Bombardment: unlocked and selectable in the tactical panel.]"
 			PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Plantera.]"
 			PresetUnlock4: "[c/7BFFB7:Dissemination: unlocked and selectable in the tactical panel.]"
 			PresetLock4: "[c/9A9A9A:Dissemination: unlocked after the Plaguebringer Goliath.]"
-			BF_Ultimate: "[c/7BFFB7:Press [{0}] to enter turret mode. After 5 seconds, press it again to leave. While active, you cannot move or switch weapons, but both fire modes are heavily empowered.]"
-			BF_UltimateLocked: "[c/9A9A9A:Legendary Skill: Turret mode unlocks after Queen Bee.]"
+			BF_Ultimate: "[c/7BFFB7:Press [{0}] to deploy a 15-second tactical field at your current position. The field has a 20-second cooldown and its effect changes with the current doctrine.]"
+			BF_UltimateLocked: "[c/9A9A9A:Legendary Skill: The tactical field unlocks after Queen Bee.]"
 			BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 			LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 			LegendaryText:
@@ -155,6 +156,14 @@ Items: {
 		NewLegendSHPCTest: {
 			DisplayName: New Legend S H P C Test
 			Tooltip: ""
+		}
+
+
+		Melee: {
+			CosmicDischarge: {
+				DisplayName: Cosmic Discharge
+				Tooltip: ""
+			}
 		}
 	}
 
@@ -260,6 +269,8 @@ Projectiles: {
 		BFFuckyouExplosion.DisplayName: Bloomburst Explosion
 		BFTurretAimBeam.DisplayName: Turret Aim Beam
 		BFTurretVine.DisplayName: Turret Vine
+		NewLegendBlossomFluxHoldOut.DisplayName: New Legend Blossom Flux Hold Out
+		BFUltimateField.DisplayName: B F Ultimate Field
 	}
 
 	BrinyBaron: {
@@ -276,6 +287,7 @@ Projectiles: {
 		Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Final Tide Execution
 		BBSD_Star.DisplayName: Final Tide Star
 		BBSD_Final_INV.DisplayName: Final Tide Brand
+		BBASD_Lighting.DisplayName: B B A S D_ Lighting
 	}
 
 	SHPC: {
@@ -406,13 +418,23 @@ Projectiles: {
 	NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 	BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
 	ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
+
+	Ranged: {
+		HeavenlyGaleProj.DisplayName: Heavenly Gale Proj
+		ShortCircuitShot.DisplayName: Short Circuit Shot
+		ShortCircuitExplosion.DisplayName: Short Circuit Explosion
+	}
+
+	Misc.ShortCircuitHook.DisplayName: Short Circuit Hook
+	Melee.CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
 }
 
 Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 Cooldowns: {
 	SHPC_EX: SHPC鍐峰嵈
-	BlossomFlux_EX: BlossomFlux Turret Cooldown
+	BlossomFlux_EX: BlossomFlux Tactical Field
+	BlossomFlux_Passive: BlossomFlux Final Stand
 	YC_EX: Crystal EX Cooldown
 	BrinyBaron_SuperDash: Briny Baron Finisher
 }

@@ -268,6 +268,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 return;
 
             target.AddBuff(BuffID.Frostburn, 180);
+            SpawnLightningBurst(target.Center, GetReliableDashDirection());
 
             if (!enemyReboundUnlocked)
             {
@@ -393,6 +394,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 Volume = 0.85f,
                 Pitch = -0.1f
             }, impactCenter);
+        }
+
+        private void SpawnLightningBurst(Vector2 impactCenter, Vector2 dashDirection)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 baseDirection = dashDirection.SafeNormalize(lockedDirection);
+            float boltSpeed = 6.5f;
+            int boltDamage = Math.Max(1, (int)(Projectile.damage * 0.45f));
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 boltVelocity = baseDirection.RotatedBy(MathHelper.TwoPi * i / 3f) * boltSpeed;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    impactCenter + baseDirection * 14f,
+                    boltVelocity,
+                    ModContent.ProjectileType<BBASD_Lighting>(),
+                    boltDamage,
+                    0f,
+                    Projectile.owner,
+                    0.75f,
+                    1f);
+            }
         }
 
         private void SpawnStartBurst()
