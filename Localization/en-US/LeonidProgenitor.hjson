@@ -17,8 +17,8 @@ Mods: {
 						'''
 					RightClick: "[c/8A8A8A:Right Click: Unused for now.]"
 					CurrentMetals: "[c/CFEFFF:Current infused bar powers:]"
-					EmptyMetalLine: ">>> <<<"
-					MetalLine: ">>> {0}: {1} <<<"
+					EmptyMetalLine: >>> <<<
+					MetalLine: >>> {0}: {1} <<<
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''

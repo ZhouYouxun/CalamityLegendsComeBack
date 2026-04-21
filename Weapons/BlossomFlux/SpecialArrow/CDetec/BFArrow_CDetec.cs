@@ -114,7 +114,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.timeLeft = Utils.Clamp(Projectile.timeLeft, 180, 270);
 
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 10, 0.8f, 2.8f, 0.8f, 1.1f);
-            SpawnReconLockFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.45f, Pitch = 0.15f }, target.Center);
 
             if (Projectile.owner == Main.myPlayer)
@@ -205,36 +204,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (foundNewTarget && Projectile.owner == Main.myPlayer)
             {
-                SpawnReconLockFX(Projectile.Center, 0.8f);
                 if (acquireSoundCooldown <= 0)
                 {
                     SoundEngine.PlaySound(SoundID.Item25 with { Volume = 0.26f, Pitch = 0.25f }, Projectile.Center);
                     acquireSoundCooldown = 20;
                 }
             }
-        }
-
-        private void SpawnReconLockFX(Vector2 center, float intensity)
-        {
-            if (Main.dedServ)
-                return;
-
-            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
-            BloomLineVFX lineA = new(center - Vector2.UnitX * 18f, Vector2.UnitX * 36f, 1.2f * intensity, mainColor, 12);
-            BloomLineVFX lineB = new(center - Vector2.UnitY * 18f, Vector2.UnitY * 36f, 1.05f * intensity, Color.White, 10);
-            GeneralParticleHandler.SpawnParticle(lineA);
-            GeneralParticleHandler.SpawnParticle(lineB);
-
-            GenericSparkle scanFlash = new(
-                center,
-                Vector2.Zero,
-                mainColor,
-                Color.White,
-                1.05f * intensity,
-                8,
-                0f,
-                1.3f);
-            GeneralParticleHandler.SpawnParticle(scanFlash);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -17,8 +17,8 @@
 						'''
 					RightClick: "[c/8A8A8A:右键：当前版本未启用。]"
 					CurrentMetals: "[c/CFEFFF:当前注入的锭之力：]"
-					EmptyMetalLine: ">>> <<<"
-					MetalLine: ">>> {0}：{1} <<<"
+					EmptyMetalLine: >>> <<<
+					MetalLine: >>> {0}：{1} <<<
 					LegendaryHint: "[c/BABABA:按住 Shift 读取传奇记录]"
 					LegendaryText:
 						'''

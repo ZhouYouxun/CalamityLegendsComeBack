@@ -131,23 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             switch (preset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
-                {
-                    CustomSpark bladeAccent = new(
-                        projectile.Center - direction * 7f + normal * Main.rand.NextFloat(-3f, 3f),
-                        projectile.velocity * 0.02f,
-                        ArrowBeamTexture,
-                        false,
-                        8,
-                        0.12f * intensity,
-                        Color.Lerp(mainColor, accentColor, 0.35f),
-                        new Vector2(0.42f, 1.7f),
-                        glowCenter: true,
-                        shrinkSpeed: 1.06f,
-                        glowCenterScale: 0.82f,
-                        glowOpacity: 0.75f);
-                    GeneralParticleHandler.SpawnParticle(bladeAccent);
                     break;
-                }
 
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
                 {
@@ -314,21 +298,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
                 {
-                    BloomLineVFX lineA = new(projectile.Center - direction * 18f, direction * 36f, 1.15f * intensity, accentColor, 12);
-                    BloomLineVFX lineB = new(projectile.Center - normal * 16f, normal * 32f, 0.9f * intensity, mainColor, 10);
-                    GeneralParticleHandler.SpawnParticle(lineA);
-                    GeneralParticleHandler.SpawnParticle(lineB);
+                    //BloomLineVFX lineA = new(projectile.Center - direction * 18f, direction * 36f, 1.15f * intensity, accentColor, 12);
+                    //BloomLineVFX lineB = new(projectile.Center - normal * 16f, normal * 32f, 0.9f * intensity, mainColor, 10);
+                    //GeneralParticleHandler.SpawnParticle(lineA);
+                    //GeneralParticleHandler.SpawnParticle(lineB);
 
-                    GenericSparkle scanFlash = new(
-                        projectile.Center,
-                        Vector2.Zero,
-                        accentColor,
-                        Color.White,
-                        1.1f * intensity,
-                        8,
-                        0f,
-                        1.35f);
-                    GeneralParticleHandler.SpawnParticle(scanFlash);
+                    //GenericSparkle scanFlash = new(
+                    //    projectile.Center,
+                    //    Vector2.Zero,
+                    //    accentColor,
+                    //    Color.White,
+                    //    1.1f * intensity,
+                    //    8,
+                    //    0f,
+                    //    1.35f);
+                    //GeneralParticleHandler.SpawnParticle(scanFlash);
                     break;
                 }
 
@@ -393,17 +377,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public static void DrawPresetArrow(Projectile projectile, Color lightColor, BlossomFluxChloroplastPresetType preset, float scale = 1f, bool drawAfterimages = true)
         {
             Texture2D texture = TextureAssets.Projectile[projectile.type].Value;
-            Texture2D glowBlade = ModContent.Request<Texture2D>(ArrowBeamTexture).Value;
             Color mainColor = projectile.GetAlpha(GetPresetColor(preset));
             Color accentColor = projectile.GetAlpha(GetPresetAccentColor(preset));
             Vector2 drawPosition = projectile.Center - Main.screenPosition;
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitY);
             float pulse = 1f + 0.08f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 8f + projectile.identity * 0.37f);
-            float beamRotation = forward.ToRotation() + MathHelper.PiOver2;
-            Vector2 beamOrigin = new(glowBlade.Width * 0.5f, glowBlade.Height);
-            Vector2 beamAnchor = drawPosition - forward * 7f;
-            Vector2 outerBeamScale = new Vector2(0.88f, 1.35f) * projectile.scale * scale * 0.04f * pulse;
-            Vector2 innerBeamScale = new Vector2(0.54f, 1.08f) * projectile.scale * scale * 0.04f * pulse;
             float outlineDistance = 1.6f + 0.7f * pulse;
             Color outlineColor = Color.Lerp(mainColor, accentColor, 0.4f) * 0.92f;
             Color centerGlowColor = Color.Lerp(accentColor, Color.White, 0.38f) * 0.6f;
@@ -445,28 +422,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     SpriteEffects.None,
                     0);
             }
-
-            Main.EntitySpriteDraw(
-                glowBlade,
-                beamAnchor,
-                null,
-                mainColor * 0.72f,
-                beamRotation,
-                beamOrigin,
-                outerBeamScale,
-                SpriteEffects.None,
-                0);
-
-            Main.EntitySpriteDraw(
-                glowBlade,
-                beamAnchor + forward * 2f,
-                null,
-                accentColor * 0.52f,
-                beamRotation,
-                beamOrigin,
-                innerBeamScale,
-                SpriteEffects.None,
-                0);
 
             Main.EntitySpriteDraw(
                 texture,

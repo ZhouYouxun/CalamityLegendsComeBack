@@ -98,14 +98,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 10);
             GeneralParticleHandler.SpawnParticle(pulse);
 
-            BloomLineVFX line = new(
-                Projectile.Center - direction * 18f,
-                direction * 36f,
-                0.95f,
-                Color.Lerp(BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak), Color.White, 0.35f),
-                10);
-            GeneralParticleHandler.SpawnParticle(line);
-
             GenericSparkle edgeSpark = new(
                 Projectile.Center + normal * Main.rand.NextFloat(-5f, 5f),
                 Projectile.velocity * 0.04f,
@@ -122,22 +114,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             if (Main.dedServ)
                 return;
-
-            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak);
-            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_ABreak);
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-
-            for (int i = 0; i < 2; i++)
-            {
-                BloomLineVFX line = new(
-                    center - direction * 20f + normal * (i == 0 ? -6f : 6f),
-                    direction * 40f,
-                    0.95f * intensity,
-                    i == 0 ? mainColor : accentColor,
-                    12);
-                GeneralParticleHandler.SpawnParticle(line);
-            }
         }
     }
 }

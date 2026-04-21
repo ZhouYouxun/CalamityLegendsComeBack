@@ -143,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 AbyssToxic * 0.88f,
                 Projectile.rotation,
                 origin,
-                new Vector2(0.2f, 0.72f + stretch * 0.28f),
+                new Vector2(0.0065f, 0.02f + stretch * 0.008f),
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(

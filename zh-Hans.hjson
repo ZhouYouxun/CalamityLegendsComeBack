@@ -77,6 +77,18 @@ Mods: {
 						// Tooltip: ""
 					}
 				}
+
+				LeonidProgenitor: {
+					// DisplayName: Leonid Progenitor
+					// Tooltip: ""
+				}
+
+				Ranged: {
+					TitaniumRailgun: {
+						// DisplayName: Titanium Railgun
+						// Tooltip: ""
+					}
+				}
 			}
 		}
 
@@ -208,6 +220,32 @@ Mods: {
 				// YC_Right_RepairShip.DisplayName: Y C_ Right_ Repair Ship
 				// YC_Right_TrackerLaser.DisplayName: Y C_ Right_ Tracker Laser
 				// YC_RightHoldOut.DisplayName: Y C_ Right Hold Out
+			}
+
+			// LeonidAstralBlast.DisplayName: Leonid Astral Blast
+			// LeonidChainLightning.DisplayName: Leonid Chain Lightning
+			// LeonidEvilWisp.DisplayName: Leonid Evil Wisp
+			// LeonidHealingOrb.DisplayName: Leonid Healing Orb
+			// LeonidHolyLaser.DisplayName: Leonid Holy Laser
+			// LeonidLavaGlob.DisplayName: Leonid Lava Glob
+			// LeonidLingeringField.DisplayName: Leonid Lingering Field
+			// LeonidLunarStrike.DisplayName: Leonid Lunar Strike
+			// LeonidOrbitFlame.DisplayName: Leonid Orbit Flame
+			// LeonidPetalBolt.DisplayName: Leonid Petal Bolt
+			// LeonidShockwave.DisplayName: Leonid Shockwave
+			// LeonidSimpleShard.DisplayName: Leonid Simple Shard
+			// LeonidSplitMeteor.DisplayName: Leonid Split Meteor
+			// LeonidTrailMushroom.DisplayName: Leonid Trail Mushroom
+
+			LeonidProgenitor: {
+				// LeonidCometSmall.DisplayName: Leonid Comet Small
+				// LeonidCometStealthMark.DisplayName: Leonid Comet Stealth Mark
+				// LeonidProgenitorBombshell.DisplayName: Leonid Progenitor Bombshell
+			}
+
+			Ranged: {
+				// TitaniumRailgunScope.DisplayName: Titanium Railgun Scope
+				// TitaniumRailgunShot.DisplayName: Titanium Railgun Shot
 			}
 		}
 
