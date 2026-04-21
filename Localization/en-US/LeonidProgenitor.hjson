@@ -1,0 +1,105 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				LeonidProgenitor: {
+					DisplayName: Meteorfall
+					Tooltip: "[GFB]"
+					LeftClick:
+						'''
+						[c/74D8FF:Left Click: Throw a primary meteor that bursts on impact, then calls down one small meteor empowered by detected metal bars.]
+						[c/99CCFF:The thrown primary meteor itself never gains bar effects. Only the follow-up small meteors inherit them.]
+						'''
+					StealthLeftClick:
+						'''
+						[c/B7A4FF:Stealth Left: The primary meteor flies faster and ignores gravity. On hit it marks the target and repeatedly calls down empowered small meteors.]
+						[c/9AD8FF:Detection order is fixed from the last inventory slot backward, and for now it always records exactly 2 different bars.]
+						'''
+					RightClick: "[c/8A8A8A:Right Click: Unused for now.]"
+					CurrentMetals: "[c/CFEFFF:Current infused bar powers:]"
+					EmptyMetalLine: ">>> <<<"
+					MetalLine: ">>> {0}: {1} <<<"
+					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					LegendaryText:
+						'''
+						[c/66E6FF:This weapon does not consume bars and does not truly reload. It simply pulls out the first two metallic echoes it finds while searching backward through your inventory.]
+						[c/66E6FF:The primary meteor is only the announcement. The real answer arrives with the meteors that fall afterward.]
+						[c/66E6FF:Every hit is another moment where the sky rifles through your backpack for you.]
+						'''
+					MetalName1: Copper Bar
+					MetalDesc1: Releases a small chain lightning burst on hit
+					MetalName2: Tin Bar
+					MetalDesc2: The meteor can bounce off tiles
+					MetalName3: Iron Bar
+					MetalDesc3: Ignores part of enemy defense
+					MetalName4: Lead Bar
+					MetalDesc4: Creates a small shockwave
+					MetalName5: Silver Bar
+					MetalDesc5: Splits once to both sides in midair
+					MetalName6: Tungsten Bar
+					MetalDesc6: Grows larger and pierces one extra time
+					MetalName7: Gold Bar
+					MetalDesc7: Bursts into a shower of gold sparks
+					MetalName8: Platinum Bar
+					MetalDesc8: Has a chance to clear your debuffs
+					MetalName9: Demonite Bar
+					MetalDesc9: Releases tracking evil wisps
+					MetalName10: Crimtane Bar
+					MetalDesc10: Releases tracking crimson wisps
+					MetalName11: Aerialite Bar
+					MetalDesc11: Ignores gravity and gains speed
+					MetalName12: Meteorite Bar
+					MetalDesc12: Can call down an extra meteor at night
+					MetalName13: Hellstone Bar
+					MetalDesc13: Explodes harder on death
+					MetalName14: Cobalt Bar
+					MetalDesc14: Ricochets once in a random direction on hit
+					MetalName15: Palladium Bar
+					MetalDesc15: Heals on hit with a cooldown
+					MetalName16: Mythril Bar
+					MetalDesc16: Summons a circling flame that later homes in
+					MetalName17: Orichalcum Bar
+					MetalDesc17: Fires a petal strike from the side
+					MetalName18: Adamantite Bar
+					MetalDesc18: Creates a burning area
+					MetalName19: Titanium Bar
+					MetalDesc19: Charges 5% titanium shielding
+					MetalName20: Cryonic Bar
+					MetalDesc20: Creates a freezing area
+					MetalName21: Hallowed Bar
+					MetalDesc21: Fires a short holy laser from a random angle
+					MetalName22: Chlorophyte Bar
+					MetalDesc22: All small meteors gain homing
+					MetalName23: Perennial Bar
+					MetalDesc23: Creates stackable healing seekers
+					MetalName24: Shroomite Bar
+					MetalDesc24: Leaves spinning fading mushrooms along the path
+					MetalName25: Spectre Bar
+					MetalDesc25: Leaves a ghost clone at the initial position
+					MetalName26: Scoria Bar
+					MetalDesc26: Erupts upward lava globs
+					MetalName27: Lunar Bar
+					MetalDesc27: Calls down moonlit strikes around the target
+					MetalName28: Astral Bar
+					MetalDesc28: Creates three random nearby starbursts
+					MetalName29: Uelibloom Bar
+					MetalDesc29: Blossoms into homing thorn shards
+					MetalName30: Cosmilite Bar
+					MetalDesc30: Releases homing cosmic fragments
+					MetalName31: Auric Bar
+					MetalDesc31: Calls down auric piercing strikes
+					MetalName32: Shadowspec Bar
+					MetalDesc32: Spreads a slow shadow aftershock
+				}
+			}
+		}
+
+		Projectiles: {
+			LeonidProgenitor: {
+				LeonidProgenitorBombshell.DisplayName: Primary Meteor
+				LeonidCometSmall.DisplayName: Small Meteor
+				LeonidCometStealthMark.DisplayName: Meteor Mark
+			}
+		}
+	}
+}

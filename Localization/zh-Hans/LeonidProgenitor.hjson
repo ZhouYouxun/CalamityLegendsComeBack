@@ -1,0 +1,105 @@
+﻿Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				LeonidProgenitor: {
+					DisplayName: 流星
+					Tooltip: "[GFB]"
+					LeftClick:
+						'''
+						[c/74D8FF:左键：掷出一颗会爆裂的主流星。命中后，从天而降一颗受金属锭之力影响的小流星。]
+						[c/99CCFF:主流星本身不会受到任何金属锭效果影响，只有后续坠落的小流星会继承背包中检测到的锭效果。]
+						'''
+					StealthLeftClick:
+						'''
+						[c/B7A4FF:潜伏左键：主流星飞得更快且不受重力。命中后会标记敌人，并持续降下多颗受金属锭之力影响的小流星。]
+						[c/9AD8FF:检测顺序固定为从背包最后一格往前，当前只会记录最先找到的 2 种不同金属锭。]
+						'''
+					RightClick: "[c/8A8A8A:右键：当前版本未启用。]"
+					CurrentMetals: "[c/CFEFFF:当前注入的锭之力：]"
+					EmptyMetalLine: ">>> <<<"
+					MetalLine: ">>> {0}：{1} <<<"
+					LegendaryHint: "[c/BABABA:按住 Shift 读取传奇记录]"
+					LegendaryText:
+						'''
+						[c/66E6FF:这把武器不吞锭，也不装填。它只是从背包最深处拉出两段最先被命运摸到的金属回响。]
+						[c/66E6FF:主流星只是宣告，真正的答案来自后续坠落的那些小流星。]
+						[c/66E6FF:所以每一次命中，都像是让天空替你翻了一次背包。]
+						'''
+					MetalName1: 铜锭
+					MetalDesc1: 命中后释放小型连锁闪电
+					MetalName2: 锡锭
+					MetalDesc2: 本体可以在方块上反弹
+					MetalName3: 铁锭
+					MetalDesc3: 忽视部分敌人防御
+					MetalName4: 铅锭
+					MetalDesc4: 产生小型震荡波
+					MetalName5: 银锭
+					MetalDesc5: 在空中向两侧分裂一次
+					MetalName6: 钨锭
+					MetalDesc6: 提升流星体积并额外穿透一次
+					MetalName7: 金锭
+					MetalDesc7: 爆出一串金币火花
+					MetalName8: 铂金锭
+					MetalDesc8: 概率清除自身减益
+					MetalName9: 魔矿锭
+					MetalDesc9: 释放邪恶吞噬者追踪
+					MetalName10: 猩红矿锭
+					MetalDesc10: 释放猩红吞噬者追踪
+					MetalName11: 天蓝锭
+					MetalDesc11: 不受重力影响并提升速度
+					MetalName12: 陨石锭
+					MetalDesc12: 夜晚概率追加一颗陨星
+					MetalName13: 狱石锭
+					MetalDesc13: 死亡时产生更大爆炸
+					MetalName14: 钴锭
+					MetalDesc14: 命中后随机方向弹射一次
+					MetalName15: 钯金锭
+					MetalDesc15: 命中回血，带冷却
+					MetalName16: 秘银锭
+					MetalDesc16: 在玩家附近盘旋火焰后追踪敌人
+					MetalName17: 山铜锭
+					MetalDesc17: 命中后从侧面射出花瓣
+					MetalName18: 精金锭
+					MetalDesc18: 产生灼烧区域
+					MetalName19: 钛金锭
+					MetalDesc19: 为自身充能 5% 钛金护盾
+					MetalName20: 寒元锭
+					MetalDesc20: 产生冰冻区域
+					MetalName21: 神圣锭
+					MetalDesc21: 随机位置射出短圣光激光
+					MetalName22: 叶绿锭
+					MetalDesc22: 小流星自动追踪敌人
+					MetalName23: 永恒锭
+					MetalDesc23: 生成可叠加的回血追踪体
+					MetalName24: 蘑菇矿锭
+					MetalDesc24: 路径留下旋转消散的小蘑菇
+					MetalName25: 幽灵锭
+					MetalDesc25: 在初始位置留下幽灵分身
+					MetalName26: 熔渣锭
+					MetalDesc26: 向上喷出熔岩流星滴
+					MetalName27: 夜明锭
+					MetalDesc27: 命中后周围召来月耀打击
+					MetalName28: 炫星锭
+					MetalDesc28: 周围随机三处产生星爆
+					MetalName29: 龙蒿
+					MetalDesc29: 绽出会追敌的龙蒿尖刺
+					MetalName30: 宇宙锭
+					MetalDesc30: 释放追踪宇宙碎屑
+					MetalName31: 圣金锭
+					MetalDesc31: 从上方降下圣金穿刺
+					MetalName32: 暗影
+					MetalDesc32: 释放缓慢扩散的暗影余震
+				}
+			}
+		}
+
+		Projectiles: {
+			LeonidProgenitor: {
+				LeonidProgenitorBombshell.DisplayName: 主流星
+				LeonidCometSmall.DisplayName: 小流星
+				LeonidCometStealthMark.DisplayName: 流星印记
+			}
+		}
+	}
+}
