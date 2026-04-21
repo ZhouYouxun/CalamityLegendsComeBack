@@ -48,13 +48,35 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
 
-            BFEXPlayer exPlayer = player.GetModPlayer<BFEXPlayer>();
             BFPassivePlayer passivePlayer = player.GetModPlayer<BFPassivePlayer>();
             passivePlayer.SetHoldingBlossomFlux();
-            SyncUltimateDisplay(player, exPlayer);
             passivePlayer.SyncPassiveDisplay();
+            BFEXPlayer exPlayer = player.GetModPlayer<BFEXPlayer>();
+            exPlayer.SetHoldingBlossomFlux();
+
+            if (player.Calamity().cooldowns.TryGetValue(BFEXCooldown.ID, out var exCooldown))
+                exCooldown.timeLeft = exPlayer.EXValue;
+            else
+                player.AddCooldown(BFEXCooldown.ID, 0);
 
             if (Main.myPlayer == player.whoAmI &&
+                KeybindSystem.LegendarySkill.JustPressed &&
+                exPlayer.ConsumeAllEX() &&
+                player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] <= 0)
+            {
+                Vector2 direction = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
+                Projectile.NewProjectile(
+                    player.GetSource_ItemUse(Item),
+                    player.Center,
+                    direction,
+                    ModContent.ProjectileType<BFEXWeapon>(),
+                    player.GetWeaponDamage(Item),
+                    Item.knockBack,
+                    player.whoAmI);
+            }
+
+            if (Main.myPlayer == player.whoAmI &&
+                player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] <= 0 &&
                 player.ownedProjectileCounts[ModContent.ProjectileType<NewLegendBlossomFluxHoldOut>()] <= 0)
             {
                 Projectile.NewProjectile(
@@ -151,10 +173,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             string unlockRecon = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_CDetec) ? "PresetUnlock2" : "PresetLock2");
             string unlockBombard = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_DBomb) ? "PresetUnlock3" : "PresetLock3");
             string unlockPlague = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_EPlague) ? "PresetUnlock4" : "PresetLock4");
-            string ultimateText = rightUIPlayer.UltimateUnlocked
-                ? string.Format(this.GetLocalizedValue("BF_Ultimate"), GetLegendarySkillKeyText())
-                : this.GetLocalizedValue("BF_UltimateLocked");
             string finalText = this.GetLocalizedValue("BF_Final");
+            string exText = this.GetLocalizedValue("BF_EX");
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
             string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
@@ -170,31 +190,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 unlockRecon + "\n" +
                 unlockBombard + "\n" +
                 unlockPlague + "\n\n" +
-                ultimateText + "\n\n" +
-                finalText + "\n\n" +
+                finalText + "\n" +
+                exText + "\n\n" +
                 legendarySection + "\n";
 
             tooltips.FindAndReplace("[GFB]", merged);
-        }
-
-        internal static void SyncUltimateDisplay(Player player, BFEXPlayer exPlayer)
-        {
-            if (!player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked)
-            {
-                if (player.Calamity().cooldowns.TryGetValue(BFEXCoolDown.ID, out var hiddenCooldown))
-                    hiddenCooldown.timeLeft = 0;
-
-                return;
-            }
-
-            if (player.Calamity().cooldowns.TryGetValue(BFEXCoolDown.ID, out var cooldown))
-            {
-                cooldown.timeLeft = exPlayer.DisplayFrames;
-            }
-            else
-            {
-                player.AddCooldown(BFEXCoolDown.ID, exPlayer.DisplayFrames);
-            }
         }
 
         private static BlossomFluxChloroplastPresetType GetDisplayedPreset()
@@ -203,12 +203,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return BlossomFluxChloroplastPresetType.Chlo_ABreak;
 
             return Main.LocalPlayer.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
-        }
-
-        private static string GetLegendarySkillKeyText()
-        {
-            string assignedKeys = string.Join("/", KeybindSystem.LegendarySkill.GetAssignedKeys());
-            return string.IsNullOrWhiteSpace(assignedKeys) ? "Unbound" : assignedKeys;
         }
 
         public override bool CanRightClick() => false;

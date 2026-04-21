@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Melee: {
+					CosmicDischarge: {
+						DisplayName: 宇宙放电
+						Tooltip: ""
+					}
+				}
+
+				NewLegendCosmicDischarge: {
+					DisplayName: 宇宙放电-传奇归来
+					Tooltip: ""
+				}
+			}
+		}
+	}
+}

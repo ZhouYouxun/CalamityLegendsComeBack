@@ -13,6 +13,10 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Accssory\BB\" />
+	  <Folder Include="Accssory\BF\" />
+	  <Folder Include="Accssory\YC\" />
+	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Sound\SHPC\" />
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
@@ -22,12 +26,18 @@
 	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\MoonEvent\参考文献\" />
 	  <Folder Include="Weapons\SHPC\RightClick\枪身特效参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
-	  <Folder Include="Weapons\Z_Miao\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Compile Remove="Weapons\A_Dev\Miao\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\BrinyBaron\CommonAttack\参考文献\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\1 “突破”特效参考\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\4 轰炸特效参考\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\5 “散播”特效参考\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\所有箭矢的特效【重点参考这里】\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\右键的单次参考特效\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\特效总和参考\**\*.cs" />
 	  <Compile Remove="Weapons\SHPC\Effects\DPreDog\SZPC\TwistingNether的参考文献\**\*.cs" />
+	  <Compile Remove="Weapons\SHPC\Effects\EAfterDog\Ascendant\参考贝塞尔曲线的\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\维修战舰参考\**\*.cs" />

@@ -13,7 +13,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     internal static class BFArrowCommon
     {
         private const string ArrowBeamTexture = "CalamityMod/Particles/GlowBlade";
-        private const string ArrowOverlayTexture = "CalamityMod/Items/Ammo/VanquisherArrowGlow";
 
         public static void SetBaseArrowDefaults(Projectile projectile, int width = 14, int height = 34, int timeLeft = 180, int penetrate = 1, int extraUpdates = 1, bool tileCollide = true)
         {
@@ -28,8 +27,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             projectile.penetrate = penetrate;
             projectile.timeLeft = timeLeft;
             projectile.extraUpdates = extraUpdates;
+            ForceLocalNPCImmunity(projectile, 12);
+        }
+
+        public static void ForceLocalNPCImmunity(Projectile projectile, int cooldown = 12)
+        {
+            projectile.usesIDStaticNPCImmunity = false;
+            projectile.idStaticNPCHitCooldown = -1;
             projectile.usesLocalNPCImmunity = true;
-            projectile.localNPCHitCooldown = 12;
+            projectile.localNPCHitCooldown = cooldown;
         }
 
         public static void FaceForward(Projectile projectile, float rotationOffset = MathHelper.PiOver2 + MathHelper.Pi)
@@ -388,7 +394,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             Texture2D texture = TextureAssets.Projectile[projectile.type].Value;
             Texture2D glowBlade = ModContent.Request<Texture2D>(ArrowBeamTexture).Value;
-            Texture2D arrowGlow = ModContent.Request<Texture2D>(ArrowOverlayTexture).Value;
             Color mainColor = projectile.GetAlpha(GetPresetColor(preset));
             Color accentColor = projectile.GetAlpha(GetPresetAccentColor(preset));
             Vector2 drawPosition = projectile.Center - Main.screenPosition;
@@ -399,9 +404,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 beamAnchor = drawPosition - forward * 7f;
             Vector2 outerBeamScale = new Vector2(0.88f, 1.35f) * projectile.scale * scale * 0.04f * pulse;
             Vector2 innerBeamScale = new Vector2(0.54f, 1.08f) * projectile.scale * scale * 0.04f * pulse;
-            Vector2 overlayScale = new Vector2(
-                texture.Width / (float)arrowGlow.Width,
-                texture.Height / (float)arrowGlow.Height) * projectile.scale * scale;
+            float outlineDistance = 1.6f + 0.7f * pulse;
+            Color outlineColor = Color.Lerp(mainColor, accentColor, 0.4f) * 0.92f;
+            Color centerGlowColor = Color.Lerp(accentColor, Color.White, 0.38f) * 0.6f;
 
             if (drawAfterimages)
             {
@@ -425,11 +430,27 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
 
             BeginAdditiveBatch();
+            for (int i = 0; i < 16; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 16f;
+                Vector2 offset = angle.ToRotationVector2() * outlineDistance;
+                Main.EntitySpriteDraw(
+                    texture,
+                    drawPosition + offset,
+                    null,
+                    outlineColor,
+                    projectile.rotation,
+                    texture.Size() * 0.5f,
+                    projectile.scale * scale,
+                    SpriteEffects.None,
+                    0);
+            }
+
             Main.EntitySpriteDraw(
                 glowBlade,
                 beamAnchor,
                 null,
-                mainColor * 0.65f,
+                mainColor * 0.72f,
                 beamRotation,
                 beamOrigin,
                 outerBeamScale,
@@ -440,10 +461,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 glowBlade,
                 beamAnchor + forward * 2f,
                 null,
-                accentColor * 0.42f,
+                accentColor * 0.52f,
                 beamRotation,
                 beamOrigin,
                 innerBeamScale,
+                SpriteEffects.None,
+                0);
+
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                null,
+                centerGlowColor,
+                projectile.rotation,
+                texture.Size() * 0.5f,
+                projectile.scale * scale * (1.05f + 0.03f * pulse),
                 SpriteEffects.None,
                 0);
 
@@ -457,19 +489,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 projectile.rotation,
                 texture.Size() * 0.5f,
                 projectile.scale * scale,
-                SpriteEffects.None,
-                0);
-
-            BeginAdditiveBatch();
-
-            Main.EntitySpriteDraw(
-                arrowGlow,
-                drawPosition,
-                null,
-                Color.Lerp(mainColor, Color.White, 0.32f) * 0.82f,
-                projectile.rotation,
-                arrowGlow.Size() * 0.5f,
-                overlayScale,
                 SpriteEffects.None,
                 0);
 
@@ -534,12 +553,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public static string GetTexturePathForPreset(BlossomFluxChloroplastPresetType preset) => preset switch
         {
-            BlossomFluxChloroplastPresetType.Chlo_ABreak => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_ABreak",
-            BlossomFluxChloroplastPresetType.Chlo_BRecov => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_BRecov",
-            BlossomFluxChloroplastPresetType.Chlo_CDetec => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_CDetec",
-            BlossomFluxChloroplastPresetType.Chlo_DBomb => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_DBomb",
-            BlossomFluxChloroplastPresetType.Chlo_EPlague => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_EPlague",
-            _ => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BFArrow_ABreak"
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/ABreak/BFArrow_ABreak",
+            BlossomFluxChloroplastPresetType.Chlo_BRecov => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BRecov/BFArrow_BRecov",
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/CDetec/BFArrow_CDetec",
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/DBomb/BFArrow_DBomb",
+            BlossomFluxChloroplastPresetType.Chlo_EPlague => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/EPlague/BFArrow_EPlague",
+            _ => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/ABreak/BFArrow_ABreak"
         };
 
         public static Color GetPresetColor(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetColor(preset);

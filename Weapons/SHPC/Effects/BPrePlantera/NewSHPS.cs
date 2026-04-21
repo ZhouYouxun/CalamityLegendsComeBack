@@ -88,10 +88,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // 生命周期固定主题色
             themeColor = PresetColors[presetIndex];
+            if (Projectile.ai[2] == 2f)
+                themeColor = new Color(96, 255, 156);
 
             if (presetIndex == 4)
             {
-                themeColor = Color.Lerp(themeColor, new Color(70, 215, 255), 0.65f);
+                Color preset4Accent = Projectile.ai[2] == 2f ? new Color(118, 255, 196) : new Color(70, 215, 255);
+                themeColor = Color.Lerp(themeColor, preset4Accent, 0.65f);
                 Projectile.timeLeft = Main.rand.Next(84, 112);
                 Projectile.extraUpdates = 1;
                 preset4SpinDirection = Main.rand.NextBool() ? 1f : -1f;

@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Melee: {
+					CosmicDischarge: {
+						DisplayName: Cosmic Discharge
+						Tooltip: ""
+					}
+				}
+
+				NewLegendCosmicDischarge: {
+					DisplayName: New Legend Cosmic Discharge
+					Tooltip: ""
+				}
+			}
+		}
+	}
+}

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
@@ -27,6 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         {
             public int ClickFeedbackTimer;
             public bool BeingHoveredOver;
+            public bool WasHoveredOverLastFrame;
             public bool SelectedAsCurrent;
             public bool Unlocked;
             public BlossomFluxChloroplastPresetType Preset;
@@ -199,7 +201,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
             Vector2 frameSize = icons[0].IconTexture.Size();
             bool hoveringOverAnySlot = false;
-            bool clickedOutside = Main.mouseLeft && Main.mouseLeftRelease;
+            bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
+            bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
             bool clickedLockedPreset = false;
             BlossomFluxChloroplastPresetType? clickedPreset = null;
 
@@ -216,10 +219,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 if (iconArea.Intersects(MouseRectangle))
                 {
                     hoveringOverAnySlot = true;
-                    clickedOutside = false;
                     icon.BeingHoveredOver = true;
 
-                    if (Main.mouseLeft && Main.mouseLeftRelease && Projectile.Opacity >= 1f)
+                    if (!icon.WasHoveredOverLastFrame && Projectile.Opacity >= 1f)
+                        SoundEngine.PlaySound(SoundID.Item55 with { Volume = 0.42f, Pitch = 0.1f }, owner.Center);
+
+                    if (leftClickPressed && Projectile.Opacity >= 1f)
                     {
                         if (icon.Unlocked)
                         {
@@ -244,20 +249,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                     SpriteEffects.None,
                     0f);
 
+                icon.WasHoveredOverLastFrame = icon.BeingHoveredOver;
                 icon.Update();
             }
 
             if (clickedPreset.HasValue)
             {
                 rightUIPlayer.TrySetPreset(clickedPreset.Value);
+                string presetName = Language.GetTextValue($"Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendBlossomFlux.PresetName{(int)clickedPreset.Value}");
+                string selectionText = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.BlossomFluxPresetSelected", presetName);
+                CombatText.NewText(owner.Hitbox, ChloroplastCommon.PresetColor(clickedPreset.Value), selectionText, dramatic: false, dot: false);
                 FadeOut = true;
-                SoundEngine.PlaySound(SoundID.MenuTick with { Pitch = 0.1f, Volume = 0.7f }, owner.Center);
+                SoundEngine.PlaySound(SoundID.Item23 with { Pitch = 0.06f, Volume = 0.72f }, owner.Center);
             }
             else if (clickedLockedPreset)
             {
                 SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.42f, Pitch = 0.2f }, owner.Center);
             }
-            else if (clickedOutside && Projectile.Opacity >= 1f)
+            else if (Projectile.Opacity >= 1f && (rightClickPressed || (leftClickPressed && !clickedLockedPreset)))
             {
                 FadeOut = true;
                 SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.5f }, owner.Center);

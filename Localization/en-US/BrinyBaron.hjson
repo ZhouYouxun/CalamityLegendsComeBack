@@ -1,0 +1,75 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendBrinyBaron: {
+					DisplayName: Briny Baron - Return of Legends
+					Tooltip: "[GFB]"
+					BB_Left:
+						'''
+						[c/66CCFF:Left Click: Unleash a flowing combo of slashes that steadily accelerates.]
+						[c/7F8FA6:The first three swings are stable cuts for pressure and spacing.]
+						[c/99CCFF:The fourth swing releases a tidal blade that extends your reach.]
+						[c/DDA0FF:The finisher calls forth a giant cleave that sweeps the area ahead.]
+						[c/FFB347:Every heavy strike pulls more tidal force into the blade.]
+						'''
+					BB_Tide: "[c/4FAEFF:Current tide value: ]"
+					BB_Right:
+						'''
+						[c/66CCFF:Right Click: Tear across the battlefield with high-speed dashes.]
+						[c/7F8FA6:Before the tide fills, it is a straight thrust for entry or escape.]
+						[c/DDA0FF:With full tide, it becomes a spinning rush that shreds everything in its path.]
+						[c/FFB347:Each dash is both an attack and a survival tool.]
+						'''
+					Dash1_Unlock: "[c/66FFAA:Unlocked: Basic Dash]"
+					Dash1_Lock: "[c/7F8FA6:Locked: Defeat the Eye of Cthulhu to unlock it.]"
+					Dash2_Unlock: "[c/66FFAA:Unlocked: Spiral Cleave]"
+					Dash2_Lock: "[c/DDA0FF:Locked: Defeat the Wall of Flesh to unlock it.]"
+					Dash3_Unlock: "[c/66FFAA:Unlocked: Rebound Slash]"
+					Dash3_Lock: "[c/99CCFF:Locked: Defeat the Wall of Flesh to unlock it.]"
+					BB_Passive: "[c/9AEF9E:Quick Slash passive: {0}. Inventory right click toggles it.]"
+					PassiveStateOn: "[c/7BFFB7:On]"
+					PassiveStateOff: "[c/F0D070:Off]"
+					Dash4_Unlock: "[c/66FFAA:Unlocked: Tidal Execution]"
+					Dash4_Lock: "[c/FFB347:Locked: Defeat Duke Fishron to unlock it.]"
+					BB_Final: "[c/9FD8A2:At full tide, mark the prey and pass judgment until the surf finishes the execution.]"
+					LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
+					LegendaryText:
+						'''
+						[c/66CCFF:The blade only begins its true hunt once the tide gauge is completely full.]
+						[c/7F8FA6:It searches around the cursor for the worthiest target, then drags the whole battlefield into the sentence.]
+						[c/99CCFF:Once the lock is set, fleeing or repositioning only changes the angle of the execution.]
+						[c/DDA0FF:The confirming left click makes the wielder appear around the victim again and again, piercing through, cleaving, and reappearing.]
+						[c/FFB347:The final mark does not fade at once; it clings to the prey and keeps delivering giant verdict slashes.]
+						[c/66CCFF:When the tide finally recedes, the target and every bystander on the line are usually already broken apart.]
+						'''
+				}
+			}
+
+			BBTest: {
+				DisplayName: BB Test
+				Tooltip: ""
+			}
+		}
+
+		Projectiles: {
+			BrinyBaron: {
+				BBSwing_Wave.DisplayName: Tidal Wave Slash
+				BBShuriken_Light.DisplayName: Tidal Shuriken Flash
+				BBSwing_INV.DisplayName: Giant Slash Hitbox
+				BBSwing_Slash.DisplayName: Tidal Slash
+				BBShuriken_Lazer.DisplayName: Waterblade Laser
+				BrinyBaron_LeftClick_Swing.DisplayName: Baron Combo Slash
+				BrinyBaron_RightClick_Shuriken.DisplayName: Baron Shuriken
+				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
+				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
+				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Rebound Slash
+				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Final Tide Execution
+				BBSD_Star.DisplayName: Final Tide Star
+				BBSD_Final_INV.DisplayName: Final Tide Brand
+			}
+		}
+
+		Cooldowns.BrinyBaron_SuperDash: Briny Baron Finisher
+	}
+}

@@ -1,57 +1,72 @@
 using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
 using Terraria.ModLoader;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 {
-    internal class BFEXPlayer : ModPlayer
+    internal sealed class BFEXPlayer : ModPlayer
     {
-        public const int UltimateCooldownSeconds = 20;
-        public const int FramesPerDisplayUnit = 60;
-        public const int UltimateCooldownFrames = UltimateCooldownSeconds * FramesPerDisplayUnit;
+        public const int EXMax = 60;
+        public const int PassiveRegenInterval = 120;
 
-        public int UltimateCooldownTimer;
+        public int EXValue;
 
-        public int DisplayFrames => UltimateCooldownTimer;
-        public int DisplayValue => UltimateCooldownTimer <= 0 ? 0 : (int)System.Math.Ceiling(UltimateCooldownTimer / (float)FramesPerDisplayUnit);
-        public bool CanTriggerUltimate => Player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked && UltimateCooldownTimer <= 0;
+        private int passiveRegenTimer;
+        private bool holdingBlossomFlux;
+
+        public bool EXReady => EXValue >= EXMax;
+        public bool ShouldShowDisplay =>
+            holdingBlossomFlux ||
+            Player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] > 0;
 
         public override void ResetEffects()
         {
-            if (UltimateCooldownTimer < 0)
-                UltimateCooldownTimer = 0;
-            else if (UltimateCooldownTimer > UltimateCooldownFrames)
-                UltimateCooldownTimer = UltimateCooldownFrames;
+            holdingBlossomFlux = false;
         }
 
         public override void PostUpdate()
         {
-            if (!Player.GetModPlayer<BFRightUIPlayer>().UltimateUnlocked)
+            if (!holdingBlossomFlux)
             {
-                UltimateCooldownTimer = 0;
+                passiveRegenTimer = 0;
                 return;
             }
 
-            if (UltimateCooldownTimer > 0)
+            if (EXValue >= EXMax)
             {
-                UltimateCooldownTimer--;
-                if (UltimateCooldownTimer == 0 && Player.whoAmI == Main.myPlayer)
-                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.6f, Pitch = 0.32f }, Player.Center);
+                passiveRegenTimer = 0;
+                EXValue = EXMax;
+                return;
+            }
+
+            passiveRegenTimer++;
+            if (passiveRegenTimer >= PassiveRegenInterval)
+            {
+                passiveRegenTimer = 0;
+                GainEX(1);
             }
         }
 
-        public void StartUltimateCooldown()
+        public void SetHoldingBlossomFlux()
         {
-            UltimateCooldownTimer = UltimateCooldownFrames;
-            if (Player.whoAmI == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.62f, Pitch = -0.05f }, Player.Center);
+            holdingBlossomFlux = true;
         }
 
-        public void ResetUltimateCooldown()
+        public void GainEX(int amount)
         {
-            UltimateCooldownTimer = 0;
+            if (amount <= 0)
+                return;
+
+            EXValue = Utils.Clamp(EXValue + amount, 0, EXMax);
+        }
+
+        public bool ConsumeAllEX()
+        {
+            if (!EXReady)
+                return false;
+
+            EXValue = 0;
+            passiveRegenTimer = 0;
+            return true;
         }
     }
 }

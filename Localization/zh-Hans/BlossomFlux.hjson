@@ -1,0 +1,82 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendBlossomFlux: {
+					DisplayName: 叶流-传奇归来
+					Tooltip: "[GFB]"
+					BF_Left:
+						'''
+						[c/66CCFF:左键：以 15 帧为一组节奏，连续打出 4 轮快速二连发。]
+						[c/99CCFF:每轮都会平行射出 3 支玩家当前的箭。]
+						[c/DDA0FF:第四轮二连发结束后，会根据当前战术补出 1 枚叶绿体。]
+						'''
+					BF_Preset: "[c/7BE495:当前战术：{0}]"
+					PresetName0: 突破
+					PresetName1: 复苏
+					PresetName2: 侦查
+					PresetName3: 轰炸
+					PresetName4: 散播
+					PresetLeft0: "[c/8BE89A:突破·左键：叶绿体高速穿刺，命中后会顺势折向下一个目标。]"
+					PresetLeft1: "[c/8BE89A:复苏·左键：叶绿体会回流追随玩家，并在接触时治疗。]"
+					PresetLeft2: "[c/8BE89A:侦查·左键：叶绿体命中后会附上 0.5 秒短标记，使全队对其伤害提高。]"
+					PresetLeft3: "[c/8BE89A:轰炸·左键：叶绿体命中后会引发一次小型爆炸。]"
+					PresetLeft4: "[c/8BE89A:散播·左键：叶绿体飞行期间会间歇释放瘟疫毒雾。]"
+					BF_Right:
+						'''
+						[c/F7D87C:右键单点：展开战术面板，点击图标后立刻切换战术并关闭面板。]
+						[c/F7D87C:右键按住超过 0.15 秒会进入当前战术对应的蓄力 HoldOut；必须蓄满后松手才会发射。]
+						[c/F7D87C:蓄满后的特种箭伤害会显著高于左键常态箭。]
+						'''
+					PresetRight0: "[c/F4D57A:突破·右键：蓄满后射出弹射并追踪的特种箭，用来撕开正面缺口。]"
+					PresetRight1: "[c/F4D57A:复苏·右键：蓄满后射出会折返追随玩家的治愈箭。]"
+					PresetRight2: "[c/F4D57A:侦查·右键：蓄满后射出扫描箭，标记者会被左键常态箭优先弱追踪并触发爆炸。]"
+					PresetRight3: "[c/F4D57A:轰炸·右键：蓄满后射出轰炸箭，命中后会持续从天上降下玩家当前箭矢。]"
+					PresetRight4: "[c/F4D57A:散播·右键：蓄满后射出可扎附的散播箭，持续释放瘟疫毒气。]"
+					BF_Passive: "[c/9AEF9E:被动：手持时若受到致命伤害，则会进入 15 秒的不死阶段并瞬间回满血，同时在触发点释放复苏立场与荧光绿色十字爆发。该阶段内再受任何伤害都会直接死亡。若撑过这 15 秒，则至少恢复到半血。当前状态：{0}。]"
+					PassiveStateReady: "[c/7BFFB7:已就绪]"
+					PassiveStateActive: "[c/FF9B8B:不死阶段中]"
+					PassiveStateCooldown: "[c/F0D070:冷却 {0} 秒]"
+					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
+					PresetUnlock1: "[c/7BFFB7:复苏：已解锁，可在战术面板中选择。]"
+					PresetLock1: "[c/9A9A9A:复苏：击败蜂王后解锁。]"
+					PresetUnlock2: "[c/7BFFB7:侦查：已解锁，可在战术面板中选择。]"
+					PresetLock2: "[c/9A9A9A:侦查：困难模式后解锁。]"
+					PresetUnlock3: "[c/7BFFB7:轰炸：已解锁，可在战术面板中选择。]"
+					PresetLock3: "[c/9A9A9A:轰炸：击败世纪之花后解锁。]"
+					PresetUnlock4: "[c/7BFFB7:散播：已解锁，可在战术面板中选择。]"
+					PresetLock4: "[c/9A9A9A:散播：击败歌莉娅后解锁。]"
+					BF_Final: "[c/9FD8A2:弓弦已经鸣动，林叶正在回应。]"
+					LegendaryHint: "[c/BABABA:按住Shift键以读取传奇记录]"
+					LegendaryText:
+						'''
+						[c/66E6FF:它原本只是想把连射做得更快一点。]
+						[c/66E6FF:后来人们发现，真正让敌人来不及喘息的，不是更快的箭，而是每一轮尾音里继续生长的东西。]
+						[c/66E6FF:于是战术被拆成五条枝脉，叶绿体被塞进节奏的最后一拍，而炮台形态则像是整张弓把自己钉死在原地，逼迫战场接受它的答案。]
+						[c/66E6FF:它还会继续生长，但现在这把弓已经懂得一件事：哒哒，哒哒，然后开花。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			BlossomFlux: {
+				BlossomFluxChloroplast.DisplayName: 叶绿体浮炮
+				BFSelectionPanel.DisplayName: 战术选择面板
+				BFArrow_ABreak.DisplayName: 突破箭
+				BFArrow_BRecov.DisplayName: 回生箭
+				BFArrow_CDetec.DisplayName: 侦测箭
+				BFArrow_DBomb.DisplayName: 轰炸箭
+				BFArrow_EPlague.DisplayName: 瘟疫箭
+				BFArrow_EPlagueGas.DisplayName: 瘟疫毒雾
+				BFFuckyouExplosion.DisplayName: 绽裂爆轰
+				NewLegendBlossomFluxHoldOut.DisplayName: 叶流悬持弓
+				BFPassiveRecoveryField.DisplayName: 复苏立场
+				BFPassiveRecoveryFieldWave.DisplayName: 复苏冲击波
+			}
+		}
+
+		Cooldowns.BlossomFlux_Passive: 叶流不死被动
+		TheSpecialText.BlossomFluxPresetSelected: 已选择{0}战术
+	}
+}

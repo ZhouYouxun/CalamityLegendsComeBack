@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             Timer++;
             AnimateFrames();
-            ChloroplastCommon.FaceForward(Projectile);
+            ChloroplastCommon.FaceForward(Projectile, 0f);
             CurrentPresetBehavior.AI(Projectile);
         }
 

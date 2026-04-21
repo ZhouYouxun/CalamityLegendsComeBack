@@ -156,6 +156,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (!Main.mouseLeft || !Main.mouseLeftRelease)
                 return;
 
+            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Projectile.netUpdate = true;
             state = 2;
             timer = 0;
 
@@ -318,19 +320,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             if (Main.myPlayer == Projectile.owner)
             {
-                Vector2 mouseWorld = Owner.Calamity().mouseWorld;
                 Vector2 oldVelocity = Projectile.velocity;
-                Vector2 targetDirection = Projectile.SafeDirectionTo(mouseWorld);
 
-                if (IsDischarging)
+                if (!IsDischarging)
                 {
-                    float currentAngle = Projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation();
-                    float targetAngle = targetDirection.ToRotation();
-                    float limitedAngle = currentAngle.AngleTowards(targetAngle, MathHelper.ToRadians(1f));
-                    Projectile.velocity = limitedAngle.ToRotationVector2();
-                }
-                else
-                {
+                    Vector2 mouseWorld = Owner.Calamity().mouseWorld;
+                    Vector2 targetDirection = Projectile.SafeDirectionTo(mouseWorld);
                     Projectile.velocity = Vector2.Lerp(
                         Projectile.velocity,
                         targetDirection,
@@ -341,7 +336,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     Projectile.netUpdate = true;
             }
 
-            //Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
+            Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
             float recoil = IsDischarging ? 0f : HoldoutRecoilOffset;
 
             Projectile.Center = armPosition + Projectile.velocity * recoil + new Vector2(0f, 5f);

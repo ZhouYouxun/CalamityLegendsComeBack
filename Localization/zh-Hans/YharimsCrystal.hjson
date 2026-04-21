@@ -1,0 +1,63 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendYharimsCrystal: {
+					DisplayName: 犽黎姆水晶
+					Tooltip: ""
+				}
+			}
+		}
+
+		Projectiles: {
+			YharimsCrystal: {
+				YC_LeftHoldOut.DisplayName: 暴君水晶左持舰阵
+				YC_RightHoldOut.DisplayName: 暴君水晶右持舰阵
+				YC_EX_VIP.DisplayName: 暴君水晶EX核心舰
+				YC_EX_Drone.DisplayName: 暴君水晶EX护卫舰
+				YC_EX_LaserCruiser.DisplayName: 暴君水晶EX巡洋舰
+				YC_EX_Battleship.DisplayName: 暴君水晶EX战列舰
+				YC_CBeam.DisplayName: 暴君水晶主炮光束
+				YC_Left_Frigate.DisplayName: 左翼护卫舰
+				YC_Left_LaserCruiser.DisplayName: 左翼巡洋舰
+				YC_Left_MissileBattleship.DisplayName: 左翼战列舰
+				YC_Left_RepairShip.DisplayName: 后方维修舰
+				YC_Left_FakeLazer.DisplayName: 诱导假激光
+				YC_Left_Rocket.DisplayName: 舰载追踪导弹
+				YC_Left_RepairBolt.DisplayName: 维修脉冲栓
+				YC_Left_Drone.DisplayName: 左翼无人机
+				YC_Right_Drone.DisplayName: 右翼无人机
+				YC_Right_LaserCruiser.DisplayName: 右翼巡洋舰
+				YC_Right_Battleship.DisplayName: 右翼战列舰
+				YC_Right_RepairShip.DisplayName: 右翼维修舰
+				YC_Right_RepairShield.DisplayName: 维修护盾场
+				YC_Right_HeavyBolt.DisplayName: 重型能量栓
+				YC_Right_TrackerLaser.DisplayName: 追踪激光
+				ApolloRocket.DisplayName: 阿波罗导弹
+				ChickenRocket.DisplayName: 小鸡导弹
+				CosmicViperHomingRocket.DisplayName: 宇宙蝰蛇追踪弹
+				CosmicViperSplitRocket1.DisplayName: 宇宙蝰蛇分裂弹
+				CosmicViperSplittingRocket.DisplayName: 宇宙蝰蛇裂变弹
+				GoliathRocket.DisplayName: 歌利亚导弹
+				MagnomalyRocket.DisplayName: 磁畸导弹
+				MK2RocketHoming.DisplayName: MK2追踪导弹
+				MK2RocketNormal.DisplayName: MK2导弹
+				PeanutRocket.DisplayName: 花生导弹
+				PrismRocket.DisplayName: 棱镜导弹
+				RainbowRocket.DisplayName: 彩虹导弹
+				RocketFire.DisplayName: 导弹尾焰
+				ScorchedEarthRocket.DisplayName: 焦土导弹
+				ScorpioLargeRocket.DisplayName: 天蝎重型导弹
+				ScorpioRocket.DisplayName: 天蝎导弹
+				SeaDragonRocket.DisplayName: 海龙导弹
+				MirrorBladeSlash.DisplayName: 镜刃斩击
+				MirrorBladeSlashCreator.DisplayName: 镜刃斩击生成器
+				YC_WarshipArtilleryShell.DisplayName: 舰载重炮弹
+				YC_WarshipMissile.DisplayName: 舰载导弹
+				YC_WarshipPulse.DisplayName: 舰载脉冲波
+			}
+		}
+
+		Cooldowns.YC_EX: 水晶EX冷却
+	}
+}

@@ -1,3 +1,5 @@
+using CalamityMod.Particles;
+using Microsoft.Xna.Framework;
 using CalamityMod;
 using Terraria;
 using Terraria.Audio;
@@ -52,6 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
             if (FinalStandTimer > 0)
             {
                 FinalStandTimer--;
+                EmitFinalStandVisuals();
                 if (FinalStandTimer == 0 && Player.active && !Player.dead)
                     ResolveFinalStandSurvival();
             }
@@ -126,6 +129,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
             Player.immuneNoBlink = true;
             Player.immuneTime = System.Math.Max(Player.immuneTime, 45);
 
+            SpawnRecoveryField();
+
             if (Player.whoAmI == Main.myPlayer)
             {
                 SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.75f, Pitch = -0.2f }, Player.Center);
@@ -150,6 +155,81 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
         private void ForceFinalStandDeath(ref Player.HurtInfo info)
         {
             info.Damage = System.Math.Max(info.Damage, Player.statLife + Player.statLifeMax2 + 1);
+        }
+
+        private void SpawnRecoveryField()
+        {
+            if (Main.myPlayer != Player.whoAmI)
+                return;
+
+            int fieldType = ModContent.ProjectileType<BFPassiveRecoveryField>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.active && projectile.owner == Player.whoAmI && projectile.type == fieldType)
+                    projectile.Kill();
+            }
+
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center,
+                Vector2.Zero,
+                fieldType,
+                0,
+                0f,
+                Player.whoAmI);
+        }
+
+        private void EmitFinalStandVisuals()
+        {
+            Lighting.AddLight(Player.Center, new Vector3(0.12f, 0.34f, 0.16f));
+
+            Vector2 bodyPoint = Player.Center + new Vector2(
+                Main.rand.NextFloat(-Player.width * 0.42f, Player.width * 0.42f),
+                Main.rand.NextFloat(-Player.height * 0.52f, Player.height * 0.28f));
+
+            Vector2 riseVelocity = new Vector2(
+                Main.rand.NextFloat(-0.55f, 0.55f),
+                Main.rand.NextFloat(-2.8f, -1.3f));
+
+            if (Main.rand.NextBool(2))
+            {
+                SquishyLightParticle lifeFlame = new(
+                    bodyPoint,
+                    riseVelocity.RotatedByRandom(0.42f),
+                    Main.rand.NextFloat(0.42f, 0.7f),
+                    Color.Lerp(new Color(86, 255, 150), Color.White, Main.rand.NextFloat(0.12f, 0.3f)),
+                    Main.rand.Next(12, 20),
+                    1f,
+                    Main.rand.NextFloat(1.3f, 2f));
+                GeneralParticleHandler.SpawnParticle(lifeFlame);
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GlowOrbParticle glowOrb = new(
+                    bodyPoint + Main.rand.NextVector2Circular(6f, 8f),
+                    riseVelocity * 0.12f,
+                    false,
+                    Main.rand.Next(9, 14),
+                    Main.rand.NextFloat(0.28f, 0.45f),
+                    Color.Lerp(new Color(72, 255, 132), Color.White, Main.rand.NextFloat(0.18f, 0.36f)),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(glowOrb);
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust glowDust = Dust.NewDustPerfect(
+                    bodyPoint,
+                    DustID.GemEmerald,
+                    riseVelocity.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.45f, 1.2f),
+                    100,
+                    Color.Lerp(new Color(88, 255, 164), Color.White, Main.rand.NextFloat(0.15f, 0.28f)),
+                    Main.rand.NextFloat(0.95f, 1.35f));
+                glowDust.noGravity = true;
+            }
         }
     }
 }

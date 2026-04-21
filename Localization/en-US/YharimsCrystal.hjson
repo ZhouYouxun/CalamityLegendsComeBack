@@ -1,0 +1,63 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendYharimsCrystal: {
+					DisplayName: Yharim's Crystal
+					Tooltip: ""
+				}
+			}
+		}
+
+		Projectiles: {
+			YharimsCrystal: {
+				YC_LeftHoldOut.DisplayName: Tyrant Crystal Left Formation
+				YC_RightHoldOut.DisplayName: Tyrant Crystal Right Formation
+				YC_EX_VIP.DisplayName: Tyrant Crystal EX Command Ship
+				YC_EX_Drone.DisplayName: Tyrant Crystal EX Frigate
+				YC_EX_LaserCruiser.DisplayName: Tyrant Crystal EX Cruiser
+				YC_EX_Battleship.DisplayName: Tyrant Crystal EX Battleship
+				YC_CBeam.DisplayName: Tyrant Crystal Main Beam
+				YC_Left_Frigate.DisplayName: Port Frigate
+				YC_Left_LaserCruiser.DisplayName: Port Cruiser
+				YC_Left_MissileBattleship.DisplayName: Port Battleship
+				YC_Left_RepairShip.DisplayName: Rear Repair Ship
+				YC_Left_FakeLazer.DisplayName: Decoy Laser
+				YC_Left_Rocket.DisplayName: Shipborne Homing Missile
+				YC_Left_RepairBolt.DisplayName: Repair Bolt
+				YC_Left_Drone.DisplayName: Port Drone
+				YC_Right_Drone.DisplayName: Starboard Drone
+				YC_Right_LaserCruiser.DisplayName: Starboard Cruiser
+				YC_Right_Battleship.DisplayName: Starboard Battleship
+				YC_Right_RepairShip.DisplayName: Starboard Repair Ship
+				YC_Right_RepairShield.DisplayName: Repair Shield
+				YC_Right_HeavyBolt.DisplayName: Heavy Bolt
+				YC_Right_TrackerLaser.DisplayName: Tracking Laser
+				ApolloRocket.DisplayName: Apollo Rocket
+				ChickenRocket.DisplayName: Chicken Rocket
+				CosmicViperHomingRocket.DisplayName: Cosmic Viper Homing Rocket
+				CosmicViperSplitRocket1.DisplayName: Cosmic Viper Split Rocket
+				CosmicViperSplittingRocket.DisplayName: Cosmic Viper Splitting Rocket
+				GoliathRocket.DisplayName: Goliath Rocket
+				MagnomalyRocket.DisplayName: Magnomaly Rocket
+				MK2RocketHoming.DisplayName: MK2 Homing Rocket
+				MK2RocketNormal.DisplayName: MK2 Rocket
+				PeanutRocket.DisplayName: Peanut Rocket
+				PrismRocket.DisplayName: Prism Rocket
+				RainbowRocket.DisplayName: Rainbow Rocket
+				RocketFire.DisplayName: Rocket Flame
+				ScorchedEarthRocket.DisplayName: Scorched Earth Rocket
+				ScorpioLargeRocket.DisplayName: Scorpio Heavy Rocket
+				ScorpioRocket.DisplayName: Scorpio Rocket
+				SeaDragonRocket.DisplayName: Sea Dragon Rocket
+				MirrorBladeSlash.DisplayName: Mirror Blade Slash
+				MirrorBladeSlashCreator.DisplayName: Mirror Blade Slash Emitter
+				YC_WarshipArtilleryShell.DisplayName: Warship Artillery Shell
+				YC_WarshipMissile.DisplayName: Warship Missile
+				YC_WarshipPulse.DisplayName: Warship Pulse
+			}
+		}
+
+		Cooldowns.YC_EX: Crystal EX Cooldown
+	}
+}

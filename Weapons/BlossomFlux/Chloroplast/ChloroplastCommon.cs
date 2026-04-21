@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
     {
         public static Color PresetColor(BlossomFluxChloroplastPresetType preset) => preset switch
         {
-            BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(108, 255, 118),
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(255, 228, 92),
             BlossomFluxChloroplastPresetType.Chlo_BRecov => new Color(140, 255, 162),
             BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(110, 240, 255),
             BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(255, 94, 68),
@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public static Color PresetAccentColor(BlossomFluxChloroplastPresetType preset) => preset switch
         {
-            BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(232, 255, 228),
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(255, 250, 214),
             BlossomFluxChloroplastPresetType.Chlo_BRecov => new Color(220, 255, 232),
             BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(220, 250, 255),
             BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(255, 210, 164),
@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public static int PresetDustType(BlossomFluxChloroplastPresetType preset) => preset switch
         {
-            BlossomFluxChloroplastPresetType.Chlo_ABreak => DustID.GrassBlades,
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => DustID.YellowTorch,
             BlossomFluxChloroplastPresetType.Chlo_BRecov => DustID.GemEmerald,
             BlossomFluxChloroplastPresetType.Chlo_CDetec => DustID.IceTorch,
             BlossomFluxChloroplastPresetType.Chlo_DBomb => DustID.RedTorch,

@@ -59,6 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         private Vector2 GunTipPosition => Projectile.Center + AimDirection * 42f;
         private Color PresetColor => BFArrowCommon.GetPresetColor(CurrentPreset);
+        private Color AccentColor => BFArrowCommon.GetPresetAccentColor(CurrentPreset);
 
         public override void SetDefaults()
         {
@@ -85,22 +86,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
             BFRightUIPlayer rightUIPlayer = Owner.GetModPlayer<BFRightUIPlayer>();
-            BFEXPlayer exPlayer = Owner.GetModPlayer<BFEXPlayer>();
 
             if (Main.myPlayer == Projectile.owner)
-                HandleOwnerLogic(rightUIPlayer, exPlayer);
+                HandleOwnerLogic(rightUIPlayer);
 
             UpdateIdlePose();
             UpdateHeldProjectileVariables();
             ManipulatePlayerVariables();
         }
 
-        private void HandleOwnerLogic(BFRightUIPlayer rightUIPlayer, BFEXPlayer exPlayer)
+        private void HandleOwnerLogic(BFRightUIPlayer rightUIPlayer)
         {
             rightUIPlayer.ProcessRightClickState(HasActiveSelectionPanel(Owner));
-
-            if (HandleLegendarySkill(rightUIPlayer, exPlayer))
-                return;
 
             if (rightUIPlayer.ShortTapReleasedThisFrame && !rightChargeActive)
                 ToggleSelectionPanel();
@@ -113,31 +110,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (!rightChargeActive)
                 HandleLeftClickInput();
-        }
-
-        private bool HandleLegendarySkill(BFRightUIPlayer rightUIPlayer, BFEXPlayer exPlayer)
-        {
-            if (!KeybindSystem.LegendarySkill.JustPressed)
-                return false;
-
-            if (!rightUIPlayer.UltimateUnlocked)
-            {
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.48f, Pitch = -0.08f }, Owner.Center);
-                return true;
-            }
-
-            if (!exPlayer.CanTriggerUltimate)
-            {
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.46f, Pitch = 0.08f }, Owner.Center);
-                return true;
-            }
-
-            exPlayer.StartUltimateCooldown();
-            CloseSelectionPanel();
-            CancelRightCharge();
-            ResetBurstState(clearPendingProjectiles: true);
-            CastUltimateField();
-            return true;
         }
 
         private void UpdateTimedLeftProjectiles()
@@ -360,6 +332,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             SpawnReleasePulse();
             ReleaseChargedShot(CurrentPreset, ChargeCompletion);
+            Owner.GetModPlayer<BFEXPlayer>().GainEX(3);
         }
 
         private void ReleaseChargedShot(BlossomFluxChloroplastPresetType preset, float chargeCompletion)
@@ -367,11 +340,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             switch (preset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
-                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_ABreak>(), 18f, 1.12f);
+                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_ABreak>(), 21.6f, 1.12f);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
-                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_BRecov>(), 16.25f, 0.94f);
+                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_BRecov>(), 19.5f, 0.94f);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
@@ -379,11 +352,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_DBomb>(), 17f, 0.88f);
+                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_DBomb>(), 20.4f, 0.88f);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_EPlague>(), 15.5f, 0.98f);
+                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_EPlague>(), 18.6f, 0.98f);
                     break;
             }
         }
@@ -539,6 +512,101 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     Main.rand.NextFloat(0.95f, 1.4f));
                 dust.noGravity = true;
             }
+        }
+
+        private void DrawRailgunTelegraph()
+        {
+            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPosition = GunTipPosition - Main.screenPosition;
+            float chargeVisual = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
+            float halfAngle = MathHelper.Lerp(0.24f, 0.012f, chargeVisual);
+            float telegraphLength = MathHelper.Lerp(42f, 82f, chargeVisual);
+            float beamPulse = 0.88f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7f + Projectile.identity * 0.37f);
+            float lineOpacity = MathHelper.Lerp(0.26f, 0.72f, chargeVisual) * (readyBurstPlayed ? 1.12f : 1f);
+            float lineThickness = MathHelper.Lerp(0.055f, 0.1f, chargeVisual) * beamPulse;
+            Color mainColor = Color.Lerp(PresetColor, AccentColor, 0.3f) * lineOpacity;
+            Color accentColor = Color.Lerp(AccentColor, Color.White, 0.22f) * (lineOpacity * 0.75f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Vector2 lineDirection = (-AimDirection).RotatedBy(halfAngle * i);
+                float lineRotation = lineDirection.ToRotation() + MathHelper.PiOver2;
+                Vector2 outerScale = new Vector2(lineThickness, telegraphLength / lineTexture.Height);
+                Vector2 innerScale = new Vector2(lineThickness * 0.45f, telegraphLength / lineTexture.Height);
+                Vector2 lineStart = drawPosition + lineDirection * 18f;
+
+                Main.EntitySpriteDraw(
+                    lineTexture,
+                    lineStart,
+                    null,
+                    mainColor,
+                    lineRotation,
+                    new Vector2(lineTexture.Width * 0.5f, 0f),
+                    outerScale,
+                    SpriteEffects.None,
+                    0);
+
+                Main.EntitySpriteDraw(
+                    lineTexture,
+                    lineStart,
+                    null,
+                    accentColor,
+                    lineRotation,
+                    new Vector2(lineTexture.Width * 0.5f, 0f),
+                    innerScale,
+                    SpriteEffects.None,
+                    0);
+
+                for (int marker = 1; marker <= 3; marker++)
+                {
+                    float markerDistance = telegraphLength * (0.22f + marker * 0.18f);
+                    Vector2 markerPosition = drawPosition + lineDirection * markerDistance;
+                    float markerScale = MathHelper.Lerp(0.08f, 0.14f, chargeVisual) * (1f - marker * 0.08f) * beamPulse;
+
+                    Main.EntitySpriteDraw(
+                        bloomTexture,
+                        markerPosition,
+                        null,
+                        accentColor * (0.42f - marker * 0.08f),
+                        0f,
+                        bloomTexture.Size() * 0.5f,
+                        markerScale * 0.35f,
+                        SpriteEffects.None,
+                        0);
+                }
+            }
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                drawPosition + AimDirection * 18f,
+                null,
+                Color.Lerp(PresetColor, Color.White, 0.28f) * (0.3f + 0.32f * chargeVisual),
+                0f,
+                bloomTexture.Size() * 0.5f,
+                MathHelper.Lerp(0.04f, 0.08f, chargeVisual) * beamPulse,
+                SpriteEffects.None,
+                0);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
         }
 
         private void FireEchoVolley()
@@ -720,6 +788,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Vector2 origin = weaponTexture.Size() * 0.5f;
             float rotation = Projectile.rotation;
             SpriteEffects effects = SpriteEffects.None;
+            float outlinePulse = 0.78f + 0.22f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.8f + Projectile.identity * 0.43f);
+            float outlineDistance = 1.7f + 0.8f * outlinePulse;
+            Color outlineColor = Color.Lerp(PresetColor, AccentColor, 0.45f) * (0.65f + 0.22f * outlinePulse);
+            Color glowColor = Color.Lerp(PresetColor, Color.White, 0.45f) * (0.34f + 0.18f * outlinePulse);
 
             if (Owner.gravDir == 1f)
             {
@@ -733,10 +805,59 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     effects = SpriteEffects.FlipVertically;
             }
 
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            for (int i = 0; i < 16; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 16f;
+                Vector2 offset = angle.ToRotationVector2() * outlineDistance;
+                Main.EntitySpriteDraw(
+                    weaponTexture,
+                    drawPosition + offset,
+                    null,
+                    outlineColor,
+                    rotation,
+                    origin,
+                    Projectile.scale,
+                effects,
+                0);
+            }
+
+            Main.EntitySpriteDraw(
+                weaponTexture,
+                drawPosition,
+                null,
+                glowColor,
+                rotation,
+                origin,
+                Projectile.scale * (1.04f + 0.05f * outlinePulse),
+                effects,
+                0);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
 
             if (!rightChargeActive || reloadTimer > 0)
                 return false;
+
+            DrawRailgunTelegraph();
 
             Texture2D arrowTexture = ModContent.Request<Texture2D>(BFArrowCommon.GetTexturePathForPreset(CurrentPreset)).Value;
             Vector2 arrowDrawPosition = GunTipPosition - AimDirection * MathHelper.Lerp(10f, 5f, ChargeCompletion) - Main.screenPosition;
@@ -756,26 +877,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 0);
 
             return false;
-        }
-
-        private void CastUltimateField()
-        {
-            int fieldType = ModContent.ProjectileType<BFUltimateField>();
-            foreach (Projectile projectile in Main.ActiveProjectiles)
-            {
-                if (projectile.active && projectile.owner == Owner.whoAmI && projectile.type == fieldType)
-                    projectile.Kill();
-            }
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Owner.Center,
-                Vector2.Zero,
-                fieldType,
-                Projectile.damage,
-                0f,
-                Owner.whoAmI,
-                (int)CurrentPreset);
         }
     }
 }
