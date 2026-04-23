@@ -1,0 +1,156 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendSHPC: {
+					DisplayName: SHPC-传奇归来
+					SHPC_LeftIntro:
+						'''
+						[c/66CCFF:左键：发射能量光球。]
+						[c/FFD966:背包材料可用于装填，部分材料装药量不同。]
+						[c/99CCFF:能量耗尽后自动重新装填。]
+						[c/AAAAAA:未装药时仍可攻击，但不附带任何效果。]
+						[c/99CCFF:对武器点击右键，可以将现有的装药倒出并概率返还。]
+						[c/DDA0FF:当前装药效果为：]
+						'''
+					SHPC_RightIntro:
+						'''
+						[c/66CCFF:右键：短暂蓄力后进行激光扫射。]
+						[c/FFB347:持续射击会累积热值，视游戏阶段性提升最高可达等级。]
+						[c/99CCFF:停止攻击后热值逐渐下降，不手持该武器可清空热值。]
+						[c/DDA0FF:扫射期间点击左键可强制降温，释放5枚能量光球并短暂中断射击。]
+						[c/FF7043:热值越高，副作用越强，但激光伤害倍率也随之提升。]
+						'''
+					SHPC_Final: "[c/99B3FF:系统仍在演化。此前的缺陷尚未完全修正，但其潜力仍然存在。或许有一天，它能够得到真正的验证。]"
+					SHPCRight1: "[c/8FA2FF:当前解锁至Ⅲ级热值：弹体消失时产生小范围爆炸。]"
+					SHPCRight2: "[c/8FA2FF:当前解锁至Ⅳ级热值：无视防御并显著提升伤害，但生命再生受到抑制。]"
+					SHPCRight3: "[c/8FA2FF:当前解锁至Ⅴ级热值：弹体可分裂扩散，并解锁手动降温能力。]"
+					SHPCRight4: "[c/8FA2FF:当前解锁至Ⅵ级热值：进一步强化弹体性能与穿透能力，同时持续灼烧自身。]"
+					SHPCRight5: "[c/8FA2FF:当前解锁至Ⅶ级热值：获得无限穿透并附加目标最大生命值伤害，但过热将迅速消耗自身。]"
+					SHPC_EXHint:
+						'''
+						[c/66CCFF:手持武器或进行左键开火时，系统会缓慢积蓄能量，最高储存60点。]
+						[c/FFD966:当能量完全充盈后，按下 {0} 即可启动终极模式。]
+						[c/FF7043:经过短暂蓄力，释放一道短暂但足以贯穿一切的超巨型激光。]
+						'''
+					Tooltip: "[GFB]"
+					TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。
+					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
+					LegendaryText:
+						'''
+						[c/66E6FF:最初的方案过于依赖单一能源，但结果证明，这种设计注定无法稳定运行。]
+						[c/66E6FF:新的结构不再局限于灵魂，任何具备能量密度的材料都被纳入测试范围。]
+						[c/66E6FF:不同输入带来的响应差异极大，部分组合甚至呈现出异常的放大效应。]
+						[c/66E6FF:控制系统因此被重新设计，能量在完全约束前即被强制释放。]
+						[c/66E6FF:理论上，这种装置不再受弹药类型限制，但它真正的极限仍无人知晓。]
+						[c/66E6FF:扫射模式下，原有的灵魂依赖被彻底剔除，结构被迫重构为更原始的热能驱动形式。]
+						[c/66E6FF:为维持输出稳定，散热系统被重新定义，出现了新的热失控效应。]
+						[c/66E6FF:随着持续运作，系统将不可避免地进入过热区间，并以此换取更高的释放效率。]
+						[c/66E6FF:若操作者无法及时干预，这种“优化”将反过来燃尽自身。]
+						'''
+				}
+
+				NewLegendSHPCTest: {
+					DisplayName: SHPC测试武器
+					Tooltip: ""
+				}
+			}
+		}
+
+		AMMO: {
+			SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
+			SHPCAmmo1: 弹跳并释放大量电火花
+			SHPCAmmo2: 释放5条连锁闪电弧
+			SHPCAmmo3: 击中地面后产生毒水
+			SHPCAmmo4: 能量耗尽后分裂成两个光球
+			SHPCAmmo5: 瞄准并猛击正下方的敌人
+			SHPCAmmo6: 爆炸时形成一片液氮区域
+			SHPCAmmo7: 标记敌人并召唤天罚激光
+			SHPCAmmo8: 把敌人崩飞
+			SHPCAmmo9: 呼唤高伤害的光明之魂绕自身旋转
+			SHPCAmmo10: 喷射追踪敌人的暗影之魂
+			SHPCAmmo11: 翱翔于天空，并向下轰炸
+			SHPCAmmo12: 在原地滞留游荡的恐惧之魂
+			SHPCAmmo13: 释放三个延迟爆炸的能量光球
+			SHPCAmmo14: 持久的飞行能够造成更猛烈的爆炸
+			SHPCAmmo15: 追踪并尝试治疗玩家
+			SHPCAmmo16: 撞击后向四周释放静止的灵魂
+			SHPCAmmo17: 持续粘在敌人表面造成多次伤害
+			SHPCAmmo18: 制造瘟疫核爆
+			SHPCAmmo19: 痛苦的赤色灵魂喷涌而出
+			SHPCAmmo20: "[甲虫外壳 未实现]"
+			SHPCAmmo21: 散射一连串日曜穿刺长矛
+			SHPCAmmo22: 飞行期间释放漩涡导弹
+			SHPCAmmo23: 强追踪并蓄力爆炸
+			SHPCAmmo24: "[NPC:406] >> [NPC:405] >> [NPC:406] >> [NPC:405] !!!"
+			SHPCAmmo25: 释放超大范围冥思爆炸
+			SHPCAmmo26: 撞击物块后产生猛烈单向冲击波
+			SHPCAmmo27: "[暂无该物品]"
+			SHPCAmmo28: 爆炸时释放神圣几何弹跳射线
+			SHPCAmmo29: 献祭玩家的血量强化自身，爆炸治疗回血
+			SHPCAmmo30: 唤醒深处的灵魂
+			SHPCAmmo31: 痛苦的赤色灵魂喷涌而出
+			SHPCAmmo32: 制造小型黑洞将敌人吸入
+			SHPCAmmo33: 进行多次双纽线追踪并抹除敌人
+			SHPCAmmo34: 反弹并释放冰刺攻击
+			SHPCAmmo35: 分裂成噩梦激光
+			SHPCAmmo36: 召唤大量的微型圣灵，进行区域火力覆盖
+			SHPCAmmo37: 感受巨龙的怒吼
+			SHPCAmmo38: 喷射激光惩戒敌人，释放分形几何
+			SHPCAmmo39: 湮灭目力所及的所有敌人
+			SHPCAmmo40: 喷射出大量的电磁光球
+		}
+
+		Projectiles: {
+			SHPC: {
+				EnergyCore_Spark.DisplayName: 能源核心火花
+				PurifiedGel_Ball.DisplayName: 净化凝胶球
+				StormlionMandible_ARC.DisplayName: 风暴狮颚电弧
+				BossSoulofMight_Ball.DisplayName: 力量之魂能量球
+				BossSoulofMight_EXP.DisplayName: 力量之魂爆裂
+				TitanHeart_BigINV.DisplayName: 泰坦之心幻核
+				EssenceofHavoc_INV.DisplayName: 浩劫精华冲击波
+				EssenceofSnow_N2.DisplayName: 冰雪精华氮流
+				EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
+				NewSHPS.DisplayName: SHPS支援核心
+				AshesofCalamity_Portal.DisplayName: 灾厄余烬传送门
+				AshesofCalamity_Soul.DisplayName: 灾厄余烬之魂
+				LivingShard_Healing.DisplayName: 活体碎片治愈波
+				FragmentEntropyExplosion.DisplayName: 熵碎爆炸
+				FragmentSolar_Spear.DisplayName: 太阳碎片长矛
+				FragmentStardust_Cell.DisplayName: 星尘碎片细胞
+				DivineGeode_Lazer.DisplayName: 神圣晶簇激光
+				ArmoredShell_Ball.DisplayName: 装甲甲壳球
+				Necroplasm_Damage.DisplayName: 死灵质爆发
+				UnholyEssence_Wave.DisplayName: 渎神精华波
+				AscendantSpirit_PROJ.DisplayName: 升华之灵弹体
+				AshesofAnn_Located.DisplayName: 安之余烬定位标记
+				AshesofAnn_SuperEXP.DisplayName: 安之余烬超爆
+				EndothermicEnergy_Copy.DisplayName: 吸热能量复制体
+				EndothermicEnergy_Shadow.DisplayName: 吸热能量影体
+				EndothermicEnergy_Split.DisplayName: 吸热能量裂片
+				ExoPrism_Geometry.DisplayName: 外天棱镜几何体
+				ExoPrism_Lazer.DisplayName: 外天棱镜激光
+				ExoPrism_Light.DisplayName: 外天棱镜辉光
+				NightmareFuel_ARC.DisplayName: 梦魇燃料弧光
+				NightmareFuel_Scythe.DisplayName: 梦魇燃料镰刃
+				YharonSoulFragment_Flame.DisplayName: 丛龙灵魂碎焰
+				NewLegendSHPB.DisplayName: SHPC能量球
+				NewLegendSHPE.DisplayName: SHPC爆轰
+				SHPCRight_HoulOut.DisplayName: SHPC悬持炮
+				SHPCRight_Proj.DisplayName: SHPC主炮光束
+				NL_SHPC_EXWeapon.DisplayName: SHPC EX超级激光
+				PlagueCell_Marked.DisplayName: 标记瘟疫细胞
+				SHPCPassiveOrb.DisplayName: SHPC被动能量球
+				SHPC_SuperLazer.DisplayName: SHPC超级激光
+				TwistingNether_BlackSLASH.DisplayName: 扭曲虚空暗斩
+				TwistingNether_Blade.DisplayName: 扭曲虚空之刃
+				TwistingNether_Shadow.DisplayName: 扭曲虚空残影
+				// ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
+				// SHPC_SLINV.DisplayName: S H P C_ S L I N V
+			}
+		}
+
+		Cooldowns.SHPC_EX: SHPC冷却
+	}
+}

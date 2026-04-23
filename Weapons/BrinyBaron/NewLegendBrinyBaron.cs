@@ -186,6 +186,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (!KeybindSystem.LegendarySkill.JustPressed)
                 return;
 
+            if (!player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped)
+                return;
+
             // ===== 大招释放 =====
             //if (KeybindSystem.LegendarySkill.JustPressed && NPC.downedFishron && tidePlayer.TideFull)
 
@@ -417,4 +420,5 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         }
     }
 }
+
 

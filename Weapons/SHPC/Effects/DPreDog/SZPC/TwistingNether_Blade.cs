@@ -1,11 +1,13 @@
-using System;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -205,56 +207,93 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Main.dedServ)
-                return false;
+            Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
-            Asset<Texture2D> smearTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearRagged");
-            Asset<Texture2D> bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");
-            Asset<Texture2D> largeBloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/LargeBloom");
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            // === 主颜色 ===
+            Color mainColor = new Color(120, 255, 200);
+            Color fadeColor = mainColor * 0.5f;
 
-            for (int i = 0; i < 5; i++)
+            // === 尾迹（稳定 oldPos 版本）===
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+
+            for (int i = 1; i < Projectile.oldPos.Length; i++)
             {
-                Vector2 afterimageOffset = -Projectile.velocity.SafeNormalize(Vector2.UnitY) * i * 10f;
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
 
-                Color drawColor = Color.Lerp(BladePurple, Color.White, i / 5f);
-                drawColor.A = 0;
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size / 2f - Main.screenPosition;
+                float progress = i / (float)Projectile.oldPos.Length;
+
+                float width = MathHelper.Lerp(6f, 1f, progress);
+                Color color = Color.Lerp(mainColor, Color.Transparent, progress) * 0.8f;
+
+                Vector2 dir = Projectile.oldPos[i - 1] - Projectile.oldPos[i];
+                float rot = dir.ToRotation();
 
                 Main.EntitySpriteDraw(
-                    smearTexture.Value,
-                    drawPosition + afterimageOffset,
+                    pixel,
+                    pos,
                     null,
-                    drawColor * (0.55f - i * 0.07f) * Projectile.Opacity,
-                    Projectile.rotation,
-                    smearTexture.Size() * 0.5f,
-                    new Vector2(0.22f + i * 0.025f, 1f + i * 0.08f),
-                    SpriteEffects.None);
+                    color,
+                    rot,
+                    new Vector2(0f, 0.5f),
+                    new Vector2(dir.Length(), width),
+                    SpriteEffects.None,
+                    0
+                );
             }
 
-            // 补一层更大的紫色脉冲，让现在的二阶段更像“高速穿刺中的蓄能体”
-            Main.EntitySpriteDraw(
-                largeBloomTexture.Value,
-                drawPosition,
-                null,
-                BladePurple * 0.22f * Projectile.Opacity,
-                0f,
-                largeBloomTexture.Size() * 0.5f,
-                new Vector2(0.35f, 0.75f),
-                SpriteEffects.None);
+            // === BloomCircle（彻底修黑块）===
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
-            float centerPulseScale = 0.18f + 0.04f * (float)Math.Sin(pulseAngle);
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
 
             Main.EntitySpriteDraw(
-                bloomTexture.Value,
-                drawPosition,
+                bloom,
+                drawPos,
                 null,
-                Color.White * 0.18f * Projectile.Opacity,
+                mainColor * 0.8f,
                 0f,
-                bloomTexture.Size() * 0.5f,
-                centerPulseScale,
-                SpriteEffects.None);
+                bloom.Size() / 2f,
+                0.6f,
+                SpriteEffects.None
+            );
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPos,
+                null,
+                Color.White * 0.6f,
+                0f,
+                bloom.Size() / 2f,
+                0.3f,
+                SpriteEffects.None
+            );
+
+            // === VerticalSmearRagged（修前伸过长）===
+            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearRagged").Value;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            // ❗ 原本是 full velocity 推进，这里削减 50%
+            Vector2 smearPos = drawPos + forward * Projectile.velocity.Length() * 0.5f;
+            smearPos = drawPos; // 直接用弹幕中心，不往前推
+
+            Main.EntitySpriteDraw(
+                smear,
+                smearPos,
+                null,
+                mainColor * 0.5f,
+                Projectile.rotation,
+                smear.Size() / 2f,
+                0.27f,
+                SpriteEffects.None
+            );
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;
         }
+
     }
 }

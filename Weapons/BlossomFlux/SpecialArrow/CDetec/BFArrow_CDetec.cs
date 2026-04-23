@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            Projectile.velocity *= 0.8f;
+            Projectile.velocity *= 0.6f;
         }
 
         public override bool? CanDamage() => State == 0f ? null : false;
@@ -56,6 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (State == 0f)
             {
+                Projectile.velocity.Y += 0.08f;
+                Projectile.velocity.X *= 0.998f;
                 BFArrowCommon.FaceForward(Projectile);
                 Projectile.velocity *= 0.9985f;
                 ScanRadius = MathHelper.Clamp(ScanRadius <= 0f ? 24f : ScanRadius + ScanGrowthPerFrame, 24f, MaxScanRadius);

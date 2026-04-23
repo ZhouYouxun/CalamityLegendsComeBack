@@ -1,3 +1,5 @@
+using System;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -9,6 +11,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 {
     internal static class ChloroplastCommon
     {
+        private const string HelixTexturePath = "CalamityMod/Particles/WaterFlavored";
+        private const string SparkTexturePath = "CalamityMod/Particles/BloomLineSoftEdge";
+        private const string BloomTexturePath = "CalamityMod/Particles/BloomCircle";
+        private const string MagicTexturePath = "CalamityLegendsComeBack/Texture/KsTexture/magic_03";
+        private const float ProjectileDrawScale = 1.8f;
+        private const float ExtraGlowScaleMultiplier = 0.05f;
+
         public static Color PresetColor(BlossomFluxChloroplastPresetType preset) => preset switch
         {
             BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(255, 228, 92),
@@ -47,122 +56,60 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
 
         public static void EmitTrail(Projectile projectile, BlossomFluxChloroplastPresetType preset, float intensity = 1f)
         {
-            if (!Main.rand.NextBool(2))
-                return;
-
             Color mainColor = PresetColor(preset);
             Color accentColor = PresetAccentColor(preset);
-            Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
-            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            Vector2 spawnPosition = projectile.Center - projectile.velocity * 0.08f + normal * Main.rand.NextFloat(-6f, 6f);
+            Vector2 forward = GetForwardDirection(projectile);
 
-            Dust dust = Dust.NewDustPerfect(
-                spawnPosition,
-                PresetDustType(preset),
-                -projectile.velocity * 0.05f + Main.rand.NextVector2Circular(0.8f, 0.8f),
-                100,
-                Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.18f, 0.55f)),
-                Main.rand.NextFloat(0.85f, 1.25f) * intensity);
-            dust.noGravity = true;
-
-            if (!Main.rand.NextBool(4))
-                return;
-
-            Dust sparkle = Dust.NewDustPerfect(
-                projectile.Center + normal * Main.rand.NextFloat(-4f, 4f),
-                DustID.TerraBlade,
-                direction.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.3f, 1.15f),
-                100,
-                accentColor,
-                Main.rand.NextFloat(0.75f, 1.05f) * intensity);
-            sparkle.noGravity = true;
-
-            switch (preset)
+            if ((int)projectile.ai[1] % 5 == 0 && !Main.dedServ)
             {
-                case BlossomFluxChloroplastPresetType.Chlo_ABreak:
-                {
-                    if (!Main.rand.NextBool(3))
-                    {
-                        Dust crystalDust = Dust.NewDustPerfect(
-                            projectile.Center + direction * 5f + normal * Main.rand.NextFloat(-4f, 4f),
-                            DustID.ChlorophyteWeapon,
-                            direction * Main.rand.NextFloat(0.5f, 1.55f),
-                            100,
-                            accentColor,
-                            Main.rand.NextFloat(0.8f, 1.1f) * intensity);
-                        crystalDust.noGravity = true;
-                    }
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    projectile.Center - projectile.velocity * 0.15f,
+                    projectile.velocity * 0.03f,
+                    Color.Lerp(mainColor, accentColor, 0.35f) * 0.72f,
+                    new Vector2(0.72f, 1.95f),
+                    forward.ToRotation(),
+                    0.14f,
+                    0.03f,
+                    12));
+            }
 
-                    break;
-                }
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Particle mist = new MediumMistParticle(
+                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    -projectile.velocity * 0.02f + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    mainColor,
+                    Color.Black,
+                    Main.rand.NextFloat(0.34f, 0.52f),
+                    Main.rand.Next(90, 130));
+                GeneralParticleHandler.SpawnParticle(mist);
+            }
 
-                case BlossomFluxChloroplastPresetType.Chlo_BRecov:
-                {
-                    if (!Main.rand.NextBool(3))
-                    {
-                        Dust mistDust = Dust.NewDustPerfect(
-                            projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                            DustID.Smoke,
-                            -projectile.velocity * Main.rand.NextFloat(0.02f, 0.05f) + Main.rand.NextVector2Circular(0.3f, 0.3f),
-                            140,
-                            Color.Lerp(mainColor, Color.White, 0.4f),
-                            Main.rand.NextFloat(0.75f, 1f) * intensity);
-                        mistDust.noGravity = true;
-                    }
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                GlowSparkParticle glowSpark = new(
+                    projectile.Center,
+                    projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.35f) * Main.rand.NextFloat(2f, 5f),
+                    false,
+                    14,
+                    0.02f,
+                    Color.Gold,
+                    new Vector2(1.8f, 0.45f),
+                    true,
+                    false);
+                GeneralParticleHandler.SpawnParticle(glowSpark);
+            }
 
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                {
-                    if (!Main.rand.NextBool(3))
-                    {
-                        Dust reconDust = Dust.NewDustPerfect(
-                            projectile.Center + normal * Main.rand.NextFloat(-3f, 3f),
-                            DustID.Electric,
-                            direction.RotatedByRandom(0.2f) * Main.rand.NextFloat(0.6f, 1.35f),
-                            100,
-                            accentColor,
-                            Main.rand.NextFloat(0.7f, 0.95f) * intensity);
-                        reconDust.noGravity = true;
-                    }
-
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                {
-                    if (!Main.rand.NextBool(3))
-                    {
-                        Dust emberDust = Dust.NewDustPerfect(
-                            projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                            DustID.RedTorch,
-                            -direction * Main.rand.NextFloat(0.15f, 0.55f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
-                            100,
-                            Color.Lerp(mainColor, accentColor, 0.45f),
-                            Main.rand.NextFloat(0.85f, 1.15f) * intensity);
-                        emberDust.noGravity = true;
-                    }
-
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                {
-                    if (!Main.rand.NextBool(3))
-                    {
-                        Dust plagueDust = Dust.NewDustPerfect(
-                            projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                            DustID.GreenTorch,
-                            -projectile.velocity * Main.rand.NextFloat(0.01f, 0.04f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
-                            100,
-                            Color.Lerp(mainColor, accentColor, 0.35f),
-                            Main.rand.NextFloat(0.85f, 1.15f) * intensity);
-                        plagueDust.noGravity = true;
-                    }
-
-                    break;
-                }
+            if (Main.rand.NextBool(2))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                    PresetDustType(preset),
+                    -projectile.velocity * Main.rand.NextFloat(0.015f, 0.04f) + Main.rand.NextVector2Circular(0.7f, 0.7f),
+                    100,
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.15f, 0.55f)),
+                    Main.rand.NextFloat(0.85f, 1.2f));
+                dust.noGravity = true;
             }
         }
 
@@ -171,6 +118,64 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             Color mainColor = PresetColor(preset);
             Color accentColor = PresetAccentColor(preset);
             int dustType = PresetDustType(preset);
+            float intensity = 0.9f + Utils.GetLerpValue(8f, 16f, amount, true) * 0.55f;
+
+            if (!Main.dedServ)
+            {
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                    projectile.Center,
+                    Vector2.Zero,
+                    Color.Lerp(mainColor, accentColor, 0.3f),
+                    0.65f * intensity,
+                    18));
+
+                GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
+                    projectile.Center,
+                    Vector2.Zero,
+                    Color.Lerp(mainColor, accentColor, 0.35f),
+                    Vector2.One,
+                    Main.rand.NextFloat(-0.2f, 0.2f),
+                    0f,
+                    0.18f * intensity,
+                    16));
+
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    projectile.Center,
+                    Vector2.Zero,
+                    Color.Lerp(mainColor, accentColor, 0.3f) * 0.8f,
+                    new Vector2(1.2f, 1.9f),
+                    Main.rand.NextFloat(-0.2f, 0.2f),
+                    0.18f * intensity,
+                    0.034f,
+                    16));
+
+                for (int i = 0; i < Math.Max(8, amount); i++)
+                {
+                    Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(speedMin * 0.9f, speedMax * 1.25f);
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                        projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                        velocity,
+                        SparkTexturePath,
+                        false,
+                        Main.rand.Next(10, 16),
+                        Main.rand.NextFloat(0.026f, 0.042f) * intensity,
+                        Main.rand.NextBool() ? mainColor : accentColor,
+                        new Vector2(Main.rand.NextFloat(1.15f, 1.85f), Main.rand.NextFloat(0.55f, 0.85f)),
+                        shrinkSpeed: 0.74f));
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    Particle mist = new MediumMistParticle(
+                        projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+                        Main.rand.NextVector2Circular(2.2f, 2.2f),
+                        Main.rand.NextBool() ? mainColor : accentColor,
+                        Color.Black,
+                        Main.rand.NextFloat(0.45f, 0.75f) * intensity,
+                        Main.rand.Next(110, 170));
+                    GeneralParticleHandler.SpawnParticle(mist);
+                }
+            }
 
             for (int i = 0; i < amount; i++)
             {
@@ -184,123 +189,169 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
                     Main.rand.NextFloat(scaleMin, scaleMax));
                 dust.noGravity = true;
             }
-
-            for (int i = 0; i < amount / 3; i++)
-            {
-                Dust sparkle = Dust.NewDustPerfect(
-                    projectile.Center,
-                    DustID.TerraBlade,
-                    Main.rand.NextVector2CircularEdge(2.2f, 2.2f) * Main.rand.NextFloat(speedMin * 0.45f, speedMax * 0.75f),
-                    100,
-                    accentColor,
-                    Main.rand.NextFloat(0.8f, 1.1f));
-                sparkle.noGravity = true;
-            }
         }
 
         public static void DrawPresetProjectile(Projectile projectile, BlossomFluxChloroplastPresetType preset, Color lightColor, float scale = 1f)
         {
-            Texture2D texture = TextureAssets.Projectile[projectile.type].Value;
-            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D ringTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
-            Texture2D flareTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/flare_01").Value;
-            Texture2D slashTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/slash_01").Value;
-            Texture2D flowerTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/flower_011").Value;
-            Texture2D shieldFlowerTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/flower_014").Value;
-            Texture2D streakTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/fx_EnergyBolt6").Value;
-            Texture2D haloTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/fx_EnergyBolt7").Value;
-            Rectangle frame = texture.Frame(1, Main.projFrames[projectile.type], 0, projectile.frame);
+            Texture2D bodyTexture = TextureAssets.Projectile[projectile.type].Value;
+            Texture2D helixTexture = ModContent.Request<Texture2D>(HelixTexturePath).Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>(BloomTexturePath).Value;
+            Texture2D sparkTexture = ModContent.Request<Texture2D>(SparkTexturePath).Value;
+            Texture2D magicTexture = ModContent.Request<Texture2D>(MagicTexturePath).Value;
+            Rectangle frame = bodyTexture.Frame(1, Main.projFrames[projectile.type], 0, projectile.frame);
             Vector2 origin = frame.Size() * 0.5f;
             Vector2 drawPosition = projectile.Center - Main.screenPosition;
+            Vector2 forward = GetForwardDirection(projectile);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             Color mainColor = projectile.GetAlpha(PresetColor(preset));
             Color accentColor = projectile.GetAlpha(PresetAccentColor(preset));
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitY);
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            float pulse = 1f + 0.07f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 6f + projectile.identity * 0.33f);
+            float pulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6.4f + projectile.identity * 0.31f);
+            float bodyScale = projectile.scale * ProjectileDrawScale;
+            float tipDistance = 42f;
 
             for (int i = 0; i < projectile.oldPos.Length; i++)
             {
-                float completion = 1f - i / (float)projectile.oldPos.Length;
-                if (completion <= 0f)
+                if (projectile.oldPos[i] == Vector2.Zero)
                     continue;
 
+                float completion = 1f - i / (float)projectile.oldPos.Length;
                 Main.EntitySpriteDraw(
-                    texture,
+                    bodyTexture,
                     projectile.oldPos[i] + projectile.Size * 0.5f - Main.screenPosition,
                     frame,
-                    mainColor * (0.12f * completion),
+                    Color.Lerp(mainColor, accentColor, 0.25f) * (0.1f * completion),
                     projectile.oldRot[i],
                     origin,
-                    projectile.scale * scale * MathHelper.Lerp(0.84f, 1f, completion),
+                    bodyScale * MathHelper.Lerp(0.88f, 1f, completion),
                     SpriteEffects.None,
                     0);
             }
 
             BeginAdditiveBatch();
 
-            switch (preset)
+            DrawHelixOrbit(projectile, helixTexture, drawPosition, forward, normal, mainColor, accentColor);
+
+            Vector2 tipPosition = drawPosition + forward * tipDistance;
+            Vector2 tailPosition = drawPosition - forward * (tipDistance - 14f);
+
+            DrawOrientedAdditive(
+                sparkTexture,
+                tipPosition,
+                accentColor * 0.78f,
+                forward.RotatedBy(-MathHelper.PiOver4).ToRotation(),
+                new Vector2(0.8f, 0.24f) * pulse * ExtraGlowScaleMultiplier);
+            DrawOrientedAdditive(
+                sparkTexture,
+                tipPosition,
+                accentColor * 0.78f,
+                forward.RotatedBy(MathHelper.PiOver4).ToRotation(),
+                new Vector2(0.8f, 0.24f) * pulse * ExtraGlowScaleMultiplier);
+            DrawOrientedAdditive(
+                sparkTexture,
+                tailPosition,
+                mainColor * 0.72f,
+                (-forward).ToRotation(),
+                new Vector2(0.92f, 0.22f) * pulse * ExtraGlowScaleMultiplier);
+
+            Main.EntitySpriteDraw(
+                magicTexture,
+                tipPosition,
+                null,
+                Color.Lerp(mainColor, accentColor, 0.45f) * 0.42f,
+                Main.GlobalTimeWrappedHourly * 1.7f + projectile.identity * 0.03f,
+                magicTexture.Size() * 0.5f,
+                (0.38f + 0.03f * pulse) * ExtraGlowScaleMultiplier,
+                SpriteEffects.None,
+                0);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                drawPosition,
+                null,
+                mainColor * 0.48f,
+                0f,
+                bloomTexture.Size() * 0.5f,
+                0.34f * pulse * ExtraGlowScaleMultiplier,
+                SpriteEffects.None,
+                0);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                tipPosition,
+                null,
+                accentColor * 0.54f,
+                0f,
+                bloomTexture.Size() * 0.5f,
+                0.2f * pulse * ExtraGlowScaleMultiplier,
+                SpriteEffects.None,
+                0);
+
+            for (int i = 0; i < 8; i++)
             {
-                case BlossomFluxChloroplastPresetType.Chlo_ABreak:
-                {
-                    DrawAdditive(bloomTexture, drawPosition, mainColor * 0.24f, 0f, projectile.scale * scale * 0.22f * pulse);
-                    DrawAdditive(haloTexture, drawPosition, accentColor * 0.18f, -Main.GlobalTimeWrappedHourly * 1.6f, projectile.scale * scale * 0.1f);
-                    DrawAdditive(streakTexture, drawPosition + forward * 4f, Color.Lerp(mainColor, accentColor, 0.38f) * 0.18f, projectile.rotation + MathHelper.PiOver2, projectile.scale * scale * 0.09f);
-                    DrawAdditive(slashTexture, drawPosition + normal * 4f, accentColor * 0.24f, projectile.rotation + MathHelper.PiOver2 * 0.2f, projectile.scale * scale * 0.12f);
-                    DrawAdditive(slashTexture, drawPosition - normal * 4f, mainColor * 0.18f, projectile.rotation - MathHelper.PiOver2 * 0.2f, projectile.scale * scale * 0.1f);
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_BRecov:
-                {
-                    DrawAdditive(ringTexture, drawPosition, mainColor * 0.17f, -Main.GlobalTimeWrappedHourly * 0.8f, projectile.scale * scale * 0.15f * pulse);
-                    DrawAdditive(shieldFlowerTexture, drawPosition, accentColor * 0.18f, Main.GlobalTimeWrappedHourly * 1.1f, projectile.scale * scale * 0.115f);
-                    DrawAdditive(streakTexture, drawPosition + forward * 2f, Color.Lerp(mainColor, accentColor, 0.45f) * 0.12f, projectile.rotation + MathHelper.PiOver2, projectile.scale * scale * 0.07f);
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                {
-                    DrawAdditive(ringTexture, drawPosition, mainColor * 0.15f, Main.GlobalTimeWrappedHourly * 1.8f, projectile.scale * scale * 0.14f * pulse);
-                    DrawAdditive(flareTexture, drawPosition, accentColor * 0.16f, 0f, projectile.scale * scale * 0.09f);
-                    DrawAdditive(flareTexture, drawPosition, accentColor * 0.12f, MathHelper.PiOver2, projectile.scale * scale * 0.08f);
-                    DrawAdditive(haloTexture, drawPosition + forward * 2f, mainColor * 0.16f, -Main.GlobalTimeWrappedHourly * 1.3f, projectile.scale * scale * 0.082f);
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                {
-                    DrawAdditive(bloomTexture, drawPosition, mainColor * 0.28f, 0f, projectile.scale * scale * 0.24f * pulse);
-                    DrawAdditive(flareTexture, drawPosition, accentColor * 0.22f, 0f, projectile.scale * scale * 0.11f);
-                    DrawAdditive(streakTexture, drawPosition, Color.Lerp(mainColor, accentColor, 0.3f) * 0.18f, projectile.rotation + MathHelper.PiOver2, projectile.scale * scale * 0.11f);
-                    DrawAdditive(haloTexture, drawPosition, mainColor * 0.18f, Main.GlobalTimeWrappedHourly * 1.7f, projectile.scale * scale * 0.09f);
-                    break;
-                }
-
-                case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                {
-                    DrawAdditive(bloomTexture, drawPosition, mainColor * 0.18f, 0f, projectile.scale * scale * 0.2f * pulse);
-                    DrawAdditive(shieldFlowerTexture, drawPosition + normal * 1.5f, accentColor * 0.12f, -Main.GlobalTimeWrappedHourly * 1.25f, projectile.scale * scale * 0.105f);
-                    DrawAdditive(haloTexture, drawPosition, mainColor * 0.16f, Main.GlobalTimeWrappedHourly * 1.5f, projectile.scale * scale * 0.085f);
-                    DrawAdditive(ringTexture, drawPosition, accentColor * 0.1f, Main.GlobalTimeWrappedHourly * 0.95f, projectile.scale * scale * 0.13f);
-                    break;
-                }
+                float angle = MathHelper.TwoPi * i / 8f;
+                Vector2 offset = angle.ToRotationVector2() * (1.2f + 0.45f * pulse);
+                Main.EntitySpriteDraw(
+                    bodyTexture,
+                    drawPosition + offset,
+                    frame,
+                    mainColor * 0.18f,
+                    projectile.rotation,
+                    origin,
+                    bodyScale * 1.02f,
+                    SpriteEffects.None,
+                    0);
             }
 
             BeginAlphaBatch();
 
             Main.EntitySpriteDraw(
-                texture,
+                bodyTexture,
                 drawPosition,
                 frame,
                 projectile.GetAlpha(lightColor),
                 projectile.rotation,
                 origin,
-                projectile.scale * scale,
+                bodyScale,
                 SpriteEffects.None,
                 0);
         }
 
-        private static void DrawAdditive(Texture2D texture, Vector2 position, Color color, float rotation, float scale)
+        private static Vector2 GetForwardDirection(Projectile projectile)
+        {
+            if (projectile.velocity.LengthSquared() > 0.001f)
+                return projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            return projectile.rotation.ToRotationVector2();
+        }
+
+        private static void DrawHelixOrbit(Projectile projectile, Texture2D helixTexture, Vector2 drawPosition, Vector2 forward, Vector2 normal, Color mainColor, Color accentColor)
+        {
+            float time = Main.GlobalTimeWrappedHourly * 6.6f + projectile.identity * 0.17f;
+            const int helixCount = 8;
+
+            for (int i = 0; i < helixCount; i++)
+            {
+                float progress = i / (float)(helixCount - 1);
+                float helixAngle = time - progress * 2.3f + MathHelper.TwoPi * i / helixCount;
+                Vector2 spiralOffset = normal.RotatedBy(helixAngle) * MathHelper.Lerp(24f, 10f, progress);
+                Vector2 backwardOffset = -forward * MathHelper.Lerp(10f, 46f, progress);
+                Vector2 totalOffset = spiralOffset + backwardOffset;
+                Color orbitColor = Color.Lerp(mainColor, accentColor, progress * 0.45f) * MathHelper.Lerp(0.82f, 0.18f, progress);
+
+                Main.EntitySpriteDraw(
+                    helixTexture,
+                    drawPosition + totalOffset,
+                    null,
+                    orbitColor,
+                    forward.ToRotation() - MathHelper.PiOver2,
+                    helixTexture.Size() * 0.5f,
+                    new Vector2(0.28f, MathHelper.Lerp(1.05f, 0.48f, progress)) * ExtraGlowScaleMultiplier,
+                    SpriteEffects.None,
+                    0);
+            }
+        }
+
+        private static void DrawOrientedAdditive(Texture2D texture, Vector2 position, Color color, float rotation, Vector2 scale)
         {
             Main.EntitySpriteDraw(
                 texture,

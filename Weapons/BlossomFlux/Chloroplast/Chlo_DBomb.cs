@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
                 projectile.GetSource_FromThis(),
                 target.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<BFFuckyouExplosion>(),
+                ModContent.ProjectileType<FuckYou>(),
                 (int)(projectile.damage * 0.55f),
                 projectile.knockBack * 0.5f,
                 projectile.owner);

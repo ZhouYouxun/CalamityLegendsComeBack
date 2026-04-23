@@ -133,16 +133,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
             if (Main.rand.NextBool(3))
             {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + normal * Main.rand.NextFloat(-3f, 3f),
-                    tangent * Main.rand.NextFloat(1.8f, 3.4f) + normal * Main.rand.NextFloat(-0.55f, 0.55f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    Main.rand.Next(9, 14),
-                    Main.rand.NextFloat(0.018f, 0.032f),
-                    Color.Lerp(currentColor, Color.White, 0.25f),
-                    new Vector2(Main.rand.NextFloat(1f, 1.3f), Main.rand.NextFloat(0.45f, 0.72f)),
-                    shrinkSpeed: 0.85f));
+                //GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                //    Projectile.Center + normal * Main.rand.NextFloat(-3f, 3f),
+                //    tangent * Main.rand.NextFloat(1.8f, 3.4f) + normal * Main.rand.NextFloat(-0.55f, 0.55f),
+                //    "CalamityMod/Particles/BloomLineSoftEdge",
+                //    false,
+                //    Main.rand.Next(9, 14),
+                //    Main.rand.NextFloat(0.018f, 0.032f),
+                //    Color.Lerp(currentColor, Color.White, 0.25f),
+                //    new Vector2(Main.rand.NextFloat(1f, 1.3f), Main.rand.NextFloat(0.45f, 0.72f)),
+                //    shrinkSpeed: 0.85f));
             }
         }
 
@@ -157,16 +157,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 Vector2 tangent = EvaluateQuadraticDerivative(startPoint, controlPoint, endPoint, completion).SafeNormalize(fallbackTangent);
                 Vector2 normal = tangent.RotatedBy(MathHelper.PiOver2);
 
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    point,
-                    tangent * Main.rand.NextFloat(1.4f, 3.1f) + normal * Main.rand.NextFloat(-0.75f, 0.75f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.018f, 0.032f),
-                    Color.Lerp(currentColor, Color.White, 0.3f),
-                    new Vector2(Main.rand.NextFloat(1f, 1.35f), Main.rand.NextFloat(0.48f, 0.78f)),
-                    shrinkSpeed: 0.82f));
+                //GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                //    point,
+                //    tangent * Main.rand.NextFloat(1.4f, 3.1f) + normal * Main.rand.NextFloat(-0.75f, 0.75f),
+                //    "CalamityMod/Particles/BloomLineSoftEdge",
+                //    false,
+                //    Main.rand.Next(10, 16),
+                //    Main.rand.NextFloat(0.018f, 0.032f),
+                //    Color.Lerp(currentColor, Color.White, 0.3f),
+                //    new Vector2(Main.rand.NextFloat(1f, 1.35f), Main.rand.NextFloat(0.48f, 0.78f)),
+                //    shrinkSpeed: 0.82f));
             }
 
             for (int i = 0; i < 10; i++)

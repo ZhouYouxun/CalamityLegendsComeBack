@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			EX: {
+				DisplayName: EX
+				Tooltip: 装备后可启用传奇武器的大招
+			}
+
+			S_OVR_ChargeLimitBreaker: {
+				DisplayName: S-OVR：过载充能限制解除器
+				Tooltip: 大招超级激光的最大充能减半，但是玩家的生命回复也减半
+			}
+
+			S_MLD_MultiLinkDistributor: {
+				DisplayName: S-MLD：多重链路分发器
+				Tooltip: 左键能一下子散射出三个能量光球，但每个的伤害降为33%
+			}
+
+			S_RSU_PhaseResonanceGuard: {
+				DisplayName: S-RSU：相位共振防护单元
+				Tooltip: 手持SHPC时展开一层护盾，15秒冷却，可减半一次伤害
+			}
+
+			S_TAC_TacticalLockCalibrator: {
+				DisplayName: S-TAC：战术锁定校准模块
+				Tooltip: 让右键的激光获得很弱的追踪能力
+			}
+		}
+	}
+}

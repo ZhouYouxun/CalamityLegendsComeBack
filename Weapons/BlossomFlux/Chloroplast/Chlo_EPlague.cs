@@ -22,6 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             projectile.penetrate = 2;
             projectile.timeLeft = 180;
             projectile.localNPCHitCooldown = 18;
+            projectile.localAI[0] = 30f;
+            projectile.localAI[1] = Main.rand.Next(2, 11);
         }
 
         public override void AI(Projectile projectile)
@@ -29,19 +31,27 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             Lighting.AddLight(projectile.Center, ChloroplastCommon.PresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague).ToVector3() * 0.34f);
             ChloroplastCommon.EmitTrail(projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.02f);
 
-            if ((int)projectile.ai[1] % 24 == 0 && projectile.owner == Main.myPlayer)
+            if (projectile.owner == Main.myPlayer && projectile.ai[1] >= projectile.localAI[0])
             {
-                SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.18f, Pitch = -0.35f }, projectile.Center);
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextVector2Circular(1.1f, 1.1f) + new Vector2(0f, -0.25f),
-                    ModContent.ProjectileType<BFArrow_EPlagueGas>(),
-                    (int)(projectile.damage * 0.22f),
-                    0f,
-                    projectile.owner,
-                    Main.rand.Next(3),
-                    Main.rand.NextFloat(0.85f, 1.1f));
+                int releaseInterval = (int)projectile.localAI[1];
+                if (releaseInterval <= 0)
+                    releaseInterval = 2;
+
+                if (((int)projectile.ai[1] - (int)projectile.localAI[0]) % releaseInterval == 0)
+                {
+                    SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.18f, Pitch = -0.35f }, projectile.Center);
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                        Main.rand.NextVector2Circular(1.1f, 1.1f) + new Vector2(0f, -0.25f),
+                        ModContent.ProjectileType<BFArrow_EPlagueGas>(),
+                        (int)(projectile.damage * 0.22f),
+                        0f,
+                        projectile.owner,
+                        Main.rand.Next(3),
+                        Main.rand.NextFloat(0.85f, 1.1f));
+                    projectile.localAI[1] = Main.rand.Next(2, 11);
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿using Terraria;
 using Terraria.ModLoader;
-using CalamityLegendsComeBack.Accssory.SHPC.OverchargeCore;
+using CalamityLegendsComeBack.Accssory.SHPC.S_OVR_ChargeLimitBreaker;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public static int GetCurrentEXMax(Player player)
         {
-            if (player.GetModPlayer<OverchargeCorePlayer>().OverchargeCoreEquipped)
+            if (player.GetModPlayer<S_OVR_ChargeLimitBreakerPlayer>().S_OVR_ChargeLimitBreakerEquipped)
                 return BaseEXMax / 2;
 
             return BaseEXMax;

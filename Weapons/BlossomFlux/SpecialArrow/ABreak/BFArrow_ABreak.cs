@@ -13,8 +13,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     {
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/ABreak/BFArrow_ABreak";
-        // A 战术右键箭：先弹射开路，再在飞行后段自动追猎。
+        // A tactical right-click arrow: homing breakthrough that keeps flying after the first impact.
         private ref float BounceCounter => ref Projectile.ai[0];
+        private ref float HomingDisabled => ref Projectile.ai[1];
         private ref float FlightTimer => ref Projectile.localAI[0];
 
         public override void SetStaticDefaults()
@@ -32,12 +33,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void AI()
         {
             FlightTimer++;
-            BFArrowCommon.FaceForward(Projectile);
             Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak).ToVector3() * 0.45f);
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 1.05f);
             EmitBreakthroughFlightFX();
 
-            if (FlightTimer >= 18f)
+            if (HomingDisabled == 1f)
+            {
+                AccelerateStraightFlight(1.018f, 30f);
+            }
+            else if (FlightTimer >= 18f)
             {
                 NPC target = Projectile.Center.ClosestNPCAt(1020f);
                 if (target != null)
@@ -45,11 +49,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     BFArrowCommon.DirectHomeTowards(Projectile, target, 0.22f, 21f);
                     BFArrowCommon.MaintainSpeed(Projectile, 21f, 0.14f);
                 }
+                else
+                {
+                    AccelerateStraightFlight(1.006f, 21f);
+                }
             }
             else
             {
-                Projectile.velocity *= 1.006f;
+                AccelerateStraightFlight(1.006f, 21f);
             }
+
+            BFArrowCommon.FaceForward(Projectile);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -69,6 +79,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            HomingDisabled = 1f;
+            Projectile.netUpdate = true;
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 8, 0.9f, 2.6f, 0.8f, 1.15f);
             SpawnBreakthroughImpactFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = 0.25f }, target.Center);
@@ -82,7 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private void EmitBreakthroughFlightFX()
         {
-            if (Main.dedServ || (int)FlightTimer % 4 != 0)
+            if (Main.dedServ)
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
@@ -91,7 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Projectile.Center + direction * 8f,
                 Projectile.velocity * 0.05f,
                 Color.Lerp(BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak), Color.White, 0.2f),
-                new Vector2(0.72f, 1.85f),
+                new Vector2(0.36f, 0.925f),
                 direction.ToRotation(),
                 0.14f,
                 0.04f,
@@ -103,11 +115,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Projectile.velocity * 0.04f,
                 Color.White,
                 BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_ABreak),
-                0.95f,
+                0.475f,
                 7,
                 0f,
-                1.2f);
+                0.6f);
             GeneralParticleHandler.SpawnParticle(edgeSpark);
+        }
+
+        private void AccelerateStraightFlight(float acceleration, float maxSpeed)
+        {
+            if (Projectile.velocity.LengthSquared() <= 0.0001f)
+                return;
+
+            Projectile.velocity *= acceleration;
+            if (Projectile.velocity.LengthSquared() > maxSpeed * maxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * maxSpeed;
         }
 
         private void SpawnBreakthroughImpactFX(Vector2 center, float intensity)

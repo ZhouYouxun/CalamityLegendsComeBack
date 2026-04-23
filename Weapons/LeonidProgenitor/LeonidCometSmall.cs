@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -162,8 +162,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Main.EntitySpriteDraw(texture, drawPosition, null, MeteorColor * (1f - Projectile.alpha / 255f), Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
+            Color drawColor = MeteorColor * (1f - Projectile.alpha / 255f);
+            Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawBloom(Projectile.Center, MeteorColor * 0.35f, FromStealthRain ? 0.42f : 0.3f, Projectile.rotation);
 
             for (int i = 0; i < activeEffects.Length; i++)

@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			EX: {
+				DisplayName: EX
+				Tooltip: Enables EX abilities for legendary weapons
+			}
+
+			S_OVR_ChargeLimitBreaker: {
+				DisplayName: S-OVR: Charge Limit Breaker
+				Tooltip: Halves the maximum charge time of the EX super laser, but also halves the player's life regeneration
+			}
+
+			S_MLD_MultiLinkDistributor: {
+				DisplayName: S-MLD: Multi-Link Distributor
+				Tooltip: Left click scatters three energy orbs at once, but each deals only 33% damage
+			}
+
+			S_RSU_PhaseResonanceGuard: {
+				DisplayName: S-RSU: Phase Resonance Guard
+				Tooltip: While holding SHPC, deploys a shield with a 15 second cooldown that halves one incoming hit
+			}
+
+			S_TAC_TacticalLockCalibrator: {
+				DisplayName: S-TAC: Tactical Lock Calibrator
+				Tooltip: Grants the right-click laser a very weak homing effect
+			}
+		}
+	}
+}

@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.TargetingCore;
+using CalamityLegendsComeBack.Accssory.SHPC.S_TAC_TacticalLockCalibrator;
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -269,7 +269,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void ApplyWeakHoming()
         {
             Player owner = Main.player[Projectile.owner];
-            if (!owner.active || owner.dead || !owner.GetModPlayer<TargetingCorePlayer>().TargetingCoreEquipped)
+            if (!owner.active || owner.dead || !owner.GetModPlayer<S_TAC_TacticalLockCalibratorPlayer>().S_TAC_TacticalLockCalibratorEquipped)
                 return;
 
             NPC target = FindHomingTarget(420f);

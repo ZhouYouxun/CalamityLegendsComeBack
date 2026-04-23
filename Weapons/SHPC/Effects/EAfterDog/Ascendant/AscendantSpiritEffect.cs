@@ -142,23 +142,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 Vector2 tangent = EvaluateQuadraticDerivative(start, control, end, completion).SafeNormalize(forward);
                 Vector2 crossVelocity = side * Main.rand.NextFloat(0.4f, 1.4f);
 
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    point,
-                    tangent * Main.rand.NextFloat(2.4f, 4.6f) + crossVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.022f, 0.036f),
-                    Color.Lerp(color, Color.White, 0.28f),
-                    new Vector2(Main.rand.NextFloat(1f, 1.35f), Main.rand.NextFloat(0.45f, 0.72f)),
-                    shrinkSpeed: 0.84f));
+                //GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                //    point,
+                //    tangent * Main.rand.NextFloat(2.4f, 4.6f) + crossVelocity,
+                //    "CalamityMod/Particles/BloomLineSoftEdge",
+                //    false,
+                //    Main.rand.Next(10, 16),
+                //    Main.rand.NextFloat(0.022f, 0.036f),
+                //    Color.Lerp(color, Color.White, 0.28f),
+                //    new Vector2(Main.rand.NextFloat(1f, 1.35f), Main.rand.NextFloat(0.45f, 0.72f)),
+                //    shrinkSpeed: 0.84f));
 
-                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
-                    point,
-                    tangent * Main.rand.NextFloat(0.3f, 1.1f) - crossVelocity * 0.25f,
-                    Main.rand.NextFloat(0.16f, 0.24f),
-                    color,
-                    Main.rand.Next(10, 15)));
+                //GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                //    point,
+                //    tangent * Main.rand.NextFloat(0.3f, 1.1f) - crossVelocity * 0.25f,
+                //    Main.rand.NextFloat(0.16f, 0.24f),
+                //    color,
+                //    Main.rand.Next(10, 15)));
             }
 
             for (int i = 0; i < 3; i++)

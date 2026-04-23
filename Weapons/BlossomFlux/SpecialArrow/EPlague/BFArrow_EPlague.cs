@@ -1,8 +1,10 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -19,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private ref float State => ref Projectile.ai[0];
         private ref float AttachedNpcIndex => ref Projectile.ai[1];
+        private ref float FlightTimer => ref Projectile.localAI[0];
 
         public override void SetStaticDefaults()
         {
@@ -35,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             storedGasDamage = System.Math.Max(Projectile.damage, 1);
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
         }
 
         public override bool? CanDamage() => State == 0f ? null : false;
@@ -47,8 +51,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (State == 0f)
             {
-                Projectile.velocity = Projectile.velocity.RotatedBy(System.Math.Sin(Projectile.identity * 0.41f + Projectile.timeLeft * 0.08f) * 0.0022f);
-                Projectile.velocity *= 0.9985f;
+                FlightTimer++;
+                if (FlightTimer > 5f)
+                {
+                    Projectile.velocity.Y += 0.18f;
+                    Projectile.velocity.X *= 0.9835f;
+                }
+
                 BFArrowCommon.FaceForward(Projectile);
                 BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.02f);
                 EmitPlagueFlightFX();
@@ -127,7 +136,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override bool PreDraw(ref Color lightColor)
         {
             if (State == 0f)
+            {
+                DrawPlagueSprayOverlay();
                 BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_EPlague);
+            }
             else
                 BFArrowCommon.DrawProjectile(Projectile, Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value, Projectile.GetAlpha(lightColor), Projectile.rotation, Projectile.scale);
 
@@ -247,21 +259,87 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private void EmitPlagueFlightFX()
         {
-            if (Main.dedServ || Main.rand.NextBool(3))
+            if (Main.dedServ)
                 return;
 
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
-            Vector2 smokeVelocity = -Projectile.velocity * 0.03f + Main.rand.NextVector2Circular(0.45f, 0.45f);
-            HeavySmokeParticle smoke = new(
-                Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                smokeVelocity,
-                Color.Lerp(mainColor, Color.Black, 0.12f),
-                15,
-                Main.rand.NextFloat(0.34f, 0.56f),
-                0.52f,
-                Main.rand.NextFloat(-0.04f, 0.04f),
-                false);
-            GeneralParticleHandler.SpawnParticle(smoke);
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 placement = Projectile.Center + Main.rand.NextVector2Circular(8f, 8f);
+                float speed = Main.rand.NextFloat(0.2f, 0.7f);
+                Particle spark = new GlowOrbParticle(
+                    placement,
+                    -Projectile.velocity * speed,
+                    false,
+                    7,
+                    Main.rand.NextFloat(0.36f, 0.6f),
+                    Color.Lerp(mainColor, Color.White, 0.16f));
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            Dust dust = Dust.NewDustPerfect(
+                Projectile.Center,
+                DustID.GreenTorch,
+                -Projectile.velocity.RotatedByRandom(0.22f) * Main.rand.NextFloat(0.18f, 0.5f),
+                0,
+                Color.Lerp(mainColor, new Color(172, 228, 92), 0.42f),
+                Main.rand.NextFloat(0.5f, 1f));
+            dust.noGravity = true;
+        }
+
+        private void DrawPlagueSprayOverlay()
+        {
+            Texture2D pointTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            float squash = Utils.GetLerpValue(-3f, 10f, Projectile.velocity.Length(), true);
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                drawPosition,
+                null,
+                mainColor * 0.5f,
+                0f,
+                bloomTexture.Size() * 0.5f,
+                0.22f + squash * 0.08f,
+                SpriteEffects.None,
+                0);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float fade = 0.55f + 0.2f * i;
+                Main.EntitySpriteDraw(
+                    pointTexture,
+                    drawPosition + Projectile.velocity * 5f * fade,
+                    null,
+                    Color.Lerp(Color.White, mainColor, i * 0.4f) * 0.55f,
+                    Projectile.velocity.ToRotation() + MathHelper.PiOver2,
+                    pointTexture.Size() * 0.5f,
+                    new Vector2(0.68f - 0.16f * i, 0.72f + 0.28f * i) * 0.04f * (0.8f + squash * 0.55f),
+                    SpriteEffects.None,
+                    0);
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
         }
 
         private void EmitPlagueAnchorAura()

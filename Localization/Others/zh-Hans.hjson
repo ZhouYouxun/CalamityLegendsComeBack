@@ -1,0 +1,35 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MiaoGun: {
+					DisplayName: 喵枪
+					Tooltip:
+						'''
+						左键持续手持扫射随机弹幕
+						不消耗任何弹药
+						'''
+				}
+
+				Ranged: {
+					HeavenlyGale: {
+						DisplayName: 天堂狂风
+						Tooltip: ""
+					}
+				}
+
+				DraedonsArsenal: {
+					ShortCircuit: {
+						DisplayName: 短路
+						Tooltip: ""
+					}
+				}
+			}
+		}
+
+		Keybinds: {
+			LegendarySkill: 传奇技能
+			// Mods.CalamityLegendsComeBack.Keybinds.LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
+		}
+	}
+}

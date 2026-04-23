@@ -117,9 +117,6 @@ LuxorsGiftRanged
 M1GarandBulletCasing
 M1GarandShot
 MagnaShot
-MagnomalyAura
-MagnomalyBeam
-MagnomalyExplosion
 MagnomalyRocket
 MarksmanShot
 MechanicalBarracuda
@@ -130,7 +127,6 @@ MineralMortarProjectile
 MiniSharkron
 MistArrow
 MistArrowFrostMist
-MortarRoundProj
 NeedlerProj
 NitroShot
 NorfleetComet
@@ -225,7 +221,6 @@ TheMaelstromShark
 ThePackMinissile
 ThePackMissile
 TheStormLightningShot
-TitaniumRailgunShot
 TorrentialArrow
 ToxicArrow
 TyphoonArrow

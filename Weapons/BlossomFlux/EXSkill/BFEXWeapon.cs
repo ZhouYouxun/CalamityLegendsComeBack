@@ -20,6 +20,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         private const int BarrageFrames = 180;
         private const float IdleHoldOffset = 22f;
         private const float ChargedHoldOffset = 14f;
+        private const float BarrageSpawnForwardRadius = 48f;
+        private const float BarrageSpawnSideRadius = 132f;
+        private const float BarrageShotSpeed = 22f;
 
         private int timer;
         private int fireSoundTimer;
@@ -184,24 +187,27 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             int shotDamage = (int)(Projectile.damage * 0.7f);
+            Vector2 shotVelocity = forward * BarrageShotSpeed;
 
             for (int i = 0; i < 3; i++)
             {
-                float offset = Main.rand.NextFloat(-24f, 24f);
-                Vector2 spawnPosition = GunTip + right * offset + forward * Main.rand.NextFloat(-6f, 10f);
-                Vector2 velocity = forward * Main.rand.NextFloat(18f, 24f);
-                int delay = Main.rand.Next(16, 52);
+                float ellipseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+                float ellipseRadius = (float)Math.Sqrt(Main.rand.NextFloat());
+                Vector2 spawnPosition =
+                    GunTip +
+                    forward * ((float)Math.Sin(ellipseAngle) * BarrageSpawnForwardRadius * ellipseRadius) +
+                    right * ((float)Math.Cos(ellipseAngle) * BarrageSpawnSideRadius * ellipseRadius);
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
-                    velocity,
+                    shotVelocity,
                     ModContent.ProjectileType<BFEXVernalShot>(),
                     shotDamage,
                     Projectile.knockBack * 0.8f,
                     Projectile.owner,
-                    delay,
-                    Main.rand.NextFloat(-1f, 1f));
+                    Main.rand.NextFloat(MathHelper.TwoPi),
+                    Main.rand.NextFloat(MathHelper.TwoPi));
             }
         }
 
@@ -386,18 +392,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // 基础贴图
             Texture2D weaponTexture = TextureAssets.Projectile[Type].Value;
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
+
+            // 基础绘制参数
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = weaponTexture.Size() * 0.5f;
             float rotation = Projectile.rotation;
             SpriteEffects effects = SpriteEffects.None;
+
+            // 外描边与本体发光脉冲
             float outlinePulse = 0.78f + 0.22f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.8f + Projectile.identity * 0.43f);
             float outlineDistance = 1.6f + 1f * outlinePulse;
             Color outlineColor = Color.Lerp(MainColor, AccentColor, 0.34f) * (0.24f + 0.16f * outlinePulse);
             Color glowColor = Color.Lerp(MainColor, Color.White, 0.24f) * (0.1f + 0.08f * outlinePulse);
 
+            // 重力翻转时修正原点与翻转方向
             if (Owner.gravDir == 1f)
             {
                 if (Projectile.spriteDirection == -1)
@@ -410,6 +422,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                     effects = SpriteEffects.FlipVertically;
             }
 
+            // 绘制外描边
             for (int i = 0; i < 8; i++)
             {
                 float angle = MathHelper.TwoPi * i / 8f;
@@ -417,13 +430,29 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, outlineColor, rotation, origin, Projectile.scale, effects, 0);
             }
 
+            // 绘制本体发光层与本体
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, glowColor, rotation, origin, Projectile.scale * (1.015f + 0.025f * outlinePulse), effects, 0);
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
 
+            // 枪口 BloomCircle：这里必须使用 Additive，否则透明边缘容易出现黑块/色块
             Vector2 gunTipDrawPosition = GunTip - Main.screenPosition;
             float bloomScale = State == 0 ? 0.42f + Utils.GetLerpValue(0f, ChargeFrames, timer, true) * 0.34f : (State == 1 ? 0.78f : 0.96f);
-            Main.EntitySpriteDraw(bloomTexture, gunTipDrawPosition, null, Color.Lerp(MainColor, Color.White, 0.25f) * 0.7f, 0f, bloomTexture.Size() * 0.5f, bloomScale, SpriteEffects.None, 0);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                gunTipDrawPosition,
+                null,
+                Color.Lerp(MainColor, Color.White, 0.25f) * 0.7f,
+                0f,
+                bloomTexture.Size() * 0.5f,
+                bloomScale,
+                SpriteEffects.None,
+                0
+            );
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // 进入后续状态后，绘制前方双线指示
             if (State >= 1)
             {
                 Vector2 forward = AimDirection;
@@ -432,8 +461,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 float spread = State == 1 ? 16f : 10f;
                 Color lineColor = Color.Lerp(MainColor, AccentColor, 0.35f) * (State == 1 ? 0.58f : 0.4f);
 
-                DrawLine(pixel, gunTipDrawPosition + right * spread, gunTipDrawPosition + right * spread + forward * lineLength, lineColor, State == 1 ? 2.4f : 1.5f);
-                DrawLine(pixel, gunTipDrawPosition - right * spread, gunTipDrawPosition - right * spread + forward * lineLength, lineColor, State == 1 ? 2.4f : 1.5f);
+                //DrawLine(pixel, gunTipDrawPosition + right * spread, gunTipDrawPosition + right * spread + forward * lineLength, lineColor, State == 1 ? 2.4f : 1.5f);
+                //DrawLine(pixel, gunTipDrawPosition - right * spread, gunTipDrawPosition - right * spread + forward * lineLength, lineColor, State == 1 ? 2.4f : 1.5f);
             }
 
             return false;
@@ -457,5 +486,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 SpriteEffects.None,
                 0f);
         }
+
+
+
+
+
+
+
+
     }
 }

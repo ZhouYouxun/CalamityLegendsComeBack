@@ -1,0 +1,36 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MiaoGun: {
+					DisplayName: Miao Gun
+					Tooltip:
+						'''
+						[c/9AEF9E:Developer Item]
+						Hold left click to sweep-fire random Calamity projectiles
+						Consumes no ammo
+						'''
+				}
+
+				Ranged: {
+					HeavenlyGale: {
+						DisplayName: Heavenly Gale
+						Tooltip: ""
+					}
+				}
+
+				DraedonsArsenal: {
+					ShortCircuit: {
+						DisplayName: Short Circuit
+						Tooltip: ""
+					}
+				}
+			}
+		}
+
+		Keybinds: {
+			LegendarySkill: Legendary skill
+			Mods.CalamityLegendsComeBack.Keybinds.LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
+		}
+	}
+}

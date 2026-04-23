@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
     // 侦查链补爆用的小型爆炸，名字保留项目内指定称呼。
-    internal class BFFuckyouExplosion : ModProjectile
+    internal class FuckYou : ModProjectile
     {
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";

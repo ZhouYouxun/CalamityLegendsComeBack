@@ -19,8 +19,8 @@
 	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Sound\SHPC\" />
 	  <Folder Include="Sound\YC\" />
+	  <Folder Include="Weapons\A_Dev\Miao\Testbench\" />
 	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
-	  <Folder Include="Weapons\BlossomFlux\SpecialArrow\" />
 	  <Folder Include="Weapons\BlossomFlux\特效总和参考\5 “散播”特效参考\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\MoonEvent\参考文献\" />

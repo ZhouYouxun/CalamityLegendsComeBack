@@ -1,4 +1,4 @@
-using System;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
@@ -8,6 +8,7 @@ using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -48,6 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private bool rightChargeActive;
         private bool readyBurstPlayed;
         private bool releasedShot;
+
+        // 瞄准镜弹幕类型缓存，便于统一生成与清理
+        private static int AimScopeProjectileType => ModContent.ProjectileType<BFAimScope>();
         private float offsetLengthFromArm = IdleOffsetLength;
         private float extraFrontArmRotation;
         private float extraBackArmRotation;
@@ -66,6 +70,44 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private Color PresetColor => BFArrowCommon.GetPresetColor(CurrentPreset);
         private Color AccentColor => BFArrowCommon.GetPresetAccentColor(CurrentPreset);
         private bool BombardChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
+        private bool RecoveryChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov;
+        private bool SpecialAimScopeAnchorActive => BombardChargePoseActive || RecoveryChargePoseActive;
+
+        internal Color GetAimScopeMainColor() => Color.Lerp(PresetColor, AccentColor, 0.18f);
+
+        internal Color GetAimScopeAccentColor() => Color.Lerp(AccentColor, Color.White, 0.25f);
+
+        internal Vector2 GetAimScopeDirection()
+        {
+            if (RecoveryChargePoseActive)
+                return GetRecoverySkyAimDirection();
+
+            if (BombardChargePoseActive)
+                return GetBombardSkyAimDirection();
+
+            Vector2 baseAnchor = GetAimScopeBaseAnchor();
+            Vector2 scopeDirection = GetCurrentMouseWorld() - baseAnchor;
+            if (scopeDirection == Vector2.Zero)
+                scopeDirection = Vector2.UnitX * Owner.direction;
+
+            return scopeDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+        }
+
+        internal Vector2 GetAimScopeCenter(Vector2 scopeDirection)
+        {
+            if (!SpecialAimScopeAnchorActive)
+                return Owner.MountedCenter + scopeDirection * BFAimScope.WeaponLength;
+
+            return GetAimScopeBaseAnchor() - scopeDirection * 18f;
+        }
+
+        internal Vector2 GetAimScopeSparkOrigin(Vector2 scopeDirection)
+        {
+            if (!SpecialAimScopeAnchorActive)
+                return Owner.MountedCenter + scopeDirection * BFAimScope.WeaponLength;
+
+            return GetAimScopeBaseAnchor();
+        }
 
         public override void SetDefaults()
         {
@@ -84,6 +126,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             if (!Owner.active || Owner.dead || Owner.HeldItem.type != AssociatedItemID)
             {
+                Projectile.Kill();
+                return;
+            }
+
+            if (HasActiveEXWeapon())
+            {
+                KillAimScopeProjectiles();
                 Projectile.Kill();
                 return;
             }
@@ -189,6 +238,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             chargeFxTimer = 0;
             readyBurstPlayed = false;
             releasedShot = false;
+
+            // 进入右键蓄力时，确保场上只有一个瞄准镜弹幕
+            EnsureAimScopeExists();
+
             SoundEngine.PlaySound(SoundID.Item149 with { Volume = 0.55f, Pitch = -0.2f }, Projectile.Center);
         }
 
@@ -234,6 +287,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             chargeFxTimer = 0;
             readyBurstPlayed = false;
             releasedShot = false;
+
+            // 退出右键蓄力时，立刻移除瞄准镜弹幕
+            KillAimScopeProjectiles();
         }
 
         private void UpdateIdlePose()
@@ -260,7 +316,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             Projectile.Center = armPosition + AimDirection * offsetLengthFromArm + GetHoldoutPositionOffset();
             Projectile.rotation = AimDirection.ToRotation();
-            Projectile.direction = Projectile.velocity.X >= 0f ? 1 : -1;
+            Projectile.direction = Math.Abs(Projectile.velocity.X) <= 0.05f ? Owner.direction : (Projectile.velocity.X >= 0f ? 1 : -1);
             Projectile.spriteDirection = Projectile.direction;
             Projectile.timeLeft = 2;
         }
@@ -283,6 +339,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 extraFrontArmRotation = MathHelper.Lerp(0.16f, 0.04f, reloadProgress);
                 extraBackArmRotation = MathHelper.Lerp(0.26f, 0.1f, reloadProgress);
                 offsetLengthFromArm = MathHelper.Lerp(IdleOffsetLength - 2f, IdleOffsetLength + 2f, reloadProgress);
+            }
+            else if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
+            {
+                extraFrontArmRotation = MathHelper.Lerp(-0.02f, -0.18f, reloadProgress);
+                extraBackArmRotation = MathHelper.Lerp(0.08f, 0.2f, reloadProgress);
+                offsetLengthFromArm = MathHelper.Lerp(IdleOffsetLength + 1f, IdleOffsetLength + 7f, reloadProgress);
             }
             else
             {
@@ -308,6 +370,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 extraFrontArmRotation = MathHelper.Lerp(0.03f, -0.06f, ChargeCompletion);
                 extraBackArmRotation = MathHelper.Lerp(0.12f, 0.22f, ChargeCompletion);
             }
+            else if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
+            {
+                offsetLengthFromArm = MathHelper.Lerp(IdleOffsetLength + 5f, IdleOffsetLength + 12f, ChargeCompletion);
+                extraFrontArmRotation = MathHelper.Lerp(-0.14f, -0.28f, ChargeCompletion);
+                extraBackArmRotation = MathHelper.Lerp(0.1f, 0.24f, ChargeCompletion);
+            }
             else
             {
                 offsetLengthFromArm = MathHelper.Lerp(IdleOffsetLength - 2f, IdleOffsetLength - 8f, ChargeCompletion);
@@ -331,6 +399,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 offsetLengthFromArm = IdleOffsetLength + 4f;
                 extraFrontArmRotation = -0.06f;
                 extraBackArmRotation = 0.22f;
+            }
+            else if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
+            {
+                offsetLengthFromArm = IdleOffsetLength + 12f;
+                extraFrontArmRotation = -0.28f;
+                extraBackArmRotation = 0.24f;
             }
             else
             {
@@ -404,7 +478,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FireBombardSpecialArrow(float chargeCompletion, int projectileType, float baseSpeed, float damageMultiplier)
         {
-            float speed = MathHelper.Lerp(baseSpeed * 0.76f, baseSpeed * 1.12f, chargeCompletion);
+            float speed = MathHelper.Lerp(baseSpeed * 1.52f, baseSpeed * 2.24f, chargeCompletion);
             int damage = (int)(Projectile.damage * RightClickBaseDamageMultiplier * MathHelper.Lerp(0.8f, 1.35f, chargeCompletion) * damageMultiplier);
             float knockback = Projectile.knockBack * MathHelper.Lerp(0.85f, 1.15f, chargeCompletion);
             Vector2 bombardTarget = GetCurrentMouseWorld();
@@ -594,24 +668,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
         }
 
-        private void DrawRailgunTelegraph()
-        {
-            float chargeVisual = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
-            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
-            {
-                DrawBombardTelegraph(chargeVisual);
-                return;
-            }
+        //private void DrawRailgunTelegraph()
+        //{
+        //    float chargeVisual = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
+        //    if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
+        //    {
+        //        DrawBombardTelegraph(chargeVisual);
+        //        return;
+        //    }
 
-            Color scopeColor = Color.Lerp(PresetColor, AccentColor, 0.36f);
-            DrawScopedAimTelegraph(scopeColor, chargeVisual, RailgunMaxSightAngle, RailgunSightSize, 0.04f, 7f);
-        }
+        //    Color scopeColor = Color.Lerp(PresetColor, AccentColor, 0.36f);
+        //    //DrawScopedAimTelegraph(scopeColor, chargeVisual, RailgunMaxSightAngle, RailgunSightSize, 0.04f, 7f);
+        //}
 
-        private void DrawBombardTelegraph(float chargeVisual)
-        {
-            Color scopeColor = Color.Lerp(Color.Goldenrod, Color.Khaki, 0.55f);
-            DrawScopedAimTelegraph(scopeColor, chargeVisual, RailgunMaxSightAngle * 0.9f, RailgunSightSize + 28f, 0.048f, 7.4f);
-        }
+        //private void DrawBombardTelegraph(float chargeVisual)
+        //{
+        //    Color scopeColor = Color.Lerp(Color.Goldenrod, Color.Khaki, 0.55f);
+        //    //DrawScopedAimTelegraph(scopeColor, chargeVisual, RailgunMaxSightAngle * 0.9f, RailgunSightSize + 28f, 0.048f, 7.4f);
+        //}
 
         private void DrawScopedAimTelegraph(Color scopeColor, float chargeVisual, float maxSightAngle, float sightsSize, float minimumResolution, float laserStrength)
         {
@@ -722,19 +796,28 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FireLeafBody()
         {
-            Vector2 velocity = GetAimVelocity(LeafSpeed);
+            Vector2 baseVelocity = GetAimVelocity(LeafSpeed);
             int damage = (int)(Owner.GetWeaponDamage(Owner.HeldItem) * 1.4f);
             int currentPreset = (int)Owner.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
+            Vector2 forward = baseVelocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 origin = GetShootOrigin(baseVelocity);
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GetShootOrigin(velocity),
-                velocity,
-                ModContent.ProjectileType<BlossomFluxChloroplast>(),
-                damage,
-                Owner.HeldItem.knockBack,
-                Owner.whoAmI,
-                currentPreset);
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 shotVelocity = baseVelocity.RotatedBy(Main.rand.NextFloat(-0.18f, 0.18f)) * Main.rand.NextFloat(0.92f, 1.08f);
+                Vector2 spawnPosition = origin + normal * Main.rand.NextFloat(-10f, 10f) + forward * Main.rand.NextFloat(-4f, 6f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    shotVelocity,
+                    ModContent.ProjectileType<BlossomFluxChloroplast>(),
+                    damage,
+                    Owner.HeldItem.knockBack,
+                    Owner.whoAmI,
+                    currentPreset);
+            }
 
             SoundEngine.PlaySound(SoundID.Item8 with { Pitch = -0.2f, Volume = 0.8f }, Owner.Center);
         }
@@ -778,6 +861,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private Vector2 GetDesiredHoldoutDirection(Vector2 armPosition)
         {
+            if (RecoveryChargePoseActive)
+                return GetRecoverySkyAimDirection();
+
             if (BombardChargePoseActive)
                 return GetBombardSkyAimDirection();
 
@@ -786,6 +872,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 aimDirection = Vector2.UnitX * Owner.direction;
 
             return aimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+        }
+
+        private Vector2 GetRecoverySkyAimDirection()
+        {
+            return (-Vector2.UnitY * Owner.gravDir).SafeNormalize(-Vector2.UnitY * Owner.gravDir);
         }
 
         private Vector2 GetBombardSkyAimDirection()
@@ -804,6 +895,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private Vector2 GetHoldoutPositionOffset()
         {
             return Vector2.Zero;
+        }
+
+        private Vector2 GetAimScopeBaseAnchor()
+        {
+            if (!SpecialAimScopeAnchorActive)
+                return Owner.MountedCenter;
+
+            return GunTipPosition + AimDirection * 8f - new Vector2(0f, 4f * Owner.gravDir);
         }
 
         private Vector2 GetCurrentMouseWorld()
@@ -899,6 +998,41 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.1f, Volume = 0.55f }, Owner.Center);
         }
 
+        // 生成瞄准镜弹幕；如果已经存在，就不重复生成
+        private void EnsureAimScopeExists()
+        {
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != Owner.whoAmI || projectile.type != AimScopeProjectileType)
+                    continue;
+
+                // 已经有了就直接返回，避免重复生成
+                return;
+            }
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition,
+                Vector2.Zero,
+                AimScopeProjectileType,
+                0,
+                0f,
+                Owner.whoAmI);
+        }
+
+        // 清理玩家当前持有的全部瞄准镜弹幕
+        private void KillAimScopeProjectiles()
+        {
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != Owner.whoAmI || projectile.type != AimScopeProjectileType)
+                    continue;
+
+                projectile.Kill();
+                projectile.netUpdate = true;
+            }
+        }
+
         private void CloseSelectionPanel()
         {
             int selectionPanelType = ModContent.ProjectileType<BFSelectionPanel>();
@@ -917,6 +1051,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 projectile.ai[0] = 1f;
                 projectile.netUpdate = true;
             }
+        }
+
+        private bool HasActiveEXWeapon()
+        {
+            int exWeaponType = ModContent.ProjectileType<BFEXWeapon>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.active && projectile.owner == Owner.whoAmI && projectile.type == exWeaponType)
+                    return true;
+            }
+
+            return false;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -995,7 +1141,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (!rightChargeActive || reloadTimer > 0)
                 return false;
 
-            DrawRailgunTelegraph();
+            //DrawRailgunTelegraph();
 
             Texture2D arrowTexture = ModContent.Request<Texture2D>(BFArrowCommon.GetTexturePathForPreset(CurrentPreset)).Value;
             Vector2 chargeArrowOffset = AimDirection * MathHelper.Lerp(20f, 24f, ChargeCompletion) + new Vector2(0f, MathHelper.Lerp(-5f, -2f, ChargeCompletion));

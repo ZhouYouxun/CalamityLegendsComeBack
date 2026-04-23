@@ -12,18 +12,17 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
-    // D 战术右键箭：改成迫击炮式上抛轰炸，命中后持续向目标区域呼叫箭雨。
+    // D tactical right-click arrow: mortar trajectory with a bombard anchor on impact.
     internal class BFArrow_DBomb : ModProjectile
     {
         private const float FlightState = 0f;
         private const float AttachedNpcState = 1f;
         private const float GroundAnchorState = 2f;
-        private const int MortarRiseFrames = 18;
         private const int BombardDuration = 96;
-        private const float MinMortarSpeed = 15f;
-        private const float MaxMortarSpeed = 25.5f;
-        private const float MinDiveTurnRate = 0.16f;
-        private const float MaxDiveTurnRate = 0.62f;
+        private const float MortarGravity = 0.28f;
+        private const float MinMortarApexHeight = 440f;
+        private const float MaxMortarApexHeight = 840f;
+        private const int MortarCollisionDelay = 12;
 
         private int rainCounter;
         private int storedRainDamage = 1;
@@ -33,7 +32,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private Vector2 stickOffset;
         private Vector2 targetPoint;
         private Vector2 groundAnchorPoint;
-        private bool diveTargetLocked;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/DBomb/BFArrow_DBomb";
@@ -63,10 +61,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override bool? CanHitNPC(NPC target) => InFlight ? null : false;
 
+        public static Vector2 CalculateMortarLaunchVelocity(Vector2 start, Vector2 target, float desiredSpeed)
+        {
+            float distance = Vector2.Distance(start, target);
+            float speedFactor = Utils.GetLerpValue(14f, 22f, desiredSpeed, true);
+            float apexHeight = MathHelper.Lerp(MinMortarApexHeight, MaxMortarApexHeight, Utils.GetLerpValue(120f, 900f, distance, true));
+            apexHeight = MathHelper.Lerp(apexHeight + 72f, apexHeight - 24f, speedFactor);
+
+            float apexY = Math.Min(start.Y, target.Y) - apexHeight;
+            float riseDistance = Math.Max(start.Y - apexY, 96f);
+            float fallDistance = Math.Max(target.Y - apexY, 96f);
+            float verticalSpeed = (float)Math.Sqrt(2f * MortarGravity * riseDistance);
+            float travelTime = verticalSpeed / MortarGravity + (float)Math.Sqrt(2f * fallDistance / MortarGravity);
+            float horizontalSpeed = (target.X - start.X) / Math.Max(travelTime, 1f);
+
+            return new Vector2(horizontalSpeed, -verticalSpeed);
+        }
+
         public void ConfigureBombardTarget(Vector2 bombardTarget)
         {
             targetPoint = bombardTarget;
-            diveTargetLocked = true;
+            float desiredSpeed = Projectile.velocity.Length();
+            if (desiredSpeed <= 0.01f)
+                desiredSpeed = 18f;
+
+            Projectile.velocity = CalculateMortarLaunchVelocity(Projectile.Center, bombardTarget, desiredSpeed);
+            Projectile.tileCollide = false;
+            BFArrowCommon.FaceForward(Projectile);
             Projectile.netUpdate = true;
         }
 
@@ -75,7 +96,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             writer.WriteVector2(targetPoint);
             writer.WriteVector2(groundAnchorPoint);
             writer.WriteVector2(stickOffset);
-            writer.Write(diveTargetLocked);
             writer.Write(rainCounter);
             writer.Write(storedRainDamage);
             writer.Write(storedAmmoType);
@@ -88,7 +108,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             targetPoint = reader.ReadVector2();
             groundAnchorPoint = reader.ReadVector2();
             stickOffset = reader.ReadVector2();
-            diveTargetLocked = reader.ReadBoolean();
             rainCounter = reader.ReadInt32();
             storedRainDamage = reader.ReadInt32();
             storedAmmoType = reader.ReadInt32();
@@ -111,6 +130,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (targetPoint == Vector2.Zero)
                 targetPoint = Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitY) * 480f;
+
+            BFArrowCommon.FaceForward(Projectile);
         }
 
         public override void AI()
@@ -178,8 +199,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.netUpdate = true;
 
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 12, 1f, 3.2f, 0.9f, 1.2f);
-            SpawnBombardImpactFX(target.Center, 1.2f);
-            SpawnBombardAuraFX(target.Center, 0.95f);
+            SpawnBombardImpactFX(target.Center, 1.55f);
+            SpawnBombardAuraFX(target.Center, 1.25f);
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.5f, Pitch = -0.08f }, target.Center);
         }
 
@@ -198,8 +219,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.netUpdate = true;
 
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 10, 1f, 2.8f, 0.9f, 1.15f);
-            SpawnBombardImpactFX(groundAnchorPoint, 1.05f);
-            SpawnBombardAuraFX(groundAnchorPoint, 0.8f);
+            SpawnBombardImpactFX(groundAnchorPoint, 1.4f);
+            SpawnBombardAuraFX(groundAnchorPoint, 1.15f);
             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.3f, Pitch = -0.2f }, Projectile.Center);
             return false;
         }
@@ -208,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 14, 1.5f, 5.5f, 0.95f, 1.35f);
             if (!Main.dedServ)
-                SpawnBombardImpactFX(Projectile.Center, 0.8f);
+                SpawnBombardImpactFX(Projectile.Center, 1.2f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -233,36 +254,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private void UpdateMortarFlight()
         {
             FlightTimer++;
-
-            if (FlightTimer > MortarRiseFrames)
-            {
-                Vector2 targetOffset = targetPoint - Projectile.Center;
-                float targetDistance = targetOffset.Length();
-                Vector2 desiredDirection = targetOffset.SafeNormalize(Vector2.UnitY);
-                Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-                float turnProgress = Utils.GetLerpValue(MortarRiseFrames, MortarRiseFrames + 18f, FlightTimer, true);
-                float alignment = Vector2.Dot(currentDirection, desiredDirection);
-                float turnRate = MathHelper.Lerp(MinDiveTurnRate, MaxDiveTurnRate, turnProgress);
-                turnRate = MathHelper.Lerp(turnRate, MaxDiveTurnRate + 0.2f, Utils.GetLerpValue(-0.2f, -1f, alignment, true));
-                turnRate = MathHelper.Lerp(turnRate, MaxDiveTurnRate + 0.28f, Utils.GetLerpValue(160f, 30f, targetDistance, true));
-                Vector2 rotatedDirection = RotateTowards(currentDirection, desiredDirection, turnRate);
-                float desiredSpeed = MathHelper.Lerp(MaxMortarSpeed, MinMortarSpeed * 0.72f, Utils.GetLerpValue(280f, 24f, targetDistance, true));
-                float speed = MathHelper.Lerp(Projectile.velocity.Length(), desiredSpeed, 0.16f + 0.18f * turnProgress);
-                speed = MathHelper.Clamp(speed, MinMortarSpeed * 0.62f, MaxMortarSpeed);
-                
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, rotatedDirection * speed, 0.08f);
-                // 加重力
-                Projectile.velocity.Y += 0.3f;
-
-
-                Projectile.tileCollide = FlightTimer >= MortarRiseFrames + 6f;
-            }
-            else
-            {
-                Vector2 riseDirection = Projectile.velocity.SafeNormalize(-Vector2.UnitY);
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, riseDirection * MaxMortarSpeed, 0.04f);
-                Projectile.tileCollide = false;
-            }
+            Projectile.velocity.Y += MortarGravity;
+            Projectile.tileCollide = FlightTimer >= MortarCollisionDelay && Projectile.velocity.Y >= 0f;
 
             BFArrowCommon.FaceForward(Projectile);
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 1.08f);
@@ -328,9 +321,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 8f,
                 Projectile.velocity * 0.05f,
                 HighlightColor * 0.46f,
-                new Vector2(0.72f, 1.85f),
+                new Vector2(0.86f, 2.3f),
                 Projectile.velocity.ToRotation(),
-                0.15f,
+                0.18f,
                 0.038f,
                 10);
             GeneralParticleHandler.SpawnParticle(pulse);
@@ -373,8 +366,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             for (int i = 0; i < 2; i++)
             {
-                Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-140f, 140f), -620f - Main.rand.NextFloat(0f, 140f));
-                Vector2 targetPosition = center + Main.rand.NextVector2Circular(30f, 20f);
+                Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-180f, 180f), -920f - Main.rand.NextFloat(0f, 220f));
+                Vector2 targetPosition = center + Main.rand.NextVector2Circular(46f, 28f);
                 Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * (storedAmmoSpeed * Main.rand.NextFloat(1.15f, 1.45f));
 
                 int projectileIndex = Projectile.NewProjectile(
@@ -417,33 +410,44 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Vector2.One,
                 Main.rand.NextFloat(-0.2f, 0.2f),
                 0f,
-                0.24f * intensity,
-                12);
+                0.34f * intensity,
+                16);
             GeneralParticleHandler.SpawnParticle(outerBlast);
 
-            StrongBloom bloom = new(center, Vector2.Zero, flashColor, 0.9f * intensity, 16);
+            StrongBloom bloom = new(center, Vector2.Zero, flashColor, 1.18f * intensity, 20);
             GeneralParticleHandler.SpawnParticle(bloom);
 
             DirectionalPulseRing pulse = new(
                 center,
                 Vector2.Zero,
                 Color.Lerp(HighlightColor, Color.White, 0.18f),
-                new Vector2(1.2f, 1.8f),
+                new Vector2(1.55f, 2.3f),
                 Main.rand.NextFloat(-0.3f, 0.3f),
-                0.18f * intensity,
+                0.24f * intensity,
                 0.045f,
-                13);
+                15);
             GeneralParticleHandler.SpawnParticle(pulse);
 
-            for (int i = 0; i < 6; i++)
+            DirectionalPulseRing crossPulse = new(
+                center,
+                Vector2.Zero,
+                Color.Lerp(flashColor, Color.White, 0.12f),
+                new Vector2(1.15f, 3.4f),
+                Main.rand.NextFloat(-0.15f, 0.15f),
+                0.2f * intensity,
+                0.036f,
+                18);
+            GeneralParticleHandler.SpawnParticle(crossPulse);
+
+            for (int i = 0; i < 10; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     center,
                     Main.rand.NextBool(3) ? DustID.FireworksRGB : DustID.Torch,
-                    Main.rand.NextVector2CircularEdge(3f, 3f) * Main.rand.NextFloat(1.8f, 3.8f),
+                    Main.rand.NextVector2CircularEdge(3.5f, 3.5f) * Main.rand.NextFloat(2.4f, 5.1f),
                     0,
                     Main.rand.NextBool(3) ? HighlightColor : Color.Goldenrod,
-                    Main.rand.NextFloat(0.95f, 1.3f));
+                    Main.rand.NextFloat(1.05f, 1.45f));
                 dust.noGravity = true;
             }
         }
@@ -460,21 +464,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 center,
                 Vector2.Zero,
                 Color.Lerp(HighlightColor, accentColor, 0.35f),
-                new Vector2(1.3f, 1.3f),
+                new Vector2(1.75f, 1.75f),
                 0f,
-                0.13f * intensity,
+                0.17f * intensity,
                 0.032f,
-                11);
+                13);
             GeneralParticleHandler.SpawnParticle(pulse);
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 4; i++)
             {
                 GlowOrbParticle ember = new(
                     center + Main.rand.NextVector2Circular(18f, 18f),
                     Main.rand.NextVector2Circular(0.65f, 0.65f),
                     false,
                     12,
-                    Main.rand.NextFloat(0.2f, 0.34f) * intensity,
+                    Main.rand.NextFloat(0.26f, 0.42f) * intensity,
                     Color.Lerp(mainColor, HighlightColor, Main.rand.NextFloat(0.25f, 0.65f)),
                     true,
                     false,
@@ -563,3 +567,4 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         }
     }
 }
+

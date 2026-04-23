@@ -1,5 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
-using CalamityLegendsComeBack.Accssory.SHPC.RemembranceCore;
+using CalamityLegendsComeBack.Accssory.SHPC.S_MLD_MultiLinkDistributor;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.Passive;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
@@ -298,13 +298,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            if (exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player) &&
+            if (player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
+                exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player) &&
                 KeybindSystem.LegendarySkill.Current)
             {
                 return false;
             }
 
-            bool tripleScatter = player.GetModPlayer<RemembranceCorePlayer>().RemembranceCoreEquipped;
+            bool tripleScatter = player.GetModPlayer<S_MLD_MultiLinkDistributorPlayer>().S_MLD_MultiLinkDistributorEquipped;
             if (tripleScatter)
             {
                 float[] spreadAngles =
@@ -495,7 +496,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             // ===== EX技能释放 =====
-            if (exUnlocked && KeybindSystem.LegendarySkill.JustPressed && exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
+            if (exUnlocked &&
+                KeybindSystem.LegendarySkill.JustPressed &&
+                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
+                exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
             {
                 // 防止重复生成
                 foreach (Projectile proj in Main.projectile)
@@ -980,6 +984,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
     }
 }
+
 
 
 

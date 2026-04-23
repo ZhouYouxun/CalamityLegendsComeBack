@@ -33,6 +33,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         private const int PresetCount = 5;
         private const int DefaultPreset = (int)BlossomFluxChloroplastPresetType.Chlo_ABreak;
         private const int FrameSpeed = 5;
+        private const int UnifiedTimeLeft = 200;
+        private const int UnifiedExtraUpdates = 2;
 
         private static readonly BlossomFluxChloroplastPreset[] PresetBehaviors =
         {
@@ -64,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         public override void SetStaticDefaults()
         {
             Main.projFrames[Type] = 5;
-            ProjectileID.Sets.TrailCacheLength[Type] = 8;
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -75,10 +77,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 210;
+            Projectile.timeLeft = UnifiedTimeLeft;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.aiStyle = 0;
+            Projectile.extraUpdates = UnifiedExtraUpdates;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 12;
         }
@@ -87,12 +90,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             Preset = NormalizePresetIndex();
             CurrentPresetBehavior.OnSpawn(Projectile, source);
+            Projectile.timeLeft = UnifiedTimeLeft;
+            Projectile.extraUpdates = UnifiedExtraUpdates;
         }
 
         public override void AI()
         {
-            Timer++;
-            AnimateFrames();
+            if (Projectile.numUpdates == 0)
+            {
+                Timer++;
+                AnimateFrames();
+            }
+
             ChloroplastCommon.FaceForward(Projectile, 0f);
             CurrentPresetBehavior.AI(Projectile);
         }

@@ -68,7 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 projectile.GetSource_FromThis(),
                 target.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<BFFuckyouExplosion>(),
+                ModContent.ProjectileType<FuckYou>(),
                 (int)(projectile.damage * 0.7f),
                 projectile.knockBack * 0.65f,
                 projectile.owner);

@@ -88,6 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
             if (Main.myPlayer == player.whoAmI &&
                 KeybindSystem.LegendarySkill.JustPressed &&
+                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
                 exPlayer.CanActivateUltimate &&
                 !HasActiveVIP(player))
             {

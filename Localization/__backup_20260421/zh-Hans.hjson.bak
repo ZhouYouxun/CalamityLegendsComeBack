@@ -1,0 +1,257 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		// Keybinds.Mods.CalamityLegendsComeBack.Keybinds.LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
+
+		Buffs: {
+			YharonSoulFragment_Buff: {
+				// DisplayName: Yharon Soul Fragment_ Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+			}
+
+			SHPCRight_DeBuff: {
+				// DisplayName: S H P C Right_ De Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+			}
+		}
+
+		Items: {
+			OverchargeCore: {
+				// DisplayName: Overcharge Core
+				// Tooltip: ""
+			}
+
+			RemembranceCore: {
+				// DisplayName: Remembrance Core
+				// Tooltip: ""
+			}
+
+			ResonanceCore: {
+				// DisplayName: Resonance Core
+				// Tooltip: ""
+			}
+
+			TargetingCore: {
+				// DisplayName: Targeting Core
+				// Tooltip: ""
+			}
+
+			Weapons: {
+				MiaoGun: {
+					// DisplayName: Miao Gun
+					// Tooltip: ""
+				}
+
+				NewLegendBlossomFlux: {
+					// DisplayName: New Legend Blossom Flux
+					// Tooltip: ""
+				}
+
+				NewLegendBrinyBaron: {
+					// DisplayName: New Legend Briny Baron
+					// Tooltip: ""
+				}
+
+				NewLegendCosmicDischarge: {
+					// DisplayName: New Legend Cosmic Discharge
+					// Tooltip: ""
+				}
+
+				NewLegendSHPC: {
+					// DisplayName: New Legend S H P C
+					// Tooltip: ""
+				}
+
+				NewLegendSHPCTest: {
+					// DisplayName: New Legend S H P C Test
+					// Tooltip: ""
+				}
+
+				NewLegendYharimsCrystal: {
+					// DisplayName: New Legend Yharims Crystal
+					// Tooltip: ""
+				}
+
+				Melee: {
+					CosmicDischarge: {
+						// DisplayName: Cosmic Discharge
+						// Tooltip: ""
+					}
+				}
+
+				LeonidProgenitor: {
+					// DisplayName: Leonid Progenitor
+					// Tooltip: ""
+				}
+
+				Ranged: {
+					TitaniumRailgun: {
+						// DisplayName: Titanium Railgun
+						// Tooltip: ""
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			// ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
+			// TeachingProjectile.DisplayName: Teaching Projectile
+			// MiaoGunHoldout.DisplayName: Miao Gun Holdout
+
+			BlossomFlux: {
+				// BlossomFluxChloroplast.DisplayName: Blossom Flux Chloroplast
+				// BFEXVernalShot.DisplayName: B F E X Vernal Shot
+				// BFEXWeapon.DisplayName: B F E X Weapon
+				// NewLegendBlossomFluxHoldOut.DisplayName: New Legend Blossom Flux Hold Out
+				// BFPassiveRecoveryField.DisplayName: B F Passive Recovery Field
+				// BFPassiveRecoveryFieldWave.DisplayName: B F Passive Recovery Field Wave
+				// BFSelectionPanel.DisplayName: B F Selection Panel
+			}
+
+			// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+			// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			// BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
+			// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+			// BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
+			// BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+			// BFFuckyouExplosion.DisplayName: B F Fuckyou Explosion
+			// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
+			// BBShuriken_Light.DisplayName: B B Shuriken_ Light
+
+			BrinyBaron: {
+				// BBSwing_INV.DisplayName: B B Swing_ I N V
+				// BBSwing_Slash.DisplayName: B B Swing_ Slash
+				// BBSwing_Wave.DisplayName: B B Swing_ Wave
+				// BBASD_Lighting.DisplayName: B B A S D_ Lighting
+				// BBSD_Final_INV.DisplayName: B B S D_ Final_ I N V
+			}
+
+			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
+			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+
+			Melee: {
+				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
+				// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
+				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
+				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
+				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
+				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
+				// CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
+			}
+
+			SHPC: {
+				// EnergyCore_Spark.DisplayName: Energy Core_ Spark
+				// StormlionMandible_ARC.DisplayName: Stormlion Mandible_ A R C
+				// BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
+				// BossSoulofMight_EXP.DisplayName: Boss Soulof Might_ E X P
+				// EssenceofHavoc_INV.DisplayName: Essenceof Havoc_ I N V
+				// EssenceofSnow_N2.DisplayName: Essenceof Snow_ N2
+				// EssenceofSunlight_Lighting.DisplayName: Essenceof Sunlight_ Lighting
+				// TitanHeart_BigINV.DisplayName: Titan Heart_ Big I N V
+				// LivingShard_Healing.DisplayName: Living Shard_ Healing
+				// FragmentEntropyExplosion.DisplayName: Fragment Entropy Explosion
+				// FragmentSolar_Spear.DisplayName: Fragment Solar_ Spear
+				// FragmentStardust_Cell.DisplayName: Fragment Stardust_ Cell
+				// DivineGeode_Lazer.DisplayName: Divine Geode_ Lazer
+				// Necroplasm_Damage.DisplayName: Necroplasm_ Damage
+				// TwistingNether_BlackSLASH.DisplayName: Twisting Nether_ Black S L A S H
+				// TwistingNether_Blade.DisplayName: Twisting Nether_ Blade
+				// UnholyEssence_Wave.DisplayName: Unholy Essence_ Wave
+				// AscendantSpirit_PROJ.DisplayName: Ascendant Spirit_ P R O J
+				// AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
+				// EndothermicEnergy_Copy.DisplayName: Endothermic Energy_ Copy
+				// EndothermicEnergy_Shadow.DisplayName: Endothermic Energy_ Shadow
+				// ExoPrism_Lazer.DisplayName: Exo Prism_ Lazer
+				// ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
+				// ExoPrism_Light.DisplayName: Exo Prism_ Light
+				// YharonSoulFragment_Flame.DisplayName: Yharon Soul Fragment_ Flame
+				// SHPC_SLINV.DisplayName: S H P C_ S L I N V
+				// SHPC_SuperLazer.DisplayName: S H P C_ Super Lazer
+				// NewLegendSHPB.DisplayName: New Legend S H P B
+				// NewLegendSHPE.DisplayName: New Legend S H P E
+				// SHPCPassiveOrb.DisplayName: S H P C Passive Orb
+				// SHPCRight_HoulOut.DisplayName: S H P C Right_ Houl Out
+				// SHPCRight_Proj.DisplayName: S H P C Right_ Proj
+			}
+
+			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			// NewSHPS.DisplayName: New S H P S
+			// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
+			// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
+			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+
+			YharimsCrystal: {
+				// YC_EX_Battleship.DisplayName: Y C_ E X_ Battleship
+				// YC_EX_Drone.DisplayName: Y C_ E X_ Drone
+				// YC_EX_LaserCruiser.DisplayName: Y C_ E X_ Laser Cruiser
+				// YC_EX_VIP.DisplayName: Y C_ E X_ V I P
+				// YC_CBeam.DisplayName: Y C_ C Beam
+				// YC_WarshipArtilleryShell.DisplayName: Y C_ Warship Artillery Shell
+				// YC_WarshipMissile.DisplayName: Y C_ Warship Missile
+				// YC_WarshipPulse.DisplayName: Y C_ Warship Pulse
+				// YC_Left_FakeLazer.DisplayName: Y C_ Left_ Fake Lazer
+				// YC_Left_Frigate.DisplayName: Y C_ Left_ Frigate
+				// YC_Left_LaserCruiser.DisplayName: Y C_ Left_ Laser Cruiser
+				// YC_Left_MissileBattleship.DisplayName: Y C_ Left_ Missile Battleship
+				// YC_Left_RepairBolt.DisplayName: Y C_ Left_ Repair Bolt
+				// YC_Left_RepairShip.DisplayName: Y C_ Left_ Repair Ship
+				// YC_Left_Rocket.DisplayName: Y C_ Left_ Rocket
+				// YC_LeftHoldOut.DisplayName: Y C_ Left Hold Out
+				// YC_Right_Battleship.DisplayName: Y C_ Right_ Battleship
+				// YC_Right_Drone.DisplayName: Y C_ Right_ Drone
+				// YC_Right_HeavyBolt.DisplayName: Y C_ Right_ Heavy Bolt
+				// YC_Right_LaserCruiser.DisplayName: Y C_ Right_ Laser Cruiser
+				// YC_Right_RepairShield.DisplayName: Y C_ Right_ Repair Shield
+				// YC_Right_RepairShip.DisplayName: Y C_ Right_ Repair Ship
+				// YC_Right_TrackerLaser.DisplayName: Y C_ Right_ Tracker Laser
+				// YC_RightHoldOut.DisplayName: Y C_ Right Hold Out
+			}
+
+			// LeonidAstralBlast.DisplayName: Leonid Astral Blast
+			// LeonidChainLightning.DisplayName: Leonid Chain Lightning
+			// LeonidEvilWisp.DisplayName: Leonid Evil Wisp
+			// LeonidHealingOrb.DisplayName: Leonid Healing Orb
+			// LeonidHolyLaser.DisplayName: Leonid Holy Laser
+			// LeonidLavaGlob.DisplayName: Leonid Lava Glob
+			// LeonidLingeringField.DisplayName: Leonid Lingering Field
+			// LeonidLunarStrike.DisplayName: Leonid Lunar Strike
+			// LeonidOrbitFlame.DisplayName: Leonid Orbit Flame
+			// LeonidPetalBolt.DisplayName: Leonid Petal Bolt
+			// LeonidShockwave.DisplayName: Leonid Shockwave
+			// LeonidSimpleShard.DisplayName: Leonid Simple Shard
+			// LeonidSplitMeteor.DisplayName: Leonid Split Meteor
+			// LeonidTrailMushroom.DisplayName: Leonid Trail Mushroom
+
+			LeonidProgenitor: {
+				// LeonidCometSmall.DisplayName: Leonid Comet Small
+				// LeonidCometStealthMark.DisplayName: Leonid Comet Stealth Mark
+				// LeonidProgenitorBombshell.DisplayName: Leonid Progenitor Bombshell
+			}
+
+			Ranged: {
+				// TitaniumRailgunScope.DisplayName: Titanium Railgun Scope
+				// TitaniumRailgunShot.DisplayName: Titanium Railgun Shot
+				// BFAimScope.DisplayName: B F Aim Scope
+			}
+
+			// BFAimScope.DisplayName: B F Aim Scope
+		}
+
+		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+	}
+}

@@ -65,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 float sway = (float)System.Math.Sin((Projectile.identity * 0.6f) + Projectile.localAI[0] * 0.17f) * 0.012f;
                 Projectile.velocity = Projectile.velocity.RotatedBy(sway);
                 Projectile.velocity.Y += GravityStrength;
-                Projectile.velocity.X *= 0.9845f;
+                Projectile.velocity.X *= 0.9945f;
             }
 
             Lighting.AddLight(Projectile.Center, Color.Lerp(AbyssToxic, AbyssCyan, 0.35f).ToVector3() * 0.55f);

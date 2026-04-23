@@ -59,10 +59,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             else
                 player.AddCooldown(BFEXCooldown.ID, 0);
 
+            bool exWeaponActive = player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] > 0;
+
             if (Main.myPlayer == player.whoAmI &&
                 KeybindSystem.LegendarySkill.JustPressed &&
+                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
                 exPlayer.ConsumeAllEX() &&
-                player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] <= 0)
+                !exWeaponActive)
             {
                 Vector2 direction = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(
@@ -73,10 +76,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     player.GetWeaponDamage(Item),
                     Item.knockBack,
                     player.whoAmI);
+
+                exWeaponActive = true;
             }
 
             if (Main.myPlayer == player.whoAmI &&
-                player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] <= 0 &&
+                !exWeaponActive &&
                 player.ownedProjectileCounts[ModContent.ProjectileType<NewLegendBlossomFluxHoldOut>()] <= 0)
             {
                 Projectile.NewProjectile(
