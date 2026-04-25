@@ -1,9 +1,9 @@
 displayName = CalamityLegendsComeBack
 author = 南鸢北笙&VectorChaos&剃刀刃台风
-version = 0.0.3
+version = 0.0.5
 hideCode = false
 hideResources = false
 includeSource = true
-modReferences = CalamityMod
+modReferences = CalamityMod, VeluriyamLib
 sortAfter = CalamityMod
 homepage = https://github.com/ZhouYouxun/CalamityLegendsComeBack

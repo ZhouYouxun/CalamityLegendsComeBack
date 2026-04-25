@@ -20,11 +20,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Items/Weapons/Magic/SHPC";
         public override int AssociatedItemID => ModContent.ItemType<NewLegendSHPC>();
+        public override bool UseBaseDraw => true;
 
         public override Vector2 GunTipPosition =>
             Projectile.Center + Vector2.UnitX.RotatedBy(Projectile.rotation) * 56f;
 
         public override float MaxOffsetLengthFromArm => 35f;
+
+        #region ===== Energy Core Position =====
+
+        // Angle controls the side rotation; distance controls how far it extends from Projectile.Center.
+        private float energyCorePolarAngle = -1.04f;
+        private float energyCorePolarDistance = 4f;
+
+        private Vector2 EnergyCorePosition
+        {
+            get
+            {
+                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX.RotatedBy(Projectile.rotation));
+                int facing = Projectile.spriteDirection == 0 ? 1 : Projectile.spriteDirection;
+
+                return Projectile.Center + direction.RotatedBy(energyCorePolarAngle * facing) * energyCorePolarDistance;
+            }
+        }
+
+        #endregion
 
         #region ===== 基础状态 =====
 
@@ -326,6 +346,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private const int RecoilReturnTime = 5;  // 收回：快
         private const float RecoilAngle = 0.72f; // 抬高角度，自行调
 
+        private const float RecoilAngleMultiplier = 3.152778f; // 0.72 * 3.152778 ≈ 2.27 rad ≈ 130°
+
         private void ApplyRecoilRotation()
         {
             if (!recoilActive)
@@ -344,19 +366,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 // 先快后慢：EaseOut
                 float t = recoilFrame / (float)RecoilRaiseTime;
                 float eased = 1f - (1f - t) * (1f - t);
-                recoilOffset = recoilSide * RecoilAngle * eased;
+                recoilOffset = recoilSide * RecoilAngle * RecoilAngleMultiplier * eased;
             }
             else if (recoilFrame < RecoilRaiseTime + RecoilHoldTime)
             {
                 // 顶点短暂停顿
-                recoilOffset = recoilSide * RecoilAngle;
+                recoilOffset = recoilSide * RecoilAngle * RecoilAngleMultiplier;
             }
             else if (recoilFrame < RecoilRaiseTime + RecoilHoldTime + RecoilReturnTime)
             {
                 // 快速收回：时间短，视觉上就是“嗖”一下压回去
                 float t = (recoilFrame - RecoilRaiseTime - RecoilHoldTime) / (float)RecoilReturnTime;
                 float eased = t * t; // 开头快，后面贴近终点时更稳
-                recoilOffset = MathHelper.Lerp(recoilSide * RecoilAngle, 0f, eased);
+                recoilOffset = MathHelper.Lerp(recoilSide * RecoilAngle * RecoilAngleMultiplier, 0f, eased);
             }
             else
             {

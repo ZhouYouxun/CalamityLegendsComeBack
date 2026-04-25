@@ -3,11 +3,8 @@ using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Items.Materials;
-using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -15,6 +12,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 {
     internal class DepthCellsEffect : DefaultEffect
     {
+        private static readonly int[] AbyssDustTypes = { 191, 29, 104 };
+
         public override int EffectID => 17;
         public override int AmmoType => ModContent.ItemType<DepthCells>();
 
@@ -69,72 +68,75 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Color toxic = DepthCells_Drop.AbyssToxic;
             Color cyan = DepthCells_Drop.AbyssCyan;
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            DirectionalPulseRing ring = new(
-                projectile.Center,
-                Vector2.Zero,
-                toxic * 0.42f,
-                Vector2.One,
-                projectile.velocity.ToRotation(),
-                0.02f,
-                0.15f,
-                20);
-            GeneralParticleHandler.SpawnParticle(ring);
+            for (int i = 0; i < 9; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 9f;
+                Vector2 offset = angle.ToRotationVector2() * Main.rand.NextFloat(2f, 7f);
+                CreateAbyssDust(
+                    projectile.Center + offset,
+                    offset.SafeNormalize(forward).RotatedByRandom(0.28f) * Main.rand.NextFloat(0.5f, 2.4f),
+                    Main.rand.NextFloat(1f, 1.45f),
+                    Main.rand.NextFloat(0.45f, 1f),
+                    120);
+            }
 
-            StrongBloom bloom = new(
-                projectile.Center,
-                Vector2.Zero,
-                Color.Lerp(toxic, cyan, 0.45f) * 0.46f,
-                0.55f,
-                18);
-            GeneralParticleHandler.SpawnParticle(bloom);
+            for (int i = 0; i < 4; i++)
+            {
+                Dust foam = Dust.NewDustPerfect(
+                    projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    DustID.Water,
+                    forward * Main.rand.NextFloat(0.35f, 1.2f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                    130,
+                    Color.Lerp(cyan, toxic, Main.rand.NextFloat(0.2f, 0.7f)),
+                    Main.rand.NextFloat(0.9f, 1.15f));
+                foam.noGravity = true;
+                foam.velocity *= 0.75f;
+            }
         }
 
         private static void SpawnSplitBurst(Projectile projectile)
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            BloomRing bloomRing = new(
-                projectile.Center,
-                Vector2.Zero,
-                DepthCells_Drop.AbyssToxic * 0.35f,
-                0.62f,
-                24);
-            GeneralParticleHandler.SpawnParticle(bloomRing);
-
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 14; i++)
             {
-                WaterGlobParticle glob = new(
-                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    forward * Main.rand.NextFloat(0.8f, 2.8f) + Main.rand.NextVector2Circular(2f, 2f),
-                    Main.rand.NextFloat(0.8f, 1.15f));
-                glob.Color = Color.Lerp(DepthCells_Drop.AbyssToxic, DepthCells_Drop.AbyssFoam, Main.rand.NextFloat()) * 0.48f;
-                GeneralParticleHandler.SpawnParticle(glob);
+                Vector2 velocity = forward.RotatedByRandom(0.7f) * Main.rand.NextFloat(1.3f, 4.8f) + Main.rand.NextVector2Circular(1.2f, 1.2f);
+                CreateAbyssDust(
+                    projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                    velocity,
+                    Main.rand.NextFloat(1.05f, 1.7f),
+                    Main.rand.NextFloat(0.25f, 0.95f),
+                    120);
             }
 
             for (int i = 0; i < 8; i++)
             {
-                WaterFlavoredParticle shard = new(
+                Dust foam = Dust.NewDustPerfect(
                     projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(1.2f, 4f),
-                    false,
-                    Main.rand.Next(14, 24),
-                    Main.rand.NextFloat(0.9f, 1.2f),
-                    Color.Lerp(DepthCells_Drop.AbyssCyan, DepthCells_Drop.AbyssFoam, Main.rand.NextFloat(0.2f, 0.8f)));
-                GeneralParticleHandler.SpawnParticle(shard);
+                    DustID.Water,
+                    forward.RotatedByRandom(0.9f) * Main.rand.NextFloat(0.7f, 2.2f) + Main.rand.NextVector2Circular(0.4f, 0.4f),
+                    130,
+                    Color.Lerp(DepthCells_Drop.AbyssCyan, DepthCells_Drop.AbyssFoam, Main.rand.NextFloat(0.2f, 0.85f)),
+                    Main.rand.NextFloat(0.85f, 1.15f));
+                foam.noGravity = true;
+                foam.velocity *= 0.7f;
             }
+        }
 
-            for (int i = 0; i < 12; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextBool(3) ? 191 : (Main.rand.NextBool() ? 29 : 104),
-                    forward.RotatedByRandom(0.65f) * Main.rand.NextFloat(1.8f, 5.4f),
-                    120,
-                    Color.Lerp(DepthCells_Drop.AbyssDeep, DepthCells_Drop.AbyssToxic, Main.rand.NextFloat(0.35f, 0.95f)),
-                    Main.rand.NextFloat(1.1f, 1.75f));
-                dust.noGravity = true;
-            }
+        private static Dust CreateAbyssDust(Vector2 position, Vector2 velocity, float scale, float colorInterpolant, int alpha)
+        {
+            Dust dust = Dust.NewDustPerfect(
+                position,
+                AbyssDustTypes[Main.rand.Next(AbyssDustTypes.Length)],
+                velocity,
+                alpha,
+                Color.Lerp(DepthCells_Drop.AbyssDeep, DepthCells_Drop.AbyssToxic, colorInterpolant),
+                scale);
+            dust.noGravity = true;
+            dust.fadeIn = scale * 1.05f;
+            return dust;
         }
     }
 

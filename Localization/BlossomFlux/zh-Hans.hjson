@@ -83,6 +83,7 @@ Mods: {
 				BFEXVernalShot.DisplayName: 森绿齐射箭
 			}
 
+			// ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
 			TeachingProjectile.DisplayName: 教学弹幕
 			MiaoGunHoldout.DisplayName: 喵喵枪手持弹幕
 
@@ -99,21 +100,76 @@ Mods: {
 			BFArrow_DBomb.DisplayName: 轰炸箭
 			BFArrow_EPlague.DisplayName: 瘟疫箭
 			BFArrow_EPlagueGas.DisplayName: 瘟疫毒雾
-			BFArrow_BRecovBlast.DisplayName: 复苏爆发
 			BFFuckyouExplosion.DisplayName: 绽裂爆轰
-			FuckYou.DisplayName: 轰炸爆点
+			// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
+			// BBShuriken_Light.DisplayName: B B Shuriken_ Light
+			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
+			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+
+			Melee: {
+				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
+				// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
+				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
+				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
+				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
+				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
+				// CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
+				// EntropicFlechette.DisplayName: Entropic Flechette
+			}
+
+			// LeonidAstralBlast.DisplayName: Leonid Astral Blast
+			// LeonidChainLightning.DisplayName: Leonid Chain Lightning
+			// LeonidEvilWisp.DisplayName: Leonid Evil Wisp
+			// LeonidHealingOrb.DisplayName: Leonid Healing Orb
+			// LeonidHolyLaser.DisplayName: Leonid Holy Laser
+			// LeonidLavaGlob.DisplayName: Leonid Lava Glob
+			// LeonidLingeringField.DisplayName: Leonid Lingering Field
+			// LeonidLunarStrike.DisplayName: Leonid Lunar Strike
+			// LeonidOrbitFlame.DisplayName: Leonid Orbit Flame
+			// LeonidPetalBolt.DisplayName: Leonid Petal Bolt
+			// LeonidShockwave.DisplayName: Leonid Shockwave
+			// LeonidSimpleShard.DisplayName: Leonid Simple Shard
+			// LeonidSplitMeteor.DisplayName: Leonid Split Meteor
+			// LeonidTrailMushroom.DisplayName: Leonid Trail Mushroom
+			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			// NewSHPS.DisplayName: New S H P S
+			// AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
+			// AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
+			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			BFArrow_BRecovBlast.DisplayName: 复苏爆发
 
 			A_Dev: {
 				DesertEagleHeavyRound.DisplayName: 沙漠之鹰重型弹
 				DesertEagleLifeRound.DisplayName: 沙漠之鹰吸血弹
 			}
 
+			FuckYou.DisplayName: 轰炸爆点
 			S_RSU_PhaseResonanceGuardShieldVisual.DisplayName: 相位共振护盾视觉
+			// DesertEagleHoldout.DisplayName: Desert Eagle Holdout
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: 吸热能量分裂体
-		Cooldowns.BlossomFlux_Passive: 叶流不死被动
-		Cooldowns.BlossomFlux_EX: 森绿能量
+
+		Cooldowns: {
+			BlossomFlux_Passive: 叶流不死被动
+			BlossomFlux_EX: 森绿能量
+		}
+
 		TheSpecialText.BlossomFluxPresetSelected: 已选择{0}战术
 
 		Buffs: {

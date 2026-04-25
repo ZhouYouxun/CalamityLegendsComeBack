@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const int MaxUpdateCount = 1;
+        private const int MaxUpdateCount = 2;
         private const int Lifetime = 350;
         private const float SuperLaserVisualWidth = 30f;
         private const float SuperLaserVisualScale = 0.7f;
@@ -50,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.timeLeft = Lifetime;
+            Projectile.timeLeft = Lifetime * MaxUpdateCount;
             Projectile.MaxUpdates = MaxUpdateCount;
             Projectile.penetrate = -1;
             Projectile.alpha = 255;

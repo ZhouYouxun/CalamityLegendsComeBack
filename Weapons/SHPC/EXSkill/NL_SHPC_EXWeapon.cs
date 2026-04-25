@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private Player Owner => Main.player[Projectile.owner];
         private Vector2 GunTip => Projectile.Center + Projectile.velocity * 56f;
         private bool IsDischarging => state == 2;
+        private bool IsAimLocked => state >= 2;
         private float HoldoutRecoilOffset => MathHelper.Clamp(24f - timer * 1.2f, 0f, 47f);
 
         private int state;
@@ -322,7 +323,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             {
                 Vector2 oldVelocity = Projectile.velocity;
 
-                if (!IsDischarging)
+                if (!IsAimLocked)
                 {
                     Vector2 mouseWorld = Owner.Calamity().mouseWorld;
                     Vector2 targetDirection = Projectile.SafeDirectionTo(mouseWorld);
@@ -337,7 +338,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             }
 
             Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
-            float recoil = IsDischarging ? 0f : HoldoutRecoilOffset;
+            float recoil = IsAimLocked ? 0f : HoldoutRecoilOffset;
 
             Projectile.Center = armPosition + Projectile.velocity * recoil + new Vector2(0f, 5f);
             Projectile.rotation = Projectile.velocity.ToRotation();

@@ -158,8 +158,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         // ===== 子类写这里 =====
         public abstract void HoldoutAI();
 
+
+        public virtual bool UseBaseDraw => false;
         public override bool PreDraw(ref Color lightColor)
         {
+            if (!UseBaseDraw)
+                return false;
+
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;

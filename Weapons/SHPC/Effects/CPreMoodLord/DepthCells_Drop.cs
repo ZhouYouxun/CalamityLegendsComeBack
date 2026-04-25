@@ -1,14 +1,9 @@
 ﻿using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
-using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -26,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private const float GravityDelay = 6f;
         private const float GravityStrength = 0.165f;
+        private static readonly int[] AbyssDustTypes = { 191, 29, 104 };
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -99,61 +95,61 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D sparkTex = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D smearTex = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
-            Vector2 origin = sparkTex.Size() * 0.5f;
-            float stretch = Utils.GetLerpValue(0f, 18f, Projectile.velocity.Length(), true);
+            Vector2 bloomOrigin = bloomTex.Size() * 0.5f;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(AbyssDeep, AbyssToxic, completion) * (0.08f + completion * 0.12f);
-                float trailScale = MathHelper.Lerp(0.22f, 0.48f, completion);
+                Color trailColor = Color.Lerp(AbyssDeep, AbyssToxic, completion) * MathHelper.Lerp(0.05f, 0.18f, completion);
+                float trailScale = MathHelper.Lerp(0.16f, 0.4f, completion);
 
                 Main.EntitySpriteDraw(
                     bloomTex,
                     oldCenter,
                     null,
                     trailColor,
-                    -Projectile.rotation * 0.2f,
-                    bloomTex.Size() * 0.5f,
+                    0f,
+                    bloomOrigin,
                     trailScale,
                     SpriteEffects.None);
             }
 
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             Main.EntitySpriteDraw(
-                smearTex,
-                drawPos - Projectile.velocity * 0.18f,
+                bloomTex,
+                drawPos - Projectile.velocity * 0.12f,
                 null,
-                AbyssBlue * 0.35f,
-                Projectile.rotation,
-                smearTex.Size() * 0.5f,
-                new Vector2(0.62f, 1.38f),
-                SpriteEffects.None);
-
-            Main.EntitySpriteDraw(
-                sparkTex,
-                drawPos,
-                null,
-                AbyssToxic * 0.88f,
-                Projectile.rotation,
-                origin,
-                new Vector2(0.0065f, 0.02f + stretch * 0.008f),
+                Color.Lerp(AbyssBlue, AbyssToxic, 0.3f) * 0.18f,
+                0f,
+                bloomOrigin,
+                new Vector2(0.22f, 0.48f),
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloomTex,
                 drawPos,
                 null,
-                AbyssFoam * 0.24f,
+                AbyssToxic * 0.26f,
                 0f,
-                bloomTex.Size() * 0.5f,
-                0.4f,
+                bloomOrigin,
+                0.34f,
+                SpriteEffects.None);
+
+            Main.EntitySpriteDraw(
+                bloomTex,
+                drawPos,
+                null,
+                AbyssFoam * 0.16f,
+                0f,
+                bloomOrigin,
+                0.18f,
                 SpriteEffects.None);
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
@@ -164,145 +160,90 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            BloomRing bloom = new(
-                Projectile.Center,
-                Vector2.Zero,
-                Color.Lerp(AbyssToxic, AbyssCyan, 0.3f) * 0.32f,
-                0.46f,
-                20);
-            GeneralParticleHandler.SpawnParticle(bloom);
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 velocity = forward.RotatedByRandom(0.42f) * Main.rand.NextFloat(0.8f, 2.7f) + Main.rand.NextVector2Circular(0.9f, 0.9f);
+                CreateAbyssDust(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    velocity,
+                    Main.rand.NextFloat(1.05f, 1.5f),
+                    Main.rand.NextFloat(0.35f, 0.95f),
+                    120);
+            }
 
             for (int i = 0; i < 4; i++)
             {
-                WaterGlobParticle glob = new(
-                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                    forward * Main.rand.NextFloat(0.4f, 1.8f) + Main.rand.NextVector2Circular(1f, 1f),
-                    Main.rand.NextFloat(0.72f, 0.96f));
-                glob.Color = Color.Lerp(AbyssBlue, AbyssToxic, Main.rand.NextFloat(0.2f, 0.8f)) * 0.44f;
-                GeneralParticleHandler.SpawnParticle(glob);
+                Dust foam = CreateFoamDust(
+                    Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    forward * Main.rand.NextFloat(0.25f, 1.1f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
+                    Main.rand.NextFloat(0.8f, 1.1f),
+                    Main.rand.NextFloat(0.25f, 0.85f),
+                    140);
+                foam.velocity *= 0.7f;
             }
         }
 
         private void SpawnFlightEffects()
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 back = -forward;
-            Vector2 spawnCenter = Projectile.Center - forward * Main.rand.NextFloat(2f, 9f);
+            Vector2 spawnCenter = Projectile.Center - forward * Main.rand.NextFloat(3f, 8f);
 
             if (Main.rand.NextBool(2))
             {
-                HeavySmokeParticle smoke = new(
-                    spawnCenter + Main.rand.NextVector2Circular(6f, 6f),
-                    back * Main.rand.NextFloat(0.8f, 2f) + Main.rand.NextVector2Circular(0.8f, 0.8f),
-                    Color.Lerp(AbyssDeep, AbyssBlue, Main.rand.NextFloat(0.3f, 0.85f)),
-                    Main.rand.Next(24, 36),
-                    Main.rand.NextFloat(0.55f, 0.9f),
-                    0.7f);
-                GeneralParticleHandler.SpawnParticle(smoke);
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                WaterGlobParticle glob = new(
-                    spawnCenter + Main.rand.NextVector2Circular(5f, 5f),
-                    back * Main.rand.NextFloat(0.25f, 1.1f) + Main.rand.NextVector2Circular(0.7f, 0.7f),
-                    Main.rand.NextFloat(0.75f, 1.08f));
-                glob.Color = Color.Lerp(AbyssToxic, AbyssFoam, Main.rand.NextFloat(0.15f, 0.85f)) * 0.5f;
-                GeneralParticleHandler.SpawnParticle(glob);
+                Dust mist = CreateAbyssDust(
+                    spawnCenter + Main.rand.NextVector2Circular(4f, 4f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.24f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    Main.rand.NextFloat(1f, 1.35f),
+                    Main.rand.NextFloat(0.15f, 0.75f),
+                    140);
+                mist.velocity *= 0.85f;
             }
 
             if (Main.rand.NextBool(3))
             {
-                WaterFlavoredParticle shard = new(
-                    spawnCenter + Main.rand.NextVector2Circular(6f, 6f),
-                    back * Main.rand.NextFloat(0.3f, 1.45f) + Main.rand.NextVector2Circular(1.8f, 1.8f),
-                    false,
-                    Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.85f, 1.22f),
-                    Color.Lerp(AbyssCyan, AbyssFoam, Main.rand.NextFloat(0.25f, 0.85f)));
-                GeneralParticleHandler.SpawnParticle(shard);
+                Dust foam = CreateFoamDust(
+                    spawnCenter + Main.rand.NextVector2Circular(3f, 3f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.12f) + Main.rand.NextVector2Circular(0.2f, 0.2f),
+                    Main.rand.NextFloat(0.72f, 1f),
+                    Main.rand.NextFloat(0.15f, 0.9f),
+                    150);
+                foam.velocity *= 0.55f;
             }
 
-            if (Main.rand.NextBool(4))
+            if (Main.rand.NextBool(5))
             {
-                AltSparkParticle spark = new(
-                    Projectile.Center - forward * Main.rand.NextFloat(3f, 8f),
-                    back * Main.rand.NextFloat(0.15f, 0.6f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.95f, 1.25f),
-                    Color.Lerp(AbyssToxic, AbyssFoam, Main.rand.NextFloat(0.3f, 0.8f)) * 0.3f);
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                GenericSparkle sparkle = new(
-                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                    Vector2.Zero,
-                    AbyssFoam,
-                    AbyssCyan,
-                    Main.rand.NextFloat(1.6f, 2.2f),
-                    12,
-                    Main.rand.NextFloat(-0.05f, 0.05f),
-                    1.6f);
-                GeneralParticleHandler.SpawnParticle(sparkle);
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    spawnCenter + Main.rand.NextVector2Circular(5f, 5f),
-                    Main.rand.NextBool(4) ? 191 : (Main.rand.NextBool() ? 104 : 29),
-                    back * Main.rand.NextFloat(0.4f, 1.8f) + Main.rand.NextVector2Circular(0.6f, 0.6f),
-                    120,
-                    Color.Lerp(AbyssDeep, AbyssToxic, Main.rand.NextFloat(0.4f, 0.95f)),
-                    Main.rand.NextFloat(1.1f, 1.7f));
-                dust.noGravity = true;
+                Dust sparkle = CreateAbyssDust(
+                    Projectile.Center + Main.rand.NextVector2Circular(2f, 2f),
+                    Main.rand.NextVector2Circular(0.12f, 0.12f),
+                    Main.rand.NextFloat(0.85f, 1.1f),
+                    Main.rand.NextFloat(0.8f, 1f),
+                    160);
+                sparkle.velocity *= 0.25f;
             }
         }
 
         private void SpawnImpactEffects(Vector2 center, Vector2 forward, float intensity)
         {
-            DirectionalPulseRing ring = new(
-                center,
-                Vector2.Zero,
-                AbyssToxic * (0.28f * intensity),
-                Vector2.One,
-                forward.ToRotation(),
-                0.018f,
-                0.12f,
-                18);
-            GeneralParticleHandler.SpawnParticle(ring);
-
-            StrongBloom bloom = new(
-                center,
-                Vector2.Zero,
-                Color.Lerp(AbyssToxic, AbyssCyan, 0.35f) * (0.32f * intensity),
-                0.45f * intensity,
-                18);
-            GeneralParticleHandler.SpawnParticle(bloom);
+            for (int i = 0; i < 12; i++)
+            {
+                Vector2 velocity = forward.RotatedByRandom(0.95f) * Main.rand.NextFloat(1.1f, 4.4f) * intensity + Main.rand.NextVector2Circular(0.65f, 0.65f);
+                CreateAbyssDust(
+                    center + Main.rand.NextVector2Circular(6f, 6f),
+                    velocity,
+                    Main.rand.NextFloat(1.05f, 1.75f) * intensity,
+                    Main.rand.NextFloat(0.25f, 0.95f),
+                    120);
+            }
 
             for (int i = 0; i < 7; i++)
             {
-                WaterGlobParticle glob = new(
-                    center + Main.rand.NextVector2Circular(6f, 6f),
-                    forward.RotatedByRandom(0.9f) * Main.rand.NextFloat(0.5f, 3.2f) + Main.rand.NextVector2Circular(1.6f, 1.6f),
-                    Main.rand.NextFloat(0.78f, 1.14f) * intensity);
-                glob.Color = Color.Lerp(AbyssBlue, AbyssToxic, Main.rand.NextFloat()) * 0.52f;
-                GeneralParticleHandler.SpawnParticle(glob);
-            }
-
-            for (int i = 0; i < 10; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextBool(3) ? 191 : (Main.rand.NextBool() ? 29 : 104),
-                    forward.RotatedByRandom(0.95f) * Main.rand.NextFloat(1.2f, 4.6f),
-                    120,
-                    Color.Lerp(AbyssDeep, AbyssFoam, Main.rand.NextFloat(0.3f, 0.9f)),
-                    Main.rand.NextFloat(1.1f, 1.8f) * intensity);
-                dust.noGravity = true;
+                Dust foam = CreateFoamDust(
+                    center + Main.rand.NextVector2Circular(5f, 5f),
+                    forward.RotatedByRandom(1.1f) * Main.rand.NextFloat(0.7f, 2.4f) * intensity + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    Main.rand.NextFloat(0.9f, 1.25f) * intensity,
+                    Main.rand.NextFloat(0.2f, 1f),
+                    130);
+                foam.velocity *= 0.75f;
             }
         }
 
@@ -311,17 +252,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             SpawnImpactEffects(Projectile.Center, forward, 1f);
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
             {
-                HeavySmokeParticle smoke = new(
-                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    Main.rand.NextVector2Circular(1.8f, 1.8f),
-                    Color.Lerp(AbyssDeep, AbyssBlue, Main.rand.NextFloat(0.3f, 0.8f)),
-                    Main.rand.Next(26, 40),
-                    Main.rand.NextFloat(0.65f, 1f),
-                    0.72f);
-                GeneralParticleHandler.SpawnParticle(smoke);
+                Dust mist = CreateAbyssDust(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextVector2Circular(1.1f, 1.1f) - forward * Main.rand.NextFloat(0.1f, 0.5f),
+                    Main.rand.NextFloat(1.2f, 1.75f),
+                    Main.rand.NextFloat(0.15f, 0.65f),
+                    130);
+                mist.velocity *= 0.9f;
             }
+        }
+
+        private static Dust CreateAbyssDust(Vector2 position, Vector2 velocity, float scale, float colorInterpolant, int alpha)
+        {
+            Dust dust = Dust.NewDustPerfect(
+                position,
+                AbyssDustTypes[Main.rand.Next(AbyssDustTypes.Length)],
+                velocity,
+                alpha,
+                Color.Lerp(AbyssDeep, AbyssToxic, colorInterpolant),
+                scale);
+            dust.noGravity = true;
+            dust.fadeIn = scale * 1.05f;
+            return dust;
+        }
+
+        private static Dust CreateFoamDust(Vector2 position, Vector2 velocity, float scale, float colorInterpolant, int alpha)
+        {
+            Dust dust = Dust.NewDustPerfect(
+                position,
+                DustID.Water,
+                velocity,
+                alpha,
+                Color.Lerp(AbyssCyan, AbyssFoam, colorInterpolant),
+                scale);
+            dust.noGravity = true;
+            return dust;
         }
     }
 }

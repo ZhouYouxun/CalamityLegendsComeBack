@@ -1,8 +1,10 @@
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Magic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -16,14 +18,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public new string LocalizationCategory => "Projectiles.SHPC";
         private const float ExplosionLifetime = 10f;
         private const float ExplosionMaxScale = 2.35f;
+        private const float VolterionShotSpeed = 18f;
+        private const int VolterionShotLifetime = 12 * 15;
 
         public ref float OrbType => ref Projectile.ai[0];
         public ref float ExplosionTimer => ref Projectile.ai[1];
+        public ref float InwardDirectionX => ref Projectile.localAI[0];
+        public ref float InwardDirectionY => ref Projectile.localAI[1];
 
         public static Asset<Texture2D> Bloom;
         public static Asset<Texture2D> Explosion;
 
         public override string Texture => "CalamityMod/Projectiles/Magic/VolterionOrb";
+
+        private Vector2 InwardDirection =>
+            new Vector2(InwardDirectionX, InwardDirectionY).SafeNormalize(-Projectile.velocity.SafeNormalize(Vector2.UnitX));
 
         public override void Load()
         {
@@ -46,7 +55,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.penetrate = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-            Projectile.timeLeft = 240;
+            Projectile.timeLeft = 80;
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(InwardDirectionX);
+            writer.Write(InwardDirectionY);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            InwardDirectionX = reader.ReadSingle();
+            InwardDirectionY = reader.ReadSingle();
         }
 
         public override void AI()
@@ -94,6 +115,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             TriggerSmallExplosion();
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            Vector2 inwardDirection = InwardDirection;
+            SpawnDeathFanFX(inwardDirection);
+
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            Projectile lightning = Projectile.NewProjectileDirect(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                inwardDirection * VolterionShotSpeed,
+                ModContent.ProjectileType<VolterionShot>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner,
+                1f
+            );
+            lightning.timeLeft = VolterionShotLifetime;
+        }
+
         private void TriggerSmallExplosion()
         {
             if (ExplosionTimer > 0f)
@@ -102,6 +144,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             ExplosionTimer = 1f;
             Projectile.penetrate = -1;
             Projectile.netUpdate = true;
+        }
+
+        private void SpawnDeathFanFX(Vector2 inwardDirection)
+        {
+            Color color = GetColor(OrbType);
+            Vector2 normal = inwardDirection.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = -3; i <= 3; i++)
+            {
+                float spread = i / 3f;
+                Vector2 fanDirection = inwardDirection.RotatedBy(spread * 0.5f).SafeNormalize(inwardDirection);
+                Vector2 fanVelocity = fanDirection * (4.4f + (1f - MathF.Abs(spread)) * 2.6f) + normal * (spread * 1.3f);
+
+                BoltParticle bolt = new BoltParticle(
+                    Projectile.Center + fanDirection * 4f,
+                    fanVelocity,
+                    false,
+                    12 + (3 - Math.Abs(i)),
+                    0.2f + (1f - MathF.Abs(spread)) * 0.08f,
+                    Color.Lerp(color, Color.White, 0.18f),
+                    new Vector2(0.34f, 0.92f + (1f - MathF.Abs(spread)) * 0.18f),
+                    true
+                );
+                GeneralParticleHandler.SpawnParticle(bolt);
+
+                Dust chemicalDust = Dust.NewDustPerfect(
+                    Projectile.Center + fanDirection * 6f,
+                    DustID.FireworksRGB,
+                    fanVelocity * 0.7f
+                );
+                chemicalDust.noGravity = true;
+                chemicalDust.noLight = true;
+                chemicalDust.scale = 1f + (1f - MathF.Abs(spread)) * 0.18f;
+                chemicalDust.fadeIn = 1.12f;
+                chemicalDust.color = Color.Lerp(color, new Color(185, 255, 240), 0.35f);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                float angleOffset = MathHelper.Lerp(-0.32f, 0.32f, i / 4f);
+                Vector2 puffDirection = inwardDirection.RotatedBy(angleOffset).SafeNormalize(inwardDirection);
+                Vector2 puffVelocity = puffDirection * (2.1f + i * 0.45f);
+
+                Dust mistDust = Dust.NewDustPerfect(
+                    Projectile.Center + puffDirection * (4f + i),
+                    DustID.Smoke,
+                    puffVelocity
+                );
+                mistDust.noGravity = true;
+                mistDust.scale = 1.1f + i * 0.08f;
+                mistDust.fadeIn = 1.18f;
+                mistDust.color = Color.Lerp(color, new Color(124, 255, 211), 0.42f);
+            }
         }
 
         public static Color GetColor(float type) =>

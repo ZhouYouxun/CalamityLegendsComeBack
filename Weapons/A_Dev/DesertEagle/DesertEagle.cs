@@ -77,17 +77,38 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         {
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
             eaglePlayer.SetHoldingDesertEagle();
-            Item.noUseGraphic = player.ownedProjectileCounts[HoldoutType] > 0;
 
             player.Calamity().mouseWorldListener = true;
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
 
-            if (Main.myPlayer == player.whoAmI &&
-                player.Calamity().mouseRight &&
+            eaglePlayer.ProcessRightClickState();
+            bool validRightInput =
+                Main.myPlayer == player.whoAmI &&
+                (player.Calamity().mouseRight || Main.mouseRight) &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
-                !(Main.playerInventory && Main.HoverItem.type == Item.type) &&
+                !player.mouseInterface &&
+                !(Main.playerInventory && Main.HoverItem.type == Item.type);
+
+            bool hideHeldItemForRightClick =
+                ShouldHideHeldItem(player) ||
+                validRightInput;
+
+            Item.noUseGraphic = hideHeldItemForRightClick;
+
+            if (hideHeldItemForRightClick)
+            {
+                player.itemTime = 0;
+                player.itemAnimation = 0;
+                player.itemRotation = 0f;
+            }
+
+            player.heldProj = hideHeldItemForRightClick ? -1 : player.heldProj;
+            
+ 
+            if (Main.myPlayer == player.whoAmI &&
+                validRightInput &&
                 player.ownedProjectileCounts[HoldoutType] <= 0)
             {
                 Vector2 shootDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
@@ -101,10 +122,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                     player.whoAmI);
             }
         }
+        private static bool ShouldHideHeldItem(Player player)
+        {
+            DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
+
+            return player.ownedProjectileCounts[HoldoutType] > 0 ||
+                (Main.myPlayer == player.whoAmI && eaglePlayer.TrackingRightPress);
+        }
 
         public override void UpdateInventory(Player player)
         {
-            Item.noUseGraphic = false;
+            DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
+            bool trackingRightClick = Main.myPlayer == player.whoAmI && eaglePlayer.TrackingRightPress;
+
+            if (player.ownedProjectileCounts[HoldoutType] <= 0 && !trackingRightClick)
+                Item.noUseGraphic = false;
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
@@ -116,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             if (eaglePlayer.PendingLifeRound)
             {
                 SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.95f, Pitch = -0.1f }, player.Center);
-                DesertEagleEffects.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 1.15f);
+                DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 1.15f);
 
                 Projectile.NewProjectile(
                     source,
@@ -134,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             }
 
             SoundEngine.PlaySound(SoundID.Item41 with { Volume = 0.9f, Pitch = -0.18f + Main.rand.NextFloat(-0.04f, 0.04f) }, player.Center);
-            DesertEagleEffects.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 0.85f);
+            DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 0.85f);
 
             for (int shot = 0; shot < 4; shot++)
             {
@@ -160,6 +192,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
         {
+            if (ShouldHideHeldItem(player))
+            {
+                player.itemRotation = 0f;
+                return;
+            }
+
             player.ChangeDir(Math.Sign((player.Calamity().mouseWorld - player.Center).X));
             float itemRotation = player.compositeFrontArm.rotation + MathHelper.PiOver2 * player.gravDir;
 
@@ -173,6 +211,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void UseItemFrame(Player player)
         {
+            if (player.ownedProjectileCounts[HoldoutType] > 0)
+                return;
+
             player.ChangeDir(Math.Sign((player.Calamity().mouseWorld - player.Center).X));
 
             float animProgress = 0.5f - player.itemTime / (float)Math.Max(1, player.itemTimeMax);
@@ -187,8 +228,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<CalamityMod.Items.Weapons.Ranged.PearlGod>())
-                .AddIngredient<LifeAlloy>(8)
-                .AddIngredient<RuinousSoul>(5)
+                .AddIngredient(ModContent.ItemType<CalamityMod.Items.Weapons.Ranged.Hellborn>())
                 .AddIngredient<DarksunFragment>(6)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();

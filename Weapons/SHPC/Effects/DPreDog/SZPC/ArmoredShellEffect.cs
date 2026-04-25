@@ -117,6 +117,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 );
 
                 // 用有规律的角度排列，而不是纯随机
+                Vector2 inwardDirection = (-radialVelocity).SafeNormalize(-ringDirection);
+                orb.localAI[0] = inwardDirection.X;
+                orb.localAI[1] = inwardDirection.Y;
                 orb.rotation = angle + ringDirection.ToRotation();
             }
         }

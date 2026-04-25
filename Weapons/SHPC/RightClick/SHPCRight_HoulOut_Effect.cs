@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -20,6 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private Vector2 normalShotFXLastCenter = Vector2.Zero;
         private readonly List<Particle> normalShotFXParticles = new();
+        private int apoctosisCoreGlowTime;
+        private float apoctosisCoreHeatRedInterpolant;
 
         #endregion
 
@@ -200,6 +203,84 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
 
         #region ===== 特效：普通开火 =====
+
+        public override void PostDraw(Color lightColor)
+        {
+            DrawApoctosisCoreGlow();
+        }
+
+        private void DrawApoctosisCoreGlow()
+        {
+            if (spawnDelay > 0 || Main.dedServ)
+                return;
+
+            float manaPercent = Owner.statManaMax2 <= 0 ? 0f : Owner.statMana / (float)Owner.statManaMax2;
+            float manaPower = MathHelper.Clamp(visualProgress, 0f, 1f);
+            bool cooling = fireStopTimer > 0;
+            bool firing = !cooling;
+            float targetRedInterpolant = stage >= MaxHeatStage ? 1f : 0f;
+            apoctosisCoreHeatRedInterpolant = MathHelper.Lerp(apoctosisCoreHeatRedInterpolant, targetRedInterpolant, 0.08f);
+
+            Color techBlue = new(70, 190, 255);
+            Color redHeat = new(255, 55, 38);
+            Color coolingYellow = new(255, 235, 80);
+            Color effectsColor = cooling
+                ? coolingYellow
+                : Color.Lerp(techBlue, redHeat, apoctosisCoreHeatRedInterpolant);
+            Color coreWhite = cooling
+                ? new Color(255, 255, 205)
+                : Color.Lerp(new Color(205, 245, 255), new Color(255, 188, 160), apoctosisCoreHeatRedInterpolant);
+            Texture2D tex2 = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            SpriteEffects flipSprite = Projectile.spriteDirection * Owner.gravDir == -1f
+                ? SpriteEffects.FlipHorizontally
+                : SpriteEffects.None;
+            Vector2 shake = Main.rand.NextVector2Circular(2f, 2f) * manaPower;
+            float time = apoctosisCoreGlowTime;
+
+            float reverseManaPower = MathHelper.Lerp(0.7f, 0.1f, manaPower > 0f ? 1f - manaPower : manaPercent);
+            for (int i = 0; i < 5; i++)
+            {
+                float iMult = 1f - 0.1f * i;
+
+                if (manaPower > 0f)
+                {
+                    Main.EntitySpriteDraw(
+                        tex2,
+                        EnergyCorePosition - Main.screenPosition + shake,
+                        null,
+                        Color.Lerp(effectsColor, coreWhite, i * 0.1f) with { A = 0 },
+                        Main.rand.NextFloat(-5f, 5f),
+                        tex2.Size() * 0.5f,
+                        new Vector2(1f, 0.35f) * 0.75f * manaPower * Main.rand.NextFloat(0.7f, 1.3f) * iMult,
+                        flipSprite
+                    );
+                }
+
+                for (int b = -1; b <= 1; b += 2)
+                {
+                    float pulseRate = (firing ? 20f : 35f) * (cooling ? 2f : 1f);
+                    float sine = MathHelper.Lerp((float)Math.Sin(Main.GlobalTimeWrappedHourly * pulseRate / MathHelper.Pi), reverseManaPower * b, 0.75f);
+                    Vector2 scale = new Vector2(0.3f, 1f * sine * b) * (Main.rand.NextFloat(3f, 4.5f) * iMult + manaPower * 1.2f);
+                    float rotation = Projectile.rotation
+                        + time * manaPower * Math.Max(i - 2, 0) * 0.2f
+                        + MathHelper.PiOver4 * b;
+
+                    Main.EntitySpriteDraw(
+                        sparkle,
+                        EnergyCorePosition - Main.screenPosition,
+                        null,
+                        Color.Lerp(effectsColor, coreWhite, i * 0.1f) with { A = 0 },
+                        rotation,
+                        sparkle.Size() * 0.5f,
+                        scale,
+                        flipSprite
+                    );
+                }
+            }
+
+            apoctosisCoreGlowTime++;
+        }
 
         private void SpawnNormalShotMuzzleEffect(Player player, Vector2 direction)
         {

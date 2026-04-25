@@ -160,11 +160,16 @@ Mods: {
 
 			FuckYou.DisplayName: Fuck You
 			S_RSU_PhaseResonanceGuardShieldVisual.DisplayName: S_ R S U_ Phase Resonance Guard Shield Visual
+			DesertEagleHoldout.DisplayName: Desert Eagle Holdout
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
-		Cooldowns.BlossomFlux_Passive: BlossomFlux Final Stand
-		Cooldowns.BlossomFlux_EX: Bloom Energy
+
+		Cooldowns: {
+			BlossomFlux_Passive: BlossomFlux Final Stand
+			BlossomFlux_EX: Bloom Energy
+		}
+
 		TheSpecialText.BlossomFluxPresetSelected: Doctrine Selected: {0}
 
 		Buffs: {
