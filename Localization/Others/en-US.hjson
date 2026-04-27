@@ -3,12 +3,14 @@ Mods: {
 		Items: {
 			Weapons: {
 				MiaoGun: {
-					DisplayName: Miao Gun
+					DisplayName: Pretty Good Gun
 					Tooltip:
 						'''
-						[c/9AEF9E:Developer Item]
-						Hold left click to sweep-fire random Calamity projectiles
-						Consumes no ammo
+						Fires random projectiles
+						"Seriously? This again?"
+						"It’s only been a few months since we made something like this…"
+						"Wait, you’re saying this is our signature style?"
+						"...Fine. Have it your way."
 						'''
 				}
 
@@ -24,6 +26,17 @@ Mods: {
 						DisplayName: Short Circuit
 						Tooltip: ""
 					}
+				}
+
+				DesertEagle: {
+					DisplayName: Desert Eagle
+					Tooltip:
+						'''
+							Left-click alternates between scattering kinetic-infused bullets and firing powerful life-stealing shots
+							Hold right-click to spin the Desert Eagle at high speed, shredding enemies on contact
+							When fully charged, left-click unleashes a powerful piercing round
+							"Used by legendary marksmen"
+						'''
 				}
 			}
 		}

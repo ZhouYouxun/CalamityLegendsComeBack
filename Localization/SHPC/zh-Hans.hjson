@@ -148,6 +148,9 @@ Mods: {
 				TwistingNether_Shadow.DisplayName: 扭曲虚空残影
 				// ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
 				// SHPC_SLINV.DisplayName: S H P C_ S L I N V
+				// RightClickMortar_HoldOut.DisplayName: Right Click Mortar_ Hold Out
+				// RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
+				// RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
 			}
 		}
 

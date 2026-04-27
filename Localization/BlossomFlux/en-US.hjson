@@ -7,9 +7,9 @@ Mods: {
 					Tooltip: "[GFB]"
 					BF_Left:
 						'''
-						[c/66CCFF:Left Click: Repeats four rapid double-bursts on a 15-frame rhythm.]
-						[c/99CCFF:Each burst fires 3 parallel arrows using the player's current ammo.]
-						[c/DDA0FF:After the fourth double-burst, a chloroplast blooms shortly afterward based on the current doctrine.]
+						[c/66CCFF:Left Click: Fires with a different pattern for each doctrine; every timed doctrine waits first, then shoots.]
+						[c/99CCFF:Wooden arrows become tactical arrows colored and shaped by the current doctrine.]
+						[c/DDA0FF:Plague instead sprays a dense green flame stream with very high update frequency.]
 						'''
 					BF_Preset: "[c/7BE495:Current doctrine: {0}]"
 					PresetName0: Breakthrough
@@ -17,23 +17,23 @@ Mods: {
 					PresetName2: Reconnaissance
 					PresetName3: Bombardment
 					PresetName4: Plague
-					PresetLeft0: "[c/8BE89A:Breakthrough Left: The chloroplast pierces rapidly and snaps toward the next target after impact.]"
-					PresetLeft1: "[c/8BE89A:Recovery Left: The chloroplast flows back to the player and heals on contact.]"
-					PresetLeft2: "[c/8BE89A:Reconnaissance Left: The chloroplast applies a 0.5 second short mark that increases all players' damage against the target.]"
-					PresetLeft3: "[c/8BE89A:Bombardment Left: The chloroplast creates a small blast on impact.]"
-					PresetLeft4: "[c/8BE89A:Dissemination Left: The chloroplast intermittently releases plague mist while traveling.]"
+					PresetLeft0: "[c/8BE89A:Breakthrough Left: A fast single shot with only horizontal muzzle offset, built for steady sniping.]"
+					PresetLeft1: "[c/8BE89A:Recovery Left: Fires a Viscera-like four-step burst; each step releases 3 parallel arrows.]"
+					PresetLeft2: "[c/8BE89A:Reconnaissance Left: Every 8 frames releases 4-6 scattered arrows, still pulled toward the right-click priority mark.]"
+					PresetLeft3: "[c/8BE89A:Bombardment Left: Calls arrows down from above in the rhythm of The Storm.]"
+					PresetLeft4: "[c/8BE89A:Plague Left: Continuously sprays a high-update plague-green flame stream.]"
 					BF_Right:
 						'''
 						[c/F7D87C:Right Click: Tap to open the tactical panel; clicking an icon swaps doctrine and closes the panel immediately.]
 						[c/F7D87C:Holding past 0.15 seconds enters the charge holdout for the current doctrine; it only fires if you release after a full charge.]
 						[c/F7D87C:A fully charged special arrow deals far more damage than the normal left-click arrows.]
 						'''
-					PresetRight0: "[c/F4D57A:Breakthrough Right: Fires a fully charged special arrow that ricochets and then homes in.]"
+					PresetRight0: "[c/F4D57A:Breakthrough Right: Stocks homing breakthrough arrows one by one; each unlocked doctrine adds one stock and shortens each stock by 7 frames.]"
 					PresetRight1: "[c/F4D57A:Recovery Right: Fires a fully charged restorative arrow that loops back to heal the player.]"
 					PresetRight2: "[c/F4D57A:Reconnaissance Right: Fires a scanning arrow; marked targets are weakly homed by normal left-click arrows and detonated.]"
 					PresetRight3: "[c/F4D57A:Bombardment Right: Fires a charged arrow that calls down the player's current ammo from above after impact.]"
-					PresetRight4: "[c/F4D57A:Dissemination Right: Fires a sticky plague arrow that keeps venting toxic clouds.]"
-					BF_Passive: "[c/9AEF9E:Passive: While held, a lethal hit instead triggers a 15-second final-stand, fully restores life, and releases a resurgence field with a fluorescent green cross burst at the trigger point. During that state, any further hit kills you instantly. Surviving it restores you to at least half life. Current state: {0}.]"
+					PresetRight4: "[c/F4D57A:Plague Right: Fires a sticky plague arrow that keeps venting toxic clouds.]"
+					BF_Passive: "[c/9AEF9E:Passive: While held, a lethal hit instead triggers a 15-second final stand, fully restores life, and releases a resurgence field with a fluorescent green cross burst at the trigger point. During that state, any further hit kills you instantly. Surviving it restores you to at least half life. Current state: {0}.]"
 					PassiveStateReady: "[c/7BFFB7:Ready]"
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
 					PassiveStateCooldown: "[c/F0D070:Cooldown {0}s]"
@@ -43,24 +43,19 @@ Mods: {
 					PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked and selectable in the tactical panel.]"
 					PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode.]"
 					PresetUnlock3: "[c/7BFFB7:Bombardment: unlocked and selectable in the tactical panel.]"
-					PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Plantera.]"
-					PresetUnlock4: "[c/7BFFB7:Dissemination: unlocked and selectable in the tactical panel.]"
-					PresetLock4: "[c/9A9A9A:Dissemination: unlocked after the Plaguebringer Goliath.]"
+					PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Skeletron Prime.]"
+					PresetUnlock4: "[c/7BFFB7:Plague: unlocked and selectable in the tactical panel.]"
+					PresetLock4: "[c/9A9A9A:Plague: unlocked after the Plaguebringer Goliath.]"
 					BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					BF_EX: "[c/8EF5A8:Legendary Skill: Stores up to 60 Bloom Energy. Successfully releasing a fully charged right-click special arrow restores 3 energy, and while held it restores 1 energy every 2 seconds. Press the Legendary Skill key at full energy to draw the bow into its ready stance, then left-click to unleash the barrage.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
 						[c/66E6FF:It began as an attempt to make burst fire faster.]
-						[c/66E6FF:Later, its maker realized the real answer was not speed alone, but the thing that kept growing in the wake of every volley.]
-						[c/66E6FF:So five doctrines were split from one trunk, the chloroplast was pinned to the last beat of each burst, and turret mode became the moment the whole bow roots itself in place and forces the battlefield to answer back.]
-						[c/66E6FF:Its legend is still growing, but the rhythm is already clear: burst, burst, then bloom.]
+						[c/66E6FF:Later, its maker realized the real answer was not speed alone, but teaching the same bowstring five different ways to breathe.]
+						[c/66E6FF:So five doctrines were split from one trunk, and even the plainest wooden arrow learned to leave the branch as something stranger.]
+						[c/66E6FF:Its legend is still growing, but the rhythm is already clear: wait, loose, then let the doctrine answer.]
 						'''
-				}
-
-				DesertEagle: {
-					DisplayName: Desert Eagle
-					Tooltip: ""
 				}
 			}
 		}
@@ -68,39 +63,48 @@ Mods: {
 		Projectiles: {
 			BlossomFlux: {
 				BlossomFluxChloroplast.DisplayName: Chloroplast Drone
+				NewLegendBlossomFluxHoldOut.DisplayName: BlossomFlux Holdout
 				BFSelectionPanel.DisplayName: Tactical Selection Panel
 				BFArrow_ABreak.DisplayName: Breakthrough Arrow
 				BFArrow_BRecov.DisplayName: Recovery Arrow
-				BFArrow_CDetec.DisplayName: Detection Arrow
+				BFArrow_BRecovBlast.DisplayName: Recovery Burst
+				BFArrow_BRecovTransfer.DisplayName: Recovery Transfer
+				BFArrow_CDetec.DisplayName: Reconnaissance Arrow
+				BFArrow_CDetecReticle.DisplayName: Reconnaissance Reticle
 				BFArrow_DBomb.DisplayName: Bombardment Arrow
 				BFArrow_EPlague.DisplayName: Plague Arrow
 				BFArrow_EPlagueGas.DisplayName: Plague Gas
-				BFFuckyouExplosion.DisplayName: Bloomburst Explosion
-				NewLegendBlossomFluxHoldOut.DisplayName: BlossomFlux Holdout
+				BFLeftTacticalArrow.DisplayName: Tactical Arrow
+				BFLeftPlagueFlame.DisplayName: Plague Flame
+				FuckYou.DisplayName: Bloomburst Explosion
 				BFPassiveRecoveryField.DisplayName: Resurgence Field
 				BFPassiveRecoveryFieldWave.DisplayName: Resurgence Wave
 				BFEXWeapon.DisplayName: BlossomFlux Overgrowth Barrage
 				BFEXVernalShot.DisplayName: Vernal Barrage Shot
 			}
 
-			ResonanceCoreShieldVisual.DisplayName: Resonance Core Shield Visual
+			Ranged.BFAimScope.DisplayName: BlossomFlux Aim Scope
+			S_RSU_PhaseResonanceGuardShieldVisual.DisplayName: S_ R S U_ Phase Resonance Guard Shield Visual
 			TeachingProjectile.DisplayName: Teaching Projectile
-			MiaoGunHoldout.DisplayName: Miao Gun Holdout
 
-			Ranged: {
-				BFAimScope.DisplayName: B F Aim Scope
-				LeafArrow.DisplayName: Leaf Arrow
+			A_Dev: {
+				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
+				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
 			}
 
+			DesertEagleHoldout.DisplayName: Desert Eagle Holdout
 			BFArrow_ABreak.DisplayName: B F Arrow_ A Break
 			BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			BFArrow_BRecovBlast.DisplayName: B F Arrow_ B Recov Blast
 			BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
 			BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
 			BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
 			BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
 			BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
 			BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
-			BFFuckyouExplosion.DisplayName: B F Fuckyou Explosion
+			BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
+			BFLeftTacticalArrow.DisplayName: B F Left Tactical Arrow
+			FuckYou.DisplayName: Fuck You
 			BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
 			BBShuriken_Light.DisplayName: B B Shuriken_ Light
 			BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
@@ -122,7 +126,6 @@ Mods: {
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
 				CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
-				EntropicFlechette.DisplayName: Entropic Flechette
 			}
 
 			LeonidAstralBlast.DisplayName: Leonid Astral Blast
@@ -151,16 +154,6 @@ Mods: {
 			NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
 			NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 			NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
-			BFArrow_BRecovBlast.DisplayName: B F Arrow_ B Recov Blast
-
-			A_Dev: {
-				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
-			}
-
-			FuckYou.DisplayName: Fuck You
-			S_RSU_PhaseResonanceGuardShieldVisual.DisplayName: S_ R S U_ Phase Resonance Guard Shield Visual
-			DesertEagleHoldout.DisplayName: Desert Eagle Holdout
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

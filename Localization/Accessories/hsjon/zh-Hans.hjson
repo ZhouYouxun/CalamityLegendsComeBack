@@ -16,6 +16,11 @@ Mods: {
 				Tooltip: 左键能一下子散射出三个能量光球，但每个的伤害降为33%
 			}
 
+			S_MOT_MortarOverwatchTransceiver: {
+				DisplayName: S-MOT：迫击监控收发器
+				Tooltip: 手持SHPC时，右键改为迫击炮模式，自动蓄力发射弱追踪炮弹，并在爆炸后呼叫多种从天而降的分裂炮弹
+			}
+
 			S_RSU_PhaseResonanceGuard: {
 				DisplayName: S-RSU：相位共振防护单元
 				Tooltip: 手持SHPC时展开一层护盾，15秒冷却，可减半一次伤害

@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
-using CalamityMod.Particles;
+using CalamityMod.Dusts;
 using CalamityMod.Items.Materials;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -48,14 +49,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (owner.whoAmI != Main.myPlayer)
+                return;
+
             Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
             if (forward == Vector2.Zero)
                 forward = Vector2.UnitX;
 
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 targetPoint = FindHistoricalTarget(projectile.Center, forward, 1080f);
-            int damage = (int)(projectile.damage * 1.5f);
+            Vector2 targetPoint = Main.MouseWorld;
+            if (float.IsNaN(targetPoint.X) || float.IsNaN(targetPoint.Y) || Vector2.Distance(projectile.Center, targetPoint) < 24f)
+                targetPoint = projectile.Center + forward * 560f;
 
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            int damage = (int)(projectile.damage * 1.5f);
             float[] angleOffsets = { -0.42f, -0.18f, 0.18f, 0.42f };
 
             for (int i = 0; i < angleOffsets.Length; i++)
@@ -69,131 +75,153 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 Vector2 spawnOffset = normal * sideSign * (widerArc ? 9f : 4f) + forward * (widerArc ? 6f : 2f);
                 Vector2 spawnPosition = projectile.Center + spawnOffset;
                 Vector2 launchDirection = forward.RotatedBy(angleOffset).SafeNormalize(forward);
-                Vector2 midpoint = (spawnPosition + targetPoint) * 0.5f;
-                float sideOffset = widerArc ? 144f : 88f;
-                float forwardOffset = widerArc ? 112f : 64f;
-                Vector2 controlPoint = midpoint + normal * sideSign * sideOffset + forward * forwardOffset;
                 Color themeColor = AscendantSpirit_PROJ.RandomThemeColor();
+                float launchDelay = (widerArc ? 15f : 11f) + i * 1.15f;
 
                 int projectileIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     spawnPosition,
-                    launchDirection * 12f,
+                    launchDirection * 8.2f,
                     ModContent.ProjectileType<AscendantSpirit_PROJ>(),
                     damage,
                     projectile.knockBack,
-                    owner.whoAmI);
+                    owner.whoAmI,
+                    targetPoint.X,
+                    targetPoint.Y,
+                    launchDelay);
 
                 if (Main.projectile.IndexInRange(projectileIndex) && Main.projectile[projectileIndex].ModProjectile is AscendantSpirit_PROJ spiritProjectile)
                 {
-                    spiritProjectile.InitializeCurve(spawnPosition, controlPoint, targetPoint, themeColor, widerArc ? 40f : 34f);
+                    spiritProjectile.InitializeNeedle(targetPoint, themeColor, launchDelay);
                     Main.projectile[projectileIndex].netUpdate = true;
                 }
 
-                SpawnBezierReleaseParticles(spawnPosition, controlPoint, targetPoint, themeColor, forward, normal * sideSign);
+                SpawnNeedleReleaseParticles(spawnPosition, launchDirection, themeColor, widerArc);
             }
 
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 sparkleVelocity = forward.RotatedByRandom(0.32f) * Main.rand.NextFloat(2f, 5f);
-                SquishyLightParticle sparkle = new(
-                    projectile.Center,
-                    sparkleVelocity,
-                    Main.rand.NextFloat(0.24f, 0.38f),
-                    Color.Lerp(new Color(120, 160, 255), Color.White, Main.rand.NextFloat(0.18f, 0.45f)),
-                    Main.rand.Next(10, 18));
-
-                GeneralParticleHandler.SpawnParticle(sparkle);
-            }
+            SpawnCentralReleaseParticles(projectile.Center, forward);
         }
 
-        private static Vector2 FindHistoricalTarget(Vector2 center, Vector2 forward, float maxDistance)
+        private static void SpawnNeedleReleaseParticles(Vector2 spawnPosition, Vector2 launchDirection, Color color, bool widerArc)
         {
-            NPC bestTarget = null;
-            float bestDistance = maxDistance;
+            Vector2 normal = launchDirection.RotatedBy(MathHelper.PiOver2);
+            int dustCount = widerArc ? 8 : 6;
 
-            foreach (NPC npc in Main.ActiveNPCs)
+            for (int i = 0; i < dustCount; i++)
             {
-                if (!npc.CanBeChasedBy())
-                    continue;
-
-                Vector2 toNpc = npc.Center - center;
-                float distance = toNpc.Length();
-                if (distance >= bestDistance)
-                    continue;
-
-                Vector2 directionToNpc = toNpc.SafeNormalize(Vector2.Zero);
-                if (Vector2.Dot(forward, directionToNpc) < 0.18f)
-                    continue;
-
-                bestDistance = distance;
-                bestTarget = npc;
+                Dust dust = Dust.NewDustPerfect(spawnPosition, ModContent.DustType<SquashDust>());
+                dust.scale = Main.rand.NextFloat(0.95f, 1.55f);
+                dust.velocity = launchDirection.RotatedByRandom(0.36f) * Main.rand.NextFloat(4.4f, 7.4f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.3f));
+                dust.fadeIn = Main.rand.NextFloat(1.1f, 2.2f);
             }
 
-            return bestTarget?.Center ?? center + forward * 600f;
-        }
+            Particle releaseBloom = new CustomSpark(
+                spawnPosition,
+                launchDirection * 0.5f,
+                "CalamityMod/Particles/BloomCircle",
+                false,
+                widerArc ? 20 : 16,
+                widerArc ? 0.34f : 0.26f,
+                color,
+                new Vector2(0.72f, 1.22f),
+                glowCenter: true,
+                shrinkSpeed: 0.18f,
+                glowOpacity: 0.72f,
+                extraRotation: launchDirection.ToRotation());
+            GeneralParticleHandler.SpawnParticle(releaseBloom);
 
-        private static void SpawnBezierReleaseParticles(Vector2 start, Vector2 control, Vector2 end, Color color, Vector2 forward, Vector2 side)
-        {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
             {
-                float completion = i / 4f;
-                Vector2 point = EvaluateQuadratic(start, control, end, completion);
-                Vector2 tangent = EvaluateQuadraticDerivative(start, control, end, completion).SafeNormalize(forward);
-                Vector2 crossVelocity = side * Main.rand.NextFloat(0.4f, 1.4f);
-
-                //GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                //    point,
-                //    tangent * Main.rand.NextFloat(2.4f, 4.6f) + crossVelocity,
-                //    "CalamityMod/Particles/BloomLineSoftEdge",
-                //    false,
-                //    Main.rand.Next(10, 16),
-                //    Main.rand.NextFloat(0.022f, 0.036f),
-                //    Color.Lerp(color, Color.White, 0.28f),
-                //    new Vector2(Main.rand.NextFloat(1f, 1.35f), Main.rand.NextFloat(0.45f, 0.72f)),
-                //    shrinkSpeed: 0.84f));
-
-                //GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
-                //    point,
-                //    tangent * Main.rand.NextFloat(0.3f, 1.1f) - crossVelocity * 0.25f,
-                //    Main.rand.NextFloat(0.16f, 0.24f),
-                //    color,
-                //    Main.rand.Next(10, 15)));
+                Particle star = new CustomSpark(
+                    spawnPosition + normal * Main.rand.NextFloat(-5f, 5f),
+                    launchDirection.RotatedByRandom(0.28f) * Main.rand.NextFloat(2.5f, 5.2f),
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(13, 21),
+                    Main.rand.NextFloat(0.08f, 0.16f),
+                    Color.Lerp(color, Color.White, 0.2f),
+                    Vector2.One,
+                    glowCenter: true,
+                    shrinkSpeed: 0.22f,
+                    glowOpacity: 0.68f);
+                GeneralParticleHandler.SpawnParticle(star);
             }
 
             for (int i = 0; i < 3; i++)
             {
-                Vector2 ringVelocity = (forward + side * Main.rand.NextFloat(-0.45f, 0.45f)).SafeNormalize(forward) * Main.rand.NextFloat(2.2f, 4.4f);
-                GlowOrbParticle orb = new(
-                    start + side * Main.rand.NextFloat(-8f, 8f),
-                    ringVelocity,
+                Particle forwardSmear = new CustomSpark(
+                    spawnPosition + Main.rand.NextVector2CircularEdge(3f, 3f),
+                    launchDirection * Main.rand.NextFloat(4f, 8f) + normal * Main.rand.NextFloat(-1.2f, 1.2f),
+                    "CalamityMod/Particles/ForwardSmear",
                     false,
-                    Main.rand.Next(9, 14),
-                    Main.rand.NextFloat(0.38f, 0.55f),
-                    Color.Lerp(color, Color.White, 0.18f),
-                    true,
-                    true);
-
-                GeneralParticleHandler.SpawnParticle(orb);
+                    Main.rand.Next(9, 15),
+                    Main.rand.NextFloat(0.11f, 0.19f),
+                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.1f, 0.35f)),
+                    Vector2.One,
+                    shrinkSpeed: 0.34f);
+                GeneralParticleHandler.SpawnParticle(forwardSmear);
             }
         }
 
-        private static Vector2 EvaluateQuadratic(Vector2 start, Vector2 control, Vector2 end, float completion)
+        private static void SpawnCentralReleaseParticles(Vector2 center, Vector2 forward)
         {
-            Vector2 firstLerp = Vector2.Lerp(start, control, completion);
-            Vector2 secondLerp = Vector2.Lerp(control, end, completion);
-            return Vector2.Lerp(firstLerp, secondLerp, completion);
-        }
+            float rotation = Main.rand.NextFloat(MathHelper.TwoPi);
 
-        private static Vector2 EvaluateQuadraticDerivative(Vector2 start, Vector2 control, Vector2 end, float completion)
-        {
-            return 2f * (1f - completion) * (control - start) + 2f * completion * (end - control);
+            for (int ring = 1; ring <= 4; ring++)
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    Color color = AscendantSpirit_PROJ.RandomThemeColor();
+                    Dust dust = Dust.NewDustPerfect(center, ModContent.DustType<SquashDust>());
+                    dust.scale = 4.8f - ring * 0.5f;
+                    dust.velocity = -Vector2.UnitY.RotatedBy(MathHelper.TwoPi / 5f * i + rotation) * (ring * 1.35f + 1.5f);
+                    dust.noGravity = true;
+                    dust.color = color;
+                    dust.fadeIn = 5.2f - ring * 0.36f;
+                }
+            }
+
+            for (int i = 0; i < 12; i++)
+            {
+                Color color = AscendantSpirit_PROJ.RandomThemeColor();
+                Particle sparkle = new CustomSpark(
+                    center,
+                    forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.2f, 6f),
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(14, 23),
+                    Main.rand.NextFloat(0.08f, 0.17f),
+                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.12f, 0.35f)),
+                    Vector2.One,
+                    glowCenter: true,
+                    shrinkSpeed: 0.24f,
+                    glowOpacity: 0.7f);
+                GeneralParticleHandler.SpawnParticle(sparkle);
+            }
+
+            Particle bloom = new CustomSpark(
+                center,
+                Vector2.Zero,
+                "CalamityMod/Particles/BloomCircle",
+                false,
+                24,
+                0.74f,
+                Color.Lerp(new Color(120, 160, 255), Color.White, 0.22f),
+                Vector2.One,
+                true,
+                true,
+                0,
+                false,
+                false,
+                glowOpacity: 0.82f);
+            GeneralParticleHandler.SpawnParticle(bloom);
         }
     }
 
     internal class AscendantSpiritEffectGlobalProjectile : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;

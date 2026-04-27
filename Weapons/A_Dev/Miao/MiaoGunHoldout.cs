@@ -87,11 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.Miao
                 firedProjectile.hostile = false;
                 firedProjectile.DamageType = DamageClass.Ranged;
 
-                MiaoTraceProjectile tracker = firedProjectile.GetGlobalProjectile<MiaoTraceProjectile>();
-                tracker.MarkAsRoot(firedProjectile);
-
-                if (Main.netMode != NetmodeID.Server && Main.myPlayer == Owner.whoAmI)
-                    Main.NewText($"[MiaoGun] Shot {tracker.TraceId}: {tracker.RootProjectileName}");
+                firedProjectile.netUpdate = true;
             }
 
             OffsetLengthFromArm -= 7f;
@@ -113,3 +109,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.Miao
         }
     }
 }
+
+
+
+
+

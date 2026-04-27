@@ -20,8 +20,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.Miao
 
             if (cachedProjectileTypes.Length == 0)
             {
-                projectileType = ProjectileID.None;
-                return false;
+                projectileType = ProjectileID.Bullet;
+                return true;
             }
 
             projectileType = cachedProjectileTypes[Main.rand.Next(cachedProjectileTypes.Length)];
@@ -37,19 +37,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.Miao
 
             Mod thisMod = ModContent.GetInstance<CalamityLegendsComeBack>();
             if (!ModLoader.TryGetMod("CalamityMod", out Mod calamityMod))
-            {
-                thisMod.Logger.Warn("MiaoGun could not load projectile names because CalamityMod is missing.");
                 return;
-            }
 
             byte[] rawProjectileList;
             try
             {
                 rawProjectileList = thisMod.GetFileBytes(ProjectileListPath);
             }
-            catch (Exception ex)
+            catch
             {
-                thisMod.Logger.Warn($"MiaoGun could not read '{ProjectileListPath}': {ex.Message}");
                 return;
             }
 
@@ -69,7 +65,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.Miao
             }
 
             cachedProjectileTypes = projectileTypes.ToArray();
-            thisMod.Logger.Info($"MiaoGun loaded {cachedProjectileTypes.Length} Calamity projectile names from '{ProjectileListPath}'.");
         }
     }
 }

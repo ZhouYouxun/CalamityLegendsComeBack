@@ -25,11 +25,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
         public int RightPressFrames => rightPressFrames;
         public bool TrackingRightPress => trackingRightPress;
+        public bool RightMouseHeld => Player.Calamity().mouseRight || Main.mouseRight;
         public float RightHoldProgress => MathHelper.Clamp(rightPressFrames / (float)TapThresholdFrames, 0f, 1f);
         public bool ShowRightHoldBar => trackingRightPress && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool LongHoldActive => trackingRightPress && rightPressFrames > TapThresholdFrames;
         public bool PassiveRainUnlocked => Main.hardMode;
         public bool UltimateUnlocked => NPC.downedQueenBee;
+        public int UnlockedPresetCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i <= (int)BlossomFluxChloroplastPresetType.Chlo_EPlague; i++)
+                {
+                    if (IsPresetUnlocked((BlossomFluxChloroplastPresetType)i))
+                        count++;
+                }
+
+                return count;
+            }
+        }
 
         public override void UpdateDead()
         {
@@ -80,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 !Player.noItems &&
                 !Player.CCed &&
                 !selectionPanelOpen &&
-                Player.Calamity().mouseRight &&
+                RightMouseHeld &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
                 !Player.mouseInterface &&
@@ -129,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => true,
                 BlossomFluxChloroplastPresetType.Chlo_BRecov => NPC.downedQueenBee,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => Main.hardMode,
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => NPC.downedPlantBoss,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => NPC.downedMechBoss3,
                 BlossomFluxChloroplastPresetType.Chlo_EPlague => DownedBossSystem.downedPlaguebringer,
                 _ => false
             };

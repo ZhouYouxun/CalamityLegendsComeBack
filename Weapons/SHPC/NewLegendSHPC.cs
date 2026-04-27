@@ -1,8 +1,10 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Accssory.SHPC.S_MLD_MultiLinkDistributor;
+using CalamityLegendsComeBack.Accssory.SHPC.S_MOT_MortarOverwatchTransceiver;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.Passive;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
@@ -575,14 +577,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 //player.itemTime = 0;
                 //recoilProgress = 0;
 
-                // ===== 防止重复生成 =====
+                int defaultRightClickType = ModContent.ProjectileType<SHPCRight_HoulOut>();
+                int mortarRightClickType = ModContent.ProjectileType<RightClickMortar_HoldOut>();
+                bool useMortarRightClick = player.GetModPlayer<S_MOT_MortarOverwatchTransceiverPlayer>().S_MOT_MortarOverwatchTransceiverEquipped;
+                int rightClickHoldoutType = useMortarRightClick ? mortarRightClickType : defaultRightClickType;
+
+                // ===== 防止重复生成；配件切换时清掉另一套右键手持 =====
                 foreach (Projectile proj in Main.projectile)
                 {
-                    if (proj.active &&
-                        proj.owner == player.whoAmI &&
-                        proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>())
+                    if (!proj.active || proj.owner != player.whoAmI)
+                        continue;
+
+                    if (proj.type == rightClickHoldoutType)
                     {
                         return;
+                    }
+
+                    if (proj.type == defaultRightClickType || proj.type == mortarRightClickType)
+                    {
+                        proj.Kill();
+                        proj.netUpdate = true;
                     }
                 }
 
@@ -593,7 +607,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     Item.GetSource_FromThis(),
                     player.Center,
                     shootDirection,
-                    ModContent.ProjectileType<SHPCRight_HoulOut>(),
+                    rightClickHoldoutType,
                     GetCurrentRightDamage(player),
                     Item.knockBack,
                     player.whoAmI,
@@ -628,6 +642,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     continue;
 
                 if (proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>() ||
+                    proj.type == ModContent.ProjectileType<RightClickMortar_HoldOut>() ||
                     proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>())
                 {
                     shouldHide = true;

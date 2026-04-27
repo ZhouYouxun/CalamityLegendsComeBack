@@ -34,6 +34,8 @@
 	  <Compile Remove="Weapons\BlossomFlux\5 “散播”特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\所有箭矢的特效【重点参考这里】\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\右键的单次参考特效\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\参考一下ClockworkBow\**\*.cs" />
+	  <Compile Remove="Weapons\BlossomFlux\参考文献看这个\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\特效总和参考\**\*.cs" />
 	  <Compile Remove="Weapons\LeonidProgenitor\他重做前长这样\**\*.cs" />
 	  <Compile Remove="Weapons\LeonidProgenitor\参考文献包括\**\*.cs" />

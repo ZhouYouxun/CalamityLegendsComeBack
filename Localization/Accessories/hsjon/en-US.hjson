@@ -16,6 +16,11 @@ Mods: {
 				Tooltip: Left click scatters three energy orbs at once, but each deals only 33% damage
 			}
 
+			S_MOT_MortarOverwatchTransceiver: {
+				DisplayName: S-MOT: Mortar Overwatch Transceiver
+				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
+			}
+
 			S_RSU_PhaseResonanceGuard: {
 				DisplayName: S-RSU: Phase Resonance Guard
 				Tooltip: While holding SHPC, deploys a shield with a 15 second cooldown that halves one incoming hit

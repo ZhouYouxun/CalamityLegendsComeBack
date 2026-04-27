@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 {
     public class DesertEagle : ModItem, ILocalizedModType
     {
-        public const string TextureAssetPath = "CalamityLegendsComeBack/Weapons/A_Dev/DesertEagle/沙漠之鹰的贴图，用这个改名";
+        public const string TextureAssetPath = "CalamityLegendsComeBack/Weapons/A_Dev/DesertEagle/沙漠之鹰";
 
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => TextureAssetPath;
@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         {
             Item.width = 82;
             Item.height = 46;
-            Item.damage = 186;
+            Item.damage = 1981;
             Item.DamageType = DamageClass.Ranged;
             Item.useTime = 9;
             Item.useAnimation = 9;
@@ -203,7 +203,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
             Vector2 itemPosition = player.MountedCenter + itemRotation.ToRotationVector2() * 7f;
             Vector2 itemSize = new Vector2(Item.width, Item.height);
-            Vector2 itemOrigin = new Vector2(-22f, 5f);
+            Vector2 itemOrigin = new Vector2(-22f, -5f);
 
             CalamityUtils.CleanHoldStyle(player, itemRotation, itemPosition, itemSize, itemOrigin);
             base.UseStyle(player, heldItemFrame);

@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.penetrate = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-            Projectile.timeLeft = 80;
+            Projectile.timeLeft = 40;
         }
 
         public override void SendExtraAI(BinaryWriter writer)

@@ -40,6 +40,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             Projectile.velocity *= 0.6f;
+            Projectile.extraUpdates = 2;
+            Projectile.timeLeft *= 5;
         }
 
         public override bool? CanDamage() => State == 0f ? null : false;
