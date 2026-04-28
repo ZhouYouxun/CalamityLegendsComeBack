@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 {
-    public class LeonidSimpleShard : ModProjectile
+    public class PostLunar_Shard : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_466";
 
@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
         {
             if (Style == 3)
             {
-                int blast = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<LeonidAstralBlast>(), Projectile.damage / 2, Projectile.knockBack, Projectile.owner);
+                int blast = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<Astral_Blast>(), Projectile.damage / 2, Projectile.knockBack, Projectile.owner);
                 if (blast >= 0 && blast < Main.maxProjectiles)
                     Main.projectile[blast].DamageType = Projectile.DamageType;
             }

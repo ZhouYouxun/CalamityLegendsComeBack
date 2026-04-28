@@ -67,13 +67,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
         {
             if (HasDamageAmp())
-                modifiers.FinalDamage *= 1.12f;
+                modifiers.FinalDamage *= 1.1f;
         }
 
         public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
         {
             if (HasDamageAmp())
-                modifiers.FinalDamage *= 1.12f;
+                modifiers.FinalDamage *= 1.1f;
         }
 
         public override void DrawEffects(NPC npc, ref Color drawColor)

@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.Miao
         {
             Item.width = 112;
             Item.height = 32;
-            Item.damage = 50;
+            Item.damage = 70;
             Item.DamageType = DamageClass.Ranged;
             Item.useAnimation = 5;
             Item.useTime = 5;

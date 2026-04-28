@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
 {
-    public class LeonidLavaGlob : ModProjectile
+    public class Scoria_LavaGlob : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_687";
 

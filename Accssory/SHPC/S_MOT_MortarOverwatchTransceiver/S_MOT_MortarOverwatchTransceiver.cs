@@ -1,3 +1,5 @@
+using CalamityMod.Items.Materials;
+using CalamityMod.Items.Weapons.Ranged;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -18,6 +20,16 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.S_MOT_MortarOverwatchTransceiver
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<S_MOT_MortarOverwatchTransceiverPlayer>().S_MOT_MortarOverwatchTransceiverEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<MysteriousCircuitry>(4)
+                .AddIngredient<DubiousPlating>(8)
+                .AddIngredient<BlissfulBombardier>()
+                .AddTile(TileID.LunarCraftingStation)
+                .Register();
         }
     }
 }

@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
 {
-    public class LeonidOrbitFlame : ModProjectile
+    public class Mythril_OrbitFlame : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_687";
 

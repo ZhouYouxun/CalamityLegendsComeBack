@@ -1,3 +1,5 @@
+using CalamityMod.Items.Accessories;
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -18,6 +20,16 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.S_RSU_PhaseResonanceGuard
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<S_RSU_PhaseResonanceGuardPlayer>().S_RSU_PhaseResonanceGuardEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<MysteriousCircuitry>(4)
+                .AddIngredient<DubiousPlating>(8)
+                .AddIngredient<RoverDrive>()
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

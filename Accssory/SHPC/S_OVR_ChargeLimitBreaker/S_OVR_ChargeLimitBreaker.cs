@@ -1,3 +1,4 @@
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -18,6 +19,18 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.S_OVR_ChargeLimitBreaker
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<S_OVR_ChargeLimitBreakerPlayer>().S_OVR_ChargeLimitBreakerEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<MysteriousCircuitry>(4)
+                .AddIngredient<DubiousPlating>(8)
+                .AddIngredient(ItemID.SoulofLight, 6)
+                .AddIngredient(ItemID.HallowedBar, 8)
+                .AddIngredient(ItemID.Wire, 20)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
         }
     }
 }

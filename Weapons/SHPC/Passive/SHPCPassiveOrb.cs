@@ -299,20 +299,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             if (FlightState == 1f && Main.rand.NextBool(3))
             {
                 Vector2 orbitDirectionNow = (Projectile.Center - owner.Center).SafeNormalize(Vector2.UnitY);
-                Particle orbitSpark = new CustomSpark(
-                    Projectile.Center + orbitDirectionNow * Main.rand.NextFloat(4f, 10f),
-                    Projectile.velocity * 0.015f + orbitDirectionNow.RotatedBy(MathHelper.PiOver2 * orbitDirection) * Main.rand.NextFloat(0.8f, 1.4f),
-                    "CalamityLegendsComeBack/Texture/KsTexture/window_04",
-                    false,
-                    9,
-                    0.08f * Projectile.scale,
-                    Color.Lerp(TechBlue, Color.White, 0.35f) * 0.68f,
-                    new Vector2(0.55f, 1.45f),
-                    glowCenter: true,
-                    shrinkSpeed: 0.8f,
-                    glowCenterScale: 0.85f,
-                    glowOpacity: 0.6f);
-                GeneralParticleHandler.SpawnParticle(orbitSpark);
+                //Particle orbitSpark = new CustomSpark(
+                //    Projectile.Center + orbitDirectionNow * Main.rand.NextFloat(4f, 10f),
+                //    Projectile.velocity * 0.015f + orbitDirectionNow.RotatedBy(MathHelper.PiOver2 * orbitDirection) * Main.rand.NextFloat(0.8f, 1.4f),
+                //    "CalamityLegendsComeBack/Texture/KsTexture/window_04",
+                //    false,
+                //    9,
+                //    0.08f * Projectile.scale,
+                //    Color.Lerp(TechBlue, Color.White, 0.35f) * 0.68f,
+                //    new Vector2(0.55f, 1.45f),
+                //    glowCenter: true,
+                //    shrinkSpeed: 0.8f,
+                //    glowCenterScale: 0.85f,
+                //    glowOpacity: 0.6f);
+                //GeneralParticleHandler.SpawnParticle(orbitSpark);
             }
         }
 
@@ -362,10 +362,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 Main.EntitySpriteDraw(orb.Value, Projectile.Center - Main.screenPosition, null, orbColor, Projectile.rotation, orb.Size() * 0.5f, scale, SpriteEffects.None);
             }
 
-            Asset<Texture2D> line = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/window_04");
-            Color coreColor = Color.Lerp(TechBlueBright, Color.White, 0.25f) * 0.7f * timeleftFade;
-            Vector2 coreScale = new Vector2(0.2f, 0.42f + pulse * 0.08f) * Projectile.scale;
-            Main.EntitySpriteDraw(line.Value, Projectile.Center - Main.screenPosition, null, coreColor, Projectile.rotation, line.Size() * 0.5f, coreScale, SpriteEffects.None);
+            //Asset<Texture2D> line = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/window_04");
+            //Color coreColor = Color.Lerp(TechBlueBright, Color.White, 0.25f) * 0.7f * timeleftFade;
+            //Vector2 coreScale = new Vector2(0.2f, 0.42f + pulse * 0.08f) * Projectile.scale;
+            //Main.EntitySpriteDraw(line.Value, Projectile.Center - Main.screenPosition, null, coreColor, Projectile.rotation, line.Size() * 0.5f, coreScale, SpriteEffects.None);
 
             return false;
         }

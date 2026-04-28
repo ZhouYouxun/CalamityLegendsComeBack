@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -15,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
                 return;
 
             Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * 8f;
-            int shard = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, velocity, ModContent.ProjectileType<LeonidSimpleShard>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, 3f);
+            int shard = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, velocity, ModContent.ProjectileType<PostLunar_Shard>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, 3f);
             if (shard >= 0 && shard < Main.maxProjectiles)
                 Main.projectile[shard].DamageType = meteor.Projectile.DamageType;
         }

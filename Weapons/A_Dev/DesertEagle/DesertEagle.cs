@@ -1,8 +1,10 @@
-using System;
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle;
 using CalamityMod;
 using CalamityMod.Items.Materials;
+using CalamityMod.Items.Weapons.Ranged;
+using CalamityMod.Tiles.Furniture.CraftingStations;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -15,16 +17,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
     {
         public const string TextureAssetPath = "CalamityLegendsComeBack/Weapons/A_Dev/DesertEagle/沙漠之鹰";
 
+        // Balance knobs kept out of SetDefaults so they are easy to tune while testing.
+        public int SilverVolleyDamage => 200;
+        public int LifeRoundDamage => 1981;
+        public float HoldoutSpinContactDamageMultiplier => 0.31f;
+        public float HoldoutFullChargeRoundDamageMultiplier => 22.0f;
+
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => TextureAssetPath;
 
         private static int HoldoutType => ModContent.ProjectileType<DesertEagleHoldout>();
+        internal static readonly SoundStyle DeltaForceDesertEagleUnsuppressedSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰无消音");
+        internal static readonly SoundStyle DeltaForceDesertEagleSuppressedSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰有消音");
+        internal static readonly SoundStyle DeltaForceSvdMarksmanRifleSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/Svd射手步枪");
 
         public override void SetDefaults()
         {
             Item.width = 82;
             Item.height = 46;
-            Item.damage = 1981;
+            Item.damage = LifeRoundDamage;
             Item.DamageType = DamageClass.Ranged;
             Item.useTime = 9;
             Item.useAnimation = 9;
@@ -35,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             Item.shootSpeed = 16f;
             Item.shoot = ProjectileID.Bullet;
             Item.useAmmo = AmmoID.Bullet;
-            Item.UseSound = SoundID.Item41 with { Volume = 0.8f, Pitch = -0.12f };
+            Item.UseSound = null;
             Item.value = Item.sellPrice(0, 14);
             Item.rare = ItemRarityID.Lime;
             Item.Calamity().devItem = true;
@@ -49,6 +60,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
             if (player.altFunctionUse == 2)
                 return false;
+
+            Item.damage = eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage;
 
             if (player.ownedProjectileCounts[HoldoutType] > 0)
                 return false;
@@ -67,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             {
                 Item.useTime = 9;
                 Item.useAnimation = 9;
-                Item.UseSound = SoundID.Item41 with { Volume = 0.8f, Pitch = -0.12f };
+                Item.UseSound = null;
                 Item.shootSpeed = 16f;
             }
 
@@ -78,6 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         {
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
             eaglePlayer.SetHoldingDesertEagle();
+            Item.damage = eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage;
 
             player.Calamity().mouseWorldListener = true;
             if (Main.myPlayer == player.whoAmI)
@@ -113,12 +127,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 player.ownedProjectileCounts[HoldoutType] <= 0)
             {
                 Vector2 shootDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+                int holdoutDamage = GetConfiguredWeaponDamage(player, LifeRoundDamage);
+
                 Projectile.NewProjectile(
                     Item.GetSource_FromThis(),
                     player.Center,
                     shootDirection,
                     HoldoutType,
-                    player.GetWeaponDamage(Item),
+                    holdoutDamage,
                     Item.knockBack,
                     player.whoAmI);
             }
@@ -148,15 +164,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
             if (eaglePlayer.PendingLifeRound)
             {
-                SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.95f, Pitch = -0.1f }, player.Center);
+                SoundEngine.PlaySound(DeltaForceDesertEagleUnsuppressedSound with { Volume = 1f, Pitch = -0.05f }, player.Center);
                 DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 1.15f);
+                int lifeRoundDamage = GetConfiguredWeaponDamage(player, LifeRoundDamage);
 
                 Projectile.NewProjectile(
                     source,
                     muzzlePosition,
                     muzzleDirection * 18f,
                     ModContent.ProjectileType<DesertEagleLifeRound>(),
-                    (int)(damage * 1.8f),
+                    lifeRoundDamage,
                     knockback * 1.35f,
                     player.whoAmI,
                     0f,
@@ -166,8 +183,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 return false;
             }
 
-            SoundEngine.PlaySound(SoundID.Item41 with { Volume = 0.9f, Pitch = -0.18f + Main.rand.NextFloat(-0.04f, 0.04f) }, player.Center);
+            SoundEngine.PlaySound(DeltaForceDesertEagleUnsuppressedSound with { Volume = 0.95f, PitchVariance = 0.04f }, player.Center);
             DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 0.85f);
+            int volleyDamage = GetConfiguredWeaponDamage(player, SilverVolleyDamage);
 
             for (int shot = 0; shot < 4; shot++)
             {
@@ -180,7 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 };
 
                 Vector2 shotVelocity = velocity.RotatedBy(spread + Main.rand.NextFloat(-0.025f, 0.025f)) * Main.rand.NextFloat(0.92f, 1.08f);
-                int projectileIndex = Projectile.NewProjectile(source, muzzlePosition + Main.rand.NextVector2Circular(2f, 2f), shotVelocity, type, (int)(damage * 0.42f), knockback, player.whoAmI);
+                int projectileIndex = Projectile.NewProjectile(source, muzzlePosition + Main.rand.NextVector2Circular(2f, 2f), shotVelocity, type, volleyDamage, knockback, player.whoAmI);
 
                 if (Main.projectile.IndexInRange(projectileIndex))
                     Main.projectile[projectileIndex].GetGlobalProjectile<DesertEagleSilverGlobalProjectile>().SilverMarked = true;
@@ -189,6 +207,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             player.velocity -= muzzleDirection * 0.55f;
             eaglePlayer.RegisterSilverVolley();
             return false;
+        }
+
+        public int GetConfiguredWeaponDamage(Player player, int baseDamage)
+        {
+            int originalDamage = Item.damage;
+            Item.damage = baseDamage;
+            int adjustedDamage = player.GetWeaponDamage(Item);
+            Item.damage = originalDamage;
+
+            return Math.Max(1, adjustedDamage);
         }
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
@@ -227,12 +255,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ModContent.ItemType<CalamityMod.Items.Weapons.Ranged.PearlGod>())
-                .AddIngredient(ModContent.ItemType<CalamityMod.Items.Weapons.Ranged.Hellborn>())
-                .AddIngredient<DarksunFragment>(6)
-                .AddTile(TileID.LunarCraftingStation)
-                .Register();
+            CreateRecipe().
+                AddIngredient<PearlGod>(1).
+                AddIngredient<Hellborn>(1).
+                AddIngredient<CosmiliteBar>(8).
+                AddIngredient<DarksunFragment>(5).
+                AddTile<CosmicAnvil>().
+                Register();
         }
     }
 }

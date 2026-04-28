@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -18,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
             Vector2 spawnPosition = target.Center + new Vector2(150f * side, Main.rand.NextFloat(-70f, 40f));
             Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitX * -side) * 15f;
 
-            int petal = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<LeonidPetalBolt>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, side);
+            int petal = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<Orichalcum_PetalBolt>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, side);
             if (petal >= 0 && petal < Main.maxProjectiles)
                 Main.projectile[petal].DamageType = meteor.Projectile.DamageType;
         }

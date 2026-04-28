@@ -83,8 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
 
             SpawnRecoveryPulse(Projectile.Center, 1.25f);
-            SpawnOrbReleaseFX(Projectile.Center, 1.28f);
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 20, 1.5f, 5f, 1f, 1.6f);
+            SpawnOrbReleaseFX(Projectile.Center, 1.45f);
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 28, 1.65f, 6.2f, 1.05f, 1.78f);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.36f, Pitch = 0.22f }, Projectile.Center);
         }
 
@@ -240,8 +240,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 return;
 
             Color coreColor = new(110, 255, 150);
-            StrongBloom bloom = new(center, Vector2.Zero, coreColor, 0.95f * intensity, 14);
+            StrongBloom bloom = new(center, Vector2.Zero, coreColor, 1.12f * intensity, 15);
             GeneralParticleHandler.SpawnParticle(bloom);
+
+            StrongBloom whiteCore = new(
+                center,
+                Vector2.Zero,
+                Color.Lerp(coreColor, Color.White, 0.36f),
+                0.58f * intensity,
+                10);
+            GeneralParticleHandler.SpawnParticle(whiteCore);
 
             DirectionalPulseRing pulse = new(
                 center,
@@ -249,24 +257,59 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Color.Lerp(coreColor, Color.White, 0.22f),
                 new Vector2(1.2f, 1.2f),
                 0f,
-                0.16f * intensity,
+                0.18f * intensity,
                 0.032f,
                 14);
             GeneralParticleHandler.SpawnParticle(pulse);
 
-            for (int i = 0; i < 10; i++)
+            DirectionalPulseRing widePulse = new(
+                center,
+                Vector2.Zero,
+                Color.Lerp(coreColor, Color.White, 0.44f),
+                new Vector2(1.55f, 1.55f),
+                MathHelper.PiOver4,
+                0.105f * intensity,
+                0.024f,
+                18);
+            GeneralParticleHandler.SpawnParticle(widePulse);
+
+            for (int i = 0; i < 16; i++)
             {
                 GlowOrbParticle orb = new(
-                    center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 3.6f),
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.0f, 4.8f),
                     false,
-                    12,
-                    Main.rand.NextFloat(0.22f, 0.36f) * intensity,
+                    Main.rand.Next(11, 17),
+                    Main.rand.NextFloat(0.2f, 0.42f) * intensity,
                     Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.15f, 0.5f)),
                     true,
                     false,
                     true);
                 GeneralParticleHandler.SpawnParticle(orb);
+            }
+
+            for (int i = 0; i < 7; i++)
+            {
+                MediumMistParticle mist = new(
+                    center + Main.rand.NextVector2Circular(16f, 16f),
+                    Main.rand.NextVector2Circular(1.1f, 1.1f) + new Vector2(0f, Main.rand.NextFloat(-0.45f, 0.15f)),
+                    Color.Lerp(coreColor, Color.White, 0.2f),
+                    Color.Black,
+                    Main.rand.NextFloat(0.42f, 0.74f) * intensity,
+                    Main.rand.Next(130, 190));
+                GeneralParticleHandler.SpawnParticle(mist);
+            }
+
+            for (int i = 0; i < 12; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    center,
+                    Main.rand.NextBool(3) ? DustID.TerraBlade : DustID.GemEmerald,
+                    Main.rand.NextVector2CircularEdge(3.4f, 3.4f) * Main.rand.NextFloat(1.8f, 4.5f),
+                    90,
+                    Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.15f, 0.42f)),
+                    Main.rand.NextFloat(1.0f, 1.55f));
+                dust.noGravity = true;
             }
         }
 

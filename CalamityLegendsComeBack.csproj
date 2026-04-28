@@ -21,14 +21,16 @@
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\A_Dev\Miao\Testbench\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
-	  <Folder Include="Weapons\BlossomFlux\BFUI\" />
-	  <Folder Include="Weapons\BlossomFlux\特效总和参考\5 “散播”特效参考\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\MoonEvent\参考文献\" />
 	  <Folder Include="Weapons\SHPC\RightClick\枪身特效参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <AdditionalFiles Remove="Weapons\BlossomFlux\BFUI\**" />
+	  <AdditionalFiles Remove="Weapons\BlossomFlux\特效总和参考\**" />
+	  <Compile Remove="Weapons\BlossomFlux\BFUI\**" />
+	  <Compile Remove="Weapons\BlossomFlux\特效总和参考\**" />
 	  <Compile Remove="Weapons\BrinyBaron\CommonAttack\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\1 “突破”特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\4 轰炸特效参考\**\*.cs" />
@@ -37,7 +39,11 @@
 	  <Compile Remove="Weapons\BlossomFlux\右键的单次参考特效\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\参考一下ClockworkBow\**\*.cs" />
 	  <Compile Remove="Weapons\BlossomFlux\参考文献看这个\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\特效总和参考\**\*.cs" />
+	  <EmbeddedResource Remove="Weapons\BlossomFlux\BFUI\**" />
+	  <EmbeddedResource Remove="Weapons\BlossomFlux\特效总和参考\**" />
+	  <None Remove="Weapons\BlossomFlux\BFUI\**" />
+	  <None Remove="Weapons\BlossomFlux\特效总和参考\**" />
+	  <Compile Remove="Weapons\BlossomFlux\SpecialArrow\SHPCKPROJ.cs" />
 	  <Compile Remove="Weapons\LeonidProgenitor\他重做前长这样\**\*.cs" />
 	  <Compile Remove="Weapons\LeonidProgenitor\参考文献包括\**\*.cs" />
 	  <Compile Remove="Weapons\SHPC\Effects\DPreDog\SZPC\TwistingNether的参考文献\**\*.cs" />

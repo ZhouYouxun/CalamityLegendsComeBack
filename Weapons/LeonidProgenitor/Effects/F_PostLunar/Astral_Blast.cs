@@ -3,9 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 {
-    public class LeonidAstralBlast : ModProjectile
+    public class Astral_Blast : ModProjectile
     {
         public override string Texture => "CalamityMod/Particles/PlasmaExplosion";
 

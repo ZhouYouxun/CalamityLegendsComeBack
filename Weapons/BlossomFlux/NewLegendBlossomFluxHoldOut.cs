@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
 using CalamityLegendsComeBack.Weapons.Visuals;
@@ -282,7 +283,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                    FirePlagueStream(source, speed, damage, knockback);
+                    FirePlagueStream(source, projectileType, speed, damage, knockback);
                     break;
             }
         }
@@ -1031,6 +1032,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Vector2 spawnPosition = GetShootOrigin(shootVelocity) + normal * Main.rand.NextFloat(-19f, 19f);
 
             SpawnLeftProjectile(source, spawnPosition, shootVelocity, projectileType, damage, knockback, CurrentPreset);
+            SpawnLeftMuzzleFX(spawnPosition, shootVelocity, CurrentPreset, 1.05f);
             SoundEngine.PlaySound(SoundID.Item5 with { Pitch = Main.rand.NextFloat(-0.08f, 0.08f), Volume = 0.86f }, Owner.Center);
         }
 
@@ -1038,6 +1040,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Vector2 velocity = GetAimVelocity(speed);
             FireParallelVolley(source, velocity, projectileType, damage, knockback, CurrentPreset);
+            SpawnLeftMuzzleFX(GetShootOrigin(velocity), velocity, CurrentPreset, 0.92f + burstGroupsStarted * 0.08f);
             SoundEngine.PlaySound(SoundID.Item8 with { Pitch = 0.2f + burstGroupsStarted * 0.04f, Volume = 0.58f }, Owner.Center);
         }
 
@@ -1059,6 +1062,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, damage, knockback, CurrentPreset);
             }
 
+            SpawnLeftMuzzleFX(origin, baseVelocity, CurrentPreset, 1.18f);
             SoundEngine.PlaySound(SoundID.Item9 with { Pitch = 0.35f, Volume = 0.42f }, Owner.Center);
         }
 
@@ -1081,13 +1085,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 shotVelocity = shotVelocity.RotatedBy(horizontalOffset * -0.004f) * rainSpeed;
                 int shotDamage = (int)(damage * (i == 0 ? 1.15f : 1f));
 
-                SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, shotDamage, knockback, CurrentPreset, noTileCollide: true);
+                SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, shotDamage, knockback, CurrentPreset);
             }
+
+            SpawnLeftMuzzleFX(mouseWorld, Vector2.UnitY * Owner.gravDir, CurrentPreset, 1.08f);
         }
 
-        private void FirePlagueStream(IEntitySource source, float speed, int damage, float knockback)
+        private void FirePlagueStream(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            Vector2 shootVelocity = GetAimVelocity(6f).RotatedByRandom(0.028f);
+            Vector2 shootVelocity = GetAimVelocity(Math.Max(speed * 0.72f, 10.5f)).RotatedByRandom(0.052f);
             Vector2 direction = shootVelocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 spawnPosition = GunTipPosition + direction * 8f + Main.rand.NextVector2Circular(2f, 2f);
 
@@ -1096,9 +1102,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 spawnPosition,
                 shootVelocity,
                 ModContent.ProjectileType<BFLeftPlagueFlame>(),
-                Math.Max(1, (int)(damage * 0.42f)),
-                knockback * 0.45f,
+                Math.Max(1, (int)(damage * 0.55f)),
+                knockback * 0.5f,
                 Owner.whoAmI);
+
+            SpawnLeftMuzzleFX(spawnPosition, shootVelocity, CurrentPreset, 0.72f);
 
             if (leftShotsFired % 8 == 0)
                 SoundEngine.PlaySound(PlagueUseSound, Owner.Center);
@@ -1124,10 +1132,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void SpawnLeftProjectile(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BlossomFluxChloroplastPresetType preset, bool noTileCollide = false)
         {
-            int tacticalArrowType = ModContent.ProjectileType<BFLeftTacticalArrow>();
+            int leafProjectileType = ModContent.ProjectileType<BFLeafProj>();
+            int plagueProjectileType = ModContent.ProjectileType<BFLeftPlagueFlame>();
             bool convertWoodenArrow = CalamityUtils.CheckWoodenAmmo(projectileType, Owner);
-            int finalProjectileType = convertWoodenArrow ? tacticalArrowType : projectileType;
-            float ai0 = finalProjectileType == tacticalArrowType ? (int)preset : 0f;
+            bool convertToLeaf = preset != BlossomFluxChloroplastPresetType.Chlo_EPlague && convertWoodenArrow;
+            bool convertToPlague = preset == BlossomFluxChloroplastPresetType.Chlo_EPlague;
+            int finalProjectileType = convertToLeaf ? leafProjectileType : convertToPlague ? plagueProjectileType : projectileType;
+            float ai0 = convertToLeaf ? (int)preset : 0f;
 
             int projectileIndex = Projectile.NewProjectile(source, spawnPosition, velocity, finalProjectileType, damage, knockback, Owner.whoAmI, ai0);
             if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
@@ -1142,13 +1153,70 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (noTileCollide)
                 arrowProjectile.tileCollide = false;
 
-            if (finalProjectileType != tacticalArrowType)
+            if (!convertToLeaf && !convertToPlague)
             {
                 arrowProjectile.extraUpdates++;
                 BFArrowCommon.ForceLocalNPCImmunity(arrowProjectile, 10);
             }
 
             BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
+        }
+
+        private void SpawnLeftMuzzleFX(Vector2 center, Vector2 velocity, BlossomFluxChloroplastPresetType preset, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = BFArrowCommon.GetPresetColor(preset);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(preset);
+            Vector2 direction = velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+
+            int dustCount = preset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => 8,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => 10,
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => 5,
+                _ => 6
+            };
+
+            for (int i = 0; i < dustCount; i++)
+            {
+                Vector2 dustVelocity =
+                    direction.RotatedByRandom(preset == BlossomFluxChloroplastPresetType.Chlo_CDetec ? 0.52f : 0.26f) * Main.rand.NextFloat(1.1f, 3.4f) +
+                    normal * Main.rand.NextFloat(-0.75f, 0.75f);
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(5f, 5f),
+                    BFArrowCommon.GetPresetDustType(preset),
+                    dustVelocity,
+                    100,
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.16f, 0.58f)),
+                    Main.rand.NextFloat(0.72f, 1.15f) * intensity);
+                dust.noGravity = true;
+            }
+
+            switch (preset)
+            {
+                case BlossomFluxChloroplastPresetType.Chlo_ABreak:
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, direction * 1.2f, mainColor, new Vector2(0.54f, 2.2f), direction.ToRotation(), 0.13f * intensity, 0.028f, 10));
+                    break;
+
+                case BlossomFluxChloroplastPresetType.Chlo_BRecov:
+                    GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(mainColor, Color.White, 0.24f), 0.36f * intensity, 10));
+                    break;
+
+                case BlossomFluxChloroplastPresetType.Chlo_CDetec:
+                    GeneralParticleHandler.SpawnParticle(new CritSpark(center + normal * Main.rand.NextFloat(-6f, 6f), direction * 1.8f, Color.White, accentColor, 0.82f * intensity, 11));
+                    break;
+
+                case BlossomFluxChloroplastPresetType.Chlo_DBomb:
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, Color.Lerp(mainColor, Color.Goldenrod, 0.28f), Vector2.One, Main.rand.NextFloat(-0.2f, 0.2f), 0f, 0.12f * intensity, 9));
+                    break;
+
+                case BlossomFluxChloroplastPresetType.Chlo_EPlague:
+                    GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(center + Main.rand.NextVector2Circular(4f, 4f), -direction * 0.6f + Main.rand.NextVector2Circular(0.35f, 0.35f), Color.Lerp(mainColor, Color.White, 0.08f), 14, 0.34f * intensity, 0.52f, Main.rand.NextFloat(-0.04f, 0.04f), false));
+                    break;
+            }
         }
 
         private Vector2 GetAimVelocity(float speed)

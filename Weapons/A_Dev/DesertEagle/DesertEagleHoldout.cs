@@ -44,6 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public int hitTimer;
 
         private new Player Owner => Main.player[Projectile.owner];
+        private DesertEagle WeaponSettings => Owner.HeldItem.ModItem as DesertEagle;
         private bool RightHeld
         {
             get
@@ -210,6 +211,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         private void FireHeavyShot()
         {
+            DesertEagle weaponSettings = WeaponSettings;
+            if (weaponSettings == null)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             Vector2 shotDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * Projectile.direction);
             ChargeTimer = 0f;
             cooldownTimer = Owner.itemAnimationMax * 2f;
@@ -227,13 +235,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                     GunTipPosition,
                     shotDirection * 22f,
                     ModContent.ProjectileType<DesertEagleHeavyRound>(),
-                    (int)(Projectile.damage * 20.8f),
+                    (int)(Projectile.damage * weaponSettings.HoldoutFullChargeRoundDamageMultiplier),
                     Projectile.knockBack * 3f,
                     Projectile.owner);
             }
 
             SoundEngine.PlaySound(SoundID.Item38 with { Volume = 1.1f, Pitch = -0.18f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f, Pitch = -0.3f }, Projectile.Center);
+            SoundEngine.PlaySound(DesertEagle.DeltaForceDesertEagleSuppressedSound with { Volume = 1f, Pitch = -0.05f }, Projectile.Center);
+            SoundEngine.PlaySound(DesertEagle.DeltaForceSvdMarksmanRifleSound with { Volume = 0.9f, Pitch = -0.12f }, Projectile.Center);
             SpawnSilverImpact(GunTipPosition + shotDirection * 10f, shotDirection, 1.25f);
             for (int i = 0; i < 4; i++)
                 SpawnHeavySmoke(GunTipPosition, -shotDirection * Main.rand.NextFloat(0.8f, 2.4f) + Main.rand.NextVector2Circular(0.8f, 0.8f), 1.05f);
@@ -531,14 +541,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 return;
             }
 
+            DesertEagle weaponSettings = WeaponSettings;
+            if (weaponSettings == null)
+            {
+                modifiers.SourceDamage *= 0f;
+                return;
+            }
+
             if (hitTimer == 0)
             {
-                modifiers.SourceDamage *= 0.08f;
+                modifiers.SourceDamage *= weaponSettings.HoldoutSpinContactDamageMultiplier;
                 ChargeTimer = MathHelper.Clamp(ChargeTimer + DesertEaglePlayer.SpinChargeMax / 12f, 0f, DesertEaglePlayer.SpinChargeMax);
                 hitTimer = Projectile.localNPCHitCooldown;
             }
             else
-                modifiers.SourceDamage *= 0.02f;
+                modifiers.SourceDamage *= weaponSettings.HoldoutSpinContactDamageMultiplier * 0.25f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

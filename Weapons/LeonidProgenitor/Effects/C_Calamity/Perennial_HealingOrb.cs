@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
 {
-    public class LeonidHealingOrb : ModProjectile
+    public class Perennial_HealingOrb : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_642";
 

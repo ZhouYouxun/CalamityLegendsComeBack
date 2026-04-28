@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -20,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.B_PreOther
 
             for (int i = 0; i < 2; i++)
             {
-                int wisp = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Main.rand.NextVector2CircularEdge(1f, 1f) * 10f, ModContent.ProjectileType<LeonidEvilWisp>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, crimsonVariant ? 1f : 0f);
+                int wisp = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Main.rand.NextVector2CircularEdge(1f, 1f) * 10f, ModContent.ProjectileType<Demonite_Wisp>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, crimsonVariant ? 1f : 0f);
                 if (wisp >= 0 && wisp < Main.maxProjectiles)
                     Main.projectile[wisp].DamageType = meteor.Projectile.DamageType;
             }

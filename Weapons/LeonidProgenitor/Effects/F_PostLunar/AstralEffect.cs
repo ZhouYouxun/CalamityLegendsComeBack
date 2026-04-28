@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -17,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             for (int i = 0; i < 3; i++)
             {
                 Vector2 position = target.Center + Main.rand.NextVector2Circular(150f, 110f);
-                int blast = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), position, Vector2.Zero, ModContent.ProjectileType<LeonidAstralBlast>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
+                int blast = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), position, Vector2.Zero, ModContent.ProjectileType<Astral_Blast>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
                 if (blast >= 0 && blast < Main.maxProjectiles)
                     Main.projectile[blast].DamageType = meteor.Projectile.DamageType;
             }

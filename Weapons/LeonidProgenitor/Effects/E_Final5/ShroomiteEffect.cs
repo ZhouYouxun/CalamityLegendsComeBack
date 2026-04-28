@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -15,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
             if (timer % 8 != 0 || Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), meteor.Projectile.Center, meteor.Projectile.velocity * 0.12f, ModContent.ProjectileType<LeonidTrailMushroom>(), 0, 0f, meteor.Projectile.owner);
+            Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), meteor.Projectile.Center, meteor.Projectile.velocity * 0.12f, ModContent.ProjectileType<Shroomite_TrailMushroom>(), 0, 0f, meteor.Projectile.owner);
         }
     }
 }

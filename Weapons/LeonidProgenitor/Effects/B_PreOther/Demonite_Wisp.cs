@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.B_PreOther
 {
-    public class LeonidEvilWisp : ModProjectile
+    public class Demonite_Wisp : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_297";
 

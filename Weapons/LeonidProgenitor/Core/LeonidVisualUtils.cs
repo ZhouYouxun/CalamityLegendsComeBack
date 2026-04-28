@@ -1,3 +1,4 @@
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -46,6 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public static void DrawBloom(Vector2 drawPosition, Color color, float scale, float rotation = 0f)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            color.A = 0;
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition - Main.screenPosition,
@@ -56,6 +58,15 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 scale,
                 SpriteEffects.None,
                 0f);
+        }
+
+        public static void SpawnBloomBurst(Vector2 center, Color color, float scale, int lifetime)
+        {
+            if (Main.dedServ)
+                return;
+
+            color.A = 0;
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, color, scale, lifetime));
         }
     }
 }

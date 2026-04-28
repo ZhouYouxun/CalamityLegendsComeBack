@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
 {
-    public class LeonidShockwave : ModProjectile
+    public class Shared_Shockwave : ModProjectile
     {
         public override string Texture => "CalamityMod/Particles/BloomRing";
 

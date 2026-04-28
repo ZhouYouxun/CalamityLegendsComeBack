@@ -3,9 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
 {
-    public class LeonidTrailMushroom : ModProjectile
+    public class Shroomite_TrailMushroom : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_131";
 

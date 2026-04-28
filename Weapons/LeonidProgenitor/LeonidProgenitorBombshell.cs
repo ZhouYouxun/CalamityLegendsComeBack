@@ -177,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         {
             Color impactColor = StealthVariant ? new Color(156, 233, 255) : new Color(110, 208, 255);
             LeonidVisualUtils.SpawnDustBurst(Projectile.Center, impactColor, StealthVariant ? 16 : 10, StealthVariant ? 6f : 4f, StealthVariant ? 1.35f : 1f);
-            LeonidVisualUtils.DrawBloom(Projectile.Center, impactColor * 0.55f, StealthVariant ? 0.65f : 0.45f);
+            LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, impactColor * 0.55f, StealthVariant ? 0.65f : 0.45f, StealthVariant ? 16 : 12);
         }
 
         private void SpawnSmallMeteor(Vector2 targetCenter, bool fromStealthMark)

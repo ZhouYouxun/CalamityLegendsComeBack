@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -16,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
 
             Vector2 spawnPosition = target.Center + Main.rand.NextVector2Circular(140f, 90f);
             Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitY) * 18f;
-            int laser = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<LeonidHolyLaser>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
+            int laser = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<Hallowed_Laser>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
             if (laser >= 0 && laser < Main.maxProjectiles)
                 Main.projectile[laser].DamageType = meteor.Projectile.DamageType;
         }

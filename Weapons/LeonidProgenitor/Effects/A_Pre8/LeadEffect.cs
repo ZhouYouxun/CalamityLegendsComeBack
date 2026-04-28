@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
             if (Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            int shockwave = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Microsoft.Xna.Framework.Vector2.Zero, ModContent.ProjectileType<LeonidShockwave>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
+            int shockwave = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Microsoft.Xna.Framework.Vector2.Zero, ModContent.ProjectileType<Shared_Shockwave>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
             if (shockwave >= 0 && shockwave < Main.maxProjectiles)
                 Main.projectile[shockwave].DamageType = meteor.Projectile.DamageType;
         }

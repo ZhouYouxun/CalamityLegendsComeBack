@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -17,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             for (int i = 0; i < 3; i++)
             {
                 Vector2 velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-8.5f, -5.5f));
-                int glob = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, velocity, ModContent.ProjectileType<LeonidLavaGlob>(), meteor.Projectile.damage / 3, 0f, meteor.Projectile.owner);
+                int glob = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, velocity, ModContent.ProjectileType<Scoria_LavaGlob>(), meteor.Projectile.damage / 3, 0f, meteor.Projectile.owner);
                 if (glob >= 0 && glob < Main.maxProjectiles)
                     Main.projectile[glob].DamageType = meteor.Projectile.DamageType;
             }

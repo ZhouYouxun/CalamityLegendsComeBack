@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -13,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
             if (Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            int bolt = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Main.rand.NextVector2CircularEdge(1f, 1f) * 14f, ModContent.ProjectileType<LeonidChainLightning>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, target.whoAmI, 2f);
+            int bolt = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Main.rand.NextVector2CircularEdge(1f, 1f) * 14f, ModContent.ProjectileType<Copper_ChainLightning>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, target.whoAmI, 2f);
             if (bolt >= 0 && bolt < Main.maxProjectiles)
                 Main.projectile[bolt].DamageType = meteor.Projectile.DamageType;
         }

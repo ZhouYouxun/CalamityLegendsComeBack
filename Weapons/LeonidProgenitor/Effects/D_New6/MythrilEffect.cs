@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -14,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
             if (Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            int flame = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), owner.Center, Vector2.Zero, ModContent.ProjectileType<LeonidOrbitFlame>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, Main.rand.NextFloat(0f, MathHelper.TwoPi));
+            int flame = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), owner.Center, Vector2.Zero, ModContent.ProjectileType<Mythril_OrbitFlame>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, Main.rand.NextFloat(0f, MathHelper.TwoPi));
             if (flame >= 0 && flame < Main.maxProjectiles)
                 Main.projectile[flame].DamageType = meteor.Projectile.DamageType;
         }

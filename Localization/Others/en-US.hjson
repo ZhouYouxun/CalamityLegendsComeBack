@@ -40,8 +40,8 @@ Mods: {
 					SHPB_Mode2: "[c/FF7AAA:Scatter layers split the shot in sequence, with a hard cap on branch count for balance.]"
 					SHPB_Mode3: "[c/A476FF:Homing layers increase target search range and steering strength.]"
 					SHPB_Right: "[c/F7D87C:Tap right click to open the core wheel. Hold right click past 0.15 seconds to charge the whole string, then release when the bar is full.]"
-					SHPB_EX: "[c/BAA0FF:The bow is SHPC's sister-frame: lower recoil, less machinery, and all decisions moved onto the string.]"
-					SHPB_Final: "[c/9FD8FF:Same source, different shape. The cannon became a question; the bow became four answers.]"
+					SHPB_EX: "[c/BAA0FF:Forged beside SHPC, she refused to speak as a cannon; the string gathers the stars, and every full draw feels like a silent verdict.]"
+					SHPB_Final: "[c/9FD8FF:Same origin, different form. Where the barrel questioned the world, this string pins four answers into the starlight.]"
 				}
 			}
 

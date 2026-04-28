@@ -4,9 +4,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers
+namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
 {
-    public class LeonidChainLightning : ModProjectile
+    public class Copper_ChainLightning : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_466";
 

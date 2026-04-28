@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Helpers;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             if (Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            int field = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Microsoft.Xna.Framework.Vector2.Zero, ModContent.ProjectileType<LeonidLingeringField>(), meteor.Projectile.damage / 3, 0f, meteor.Projectile.owner, 1f);
+            int field = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Microsoft.Xna.Framework.Vector2.Zero, ModContent.ProjectileType<Shared_LingeringField>(), meteor.Projectile.damage / 3, 0f, meteor.Projectile.owner, 1f);
             if (field >= 0 && field < Main.maxProjectiles)
                 Main.projectile[field].DamageType = meteor.Projectile.DamageType;
         }

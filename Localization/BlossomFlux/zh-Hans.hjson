@@ -7,54 +7,123 @@ Mods: {
 					Tooltip: "[GFB]"
 					BF_Left:
 						'''
-						[c/66CCFF:左键：每种战术都有不同射击方式；所有带间隔的战术都会先等待，再发射。]
-						[c/99CCFF:木箭会被转化成当前战术对应的特殊战术箭。]
-						[c/DDA0FF:瘟疫则改为持续喷射高更新频率的绿色火流。]
+						[c/66CCFF:左键：按当前战术连续射击。]
+						[c/99CCFF:突破、复苏、侦查、轰炸只转木箭。]
+						[c/99CCFF:木箭会化为对应战术叶子箭。]
+						[c/DDA0FF:瘟疫会将任何弹药化为毒焰。]
+						[c/7BE495:突破枫叶，复苏寄生，侦查木刺。]
+						[c/7BE495:轰炸树杈，瘟疫则是无形毒焰。]
 						'''
-					BF_Preset: "[c/7BE495:当前战术：{0}]"
+					BF_Preset: "[c/7BE495:当前显示战术：{0}，下方为专属说明。]"
 					PresetName0: 突破
 					PresetName1: 复苏
 					PresetName2: 侦查
 					PresetName3: 轰炸
 					PresetName4: 瘟疫
-					PresetLeft0: "[c/8BE89A:突破·左键：快速单发连射，仅保留水平枪口偏移，适合稳定点射。]"
-					PresetLeft1: "[c/8BE89A:复苏·左键：模仿 Viscera 的四段连发，每段射出 3 支平行箭。]"
-					PresetLeft2: "[c/8BE89A:侦查·左键：每 8 帧释放 4-6 支散射箭，仍会被右键优先标记吸引。]"
-					PresetLeft3: "[c/8BE89A:轰炸·左键：参考 The Storm，从天上降下箭雨。]"
-					PresetLeft4: "[c/8BE89A:瘟疫·左键：持续喷射高更新频率的瘟疫绿色火流。]"
+					PresetLeft0:
+						'''
+						[c/8BE89A:突破左键：木箭化为突破枫叶。]
+						[c/8BE89A:枫叶直线飞行，并可穿透两次。]
+						'''
+					PresetLeft1:
+						'''
+						[c/8BE89A:复苏左键：木箭化为复苏寄生。]
+						[c/8BE89A:寄生叶只伤害一次，命中少量吸血。]
+						'''
+					PresetLeft2:
+						'''
+						[c/8BE89A:侦查左键：木箭化为侦查木刺。]
+						[c/8BE89A:木刺命中后标记敌人约半秒。]
+						[c/8BE89A:被标记者受到任意伤害提高10%。]
+						'''
+					PresetLeft3:
+						'''
+						[c/8BE89A:轰炸左键：木箭化为轰炸树杈。]
+						[c/8BE89A:树杈受重力影响，命中产生爆破。]
+						[c/8BE89A:爆破范围约75乘75，适合压制群怪。]
+						'''
+					PresetLeft4:
+						'''
+						[c/8BE89A:瘟疫左键：任何弹药化为毒焰。]
+						[c/8BE89A:毒焰本体不可见，并留下绿火流。]
+						[c/8BE89A:它以高更新率飞行，命中附加疫病。]
+						'''
 					BF_Right:
 						'''
-						[c/F7D87C:右键单点：展开战术面板，点击图标后立刻切换战术并关闭面板。]
-						[c/F7D87C:右键按住超过 0.15 秒会进入当前战术对应的蓄力手持状态；必须蓄满后松手才会发射。]
-						[c/F7D87C:蓄满后的特殊箭伤害会显著高于左键常态箭。]
+						[c/F7D87C:右键轻点可打开战术面板并切换。]
+						[c/F7D87C:按住超过0.15秒进入蓄力架势。]
+						[c/F7D87C:蓄满后松开，发射当前特殊箭。]
+						[c/F7D87C:右键特殊箭伤害高于左键常态箭。]
 						'''
-					PresetRight0: "[c/F4D57A:突破·右键：逐根储存追踪突破箭；每解锁一种战术，储箭上限 +1，且每根箭蓄力缩短 7 帧。]"
-					PresetRight1: "[c/F4D57A:复苏·右键：蓄满后射出会折返追随玩家的治疗箭。]"
-					PresetRight2: "[c/F4D57A:侦查·右键：蓄满后射出扫描箭，标记者会被左键常态箭优先弱追踪并触发爆炸。]"
-					PresetRight3: "[c/F4D57A:轰炸·右键：蓄满后射出轰炸箭，命中后会持续从天上降下玩家当前箭矢。]"
-					PresetRight4: "[c/F4D57A:瘟疫·右键：蓄满后射出可附着的瘟疫箭，持续释放瘟疫毒气。]"
-					BF_Passive: "[c/9AEF9E:被动：手持时若受到致命伤害，则会进入 15 秒的不死阶段并瞬间回满血，同时在触发点释放复苏立场与荧光绿色十字爆发。该阶段内再受任何伤害都会直接死亡。若撑过这 15 秒，则至少恢复到半血。当前状态：{0}。]"
+					PresetRight0:
+						'''
+						[c/F4D57A:突破右键：逐根储存追踪突破箭。]
+						[c/F4D57A:每解锁一种战术，储箭上限加一。]
+						[c/F4D57A:同时每根突破箭蓄力缩短7帧。]
+						'''
+					PresetRight1:
+						'''
+						[c/F4D57A:复苏右键：蓄满后发射复苏治疗箭。]
+						[c/F4D57A:治疗箭会折返，并持续追随玩家。]
+						'''
+					PresetRight2:
+						'''
+						[c/F4D57A:侦查右键：蓄满后发射扫描箭。]
+						[c/F4D57A:被标记敌人会吸引左键常态箭。]
+						[c/F4D57A:常态箭命中标记者后触发爆炸。]
+						'''
+					PresetRight3:
+						'''
+						[c/F4D57A:轰炸右键：蓄满后发射轰炸箭。]
+						[c/F4D57A:命中后持续从天上降下当前箭矢。]
+						'''
+					PresetRight4:
+						'''
+						[c/F4D57A:瘟疫右键：蓄满后发射附着瘟疫箭。]
+						[c/F4D57A:附着后持续向周围释放瘟疫毒气。]
+						'''
+					BF_Passive:
+						'''
+						[c/9AEF9E:被动：手持时可抵御一次致命伤害。]
+						[c/9AEF9E:触发后立刻回满生命并生成复苏立场。]
+						[c/9AEF9E:接下来15秒内再次受伤会直接死亡。]
+						[c/9AEF9E:若撑过倒计时，生命至少回到一半。]
+						[c/9AEF9E:当前被动状态：{0}，请留意冷却。]
+						'''
 					PassiveStateReady: "[c/7BFFB7:已就绪]"
 					PassiveStateActive: "[c/FF9B8B:不死阶段中]"
 					PassiveStateCooldown: "[c/F0D070:冷却 {0} 秒]"
 					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
-					PresetUnlock1: "[c/7BFFB7:复苏：已解锁，可在战术面板中选择。]"
-					PresetLock1: "[c/9A9A9A:复苏：击败蜂王后解锁。]"
-					PresetUnlock2: "[c/7BFFB7:侦查：已解锁，可在战术面板中选择。]"
-					PresetLock2: "[c/9A9A9A:侦查：困难模式后解锁。]"
-					PresetUnlock3: "[c/7BFFB7:轰炸：已解锁，可在战术面板中选择。]"
-					PresetLock3: "[c/9A9A9A:轰炸：击败机械骷髅王后解锁。]"
-					PresetUnlock4: "[c/7BFFB7:瘟疫：已解锁，可在战术面板中选择。]"
-					PresetLock4: "[c/9A9A9A:瘟疫：击败瘟疫使者歌莉娅后解锁。]"
-					BF_Final: "[c/9FD8A2:弓弦已经鸣动，林叶正在回应。]"
-					BF_EX: "[c/8EF5A8:传说技能：最多储存 60 点森绿能量。只有成功完成右键蓄力并放出特殊箭矢时，才会立即回复 3 点能量；手持此弓时，每 2 秒额外回复 1 点能量。能量满后按下“传说技能”按键进入备射状态，再点击左键引爆狂暴弹幕齐射。]"
-					LegendaryHint: "[c/BABABA:按住 Shift 键以读取传奇记录]"
+					PresetUnlock1: "[c/7BFFB7:复苏战术：已解锁，可在右键面板切换。]"
+					PresetLock1: "[c/9A9A9A:复苏战术：击败蜂王后解锁，面板待命。]"
+					PresetUnlock2: "[c/7BFFB7:侦查战术：已解锁，可在右键面板切换。]"
+					PresetLock2: "[c/9A9A9A:侦查战术：困难模式后解锁，面板待命。]"
+					PresetUnlock3: "[c/7BFFB7:轰炸战术：已解锁，可在右键面板切换。]"
+					PresetLock3: "[c/9A9A9A:轰炸战术：击败机械骷髅王后解锁。]"
+					PresetUnlock4: "[c/7BFFB7:瘟疫战术：已解锁，可在右键面板切换。]"
+					PresetLock4: "[c/9A9A9A:瘟疫战术：击败瘟疫使者歌莉娅后解锁。]"
+					BF_Final: "[c/9FD8A2:最终记录：弓弦鸣动，林叶仍在回应。]"
+					BF_EX:
+						'''
+						[c/8EF5A8:大招：最多储存60点森绿能量。]
+						[c/8EF5A8:手持此弓时，每2秒恢复1点能量。]
+						[c/8EF5A8:成功释放右键蓄力箭恢复3点能量。]
+						[c/8EF5A8:能量满且装备EX饰品时，按传说技能键。]
+						[c/8EF5A8:随后进入备射姿态，再点击左键。]
+						[c/8EF5A8:最终释放森绿弹幕齐射。]
+						'''
+					LegendaryHint: "[c/BABABA:按住Shift键读取完整传奇记录。]"
 					LegendaryText:
 						'''
-						[c/66E6FF:它原本只是想把连射做得更快一点。]
-						[c/66E6FF:后来人们发现，真正让敌人来不及喘息的，不只是更快的箭，而是同一根弓弦学会了五种呼吸。]
-						[c/66E6FF:于是战术被拆成五条枝脉，连最普通的木箭也能离弦时变成另一种东西。]
-						[c/66E6FF:它还会继续生长，但现在这把弓已经懂得一件事：等待，放箭，然后让战术自己给出答案。]
+						[c/66E6FF:最初，它只是单一的释放——弓弦拉满，叶箭如水流般倾泻，偶尔坠下一枚缓慢扩散毒云的孢子。]
+						[c/66E6FF:这种设计简单直接，却也注定停留在表层，所有输出都围绕着“更快”与“更多”展开。]
+						[c/66E6FF:但随着测试深入，制作者逐渐意识到，问题并不在速度，而在于表达的维度过于单一。]
+						[c/66E6FF:弓弦被重新定义为结构核心，不再只是发射装置，而是承载多重响应的调度节点。]
+						[c/66E6FF:木箭在离弦之后被允许改变形态，不同输入将引导其演化为完全不同的攻击分支。]
+						[c/66E6FF:突破、复苏、侦查、轰炸与瘟疫被拆解为五条独立路径，并在同一体系内共存。]
+						[c/66E6FF:各分支之间的反馈差异极大，部分组合甚至表现出远超预期的协同放大效应。]
+						[c/66E6FF:系统因此放弃绝对稳定性，转而依赖使用者在战斗中的选择来维持整体输出节奏。]
+						[c/66E6FF:如今，它已不再只是发射箭矢的武器，而是一种在不断分化中持续生长的战术结构。]
 						'''
 				}
 			}
@@ -74,7 +143,8 @@ Mods: {
 				BFArrow_DBomb.DisplayName: 轰炸箭
 				BFArrow_EPlague.DisplayName: 瘟疫箭
 				BFArrow_EPlagueGas.DisplayName: 瘟疫毒雾
-				BFLeftTacticalArrow.DisplayName: 战术箭
+				BFLeafProj.DisplayName: 叶子箭
+				BFLeafBombExplosion.DisplayName: 树杈爆破
 				BFLeftPlagueFlame.DisplayName: 瘟疫火流
 				FuckYou.DisplayName: 绽裂爆轰
 				BFPassiveRecoveryField.DisplayName: 复苏立场
@@ -103,7 +173,6 @@ Mods: {
 			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
 			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
 			// BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
-			// BFLeftTacticalArrow.DisplayName: B F Left Tactical Arrow
 			// FuckYou.DisplayName: Fuck You
 			// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
 			// BBShuriken_Light.DisplayName: B B Shuriken_ Light
