@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
+using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -319,6 +320,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                 Main.Rasterizer,
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
+
+            if (flashPulse > 0f)
+            {
+                HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
+                    texture,
+                    drawPosition,
+                    Projectile.rotation,
+                    origin,
+                    Vector2.One * Projectile.scale * (1f + flashPulse * 0.05f),
+                    effects,
+                    3.2f + flashPulse * 7.2f,
+                    flashPulse * 0.95f,
+                    Main.GlobalTimeWrappedHourly + Projectile.identity * 0.19f,
+                    22,
+                    manageBlendState: false);
+            }
 
             for (int i = 0; i < 14; i++)
             {

@@ -1,16 +1,20 @@
 using CalamityMod;
+using CalamityMod.Enums;
 using CalamityMod.Particles;
+using CalamityMod.Graphics.Primitives;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 {
-    internal sealed class SHPBowArrow : ModProjectile, ILocalizedModType
+    internal sealed class SHPBowArrow : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.A_Dev";
@@ -26,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 18;
+            ProjectileID.Sets.TrailCacheLength[Type] = 28;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -272,10 +276,115 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             }
         }
 
+        public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
+        {
+            Vector2[] trailPoints = BuildShaderTrailPoints();
+            if (trailPoints.Length < 2)
+                return;
+
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+
+            PrimitiveRenderer.RenderTrail(
+                trailPoints,
+                new PrimitiveSettings(
+                    OuterTrailWidthFunction,
+                    OuterTrailColorFunction,
+                    ShaderTrailOffsetFunction,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                trailPoints.Length * 4);
+
+            Vector2[] coreTrail = trailPoints.Take(System.Math.Min(12, trailPoints.Length)).ToArray();
+            if (coreTrail.Length < 2)
+                return;
+
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+
+            PrimitiveRenderer.RenderTrail(
+                coreTrail,
+                new PrimitiveSettings(
+                    CoreTrailWidthFunction,
+                    CoreTrailColorFunction,
+                    ShaderTrailOffsetFunction,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                coreTrail.Length * 4);
+        }
+
+        private Vector2[] BuildShaderTrailPoints()
+        {
+            Vector2[] trailPoints = Projectile.oldPos
+                .Where(position => position != Vector2.Zero)
+                .Select(position => position + Projectile.Size * 0.5f)
+                .ToArray();
+
+            if (trailPoints.Length == 0)
+                return new[] { Projectile.Center - Projectile.velocity, Projectile.Center };
+
+            if (trailPoints[0] != Projectile.Center)
+                trailPoints = new[] { Projectile.Center }.Concat(trailPoints).ToArray();
+
+            return trailPoints;
+        }
+
+        private Vector2 ShaderTrailOffsetFunction(float completion, Vector2 _)
+        {
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            float wave = (float)System.Math.Sin(completion * MathHelper.TwoPi * 1.35f + Main.GlobalTimeWrappedHourly * (Charged ? 15f : 11f) + Projectile.identity * 0.2f);
+            return normal * wave * (Charged ? 1.35f : 0.85f) * (1f - completion * 0.35f);
+        }
+
+        private float OuterTrailWidthFunction(float completion, Vector2 _)
+        {
+            float bodyWidth = Projectile.scale * (Charged ? 23f : 16f) + SequenceLength * (Charged ? 0.9f : 0.55f);
+            float headCurve = 0.16f;
+
+            if (completion < headCurve)
+                return (float)System.Math.Sin(completion / headCurve * MathHelper.PiOver2) * bodyWidth + headCurve;
+
+            return Utils.Remap(completion, headCurve, 1f, bodyWidth, 0f);
+        }
+
+        private Color OuterTrailColorFunction(float completion, Vector2 _)
+        {
+            Color headColor = Color.Lerp(Color.White, EnergyColor(0.06f + completion * 0.18f), 0.28f);
+            Color bodyColor = Color.Lerp(EnergyColor(completion * 0.9f), EnergyColor(0.55f + completion * 0.45f), 0.42f);
+            float tailFade = Utils.GetLerpValue(0.72f, 1f, completion, true);
+            float opacity = Projectile.Opacity * (Charged ? 0.98f : 0.82f) * (1f - tailFade);
+            Color finalColor = Color.Lerp(headColor, bodyColor, Utils.GetLerpValue(0f, 0.42f, completion, true)) * opacity;
+            finalColor.A = 0;
+            return finalColor;
+        }
+
+        private float CoreTrailWidthFunction(float completion, Vector2 _)
+        {
+            float bodyWidth = Projectile.scale * (Charged ? 10.5f : 7.2f) + SequenceLength * 0.24f;
+            float headCurve = 0.14f;
+
+            if (completion < headCurve)
+                return (float)System.Math.Sin(completion / headCurve * MathHelper.PiOver2) * bodyWidth + headCurve;
+
+            return Utils.Remap(completion, headCurve, 1f, bodyWidth, 0f);
+        }
+
+        private Color CoreTrailColorFunction(float completion, Vector2 _)
+        {
+            Color coreColor = Color.Lerp(Color.White, EnergyColor(0.18f + completion * 0.3f), Charged ? 0.28f : 0.38f);
+            float opacity = Projectile.Opacity * (Charged ? 1.08f : 0.92f) * (1f - Utils.GetLerpValue(0.76f, 1f, completion, true));
+            coreColor.A = 0;
+            return coreColor * opacity;
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D streakTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/FadeStreak").Value;
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float drawRotation = direction.ToRotation();
@@ -337,6 +446,34 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                     0);
             }
 
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            Color headColor = MakeAdditive(EnergyColor(0.42f + time * 0.31f));
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float wingPulse = 0.86f + 0.14f * (float)System.Math.Sin(time * 9f + side * 1.7f);
+                Main.EntitySpriteDraw(
+                    streakTexture,
+                    drawPosition - direction * (Charged ? 3f : 2f) + normal * side * (Charged ? 3.6f : 2.4f),
+                    null,
+                    headColor * (Charged ? 0.62f : 0.48f),
+                    drawRotation + side * 0.24f,
+                    new Vector2(streakTexture.Width * 0.5f, streakTexture.Height * 0.5f),
+                    new Vector2((Charged ? 0.82f : 0.58f) * scale * wingPulse, (Charged ? 0.18f : 0.13f) * scale),
+                    SpriteEffects.None,
+                    0);
+            }
+
+            Main.EntitySpriteDraw(
+                starTexture,
+                drawPosition + direction * (Charged ? 8f : 5f),
+                null,
+                Color.White * (Charged ? 0.8f : 0.62f),
+                drawRotation + MathHelper.PiOver2,
+                starTexture.Size() * 0.5f,
+                new Vector2((Charged ? 0.32f : 0.22f) * scale, (Charged ? 1.25f : 0.86f) * scale),
+                SpriteEffects.None,
+                0);
+
             Main.EntitySpriteDraw(
                 streakTexture,
                 drawPosition + direction * (Charged ? 8f : 5f),
@@ -344,7 +481,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 MakeAdditive(EnergyColor(0.68f + time * 0.24f)) * (Charged ? 0.88f : 0.66f),
                 drawRotation,
                 new Vector2(streakTexture.Width * 0.5f, streakTexture.Height * 0.5f),
-                new Vector2((Charged ? 1.05f : 0.74f) * scale, (Charged ? 0.3f : 0.22f) * scale),
+                new Vector2((Charged ? 1.32f : 0.94f) * scale, (Charged ? 0.38f : 0.29f) * scale),
                 SpriteEffects.None,
                 0);
 
@@ -355,7 +492,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 MakeAdditive(EnergyColor(0.12f + time * 0.2f)) * (Charged ? 0.88f : 0.65f),
                 0f,
                 bloomTexture.Size() * 0.5f,
-                (Charged ? 0.16f : 0.105f) * scale,
+                (Charged ? 0.24f : 0.16f) * scale,
                 SpriteEffects.None,
                 0);
 
@@ -366,7 +503,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 Color.White * (Charged ? 0.92f : 0.78f),
                 0f,
                 bloomTexture.Size() * 0.5f,
-                (Charged ? 0.055f : 0.038f) * scale,
+                (Charged ? 0.08f : 0.055f) * scale,
                 SpriteEffects.None,
                 0);
 

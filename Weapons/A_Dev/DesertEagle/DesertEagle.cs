@@ -38,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             Item.UseSound = SoundID.Item41 with { Volume = 0.8f, Pitch = -0.12f };
             Item.value = Item.sellPrice(0, 14);
             Item.rare = ItemRarityID.Lime;
+            Item.Calamity().devItem = true;
         }
 
         public override bool AltFunctionUse(Player player) => true;

@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -458,6 +459,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
+            TriggerNormalFireOutlinePulse();
             int count = LaserChainCount;
 
             Vector2 fireDirection = Vector2.UnitX.RotatedBy(Projectile.rotation);
@@ -582,8 +584,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override bool PreDraw(ref Color lightColor)
         {
-            // ===== 阶段升级描边脉冲 =====
+            Texture2D outlineTexture = TextureAssets.Projectile[Projectile.type].Value;
+            Vector2 outlinePosition = Projectile.Center - Main.screenPosition;
+            Vector2 outlineOrigin = outlineTexture.Size() * 0.5f;
+            float outlineRotation = Projectile.rotation + (Projectile.spriteDirection == -1 ? MathHelper.Pi : 0f);
+            SpriteEffects outlineEffects =
+                (float)Projectile.spriteDirection * Owner.gravDir == -1f
+                    ? SpriteEffects.FlipHorizontally
+                    : SpriteEffects.None;
+            Vector2 outlineScale = Vector2.One * Projectile.scale * Math.Abs(Owner.gravDir);
+
+            if (normalFireOutlineTimer > 0)
+            {
+                float firePulse = normalFireOutlineTimer / (float)NormalFireOutlineDuration;
+                Color fireColor = Color.Lerp(new Color(78, 214, 255), Color.White, 0.45f);
+
+                HoldoutOutlineHelper.DrawSolidOutline(
+                    outlineTexture,
+                    outlinePosition,
+                    outlineRotation,
+                    outlineOrigin,
+                    outlineScale,
+                    outlineEffects,
+                    fireColor,
+                    1.4f + firePulse * 4.4f,
+                    firePulse * 0.78f,
+                    Main.GlobalTimeWrappedHourly + Projectile.identity * 0.1f,
+                    12);
+
+                normalFireOutlineTimer--;
+            }
+
             if (stageOutlineTimer > 0)
+            {
+                float stagePulse = stageOutlineTimer / (float)StageOutlineDuration;
+
+                HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
+                    outlineTexture,
+                    outlinePosition,
+                    outlineRotation,
+                    outlineOrigin,
+                    outlineScale * (1f + stagePulse * 0.05f),
+                    outlineEffects,
+                    2.2f + stagePulse * 7.6f,
+                    stagePulse * 0.98f,
+                    Main.GlobalTimeWrappedHourly + Projectile.identity * 0.17f,
+                    22);
+
+                stageOutlineTimer--;
+            }
+            // ===== 阶段升级描边脉冲 =====
+            if (stageOutlineTimer > StageOutlineDuration + 1)
             {
                 Texture2D tex = TextureAssets.Projectile[Projectile.type].Value;
 

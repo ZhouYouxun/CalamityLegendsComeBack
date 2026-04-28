@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
+using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -33,6 +34,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int PlagueAmmoSavePercent = 95;
         private const int BreakthroughChargeReductionPerUnlock = 7;
         private const int BreakthroughLoadFlashFrames = 14;
+        private const int LeftOutlinePulseFrames = 10;
+        private const int RightOutlinePulseFrames = 22;
         private const float ParallelSpacing = 18f;
         private const float BreakthroughSpeed = 19f;
         private const float ReconSpread = 0.34f;
@@ -59,6 +62,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private int chargeFxTimer;
         private int breakthroughLoadedArrows;
         private int breakthroughLoadFlashTimer;
+        private int leftOutlinePulseTimer;
+        private int rightOutlinePulseTimer;
         private bool rightChargeActive;
         private bool readyBurstPlayed;
         private bool releasedShot;
@@ -159,6 +164,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
+            UpdateOutlinePulseTimers();
+
             BFRightUIPlayer rightUIPlayer = Owner.GetModPlayer<BFRightUIPlayer>();
 
             if (Main.myPlayer == Projectile.owner)
@@ -254,6 +261,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FireCurrentPresetLeftAttack(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
+            TriggerTacticalOutlinePulse(rightClick: false);
+
             switch (CurrentPreset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
@@ -455,6 +464,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, armRotation + extraBackArmRotation);
         }
 
+        private void UpdateOutlinePulseTimers()
+        {
+            if (leftOutlinePulseTimer > 0)
+                leftOutlinePulseTimer--;
+
+            if (rightOutlinePulseTimer > 0)
+                rightOutlinePulseTimer--;
+        }
+
+        private void TriggerTacticalOutlinePulse(bool rightClick)
+        {
+            if (rightClick)
+                rightOutlinePulseTimer = RightOutlinePulseFrames;
+            else
+                leftOutlinePulseTimer = LeftOutlinePulseFrames;
+        }
+
         private void UpdateReloadAnimation()
         {
             float reloadProgress = 1f - reloadTimer / (float)ReloadFrames;
@@ -554,6 +580,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             extraBackArmRotation = 0f;
 
             SpawnReleasePulse();
+            TriggerTacticalOutlinePulse(rightClick: true);
             ReleaseChargedShot(CurrentPreset, ChargeCompletion);
             Owner.GetModPlayer<BFEXPlayer>().GainEX(3);
         }
@@ -738,6 +765,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
 
             readyBurstPlayed = true;
+            rightOutlinePulseTimer = Math.Max(rightOutlinePulseTimer, RightOutlinePulseFrames / 2);
             bool bombard = CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
 
             SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.6f, Pitch = 0.25f }, GunTipPosition);
@@ -759,6 +787,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void PlayBreakthroughArrowLoadedBurst()
         {
+            rightOutlinePulseTimer = Math.Max(rightOutlinePulseTimer, BreakthroughLoadFlashFrames);
             SoundEngine.PlaySound(SoundID.Item108 with { Volume = 0.22f, Pitch = 0.35f }, GunTipPosition);
 
             Color flashColor = new(124, 255, 136);
@@ -1314,9 +1343,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float time = Main.GlobalTimeWrappedHourly;
             float outlinePulse = 0.72f + 0.28f * (float)Math.Sin(time * 5.2f + Projectile.identity * 0.43f);
             float chargeGlow = rightChargeActive && reloadTimer <= 0 ? MathHelper.SmoothStep(0f, 1f, ChargeCompletion) : 0f;
+            float leftOutlinePulse = leftOutlinePulseTimer / (float)LeftOutlinePulseFrames;
+            float rightOutlinePulse = rightOutlinePulseTimer / (float)RightOutlinePulseFrames;
+            float tacticalOutlinePulse = Math.Max(leftOutlinePulse * 0.78f, rightOutlinePulse);
             float glowStrength = 0.88f + outlinePulse * 0.22f + chargeGlow * 0.9f;
             float glowRadius = MathHelper.Lerp(2.8f, 7.4f, chargeGlow) + outlinePulse * 0.55f;
             int glowDraws = 20 + (int)(chargeGlow * 12f);
+            glowStrength += tacticalOutlinePulse * 1.1f;
+            glowRadius += tacticalOutlinePulse * (rightOutlinePulse > leftOutlinePulse ? 7.5f : 4.5f);
+            glowDraws += (int)(tacticalOutlinePulse * 16f);
             Color outerGlowColor = (Color.Lerp(PresetColor, Color.White, 0.48f) with { A = 0 }) * glowStrength;
             Color innerGlowColor = (Color.Lerp(AccentColor, Color.White, 0.68f) with { A = 0 }) * (0.72f + chargeGlow * 0.64f);
             Color coreGlowColor = (Color.Lerp(Color.White, PresetColor, 0.28f) with { A = 0 }) * (0.46f + chargeGlow * 0.54f);
@@ -1342,6 +1377,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Main.Rasterizer,
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
+
+            if (tacticalOutlinePulse > 0f)
+            {
+                Color tacticalColor = Color.Lerp(PresetColor, AccentColor, rightOutlinePulse > leftOutlinePulse ? 0.45f : 0.18f);
+                HoldoutOutlineHelper.DrawSolidOutline(
+                    weaponTexture,
+                    drawPosition,
+                    rotation,
+                    origin,
+                    Vector2.One * Projectile.scale * (1f + tacticalOutlinePulse * 0.05f),
+                    effects,
+                    tacticalColor,
+                    glowRadius + tacticalOutlinePulse * 3f,
+                    tacticalOutlinePulse * 0.78f,
+                    time + Projectile.identity * 0.2f,
+                    18 + (int)(tacticalOutlinePulse * 8f),
+                    manageBlendState: false);
+            }
 
             for (int i = 0; i < glowDraws; i++)
             {

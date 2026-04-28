@@ -58,6 +58,13 @@ Mods: {
 					SHPB_Final: "[c/9FD8FF:Same source, different shape. The cannon became a question; the bow became four answers.]"
 				}
 			}
+
+			Consumables: {
+				LegendarySupplyBox: {
+					DisplayName: Legendary Supply Box
+					Tooltip: "Right click to claim the currently available legendary weapons."
+				}
+			}
 		}
 
 		Projectiles: {

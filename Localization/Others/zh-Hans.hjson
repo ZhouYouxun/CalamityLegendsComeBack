@@ -58,6 +58,13 @@ Mods: {
 					SHPB_Final: "[c/9FD8FF:同源，不同形。炮身成为一个问题，而弓给出了四种回答。]"
 				}
 			}
+
+			Consumables: {
+				LegendarySupplyBox: {
+					DisplayName: 传奇补给箱
+					Tooltip: "右键打开，领取目前已经准备好的传奇武器。"
+				}
+			}
 		}
 
 		Projectiles: {

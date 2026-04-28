@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.Visuals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,10 +18,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
         private const float HoldoutLength = 24f;
         private const float MuzzleLength = 46f;
         private const int ReadyPulseFrames = 18;
+        private const int NormalFireOutlineFrames = 16;
+        private const int ChargedFireOutlineFrames = 32;
 
         private int leftFireTimer;
         private int chargeTimer;
         private int readyPulseTimer;
+        private int rainbowOutlineTimer;
         private float recoilKick;
         private bool rightChargeActive;
         private bool readySoundPlayed;
@@ -175,6 +179,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             {
                 readySoundPlayed = true;
                 readyPulseTimer = ReadyPulseFrames;
+                rainbowOutlineTimer = Math.Max(rainbowOutlineTimer, ReadyPulseFrames);
                 SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.9f, Pitch = -0.18f }, Projectile.Center);
             }
 
@@ -224,6 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             }
 
             ApplyRecoil(charged ? 14f : 2.6f + shots.Count * 0.35f);
+            rainbowOutlineTimer = charged ? ChargedFireOutlineFrames : NormalFireOutlineFrames;
             if (charged)
             {
                 Owner.velocity -= aim * (4.4f + BowPlayer.SequenceLength * 0.5f);
@@ -402,6 +408,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             if (readyPulseTimer > 0)
                 readyPulseTimer--;
 
+            if (rainbowOutlineTimer > 0)
+                rainbowOutlineTimer--;
+
             Color color = SHPBowModeHelpers.SequenceColor(BowPlayer.PackedSequence, 0.65f);
             Lighting.AddLight(GetMuzzlePosition(AimDirection), color.ToVector3() * (0.2f + ChargeCompletion * 0.46f));
         }
@@ -559,17 +568,36 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             float pulse = 0.76f + 0.24f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7f + Projectile.identity);
             float chargeGlow = rightChargeActive ? ChargeCompletion : 0f;
             float readyPulse = readyPulseTimer / (float)ReadyPulseFrames;
+            float outlinePulse = rainbowOutlineTimer / (float)(rightChargeActive || rainbowOutlineTimer > NormalFireOutlineFrames ? ChargedFireOutlineFrames : NormalFireOutlineFrames);
+            float rainbowOpacity = MathHelper.Clamp(0.14f + BowPlayer.SequenceLength * 0.04f + chargeGlow * 0.36f + readyPulse * 0.52f + outlinePulse * 0.85f, 0f, 1.35f);
+            float rainbowRadius = 1.8f + chargeGlow * 5.2f + readyPulse * 4.2f + outlinePulse * 6.2f;
+
+            HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
+                texture,
+                drawPosition,
+                drawRotation,
+                origin,
+                Vector2.One * Projectile.scale * (1f + outlinePulse * 0.04f),
+                effects,
+                rainbowRadius,
+                rainbowOpacity,
+                Main.GlobalTimeWrappedHourly + Projectile.identity * 0.13f,
+                18 + (int)(chargeGlow * 10f + outlinePulse * 8f));
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
 
             for (int i = 0; i < 12; i++)
             {
                 float completion = i / 11f;
                 float angle = MathHelper.TwoPi * completion + Main.GlobalTimeWrappedHourly * (1.45f + chargeGlow);
                 Vector2 offset = angle.ToRotationVector2() * (1.4f + chargeGlow * 4.6f + readyPulse * 5f) * pulse;
+                Color glowColor = Color.Lerp(baseColor, tipColor, completion);
+                glowColor.A = 0;
                 Main.EntitySpriteDraw(
                     texture,
                     drawPosition + offset,
                     null,
-                    Color.Lerp(baseColor, tipColor, completion) * (0.1f + chargeGlow * 0.2f + readyPulse * 0.26f),
+                    glowColor * (0.1f + chargeGlow * 0.2f + readyPulse * 0.26f),
                     drawRotation,
                     origin,
                     Projectile.scale,
@@ -577,6 +605,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                     0);
             }
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             DrawBowString(drawRotation);
             DrawSequenceBeads(drawRotation);
 
