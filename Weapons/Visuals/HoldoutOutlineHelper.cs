@@ -78,8 +78,11 @@ namespace CalamityLegendsComeBack.Weapons.Visuals
             if (texture is null || opacity <= 0f || radius <= 0f || drawCount <= 0)
                 return;
 
+            // These outline copies intentionally use A=0 colors. In Terraria's premultiplied
+            // AlphaBlend pass that brightens without adding a dark silhouette; Additive would
+            // multiply by SourceAlpha and make the copies invisible.
             if (manageBlendState)
-                Main.spriteBatch.SetBlendState(BlendState.Additive);
+                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             int layers = 5;
             int directions = System.Math.Max(drawCount, 12);

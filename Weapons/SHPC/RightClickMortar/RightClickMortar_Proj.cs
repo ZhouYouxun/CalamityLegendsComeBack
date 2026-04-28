@@ -261,6 +261,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
 
         public override void OnKill(int timeLeft)
         {
+            int projIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                (int)(Projectile.damage * 0.8f),
+                Projectile.knockBack,
+                Projectile.owner
+            );
+
+            Projectile proj = Main.projectile[projIndex];
+            proj.width = 375;
+            proj.height = 375;
+
+
+
             Vector2 explosionCenter = Projectile.Center;
 
             int oldWidth = Projectile.width;

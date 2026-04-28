@@ -459,7 +459,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
-            TriggerNormalFireOutlinePulse();
             int count = LaserChainCount;
 
             Vector2 fireDirection = Vector2.UnitX.RotatedBy(Projectile.rotation);
@@ -594,74 +593,69 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     : SpriteEffects.None;
             Vector2 outlineScale = Vector2.One * Projectile.scale * Math.Abs(Owner.gravDir);
 
-            bool shouldDrawOutline = normalFireOutlineTimer > 0 || stageOutlineTimer > 0;
-            if (shouldDrawOutline)
-            {
-                Main.spriteBatch.End();
-                Main.spriteBatch.Begin(
-                    SpriteSortMode.Deferred,
-                    BlendState.Additive,
-                    SamplerState.PointClamp,
-                    DepthStencilState.None,
-                    Main.Rasterizer,
-                    null,
-                    Main.GameViewMatrix.TransformationMatrix);
-            }
+            float stageProgress = stage >= MaxHeatStage
+                ? 1f
+                : MathHelper.Clamp(stageTimer / (float)GetStageUpTime(), 0f, 1f);
+            float heatGlow = MathHelper.SmoothStep(0f, 1f, stageProgress);
+            float stageSnap = stageOutlineTimer / (float)StageOutlineDuration;
+            float stageColorProgress = MathHelper.Clamp((stage + heatGlow) / Math.Max(1f, MaxHeatStage), 0f, 1f);
+            Color heatColor = Color.Lerp(new Color(70, 210, 255), new Color(255, 92, 214), stageColorProgress);
+            heatColor = Color.Lerp(heatColor, Color.White, 0.08f + heatGlow * 0.18f);
+            float heatRadius = 1.25f + heatGlow * 4.85f + stageSnap * 0.55f;
+            float heatOpacity = 0.1f + heatGlow * 0.42f + stageSnap * 0.12f;
+            int heatDraws = 12 + (int)(heatGlow * 10f) + (stageSnap > 0f ? 4 : 0);
 
-            if (normalFireOutlineTimer > 0)
-            {
-                float firePulse = normalFireOutlineTimer / (float)NormalFireOutlineDuration;
-                Color fireColor = Color.Lerp(new Color(78, 214, 255), Color.White, 0.45f);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
 
-                HoldoutOutlineHelper.DrawSolidOutline(
+            HoldoutOutlineHelper.DrawSolidOutline(
+                outlineTexture,
+                outlinePosition,
+                outlineRotation,
+                outlineOrigin,
+                outlineScale,
+                outlineEffects,
+                heatColor,
+                heatRadius,
+                heatOpacity,
+                Main.GlobalTimeWrappedHourly + Projectile.identity * 0.1f,
+                heatDraws,
+                manageBlendState: false);
+
+            if (stageOutlineTimer > 0)
+            {
+                HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
                     outlineTexture,
                     outlinePosition,
                     outlineRotation,
                     outlineOrigin,
                     outlineScale,
                     outlineEffects,
-                    fireColor,
-                    3.2f + firePulse * 6.2f,
-                    firePulse * 1.15f,
-                    Main.GlobalTimeWrappedHourly + Projectile.identity * 0.1f,
-                    22,
-                    manageBlendState: false);
-
-                normalFireOutlineTimer--;
-            }
-
-            if (stageOutlineTimer > 0)
-            {
-                float stagePulse = stageOutlineTimer / (float)StageOutlineDuration;
-
-                HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
-                    outlineTexture,
-                    outlinePosition,
-                    outlineRotation,
-                    outlineOrigin,
-                    outlineScale * (1f + stagePulse * 0.05f),
-                    outlineEffects,
-                    4.4f + stagePulse * 9.2f,
-                    stagePulse * 1.25f,
+                    1.15f + stageSnap * 1.65f,
+                    0.12f + stageSnap * 0.3f,
                     Main.GlobalTimeWrappedHourly + Projectile.identity * 0.17f,
-                    28,
+                    18,
                     manageBlendState: false);
 
                 stageOutlineTimer--;
             }
 
-            if (shouldDrawOutline)
-            {
-                Main.spriteBatch.End();
-                Main.spriteBatch.Begin(
-                    SpriteSortMode.Deferred,
-                    BlendState.AlphaBlend,
-                    SamplerState.PointClamp,
-                    DepthStencilState.None,
-                    Main.Rasterizer,
-                    null,
-                    Main.GameViewMatrix.TransformationMatrix);
-            }
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
             // ===== 阶段升级描边脉冲 =====
             if (stageOutlineTimer > StageOutlineDuration + 1)
             {

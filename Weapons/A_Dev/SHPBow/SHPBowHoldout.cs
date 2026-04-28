@@ -229,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             }
 
             ApplyRecoil(charged ? 14f : 2.6f + shots.Count * 0.35f);
-            rainbowOutlineTimer = charged ? ChargedFireOutlineFrames : NormalFireOutlineFrames;
+            rainbowOutlineTimer = charged ? ChargedFireOutlineFrames : Math.Max(rainbowOutlineTimer, NormalFireOutlineFrames / 3);
             if (charged)
             {
                 Owner.velocity -= aim * (4.4f + BowPlayer.SequenceLength * 0.5f);
@@ -569,13 +569,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             float chargeGlow = rightChargeActive ? ChargeCompletion : 0f;
             float readyPulse = readyPulseTimer / (float)ReadyPulseFrames;
             float outlinePulse = rainbowOutlineTimer / (float)(rightChargeActive || rainbowOutlineTimer > NormalFireOutlineFrames ? ChargedFireOutlineFrames : NormalFireOutlineFrames);
-            float rainbowOpacity = MathHelper.Clamp(0.52f + BowPlayer.SequenceLength * 0.07f + chargeGlow * 0.55f + readyPulse * 0.72f + outlinePulse * 1.05f, 0f, 1.65f);
-            float rainbowRadius = 4.2f + chargeGlow * 6.2f + readyPulse * 5.2f + outlinePulse * 7.4f;
+            float rainbowOpacity = MathHelper.Clamp(0.2f + BowPlayer.SequenceLength * 0.025f + chargeGlow * 0.38f + readyPulse * 0.36f + outlinePulse * 0.3f, 0f, 0.92f);
+            float rainbowRadius = 2.1f + chargeGlow * 4.35f + readyPulse * 2.25f + outlinePulse * 1.9f;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
-                BlendState.Additive,
+                BlendState.AlphaBlend,
                 SamplerState.PointClamp,
                 DepthStencilState.None,
                 Main.Rasterizer,
@@ -587,12 +587,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 drawPosition,
                 drawRotation,
                 origin,
-                Vector2.One * Projectile.scale * (1f + outlinePulse * 0.04f),
+                Vector2.One * Projectile.scale * (1f + outlinePulse * 0.015f),
                 effects,
                 rainbowRadius,
                 rainbowOpacity,
                 Main.GlobalTimeWrappedHourly + Projectile.identity * 0.13f,
-                24 + (int)(chargeGlow * 10f + outlinePulse * 10f),
+                16 + (int)(chargeGlow * 6f + outlinePulse * 4f),
                 manageBlendState: false);
 
             for (int i = 0; i < 12; i++)
@@ -606,7 +606,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                     texture,
                     drawPosition + offset,
                     null,
-                    glowColor * (0.2f + chargeGlow * 0.34f + readyPulse * 0.42f + outlinePulse * 0.26f),
+                    glowColor * (0.08f + chargeGlow * 0.17f + readyPulse * 0.18f + outlinePulse * 0.08f),
                     drawRotation,
                     origin,
                     Projectile.scale,

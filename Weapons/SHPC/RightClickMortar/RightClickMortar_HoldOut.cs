@@ -314,7 +314,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
-                BlendState.Additive,
+                BlendState.AlphaBlend,
                 SamplerState.PointClamp,
                 DepthStencilState.None,
                 Main.Rasterizer,

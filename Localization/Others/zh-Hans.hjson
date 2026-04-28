@@ -14,27 +14,13 @@ Mods: {
 						'''
 				}
 
-				Ranged: {
-					HeavenlyGale: {
-						DisplayName: 天堂狂风
-						Tooltip: ""
-					}
-				}
-
-				DraedonsArsenal: {
-					ShortCircuit: {
-						DisplayName: 短路
-						Tooltip: ""
-					}
-				}
-
 				DesertEagle: {
 					DisplayName: 沙漠之鹰
 					Tooltip:
 						'''
 						左键轮流散射动能灌注子弹，以及释放强力吸血弹
 						按住右键将高速旋转手里的沙漠之鹰，切碎撞到它的敌人
-						充能满时点击左键将释放一枚强力的穿透弹
+						充能满时点击左键将释放一枚强力的闪光爆弹
 						“传奇神射手同款”
 						'''
 				}
@@ -62,7 +48,11 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: 传奇补给箱
-					Tooltip: 右键打开，领取目前已经准备好的传奇武器。
+					Tooltip: 
+					'''
+					右键打开，领取目前已经准备好的传奇武器。
+
+					'''
 				}
 			}
 		}

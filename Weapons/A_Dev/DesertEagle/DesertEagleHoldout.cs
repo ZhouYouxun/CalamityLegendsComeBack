@@ -227,7 +227,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                     GunTipPosition,
                     shotDirection * 22f,
                     ModContent.ProjectileType<DesertEagleHeavyRound>(),
-                    (int)(Projectile.damage * 3.8f),
+                    (int)(Projectile.damage * 20.8f),
                     Projectile.knockBack * 3f,
                     Projectile.owner);
             }

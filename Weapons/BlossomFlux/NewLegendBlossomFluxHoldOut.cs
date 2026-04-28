@@ -488,10 +488,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             int interval = GetCurrentLeftGlowInterval();
             if (interval <= 0)
-                return 0.68f + 0.32f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity * 0.31f);
+                return 0.12f + 0.06f * (0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity * 0.31f));
 
             float build = 1f - leftBurstTimer / (float)interval;
-            return MathHelper.Clamp(build, 0f, 1f);
+            float intervalWeight = MathHelper.Clamp(interval / (float)ReconFireInterval, 0.16f, 1f);
+            intervalWeight = MathHelper.Lerp(0.16f, 1f, (float)Math.Pow(intervalWeight, 1.35f));
+            return MathHelper.Clamp(build, 0f, 1f) * intervalWeight;
         }
 
         private int GetCurrentLeftGlowInterval()
@@ -1372,13 +1374,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float leftOutlinePulse = leftOutlinePulseTimer / (float)LeftOutlinePulseFrames;
             float rightOutlinePulse = rightOutlinePulseTimer / (float)RightOutlinePulseFrames;
             float leftBuildGlow = GetLeftAttackBuildGlow();
-            float tacticalOutlinePulse = Math.Max(Math.Max(leftOutlinePulse * 0.78f, rightOutlinePulse), leftBuildGlow);
-            float glowStrength = 1.02f + outlinePulse * 0.26f + chargeGlow * 0.98f + leftBuildGlow * 1.15f;
-            float glowRadius = MathHelper.Lerp(3.4f, 8.2f, chargeGlow) + outlinePulse * 0.65f + leftBuildGlow * 5.6f;
-            int glowDraws = 20 + (int)(chargeGlow * 12f);
-            glowStrength += tacticalOutlinePulse * 1.1f;
-            glowRadius += tacticalOutlinePulse * (rightOutlinePulse > leftBuildGlow ? 8.5f : 5.5f);
-            glowDraws += (int)(tacticalOutlinePulse * 22f);
+            float tacticalOutlinePulse = Math.Max(Math.Max(leftOutlinePulse * 0.28f, rightOutlinePulse * 0.78f), leftBuildGlow);
+            bool rightPulseDominates = rightOutlinePulse * 0.78f > leftBuildGlow;
+            float glowStrength = 0.32f + outlinePulse * 0.1f + chargeGlow * 0.62f + leftBuildGlow * 0.42f;
+            float glowRadius = MathHelper.Lerp(1.75f, 5.7f, chargeGlow) + outlinePulse * 0.24f + leftBuildGlow * 2.6f;
+            int glowDraws = 12 + (int)(chargeGlow * 8f);
+            glowStrength += tacticalOutlinePulse * (rightPulseDominates ? 0.54f : 0.24f);
+            glowRadius += tacticalOutlinePulse * (rightPulseDominates ? 4.4f : 1.8f);
+            glowDraws += (int)(tacticalOutlinePulse * (rightPulseDominates ? 10f : 5f));
             Color outerGlowColor = (Color.Lerp(PresetColor, Color.White, 0.48f) with { A = 0 }) * glowStrength;
             Color innerGlowColor = (Color.Lerp(AccentColor, Color.White, 0.68f) with { A = 0 }) * (0.72f + chargeGlow * 0.64f);
             Color coreGlowColor = (Color.Lerp(Color.White, PresetColor, 0.28f) with { A = 0 }) * (0.46f + chargeGlow * 0.54f);
@@ -1398,7 +1401,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
-                BlendState.Additive,
+                BlendState.AlphaBlend,
                 SamplerState.PointClamp,
                 DepthStencilState.None,
                 Main.Rasterizer,
@@ -1407,19 +1410,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (tacticalOutlinePulse > 0f)
             {
-                Color tacticalColor = Color.Lerp(PresetColor, AccentColor, rightOutlinePulse > leftBuildGlow ? 0.45f : 0.22f);
+                Color tacticalColor = Color.Lerp(PresetColor, AccentColor, rightPulseDominates ? 0.45f : 0.22f);
                 HoldoutOutlineHelper.DrawSolidOutline(
                     weaponTexture,
                     drawPosition,
                     rotation,
                     origin,
-                    Vector2.One * Projectile.scale * (1f + tacticalOutlinePulse * 0.05f),
+                    Vector2.One * Projectile.scale * (1f + tacticalOutlinePulse * (rightPulseDominates ? 0.04f : 0.015f)),
                     effects,
                     tacticalColor,
-                    glowRadius + tacticalOutlinePulse * 4.4f,
-                    MathHelper.Clamp(0.38f + tacticalOutlinePulse * 0.95f, 0f, 1.45f),
+                    glowRadius + tacticalOutlinePulse * (rightPulseDominates ? 2.4f : 0.8f),
+                    MathHelper.Clamp(0.1f + tacticalOutlinePulse * (rightPulseDominates ? 0.58f : 0.24f), 0f, 0.82f),
                     time + Projectile.identity * 0.2f,
-                    24 + (int)(tacticalOutlinePulse * 12f),
+                    14 + (int)(tacticalOutlinePulse * (rightPulseDominates ? 8f : 4f)),
                     manageBlendState: false);
             }
 

@@ -14,20 +14,6 @@ Mods: {
 						'''
 				}
 
-				Ranged: {
-					HeavenlyGale: {
-						DisplayName: Heavenly Gale
-						Tooltip: ""
-					}
-				}
-
-				DraedonsArsenal: {
-					ShortCircuit: {
-						DisplayName: Short Circuit
-						Tooltip: ""
-					}
-				}
-
 				DesertEagle: {
 					DisplayName: Desert Eagle
 					Tooltip:

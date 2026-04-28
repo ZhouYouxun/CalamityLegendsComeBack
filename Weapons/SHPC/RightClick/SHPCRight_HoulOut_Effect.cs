@@ -18,8 +18,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private int stageOutlineTimer;
         private const int StageOutlineDuration = 24;
-        private int normalFireOutlineTimer;
-        private const int NormalFireOutlineDuration = 10;
 
         private Vector2 normalShotFXLastCenter = Vector2.Zero;
         private readonly List<Particle> normalShotFXParticles = new();
@@ -107,11 +105,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void TriggerStageOutlinePulse()
         {
             stageOutlineTimer = StageOutlineDuration;
-        }
-
-        private void TriggerNormalFireOutlinePulse()
-        {
-            normalFireOutlineTimer = NormalFireOutlineDuration;
         }
 
         private void SpawnStageUpEnergyBurst()
