@@ -62,7 +62,7 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: Legendary Supply Box
-					Tooltip: "Right click to claim the currently available legendary weapons."
+					Tooltip: Right click to claim the currently available legendary weapons.
 				}
 			}
 		}

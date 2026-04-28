@@ -330,10 +330,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                     origin,
                     Vector2.One * Projectile.scale * (1f + flashPulse * 0.05f),
                     effects,
-                    3.2f + flashPulse * 7.2f,
-                    flashPulse * 0.95f,
+                    4.6f + flashPulse * 9.4f,
+                    flashPulse * 1.35f,
                     Main.GlobalTimeWrappedHourly + Projectile.identity * 0.19f,
-                    22,
+                    28,
                     manageBlendState: false);
             }
 

@@ -569,8 +569,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             float chargeGlow = rightChargeActive ? ChargeCompletion : 0f;
             float readyPulse = readyPulseTimer / (float)ReadyPulseFrames;
             float outlinePulse = rainbowOutlineTimer / (float)(rightChargeActive || rainbowOutlineTimer > NormalFireOutlineFrames ? ChargedFireOutlineFrames : NormalFireOutlineFrames);
-            float rainbowOpacity = MathHelper.Clamp(0.14f + BowPlayer.SequenceLength * 0.04f + chargeGlow * 0.36f + readyPulse * 0.52f + outlinePulse * 0.85f, 0f, 1.35f);
-            float rainbowRadius = 1.8f + chargeGlow * 5.2f + readyPulse * 4.2f + outlinePulse * 6.2f;
+            float rainbowOpacity = MathHelper.Clamp(0.52f + BowPlayer.SequenceLength * 0.07f + chargeGlow * 0.55f + readyPulse * 0.72f + outlinePulse * 1.05f, 0f, 1.65f);
+            float rainbowRadius = 4.2f + chargeGlow * 6.2f + readyPulse * 5.2f + outlinePulse * 7.4f;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
 
             HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
                 texture,
@@ -582,9 +592,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 rainbowRadius,
                 rainbowOpacity,
                 Main.GlobalTimeWrappedHourly + Projectile.identity * 0.13f,
-                18 + (int)(chargeGlow * 10f + outlinePulse * 8f));
-
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
+                24 + (int)(chargeGlow * 10f + outlinePulse * 10f),
+                manageBlendState: false);
 
             for (int i = 0; i < 12; i++)
             {
@@ -597,7 +606,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                     texture,
                     drawPosition + offset,
                     null,
-                    glowColor * (0.1f + chargeGlow * 0.2f + readyPulse * 0.26f),
+                    glowColor * (0.2f + chargeGlow * 0.34f + readyPulse * 0.42f + outlinePulse * 0.26f),
                     drawRotation,
                     origin,
                     Projectile.scale,
@@ -605,7 +614,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                     0);
             }
 
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             DrawBowString(drawRotation);
             DrawSequenceBeads(drawRotation);
 

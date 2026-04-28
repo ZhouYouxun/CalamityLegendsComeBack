@@ -81,25 +81,35 @@ namespace CalamityLegendsComeBack.Weapons.Visuals
             if (manageBlendState)
                 Main.spriteBatch.SetBlendState(BlendState.Additive);
 
-            for (int i = 0; i < drawCount; i++)
-            {
-                float completion = i / (float)drawCount;
-                float angle = MathHelper.TwoPi * completion + time * 1.45f;
-                float wave = 0.88f + 0.12f * (float)System.Math.Sin(time * 7.5f + i * 0.73f);
-                Vector2 offset = angle.ToRotationVector2() * radius * wave;
-                Color color = colorSelector(completion);
-                color.A = 0;
+            int layers = 5;
+            int directions = System.Math.Max(drawCount, 12);
 
-                Main.EntitySpriteDraw(
-                    texture,
-                    drawPosition + offset,
-                    null,
-                    color * opacity,
-                    rotation,
-                    origin,
-                    scale,
-                    effects,
-                    0f);
+            for (int layer = 0; layer < layers; layer++)
+            {
+                float layerCompletion = layers <= 1 ? 0f : layer / (float)(layers - 1);
+                float currentRadius = MathHelper.Lerp(radius, radius * 0.18f, layerCompletion);
+                float layerOpacity = opacity * MathHelper.Lerp(0.72f, 0.14f, layerCompletion);
+
+                for (int i = 0; i < directions; i++)
+                {
+                    float completion = i / (float)directions;
+                    float angle = MathHelper.TwoPi * completion + time * 1.45f + layer * 0.19f;
+                    float wave = 0.9f + 0.1f * (float)System.Math.Sin(time * 7.5f + i * 0.73f + layer * 1.1f);
+                    Vector2 offset = angle.ToRotationVector2() * currentRadius * wave;
+                    Color color = colorSelector((completion + layerCompletion * 0.18f) % 1f);
+                    color.A = 0;
+
+                    Main.EntitySpriteDraw(
+                        texture,
+                        drawPosition + offset,
+                        null,
+                        color * layerOpacity,
+                        rotation,
+                        origin,
+                        scale,
+                        effects,
+                        0f);
+                }
             }
 
             if (manageBlendState)

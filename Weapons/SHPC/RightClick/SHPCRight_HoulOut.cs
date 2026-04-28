@@ -594,6 +594,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     : SpriteEffects.None;
             Vector2 outlineScale = Vector2.One * Projectile.scale * Math.Abs(Owner.gravDir);
 
+            bool shouldDrawOutline = normalFireOutlineTimer > 0 || stageOutlineTimer > 0;
+            if (shouldDrawOutline)
+            {
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(
+                    SpriteSortMode.Deferred,
+                    BlendState.Additive,
+                    SamplerState.PointClamp,
+                    DepthStencilState.None,
+                    Main.Rasterizer,
+                    null,
+                    Main.GameViewMatrix.TransformationMatrix);
+            }
+
             if (normalFireOutlineTimer > 0)
             {
                 float firePulse = normalFireOutlineTimer / (float)NormalFireOutlineDuration;
@@ -607,10 +621,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     outlineScale,
                     outlineEffects,
                     fireColor,
-                    1.4f + firePulse * 4.4f,
-                    firePulse * 0.78f,
+                    3.2f + firePulse * 6.2f,
+                    firePulse * 1.15f,
                     Main.GlobalTimeWrappedHourly + Projectile.identity * 0.1f,
-                    12);
+                    22,
+                    manageBlendState: false);
 
                 normalFireOutlineTimer--;
             }
@@ -626,12 +641,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     outlineOrigin,
                     outlineScale * (1f + stagePulse * 0.05f),
                     outlineEffects,
-                    2.2f + stagePulse * 7.6f,
-                    stagePulse * 0.98f,
+                    4.4f + stagePulse * 9.2f,
+                    stagePulse * 1.25f,
                     Main.GlobalTimeWrappedHourly + Projectile.identity * 0.17f,
-                    22);
+                    28,
+                    manageBlendState: false);
 
                 stageOutlineTimer--;
+            }
+
+            if (shouldDrawOutline)
+            {
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(
+                    SpriteSortMode.Deferred,
+                    BlendState.AlphaBlend,
+                    SamplerState.PointClamp,
+                    DepthStencilState.None,
+                    Main.Rasterizer,
+                    null,
+                    Main.GameViewMatrix.TransformationMatrix);
             }
             // ===== 阶段升级描边脉冲 =====
             if (stageOutlineTimer > StageOutlineDuration + 1)
