@@ -26,8 +26,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int BreakthroughFireInterval = 7;
         private const int RecoveryBurstInterval = 7;
         private const int RecoveryCyclePause = 40;
-        private const int ReconFireInterval = 8;
-        private const int BombardFireInterval = 2;
+        private const int ReconFireInterval = 40;
+        private const int BombardFireInterval = 4;
         private const int PlagueFireInterval = 0;
         private const int BombardAmmoSavePercent = 90;
         private const int PlagueAmmoSavePercent = 95;

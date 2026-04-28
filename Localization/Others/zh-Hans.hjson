@@ -8,9 +8,9 @@ Mods: {
 						'''
 						射出随机的弹幕
 						“不是吧，又整这一套？”
-						“距离上次我们做出类似的东西才过了不到几个月啊”
-						“什么你说这是我们的特色？”
-						“好吧，满足你”
+						“距离上次我们做出类似的东西才过了不到几个月啊。”
+						“什么？你说这是我们的特色？”
+						“好吧，满足你。”
 						'''
 				}
 
@@ -32,12 +32,39 @@ Mods: {
 					DisplayName: 沙漠之鹰
 					Tooltip:
 						'''
-						左键轮流散射子弹并为其灌注动能，以及释放强力吸血弹
-						按住右键将高速旋转手里的沙漠之鹰，切碎撞到他的敌人
+						左键轮流散射动能灌注子弹，以及释放强力吸血弹
+						按住右键将高速旋转手里的沙漠之鹰，切碎撞到它的敌人
 						充能满时点击左键将释放一枚强力的穿透弹
 						“传奇神射手同款”
 						'''
 				}
+
+				SHPBow: {
+					DisplayName: S.H.P.B.
+					Tooltip: "[GFB]"
+					ModeName0: 穿透
+					ModeName1: 反弹
+					ModeName2: 散射
+					ModeName3: 追踪
+					SHPB_CurrentSequence: "[c/78E6FF:当前 SHP 弓弦序列：{0}]"
+					SHPB_Left: "[c/9FD8FF:左键发射由弓弦序列构成的一份箭式，从左到右依次加工。]"
+					SHPB_StackHint: "[c/C7F3FF:在轮盘中左键点击核心会把它追加到序列末端；序列满时向前滚动。右键点击核心会把序列重置为该核心。允许重复。]"
+					SHPB_Mode0: "[c/60E2FF:穿透层：提高速度、穿透、破甲与局部命中节奏。]"
+					SHPB_Mode1: "[c/FFD464:反弹层：增加物块反弹次数与命中后的再索敌范围。]"
+					SHPB_Mode2: "[c/FF7AAA:散射层：按序分裂箭式，但分支数量有硬上限以维持平衡。]"
+					SHPB_Mode3: "[c/A476FF:追踪层：提高索敌范围与转向强度。]"
+					SHPB_Right: "[c/F7D87C:右键短按打开核心轮盘；右键按住超过 0.15 秒会为整条序列蓄力，蓄满后松手释放。]"
+					SHPB_EX: "[c/BAA0FF:这把弓是 SHPC 的姊妹框架：更少后坐力，更少机械结构，把所有判断都移到了弓弦上。]"
+					SHPB_Final: "[c/9FD8FF:同源，不同形。炮身成为一个问题，而弓给出了四种回答。]"
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				SHPBowHoldout.DisplayName: S.H.P.B. 悬持弓
+				SHPBowSelectionPanel.DisplayName: SHP 核心轮盘
+				SHPBowArrow.DisplayName: SHP 核心箭
 			}
 		}
 

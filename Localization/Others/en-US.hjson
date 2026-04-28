@@ -38,6 +38,33 @@ Mods: {
 							"Used by legendary marksmen"
 						'''
 				}
+
+				SHPBow: {
+					DisplayName: S.H.P.B.
+					Tooltip: "[GFB]"
+					ModeName0: Pierce
+					ModeName1: Ricochet
+					ModeName2: Scatter
+					ModeName3: Homing
+					SHPB_CurrentSequence: "[c/78E6FF:Current SHP string: {0}]"
+					SHPB_Left: "[c/9FD8FF:Left click fires one arrow recipe built from the string, processed from left to right.]"
+					SHPB_StackHint: "[c/C7F3FF:Left-click a core in the wheel to append it. A full string rolls forward. Right-click a core to reset the string to that core. Repeats are allowed.]"
+					SHPB_Mode0: "[c/60E2FF:Pierce layers add speed, penetration, armor penetration, and tighter local hit timing.]"
+					SHPB_Mode1: "[c/FFD464:Ricochet layers add tile rebounds and post-hit retargeting range.]"
+					SHPB_Mode2: "[c/FF7AAA:Scatter layers split the shot in sequence, with a hard cap on branch count for balance.]"
+					SHPB_Mode3: "[c/A476FF:Homing layers increase target search range and steering strength.]"
+					SHPB_Right: "[c/F7D87C:Tap right click to open the core wheel. Hold right click past 0.15 seconds to charge the whole string, then release when the bar is full.]"
+					SHPB_EX: "[c/BAA0FF:The bow is SHPC's sister-frame: lower recoil, less machinery, and all decisions moved onto the string.]"
+					SHPB_Final: "[c/9FD8FF:Same source, different shape. The cannon became a question; the bow became four answers.]"
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				SHPBowHoldout.DisplayName: S.H.P.B. Holdout
+				SHPBowSelectionPanel.DisplayName: SHP Core Wheel
+				SHPBowArrow.DisplayName: SHP Core Arrow
 			}
 		}
 

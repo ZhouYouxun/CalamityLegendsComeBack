@@ -1,8 +1,8 @@
-using CalamityMod.Particles;
 using CalamityMod;
+using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
@@ -12,82 +12,84 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private ref float Time => ref Projectile.localAI[0];
+        private Color sparkColor;
+        private int time;
 
         public override void SetDefaults()
         {
-            Projectile.width = 26;
-            Projectile.height = 26;
+            Projectile.width = 30;
+            Projectile.height = 30;
             Projectile.friendly = true;
-            Projectile.hostile = false;
-            Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
+            Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 42;
-            Projectile.MaxUpdates = 120;
-            Projectile.alpha = 255;
+            Projectile.MaxUpdates = 180;
+            Projectile.timeLeft = 240;
             Projectile.usesIDStaticNPCImmunity = true;
             Projectile.idStaticNPCHitCooldown = 6;
         }
 
         public override void AI()
         {
-            Time++;
+            Player owner = Main.player[Projectile.owner];
+            float ownerDistance = Vector2.Distance(owner.Center, Projectile.Center);
+            time++;
 
             Color plagueGreen = new(124, 238, 68);
             Color plagueYellow = new(218, 255, 116);
-            Lighting.AddLight(Projectile.Center, plagueGreen.ToVector3() * 0.28f);
+            Color deepGreen = new(36, 152, 48);
+            float colorPulse = Main.GlobalTimeWrappedHourly * 8f;
+            sparkColor = Color.Lerp(plagueGreen, plagueYellow, colorPulse % 2f > 1f ? 1f : colorPulse % 1f);
 
-            if (Time > 4f && Main.rand.NextBool(38))
-            {
-                Dust ember = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.GreenTorch,
-                    -Projectile.velocity.RotatedByRandom(0.05f) * Main.rand.NextFloat(0.08f, 0.22f),
-                    100,
-                    Main.rand.NextBool(3) ? plagueYellow : plagueGreen,
-                    Main.rand.NextFloat(0.45f, 0.95f));
-                ember.noGravity = true;
-            }
+            Lighting.AddLight(Projectile.Center, Color.White.ToVector3() * 0.2f);
+            Lighting.AddLight(Projectile.Center, plagueGreen.ToVector3() * 0.35f);
 
-            if (Main.dedServ || !Projectile.FinalExtraUpdate())
+            if (Main.dedServ)
                 return;
 
-            float fade = Utils.GetLerpValue(0f, 8f, Time, true) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
-            Color sparkColor = Color.Lerp(plagueGreen, plagueYellow, Main.rand.NextFloat(0.12f, 0.55f)) * fade;
-
-            CustomSpark spark = new(
-                Projectile.Center,
-                Projectile.velocity * Main.rand.NextFloat(0.3f, 2.4f),
-                "CalamityMod/Particles/SmallBloom",
-                false,
-                4,
-                Main.rand.NextFloat(0.055f, 0.09f),
-                sparkColor,
-                new Vector2(1f, 1f + Time * 0.03f),
-                true,
-                false);
-            GeneralParticleHandler.SpawnParticle(spark);
-
-            if (Main.rand.NextBool(3))
+            if (ownerDistance < 1400f)
             {
-                MediumMistParticle smoke = new(
-                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                    Projectile.velocity.RotatedByRandom(0.15f) * Main.rand.NextFloat(0.2f, 0.65f),
-                    new Color(114, 186, 52) * fade,
-                    new Color(220, 255, 130) * fade,
-                    Main.rand.NextFloat(0.65f, 1.15f),
-                    34,
-                    Main.rand.NextFloat(-0.04f, 0.04f));
-                GeneralParticleHandler.SpawnParticle(smoke);
+                float sparkScale = (37f - time * 0.165f) * 0.005f;
+                sparkScale = MathHelper.Clamp(sparkScale, 0.035f, 0.19f);
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center,
+                    Projectile.velocity * Main.rand.NextFloat(0.5f, 4f),
+                    "CalamityMod/Particles/SmallBloom",
+                    false,
+                    4,
+                    sparkScale,
+                    sparkColor,
+                    new Vector2(1f, 1f + time * 0.1f)));
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center,
+                    Projectile.velocity * Main.rand.NextFloat(0.5f, 4f),
+                    "CalamityMod/Particles/SmallBloom",
+                    false,
+                    4,
+                    sparkScale * 0.62f,
+                    Color.Lerp(deepGreen, sparkColor, 0.55f),
+                    new Vector2(1f, 1f + time * 0.1f)));
+            }
+
+            if (Main.rand.NextBool(35) && ownerDistance < 1400f && time > 5)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    263,
+                    new Vector2(0f, -5f).RotatedByRandom(0.05f) * Main.rand.NextFloat(0.3f, 1.6f));
+
+                dust.noGravity = true;
+                dust.scale = Main.rand.NextFloat(0.3f, 1f);
+                dust.color = sparkColor;
             }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(BuffID.Poisoned, 240);
-            target.AddBuff(BuffID.Venom, 180);
+            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 1200);
         }
     }
 }
