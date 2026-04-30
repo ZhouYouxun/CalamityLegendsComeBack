@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 glow,
                 drawPosition,
                 null,
-                Color.White * (0.5f * opacity),
+                (Color.White with { A = 0 }) * (0.5f * opacity),
                 Projectile.rotation,
                 glow.Size() * 0.5f,
                 Projectile.scale * 0.1f,

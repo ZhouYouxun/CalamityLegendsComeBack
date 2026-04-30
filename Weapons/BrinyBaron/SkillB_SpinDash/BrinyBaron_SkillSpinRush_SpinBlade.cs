@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -457,6 +458,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         {
             target.AddBuff(BuffID.Frostburn, 180);
             Owner.GetModPlayer<BBEXPlayer>().AddTide();
+
+            if (Owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
+                Owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ReduceCooldownTo(BBAccessoryPlayer.ImpactRestarterSpinDashCooldown);
 
             if (!dashImpactPlayed)
             {

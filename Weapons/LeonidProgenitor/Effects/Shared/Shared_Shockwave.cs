@@ -1,3 +1,4 @@
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -26,6 +27,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
 
         public override void AI()
         {
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                if (!Main.dedServ && Main.LocalPlayer.Distance(Projectile.Center) < 900f)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = System.Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 1.8f);
+            }
+
             Projectile.scale += 0.08f;
             Projectile.alpha = System.Math.Max(0, Projectile.alpha - 24);
             Lighting.AddLight(Projectile.Center, new Vector3(0.22f, 0.2f, 0.26f));

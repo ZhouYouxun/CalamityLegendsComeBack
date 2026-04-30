@@ -24,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public new string LocalizationCategory => "Items.Weapons";
         private bool CanUseDashTornado => BB_Balance.CanUseShortDash;
         private bool CanUseSpinRush => BB_Balance.CanUseSpinRush;
+        private BalanceBrinyBaron damageBalance = new();
 
         public override void SetDefaults()
         {
@@ -59,6 +60,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             if (player.altFunctionUse == 2)
             {
+                if (player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] > 0)
+                    return false;
+
                 if (!CanUseDashTornado && !CanUseSpinRush)
                     return false;
 
@@ -109,10 +113,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (player.altFunctionUse == 2)
             {
                 BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                int rightClickDamage = GetCurrentRightClickDamage(player);
 
                 if (type == ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>())
                 {
-                    Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
+                    Projectile.NewProjectile(source, position, velocity, type, rightClickDamage, knockback, player.whoAmI);
                     dashCooldown.StartCooldown();
                     BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
                     tidePlayer.TideValue = Math.Max(0, tidePlayer.TideValue - 1);
@@ -121,7 +126,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
 
                 Vector2 shootVelocity = velocity.SafeNormalize(Vector2.UnitX * player.direction);
-                Projectile.NewProjectile(source, position, shootVelocity, type, damage, knockback, player.whoAmI);
+                Projectile.NewProjectile(source, position, shootVelocity, type, rightClickDamage, knockback, player.whoAmI);
                 dashCooldown.StartCooldown();
                 return false;
             }
@@ -265,63 +270,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         // ===== 这里只改武器面板伤害，不影响各个技能自己的倍率 =====
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            bool[] downStages =
-            {
-                NPC.downedBoss1,
-                NPC.downedBoss2,                
-                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,
-                NPC.downedBoss3,
-                DownedBossSystem.downedSlimeGod,
-                Main.hardMode,
-                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
-                DownedBossSystem.downedCalamitasClone,
-                NPC.downedPlantBoss,
-                NPC.downedFishron,
-                NPC.downedAncientCultist,
-                NPC.downedMoonlord,
-                DownedBossSystem.downedProvidence,
-                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid,
-                DownedBossSystem.downedPolterghast,
-                DownedBossSystem.downedDoG,
-                DownedBossSystem.downedYharon,
-                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas,
-                DownedBossSystem.downedPrimordialWyrm
-            };
+            damage.Base = damageBalance.GetLeftClickBaseDamage();
+        }
 
-            int[] stageDamage =
-            {
-                15,
-                24,
-                31,
-                33,
-                34,
-                42,
-                79,
-                108,
-                121,
-                144,
-                210,
-                465,
-                472,
-                489,
-                505,
-                1248,
-                1351,
-                16590,
-                21469
-            };
-
-            int finalDamage = 10;
-
-            for (int i = 0; i < downStages.Length; i++)
-            {
-                if (downStages[i])
-                    finalDamage = stageDamage[i];
-                else
-                    break;
-            }
-
-            damage.Base = finalDamage;
+        private int GetCurrentRightClickDamage(Player player)
+        {
+            int baseDamage = damageBalance.GetRightClickBaseDamage();
+            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
         }
 
         #endregion

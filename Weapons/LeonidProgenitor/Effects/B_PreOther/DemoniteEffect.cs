@@ -1,5 +1,5 @@
 using Terraria;
-using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.B_PreOther
 {
@@ -17,11 +17,29 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.B_PreOther
             if (Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            for (int i = 0; i < 2; i++)
+            // ProjectileID.VampireKnife = 304, ProjectileID.EatersBite = 306.
+            int projectileType = crimsonVariant ? ProjectileID.VampireKnife : ProjectileID.EatersBite;
+            int projectileCount = crimsonVariant ? 3 : 2;
+            for (int i = 0; i < projectileCount; i++)
             {
-                int wisp = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), target.Center, Main.rand.NextVector2CircularEdge(1f, 1f) * 10f, ModContent.ProjectileType<Demonite_Wisp>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, crimsonVariant ? 1f : 0f);
-                if (wisp >= 0 && wisp < Main.maxProjectiles)
-                    Main.projectile[wisp].DamageType = meteor.Projectile.DamageType;
+                Microsoft.Xna.Framework.Vector2 spawnPosition = target.Center + Main.rand.NextVector2CircularEdge(70f, 70f) + Main.rand.NextVector2Circular(12f, 12f);
+                Microsoft.Xna.Framework.Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Microsoft.Xna.Framework.Vector2.UnitY) * (crimsonVariant ? 13f : 10f);
+
+                int spawned = Projectile.NewProjectile(
+                    meteor.Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    projectileType,
+                    crimsonVariant ? meteor.Projectile.damage / 3 : meteor.Projectile.damage / 2,
+                    meteor.Projectile.knockBack,
+                    meteor.Projectile.owner);
+
+                if (spawned >= 0 && spawned < Main.maxProjectiles)
+                {
+                    Main.projectile[spawned].friendly = true;
+                    Main.projectile[spawned].hostile = false;
+                    Main.projectile[spawned].DamageType = meteor.Projectile.DamageType;
+                }
             }
         }
     }

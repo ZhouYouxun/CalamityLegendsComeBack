@@ -63,7 +63,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         public static bool IsOwnedExWarshipType(int projectileType)
         {
-            return projectileType == ModContent.ProjectileType<YC_EX_Drone>() ||
+            return projectileType == ModContent.ProjectileType<YC_EX_LaserDrone>() ||
+                   projectileType == ModContent.ProjectileType<YC_EX_Drone>() ||
                    projectileType == ModContent.ProjectileType<YC_EX_LaserCruiser>() ||
                    projectileType == ModContent.ProjectileType<YC_EX_Battleship>();
         }

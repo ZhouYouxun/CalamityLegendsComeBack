@@ -39,13 +39,13 @@ Mods: {
 					MetalName6: Tungsten Bar
 					MetalDesc6: Grows larger and pierces one extra time
 					MetalName7: Gold Bar
-					MetalDesc7: Bursts into a shower of gold sparks
+					MetalDesc7: 10% chance to burst into 1 to 3 gold coin projectiles
 					MetalName8: Platinum Bar
-					MetalDesc8: Has a chance to clear your debuffs
+					MetalDesc8: Releases execution slashes, stronger against wounded targets
 					MetalName9: Demonite Bar
-					MetalDesc9: Releases tracking evil wisps
+					MetalDesc9: Releases small EatersBite projectiles
 					MetalName10: Crimtane Bar
-					MetalDesc10: Releases tracking crimson wisps
+					MetalDesc10: Releases VampireKnife projectiles
 					MetalName11: Aerialite Bar
 					MetalDesc11: Ignores gravity and gains speed
 					MetalName12: Meteorite Bar
@@ -57,19 +57,19 @@ Mods: {
 					MetalName15: Palladium Bar
 					MetalDesc15: Heals on hit with a cooldown
 					MetalName16: Mythril Bar
-					MetalDesc16: Summons a circling flame that later homes in
+					MetalDesc16: Summons a nearby MythrilFlare that waits briefly, then homes in
 					MetalName17: Orichalcum Bar
-					MetalDesc17: Fires a petal strike from the side
+					MetalDesc17: Fires two FlowerPetal strikes from the screen edge
 					MetalName18: Adamantite Bar
 					MetalDesc18: Creates a burning area
 					MetalName19: Titanium Bar
-					MetalDesc19: Charges 5% titanium shielding
+					MetalDesc19: Grants a short Interstellar Stompers-style mobility surge
 					MetalName20: Cryonic Bar
 					MetalDesc20: Creates a freezing area
 					MetalName21: Hallowed Bar
 					MetalDesc21: Fires a short holy laser from a random angle
 					MetalName22: Chlorophyte Bar
-					MetalDesc22: All small meteors gain homing
+					MetalDesc22: Primary and small meteors gain homing
 					MetalName23: Perennial Bar
 					MetalDesc23: Creates stackable healing seekers
 					MetalName24: Shroomite Bar
@@ -77,11 +77,11 @@ Mods: {
 					MetalName25: Spectre Bar
 					MetalDesc25: Leaves a ghost clone at the initial position
 					MetalName26: Scoria Bar
-					MetalDesc26: Erupts upward lava globs
+					MetalDesc26: Erupts pure molten dust upward
 					MetalName27: Lunar Bar
-					MetalDesc27: Calls down moonlit strikes around the target
+					MetalDesc27: Calls down mixed MoonlordArrowTrail and LunarFlare strikes
 					MetalName28: Astral Bar
-					MetalDesc28: Creates three random nearby starbursts
+					MetalDesc28: Creates three SummonAstralExplosion blasts as rogue damage
 					MetalName29: Uelibloom Bar
 					MetalDesc29: Blossoms into homing thorn shards
 					MetalName30: Cosmilite Bar
@@ -90,6 +90,8 @@ Mods: {
 					MetalDesc31: Calls down auric piercing strikes
 					MetalName32: Shadowspec Bar
 					MetalDesc32: Spreads a slow shadow aftershock
+					MetalName33: Life Alloy
+					MetalDesc33: Releases tri-color gleams that pause, bend, and then home in
 				}
 			}
 		}
@@ -99,6 +101,13 @@ Mods: {
 				LeonidProgenitorBombshell.DisplayName: Primary Meteor
 				LeonidCometSmall.DisplayName: Small Meteor
 				LeonidCometStealthMark.DisplayName: Meteor Mark
+				Copper_ChainLightning.DisplayName: Leonid Chain Lightning
+				Shared_Shockwave.DisplayName: Leonid Shockwave
+				Shared_LingeringField.DisplayName: Leonid Elemental Field
+				Shared_SplitMeteor.DisplayName: Leonid Ghost Meteor
+				Perennial_HealingOrb.DisplayName: Perennial Healing Light
+				LifeAlloy_Gleam.DisplayName: Life Alloy Gleam
+				Hallowed_Laser.DisplayName: Hallowed Short Laser
 			}
 		}
 	}

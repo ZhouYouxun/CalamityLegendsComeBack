@@ -34,6 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         Uelibloom = 29,
         Cosmilite = 30,
         Auric = 31,
-        Shadowspec = 32
+        Shadowspec = 32,
+        LifeAlloy = 33
     }
 }

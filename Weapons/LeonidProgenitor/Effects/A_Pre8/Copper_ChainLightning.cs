@@ -18,10 +18,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
             Projectile.height = 18;
             Projectile.friendly = true;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 24;
+            Projectile.timeLeft = 54;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = 1;
+            Projectile.extraUpdates = 0;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
             if (nextTarget == null)
                 return;
 
-            Vector2 velocity = (nextTarget.Center - target.Center).SafeNormalize(Vector2.UnitX) * 18f;
+            Vector2 velocity = (nextTarget.Center - target.Center).SafeNormalize(Vector2.UnitX) * 7f;
             int nextBolt = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 target.Center,

@@ -28,7 +28,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float NormalSwooshScale = 0.6f;
         private const float StageFourSwooshScale = 0.75f;
         private const float GiantSwooshScale = 1.35f;
-        private const float GiantSlashDurationMultiplier = 1.7f;
+        private const float RightSpinTurnsPerCycle = 2f;
+        private const int RightSpinTransitionFrames = 14;
+        private const int RightSpinClockwiseDirection = 1;
+        private const float RightSpinMaxAngularVelocity = 780f / 32f * MathHelper.Pi / 180f;
+        private const float RightSpinAngularAcceleration = 0.18f;
+        private const int RightSpinHitboxInterval = 8;
 
         // 0/1/2 = 前三刀普通攻击，3 = 第四刀普通攻击+手里剑，4 = 第五刀巨大化攻击
         private int CurrentComboStage => swingCount % 5;
@@ -90,6 +95,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private float currentScale = 0.5f;
         private bool spawnedInvisibleSwingHitbox = false;
         private float giantHoldRotationOffset = 0f;
+        private bool rightSpinActive = false;
+        private int rightSpinTimer = 0;
+        private int rightSpinDirection = 1;
+        private int rightSpinOwnerDirection = 1;
+        private int rightSpinLastShurikenTurn = 0;
+        private bool rightSpinSound = true;
+        private float rightSpinAngularVelocity = 0f;
+        private float rightSpinAccumulatedRotation = 0f;
+        private int rightSpinTransitionTimer = 0;
+        private float rightSpinTransitionStartOffset = 0f;
 
         public override void SetDefaults()
         {
@@ -279,6 +294,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             spawnedInvisibleSwingHitbox = false;
             SetCurrentScale(normalModeScale);
             giantHoldRotationOffset = RotationOffset;
+            rightSpinActive = false;
+            rightSpinTimer = 0;
+            rightSpinSound = true;
+            rightSpinOwnerDirection = Owner.direction == 0 ? 1 : Owner.direction;
+            rightSpinLastShurikenTurn = 0;
+            rightSpinAngularVelocity = 0f;
+            rightSpinAccumulatedRotation = 0f;
+            rightSpinTransitionTimer = 0;
+            rightSpinTransitionStartOffset = 0f;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        private bool WantsRightSpin()
+        {
+            if (Owner.whoAmI != Main.myPlayer)
+                return rightSpinActive;
+
+            Owner.Calamity().rightClickListener = true;
+            return Owner.Calamity().mouseRight &&
+                   Owner.channel &&
+                   !Owner.noItems &&
+                   !Owner.CCed &&
+                   !Owner.mouseInterface &&
+                   !Main.mapFullscreen &&
+                   !Main.blockMouse;
         }
 
         private void SpawnNormalSwingWave()
@@ -336,8 +376,276 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             }
         }
 
+        private void SpawnRightSpinHitbox()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            int squareSize = Math.Max(GetInvisibleHitboxSize(), (int)ScaleDistance(250f));
+            int projectileIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BBSwing_INV>(),
+                Math.Max(1, (int)(Projectile.damage * 0.48f)),
+                Projectile.knockBack * 0.5f,
+                Projectile.owner,
+                squareSize,
+                CurrentVisualScale,
+                SlashAngle);
+
+            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
+            {
+                Projectile hitboxProjectile = Main.projectile[projectileIndex];
+                hitboxProjectile.Center = Owner.Center;
+                hitboxProjectile.timeLeft = 2;
+                hitboxProjectile.localNPCHitCooldown = 18;
+            }
+        }
+
+        private void SpawnRightSpinShuriken()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            float launchAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            Vector2 radialDirection = launchAngle.ToRotationVector2();
+            Vector2 tangentDirection = radialDirection.RotatedBy(MathHelper.PiOver2 * rightSpinDirection);
+            Vector2 spawnPosition = Owner.Center + radialDirection * ScaleDistance(Main.rand.NextFloat(38f, 62f));
+            Vector2 velocity = radialDirection * Main.rand.NextFloat(9.5f, 13.5f) +
+                               tangentDirection * Main.rand.NextFloat(1.5f, 3.5f);
+            velocity = velocity.SafeNormalize(radialDirection) * Main.rand.NextFloat(11f, 15f);
+
+            int projectileIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                Projectile.knockBack * 0.45f,
+                Projectile.owner,
+                1f);
+
+            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
+            {
+                Projectile shuriken = Main.projectile[projectileIndex];
+                shuriken.timeLeft = Math.Min(shuriken.timeLeft, 150);
+                shuriken.netUpdate = true;
+            }
+        }
+
+        private void SpawnRightSpinShurikenBurst()
+        {
+            for (int i = 0; i < 3; i++)
+                SpawnRightSpinShuriken();
+        }
+
+        private int GetEarthSpinUseAnim() => Math.Max(1, Owner.itemAnimationMax * 2);
+
+        private static float GetEarthSpinSlashDelay(float spinUseAnim) => spinUseAnim / 2.5f;
+
+        private static float GetEarthSpinSlashTimeMax(float spinUseAnim) => spinUseAnim - GetEarthSpinSlashDelay(spinUseAnim);
+
+        private void ApplyEarthDoubleSpinRotation(float animationProgress, int completedCycles, float swingDirection, int spinUseAnim)
+        {
+            float cycleBase = -360f * RightSpinTurnsPerCycle * swingDirection * completedCycles;
+
+            if (animationProgress < spinUseAnim / 7f)
+            {
+                float windupPower = 1f + Utils.GetLerpValue(spinUseAnim * 0.35f, spinUseAnim * 0.6f, animationProgress, true) * 0.25f;
+                RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(cycleBase + 120f * swingDirection * windupPower), 0.2f);
+                return;
+            }
+
+            float slashDelay = GetEarthSpinSlashDelay(spinUseAnim);
+            float slashTimeMax = GetEarthSpinSlashTimeMax(spinUseAnim);
+            float time = animationProgress - slashDelay;
+            float progress = MathHelper.Clamp(time / slashTimeMax, 0f, 1f);
+            float start = cycleBase + 150f * swingDirection;
+            float end = start - 360f * RightSpinTurnsPerCycle * swingDirection;
+            float targetRotation = MathHelper.ToRadians(MathHelper.Lerp(start, end, CalamityUtils.ExpInOutEasing(progress, 1)));
+
+            RotationOffset = MathHelper.Lerp(RotationOffset, targetRotation, 0.2f);
+        }
+
+        private void SpawnRightSpinParticles()
+        {
+            if (!CanHit)
+                return;
+
+            Vector2 slashDirection = SlashAngle.ToRotationVector2();
+            Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinDirection);
+            float ringPhase = rightSpinTimer * 0.34f * rightSpinDirection;
+
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = ringPhase + MathHelper.TwoPi * i / 4f + Main.rand.NextFloat(-0.16f, 0.16f);
+                Vector2 orbitDirection = angle.ToRotationVector2();
+                Vector2 spawnPosition = Owner.Center + orbitDirection * ScaleDistance(Main.rand.NextFloat(72f, 154f));
+                Vector2 velocity = tangentDirection * Main.rand.NextFloat(1.3f, 2.9f) +
+                                   orbitDirection * Main.rand.NextFloat(0.4f, 1.4f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    spawnPosition,
+                    Main.rand.NextBool() ? DustID.Frost : DustID.Water,
+                    velocity,
+                    0,
+                    default,
+                    Main.rand.NextFloat(0.9f, 1.35f) * CurrentVisualScale);
+                dust.noGravity = true;
+                dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 glowPosition = Owner.Center + (ringPhase + Main.rand.NextFloat(-0.2f, 0.2f)).ToRotationVector2() * ScaleDistance(135f);
+                GeneralParticleHandler.SpawnParticle(
+                    new GlowOrbParticle(
+                        glowPosition,
+                        tangentDirection * Main.rand.NextFloat(0.8f, 1.8f),
+                        false,
+                        12,
+                        CurrentVisualScale * 0.4f,
+                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                        true,
+                        false,
+                        true
+                    )
+                );
+            }
+        }
+
+        private void DoRightSpin()
+        {
+            bool keepSpinning = WantsRightSpin();
+            if (!keepSpinning)
+            {
+                if (!Owner.channel)
+                {
+                    Projectile.Kill();
+                    return;
+                }
+
+                rightSpinActive = false;
+                rightSpinTimer = 0;
+                rightSpinSound = true;
+                rightSpinLastShurikenTurn = 0;
+                rightSpinAngularVelocity = 0f;
+                rightSpinAccumulatedRotation = 0f;
+                rightSpinTransitionTimer = 0;
+                rightSpinTransitionStartOffset = 0f;
+                Projectile.localNPCHitCooldown = -1;
+                CanHit = false;
+                postSwing = false;
+                doSwing = false;
+                return;
+            }
+
+            if (!rightSpinActive)
+            {
+                rightSpinActive = true;
+                rightSpinTimer = 0;
+                rightSpinOwnerDirection = Owner.direction == 0 ? 1 : Owner.direction;
+                rightSpinDirection = RightSpinClockwiseDirection;
+                rightSpinLastShurikenTurn = 0;
+                rightSpinSound = true;
+                rightSpinAngularVelocity = 0f;
+                rightSpinAccumulatedRotation = 0f;
+                rightSpinTransitionTimer = 0;
+                rightSpinTransitionStartOffset = RotationOffset;
+                spawnedInvisibleSwingHitbox = false;
+                giantGrowing = false;
+                giantSlashing = false;
+                giantShrinking = false;
+                giantTimer = 0;
+
+                for (int i = 0; i < Main.maxNPCs; i++)
+                    Projectile.localNPCImmunity[i] = 0;
+
+                Projectile.numHits = 0;
+                SetCurrentScale(normalModeScale * 1.08f);
+                Projectile.localNPCHitCooldown = 8;
+            }
+
+            rightSpinTimer++;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
+            Projectile.Center = Owner.Center;
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.itemTime = Math.Max(Owner.itemTime, 2);
+            Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
+            DrawUnconditionally = true;
+            SetCurrentScale(MathHelper.Lerp(CurrentVisualScale, normalModeScale * 1.08f, 0.22f));
+
+            Vector2 mouseWorld = Owner.Calamity().mouseWorld;
+            if (mouseWorld == Vector2.Zero)
+                mouseWorld = Main.MouseWorld;
+
+            Vector2 aimDirection = (mouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
+            if (aimDirection == Vector2.Zero)
+                aimDirection = Vector2.UnitX * rightSpinOwnerDirection;
+
+            mousePos = mouseWorld;
+            aimVel = -aimDirection * 65f;
+            Owner.direction = aimDirection.X >= 0f ? 1 : -1;
+            FlipAsSword = Owner.direction == -1;
+            Projectile.rotation = Projectile.rotation.AngleLerp(aimDirection.ToRotation() + MathHelper.ToRadians(45f), 0.42f);
+
+            if (rightSpinTransitionTimer < RightSpinTransitionFrames)
+            {
+                rightSpinTransitionTimer++;
+                float transitionProgress = rightSpinTransitionTimer / (float)RightSpinTransitionFrames;
+                float easedTransition = 1f - (float)Math.Pow(1f - transitionProgress, 3f);
+                RotationOffset = Utils.AngleLerp(rightSpinTransitionStartOffset, 0f, easedTransition);
+                rightSpinAngularVelocity = 0f;
+                rightSpinAccumulatedRotation = 0f;
+                rightSpinLastShurikenTurn = 0;
+                CanHit = false;
+                postSwing = true;
+
+                if (rightSpinTransitionTimer >= RightSpinTransitionFrames)
+                    RotationOffset = 0f;
+
+                return;
+            }
+
+            float targetAngularVelocity = RightSpinMaxAngularVelocity * rightSpinDirection;
+            rightSpinAngularVelocity = MathHelper.Lerp(rightSpinAngularVelocity, targetAngularVelocity, RightSpinAngularAcceleration);
+            RotationOffset += rightSpinAngularVelocity;
+            rightSpinAccumulatedRotation += Math.Abs(rightSpinAngularVelocity);
+
+            float spinSpeedRatio = MathHelper.Clamp(Math.Abs(rightSpinAngularVelocity) / RightSpinMaxAngularVelocity, 0f, 1f);
+            CanHit = spinSpeedRatio > 0.32f;
+            postSwing = true;
+
+            if (rightSpinTimer % 30 == 1 || (rightSpinSound && spinSpeedRatio > 0.72f))
+            {
+                SoundEngine.PlaySound(
+                    SoundID.Item71 with
+                    {
+                        Volume = 0.8f,
+                        Pitch = Main.rand.NextFloat(-0.08f, 0.08f)
+                    },
+                    Projectile.Center);
+                rightSpinSound = false;
+            }
+
+            int completedTurns = (int)(rightSpinAccumulatedRotation / MathHelper.TwoPi);
+            while (rightSpinLastShurikenTurn < completedTurns)
+            {
+                rightSpinLastShurikenTurn++;
+                SpawnRightSpinShurikenBurst();
+            }
+
+            SpawnRightSpinParticles();
+
+            if (CanHit && rightSpinTimer % RightSpinHitboxInterval == 1)
+                SpawnRightSpinHitbox();
+        }
+
         public override void UseStyle()
         {
+            Owner.Calamity().mouseWorldListener = true;
+            Owner.Calamity().rightClickListener = true;
             AnimationProgress = Animation % useAnim;
             DrawUnconditionally = false;
 
@@ -373,6 +681,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 finalFlip = false;
                 swingSound = true;
                 armoredHits = 0;
+                rightSpinActive = false;
+                rightSpinTimer = 0;
+                rightSpinSound = true;
+                rightSpinLastShurikenTurn = 0;
+                rightSpinAngularVelocity = 0f;
+                rightSpinAccumulatedRotation = 0f;
+                rightSpinTransitionTimer = 0;
+                rightSpinTransitionStartOffset = 0f;
+                Projectile.localNPCHitCooldown = -1;
                 spawnedStage4Projectiles = false;
 
                 // 第五刀状态重置
@@ -396,6 +713,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 }
 
                 // 转动速度的核心
+                bool rightSpinRequested = rightSpinActive || WantsRightSpin();
+
+                if (rightSpinRequested)
+                {
+                    DoRightSpin();
+                    ArmRotationOffset = MathHelper.ToRadians(-140f);
+                    ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
+                    return;
+                }
+
                 Projectile.rotation = Projectile.rotation.AngleLerp(
                     Owner.AngleTo(mousePos) + MathHelper.ToRadians(45f),
                     0.5f // 更改转动速度的快慢
@@ -834,22 +1161,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
 
 
-                float time = giantTimer;
-                float timeMax = Owner.itemAnimationMax * 1.2f; // Earth 第1下：useAnim=2倍，挥砍段=0.6useAnim，所以最终=1.2倍 itemAnimationMax
-
-
-                timeMax *= GiantSlashDurationMultiplier;
-                float linearSlashProgress = Utils.GetLerpValue(0f, timeMax, time, true);
-
-                float slashProgress = EvaluateEarthStyleSwingProgress(linearSlashProgress);
+                int spinUseAnim = GetEarthSpinUseAnim();
+                float animationProgress = Math.Min(giantTimer - 1, spinUseAnim - 1);
+                float slashTimeMax = GetEarthSpinSlashTimeMax(spinUseAnim);
+                float time = animationProgress - GetEarthSpinSlashDelay(spinUseAnim);
+                float linearSlashProgress = Utils.GetLerpValue(0f, spinUseAnim, animationProgress, true);
+                float swingDirection = Projectile.ai[1] * Owner.direction;
                 
                 TrySpawnInvisibleSwingHitbox(linearSlashProgress);
+                ApplyEarthDoubleSpinRotation(animationProgress, 0, swingDirection, spinUseAnim);
 
-                float swingDirection = Projectile.ai[1] * Owner.direction;
-                float start = 150f * swingDirection;
-                float end = start - 360f * swingDirection;
-
-                if (time >= (int)(timeMax * 0.4f) && swingSound)
+                if (time >= (int)(slashTimeMax * 0.4f) && swingSound)
                 {
                     SoundEngine.PlaySound(
                         SoundID.Item71 with
@@ -871,9 +1193,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                     swingSound = false;
                 }
-                RotationOffset = MathHelper.ToRadians(MathHelper.Lerp(start, end, slashProgress));
 
-                if (time > (int)(timeMax * 0.45f) && time < (int)(timeMax * 0.9f))
+                if (time > (int)(slashTimeMax * 0.45f) && time < (int)(slashTimeMax * 0.9f))
                 {
                     CanHit = true;
                     postSwing = true;
@@ -883,10 +1204,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 else
                     CanHit = false;
 
-                if (time < (int)(timeMax * 0.7f))
+                if (time < (int)(slashTimeMax * 0.7f))
                     postSwing = true;
 
-                if (time >= timeMax)
+                if (giantTimer >= spinUseAnim)
                 {
                     giantSlashing = false;
                     giantShrinking = true;
@@ -909,9 +1230,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 postSwing = false;
 
                 float swingDirection = Projectile.ai[1] * Owner.direction;
-                float slashEnd = 150f * swingDirection - 360f * swingDirection;
-                float shrinkEnd = 28f * -swingDirection;
-                RotationOffset = MathHelper.ToRadians(MathHelper.Lerp(slashEnd, shrinkEnd, shrinkProgress));
+                float slashEnd = 150f * swingDirection - 360f * RightSpinTurnsPerCycle * swingDirection;
+                RotationOffset = MathHelper.ToRadians(slashEnd);
 
                 SpawnGiantShrinkParticles(shrinkProgress);
 

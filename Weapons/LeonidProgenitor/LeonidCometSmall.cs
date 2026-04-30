@@ -12,6 +12,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     public class LeonidCometSmall : ModProjectile, ILocalizedModType
     {
+        public const int FromStealthFlag = 1;
+        public const int SilverSplitFlag = 2;
+        public const int SpectreCloneFlag = 4;
+
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/LeonidProgenitor";
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
@@ -23,7 +27,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public int PrimaryEffectID => (int)Projectile.ai[0];
         public int SecondaryEffectID => (int)Projectile.ai[1];
-        public bool FromStealthRain => Projectile.ai[2] > 0f;
+        public int SpawnFlags => (int)Projectile.ai[2];
+        public bool FromStealthRain => (SpawnFlags & FromStealthFlag) != 0;
         public Player Owner => Main.player[Projectile.owner];
         public Vector2 InitialCenter { get; private set; }
         public Color MeteorColor { get; private set; }
@@ -59,6 +64,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             MeteorColor = LeonidVisualUtils.GetMeteorColor(PrimaryEffectID, SecondaryEffectID);
             activeEffects = LeonidMetalEffectRegistry.ResolveEffects(PrimaryEffectID, SecondaryEffectID);
             Projectile.DamageType = Owner.HeldItem.DamageType;
+
+            if ((SpawnFlags & SilverSplitFlag) != 0)
+                SetFlag("silver_split");
+
+            if ((SpawnFlags & SpectreCloneFlag) != 0)
+                SetFlag("spectre_clone");
 
             for (int i = 0; i < activeEffects.Length; i++)
                 activeEffects[i].OnSpawn(this, Owner);

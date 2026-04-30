@@ -23,6 +23,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.DamageType = DamageClass.Ranged;
+            Projectile.arrow = true;
+            Projectile.noDropItem = true;
             Projectile.penetrate = -1;
             Projectile.MaxUpdates = 60;
             Projectile.timeLeft = 240;

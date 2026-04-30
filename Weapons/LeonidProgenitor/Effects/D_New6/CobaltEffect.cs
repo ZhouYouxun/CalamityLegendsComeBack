@@ -18,7 +18,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
                 return;
 
             meteor.SetFlag("cobalt_ricochet");
-            meteor.Projectile.velocity = meteor.Projectile.velocity.RotatedByRandom(MathHelper.ToRadians(100f));
+            float speed = System.Math.Max(meteor.Projectile.velocity.Length(), 9f);
+            float reflectedAngle = meteor.Projectile.velocity.ToRotation() + MathHelper.Pi;
+            meteor.Projectile.velocity = (reflectedAngle + Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)).ToRotationVector2() * speed;
             meteor.Projectile.netUpdate = true;
         }
     }

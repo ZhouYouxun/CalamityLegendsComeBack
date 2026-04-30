@@ -108,6 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 new(LeonidMetalID.Shroomite, ItemID.ShroomiteBar, "ShroomiteBar", "蘑菇矿锭", 1552, "E_Final5", new Color(111, 161, 255)), // 蘑菇矿锭 1552
                 new(LeonidMetalID.Spectre, ItemID.SpectreBar, "SpectreBar", "幽灵锭", 3261, "E_Final5", new Color(144, 227, 255)), // 幽灵锭 3261
                 new(LeonidMetalID.Scoria, ModContent.ItemType<ScoriaBar>(), "ScoriaBar", "熔渣锭", -1, "C_Calamity", new Color(255, 109, 62)), // 熔渣锭 ScoriaBar
+                new(LeonidMetalID.LifeAlloy, ModContent.ItemType<LifeAlloy>(), "LifeAlloy", "生命合金", -1, "C_Calamity", new Color(149, 255, 196)), // 生命合金 LifeAlloy
                 new(LeonidMetalID.Lunar, ItemID.LunarBar, "LunarBar", "夜明锭", 3467, "E_Final5", new Color(141, 193, 255)), // 夜明锭 3467
 
                 // F_PostLunar

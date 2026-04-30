@@ -1,4 +1,6 @@
 using System;
+using CalamityLegendsComeBack.Accssory.BB;
+using CalamityLegendsComeBack.Accssory.BB.SurgeChainReactor;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -366,6 +368,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            Player player = Main.player[Projectile.owner];
             target.AddBuff(BuffID.Frostburn, 180);
 
             // 卢克雷西亚 primary 是一次挥砍打一组切割反馈，这里也照这个思路来
@@ -414,6 +417,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                     d.noGravity = true;
                     d.scale = Main.rand.NextFloat(1.1f, 1.7f);
                     d.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
+                }
+
+                if (Main.myPlayer == Projectile.owner && player.GetModPlayer<BBAccessoryPlayer>().SurgeChainReactorEquipped)
+                {
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        target.Center,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<SurgeChainWaterBurst>(),
+                        Math.Max(1, (int)(Projectile.damage * BBAccessoryPlayer.SurgeChainReactorDamageFactor)),
+                        2f,
+                        Projectile.owner);
                 }
             }
         }

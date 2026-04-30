@@ -30,6 +30,28 @@ Mods: {
 				DisplayName: S-TAC: Tactical Lock Calibrator
 				Tooltip: Grants the right-click laser a very weak homing effect
 			}
+
+			OffshoreWindTurbine: {
+				DisplayName: Offshore Wind Turbine
+				Tooltip: Increases Briny Baron's maximum tide by 2
+			}
+
+			ImpactRestarter: {
+				DisplayName: Impact Restarter
+				Tooltip: Briny Baron's short right-click dash fully refreshes its cooldown on enemy impact\nThe full-tide spin dash reduces that cooldown to 1 second instead
+			}
+
+			HighTideOverloadBarrier: {
+				DisplayName: High-Tide Overload Barrier
+				Tooltip: While Briny Baron's tide is full, grants 20 defense and 20% damage reduction
+			}
+
+			SurgeChainReactor: {
+				DisplayName: Surge Chain Reactor
+				Tooltip: Briny Baron's quick slash releases an extra 75x75 water burst on enemy impact
+			}
 		}
+
+		Projectiles.BrinyBaron.SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
 	}
 }

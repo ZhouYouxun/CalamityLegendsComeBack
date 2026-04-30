@@ -342,7 +342,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
                     Player exOwner = Main.player[source.owner];
                     Vector2 outward = exBeamSource.CurrentForwardDirection.SafeNormalize((source.Center - exOwner.Center).SafeNormalize(Vector2.UnitY));
-                    NPC nearestTarget = FindNearestTarget(source.Center, ConfiguredLength);
+                    NPC nearestTarget = FindNearestTarget(exOwner.Center, ConfiguredLength);
                     desiredDirection = nearestTarget != null
                         ? (nearestTarget.Center - source.Center).SafeNormalize(outward)
                         : outward;

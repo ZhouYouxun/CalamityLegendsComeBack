@@ -27,18 +27,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
 
         public override void AI()
         {
-            Vector2 desiredVelocity = (Owner.Center - Projectile.Center).SafeNormalize(Vector2.Zero) * 10.5f;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.08f);
+            Projectile.localAI[0]++;
+            float distance = Vector2.Distance(Owner.Center, Projectile.Center);
+            Vector2 desiredVelocity = (Owner.Center - Projectile.Center).SafeNormalize(Vector2.Zero) * (distance > 120f ? 10.5f : 4.5f);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, distance > 120f ? 0.08f : 0.045f);
             Projectile.rotation += 0.08f;
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.14f, 0.34f, 0.16f));
 
-            if (Projectile.Hitbox.Intersects(Owner.Hitbox))
+            if (distance < 88f && Projectile.localAI[0] % 24f == 0f && Owner.statLife < Owner.statLifeMax2)
             {
-                Owner.statLife = System.Math.Min(Owner.statLife + 2, Owner.statLifeMax2);
-                Owner.HealEffect(2, true);
-                Projectile.Kill();
-                return;
+                Owner.statLife = System.Math.Min(Owner.statLife + 1, Owner.statLifeMax2);
+                Owner.HealEffect(1, true);
             }
 
             if (Main.rand.NextBool(2))

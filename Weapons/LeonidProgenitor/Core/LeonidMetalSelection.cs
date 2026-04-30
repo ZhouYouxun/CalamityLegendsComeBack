@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             if (player == null || !player.active)
                 return result;
 
-            bool[] seenEffectIDs = new bool[33];
+            bool[] seenEffectIDs = new bool[64];
             int foundCount = 0;
 
             for (int slotIndex = player.inventory.Length - 1; slotIndex >= 0; slotIndex--)

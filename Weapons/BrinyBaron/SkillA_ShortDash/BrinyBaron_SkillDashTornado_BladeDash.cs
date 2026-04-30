@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityMod;
 using CalamityMod.Enums;
 using Microsoft.Xna.Framework;
@@ -21,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private const int DashTimeMax = 45;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
-        private const float DashSpeed = 28f;
-        private const float ReboundSpeed = 18f;
+        private const float DashSpeed = 14f;
+        private const float ReboundSpeed = 9f;
         private const float DashTurnRate = 0.01f; // 转向最大角度限
         private const float ReadyBladeDistance = 28f;
         private const float DashBladeDistance = 20f;
@@ -270,6 +271,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             target.AddBuff(BuffID.Frostburn, 180);
             SpawnLightningBurst(target.Center, GetReliableDashDirection());
 
+            Player owner = Main.player[Projectile.owner];
+            if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
+                owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ClearCooldown();
+
             if (!enemyReboundUnlocked)
             {
                 Projectile.Kill();
@@ -407,10 +412,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             for (int i = 0; i < 3; i++)
             {
-                Vector2 boltVelocity = baseDirection.RotatedBy(MathHelper.TwoPi * i / 3f) * boltSpeed;
+                float laneOffset = MathHelper.Lerp(-0.22f, 0.22f, i / 2f);
+                float randomOffset = Main.rand.NextFloat(-0.055f, 0.055f);
+                Vector2 boltVelocity = baseDirection.RotatedBy(laneOffset + randomOffset) * boltSpeed;
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    impactCenter + baseDirection * 14f,
+                    impactCenter + baseDirection * 14f + baseDirection.RotatedBy(MathHelper.PiOver2) * laneOffset * 28f,
                     boltVelocity,
                     ModContent.ProjectileType<BBASD_Lighting>(),
                     boltDamage,

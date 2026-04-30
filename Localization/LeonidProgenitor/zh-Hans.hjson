@@ -39,13 +39,13 @@ Mods: {
 					MetalName6: 钨锭
 					MetalDesc6: 提升流星体积并额外穿透一次
 					MetalName7: 金锭
-					MetalDesc7: 爆出一串金币火花
+					MetalDesc7: 10% 概率爆出 1 到 3 枚金币弹幕
 					MetalName8: 铂金锭
-					MetalDesc8: 概率清除自身减益
+					MetalDesc8: 释放斩杀刀光，目标越虚弱越锋利
 					MetalName9: 魔矿锭
-					MetalDesc9: 释放邪恶吞噬者追踪
+					MetalDesc9: 释放小型 EatersBite 吞噬者弹幕
 					MetalName10: 猩红矿锭
-					MetalDesc10: 释放猩红吞噬者追踪
+					MetalDesc10: 释放 VampireKnife 吸血飞刀弹幕
 					MetalName11: 天蓝锭
 					MetalDesc11: 不受重力影响并提升速度
 					MetalName12: 陨石锭
@@ -57,19 +57,19 @@ Mods: {
 					MetalName15: 钯金锭
 					MetalDesc15: 命中回血，带冷却
 					MetalName16: 秘银锭
-					MetalDesc16: 在玩家附近盘旋火焰后追踪敌人
+					MetalDesc16: 在周围生成 MythrilFlare，短暂停顿后追踪敌人
 					MetalName17: 山铜锭
-					MetalDesc17: 命中后从侧面射出花瓣
+					MetalDesc17: 命中后从屏幕边缘射出两枚 FlowerPetal
 					MetalName18: 精金锭
 					MetalDesc18: 产生灼烧区域
 					MetalName19: 钛金锭
-					MetalDesc19: 为自身充能 5% 钛金护盾
+					MetalDesc19: 短时间获得类似引力靴的跳跃、下落与加速度加成
 					MetalName20: 寒元锭
 					MetalDesc20: 产生冰冻区域
 					MetalName21: 神圣锭
 					MetalDesc21: 随机位置射出短圣光激光
 					MetalName22: 叶绿锭
-					MetalDesc22: 小流星自动追踪敌人
+					MetalDesc22: 主流星和小流星都会自动追踪敌人
 					MetalName23: 永恒锭
 					MetalDesc23: 生成可叠加的回血追踪体
 					MetalName24: 蘑菇矿锭
@@ -77,11 +77,11 @@ Mods: {
 					MetalName25: 幽灵锭
 					MetalDesc25: 在初始位置留下幽灵分身
 					MetalName26: 熔渣锭
-					MetalDesc26: 向上喷出熔岩流星滴
+					MetalDesc26: 向上喷出纯 Dust 熔岩
 					MetalName27: 夜明锭
-					MetalDesc27: 命中后周围召来月耀打击
+					MetalDesc27: 命中后混合召来 MoonlordArrowTrail 与 LunarFlare
 					MetalName28: 炫星锭
-					MetalDesc28: 周围随机三处产生星爆
+					MetalDesc28: 周围随机三处产生盗贼伤害的 SummonAstralExplosion
 					MetalName29: 龙蒿
 					MetalDesc29: 绽出会追敌的龙蒿尖刺
 					MetalName30: 宇宙锭
@@ -90,6 +90,8 @@ Mods: {
 					MetalDesc31: 从上方降下圣金穿刺
 					MetalName32: 暗影
 					MetalDesc32: 释放缓慢扩散的暗影余震
+					MetalName33: 生命合金
+					MetalDesc33: 释放三色小光芒，停顿、折返后追踪敌人
 				}
 			}
 		}
@@ -99,6 +101,13 @@ Mods: {
 				LeonidProgenitorBombshell.DisplayName: 主流星
 				LeonidCometSmall.DisplayName: 小流星
 				LeonidCometStealthMark.DisplayName: 流星印记
+				Copper_ChainLightning.DisplayName: 流星连锁闪电
+				Shared_Shockwave.DisplayName: 流星震荡波
+				Shared_LingeringField.DisplayName: 流星元素区域
+				Shared_SplitMeteor.DisplayName: 流星幽灵分身
+				Perennial_HealingOrb.DisplayName: 永恒回生光
+				LifeAlloy_Gleam.DisplayName: 生命合金光芒
+				Hallowed_Laser.DisplayName: 神圣短激光
 			}
 		}
 	}

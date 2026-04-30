@@ -154,6 +154,7 @@ Mods: {
 				BFPassiveRecoveryFieldWave.DisplayName: Resurgence Wave
 				BFEXWeapon.DisplayName: BlossomFlux Overgrowth Barrage
 				BFEXVernalShot.DisplayName: Vernal Barrage Shot
+				BFLeftPlagueReaper.DisplayName: B F Left Plague Reaper
 			}
 
 			Ranged.BFAimScope.DisplayName: BlossomFlux Aim Scope
@@ -240,6 +241,7 @@ Mods: {
 			Shared_LingeringField.DisplayName: Shared_ Lingering Field
 			Shared_Shockwave.DisplayName: Shared_ Shockwave
 			Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
+			NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

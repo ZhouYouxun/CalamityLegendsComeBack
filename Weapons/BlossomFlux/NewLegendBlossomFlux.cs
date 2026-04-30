@@ -16,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     public class NewLegendBlossomFlux : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
+        private BalanceBlossomFlux damageBalance = new();
 
         public override void SetDefaults()
         {
@@ -97,62 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            bool[] downStages =
-            {
-                NPC.downedBoss1,
-                NPC.downedBoss2,
-                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,
-                NPC.downedBoss3,                
-                DownedBossSystem.downedSlimeGod,
-                Main.hardMode,
-                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
-                DownedBossSystem.downedCalamitasClone,
-                NPC.downedPlantBoss,
-                NPC.downedGolemBoss,
-                NPC.downedAncientCultist,
-                NPC.downedMoonlord,          
-                DownedBossSystem.downedProvidence,
-                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid,
-                DownedBossSystem.downedPolterghast,
-                DownedBossSystem.downedDoG,
-                DownedBossSystem.downedYharon,
-                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas,
-                DownedBossSystem.downedPrimordialWyrm
-            };
-
-            int[] stageDamage =
-            {
-                12,
-                17,
-                22,
-                27,
-                32,
-                40,
-                54,
-                66,
-                82,
-                96,
-                116,
-                155,
-                185,
-                220,
-                255,
-                320,
-                395,
-                560,
-                720
-            };
-
-            int finalDamage = 10;
-            for (int i = 0; i < downStages.Length; i++)
-            {
-                if (downStages[i])
-                    finalDamage = stageDamage[i];
-                else
-                    break;
-            }
-
-            damage.Base = finalDamage;
+            damage.Base = damageBalance.GetLeftClickBaseDamage();
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)

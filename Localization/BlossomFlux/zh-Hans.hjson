@@ -151,6 +151,7 @@ Mods: {
 				BFPassiveRecoveryFieldWave.DisplayName: 复苏冲击波
 				BFEXWeapon.DisplayName: 寒森复苏齐射
 				BFEXVernalShot.DisplayName: 森绿齐射箭
+				// BFLeftPlagueReaper.DisplayName: B F Left Plague Reaper
 			}
 
 			Ranged.BFAimScope.DisplayName: 叶流瞄准镜
@@ -223,6 +224,21 @@ Mods: {
 			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
 			// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			// Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
+			// Demonite_Wisp.DisplayName: Demonite_ Wisp
+			// Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
+			// Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
+			// Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
+			// Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
+			// Hallowed_Laser.DisplayName: Hallowed_ Laser
+			// Lunar_Strike.DisplayName: Lunar_ Strike
+			// Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
+			// Astral_Blast.DisplayName: Astral_ Blast
+			// PostLunar_Shard.DisplayName: Post Lunar_ Shard
+			// Shared_LingeringField.DisplayName: Shared_ Lingering Field
+			// Shared_Shockwave.DisplayName: Shared_ Shockwave
+			// Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
+			// NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
 		}
 
 		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

@@ -249,7 +249,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
         {
             List<SequenceShot> shots = new() { new SequenceShot(aim) };
             int scatterStep = 0;
-            int maxShots = charged ? 11 : 7;
+            int maxShots = 1 + BowPlayer.CountMode(SHPBowMode.Scatter);
 
             for (int i = 0; i < BowPlayer.SequenceLength; i++)
             {
@@ -287,7 +287,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                         {
                             SequenceShot shot = shots[s];
                             shot.SpeedMultiplier *= charged ? 1.01f : 0.99f;
-                            shot.DamageMultiplier *= charged ? 1.06f : 1.03f;
                             shots[s] = shot;
                         }
                         break;
@@ -299,21 +298,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
         private static List<SequenceShot> ApplyScatterTransform(List<SequenceShot> shots, int scatterStep, int maxShots, bool charged)
         {
-            List<SequenceShot> transformed = new(maxShots);
-            float baseAngle = 0.1f + scatterStep * 0.045f;
+            List<SequenceShot> transformed = new(shots.Count + 1);
 
-            for (int i = 0; i < shots.Count && transformed.Count < maxShots; i++)
+            for (int i = 0; i < shots.Count; i++)
             {
                 SequenceShot baseShot = shots[i];
-                baseShot.DamageMultiplier *= charged ? 0.93f : 0.88f;
+                baseShot.DamageMultiplier *= charged ? 0.98f : 0.94f;
                 transformed.Add(baseShot);
-
-                int side = (i + scatterStep) % 2 == 0 ? 1 : -1;
-                AddScatterBranch(transformed, shots[i], side, baseAngle, scatterStep, charged, maxShots);
-
-                if (charged)
-                    AddScatterBranch(transformed, shots[i], -side, baseAngle * 1.25f, scatterStep, charged, maxShots);
             }
+
+            int side = scatterStep % 2 == 1 ? 1 : -1;
+            int ring = (scatterStep + 1) / 2;
+            float angle = 0.075f + ring * 0.055f;
+            AddScatterBranch(transformed, shots[0], side, angle, scatterStep, charged, maxShots);
 
             return transformed;
         }
@@ -325,8 +322,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
             SequenceShot branch = source;
             branch.Direction = branch.Direction.RotatedBy(angle * side).SafeNormalize(source.Direction);
-            branch.SpeedMultiplier *= charged ? 0.98f : 0.94f;
-            branch.DamageMultiplier *= charged ? 0.74f : 0.58f;
+            branch.SpeedMultiplier *= charged ? 0.995f : 0.98f;
+            branch.DamageMultiplier *= charged ? 0.82f : 0.72f;
             branch.LateralOffset += side * (3.4f + scatterStep * 1.8f);
             shots.Add(branch);
         }
@@ -362,7 +359,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
             Projectile arrow = Main.projectile[projectileIndex];
             arrow.noDropItem = true;
-            arrow.originalDamage = damage;
+            arrow.originalDamage = arrow.damage;
             arrow.netUpdate = true;
         }
 
@@ -442,8 +439,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
         private int GetPrimaryFireInterval()
         {
-            int interval = 9 + BowPlayer.SequenceLength * 2 + BowPlayer.CountMode(SHPBowMode.Scatter) * 2 + BowPlayer.CountMode(SHPBowMode.Homing);
-            return Utils.Clamp(interval, 11, 28);
+            int interval = 8 + BowPlayer.SequenceLength + BowPlayer.CountMode(SHPBowMode.Scatter) + BowPlayer.CountMode(SHPBowMode.Homing);
+            return Utils.Clamp(interval, 9, 22);
         }
 
         private int GetChargeFrames()

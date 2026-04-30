@@ -3,8 +3,20 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendYharimsCrystal: {
-					DisplayName: Yharim's Crystal
-					Tooltip: ""
+					DisplayName: Tyrant Crystal
+					Tooltip: "[GFB]"
+					CurrentMode: "[c/F6D06B:Current core] {0}"
+					Mode_Drill: "[c/F2B85D:Siege Drill]"
+					Mode_Flamethrower: "[c/FF7A45:Auric Flamethrower]"
+					Mode_Warships: "[c/73DFFF:Imperial Fleet]"
+					Mode_HelixLaser: "[c/F8E28A:Helix Prism]"
+					Mode_Drill_Desc: "[c/F2B85D:Siege Drill] [c/DCD6C8:spins up into a narrow sawline, chewing close targets and shaking the screen on impact.]"
+					Mode_Flamethrower_Desc: "[c/FF7A45:Auric Flamethrower] [c/DCD6C8:vents, then fires rapid energy-flame pseudo-lasers with light homing before resting.]"
+					Mode_Warships_Desc: "[c/73DFFF:Imperial Fleet] [c/DCD6C8:deploys 6 escorts, 4 cruisers, 2 artillery ships, 1 forward super-laser ship, and 1 rear repair ship.]"
+					Mode_HelixLaser_Desc: "[c/F8E28A:Helix Prism] [c/DCD6C8:weaves helix beams, refraction needles, and short golden lances; hold right click while firing to smoothly focus them into one point.]"
+					SwitchInfo: "[c/B5E7FF:Switch] [c/DCD6C8:right click the left side of the player to cycle backward, or the right side to cycle forward.]"
+					FocusInfo: "[c/F8E28A:Focus] [c/DCD6C8:only works while the Helix Prism is firing, and converges with acceleration instead of snapping.]"
+					EXInfo: "[c/F6D06B:Legendary Skill] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
 				}
 			}
 		}
@@ -33,6 +45,20 @@ Mods: {
 				YC_Right_RepairShield.DisplayName: Repair Shield
 				YC_Right_HeavyBolt.DisplayName: Heavy Bolt
 				YC_Right_TrackerLaser.DisplayName: Tracking Laser
+				YC_ModeSwitchGlyph.DisplayName: Tyrant Crystal Mode Glyph
+				YC_DrillHoldout.DisplayName: Tyrant Crystal Siege Drill
+				YC_FlamethrowerHoldout.DisplayName: Tyrant Crystal Flamethrower
+				YC_FlameLance.DisplayName: Tyrant Flame Lance
+				YC_WarshipHoldout.DisplayName: Tyrant Crystal Imperial Fleet
+				YC_WarshipEscort.DisplayName: Auric Escort
+				YC_WarshipCruiser.DisplayName: Auric Cruiser
+				YC_WarshipBattleship.DisplayName: Auric Battleship
+				YC_WarshipLaserShip.DisplayName: Auric Laser Ship
+				YC_WarshipRepairShip.DisplayName: Auric Repair Ship
+				YC_WarshipAuricRail.DisplayName: Auric Rail Cannon
+				YC_HelixLaserHoldout.DisplayName: Tyrant Crystal Helix Prism
+				YC_HelixLaserBeam.DisplayName: Helix Prism Beam
+				YC_EX_LaserDrone.DisplayName: Tyrant Crystal EX Laser Ship
 				ApolloRocket.DisplayName: Apollo Rocket
 				ChickenRocket.DisplayName: Chicken Rocket
 				CosmicViperHomingRocket.DisplayName: Cosmic Viper Homing Rocket
@@ -55,6 +81,9 @@ Mods: {
 				YC_WarshipArtilleryShell.DisplayName: Warship Artillery Shell
 				YC_WarshipMissile.DisplayName: Warship Missile
 				YC_WarshipPulse.DisplayName: Warship Pulse
+				YC_WarshipSuperLaser.DisplayName: Auric Fleet Super Laser
+				YC_PrismNeedleLaser.DisplayName: Prism Needle Laser
+				SODLazer.DisplayName: Auric Refraction Lance
 			}
 		}
 

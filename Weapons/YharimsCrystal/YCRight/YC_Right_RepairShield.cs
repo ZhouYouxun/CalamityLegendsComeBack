@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.C_Warships;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
 {
@@ -49,14 +50,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
                 return;
             }
 
-            if (!YC_RightHelper.TryGetHoldout(Projectile.owner, HoldoutIndex, out _, out YC_RightHoldOut holdout))
+            if (!TryResolveForwardDirection(out Vector2 forward))
             {
                 Projectile.Kill();
                 return;
             }
 
             Projectile.timeLeft = 2;
-            UpdateShieldPosition(holdout);
+            UpdateShieldPosition(forward);
 
             if (CooldownTimer > 0f)
             {
@@ -66,10 +67,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             }
             else
             {
-                TryBlockProjectiles(holdout.ForwardDirection);
+                TryBlockProjectiles(forward);
             }
 
-            EmitShieldFX(holdout.ForwardDirection);
+            EmitShieldFX(forward);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -82,9 +83,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             return false;
         }
 
-        private void UpdateShieldPosition(YC_RightHoldOut holdout)
+        private bool TryResolveForwardDirection(out Vector2 forward)
         {
-            Vector2 forward = holdout.ForwardDirection;
+            forward = Vector2.UnitY;
+
+            if (YC_RightHelper.TryGetHoldout(Projectile.owner, HoldoutIndex, out _, out YC_RightHoldOut rightHoldout))
+            {
+                forward = rightHoldout.ForwardDirection;
+                return true;
+            }
+
+            if (YC_WarshipHelper.TryGetHoldout(Projectile.owner, HoldoutIndex, out _, out YC_WarshipHoldout warshipHoldout))
+            {
+                forward = warshipHoldout.ForwardDirection;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void UpdateShieldPosition(Vector2 forward)
+        {
             Vector2 radial = forward.RotatedBy(MathHelper.ToRadians(ShieldArcDegrees[ShieldIndex]));
             Vector2 desiredCenter = Owner.Center + radial * 82f;
 

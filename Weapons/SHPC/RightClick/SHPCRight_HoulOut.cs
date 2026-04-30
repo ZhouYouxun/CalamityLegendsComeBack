@@ -349,6 +349,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private const float RecoilAngleMultiplier = 3.152778f; // 0.72 * 3.152778 ≈ 2.27 rad ≈ 130°
 
+        private const int CoolingRecoilRaiseTime = RecoilRaiseTime + 2;
+        private const int CoolingRecoilHoldTime = RecoilHoldTime + 40;
+        private const int CoolingRecoilReturnTime = RecoilReturnTime + 5;
+        private const int CoolingRecoilTotalTime = CoolingRecoilRaiseTime + CoolingRecoilHoldTime + CoolingRecoilReturnTime;
+
         private void ApplyRecoilRotation()
         {
             if (!recoilActive)
@@ -362,27 +367,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             float recoilSide = aimDir.X >= 0f ? -1f : 1f;
             float recoilOffset;
 
-            if (recoilFrame < RecoilRaiseTime)
+            if (recoilFrame < CoolingRecoilRaiseTime)
             {
                 // 先快后慢：EaseOut
-                float t = recoilFrame / (float)RecoilRaiseTime;
+                float t = recoilFrame / (float)CoolingRecoilRaiseTime;
                 float eased = 1f - (1f - t) * (1f - t);
                 recoilOffset = recoilSide * RecoilAngle * RecoilAngleMultiplier * eased;
             }
-            else if (recoilFrame < RecoilRaiseTime + RecoilHoldTime)
+            else if (recoilFrame < CoolingRecoilRaiseTime + CoolingRecoilHoldTime)
             {
                 // 顶点短暂停顿
                 recoilOffset = recoilSide * RecoilAngle * RecoilAngleMultiplier;
             }
-            else if (recoilFrame < RecoilRaiseTime + RecoilHoldTime + RecoilReturnTime)
+            else if (recoilFrame < CoolingRecoilTotalTime)
             {
                 // 快速收回：时间短，视觉上就是“嗖”一下压回去
-                float t = (recoilFrame - RecoilRaiseTime - RecoilHoldTime) / (float)RecoilReturnTime;
+                float t = (recoilFrame - CoolingRecoilRaiseTime - CoolingRecoilHoldTime + 1f) / CoolingRecoilReturnTime;
                 float eased = t * t; // 开头快，后面贴近终点时更稳
                 recoilOffset = MathHelper.Lerp(recoilSide * RecoilAngle * RecoilAngleMultiplier, 0f, eased);
             }
             else
             {
+                Projectile.rotation = baseAimRotation;
+                Projectile.velocity = baseAimRotation.ToRotationVector2();
                 recoilActive = false;
                 recoilFrame = 0;
                 return;
@@ -431,7 +438,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             stageTimer = 0;
             
             reduceCooldown = 300; // 降温的冷却时长
-            fireStopTimer = 60; // 停火时间
+            fireStopTimer = CoolingRecoilTotalTime; // 停火时间
 
             OffsetLengthFromArm -= 18f;
 

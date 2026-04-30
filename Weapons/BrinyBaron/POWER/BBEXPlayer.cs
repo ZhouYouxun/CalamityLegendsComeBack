@@ -1,5 +1,6 @@
 ﻿using Terraria;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Accssory.BB;
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
 {
     internal class BBEXPlayer : ModPlayer
@@ -9,13 +10,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         {
             get
             {
-                return BB_Balance.GetCurrentTideMax();
+                return BB_Balance.GetCurrentTideMax() + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
             }
         }
 
         public bool TideFull => TideValue >= CurrentTideMax;
 
-        public override void ResetEffects()
+        public override void PostUpdateEquips()
         {
             if (TideValue > CurrentTideMax)
                 TideValue = CurrentTideMax;

@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
 {
@@ -17,9 +17,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
             {
                 Vector2 spawnPosition = target.Center + new Vector2(Main.rand.NextFloat(-120f, 120f), -480f - Main.rand.NextFloat(0f, 160f));
                 Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitY) * 20f;
-                int strike = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<Lunar_Strike>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
+                int projectileType = Main.rand.NextBool() ? ProjectileID.MoonlordArrowTrail : ProjectileID.LunarFlare; // IDs 640 and 645.
+                int strike = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, projectileType, meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner);
                 if (strike >= 0 && strike < Main.maxProjectiles)
+                {
+                    Main.projectile[strike].friendly = true;
+                    Main.projectile[strike].hostile = false;
                     Main.projectile[strike].DamageType = meteor.Projectile.DamageType;
+                }
             }
         }
     }

@@ -3,16 +3,28 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendYharimsCrystal: {
-					DisplayName: 犽黎姆水晶
-					Tooltip: ""
+					DisplayName: 暴君水晶
+					Tooltip: "[GFB]"
+					CurrentMode: "[c/F6D06B:当前形态] {0}"
+					Mode_Drill: "[c/F2B85D:攻城钻头]"
+					Mode_Flamethrower: "[c/FF7A45:金焰喷射]"
+					Mode_Warships: "[c/73DFFF:帝国舰队]"
+					Mode_HelixLaser: "[c/F8E28A:螺旋棱镜]"
+					Mode_Drill_Desc: "[c/F2B85D:攻城钻头] [c/DCD6C8:短暂启动后收束成窄而长的盘锯轨迹，持续撕咬近身目标，命中时震动屏幕。]"
+					Mode_Flamethrower_Desc: "[c/FF7A45:金焰喷射] [c/DCD6C8:预热后喷出高速能量火舌伪激光，直线单体、弱追踪，并在喷射与休息之间循环。]"
+					Mode_Warships_Desc: "[c/73DFFF:帝国舰队] [c/DCD6C8:部署6护卫、4巡洋、2重炮舰、1前置超级激光舰与1后置维修舰。]"
+					Mode_HelixLaser_Desc: "[c/F8E28A:螺旋棱镜] [c/DCD6C8:编织螺旋光束、折射针光与短促金色切线激光；开火时按住右键可加速聚焦到一点。]"
+					SwitchInfo: "[c/B5E7FF:切换] [c/DCD6C8:右键玩家左半边切换到上一个形态，右键玩家右半边切换到下一个形态。]"
+					FocusInfo: "[c/F8E28A:聚焦] [c/DCD6C8:只在螺旋棱镜左键开火时生效，光束会逐渐加速收束，而不是瞬间贴到同一点。]"
+					EXInfo: "[c/F6D06B:传奇技能] [c/DCD6C8:召唤12艘金色激光舰进入轨道；准备完成后点击左键齐射。]"
 				}
 			}
 		}
 
 		Projectiles: {
 			YharimsCrystal: {
-				YC_LeftHoldOut.DisplayName: 暴君水晶左持舰阵
-				YC_RightHoldOut.DisplayName: 暴君水晶右持舰阵
+				YC_LeftHoldOut.DisplayName: 暴君水晶左翼舰阵
+				YC_RightHoldOut.DisplayName: 暴君水晶右翼舰阵
 				YC_EX_VIP.DisplayName: 暴君水晶EX核心舰
 				YC_EX_Drone.DisplayName: 暴君水晶EX护卫舰
 				YC_EX_LaserCruiser.DisplayName: 暴君水晶EX巡洋舰
@@ -22,17 +34,31 @@ Mods: {
 				YC_Left_LaserCruiser.DisplayName: 左翼巡洋舰
 				YC_Left_MissileBattleship.DisplayName: 左翼战列舰
 				YC_Left_RepairShip.DisplayName: 后方维修舰
-				YC_Left_FakeLazer.DisplayName: 诱导假激光
+				YC_Left_FakeLazer.DisplayName: 诱导伪激光
 				YC_Left_Rocket.DisplayName: 舰载追踪导弹
-				YC_Left_RepairBolt.DisplayName: 维修脉冲栓
+				YC_Left_RepairBolt.DisplayName: 维修脉冲核
 				YC_Left_Drone.DisplayName: 左翼无人机
 				YC_Right_Drone.DisplayName: 右翼无人机
 				YC_Right_LaserCruiser.DisplayName: 右翼巡洋舰
 				YC_Right_Battleship.DisplayName: 右翼战列舰
 				YC_Right_RepairShip.DisplayName: 右翼维修舰
-				YC_Right_RepairShield.DisplayName: 维修护盾场
-				YC_Right_HeavyBolt.DisplayName: 重型能量栓
+				YC_Right_RepairShield.DisplayName: 维修护盾圈
+				YC_Right_HeavyBolt.DisplayName: 重型能量核
 				YC_Right_TrackerLaser.DisplayName: 追踪激光
+				YC_ModeSwitchGlyph.DisplayName: 暴君水晶形态星图
+				YC_DrillHoldout.DisplayName: 暴君水晶攻城钻头
+				YC_FlamethrowerHoldout.DisplayName: 暴君水晶金焰喷射器
+				YC_FlameLance.DisplayName: 暴君金焰枪
+				YC_WarshipHoldout.DisplayName: 暴君水晶帝国舰队
+				YC_WarshipEscort.DisplayName: 金辉护卫舰
+				YC_WarshipCruiser.DisplayName: 金辉巡洋舰
+				YC_WarshipBattleship.DisplayName: 金辉重炮舰
+				YC_WarshipLaserShip.DisplayName: 金辉激光舰
+				YC_WarshipRepairShip.DisplayName: 金辉维修舰
+				YC_WarshipAuricRail.DisplayName: 金辉轨道重炮
+				YC_HelixLaserHoldout.DisplayName: 暴君水晶螺旋棱镜
+				YC_HelixLaserBeam.DisplayName: 螺旋棱镜光束
+				YC_EX_LaserDrone.DisplayName: 暴君水晶EX激光舰
 				ApolloRocket.DisplayName: 阿波罗导弹
 				ChickenRocket.DisplayName: 小鸡导弹
 				CosmicViperHomingRocket.DisplayName: 宇宙蝰蛇追踪弹
@@ -51,10 +77,13 @@ Mods: {
 				ScorpioRocket.DisplayName: 天蝎导弹
 				SeaDragonRocket.DisplayName: 海龙导弹
 				MirrorBladeSlash.DisplayName: 镜刃斩击
-				MirrorBladeSlashCreator.DisplayName: 镜刃斩击生成器
+				MirrorBladeSlashCreator.DisplayName: 镜刃斩击发生器
 				YC_WarshipArtilleryShell.DisplayName: 舰载重炮弹
 				YC_WarshipMissile.DisplayName: 舰载导弹
 				YC_WarshipPulse.DisplayName: 舰载脉冲波
+				YC_WarshipSuperLaser.DisplayName: 金辉舰队超级激光
+				YC_PrismNeedleLaser.DisplayName: 棱镜针状激光
+				SODLazer.DisplayName: 金辉折射枪
 			}
 		}
 

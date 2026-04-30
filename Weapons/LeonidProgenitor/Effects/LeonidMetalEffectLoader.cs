@@ -38,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             LeonidMetalEffectRegistry.Register(new HallowedEffect());
             LeonidMetalEffectRegistry.Register(new ChlorophyteEffect());
             LeonidMetalEffectRegistry.Register(new PerennialEffect());
+            LeonidMetalEffectRegistry.Register(new LifeAlloyEffect());
             LeonidMetalEffectRegistry.Register(new ShroomiteEffect());
             LeonidMetalEffectRegistry.Register(new SpectreEffect());
             LeonidMetalEffectRegistry.Register(new ScoriaEffect());

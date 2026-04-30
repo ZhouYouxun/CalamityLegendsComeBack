@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
@@ -13,13 +14,31 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
             if (Main.myPlayer != meteor.Projectile.owner)
                 return;
 
-            float side = Main.rand.NextBool() ? -1f : 1f;
-            Vector2 spawnPosition = target.Center + new Vector2(150f * side, Main.rand.NextFloat(-70f, 40f));
-            Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitX * -side) * 15f;
+            for (int i = 0; i < 2; i++)
+            {
+                float spawnX = owner.direction > 0 ? Main.screenPosition.X : Main.screenPosition.X + Main.screenWidth;
+                float spawnY = Main.screenPosition.Y + Main.rand.Next(Main.screenHeight);
+                Vector2 spawnPosition = new(spawnX, spawnY);
+                Vector2 trajectory = target.Center - spawnPosition;
+                trajectory.X += Main.rand.NextFloat(-5f, 5f);
+                trajectory.Y += Main.rand.NextFloat(-5f, 5f);
+                trajectory = trajectory.SafeNormalize(Vector2.UnitY) * 24f;
 
-            int petal = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<Orichalcum_PetalBolt>(), meteor.Projectile.damage / 2, 0f, meteor.Projectile.owner, side);
-            if (petal >= 0 && petal < Main.maxProjectiles)
-                Main.projectile[petal].DamageType = meteor.Projectile.DamageType;
+                int petal = Projectile.NewProjectile(
+                    meteor.Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    trajectory,
+                    ProjectileID.FlowerPetal,
+                    (int)(meteor.Projectile.damage * 0.75f),
+                    0f,
+                    meteor.Projectile.owner);
+
+                if (petal >= 0 && petal < Main.maxProjectiles)
+                {
+                    Main.projectile[petal].DamageType = DamageClass.Ranged;
+                    Main.projectile[petal].penetrate = 1;
+                }
+            }
         }
     }
 }

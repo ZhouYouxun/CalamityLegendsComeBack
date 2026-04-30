@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
@@ -27,13 +28,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (stage <= 0)
                 return;
 
+            if (player.statLife <= 0)
+            {
+                KillFromOverheat(player, 1);
+                return;
+            }
+
             // ===== Stage5 =====
             if (stage == 5)
             {
                 if (player.statLife > 100)
                 {
                     if (Main.GameUpdateCount % 4 == 0)
-                        player.statLife--;
+                        ApplyOverheatDamage(player, 1);
                 }
             }
 
@@ -43,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 if (player.statLife > 100)
                 {
                     if (Main.GameUpdateCount % 2 == 0)
-                        player.statLife--;
+                        ApplyOverheatDamage(player, 1);
                 }
             }
 
@@ -51,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             else if (stage >= 7)
             {
                 if (Main.GameUpdateCount % 1 == 0)
-                    player.statLife -= Main.rand.Next(1, 3);
+                    ApplyOverheatDamage(player, Main.rand.Next(1, 3));
 
                 // 搞笑文本
                 if (Main.rand.NextBool(12))
@@ -69,6 +76,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             ApplyBurningVisual(player, stage);
 
+        }
+
+        private static void ApplyOverheatDamage(Player player, int damage)
+        {
+            if (damage <= 0 || player.dead)
+                return;
+
+            if (player.statLife > damage)
+            {
+                player.statLife -= damage;
+                return;
+            }
+
+            KillFromOverheat(player, damage);
+        }
+
+        private static void KillFromOverheat(Player player, int damage)
+        {
+            if (player.dead)
+                return;
+
+            player.statLife = 0;
+            player.KillMe(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral($"{player.name} was burned out by SHPC overload.")), System.Math.Max(1, damage), 0);
         }
 
         private void ApplyBurningVisual(Player player, int stage)

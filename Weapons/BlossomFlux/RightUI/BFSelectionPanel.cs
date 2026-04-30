@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             new(BlossomFluxChloroplastPresetType.Chlo_EPlague)
         };
 
-        private Vector2 playerOffset;
+        private Vector2 screenCenter;
         private bool offsetInitialized;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/RightUI/BF_Panel";
@@ -152,11 +152,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
             if (!offsetInitialized && Main.myPlayer == Projectile.owner)
             {
-                playerOffset = Main.MouseWorld - owner.Center;
+                screenCenter = Main.MouseScreen;
                 offsetInitialized = true;
             }
 
-            Projectile.Center = owner.Center + playerOffset;
+            Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + screenCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.12f : 0.12f), 0f, 1f);
 
@@ -171,7 +171,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
             Player owner = Main.player[Projectile.owner];
             BFRightUIPlayer rightUIPlayer = owner.GetModPlayer<BFRightUIPlayer>();
-            Vector2 drawPosition = (owner.Center + playerOffset - Main.screenPosition).Floor();
+            Vector2 drawPosition = screenCenter.Floor();
             Texture2D outerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/flower_015").Value;
             Texture2D innerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
             Color outerColor = new Color(82, 175, 110, 0) * (0.36f * Projectile.Opacity);

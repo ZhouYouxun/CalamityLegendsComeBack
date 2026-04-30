@@ -14,9 +14,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
                 return;
 
             meteor.SetFlag("spectre_clone");
-            int clone = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), meteor.InitialCenter, meteor.Projectile.velocity * 0.95f, ModContent.ProjectileType<Shared_SplitMeteor>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, 1f);
+            int clone = Projectile.NewProjectile(meteor.Projectile.GetSource_FromThis(), meteor.InitialCenter, meteor.Projectile.velocity * 2f, ModContent.ProjectileType<Shared_SplitMeteor>(), meteor.Projectile.damage / 2, meteor.Projectile.knockBack, meteor.Projectile.owner, 1f);
             if (clone >= 0 && clone < Main.maxProjectiles)
+            {
                 Main.projectile[clone].DamageType = meteor.Projectile.DamageType;
+                Main.projectile[clone].netUpdate = true;
+            }
         }
     }
 }

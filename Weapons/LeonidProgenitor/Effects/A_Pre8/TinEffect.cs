@@ -14,10 +14,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
 
             meteor.SetState("tin_bounce", bounceCount + 1);
             if (meteor.Projectile.velocity.X != oldVelocity.X)
-                meteor.Projectile.velocity.X = -oldVelocity.X * 0.82f;
+                meteor.Projectile.velocity.X = -oldVelocity.X;
 
             if (meteor.Projectile.velocity.Y != oldVelocity.Y)
-                meteor.Projectile.velocity.Y = -oldVelocity.Y * 0.82f;
+                meteor.Projectile.velocity.Y = -oldVelocity.Y;
 
             return false;
         }

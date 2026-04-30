@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             Projectile.velocity = Projectile.velocity.RotatedByRandom(MathHelper.ToRadians(4f));
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
             CachedTargetIndex = -1f;
         }
 
@@ -76,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 Projectile.velocity = RotateTowards(forward, desiredDirection, MathHelper.Max(0.012f, TurnRate)) * speed;
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
             Lighting.AddLight(Projectile.Center, new Color(95, 205, 255).ToVector3() * 0.45f);
             EmitFlightFX();
         }

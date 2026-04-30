@@ -82,6 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private int zenithBurstTimer;
         private int zenithBurstCount;
         #endregion
+
+        private BalanceSHPC balance = new();
         #endregion
 
 
@@ -457,16 +459,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // ===== 获取右键进度状态 =====
         public int GetRightClickProgressState()
         {
-            int state = 0;
-            if (NPC.downedMechBoss1)
-                state = 1;
-            if (DownedBossSystem.downedAstrumDeus)
-                state = 2;
-            if (DownedBossSystem.downedStormWeaver)
-                state = 3;
-            if (DownedBossSystem.downedExoMechs)
-                state = 4;
-            return state;
+            return balance.GetRightClickProgressState();
         }
         #endregion
 
@@ -685,144 +678,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region ===== 传奇成长与伤害覆盖 =====
 
-        #region ===== 右键阶段伤害 =====
-
-        // ===== 右键基础伤害（固定表）=====
-        private int GetLegendaryRightBaseDamage(Player player)
-        {
-            bool[] downStages =
-            {
-                NPC.downedBoss1,
-                NPC.downedBoss2,
-                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,
-                NPC.downedBoss3,
-                DownedBossSystem.downedSlimeGod,
-                Main.hardMode,
-                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
-                DownedBossSystem.downedCalamitasClone,
-                NPC.downedPlantBoss,
-                NPC.downedGolemBoss,
-                NPC.downedAncientCultist,
-                NPC.downedMoonlord,
-                DownedBossSystem.downedProvidence,
-                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid,
-                DownedBossSystem.downedPolterghast,
-                DownedBossSystem.downedDoG,
-                DownedBossSystem.downedYharon,
-                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas,
-                DownedBossSystem.downedPrimordialWyrm
-            };
-
-            int[] stageDamage =
-            {
-                4,
-                4,
-                4,
-                7,
-                7,
-                34,
-                34,
-                34,
-                45,
-                45,
-                45,
-                63,
-                73,
-                73,
-                73,
-                90,
-                125,
-                188,
-                1667
-            };
-
-            int finalDamage = 9;
-
-            for (int i = 0; i < downStages.Length; i++)
-            {
-                if (downStages[i])
-                    finalDamage = stageDamage[i];
-                else
-                    break;
-            }
-
-            return finalDamage;
-        }
         // 应用右键最终伤害
         private int GetCurrentRightDamage(Player player)
         {
-            int baseDamage = GetLegendaryRightBaseDamage(player);
+            int baseDamage = balance.GetRightClickBaseDamage();
             return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
         }
-        #endregion
 
-        #region ===== 左键传奇伤害覆写 =====
-
-        // ==================== 额外伤害修正（完整保留） ====================
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            // 从早到晚的成长阶段判定
-            bool[] downStages =
-            {
-                NPC.downedBoss1, // 克眼
-                NPC.downedBoss2, // 世吞 / 克脑
-                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator, // 腐巢 / 宿主
-                NPC.downedBoss3, // 骷髅王                
-                DownedBossSystem.downedSlimeGod, // 史莱姆之神
-                Main.hardMode, // 肉山后
-                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3, // 机械三王
-                DownedBossSystem.downedCalamitasClone, // 灾厄之眼 / 灾影
-                NPC.downedPlantBoss, // 世花
-                NPC.downedGolemBoss, // 石巨人
-                NPC.downedAncientCultist, // 拜月教徒
-                NPC.downedMoonlord, // 月总                
-                DownedBossSystem.downedProvidence, // 亵渎天神
-                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid, // 神使三兄弟
-                DownedBossSystem.downedPolterghast, // 幽花
-                DownedBossSystem.downedDoG, // 神吞
-                DownedBossSystem.downedYharon, // 犽戎
-                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas, // 星流机甲 + 至尊灾厄
-                DownedBossSystem.downedPrimordialWyrm // 始源妖龙
-            };
-
-            int[] stageDamage =
-            {
-                16,     // 初始 / 克眼
-                16,     // 世吞 / 克脑
-                16,     // 腐巢 / 宿主
-                26,     // 骷髅王
-                26,     // 史莱姆之神
-                135,    // 肉山后
-                135,    // 机械三王
-                135,    // 灾影
-                180,    // 世花
-                180,    // 石巨人
-                180,    // 拜月教徒
-                250,    // 月总
-                290,    // 亵渎天神
-                290,    // 神使三兄弟
-                290,    // 幽花
-                360,    // 神吞
-                500,    // 犽戎
-                750,    // 星流机甲 + 至尊灾厄
-                6666    // 始源妖龙
-            };
-
-            int finalDamage = 10;
-
-            // 从早到晚检查，取当前已到达的最高阶段面板
-            for (int i = 0; i < downStages.Length; i++)
-            {
-                if (downStages[i])
-                    finalDamage = stageDamage[i];
-                else
-                    break;
-            }
-
             // 直接覆写面板基础伤害
-            damage.Base = finalDamage;
+            damage.Base = balance.GetLeftClickBaseDamage();
         }
-        #endregion
         #endregion
 
 

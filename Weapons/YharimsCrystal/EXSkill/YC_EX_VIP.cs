@@ -21,10 +21,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             Cleanup
         }
 
-        public const int DroneTotal = 7;
-        public const int LaserCruiserTotal = 4;
-        public const int BattleshipTotal = 2;
-        public const int TotalWarshipCount = DroneTotal + LaserCruiserTotal + BattleshipTotal;
+        public const int DroneTotal = 12;
+        public const int LaserCruiserTotal = 0;
+        public const int BattleshipTotal = 0;
+        public const int TotalWarshipCount = DroneTotal;
         public const int DroneChargeTime = 120;
         public const int LaserFireTime = 15 * 60;
         private const int SpawnInterval = 12;
@@ -221,14 +221,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                     Projectile.GetSource_FromThis(),
                     owner.Center,
                     Vector2.Zero,
-                    ModContent.ProjectileType<YC_EX_Drone>(),
+                    ModContent.ProjectileType<YC_EX_LaserDrone>(),
                     Projectile.damage,
                     Projectile.knockBack,
                     Projectile.owner,
                     slotIndex,
                     colorIndex);
 
-                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.2f, Pitch = 0.15f + slotIndex * 0.02f }, owner.Center);
+                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.2f, Pitch = 0.12f + slotIndex * 0.015f }, owner.Center);
                 return;
             }
 
@@ -311,6 +311,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         private static int GetCleanupPriority(Projectile projectile)
         {
+            if (projectile.type == ModContent.ProjectileType<YC_EX_LaserDrone>())
+                return 0;
+
             if (projectile.type == ModContent.ProjectileType<YC_EX_Battleship>())
                 return 0;
 

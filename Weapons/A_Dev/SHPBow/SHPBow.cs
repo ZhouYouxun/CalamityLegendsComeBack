@@ -1,5 +1,11 @@
 using CalamityMod;
 using CalamityMod.Items;
+using CalamityMod.Items.Materials;
+using CalamityMod.Items.Weapons.DraedonsArsenal;
+using CalamityMod.Items.Weapons.Melee;
+using CalamityMod.Items.Weapons.Ranged;
+using CalamityMod.NPCs.SunkenSea;
+using CalamityMod.Projectiles.Boss;
 using CalamityMod.Rarities;
 using CalamityMod.World;
 using Microsoft.Xna.Framework;
@@ -24,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
         {
             Item.width = 68;
             Item.height = 126;
-            Item.damage = 18;
+            Item.damage = 58;
             Item.DamageType = DamageClass.Ranged;
             Item.useAnimation = 10;
             Item.useTime = 10;
@@ -76,66 +82,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 Item.noUseGraphic = true;
         }
 
-        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
-        {
-            bool[] downStages =
-            {
-                NPC.downedBoss1,
-                NPC.downedBoss2,
-                DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,
-                NPC.downedBoss3,
-                DownedBossSystem.downedSlimeGod,
-                Main.hardMode,
-                NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3,
-                DownedBossSystem.downedCalamitasClone,
-                NPC.downedPlantBoss,
-                NPC.downedGolemBoss,
-                NPC.downedAncientCultist,
-                NPC.downedMoonlord,
-                DownedBossSystem.downedProvidence,
-                DownedBossSystem.downedSignus && DownedBossSystem.downedStormWeaver && DownedBossSystem.downedCeaselessVoid,
-                DownedBossSystem.downedPolterghast,
-                DownedBossSystem.downedDoG,
-                DownedBossSystem.downedYharon,
-                DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas,
-                DownedBossSystem.downedPrimordialWyrm
-            };
-
-            int[] stageDamage =
-            {
-                18,
-                24,
-                30,
-                38,
-                48,
-                76,
-                110,
-                135,
-                168,
-                198,
-                235,
-                310,
-                380,
-                445,
-                520,
-                650,
-                820,
-                1200,
-                7777
-            };
-
-            int finalDamage = 18;
-            for (int i = 0; i < downStages.Length; i++)
-            {
-                if (downStages[i])
-                    finalDamage = stageDamage[i];
-                else
-                    break;
-            }
-
-            damage.Base = finalDamage;
-        }
-
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             SHPBowPlayer bowPlayer = Main.LocalPlayer.GetModPlayer<SHPBowPlayer>();
@@ -169,6 +115,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             }
 
             return builder.ToString();
+        }
+
+
+        public override void AddRecipes()
+        {
+            CreateRecipe().
+                AddIngredient<PlasmaDriveCore>().
+                AddIngredient<SuspiciousScrap>(4).
+                AddRecipeGroup("AnyMythrilBar", 10).
+                AddIngredient<TitaniumRailgun> (1). // 钛金电磁炮，对应穿透
+                AddIngredient<Buzzkill>(1). // 嗡鸣绞轮，对应反弹
+                AddIngredient<HolofibreImmolator> (1). // R-PMA纤化焚毁器，对应散射
+                AddIngredient<ClamorRifle> (1). // 音波步枪,对应追踪
+                AddIngredient(ItemID.SoulofFright, 1).
+                AddIngredient(ItemID.SoulofMight, 1).
+                AddIngredient(ItemID.SoulofSight, 1).
+                AddTile(TileID.MythrilAnvil).
+                Register();
         }
     }
 }

@@ -14,8 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
 
         public override void SetDefaults()
         {
-            Projectile.width = 92;
-            Projectile.height = 92;
+            Projectile.width = 200;
+            Projectile.height = 200;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 90;
@@ -28,15 +28,26 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
 
         public override void AI()
         {
-            Projectile.scale = MathHelper.Lerp(0.3f, 1.15f, 1f - Projectile.timeLeft / 90f);
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                int size = CryonicField ? 200 : 170;
+                Projectile.Resize(size, size);
+            }
+
+            float lifetimeCompletion = 1f - Projectile.timeLeft / 90f;
+            Projectile.scale = CryonicField ? MathHelper.Lerp(0.88f, 1f, Utils.GetLerpValue(0f, 8f, Projectile.localAI[1], true)) : MathHelper.Lerp(0.35f, 1.18f, lifetimeCompletion);
+            Projectile.localAI[1]++;
             Lighting.AddLight(Projectile.Center, (CryonicField ? new Vector3(0.1f, 0.22f, 0.34f) : new Vector3(0.34f, 0.14f, 0.08f)) * 1.2f);
 
-            if (Main.rand.NextBool(2))
+            int dustCount = CryonicField ? 4 : 6;
+            for (int i = 0; i < dustCount; i++)
             {
+                float radius = Projectile.width * 0.42f;
                 Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + Main.rand.NextVector2Circular(Projectile.width * 0.45f, Projectile.height * 0.45f),
+                    Projectile.Center + Main.rand.NextVector2Circular(radius, radius),
                     DustID.TintableDustLighted,
-                    Main.rand.NextVector2Circular(1f, 1f),
+                    CryonicField ? new Vector2(Main.rand.NextFloat(-0.8f, 0.8f), Main.rand.NextFloat(-2.8f, -0.6f)) : Main.rand.NextVector2Circular(1.6f, 1.6f),
                     100,
                     CryonicField ? new Color(148, 232, 255) : new Color(255, 142, 84),
                     Main.rand.NextFloat(0.85f, 1.3f));

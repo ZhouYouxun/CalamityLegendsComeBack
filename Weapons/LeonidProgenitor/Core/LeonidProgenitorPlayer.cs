@@ -1,4 +1,5 @@
 using System;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -15,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 
         public int PalladiumHealCooldown;
         public float TitaniumShieldCharge;
+        public int TitaniumStompersTimer;
 
         public override void ResetEffects()
         {
@@ -24,12 +26,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         {
             PalladiumHealCooldown = 0;
             TitaniumShieldCharge = 0f;
+            TitaniumStompersTimer = 0;
         }
 
         public override void PostUpdate()
         {
             if (PalladiumHealCooldown > 0)
                 PalladiumHealCooldown--;
+
+            if (TitaniumStompersTimer > 0)
+            {
+                TitaniumStompersTimer--;
+                ApplyTitaniumStompersMovement();
+            }
 
             if (TitaniumShieldCharge > 0f)
             {
@@ -62,6 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 return;
 
             PalladiumHealCooldown = PalladiumHealCooldownMax;
+            Player.AddBuff(BuffID.RapidHealing, 300);
             Player.statLife = Math.Min(Player.statLife + healAmount, Player.statLifeMax2);
             Player.HealEffect(healAmount, true);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.45f, Pitch = 0.22f }, Player.Center);
@@ -70,6 +80,42 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public void AddTitaniumShieldCharge(float amount)
         {
             TitaniumShieldCharge = MathHelper.Clamp(TitaniumShieldCharge + amount, 0f, TitaniumShieldChargeMax);
+        }
+
+        public void ActivateTitaniumStompers(int duration)
+        {
+            TitaniumStompersTimer = Math.Max(TitaniumStompersTimer, duration);
+        }
+
+        private void ApplyTitaniumStompersMovement()
+        {
+            Player.noFallDmg = true;
+            Player.moveSpeed += 0.06f;
+            Player.jumpSpeedBoost += 1f;
+            Player.runAcceleration *= 1.12f;
+            Player.accRunSpeed += 0.45f;
+
+            if (Player.velocity.Y * Player.gravDir > 0f)
+            {
+                Player.maxFallSpeed = Math.Max(Player.maxFallSpeed, 40f);
+                Player.gravity = Math.Max(Player.gravity, 1.05f);
+            }
+
+            Player.Calamity().gSabaton = true;
+            Player.Calamity().gSabatonTempJumpSpeed = Math.Max(Player.Calamity().gSabatonTempJumpSpeed, 8);
+
+            Lighting.AddLight(Player.Center, new Vector3(0.14f, 0.2f, 0.3f));
+            if (Main.rand.NextBool(4))
+            {
+                Dust stompDust = Dust.NewDustPerfect(
+                    Player.Bottom + new Vector2(Main.rand.NextFloat(-Player.width * 0.45f, Player.width * 0.45f), Main.rand.NextFloat(-6f, 4f)),
+                    DustID.TintableDustLighted,
+                    new Vector2(Main.rand.NextFloat(-0.8f, 0.8f), Main.rand.NextFloat(-1.8f, -0.2f)),
+                    100,
+                    new Color(206, 232, 255),
+                    Main.rand.NextFloat(0.7f, 1f));
+                stompDust.noGravity = true;
+            }
         }
 
         private void ApplyTitaniumShield(ref Player.HurtInfo info)

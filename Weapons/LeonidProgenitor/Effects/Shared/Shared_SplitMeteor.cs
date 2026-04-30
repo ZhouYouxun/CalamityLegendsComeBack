@@ -23,7 +23,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
             Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
+            Projectile.alpha = 0;
         }
+
+        public override bool ShouldUpdatePosition() => !GhostVariant || Projectile.localAI[0] > 7f;
 
         public override void AI()
         {
@@ -35,8 +38,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
             }
             else
             {
-                Projectile.velocity *= 1.01f;
-                Projectile.alpha += 1;
+                Projectile.localAI[0]++;
+                if (Projectile.localAI[0] <= 7f)
+                {
+                    Projectile.alpha = 70;
+                    Projectile.velocity *= 1f;
+                }
+                else
+                {
+                    Projectile.velocity *= 1.01f;
+                    Projectile.alpha += 1;
+                }
             }
 
             Lighting.AddLight(Projectile.Center, GhostVariant ? new Vector3(0.18f, 0.34f, 0.38f) : new Vector3(0.22f, 0.22f, 0.32f));
@@ -56,7 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
-            Color drawColor = GhostVariant ? new Color(180, 255, 255, 0) : new Color(236, 236, 255, 0);
+            Color drawColor = GhostVariant ? new Color(245, 252, 255, 0) : new Color(236, 236, 255, 0);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, drawColor * 0.7f, Projectile.rotation, texture.Size() * 0.5f, GhostVariant ? 0.72f : 0.6f, SpriteEffects.None, 0f);
             return false;
         }

@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
         public override void OnSpawn(LeonidCometSmall meteor, Player owner)
         {
             meteor.DisableGravity();
-            meteor.Projectile.velocity *= 1.18f;
+            meteor.Projectile.velocity *= 1.2f;
         }
     }
 }

@@ -34,8 +34,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             {
                 Projectile.localAI[0] = 1f;
                 Vector2 center = Projectile.Center;
-                Projectile.width = 88;
-                Projectile.height = 88;
+                int blastSize = Projectile.ai[0] > 0f ? (int)Projectile.ai[0] : 88;
+                Projectile.width = blastSize;
+                Projectile.height = blastSize;
                 Projectile.Center = center;
 
                 SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.55f, Pitch = 0.15f }, Projectile.Center);

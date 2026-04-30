@@ -93,6 +93,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             else
                 Projectile.velocity *= 1.003f;
 
+            if (HasMetal(LeonidMetalID.Chlorophyte))
+                ApplyChlorophyteHoming();
+
             Projectile.rotation += (0.25f + Projectile.velocity.Length() * 0.015f) * System.Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
         }
 
@@ -195,7 +198,51 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 Projectile.owner,
                 PrimaryEffectID,
                 SecondaryEffectID,
-                fromStealthMark ? 1f : 0f);
+                fromStealthMark ? LeonidCometSmall.FromStealthFlag : 0f);
+        }
+
+        private bool HasMetal(LeonidMetalID metalID)
+        {
+            int effectID = (int)metalID;
+            return PrimaryEffectID == effectID || SecondaryEffectID == effectID;
+        }
+
+        private void ApplyChlorophyteHoming()
+        {
+            NPC target = FindClosestNPC(980f);
+            if (target == null)
+                return;
+
+            float speed = MathHelper.Clamp(Projectile.velocity.Length(), 8f, StealthVariant ? 24f : 20f);
+            Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * speed;
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, StealthVariant ? 0.085f : 0.065f);
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.ChlorophyteWeapon, -Projectile.velocity * 0.08f, 100, Color.White, Main.rand.NextFloat(0.75f, 1.1f));
+                dust.noGravity = true;
+            }
+        }
+
+        private NPC FindClosestNPC(float range)
+        {
+            NPC target = null;
+            float sqrRange = range * range;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float sqrDistance = Vector2.DistanceSquared(npc.Center, Projectile.Center);
+                if (sqrDistance > sqrRange)
+                    continue;
+
+                sqrRange = sqrDistance;
+                target = npc;
+            }
+
+            return target;
         }
     }
 }

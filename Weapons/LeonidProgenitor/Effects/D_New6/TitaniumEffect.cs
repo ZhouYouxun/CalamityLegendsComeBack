@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
 
         public override void OnHitNPC(LeonidCometSmall meteor, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            owner.GetModPlayer<LeonidProgenitorPlayer>().AddTitaniumShieldCharge(LeonidProgenitorPlayer.TitaniumShieldChargePerHit);
+            owner.GetModPlayer<LeonidProgenitorPlayer>().ActivateTitaniumStompers(240);
         }
     }
 }

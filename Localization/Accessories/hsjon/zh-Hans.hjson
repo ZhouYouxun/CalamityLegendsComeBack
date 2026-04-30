@@ -30,6 +30,28 @@ Mods: {
 				DisplayName: S-TAC：战术锁定校准模块
 				Tooltip: 让右键的激光获得很弱的追踪能力
 			}
+
+			OffshoreWindTurbine: {
+				DisplayName: 离岸风力发电机
+				Tooltip: 海爵的最大潮汐值 +2
+			}
+
+			ImpactRestarter: {
+				DisplayName: 冲击重启器
+				Tooltip: 海爵的右键小冲刺命中敌人后立刻清空三秒冷却\n满潮回旋冲刺命中敌人时，将三秒冷却压缩为一秒
+			}
+
+			HighTideOverloadBarrier: {
+				DisplayName: 满潮过载防护层
+				Tooltip: 海爵潮汐值为满时，额外提供 20 点防御力和 20% 伤害减免
+			}
+
+			SurgeChainReactor: {
+				DisplayName: 电涌连锁反应器
+				Tooltip: 海爵的快刀斩命中敌人后，额外爆发 75x75 的蓝色水能爆炸
+			}
 		}
+
+		Projectiles.BrinyBaron.SurgeChainWaterBurst.DisplayName: 电涌水爆
 	}
 }

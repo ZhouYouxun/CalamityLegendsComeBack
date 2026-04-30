@@ -33,5 +33,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             CooldownTimer = DashCooldown;
         }
+
+        public void ClearCooldown()
+        {
+            CooldownTimer = 0;
+        }
+
+        public void ReduceCooldownTo(int frames)
+        {
+            if (CooldownTimer > frames)
+                CooldownTimer = frames;
+        }
     }
 }

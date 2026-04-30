@@ -61,7 +61,7 @@ Mods: {
 			SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
 			SHPCAmmo1: 弹跳并释放大量电火花
 			SHPCAmmo2: 释放5条连锁闪电弧
-			SHPCAmmo3: 击中地面后产生毒水
+			SHPCAmmo3: 击中地面后产生毒气
 			SHPCAmmo4: 能量耗尽后分裂成两个光球
 			SHPCAmmo5: 瞄准并猛击正下方的敌人
 			SHPCAmmo6: 爆炸时形成一片液氮区域
@@ -69,13 +69,13 @@ Mods: {
 			SHPCAmmo8: 把敌人崩飞
 			SHPCAmmo9: 呼唤高伤害的光明之魂绕自身旋转
 			SHPCAmmo10: 喷射追踪敌人的暗影之魂
-			SHPCAmmo11: 翱翔于天空，并向下轰炸
+			SHPCAmmo11: 翱翔于天空并向下轰炸
 			SHPCAmmo12: 在原地滞留游荡的恐惧之魂
 			SHPCAmmo13: 释放三个延迟爆炸的能量光球
 			SHPCAmmo14: 持久的飞行能够造成更猛烈的爆炸
 			SHPCAmmo15: 追踪并尝试治疗玩家
 			SHPCAmmo16: 撞击后向四周释放静止的灵魂
-			SHPCAmmo17: 持续粘在敌人表面造成多次伤害
+			SHPCAmmo17: 释放多发快速下降的渊球
 			SHPCAmmo18: 制造瘟疫核爆
 			SHPCAmmo19: 痛苦的赤色灵魂喷涌而出
 			SHPCAmmo20: "[甲虫外壳 未实现]"
@@ -91,14 +91,14 @@ Mods: {
 			SHPCAmmo30: 唤醒深处的灵魂
 			SHPCAmmo31: 痛苦的赤色灵魂喷涌而出
 			SHPCAmmo32: 制造小型黑洞将敌人吸入
-			SHPCAmmo33: 进行多次双纽线追踪并抹除敌人
-			SHPCAmmo34: 反弹并释放冰刺攻击
-			SHPCAmmo35: 分裂成噩梦激光
-			SHPCAmmo36: 召唤大量的微型圣灵，进行区域火力覆盖
-			SHPCAmmo37: 感受巨龙的怒吼
+			SHPCAmmo33: 释放刀锋切割敌人
+			SHPCAmmo34: 在敌人周围制造冰刺攻击
+			SHPCAmmo35: 分裂成强追踪的噩梦激光
+			SHPCAmmo36: 释放4个化神之星冲向前方
+			SHPCAmmo37: 12号口径龙息霰弹
 			SHPCAmmo38: 喷射激光惩戒敌人，释放分形几何
 			SHPCAmmo39: 湮灭目力所及的所有敌人
-			SHPCAmmo40: 喷射出大量的电磁光球
+			SHPCAmmo40: 喷射出大量的电磁光球并释放闪电
 		}
 
 		Projectiles: {

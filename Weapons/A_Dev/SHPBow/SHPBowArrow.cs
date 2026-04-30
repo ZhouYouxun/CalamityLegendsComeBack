@@ -57,15 +57,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             int length = SequenceLength;
             int pierce = PierceCount;
             int ricochet = RicochetCount;
-            int scatter = ScatterCount;
             int homing = HomingCount;
 
             Projectile.noDropItem = true;
             Projectile.scale = 0.95f + length * 0.04f + (Charged ? 0.22f : 0f);
-            Projectile.penetrate = 1 + pierce * 2 + ricochet + scatter / 2 + (Charged ? length : 0);
+            Projectile.penetrate = 1 + pierce + ricochet + (Charged ? System.Math.Max(1, length / 2) : 0);
             Projectile.extraUpdates = 1 + System.Math.Min(2, pierce / 2 + (Charged && pierce > 0 ? 1 : 0));
             Projectile.ArmorPenetration = pierce * 11 + (Charged ? length * 6 : 0);
             Projectile.localNPCHitCooldown = System.Math.Max(6, 13 - pierce - ricochet - (Charged ? 2 : 0));
+
+            if (homing > 0)
+                Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * (1f + homing * 0.05f)));
 
             if (homing >= 3)
                 Projectile.timeLeft += 40;
@@ -147,6 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             if (Projectile.velocity.Y != oldVelocity.Y)
                 Projectile.velocity.Y = -oldVelocity.Y * retention;
 
+            ApplyRicochetDamageBoost();
             Projectile.timeLeft = System.Math.Max(Projectile.timeLeft, 80);
             Projectile.netUpdate = true;
             EmitBurst(Charged ? 12 : 7, 0.6f, Charged ? 3.8f : 2.5f);
@@ -156,8 +159,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (RicochetCount > 0)
-                RetargetRicochet(target);
+            ApplyPenetrationDamageDecay();
+
+            if (RicochetCount > 0 && RetargetRicochet(target))
+                ApplyRicochetDamageBoost();
 
             if (ScatterCount > 0)
                 target.AddBuff(BuffID.OnFire, Charged ? 240 : 120);
@@ -168,12 +173,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             EmitBurst(Charged ? 14 : 6, 0.7f, Charged ? 4.2f : 2.2f);
         }
 
-        private void RetargetRicochet(NPC hitTarget)
+        private void ApplyPenetrationDamageDecay()
+        {
+            float multiplier = MathHelper.Clamp(0.4f - PierceCount * 0.05f, 0.2f, 0.4f);
+            Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * multiplier));
+            Projectile.netUpdate = true;
+        }
+
+        private void ApplyRicochetDamageBoost()
+        {
+            int ricochet = RicochetCount;
+            if (ricochet <= 0)
+                return;
+
+            Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * (1f + ricochet * 0.05f)));
+            Projectile.netUpdate = true;
+        }
+
+        private bool RetargetRicochet(NPC hitTarget)
         {
             int ricochet = RicochetCount;
             int maxBounces = ricochet * (Charged ? 3 : 2);
             if (BounceCount >= maxBounces)
-                return;
+                return false;
 
             NPC nextTarget = null;
             float closest = 360f + ricochet * 140f + (Charged ? 180f : 0f);
@@ -191,12 +213,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             }
 
             if (nextTarget is null)
-                return;
+                return false;
 
             BounceCount++;
             float speed = MathHelper.Clamp(Projectile.velocity.Length() + 0.8f + ricochet * 0.45f, 12f, Charged ? 28f : 22f);
             Projectile.velocity = (nextTarget.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
             Projectile.netUpdate = true;
+            return true;
         }
 
         public override void OnKill(int timeLeft)
