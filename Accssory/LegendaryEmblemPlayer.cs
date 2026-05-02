@@ -2,7 +2,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory
 {
-    internal sealed class EXPlayer : ModPlayer
+    internal sealed class LegendaryEmblemPlayer : ModPlayer
     {
         public bool EXAccessoryEquipped;
 

@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
         {
             Item.width = 68;
             Item.height = 126;
-            Item.damage = 58;
+            Item.damage = 69;
             Item.DamageType = DamageClass.Ranged;
             Item.useAnimation = 10;
             Item.useTime = 10;
@@ -43,7 +43,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             Item.UseSound = null;
             Item.shoot = HoldoutType;
             Item.shootSpeed = 18f;
-            Item.useAmmo = AmmoID.Arrow;
             Item.value = CalamityGlobalItem.RarityVioletBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
             Item.Calamity().devItem = true;

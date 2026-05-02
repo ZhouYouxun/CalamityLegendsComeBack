@@ -1,72 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     public class SHPCRight_Player : ModPlayer
     {
         public int HeatStage;
+        public int AttackLockoutTimer;
 
-        private int heatUpTimer;
-        private int coolDownTimer;
-
-        public override void ResetEffects()
-        {
-            // ❌ 不再清零
-        }
+        private int heatDecayTimer;
 
         public override void PostUpdate()
         {
-            bool holdingRightClick = false;
+            if (AttackLockoutTimer > 0)
+                AttackLockoutTimer--;
 
-            // ===== 检测是否存在 Holdout =====
-            foreach (Projectile proj in Main.projectile)
+            bool holdingRightClick =
+                Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0 ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] > 0;
+
+            if (holdingRightClick || AttackLockoutTimer > 0)
             {
-                if (proj.active &&
-                    proj.owner == Player.whoAmI &&
-                    proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>())
-                {
-                    holdingRightClick = true;
-                    break;
-                }
+                heatDecayTimer = 0;
+                return;
             }
 
-            // ===== 持续开火：升温 =====
-            if (holdingRightClick)
+            if (HeatStage <= 0)
+                return;
+
+            heatDecayTimer++;
+            if (heatDecayTimer >= 90)
             {
-                heatUpTimer++;
-                coolDownTimer = 0;
-
-                if (heatUpTimer >= 180) // 3秒升一级
-                {
-                    HeatStage++;
-                    heatUpTimer = 0;
-                }
+                HeatStage--;
+                heatDecayTimer = 0;
             }
-            // ===== 没持枪：降温 =====
-            else
-            {
-                coolDownTimer++;
-                heatUpTimer = 0;
+        }
 
-                if (coolDownTimer >= 300) // 5秒降一级
-                {
-                    HeatStage--;
-                    coolDownTimer = 0;
-                }
-            }
-
-            // ===== 限制范围 =====
-            if (HeatStage < 0)
-                HeatStage = 0;
-
-            if (HeatStage > 7)
-                HeatStage = 7;
+        public void SetAttackLockout(int frames)
+        {
+            if (frames > AttackLockoutTimer)
+                AttackLockoutTimer = frames;
         }
     }
 }

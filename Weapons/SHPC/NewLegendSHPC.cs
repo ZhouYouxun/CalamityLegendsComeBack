@@ -209,6 +209,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 使用条件与消耗 =====
         public override bool CanUseItem(Player player)
         {
+            if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
+                return false;
+
             if (player.altFunctionUse == 2)
             {
                 Item.channel = true;         // ✅ 右键长按核心
@@ -268,6 +271,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 // 成功装填后恢复发数
                 if (ammoConsumed)
                     storedEffectPower = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
+                else
+                {
+                    storedAmmoType = ItemID.None;
+                    storedEffectID = 0;
+                }
             }
 
             return base.UseItem(player);
@@ -292,7 +300,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
 
             // ❌ 新增：左键冷却锁
-            if (leftClickCooldown > 0)
+            if (leftClickCooldown > 0 || player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
                 return false;
 
             // 右键 → 不发射左键弹幕
@@ -302,7 +310,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
-            if (player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
+            if (player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
                 exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player) &&
                 KeybindSystem.LegendarySkill.Current)
             {
@@ -333,7 +341,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         scatterDamage,
                         knockback,
                         player.whoAmI,
-                        storedEffectID > 0 ? storedEffectID : -1
+                        GetProjectileEffectIDForShot()
                     );
                 }
             }
@@ -347,16 +355,45 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     damage,
                     knockback,
                     player.whoAmI,
-                    storedEffectID > 0 ? storedEffectID : -1
+                    GetProjectileEffectIDForShot()
                 );
             }
             leftClickCooldown = Item.useTime; // 60帧锁死
-            exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+            GainEXFromLeftShot(player);
+
+            return false;
+        }
+
+        private int GetProjectileEffectIDForShot()
+        {
+            return storedEffectPower > 0 && storedEffectID > 0 ? storedEffectID : -1;
+        }
+
+        private void GainEXFromLeftShot(Player player)
+        {
+            NewLegend_EXPlayer exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+            if (!exPlayer.EXUnlocked || !HasNearbyChargeTarget(player))
+                return;
+
             int currentMaxEX = NewLegend_EXPlayer.GetCurrentEXMax(player);
-            exPlayer.EXValue += (int)(currentMaxEX * 0.025f); // 左键对大技能的充能效果
+            exPlayer.EXValue += NewLegend_EXPlayer.GetFramesPerDisplayUnit(player);
 
             if (exPlayer.EXValue > currentMaxEX)
                 exPlayer.EXValue = currentMaxEX;
+        }
+
+        private bool HasNearbyChargeTarget(Player player)
+        {
+            const float chargeRange = 900f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(player, false))
+                    continue;
+
+                if (Vector2.Distance(player.Center, npc.Center) <= chargeRange)
+                    return true;
+            }
 
             return false;
         }
@@ -493,7 +530,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== EX技能释放 =====
             if (exUnlocked &&
                 KeybindSystem.LegendarySkill.JustPressed &&
-                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
+                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
                 exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
             {
                 // 防止重复生成
@@ -565,6 +602,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 !Main.blockMouse &&
                 !(Main.playerInventory && Main.HoverItem.type == Item.type)) // ❗新增
             {
+                if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
+                    return;
+
                 // 🔥 强制打断左键动画
                 //player.itemAnimation = 0;
                 //player.itemTime = 0;
@@ -688,7 +728,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             // 直接覆写面板基础伤害
-            damage.Base = balance.GetLeftClickBaseDamage();
+            int targetDamage = balance.GetLeftClickBaseDamageForEffect(GetProjectileEffectIDForShot());
+            damage.Base += targetDamage - Item.damage;
         }
         #endregion
 

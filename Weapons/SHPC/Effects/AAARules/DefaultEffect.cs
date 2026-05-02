@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.SHPC;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 {
@@ -62,8 +64,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         // 死亡时（白卷）
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.owner != Main.myPlayer)
+                return;
 
+            int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
+            int explosionIndex = Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                (int)(projectile.damage * 0.85f),
+                projectile.knockBack,
+                projectile.owner
+            );
 
+            if (explosionIndex >= 0 && explosionIndex < Main.maxProjectiles)
+            {
+                Projectile explosion = Main.projectile[explosionIndex];
+                explosion.Center = projectile.Center;
+                explosion.width = explosionSize;
+                explosion.height = explosionSize;
+                explosion.netUpdate = true;
+            }
         }
 
         // 光芒大小（默认=原始行为）

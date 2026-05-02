@@ -17,7 +17,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
         public override int EffectID => 1;
 
         public override int AmmoType => ModContent.ItemType<EnergyCore>();
-        public override int ShotsPerAmmo => 75;
 
         public override Color ThemeColor => new Color(120, 255, 120); // 稍微偏深的Lime
         public override Color StartColor => new Color(140, 255, 140); // 稍亮一点作为起点

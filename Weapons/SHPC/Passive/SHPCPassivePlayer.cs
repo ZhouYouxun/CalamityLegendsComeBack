@@ -3,6 +3,7 @@ using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 {
@@ -63,18 +64,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 
         private bool PassiveCanTrigger()
         {
-            bool stationary = Player.velocity.LengthSquared() <= 0.01f && Player.grapCount <= 0;
-            bool notAttacking = Player.itemAnimation <= 0 && Player.itemTime <= 0;
-            bool noHeldProjectile = Player.ownedProjectileCounts[ModContent.ProjectileType<RightClick.SHPCRight_HoulOut>()] <= 0;
+            if (Player.dead || Player.pulley || Player.statMana >= Player.statManaMax2)
+                return false;
 
-            return stationary &&
-                   notAttacking &&
+            bool notFiring = IsNotFiring();
+            if (NPC.downedPlantBoss)
+                return notFiring;
+
+            bool notMovingHorizontally =
+                !Player.controlLeft &&
+                !Player.controlRight &&
+                Math.Abs(Player.velocity.X) <= 0.08f;
+
+            if (Main.hardMode)
+                return notMovingHorizontally;
+
+            bool stationary = Player.velocity.LengthSquared() <= 0.01f && Player.grapCount <= 0;
+            return stationary && notFiring;
+        }
+
+        private bool IsNotFiring()
+        {
+            bool noHeldProjectile =
+                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClick.SHPCRight_HoulOut>()] <= 0 &&
+                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] <= 0;
+
+            return Player.itemAnimation <= 0 &&
+                   Player.itemTime <= 0 &&
                    noHeldProjectile &&
                    !Player.controlUseItem &&
-                   !Player.controlUseTile &&
-                   !Player.pulley &&
-                   !Player.dead &&
-                   Player.statMana < Player.statManaMax2; // ⭐新增：蓝没满才触发
+                   !Player.controlUseTile;
         }
 
         private void RestoreManaPerFrame()

@@ -64,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (Main.myPlayer == player.whoAmI &&
                 KeybindSystem.LegendarySkill.JustPressed &&
-                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped &&
+                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
                 exPlayer.ConsumeAllEX() &&
                 !exWeaponActive)
             {

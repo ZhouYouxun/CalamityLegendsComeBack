@@ -53,9 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             if (holdingSHPC)
             {
-                // 手持：每帧增长1，满值正好需要 7200 帧（两分钟）
-                if (EXValue < maxEX)
-                    EXValue++;
+                EXValue = Utils.Clamp(EXValue, 0, maxEX);
             }
             else
             {

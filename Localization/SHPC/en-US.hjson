@@ -7,29 +7,29 @@ Mods: {
 					SHPC_LeftIntro:
 						'''
 						[c/66CCFF:Left Click: Fires an energy sphere.]
-						[c/FFD966:Materials in your inventory can be used as ammunition; different materials provide different capacities.]
+						[c/FFD966:Materials in your inventory can be loaded; loaded materials override left-click displayed damage and may provide different capacities.]
 						[c/99CCFF:Automatically reloads once the current charge is depleted.]
-						[c/AAAAAA:Can still fire without any loaded material, but no additional effects will be applied.]
+						[c/AAAAAA:Can still fire without any loaded material, but only as a default white orb; its multiplier and blast radius improve with progression.]
 						[c/99CCFF:Right-click the item in your inventory to purge the current load, with a chance to recover the material.]
 						[c/DDA0FF:Current loaded effect:]
 						'''
 					SHPC_RightIntro:
 						'''
-						[c/66CCFF:Right Click: After a brief charge, unleashes a sustained laser barrage.]
-						[c/FFB347:Continuous firing builds up heat, with the maximum level scaling with game progression.]
-						[c/99CCFF:Heat gradually dissipates after ceasing fire, and is fully cleared when the weapon is unequipped.]
-						[c/DDA0FF:During firing, pressing left click forcibly vents heat, releasing 5 energy spheres and briefly interrupting the attack.]
-						[c/FF7043:Higher heat increases both side effects and laser damage output.]
+						[c/66CCFF:Right Click: Hold to fire a precise laser barrage; secondary lasers have slight deviation and spiral lateral offset.]
+						[c/FFB347:Continuous fire builds heat. Maximum heat level unlocks at Hardmode, Plantera, Moon Lord, and Devourer of Gods.]
+						[c/99CCFF:After max heat fills, firing can continue for 1.5 seconds before a forced 0.5-second shutdown disables both attacks.]
+						[c/DDA0FF:Once at least one heat level is filled, left click while firing vents heat, fires 3 energy orbs, and removes one heat level.]
+						[c/FF7043:Heat IV cancels life regeneration and slowly burns the user; Heat V rapidly drains life.]
 						'''
 					SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
-					SHPCRight1: "[c/8FA2FF:Unlocked up to Heat Level III: projectiles create a small explosion upon dissipation.]"
-					SHPCRight2: "[c/8FA2FF:Unlocked up to Heat Level IV: ignores defense and significantly increases damage, but suppresses life regeneration.]"
-					SHPCRight3: "[c/8FA2FF:Unlocked up to Heat Level V: projectiles split upon termination, and manual cooling becomes available.]"
-					SHPCRight4: "[c/8FA2FF:Unlocked up to Heat Level VI: further enhances projectile performance and piercing capability, while continuously burning the user.]"
-					SHPCRight5: "[c/8FA2FF:Unlocked up to Heat Level VII: grants infinite piercing and bonus damage based on target max health, but overheating rapidly drains the user.]"
+					SHPCRight1: "[c/8FA2FF:Unlocked up to Heat I: one precise laser. Once heat is full, output can continue briefly before shutdown.]"
+					SHPCRight2: "[c/8FA2FF:Unlocked up to Heat II: adds one secondary laser. At Heat II, lasers pierce 3 enemies and lose 10% damage per pierce.]"
+					SHPCRight3: "[c/8FA2FF:Unlocked up to Heat III: secondary lasers have a 33% first-hit chance to create a small blast; the main laser has a 10% first-hit chance to create a medium blast.]"
+					SHPCRight4: "[c/8FA2FF:Unlocked up to Heat IV: adds a second secondary laser. Blast chance rises to 50%/20%, can trigger after piercing, and burns the user.]"
+					SHPCRight5: "[c/8FA2FF:Unlocked up to Heat V: lasers gain infinite piercing and max-life damage, but rapidly drain the user's life.]"
 					SHPC_EXHint:
 						'''
-						[c/66CCFF:While holding the weapon or firing its normal left click, the system gradually accumulates energy, up to 60.]
+						[c/66CCFF:When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
 						[c/FFD966:Once fully charged, press [{0}] to activate the ultimate mode.]
 						[c/FF7043:After a brief charge, unleash a colossal laser that pierces through everything.]
 						'''
@@ -59,6 +59,7 @@ Mods: {
 
 		AMMO: {
 			SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
+			SHPCAmmoPanel: Left-click displayed damage: {0}; load capacity: {1} shots
 			SHPCAmmo1: Bounces and releases bursts of electric sparks
 			SHPCAmmo2: Unleashes five chaining lightning arcs
 			SHPCAmmo3: Generates toxic gas upon ground impact
@@ -139,6 +140,7 @@ Mods: {
 				NewLegendSHPE.DisplayName: SHPC Explosion
 				SHPCRight_HoulOut.DisplayName: SHPC Holdout
 				SHPCRight_Proj.DisplayName: SHPC Main Beam
+				SHPCRight_Explosion.DisplayName: SHPC Heat Blast
 				NL_SHPC_EXWeapon.DisplayName: SHPC EX Super Laser
 				PlagueCell_Marked.DisplayName: Marked Plague Cell
 				SHPCPassiveOrb.DisplayName: SHPC Passive Orb

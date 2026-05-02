@@ -191,7 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (!KeybindSystem.LegendarySkill.JustPressed)
                 return;
 
-            if (!player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.EXPlayer>().EXAccessoryEquipped)
+            if (!player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped)
                 return;
 
             // ===== 大招释放 =====

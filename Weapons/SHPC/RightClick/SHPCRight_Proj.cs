@@ -23,12 +23,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override string Texture => "CalamityMod/Projectiles/LaserProj";
 
         public int WeaponStage;
+        public int HeatLevel;
+        public int BeamIndex;
+        public bool IsMainBeam = true;
 
         private bool penetratedSet;
 
-        // 是否允许分裂（子弹用）
-        private bool canSplit = true;
         private int helixTimer;
+        private bool heatExplosionRolled;
         public override Color? GetAlpha(Color lightColor)
             => new Color(255, 235, 120, 0);
 
@@ -125,13 +127,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private Vector2 TrailOffsetFunction(float completion, Vector2 _)
         {
-            float lateralWave = (float)Math.Sin(completion * MathHelper.Pi * 1.15f + Main.GlobalTimeWrappedHourly * 10f) * 0.6f;
+            float lateralWave = IsMainBeam
+                ? 0f
+                : (float)Math.Sin(completion * MathHelper.Pi * 1.15f + Main.GlobalTimeWrappedHourly * 10f) * 0.6f;
+
+            if (BeamIndex > 0)
+            {
+                float amplitude = BeamIndex == 1 ? 4f : 6f;
+                lateralWave += (float)Math.Sin(completion * MathHelper.TwoPi * 2f + Main.GlobalTimeWrappedHourly * 8f + BeamIndex * 1.35f) * amplitude;
+            }
+
             return Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * lateralWave;
         }
 
         private float TrailWidthFunction(float completion, Vector2 _)
         {
-            float maxBodyWidth = Projectile.scale * 15f;
+            float maxBodyWidth = Projectile.scale * (IsMainBeam ? 30f : 15f);
             float curveRatio = 0.18f;
 
             if (completion < curveRatio)
@@ -142,8 +153,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private Color TrailColorFunction(float completion, Vector2 _)
         {
-            Color headColor = new Color(255, 236, 125);
-            Color midColor = new Color(255, 214, 72);
+            Color headColor = IsMainBeam ? new Color(86, 225, 255) : new Color(255, 236, 125);
+            Color midColor = IsMainBeam ? new Color(24, 154, 255) : new Color(255, 214, 72);
             float opacity = Projectile.Opacity * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true);
             Color bodyColor = Color.Lerp(headColor, midColor, completion * 0.65f) * opacity;
             Color tipColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.74f, 1f, completion, true));
@@ -153,7 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private float TrailCoreWidthFunction(float completion, Vector2 _)
         {
-            float maxBodyWidth = Projectile.scale * 8.5f;
+            float maxBodyWidth = Projectile.scale * (IsMainBeam ? 17f : 8.5f);
             float curveRatio = 0.18f;
 
             if (completion < curveRatio)
@@ -165,7 +176,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private Color TrailCoreColorFunction(float completion, Vector2 _)
         {
             float opacity = Projectile.Opacity * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true);
-            Color bodyColor = Color.Lerp(Color.White, new Color(255, 250, 210), completion * 0.5f) * opacity;
+            Color bodyColor = IsMainBeam
+                ? Color.Lerp(Color.White, new Color(150, 245, 255), completion * 0.5f) * opacity
+                : Color.Lerp(Color.White, new Color(255, 250, 210), completion * 0.5f) * opacity;
             Color tipColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.78f, 1f, completion, true));
             tipColor.A = 0;
             return Color.Lerp(bodyColor, tipColor, completion);
@@ -189,26 +202,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private float baseSpeed;
         public override void OnSpawn(IEntitySource source)
         {
+            BeamIndex = (int)Projectile.ai[0];
+            IsMainBeam = BeamIndex == 0;
+
             // ===== 根据热值调整初速度倍率 =====
-            float speedMultiplier = WeaponStage switch
+            float speedMultiplier = HeatLevel switch
             {
-                1 => 0.86f,
-                2 => 0.98f,
-                3 => 1.12f,
-                4 => 1.25f,
-                5 => 1.38f,
-                6 => 1.48f,
-                >= 7 => 1.58f,
-                _ => 0.86f
+                1 => 0.94f,
+                2 => 1f,
+                3 => 1.05f,
+                4 => 1.1f,
+                >= 5 => 1.15f,
+                _ => 0.94f
             };
 
             Projectile.velocity *= speedMultiplier;
 
             baseSpeed = Projectile.velocity.Length();
 
-            // 子弹标记（防止递归分裂）
-            if (Projectile.ai[0] == 1f)
-                canSplit = false;
         }
 
         public override void AI()
@@ -248,10 +259,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // 穿透设置
             if (!penetratedSet)
             {
-                Projectile.penetrate = WeaponStage switch
+                int heat = Math.Max(WeaponStage, HeatLevel);
+                Projectile.penetrate = heat switch
                 {
-                    >= 7 => -1,
-                    >= 4 => 7,
+                    >= 5 => -1,
                     >= 2 => 3,
                     _ => 1
                 };
@@ -259,7 +270,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // 飞行特效：Stage3+ 才启用，且每真实帧只释放一次，避免过重
-            if (WeaponStage >= 3 && Projectile.numUpdates == 0)
+            if ((HeatLevel >= 3 || BeamIndex > 0) && Projectile.numUpdates == 0)
             {
                 helixTimer++;
                 SpawnHelixFlightEffects();
@@ -316,141 +327,107 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            // ===== 单螺旋：用单个 sin 波在弹道两侧摆动 =====
-            float wave = (float)Math.Sin(helixTimer * 0.42f);
-            Vector2 helixOffset = right * wave * 6f;
-            Vector2 spawnPos = Projectile.Center + helixOffset;
+            if (IsMainBeam)
+            {
+                Dust core = Dust.NewDustPerfect(Projectile.Center, 267);
+                core.velocity = forward * Main.rand.NextFloat(1.4f, 2.6f) + Main.rand.NextVector2Circular(0.35f, 0.35f);
+                core.color = Color.Lerp(new Color(70, 210, 255), Color.White, Main.rand.NextFloat(0.35f, 0.8f));
+                core.scale = Main.rand.NextFloat(0.82f, 1.12f);
+                core.noGravity = true;
+                return;
+            }
 
+            float time = helixTimer * 0.46f;
             Color brightYellow = new Color(255, 235, 120);
             Color hotYellow = Color.Lerp(brightYellow, Color.White, 0.35f);
-
-            // ===== 1. 同源碎屑：少量亮黄色 Dust =====
-            Dust dust = Dust.NewDustPerfect(
-                spawnPos,
-                267
-            );
-
-            dust.velocity =
-                forward * Main.rand.NextFloat(1.8f, 3.6f) +
-                right * wave * Main.rand.NextFloat(0.15f, 0.45f);
-
-            dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
-            dust.scale = Main.rand.NextFloat(0.62f, 0.82f);
-            dust.noGravity = true;
-
-            // ===== 2. 同源光学线：更克制，只偶尔喷一条 =====
-            if (Main.rand.NextBool(2))
+            float[] phases =
             {
-                Vector2 lineVelocity =
-                    forward * Main.rand.NextFloat(5.5f, 8.5f) +
-                    right * wave * Main.rand.NextFloat(0.4f, 1.0f);
+                0f,
+                MathHelper.Pi,
+                MathHelper.PiOver2,
+                MathHelper.PiOver2 + MathHelper.Pi
+            };
 
-                Particle line = new CustomSpark(
-                    spawnPos,
-                    lineVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    9,
-                    Main.rand.NextFloat(0.018f, 0.028f),
-                    hotYellow,
-                    new Vector2(0.9f, 0.62f),
-                    shrinkSpeed: 0.8f
-                );
+            for (int i = 0; i < phases.Length; i++)
+            {
+                bool thickStrand = i < 2;
+                float radius = thickStrand ? 7.5f : 4.8f;
+                float wave = (float)Math.Sin(time + phases[i] + BeamIndex * 0.7f);
+                Vector2 spawnPos = Projectile.Center + right * wave * radius;
 
-                GeneralParticleHandler.SpawnParticle(line);
+                Dust dust = Dust.NewDustPerfect(spawnPos, 267);
+                dust.velocity =
+                    forward * Main.rand.NextFloat(1.4f, 2.8f) +
+                    right * wave * Main.rand.NextFloat(0.22f, 0.55f);
+                dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
+                dust.scale = thickStrand
+                    ? Main.rand.NextFloat(0.82f, 1.08f)
+                    : Main.rand.NextFloat(0.48f, 0.66f);
+                dust.noGravity = true;
             }
         }
 
         // ===== 核心：伤害倍率 + 防御处理 =====
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            float multiplier = WeaponStage switch
-            {
-                1 => 1f,
-                2 => 1.1f,
-                3 => 1.25f,
-                4 => 1.5f,
-                5 => 1.65f,
-                6 => 1.75f,
-                >= 7 => 2f,
-                _ => 1f
-            };
+            int heat = Math.Max(WeaponStage, HeatLevel);
 
-            modifiers.SourceDamage *= multiplier;
-
-            // Stage4+：无视防御与DR
-            if (WeaponStage >= 4)
+            // Heat5：附加最大生命百分比伤害
+            if (heat >= 5)
             {
-                modifiers.DefenseEffectiveness *= 0f;
-                modifiers.FinalDamage /= 1f - target.Calamity().DR;
-            }
-
-            // Stage7：附加最大生命【1‰】伤害
-            if (WeaponStage >= 7)
-            {
-                modifiers.SourceDamage += target.lifeMax * 0.001f;
+                modifiers.SourceDamage += target.lifeMax * 0.0005f;
             }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            int heat = Math.Max(WeaponStage, HeatLevel);
+            TrySpawnHeatExplosion(target, heat);
+
+            if (heat >= 2 && heat < 5)
+                Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.9f));
+
             SpawnHitEffects(target);
+        }
+
+        private void TrySpawnHeatExplosion(NPC target, int heat)
+        {
+            if (heat < 3)
+                return;
+
+            if (heat == 3 && heatExplosionRolled)
+                return;
+
+            if (heat == 3)
+                heatExplosionRolled = true;
+
+            float chance = IsMainBeam
+                ? (heat >= 4 ? 0.2f : 0.1f)
+                : (heat >= 4 ? 0.5f : 0.33f);
+
+            if (Main.rand.NextFloat() >= chance)
+                return;
+
+            int explosionSize = IsMainBeam
+                ? (heat >= 4 ? 150 : 128)
+                : (heat >= 4 ? 104 : 84);
+            int explosionDamage = Math.Max(1, (int)(Projectile.damage * (IsMainBeam ? 0.65f : 0.45f)));
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<SHPCRight_Explosion>(),
+                explosionDamage,
+                Projectile.knockBack,
+                Projectile.owner,
+                target.whoAmI,
+                explosionSize
+            );
         }
 
         public override void OnKill(int timeLeft)
         {
-            // ===== Stage3：小爆炸 =====
-            if (WeaponStage >= 3)
-            {
-                int explosionIndex = Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<NewLegendSHPE>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner
-                );
-
-                Projectile explosion = Main.projectile[explosionIndex];
-                explosion.width = 25;
-                explosion.height = 25;
-            }
-
-            // ===== Stage5：概率分裂 =====
-            if (WeaponStage >= 5 && canSplit)
-            {
-                int splitCount = Main.rand.Next(0, 3); // 0~ 均匀分布
-
-                for (int i = 0; i < splitCount; i++)
-                {
-                    Vector2 velocity =
-                        Projectile.velocity.SafeNormalize(Vector2.UnitX)
-                            .RotatedByRandom(0.6f) *
-                        baseSpeed *
-                        Main.rand.NextFloat(0.9f, 1.05f);
-
-                    int index = Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        velocity,
-                        Type,
-                        Projectile.damage,
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        1f // 标记为子弹（禁止再分裂）
-                    );
-
-                    if (Main.projectile[index].ModProjectile is SHPCRight_Proj p)
-                    {
-                        p.WeaponStage = WeaponStage;
-
-                    }
-                    Main.projectile[index].tileCollide = false;
-                    Main.projectile[index].timeLeft = 100; // 分裂子弹寿命固定为100
-                }
-            }
-
             SpawnDeathEffects();
         }
 
@@ -656,11 +633,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override void SendExtraAI(BinaryWriter writer)
         {
             writer.Write(WeaponStage);
+            writer.Write(HeatLevel);
+            writer.Write(BeamIndex);
+            writer.Write(IsMainBeam);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
             WeaponStage = reader.ReadInt32();
+            HeatLevel = reader.ReadInt32();
+            BeamIndex = reader.ReadInt32();
+            IsMainBeam = reader.ReadBoolean();
         }
 
 

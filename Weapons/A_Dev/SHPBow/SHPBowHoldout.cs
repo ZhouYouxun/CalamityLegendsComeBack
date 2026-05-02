@@ -197,17 +197,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
         private void FireSequenceShot(bool charged)
         {
-            if (!TryPickAmmoForSequence(charged, out float ammoSpeed, out int ammoDamage, out float knockback))
-            {
-                leftFireTimer = 6;
-                return;
-            }
+            GetShotStats(out float shotSpeed, out int baseDamage, out float knockback);
 
             IEntitySource source = Projectile.GetSource_FromThis();
             int packedSequence = BowPlayer.PackedSequence;
             Vector2 aim = AimDirection;
             Vector2 muzzle = GetMuzzlePosition(aim);
-            float speed = Math.Max(ammoSpeed, Owner.HeldItem.shootSpeed);
+            float speed = Math.Max(shotSpeed, Owner.HeldItem.shootSpeed);
             List<SequenceShot> shots = BuildSequenceShots(aim, charged);
             float chargedDamageMultiplier = charged ? 1.55f + BowPlayer.SequenceLength * 0.22f : 1f;
 
@@ -216,7 +212,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
                 Vector2 normal = shot.Direction.RotatedBy(MathHelper.PiOver2);
                 Vector2 spawnPosition = muzzle + normal * shot.LateralOffset + Main.rand.NextVector2Circular(charged ? 1.8f : 0.8f, charged ? 1.8f : 0.8f);
                 Vector2 velocity = shot.Direction * speed * shot.SpeedMultiplier;
-                int damage = Math.Max(1, (int)(ammoDamage * shot.DamageMultiplier * chargedDamageMultiplier));
+                int damage = Math.Max(1, (int)(baseDamage * shot.DamageMultiplier * chargedDamageMultiplier));
 
                 SpawnArrow(
                     source,
@@ -328,17 +324,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             shots.Add(branch);
         }
 
-        private bool TryPickAmmoForSequence(bool chargedShot, out float speed, out int damage, out float knockback)
+        private void GetShotStats(out float speed, out int damage, out float knockback)
         {
-            bool dontConsume = !chargedShot && BowPlayer.CountMode(SHPBowMode.Scatter) > 0 && Main.rand.NextBool(7);
-
-            if (!Owner.PickAmmo(Owner.HeldItem, out _, out speed, out damage, out knockback, out _, dontConsume))
-                return false;
-
+            speed = Owner.HeldItem.shootSpeed;
+            damage = Owner.GetWeaponDamage(Owner.HeldItem);
+            knockback = Owner.HeldItem.knockBack;
             if (speed <= 0f)
                 speed = Owner.HeldItem.shootSpeed;
-
-            return true;
         }
 
         private void SpawnArrow(IEntitySource source, Vector2 position, Vector2 velocity, int packedSequence, int damage, float knockback, bool charged)

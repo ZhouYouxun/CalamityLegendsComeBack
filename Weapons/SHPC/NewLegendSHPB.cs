@@ -112,7 +112,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Projectile.velocity *= 0.98f;
 
             // ===== 默认接近爆炸 =====
-            float explodeRange = 250f;
+            float explodeRange = CurrentEffect.EffectID == -1
+                ? new BalanceSHPC().GetDefaultOrbExplosionSize() * 1.15f
+                : 250f;
 
             foreach (NPC npc in Main.ActiveNPCs)
             {

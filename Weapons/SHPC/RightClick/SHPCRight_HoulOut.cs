@@ -58,31 +58,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private int stage;
         private int stageTimer;
-        private float chargeProgress;
+        private int overheatTimer;
 
         private float visualProgress; // 用于UI的真实进度（可升可降）
+        private int manualCoolingVisualTimer;
 
         // ===== 世界进度状态（来自武器）=====
         public int ProgressState; // 0~4
 
         private int MaxHeatStage;
         private int LaserChainCount;
-        private bool AllowManualCool;
+        private readonly BalanceSHPC balance = new();
 
         // ===== 每阶段升级所需时间 =====
         private int GetStageUpTime()
         {
-            return stage switch
-            {
-                0 => 120,  // 1级（初始→1）
-                1 => 150,
-                2 => 180,
-                3 => 210,
-                4 => 240,
-                5 => 270,
-                6 => 300,
-                _ => 180
-            };
+            return balance.GetHeatFillTime(stage);
         }
 
         #endregion
@@ -119,6 +110,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             ProgressState = (int)Projectile.ai[0];
             currentEffectID = (int)Projectile.ai[1];
             InitializeProgressRules();
+
+            Player owner = Main.player[Projectile.owner];
+            stage = Utils.Clamp(owner.GetModPlayer<SHPCRight_Player>().HeatStage, 0, MaxHeatStage);
         }
         // ===== 根据进度初始化规则 =====
         private void InitializeProgressRules()
@@ -127,33 +121,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 default: // 初始
                 case 0:
-                    MaxHeatStage = 3;
+                    MaxHeatStage = 1;
                     LaserChainCount = 1;
-                    AllowManualCool = false;
                     break;
 
-                case 1: // 毁灭者
-                    MaxHeatStage = 4;
+                case 1: // Hardmode
+                    MaxHeatStage = 2;
                     LaserChainCount = 2;
-                    AllowManualCool = false;
                     break;
 
-                case 2: // 星神游龙
+                case 2: // Plantera
+                    MaxHeatStage = 3;
+                    LaserChainCount = 2;
+                    break;
+
+                case 3: // Moon Lord
+                    MaxHeatStage = 4;
+                    LaserChainCount = 3;
+                    break;
+
+                case 4: // Devourer of Gods
                     MaxHeatStage = 5;
                     LaserChainCount = 3;
-                    AllowManualCool = true;
-                    break;
-
-                case 3: // 风暴编织者
-                    MaxHeatStage = 6;
-                    LaserChainCount = 3;
-                    AllowManualCool = true;
-                    break;
-
-                case 4: // 星流巨械
-                    MaxHeatStage = 7;
-                    LaserChainCount = 4;
-                    AllowManualCool = true;
                     break;
             }
         }
@@ -234,14 +223,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #region ===== 升级系统 =====
 
-            int stageUpTime = GetStageUpTime();
-
-            if (stage < MaxHeatStage && stageTimer >= stageUpTime)
+            if (fireStopTimer <= 0)
             {
-                stage++;
-                stageTimer = 0;
-                TriggerStageOutlinePulse();
-                SpawnStageUpEnergyBurst();
+                int stageUpTime = GetStageUpTime();
+
+                if (stage < MaxHeatStage && stageTimer >= stageUpTime)
+                {
+                    stage++;
+                    stageTimer = 0;
+                    overheatTimer = 0;
+                    TriggerStageOutlinePulse();
+                    SpawnStageUpEnergyBurst();
+                }
+                else if (stage >= MaxHeatStage)
+                {
+                    overheatTimer++;
+
+                    if (overheatTimer >= BalanceSHPC.OverheatGraceTime)
+                    {
+                        ForceShutdown(player);
+                    }
+                }
             }
 
             #endregion
@@ -270,9 +272,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== 手动降温（反向）=====
             else
             {
-                float coolTime = 30f; // 用你的 fireStopTimer 最大值
-                targetProgress = fireStopTimer / coolTime;
+                targetProgress = manualCoolingVisualTimer > 0
+                    ? manualCoolingVisualTimer / (float)CoolingRecoilTotalTime
+                    : fireStopTimer / (float)BalanceSHPC.ForcedShutdownTime;
             }
+
+            if (manualCoolingVisualTimer > 0)
+                manualCoolingVisualTimer--;
 
             // ===== 平滑过渡（关键）=====
             visualProgress = MathHelper.Lerp(visualProgress, targetProgress, 0.25f);
@@ -354,6 +360,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private const int CoolingRecoilReturnTime = RecoilReturnTime + 5;
         private const int CoolingRecoilTotalTime = CoolingRecoilRaiseTime + CoolingRecoilHoldTime + CoolingRecoilReturnTime;
 
+        private void ForceShutdown(Player player)
+        {
+            stage = Math.Max(0, stage - 1);
+            stageTimer = 0;
+            overheatTimer = 0;
+            fireStopTimer = BalanceSHPC.ForcedShutdownTime;
+            manualCoolingVisualTimer = 0;
+            frameCounter = 0;
+            player.GetModPlayer<SHPCRight_Player>().HeatStage = stage;
+            player.GetModPlayer<SHPCRight_Player>().SetAttackLockout(BalanceSHPC.ForcedShutdownTime);
+            TriggerStageOutlinePulse();
+            SpawnCoolingVentMist();
+        }
+
         private void ApplyRecoilRotation()
         {
             if (!recoilActive)
@@ -421,7 +441,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public void TryReduceHeat()
         {
-            if (!AllowManualCool || reduceCooldown > 0 || stage <= 0)
+            if (reduceCooldown > 0 || stage <= 0)
                 return;
 
             // ===== 降温音效 =====
@@ -436,9 +456,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             stage--;
             stageTimer = 0;
+            overheatTimer = 0;
+            Owner.GetModPlayer<SHPCRight_Player>().HeatStage = stage;
             
-            reduceCooldown = 300; // 降温的冷却时长
+            reduceCooldown = CoolingRecoilTotalTime + BalanceSHPC.ManualCoolingExtraLockout;
             fireStopTimer = CoolingRecoilTotalTime; // 停火时间
+            manualCoolingVisualTimer = CoolingRecoilTotalTime;
 
             OffsetLengthFromArm -= 18f;
 
@@ -470,58 +493,49 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Vector2 fireDirection = Vector2.UnitX.RotatedBy(Projectile.rotation);
             Vector2 baseVelocity = fireDirection * 25f;
+            Vector2 sideDirection = fireDirection.RotatedBy(MathHelper.PiOver2);
 
             for (int i = 0; i < count; i++)
             {
-                Vector2 velocity;
-
-                // ===== 单链：基本直线 =====
-                if (count == 1)
+                float fixedAngle = i switch
                 {
-                    velocity = baseVelocity.RotatedBy(Main.rand.NextFloat(-0.02f, 0.02f));
-                }
-                // ===== 多链：霰射感 =====
-                else
+                    1 => MathHelper.ToRadians(1.15f),
+                    2 => MathHelper.ToRadians(-2.35f),
+                    _ => 0f
+                };
+                float waveAngle = i == 0
+                    ? 0f
+                    : (float)Math.Sin(spiralCounter * 0.26f + i * 1.7f) * MathHelper.ToRadians(i == 1 ? 0.25f : 0.4f);
+                float sideOffset = i switch
                 {
-                    // 原本：完全随机【前面的逻辑】
-                    float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.05f;
-                    float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.05f;
-                    velocity = new Vector2(speedX, speedY);
-
-
-
-                    //float t = spiralCounter * 0.15f; // 时间参数（调速度）
-
-                    //float maxAngle = MathHelper.Pi / 180f * 4f;   // 主扇形 ±X°
-                    //float waveAngle = MathHelper.Pi / 180f * 1f;  // 螺旋扰动 ±Y°
-
-                    //float spread = MathHelper.Lerp(-maxAngle, maxAngle, i / (float)(count - 1));
-                    //Vector2 baseDir = baseVelocity.RotatedBy(spread);
-
-                    //float phase = i * 1.2f;
-                    //float offset = (float)Math.Sin(t + phase) * waveAngle;
-
-                    //velocity = baseDir.RotatedBy(offset);
-                }
+                    1 => 2.5f,
+                    2 => -4f,
+                    _ => 0f
+                };
+                Vector2 velocity = baseVelocity.RotatedBy(fixedAngle + waveAngle);
 
                 int projIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    GetSafeFirePosition(player) - fireDirection * 22f,
+                    GetSafeFirePosition(player) - fireDirection * 22f + sideDirection * sideOffset,
                     velocity,
                     ModContent.ProjectileType<SHPCRight_Proj>(),
                     Projectile.damage,
                     Projectile.knockBack,
-                    player.whoAmI
+                    player.whoAmI,
+                    i
                 );
 
                 if (Main.projectile.IndexInRange(projIndex) &&
                     Main.projectile[projIndex].ModProjectile is SHPCRight_Proj beam)
                 {
                     beam.WeaponStage = stage;
+                    beam.HeatLevel = stage;
+                    beam.BeamIndex = i;
+                    beam.IsMainBeam = i == 0;
                 }
             }
 
-            // ===== Stage5+：施加烧伤Debuff =====
+            // ===== Heat4+：施加过热Debuff =====
             if (stage >= 4)
             {
                 player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3秒
@@ -723,13 +737,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Rectangle frameCrop = new Rectangle(0, 0, (int)(barFG.Width * visualProgress), barFG.Height);
 
                 float opacity = 1f;
-                Color color = Color.Orange;
+                float heatColorProgress = MathHelper.Clamp((stage + visualProgress) / Math.Max(1f, MaxHeatStage), 0f, 1f);
+                Color color = GetHeatBarColor(heatColorProgress);
+                if (fireStopTimer > 0)
+                    color = Color.Lerp(color, Color.White, 0.25f);
 
                 Main.spriteBatch.Draw(barBG, drawPos, null, color * opacity, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
                 Main.spriteBatch.Draw(barFG, drawPos, frameCrop, color * opacity * 0.8f, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
             }
 
             return base.PreDraw(ref lightColor);
+        }
+
+        private Color GetHeatBarColor(float progress)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+
+            if (progress < 0.25f)
+                return Color.Lerp(new Color(70, 210, 255), new Color(120, 245, 255), progress / 0.25f);
+
+            if (progress < 0.5f)
+                return Color.Lerp(new Color(120, 245, 255), new Color(255, 230, 90), (progress - 0.25f) / 0.25f);
+
+            if (progress < 0.75f)
+                return Color.Lerp(new Color(255, 230, 90), new Color(255, 112, 67), (progress - 0.5f) / 0.25f);
+
+            return Color.Lerp(new Color(255, 112, 67), Color.White, (progress - 0.75f) / 0.25f);
         }
 
         #endregion

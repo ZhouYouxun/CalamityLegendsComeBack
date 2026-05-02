@@ -34,33 +34,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
-            // ===== Stage5 =====
-            if (stage == 5)
+            if (stage < 4)
+                return;
+
+            player.lifeRegenTime = 0;
+            if (player.lifeRegen > 0)
+                player.lifeRegen = 0;
+
+            // ===== Heat4 =====
+            if (stage == 4)
             {
                 if (player.statLife > 100)
                 {
-                    if (Main.GameUpdateCount % 4 == 0)
+                    if (Main.GameUpdateCount % 30 == 0)
                         ApplyOverheatDamage(player, 1);
                 }
             }
 
-            // ===== Stage6 =====
-            else if (stage == 6)
+            // ===== Heat5 =====
+            else if (stage >= 5)
             {
-                if (player.statLife > 100)
-                {
-                    if (Main.GameUpdateCount % 2 == 0)
-                        ApplyOverheatDamage(player, 1);
-                }
-            }
-
-            // ===== Stage7 =====
-            else if (stage >= 7)
-            {
-                if (Main.GameUpdateCount % 1 == 0)
+                if (Main.GameUpdateCount % 5 == 0)
                     ApplyOverheatDamage(player, Main.rand.Next(1, 3));
 
-                // 搞笑文本
                 if (Main.rand.NextBool(12))
                 {
                     Vector2 pos = player.Center;
@@ -103,21 +99,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void ApplyBurningVisual(Player player, int stage)
         {
-            if (stage < 5)
+            if (stage < 4)
                 return;
 
             // ===== 基础燃烧（始终存在）=====
             ApplyStage5Burn(player);
 
-            // ===== Stage6 叠加 =====
-            if (stage >= 6)
+            // ===== Heat5 叠加 =====
+            if (stage >= 5)
             {
                 ApplyStage6PanicBurn(player);
-            }
-
-            // ===== Stage7 叠加 =====
-            if (stage >= 7)
-            {
                 ApplyStage7Meltdown(player);
             }
         }

@@ -288,7 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Vector2 right = direction.RotatedBy(MathHelper.PiOver2);
 
             int laserCount = Math.Max(1, Math.Min(LaserChainCount, 4));
-            float heatInterpolant = MathHelper.Clamp(stage / 7f, 0f, 1f);
+            float heatInterpolant = MathHelper.Clamp(stage / Math.Max(1f, MaxHeatStage), 0f, 1f);
 
             Color techBlue = new Color(90, 190, 255);
             Color paleBlue = new Color(180, 235, 255);
@@ -465,7 +465,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             if (weapon != null && weapon.storedEffectPower > 0)
             {
-                weapon.storedEffectPower -= 5;
+                weapon.storedEffectPower -= 3;
 
                 if (weapon.storedEffectPower < 0)
                     weapon.storedEffectPower = 0;
@@ -473,7 +473,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             if (testWeapon != null && testWeapon.storedEffectPower > 0)
             {
-                testWeapon.storedEffectPower -= 5;
+                testWeapon.storedEffectPower -= 3;
 
                 if (testWeapon.storedEffectPower < 0)
                     testWeapon.storedEffectPower = 0;
@@ -493,10 +493,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, dir);
             SpawnRocketSalvoMuzzleEffect(player, dir);
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
-                float t = i / 4f;
-                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
+                float t = i / 2f;
+                float angle = MathHelper.Lerp(-0.22f, 0.22f, t);
                 float distFromCenter = Math.Abs(t - 0.5f) * 2f;
                 float speedFactor = (float)Math.Pow(1f - distFromCenter, 1.5f);
                 float speed = MathHelper.Lerp(10f, 18f, speedFactor);
@@ -574,10 +574,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
-                float t = i / 4f;
-                float angle = MathHelper.Lerp(-0.3f, 0.3f, t);
+                float t = i / 2f;
+                float angle = MathHelper.Lerp(-0.22f, 0.22f, t);
 
                 Vector2 laneDirection = baseDirection.RotatedBy(angle);
                 Vector2 lanePos = muzzlePos + laneDirection * Main.rand.NextFloat(2f, 5f);

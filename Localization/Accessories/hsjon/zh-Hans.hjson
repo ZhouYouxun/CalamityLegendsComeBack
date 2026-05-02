@@ -1,9 +1,9 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
-			EX: {
-				DisplayName: EX
-				Tooltip: 装备后可启用传奇武器的大招
+			LegendaryEmblem: {
+				DisplayName: 传奇徽章
+				Tooltip: 佩戴后才可以开启传奇武器的大招
 			}
 
 			S_OVR_ChargeLimitBreaker: {

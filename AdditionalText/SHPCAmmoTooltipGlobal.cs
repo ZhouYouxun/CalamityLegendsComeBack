@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 
 namespace CalamityLegendsComeBack.AdditionalText
@@ -19,12 +20,21 @@ namespace CalamityLegendsComeBack.AdditionalText
             if (Weapons.SHPC.Effects.AAARules.EffectRegistry.IsRegisteredAmmo(item.type))
             {
                 int effectID = Weapons.SHPC.Effects.AAARules.EffectRegistry.GetEffectIDByAmmo(item.type);
+                BalanceSHPC balance = new();
+                int panelDamage = balance.GetMaterialLeftClickDamage(effectID);
+                int shotsPerAmmo = Weapons.SHPC.SHPCAmmoCapacity.GetCapacity(effectID);
 
                 // 通用提示
                 tooltips.Add(new TooltipLine(Mod, "SHPCAmmoPrompt",
                     Language.GetTextValue("Mods.CalamityLegendsComeBack.AMMO.SHPCAmmoPrompt"))
                 {
                     OverrideColor = Microsoft.Xna.Framework.Color.LightSkyBlue
+                });
+
+                tooltips.Add(new TooltipLine(Mod, "SHPCAmmoPanel",
+                    Language.GetTextValue("Mods.CalamityLegendsComeBack.AMMO.SHPCAmmoPanel", panelDamage, shotsPerAmmo))
+                {
+                    OverrideColor = Microsoft.Xna.Framework.Color.Gold
                 });
 
                 // 专属提示（如果存在）

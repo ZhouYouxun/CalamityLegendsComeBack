@@ -1,9 +1,9 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
-			EX: {
-				DisplayName: EX
-				Tooltip: Enables EX abilities for legendary weapons
+			LegendaryEmblem: {
+				DisplayName: Legendary Emblem
+				Tooltip: Must be equipped to activate legendary weapon ultimates
 			}
 
 			S_OVR_ChargeLimitBreaker: {

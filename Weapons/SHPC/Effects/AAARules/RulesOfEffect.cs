@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using CalamityLegendsComeBack.Weapons.SHPC;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 {
@@ -16,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         public virtual Color EndColor => Color.White;
 
         // 一个材料装填多少发？
-        public virtual int ShotsPerAmmo => 50; // 默认50发
+        public virtual int ShotsPerAmmo => SHPCAmmoCapacity.GetCapacity(EffectID);
         // 基础数值修改（只允许改指定字段）
         public virtual void SetDefaults(Projectile projectile)
         {
