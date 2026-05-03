@@ -65,8 +65,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0, // EffectID 0: Unused gap / 未使用空位
             18, // EffectID 1: Energy Core / 钨钢能源核心
             22, // EffectID 2: Stormlion Mandible / 风暴之颚
-            24, // EffectID 3: Sulphuric Scale / 硫磺鳞片
-            20, // EffectID 4: Purified Gel / 纯净凝胶
+            26, // EffectID 3: Sulphuric Scale / 硫磺鳞片
+            40, // EffectID 4: Purified Gel / 纯净凝胶
             34, // EffectID 5: Essence of Havoc / 混沌精华
             34, // EffectID 6: Essence of Eleum / 冰精华
             36, // EffectID 7: Essence of Sunlight / 日光精华

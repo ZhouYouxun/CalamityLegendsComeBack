@@ -276,7 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
                     velocity,
                     projType,
-                    (int)(projectile.damage * 0.24f),
+                    (int)(projectile.damage * 0.4f),
                     projectile.knockBack,
                     projectile.owner
                 );
