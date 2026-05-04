@@ -25,38 +25,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public static readonly int[] LeftClickProgressDamage =
         {
-            10, // Initial / 初始
-            16, // Eye of Cthulhu / 克苏鲁之眼
-            16, // Evil Boss / 邪恶Boss
-            26, // Skeletron / 骷髅王
-            135, // Hardmode / 肉后
-            135, // Any Mechanical Boss / 任意机械Boss后
-            180, // Plantera / 世纪之花后
-            180, // Golem / 石巨人后
-            250, // Moon Lord / 月亮领主后
-            290, // Providence / 亵渎天神后
-            290, // Polterghast / 幽花后
-            360, // Devourer of Gods / 神明吞噬者后
-            500, // Yharon / 犽戎后
-            750 // Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            15, // Initial / 初始
+            24, //24 Eye of Cthulhu / 克苏鲁之眼
+            30, //30 Evil Boss / 邪恶Boss
+            42, //42 Skeletron / 骷髅王
+            42, //54 Hardmode / 肉后
+            42, //72 Any Mechanical Boss / 任意机械Boss后
+            42, //90 Plantera / 世纪之花后
+            42, //120 Golem / 石巨人后
+            42, //180 Moon Lord / 月亮领主后
+            42, //240 Providence / 亵渎天神后
+            42, //300 Polterghast / 幽花后
+            42, //360 Devourer of Gods / 神明吞噬者后
+            42, //500 Yharon / 犽戎后
+            42 //750 Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
         };
 
         public static readonly int[] RightClickBaseDamage =
         {
-            9, // Initial / 初始
-            4, // Eye of Cthulhu / 克苏鲁之眼
-            4, // Evil Boss / 邪恶Boss
-            7, // Skeletron / 骷髅王
-            34, // Hardmode / 肉后
-            34, // Any Mechanical Boss / 任意机械Boss后
-            45, // Plantera / 世纪之花后
-            45, // Golem / 石巨人后
-            63, // Moon Lord / 月亮领主后
-            73, // Providence / 亵渎天神后
-            73, // Polterghast / 幽花后
-            90, // Devourer of Gods / 神明吞噬者后
-            125, // Yharon / 犽戎后
-            188 // Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            6, //6 Initial / 初始
+            8, // Eye of Cthulhu / 克苏鲁之眼
+            9, //9 Evil Boss / 邪恶Boss
+            10, //10 Skeletron / 骷髅王
+            10, //17 Hardmode / 肉后
+            10, //24 Any Mechanical Boss / 任意机械Boss后
+            10, //32 Plantera / 世纪之花后
+            10, //40 Golem / 石巨人后
+            10, //54 Moon Lord / 月亮领主后
+            10, //66 Providence / 亵渎天神后
+            10, //77 Polterghast / 幽花后
+            10, //90 Devourer of Gods / 神明吞噬者后
+            10, //100 Yharon / 犽戎后
+            10 //150 Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
         };
 
         // Indexed by SHPC effect ID. 0, 16, 20 and 27 are currently unused gaps.
@@ -65,8 +65,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0, // EffectID 0: Unused gap / 未使用空位
             18, // EffectID 1: Energy Core / 钨钢能源核心
             22, // EffectID 2: Stormlion Mandible / 风暴之颚
-            26, // EffectID 3: Sulphuric Scale / 硫磺鳞片
-            40, // EffectID 4: Purified Gel / 纯净凝胶
+            28, // EffectID 3: Sulphuric Scale / 硫磺鳞片
+            64, // EffectID 4: Purified Gel / 纯净凝胶
             34, // EffectID 5: Essence of Havoc / 混沌精华
             34, // EffectID 6: Essence of Eleum / 冰精华
             36, // EffectID 7: Essence of Sunlight / 日光精华
