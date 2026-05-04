@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(projectile.damage * 0.8f),
+                (int)(projectile.damage * 0.9f),
                 projectile.knockBack,
                 projectile.owner
             );
@@ -276,8 +276,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
                     velocity,
                     projType,
-                    (int)(projectile.damage * 0.24f),
-                    projectile.knockBack,
+                    (int)(projectile.damage * 0.44f),
+                    (int)(projectile.knockBack * 0.1f),
                     projectile.owner
                 );
             }
@@ -298,7 +298,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             for (int i = 0; i < count; i++)
             {
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                float speed = Main.rand.NextFloat(1.6f, 4.2f);
+                float speed = Main.rand.NextFloat(1.25f, 4.5f);
 
                 Vector2 velocity = angle.ToRotationVector2() * speed;
 

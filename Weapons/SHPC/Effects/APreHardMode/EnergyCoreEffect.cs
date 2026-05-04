@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             // ===== 模拟重力 =====
 
             float gravity = 0.18f;      // 重力强度（你可以调，0.1~0.3之间比较自然）
-            float maxFallSpeed = 16f;   // 最大下落速度（防止无限加速）
+            float maxFallSpeed = 18f;   // 最大下落速度（防止无限加速）
 
             // 逐帧向下加速
             projectile.velocity.Y += gravity;
@@ -80,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 				Vector2 velocity = angle.ToRotationVector2() * speed;
 
 				// 伤害随机（0.X~0.Y倍）
-				float damageFactor = Main.rand.NextFloat(0.25f, 0.4f);
+				float damageFactor = Main.rand.NextFloat(0.33f, 0.5f);
 
 				Projectile.NewProjectile(
 					projectile.GetSource_FromThis(),
@@ -98,14 +98,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
                 projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(projectile.damage * 0.8f),
+                (int)(projectile.damage * 0.85f),
                 projectile.knockBack,
                 projectile.owner
             );
 
             Projectile proj = Main.projectile[projIndex];
-            proj.width = 75;
-            proj.height = 75;
+            proj.width = 80;
+            proj.height = 80;
         }
 
         public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)

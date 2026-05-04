@@ -25,14 +25,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void SetDefaults()
         {
-            Projectile.width = 18;
-            Projectile.height = 18;
+            Projectile.width = 20;
+            Projectile.height = 20;
             Projectile.friendly = true;
-            Projectile.penetrate = 1;
+            Projectile.penetrate = 2;
             Projectile.timeLeft = 300;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 10;
         }
 
         public override bool PreDraw(ref Color lightColor)

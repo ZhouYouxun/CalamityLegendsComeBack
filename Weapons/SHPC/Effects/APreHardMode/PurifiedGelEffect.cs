@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.timeLeft = 30;
+            projectile.timeLeft = 15;
 
             // 确保这个弹幕编号是“未触发”状态
             releasedProjectiles.Remove(projectile.whoAmI);
@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 float baseRot = baseVelocity.ToRotation();
                 float baseSpeed = baseVelocity.Length();
 
-                float angleOffset = MathHelper.ToRadians(15f);
+                float angleOffset = MathHelper.ToRadians(2.5f);
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -58,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                         projectile.Center,
                         velocity,
                         ModContent.ProjectileType<PurifiedGel_Ball>(),
-                        (int)(projectile.damage * 0.95f),
+                        (int)(projectile.damage * 1.25f),
                         projectile.knockBack,
                         projectile.owner
                     );

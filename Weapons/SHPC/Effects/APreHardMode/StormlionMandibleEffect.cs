@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             // 提高更新频率（更丝滑）
-            projectile.extraUpdates = 1;
+            projectile.extraUpdates = 2;
         }
 
         public override void AI(Projectile projectile, Player owner)
@@ -82,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.Center,
                     velocity,
                     ModContent.ProjectileType<StormlionMandible_ARC>(),
-                    (int)(projectile.damage * 0.25f),
+                    (int)(projectile.damage * 0.225f),
                     hit.Knockback,
                     projectile.owner,
                     targetIndex, // ai[0]：锁定目标
