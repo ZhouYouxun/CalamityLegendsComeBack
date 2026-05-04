@@ -155,6 +155,8 @@ Mods: {
 				BFEXWeapon.DisplayName: BlossomFlux Overgrowth Barrage
 				BFEXVernalShot.DisplayName: Vernal Barrage Shot
 				BFLeftPlagueReaper.DisplayName: B F Left Plague Reaper
+				BFRecoveryFlash.DisplayName: B F Recovery Flash
+				BFArrow_DBombVisual.DisplayName: B F Arrow_ D Bomb Visual
 			}
 
 			Ranged.BFAimScope.DisplayName: BlossomFlux Aim Scope
@@ -262,6 +264,16 @@ Mods: {
 			SHPCRight_DeBuff: {
 				DisplayName: S H P C Right_ De Buff
 				Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+			}
+
+			BFRecoveryLeafBuff: {
+				DisplayName: B F Recovery Leaf Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.BFRecoveryLeafBuff.Description
+			}
+
+			BFPlaguePollutionBuff: {
+				DisplayName: B F Plague Pollution Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.BFPlaguePollutionBuff.Description
 			}
 		}
 	}

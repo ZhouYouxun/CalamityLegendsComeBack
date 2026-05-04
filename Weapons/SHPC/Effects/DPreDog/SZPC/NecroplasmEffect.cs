@@ -1,9 +1,11 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -15,7 +17,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override int AmmoType => ModContent.ItemType<Necroplasm>();
 
-        // ===== 全部改成亮粉 =====
         public override Color ThemeColor => new Color(255, 80, 180);
         public override Color StartColor => new Color(255, 120, 200);
         public override Color EndColor => new Color(200, 40, 140);
@@ -26,27 +27,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         private float sinTimer;
         private int timer;
 
-        // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             sinTimer = 0f;
             timer = 0;
 
             projectile.penetrate = 5;
-
-            // 初始更快一点
             projectile.velocity *= 1.8f;
         }
 
-        // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
             timer++;
-
-            // 抵消减速（更快）
             projectile.velocity *= 1.04f;
 
-            // ===== 强化追踪 =====
             NPC target = projectile.Center.ClosestNPCAt(3000f);
             if (target != null)
             {
@@ -54,7 +48,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 projectile.velocity = (projectile.velocity * 5f + desired * 16f) / 6f;
             }
 
-            // ===== 每6帧释放子弹 =====
             if (timer % 6 == 0)
             {
                 Projectile.NewProjectile(
@@ -68,16 +61,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 );
             }
 
-            // === ∞视觉 ===
             sinTimer += 0.22f;
 
             float pulse = (float)System.Math.Sin(sinTimer);
-
-            float angle = projectile.velocity.ToRotation() + (MathHelper.Pi / 2f);
+            float angle = projectile.velocity.ToRotation() + MathHelper.Pi / 2f;
             Vector2 normal = angle.ToRotationVector2();
-
             float radius = 6f;
-
             Vector2 offset = normal * pulse * radius;
 
             CreateVoidDust(projectile.Center + offset);
@@ -85,33 +74,155 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
             if (Main.rand.NextBool(3))
             {
-                SquishyLightParticle p = new(
+                SquishyLightParticle particle = new(
                     projectile.Center,
                     -projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.05f, 0.2f),
                     Main.rand.NextFloat(0.3f, 0.6f),
                     Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat()),
                     Main.rand.Next(10, 16)
                 );
-                GeneralParticleHandler.SpawnParticle(p);
+                GeneralParticleHandler.SpawnParticle(particle);
             }
 
             Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.35f);
         }
 
-        // ================= ModifyHitNPC =================
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
         }
 
-        // ================= OnHitNPC =================
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
         }
 
-        // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // ===== 原爆炸保留 =====
+            owner.SetScreenshake(8.5f);
+            float power = 1.35f;
+
+            SpawnNecroplasmCollapseDust(projectile, owner, power);
+            SpawnNecroplasmCollapsePulses(projectile, owner, power);
+            SpawnNecroplasmCollapseSmears(projectile, owner, power);
+            PlayNecroplasmCollapseSounds(projectile);
+            SpawnNecroplasmDamage(projectile);
+        }
+
+        private void SpawnNecroplasmCollapseDust(Projectile projectile, Player owner, float power)
+        {
+            for (int i = 0; i < 55; i++)
+            {
+                Color useColor = GetRandomNecroBurstColor(owner);
+                int dustType = Main.rand.NextBool(6)
+                    ? ModContent.DustType<VoidDustInverted>()
+                    : ModContent.DustType<VoidDust>();
+                Vector2 dustVelocity = (projectile.velocity * 6f * power).RotatedByRandom(100f) * Main.rand.NextFloat(0.2f, 1f);
+
+                Dust dust = Dust.NewDustPerfect(projectile.Center, dustType, dustVelocity);
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+                dust.scale = Main.rand.NextFloat(1.55f, 2.05f) * power;
+                dust.color = useColor;
+
+                if (i % 2 != 0)
+                    continue;
+
+                Vector2 sparkVelocity = new Vector2(0f, -34f * power).RotatedByRandom(100f) * Main.rand.NextFloat(0.1f, 1f);
+                Particle spark = new CustomSpark(
+                    projectile.Center,
+                    sparkVelocity,
+                    "CalamityMod/Particles/Sparkle",
+                    false,
+                    40,
+                    Main.rand.NextFloat(1.15f, 2f) * power,
+                    useColor,
+                    new Vector2(0.4f, 1.1f));
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+        }
+
+        private void SpawnNecroplasmCollapsePulses(Projectile projectile, Player owner, float power)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                Color useColor = GetRandomNecroBurstColor(owner);
+                Particle softBurst = new CustomPulse(
+                    projectile.Center,
+                    Vector2.Zero,
+                    useColor,
+                    "CalamityMod/Particles/SoftRoundExplosion",
+                    Vector2.One,
+                    Main.rand.NextFloat(-10f, 10f),
+                    0f,
+                    (0.4f - i * 0.03f) * power,
+                    13);
+                GeneralParticleHandler.SpawnParticle(softBurst);
+            }
+
+            Particle bloomRing = new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                ThemeColor,
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-10f, 10f),
+                0.15f * power,
+                2.15f * power,
+                38);
+            GeneralParticleHandler.SpawnParticle(bloomRing);
+
+            Particle blackCore = new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Black,
+                "CalamityMod/Particles/SmallBloom",
+                Vector2.One,
+                Main.rand.NextFloat(-10f, 10f),
+                0f,
+                1.05f * power,
+                39,
+                false);
+            GeneralParticleHandler.SpawnParticle(blackCore);
+        }
+
+        private void SpawnNecroplasmCollapseSmears(Projectile projectile, Player owner, float power)
+        {
+            int parts = 8;
+            float rot = Main.rand.NextFloat(-9f, 9f);
+
+            for (int i = 0; i < parts; i++)
+            {
+                Color useColor = GetRandomNecroBurstColor(owner);
+                Vector2 smearVelocity = new Vector2(0f, -15f * (i % 2 == 0 ? 1.8f : 1f) * power)
+                    .RotatedBy(i * (MathHelper.TwoPi / parts))
+                    .RotatedBy(rot);
+
+                Particle smear = new CustomSpark(
+                    projectile.Center,
+                    smearVelocity,
+                    "CalamityMod/Particles/VerticalSmear",
+                    false,
+                    19,
+                    3f * power,
+                    useColor,
+                    new Vector2(0.2f, 1f));
+                GeneralParticleHandler.SpawnParticle(smear);
+            }
+        }
+
+        private static void PlayNecroplasmCollapseSounds(Projectile projectile)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                SoundStyle meteorSound = new("CalamityMod/Sounds/Item/EarthMeteor");
+                SoundEngine.PlaySound(meteorSound with { Volume = 0.44f, Pitch = -0.12f * (i + 1), MaxInstances = 3 }, projectile.Center);
+            }
+
+            SoundStyle reflectSound = new("CalamityMod/Sounds/Item/ShadowboltReflect");
+            SoundEngine.PlaySound(reflectSound with { Volume = 0.76f, Pitch = -0.34f }, projectile.Center);
+        }
+
+        private static void SpawnNecroplasmDamage(Projectile projectile)
+        {
             int projIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
@@ -122,11 +233,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 projectile.owner
             );
 
-            Projectile proj = Main.projectile[projIndex];
-            proj.width = 250;
-            proj.height = 250;
+            if (projIndex >= 0 && projIndex < Main.maxProjectiles)
+            {
+                Projectile proj = Main.projectile[projIndex];
+                proj.width = 250;
+                proj.height = 250;
+            }
 
-            // ===== 新：分裂6个 =====
             for (int i = 0; i < 6; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 8f);
@@ -141,39 +254,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     projectile.owner
                 );
             }
-
-            // ===== 粉色爆散 =====
-            for (int i = 0; i < 36; i++)
-            {
-                Vector2 dir = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
-                    DustID.FireworkFountain_Pink,
-                    dir,
-                    0,
-                    Color.Lerp(StartColor, EndColor, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.2f, 1.9f)
-                );
-                dust.noGravity = true;
-            }
-
-            Particle pulse = new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                ThemeColor,
-                "CalamityMod/Particles/BloomCircle",
-                Vector2.One * 1.2f,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.02f,
-                0.3f,
-                26,
-                true
-            );
-            GeneralParticleHandler.SpawnParticle(pulse);
         }
 
-        // ================= 工具函数 =================
         private void CreateVoidDust(Vector2 pos)
         {
             Dust dust = Dust.NewDustPerfect(
@@ -185,6 +267,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 Main.rand.NextFloat(1.1f, 1.6f)
             );
             dust.noGravity = true;
+        }
+
+        private Color GetRandomNecroBurstColor(Player owner)
+        {
+            if (owner.shirtColor == Color.White && Main.rand.NextBool(4))
+                return new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
+
+            return Main.rand.Next(5) switch
+            {
+                0 => ThemeColor,
+                1 => StartColor,
+                2 => EndColor,
+                3 => new Color(120, 16, 95),
+                _ => Color.Lerp(Color.Black, ThemeColor, Main.rand.NextFloat(0.25f, 0.75f))
+            };
         }
     }
 }

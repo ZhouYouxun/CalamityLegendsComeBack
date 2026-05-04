@@ -52,6 +52,9 @@ Mods: {
 			}
 		}
 
-		Projectiles.BrinyBaron.SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
+		Projectiles: {
+			BrinyBaron.SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
+			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+		}
 	}
 }

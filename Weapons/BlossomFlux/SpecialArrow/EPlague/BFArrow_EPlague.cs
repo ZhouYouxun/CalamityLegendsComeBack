@@ -141,11 +141,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.timeLeft = 180;
             Projectile.netUpdate = true;
 
+            BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
+            pollution.ApplyPermanentSpore(target);
+            pollution.ApplyPlagueDebuffs(target, target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner));
+            pollution.ApplyPollution(target, target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner));
             target.AddBuff(BuffID.Poisoned, 180);
             target.AddBuff(BuffID.Venom, 120);
+            Main.player[Projectile.owner].SetScreenshake(6.5f);
+            SpawnPlagueCollapseBurst(target.Center, 1.25f);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 0.9f, 3f, 0.85f, 1.15f);
             SpawnPlagueAnchorFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.38f, Pitch = 0.1f }, target.Center);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.36f, Pitch = -0.24f }, target.Center);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -400,6 +407,80 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     0.16f * intensity,
                     10 + i);
                 GeneralParticleHandler.SpawnParticle(explosion);
+            }
+        }
+
+        private void SpawnPlagueCollapseBurst(Vector2 center, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
+            Color acidColor = new(198, 255, 78);
+            Color darkColor = new(18, 92, 30);
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.Lerp(darkColor, mainColor, 0.35f),
+                "CalamityMod/Particles/SmallBloom",
+                Vector2.One,
+                Main.rand.NextFloat(-0.4f, 0.4f),
+                0f,
+                1.05f * intensity,
+                32,
+                false));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.Lerp(mainColor, acidColor, 0.5f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-0.25f, 0.25f),
+                0.18f * intensity,
+                2.1f * intensity,
+                34));
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5.5f, 13f) * intensity;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    center + Main.rand.NextVector2Circular(8f, 8f),
+                    velocity,
+                    "CalamityMod/Particles/VerticalSmear",
+                    false,
+                    Main.rand.Next(15, 23),
+                    Main.rand.NextFloat(1.8f, 2.8f) * intensity,
+                    Color.Lerp(mainColor, acidColor, Main.rand.NextFloat(0.25f, 0.8f)),
+                    new Vector2(0.18f, 1f)));
+            }
+
+            for (int i = 0; i < 42; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 7.8f) * intensity;
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(12f, 12f),
+                    Main.rand.NextBool(4) ? DustID.TerraBlade : DustID.GreenTorch,
+                    velocity,
+                    80,
+                    Color.Lerp(darkColor, acidColor, Main.rand.NextFloat(0.25f, 0.9f)),
+                    Main.rand.NextFloat(0.95f, 1.75f) * intensity);
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                HeavySmokeParticle smoke = new(
+                    center + Main.rand.NextVector2Circular(18f, 18f),
+                    Main.rand.NextVector2Circular(1.4f, 1.4f),
+                    Color.Lerp(mainColor, darkColor, 0.28f),
+                    Main.rand.Next(20, 30),
+                    Main.rand.NextFloat(0.76f, 1.15f) * intensity,
+                    0.62f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(smoke);
             }
         }
 

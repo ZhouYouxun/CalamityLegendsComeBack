@@ -456,7 +456,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player player = Main.player[Projectile.owner];
             NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
-            NewLegendSHPC testWeapon = player.HeldItem.ModItem as NewLegendSHPC;
+            NewLegendSHPCTest testWeapon = player.HeldItem.ModItem as NewLegendSHPCTest;
 
             player.CheckMana(player.HeldItem, 150, true, false);
 

@@ -1,77 +1,25 @@
-using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
-using Microsoft.Xna.Framework;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
-    // 侦查效果挂在普通箭上，让左键常态箭学会优先追踪并触发补爆。
     internal class BFArrow_CDetecEffect : GlobalProjectile
     {
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override bool InstancePerEntity => true;
 
         public bool BlossomFluxLeftArrow;
-        private bool triggeredPriorityExplosion;
+        public bool ConvertedLeafArrow;
+        public BlossomFluxChloroplastPresetType Preset;
 
-        public override void AI(Projectile projectile)
+        public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (!BlossomFluxLeftArrow || !projectile.active || !projectile.friendly)
+            if (!BlossomFluxLeftArrow || ConvertedLeafArrow || Preset != BlossomFluxChloroplastPresetType.Chlo_ABreak)
                 return;
 
-            if (!BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers))
-                return;
-
-            Player owner = Main.player[projectile.owner];
-            if (!owner.active || owner.dead)
-                return;
-
-            BFRightUIPlayer rightUiPlayer = owner.GetModPlayer<BFRightUIPlayer>();
-            int priorityTargetIndex = rightUiPlayer.ReconPriorityTargetIndex;
-            if (!BFArrowCommon.InBounds(priorityTargetIndex, Main.maxNPCs))
-                return;
-
-            NPC priorityTarget = Main.npc[priorityTargetIndex];
-            if (!priorityTarget.active || priorityTarget.dontTakeDamage || !priorityTarget.CanBeChasedBy(projectile))
-            {
-                rightUiPlayer.ClearReconPriorityTarget();
-                return;
-            }
-
-            BFArrow_CDetecNPC markData = priorityTarget.GetGlobalNPC<BFArrow_CDetecNPC>();
-            if (!markData.IsPriorityMarkedBy(projectile.owner))
-                return;
-
-            if (Vector2.Distance(projectile.Center, priorityTarget.Center) > 1400f)
-                return;
-
-            float speed = System.Math.Max(projectile.velocity.Length(), 12f);
-            BFArrowCommon.DirectHomeTowards(projectile, priorityTarget, 0.28f, speed + 1.5f);
-            BFArrowCommon.MaintainSpeed(projectile, speed + 1.5f, 0.18f);
-        }
-
-        public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            if (!BlossomFluxLeftArrow || triggeredPriorityExplosion || !BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers))
-                return;
-
-            BFRightUIPlayer rightUiPlayer = Main.player[projectile.owner].GetModPlayer<BFRightUIPlayer>();
-            if (target.whoAmI != rightUiPlayer.ReconPriorityTargetIndex)
-                return;
-
-            BFArrow_CDetecNPC markData = target.GetGlobalNPC<BFArrow_CDetecNPC>();
-            if (!markData.IsPriorityMarkedBy(projectile.owner))
-                return;
-
-            triggeredPriorityExplosion = true;
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                target.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<FuckYou>(),
-                (int)(projectile.damage * 0.7f),
-                projectile.knockBack * 0.65f,
-                projectile.owner);
+            if (target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(projectile.owner))
+                modifiers.FinalDamage *= 1.4f;
         }
     }
 }

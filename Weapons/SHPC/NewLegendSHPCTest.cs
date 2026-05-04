@@ -237,16 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetRightClickProgressState()
         {
-            int state = 0;
-            if (NPC.downedMechBoss1)
-                state = 1;
-            if (DownedBossSystem.downedAstrumDeus)
-                state = 2;
-            if (DownedBossSystem.downedStormWeaver)
-                state = 3;
-            if (DownedBossSystem.downedExoMechs)
-                state = 4;
-            return state;
+            return 0;
         }
 
         public override void HoldItem(Player player)

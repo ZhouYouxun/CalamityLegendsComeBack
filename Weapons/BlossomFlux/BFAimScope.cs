@@ -153,6 +153,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
             if (Charge == -1)
                 return false;
 
+            Projectile trackedHoldout = FindTrackedHoldout();
+            if (trackedHoldout?.ModProjectile is NewLegendBlossomFluxHoldOut holdout && holdout.ShouldDrawBombardMouseReticle)
+            {
+                DrawBombardMouseReticle(holdout.GetBombardReticleCenter(), holdout.GetChargeCompletion());
+                return false;
+            }
+
             float sightsSize = 350f;
             float sightsResolution = MathHelper.Lerp(0.04f, 0.2f, Math.Min(ChargePercent * 1.5f, 1));
 
@@ -204,6 +211,77 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             return false;
+        }
+
+        private static void DrawBombardMouseReticle(Vector2 centerWorld, float chargeCompletion)
+        {
+            Texture2D glowTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D magic03 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
+            Texture2D magic04 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_04").Value;
+            Texture2D sparkTex = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Vector2 drawPosition = centerWorld - Main.screenPosition;
+            float time = Main.GlobalTimeWrappedHourly;
+            float pulse = 0.78f + 0.22f * (float)Math.Sin(time * 8f);
+            float chargePulse = MathHelper.Clamp(chargeCompletion, 0f, 1f);
+            Color crimson = new Color(255, 44, 42, 0);
+            Color hot = new Color(255, 170, 120, 0);
+            Color core = Color.Lerp(hot, Color.White, 0.32f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(glowTex, drawPosition, null, crimson * (0.42f + 0.22f * chargePulse), 0f, glowTex.Size() * 0.5f, 0.48f * pulse, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(glowTex, drawPosition, null, core * (0.26f + 0.18f * chargePulse), 0f, glowTex.Size() * 0.5f, 0.22f * pulse, SpriteEffects.None, 0f);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float rotation = time * (0.62f + i * 0.28f) * (i == 1 ? -1f : 1f);
+                float scale = 0.34f + i * 0.1f + chargePulse * 0.14f;
+                Main.EntitySpriteDraw(
+                    i == 1 ? magic04 : magic03,
+                    drawPosition,
+                    null,
+                    Color.Lerp(crimson, hot, i * 0.25f) * (0.62f - i * 0.1f),
+                    rotation,
+                    (i == 1 ? magic04 : magic03).Size() * 0.5f,
+                    scale,
+                    i == 2 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                    0f);
+            }
+
+            float ringRadius = MathHelper.Lerp(34f, 54f, chargePulse) * pulse;
+            for (int i = 0; i < 10; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 10f + time * (i % 2 == 0 ? 1.4f : -1.15f);
+                Vector2 offset = angle.ToRotationVector2() * ringRadius;
+                Main.EntitySpriteDraw(
+                    sparkTex,
+                    drawPosition + offset,
+                    null,
+                    Color.Lerp(hot, Color.White, 0.18f) * 0.76f,
+                    angle + MathHelper.PiOver2,
+                    sparkTex.Size() * 0.5f,
+                    new Vector2(0.05f, 0.16f + chargePulse * 0.08f),
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
         }
     }
 }

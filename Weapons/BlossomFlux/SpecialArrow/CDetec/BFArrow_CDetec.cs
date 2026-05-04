@@ -1,8 +1,10 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -11,146 +13,99 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
-    // C 战术右键箭：负责扫描、标记，并在命中后扎附在敌人身上。
     internal class BFArrow_CDetec : ModProjectile
     {
+        private const int PriorityMarkDuration = 15 * 60;
+        private const float MaxScanRadius = 240f;
+
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/CDetec/BFArrow_CDetec";
-        private const float ScanGrowthPerFrame = 3.8f;
-        private const float MaxScanRadius = 240f;
-        private int acquireSoundCooldown;
 
-        private ref float State => ref Projectile.ai[0];
-        private ref float AttachedNpcIndex => ref Projectile.ai[1];
-        private ref float ScanRadius => ref Projectile.localAI[0];
-        private ref float LifeTimer => ref Projectile.localAI[1];
+        private ref float BestTargetIndex => ref Projectile.ai[0];
+        private ref float BestTargetLifeMax => ref Projectile.ai[1];
+        private ref float FlightTimer => ref Projectile.localAI[0];
+        private ref float ScanRadius => ref Projectile.localAI[1];
+        private int configuredMarkDuration = PriorityMarkDuration;
+        private int configuredEffectTier;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 16;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
         public override void SetDefaults()
         {
-            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 270, penetrate: -1, extraUpdates: 1, tileCollide: true);
-            Projectile.localNPCHitCooldown = -1;
+            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 240, penetrate: -1, extraUpdates: 6, tileCollide: true);
+            Projectile.localNPCHitCooldown = 12;
+        }
+
+        public void ConfigureMark(int markDuration, int effectTier)
+        {
+            configuredMarkDuration = System.Math.Max(60, markDuration);
+            configuredEffectTier = Utils.Clamp(effectTier, 0, 2);
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(configuredMarkDuration);
+            writer.Write(configuredEffectTier);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            configuredMarkDuration = reader.ReadInt32();
+            configuredEffectTier = reader.ReadInt32();
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            Projectile.velocity *= 0.6f;
-            Projectile.extraUpdates = 2;
-            Projectile.timeLeft *= 5;
+            BestTargetIndex = -1f;
+            BestTargetLifeMax = -1f;
+            ScanRadius = 28f;
+            BFArrowCommon.FaceForward(Projectile);
         }
-
-        public override bool? CanDamage() => State == 0f ? null : false;
-
-        public override bool? CanHitNPC(NPC target) => State == 0f ? null : false;
 
         public override void AI()
         {
-            LifeTimer++;
-            if (acquireSoundCooldown > 0)
-                acquireSoundCooldown--;
+            FlightTimer++;
+            ScanRadius = MathHelper.Clamp(ScanRadius + 3.6f, 28f, MaxScanRadius);
 
-            Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.46f);
+            Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.52f);
+            BFArrowCommon.FaceForward(Projectile);
+            BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.18f);
+            EmitPenetrationFlightFX();
 
-            if (State == 0f)
-            {
-                Projectile.velocity.Y += 0.08f;
-                Projectile.velocity.X *= 0.998f;
-                BFArrowCommon.FaceForward(Projectile);
-                Projectile.velocity *= 0.9985f;
-                ScanRadius = MathHelper.Clamp(ScanRadius <= 0f ? 24f : ScanRadius + ScanGrowthPerFrame, 24f, MaxScanRadius);
-                BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.02f);
-
-                if ((int)LifeTimer % 10 == 0)
-                {
-                    if (Projectile.owner == Main.myPlayer)
-                        SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.16f, Pitch = 0.6f }, Projectile.Center);
-
-                    PerformReconScan();
-                }
-
-                return;
-            }
-
-            Projectile.friendly = false;
-            Projectile.tileCollide = false;
-
-            if (!BFArrowCommon.InBounds(AttachedNpcIndex, Main.maxNPCs))
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            NPC attachedNpc = Main.npc[(int)AttachedNpcIndex];
-            if (!attachedNpc.active || attachedNpc.dontTakeDamage)
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            Projectile.Center = attachedNpc.Center - Projectile.velocity * 0.75f;
-            Projectile.gfxOffY = attachedNpc.gfxOffY;
-            ScanRadius = MathHelper.Lerp(ScanRadius, 0f, 0.18f);
-            if (ScanRadius < 2f)
-                ScanRadius = 0f;
-
-            attachedNpc.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyPriorityMark(Projectile.owner, 180);
+            if ((int)FlightTimer % 16 == 0 && Projectile.owner == Main.myPlayer)
+                SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.12f, Pitch = 0.72f }, Projectile.Center);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (State != 0f)
-                return;
-
-            BFArrow_CDetecNPC markData = target.GetGlobalNPC<BFArrow_CDetecNPC>();
-            markData.ApplyPriorityMark(Projectile.owner, 180);
-            Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, 180);
-
-            State = 1f;
-            AttachedNpcIndex = target.whoAmI;
-            Projectile.velocity = target.Center - Projectile.Center;
-            Projectile.damage = 0;
-            Projectile.netUpdate = true;
-            Projectile.timeLeft = Utils.Clamp(Projectile.timeLeft, 180, 270);
-
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 10, 0.8f, 2.8f, 0.8f, 1.1f);
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.45f, Pitch = 0.15f }, target.Center);
-
-            if (Projectile.owner == Main.myPlayer)
+            if (target.lifeMax > BestTargetLifeMax)
             {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    target.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<BFArrow_CDetecReticle>(),
-                    0,
-                    0f,
-                    Projectile.owner,
-                    target.whoAmI);
+                BestTargetLifeMax = target.lifeMax;
+                BestTargetIndex = target.whoAmI;
+                Projectile.netUpdate = true;
             }
+
+            Projectile.localNPCImmunity[target.whoAmI] = 24;
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 8, 0.7f, 2.6f, 0.72f, 1.05f);
+            SpawnPenetrationImpactFX(target.Center, 1f);
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.28f, Pitch = 0.24f }, target.Center);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 12, 1f, 3.8f, 0.82f, 1.18f);
             SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.25f, Pitch = 0.35f }, Projectile.Center);
-
-            if (Projectile.velocity.X != oldVelocity.X)
-                Projectile.velocity.X = -oldVelocity.X * 0.96f;
-
-            if (Projectile.velocity.Y != oldVelocity.Y)
-                Projectile.velocity.Y = -oldVelocity.Y * 0.96f;
-
-            Projectile.netUpdate = true;
-            return false;
+            return true;
         }
 
         public override void OnKill(int timeLeft)
         {
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 12, 1.1f, 4.5f, 0.85f, 1.2f);
+            ApplyBestTargetMark();
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 14, 1.1f, 4.8f, 0.88f, 1.25f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -159,60 +114,134 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             {
                 Texture2D circleTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
                 float scale = ScanRadius * 2f / circleTexture.Width;
-                Color ringColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec) * 0.22f;
+                float opacity = Utils.GetLerpValue(0f, MaxScanRadius, ScanRadius, true);
+                Color ringColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec) * (0.18f * (1f - opacity * 0.45f));
 
                 Main.EntitySpriteDraw(
                     circleTexture,
                     Projectile.Center - Main.screenPosition,
                     null,
                     ringColor,
-                    Main.GlobalTimeWrappedHourly * 0.5f,
+                    Main.GlobalTimeWrappedHourly * 1.1f,
                     circleTexture.Size() * 0.5f,
                     scale,
                     SpriteEffects.None,
                     0);
-
-                Main.EntitySpriteDraw(
-                    circleTexture,
-                    Projectile.Center - Main.screenPosition,
-                    null,
-                    ringColor * 0.65f,
-                    -Main.GlobalTimeWrappedHourly * 0.8f,
-                    circleTexture.Size() * 0.5f,
-                    scale * 0.82f,
-                    SpriteEffects.None,
-                    0);
             }
 
-            BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.05f);
             return false;
         }
 
-        private void PerformReconScan()
+        private void ApplyBestTargetMark()
         {
-            bool foundNewTarget = false;
+            if (!BFArrowCommon.InBounds(BestTargetIndex, Main.maxNPCs) || !BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                return;
 
-            for (int i = 0; i < Main.maxNPCs; i++)
+            NPC target = Main.npc[(int)BestTargetIndex];
+            if (!target.active || target.dontTakeDamage)
+                return;
+
+            target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyPriorityMark(Projectile.owner, configuredMarkDuration);
+            Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, configuredMarkDuration);
+
+            SpawnMarkAcquireFX(target.Center);
+            SoundEngine.PlaySound(SoundID.Item25 with { Volume = 0.38f, Pitch = 0.34f }, target.Center);
+
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BFArrow_CDetecReticle>(),
+                0,
+                0f,
+                Projectile.owner,
+                target.whoAmI);
+        }
+
+        private void EmitPenetrationFlightFX()
+        {
+            if (Main.dedServ || !Projectile.FinalExtraUpdate())
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+
+            if ((int)FlightTimer % 2 == 0)
             {
-                NPC npc = Main.npc[i];
-                if (!npc.active || npc.friendly || npc.dontTakeDamage || !npc.CanBeChasedBy(this))
-                    continue;
-
-                if (Vector2.Distance(Projectile.Center, npc.Center) > ScanRadius)
-                    continue;
-
-                BFArrow_CDetecNPC markData = npc.GetGlobalNPC<BFArrow_CDetecNPC>();
-                if (markData.ApplyMark(Projectile.owner, 180))
-                    foundNewTarget = true;
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center + direction * 10f,
+                    Projectile.velocity * 0.04f,
+                    Color.Lerp(mainColor, Color.White, 0.22f),
+                    new Vector2(0.42f, 1.45f),
+                    direction.ToRotation(),
+                    0.16f,
+                    0.034f,
+                    10));
             }
 
-            if (foundNewTarget && Projectile.owner == Main.myPlayer)
+            GeneralParticleHandler.SpawnParticle(new CritSpark(
+                Projectile.Center + normal * Main.rand.NextFloat(-7f, 7f),
+                direction * Main.rand.NextFloat(1.8f, 3.8f),
+                Color.White,
+                accentColor,
+                0.58f,
+                9));
+        }
+
+        private void SpawnPenetrationImpactFX(Vector2 center, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                direction * 0.7f,
+                Color.Lerp(mainColor, Color.White, 0.18f),
+                new Vector2(0.78f, 1.95f),
+                direction.ToRotation(),
+                0.14f * intensity,
+                0.032f,
+                10));
+
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                center,
+                Vector2.Zero,
+                Color.Lerp(mainColor, accentColor, 0.35f),
+                0.38f * intensity,
+                9));
+        }
+
+        private void SpawnMarkAcquireFX(Vector2 center)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+
+            float tierScale = 1f + configuredEffectTier * 0.28f;
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(mainColor, Color.White, 0.22f), 0.92f * tierScale, 16 + configuredEffectTier * 4));
+            for (int i = 0; i < 3 + configuredEffectTier * 2; i++)
             {
-                if (acquireSoundCooldown <= 0)
-                {
-                    SoundEngine.PlaySound(SoundID.Item25 with { Volume = 0.26f, Pitch = 0.25f }, Projectile.Center);
-                    acquireSoundCooldown = 20;
-                }
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    center,
+                    Vector2.Zero,
+                    Color.Lerp(mainColor, accentColor, 0.25f + i * 0.12f),
+                    new Vector2(0.78f + i * 0.16f, 1.35f + i * 0.24f),
+                    MathHelper.TwoPi * i / (3f + configuredEffectTier * 2f),
+                    (0.14f + i * 0.03f) * tierScale,
+                    0.026f,
+                    12 + i * 2));
             }
         }
     }

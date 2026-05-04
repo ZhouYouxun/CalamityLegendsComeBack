@@ -18,10 +18,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/ABreak/BFArrow_ABreak";
-        // A tactical right-click arrow: homing breakthrough that keeps flying after the first impact.
-        private ref float BounceCounter => ref Projectile.ai[0];
-        private ref float HomingDisabled => ref Projectile.ai[1];
+        private ref float ConfiguredPenetrate => ref Projectile.ai[0];
+        private ref float IgnorePenetrationDamageFalloff => ref Projectile.ai[1];
         private ref float FlightTimer => ref Projectile.localAI[0];
+        private ref float BounceCounter => ref Projectile.localAI[1];
 
         public override void SetStaticDefaults()
         {
@@ -31,56 +31,35 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void SetDefaults()
         {
-            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 240, penetrate: 2, extraUpdates: 1, tileCollide: true);
+            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 260, penetrate: 5, extraUpdates: 1, tileCollide: true);
             Projectile.localNPCHitCooldown = 10;
         }
 
-        public override bool? CanDamage()
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            if (GetSlowdownProgress() > 0.78f)
-                return false;
+            if (ConfiguredPenetrate != 0f)
+                Projectile.penetrate = (int)ConfiguredPenetrate;
 
-            return null;
+            Projectile.velocity *= 0.55f;
+        }
+
+        public override bool? CanDamage() => null;
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner))
+                modifiers.FinalDamage *= 1.4f;
         }
 
         public override void AI()
         {
             FlightTimer++;
-            float slowdownProgress = GetSlowdownProgress();
-            float glowStrength = MathHelper.Lerp(1f, 0.08f, slowdownProgress);
+            float glowStrength = Utils.GetLerpValue(0f, 36f, FlightTimer, true);
             Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak).ToVector3() * (0.18f + 0.32f * glowStrength));
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 1.05f);
             EmitBreakthroughFlightFX(glowStrength);
 
-            if (slowdownProgress > 0f)
-            {
-                UpdateSlowdown(slowdownProgress);
-                BFArrowCommon.FaceForward(Projectile);
-                return;
-            }
-
-            if (HomingDisabled == 1f)
-            {
-                AccelerateStraightFlight(1.018f, 30f);
-            }
-            else if (FlightTimer >= 18f)
-            {
-                NPC target = Projectile.Center.ClosestNPCAt(1020f);
-                if (target != null)
-                {
-                    BFArrowCommon.DirectHomeTowards(Projectile, target, 0.22f, 21f);
-                    BFArrowCommon.MaintainSpeed(Projectile, 21f, 0.14f);
-                }
-                else
-                {
-                    AccelerateStraightFlight(1.006f, 21f);
-                }
-            }
-            else
-            {
-                AccelerateStraightFlight(1.006f, 21f);
-            }
-
+            AccelerateStraightFlight(1.01f, 36f);
             BFArrowCommon.FaceForward(Projectile);
         }
 
@@ -96,18 +75,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnKill(int timeLeft)
         {
-            if (GetSlowdownProgress() > 0.25f)
-                SpawnBreakthroughVanishFX(Projectile.Center, 0.72f);
-            else
-                BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 10, 0.9f, 3.2f, 0.8f, 1.18f);
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 10, 0.9f, 3.2f, 0.8f, 1.18f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            HomingDisabled = 1f;
-            FlightTimer = Math.Max(FlightTimer, PostImpactSlowdownStartFrame);
+            Projectile.localNPCImmunity[target.whoAmI] = 16;
+            if (IgnorePenetrationDamageFalloff != 1f)
+                Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.82f));
+
             Projectile.netUpdate = true;
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 8, 0.9f, 2.6f, 0.8f, 1.15f);
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 12, 0.9f, 3.4f, 0.8f, 1.2f);
             SpawnBreakthroughImpactFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = 0.25f }, target.Center);
         }
@@ -120,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private float GetSlowdownProgress()
         {
-            float startFrame = HomingDisabled == 1f ? PostImpactSlowdownStartFrame : SlowdownStartFrame;
+            float startFrame = IgnorePenetrationDamageFalloff == 1f ? PostImpactSlowdownStartFrame : SlowdownStartFrame;
             return Utils.GetLerpValue(startFrame, startFrame + SlowdownDuration, FlightTimer, true);
         }
 

@@ -3,127 +3,129 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBlossomFlux: {
-					DisplayName: 叶流-传奇归来
+					DisplayName: 叶流 - 传奇归来
 					Tooltip: "[GFB]"
-					BF_Left:
+					/* BF_Left:
 						'''
-						[c/66CCFF:左键：按当前战术连续射击。]
-						[c/99CCFF:突破、复苏、侦查、轰炸只转木箭。]
-						[c/99CCFF:木箭会化为对应战术叶子箭。]
-						[c/DDA0FF:瘟疫会将任何弹药化为毒焰。]
-						[c/7BE495:突破枫叶，复苏寄生，侦查木刺。]
-						[c/7BE495:轰炸树杈，瘟疫则是无形毒焰。]
-						'''
-					BF_Preset: "[c/7BE495:当前显示战术：{0}，下方为专属说明。]"
-					PresetName0: 突破
+						[c/66CCFF:Left Click: Fires with the current doctrine.]
+						[c/99CCFF:Breakthrough, Recovery, Reconnaissance, and Bombardment only convert wooden arrows.]
+						[c/99CCFF:Converted wooden arrows become doctrine-shaped leaf arrows.]
+						[c/DDA0FF:Plague converts any ammo into an invisible plague flame.]
+						[c/7BE495:Breakthrough is maple leaf, Recovery is parasite, and Reconnaissance is wood thorn.]
+						[c/7BE495:Bombardment is branch, while Plague becomes formless toxic flame.]
+						''' */
+					// BF_Preset: "[c/7BE495:Current displayed doctrine: {0}; details below.]"
+					PresetName0: 突击
 					PresetName1: 复苏
-					PresetName2: 侦查
-					PresetName3: 轰炸
-					PresetName4: 瘟疫
+					PresetName2: 侦察
+					PresetName3: 歼灭
+					PresetName4: 侵染
 					PresetLeft0:
 						'''
-						[c/8BE89A:突破左键：木箭化为突破枫叶。]
-						[c/8BE89A:枫叶直线飞行，并可穿透两次。]
+						[c/8BE89A:左键 - 突击：直线单弹道，无散射、无随机偏移、无复杂附加机制。]
+						[c/8BE89A:只转化木箭；其他箭矢按原弹药发射，但仍属于叶流左键弹幕。]
+						[c/8BE89A:侦察优先标记存在时，命中该目标造成 x1.40 伤害。]
 						'''
 					PresetLeft1:
 						'''
-						[c/8BE89A:复苏左键：木箭化为复苏寄生。]
-						[c/8BE89A:寄生叶只伤害一次，命中少量吸血。]
+						[c/8BE89A:左键 - 复苏：全转化，发射快速 DNA 双链叶弹。]
+						[c/8BE89A:每轮发射两发；两发沿“武器到鼠标中轴线”的垂线两侧偏移，偏移会持续靠近中心、越过中心、再从另一侧返回。]
+						[c/8BE89A:命中敌人有 20% 几率产生复苏闪光；闪光消失时治疗玩家并提供 5 秒复苏之叶，持续时间可叠加。]
+						[c/8BE89A:侦察优先标记存在时，复苏闪光冷却改为 1.25 秒，并取消 5 秒最多 2 个的限制。多人模式本身也取消该限制。]
 						'''
 					PresetLeft2:
 						'''
-						[c/8BE89A:侦查左键：木箭化为侦查木刺。]
-						[c/8BE89A:木刺命中后标记敌人约半秒。]
-						[c/8BE89A:被标记者受到任意伤害提高10%。]
+						[c/8BE89A:左键 - 侦察：全转化，适合对单且输出稳定。]
+						[c/8BE89A:连射五发，每两发间隔 5 帧；每轮五连射之间间隔 20 帧。]
+						[c/8BE89A:侦察箭可造成 3 次伤害；穿透敌人后短暂关闭碰撞，随机游荡，然后重新追踪。]
+						[c/8BE89A:若场上存在侦察优先标记目标，侦察箭会优先追踪该目标，造成 x1.25 伤害，并在命中后折返继续攻击，折返后伤害大幅降低。]
 						'''
 					PresetLeft3:
 						'''
-						[c/8BE89A:轰炸左键：木箭化为轰炸树杈。]
-						[c/8BE89A:树杈受重力影响，命中产生爆破。]
-						[c/8BE89A:爆破范围约75乘75，适合压制群怪。]
+						[c/8BE89A:左键 - 歼灭：全转化，从空中落下歼灭箭雨。]
+						[c/8BE89A:歼灭箭穿透次数 -1，命中后触发 BFLeafBombExplosion，并额外生成无伤害视觉弹幕 FuckYou。]
+						[c/8BE89A:若目标被侦察优先标记，爆炸有概率变成更高伤害、更大范围的强化爆炸，并无视普通爆炸次数限制。]
 						'''
 					PresetLeft4:
 						'''
-						[c/8BE89A:瘟疫左键：任何弹药化为毒焰。]
-						[c/8BE89A:毒焰本体不可见，并留下绿火流。]
-						[c/8BE89A:它以高更新率飞行，命中附加疫病。]
+						[c/8BE89A:左键 - 侵染：全转化，发射使用 BlossomFluxBOMB 贴图的收割者弹幕。]
+						[c/8BE89A:发射点位于手持弹幕中心附近；速度约为旧版一半，扩散角度约为旧版一半。]
+						[c/8BE89A:收割者会强力追踪侦察优先标记目标。命中会施加污染和一组负面效果；重复命中会刷新或延长。]
+						[c/8BE89A:污染由 GlobalNPC 管理，切换战术、换武器或丢掉武器后仍存在，直到持续时间结束。污染逐层降低敌人防御倍率，最多 -75%。]
 						'''
-					BF_Right:
+					/* BF_Right:
 						'''
-						[c/F7D87C:右键轻点可打开战术面板并切换。]
-						[c/F7D87C:按住超过0.15秒进入蓄力架势。]
-						[c/F7D87C:蓄满后松开，发射当前特殊箭。]
-						[c/F7D87C:右键特殊箭伤害高于左键常态箭。]
-						'''
+						[c/F7D87C:Right Click: Tap to open the tactical panel and switch doctrine.]
+						[c/F7D87C:Hold for over 0.15 seconds to enter the charge stance.]
+						[c/F7D87C:Release at full charge to fire the current special arrow.]
+						[c/F7D87C:Right-click special arrows hit harder than normal left arrows.]
+						''' */
 					PresetRight0:
 						'''
-						[c/F4D57A:突破右键：逐根储存追踪突破箭。]
-						[c/F4D57A:每解锁一种战术，储箭上限加一。]
-						[c/F4D57A:同时每根突破箭蓄力缩短7帧。]
+						[c/F4D57A:右键 - 突击蓄力：逐根装填突击箭，松手后从中轴线排队依次射出。]
+						[c/F4D57A:每两根射出间隔 4 帧；箭矢完全平行，不再按水平偏移同时齐射，也不再追踪。]
+						[c/F4D57A:突击蓄力箭初速较慢，飞行中每帧速度 x1.01；具备多次穿透与穿透特效。]
 						'''
 					PresetRight1:
 						'''
-						[c/F4D57A:复苏右键：蓄满后发射复苏治疗箭。]
-						[c/F4D57A:治疗箭会折返，并持续追随玩家。]
+						[c/F4D57A:右键 - 复苏蓄力：向上举弓蓄力，释放一批纯粹复苏闪光。]
+						[c/F4D57A:纯粹复苏闪光更大、更分散；只治疗玩家，不提供复苏之叶。]
 						'''
 					PresetRight2:
 						'''
-						[c/F4D57A:侦查右键：蓄满后发射扫描箭。]
-						[c/F4D57A:被标记敌人会吸引左键常态箭。]
-						[c/F4D57A:常态箭命中标记者后触发爆炸。]
+						[c/F4D57A:右键 - 侦察蓄力：发射高速标记箭。]
+						[c/F4D57A:标记箭额外更新次数提升，不受重力下坠影响，穿透次数 -1，会记录路径上全部命中的敌人。]
+						[c/F4D57A:弹幕死亡时，只标记命中过的最大生命值最高目标；标记会强化所有形态的左键。]
 						'''
 					PresetRight3:
 						'''
-						[c/F4D57A:轰炸右键：蓄满后发射轰炸箭。]
-						[c/F4D57A:命中后持续从天上降下当前箭矢。]
+						[c/F4D57A:右键 - 歼灭蓄力：鼠标位置生成赤红准星，准星跟随鼠标但带加速和减速。]
+						[c/F4D57A:蓄力 60 帧可释放；释放后箭矢先向天空发射，随后从屏幕上方高速制导至准星位置并产生大爆炸。]
+						[c/F4D57A:落下前准星继续跟随鼠标；箭矢重新进入屏幕后锁定最终点位。前一发爆炸前无法开始下一次歼灭蓄力。]
 						'''
 					PresetRight4:
 						'''
-						[c/F4D57A:瘟疫右键：蓄满后发射附着瘟疫箭。]
-						[c/F4D57A:附着后持续向周围释放瘟疫毒气。]
+						[c/F4D57A:右键 - 侵染蓄力：积攒大型孢子弹，命中后产生感染主题爆发并持续喷出孢子云。]
+						[c/F4D57A:蓄力命中会永久降低该 NPC 的能力。该削弱绑定在敌人身上，不要求玩家继续手持叶流。]
 						'''
 					BF_Passive:
 						'''
-						[c/9AEF9E:被动：手持时可抵御一次致命伤害。]
-						[c/9AEF9E:触发后立刻回满生命并生成复苏立场。]
-						[c/9AEF9E:接下来15秒内再次受伤会直接死亡。]
-						[c/9AEF9E:若撑过倒计时，生命至少回到一半。]
-						[c/9AEF9E:当前被动状态：{0}，请留意冷却。]
+						[c/9AEF9E:被动复活：手持叶流时，可抵消一次致命伤害。]
+						[c/9AEF9E:触发后立即回满生命并生成复苏立场；之后 15 秒内再次受到致命伤害会直接死亡。]
+						[c/9AEF9E:若撑过倒计时，生命至少恢复到一半。当前状态：{0}。]
 						'''
 					PassiveStateReady: "[c/7BFFB7:已就绪]"
-					PassiveStateActive: "[c/FF9B8B:不死阶段中]"
+					PassiveStateActive: "[c/FF9B8B:终末防线中]"
 					PassiveStateCooldown: "[c/F0D070:冷却 {0} 秒]"
 					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
-					PresetUnlock1: "[c/7BFFB7:复苏战术：已解锁，可在右键面板切换。]"
-					PresetLock1: "[c/9A9A9A:复苏战术：击败蜂王后解锁，面板待命。]"
-					PresetUnlock2: "[c/7BFFB7:侦查战术：已解锁，可在右键面板切换。]"
-					PresetLock2: "[c/9A9A9A:侦查战术：困难模式后解锁，面板待命。]"
-					PresetUnlock3: "[c/7BFFB7:轰炸战术：已解锁，可在右键面板切换。]"
-					PresetLock3: "[c/9A9A9A:轰炸战术：击败机械骷髅王后解锁。]"
-					PresetUnlock4: "[c/7BFFB7:瘟疫战术：已解锁，可在右键面板切换。]"
-					PresetLock4: "[c/9A9A9A:瘟疫战术：击败瘟疫使者歌莉娅后解锁。]"
-					BF_Final: "[c/9FD8A2:最终记录：弓弦鸣动，林叶仍在回应。]"
-					BF_EX:
+					// PresetUnlock1: "[c/7BFFB7:Recovery: unlocked and selectable in the tactical panel.]"
+					// PresetLock1: "[c/9A9A9A:Recovery: unlocked after Queen Bee.]"
+					// PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked and selectable in the tactical panel.]"
+					// PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode.]"
+					// PresetUnlock3: "[c/7BFFB7:Bombardment: unlocked and selectable in the tactical panel.]"
+					// PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Skeletron Prime.]"
+					// PresetUnlock4: "[c/7BFFB7:Plague: unlocked and selectable in the tactical panel.]"
+					// PresetLock4: "[c/9A9A9A:Plague: unlocked after the Plaguebringer Goliath.]"
+					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
+					/* BF_EX:
 						'''
-						[c/8EF5A8:大招：最多储存60点森绿能量。]
-						[c/8EF5A8:手持此弓时，每2秒恢复1点能量。]
-						[c/8EF5A8:成功释放右键蓄力箭恢复3点能量。]
-						[c/8EF5A8:能量满且装备EX饰品时，按传说技能键。]
-						[c/8EF5A8:随后进入备射姿态，再点击左键。]
-						[c/8EF5A8:最终释放森绿弹幕齐射。]
-						'''
-					LegendaryHint: "[c/BABABA:按住Shift键读取完整传奇记录。]"
+						[c/8EF5A8:Legendary Skill: Stores up to 60 Bloom Energy.]
+						[c/8EF5A8:While held, restores 1 energy every 2 seconds.]
+						[c/8EF5A8:Releasing a charged right-click arrow restores 3 energy.]
+						[c/8EF5A8:At full energy with the EX accessory, press the Legendary Skill key.]
+						[c/8EF5A8:Then enter the ready stance and left-click.]
+						[c/8EF5A8:Finally releases the verdant arrow curtain barrage.]
+						''' */
+					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:
 						'''
-						[c/66E6FF:最初，它只是单一的释放——弓弦拉满，叶箭如水流般倾泻，偶尔坠下一枚缓慢扩散毒云的孢子。]
-						[c/66E6FF:这种设计简单直接，却也注定停留在表层，所有输出都围绕着“更快”与“更多”展开。]
-						[c/66E6FF:但随着测试深入，制作者逐渐意识到，问题并不在速度，而在于表达的维度过于单一。]
-						[c/66E6FF:弓弦被重新定义为结构核心，不再只是发射装置，而是承载多重响应的调度节点。]
-						[c/66E6FF:木箭在离弦之后被允许改变形态，不同输入将引导其演化为完全不同的攻击分支。]
-						[c/66E6FF:突破、复苏、侦查、轰炸与瘟疫被拆解为五条独立路径，并在同一体系内共存。]
-						[c/66E6FF:各分支之间的反馈差异极大，部分组合甚至表现出远超预期的协同放大效应。]
-						[c/66E6FF:系统因此放弃绝对稳定性，转而依赖使用者在战斗中的选择来维持整体输出节奏。]
-						[c/66E6FF:如今，它已不再只是发射箭矢的武器，而是一种在不断分化中持续生长的战术结构。]
+						[c/66E6FF:最初，它只是一场追求更快连射的尝试。]
+						[c/66E6FF:后来制作者意识到，速度不是答案。]
+						[c/66E6FF:同一根弓弦必须学会五种呼吸方式。]
+						[c/66E6FF:于是战术拆分为五条枝流。]
+						[c/66E6FF:即便是普通木箭，也会在离弦后改变形态。]
+						[c/66E6FF:它仍会继续生长，但节奏已经成形。]
+						[c/66E6FF:等待、松弦，然后让战术回应。]
 						'''
 				}
 			}
@@ -131,27 +133,29 @@ Mods: {
 
 		Projectiles: {
 			BlossomFlux: {
-				BlossomFluxChloroplast.DisplayName: 叶绿体浮炮
-				NewLegendBlossomFluxHoldOut.DisplayName: 叶流悬持弓
+				BlossomFluxChloroplast.DisplayName: 叶绿体浮游器
+				NewLegendBlossomFluxHoldOut.DisplayName: 叶流持弓
 				BFSelectionPanel.DisplayName: 战术选择面板
-				BFArrow_ABreak.DisplayName: 突破箭
+				BFArrow_ABreak.DisplayName: 突击箭
 				BFArrow_BRecov.DisplayName: 复苏箭
 				BFArrow_BRecovBlast.DisplayName: 复苏爆发
 				BFArrow_BRecovTransfer.DisplayName: 复苏转移箭
-				BFArrow_CDetec.DisplayName: 侦查箭
-				BFArrow_CDetecReticle.DisplayName: 侦查标记
-				BFArrow_DBomb.DisplayName: 轰炸箭
-				BFArrow_EPlague.DisplayName: 瘟疫箭
-				BFArrow_EPlagueGas.DisplayName: 瘟疫毒雾
-				BFLeafProj.DisplayName: 叶子箭
-				BFLeafBombExplosion.DisplayName: 树杈爆破
-				BFLeftPlagueFlame.DisplayName: 瘟疫火流
-				FuckYou.DisplayName: 绽裂爆轰
+				BFArrow_CDetec.DisplayName: 侦察箭
+				BFArrow_CDetecReticle.DisplayName: 侦察准星
+				BFArrow_DBomb.DisplayName: 歼灭箭
+				BFArrow_EPlague.DisplayName: 侵染箭
+				BFArrow_EPlagueGas.DisplayName: 侵染毒云
+				BFLeafProj.DisplayName: 战术叶弹
+				BFLeafBombExplosion.DisplayName: 枝爆
+				BFLeftPlagueFlame.DisplayName: 侵染火流
+				FuckYou.DisplayName: 枝爆视觉弹幕
 				BFPassiveRecoveryField.DisplayName: 复苏立场
 				BFPassiveRecoveryFieldWave.DisplayName: 复苏冲击波
-				BFEXWeapon.DisplayName: 寒森复苏齐射
+				BFEXWeapon.DisplayName: 叶流森绿箭幕
 				BFEXVernalShot.DisplayName: 森绿齐射箭
-				// BFLeftPlagueReaper.DisplayName: B F Left Plague Reaper
+				BFLeftPlagueReaper.DisplayName: 侵染收割者
+				BFRecoveryFlash.DisplayName: 复苏闪光
+				BFArrow_DBombVisual.DisplayName: 歼灭上射视觉箭
 			}
 
 			Ranged.BFAimScope.DisplayName: 叶流瞄准镜
@@ -244,21 +248,31 @@ Mods: {
 		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 		Cooldowns: {
-			BlossomFlux_Passive: 叶流不死被动
+			BlossomFlux_Passive: 叶流终末防线
 			BlossomFlux_EX: 森绿能量
 		}
 
-		TheSpecialText.BlossomFluxPresetSelected: 已选择{0}战术
+		TheSpecialText.BlossomFluxPresetSelected: 已选择 {0} 战术
 
 		Buffs: {
 			YharonSoulFragment_Buff: {
-				// DisplayName: Yharon Soul Fragment_ Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+				DisplayName: 丛林龙魂碎片
+				Description: 灵魂碎片正在灼烧目标。
 			}
 
 			SHPCRight_DeBuff: {
-				// DisplayName: S H P C Right_ De Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+				DisplayName: SHPC 过热
+				Description: 过热正在持续惩罚玩家。
+			}
+
+			BFRecoveryLeafBuff: {
+				DisplayName: 复苏之叶
+				Description: 复苏枝流正在保护并治疗你。
+			}
+
+			BFPlaguePollutionBuff: {
+				DisplayName: 侵染污染
+				Description: 防御正被侵染逐层侵蚀。
 			}
 		}
 	}

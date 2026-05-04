@@ -1,10 +1,12 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -17,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private static readonly Color PlagueDeep = new(34, 145, 46);
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BlossomFluxBOMB";
 
         private ref float Seed => ref Projectile.ai[0];
         private ref float Variant => ref Projectile.ai[1];
@@ -59,11 +61,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             Timer++;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            NPC target = FindTargetAhead(forward);
+            NPC priorityTarget = FindPriorityMarkedTarget();
+            NPC target = priorityTarget ?? FindTargetAhead(forward);
             if (target != null)
             {
-                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(forward) * MathHelper.Clamp(Projectile.velocity.Length() * 1.01f, 10.5f, 17.5f);
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.045f);
+                bool priority = target == priorityTarget;
+                float targetSpeed = priority
+                    ? MathHelper.Clamp(Projectile.velocity.Length() * 1.05f + 0.7f, 9.5f, 18.5f)
+                    : MathHelper.Clamp(Projectile.velocity.Length() * 1.01f, 8.5f, 15.5f);
+                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(forward) * targetSpeed;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, priority ? 0.2f : 0.045f);
             }
 
             float wingBeat = (float)System.Math.Sin((Timer + Seed) * 0.82f);
@@ -82,9 +89,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(BuffID.Poisoned, 180);
-            target.AddBuff(BuffID.Venom, 120);
-            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 240);
+            bool markedTarget = target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner);
+            BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
+            pollution.ApplyPollution(target, markedTarget);
+            pollution.ApplyPlagueDebuffs(target, markedTarget);
+            target.AddBuff(ModContent.BuffType<MiracleBlight>(), markedTarget ? 480 : 240);
             Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.78f));
 
             if (Main.dedServ)
@@ -146,6 +155,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
 
             return bestTarget;
+        }
+
+        private NPC FindPriorityMarkedTarget()
+        {
+            if (!BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                return null;
+
+            Player owner = Main.player[Projectile.owner];
+            BFRightUIPlayer rightUiPlayer = owner.GetModPlayer<BFRightUIPlayer>();
+            int targetIndex = rightUiPlayer.ReconPriorityTargetIndex;
+            if (!BFArrowCommon.InBounds(targetIndex, Main.maxNPCs))
+                return null;
+
+            NPC target = Main.npc[targetIndex];
+            if (!target.CanBeChasedBy(Projectile))
+                return null;
+
+            if (!target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner))
+                return null;
+
+            if (Vector2.DistanceSquared(Projectile.Center, target.Center) > 1500f * 1500f)
+                return null;
+
+            return target;
         }
 
         private void SpawnTakeoffEffects()
@@ -241,6 +274,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             Texture2D orb = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D wing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/muzzle_02").Value;
+            Texture2D body = TextureAssets.Projectile[Type].Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
@@ -292,6 +326,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(
+                body,
+                center,
+                null,
+                Color.White * fade,
+                Projectile.rotation,
+                body.Size() * 0.5f,
+                Projectile.scale,
+                SpriteEffects.None,
+                0);
+
             return false;
         }
 

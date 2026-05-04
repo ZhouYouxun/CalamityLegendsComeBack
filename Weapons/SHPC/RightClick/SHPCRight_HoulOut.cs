@@ -28,6 +28,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override float MaxOffsetLengthFromArm => 35f;
 
+        public override void KillHoldoutLogic()
+        {
+            if (!Owner.active || Owner.dead)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            int heldType = Owner.HeldItem.type;
+            if (heldType != AssociatedItemID && heldType != ModContent.ItemType<NewLegendSHPCTest>())
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            if (!Main.mouseRight)
+                Projectile.Kill();
+        }
+
         #region ===== Energy Core Position =====
 
         // Angle controls the side rotation; distance controls how far it extends from Projectile.Center.
@@ -112,7 +131,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             InitializeProgressRules();
 
             Player owner = Main.player[Projectile.owner];
-            stage = Utils.Clamp(owner.GetModPlayer<SHPCRight_Player>().HeatStage, 0, MaxHeatStage);
+            SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
+            stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
+            stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+            heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
         }
         // ===== 根据进度初始化规则 =====
         private void InitializeProgressRules()
@@ -157,7 +179,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #region ===== 基础生存判定 =====
 
-            if (!player.active || player.dead || (player.HeldItem.type != AssociatedItemID && player.HeldItem.type != ModContent.ItemType<NewLegendSHPC>()))
+            if (!player.active || player.dead ||
+                (player.HeldItem.type != AssociatedItemID && player.HeldItem.type != ModContent.ItemType<NewLegendSHPCTest>()))
             {
                 Projectile.Kill();
                 return;
@@ -201,8 +224,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             frameCounter++;
             stageTimer++;
 
-            // ===== 同步热值到玩家（必须每帧写）=====
-            player.GetModPlayer<SHPCRight_Player>().HeatStage = stage;
+            // Sync after stage changes so detached heat UI and cooling use the final value.
+            SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
 
             #endregion
 
@@ -249,6 +272,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #endregion
 
             #region ===== 后坐力 & 充能 =====
+
+            heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
 
             OffsetLengthFromArm -= 2f;
 
@@ -368,8 +393,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             fireStopTimer = BalanceSHPC.ForcedShutdownTime;
             manualCoolingVisualTimer = 0;
             frameCounter = 0;
-            player.GetModPlayer<SHPCRight_Player>().HeatStage = stage;
-            player.GetModPlayer<SHPCRight_Player>().SetAttackLockout(BalanceSHPC.ForcedShutdownTime);
+            SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
+            heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
+            heatPlayer.SetAttackLockout(BalanceSHPC.ForcedShutdownTime);
             TriggerStageOutlinePulse();
             SpawnCoolingVentMist();
         }
@@ -457,7 +483,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             stage--;
             stageTimer = 0;
             overheatTimer = 0;
-            Owner.GetModPlayer<SHPCRight_Player>().HeatStage = stage;
+            Owner.GetModPlayer<SHPCRight_Player>().SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
             
             reduceCooldown = CoolingRecoilTotalTime + BalanceSHPC.ManualCoolingExtraLockout;
             fireStopTimer = CoolingRecoilTotalTime; // 停火时间

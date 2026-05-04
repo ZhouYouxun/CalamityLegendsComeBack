@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,8 +22,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private const float GroundAnchorState = 2f;
         private const int BombardDuration = 96;
         private const float MortarGravity = 0.28f;
-        private const float MinMortarApexHeight = 440f;
-        private const float MaxMortarApexHeight = 840f;
+        private const float MortarFallGravityMultiplier = 2.5f;
+        private const float MinMortarApexHeight = 620f;
+        private const float MaxMortarApexHeight = 1120f;
         private const int MortarCollisionDelay = 12;
 
         private int rainCounter;
@@ -29,9 +32,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private int storedAmmoType = ProjectileID.WoodenArrowFriendly;
         private float storedAmmoSpeed = 14f;
         private float storedAmmoKnockback = 2f;
+        private float explosionSize = 190f;
         private Vector2 stickOffset;
         private Vector2 targetPoint;
         private Vector2 groundAnchorPoint;
+        private bool passedBombardTarget;
+        private bool detonated;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/DBomb/BFArrow_DBomb";
@@ -72,21 +78,29 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             float riseDistance = Math.Max(start.Y - apexY, 96f);
             float fallDistance = Math.Max(target.Y - apexY, 96f);
             float verticalSpeed = (float)Math.Sqrt(2f * MortarGravity * riseDistance);
-            float travelTime = verticalSpeed / MortarGravity + (float)Math.Sqrt(2f * fallDistance / MortarGravity);
+            float travelTime = verticalSpeed / MortarGravity + (float)Math.Sqrt(2f * fallDistance / (MortarGravity * MortarFallGravityMultiplier));
             float horizontalSpeed = (target.X - start.X) / Math.Max(travelTime, 1f);
 
             return new Vector2(horizontalSpeed, -verticalSpeed);
         }
 
-        public void ConfigureBombardTarget(Vector2 bombardTarget)
+        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f)
         {
             targetPoint = bombardTarget;
+            explosionSize = MathHelper.Clamp(strikeExplosionSize, 96f, 720f);
             float desiredSpeed = Projectile.velocity.Length();
             if (desiredSpeed <= 0.01f)
                 desiredSpeed = 18f;
 
-            Projectile.velocity = CalculateMortarLaunchVelocity(Projectile.Center, bombardTarget, desiredSpeed);
+            Player owner = Main.player[Projectile.owner];
+            float gravDir = owner.active ? owner.gravDir : 1f;
+            Vector2 fallStart = bombardTarget - Vector2.UnitY * 980f * gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
+            Vector2 fallDirection = (bombardTarget - fallStart).SafeNormalize(Vector2.UnitY * gravDir);
+            Projectile.Center = fallStart;
+            Projectile.velocity = fallDirection * Math.Max(32f, desiredSpeed * 1.7f);
+            FlightTimer = 0f;
             Projectile.tileCollide = false;
+            passedBombardTarget = false;
             BFArrowCommon.FaceForward(Projectile);
             Projectile.netUpdate = true;
         }
@@ -101,6 +115,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             writer.Write(storedAmmoType);
             writer.Write(storedAmmoSpeed);
             writer.Write(storedAmmoKnockback);
+            writer.Write(explosionSize);
+            writer.Write(passedBombardTarget);
+            writer.Write(detonated);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -113,6 +130,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             storedAmmoType = reader.ReadInt32();
             storedAmmoSpeed = reader.ReadSingle();
             storedAmmoKnockback = reader.ReadSingle();
+            explosionSize = reader.ReadSingle();
+            passedBombardTarget = reader.ReadBoolean();
+            detonated = reader.ReadBoolean();
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -188,20 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (!InFlight)
                 return;
 
-            stickOffset = Projectile.Center - target.Center;
-            groundAnchorPoint = target.Center;
-            storedRainDamage = Math.Max(Projectile.damage, storedRainDamage);
-            State = AttachedNpcState;
-            AttachedNpcIndex = target.whoAmI;
-            Projectile.damage = 0;
-            Projectile.velocity = Vector2.Zero;
-            Projectile.timeLeft = BombardDuration;
-            Projectile.netUpdate = true;
-
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 12, 1f, 3.2f, 0.9f, 1.2f);
-            SpawnBombardImpactFX(target.Center, 1.55f);
-            SpawnBombardAuraFX(target.Center, 1.25f);
-            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.5f, Pitch = -0.08f }, target.Center);
+            DetonateBombardStrike(target.Center, target);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -209,19 +216,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (!InFlight)
                 return false;
 
-            State = GroundAnchorState;
-            groundAnchorPoint = Projectile.Center;
-            Projectile.damage = 0;
-            Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = oldVelocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
-            Projectile.tileCollide = false;
-            Projectile.timeLeft = BombardDuration;
-            Projectile.netUpdate = true;
-
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 10, 1f, 2.8f, 0.9f, 1.15f);
-            SpawnBombardImpactFX(groundAnchorPoint, 1.4f);
-            SpawnBombardAuraFX(groundAnchorPoint, 1.15f);
-            SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.3f, Pitch = -0.2f }, Projectile.Center);
+            DetonateBombardStrike(Projectile.Center, null);
             return false;
         }
 
@@ -254,12 +249,87 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private void UpdateMortarFlight()
         {
             FlightTimer++;
-            Projectile.velocity.Y += MortarGravity;
-            Projectile.tileCollide = FlightTimer >= MortarCollisionDelay && Projectile.velocity.Y >= 0f;
+            Projectile.velocity.Y += Projectile.velocity.Y > 0f ? MortarGravity * MortarFallGravityMultiplier : MortarGravity;
+            AccelerateThroughBombardTarget();
+            TryDetonateAtTargetPoint();
+            Projectile.tileCollide = FlightTimer >= MortarCollisionDelay && Projectile.velocity.Y >= 0f && passedBombardTarget;
 
             BFArrowCommon.FaceForward(Projectile);
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 1.08f);
             EmitBombardFlightFX();
+        }
+
+        private void TryDetonateAtTargetPoint()
+        {
+            if (detonated || !passedBombardTarget || targetPoint == Vector2.Zero)
+                return;
+
+            Vector2 toTarget = targetPoint - Projectile.Center;
+            if (toTarget.LengthSquared() <= 46f * 46f || Vector2.Dot(Projectile.velocity, toTarget) < 0f)
+                DetonateBombardStrike(targetPoint, null);
+        }
+
+        private void DetonateBombardStrike(Vector2 center, NPC directTarget)
+        {
+            if (detonated)
+                return;
+
+            detonated = true;
+            storedRainDamage = Math.Max(Projectile.damage, storedRainDamage);
+            Projectile.damage = 0;
+            Projectile.friendly = false;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.Center = center;
+            Projectile.timeLeft = 2;
+            Projectile.tileCollide = false;
+            Projectile.netUpdate = true;
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<BFLeafBombExplosion>(),
+                    Math.Max(1, storedRainDamage),
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    explosionSize,
+                    1f);
+            }
+
+            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 18, 1.35f, 5.4f, 1f, 1.55f);
+            SpawnBombardImpactFX(center, MathHelper.Clamp(explosionSize / 180f, 1.35f, 2.8f));
+            SpawnBombardAuraFX(center, 1.35f);
+            Main.player[Projectile.owner].SetScreenshake(MathHelper.Clamp(explosionSize / 24f, 8f, 22f));
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.65f, Pitch = -0.2f }, center);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.5f, Pitch = -0.18f }, center);
+        }
+
+        private void AccelerateThroughBombardTarget()
+        {
+            if (passedBombardTarget || Projectile.velocity.Y <= 0f || targetPoint == Vector2.Zero)
+                return;
+
+            Vector2 toTarget = targetPoint - Projectile.Center;
+            float distance = toTarget.Length();
+            if (distance <= 0.001f || Vector2.Dot(Projectile.velocity, toTarget) < 0f)
+            {
+                passedBombardTarget = true;
+                Projectile.netUpdate = true;
+                return;
+            }
+
+            float speed = Math.Max(Projectile.velocity.Length(), 32f);
+            Vector2 desiredVelocity = toTarget / distance * speed;
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.22f);
+
+            if (distance < Math.Max(42f, speed * 1.15f))
+            {
+                Projectile.velocity = desiredVelocity;
+                passedBombardTarget = true;
+                Projectile.netUpdate = true;
+            }
         }
 
         private void UpdateBombardAnchor(Vector2 bombardCenter)

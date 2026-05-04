@@ -104,14 +104,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             BlossomFluxChloroplastPresetType currentPreset = GetDisplayedPreset();
-            BFRightUIPlayer rightUIPlayer = Main.LocalPlayer.GetModPlayer<BFRightUIPlayer>();
             BFPassivePlayer passivePlayer = Main.LocalPlayer.GetModPlayer<BFPassivePlayer>();
-            string leftText = this.GetLocalizedValue("BF_Left");
-            string rightText = this.GetLocalizedValue("BF_Right");
             string presetName = this.GetLocalizedValue($"PresetName{(int)currentPreset}");
-            string presetText = string.Format(this.GetLocalizedValue("BF_Preset"), presetName);
+            string introText = string.Format(this.GetLocalizedValue("BF_Intro"), presetName);
             string leftPresetText = this.GetLocalizedValue($"PresetLeft{(int)currentPreset}");
+            string leftGrowthText = this.GetLocalizedValue($"PresetLeftGrowth{(int)currentPreset}");
             string rightPresetText = this.GetLocalizedValue($"PresetRight{(int)currentPreset}");
+            string rightGrowthText = this.GetLocalizedValue($"PresetRightGrowth{(int)currentPreset}");
             string passiveStatus = !passivePlayer.PassiveUnlocked
                 ? this.GetLocalizedValue("PassiveStateLocked")
                 : passivePlayer.FinalStandActive
@@ -120,29 +119,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                         ? this.GetLocalizedValue("PassiveStateReady")
                         : string.Format(this.GetLocalizedValue("PassiveStateCooldown"), passivePlayer.RemainingSeconds);
             string passiveText = string.Format(this.GetLocalizedValue("BF_Passive"), passiveStatus);
-            string unlockRecovery = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_BRecov) ? "PresetUnlock1" : "PresetLock1");
-            string unlockRecon = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_CDetec) ? "PresetUnlock2" : "PresetLock2");
-            string unlockBombard = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_DBomb) ? "PresetUnlock3" : "PresetLock3");
-            string unlockPlague = this.GetLocalizedValue(rightUIPlayer.IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_EPlague) ? "PresetUnlock4" : "PresetLock4");
-            string finalText = this.GetLocalizedValue("BF_Final");
-            string exText = this.GetLocalizedValue("BF_EX");
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
             string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
 
             string merged =
-                leftText + "\n" +
-                presetText + "\n" +
-                leftPresetText + "\n\n" +
-                rightText + "\n" +
-                rightPresetText + "\n\n" +
+                introText + "\n\n" +
                 passiveText + "\n" +
-                unlockRecovery + "\n" +
-                unlockRecon + "\n" +
-                unlockBombard + "\n" +
-                unlockPlague + "\n\n" +
-                finalText + "\n" +
-                exText + "\n\n" +
+                leftPresetText + "\n" +
+                leftGrowthText + "\n\n" +
+                rightPresetText + "\n" +
+                rightGrowthText + "\n\n" +
                 legendarySection + "\n";
 
             tooltips.FindAndReplace("[GFB]", merged);

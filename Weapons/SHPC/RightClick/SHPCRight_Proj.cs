@@ -326,18 +326,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 previousCenter = Projectile.oldPosition + Projectile.Size * 0.5f;
+            if (previousCenter == Projectile.Size * 0.5f)
+                previousCenter = Projectile.Center - Projectile.velocity;
 
             if (IsMainBeam)
             {
-                Dust core = Dust.NewDustPerfect(Projectile.Center, 267);
-                core.velocity = forward * Main.rand.NextFloat(1.4f, 2.6f) + Main.rand.NextVector2Circular(0.35f, 0.35f);
-                core.color = Color.Lerp(new Color(70, 210, 255), Color.White, Main.rand.NextFloat(0.35f, 0.8f));
-                core.scale = Main.rand.NextFloat(0.82f, 1.12f);
-                core.noGravity = true;
+                for (int i = 0; i < 2; i++)
+                {
+                    float completion = (i + 1f) / 2f;
+                    Vector2 spawnPos = Vector2.Lerp(previousCenter, Projectile.Center, completion);
+                    Dust core = Dust.NewDustPerfect(spawnPos, 267);
+                    core.velocity = forward * Main.rand.NextFloat(0.45f, 1.05f) + Main.rand.NextVector2Circular(0.18f, 0.18f);
+                    core.color = Color.Lerp(new Color(70, 210, 255), Color.White, Main.rand.NextFloat(0.35f, 0.8f));
+                    core.scale = Main.rand.NextFloat(0.42f, 0.62f);
+                    core.noGravity = true;
+                }
+
                 return;
             }
 
-            float time = helixTimer * 0.46f;
             Color brightYellow = new Color(255, 235, 120);
             Color hotYellow = Color.Lerp(brightYellow, Color.White, 0.35f);
             float[] phases =
@@ -348,35 +356,41 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 MathHelper.PiOver2 + MathHelper.Pi
             };
 
-            for (int i = 0; i < phases.Length; i++)
+            const int substeps = 4;
+            for (int step = 0; step < substeps; step++)
             {
-                bool thickStrand = i < 2;
-                float radius = thickStrand ? 7.5f : 4.8f;
-                float wave = (float)Math.Sin(time + phases[i] + BeamIndex * 0.7f);
-                Vector2 spawnPos = Projectile.Center + right * wave * radius;
+                float completion = (step + 1f) / substeps;
+                Vector2 center = Vector2.Lerp(previousCenter, Projectile.Center, completion);
+                float time = (helixTimer - 1f + completion) * 0.46f;
 
-                Dust dust = Dust.NewDustPerfect(spawnPos, 267);
-                dust.velocity =
-                    forward * Main.rand.NextFloat(1.4f, 2.8f) +
-                    right * wave * Main.rand.NextFloat(0.22f, 0.55f);
-                dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
-                dust.scale = thickStrand
-                    ? Main.rand.NextFloat(0.82f, 1.08f)
-                    : Main.rand.NextFloat(0.48f, 0.66f);
-                dust.noGravity = true;
+                for (int i = 0; i < phases.Length; i++)
+                {
+                    if (((i + step + BeamIndex) & 1) != 0)
+                        continue;
+
+                    bool thickStrand = i < 2;
+                    float radius = thickStrand ? 7.5f : 4.8f;
+                    float wave = (float)Math.Sin(time + phases[i] + BeamIndex * 0.7f);
+                    Vector2 spawnPos = center + right * wave * radius;
+
+                    Dust dust = Dust.NewDustPerfect(spawnPos, 267);
+                    dust.velocity =
+                        forward * Main.rand.NextFloat(0.35f, 0.9f) +
+                        right * wave * Main.rand.NextFloat(0.08f, 0.22f);
+                    dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
+                    dust.scale = thickStrand
+                        ? Main.rand.NextFloat(0.34f, 0.52f)
+                        : Main.rand.NextFloat(0.22f, 0.34f);
+                    dust.noGravity = true;
+                }
             }
         }
 
         // ===== 核心：伤害倍率 + 防御处理 =====
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            int heat = Math.Max(WeaponStage, HeatLevel);
 
             // Heat5：附加最大生命百分比伤害
-            if (heat >= 5)
-            {
-                modifiers.SourceDamage += target.lifeMax * 0.0005f;
-            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

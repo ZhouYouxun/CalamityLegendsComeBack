@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
 using CalamityMod;
 using CalamityMod.Enums;
@@ -19,8 +20,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 {
     internal sealed class BFLeafProj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private static readonly ulong[] LastRecoveryHealFrame = new ulong[Main.maxPlayers];
-
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BFLeafProj";
@@ -35,6 +34,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         private ref float StoredSpeed => ref Projectile.localAI[0];
         private ref float FlightTimer => ref Projectile.localAI[1];
+        private ref float ReconWanderTimer => ref Projectile.ai[1];
+        private ref float BombardExplosionsLeft => ref Projectile.ai[1];
+        private int bombardExplosionCooldown;
 
         public override void SetStaticDefaults()
         {
@@ -82,15 +84,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                    Projectile.penetrate = 1;
-                    Projectile.timeLeft = 125;
+                    Projectile.penetrate = 3;
+                    Projectile.timeLeft = 170;
                     StoredSpeed = MathHelper.Clamp(StoredSpeed, 11f, 21f);
+                    Projectile.localNPCHitCooldown = 18;
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    Projectile.penetrate = 1;
+                    Projectile.penetrate = -1;
                     Projectile.timeLeft = 140;
-                    Projectile.extraUpdates = 0;
+                    Projectile.extraUpdates = 1;
+                    if (BombardExplosionsLeft <= 0f)
+                        BombardExplosionsLeft = 1f;
                     StoredSpeed = MathHelper.Clamp(StoredSpeed * 0.84f, 8.5f, 17f);
                     break;
             }
@@ -101,6 +106,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
         public override void AI()
         {
             FlightTimer++;
+            if (bombardExplosionCooldown > 0)
+                bombardExplosionCooldown--;
+
             BlossomFluxChloroplastPresetType preset = Preset;
             Color mainColor = BFArrowCommon.GetPresetColor(preset);
 
@@ -119,6 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
                     Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * StoredSpeed;
+                    UpdateReconHoming();
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
@@ -131,6 +140,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             EmitLeafTrail(preset);
         }
 
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (Preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && IsReconPriorityTarget(target))
+            {
+                modifiers.FinalDamage *= 1.4f;
+                return;
+            }
+
+            if (Preset == BlossomFluxChloroplastPresetType.Chlo_CDetec && IsReconPriorityTarget(target))
+                modifiers.FinalDamage *= 1.25f;
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             BlossomFluxChloroplastPresetType preset = Preset;
@@ -139,17 +160,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             switch (preset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
-                    TryHealOwner(damageDone);
+                    if (BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                        Main.player[Projectile.owner].GetModPlayer<BFRecoveryEcologyPlayer>().TrySpawnRecoveryFlash(target.Center, IsReconPriorityTarget(target));
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
                     target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyDamageAmpMark(Projectile.owner, 30);
+                    if (IsReconPriorityTarget(target))
+                    {
+                        ReconWanderTimer = 10f;
+                        Projectile.velocity = -Projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Clamp(StoredSpeed * 0.84f, 9f, 18f);
+                        Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.72f));
+                    }
+                    else
+                    {
+                        ReconWanderTimer = 24f;
+                        Projectile.velocity = Projectile.velocity.RotatedByRandom(0.72f) * Main.rand.NextFloat(0.72f, 0.94f);
+                    }
+
+                    Projectile.netUpdate = true;
                     SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.28f, Pitch = 0.36f }, target.Center);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    SpawnBombardExplosion(target.Center);
-                    Projectile.Kill();
+                    SpawnBombardExplosion(target.Center, target);
                     break;
             }
         }
@@ -237,47 +271,113 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             return false;
         }
 
-        private void TryHealOwner(int damageDone)
+        private void SpawnBombardExplosion(Vector2 center, NPC target)
         {
-            if (!BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+            bool markedTarget = IsReconPriorityTarget(target);
+            bool enhanced = markedTarget && Main.rand.NextBool(3);
+            if (!enhanced)
+            {
+                if (bombardExplosionCooldown > 0 || BombardExplosionsLeft <= 0f)
+                    return;
+
+                BombardExplosionsLeft--;
+            }
+            else if (bombardExplosionCooldown > 0)
+            {
                 return;
+            }
 
-            Player owner = Main.player[Projectile.owner];
-            if (!owner.active || owner.dead || owner.statLife >= owner.statLifeMax2)
-                return;
+            bombardExplosionCooldown = enhanced ? 8 : 14;
 
-            ulong now = Main.GameUpdateCount;
-            if (LastRecoveryHealFrame[Projectile.owner] != 0UL && now - LastRecoveryHealFrame[Projectile.owner] < 18UL)
-                return;
-
-            int healAmount = Utils.Clamp(damageDone / 140, 1, 2);
-            healAmount = Math.Min(healAmount, owner.statLifeMax2 - owner.statLife);
-            if (healAmount <= 0)
-                return;
-
-            owner.statLife += healAmount;
-            owner.HealEffect(healAmount, true);
-            LastRecoveryHealFrame[Projectile.owner] = now;
-
-            if (owner.whoAmI == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.22f, Pitch = 0.45f }, owner.Center);
-        }
-
-        private void SpawnBombardExplosion(Vector2 center)
-        {
             if (Projectile.owner == Main.myPlayer)
             {
+                int explosionDamage = enhanced
+                    ? Math.Max(1, (int)(Projectile.damage * 1.18f))
+                    : Math.Max(1, (int)(Projectile.damage * 0.65f));
+                float explosionSize = (enhanced ? 158f : 75f) * Projectile.scale;
+
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     center,
                     Vector2.Zero,
                     ModContent.ProjectileType<BFLeafBombExplosion>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.65f)),
-                    Projectile.knockBack * 0.65f,
-                    Projectile.owner);
+                    explosionDamage,
+                    Projectile.knockBack * (enhanced ? 0.95f : 0.65f),
+                    Projectile.owner,
+                    explosionSize,
+                    enhanced ? 1f : 0f);
             }
 
-            SpawnLeafImpactFX(center, BlossomFluxChloroplastPresetType.Chlo_DBomb, 1.35f);
+            SpawnLeafImpactFX(center, BlossomFluxChloroplastPresetType.Chlo_DBomb, markedTarget ? 1.8f : 1.35f);
+        }
+
+        private void UpdateReconHoming()
+        {
+            if (ReconWanderTimer > 0f)
+            {
+                ReconWanderTimer--;
+                Projectile.velocity = Projectile.velocity.RotatedBy(Main.rand.NextFloat(-0.035f, 0.035f));
+                return;
+            }
+
+            NPC target = FindReconTarget();
+            if (target == null)
+            {
+                Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(FlightTimer * 0.08f + Projectile.identity) * 0.004f);
+                return;
+            }
+
+            float speed = MathHelper.Clamp(StoredSpeed + (IsReconPriorityTarget(target) ? 2.5f : 0f), 11f, 24f);
+            BFArrowCommon.DirectHomeTowards(Projectile, target, IsReconPriorityTarget(target) ? 0.26f : 0.16f, speed);
+            BFArrowCommon.MaintainSpeed(Projectile, speed, 0.14f);
+        }
+
+        private NPC FindReconTarget()
+        {
+            if (!BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                return null;
+
+            Player owner = Main.player[Projectile.owner];
+            BFRightUIPlayer rightUiPlayer = owner.GetModPlayer<BFRightUIPlayer>();
+            int priorityTargetIndex = rightUiPlayer.ReconPriorityTargetIndex;
+            if (BFArrowCommon.InBounds(priorityTargetIndex, Main.maxNPCs))
+            {
+                NPC priorityTarget = Main.npc[priorityTargetIndex];
+                if (priorityTarget.active &&
+                    priorityTarget.CanBeChasedBy(Projectile) &&
+                    priorityTarget.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner) &&
+                    Vector2.DistanceSquared(Projectile.Center, priorityTarget.Center) <= 1500f * 1500f)
+                {
+                    return priorityTarget;
+                }
+            }
+
+            NPC bestTarget = null;
+            float bestDistance = 760f;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Vector2.Distance(Projectile.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
+        }
+
+        private bool IsReconPriorityTarget(NPC target)
+        {
+            if (target == null || !BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                return false;
+
+            BFRightUIPlayer rightUiPlayer = Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>();
+            return target.whoAmI == rightUiPlayer.ReconPriorityTargetIndex &&
+                target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner);
         }
 
         private void EmitLeafTrail(BlossomFluxChloroplastPresetType preset)
@@ -514,12 +614,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
             initialized = true;
             Vector2 center = Projectile.Center;
-            Projectile.width = 75;
-            Projectile.height = 75;
+            int blastSize = Projectile.ai[0] > 0f ? (int)Projectile.ai[0] : 75;
+            Projectile.width = blastSize;
+            Projectile.height = blastSize;
             Projectile.Center = center;
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.42f, Pitch = 0.2f }, center);
             SpawnExplosionFX(center);
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<FuckYou>(),
+                    0,
+                    0f,
+                    Projectile.owner,
+                    Math.Max(Projectile.ai[0], 88f));
+            }
         }
 
         private static void SpawnExplosionFX(Vector2 center)

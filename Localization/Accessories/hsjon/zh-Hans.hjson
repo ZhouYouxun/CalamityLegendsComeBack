@@ -52,6 +52,9 @@ Mods: {
 			}
 		}
 
-		Projectiles.BrinyBaron.SurgeChainWaterBurst.DisplayName: 电涌水爆
+		Projectiles: {
+			BrinyBaron.SurgeChainWaterBurst.DisplayName: 电涌水爆
+			// SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+		}
 	}
 }
