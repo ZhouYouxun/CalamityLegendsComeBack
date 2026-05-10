@@ -82,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             Projectile.localNPCImmunity[target.whoAmI] = 16;
             if (IgnorePenetrationDamageFalloff != 1f)
-                Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.82f));
+                Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.9f));
 
             Projectile.netUpdate = true;
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 12, 0.9f, 3.4f, 0.8f, 1.2f);

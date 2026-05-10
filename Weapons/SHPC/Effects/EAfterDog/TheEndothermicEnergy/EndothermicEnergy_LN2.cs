@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicEnergy
 {
-    internal class EndothermicEnergy_Copy : ModProjectile, ILocalizedModType
+    internal class EndothermicEnergy_LN2 : ModProjectile, ILocalizedModType
     {
         private class EndothermicCopyState
         {
@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             float t = (float)Main.GameUpdateCount * 0.18f + Projectile.identity * 0.31f;
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, new Color(170, 220, 255).ToVector3() * 0.52f);
+            Lighting.AddLight(Projectile.Center, new Color(170, 220, 255).ToVector3() * 0.36f);
 
             if (Main.rand.NextBool(4))
             {
@@ -71,9 +71,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 SquishyLightParticle particle = new(
                     spawnPos,
                     vel,
-                    Main.rand.NextFloat(0.62f, 0.95f),
-                    Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.18f, 0.55f)),
-                    Main.rand.Next(18, 26)
+                    Main.rand.NextFloat(0.44f, 0.67f),
+                    Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.18f, 0.55f)) * 0.7f,
+                    Main.rand.Next(13, 19)
                 );
                 GeneralParticleHandler.SpawnParticle(particle);
             }
@@ -93,9 +93,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                     spawnPos,
                     sparkVelocity,
                     false,
-                    Main.rand.Next(8, 11),
-                    Main.rand.NextFloat(0.016f, 0.024f),
-                    Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.15f, 0.50f)),
+                    Main.rand.Next(6, 8),
+                    Main.rand.NextFloat(0.011f, 0.017f),
+                    Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.15f, 0.50f)) * 0.7f,
                     new Vector2(1.8f, 1f),
                     true,
                     false,
@@ -104,10 +104,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            for (int i = 0; i < 2; i++)
+            if (Main.rand.NextBool(2))
             {
-                float side = i == 0 ? -1f : 1f;
-                float phase = t * 0.92f + i * 2.1f;
+                float side = Main.rand.NextBool() ? -1f : 1f;
+                float phase = t * 0.92f + side * 2.1f;
                 Vector2 dustPos =
                     Projectile.Center
                     - forward * Main.rand.NextFloat(4f, 10f)
@@ -123,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                     dustVel,
                     0,
                     Color.Lerp(new Color(120, 170, 255), Color.White, Main.rand.NextFloat(0.28f, 0.72f)),
-                    Main.rand.NextFloat(0.95f, 1.28f)
+                    Main.rand.NextFloat(0.66f, 0.9f)
                 );
                 dust.noGravity = true;
             }
@@ -139,10 +139,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 Particle mist = new MediumMistParticle(
                     pos,
                     vel,
-                    Color.White,
+                    Color.White * 0.7f,
                     Color.Transparent,
-                    Main.rand.NextFloat(0.42f, 0.68f),
-                    Main.rand.NextFloat(110f, 155f)
+                    Main.rand.NextFloat(0.3f, 0.48f),
+                    Main.rand.NextFloat(78f, 110f)
                 );
                 GeneralParticleHandler.SpawnParticle(mist);
             }
@@ -152,14 +152,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 Projectile.velocity * 0.02f,
                 "CalamityLegendsComeBack/Texture/KsTexture/window_04",
                 false,
-                10,
-                0.26f,
-                new Color(160, 242, 255) * 1.96f,
-                new Vector2(0.56f, 2.15f),
+                7,
+                0.18f,
+                new Color(160, 242, 255) * 1.37f,
+                new Vector2(0.39f, 1.5f),
                 glowCenter: true,
                 shrinkSpeed: 1.2f,
-                glowCenterScale: 0.92f,
-                glowOpacity: 0.72f);
+                glowCenterScale: 0.64f,
+                glowOpacity: 0.5f);
             GeneralParticleHandler.SpawnParticle(centerFlare);
         }
 
@@ -184,10 +184,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 NPC target = Main.npc[state.MarkedTargetIndex];
                 if (target.active && target.CanBeChasedBy(Projectile))
                 {
-                    for (int i = 0; i < 3; i++)
+                    const int shardCount = 9;
+                    float spiralSeed = Main.rand.NextFloat(MathHelper.TwoPi);
+
+                    for (int i = 0; i < shardCount; i++)
                     {
-                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                        float distance = Main.rand.NextFloat(170f, 512f);
+                        float progress = i / (float)(shardCount - 1);
+                        float angle = spiralSeed + i * MathHelper.TwoPi * 0.38196601125f + Main.rand.NextFloat(-0.08f, 0.08f);
+                        float distance = MathHelper.Lerp(180f, 520f, progress) + (float)System.Math.Sin(i * 1.7f + spiralSeed) * 38f;
                         Vector2 spawnOffset = angle.ToRotationVector2() * distance;
 
                         Projectile.NewProjectile(
@@ -195,7 +199,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                             target.Center + spawnOffset,
                             Vector2.Zero,
                             ModContent.ProjectileType<EndothermicEnergy_Shadow>(),
-                            (int)(Projectile.damage * 0.42f),
+                            (int)(Projectile.damage * 0.36f),
                             Projectile.knockBack,
                             Projectile.owner,
                             0f,

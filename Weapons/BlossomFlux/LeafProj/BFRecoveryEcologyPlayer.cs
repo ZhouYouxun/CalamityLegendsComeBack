@@ -1,8 +1,7 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
-using CalamityMod.Buffs.DamageOverTime;
-using CalamityMod.Buffs.StatDebuffs;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -23,10 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
     internal sealed class BFRecoveryEcologyPlayer : ModPlayer
     {
-        private const int LeafTimePerFlash = 5 * 60;
         private const int FlashChanceDenominator = 5;
 
-        private readonly BalanceBlossomFlux balance = new();
         private int leafTimeLeft;
         private int flashCooldown;
         private int flashWindowTimer;
@@ -42,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         public void AddRecoveryLeaf(int timeToAdd)
         {
-            BalanceBlossomFlux.RecoveryLeafStats stats = balance.GetRecoveryLeafStats();
+            BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
             leafTimeLeft = Utils.Clamp(leafTimeLeft + timeToAdd, 1, stats.LeafMaxTime);
             Player.AddBuff(ModContent.BuffType<BFRecoveryLeafBuff>(), leafTimeLeft);
         }
@@ -52,10 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             if (!Main.rand.NextBool(FlashChanceDenominator))
                 return;
 
-            BalanceBlossomFlux.RecoveryLeafStats stats = balance.GetRecoveryLeafStats();
-            bool multiplayer = Main.netMode != NetmodeID.SinglePlayer || CountActivePlayers() > 1;
-            int cooldownFrames = markedTarget ? 75 : GetMultiplayerAdjustedCooldown(stats.FlashCooldownFrames);
-            bool windowLimited = !multiplayer && !markedTarget;
+            BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
+            int cooldownFrames = markedTarget ? stats.MarkedFlashCooldownFrames : stats.FlashCooldownFrames;
+            bool windowLimited = !markedTarget;
 
             if (flashCooldown > 0)
                 return;
@@ -67,7 +63,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             }
 
             if (windowLimited && flashesInWindow >= stats.FlashWindowLimit)
-                return;
+            {
+                RemoveOldestOwnedRecoveryFlash();
+                flashesInWindow = System.Math.Max(0, stats.FlashWindowLimit - 1);
+            }
 
             flashCooldown = cooldownFrames;
             flashesInWindow++;
@@ -113,18 +112,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             if (leafTimeLeft <= 0)
                 return;
 
-            BalanceBlossomFlux.RecoveryLeafStats stats = balance.GetRecoveryLeafStats();
-            bool fullRecoveryForm = IsHoldingRecoveryMode();
-            float halfFactor = fullRecoveryForm ? 1f : 0.5f;
-
-            Player.statDefense += (int)(stats.Defense * halfFactor);
-            Player.endurance += stats.DamageReduction * halfFactor;
-
-            if (fullRecoveryForm)
-            {
-                ApplyRecoveryImmunities(stats);
-                EmitRecoveryParticles();
-            }
+            BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
+            Player.statDefense += stats.Defense;
+            Player.endurance += stats.DamageReduction;
+            EmitRecoveryParticles();
 
             int buffType = ModContent.BuffType<BFRecoveryLeafBuff>();
             int buffIndex = Player.FindBuffIndex(buffType);
@@ -136,26 +127,49 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         public override void UpdateLifeRegen()
         {
-            if (leafTimeLeft <= 0 || !IsHoldingRecoveryMode())
+            if (leafTimeLeft <= 0)
                 return;
 
-            BalanceBlossomFlux.RecoveryLeafStats stats = balance.GetRecoveryLeafStats();
-            Player.lifeRegen += stats.LifeRegen;
+            BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
+            Player.lifeRegen += stats.LifeRegen + GetMissingHealthRegenBonus(stats);
             Player.lifeRegenTime += stats.RegenTimePerTick;
-
-            if (stats.MovingRegenBoost && Player.velocity.LengthSquared() > 0.25f)
-                Player.lifeRegen += System.Math.Max(1, stats.LifeRegen / 2);
-
-            ApplyHealthBasedRegenFloor(stats);
-
-            if (stats.DebuffDamageReduction > 0f && Player.lifeRegen < 0)
-                Player.lifeRegen = (int)(Player.lifeRegen * (1f - stats.DebuffDamageReduction));
         }
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
         {
             if (recoveryChargeDamageReduction > 0f)
                 modifiers.FinalDamage *= 1f - recoveryChargeDamageReduction;
+        }
+
+        private int GetMissingHealthRegenBonus(BFRecoveryLeftStats stats)
+        {
+            if (stats.LifeRegenPerMissingQuarter <= 0 || Player.statLifeMax2 <= 0)
+                return 0;
+
+            float lifeRatio = MathHelper.Clamp(Player.statLife / (float)Player.statLifeMax2, 0f, 1f);
+            int missingQuarters = Utils.Clamp((int)System.Math.Ceiling((1f - lifeRatio) * 4f), 0, 4);
+            return missingQuarters * stats.LifeRegenPerMissingQuarter;
+        }
+
+        private void RemoveOldestOwnedRecoveryFlash()
+        {
+            int flashType = ModContent.ProjectileType<BFRecoveryFlash>();
+            Projectile oldestFlash = null;
+            int lowestTimeLeft = int.MaxValue;
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != Player.whoAmI || projectile.type != flashType)
+                    continue;
+
+                if (projectile.timeLeft >= lowestTimeLeft)
+                    continue;
+
+                lowestTimeLeft = projectile.timeLeft;
+                oldestFlash = projectile;
+            }
+
+            oldestFlash?.Kill();
         }
 
         private bool IsHoldingRecoveryMode()
@@ -166,76 +180,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                 Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov;
         }
 
-        private static int CountActivePlayers()
-        {
-            int count = 0;
-            for (int i = 0; i < Main.maxPlayers; i++)
-            {
-                Player player = Main.player[i];
-                if (player.active && !player.dead)
-                    count++;
-            }
-
-            return System.Math.Max(1, count);
-        }
-
-        private static int GetMultiplayerAdjustedCooldown(int baseCooldown)
-        {
-            int activePlayers = CountActivePlayers();
-            return System.Math.Max(60, baseCooldown - (activePlayers - 1) * 30);
-        }
-
-        private void ApplyHealthBasedRegenFloor(BalanceBlossomFlux.RecoveryLeafStats stats)
-        {
-            if (!stats.MoonLordHealthRegenFloor && !stats.YharonHealthRegenFloor)
-                return;
-
-            float lifeRatio = Player.statLifeMax2 <= 0 ? 1f : Player.statLife / (float)Player.statLifeMax2;
-            if (lifeRatio <= 0.25f)
-                Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, stats.YharonHealthRegenFloor ? 4800 : 3600);
-            else if (lifeRatio <= 0.5f)
-                Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, stats.YharonHealthRegenFloor ? 2400 : 1800);
-            else if (lifeRatio <= 0.75f)
-                Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, stats.YharonHealthRegenFloor ? 1200 : 900);
-        }
-
-        private void ApplyRecoveryImmunities(BalanceBlossomFlux.RecoveryLeafStats stats)
-        {
-            if (stats.ImmunePoisonAndFire)
-            {
-                Player.buffImmune[BuffID.Poisoned] = true;
-                Player.buffImmune[BuffID.OnFire] = true;
-            }
-
-            if (stats.ImmuneVenom)
-                Player.buffImmune[BuffID.Venom] = true;
-
-            if (stats.ImmunePlague)
-                Player.buffImmune[ModContent.BuffType<Plague>()] = true;
-
-            if (!stats.BroadDebuffImmunity)
-                return;
-
-            Player.buffImmune[BuffID.Bleeding] = true;
-            Player.buffImmune[BuffID.Burning] = true;
-            Player.buffImmune[BuffID.CursedInferno] = true;
-            Player.buffImmune[BuffID.Frostburn] = true;
-            Player.buffImmune[BuffID.Ichor] = true;
-            Player.buffImmune[BuffID.OnFire] = true;
-            Player.buffImmune[BuffID.Poisoned] = true;
-            Player.buffImmune[BuffID.ShadowFlame] = true;
-            Player.buffImmune[BuffID.Venom] = true;
-            Player.buffImmune[ModContent.BuffType<AstralInfectionDebuff>()] = true;
-            Player.buffImmune[ModContent.BuffType<Dragonfire>()] = true;
-            Player.buffImmune[ModContent.BuffType<Irradiated>()] = true;
-            Player.buffImmune[ModContent.BuffType<Plague>()] = true;
-            Player.buffImmune[ModContent.BuffType<WhisperingDeath>()] = true;
-            Player.buffImmune[ModContent.BuffType<WitherDebuff>()] = true;
-        }
-
         private void EmitRecoveryParticles()
         {
-            if (Main.dedServ || Main.rand.NextBool(3))
+            if (!IsHoldingRecoveryMode() || Main.dedServ || Main.rand.NextBool(3))
                 return;
 
             Vector2 spawnPosition = Player.Center + Main.rand.NextVector2Circular(18f, 30f);

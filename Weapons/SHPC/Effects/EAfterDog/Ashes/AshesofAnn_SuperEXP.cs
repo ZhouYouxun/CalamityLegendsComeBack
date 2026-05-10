@@ -29,8 +29,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         }
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.SourceDamage.Base = target.lifeMax / 100f;
-            modifiers.SourceDamage *= 0f;
             modifiers.FlatBonusDamage += target.lifeMax / 100;
         }
         public override bool PreDraw(ref Color lightColor)

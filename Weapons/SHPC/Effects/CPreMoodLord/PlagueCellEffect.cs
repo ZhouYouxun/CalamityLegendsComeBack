@@ -25,6 +25,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override float SquishyLightParticleFactor => 1.55f;
         public override float ExplosionPulseFactor => 1.55f;
+        public override bool EnableDefaultSlowdown => false;
+
+        public override void OnSpawn(Projectile projectile, Player owner)
+        {
+            projectile.velocity *= 1.65f;
+            projectile.timeLeft = 390;
+            projectile.penetrate = 1;
+            projectile.localAI[0] = 0f;
+        }
 
         public override void AI(Projectile projectile, Player owner)
         {
@@ -37,16 +46,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             target.AddBuff(ModContent.BuffType<Plague>(), 180);
             target.AddBuff(BuffID.Venom, 180);
             target.AddBuff(BuffID.Poisoned, 180);
+            projectile.localAI[0] = 1f;
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.localAI[0] != 1f)
+                return;
+
             // ================= 大范围瘟疫爆炸伤害 =================
             int explosionIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<NewLegendSHPE>(),
+                ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPE>(),
                 projectile.damage,
                 projectile.knockBack,
                 projectile.owner

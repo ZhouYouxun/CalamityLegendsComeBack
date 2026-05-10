@@ -53,6 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             hitCountOnCurrentTarget[id] = 0;
             stickVisualTimer[id] = 0;
             orbitAngle[id] = Main.rand.NextFloat(MathHelper.TwoPi);
+
+            if (projectile.owner == Main.myPlayer)
+                SpawnOrReleaseOrbitGhosts(projectile);
         }
 
         // ================= AI =================
@@ -125,6 +128,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }, target.Center);
 
             Vector2 forward = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
+
+            if (projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    target.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<RuinousSoul_GhostExplosion>(),
+                    (int)(projectile.damage * 0.85f),
+                    projectile.knockBack,
+                    projectile.owner);
+            }
 
             // ===== 命中时：扇形 SquishyLightParticle（鬼白）=====
             for (int i = 0; i < 14; i++)
@@ -279,6 +294,62 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             hitCountOnCurrentTarget.Remove(id);
             stickVisualTimer.Remove(id);
             orbitAngle.Remove(id);
+        }
+
+        private static void SpawnOrReleaseOrbitGhosts(Projectile projectile)
+        {
+            int ghostType = ModContent.ProjectileType<RuinousSoul_OrbitGhost>();
+            int ownedGhosts = 0;
+
+            foreach (Projectile ghost in Main.ActiveProjectiles)
+            {
+                if (ghost.owner == projectile.owner && ghost.type == ghostType && ghost.ai[0] == 0f)
+                    ownedGhosts++;
+            }
+
+            if (ownedGhosts < RuinousSoul_OrbitGhost.ReleaseCap)
+            {
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    Main.player[projectile.owner].Center,
+                    Vector2.Zero,
+                    ghostType,
+                    (int)(projectile.damage * 0.35f),
+                    projectile.knockBack,
+                    projectile.owner,
+                    0f,
+                    -1f,
+                    Main.rand.NextFloat(MathHelper.TwoPi));
+                return;
+            }
+
+            int targetIndex = FindReleaseTarget(projectile);
+            foreach (Projectile ghost in Main.ActiveProjectiles)
+            {
+                if (ghost.owner == projectile.owner && ghost.type == ghostType && ghost.ModProjectile is RuinousSoul_OrbitGhost orbitGhost && ghost.ai[0] == 0f)
+                    orbitGhost.Release(targetIndex);
+            }
+        }
+
+        private static int FindReleaseTarget(Projectile projectile)
+        {
+            int targetIndex = -1;
+            float bestDistance = 1400f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(projectile))
+                    continue;
+
+                float distance = Vector2.Distance(Main.MouseWorld, npc.Center);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    targetIndex = npc.whoAmI;
+                }
+            }
+
+            return targetIndex;
         }
 
      

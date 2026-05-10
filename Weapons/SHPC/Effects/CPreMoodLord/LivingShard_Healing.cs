@@ -1,9 +1,10 @@
+using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using CalamityMod.Particles;
-using System;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 {
@@ -12,192 +13,236 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        // ===== 自定义计时器（禁止用localAI）=====
         private int timer;
+        private int retargetTimer;
+        private int targetPlayerIndex = -1;
 
         public override void SetDefaults()
         {
             Projectile.width = 20;
             Projectile.height = 20;
-
-            Projectile.friendly = false; // 不参与伤害
+            Projectile.friendly = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-
             Projectile.penetrate = -1;
-            Projectile.extraUpdates = 2;
+            Projectile.extraUpdates = 1;
             Projectile.timeLeft = 420;
         }
 
-        // ===== 永远不能造成伤害 =====
         public override bool? CanDamage() => false;
-        private int targetPlayerIndex = -1; // -1表示未锁定
+
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            AcquireTargetPlayer();
+
+            if (Projectile.velocity.Length() > 0.1f)
+            {
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * (Projectile.velocity.Length() * 0.5f);
+                return;
+            }
+
+            Player owner = Main.player[Projectile.owner];
+            Vector2 direction = owner.active && !owner.dead
+                ? (owner.Center - Projectile.Center).SafeNormalize(Vector2.UnitY)
+                : -Vector2.UnitY;
+            Projectile.velocity = direction * 4.5f;
+        }
+
         public override void AI()
         {
             timer++;
+            retargetTimer++;
 
-            Player player = Main.player[Projectile.owner];
+            if (!IsValidTarget(targetPlayerIndex) || retargetTimer >= 12)
+                AcquireTargetPlayer();
 
-            // ===== 追踪玩家 =====
-            if (timer > 10)
-            {
-                // ===== 只在第一次锁定目标 =====
-                if (targetPlayerIndex == -1)
-                {
-                    float lowestRatio = 1f;
+            Player target = Main.player[targetPlayerIndex];
+            Vector2 predictedCenter = target.Center + target.velocity * 8f;
+            Vector2 toTarget = predictedCenter - Projectile.Center;
+            float distance = toTarget.Length();
+            Vector2 desiredDirection = toTarget.SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY));
+            float windup = Utils.GetLerpValue(0f, 40f, timer, true);
+            float desiredSpeed = MathHelper.Lerp(9f, 26f, Utils.GetLerpValue(720f, 80f, distance, true));
+            desiredSpeed *= MathHelper.Lerp(0.55f, 1f, windup);
+            float turnRate = MathHelper.Lerp(0.08f, 0.34f, Utils.GetLerpValue(520f, 90f, distance, true));
 
-                    for (int i = 0; i < Main.maxPlayers; i++)
-                    {
-                        Player p = Main.player[i];
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * desiredSpeed, turnRate);
+            if (Projectile.velocity.Length() > 30f)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * 30f;
 
-                        if (!p.active || p.dead)
-                            continue;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Lighting.AddLight(Projectile.Center, new Color(115, 255, 150).ToVector3() * 0.75f);
 
-                        float ratio = (float)p.statLife / p.statLifeMax2;
+            if (distance < 28f || Projectile.Hitbox.Intersects(target.Hitbox))
+                Projectile.Kill();
 
-                        if (ratio < lowestRatio)
-                        {
-                            lowestRatio = ratio;
-                            targetPlayerIndex = i;
-                        }
-                    }
+            SpawnFlightEffects();
+        }
 
-                    // 兜底（防止全死）
-                    if (targetPlayerIndex == -1)
-                        targetPlayerIndex = Projectile.owner;
-                }
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = bloom.Size() * 0.5f;
+            float pulse = 0.82f + (float)System.Math.Sin(timer * 0.18f) * 0.12f;
 
-                Player target = Main.player[targetPlayerIndex];
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
 
-                Vector2 dir = (target.Center - Projectile.Center).SafeNormalize(Vector2.Zero);
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                new Color(90, 255, 130) * 0.36f,
+                0f,
+                origin,
+                0.42f * pulse,
+                SpriteEffects.None);
 
-                // 平滑追踪
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, dir * 20f, 0.08f);
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                Color.White * 0.16f,
+                0f,
+                origin,
+                0.18f * pulse,
+                SpriteEffects.None);
 
-                // ===== 碰到目标 → 自毁 =====
-                if (Projectile.Hitbox.Intersects(target.Hitbox))
-                {
-                    Projectile.Kill();
-                }
-            }
-
-            // ===== 视觉：持续绿色粒子 =====
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-
-            for (int i = 0; i < 1; i++)
-            {
-                float angle = Main.rand.NextFloat(-0.6f, 0.6f);
-
-                Vector2 velocity = forward.RotatedBy(angle) * Main.rand.NextFloat(1f, 4f);
-
-                float scale = Main.rand.NextFloat(0.6f, 1.2f);
-
-                Color particleColor = Color.Lerp(
-                    new Color(120, 255, 120),
-                    new Color(60, 200, 120),
-                    Main.rand.NextFloat()
-                );
-
-                int lifetime = Main.rand.Next(10, 20);
-
-                SquishyLightParticle particle = new(
-                    Projectile.Center,
-                    velocity,
-                    scale,
-                    particleColor,
-                    lifetime
-                );
-
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            return false;
         }
 
         public override void OnKill(int timeLeft)
         {
-            int healAmount = Main.rand.Next(2, 6);
+            int healAmount = 12;
             Player owner = Main.player[Projectile.owner];
-            owner.statLife += healAmount;
-            owner.HealEffect(healAmount);
+            Player healTarget = owner;
+
+            if (targetPlayerIndex >= 0 && targetPlayerIndex < Main.maxPlayers)
+            {
+                Player candidate = Main.player[targetPlayerIndex];
+                if (candidate.active && !candidate.dead)
+                    healTarget = candidate;
+            }
+
+            healTarget.statLife = System.Math.Min(healTarget.statLifeMax2, healTarget.statLife + healAmount);
+            healTarget.HealEffect(healAmount);
 
             Vector2 center = Projectile.Center;
 
-
-            // ================= 1.主圆环（放射爆散） =================
-            int count = 12;
-            float baseSpeedMin = 2f;
-            float baseSpeedMax = 5f;
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < 6; i++)
             {
-                float angle = MathHelper.TwoPi * i / count;
-
-                Vector2 dir = angle.ToRotationVector2();
-                Vector2 vel = dir * Main.rand.NextFloat(baseSpeedMin, baseSpeedMax);
-
+                Vector2 dir = (MathHelper.TwoPi * i / 6f).ToRotationVector2();
                 SquishyLightParticle particle = new(
                     center,
-                    vel,
-                    1.2f,
+                    dir * Main.rand.NextFloat(1.4f, 3.2f),
+                    0.65f,
                     Color.Lerp(Color.LimeGreen, Color.White, 0.3f),
-                    18
+                    14
                 );
 
                 GeneralParticleHandler.SpawnParticle(particle);
             }
 
-            // ================= 2.椭圆 Dust 环（X结构） =================
-            int dustCount = 24;
-
-            float longAxis = 70f;   // ⭐ 长轴（你可以改）
-            float shortAxis = 30f;  // ⭐ 短轴（你可以改）
-
-            float speed = 3f;       // ⭐ 外扩速度
-
-            for (int i = 0; i < dustCount; i++)
+            for (int i = 0; i < 12; i++)
             {
-                float t = MathHelper.TwoPi * i / dustCount;
-
-                // ===== 椭圆1 =====
-                Vector2 ellipse1 = new Vector2(
-                    (float)Math.Cos(t) * longAxis,
-                    (float)Math.Sin(t) * shortAxis
-                );
-
-                // ===== 椭圆2（旋转90°形成X）=====
-                Vector2 ellipse2 = ellipse1.RotatedBy(MathHelper.PiOver2);
-
-                // ===== 方向归一化（用于爆散）=====
-                Vector2 dir1 = ellipse1.SafeNormalize(Vector2.UnitY);
-                Vector2 dir2 = ellipse2.SafeNormalize(Vector2.UnitY);
-
-                Vector2 vel1 = dir1 * speed;
-                Vector2 vel2 = dir2 * speed;
-
-                // ===== Dust 1 =====
-                Dust d1 = Dust.NewDustPerfect(
-                    center + ellipse1,
+                float t = MathHelper.TwoPi * i / 12f;
+                Vector2 ellipse = new Vector2((float)System.Math.Cos(t) * 42f, (float)System.Math.Sin(t) * 18f);
+                Dust dust = Dust.NewDustPerfect(
+                    center + ellipse,
                     Main.rand.NextBool() ? 107 : 110,
-                    vel1,
+                    ellipse.SafeNormalize(Vector2.UnitY) * 1.6f,
                     120,
                     Main.rand.NextBool() ? Color.LightGreen : Color.LimeGreen,
-                    Main.rand.NextFloat(1.0f, 2.2f)
+                    Main.rand.NextFloat(0.75f, 1.15f)
                 );
-                d1.noGravity = true;
-
-                // ===== Dust 2 =====
-                Dust d2 = Dust.NewDustPerfect(
-                    center + ellipse2,
-                    Main.rand.NextBool() ? 107 : 110,
-                    vel2,
-                    120,
-                    Main.rand.NextBool() ? Color.LightGreen : Color.LimeGreen,
-                    Main.rand.NextFloat(1.0f, 2.2f)
-                );
-                d2.noGravity = true;
+                dust.noGravity = true;
             }
         }
 
+        private void SpawnFlightEffects()
+        {
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
 
+            if (Projectile.numUpdates == 0)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector2 spawnPosition = Projectile.Center - forward * Main.rand.NextFloat(4f, 14f) + side * Main.rand.NextFloat(-7f, 7f);
+                    Vector2 velocity = -forward.RotatedByRandom(0.42f) * Main.rand.NextFloat(0.7f, 2.8f) + side * Main.rand.NextFloat(-0.35f, 0.35f);
 
+                    SquishyLightParticle particle = new(
+                        spawnPosition,
+                        velocity,
+                        Main.rand.NextFloat(0.75f, 1.25f),
+                        Color.Lerp(new Color(130, 255, 145), Color.White, Main.rand.NextFloat(0.08f, 0.32f)),
+                        Main.rand.Next(16, 26),
+                        1f,
+                        Main.rand.NextFloat(1.1f, 1.65f));
+                    GeneralParticleHandler.SpawnParticle(particle);
+                }
+
+                for (int i = 0; i < 2; i++)
+                {
+                    Dust dust = Dust.NewDustPerfect(
+                        Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                        Main.rand.NextBool() ? 107 : DustID.GreenTorch,
+                        -forward * Main.rand.NextFloat(0.5f, 2.4f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                        80,
+                        Main.rand.NextBool() ? Color.LightGreen : new Color(80, 255, 130),
+                        Main.rand.NextFloat(1.0f, 1.65f));
+                    dust.noGravity = true;
+                    dust.fadeIn = Main.rand.NextFloat(0.3f, 0.7f);
+                }
+            }
+            else if (Main.rand.NextBool(2))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - forward * Main.rand.NextFloat(2f, 8f),
+                    DustID.GreenTorch,
+                    -forward * Main.rand.NextFloat(0.25f, 1.1f),
+                    100,
+                    new Color(100, 255, 130),
+                    Main.rand.NextFloat(0.75f, 1.1f));
+                dust.noGravity = true;
+            }
+        }
+
+        private bool IsValidTarget(int playerIndex)
+        {
+            if (playerIndex < 0 || playerIndex >= Main.maxPlayers)
+                return false;
+
+            Player player = Main.player[playerIndex];
+            return player.active && !player.dead;
+        }
+
+        private void AcquireTargetPlayer()
+        {
+            retargetTimer = 0;
+            float bestScore = float.MaxValue;
+            targetPlayerIndex = -1;
+
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player player = Main.player[i];
+                if (!player.active || player.dead)
+                    continue;
+
+                float ratio = (float)player.statLife / player.statLifeMax2;
+                float distanceFactor = Projectile.Distance(player.Center) / 2400f;
+                float score = ratio + distanceFactor * 0.18f;
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    targetPlayerIndex = i;
+                }
+            }
+
+            if (targetPlayerIndex == -1)
+                targetPlayerIndex = Projectile.owner;
+        }
     }
 }

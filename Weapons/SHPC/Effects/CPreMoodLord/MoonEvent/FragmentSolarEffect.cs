@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
@@ -20,60 +21,69 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override Color EndColor => new Color(180, 60, 20);
         public override float SquishyLightParticleFactor => 1.55f;
         public override float ExplosionPulseFactor => 1.55f;
+        public override bool EnableDefaultSlowdown => false;
 
         private int shootTimer;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             shootTimer = 0;
-            projectile.timeLeft = 50;
-            projectile.velocity *= 0.3f;
+            projectile.timeLeft = 120;
+            projectile.velocity *= 1.8f;
+            projectile.penetrate = 1;
+            projectile.localAI[0] = 0f;
+            projectile.localAI[1] = -1f;
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
             shootTimer++;
-
-            if (projectile.timeLeft > 21)
-            {
-                projectile.velocity *= 1.02f;
-            }
-            else
-            {
-                projectile.velocity *= 0.99f;
-
-                if (shootTimer % 3 == 0)
-                {
-                    float[] angles = { -12f, -8f, -4f, 0f, 4f, 8f, 12f };
-
-                    int index = (21 - projectile.timeLeft) / 3;
-                    if (index >= 0 && index < angles.Length)
-                    {
-                        Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-                        Vector2 shootVelocity = forward.RotatedBy(MathHelper.ToRadians(angles[index])) * 16f;
-
-                        Projectile.NewProjectile(
-                            projectile.GetSource_FromThis(),
-                            projectile.Center,
-                            shootVelocity,
-                            ModContent.ProjectileType<FragmentSolar_Spear>(),
-                            (int)(projectile.damage * 0.7f),
-                            projectile.knockBack,
-                            projectile.owner
-                        );
-                    }
-                }
-            }
+            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.45f);
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            projectile.localAI[0] = 1f;
+            projectile.localAI[1] = target.whoAmI;
+            projectile.Kill();
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 center = projectile.Center;
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            if (projectile.localAI[0] != 1f)
+                return;
+
+            if (projectile.localAI[1] >= 0f && projectile.localAI[1] < Main.maxNPCs)
+            {
+                NPC target = Main.npc[(int)projectile.localAI[1]];
+                if (target.active)
+                    center = target.Center;
+            }
+
+            if (projectile.owner == Main.myPlayer)
+            {
+                int explosionIndex = Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<NewLegendSHPE>(),
+                    projectile.damage,
+                    projectile.knockBack,
+                    projectile.owner);
+
+                if (Main.projectile.IndexInRange(explosionIndex))
+                {
+                    Projectile explosion = Main.projectile[explosionIndex];
+                    explosion.width = 320;
+                    explosion.height = 320;
+                    explosion.Center = center;
+                }
+
+                SpawnDawnbreakerSpears(projectile, center);
+            }
 
             SoundEngine.PlaySound(SoundID.Item14 with
             {
@@ -90,8 +100,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     "CalamityMod/Particles/BloomCircle",
                     Vector2.One,
                     Main.rand.NextFloat(-8f, 8f),
-                    1.1f + i * 0.45f,
-                    0.55f + i * 0.18f,
+                    0.52f + i * 0.2f,
+                    0.28f + i * 0.08f,
                     24 - i * 2,
                     true);
                 GeneralParticleHandler.SpawnParticle(outerPulse);
@@ -153,6 +163,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     Color.Lerp(new Color(255, 230, 145), new Color(255, 105, 25), Main.rand.NextFloat()),
                     Main.rand.NextFloat(0.95f, 1.45f));
                 fire.noGravity = true;
+            }
+        }
+
+        private void SpawnDawnbreakerSpears(Projectile projectile, Vector2 center)
+        {
+            for (int i = 0; i < 7; i++)
+            {
+                float angle = MathHelper.ToRadians(MathHelper.Lerp(-15f, 15f, i / 6f) + Main.rand.NextFloat(-2f, 2f));
+                Vector2 direction = Vector2.UnitY.RotatedBy(angle);
+                Vector2 spawnPos = center - direction * Main.rand.NextFloat(520f, 720f) + direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-70f, 70f);
+                Vector2 velocity = direction * Main.rand.NextFloat(17f, 22f);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    spawnPos,
+                    velocity,
+                    ModContent.ProjectileType<FragmentSolar_Spear>(),
+                    (int)(projectile.damage * 0.65f),
+                    projectile.knockBack,
+                    projectile.owner
+                );
             }
         }
     }

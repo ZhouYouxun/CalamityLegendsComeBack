@@ -433,7 +433,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             // ===== 初次锁定 =====
             if (!hasTarget5)
             {
-                float dist = 800f;
+                float dist = Projectile.ai[2] == 3f ? 1600f : 800f;
                 int index = -1;
 
                 foreach (NPC n in Main.npc)
@@ -461,13 +461,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             {
                 Vector2 desiredDir = (target5.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
 
+                bool sightBurstPreset = Projectile.ai[2] == 3f;
+                float loosen = sightBurstPreset ? Utils.GetLerpValue(0f, 90f, timer, true) : 0f;
+                float closeTargetBoost = sightBurstPreset ? Utils.GetLerpValue(180f, 34f, Projectile.Distance(target5.Center), true) : 0f;
+
+                float targetSpeed = sightBurstPreset ? MathHelper.Lerp(24f, 30f, loosen) : 20f * 1.25f;
+                float inertia = sightBurstPreset ? MathHelper.Lerp(11f, 2f, MathHelper.Max(loosen, closeTargetBoost)) : 17f;
+
                 Projectile.velocity = (
-                    Projectile.velocity * 17f +
-                    desiredDir * (20f * 1.25f)
-                ) / 18f;
+                    Projectile.velocity * inertia +
+                    desiredDir * targetSpeed
+                ) / (inertia + 1f);
 
                 float speed = Projectile.velocity.Length();
-                speed = MathHelper.Lerp(speed, 14f, 0.08f);
+                float targetFinalSpeed = sightBurstPreset ? MathHelper.Lerp(20f, 28f, loosen) : 14f;
+                float speedCorrection = sightBurstPreset ? MathHelper.Lerp(0.12f, 0.34f, MathHelper.Max(loosen, closeTargetBoost)) : 0.08f;
+                speed = MathHelper.Lerp(speed, targetFinalSpeed, speedCorrection);
                 Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
             }
             else

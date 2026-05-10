@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 projectile.GetSource_FromThis(),
                 projectile.Center,
                 spawnVelocity,
-                ModContent.ProjectileType<EndothermicEnergy_Copy>(),
+                ModContent.ProjectileType<EndothermicEnergy_LN2>(),
                 projectile.damage,
                 projectile.knockBack,
                 owner.whoAmI

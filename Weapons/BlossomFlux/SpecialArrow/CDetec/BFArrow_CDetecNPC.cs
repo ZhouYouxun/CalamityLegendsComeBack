@@ -40,6 +40,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public bool IsPriorityMarkedBy(int owner) => BFArrowCommon.InBounds(owner, Main.maxPlayers) && priorityTimers[owner] > 0;
 
+        public int MultiplyCurrentMarkTime(int owner, float multiplier)
+        {
+            if (!BFArrowCommon.InBounds(owner, Main.maxPlayers) || multiplier <= 1f)
+                return 0;
+
+            if (markTimers[owner] <= 0 && priorityTimers[owner] <= 0)
+                return 0;
+
+            if (markTimers[owner] > 0)
+                markTimers[owner] = System.Math.Max(markTimers[owner], (int)System.Math.Ceiling(markTimers[owner] * multiplier));
+
+            if (priorityTimers[owner] > 0)
+                priorityTimers[owner] = System.Math.Max(priorityTimers[owner], (int)System.Math.Ceiling(priorityTimers[owner] * multiplier));
+
+            return System.Math.Max(markTimers[owner], priorityTimers[owner]);
+        }
+
         public bool ApplyDamageAmpMark(int owner, int timeLeft)
         {
             bool isNewMark = ApplyMark(owner, timeLeft);

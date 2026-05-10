@@ -55,6 +55,24 @@ Mods: {
 		Projectiles: {
 			BrinyBaron.SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
 			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+
+			SHPC: {
+				BloodstoneCore_BloodOrb.DisplayName: Bloodstone Core_ Blood Orb
+				RuinousSoul_GhostExplosion.DisplayName: Ruinous Soul_ Ghost Explosion
+				RuinousSoul_OrbitGhost.DisplayName: Ruinous Soul_ Orbit Ghost
+				Necroplasm_Orb.DisplayName: Necroplasm_ Orb
+				FragmentNebula_Star.DisplayName: Fragment Nebula_ Star
+				EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
+				EndothermicEnergy_LN2.DisplayName: Endothermic Energy_ L N2
+				FragmentEntropy_CosmicFire.DisplayName: Fragment Entropy_ Cosmic Fire
+			}
+
+			ChangedWeapons: {
+				EAfterDog: {
+					EndlessDevourJavBlackHole.DisplayName: Endless Devour Jav Black Hole
+					EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
+				}
+			}
 		}
 	}
 }

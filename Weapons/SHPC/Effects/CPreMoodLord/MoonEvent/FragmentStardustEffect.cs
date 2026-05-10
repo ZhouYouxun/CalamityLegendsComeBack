@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         public override float SquishyLightParticleFactor => 1.55f;
         public override float ExplosionPulseFactor => 1.55f;
+        public override bool EnableDefaultSlowdown => false;
 
         // ===== 状态 =====
         private int splitDepth;
@@ -35,6 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             if (!initialized)
             {
                 projectile.timeLeft = 150;
+                projectile.velocity *= 1.9f;
                 initialized = true;
 
                 splitDepth = (int)projectile.ai[0];
@@ -45,6 +47,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void AI(Projectile projectile, Player owner)
         {
             splitDepth = (int)projectile.ai[0];
+            projectile.localAI[0] += projectile.velocity.Length();
+            if (projectile.localAI[0] >= 150f * 16f)
+                projectile.Kill();
 
             // ❌ 删除额外减速（避免停住被爆炸机制干掉）
 
@@ -86,9 +91,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 baseDir = Main.rand.NextVector2Unit();
+            if (FragmentStardust_Cell.ActiveCellCount() >= FragmentStardust_Cell.MaxActiveCells)
+                return;
 
             for (int i = 0; i < 2; i++)
             {
+                if (FragmentStardust_Cell.ActiveCellCount() >= FragmentStardust_Cell.MaxActiveCells)
+                    break;
+
                 Vector2 dir = baseDir.RotatedBy(MathHelper.Pi * i);
                 Vector2 velocity = dir * Main.rand.NextFloat(2f, 4f);
 
@@ -99,21 +109,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     ModContent.ProjectileType<FragmentStardust_Cell>(),
                     (int)(projectile.damage * 0.5f),
                     projectile.knockBack,
-                    projectile.owner
+                    projectile.owner,
+                    0f
                 );
-
-                //if (Main.projectile.IndexInRange(projID))
-                //{
-                //    Projectile child = Main.projectile[projID];
-
-                //    int nextDepth = splitDepth + 1;
-
-                //    // ===== 传递层级（必须！）=====
-                //    child.ai[0] = nextDepth;
-
-                //    // ===== 生命周期用 nextDepth =====
-                //    child.timeLeft = Math.Max(40, 100 - nextDepth * 12);
-                //}
             }
         }
 

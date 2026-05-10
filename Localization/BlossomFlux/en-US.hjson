@@ -157,6 +157,8 @@ Mods: {
 				BFLeftPlagueReaper.DisplayName: B F Left Plague Reaper
 				BFRecoveryFlash.DisplayName: B F Recovery Flash
 				BFArrow_DBombVisual.DisplayName: B F Arrow_ D Bomb Visual
+				BFEXConvergingLeaf.DisplayName: B F E X Converging Leaf
+				BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
 			}
 
 			Ranged.BFAimScope.DisplayName: BlossomFlux Aim Scope

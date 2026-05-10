@@ -33,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private float storedAmmoSpeed = 14f;
         private float storedAmmoKnockback = 2f;
         private float explosionSize = 190f;
+        private float skyRainMultiplier = 1f;
         private Vector2 stickOffset;
         private Vector2 targetPoint;
         private Vector2 groundAnchorPoint;
@@ -84,10 +85,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             return new Vector2(horizontalSpeed, -verticalSpeed);
         }
 
-        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f)
+        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f, float rainMultiplier = 1f)
         {
             targetPoint = bombardTarget;
             explosionSize = MathHelper.Clamp(strikeExplosionSize, 96f, 720f);
+            skyRainMultiplier = MathHelper.Clamp(rainMultiplier, 1f, 3f);
             float desiredSpeed = Projectile.velocity.Length();
             if (desiredSpeed <= 0.01f)
                 desiredSpeed = 18f;
@@ -116,6 +118,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             writer.Write(storedAmmoSpeed);
             writer.Write(storedAmmoKnockback);
             writer.Write(explosionSize);
+            writer.Write(skyRainMultiplier);
             writer.Write(passedBombardTarget);
             writer.Write(detonated);
         }
@@ -131,6 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             storedAmmoSpeed = reader.ReadSingle();
             storedAmmoKnockback = reader.ReadSingle();
             explosionSize = reader.ReadSingle();
+            skyRainMultiplier = reader.ReadSingle();
             passedBombardTarget = reader.ReadBoolean();
             detonated = reader.ReadBoolean();
         }
@@ -208,7 +212,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (!InFlight)
                 return;
 
-            DetonateBombardStrike(target.Center, target);
+            DetonateBombardStrike(Projectile.Center, target);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -280,8 +284,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.friendly = false;
             Projectile.velocity = Vector2.Zero;
             Projectile.Center = center;
-            Projectile.timeLeft = 2;
+            Projectile.timeLeft = BombardDuration;
             Projectile.tileCollide = false;
+            rainCounter = 0;
+
+            if (directTarget != null && directTarget.active && !directTarget.dontTakeDamage)
+            {
+                State = AttachedNpcState;
+                AttachedNpcIndex = directTarget.whoAmI;
+                stickOffset = center - directTarget.Center;
+                Projectile.Center = directTarget.Center + stickOffset;
+            }
+            else
+            {
+                State = GroundAnchorState;
+                AttachedNpcIndex = -1f;
+                groundAnchorPoint = center;
+            }
+
             Projectile.netUpdate = true;
 
             if (Projectile.owner == Main.myPlayer)
@@ -434,7 +454,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            for (int i = 0; i < 2; i++)
+            int rainCount = Math.Max(1, (int)Math.Round(2f * skyRainMultiplier));
+            for (int i = 0; i < rainCount; i++)
             {
                 Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-180f, 180f), -920f - Main.rand.NextFloat(0f, 220f));
                 Vector2 targetPosition = center + Main.rand.NextVector2Circular(46f, 28f);

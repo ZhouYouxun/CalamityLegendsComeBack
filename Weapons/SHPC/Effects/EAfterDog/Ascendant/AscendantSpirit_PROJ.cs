@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Ascendant/AscendantSpirit_PROJ";
 
         private const float DefaultLaunchDelayFrames = 14f;
+        private const float RetargetIntervalFrames = 8f;
         private const float LaunchSpeed = 20.5f;
         private const float CollisionRadius = 5.5f;
 
@@ -109,10 +110,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             if (initializedNeedle)
                 return;
 
-            initialDirection = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             targetPoint = Projectile.ai[0] != 0f || Projectile.ai[1] != 0f
                 ? new Vector2(Projectile.ai[0], Projectile.ai[1])
-                : Projectile.Center + initialDirection * 540f;
+                : Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitY) * 540f;
+
+            initialDirection = Projectile.velocity.SafeNormalize((targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitY));
 
             launchDelay = Projectile.ai[2] > 0f
                 ? Projectile.ai[2]
@@ -144,6 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         {
             float chargeCompletion = Utils.GetLerpValue(0f, launchDelay, timer, true);
             float chargePower = (float)Math.Pow(chargeCompletion, 2.2f);
+            RefreshTargetPointFromMouse(timer >= launchDelay - 1f);
             Vector2 aimDirection = (targetPoint - Projectile.Center).SafeNormalize(initialDirection);
 
             Projectile.velocity *= MathHelper.Lerp(0.955f, 0.86f, chargeCompletion);
@@ -155,6 +158,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
             if (timer >= launchDelay)
                 LaunchAtTarget(aimDirection);
+        }
+
+        private void RefreshTargetPointFromMouse(bool force)
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int retargetInterval = Math.Max(1, (int)(RetargetIntervalFrames * (Projectile.extraUpdates + 1f)));
+            if (!force && (int)timer % retargetInterval != 0)
+                return;
+
+            Vector2 mousePosition = Main.MouseWorld;
+            if (float.IsNaN(mousePosition.X) || float.IsNaN(mousePosition.Y))
+                return;
+
+            if (Vector2.Distance(mousePosition, Projectile.Center) < 24f)
+                mousePosition = Projectile.Center + initialDirection * 540f;
+
+            if (Vector2.DistanceSquared(mousePosition, targetPoint) < 4f)
+                return;
+
+            targetPoint = mousePosition;
+            Projectile.ai[0] = targetPoint.X;
+            Projectile.ai[1] = targetPoint.Y;
+            Projectile.netUpdate = true;
         }
 
         private void LaunchAtTarget(Vector2 direction)

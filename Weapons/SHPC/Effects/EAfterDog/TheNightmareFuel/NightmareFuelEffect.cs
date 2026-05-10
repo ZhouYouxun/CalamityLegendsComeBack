@@ -9,7 +9,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
     internal class NightmareFuelEffect : DefaultEffect
     {
         public override int EffectID => 35;
-
         public override int AmmoType => ModContent.ItemType<NightmareFuel>();
 
         public override Color ThemeColor => new Color(200, 140, 40);
@@ -19,35 +18,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
 
-        // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            var gp = projectile.GetGlobalProjectile<NightmareFuel_GP>();
-
-            // 标记第一帧
-            gp.firstFrame = true;
+            projectile.GetGlobalProjectile<NightmareFuel_GP>().firstFrame = true;
         }
 
-        // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
-            var gp = projectile.GetGlobalProjectile<NightmareFuel_GP>();
-
-            // 第一帧直接自杀
-            if (gp.firstFrame)
-            {
-                gp.firstFrame = false;
-                projectile.Kill();
+            NightmareFuel_GP gp = projectile.GetGlobalProjectile<NightmareFuel_GP>();
+            if (!gp.firstFrame)
                 return;
-            }
+
+            gp.firstFrame = false;
+            projectile.Kill();
         }
 
-        // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * 12f;
-
-            // 中间直线
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
@@ -56,34 +44,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                 projectile.damage,
                 projectile.knockBack,
                 owner.whoAmI,
-                projectile.ai[0], // ✅ 继承EffectID
+                projectile.ai[0],
                 0f
-            );
-
-            // 左弧
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                baseVelocity.RotatedBy(-0.23f),
-                ModContent.ProjectileType<NightmareFuel_ARC>(),
-                projectile.damage,
-                projectile.knockBack,
-                owner.whoAmI,
-                projectile.ai[0], // ✅ 继承EffectID
-                -1f
-            );
-
-            // 右弧
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                baseVelocity.RotatedBy(0.23f),
-                ModContent.ProjectileType<NightmareFuel_ARC>(),
-                projectile.damage,
-                projectile.knockBack,
-                owner.whoAmI,
-                projectile.ai[0], // ✅ 继承EffectID
-                1f
             );
         }
 
@@ -96,7 +58,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
         }
     }
 
-    // ================= 独立实例数据 =================
     public class NightmareFuel_GP : GlobalProjectile
     {
         public new string LocalizationCategory => "Projectiles.SHPC";

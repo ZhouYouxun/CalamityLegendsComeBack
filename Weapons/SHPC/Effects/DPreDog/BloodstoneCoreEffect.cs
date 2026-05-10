@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override float SquishyLightParticleFactor => 0.85f;
         public override float ExplosionPulseFactor => 1.05f;
+        public override bool EnableDefaultSlowdown => false;
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
@@ -28,16 +29,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
             data.empowered = false;
             data.linkedPlayerIndex = -1;
+            projectile.velocity *= 1.85f;
+            projectile.timeLeft = 360;
 
             Player targetPlayer = FindClosestValidPlayer(projectile.Center, 45f * 16f);
             if (targetPlayer != null)
             {
                 int lifeThreshold = (int)(targetPlayer.statLifeMax2 * 0.5f);
 
-                if (targetPlayer.statLife > lifeThreshold && targetPlayer.statLife > 66)
+                if (targetPlayer.statLife > lifeThreshold && targetPlayer.statLife > 10)
                 {
-                    targetPlayer.statLife -= 66;
-                    CombatText.NewText(targetPlayer.Hitbox, Color.Red, 66, true, false);
+                    targetPlayer.statLife -= 10;
+                    CombatText.NewText(targetPlayer.Hitbox, Color.Red, 10, true, false);
 
                     data.empowered = true;
                     data.linkedPlayerIndex = targetPlayer.whoAmI;
@@ -115,7 +118,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 projectile.GetSource_FromThis(),
                 projectile.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<NewLegendSHPE>(),
+                ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPE>(),
                 explosionDamage,
                 projectile.knockBack,
                 projectile.owner
@@ -125,6 +128,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             int radius = empowered ? 260 : 90;
             proj.width = radius;
             proj.height = radius;
+            SpawnBloodOrbs(projectile, target.Center, empowered);
 
             // ================= 统计范围内敌人数量 =================
             int enemyCount = 0;
@@ -165,6 +169,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 }
 
                 // ================= 应用回血 =================
+                healAmount = enemyCount <= 1
+                    ? 20
+                    : enemyCount == 2
+                        ? 40
+                        : enemyCount == 3
+                            ? 60
+                            : 60 + (enemyCount - 3) * 28;
+
                 owner.statLife += healAmount;
                 if (owner.statLife > owner.statLifeMax2)
                     owner.statLife = owner.statLifeMax2;
@@ -332,6 +344,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
 
             return closest;
+        }
+
+        private void SpawnBloodOrbs(Projectile projectile, Vector2 center, bool empowered)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            int count = empowered ? 8 : 5;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, empowered ? 10f : 8f);
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    center + Main.rand.NextVector2Circular(12f, 12f),
+                    velocity,
+                    ModContent.ProjectileType<BloodstoneCore_BloodOrb>(),
+                    (int)(projectile.damage * 0.35f),
+                    projectile.knockBack * 0.35f,
+                    projectile.owner);
+            }
         }
 
         private void CreateBloodLink(Vector2 start, Vector2 end)

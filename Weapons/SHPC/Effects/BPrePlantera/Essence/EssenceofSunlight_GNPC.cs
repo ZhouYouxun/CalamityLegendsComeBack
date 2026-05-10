@@ -1,7 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+using CalamityMod.Particles;
+using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
-using CalamityMod.Particles;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
@@ -9,30 +10,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
     {
         public override bool InstancePerEntity => true;
 
-        public bool marked;
-        public int timer;
-        public int owner;
+        private readonly List<SunlightMark> marks = new();
 
-        public override void ResetEffects(NPC npc)
+        private sealed class SunlightMark
         {
-            // 不在这里清marked，保持状态
+            public int Owner;
+            public int Damage;
+            public int Timer;
+            public int NextStrike = 60;
+        }
+
+        public void AddMark(int owner, int damage)
+        {
+            marks.Add(new SunlightMark
+            {
+                Owner = owner,
+                Damage = damage,
+                Timer = 0,
+                NextStrike = 60
+            });
         }
 
         public override void AI(NPC npc)
         {
-            if (!marked)
+            if (marks.Count <= 0)
                 return;
-
-            timer++;
 
             Vector2 headPos = npc.Center + new Vector2(0f, -npc.height * 0.01f);
 
-            // ===== 垂直上升 Spark =====
             for (int i = 0; i < 3; i++)
             {
                 Particle trail = new SparkParticle(
                     headPos + new Vector2(Main.rand.NextFloat(-20f, 20f), 0f),
-                    new Vector2(0f, Main.rand.NextFloat(-6f, -3f)), // 严格向上
+                    new Vector2(0f, Main.rand.NextFloat(-6f, -3f)),
                     false,
                     40,
                     Main.rand.NextFloat(0.8f, 1.2f),
@@ -41,8 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 GeneralParticleHandler.SpawnParticle(trail);
             }
 
-            // ===== GlowSpark（更亮的）=====
-            if (timer % 2 == 0)
+            if (Main.GameUpdateCount % 2 == 0)
             {
                 Particle glow = new GlowSparkParticle(
                     headPos + new Vector2(Main.rand.NextFloat(-16f, 16f), 0f),
@@ -59,30 +68,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 GeneralParticleHandler.SpawnParticle(glow);
             }
 
-            // ===== 3秒触发 =====
-            if (timer >= 180)
+            for (int i = marks.Count - 1; i >= 0; i--)
             {
-                Vector2 spawnPos = npc.Center + new Vector2(0f, -16f * 16f);
+                SunlightMark mark = marks[i];
+                mark.Timer++;
 
+                if (mark.Timer >= mark.NextStrike && mark.NextStrike <= 180)
+                {
+                    Vector2 spawnPos = npc.Center + new Vector2(Main.rand.NextFloat(-3f, 3f) * 16f, -16f * 16f);
 
-                Projectile.NewProjectile(
-                    npc.GetSource_FromThis(),
-                    spawnPos,
-                    new Vector2(0f, 16f),
-                    ModContent.ProjectileType<EssenceofSunlight_Lighting>(),
-                    50,
-                    0f,
-                    owner
-                );
+                    Projectile.NewProjectile(
+                        npc.GetSource_FromThis(),
+                        spawnPos,
+                        new Vector2(0f, 16f),
+                        ModContent.ProjectileType<EssenceofSunlight_Lighting>(),
+                        mark.Damage,
+                        0f,
+                        mark.Owner
+                    );
 
-                marked = false;
+                    mark.NextStrike += 60;
+                }
+
+                if (mark.Timer >= 180)
+                    marks.RemoveAt(i);
             }
         }
-
-
-
-
-
-
     }
 }

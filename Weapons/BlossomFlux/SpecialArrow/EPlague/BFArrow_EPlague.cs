@@ -1,4 +1,6 @@
+using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -142,9 +144,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.netUpdate = true;
 
             BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
+            bool markedTarget = target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner);
             pollution.ApplyPermanentSpore(target);
-            pollution.ApplyPlagueDebuffs(target, target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner));
-            pollution.ApplyPollution(target, target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner));
+            ExtendReconMark(target);
+            pollution.ApplyPlagueDebuffs(target, markedTarget);
+            pollution.ApplyPollution(target, markedTarget);
             target.AddBuff(BuffID.Poisoned, 180);
             target.AddBuff(BuffID.Venom, 120);
             Main.player[Projectile.owner].SetScreenshake(6.5f);
@@ -153,6 +157,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             SpawnPlagueAnchorFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.38f, Pitch = 0.1f }, target.Center);
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.36f, Pitch = -0.24f }, target.Center);
+        }
+
+        private void ExtendReconMark(NPC target)
+        {
+            if (!BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                return;
+
+            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
+            if (stats.MarkDurationMultiplier <= 1f)
+                return;
+
+            BFArrow_CDetecNPC reconMark = target.GetGlobalNPC<BFArrow_CDetecNPC>();
+            int newTime = reconMark.MultiplyCurrentMarkTime(Projectile.owner, stats.MarkDurationMultiplier);
+            if (newTime <= 0)
+                return;
+
+            Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, newTime);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)

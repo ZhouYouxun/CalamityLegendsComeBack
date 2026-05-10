@@ -84,6 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
 
                 if (trackedHoldout.ModProjectile is NewLegendBlossomFluxHoldOut holdout)
                 {
+                    MaxChargeOrTargetRotation = holdout.GetAimScopeMaxChargeFrames();
                     scopeDirection = holdout.GetAimScopeDirection();
                     scopeCenter = holdout.GetAimScopeCenter(scopeDirection);
                     sparkOrigin = holdout.GetAimScopeSparkOrigin(scopeDirection);

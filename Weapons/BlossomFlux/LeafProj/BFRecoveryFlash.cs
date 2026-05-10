@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -80,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     target.statLife += heal;
                     target.HealEffect(heal, true);
                     if (!IsPure)
-                        target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(5 * 60);
+                        target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);
                 }
             }
 

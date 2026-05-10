@@ -29,8 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         public float RightHoldProgress => MathHelper.Clamp(rightPressFrames / (float)TapThresholdFrames, 0f, 1f);
         public bool ShowRightHoldBar => trackingRightPress && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool LongHoldActive => trackingRightPress && rightPressFrames > TapThresholdFrames;
-        public bool PassiveRainUnlocked => Main.hardMode;
-        public bool UltimateUnlocked => NPC.downedQueenBee;
+        public bool PassiveRainUnlocked => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh);
+        public bool UltimateUnlocked => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee);
         public int UnlockedPresetCount
         {
             get
@@ -142,10 +142,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             return preset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => true,
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => NPC.downedQueenBee,
-                BlossomFluxChloroplastPresetType.Chlo_CDetec => Main.hardMode,
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => NPC.downedMechBoss3,
-                BlossomFluxChloroplastPresetType.Chlo_EPlague => DownedBossSystem.downedPlaguebringer,
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee),
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh),
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss),
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath),
                 _ => false
             };
         }

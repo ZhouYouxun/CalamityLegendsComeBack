@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -33,7 +34,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         // ===== 射击逻辑 =====
         private int shootTimer;
-        private int shootDelay;
 
         public override void SetStaticDefaults()
         {
@@ -45,15 +45,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void SetDefaults()
         {
-            Projectile.width = 200;
-            Projectile.height = 200;
+            Projectile.width = 140;
+            Projectile.height = 140;
             Projectile.hostile = false;
             Projectile.friendly = false;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.hide = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 200;
+            Projectile.timeLeft = 100;
             Projectile.Opacity = 0f;
         }
 
@@ -62,8 +62,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             lifeTimer++;
 
             // ===== 淡入淡出（完全照搬）=====
-            int fadeInTime = 30;
-            int fadeOutTime = 30;
+            int fadeInTime = 15;
+            int fadeOutTime = 15;
 
             if (lifeTimer <= fadeInTime)
                 Projectile.Opacity = lifeTimer / (float)fadeInTime;
@@ -74,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             // ===== 呼吸 =====
             float pulsate = 1f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 2f);
-            Projectile.scale = 0.6f * pulsate;
+            Projectile.scale = 0.42f * pulsate;
 
             // ===== 自转 =====
             Projectile.rotation += 0.03f;
@@ -176,31 +176,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             // ===== 发射逻辑（保留你的）=====
             shootTimer++;
 
-            if (shootDelay == 0)
-                shootDelay = Main.rand.Next(8, 19);
+            float shootProgress = Utils.GetLerpValue(0f, 100f, lifeTimer, true);
+            int currentDelay = (int)MathHelper.Lerp(18f, 4f, shootProgress);
 
-            if (shootTimer >= shootDelay)
+            if (shootTimer >= currentDelay && Projectile.owner == Main.myPlayer)
             {
                 shootTimer = 0;
-                shootDelay = Main.rand.Next(8, 19);
-
-                Vector2 direction = Projectile.ai[0].ToRotationVector2();
 
                 float radius = 2f * 16f;
                 Vector2 offset = Main.rand.NextVector2CircularEdge(radius, radius);
-
                 Vector2 spawnPos = Projectile.Center + offset;
+                Vector2 direction = GetRandomSoulDirection(spawnPos);
+                float speed = Main.rand.NextFloat(7.5f, 12.5f) + shootProgress * 3f;
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPos,
-                    direction * 6f,
+                    direction * speed,
                     ModContent.ProjectileType<AshesofCalamity_Soul>(),
-                    Projectile.damage,
+                    (int)(Projectile.damage * 0.75f),
                     0f,
-                    Projectile.owner
+                    Projectile.owner,
+                    0f
                 );
             }
+        }
+
+        private Vector2 GetRandomSoulDirection(Vector2 spawnPos)
+        {
+            NPC target = spawnPos.ClosestNPCAt(720f);
+
+            if (target != null && Main.rand.NextBool(3))
+                return (target.Center - spawnPos).SafeNormalize(Main.rand.NextVector2Unit());
+
+            return Main.rand.NextVector2Unit();
         }
 
         public override bool PreDraw(ref Color lightColor)

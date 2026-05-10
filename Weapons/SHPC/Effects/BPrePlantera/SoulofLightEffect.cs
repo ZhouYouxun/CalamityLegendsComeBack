@@ -27,8 +27,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             projectile.tileCollide = false;
             projectile.penetrate = 1;
 
-            // ===== 初速度提升 =====
-            projectile.velocity *= 1.1f;
+            // ===== 主弹幕大幅提速 =====
+            projectile.velocity *= 2.1f;
 
             // ===== 生成3个伴随弹幕 =====
             for (int i = 0; i < 3; i++)
@@ -49,18 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void AI(Projectile projectile, Player owner)
         {
-            // ===== 屏幕反弹 =====
-            Rectangle screenRect = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
-            Vector2 screenPosition = projectile.Center - Main.screenPosition;
-
-            if (!screenRect.Contains(screenPosition.ToPoint()))
-            {
-                if (screenPosition.X <= 0 || screenPosition.X >= Main.screenWidth)
-                    projectile.velocity.X *= -1;
-
-                if (screenPosition.Y <= 0 || screenPosition.Y >= Main.screenHeight)
-                    projectile.velocity.Y *= -1;
-            }
+            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.55f);
         }
 
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers) { }

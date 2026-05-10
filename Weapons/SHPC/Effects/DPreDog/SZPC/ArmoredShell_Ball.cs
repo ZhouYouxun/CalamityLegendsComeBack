@@ -118,7 +118,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void OnKill(int timeLeft)
         {
             Vector2 inwardDirection = InwardDirection;
-            SpawnDeathFanFX(inwardDirection);
+            Vector2 shotDirection = FindMouseNearestTargetDirection(inwardDirection);
+            SpawnDeathFanFX(shotDirection);
 
             if (Projectile.owner != Main.myPlayer)
                 return;
@@ -126,7 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile lightning = Projectile.NewProjectileDirect(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
-                inwardDirection * VolterionShotSpeed,
+                shotDirection * VolterionShotSpeed,
                 ModContent.ProjectileType<VolterionShot>(),
                 Projectile.damage,
                 Projectile.knockBack,
@@ -134,6 +135,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 1f
             );
             lightning.timeLeft = VolterionShotLifetime;
+        }
+
+        private Vector2 FindMouseNearestTargetDirection(Vector2 fallbackDirection)
+        {
+            NPC target = null;
+            float bestDistance = 2400f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float mouseDistance = Vector2.Distance(Main.MouseWorld, npc.Center);
+                if (mouseDistance >= bestDistance)
+                    continue;
+
+                bestDistance = mouseDistance;
+                target = npc;
+            }
+
+            if (target == null)
+                return fallbackDirection;
+
+            return (target.Center - Projectile.Center).SafeNormalize(fallbackDirection);
         }
 
         private void TriggerSmallExplosion()

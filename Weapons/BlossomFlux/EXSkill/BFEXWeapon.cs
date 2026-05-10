@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill.SpecialEffects;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityMod;
@@ -20,9 +21,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         private const int BarrageFrames = 180;
         private const float IdleHoldOffset = 22f;
         private const float ChargedHoldOffset = 14f;
-        private const float BarrageSpawnForwardRadius = 48f;
-        private const float BarrageSpawnSideRadius = 132f;
-        private const float BarrageShotSpeed = 22f;
+        private const int BarrageVolleyCount = 5;
+        private const float BarrageSpawnBackDistance = 280f;
+        private const float BarrageSpawnDepth = 130f;
+        private const float BarrageSpawnHalfHeight = 360f;
+        private const float BarrageCenterShotSpeed = 31f;
+        private const float BarrageSideShotSpeed = 19.5f;
+        private const float ChargeScreenEdgeMargin = 96f;
 
         private int timer;
         private int fireSoundTimer;
@@ -105,6 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             extraBackArmRotation = 0.05f * chargeCompletion;
 
             SpawnAbsorbEffects(strong: true);
+            SpawnChargeConvergenceEffects(chargeCompletion);
 
             if (timer >= ChargeFrames)
                 EnterReadyPhase();
@@ -164,6 +170,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             timer = 0;
             Projectile.netUpdate = true;
 
+            FadeChargeConvergenceProjectiles();
             SpawnChargeBurst(1.1f);
             SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.78f, Pitch = -0.08f }, GunTip);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.42f, Pitch = -0.2f }, GunTip);
@@ -178,25 +185,52 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             Projectile.velocity = AimDirection;
             Projectile.netUpdate = true;
 
+            FadeChargeConvergenceProjectiles();
             SpawnChargeBurst(1.35f);
-            SoundEngine.PlaySound(SoundID.Item163 with { Volume = 0.95f, Pitch = -0.16f }, GunTip);
+            SpawnReleaseShockwave();
+
+            if (Main.myPlayer == Projectile.owner)
+            {
+                Owner.SetScreenshake(18f);
+                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 14f);
+                FireBarrageVolley();
+            }
+
+            SoundEngine.PlaySound(SoundID.Item163 with { Volume = 1.05f, Pitch = -0.22f }, GunTip);
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.88f, Pitch = -0.34f, PitchVariance = 0.08f }, Owner.Center);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.6f, Pitch = -0.45f }, Owner.Center);
         }
 
         private void FireBarrageVolley()
         {
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            int shotDamage = (int)(Projectile.damage * 0.7f);
-            Vector2 shotVelocity = forward * BarrageShotSpeed;
+            Vector2 backfieldCenter = Owner.Center - forward * BarrageSpawnBackDistance + Owner.velocity * 0.35f;
+            int shotDamage = (int)(Projectile.damage * 0.72f);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < BarrageVolleyCount; i++)
             {
-                float ellipseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-                float ellipseRadius = (float)Math.Sqrt(Main.rand.NextFloat());
+                float laneRatio = BarrageVolleyCount <= 1
+                    ? 0f
+                    : (i - (BarrageVolleyCount - 1f) * 0.5f) / ((BarrageVolleyCount - 1f) * 0.5f);
+
+                float sideOffset = laneRatio * BarrageSpawnHalfHeight + Main.rand.NextFloat(-28f, 28f);
+                float sideCompletion = MathHelper.Clamp(Math.Abs(sideOffset) / BarrageSpawnHalfHeight, 0f, 1f);
+                float depthOffset = Main.rand.NextFloat(-BarrageSpawnDepth * 0.5f, BarrageSpawnDepth * 0.5f);
+                float shotSpeed = MathHelper.Lerp(BarrageCenterShotSpeed, BarrageSideShotSpeed, MathHelper.SmoothStep(0f, 1f, sideCompletion));
                 Vector2 spawnPosition =
-                    GunTip +
-                    forward * ((float)Math.Sin(ellipseAngle) * BarrageSpawnForwardRadius * ellipseRadius) +
-                    right * ((float)Math.Cos(ellipseAngle) * BarrageSpawnSideRadius * ellipseRadius);
+                    backfieldCenter +
+                    right * sideOffset +
+                    forward * depthOffset +
+                    Main.rand.NextVector2Circular(10f, 10f);
+
+                Vector2 aimPoint =
+                    Owner.Center +
+                    forward * 980f +
+                    right * sideOffset * 0.08f +
+                    Main.rand.NextVector2Circular(32f, 32f);
+
+                Vector2 shotVelocity = (aimPoint - spawnPosition).SafeNormalize(forward) * (shotSpeed + Main.rand.NextFloat(-0.7f, 0.7f));
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -208,6 +242,147 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                     Projectile.owner,
                     Main.rand.NextFloat(MathHelper.TwoPi),
                     Main.rand.NextFloat(MathHelper.TwoPi));
+            }
+        }
+
+        private void SpawnChargeConvergenceEffects(float chargeCompletion)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            if (timer % 2 == 0)
+                SpawnChargeConvergenceProjectile(ModContent.ProjectileType<BFEXConvergingLeaf>(), 12.5f, 17.5f);
+
+            if (timer % 3 == 0)
+                SpawnChargeConvergenceProjectile(ModContent.ProjectileType<BFEXConvergingWisp>(), 8.5f, 14.5f);
+
+            if (chargeCompletion > 0.55f && timer % 5 == 0)
+            {
+                int extraType = Main.rand.NextBool()
+                    ? ModContent.ProjectileType<BFEXConvergingLeaf>()
+                    : ModContent.ProjectileType<BFEXConvergingWisp>();
+                SpawnChargeConvergenceProjectile(extraType, 11f, 18f);
+            }
+
+            SpawnEdgeGlowSparks(chargeCompletion);
+        }
+
+        private void SpawnChargeConvergenceProjectile(int projectileType, float minSpeed, float maxSpeed)
+        {
+            Vector2 spawnPosition = GetScreenEdgeSpawnPosition(ChargeScreenEdgeMargin);
+            Vector2 targetPosition = Owner.Center + Main.rand.NextVector2Circular(54f, 44f);
+            Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(minSpeed, maxSpeed);
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                projectileType,
+                0,
+                0f,
+                Projectile.owner,
+                0f,
+                Main.rand.NextFloat(MathHelper.TwoPi));
+        }
+
+        private void SpawnEdgeGlowSparks(float chargeCompletion)
+        {
+            if (Main.dedServ)
+                return;
+
+            int sparkCount = 2 + (int)(chargeCompletion * 2.4f);
+            Color edgeColor = Color.Lerp(MainColor, AccentColor, 0.28f);
+            Color whiteColor = Color.Lerp(AccentColor, Color.White, 0.42f);
+
+            for (int i = 0; i < sparkCount; i++)
+            {
+                Vector2 spawnPosition = GetScreenEdgeSpawnPosition(38f);
+                Vector2 targetPosition = Owner.Center + Main.rand.NextVector2Circular(82f, 56f);
+                Vector2 direction = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY);
+                Vector2 velocity = direction * Main.rand.NextFloat(18f, 28f);
+                Color sparkColor = Main.rand.NextBool(3) ? whiteColor : edgeColor;
+
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    spawnPosition,
+                    velocity,
+                    false,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.045f, 0.075f),
+                    sparkColor,
+                    new Vector2(Main.rand.NextFloat(1.75f, 2.45f), Main.rand.NextFloat(0.32f, 0.52f)),
+                    true,
+                    false));
+            }
+        }
+
+        private static Vector2 GetScreenEdgeSpawnPosition(float margin)
+        {
+            float left = Main.screenPosition.X - margin;
+            float right = Main.screenPosition.X + Main.screenWidth + margin;
+            float top = Main.screenPosition.Y - margin;
+            float bottom = Main.screenPosition.Y + Main.screenHeight + margin;
+
+            return Main.rand.Next(4) switch
+            {
+                0 => new Vector2(left, Main.rand.NextFloat(top, bottom)),
+                1 => new Vector2(right, Main.rand.NextFloat(top, bottom)),
+                2 => new Vector2(Main.rand.NextFloat(left, right), top),
+                _ => new Vector2(Main.rand.NextFloat(left, right), bottom)
+            };
+        }
+
+        private void FadeChargeConvergenceProjectiles()
+        {
+            int leafType = ModContent.ProjectileType<BFEXConvergingLeaf>();
+            int wispType = ModContent.ProjectileType<BFEXConvergingWisp>();
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != Projectile.owner)
+                    continue;
+
+                if (projectile.type != leafType && projectile.type != wispType)
+                    continue;
+
+                projectile.ai[2] = 1f;
+                projectile.timeLeft = Math.Min(projectile.timeLeft, 28);
+                projectile.netUpdate = true;
+            }
+        }
+
+        private void SpawnReleaseShockwave()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = AimDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 center = Owner.Center - forward * 42f;
+            Color flashColor = Color.Lerp(MainColor, Color.White, 0.48f);
+
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, flashColor, 1.45f, 24));
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, flashColor * 0.86f, Vector2.One, 0f, 0f, 0.32f, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, MainColor * 0.9f, new Vector2(1.35f, 4.4f), forward.ToRotation(), 0.26f, 0.045f, 24));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, AccentColor * 0.8f, new Vector2(1.1f, 6.2f), forward.ToRotation() + MathHelper.PiOver2, 0.22f, 0.038f, 22));
+
+            for (int i = 0; i < 22; i++)
+            {
+                Vector2 sparkVelocity =
+                    forward.RotatedByRandom(0.32f) * Main.rand.NextFloat(6f, 18f) +
+                    right * Main.rand.NextFloat(-2.4f, 2.4f);
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    sparkVelocity,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(10, 17),
+                    Main.rand.NextFloat(0.04f, 0.07f),
+                    Main.rand.NextBool(3) ? Color.White : Color.Lerp(MainColor, AccentColor, Main.rand.NextFloat(0.2f, 0.7f)),
+                    new Vector2(Main.rand.NextFloat(1.2f, 2f), Main.rand.NextFloat(0.55f, 0.9f)),
+                    glowCenter: true,
+                    shrinkSpeed: 0.72f,
+                    glowOpacity: 0.62f));
             }
         }
 
@@ -395,6 +570,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             // 基础贴图
             Texture2D weaponTexture = TextureAssets.Projectile[Type].Value;
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
 
             // 基础绘制参数
@@ -450,6 +626,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 SpriteEffects.None,
                 0
             );
+
+            float chargeForGlow = State == 0 ? Utils.GetLerpValue(0f, ChargeFrames, timer, true) : 1f;
+            float flashWave = 0.88f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 9f + Projectile.identity * 0.27f);
+            for (int i = 0; i < 4; i++)
+            {
+                float starRotation = AimDirection.ToRotation() + MathHelper.PiOver4 * i + Main.GlobalTimeWrappedHourly * (1.25f + i * 0.14f);
+                Main.EntitySpriteDraw(
+                    starTexture,
+                    gunTipDrawPosition,
+                    null,
+                    Color.Lerp(AccentColor, Color.White, 0.52f) * (0.22f + chargeForGlow * 0.38f),
+                    starRotation,
+                    starTexture.Size() * 0.5f,
+                    new Vector2(0.22f + chargeForGlow * 0.18f, 1.2f + chargeForGlow * 1.25f) * flashWave,
+                    SpriteEffects.None,
+                    0);
+            }
+
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             // 进入后续状态后，绘制前方双线指示

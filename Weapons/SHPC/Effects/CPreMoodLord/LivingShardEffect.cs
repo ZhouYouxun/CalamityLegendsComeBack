@@ -30,14 +30,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             // 穿透
-            projectile.penetrate = 6;
-            projectile.timeLeft = 300;
+            projectile.penetrate = 1;
+            projectile.timeLeft = 500;
 
             // 初速度大幅提升
             projectile.velocity *= 2.5f;
         }
         private int hitCount;
         private int postHitTimer;
+        private int trackingTimer;
         public override void AI(Projectile projectile, Player owner)
         {
             NPC target = projectile.Center.ClosestNPCAt(1200f);
@@ -46,34 +47,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             if (target != null)
             {
+                trackingTimer++;
                 Vector2 desiredDir = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
 
                 // ================= 角速度逻辑 =================
-                float maxTurn;
+                float loosen = Utils.GetLerpValue(0f, 105f, trackingTimer, true);
+                float closeTargetBoost = Utils.GetLerpValue(190f, 40f, projectile.Distance(target.Center), true);
+                float turnInterpolant = MathHelper.Max(loosen, closeTargetBoost);
+                float maxTurnDegrees;
 
                 if (hitCount == 0)
                 {
                     // 第一次命中前
-                    maxTurn = MathHelper.ToRadians(2.7f);
+                    maxTurnDegrees = MathHelper.Lerp(2.7f, 10.5f, turnInterpolant);
                 }
                 else
                 {
-                    // 命中后：5.5 → 0.9（25帧线性下降）
-                    float t = MathHelper.Clamp(postHitTimer / 25f, 0f, 1f);
-
-                    float deg = MathHelper.Lerp(5.5f, 0.9f, t);
-                    maxTurn = MathHelper.ToRadians(deg);
-
+                    maxTurnDegrees = MathHelper.Lerp(5.5f, 14f, turnInterpolant);
                     postHitTimer++;
                 }
 
+                float maxTurn = MathHelper.ToRadians(maxTurnDegrees);
                 float currentRot = projectile.velocity.ToRotation();
                 float targetRot = desiredDir.ToRotation();
 
                 float newRot = currentRot.AngleTowards(targetRot, maxTurn);
 
                 // ===== 随机扰动 =====
-                newRot += Main.rand.NextFloat(-0.08f, 0.08f);
+                newRot += Main.rand.NextFloat(-0.08f, 0.08f) * (1f - turnInterpolant);
 
                 float speed = projectile.velocity.Length();
 
@@ -82,6 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
                 projectile.velocity = newRot.ToRotationVector2() * speed;
             }
+            else
+                trackingTimer = 0;
 
             // ================= 速度层 =================
             projectile.velocity *= 1.025f; // 常驻
@@ -108,16 +111,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             //    owner.HealEffect(heal);
             //}
 
-            // ===== 释放额外弹幕 =====
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                target.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<LivingShard_Healing>(),
-                projectile.damage,
-                0f,
-                projectile.owner
-            );
+            if (projectile.localAI[0] == 0f)
+            {
+                projectile.localAI[0] = 1f;
+
+                Vector2 healVelocity = (owner.Center - target.Center).SafeNormalize(-projectile.velocity.SafeNormalize(Vector2.UnitY)) * 9f;
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    target.Center,
+                    healVelocity,
+                    ModContent.ProjectileType<LivingShard_Healing>(),
+                    projectile.damage,
+                    0f,
+                    projectile.owner
+                );
+            }
         }
 
 

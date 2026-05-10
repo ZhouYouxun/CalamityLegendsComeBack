@@ -20,54 +20,54 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         private Vector2 spawnPos;
         private float traveledDistance;
+        private int lifeTimer;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             spawnPos = projectile.Center;
             traveledDistance = 0f;
+            lifeTimer = 0;
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
+            lifeTimer++;
             traveledDistance = Vector2.Distance(spawnPos, projectile.Center);
+
+            if (traveledDistance >= 30f * 16f)
+                projectile.Kill();
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // ===== 距离转倍率 =====
-            float t = MathHelper.Clamp(traveledDistance / (80f * 16f), 0.2f, 2f);
+            float progress = MathHelper.Clamp(MathHelper.Max(traveledDistance / (30f * 16f), lifeTimer / 60f), 0.2f, 1f);
+            int soulCount = (int)MathHelper.Lerp(2f, 10f, progress);
+            float damageScale = MathHelper.Lerp(0.6f, 1.25f, progress);
 
-            // ===== 爆炸 =====
-            int explosionIndex = Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(projectile.damage * 0.1f * t),
-                projectile.knockBack,
-                projectile.owner
-            );
-
-            Projectile explosion = Main.projectile[explosionIndex];
-            explosion.width = 150;
-            explosion.height = 150;
-
-            // ===== 7个灵魂 =====
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < soulCount; i++)
             {
                 Vector2 dir = Main.rand.NextVector2Unit();
-                float speed = Main.rand.NextFloat(6f, 10f);
+                float speed = Main.rand.NextFloat(12f, 18f);
 
-                Projectile.NewProjectile(
+                int soulIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     dir * speed,
                     ModContent.ProjectileType<NewSHPS>(),
-                    (int)(projectile.damage * t),
+                    (int)(projectile.damage * damageScale),
                     projectile.knockBack,
                     projectile.owner,
-                    5
+                    5,
+                    0f,
+                    3f
                 );
+
+                if (Main.projectile.IndexInRange(soulIndex))
+                {
+                    Projectile soul = Main.projectile[soulIndex];
+                    soul.timeLeft = 160;
+                    soul.extraUpdates = 1;
+                }
             }
 
             // ================= 荷鲁斯之眼 =================

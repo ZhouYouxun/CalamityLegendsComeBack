@@ -17,40 +17,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override Color StartColor => new Color(255, 80, 80);
         public override Color EndColor => new Color(120, 10, 10);
 
+        private int soulSpawnTimer;
+
+        public override void AI(Projectile projectile, Player owner)
+        {
+            soulSpawnTimer++;
+
+            if (projectile.owner != Main.myPlayer || soulSpawnTimer % 4 != 0)
+                return;
+
+            Vector2 dir = Main.rand.NextVector2Unit();
+            float speed = Main.rand.NextFloat(5f, 10f);
+
+            int soulIndex = Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
+                dir * speed,
+                ModContent.ProjectileType<NewSHPS>(),
+                (int)(projectile.damage * 0.55f),
+                projectile.knockBack,
+                projectile.owner,
+                3
+            );
+
+            if (Main.projectile.IndexInRange(soulIndex))
+                Main.projectile[soulIndex].timeLeft = 75;
+        }
+
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-
-
-
-
-
-            // ===== 爆8个灵魂（保留不变）=====
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 dir = Main.rand.NextVector2Unit();
-                float speed = Main.rand.NextFloat(6f, 12f);
-
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center + Main.rand.NextVector2Circular(80f, 80f),
-                    dir * speed,
-                    ModContent.ProjectileType<NewSHPS>(),
-                    projectile.damage,
-                    projectile.knockBack,
-                    projectile.owner,
-                    3 // preset3
-                );
-            }
-
-
-
-
-
-
-
-
-
-
             // ===== 骷髅头主体：向外大范围爆散 =====
             for (int i = 0; i < 12; i++)
             {

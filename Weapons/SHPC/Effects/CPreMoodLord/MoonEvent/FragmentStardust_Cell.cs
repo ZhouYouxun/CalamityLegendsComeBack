@@ -18,13 +18,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         private int stateTimer = 0;
 
         private int loopCount => (int)Projectile.ai[0];
-        private const int MaxLoop = 6;
+        public const int MaxActiveCells = 70;
+        private const int MaxLoop = 5;
 
         private int frame;
         private int frameTimer;
 
         private float wanderAngle;
         private int wanderTimer;
+        private bool finalRound;
 
         public override void SetDefaults()
         {
@@ -44,13 +46,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             isSmall = true;
             stateTimer = 0;
-            Projectile.ai[0] = 0;
-
             frame = 0;
             frameTimer = 0;
 
             wanderTimer = 0;
             wanderAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            finalRound = false;
         }
 
         public override bool? CanDamage()
@@ -63,6 +64,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             stateTimer++;
             wanderTimer++;
 
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead || owner.HeldItem.type != ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPC>())
+                finalRound = true;
+
             // ===== 前5次循环：强制锁时间 =====
             if (loopCount < MaxLoop - 1)
             {
@@ -70,24 +75,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             }
 
             // ===== 粒子铺满碰撞体积 =====
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 randPos = Projectile.Center + new Vector2(
-                    Main.rand.NextFloat(-Projectile.width / 2f, Projectile.width / 2f),
-                    Main.rand.NextFloat(-Projectile.height / 2f, Projectile.height / 2f)
-                );
-
-                Dust d = Dust.NewDustPerfect(
-                    randPos,
-                    DustID.Electric,
-                    Main.rand.NextVector2Circular(1.2f, 1.2f),
-                    0,
-                    Color.LightBlue,
-                    1.2f
-                );
-                d.noGravity = true;
-            }
-
             if (isSmall)
                 SmallStateAI();
             else
@@ -185,25 +172,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             stateTimer = 0;
             frame = 0;
             frameTimer = 0;
-
-            for (int i = 0; i < 12; i++)
-            {
-                Dust d = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.Electric,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 6f),
-                    0,
-                    Color.LightBlue,
-                    1.4f
-                );
-                d.noGravity = true;
-            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // ===== 反冲粒子 =====
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 0; i++)
             {
                 Vector2 dir = (Projectile.Center - target.Center).SafeNormalize(Vector2.UnitX);
                 Vector2 vel = dir.RotatedByRandom(0.6f) * Main.rand.NextFloat(2f, 6f);
@@ -224,18 +198,66 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             if (!isSmall)
             {
-                Projectile.ai[0]++;
-
-                if (loopCount < MaxLoop)
+                if (finalRound)
                 {
-                    //Projectile.timeLeft = 150;
+                    Projectile.Kill();
+                    return;
+                }
+
+                int nextLoop = loopCount + 1;
+
+                if (nextLoop <= MaxLoop && ActiveCellCount() < MaxActiveCells)
+                {
+                    SpawnChildCells(target, nextLoop);
+                    Projectile.Kill();
                 }
                 else
                 {
                     return;
                 }
+            }
+        }
 
-                TurnBackToSmall(target);
+        public static int ActiveCellCount()
+        {
+            int count = 0;
+            int type = ModContent.ProjectileType<FragmentStardust_Cell>();
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.type == type)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private void SpawnChildCells(NPC target, int nextLoop)
+        {
+            Vector2 away = (Projectile.Center - target.Center).SafeNormalize(Vector2.UnitX);
+
+            for (int i = 0; i < 2; i++)
+            {
+                if (ActiveCellCount() >= MaxActiveCells)
+                    break;
+
+                Vector2 direction = away.RotatedBy(i == 0 ? -0.65f : 0.65f);
+                int childIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + direction * 12f,
+                    direction * Main.rand.NextFloat(4.2f, 6.2f),
+                    ModContent.ProjectileType<FragmentStardust_Cell>(),
+                    (int)(Projectile.damage * 0.75f),
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    nextLoop);
+
+                if (Main.projectile.IndexInRange(childIndex))
+                {
+                    Projectile child = Main.projectile[childIndex];
+                    child.scale = MathHelper.Clamp(Projectile.scale * 0.88f, 0.58f, 1f);
+                    child.timeLeft = Math.Max(120, 520 - nextLoop * 55);
+                }
             }
         }
 

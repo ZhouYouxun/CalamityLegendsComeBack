@@ -9,7 +9,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     public class NecroplasmEffect : DefaultEffect
     {
@@ -26,13 +26,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private float sinTimer;
         private int timer;
+        private int homingTimer;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             sinTimer = 0f;
             timer = 0;
+            homingTimer = 0;
 
             projectile.penetrate = 5;
+            if (projectile.timeLeft < 240)
+                projectile.timeLeft = 240;
             projectile.velocity *= 1.8f;
         }
 
@@ -44,9 +48,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             NPC target = projectile.Center.ClosestNPCAt(3000f);
             if (target != null)
             {
+                homingTimer++;
                 Vector2 desired = projectile.SafeDirectionTo(target.Center);
-                projectile.velocity = (projectile.velocity * 5f + desired * 16f) / 6f;
+                float trackingPower = Utils.GetLerpValue(0f, 120f, homingTimer, true);
+                float targetSpeed = MathHelper.Lerp(20f, 34f, trackingPower);
+                float inertia = MathHelper.Lerp(5f, 2.5f, trackingPower);
+                projectile.velocity = (projectile.velocity * inertia + desired * targetSpeed) / (inertia + 1f);
             }
+            else
+                homingTimer = 0;
 
             if (timer % 6 == 0)
             {
@@ -97,8 +107,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            owner.SetScreenshake(8.5f);
-            float power = 1.35f;
+            owner.SetScreenshake(3.5f);
+            float power = 0.58f;
 
             SpawnNecroplasmCollapseDust(projectile, owner, power);
             SpawnNecroplasmCollapsePulses(projectile, owner, power);
@@ -109,31 +119,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private void SpawnNecroplasmCollapseDust(Projectile projectile, Player owner, float power)
         {
-            for (int i = 0; i < 55; i++)
+            for (int i = 0; i < 24; i++)
             {
                 Color useColor = GetRandomNecroBurstColor(owner);
-                int dustType = Main.rand.NextBool(6)
-                    ? ModContent.DustType<VoidDustInverted>()
-                    : ModContent.DustType<VoidDust>();
-                Vector2 dustVelocity = (projectile.velocity * 6f * power).RotatedByRandom(100f) * Main.rand.NextFloat(0.2f, 1f);
+                Vector2 dustVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 7.5f) * power;
 
-                Dust dust = Dust.NewDustPerfect(projectile.Center, dustType, dustVelocity);
+                Dust dust = Dust.NewDustPerfect(projectile.Center, DustID.FireworkFountain_Pink, dustVelocity);
                 dust.noGravity = true;
-                dust.noLightEmittence = true;
-                dust.scale = Main.rand.NextFloat(1.55f, 2.05f) * power;
+                dust.scale = Main.rand.NextFloat(0.85f, 1.35f) * power;
                 dust.color = useColor;
 
-                if (i % 2 != 0)
+                if (i % 3 != 0)
                     continue;
 
-                Vector2 sparkVelocity = new Vector2(0f, -34f * power).RotatedByRandom(100f) * Main.rand.NextFloat(0.1f, 1f);
+                Vector2 sparkVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.8f, 6.8f) * power;
                 Particle spark = new CustomSpark(
                     projectile.Center,
                     sparkVelocity,
                     "CalamityMod/Particles/Sparkle",
                     false,
-                    40,
-                    Main.rand.NextFloat(1.15f, 2f) * power,
+                    18,
+                    Main.rand.NextFloat(0.45f, 0.82f) * power,
                     useColor,
                     new Vector2(0.4f, 1.1f));
                 GeneralParticleHandler.SpawnParticle(spark);
@@ -142,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private void SpawnNecroplasmCollapsePulses(Projectile projectile, Player owner, float power)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 2; i++)
             {
                 Color useColor = GetRandomNecroBurstColor(owner);
                 Particle softBurst = new CustomPulse(
@@ -153,8 +159,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     Vector2.One,
                     Main.rand.NextFloat(-10f, 10f),
                     0f,
-                    (0.4f - i * 0.03f) * power,
-                    13);
+                    (0.24f - i * 0.03f) * power,
+                    10);
                 GeneralParticleHandler.SpawnParticle(softBurst);
             }
 
@@ -165,28 +171,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 "CalamityMod/Particles/BloomRing",
                 Vector2.One,
                 Main.rand.NextFloat(-10f, 10f),
-                0.15f * power,
-                2.15f * power,
-                38);
+                0.06f * power,
+                0.86f * power,
+                22);
             GeneralParticleHandler.SpawnParticle(bloomRing);
-
-            Particle blackCore = new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                Color.Black,
-                "CalamityMod/Particles/SmallBloom",
-                Vector2.One,
-                Main.rand.NextFloat(-10f, 10f),
-                0f,
-                1.05f * power,
-                39,
-                false);
-            GeneralParticleHandler.SpawnParticle(blackCore);
         }
 
         private void SpawnNecroplasmCollapseSmears(Projectile projectile, Player owner, float power)
         {
-            int parts = 8;
+            int parts = 5;
             float rot = Main.rand.NextFloat(-9f, 9f);
 
             for (int i = 0; i < parts; i++)
@@ -201,8 +194,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     smearVelocity,
                     "CalamityMod/Particles/VerticalSmear",
                     false,
-                    19,
-                    3f * power,
+                    13,
+                    1.35f * power,
                     useColor,
                     new Vector2(0.2f, 1f));
                 GeneralParticleHandler.SpawnParticle(smear);
@@ -211,14 +204,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private static void PlayNecroplasmCollapseSounds(Projectile projectile)
         {
-            for (int i = 0; i < 3; i++)
-            {
-                SoundStyle meteorSound = new("CalamityMod/Sounds/Item/EarthMeteor");
-                SoundEngine.PlaySound(meteorSound with { Volume = 0.44f, Pitch = -0.12f * (i + 1), MaxInstances = 3 }, projectile.Center);
-            }
-
             SoundStyle reflectSound = new("CalamityMod/Sounds/Item/ShadowboltReflect");
-            SoundEngine.PlaySound(reflectSound with { Volume = 0.76f, Pitch = -0.34f }, projectile.Center);
+            SoundEngine.PlaySound(reflectSound with { Volume = 0.48f, Pitch = -0.18f }, projectile.Center);
         }
 
         private static void SpawnNecroplasmDamage(Projectile projectile)
@@ -242,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
             for (int i = 0; i < 6; i++)
             {
-                Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 8f);
+                Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f, 12f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
@@ -271,7 +258,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private Color GetRandomNecroBurstColor(Player owner)
         {
-            if (owner.shirtColor == Color.White && Main.rand.NextBool(4))
+            if (owner.shirtColor == Color.White && Main.rand.NextBool(8))
                 return new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
 
             return Main.rand.Next(5) switch
@@ -280,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 1 => StartColor,
                 2 => EndColor,
                 3 => new Color(120, 16, 95),
-                _ => Color.Lerp(Color.Black, ThemeColor, Main.rand.NextFloat(0.25f, 0.75f))
+                _ => new Color(235, 70, 170)
             };
         }
     }

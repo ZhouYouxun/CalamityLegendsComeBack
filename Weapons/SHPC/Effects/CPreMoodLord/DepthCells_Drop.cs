@@ -1,6 +1,7 @@
 ﻿using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -19,9 +20,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         internal static readonly Color AbyssToxic = new(108, 255, 176);
         internal static readonly Color AbyssFoam = new(210, 255, 236);
 
-        private const float GravityDelay = 6f;
-        private const float GravityStrength = 0.165f;
+        private const float GravityDelay = 10f;
+        private const float GravityStrength = 0.055f;
+        private const int StickTime = 150;
         private static readonly int[] AbyssDustTypes = { 191, 29, 104 };
+
+        private bool IsStuck => Projectile.ai[0] == 1f;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -43,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.extraUpdates = 2;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 10;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -53,6 +57,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void AI()
         {
+            if (IsStuck)
+            {
+                UpdateStuckState();
+                return;
+            }
+
             Projectile.localAI[0]++;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
@@ -61,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 float sway = (float)System.Math.Sin((Projectile.identity * 0.6f) + Projectile.localAI[0] * 0.17f) * 0.012f;
                 Projectile.velocity = Projectile.velocity.RotatedBy(sway);
                 Projectile.velocity.Y += GravityStrength;
-                Projectile.velocity.X *= 0.9945f;
+                Projectile.velocity.X *= 0.998f;
             }
 
             Lighting.AddLight(Projectile.Center, Color.Lerp(AbyssToxic, AbyssCyan, 0.35f).ToVector3() * 0.55f);
@@ -79,6 +89,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             target.AddBuff(ModContent.BuffType<CrushDepth>(), 240);
             target.AddBuff(ModContent.BuffType<Eutrophication>(), 240);
             SpawnImpactEffects(target.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX), 0.9f);
+
+            if (!IsStuck)
+                StickToTarget(target);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -95,72 +108,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 bloomOrigin = bloomTex.Size() * 0.5f;
+            return false;
+        }
 
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
+        private void StickToTarget(NPC target)
+        {
+            Projectile.ai[0] = 1f;
+            Projectile.ai[1] = target.whoAmI;
+            Projectile.localAI[1] = 0f;
+            Projectile.velocity = target.Center - Projectile.Center;
+            Projectile.tileCollide = false;
+            Projectile.friendly = false;
+            Projectile.penetrate = -1;
+            Projectile.netUpdate = true;
+        }
 
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+        private void UpdateStuckState()
+        {
+            int targetIndex = (int)Projectile.ai[1];
+
+            if (!Main.npc.IndexInRange(targetIndex) || !Main.npc[targetIndex].active)
             {
-                if (Projectile.oldPos[i] == Vector2.Zero)
-                    continue;
-
-                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                float completion = 1f - i / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(AbyssDeep, AbyssToxic, completion) * MathHelper.Lerp(0.05f, 0.18f, completion);
-                float trailScale = MathHelper.Lerp(0.16f, 0.4f, completion);
-
-                Main.EntitySpriteDraw(
-                    bloomTex,
-                    oldCenter,
-                    null,
-                    trailColor,
-                    0f,
-                    bloomOrigin,
-                    trailScale,
-                    SpriteEffects.None);
+                Projectile.Kill();
+                return;
             }
 
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Main.EntitySpriteDraw(
-                bloomTex,
-                drawPos - Projectile.velocity * 0.12f,
-                null,
-                Color.Lerp(AbyssBlue, AbyssToxic, 0.3f) * 0.18f,
-                0f,
-                bloomOrigin,
-                new Vector2(0.22f, 0.48f),
-                SpriteEffects.None);
+            NPC target = Main.npc[targetIndex];
+            Projectile.localAI[1]++;
+            Projectile.Center = target.Center - Projectile.velocity;
+            Projectile.gfxOffY = target.gfxOffY;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
 
-            Main.EntitySpriteDraw(
-                bloomTex,
-                drawPos,
-                null,
-                AbyssToxic * 0.26f,
-                0f,
-                bloomOrigin,
-                0.34f,
-                SpriteEffects.None);
+            Lighting.AddLight(Projectile.Center, Color.Lerp(AbyssToxic, AbyssCyan, 0.35f).ToVector3() * 0.28f);
 
-            Main.EntitySpriteDraw(
-                bloomTex,
-                drawPos,
-                null,
-                AbyssFoam * 0.16f,
-                0f,
-                bloomOrigin,
-                0.18f,
-                SpriteEffects.None);
+            if (Projectile.numUpdates == 0 && Main.rand.NextBool(4))
+            {
+                Dust seep = CreateAbyssDust(
+                    Projectile.Center + Main.rand.NextVector2Circular(3f, 3f),
+                    Main.rand.NextVector2Circular(0.35f, 0.35f),
+                    Main.rand.NextFloat(0.85f, 1.15f),
+                    Main.rand.NextFloat(0.3f, 0.85f),
+                    140);
+                seep.velocity *= 0.35f;
+            }
 
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-            return false;
+            if (Projectile.localAI[1] >= StickTime)
+                Projectile.Kill();
         }
 
         private void SpawnLaunchEffects()
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 15; i++)
             {
                 Vector2 velocity = forward.RotatedByRandom(0.42f) * Main.rand.NextFloat(0.8f, 2.7f) + Main.rand.NextVector2Circular(0.9f, 0.9f);
                 CreateAbyssDust(
@@ -171,7 +171,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     120);
             }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 8; i++)
             {
                 Dust foam = CreateFoamDust(
                     Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
@@ -181,6 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     140);
                 foam.velocity *= 0.7f;
             }
+
         }
 
         private void SpawnFlightEffects()
@@ -188,29 +189,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 spawnCenter = Projectile.Center - forward * Main.rand.NextFloat(3f, 8f);
 
-            if (Main.rand.NextBool(2))
+            if (Projectile.numUpdates == 0 || Main.rand.NextBool(2))
             {
                 Dust mist = CreateAbyssDust(
                     spawnCenter + Main.rand.NextVector2Circular(4f, 4f),
-                    -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.24f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
-                    Main.rand.NextFloat(1f, 1.35f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.28f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
+                    Main.rand.NextFloat(1.2f, 1.75f),
                     Main.rand.NextFloat(0.15f, 0.75f),
-                    140);
+                    125);
                 mist.velocity *= 0.85f;
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(2))
             {
                 Dust foam = CreateFoamDust(
-                    spawnCenter + Main.rand.NextVector2Circular(3f, 3f),
+                    spawnCenter + Main.rand.NextVector2Circular(4f, 4f),
                     -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.12f) + Main.rand.NextVector2Circular(0.2f, 0.2f),
-                    Main.rand.NextFloat(0.72f, 1f),
+                    Main.rand.NextFloat(0.9f, 1.25f),
                     Main.rand.NextFloat(0.15f, 0.9f),
-                    150);
+                    135);
                 foam.velocity *= 0.55f;
             }
 
-            if (Main.rand.NextBool(5))
+            if (Main.rand.NextBool(3))
             {
                 Dust sparkle = CreateAbyssDust(
                     Projectile.Center + Main.rand.NextVector2Circular(2f, 2f),
@@ -220,6 +221,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     160);
                 sparkle.velocity *= 0.25f;
             }
+
         }
 
         private void SpawnImpactEffects(Vector2 center, Vector2 forward, float intensity)

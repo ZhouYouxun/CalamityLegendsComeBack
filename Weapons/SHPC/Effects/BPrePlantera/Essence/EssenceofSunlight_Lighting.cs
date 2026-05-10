@@ -53,8 +53,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             for (int i = 0; i < 4; i++)
             {
                 Vector2 vel =
-                    forward.RotatedByRandom(MathHelper.ToRadians(10f))
-                    * Main.rand.NextFloat(6f, 12f);
+                    forward.RotatedByRandom(MathHelper.ToRadians(6f))
+                    * Main.rand.NextFloat(3.6f, 7.2f);
 
                 Particle spark = new GlowSparkParticle(
                     futurePos,
@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
                 Particle trail = new GlowSparkParticle(
                     backPos,
-                    -forward * Main.rand.NextFloat(2f, 5f),
+                    -forward * Main.rand.NextFloat(1.2f, 3f),
                     false,
                     10,
                     0.1f,
@@ -109,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             {
                 Particle core = new GlowSparkParticle(
                     pos,
-                    Main.rand.NextVector2Circular(1f, 1f),
+                    Main.rand.NextVector2Circular(0.6f, 0.6f),
                     false,
                     6,
                     0.2f,
@@ -126,8 +126,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             for (int i = 0; i < 18; i++)
             {
                 Vector2 vel =
-                    forward.RotatedByRandom(MathHelper.ToRadians(8f))
-                    * Main.rand.NextFloat(8f, 16f);
+                    forward.RotatedByRandom(MathHelper.ToRadians(4.8f))
+                    * Main.rand.NextFloat(4.8f, 9.6f);
 
                 Particle jet = new GlowSparkParticle(
                     pos,

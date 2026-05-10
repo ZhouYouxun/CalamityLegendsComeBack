@@ -29,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         // 每圈实际喷出的球数量
         private const int OrbProjectileCount = 12;
+        private const int SequentialShotDelay = 3;
 
         // 圆环整体前冲速度
         private const float MiddleForwardSpeed = 24f;
@@ -121,6 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 orb.localAI[0] = inwardDirection.X;
                 orb.localAI[1] = inwardDirection.Y;
                 orb.rotation = angle + ringDirection.ToRotation();
+                orb.timeLeft = 30 + i * SequentialShotDelay;
             }
         }
 

@@ -26,6 +26,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         {
             // 生命周期
             projectile.timeLeft = 160;
+            projectile.penetrate = 3;
+            projectile.usesLocalNPCImmunity = true;
+            projectile.localNPCHitCooldown = 18;
 
             // 初始化状态（保险）
             var gp = projectile.GetGlobalProjectile<EssenceofSunlight_GP>();
@@ -162,27 +165,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            float radius = 50f;
-
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-
-                if (!npc.active || !npc.CanBeChasedBy())
-                    continue;
-
-                if (Vector2.Distance(npc.Center, target.Center) <= radius)
-                {
-                    var gnpc = npc.GetGlobalNPC<EssenceofSunlight_GNPC>();
-
-                    if (!gnpc.marked)
-                    {
-                        gnpc.marked = true;
-                        gnpc.timer = 0;
-                        gnpc.owner = projectile.owner;
-                    }
-                }
-            }
+            target.GetGlobalNPC<EssenceofSunlight_GNPC>()
+                .AddMark(projectile.owner, System.Math.Max(1, (int)(projectile.damage * 0.65f)));
         }
     }
 

@@ -3,6 +3,7 @@ using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Items.Materials;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -48,8 +49,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             SpawnSplitBurst(projectile);
 
             Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float[] spread = { -0.18f, 0f, 0.18f };
-            float[] speedScale = { 10.6f, 12.4f, 11.3f };
+            float[] spread = { -0.08f, 0f, 0.08f };
+            float[] speedScale = { 12.2f, 13.6f, 12.8f };
 
             for (int i = 0; i < spread.Length; i++)
             {
@@ -70,9 +71,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Color cyan = DepthCells_Drop.AbyssCyan;
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            for (int i = 0; i < 9; i++)
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(DepthCells_Drop.AbyssDeep, toxic, 0.18f),
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.08f,
+                0.32f,
+                22,
+                false));
+
+            for (int i = 0; i < 16; i++)
             {
-                float angle = MathHelper.TwoPi * i / 9f;
+                float angle = MathHelper.TwoPi * i / 16f;
                 Vector2 offset = angle.ToRotationVector2() * Main.rand.NextFloat(2f, 7f);
                 CreateAbyssDust(
                     projectile.Center + offset,
@@ -82,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     120);
             }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 7; i++)
             {
                 Dust foam = Dust.NewDustPerfect(
                     projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
@@ -94,13 +107,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 foam.noGravity = true;
                 foam.velocity *= 0.75f;
             }
+
+            for (int i = 0; i < 6; i++)
+            {
+                HeavySmokeParticle smoke = new(
+                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    -forward * Main.rand.NextFloat(0.2f, 1.1f) + Main.rand.NextVector2Circular(0.8f, 0.8f),
+                    Color.Lerp(DepthCells_Drop.AbyssDeep, DepthCells_Drop.AbyssBlue, Main.rand.NextFloat(0.1f, 0.5f)),
+                    Main.rand.Next(26, 42),
+                    Main.rand.NextFloat(0.45f, 0.9f),
+                    0.45f,
+                    Main.rand.NextFloat(-0.04f, 0.04f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
         }
 
         private static void SpawnSplitBurst(Projectile projectile)
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            for (int i = 0; i < 14; i++)
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(DepthCells_Drop.AbyssDeep, DepthCells_Drop.AbyssCyan, 0.22f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.06f,
+                0.42f,
+                20,
+                false));
+
+            for (int i = 0; i < 22; i++)
             {
                 Vector2 velocity = forward.RotatedByRandom(0.7f) * Main.rand.NextFloat(1.3f, 4.8f) + Main.rand.NextVector2Circular(1.2f, 1.2f);
                 CreateAbyssDust(
@@ -111,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     120);
             }
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
             {
                 Dust foam = Dust.NewDustPerfect(
                     projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
@@ -122,6 +161,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     Main.rand.NextFloat(0.85f, 1.15f));
                 foam.noGravity = true;
                 foam.velocity *= 0.7f;
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                HeavySmokeParticle smoke = new(
+                    projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    -forward.RotatedByRandom(0.9f) * Main.rand.NextFloat(0.4f, 2f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
+                    Main.rand.NextBool(3) ? DepthCells_Drop.AbyssDeep : Color.Lerp(DepthCells_Drop.AbyssBlue, DepthCells_Drop.AbyssDeep, 0.72f),
+                    Main.rand.Next(28, 48),
+                    Main.rand.NextFloat(0.5f, 1.05f),
+                    0.42f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(smoke);
             }
         }
 

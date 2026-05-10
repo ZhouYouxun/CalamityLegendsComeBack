@@ -20,6 +20,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
+        public override float GlowScaleFactor => 0f;
+        public override float GlowIntensityFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
@@ -178,10 +180,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
+            projectile.GetGlobalProjectile<SoulofNight_GP>().firstFrame = true;
+            projectile.timeLeft = 2;
+            projectile.penetrate = -1;
+            projectile.tileCollide = false;
+        }
+        public override void AI(Projectile projectile, Player owner)
+        {
+            SoulofNight_GP gp = projectile.GetGlobalProjectile<SoulofNight_GP>();
+            if (!gp.firstFrame)
+                return;
+
+            gp.firstFrame = false;
             projectile.Kill();
         }
-        public override void AI(Projectile projectile, Player owner) { }
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers) { }
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone) { }
+    }
+
+    internal class SoulofNight_GP : GlobalProjectile
+    {
+        public override bool InstancePerEntity => true;
+        public bool firstFrame;
     }
 }

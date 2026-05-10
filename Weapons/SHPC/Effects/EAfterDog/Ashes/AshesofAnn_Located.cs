@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
@@ -21,7 +22,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Projectile.width = 10;
             Projectile.height = 10;
+            Projectile.timeLeft = 20;
             Projectile.timeLeft = 19 * 3; // 生命周期
+            Projectile.timeLeft = 20;
             Projectile.penetrate = -1;
             Projectile.friendly = true;
             Projectile.ignoreWater = false;
@@ -57,6 +60,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             // 每5帧触发一次爆炸
             timer++;
+            if (timer != 15)
+                return;
+
             if (timer % 15 == 0)
             {
                 // 大范围低伤害爆炸
@@ -77,6 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 // 屏幕震动效果
                 float shakePower = 35f; // 设置震动强度
                 float distanceFactor = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true); // 距离衰减
+                shakePower = 12f;
                 Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceFactor);
 
 
@@ -101,23 +108,120 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             // 爆炸音效
             SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸")
             {
-                Volume = 1.35f,
+                Volume = 0.82f,
                 Pitch = -0.08f,
                 PitchVariance = 0.16f,
                 MaxInstances = 5
             }, center);
 
+            Particle compactPulse = new CustomPulse(
+                center,
+                Vector2.Zero,
+                new Color(200, 30, 30),
+                "CalamityMod/Particles/LargeBloom",
+                Vector2.One,
+                Main.rand.NextFloat(-0.12f, 0.12f),
+                0.18f,
+                0.82f,
+                16,
+                false);
+            GeneralParticleHandler.SpawnParticle(compactPulse);
+
+            for (int i = 0; i < 24; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 13f);
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(24f, 24f),
+                    DustID.Torch,
+                    velocity,
+                    80,
+                    Color.Lerp(new Color(255, 70, 24), new Color(90, 0, 0), Main.rand.NextFloat(0.2f, 0.75f)),
+                    Main.rand.NextFloat(1f, 1.7f));
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 9f);
+                Particle line = new LineParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.45f, 0.82f),
+                    Color.Lerp(new Color(255, 96, 40), new Color(120, 0, 0), Main.rand.NextFloat(0.25f, 0.7f)));
+                GeneralParticleHandler.SpawnParticle(line);
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                Particle smoke = new HeavySmokeParticle(
+                    center + Main.rand.NextVector2Circular(24f, 24f),
+                    Main.rand.NextVector2Circular(2.5f, 2.5f),
+                    Main.rand.NextBool() ? new Color(70, 0, 0) : Color.Black,
+                    Main.rand.Next(22, 34),
+                    Main.rand.NextFloat(0.65f, 1.05f),
+                    0.34f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            return;
+
             Particle expandingPulse = new DirectionalPulseRing(
                 center,
                 Vector2.Zero,
                 new Color(200, 30, 30), // 赤红写死
-                new Vector2(1.2f, 1.2f),
+                new Vector2(0.72f, 0.72f),
                 0f,
-                0.5f,
+                0.28f,
                 12f, // 改成12
-                20
+                14
             );
             GeneralParticleHandler.SpawnParticle(expandingPulse);
+
+            for (int i = 0; i < 24; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 13f);
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(24f, 24f),
+                    DustID.Torch,
+                    velocity,
+                    80,
+                    Color.Lerp(new Color(255, 70, 24), new Color(90, 0, 0), Main.rand.NextFloat(0.2f, 0.75f)),
+                    Main.rand.NextFloat(1f, 1.7f));
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 9f);
+                Particle line = new LineParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.45f, 0.82f),
+                    Color.Lerp(new Color(255, 96, 40), new Color(120, 0, 0), Main.rand.NextFloat(0.25f, 0.7f)));
+                GeneralParticleHandler.SpawnParticle(line);
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                Particle smoke = new HeavySmokeParticle(
+                    center + Main.rand.NextVector2Circular(24f, 24f),
+                    Main.rand.NextVector2Circular(2.5f, 2.5f),
+                    Main.rand.NextBool() ? new Color(70, 0, 0) : Color.Black,
+                    Main.rand.Next(22, 34),
+                    Main.rand.NextFloat(0.65f, 1.05f),
+                    0.34f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            return;
 
             // 1. 最内核：高温内爆，只放亮而烫的熔岩球
             CreateAshInnerCollapse(center);

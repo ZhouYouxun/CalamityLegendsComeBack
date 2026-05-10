@@ -78,8 +78,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         Projectile missile = Main.projectile[projID];
                         missile.friendly = true;
                         missile.hostile = false;
+                        missile.usesIDStaticNPCImmunity = false;
                         missile.usesLocalNPCImmunity = true;
-                        missile.localNPCHitCooldown = 10;
+                        missile.localNPCHitCooldown = 6;
                     }
                 }
             }
@@ -214,8 +215,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         Projectile missile = Main.projectile[projID];
                         missile.friendly = true;
                         missile.hostile = false;
+                        missile.usesIDStaticNPCImmunity = false;
                         missile.usesLocalNPCImmunity = true;
-                        missile.localNPCHitCooldown = 10;
+                        missile.localNPCHitCooldown = 6;
                     }
                 }
             }           

@@ -18,23 +18,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
+        public override float GlowScaleFactor => 0f;
+        public override float GlowIntensityFactor => 0f;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
+            projectile.timeLeft = 2;
+            projectile.penetrate = -1;
+            projectile.tileCollide = false;
             projectile.Kill();
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            Vector2 direction = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
+            float speed = MathHelper.Max(projectile.velocity.Length() * 1.8f, 15.5f);
+
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<AshesofCalamity_Portal>(),
+                direction * speed,
+                ModContent.ProjectileType<AshesofCalamity_Soul>(),
                 projectile.damage,
                 projectile.knockBack,
                 projectile.owner,
-                projectile.velocity.ToRotation() // 记录方向
+                1f
             );
         }
 

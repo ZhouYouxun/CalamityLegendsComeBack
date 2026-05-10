@@ -26,7 +26,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public const int MaxPollutionStacks = 15;
         public const float DefenseReductionPerStack = 0.05f;
 
-        private readonly BalanceBlossomFlux balance = new();
         private int pollutionTimeLeft;
         private int pollutionStacks;
         private int permanentSporeStacks;
@@ -43,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public void ApplyPlagueDebuffs(NPC npc, bool markedTarget)
         {
-            BalanceBlossomFlux.PlagueDebuffStats stats = balance.GetPlagueDebuffStats();
+            BFPlagueLeftStats stats = BFPlagueLeftBalance.GetStats();
             bool alreadyAfflicted = HasAnyPlagueDebuff(npc);
             int addTime = alreadyAfflicted ? stats.StackDuration : stats.InitialDuration;
             int maxTime = stats.MaxDuration;
@@ -59,8 +58,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             AddOrExtendBuff(npc, ModContent.BuffType<Plague>(), addTime, maxTime);
             AddOrExtendBuff(npc, ModContent.BuffType<MarkedforDeath>(), addTime, maxTime);
 
-            if (stats.InflictDragonfire)
-                AddOrExtendBuff(npc, ModContent.BuffType<Dragonfire>(), addTime, maxTime);
+            if (stats.InflictBetsysCurse)
+                AddOrExtendBuff(npc, BuffID.BetsysCurse, addTime, maxTime);
 
             if (stats.InflictAstralInfection)
                 AddOrExtendBuff(npc, ModContent.BuffType<AstralInfectionDebuff>(), addTime, maxTime);
@@ -77,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public void ApplyPermanentSpore(NPC npc)
         {
-            BalanceBlossomFlux.PlagueChargeStats stats = balance.GetPlagueChargeStats();
+            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
             permanentSporeStacks = Utils.Clamp(permanentSporeStacks + 1, 0, stats.MaxPermanentStacks);
 
             if (Main.dedServ)
@@ -125,9 +124,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (permanentSporeStacks <= 0)
                 return;
 
-            BalanceBlossomFlux.PlagueChargeStats stats = balance.GetPlagueChargeStats();
+            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
             modifiers.Defense.Base -= stats.DefenseReductionPerStack * permanentSporeStacks;
-            modifiers.FinalDamage *= 1f + stats.VulnerabilityPerStack * permanentSporeStacks;
         }
 
         public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
@@ -135,7 +133,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (permanentSporeStacks <= 0)
                 return;
 
-            BalanceBlossomFlux.PlagueChargeStats stats = balance.GetPlagueChargeStats();
+            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
             modifiers.FinalDamage *= 1f - stats.NpcDamageReductionPerStack * permanentSporeStacks;
         }
 

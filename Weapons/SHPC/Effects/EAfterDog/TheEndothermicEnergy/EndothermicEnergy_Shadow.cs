@@ -117,13 +117,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         private void BurstSplits(NPC target)
         {
-            int splitCount = Main.rand.Next(6, 11);
+            int splitCount = Main.rand.Next(10, 15);
             float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
 
             for (int i = 0; i < splitCount; i++)
             {
-                float angle = baseAngle + MathHelper.TwoPi * i / splitCount + Main.rand.NextFloat(-0.2f, 0.2f);
-                float speed = Main.rand.NextFloat(7.5f, 12.5f);
+                float angle = baseAngle + MathHelper.TwoPi * i / splitCount + (i % 2 == 0 ? 0.12f : -0.12f);
+                float speed = Main.rand.NextFloat(8.5f, 13.5f);
                 Vector2 velocity = angle.ToRotationVector2() * speed;
 
                 Projectile.NewProjectile(

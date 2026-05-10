@@ -1,11 +1,11 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using CalamityMod.Particles;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
@@ -31,47 +31,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             gp.fallDelayTimer = 0;
             gp.detectedTarget = false;
             gp.isFalling = false;
+            gp.fallTargetX = projectile.Center.X;
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
             var gp = projectile.GetGlobalProjectile<EssenceofHavoc_GP>();
 
-            float gravity = 0.18f;
-            float maxFallSpeed = 16f;
+            projectile.velocity.Y = MathHelper.Min(projectile.velocity.Y + 0.18f, 16f);
 
-            projectile.velocity.Y += gravity;
-
-            if (projectile.velocity.Y > maxFallSpeed)
-                projectile.velocity.Y = maxFallSpeed;
-
-            // ================= 正下方窄区域检测（修复点） =================
-            NPC target = null;
-
-            float maxDistance = 60f * 16f; // 60格
-            float maxHorizontal = 1f * 16f; // ⭐ 只允许 ±X格
-
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-
-                if (!npc.active || !npc.CanBeChasedBy())
-                    continue;
-
-                float dx = npc.Center.X - projectile.Center.X;
-                float dy = npc.Center.Y - projectile.Center.Y;
-
-                if (dy > 0 && dy < maxDistance && Math.Abs(dx) <= maxHorizontal)
-                {
-                    target = npc;
-                    break;
-                }
-            }
-
-            // ================= 触发冲刺 =================
+            NPC target = FindPredictedDropTarget(projectile, out float predictedX);
             if (target != null && !gp.isFalling)
             {
                 gp.detectedTarget = true;
+                gp.fallTargetX = predictedX;
             }
 
             if (gp.detectedTarget && !gp.isFalling)
@@ -82,35 +55,68 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 {
                     gp.isFalling = true;
 
-                    // ⭐ 冲刺瞬间（比日光弱一点）
-                    projectile.velocity = new Vector2(0f, 12f);
-
-                    // ⭐ 只触发一次特效
+                    float horizontalVelocity = MathHelper.Clamp((gp.fallTargetX - projectile.Center.X) * 0.12f, -7.5f, 7.5f);
+                    projectile.velocity = new Vector2(horizontalVelocity, 24f);
                     SpawnChargeBackEffect(projectile);
                 }
             }
 
-            // ================= 下坠 =================
             if (gp.isFalling)
             {
-                projectile.velocity.X = 0f;
-                projectile.velocity.Y += 3.6f;
+                float desiredHorizontalVelocity = MathHelper.Clamp((gp.fallTargetX - projectile.Center.X) * 0.1f, -9f, 9f);
+                projectile.velocity.X = MathHelper.Lerp(projectile.velocity.X, desiredHorizontalVelocity, 0.08f);
+                projectile.velocity.Y += 7.2f;
             }
 
             projectile.rotation = projectile.velocity.ToRotation();
-
             projectile.velocity *= 1.030408f;
         }
 
-        // ===== 坠落伤害强化 =====
+        private NPC FindPredictedDropTarget(Projectile projectile, out float predictedX)
+        {
+            NPC target = null;
+            predictedX = projectile.Center.X;
+
+            float maxDistance = 60f * 16f;
+            float maxHorizontal = 2.5f * 16f;
+            float bestScore = float.MaxValue;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+
+                if (!npc.active || !npc.CanBeChasedBy())
+                    continue;
+
+                float dy = npc.Center.Y - projectile.Center.Y;
+                if (dy <= 0f || dy >= maxDistance)
+                    continue;
+
+                float fallTime = MathHelper.Clamp(dy / 24f, 0f, 34f);
+                float predictedNpcX = npc.Center.X + npc.velocity.X * fallTime;
+                float dx = predictedNpcX - projectile.Center.X;
+
+                if (Math.Abs(dx) > maxHorizontal)
+                    continue;
+
+                float score = dy + Math.Abs(dx) * 12f;
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    target = npc;
+                    predictedX = predictedNpcX;
+                }
+            }
+
+            return target;
+        }
+
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
             var gp = projectile.GetGlobalProjectile<EssenceofHavoc_GP>();
 
             if (gp.isFalling)
-            {
                 modifiers.SourceDamage *= 1.5f;
-            }
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
@@ -144,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                     -dirY
                 };
 
-                foreach (var dir in dirs)
+                foreach (Vector2 dir in dirs)
                 {
                     SquishyLightParticle particle = new(
                         projectile.Center,
@@ -158,7 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 }
             }
 
-            Vector2[] di1rs =
+            Vector2[] invDirs =
             {
                 Vector2.UnitX,
                 -Vector2.UnitX,
@@ -168,14 +174,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
             float[] speeds = { 6f, 10f, 14f };
 
-            foreach (var dir in di1rs)
+            foreach (Vector2 dir in invDirs)
             {
-                foreach (float spd in speeds)
+                foreach (float speed in speeds)
                 {
                     Projectile.NewProjectile(
                         projectile.GetSource_FromThis(),
                         projectile.Center,
-                        dir * spd,
+                        dir * speed,
                         ModContent.ProjectileType<EssenceofHavoc_INV>(),
                         (int)(projectile.damage * (isFalling ? 1.2f : 0.5f)),
                         projectile.knockBack,
@@ -185,7 +191,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             }
         }
 
-        // ================= 冲刺瞬间特效 =================
         private void SpawnChargeBackEffect(Projectile projectile)
         {
             Vector2 back = -projectile.velocity.SafeNormalize(Vector2.UnitY);
@@ -193,7 +198,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             for (int i = 0; i < 10; i++)
             {
                 float angle = MathHelper.TwoPi * i / 10f;
-
                 Vector2 dir = back.RotatedBy(angle) * Main.rand.NextFloat(2f, 5f);
 
                 SquishyLightParticle particle = new(
@@ -212,7 +216,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 back * 2f,
                 ThemeColor,
                 new Vector2(1f, 3f),
-                projectile.rotation - (MathHelper.Pi / 4f),
+                projectile.rotation - MathHelper.PiOver4,
                 0.25f,
                 0.02f,
                 22
@@ -230,5 +234,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         public int fallDelayTimer;
         public bool detectedTarget;
         public bool isFalling;
+        public float fallTargetX;
     }
 }

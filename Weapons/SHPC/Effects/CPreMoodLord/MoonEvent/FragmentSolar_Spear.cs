@@ -235,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Projectile.friendly = true;
             Projectile.hostile = false;
 
-            Projectile.penetrate = 2; // 穿透两次
+            Projectile.penetrate = 3;
             Projectile.timeLeft = 180;
 
             Projectile.ignoreWater = true;
@@ -249,8 +249,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Projectile.extraUpdates = 1;
         }
 
-        private int curveTimer = 0;     // 曲线阶段计时器
-        private Vector2 curveVel;       // 曲线飞行方向
         // ================= OnSpawn =================
         public override void OnSpawn(IEntitySource source)
         {
@@ -265,32 +263,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             // 基础旋转（长矛感）
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-
-
-
-            if (curveTimer > 0)
-            {
-                curveTimer--;
-
-                // 曲线：轻微摇摆
-                Projectile.velocity = Projectile.velocity.RotatedBy(MathHelper.ToRadians(0.8f)) * 0.99f;
-
-                if (curveTimer == 0)
-                {
-                    // 曲线结束 → 开始重新追踪
-                    NPC closestNPC = Main.npc
-                        .Where(npc => npc.active && !npc.friendly && npc.life > 0)
-                        .OrderBy(npc => Vector2.Distance(npc.Center, Projectile.Center))
-                        .FirstOrDefault();
-
-                    if (closestNPC != null)
-                    {
-                        Vector2 direction = closestNPC.Center - Projectile.Center;
-                        Projectile.velocity = Vector2.Normalize(direction) * Projectile.velocity.Length();
-                    }
-                }
-            }
-
             // 加速
             Projectile.velocity *= 1.01f;
 
@@ -323,7 +295,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 }
 
                 // 2. 外焰抛洒：左右两侧甩出高热火花，增强“太阳爆燃”感
-                if (Main.rand.NextBool(2))
+                if (Main.rand.NextBool(4))
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -341,12 +313,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                             Main.rand.NextFloat(1.5f, 2.7f)
                         );
                         d.noGravity = true;
-                        d.fadeIn = 2.5f;
+                        d.fadeIn = 1.25f;
                     }
                 }
 
                 // 3. 高温气泡 / 等离子火种：用 CustomSpark 做“鼓泡感”
-                if (Main.rand.NextBool(2))
+                if (!Main.rand.NextBool(3))
                 {
                     float t = Main.GlobalTimeWrappedHourly * 7.2f + Projectile.identity * 0.37f;
 
@@ -382,7 +354,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 }
 
                 // 4. 前端炽亮压缩光：让矛尖看起来像在烧穿空气
-                if (Main.rand.NextBool(3))
+                if (Main.rand.NextBool(6))
                 {
                     Vector2 frontPos = Projectile.Center + forward * Main.rand.NextFloat(8f, 14f);
                     Vector2 velocity = forward * Main.rand.NextFloat(0.5f, 2.2f) + Main.rand.NextVector2Circular(0.4f, 0.4f);
@@ -396,7 +368,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         Main.rand.NextFloat(1.2f, 1.9f)
                     );
                     frontFlash.noGravity = true;
-                    frontFlash.fadeIn = 2.5f;
+                    frontFlash.fadeIn = 1.25f;
                 }
 
                 // 5. 动态照明：中心偏白，外圈偏橙
@@ -418,10 +390,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // 瞄准最近的敌人并调整弹幕方向
-            NPC closestNPC = Main.npc
-                .Where(npc => npc.active && !npc.friendly && npc.life > 0 && npc.whoAmI != target.whoAmI)
-                .OrderBy(npc => Vector2.Distance(npc.Center, Projectile.Center))
-                .FirstOrDefault();
+            #if false
+            NPC closestNPC = null;
 
 
             if (closestNPC != null)
@@ -429,13 +399,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 // 命中后先折射，偏移 ±10°
                 float offset = Main.rand.NextBool() ? MathHelper.ToRadians(10f) : MathHelper.ToRadians(-10f);
                 Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(offset);
-                curveVel = dir * Projectile.velocity.Length();
+                Vector2 curveVel = dir * Projectile.velocity.Length();
 
                 // 开始进入曲线阶段
-                curveTimer = 30; // 例如持续 30 帧
+                int curveTimer = 30; // 例如持续 30 帧
                 Projectile.velocity = curveVel;
             }
 
+            #endif
             hitCount++;
 
             // ===== 日耀爆炸（每次命中触发）=====
@@ -447,6 +418,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.8f, Pitch = 0.08f }, Projectile.Center);
+            SpawnSolarExplosion();
             // 死亡也补一个爆炸
             SpawnSolarExplosion();
         }

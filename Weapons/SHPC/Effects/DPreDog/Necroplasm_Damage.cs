@@ -9,7 +9,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class Necroplasm_Damage : ModProjectile, ILocalizedModType
     {
@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.tileCollide = false;
 
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 120;
+            Projectile.timeLeft = 180;
 
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
@@ -41,7 +41,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void AI()
         {
             timer++; // 计时器
-            Projectile.velocity *= 0.95f;
+
+            if (timer > 20)
+            {
+                NPC target = FindTarget(1400f);
+                if (target != null)
+                {
+                    float trackingPower = Utils.GetLerpValue(20f, 120f, timer, true);
+                    float speed = MathHelper.Lerp(8f, 19f, trackingPower);
+                    Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, MathHelper.Lerp(0.08f, 0.22f, trackingPower));
+                    return;
+                }
+            }
+
+            Projectile.velocity *= 0.965f;
+        }
+
+        private NPC FindTarget(float maxDistance)
+        {
+            NPC result = null;
+            float bestDistance = maxDistance;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                result = npc;
+            }
+
+            return result;
         }
 
         // ===== 视觉完全复刻 =====

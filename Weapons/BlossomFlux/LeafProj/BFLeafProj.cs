@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
@@ -37,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
         private ref float ReconWanderTimer => ref Projectile.ai[1];
         private ref float BombardExplosionsLeft => ref Projectile.ai[1];
         private int bombardExplosionCooldown;
+        private int bombardMarkedExplosionCooldown;
 
         public override void SetStaticDefaults()
         {
@@ -109,6 +111,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             if (bombardExplosionCooldown > 0)
                 bombardExplosionCooldown--;
 
+            if (bombardMarkedExplosionCooldown > 0)
+                bombardMarkedExplosionCooldown--;
+
             BlossomFluxChloroplastPresetType preset = Preset;
             Color mainColor = BFArrowCommon.GetPresetColor(preset);
 
@@ -165,7 +170,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                    target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyDamageAmpMark(Projectile.owner, 30);
+                    target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyPriorityMark(Projectile.owner, BFReconLeftBalance.MarkDuration);
+                    if (BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
+                        Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, BFReconLeftBalance.MarkDuration);
+
                     if (IsReconPriorityTarget(target))
                     {
                         ReconWanderTimer = 10f;
@@ -275,19 +283,22 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
         {
             bool markedTarget = IsReconPriorityTarget(target);
             bool enhanced = markedTarget && Main.rand.NextBool(3);
-            if (!enhanced)
+
+            if (markedTarget)
+            {
+                if (bombardMarkedExplosionCooldown > 0)
+                    return;
+
+                bombardMarkedExplosionCooldown = 8;
+            }
+            else
             {
                 if (bombardExplosionCooldown > 0 || BombardExplosionsLeft <= 0f)
                     return;
 
                 BombardExplosionsLeft--;
+                bombardExplosionCooldown = 14;
             }
-            else if (bombardExplosionCooldown > 0)
-            {
-                return;
-            }
-
-            bombardExplosionCooldown = enhanced ? 8 : 14;
 
             if (Projectile.owner == Main.myPlayer)
             {

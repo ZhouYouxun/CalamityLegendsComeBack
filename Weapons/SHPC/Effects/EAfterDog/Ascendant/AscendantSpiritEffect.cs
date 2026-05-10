@@ -62,26 +62,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             int damage = (int)(projectile.damage * 1.5f);
-            float[] angleOffsets = { -0.42f, -0.18f, 0.18f, 0.42f };
+            float[] angleOffsets =
+            {
+                MathHelper.ToRadians(-20f),
+                MathHelper.ToRadians(-10f),
+                0f,
+                MathHelper.ToRadians(10f),
+                MathHelper.ToRadians(20f)
+            };
 
             for (int i = 0; i < angleOffsets.Length; i++)
             {
                 float angleOffset = angleOffsets[i];
-                float sideSign = Math.Sign(angleOffset);
-                if (sideSign == 0f)
-                    sideSign = 1f;
-
                 bool widerArc = Math.Abs(angleOffset) > 0.3f;
-                Vector2 spawnOffset = normal * sideSign * (widerArc ? 9f : 4f) + forward * (widerArc ? 6f : 2f);
-                Vector2 spawnPosition = projectile.Center + spawnOffset;
                 Vector2 launchDirection = forward.RotatedBy(angleOffset).SafeNormalize(forward);
+                Vector2 spawnOffset = launchDirection * 96f + normal * (i - 2f) * 8f;
+                Vector2 spawnPosition = projectile.Center + spawnOffset;
                 Color themeColor = AscendantSpirit_PROJ.RandomThemeColor();
-                float launchDelay = (widerArc ? 15f : 11f) + i * 1.15f;
+                float launchDelay = 9f + i * 10f;
 
                 int projectileIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     spawnPosition,
-                    launchDirection * 8.2f,
+                    launchDirection * 0.01f,
                     ModContent.ProjectileType<AscendantSpirit_PROJ>(),
                     damage,
                     projectile.knockBack,

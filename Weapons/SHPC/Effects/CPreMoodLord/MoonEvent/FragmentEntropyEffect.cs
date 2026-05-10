@@ -19,10 +19,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override Color EndColor => new Color(0, 0, 0);
 
         public override float SquishyLightParticleFactor => 0f;
-        public override float ExplosionPulseFactor => 1.55f;
+        public override float ExplosionPulseFactor => 0f;
+        public override float GlowScaleFactor => 0f;
+        public override float GlowIntensityFactor => 0f;
+        public override bool EnableDefaultSlowdown => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
+            projectile.timeLeft = 2;
+            projectile.penetrate = -1;
+            projectile.tileCollide = false;
+            projectile.Kill();
         }
 
         public override void AI(Projectile projectile, Player owner)
@@ -146,21 +153,86 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             Vector2 center = projectile.Center;
 
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                center,
-                Vector2.Zero,
-                ModContent.ProjectileType<FragmentEntropyExplosion>(),
-                (int)(projectile.damage * 0.1f),
-                projectile.knockBack,
-                projectile.owner
-            );
-
-            SpawnOrderedBurst(center);
-            SpawnChaoticBurst(center);
-            SpawnCollapseCore(center);
+            SpawnEntropyFanBurst(projectile, center);
+            FireEntropyBursts(projectile, owner, center);
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = -0.48f }, center);
+        }
+
+        private static void FireEntropyBursts(Projectile projectile, Player owner, Vector2 center)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            float[] offsets = { -5f, 0f, 5f };
+
+            for (int i = 0; i < offsets.Length; i++)
+            {
+                Vector2 direction = forward.RotatedBy(MathHelper.ToRadians(offsets[i]));
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    center + direction * 10f + side * ((i - 1f) * 4f),
+                    direction * 15.5f,
+                    ModContent.ProjectileType<FragmentEntropy_CosmicFire>(),
+                    projectile.damage,
+                    projectile.knockBack,
+                    projectile.owner
+                );
+            }
+        }
+
+        private static void SpawnEntropyFanBurst(Projectile projectile, Vector2 center)
+        {
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+
+            DirectionalPulseRing pulse = new(
+                center,
+                forward * 1.5f,
+                new Color(92, 255, 210),
+                new Vector2(0.45f, 2.3f),
+                forward.ToRotation(),
+                0.18f,
+                0.018f,
+                22
+            );
+            GeneralParticleHandler.SpawnParticle(pulse);
+
+            for (int i = 0; i < 24; i++)
+            {
+                float fanInterpolant = i / 23f;
+                float angle = MathHelper.Lerp(-0.72f, 0.72f, fanInterpolant);
+                Vector2 direction = forward.RotatedBy(angle);
+                Vector2 spawnOffset = side * MathHelper.Lerp(-18f, 18f, fanInterpolant) + forward * Main.rand.NextFloat(2f, 18f);
+                Color shardColor = Color.Lerp(new Color(38, 255, 196), new Color(170, 86, 255), Main.rand.NextFloat(0.1f, 0.8f));
+
+                AltSparkParticle shard = new(
+                    center + spawnOffset,
+                    direction * Main.rand.NextFloat(4f, 12f),
+                    false,
+                    Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.8f, 1.35f),
+                    shardColor
+                );
+                GeneralParticleHandler.SpawnParticle(shard);
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                float angle = Main.rand.NextFloat(-0.9f, 0.9f);
+                Vector2 direction = forward.RotatedBy(angle);
+                SparkParticle spark = new(
+                    center + forward * Main.rand.NextFloat(4f, 20f) + side * Main.rand.NextFloat(-18f, 18f),
+                    direction * Main.rand.NextFloat(2.5f, 8f),
+                    false,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.55f, 1.05f),
+                    Color.Lerp(new Color(220, 255, 245), new Color(88, 110, 255), Main.rand.NextFloat())
+                );
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
         }
 
         private static void SpawnOrderedBurst(Vector2 center)

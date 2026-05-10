@@ -156,6 +156,8 @@ Mods: {
 				BFLeftPlagueReaper.DisplayName: 侵染收割者
 				BFRecoveryFlash.DisplayName: 复苏闪光
 				BFArrow_DBombVisual.DisplayName: 歼灭上射视觉箭
+				// BFEXConvergingLeaf.DisplayName: B F E X Converging Leaf
+				// BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
 			}
 
 			Ranged.BFAimScope.DisplayName: 叶流瞄准镜
