@@ -2,9 +2,11 @@ using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -17,6 +19,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         // 自定义计时器（禁止用localAI）
         private int timer = 0;
+        private const float AshEffectIntensity = 0.8f;
+        private const int ExplosionTriggerFrame = 15;
+        private const int PixelRingLifetime = 18;
+        private bool exploded;
+        private int pixelRingTimer = -1;
+        private Vector2 pixelRingCenter;
 
         public override void SetDefaults()
         {
@@ -38,6 +46,63 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override void AI()
         {
+            if (exploded)
+            {
+                pixelRingTimer++;
+                Projectile.Center = pixelRingCenter;
+
+                if (pixelRingTimer >= PixelRingLifetime)
+                    Projectile.Kill();
+
+                return;
+            }
+
+            int targetIndex = (int)Projectile.ai[0];
+
+            if (targetIndex < 0 || targetIndex >= Main.npc.Length)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            NPC target = Main.npc[targetIndex];
+
+            if (!target.active)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.Center = target.Center;
+            timer++;
+
+            if (timer != ExplosionTriggerFrame)
+                return;
+
+            exploded = true;
+            pixelRingTimer = 0;
+            pixelRingCenter = Projectile.Center;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, PixelRingLifetime);
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<AshesofAnn_SuperEXP>(),
+                (int)(Projectile.damage * 1.0f),
+                Projectile.knockBack,
+                Projectile.owner
+            );
+
+            float shakePower = 12f * AshEffectIntensity;
+            float distanceFactor = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceFactor);
+
+            if (!Main.dedServ)
+                CreateUltimateAshExplosionFX(Projectile.Center);
+        }
+
+        /*
             // 读取目标NPC
             int targetIndex = (int)Projectile.ai[0];
 
@@ -92,8 +157,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             }
         }
                         
+        */
+
         public override bool PreDraw(ref Color lightColor)
         {
+            if (exploded && pixelRingTimer >= 0)
+                DrawCrimsonMagicPixelRing(pixelRingCenter, pixelRingTimer);
+
             return false; // 完全透明，不绘制
         }
 
@@ -103,12 +173,56 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
 
 
+        private static int ScaledCount(int count) => Math.Max(1, (int)MathF.Round(count * AshEffectIntensity));
+
+        private static float ScaledPower(float value) => value * AshEffectIntensity;
+
+        private void DrawCrimsonMagicPixelRing(Vector2 center, int frame)
+        {
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Vector2 drawCenter = center - Main.screenPosition;
+            float progress = Utils.GetLerpValue(0f, PixelRingLifetime, frame, true);
+            float easedProgress = 1f - (1f - progress) * (1f - progress) * (1f - progress);
+            float radius = MathHelper.Lerp(64f, ScaledPower(960f), easedProgress);
+            float alpha = (1f - progress) * (0.72f + 0.28f * (float)Math.Sin(progress * MathHelper.Pi));
+            float thickness = MathHelper.Lerp(10f, 3.5f, progress) * AshEffectIntensity;
+            int segmentCount = ScaledCount(96);
+            float segmentLength = MathHelper.TwoPi * radius / segmentCount * 0.72f;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            for (int i = 0; i < segmentCount; i++)
+            {
+                float angle = MathHelper.TwoPi * i / segmentCount;
+                Vector2 outward = angle.ToRotationVector2();
+                Vector2 tangent = outward.RotatedBy(MathHelper.PiOver2);
+                Vector2 position = drawCenter + outward * radius;
+
+                Color ringColor = Color.Lerp(new Color(255, 94, 32), new Color(150, 0, 0), progress * 0.72f);
+                ringColor = Color.Lerp(ringColor, new Color(255, 210, 112), 0.16f * (1f - progress));
+                ringColor.A = 0;
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    position,
+                    null,
+                    ringColor * alpha,
+                    tangent.ToRotation(),
+                    new Vector2(0f, 0.5f),
+                    new Vector2(segmentLength, thickness),
+                    SpriteEffects.None,
+                    0);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+        }
+
         private void CreateUltimateAshExplosionFX(Vector2 center)
         {
             // 爆炸音效
             SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸")
             {
-                Volume = 0.82f,
+                Volume = 0.82f * AshEffectIntensity,
                 Pitch = -0.08f,
                 PitchVariance = 0.16f,
                 MaxInstances = 5
@@ -119,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 Vector2.Zero,
                 new Color(200, 30, 30),
                 "CalamityMod/Particles/LargeBloom",
-                Vector2.One,
+                Vector2.One * AshEffectIntensity,
                 Main.rand.NextFloat(-0.12f, 0.12f),
                 0.18f,
                 0.82f,
@@ -127,101 +241,101 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 false);
             GeneralParticleHandler.SpawnParticle(compactPulse);
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < ScaledCount(24); i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 13f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(ScaledPower(4f), ScaledPower(13f));
                 Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(24f, 24f),
+                    center + Main.rand.NextVector2Circular(ScaledPower(24f), ScaledPower(24f)),
                     DustID.Torch,
                     velocity,
                     80,
                     Color.Lerp(new Color(255, 70, 24), new Color(90, 0, 0), Main.rand.NextFloat(0.2f, 0.75f)),
-                    Main.rand.NextFloat(1f, 1.7f));
+                    Main.rand.NextFloat(1f, 1.7f) * AshEffectIntensity);
                 dust.noGravity = true;
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < ScaledCount(10); i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 9f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(ScaledPower(3f), ScaledPower(9f));
                 Particle line = new LineParticle(
                     center,
                     velocity,
                     false,
                     Main.rand.Next(14, 22),
-                    Main.rand.NextFloat(0.45f, 0.82f),
+                    Main.rand.NextFloat(0.45f, 0.82f) * AshEffectIntensity,
                     Color.Lerp(new Color(255, 96, 40), new Color(120, 0, 0), Main.rand.NextFloat(0.25f, 0.7f)));
                 GeneralParticleHandler.SpawnParticle(line);
             }
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < ScaledCount(6); i++)
             {
                 Particle smoke = new HeavySmokeParticle(
-                    center + Main.rand.NextVector2Circular(24f, 24f),
-                    Main.rand.NextVector2Circular(2.5f, 2.5f),
+                    center + Main.rand.NextVector2Circular(ScaledPower(24f), ScaledPower(24f)),
+                    Main.rand.NextVector2Circular(ScaledPower(2.5f), ScaledPower(2.5f)),
                     Main.rand.NextBool() ? new Color(70, 0, 0) : Color.Black,
                     Main.rand.Next(22, 34),
-                    Main.rand.NextFloat(0.65f, 1.05f),
-                    0.34f,
+                    Main.rand.NextFloat(0.65f, 1.05f) * AshEffectIntensity,
+                    0.34f * AshEffectIntensity,
                     Main.rand.NextFloat(-0.05f, 0.05f),
                     false);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            return;
+            // return;
 
             Particle expandingPulse = new DirectionalPulseRing(
                 center,
                 Vector2.Zero,
                 new Color(200, 30, 30), // 赤红写死
-                new Vector2(0.72f, 0.72f),
+                new Vector2(0.72f, 0.72f) * AshEffectIntensity,
                 0f,
                 0.28f,
-                12f, // 改成12
+                ScaledPower(12f), // scaled burst radius
                 14
             );
             GeneralParticleHandler.SpawnParticle(expandingPulse);
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < ScaledCount(24); i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 13f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(ScaledPower(4f), ScaledPower(13f));
                 Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(24f, 24f),
+                    center + Main.rand.NextVector2Circular(ScaledPower(24f), ScaledPower(24f)),
                     DustID.Torch,
                     velocity,
                     80,
                     Color.Lerp(new Color(255, 70, 24), new Color(90, 0, 0), Main.rand.NextFloat(0.2f, 0.75f)),
-                    Main.rand.NextFloat(1f, 1.7f));
+                    Main.rand.NextFloat(1f, 1.7f) * AshEffectIntensity);
                 dust.noGravity = true;
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < ScaledCount(10); i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 9f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(ScaledPower(3f), ScaledPower(9f));
                 Particle line = new LineParticle(
                     center,
                     velocity,
                     false,
                     Main.rand.Next(14, 22),
-                    Main.rand.NextFloat(0.45f, 0.82f),
+                    Main.rand.NextFloat(0.45f, 0.82f) * AshEffectIntensity,
                     Color.Lerp(new Color(255, 96, 40), new Color(120, 0, 0), Main.rand.NextFloat(0.25f, 0.7f)));
                 GeneralParticleHandler.SpawnParticle(line);
             }
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < ScaledCount(6); i++)
             {
                 Particle smoke = new HeavySmokeParticle(
-                    center + Main.rand.NextVector2Circular(24f, 24f),
-                    Main.rand.NextVector2Circular(2.5f, 2.5f),
+                    center + Main.rand.NextVector2Circular(ScaledPower(24f), ScaledPower(24f)),
+                    Main.rand.NextVector2Circular(ScaledPower(2.5f), ScaledPower(2.5f)),
                     Main.rand.NextBool() ? new Color(70, 0, 0) : Color.Black,
                     Main.rand.Next(22, 34),
-                    Main.rand.NextFloat(0.65f, 1.05f),
-                    0.34f,
+                    Main.rand.NextFloat(0.65f, 1.05f) * AshEffectIntensity,
+                    0.34f * AshEffectIntensity,
                     Main.rand.NextFloat(-0.05f, 0.05f),
                     false);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            return;
+            // return;
 
             // 1. 最内核：高温内爆，只放亮而烫的熔岩球
             CreateAshInnerCollapse(center);
@@ -264,31 +378,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     switch (layer)
                     {
                         case 0:
-                            count = 70;
-                            minRadius = 30f;
-                            maxRadius = 120f;
-                            minSpeed = 8f;
-                            maxSpeed = 18f;
+                            count = ScaledCount(70);
+                            minRadius = ScaledPower(30f);
+                            maxRadius = ScaledPower(120f);
+                            minSpeed = ScaledPower(8f);
+                            maxSpeed = ScaledPower(18f);
                             colorA = new Color(255, 120, 30);
                             colorB = new Color(255, 240, 150);
                             break;
 
                         case 1:
-                            count = 90;
-                            minRadius = 100f;
-                            maxRadius = 220f;
-                            minSpeed = 10f;
-                            maxSpeed = 24f;
+                            count = ScaledCount(90);
+                            minRadius = ScaledPower(100f);
+                            maxRadius = ScaledPower(220f);
+                            minSpeed = ScaledPower(10f);
+                            maxSpeed = ScaledPower(24f);
                             colorA = new Color(255, 80, 20);
                             colorB = new Color(255, 180, 70);
                             break;
 
                         default:
-                            count = 120;
-                            minRadius = 180f;
-                            maxRadius = 360f; // 原来约 80，这里直接拉到约 3 倍以上
-                            minSpeed = 12f;
-                            maxSpeed = 30f;
+                            count = ScaledCount(120);
+                            minRadius = ScaledPower(180f);
+                            maxRadius = ScaledPower(360f); // scaled from the restored large ring
+                            minSpeed = ScaledPower(12f);
+                            maxSpeed = ScaledPower(30f);
                             colorA = new Color(200, 40, 10);
                             colorB = new Color(255, 150, 40);
                             break;
@@ -310,12 +424,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
                         Dust coreDust = Dust.NewDustPerfect(spawnPos, 264);
                         coreDust.noGravity = true;
-                        coreDust.scale = Main.rand.NextFloat(1.6f, 3.2f);
+                        coreDust.scale = Main.rand.NextFloat(1.6f, 3.2f) * AshEffectIntensity;
 
                         // 速度：以向外爆散为主，同时掺一点切线旋感
                         coreDust.velocity =
                             outward * Main.rand.NextFloat(minSpeed, maxSpeed) +
-                            tangent * Main.rand.NextFloat(-3.5f, 3.5f);
+                            tangent * Main.rand.NextFloat(ScaledPower(-2.2f), ScaledPower(2.2f));
 
                         coreDust.color = Color.Lerp(colorA, colorB, Main.rand.NextFloat());
                     }
@@ -329,10 +443,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 float globalScale = Main.rand.NextFloat(0.92f, 1.08f);
 
                 // ===== 中心填充（防空洞）=====
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < ScaledCount(8); i++)
                 {
-                    Vector2 offset = Main.rand.NextVector2Circular(16f, 16f);
-                    float radius = Main.rand.NextFloat(60f, 90f) * globalScale;
+                    Vector2 offset = Main.rand.NextVector2Circular(ScaledPower(16f), ScaledPower(16f));
+                    float radius = Main.rand.NextFloat(ScaledPower(60f), ScaledPower(90f)) * globalScale;
 
                     RancorLavaMetaball.SpawnParticle(center + offset, radius);
                 }
@@ -342,7 +456,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
                 for (int ringIndex = 0; ringIndex < ringRadii.Length; ringIndex++)
                 {
-                    float ringRadius = ringRadii[ringIndex] * globalScale;
+                    float ringRadius = ScaledPower(ringRadii[ringIndex]) * globalScale;
 
                     // 点密度随半径变化
                     float spacing = 48f;
@@ -360,7 +474,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
                         Vector2 pos = center + angle.ToRotationVector2() * (ringRadius + radialJitter);
 
-                        float size = (34f + ringIndex * 5f) * globalScale + Main.rand.NextFloat(-4f, 4f);
+                        float size = ((34f + ringIndex * 5f) * globalScale + Main.rand.NextFloat(-4f, 4f)) * AshEffectIntensity;
 
                         RancorLavaMetaball.SpawnParticle(pos, size);
                     }
@@ -370,10 +484,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             // 整体随机（统一作用）
             float globalRotation = Main.rand.NextFloat(MathHelper.TwoPi);
-            float globalTightness = Main.rand.NextFloat(0.85f, 1.2f);
+            float globalTightness = Main.rand.NextFloat(0.85f, 1.2f) * AshEffectIntensity;
 
             int armCount = 4;
-            int pointsPerArm = 24;
+            int pointsPerArm = ScaledCount(24);
 
             for (int arm = 0; arm < armCount; arm++)
             {
@@ -383,7 +497,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 {
                     float t = i / (float)(pointsPerArm - 1);
 
-                    float radius = MathHelper.Lerp(90f, 480f, t);
+                    float radius = MathHelper.Lerp(ScaledPower(90f), ScaledPower(480f), t);
 
                     // 螺旋强度带随机（但整条臂一致）
                     float spiral = MathHelper.Lerp(0.2f, 1.4f, t) * globalTightness;
@@ -399,10 +513,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     Vector2 spawnPos = center + outward * radius;
 
                     Vector2 velocity =
-                        -outward * MathHelper.Lerp(5f, 14f, t) +
-                        tangent * MathHelper.Lerp(2.6f, 0.6f, t) * (arm % 2 == 0 ? 1f : -1f);
+                        outward * MathHelper.Lerp(ScaledPower(5f), ScaledPower(14f), t) +
+                        tangent * MathHelper.Lerp(ScaledPower(1.2f), ScaledPower(0.25f), t) * (arm % 2 == 0 ? 1f : -1f);
 
-                    float size = MathHelper.Lerp(55f, 85f, 1f - t) + Main.rand.NextFloat(-4f, 4f);
+                    float size = (MathHelper.Lerp(55f, 85f, 1f - t) + Main.rand.NextFloat(-4f, 4f)) * AshEffectIntensity;
 
                     GruesomeMetaball.SpawnParticle(spawnPos, velocity, size);
 
@@ -410,7 +524,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     if (i % 3 == 1 && i < pointsPerArm - 1)
                     {
                         float t2 = (i + 1) / (float)(pointsPerArm - 1);
-                        float r2 = MathHelper.Lerp(90f, 480f, t2);
+                        float r2 = MathHelper.Lerp(ScaledPower(90f), ScaledPower(480f), t2);
 
                         float spiral2 = MathHelper.Lerp(0.2f, 1.4f, t2) * globalTightness;
                         float wave2 = (float)Math.Sin(t2 * MathHelper.TwoPi * 1.6f + arm * 0.7f) * 0.18f;
@@ -425,8 +539,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                         Vector2 midTan = midDir.RotatedBy(MathHelper.PiOver2);
 
                         Vector2 midVel =
-                            -midDir * MathHelper.Lerp(6f, 12f, t) +
-                            midTan * MathHelper.Lerp(2f, 0.5f, t) * (arm % 2 == 0 ? 1f : -1f);
+                            midDir * MathHelper.Lerp(ScaledPower(6f), ScaledPower(12f), t) +
+                            midTan * MathHelper.Lerp(ScaledPower(0.9f), ScaledPower(0.2f), t) * (arm % 2 == 0 ? 1f : -1f);
 
                         GruesomeMetaball.SpawnParticle(mid, midVel, size * 0.9f);
                     }
@@ -440,9 +554,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 // 三个固定主圈：40格、50格、60格
                 float[] mainRings = new float[]
                 {
-                    40f * 16f,
-                    50f * 16f,
-                    60f * 16f
+                    ScaledPower(40f * 16f),
+                    ScaledPower(50f * 16f),
+                    ScaledPower(60f * 16f)
                 };
 
                 Color[] innerColors = new Color[]
@@ -510,7 +624,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private void CreateAshScatterGlyphsOnRing(Vector2 center, float ringRadius, float globalRotation, Color innerColor, Color outerColor)
         {
             // 每一圈上随机散布一些符文位点
-            int glyphCount = Main.rand.Next(8, 13);
+            int glyphCount = Main.rand.Next(ScaledCount(8), ScaledCount(13) + 1);
 
             for (int i = 0; i < glyphCount; i++)
             {
@@ -528,7 +642,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     case 0:
                         {
                             // 小圆环
-                            float smallRingRadius = Main.rand.NextFloat(28f, 52f);
+                            float smallRingRadius = Main.rand.NextFloat(ScaledPower(28f), ScaledPower(52f));
                             int smallRingCount = Main.rand.Next(10, 16);
 
                             CreateAshCircleRing(
@@ -547,7 +661,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     case 1:
                         {
                             // 正三角
-                            float triangleRadius = Main.rand.NextFloat(26f, 46f);
+                            float triangleRadius = Main.rand.NextFloat(ScaledPower(26f), ScaledPower(46f));
                             CreateAshTriangle(
                                 glyphCenter,
                                 triangleRadius,
@@ -561,7 +675,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     default:
                         {
                             // 倒三角
-                            float triangleRadius = Main.rand.NextFloat(26f, 46f);
+                            float triangleRadius = Main.rand.NextFloat(ScaledPower(26f), ScaledPower(46f));
                             CreateAshTriangle(
                                 glyphCenter,
                                 triangleRadius,
@@ -574,25 +688,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 }
 
                 // 每个位点再补一点朝外散的小碎屑，让它不显得太死板
-                int shardCount = Main.rand.Next(4, 8);
+                int shardCount = Main.rand.Next(ScaledCount(4), ScaledCount(8) + 1);
                 for (int j = 0; j < shardCount; j++)
                 {
-                    Dust shardDust = Dust.NewDustPerfect(glyphCenter + Main.rand.NextVector2Circular(12f, 12f), 267);
+                    Dust shardDust = Dust.NewDustPerfect(glyphCenter + Main.rand.NextVector2Circular(ScaledPower(12f), ScaledPower(12f)), 267);
                     shardDust.noGravity = true;
-                    shardDust.scale = Main.rand.NextFloat(1.0f, 1.45f);
+                    shardDust.scale = Main.rand.NextFloat(1.0f, 1.45f) * AshEffectIntensity;
                     shardDust.color = Color.Lerp(innerColor, outerColor, Main.rand.NextFloat());
                     shardDust.velocity =
-                        direction * Main.rand.NextFloat(0.8f, 2.2f) +
-                        direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-1.1f, 1.1f);
+                        direction * Main.rand.NextFloat(ScaledPower(0.8f), ScaledPower(2.2f)) +
+                        direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(ScaledPower(-0.5f), ScaledPower(0.5f));
                 }
             }
         }
 
         private void CreateAshCircleRing(Vector2 center, float radius, int count, int dustType, Color innerColor, Color outerColor, float outwardSpeed, float tangentialSpeed)
         {
-            for (int i = 0; i < count; i++)
+            int effectiveCount = ScaledCount(count);
+            for (int i = 0; i < effectiveCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / count;
+                float angle = MathHelper.TwoPi * i / effectiveCount;
                 Vector2 outward = angle.ToRotationVector2();
                 Vector2 tangent = outward.RotatedBy(MathHelper.PiOver2);
 
@@ -600,12 +715,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 Vector2 spawnPos = center + outward * radius;
 
                 // 让 Dust 有“向外略扩散 + 沿切线旋转”的观感
-                Vector2 velocity = outward * Main.rand.NextFloat(outwardSpeed * 0.8f, outwardSpeed * 1.25f) +
-                                   tangent * Main.rand.NextFloat(-tangentialSpeed, tangentialSpeed);
+                Vector2 velocity = outward * Main.rand.NextFloat(ScaledPower(outwardSpeed * 0.8f), ScaledPower(outwardSpeed * 1.25f)) +
+                                   tangent * Main.rand.NextFloat(ScaledPower(-tangentialSpeed * 0.45f), ScaledPower(tangentialSpeed * 0.45f));
 
                 Dust ringDust = Dust.NewDustPerfect(spawnPos, dustType);
                 ringDust.noGravity = true;
-                ringDust.scale = Main.rand.NextFloat(1.15f, 1.85f);
+                ringDust.scale = Main.rand.NextFloat(1.15f, 1.85f) * AshEffectIntensity;
                 ringDust.color = Color.Lerp(innerColor, outerColor, Main.rand.NextFloat());
                 ringDust.velocity = velocity;
                 ringDust.rotation = angle;
@@ -626,9 +741,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 Vector2 start = points[i];
                 Vector2 end = points[(i + 1) % 3];
 
-                for (int j = 0; j < 28; j++)
+                int lineCount = ScaledCount(28);
+                for (int j = 0; j < lineCount; j++)
                 {
-                    float t = j / 27f;
+                    float t = j / (float)Math.Max(1, lineCount - 1);
                     Vector2 pos = Vector2.Lerp(start, end, t);
 
                     // 边线 Dust 轻微向外扩散，同时带一点旋转感
@@ -637,9 +753,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
                     Dust lineDust = Dust.NewDustPerfect(pos, dustType);
                     lineDust.noGravity = true;
-                    lineDust.scale = Main.rand.NextFloat(1.15f, 1.7f);
+                    lineDust.scale = Main.rand.NextFloat(1.15f, 1.7f) * AshEffectIntensity;
                     lineDust.color = Color.Lerp(dustColor, Color.Black, Main.rand.NextFloat(0.35f));
-                    lineDust.velocity = outward * Main.rand.NextFloat(0.8f, 1.9f) + tangent * Main.rand.NextFloat(-1.2f, 1.2f);
+                    lineDust.velocity = outward * Main.rand.NextFloat(ScaledPower(0.8f), ScaledPower(1.9f)) + tangent * Main.rand.NextFloat(ScaledPower(-0.45f), ScaledPower(0.45f));
                 }
             }
         }
@@ -649,18 +765,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             // ===== 1. 先铺一层高密度黑烟圆环 =====
             // 小半径 = 10×16，大半径 = 20×16
-            float innerRadius = 10f * 16f;
-            float outerRadius = 20f * 16f;
+            float innerRadius = ScaledPower(10f * 16f);
+            float outerRadius = ScaledPower(20f * 16f);
 
             // 用多圈 + 多点的方式把圆环铺密，同时让它向外旋转着散掉
-            int ringLayers = 6;
+            int ringLayers = ScaledCount(6);
             for (int layer = 0; layer < ringLayers; layer++)
             {
-                float layerT = layer / (float)(ringLayers - 1);
+                float layerT = layer / (float)Math.Max(1, ringLayers - 1);
                 float radius = MathHelper.Lerp(innerRadius, outerRadius, layerT);
 
                 // 外圈点更多，保证不会稀
-                int pointCount = (int)MathHelper.Lerp(36f, 64f, layerT);
+                int pointCount = ScaledCount((int)MathHelper.Lerp(36f, 64f, layerT));
 
                 // 每一层整体随机转一点，避免太死板
                 float layerRotation = Main.rand.NextFloat(MathHelper.TwoPi);
@@ -673,15 +789,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
                     // 位置轻微抖动，但整体仍然是圆环
                     Vector2 spawnPos = center
-                        + outward * (radius + Main.rand.NextFloat(-10f, 10f))
-                        + Main.rand.NextVector2Circular(4f, 4f);
+                        + outward * (radius + Main.rand.NextFloat(ScaledPower(-10f), ScaledPower(10f)))
+                        + Main.rand.NextVector2Circular(ScaledPower(4f), ScaledPower(4f));
 
                     // 向外 + 切线速度，形成“往外旋转着消失”的感觉
                     Vector2 smokeVel =
-                        outward * Main.rand.NextFloat(1.2f, 2.8f) +
-                        tangent * Main.rand.NextFloat(-2.2f, 2.2f);
+                        outward * Main.rand.NextFloat(ScaledPower(1.2f), ScaledPower(2.8f)) +
+                        tangent * Main.rand.NextFloat(ScaledPower(-0.8f), ScaledPower(0.8f));
 
-                    float smokeScale = Main.rand.NextFloat(1.15f, 1.95f);
+                    float smokeScale = Main.rand.NextFloat(1.15f, 1.95f) * AshEffectIntensity;
 
                     Particle smoke = new SmallSmokeParticle(
                         spawnPos,
@@ -696,22 +812,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             }
 
             // ===== 2. 保留原本的随机黑烟填充 =====
-            for (int i = 0; i < 64; i++)
+            for (int i = 0; i < ScaledCount(64); i++)
             {
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 Vector2 direction = angle.ToRotationVector2();
                 Vector2 tangent = direction.RotatedBy(MathHelper.PiOver2);
 
                 // 中层范围，专门填满法阵与内爆之间的空隙
-                Vector2 spawnPos = center + direction * Main.rand.NextFloat(180f, 860f);
+                Vector2 spawnPos = center + direction * Main.rand.NextFloat(ScaledPower(180f), ScaledPower(860f));
 
                 // 也给这层一点旋转 outward 的感觉
                 Vector2 smokeVel =
-                    direction * Main.rand.NextFloat(1.6f, 5.2f) +
-                    tangent * Main.rand.NextFloat(-1.8f, 1.8f) +
-                    Main.rand.NextVector2Circular(0.8f, 0.8f);
+                    direction * Main.rand.NextFloat(ScaledPower(1.6f), ScaledPower(5.2f)) +
+                    tangent * Main.rand.NextFloat(ScaledPower(-0.7f), ScaledPower(0.7f)) +
+                    Main.rand.NextVector2Circular(ScaledPower(0.8f), ScaledPower(0.8f));
 
-                float smokeScale = Main.rand.NextFloat(1.3f, 2.5f);
+                float smokeScale = Main.rand.NextFloat(1.3f, 2.5f) * AshEffectIntensity;
 
                 Particle smoke = new SmallSmokeParticle(
                     spawnPos,
@@ -729,34 +845,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             // ===== 最外层细火花：负责把整体观感撑到超大直径 =====
             // 这里用更细、更远、更稀碎的 Dust 当 spark 层来铺外圈
-            for (int i = 0; i < 180; i++)
+            int outerSparkCount = ScaledCount(180);
+            for (int i = 0; i < outerSparkCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / 180f + Main.rand.NextFloat(-0.02f, 0.02f);
+                float angle = MathHelper.TwoPi * i / outerSparkCount + Main.rand.NextFloat(-0.02f, 0.02f);
                 Vector2 outward = angle.ToRotationVector2();
                 Vector2 tangent = outward.RotatedBy(MathHelper.PiOver2);
 
                 // 外层起始半径很大，确保整体视觉接近直径 2700
-                Vector2 spawnPos = center + outward * Main.rand.NextFloat(980f, 1280f);
+                Vector2 spawnPos = center + outward * Main.rand.NextFloat(ScaledPower(980f), ScaledPower(1280f));
 
                 Dust spark = Dust.NewDustPerfect(spawnPos, 264);
                 spark.noGravity = true;
-                spark.scale = Main.rand.NextFloat(0.85f, 1.45f);
+                spark.scale = Main.rand.NextFloat(0.85f, 1.45f) * AshEffectIntensity;
                 spark.color = Color.Lerp(new Color(255, 70, 30), new Color(255, 180, 80), Main.rand.NextFloat());
 
                 // 小 outward + 强一点切线，形成“旋着散掉”的薄外圈
-                spark.velocity = outward * Main.rand.NextFloat(1.4f, 3.4f) + tangent * Main.rand.NextFloat(-2.8f, 2.8f);
+                spark.velocity = outward * Main.rand.NextFloat(ScaledPower(1.4f), ScaledPower(3.4f)) + tangent * Main.rand.NextFloat(ScaledPower(-0.9f), ScaledPower(0.9f));
             }
 
             // ===== 再补一层暗红碎片，让外圈不至于全是亮点 =====
-            for (int i = 0; i < 90; i++)
+            for (int i = 0; i < ScaledCount(90); i++)
             {
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 Vector2 outward = angle.ToRotationVector2();
 
-                Vector2 spawnPos = center + outward * Main.rand.NextFloat(760f, 1180f);
-                Vector2 velocity = outward * Main.rand.NextFloat(2.4f, 5.5f) + outward.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-1.5f, 1.5f);
+                Vector2 spawnPos = center + outward * Main.rand.NextFloat(ScaledPower(760f), ScaledPower(1180f));
+                Vector2 velocity = outward * Main.rand.NextFloat(ScaledPower(2.4f), ScaledPower(5.5f)) + outward.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(ScaledPower(-0.55f), ScaledPower(0.55f));
 
-                float size = Main.rand.NextFloat(24f, 52f);
+                float size = Main.rand.NextFloat(24f, 52f) * AshEffectIntensity;
                 GruesomeMetaball.SpawnParticle(spawnPos, velocity, size);
             }
         }

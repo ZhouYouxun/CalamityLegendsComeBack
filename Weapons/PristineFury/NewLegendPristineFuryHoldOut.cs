@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         private int hookChargeTimer;
         private int hookCooldown;
+        private bool hookChargeReady;
         private bool hookFiredForThisHold;
         private bool leftHeldLastFrame;
         private bool rightHeldLastFrame;
@@ -104,15 +105,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
             }
 
+            if (hookChargeReady && leftHeldLastFrame && rightHeldLastFrame)
+            {
+                FireExtractionHook();
+                ResetHookChargeAfterFire();
+                leftHeldLastFrame = leftHeld;
+                rightHeldLastFrame = rightHeld;
+                return;
+            }
+
             DecayHookCharge();
 
             if (!leftHeld && !rightHeld)
+            {
                 hookFiredForThisHold = false;
+                hookChargeReady = false;
+            }
 
             PristineFuryLeftEffect effect = PristineFuryLeftEffectRegistry.Get(CurrentMark);
             effect.Update(this, leftHeld, leftHeld && !leftHeldLastFrame, !leftHeld && leftHeldLastFrame);
 
-            HandleRightClick(rightHeld, rightHeld && !rightHeldLastFrame);
+            HandleRightClick(rightHeld);
 
             leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;
@@ -128,30 +141,47 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
             }
 
-            hookChargeTimer++;
+            if (!hookChargeReady)
+                hookChargeTimer++;
+
+            if (hookChargeTimer >= HookChargeMaxFrames)
+            {
+                hookChargeTimer = HookChargeMaxFrames;
+
+                if (!hookChargeReady)
+                {
+                    hookChargeReady = true;
+                    SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.72f, Pitch = 0.35f }, GunTipPosition);
+                }
+            }
+
             pristinePlayer.HookChargeFrames = hookChargeTimer;
             pristinePlayer.HookChargeOpacity = MathHelper.Clamp(pristinePlayer.HookChargeOpacity + 0.08f, 0f, 1f);
 
             SpawnHookChargeEffects(hookChargeTimer / (float)HookChargeMaxFrames);
-
-            if (hookChargeTimer < HookChargeMaxFrames)
-                return;
-
-            FireExtractionHook();
-            hookChargeTimer = 0;
-            hookCooldown = 42;
-            hookFiredForThisHold = true;
         }
 
         private void DecayHookCharge()
         {
-            if (hookChargeTimer <= 0)
+            if (hookChargeTimer <= 0 || hookChargeReady)
                 return;
 
             hookChargeTimer = Math.Max(0, hookChargeTimer - 5);
             PristineFuryPlayer pristinePlayer = Owner.GetModPlayer<PristineFuryPlayer>();
             pristinePlayer.HookChargeFrames = hookChargeTimer;
             pristinePlayer.HookChargeOpacity = Math.Max(pristinePlayer.HookChargeOpacity, hookChargeTimer / (float)HookChargeMaxFrames);
+        }
+
+        private void ResetHookChargeAfterFire()
+        {
+            hookChargeTimer = 0;
+            hookChargeReady = false;
+            hookCooldown = 42;
+            hookFiredForThisHold = true;
+
+            PristineFuryPlayer pristinePlayer = Owner.GetModPlayer<PristineFuryPlayer>();
+            pristinePlayer.HookChargeFrames = 0;
+            pristinePlayer.HookChargeOpacity = Math.Max(pristinePlayer.HookChargeOpacity, 0.35f);
         }
 
         private void FireExtractionHook()
@@ -171,12 +201,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.85f, Pitch = -0.18f }, GunTipPosition);
         }
 
-        private void HandleRightClick(bool rightHeld, bool rightJustPressed)
+        private void HandleRightClick(bool rightHeld)
         {
+            if (!rightHeld)
+            {
+                ResetRightBurst();
+                return;
+            }
+
             if (rightCooldownTimer > 0)
                 return;
 
-            if (rightJustPressed && rightBurstShotsLeft <= 0)
+            if (rightBurstShotsLeft <= 0)
             {
                 rightBurstShotsLeft = RightBurstCount;
                 rightBurstTimer = 0;
@@ -274,8 +310,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Owner.ChangeDir(direction);
             Owner.heldProj = Projectile.whoAmI;
-            Owner.itemTime = 2;
-            Owner.itemAnimation = 2;
             Owner.itemRotation = (aim * direction).ToRotation();
 
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir;
@@ -338,7 +372,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
 
             Vector2 direction = AimDirection;
-            Vector2 muzzle = GunTipPosition + direction * 8f;
+            Vector2 muzzle = GunTipPosition + direction * 2f;
 
             for (int i = 0; i < 9; i++)
             {
@@ -366,7 +400,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Main.dedServ)
                 return;
 
-            Vector2 center = Vector2.Lerp(Projectile.Center, GunTipPosition, 0.58f);
+            Vector2 center = Vector2.Lerp(Projectile.Center, GunTipPosition, 0.48f);
             Color color = Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, charge * 0.55f);
             Lighting.AddLight(center, color.ToVector3() * (0.25f + charge * 0.55f));
 
@@ -431,7 +465,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Vector2 muzzle = GunTipPosition + AimDirection * 8f - Main.screenPosition;
+            Vector2 muzzle = GunTipPosition - AimDirection * 5f - Main.screenPosition;
             Color color = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, 0.48f) with { A = 0 }) * power;
 
             Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.55f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.34f + power * 0.24f, 0.18f + power * 0.12f), SpriteEffects.None, 0);
@@ -453,13 +487,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Texture2D back = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
             Texture2D front = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
             float completion = MathHelper.Clamp(pristinePlayer.HookChargeFrames / (float)HookChargeMaxFrames, 0f, 1f);
-            Vector2 drawPosition = Owner.Top + new Vector2(0f, -32f * Owner.gravDir) - Main.screenPosition;
-            Vector2 origin = back.Size() * 0.5f;
+            float scale = 0.92f;
+            Vector2 drawPosition = Owner.Top + new Vector2(0f, Owner.gfxOffY - 38f) - Main.screenPosition;
+            Vector2 backOrigin = back.Size() * 0.5f;
+            Vector2 frontOrigin = new(0f, front.Height * 0.5f);
+            Vector2 frontPosition = drawPosition - new Vector2(front.Width * scale * 0.5f, 0f);
             Rectangle frontFrame = new(0, 0, (int)(front.Width * completion), front.Height);
             Color color = PristineFuryMarkHelper.GetColor(CurrentMark);
 
-            Main.EntitySpriteDraw(back, drawPosition, null, Color.Black * (0.55f * opacity), 0f, origin, 0.92f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(front, drawPosition - new Vector2((front.Width - frontFrame.Width) * 0.46f, 0f), frontFrame, Color.Lerp(color, Color.White, completion) * opacity, 0f, front.Size() * 0.5f, 0.92f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(back, drawPosition, null, Color.Black * (0.55f * opacity), 0f, backOrigin, scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(front, frontPosition, frontFrame, Color.Lerp(color, Color.White, completion) * opacity, 0f, frontOrigin, scale, SpriteEffects.None, 0);
         }
     }
 }

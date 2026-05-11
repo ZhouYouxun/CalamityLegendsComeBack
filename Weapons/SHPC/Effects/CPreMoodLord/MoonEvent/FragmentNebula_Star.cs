@@ -651,8 +651,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private float TrailWidthFunction(float completion, Vector2 _)
         {
-            float width = Projectile.scale * (IsBlueVariant ? 31f : 23f);
-            return MathF.Sin((1f - completion) * MathHelper.PiOver2) * width;
+            float width = Projectile.scale * (IsBlueVariant ? 18f : 13f);
+            float spawnFade = MathHelper.Lerp(0.28f, 1f, Utils.GetLerpValue(0f, 28f, Timer, true));
+            float startTaper = MathHelper.Lerp(0.35f, 1f, Utils.GetLerpValue(0.06f, 0.32f, completion, true));
+            return MathF.Sin((1f - completion) * MathHelper.PiOver2) * width * spawnFade * startTaper;
         }
 
         private Color TrailColorFunction(float completion, Vector2 _)

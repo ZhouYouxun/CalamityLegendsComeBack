@@ -271,7 +271,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 else
                     projType = ProjectileID.ToxicCloud3;
 
-                Projectile.NewProjectile(
+                int cloudIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
                     velocity,
@@ -280,6 +280,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     (int)(projectile.knockBack * 0.1f),
                     projectile.owner
                 );
+
+                if (Main.projectile.IndexInRange(cloudIndex))
+                    Main.projectile[cloudIndex].DamageType = DamageClass.Magic;
             }
 
 
@@ -315,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
 
 
-                Projectile.NewProjectile(
+                int cloudIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     velocity,
@@ -324,6 +327,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.knockBack,
                     projectile.owner
                 );
+
+                if (Main.projectile.IndexInRange(cloudIndex))
+                    Main.projectile[cloudIndex].DamageType = DamageClass.Magic;
             }
         }
     }

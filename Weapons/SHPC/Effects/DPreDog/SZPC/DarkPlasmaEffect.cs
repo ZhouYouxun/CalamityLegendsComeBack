@@ -286,7 +286,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 return;
 
             int interval = (int)MathHelper.Lerp(42f, 7f, MathHelper.Clamp(lifeFactor, 0f, 1f));
-            interval = Math.Max(5, interval);
+            interval = Math.Max(25, interval);
             if (projectile.timeLeft % interval != 0)
                 return;
 
@@ -386,18 +386,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 GeneralParticleHandler.SpawnParticle(softExplosion);
             }
 
-            Particle accretionRing = new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                Color.Black,
-                "CalamityMod/Particles/BloomRing",
-                new Vector2(1.75f, 0.48f),
-                diskRotation,
-                0.15f * power,
-                2.5f * power,
-                38,
-                false);
-            GeneralParticleHandler.SpawnParticle(accretionRing);
+            //Particle accretionRing = new CustomPulse(
+            //    projectile.Center,
+            //    Vector2.Zero,
+            //    Color.Black,
+            //    "CalamityMod/Particles/BloomRing",
+            //    new Vector2(1.75f, 0.48f),
+            //    diskRotation,
+            //    0.15f * power,
+            //    2.5f * power,
+            //    38,
+            //    false);
+            //GeneralParticleHandler.SpawnParticle(accretionRing);
 
             int parts = 10;
             float rot = Main.rand.NextFloat(-9f, 9f);

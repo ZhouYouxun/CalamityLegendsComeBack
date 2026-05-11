@@ -135,6 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 1f
             );
             lightning.timeLeft = VolterionShotLifetime;
+            lightning.DamageType = DamageClass.Magic;
         }
 
         private Vector2 FindMouseNearestTargetDirection(Vector2 fallbackDirection)

@@ -81,6 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         missile.usesIDStaticNPCImmunity = false;
                         missile.usesLocalNPCImmunity = true;
                         missile.localNPCHitCooldown = 6;
+                        missile.DamageType = DamageClass.Magic;
                     }
                 }
             }
@@ -218,6 +219,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         missile.usesIDStaticNPCImmunity = false;
                         missile.usesLocalNPCImmunity = true;
                         missile.localNPCHitCooldown = 6;
+                        missile.DamageType = DamageClass.Magic;
                     }
                 }
             }           

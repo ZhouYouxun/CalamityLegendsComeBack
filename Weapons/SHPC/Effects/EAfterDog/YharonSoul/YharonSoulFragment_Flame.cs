@@ -242,7 +242,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 
             target.AddBuff(ModContent.BuffType<YharonSoulFragment_Buff>(), 300);
 
-            Projectile.NewProjectile(
+            int explosionIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 target.Center,
                 Vector2.Zero,
@@ -251,6 +251,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
                 Projectile.knockBack,
                 Projectile.owner
             );
+
+            if (Main.projectile.IndexInRange(explosionIndex))
+                Main.projectile[explosionIndex].DamageType = DamageClass.Magic;
 
 
             // ================= 命中特效：向上方约5度扇形猛烈喷射 =================

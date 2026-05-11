@@ -266,6 +266,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Color fadeColor = BladeBlood * 0.65f;
 
             // === 尾迹（稳定 oldPos 版本）===
+            /*
             Texture2D pixel = TextureAssets.MagicPixel.Value;
 
             for (int i = 1; i < Projectile.oldPos.Length; i++)
@@ -296,6 +297,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             }
 
             // === BloomCircle（彻底修黑块）===
+            */
+
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);

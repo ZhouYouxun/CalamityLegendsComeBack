@@ -331,7 +331,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
 
             // 爆炸弹幕（保留）
-            Projectile.NewProjectile(
+            int explosionIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 pos,
                 Vector2.Zero,
@@ -340,6 +340,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile.knockBack,
                 Projectile.owner
             );
+
+            if (Main.projectile.IndexInRange(explosionIndex))
+                Main.projectile[explosionIndex].DamageType = DamageClass.Magic;
 
             //Projectile.Kill();
         }
