@@ -47,16 +47,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             8, // Eye of Cthulhu / 克苏鲁之眼
             9, //9 Evil Boss / 邪恶Boss
             10, //10 Skeletron / 骷髅王
-            10, //17 Hardmode / 肉后
-            10, //24 Any Mechanical Boss / 任意机械Boss后
-            10, //32 Plantera / 世纪之花后
-            10, //40 Golem / 石巨人后
-            10, //54 Moon Lord / 月亮领主后
-            10, //66 Providence / 亵渎天神后
-            10, //77 Polterghast / 幽花后
-            10, //90 Devourer of Gods / 神明吞噬者后
-            10, //100 Yharon / 犽戎后
-            10 //150 Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            17, //17 Hardmode / 肉后
+            24, //24 Any Mechanical Boss / 任意机械Boss后
+            32, //32 Plantera / 世纪之花后
+            40, //40 Golem / 石巨人后
+            54, //54 Moon Lord / 月亮领主后
+            66, //66 Providence / 亵渎天神后
+            77, //77 Polterghast / 幽花后
+            90, //90 Devourer of Gods / 神明吞噬者后
+            100, //100 Yharon / 犽戎后
+            150 //150 Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
         };
 
         // Indexed by SHPC effect ID. 0, 16, 20 and 27 are currently unused gaps.
@@ -176,10 +176,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int stageIndex = 0;
             for (int i = 0; i < clearedStages.Length; i++)
             {
-                if (!clearedStages[i])
-                    break;
-
-                stageIndex = i + 1;
+                if (clearedStages[i])
+                    stageIndex = i + 1;
             }
 
             return stageIndex;

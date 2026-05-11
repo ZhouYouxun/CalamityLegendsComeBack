@@ -17,8 +17,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 {
     internal sealed class BFEXWeapon : ModProjectile, ILocalizedModType
     {
-        private const int ChargeFrames = 60;
+        private const int ChargeFrames = 180;
         private const int BarrageFrames = 180;
+        private const float MinChargeScreenshake = 3f;
+        private const float MaxChargeScreenshake = 30f;
         private const float IdleHoldOffset = 22f;
         private const float ChargedHoldOffset = 14f;
         private const int BarrageVolleyCount = 5;
@@ -111,9 +113,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             SpawnAbsorbEffects(strong: true);
             SpawnChargeConvergenceEffects(chargeCompletion);
+            ApplyChargeScreenshake(chargeCompletion);
 
             if (timer >= ChargeFrames)
                 EnterReadyPhase();
+        }
+
+        private void ApplyChargeScreenshake(float chargeCompletion)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            float screenshake = MathHelper.Lerp(MinChargeScreenshake, MaxChargeScreenshake, chargeCompletion);
+            Owner.SetScreenshake(screenshake);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, screenshake);
         }
 
         private void ReadyPhase()

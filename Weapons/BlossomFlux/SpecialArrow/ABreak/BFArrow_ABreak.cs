@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
@@ -38,7 +38,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             if (ConfiguredPenetrate != 0f)
+            {
                 Projectile.penetrate = (int)ConfiguredPenetrate;
+                Vector2 center = Projectile.Center;
+                Projectile.width = 32;
+                Projectile.height = 32;
+                Projectile.Center = center;
+            }
 
             Projectile.velocity *= 0.55f;
         }
@@ -56,7 +62,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             FlightTimer++;
             float glowStrength = Utils.GetLerpValue(0f, 36f, FlightTimer, true);
             Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak).ToVector3() * (0.18f + 0.32f * glowStrength));
-            BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 1.05f);
+            BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 0.74f);
             EmitBreakthroughFlightFX(glowStrength);
 
             AccelerateStraightFlight(1.01f, 36f);
@@ -142,9 +148,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     Projectile.Center + direction * 8f,
                     Projectile.velocity * 0.05f,
                     Color.Lerp(BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak), Color.White, 0.2f),
-                    new Vector2(0.36f, 0.925f),
+                    new Vector2(0.28f, 0.68f),
                     direction.ToRotation(),
-                    0.14f * glowStrength,
+                    0.095f * glowStrength,
                     0.04f,
                     10);
                 GeneralParticleHandler.SpawnParticle(pulse);
@@ -155,10 +161,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Projectile.velocity * 0.04f,
                 Color.White,
                 BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_ABreak),
-                0.475f * glowStrength,
+                0.34f * glowStrength,
                 7,
                 0f,
-                0.6f * glowStrength);
+                0.46f * glowStrength);
             GeneralParticleHandler.SpawnParticle(edgeSpark);
         }
 

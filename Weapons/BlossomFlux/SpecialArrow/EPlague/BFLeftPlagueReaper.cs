@@ -17,6 +17,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private static readonly Color PlagueGreen = new(124, 238, 68);
         private static readonly Color PlagueBright = new(214, 255, 104);
         private static readonly Color PlagueDeep = new(34, 145, 46);
+        private static readonly Color PlagueMurk = new(18, 74, 28);
+        private static readonly Color PlagueAcid = new(188, 255, 54);
+
+        private const int HomingDelayFrames = 25;
+        private const int HomingWarmupFrames = 4;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BlossomFluxBOMB";
@@ -24,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private ref float Seed => ref Projectile.ai[0];
         private ref float Variant => ref Projectile.ai[1];
         private ref float Timer => ref Projectile.localAI[0];
+        private bool homingAwakened;
 
         public override void SetStaticDefaults()
         {
@@ -61,16 +67,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             Timer++;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            NPC priorityTarget = FindPriorityMarkedTarget();
-            NPC target = priorityTarget ?? FindTargetAhead(forward);
-            if (target != null)
+            float homingReadiness = GetHomingReadiness();
+            if (homingReadiness > 0f)
             {
-                bool priority = target == priorityTarget;
-                float targetSpeed = priority
-                    ? MathHelper.Clamp(Projectile.velocity.Length() * 1.05f + 0.7f, 9.5f, 18.5f)
-                    : MathHelper.Clamp(Projectile.velocity.Length() * 1.01f, 8.5f, 15.5f);
-                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(forward) * targetSpeed;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, priority ? 0.2f : 0.045f);
+                if (!homingAwakened)
+                {
+                    homingAwakened = true;
+                    SpawnHomingAwakenEffects();
+                }
+
+                NPC priorityTarget = FindPriorityMarkedTarget();
+                NPC target = priorityTarget ?? FindTargetAhead(forward, homingReadiness);
+                if (target != null)
+                {
+                    bool priority = target == priorityTarget;
+                    float targetSpeed = priority
+                        ? MathHelper.Clamp(Projectile.velocity.Length() * 1.05f + 0.7f, 9.5f, 18.5f)
+                        : MathHelper.Clamp(Projectile.velocity.Length() * 1.04f + 0.35f, 9.25f, 17.5f);
+                    Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(forward) * targetSpeed;
+                    float steering = (priority ? 0.22f : 0.135f) * homingReadiness;
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, steering);
+                }
+            }
+            else
+            {
+                float preHomingDrift = (float)System.Math.Sin((Timer + Seed) * 0.13f) * 0.012f;
+                Projectile.velocity = Projectile.velocity.RotatedBy(preHomingDrift) * 0.998f;
             }
 
             float wingBeat = (float)System.Math.Sin((Timer + Seed) * 0.82f);
@@ -84,7 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (Main.dedServ)
                 return;
 
-            EmitFlightEffects(forward);
+            EmitFlightEffects(forward, homingReadiness);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -94,12 +116,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             pollution.ApplyPollution(target, markedTarget);
             pollution.ApplyPlagueDebuffs(target, markedTarget);
             target.AddBuff(ModContent.BuffType<MiracleBlight>(), markedTarget ? 480 : 240);
+            int gasDamage = System.Math.Max(1, (int)(Projectile.damage * 0.18f));
             Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.78f));
 
             if (Main.dedServ)
                 return;
 
             SpawnImpactEffects(target.Center);
+            ReleaseImpactGas(target.Center, gasDamage, markedTarget);
             SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.32f, Pitch = 0.32f }, target.Center);
         }
 
@@ -130,10 +154,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 SpawnImpactEffects(Projectile.Center, 0.82f);
         }
 
-        private NPC FindTargetAhead(Vector2 forward)
+        private float GetHomingReadiness()
+        {
+            int homingDelayUpdates = HomingDelayFrames * Projectile.MaxUpdates;
+            int homingWarmupUpdates = HomingWarmupFrames * Projectile.MaxUpdates;
+            return Utils.GetLerpValue(
+                homingDelayUpdates,
+                homingDelayUpdates + homingWarmupUpdates,
+                Timer,
+                true);
+        }
+
+        private NPC FindTargetAhead(Vector2 forward, float homingReadiness)
         {
             NPC bestTarget = null;
-            float bestDistance = 560f;
+            float bestDistance = MathHelper.Lerp(760f, 1120f, homingReadiness);
 
             for (int i = 0; i < Main.maxNPCs; i++)
             {
@@ -147,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     continue;
 
                 float angle = System.Math.Abs(MathHelper.WrapAngle(forward.ToRotation() - toNpc.ToRotation()));
-                if (angle > MathHelper.PiOver2)
+                if (angle > MathHelper.Lerp(MathHelper.PiOver2, MathHelper.Pi, homingReadiness))
                     continue;
 
                 bestDistance = distance;
@@ -211,13 +246,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
         }
 
-        private void EmitFlightEffects(Vector2 forward)
+        private void EmitFlightEffects(Vector2 forward, float homingReadiness)
         {
             if (!Projectile.FinalExtraUpdate())
                 return;
 
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             float squash = Utils.GetLerpValue(5f, 15f, Projectile.velocity.Length(), true);
+            float plagueIntensity = 0.75f + homingReadiness * 0.55f;
 
             if (Main.rand.NextBool(2))
             {
@@ -227,23 +263,81 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     "CalamityMod/Particles/DualTrail",
                     false,
                     10,
-                    0.052f,
-                    Color.Lerp(PlagueDeep, PlagueBright, 0.46f) * 0.58f,
+                    0.052f * plagueIntensity,
+                    Color.Lerp(PlagueMurk, PlagueBright, 0.42f + homingReadiness * 0.22f) * 0.66f,
                     new Vector2(0.8f - 0.18f * squash, 1.15f + squash),
                     true,
                     false,
                     shrinkSpeed: 0.22f));
             }
 
+            if (Main.rand.NextBool(4))
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + side * Main.rand.NextFloat(-7f, 7f),
+                    Main.rand.NextVector2Circular(0.7f, 0.7f) - forward * Main.rand.NextFloat(0.2f, 0.75f),
+                    "CalamityMod/Particles/SmallBloom",
+                    false,
+                    Main.rand.Next(7, 12),
+                    Main.rand.NextFloat(0.08f, 0.14f) * plagueIntensity,
+                    Color.Lerp(PlagueAcid, Color.White, Main.rand.NextFloat(0.04f, 0.18f)),
+                    new Vector2(0.9f, 1.2f + squash * 0.6f),
+                    true,
+                    false,
+                    shrinkSpeed: 0.5f));
+            }
+
             if (Main.rand.NextBool(3))
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center - forward * Main.rand.NextFloat(2f, 12f) + side * Main.rand.NextFloat(-6f, 6f),
-                    DustID.GreenTorch,
+                    Main.rand.NextBool(4) ? DustID.TerraBlade : DustID.GreenTorch,
                     -Projectile.velocity * Main.rand.NextFloat(0.035f, 0.095f) + Main.rand.NextVector2Circular(0.26f, 0.26f),
-                    0,
-                    Color.Lerp(PlagueGreen, PlagueBright, Main.rand.NextFloat(0.1f, 0.45f)),
-                    Main.rand.NextFloat(0.52f, 0.86f));
+                    40,
+                    Color.Lerp(PlagueMurk, PlagueAcid, Main.rand.NextFloat(0.18f, 0.62f)),
+                    Main.rand.NextFloat(0.56f, 1.05f) * plagueIntensity);
+                dust.noGravity = true;
+            }
+        }
+
+        private void SpawnHomingAwakenEffects()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(PlagueMurk, PlagueAcid, 0.42f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Projectile.rotation,
+                0.12f,
+                0.95f,
+                18,
+                true));
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center - forward * 6f,
+                -forward * 1.2f,
+                "CalamityMod/Particles/VerticalSmear",
+                false,
+                14,
+                1.4f,
+                Color.Lerp(PlagueGreen, PlagueAcid, 0.5f),
+                new Vector2(0.12f, 0.82f)));
+
+            for (int i = 0; i < 14; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextBool(3) ? DustID.TerraBlade : DustID.GreenTorch,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.1f, 3.4f) - forward * Main.rand.NextFloat(0.2f, 1.2f),
+                    50,
+                    Color.Lerp(PlagueMurk, PlagueAcid, Main.rand.NextFloat(0.2f, 0.85f)),
+                    Main.rand.NextFloat(0.72f, 1.18f));
                 dust.noGravity = true;
             }
         }
@@ -253,20 +347,56 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                 center,
                 Vector2.Zero,
-                Color.Lerp(PlagueGreen, Color.White, 0.16f),
-                0.26f * intensity,
-                8));
+                Color.Lerp(PlagueGreen, PlagueAcid, 0.3f),
+                0.36f * intensity,
+                10));
 
-            for (int i = 0; i < 10; i++)
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.Lerp(PlagueMurk, PlagueGreen, 0.42f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-0.4f, 0.4f),
+                0.14f * intensity,
+                1.2f * intensity,
+                20,
+                true));
+
+            for (int i = 0; i < 18; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(5f, 5f),
-                    DustID.GreenTorch,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, 4.8f) * intensity,
-                    0,
-                    Color.Lerp(PlagueDeep, PlagueBright, Main.rand.NextFloat(0.18f, 0.78f)),
-                    Main.rand.NextFloat(0.62f, 1.12f) * intensity);
+                    center + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextBool(4) ? DustID.TerraBlade : DustID.GreenTorch,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.7f, 5.8f) * intensity,
+                    40,
+                    Color.Lerp(PlagueMurk, PlagueAcid, Main.rand.NextFloat(0.18f, 0.9f)),
+                    Main.rand.NextFloat(0.72f, 1.34f) * intensity);
                 dust.noGravity = true;
+            }
+        }
+
+        private void ReleaseImpactGas(Vector2 center, int damage, bool markedTarget)
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int gasCount = markedTarget ? 2 : 1;
+            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            for (int i = 0; i < gasCount; i++)
+            {
+                Vector2 velocity = (baseAngle + MathHelper.TwoPi * i / gasCount).ToRotationVector2() * Main.rand.NextFloat(1.1f, 2.4f);
+                velocity += Main.rand.NextVector2Circular(0.55f, 0.55f) + new Vector2(0f, Main.rand.NextFloat(-0.6f, -0.15f));
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    velocity,
+                    ModContent.ProjectileType<BFArrow_EPlagueGas>(),
+                    damage,
+                    0f,
+                    Projectile.owner,
+                    Main.rand.Next(3),
+                    Main.rand.NextFloat(0.76f, markedTarget ? 1.05f : 0.92f));
             }
         }
 
@@ -279,6 +409,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             float fade = Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
+            float homingReadiness = GetHomingReadiness();
             float wingBeat = (float)System.Math.Sin((Timer + Seed) * 1.72f);
             float wingOpen = 0.22f + 0.34f * System.Math.Abs(wingBeat);
             float bodyPulse = 0.5f + 0.5f * (float)System.Math.Sin((Timer + Seed) * 0.31f);
@@ -292,7 +423,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     continue;
 
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(PlagueDeep, PlagueBright, completion) with { A = 0 } * (completion * 0.26f * fade);
+                Color trailColor = Color.Lerp(PlagueMurk, PlagueAcid, completion) with { A = 0 } * (completion * MathHelper.Lerp(0.2f, 0.34f, homingReadiness) * fade);
                 Main.EntitySpriteDraw(
                     orb,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
@@ -305,12 +436,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     0);
             }
 
+            Main.EntitySpriteDraw(
+                orb,
+                center - forward * 8f,
+                null,
+                (Color.Lerp(PlagueMurk, PlagueGreen, 0.42f) with { A = 0 }) * (0.28f + 0.22f * homingReadiness) * fade,
+                Projectile.rotation,
+                orb.Size() * 0.5f,
+                new Vector2(0.18f + 0.1f * homingReadiness, 0.11f + 0.04f * bodyPulse),
+                SpriteEffects.None,
+                0);
+
             DrawWing(wing, center, side, 1f, wingOpen, fade);
             DrawWing(wing, center, -side, -1f, wingOpen, fade);
 
             for (int i = 0; i < 5; i++)
             {
-                Color bodyColor = Color.Lerp(PlagueGreen, Color.White, i * 0.08f) with { A = 0 } * (0.34f + bodyPulse * 0.06f) * fade;
+                Color bodyColor = Color.Lerp(PlagueGreen, Color.Lerp(PlagueAcid, Color.White, 0.2f), i * 0.08f + homingReadiness * 0.18f) with { A = 0 } * (0.34f + bodyPulse * 0.06f) * fade;
                 Vector2 scale = new Vector2(0.04f + i * 0.01f, 0.065f + i * 0.013f) * (1f + bodyPulse * 0.12f);
                 Main.EntitySpriteDraw(
                     orb,

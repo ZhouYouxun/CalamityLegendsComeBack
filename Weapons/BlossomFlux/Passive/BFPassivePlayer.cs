@@ -1,5 +1,6 @@
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityMod;
 using Terraria;
 using Terraria.Audio;
@@ -46,7 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
         {
             if (PassiveCooldownTimer > 0)
             {
-                PassiveCooldownTimer--;
+                int cooldownDecay = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped ? 2 : 1;
+                PassiveCooldownTimer = System.Math.Max(0, PassiveCooldownTimer - cooldownDecay);
                 if (PassiveCooldownTimer == 0 && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
                     SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
             }
@@ -66,6 +68,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
         {
             if (!FinalStandActive)
                 return;
+
+            if (Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped)
+            {
+                modifiers.FinalDamage *= 0.1f;
+                return;
+            }
 
             modifiers.ModifyHurtInfo += ForceFinalStandDeath;
         }
@@ -123,11 +131,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive
             if (healAmount > 0)
                 Player.HealEffect(healAmount, true);
 
+            bool silvaHarp = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
             FinalStandTimer = FinalStandDurationFrames;
-            PassiveCooldownTimer = PassiveCooldownFrames;
+            PassiveCooldownTimer = silvaHarp ? BFAccessoryPlayer.SilvaHarpPassiveCooldownFrames : PassiveCooldownFrames;
             Player.immune = true;
             Player.immuneNoBlink = true;
-            Player.immuneTime = System.Math.Max(Player.immuneTime, 45);
+            Player.immuneTime = System.Math.Max(Player.immuneTime, silvaHarp ? BFAccessoryPlayer.SilvaHarpFinalStandImmuneFrames : 45);
 
             SpawnRecoveryField();
 

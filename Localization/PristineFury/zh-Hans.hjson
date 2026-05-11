@@ -1,0 +1,81 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendPristineFury: {
+					DisplayName: 纯元：传奇归来
+					PristineFuryIntro: "[c/FF9340:当前印记：{0}。]"
+					RightClick: "[c/FFB066:右键：快速六连散射。弹丸击中物块后会留下持续燃烧的地火。]"
+					Hook: "[c/9AEAFF:同时按住左键与右键 3 秒会发射提取钩。有效 Boss 会授予对应印记；其他敌人会承受高额钩爪伤害。]"
+					Left_Idle: "[c/FF9340:左键：短程直线纯净焰流。]"
+					Left_EvilT2: "[c/D246EB:左键：红紫双螺旋焰流。]"
+					Left_SlimeGod: "[c/BC4EFF:左键：每秒喷射五发过载弹，弹射并在每次反弹时爆裂。]"
+					Left_HardMode: "[c/FF8E42:左键：压力波吐息，每轮三道递进穿透冲击波。]"
+					Left_Prime: "[c/FFCE5C:左键：传统重型喷火器，附带金热火焰特效。]"
+					Left_BrimstoneElemental: "[c/F63740:左键：连续蓄力 3 秒，自动释放硫火激光和平行分裂弹。]"
+					Left_Plantera: "[c/5EF26C:左键：按住蓄力，满蓄后松开发射四枚治疗型附着孢子。]"
+					Left_Aurora: "[c/7ED2FF:左键：持续喷射星辉极光火焰，与 Aurora Fire 同源不同形。]"
+					Left_Goliath: "[c/8BF249:左键：纳米瘟疫群息，烟雾减速后分裂为瘟疫蜂群，并感染死亡目标。]"
+					Left_Moonlord: "[c/7E9CFF:左键：四天体混合吐息，包含日耀火、星云云团、星旋光束与星尘碎片。]"
+					Left_Providence: "[c/FFDC76:左键：发射亵渎迫击火箭，命中后留下高伤害燃烧区。]"
+					Left_Polterghast: "[c/D288FF:左键：约 550 RPM 的幻影星辰之息，星辰短暂漂浮后追踪敌人。]"
+					Left_Dog: "[c/6049D6:左键：维度裂隙吐息，虚空流会撕开延迟裂隙并复制二次爆发。]"
+					Left_Dragon: "[c/FF6C32:左键：约 330 RPM 的龙息弹，每轮 18 颗弹丸并在命中时散出火花。]"
+					Tooltip: "[GFB]"
+					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
+					LegendaryText:
+						'''
+						[c/FF9340:纯元不再只作为一把武器燃烧。]
+						[c/FFB066:它记录钩爪锚定过的压力、恶意、神性、瘟疫与不可能的饥饿。]
+						[c/9AEAFF:枪管会把这些轨迹作为印记保存，再将它们重新吐回世界。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			PristineFury: {
+				NewLegendPristineFuryHoldOut.DisplayName: 纯元手持弹幕
+				PristineFuryHook.DisplayName: 纯元提取钩
+				PristineFuryBreath.DisplayName: 纯元吐息
+				PristineFuryOverloadedBolt.DisplayName: 过载弹射弹
+				PristineFuryPressureWave.DisplayName: 压力波吐息
+				PristineFuryBrimstoneBeam.DisplayName: 硫火怒焰激光
+				PristineFuryBrimstoneShard.DisplayName: 硫火平行弹
+				PristineFuryStickySpore.DisplayName: 掠食附着孢子
+				PristineFuryPlagueSmoke.DisplayName: 瘟疫群息
+				PristineFuryPlagueBee.DisplayName: 瘟疫蜂
+				PristineFuryCelestialShard.DisplayName: 天体碎片
+				PristineFuryProfanedRocket.DisplayName: 亵渎迫击火箭
+				PristineFuryPhantomStar.DisplayName: 幻影星辰
+				PristineFuryVoidStream.DisplayName: 维度虚空流
+				PristineFuryVoidRift.DisplayName: 维度裂隙
+				PristineFuryDragonPellet.DisplayName: 龙息弹
+				PristineFuryRightPellet.DisplayName: 纯元散射弹
+				PristineFuryGroundFlame.DisplayName: 纯元地火
+				PristineFuryImpactExplosion.DisplayName: 纯元冲击爆裂
+			}
+		}
+
+		PristineFury: {
+			MarkExtracted: 已提取{0}的印记
+
+			Marks: {
+				Idle: 默认
+				EvilT2: 邪恶 T2
+				SlimeGod: 史莱姆之神
+				HardMode: 血肉墙
+				Prime: 机械骷髅王
+				BrimstoneElemental: 硫磺火元素
+				Plantera: 世纪之花
+				Aurora: 白金星舰
+				Goliath: 瘟疫使者歌莉娅
+				Moonlord: 月亮领主
+				Providence: 亵渎天神
+				Polterghast: 鬼妖村正
+				Dog: 神明吞噬者
+				Dragon: 丛林龙
+			}
+		}
+	}
+}

@@ -276,7 +276,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 GeneralParticleHandler.SpawnParticle(corePulse);
             }
 
+            TryReleaseDevourOrbs(projectile, owner, lifeFactor);
             Lighting.AddLight(projectile.Center, new Vector3(0.06f, 0.06f, 0.06f));
+        }
+
+        private static void TryReleaseDevourOrbs(Projectile projectile, Player owner, float lifeFactor)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            int interval = (int)MathHelper.Lerp(42f, 7f, MathHelper.Clamp(lifeFactor, 0f, 1f));
+            interval = Math.Max(5, interval);
+            if (projectile.timeLeft % interval != 0)
+                return;
+
+            int count = lifeFactor > 0.72f ? 2 : 1;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+                Vector2 velocity = direction * Main.rand.NextFloat(7f, MathHelper.Lerp(11f, 19f, lifeFactor));
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center + direction * Main.rand.NextFloat(14f, 28f),
+                    velocity,
+                    ModContent.ProjectileType<EndlessDevourJavOrbSmall>(),
+                    (int)(projectile.damage * 0.45f),
+                    projectile.knockBack * 0.35f,
+                    projectile.owner,
+                    0f,
+                    Main.rand.NextFloat(MathHelper.TwoPi));
+            }
         }
 
         // ================= ModifyHitNPC =================
@@ -292,136 +321,208 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            SpawnDarkPlasmaAccretionDeath(projectile, owner);
+            SpawnDarkPlasmaDeathDamage(projectile);
+            SpawnDarkPlasmaDeathOrbs(projectile);
+            PlayDarkPlasmaDeathSounds(projectile);
+        }
+
+        private static void SpawnDarkPlasmaAccretionDeath(Projectile projectile, Player owner)
+        {
             owner.SetScreenshake(8.5f);
+            float power = 1.5f;
+            float diskRotation = projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation() + Main.rand.NextFloat(-0.35f, 0.35f);
+
+            for (int i = 0; i < 55; i++)
+            {
+                Color useColor = GetRandomDarkPlasmaBurstColor(owner);
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 radial = new Vector2((float)Math.Cos(angle) * 1.85f, (float)Math.Sin(angle) * 0.42f).RotatedBy(diskRotation).SafeNormalize(Vector2.UnitX);
+                Vector2 tangent = radial.RotatedBy(MathHelper.PiOver2);
+                Vector2 velocity = (tangent * Main.rand.NextFloat(4f, 11f) + radial * Main.rand.NextFloat(-2.6f, 4.6f)) * power;
+
+                Dust dust = Dust.NewDustPerfect(
+                    projectile.Center,
+                    Main.rand.NextBool(6) ? ModContent.DustType<VoidDustInverted>() : ModContent.DustType<VoidDust>(),
+                    velocity);
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+                dust.scale = Main.rand.NextFloat(1.75f, 2.25f) * power;
+                dust.color = useColor;
+
+                if (i % 2 == 0)
+                {
+                    Color sparkColor = GetDarkPlasmaVisibleBurstColor(owner);
+                    Vector2 sparkVelocity = new Vector2(0f, -40f * power)
+                        .RotatedByRandom(100f)
+                        .RotatedBy(diskRotation)
+                        * Main.rand.NextFloat(0.1f, 1f);
+                    Particle spark = new CustomSpark(
+                        projectile.Center,
+                        sparkVelocity,
+                        "CalamityMod/Particles/Sparkle",
+                        false,
+                        40,
+                        Main.rand.NextFloat(1.4f, 2.4f) * power,
+                        sparkColor,
+                        new Vector2(0.4f, 1.1f));
+                    GeneralParticleHandler.SpawnParticle(spark);
+                }
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Color useColor = GetDarkPlasmaVisibleBurstColor(owner);
+                Particle softExplosion = new CustomPulse(
+                    projectile.Center,
+                    Vector2.Zero,
+                    useColor,
+                    "CalamityMod/Particles/SoftRoundExplosion",
+                    Vector2.One,
+                    Main.rand.NextFloat(-10f, 10f),
+                    0f,
+                    0.4f - i * 0.03f * power,
+                    13);
+                GeneralParticleHandler.SpawnParticle(softExplosion);
+            }
+
+            Particle accretionRing = new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Black,
+                "CalamityMod/Particles/BloomRing",
+                new Vector2(1.75f, 0.48f),
+                diskRotation,
+                0.15f * power,
+                2.5f * power,
+                38,
+                false);
+            GeneralParticleHandler.SpawnParticle(accretionRing);
+
+            int parts = 10;
+            float rot = Main.rand.NextFloat(-9f, 9f);
+            for (int i = 0; i < parts; i++)
+            {
+                Color useColor = GetDarkPlasmaVisibleBurstColor(owner);
+                Vector2 smearVelocity = new Vector2(0f, -15f * (i % 2 == 0 ? 1.8f : 1f) * power)
+                    .RotatedBy(i * MathHelper.TwoPi / parts)
+                    .RotatedBy(rot)
+                    .RotatedBy(diskRotation);
+                smearVelocity.X *= 1.65f;
+                smearVelocity.Y *= 0.58f;
+
+                Particle smear = new CustomSpark(
+                    projectile.Center,
+                    smearVelocity,
+                    "CalamityMod/Particles/VerticalSmearRagged",
+                    false,
+                    19,
+                    3f * power,
+                    useColor,
+                    new Vector2(0.2f, 1f));
+                GeneralParticleHandler.SpawnParticle(smear);
+            }
+
+            Particle blackCore = new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                Color.Black,
+                "CalamityMod/Particles/SmallBloom",
+                Vector2.One,
+                Main.rand.NextFloat(-10f, 10f),
+                0f,
+                1.2f * power,
+                39,
+                false);
+            GeneralParticleHandler.SpawnParticle(blackCore);
+        }
+
+        private static Color GetRandomDarkPlasmaBurstColor(Player owner)
+        {
+            if (owner.shirtColor == Color.White && Main.rand.NextBool(10))
+                return new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
+
+            return Main.rand.Next(5) switch
+            {
+                0 => Color.Black,
+                1 => new Color(8, 8, 8),
+                2 => new Color(18, 18, 18),
+                3 => new Color(34, 34, 34),
+                _ => new Color(2, 2, 2)
+            };
+        }
+
+        private static Color GetDarkPlasmaVisibleBurstColor(Player owner)
+        {
+            if (owner.shirtColor == Color.White && Main.rand.NextBool(10))
+                return new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
+
+            return Main.rand.Next(4) switch
+            {
+                0 => new Color(26, 26, 26),
+                1 => new Color(38, 38, 38),
+                2 => new Color(18, 18, 24),
+                _ => new Color(46, 46, 52)
+            };
+        }
+
+        private static void SpawnDarkPlasmaDeathDamage(Projectile projectile)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
 
             int projIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPE>(),
-                projectile.damage,
+                (int)(projectile.damage * 3f),
                 projectile.knockBack,
-                projectile.owner
-            );
+                projectile.owner);
+
+            if (!Main.projectile.IndexInRange(projIndex))
+                return;
 
             Projectile proj = Main.projectile[projIndex];
-            proj.width = 250;
-            proj.height = 250;
+            proj.width = 280;
+            proj.height = 220;
+            proj.Center = projectile.Center;
+            proj.netUpdate = true;
+        }
 
-            for (int i = 0; i < 8; i++)
+        private static void SpawnDarkPlasmaDeathOrbs(Projectile projectile)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            for (int i = 0; i < 28; i++)
             {
-                Vector2 orbVelocity = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * Main.rand.NextFloat(12.5f, 15.5f);
+                float angle = MathHelper.TwoPi * i / 28f + Main.rand.NextFloat(-0.08f, 0.08f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 orbVelocity = direction * Main.rand.NextFloat(10f, 22f);
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center + orbVelocity.SafeNormalize(Vector2.UnitY) * 18f,
+                    projectile.Center + direction * Main.rand.NextFloat(8f, 28f),
                     orbVelocity,
                     ModContent.ProjectileType<EndlessDevourJavOrbSmall>(),
                     (int)(projectile.damage * 0.72f),
                     projectile.knockBack * 0.5f,
                     projectile.owner,
                     0f,
-                    Main.rand.NextFloat(MathHelper.TwoPi)
-                );
+                    Main.rand.NextFloat(MathHelper.TwoPi));
             }
+        }
 
-            // ===== 爆炸前两层黑核 =====
-            for (int i = 0; i < 1; i++)
+        private static void PlayDarkPlasmaDeathSounds(Projectile projectile)
+        {
+            for (int i = 0; i < 3; i++)
             {
-                Particle blackCore = new CustomPulse(
-                    projectile.Center,
-                    Vector2.Zero,
-                    Color.Black,
-                    "CalamityMod/Particles/SmallBloom",
-                    Vector2.One,
-                    Main.rand.NextFloat(-0.25f, 0.25f),
-                    0.55f,
-                    0f,
-                    26,
-                    false
-                );
-                GeneralParticleHandler.SpawnParticle(blackCore);
+                SoundStyle fire = new("CalamityMod/Sounds/Item/EarthMeteor");
+                SoundEngine.PlaySound(fire with { Volume = 0.6f, Pitch = -0.1f * (i + 1), MaxInstances = 3 }, projectile.Center);
             }
 
-            // ===== 黑色外爆 =====
-            Particle outerBloom = new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                Color.Black,
-                "CalamityMod/Particles/LargeBloom",
-                Vector2.One,
-                Main.rand.NextFloat(-0.25f, 0.25f),
-                0f,
-                0.28f,
-                12,
-                false
-            );
-            outerBloom.DrawLayer = GeneralDrawLayer.AfterEverything;
-            GeneralParticleHandler.SpawnParticle(outerBloom);
-
-            // ===== 暗雾爆开 =====
-            for (int i = 0; i < 9; i++)
-            {
-                Particle smoke = new HeavySmokeParticle(
-                    projectile.Center,
-                    Main.rand.NextVector2Circular(4.5f, 4.5f),
-                    Main.rand.NextBool(2) ? Color.Black : new Color(50, 50, 50),
-                    Main.rand.Next(18, 30),
-                    Main.rand.NextFloat(0.55f, 1.0f),
-                    0.4f,
-                    Main.rand.NextFloat(-0.08f, 0.08f),
-                    false
-                );
-                GeneralParticleHandler.SpawnParticle(smoke);
-            }
-
-            // ===== 黑色裂流 =====
-            for (int i = 0; i < 16; i++)
-            {
-                Particle altSpark = new AltSparkParticle(
-                    projectile.Center,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 11f),
-                    false,
-                    Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.62f, 1.05f),
-                    Color.Black
-                );
-                GeneralParticleHandler.SpawnParticle(altSpark);
-            }
-
-            // ===== 长尾黑色火花 =====
-            for (int i = 0; i < 6; i++)
-            {
-                Particle customSpark = new CustomSpark(
-                    projectile.Center,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 6f),
-                    "CalamityMod/Particles/GlowSpark2",
-                    false,
-                    Main.rand.Next(8, 12),
-                    Main.rand.NextFloat(0.014f, 0.032f),
-                    Color.Black * 0.9f,
-                    new Vector2(Main.rand.NextFloat(1.1f, 1.8f), Main.rand.NextFloat(0.35f, 0.7f)),
-                    false,
-                    shrinkSpeed: 1.08f
-                );
-                GeneralParticleHandler.SpawnParticle(customSpark);
-            }
-
-            // ===== 虚空尘大爆散 =====
-            for (int i = 0; i < 18; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
-                    ModContent.DustType<VoidDustInverted>(),
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, 7.5f),
-                    0,
-                    Color.Black,
-                    Main.rand.NextFloat(0.75f, 1.25f)
-                );
-                dust.noGravity = true;
-                dust.noLightEmittence = true;
-            }
-
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.7f, Pitch = -0.45f }, projectile.Center);
+            SoundStyle reflect = new("CalamityMod/Sounds/Item/ShadowboltReflect");
+            SoundEngine.PlaySound(reflect with { Volume = 0.9f, Pitch = -0.4f }, projectile.Center);
         }
 
         // ================= PreDraw =================
@@ -429,10 +530,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         {
             Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleVortex").Value;
             Texture2D bloom = TextureAssets.Extra[98].Value;
+            Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearRagged").Value;
 
             Vector2 drawPos = projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 bloomOrigin = bloom.Size() * 0.5f;
+            Vector2 bladeOrigin = blade.Size() * 0.5f;
 
             float scale01;
 
@@ -470,6 +573,37 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             }
 
 
+
+            // ===== 白色刀盘层：恢复旧版的亮刃切盘感 =====
+            float bladePulse = 0.92f + (float)Math.Sin(portalTimer * 7f) * 0.08f;
+            for (int i = 0; i < 8; i++)
+            {
+                float bladeRotation = projectile.rotation * -2.2f + i * MathHelper.TwoPi / 8f;
+                Color bladeColor = Color.Lerp(Color.White, new Color(95, 95, 95), i / 7f);
+                bladeColor.A = 0;
+
+                Main.EntitySpriteDraw(
+                    blade,
+                    drawPos,
+                    null,
+                    bladeColor * scale01 * 0.34f,
+                    bladeRotation,
+                    bladeOrigin,
+                    new Vector2(0.16f, 0.72f) * scale01 * bladePulse,
+                    SpriteEffects.None
+                );
+            }
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPos,
+                null,
+                Color.White * 0.16f * scale01,
+                projectile.rotation * 1.6f,
+                bloomOrigin,
+                0.18f * scale01 * bladePulse,
+                SpriteEffects.None
+            );
 
 
 

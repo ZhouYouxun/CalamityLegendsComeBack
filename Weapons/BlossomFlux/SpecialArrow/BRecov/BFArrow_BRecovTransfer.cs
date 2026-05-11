@@ -1,11 +1,13 @@
 using System;
 using CalamityMod;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,8 +16,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 {
     internal class BFArrow_BRecovTransfer : ModProjectile
     {
-        private const int BaseScatterFrames = 8;
-        private const int BaseHoverFrames = 10;
+        internal const float LeftHitSpawnMode = 0f;
+        internal const float ChargedReleaseSpawnMode = 1f;
+
+        private const int LeftScatterFrames = 10;
+        private const int ChargedScatterFrames = 18;
+        private const int LeftHoverFrames = 8;
+        private const int ChargedHoverFrames = 10;
         private const int MaxLifetimeFrames = 150;
         private const float BaseSearchRange = 3200f;
         private const float ContactDistance = 20f;
@@ -26,11 +33,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private ref float TargetPlayerIndex => ref Projectile.ai[0];
         private ref float StoredHealAmount => ref Projectile.ai[1];
+        private ref float SpawnMode => ref Projectile.ai[2];
         private ref float Timer => ref Projectile.localAI[0];
         private ref float StateTimer => ref Projectile.localAI[1];
 
-        private int ScatterFramesInUpdates => BaseScatterFrames * Projectile.MaxUpdates;
-        private int HoverFramesInUpdates => BaseHoverFrames * Projectile.MaxUpdates;
+        private bool FromChargedRelease => SpawnMode == ChargedReleaseSpawnMode;
+        private int ScatterFramesInUpdates => (FromChargedRelease ? ChargedScatterFrames : LeftScatterFrames) * Projectile.MaxUpdates;
+        private int HoverFramesInUpdates => (FromChargedRelease ? ChargedHoverFrames : LeftHoverFrames) * Projectile.MaxUpdates;
         private Player Owner => Main.player[Projectile.owner];
 
         public override void SetStaticDefaults()
@@ -55,6 +64,25 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override bool? CanDamage() => false;
 
+        internal static int Spawn(IEntitySource source, Vector2 center, Vector2 velocity, int owner, float healAmount, float spawnMode)
+        {
+            int targetIndex = BFArrowCommon.InBounds(owner, Main.maxPlayers)
+                ? FindRandomInjuredPlayerIndex(Main.player[owner], center, BaseSearchRange)
+                : -1;
+
+            return Projectile.NewProjectile(
+                source,
+                center,
+                velocity,
+                ModContent.ProjectileType<BFArrow_BRecovTransfer>(),
+                0,
+                0f,
+                owner,
+                targetIndex,
+                healAmount,
+                spawnMode);
+        }
+
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             StateTimer = ScatterFramesInUpdates + HoverFramesInUpdates;
@@ -62,7 +90,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 StoredHealAmount = 3f;
 
             if (Projectile.velocity.LengthSquared() < 0.01f)
-                Projectile.velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 4.8f);
+            {
+                Projectile.velocity = FromChargedRelease
+                    ? (-Vector2.UnitY * Owner.gravDir).RotatedByRandom(0.86f) * Main.rand.NextFloat(2.4f, 5.4f)
+                    : Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 5.6f);
+            }
+
+            if (FromChargedRelease)
+            {
+                Vector2 upward = -Vector2.UnitY * Owner.gravDir;
+                Projectile.velocity += upward * Main.rand.NextFloat(1.2f, 2.8f);
+                Projectile.scale = Main.rand.NextFloat(1.04f, 1.18f);
+            }
+            else
+            {
+                Projectile.velocity = Projectile.velocity.RotatedByRandom(0.55f) * Main.rand.NextFloat(0.92f, 1.18f);
+                Projectile.scale = Main.rand.NextFloat(0.92f, 1.08f);
+            }
+
+            if (!HasValidHealTarget() && Projectile.owner == Main.myPlayer)
+                RefreshHealTarget();
         }
 
         public override void AI()
@@ -121,8 +168,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
-            Color mainColor = new Color(110, 255, 150, 0) * Projectile.Opacity;
-            Color accentColor = new Color(220, 255, 235, 0) * Projectile.Opacity;
+            Texture2D magicTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
+            Texture2D circleTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_04").Value;
+            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Color mainColor = new Color(110, 255, 150, 180) * Projectile.Opacity;
+            Color accentColor = new Color(220, 255, 235, 205) * Projectile.Opacity;
+            Vector2 drawCenter = Projectile.Center - Main.screenPosition;
+            float pulse = 0.88f + 0.12f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8.4f + Projectile.identity * 0.47f);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -152,7 +204,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             Main.EntitySpriteDraw(
                 bloomTexture,
-                Projectile.Center - Main.screenPosition,
+                drawCenter,
                 null,
                 mainColor * 0.84f,
                 0f,
@@ -163,7 +215,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             Main.EntitySpriteDraw(
                 bloomTexture,
-                Projectile.Center - Main.screenPosition,
+                drawCenter,
                 null,
                 accentColor * 0.52f,
                 0f,
@@ -171,6 +223,46 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 0.042f,
                 SpriteEffects.None,
                 0f);
+
+            const float tinyMagicScale = 0.1f;
+
+            Main.EntitySpriteDraw(
+                magicTexture,
+                drawCenter,
+                null,
+                mainColor * 0.24f,
+                -Projectile.rotation * 0.72f,
+                magicTexture.Size() * 0.5f,
+                0.17f * Projectile.scale * pulse * tinyMagicScale,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                circleTexture,
+                drawCenter,
+                null,
+                accentColor * 0.18f,
+                Projectile.rotation * 0.86f + MathHelper.PiOver4,
+                circleTexture.Size() * 0.5f,
+                0.12f * Projectile.scale * (1.08f - 0.08f * pulse) * tinyMagicScale,
+                SpriteEffects.None,
+                0f);
+
+            for (int i = 0; i < 4; i++)
+            {
+                float rotation = Projectile.rotation + MathHelper.TwoPi * i / 4f;
+                Vector2 offset = rotation.ToRotationVector2() * (4.5f + 2f * pulse) * Projectile.scale * tinyMagicScale;
+                Main.EntitySpriteDraw(
+                    sparkTexture,
+                    drawCenter + offset,
+                    null,
+                    Color.Lerp(mainColor, accentColor, 0.45f) * 0.22f,
+                    rotation,
+                    sparkTexture.Size() * 0.5f,
+                    new Vector2(0.058f, 0.2f) * Projectile.scale * tinyMagicScale,
+                    SpriteEffects.None,
+                    0f);
+            }
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -230,14 +322,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private void ScatterBehavior()
         {
-            Projectile.velocity *= 0.955f;
-            Projectile.velocity = Projectile.velocity.RotatedBy(MathF.Sin((Projectile.identity * 0.41f) + Timer * 0.028f) * 0.007f);
+            Projectile.velocity *= FromChargedRelease ? 0.972f : 0.955f;
+            Projectile.velocity = Projectile.velocity.RotatedBy(MathF.Sin((Projectile.identity * 0.41f) + Timer * 0.028f) * (FromChargedRelease ? 0.011f : 0.007f));
+
+            if (FromChargedRelease)
+                Projectile.velocity += -Vector2.UnitY * Owner.gravDir * 0.026f;
         }
 
         private void HoverBehavior()
         {
             Projectile.velocity *= 0.88f;
             Projectile.velocity.Y += (float)Math.Sin((Projectile.identity * 0.3f) + Timer * 0.06f) * 0.015f;
+            if (FromChargedRelease)
+                Projectile.velocity += -Vector2.UnitY * Owner.gravDir * 0.01f;
         }
 
         private void HomeToTarget(Player target)
@@ -258,12 +355,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private void HealTarget(Player target)
         {
-            int healAmount = Utils.Clamp((int)StoredHealAmount, 3, 3);
+            int healAmount = Utils.Clamp((int)MathF.Round(StoredHealAmount), 1, 999);
             target.statLife += healAmount;
             if (target.statLife > target.statLifeMax2)
                 target.statLife = target.statLifeMax2;
 
             target.HealEffect(healAmount, true);
+            if (!FromChargedRelease)
+                target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);
+
             healedTarget = true;
             SpawnTransferBurst(target.Center, 1.15f, true);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.56f, Pitch = 0.38f }, target.Center);

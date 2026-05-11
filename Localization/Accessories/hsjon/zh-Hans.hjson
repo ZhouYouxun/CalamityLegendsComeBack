@@ -50,6 +50,36 @@ Mods: {
 				DisplayName: 电涌连锁反应器
 				Tooltip: 海爵的快刀斩命中敌人后，额外爆发 75x75 的蓝色水能爆炸
 			}
+
+			ATunedQuiver: {
+				// DisplayName: A Tuned Quiver
+				// Tooltip: ""
+			}
+
+			BResonatingQuiver: {
+				// DisplayName: B Resonating Quiver
+				// Tooltip: ""
+			}
+
+			CDominationQuiver: {
+				// DisplayName: C Domination Quiver
+				// Tooltip: ""
+			}
+
+			PastLingering: {
+				// DisplayName: Past Lingering
+				// Tooltip: ""
+			}
+
+			SeedOfSilva: {
+				// DisplayName: Seed Of Silva
+				// Tooltip: ""
+			}
+
+			SilvaHarp: {
+				// DisplayName: Silva Harp
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -73,6 +103,13 @@ Mods: {
 					// EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
 				}
 			}
+
+			// PastLingeringShard.DisplayName: Past Lingering Shard
+			// SeedOfSilvaDelphiniumArc.DisplayName: Seed Of Silva Delphinium Arc
+			// SeedOfSilvaMandrakeDart.DisplayName: Seed Of Silva Mandrake Dart
+			// SeedOfSilvaMandrakeSpore.DisplayName: Seed Of Silva Mandrake Spore
+			// SeedOfSilvaSeed.DisplayName: Seed Of Silva Seed
+			// SeedOfSilvaTorchFlame.DisplayName: Seed Of Silva Torch Flame
 		}
 	}
 }

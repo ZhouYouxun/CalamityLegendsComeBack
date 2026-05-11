@@ -1,0 +1,81 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendPristineFury: {
+					DisplayName: Pristine Fury - Return of Legends
+					PristineFuryIntro: "[c/FF9340:Current imprint: {0}.]"
+					RightClick: "[c/FFB066:Right Click: fires a rapid six-burst scatter barrage. Pellets leave burning ground fire on tile impact.]"
+					Hook: "[c/9AEAFF:Hold Left + Right for 3 seconds to launch the extraction hook. Valid bosses grant their imprint; other enemies take heavy hook damage.]"
+					Left_Idle: "[c/FF9340:Left Click: short, direct pristine flame jets.]"
+					Left_EvilT2: "[c/D246EB:Left Click: red and violet twin-helix flame jets.]"
+					Left_SlimeGod: "[c/BC4EFF:Left Click: once per second, fires five overloaded ricochet bolts that burst on every bounce.]"
+					Left_HardMode: "[c/FF8E42:Left Click: pressure-wave breath, three piercing shockwaves per volley.]"
+					Left_Prime: "[c/FFCE5C:Left Click: traditional heavy flamethrower with gold-hot flame.]"
+					Left_BrimstoneElemental: "[c/F63740:Left Click: channels for 3 seconds, then releases a brimstone beam and splitting parallel shards.]"
+					Left_Plantera: "[c/5EF26C:Left Click: hold to charge, release after a full charge to fire four healing adhesive spores.]"
+					Left_Aurora: "[c/7ED2FF:Left Click: sustained astral aurora flame, reshaped from Aurora Fire.]"
+					Left_Goliath: "[c/8BF249:Left Click: plague smoke breath that slows, splits into plague bees, and infects dying targets.]"
+					Left_Moonlord: "[c/7E9CFF:Left Click: mixed celestial breath: solar fire, nebula clouds, vortex beams, and stardust shards.]"
+					Left_Providence: "[c/FFDC76:Left Click: launches a profaned mortar rocket that leaves a burning damage zone.]"
+					Left_Polterghast: "[c/D288FF:Left Click: 550 RPM phantom star breath with drifting soul-like homing stars.]"
+					Left_Dog: "[c/6049D6:Left Click: void-stream breath that tears delayed rifts and impossible secondary bursts.]"
+					Left_Dragon: "[c/FF6C32:Left Click: 330 RPM dragon breath shells; each volley launches 18 spark-splitting pellets.]"
+					Tooltip: "[GFB]"
+					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
+					LegendaryText:
+						'''
+						[c/FF9340:Pristine Fury no longer burns as one weapon.]
+						[c/FFB066:It records the pressure, malice, divinity, plague, and impossible hunger of anything its hook can anchor.]
+						[c/9AEAFF:The barrel remembers those patterns as imprints, then exhales them back into the world.]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			PristineFury: {
+				NewLegendPristineFuryHoldOut.DisplayName: Pristine Fury Holdout
+				PristineFuryHook.DisplayName: Pristine Fury Extraction Hook
+				PristineFuryBreath.DisplayName: Pristine Fury Breath
+				PristineFuryOverloadedBolt.DisplayName: Overloaded Ricochet Bolt
+				PristineFuryPressureWave.DisplayName: Pressure Wave Breath
+				PristineFuryBrimstoneBeam.DisplayName: Brimstone Fury Beam
+				PristineFuryBrimstoneShard.DisplayName: Brimstone Parallel Shard
+				PristineFuryStickySpore.DisplayName: Predatory Spore
+				PristineFuryPlagueSmoke.DisplayName: Plague Swarm Breath
+				PristineFuryPlagueBee.DisplayName: Plague Bee
+				PristineFuryCelestialShard.DisplayName: Celestial Shard
+				PristineFuryProfanedRocket.DisplayName: Profaned Mortar Rocket
+				PristineFuryPhantomStar.DisplayName: Phantom Star
+				PristineFuryVoidStream.DisplayName: Dimensional Void Stream
+				PristineFuryVoidRift.DisplayName: Dimensional Rift
+				PristineFuryDragonPellet.DisplayName: Dragon Breath Pellet
+				PristineFuryRightPellet.DisplayName: Pristine Scatter Pellet
+				PristineFuryGroundFlame.DisplayName: Pristine Ground Flame
+				PristineFuryImpactExplosion.DisplayName: Pristine Impact Burst
+			}
+		}
+
+		PristineFury: {
+			MarkExtracted: Extracted {0}'s imprint
+
+			Marks: {
+				Idle: Default
+				EvilT2: Evil T2
+				SlimeGod: Slime God
+				HardMode: Wall of Flesh
+				Prime: Skeletron Prime
+				BrimstoneElemental: Brimstone Elemental
+				Plantera: Plantera
+				Aurora: Astrum Aureus
+				Goliath: The Plaguebringer Goliath
+				Moonlord: Moon Lord
+				Providence: Providence
+				Polterghast: Polterghast
+				Dog: The Devourer of Gods
+				Dragon: Yharon
+			}
+		}
+	}
+}

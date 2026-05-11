@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -44,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             Player.AddBuff(ModContent.BuffType<BFRecoveryLeafBuff>(), leafTimeLeft);
         }
 
-        public void TrySpawnRecoveryFlash(Vector2 sourcePosition, bool markedTarget)
+        public void TrySpawnRecoveryTransfer(Vector2 sourcePosition, bool markedTarget)
         {
             if (!Main.rand.NextBool(FlashChanceDenominator))
                 return;
@@ -64,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
             if (windowLimited && flashesInWindow >= stats.FlashWindowLimit)
             {
-                RemoveOldestOwnedRecoveryFlash();
+                RemoveOldestOwnedRecoveryTransfer();
                 flashesInWindow = System.Math.Max(0, stats.FlashWindowLimit - 1);
             }
 
@@ -74,16 +75,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            Projectile.NewProjectile(
-                Player.GetSource_Misc("BlossomFluxRecoveryFlash"),
-                sourcePosition,
-                -Vector2.UnitY.RotatedByRandom(0.55f) * Main.rand.NextFloat(1.6f, 3.2f),
-                ModContent.ProjectileType<BFRecoveryFlash>(),
-                0,
-                0f,
+            Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 5.8f);
+            BFArrow_BRecovTransfer.Spawn(
+                Player.GetSource_Misc("BlossomFluxRecoveryTransfer"),
+                sourcePosition + Main.rand.NextVector2Circular(8f, 8f),
+                velocity,
                 Player.whoAmI,
                 stats.FlashHealAmount,
-                0f);
+                BFArrow_BRecovTransfer.LeftHitSpawnMode);
         }
 
         public override void ResetEffects()
@@ -151,9 +150,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             return missingQuarters * stats.LifeRegenPerMissingQuarter;
         }
 
-        private void RemoveOldestOwnedRecoveryFlash()
+        private void RemoveOldestOwnedRecoveryTransfer()
         {
-            int flashType = ModContent.ProjectileType<BFRecoveryFlash>();
+            int flashType = ModContent.ProjectileType<BFArrow_BRecovTransfer>();
             Projectile oldestFlash = null;
             int lowestTimeLeft = int.MaxValue;
 

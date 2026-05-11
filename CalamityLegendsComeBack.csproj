@@ -14,7 +14,6 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Accssory\BB\" />
-	  <Folder Include="Accssory\BF\" />
 	  <Folder Include="Accssory\YC\" />
 	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Sound\SHPC\" />
@@ -26,7 +25,6 @@
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\SHPC\RightClick\枪身特效参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
-	  <Folder Include="Weapons\PristineFury\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <AdditionalFiles Remove="Weapons\BlossomFlux\BFUI\**" />
@@ -54,6 +52,10 @@
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\维修战舰参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\重做前的效果\**\*.cs" />
+	  <Compile Remove="Weapons\PristineFury\别人重做前的版本，先看\**\*.cs" />
+	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
+	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
+	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
 	</ItemGroup>
 
 	<!-- References -->

@@ -1,7 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
-using CalamityMod.Projectiles.Magic;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
@@ -192,8 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 dust.noGravity = true;
             }
 
-            // ===== 额外效果：随机对立双发 PhantasmalFuryProj =====
-            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            // ===== 额外效果：释放夺舍后的毁灭幽魂 =====
             for (int i = 0; i < 6; i++)
             {
                 // ===== 在命中点下方随机生成位置 =====
@@ -210,10 +208,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.GetSource_FromThis(),
                     spawnPos,
                     shootVelocity,
-                    ModContent.ProjectileType<PhantasmalFuryProj>(),
+                    ModContent.ProjectileType<RuinousSoul_OrbitGhost>(),
                     (int)(projectile.damage * 0.35f),
                     1f,
-                    projectile.owner
+                    projectile.owner,
+                    0f,
+                    -1f,
+                    i
                 );
 
                 // ===== 朝该方向喷射鬼魂线性特效 =====
@@ -319,7 +320,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.owner,
                     0f,
                     -1f,
-                    Main.rand.NextFloat(MathHelper.TwoPi));
+                    ownedGhosts);
                 return;
             }
 

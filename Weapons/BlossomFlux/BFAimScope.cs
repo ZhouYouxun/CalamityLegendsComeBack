@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
         public new string LocalizationCategory => "Projectiles.Ranged";
         public ref float Charge => ref Projectile.ai[0];
         public ref float MaxChargeOrTargetRotation => ref Projectile.ai[1];
+        private ref float ScopeSlot => ref Projectile.ai[2];
         public const float BaseMaxCharge = 60f;
         public const float MinimumCharge = 18f;
         public float ChargePercent => MathHelper.Clamp(Charge / MaxChargeOrTargetRotation, 0f, 1f);
@@ -33,6 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
         private int holdoutIdentity = -1;
         private Color scopeMainColor = Color.LightBlue;
         private Color scopeAccentColor = Color.White;
+        private bool playedReadySound;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -77,14 +79,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
                 if (Projectile.owner != Main.myPlayer)
                     return;
 
-                Charge++;
+                int slotIndex = (int)ScopeSlot;
                 Vector2 scopeDirection = MousePosition.SafeNormalize(Vector2.UnitX);
                 Vector2 scopeCenter = scopeDirection * WeaponLength + Owner.MountedCenter;
                 Vector2 sparkOrigin = scopeCenter;
 
                 if (trackedHoldout.ModProjectile is NewLegendBlossomFluxHoldOut holdout)
                 {
+                    if (!holdout.ShouldKeepAimScopeSlot(slotIndex))
+                    {
+                        Projectile.Kill();
+                        return;
+                    }
+
                     MaxChargeOrTargetRotation = holdout.GetAimScopeMaxChargeFrames();
+                    Charge = holdout.GetAimScopeChargeForSlot(slotIndex);
                     scopeDirection = holdout.GetAimScopeDirection();
                     scopeCenter = holdout.GetAimScopeCenter(scopeDirection);
                     sparkOrigin = holdout.GetAimScopeSparkOrigin(scopeDirection);
@@ -93,6 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
                 }
                 else
                 {
+                    Charge++;
                     scopeMainColor = Color.LightBlue;
                     scopeAccentColor = Color.White;
                 }
@@ -101,8 +111,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.AimScope
                 Projectile.Center = scopeCenter;
                 Projectile.timeLeft = 2;
 
-                if (Charge == MaxChargeOrTargetRotation)
+                if (!playedReadySound && Charge >= MaxChargeOrTargetRotation)
+                {
+                    playedReadySound = true;
                     SoundEngine.PlaySound(SoundID.Item82 with { Volume = SoundID.Item82.Volume * 0.7f }, Owner.MountedCenter);
+                }
+
+                if (Charge < MaxChargeOrTargetRotation)
+                    playedReadySound = false;
 
                 if (ChargePercent == 1f && Charge % 2 == 0)
                 {

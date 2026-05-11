@@ -261,12 +261,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
 
         public override void OnKill(int timeLeft)
         {
+            int sourceDamage = Projectile.damage;
+
             int projIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(Projectile.damage * 0.8f),
+                (int)(sourceDamage * 0.8f),
                 Projectile.knockBack,
                 Projectile.owner
             );
@@ -285,7 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             Projectile.width = Projectile.height = 190;
             Projectile.Center = explosionCenter;
             Projectile.penetrate = -1;
-            Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.5f));
+            Projectile.damage = Math.Max(1, (int)(sourceDamage * 0.5f));
             Projectile.Damage();
             Projectile.width = oldWidth;
             Projectile.height = oldHeight;
@@ -294,17 +296,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             SoundEngine.PlaySound(NewLegendSHPC.AntiPersonnelMineExplosion, explosionCenter);
 
             if (Main.myPlayer == Projectile.owner)
-                SpawnLaserBarrage(explosionCenter);
+                SpawnLaserBarrage(explosionCenter, sourceDamage);
 
             SpawnExplosionEffects(explosionCenter);
         }
 
-        private void SpawnLaserBarrage(Vector2 explosionCenter)
+        private void SpawnLaserBarrage(Vector2 explosionCenter, int sourceDamage)
         {
             NPC target = FindLaserTarget(explosionCenter);
             Vector2 targetCenter = target?.Center ?? explosionCenter;
             int laserCount = Main.rand.Next(24, 31);
-            int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.38f));
+            int laserDamage = Math.Max(1, (int)(sourceDamage * 0.38f));
 
             for (int i = 0; i < laserCount; i++)
             {

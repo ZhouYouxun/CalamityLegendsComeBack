@@ -13,6 +13,13 @@ Mods: {
 					DisplayName: New Legend Cosmic Discharge
 					Tooltip: ""
 				}
+
+				Ranged: {
+					Riftburst: {
+						DisplayName: Riftburst
+						Tooltip: ""
+					}
+				}
 			}
 		}
 	}

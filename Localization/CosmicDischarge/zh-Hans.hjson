@@ -13,6 +13,13 @@ Mods: {
 					DisplayName: 宇宙放电-传奇归来
 					Tooltip: ""
 				}
+
+				Ranged: {
+					Riftburst: {
+						// DisplayName: Riftburst
+						// Tooltip: ""
+					}
+				}
 			}
 		}
 	}

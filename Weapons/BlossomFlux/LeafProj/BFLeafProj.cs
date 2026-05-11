@@ -21,6 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 {
     internal sealed class BFLeafProj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
+        private const int ReconHomingDelayFrames = 25;
+
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BFLeafProj";
@@ -166,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             {
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
                     if (BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
-                        Main.player[Projectile.owner].GetModPlayer<BFRecoveryEcologyPlayer>().TrySpawnRecoveryFlash(target.Center, IsReconPriorityTarget(target));
+                        Main.player[Projectile.owner].GetModPlayer<BFRecoveryEcologyPlayer>().TrySpawnRecoveryTransfer(target.Center, IsReconPriorityTarget(target));
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
@@ -324,6 +326,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         private void UpdateReconHoming()
         {
+            if (FlightTimer < ReconHomingDelayFrames * Projectile.MaxUpdates)
+            {
+                Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(FlightTimer * 0.08f + Projectile.identity) * 0.003f);
+                return;
+            }
+
             if (ReconWanderTimer > 0f)
             {
                 ReconWanderTimer--;

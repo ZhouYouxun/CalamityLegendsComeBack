@@ -94,7 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private void UpdateHoming(float idealSpeed, Vector2 currentDirection, float homingDelay)
         {
-            NPC target = FindTarget(IsBlueVariant ? 1150f : 950f);
+            NPC target = FindTarget(IsBlueVariant ? 1900f : 1650f);
             if (target is null)
             {
                 Projectile.velocity = currentDirection * MathHelper.Lerp(Projectile.velocity.Length(), idealSpeed, 0.08f);
@@ -102,11 +102,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             }
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
-            float inertia = IsBlueVariant ? 24f : 17f;
             float turnBoost = Utils.GetLerpValue(0f, 50f * (Projectile.extraUpdates + 1f), Timer - homingDelay, true);
+            float maxTurn = MathHelper.Lerp(
+                IsBlueVariant ? 0.24f : 0.34f,
+                IsBlueVariant ? 1.08f : 1.32f,
+                turnBoost);
+            float angleDelta = currentDirection.AngleTo(desiredDirection);
+            Vector2 limitedDirection = Math.Abs(angleDelta) <= maxTurn
+                ? desiredDirection
+                : currentDirection.RotatedBy(MathHelper.Clamp(angleDelta, -maxTurn, maxTurn));
+            float blend = MathHelper.Lerp(IsBlueVariant ? 0.28f : 0.36f, IsBlueVariant ? 0.74f : 0.86f, turnBoost);
+            Vector2 finalDirection = Vector2.Lerp(currentDirection, limitedDirection, blend).SafeNormalize(desiredDirection);
 
-            Projectile.velocity = (Projectile.velocity * inertia + desiredDirection * idealSpeed * (1f + turnBoost * 0.18f)) / (inertia + 1f);
-            Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * idealSpeed;
+            Projectile.velocity = finalDirection * idealSpeed * (1f + turnBoost * 0.08f);
         }
 
         private NPC FindTarget(float range)
@@ -121,9 +129,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
                 float distance = Projectile.Distance(npc.Center);
                 if (distance >= bestScore)
-                    continue;
-
-                if (!Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1))
                     continue;
 
                 bestTarget = npc;
@@ -483,14 +488,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
             Texture2D fadeStreak = ModContent.Request<Texture2D>("CalamityMod/Particles/FadeStreak").Value;
             Texture2D magicPoint = TextureAssets.Extra[89].Value;
+            Texture2D runeStar = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_05").Value;
+            Texture2D magicRune = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_02").Value;
+            Texture2D twirlRune = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/twirl_02").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 tipPosition = drawPosition + forward * Projectile.scale * (IsBlueVariant ? 18f : 15f);
             Color primary = PrimaryColor;
             Color secondary = SecondaryColor;
             Color core = CoreColor;
             float fadeIn = Utils.GetLerpValue(0f, 14f, Timer, true);
             float fadeOut = Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
             float opacity = fadeIn * fadeOut;
+            float tipOpacity = MathHelper.Max(opacity, 0.62f * fadeIn);
             float pulse = 1f + (float)Math.Sin((Timer + Projectile.ai[2] * 17f) * 0.16f) * 0.08f;
 
             Main.spriteBatch.End();
@@ -504,6 +515,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 Main.GameViewMatrix.TransformationMatrix);
 
             float magicRotation = Main.GlobalTimeWrappedHourly * MathHelper.TwoPi * (IsBlueVariant ? 0.72f : 0.56f);
+            for (int i = 0; i < 3; i++)
+            {
+                float angle = magicRotation * (1f + i * 0.18f) + MathHelper.TwoPi * i / 3f;
+                Color tipColor = Color.Lerp(core, i == 1 ? secondary : primary, 0.45f);
+                tipColor.A = 220;
+
+                Main.EntitySpriteDraw(
+                    magicPoint,
+                    tipPosition,
+                    null,
+                    tipColor * tipOpacity * (IsBlueVariant ? 1.8f : 1.45f),
+                    angle,
+                    magicPoint.Size() * 0.5f,
+                    (0.34f + i * 0.08f) * pulse * Projectile.scale,
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            Texture2D[] tipRunes = { runeStar, magicRune, twirlRune };
+            for (int i = 0; i < tipRunes.Length; i++)
+            {
+                Texture2D rune = tipRunes[i];
+                Color runeColor = Color.Lerp(primary, i == 0 ? core : secondary, 0.38f);
+                runeColor.A = 185;
+
+                Main.EntitySpriteDraw(
+                    rune,
+                    tipPosition,
+                    null,
+                    runeColor * tipOpacity * (IsBlueVariant ? 0.7f : 0.58f),
+                    Projectile.rotation + magicRotation * (i % 2 == 0 ? 0.42f : -0.34f) + MathHelper.TwoPi * i / 3f,
+                    rune.Size() * 0.5f,
+                    (0.25f * (0.32f + i * 0.08f)) * Projectile.scale * pulse,
+                    SpriteEffects.None,
+                    0f);
+            }
+
             for (int i = 0; i < 4; i++)
             {
                 float angle = magicRotation + MathHelper.TwoPi * i / 4f;

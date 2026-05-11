@@ -19,9 +19,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         private const int Lifetime = 300;
         private const int MaxUpdateCount = 4;
 
-        private static readonly Color TrailStartColor = new(8, 8, 14);
-        private static readonly Color TrailMidColor = new(0, 0, 0);
-        private static readonly Color TrailEndColor = new(58, 0, 82);
+        private static readonly Color TrailStartColor = Color.Black;
+        private static readonly Color TrailMidColor = Color.Black;
+        private static readonly Color TrailEndColor = Color.Black;
 
         public override void SetStaticDefaults()
         {
@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             float seed = Projectile.ai[1] == 0f ? Projectile.identity * 0.73f : Projectile.ai[1];
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, new Color(35, 0, 58).ToVector3() * 0.36f);
+            Lighting.AddLight(Projectile.Center, new Vector3(0.01f, 0.01f, 0.01f));
 
             if (timer < 34f)
             {
@@ -124,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     false,
                     Main.rand.Next(12, 20),
                     Main.rand.NextFloat(0.25f, 0.42f) * strength,
-                    Color.Lerp(new Color(42, 0, 62), Color.Black, Main.rand.NextFloat(0.35f, 0.75f)) * 0.82f);
+                    Color.Black);
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     DustID.Shadowflame,
                     -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.12f),
                     120,
-                    new Color(38, 0, 54),
+                    Color.Black,
                     Main.rand.NextFloat(0.65f, 1.05f) * strength);
                 dust.noGravity = true;
             }
@@ -156,7 +156,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     false,
                     Main.rand.Next(16, 24),
                     Main.rand.NextFloat(0.35f, 0.58f),
-                    Color.Lerp(new Color(70, 0, 95), Color.Black, Main.rand.NextFloat(0.25f, 0.55f)) * 0.85f);
+                    Color.Black);
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
@@ -165,7 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 Particle smoke = new HeavySmokeParticle(
                     center + Main.rand.NextVector2Circular(8f, 8f),
                     Main.rand.NextVector2Circular(1.1f, 1.1f),
-                    Main.rand.NextBool() ? Color.Black : new Color(32, 0, 44),
+                    Color.Black,
                     Main.rand.Next(20, 30),
                     Main.rand.NextFloat(0.28f, 0.46f),
                     0.35f,
@@ -185,11 +185,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private Color PrimitiveColorFunction(float completionRatio, Vector2 vertexPos)
         {
-            float pulse = (float)Math.Cos(completionRatio * 3.4f - Main.GlobalTimeWrappedHourly * 5f) * 0.5f + 0.5f;
-            Color startingColor = Color.Lerp(TrailStartColor, TrailMidColor, pulse * 0.7f);
-            Color color = Color.Lerp(startingColor, TrailEndColor, MathHelper.SmoothStep(0f, 1f, completionRatio));
-            color.A = 0;
-            return color * Utils.GetLerpValue(1f, 0.1f, completionRatio, true);
+            return Color.Black * Utils.GetLerpValue(1f, 0.1f, completionRatio, true);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            Vector2 center = Projectile.Center;
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 10f);
+                Particle spark = new SparkParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.32f, 0.62f),
+                    Color.Black);
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                Particle smoke = new HeavySmokeParticle(
+                    center + Main.rand.NextVector2Circular(5f, 5f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 4.4f),
+                    Color.Black,
+                    Main.rand.Next(18, 32),
+                    Main.rand.NextFloat(0.34f, 0.72f),
+                    0.42f,
+                    Main.rand.NextFloat(-0.08f, 0.08f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)

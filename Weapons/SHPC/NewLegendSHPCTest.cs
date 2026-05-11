@@ -31,6 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public int recoilProgress;
 
         private int leftClickCooldown;
+        private readonly BalanceSHPC balance = new();
 
         public override void SetDefaults()
         {
@@ -349,7 +350,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, rotation);
         }
 
-        private int GetCurrentRightDamage(Player player) => (int)player.GetTotalDamage(Item.DamageType).ApplyTo(Item.damage);
+        private int GetCurrentRightDamage(Player player)
+        {
+            int baseDamage = balance.GetRightClickBaseDamage();
+            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
+        }
 
         public override bool CanRightClick() => true;
 

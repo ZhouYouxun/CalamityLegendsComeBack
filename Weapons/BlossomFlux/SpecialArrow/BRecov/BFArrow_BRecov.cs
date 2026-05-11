@@ -14,9 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     {
         private const int LifetimeFrames = 14;
         private const float MaxFlightSpeed = 26.5f;
-        private const float HitExplosionDamageMultiplier = 0.6f;
 
-        private bool releasedRecoveryOrbs;
+        private bool releasedRecoveryOrb;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/BRecov/BFArrow_BRecov";
@@ -55,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             SpawnPenetrationImpactFX(target.Center, 1.1f);
-            SpawnHitBlast(target.Center);
+            ReleaseRecoveryOrb(target.Center, BFArrow_BRecovTransfer.LeftHitSpawnMode);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 16, 1.4f, 4.4f, 1f, 1.5f);
             SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.42f, Pitch = 0.3f }, target.Center);
 
@@ -76,10 +75,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnKill(int timeLeft)
         {
-            if (!releasedRecoveryOrbs)
+            if (!releasedRecoveryOrb)
             {
-                releasedRecoveryOrbs = true;
-                ReleaseRecoveryOrbs(Projectile.Center);
+                ReleaseRecoveryOrb(Projectile.Center, BFArrow_BRecovTransfer.LeftHitSpawnMode);
             }
 
             SpawnRecoveryPulse(Projectile.Center, 1.25f);
@@ -160,22 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
         }
 
-        private void SpawnHitBlast(Vector2 center)
-        {
-            if (Projectile.owner != Main.myPlayer)
-                return;
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                center,
-                Vector2.Zero,
-                ModContent.ProjectileType<BFArrow_BRecovBlast>(),
-                Math.Max(1, (int)(Projectile.damage * HitExplosionDamageMultiplier)),
-                Projectile.knockBack * 0.8f,
-                Projectile.owner);
-        }
-
-        private void ReleaseRecoveryOrbs(Vector2 center)
+        private void ReleaseRecoveryOrb(Vector2 center, float spawnMode)
         {
             if (Projectile.owner != Main.myPlayer)
                 return;
@@ -184,25 +167,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (!owner.active || owner.dead)
                 return;
 
-            int orbCount = Main.rand.Next(3, 8);
-            for (int i = 0; i < orbCount; i++)
-            {
-                int targetIndex = BFArrow_BRecovTransfer.FindRandomInjuredPlayerIndex(owner, center, 2400f);
-                Vector2 velocity =
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 6f) +
-                    new Vector2(0f, Main.rand.NextFloat(-2.5f, -0.8f));
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    center,
-                    velocity,
-                    ModContent.ProjectileType<BFArrow_BRecovTransfer>(),
-                    0,
-                    0f,
-                    Projectile.owner,
-                    targetIndex,
-                    3f);
-            }
+            releasedRecoveryOrb = true;
+            Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 6f);
+            BFArrow_BRecovTransfer.Spawn(
+                Projectile.GetSource_FromThis(),
+                center + Main.rand.NextVector2Circular(8f, 8f),
+                velocity,
+                Projectile.owner,
+                3f,
+                spawnMode);
         }
 
         private void SpawnRecoveryPulse(Vector2 center, float intensity)
