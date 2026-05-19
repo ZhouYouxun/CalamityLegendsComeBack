@@ -26,14 +26,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
+            projectile.GetGlobalProjectile<FragmentEntropy_GP>().firstFrame = true;
             projectile.timeLeft = 2;
             projectile.penetrate = -1;
             projectile.tileCollide = false;
-            projectile.Kill();
+            projectile.friendly = false;
+            projectile.hide = true;
         }
+
+        public override bool? CanDamage(Projectile projectile, Player owner) => false;
 
         public override void AI(Projectile projectile, Player owner)
         {
+            FragmentEntropy_GP gp = projectile.GetGlobalProjectile<FragmentEntropy_GP>();
+            if (gp.firstFrame)
+            {
+                gp.firstFrame = false;
+                projectile.Kill();
+                return;
+            }
+
             projectile.velocity *= 1.02f;
 
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -153,8 +165,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             Vector2 center = projectile.Center;
 
-            //SpawnEntropyFanBurst(projectile, center);
-            //FireEntropyBursts(projectile, owner, center);
+            SpawnEntropyFanBurst(projectile, center);
+            FireEntropyBursts(projectile, owner, center);
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = -0.48f }, center);
         }
@@ -168,7 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 center + forward * 10f,
-                forward * 18.6f,
+                forward * 37.2f,
                 ModContent.ProjectileType<FragmentEntropy_CosmicFire>(),
                 projectile.damage,
                 projectile.knockBack,
@@ -393,5 +405,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             Lighting.AddLight(center, new Vector3(0.08f, 0.085f, 0.08f));
         }
+    }
+
+    public class FragmentEntropy_GP : GlobalProjectile
+    {
+        public override bool InstancePerEntity => true;
+
+        public bool firstFrame;
     }
 }

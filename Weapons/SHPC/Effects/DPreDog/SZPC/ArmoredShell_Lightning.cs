@@ -233,14 +233,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 dust.color = Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid;
             }
 
-            Particle pulse = new CustomPulse(pos, Vector2.Zero, Color.Cyan, "CalamityMod/Particles/HighResFoggyCircleHardEdge", Vector2.One, 0f, 0f, 0.0815f * fxScale, 10);
+            Particle pulse = new CustomPulse(pos, Vector2.Zero, Color.Cyan, "CalamityMod/Particles/HighResFoggyCircleHardEdge", Vector2.One, 0f, 0f, 0.05705f * fxScale, 10);
             GeneralParticleHandler.SpawnParticle(pulse);
 
             for (int i = 0; i < 2; i++)
             {
-                Particle orb = new CustomPulse(pos, Vector2.Zero, Color.Orchid, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 1.38f * fxScale, 0.5f * fxScale, 14);
+                Particle orb = new CustomPulse(pos, Vector2.Zero, Color.Orchid, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.966f * fxScale, 0.35f * fxScale, 14);
                 GeneralParticleHandler.SpawnParticle(orb);
-                Particle orb2 = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.925f * fxScale, 0.2f * fxScale, 14);
+                Particle orb2 = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.6475f * fxScale, 0.14f * fxScale, 14);
                 GeneralParticleHandler.SpawnParticle(orb2);
             }
         }

@@ -44,19 +44,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             Time++;
 
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
-
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             Projectile.velocity *= 1.002f;
 
             float phase = Time * 0.19f + Projectile.identity * 0.41f;
             float wave = (float)System.Math.Sin(phase);
-            if (Time < 26f)
-                Projectile.position += side * wave * 0.22f;
 
             if (Time > 12f && Time % 17f == 0f)
                 Projectile.velocity = Projectile.velocity.RotatedBy(Main.rand.NextFloat(-0.035f, 0.035f));
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+
+            if (Time < 26f)
+                Projectile.position += side * wave * 0.22f;
 
             Lighting.AddLight(Projectile.Center, InnerColor.ToVector3() * 0.2f);
 
@@ -141,16 +143,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             float age = Utils.GetLerpValue(12f, 46f, Time, true);
             float fadeOut = Utils.GetLerpValue(0f, 26f, Projectile.timeLeft, true);
-            float radius = MathHelper.Lerp(6f, 28f, age);
-            float basePhase = Time * 0.58f + Projectile.identity * 0.37f;
+            float radius = MathHelper.Lerp(4.5f, 21f, age);
+            float basePhase = Time * 0.82f + Projectile.velocity.ToRotation() * 0.45f + Projectile.identity * 0.37f;
 
-            for (int sample = 0; sample < 2; sample++)
+            for (int sample = 0; sample < 4; sample++)
             {
-                float sampleOffset = sample * 0.52f;
+                float sampleOffset = sample * 0.26f;
                 float phase = basePhase - sampleOffset;
                 float sine = (float)System.Math.Sin(phase);
                 float cosine = (float)System.Math.Cos(phase);
-                Vector2 sampleCenter = Projectile.Center - forward * Projectile.velocity.Length() * 0.22f * sample;
+                Vector2 sampleCenter = Projectile.Center - forward * Projectile.velocity.Length() * 0.11f * sample;
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -170,9 +172,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         "CalamityMod/Particles/GlowSpark2",
                         false,
                         Main.rand.Next(10, 15),
-                        Main.rand.NextFloat(0.021f, 0.036f) * fadeOut,
+                        Main.rand.NextFloat(0.014f, 0.024f) * fadeOut,
                         Color.Black,
-                        new Vector2(0.55f, 1.2f),
+                        new Vector2(0.42f, 0.92f),
                         false);
                     GeneralParticleHandler.SpawnParticle(blackCore);
 
@@ -182,9 +184,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         "CalamityMod/Particles/GlowSpark",
                         false,
                         Main.rand.Next(10, 15),
-                        Main.rand.NextFloat(0.011f, 0.021f) * fadeOut,
+                        Main.rand.NextFloat(0.0075f, 0.0145f) * fadeOut,
                         helixColor,
-                        new Vector2(0.45f, 1.45f),
+                        new Vector2(0.34f, 1.08f),
                         true,
                         false);
                     GeneralParticleHandler.SpawnParticle(greenSheen);
@@ -197,7 +199,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                             ModContent.DustType<VoidDustInverted>(),
                             -forward.RotatedBy(sign * 0.35f) * Main.rand.NextFloat(0.3f, 1.6f));
                         dust.noGravity = Main.rand.NextBool();
-                        dust.scale = Main.rand.NextFloat(0.33f, 0.63f);
+                        dust.scale = Main.rand.NextFloat(0.22f, 0.43f);
                         dust.color = helixColor;
                     }
                 }
@@ -268,8 +270,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             if (Main.projectile.IndexInRange(explosionIndex))
             {
                 Projectile explosion = Main.projectile[explosionIndex];
-                explosion.width = 200;
-                explosion.height = 200;
+                explosion.width = 500;
+                explosion.height = 500;
                 explosion.Center = Projectile.Center;
                 explosion.friendly = true;
                 explosion.hostile = false;

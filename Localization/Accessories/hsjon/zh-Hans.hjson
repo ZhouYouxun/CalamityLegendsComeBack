@@ -99,6 +99,7 @@ Mods: {
 				// ArmoredShell_Lightning.DisplayName: Armored Shell_ Lightning
 				// UnholyEssence_HolyNova.DisplayName: Unholy Essence_ Holy Nova
 				// RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
+				// FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
 			}
 
 			ChangedWeapons: {

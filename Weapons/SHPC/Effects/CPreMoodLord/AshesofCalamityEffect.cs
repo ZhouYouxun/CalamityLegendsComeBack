@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -20,48 +20,55 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         public override float ExplosionPulseFactor => 0f;
         public override float GlowScaleFactor => 0f;
         public override float GlowIntensityFactor => 0f;
+        public override bool EnableDefaultSlowdown => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.timeLeft = 90;
-            projectile.penetrate = 1;
+            projectile.GetGlobalProjectile<AshesofCalamity_GP>().firstFrame = true;
+            projectile.timeLeft = 2;
+            projectile.penetrate = -1;
             projectile.tileCollide = false;
-            projectile.usesLocalNPCImmunity = true;
-            projectile.localNPCHitCooldown = -1;
-            projectile.localAI[0] = 0f;
+            projectile.friendly = false;
+            projectile.hide = true;
+        }
+
+        public override bool? CanDamage(Projectile projectile, Player owner) => false;
+
+        public override void AI(Projectile projectile, Player owner)
+        {
+            AshesofCalamity_GP gp = projectile.GetGlobalProjectile<AshesofCalamity_GP>();
+            if (!gp.firstFrame)
+                return;
+
+            gp.firstFrame = false;
+            projectile.Kill();
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-        }
-
-        public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
-        {
-        }
-
-        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            if (projectile.localAI[0] == 1f)
-                return;
-
-            projectile.localAI[0] = 1f;
-
             if (projectile.owner != Main.myPlayer)
                 return;
 
+            Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
+            float speed = System.Math.Max(projectile.velocity.Length(), 18f);
+
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
-                target.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<AshesofCalamity_Portal>(),
+                projectile.Center + forward * 12f,
+                forward * speed,
+                ModContent.ProjectileType<AshesofCalamity_Soul>(),
                 projectile.damage,
                 projectile.knockBack,
-                projectile.owner
+                projectile.owner,
+                1f
             );
         }
+    }
 
+    public class AshesofCalamity_GP : GlobalProjectile
+    {
+        public override bool InstancePerEntity => true;
 
-
-
+        public bool firstFrame;
     }
 }

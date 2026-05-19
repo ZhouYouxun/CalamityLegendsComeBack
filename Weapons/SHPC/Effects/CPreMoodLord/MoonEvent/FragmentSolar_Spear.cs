@@ -100,20 +100,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 GeneralParticleHandler.SpawnParticle(ember);
             }
 
-            //if (Main.rand.NextBool(4))
-            //{
-            //    Vector2 smokePos = Projectile.Center - forward * Main.rand.NextFloat(4f, 12f) + side * Main.rand.NextFloat(-12f, 12f);
-            //    Vector2 smokeVel = back.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.45f, 1.5f);
-            //    Particle smoke = new MediumMistParticle(
-            //        smokePos,
-            //        smokeVel,
-            //        Main.rand.NextBool() ? new Color(255, 115, 32) : Color.DarkOrange,
-            //        Color.Black,
-            //        Main.rand.NextFloat(0.38f, 0.76f),
-            //        Main.rand.NextFloat(90f, 135f),
-            //        0.08f);
-            //    GeneralParticleHandler.SpawnParticle(smoke);
-            //}
+            if (Main.rand.NextBool(4))
+            {
+                Vector2 smokePos = Projectile.Center - forward * Main.rand.NextFloat(4f, 12f) + side * Main.rand.NextFloat(-12f, 12f);
+                Vector2 smokeVel = back.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.45f, 1.5f);
+                Particle smoke = new MediumMistParticle(
+                    smokePos,
+                    smokeVel,
+                    Main.rand.NextBool() ? new Color(255, 115, 32) : Color.DarkOrange,
+                    Color.Black,
+                    Main.rand.NextFloat(0.38f, 0.76f),
+                    Main.rand.NextFloat(90f, 135f),
+                    0.08f);
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
 
             //if (Main.rand.NextBool(5))
             //{

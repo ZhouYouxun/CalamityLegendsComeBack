@@ -123,6 +123,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 );
                 dust.noGravity = true;
             }
+
+            SpawnVortexPixelTrail(projectile);
         }
 
         // ================= ModifyHitNPC =================
@@ -150,31 +152,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 dust.noGravity = true;
             }
 
-            SpawnVortexPixelTrail(projectile);
+            SpawnVortexPixelTrail(projectile, true);
         }
 
-        private void SpawnVortexPixelTrail(Projectile projectile)
+        private void SpawnVortexPixelTrail(Projectile projectile, bool burst = false)
         {
             if (projectile.owner != Main.myPlayer)
                 return;
 
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            int pixelCount = Main.rand.Next(3, 6);
+            int pixelCount = burst ? Main.rand.Next(24, 34) : Main.rand.Next(8, 14);
 
             for (int i = 0; i < pixelCount; i++)
             {
-                float backOffset = Main.rand.NextFloat(4f, 42f);
-                float lateralOffset = Main.rand.NextFloat(-30f, 30f);
+                float backOffset = burst ? Main.rand.NextFloat(-12f, 58f) : Main.rand.NextFloat(2f, 54f);
+                float lateralOffset = Main.rand.NextFloat(burst ? -76f : -42f, burst ? 76f : 42f);
                 Vector2 spawnPos =
                     projectile.Center -
                     forward * backOffset +
                     normal * lateralOffset +
-                    Main.rand.NextVector2Circular(4f, 4f);
+                    Main.rand.NextVector2Circular(burst ? 18f : 7f, burst ? 18f : 7f);
 
                 Vector2 drift =
-                    normal * Main.rand.NextFloat(-0.22f, 0.22f) -
-                    forward * Main.rand.NextFloat(0.02f, 0.16f);
+                    normal * Main.rand.NextFloat(-0.46f, 0.46f) -
+                    forward * Main.rand.NextFloat(0.04f, 0.24f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
@@ -184,9 +186,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     0,
                     0f,
                     projectile.owner,
-                    Main.rand.NextFloat(3f, 11f),
+                    Main.rand.NextFloat(burst ? 18f : 12f, burst ? 42f : 28f),
                     Main.rand.NextFloat(),
-                    Main.rand.Next(12, 24));
+                    Main.rand.Next(burst ? 34 : 30, burst ? 58 : 48));
             }
         }
 

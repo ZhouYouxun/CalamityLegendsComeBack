@@ -194,13 +194,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 if (mainProj.active)
                 {
-                    float syncedPulse = 0.5f + 0.5f * (float)Math.Sin(Main.GameUpdateCount * 0.075f + boundMainProjectileID * 0.23f);
+                    float syncedPulse = 0.5f + 0.5f * (float)Math.Sin(Main.GameUpdateCount * 0.15f + boundMainProjectileID * 0.23f);
                     float orbitScale = MathHelper.SmoothStep(0.58f, 1.45f, syncedPulse);
                     float a = 62f * orbitScale;
                     float b = 30f * orbitScale;
 
-                    orbitAngle += 0.064f;
-                    ellipseRotation += 0.024f;
+                    orbitAngle += 0.128f;
+                    ellipseRotation += 0.048f;
 
                     Vector2 ellipse = new Vector2(
                         (float)Math.Cos(orbitAngle + orbitOffset) * a,
@@ -210,8 +210,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     Projectile.Center = mainProj.Center + ellipse;
 
                     Vector2 futurePos = mainProj.Center + new Vector2(
-                        (float)Math.Cos(orbitAngle + orbitOffset + 0.12f) * a,
-                        (float)Math.Sin(orbitAngle + orbitOffset + 0.12f) * b
+                        (float)Math.Cos(orbitAngle + orbitOffset + 0.24f) * a,
+                        (float)Math.Sin(orbitAngle + orbitOffset + 0.24f) * b
                     ).RotatedBy(ellipseRotation);
 
                     Projectile.velocity = futurePos - Projectile.Center;
