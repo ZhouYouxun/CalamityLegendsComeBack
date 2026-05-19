@@ -110,25 +110,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (ScanRadius > 3f)
-            {
-                Texture2D circleTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
-                float scale = ScanRadius * 2f / circleTexture.Width;
-                float opacity = Utils.GetLerpValue(0f, MaxScanRadius, ScanRadius, true);
-                Color ringColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec) * (0.18f * (1f - opacity * 0.45f));
-
-                Main.EntitySpriteDraw(
-                    circleTexture,
-                    Projectile.Center - Main.screenPosition,
-                    null,
-                    ringColor,
-                    Main.GlobalTimeWrappedHourly * 1.1f,
-                    circleTexture.Size() * 0.5f,
-                    scale,
-                    SpriteEffects.None,
-                    0);
-            }
-
             BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.05f);
             return false;
         }
@@ -171,19 +152,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
             Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
-
-            if ((int)FlightTimer % 2 == 0)
-            {
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    Projectile.Center + direction * 10f,
-                    Projectile.velocity * 0.04f,
-                    Color.Lerp(mainColor, Color.White, 0.22f),
-                    new Vector2(0.42f, 1.45f),
-                    direction.ToRotation(),
-                    0.16f,
-                    0.034f,
-                    10));
-            }
 
             GeneralParticleHandler.SpawnParticle(new CritSpark(
                 Projectile.Center + normal * Main.rand.NextFloat(-7f, 7f),

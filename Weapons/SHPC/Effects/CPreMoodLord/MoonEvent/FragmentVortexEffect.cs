@@ -1,9 +1,12 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Utilities;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 {
@@ -145,6 +148,143 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     Main.rand.NextFloat(1.1f, 1.6f)
                 );
                 dust.noGravity = true;
+            }
+
+            SpawnVortexPixelTrail(projectile);
+        }
+
+        private void SpawnVortexPixelTrail(Projectile projectile)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            int pixelCount = Main.rand.Next(3, 6);
+
+            for (int i = 0; i < pixelCount; i++)
+            {
+                float backOffset = Main.rand.NextFloat(4f, 42f);
+                float lateralOffset = Main.rand.NextFloat(-30f, 30f);
+                Vector2 spawnPos =
+                    projectile.Center -
+                    forward * backOffset +
+                    normal * lateralOffset +
+                    Main.rand.NextVector2Circular(4f, 4f);
+
+                Vector2 drift =
+                    normal * Main.rand.NextFloat(-0.22f, 0.22f) -
+                    forward * Main.rand.NextFloat(0.02f, 0.16f);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    spawnPos,
+                    drift,
+                    ModContent.ProjectileType<FragmentVortex_Pixel>(),
+                    0,
+                    0f,
+                    projectile.owner,
+                    Main.rand.NextFloat(3f, 11f),
+                    Main.rand.NextFloat(),
+                    Main.rand.Next(12, 24));
+            }
+        }
+
+        public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
+        {
+        }
+
+        private void DrawVortexPixelAfterimages(Projectile projectile, SpriteBatch spriteBatch)
+        {
+            Texture2D shockPixel = TextureAssets.MagicPixel.Value;
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            float spawnFade = Utils.GetLerpValue(25f, 18f, projectile.timeLeft, true);
+            float deathFade = Utils.GetLerpValue(0f, 7f, projectile.timeLeft, true);
+            float globalFade = spawnFade * deathFade;
+
+            if (globalFade <= 0f)
+                return;
+
+            int trailLength = projectile.oldPos.Length;
+            for (int i = 0; i < trailLength; i++)
+            {
+                if (projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                float age = i / (float)Math.Max(1, trailLength - 1);
+                float ageFade = (float)Math.Pow(1f - age, 3.1f);
+                if (ageFade <= 0.02f)
+                    continue;
+
+                Vector2 oldCenter = projectile.oldPos[i] + projectile.Size * 0.5f;
+                Vector2 segmentForward = forward;
+                if (i > 0 && projectile.oldPos[i - 1] != Vector2.Zero)
+                    segmentForward = (projectile.oldPos[i - 1] - projectile.oldPos[i]).SafeNormalize(forward);
+                Vector2 segmentNormal = segmentForward.RotatedBy(MathHelper.PiOver2);
+
+                int pixelCount = i < 3 ? 12 : 7;
+                UnifiedRandom seededRandom = new(projectile.identity * 997 + i * 131);
+                for (int j = 0; j < pixelCount; j++)
+                {
+                    float along = seededRandom.NextFloat(-18f, 16f) * (1f - age * 0.45f);
+                    float lateral = seededRandom.NextFloat(-34f, 34f) * (1f - age * 0.25f);
+                    float wobble = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f + i * 1.7f + j * 0.53f) * seededRandom.NextFloat(1f, 5f);
+                    Vector2 worldPos = oldCenter + segmentForward * along + segmentNormal * (lateral + wobble);
+                    Vector2 drawPos = worldPos - Main.screenPosition;
+
+                    float cellSize = seededRandom.NextFloat(3f, 10f) * MathHelper.Lerp(1.15f, 0.35f, age);
+                    float intensity = 0.45f + 0.55f *
+                        (float)Math.Sin(i * 0.73f + j * 1.17f + Main.GlobalTimeWrappedHourly * 9f);
+
+                    Color pixelColor = Color.Lerp(
+                        new Color(0, 62, 82),
+                        new Color(62, 255, 235),
+                        intensity);
+
+                    if ((i + j + projectile.identity) % 11 == 0)
+                        pixelColor = Color.Lerp(pixelColor, Color.White, 0.32f);
+
+                    float alpha = globalFade * ageFade * seededRandom.NextFloat(0.32f, 0.82f);
+                    Rectangle voxelRect = new(
+                        (int)drawPos.X,
+                        (int)drawPos.Y,
+                        Math.Max(1, (int)cellSize),
+                        Math.Max(1, (int)cellSize));
+
+                    spriteBatch.Draw(
+                        shockPixel,
+                        voxelRect,
+                        null,
+                        pixelColor * alpha,
+                        0f,
+                        Vector2.Zero,
+                        SpriteEffects.None,
+                        0f);
+                }
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    Vector2 drawPos = projectile.Center - Main.screenPosition +
+                        forward * Main.rand.NextFloat(-18f, 8f) +
+                        normal * Main.rand.NextFloat(-20f, 20f);
+                    float size = Main.rand.NextFloat(4f, 11f);
+                    Color color = Color.Lerp(Color.Cyan, Color.Teal, Main.rand.NextFloat(0.15f, 0.75f));
+                    color.A = 0;
+
+                    spriteBatch.Draw(
+                        shockPixel,
+                        new Rectangle((int)drawPos.X, (int)drawPos.Y, (int)size, (int)size),
+                        null,
+                        color * 0.45f * globalFade,
+                        0f,
+                        Vector2.Zero,
+                        SpriteEffects.None,
+                        0f);
+                }
             }
         }
 

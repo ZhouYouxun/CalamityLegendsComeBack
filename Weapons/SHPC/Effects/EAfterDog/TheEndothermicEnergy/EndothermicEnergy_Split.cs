@@ -41,6 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Projectile.usesLocalNPCImmunity = true; // 弹幕使用本地无敌帧
             Projectile.localNPCHitCooldown = 14; // 无敌帧冷却时间为14帧
             Projectile.ignoreWater = true; // 弹幕不受水影响
+            Projectile.tileCollide = true;
             Projectile.arrow = true;
             Projectile.extraUpdates = 1;
             Projectile.aiStyle = 0;
@@ -95,6 +96,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 iceDust.fadeIn = 1.5f; // 使粒子有一个渐入效果
             }
             
+        }
+
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            if (Projectile.ai[1] >= 2f)
+                return true;
+
+            Projectile.ai[1]++;
+
+            if (Projectile.velocity.X != oldVelocity.X)
+                Projectile.velocity.X = -oldVelocity.X;
+
+            if (Projectile.velocity.Y != oldVelocity.Y)
+                Projectile.velocity.Y = -oldVelocity.Y;
+
+            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * oldVelocity.Length() * 0.92f;
+            Projectile.netUpdate = true;
+            return false;
         }
 
 

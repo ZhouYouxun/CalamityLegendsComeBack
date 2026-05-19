@@ -33,9 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int ReconFireInterval = 5;
         private const int ReconCyclePause = 20;
         private const int BombardFireInterval = 4;
-        private const int PlagueFireInterval = 0;
-        private const int PlagueReaperMinNeedles = 3;
-        private const int PlagueReaperMaxNeedles = 6;
+        private const int PlagueFireInterval = 12;
         private const int BombardAmmoSavePercent = 90;
         private const int PlagueAmmoSavePercent = 95;
         private const int PastLingeringAmmoSavePercent = 66;
@@ -61,13 +59,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private BalanceBlossomFlux damageBalance = new();
         private const float RailgunSightSize = 9f;
         private const float RailgunMaxSightAngle = MathHelper.Pi * (2f / 3f);
-        private static readonly SoundStyle PlagueUseSound = new("CalamityMod/Sounds/Item/PhotoUseSound") { Volume = 0.28f, PitchVariance = 0.16f };
 
         private int burstGroupsStarted;
         private int leftBurstTimer;
         private int leftShotsFired;
         private int reconShotsFiredInBurst;
-        private int plagueNeedlesUntilReaper;
         private bool leftHeldLastFrame;
 
         private int reloadTimer;
@@ -317,7 +313,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 burstGroupsStarted = 0;
                 leftShotsFired = 0;
                 reconShotsFiredInBurst = 0;
-                plagueNeedlesUntilReaper = Main.rand.Next(PlagueReaperMinNeedles, PlagueReaperMaxNeedles + 1);
                 leftBurstTimer = GetInitialLeftFireDelay();
                 if (leftBurstTimer > 0)
                     return;
@@ -342,7 +337,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             BlossomFluxChloroplastPresetType.Chlo_BRecov => RecoveryBurstInterval,
             BlossomFluxChloroplastPresetType.Chlo_CDetec => 0,
             BlossomFluxChloroplastPresetType.Chlo_DBomb => BombardFireInterval,
-            BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueFireInterval,
+            BlossomFluxChloroplastPresetType.Chlo_EPlague => 0,
             _ => BreakthroughFireInterval
         };
 
@@ -1422,11 +1417,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             for (int i = 0; i < arrowCount; i++)
             {
-                float horizontalOffset = Main.rand.NextFloat(-40f, 40f);
+                float horizontalOffset = Main.rand.NextFloat(-78f, 78f);
                 Vector2 spawnPosition = new(
                     MathHelper.Lerp(mouseWorld.X, Owner.Center.X, 0.5f) + horizontalOffset,
                     Owner.Center.Y - Main.rand.NextFloat(560f, 660f) * Owner.gravDir);
-                Vector2 targetPosition = mouseWorld + new Vector2(Main.rand.NextFloat(-30f, 30f), Main.rand.NextFloat(-12f, 28f) * Owner.gravDir);
+                Vector2 targetPosition = mouseWorld + new Vector2(Main.rand.NextFloat(-58f, 58f), Main.rand.NextFloat(-16f, 34f) * Owner.gravDir);
                 Vector2 shotVelocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY * Owner.gravDir);
                 shotVelocity = shotVelocity.RotatedBy(horizontalOffset * -0.004f) * rainSpeed;
                 int shotDamage = (int)(damage * (i == 0 ? 1.15f : 1f));
@@ -1445,53 +1440,34 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            plagueNeedlesUntilReaper--;
-            if (plagueNeedlesUntilReaper > 0)
-            {
-                if (Main.GameUpdateCount % 3 == 0)
-                    SpawnLeftMuzzleFX(GunTipPosition, AimDirection, CurrentPreset, 0.24f);
-
-                return;
-            }
-
-            plagueNeedlesUntilReaper = Main.rand.Next(PlagueReaperMinNeedles, PlagueReaperMaxNeedles + 1);
-            int finalProjectileType = ModContent.ProjectileType<BFLeftPlagueReaper>();
-            int reaperCount = Main.rand.Next(1, 3);
+            int finalProjectileType = ModContent.ProjectileType<BFArrow_EPlague>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            Vector2 origin = Projectile.Center;
+            Vector2 origin = GunTipPosition;
             float speedMultiplier = GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_EPlague);
+            float shotSpeed = Math.Max(speed, 12.5f) * 0.92f * speedMultiplier;
+            Vector2 shootVelocity = baseDirection.RotatedBy(Main.rand.NextFloat(-0.05f, 0.05f)) * shotSpeed;
+            Vector2 spawnPosition = origin + baseDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-4f, 4f);
 
-            for (int i = 0; i < reaperCount; i++)
+            int projectileIndex = Projectile.NewProjectile(
+                source,
+                spawnPosition,
+                shootVelocity,
+                finalProjectileType,
+                Math.Max(1, (int)(damage * 1.05f)),
+                knockback * 0.72f,
+                Owner.whoAmI,
+                BFArrow_EPlague.LeftSporeState,
+                Main.rand.NextFloat(1000f));
+
+            if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
             {
-                float angleOffset = Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4);
-                float speedJitter = Main.rand.NextFloat(0.86f, 1.12f);
-                Vector2 shootVelocity = baseDirection.RotatedBy(angleOffset) * Math.Max(speed * 0.46f, 6.75f) * speedJitter * speedMultiplier;
-                Vector2 spawnPosition = origin + shootVelocity.SafeNormalize(baseDirection).RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-8f, 8f);
-
-                int projectileIndex = Projectile.NewProjectile(
-                    source,
-                    spawnPosition,
-                    shootVelocity,
-                    finalProjectileType,
-                    Math.Max(1, (int)(damage * 0.74f)),
-                    knockback * 0.5f,
-                    Owner.whoAmI,
-                    Main.rand.NextFloat(1000f),
-                    i);
-
-                if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
-                {
-                    Projectile arrowProjectile = Main.projectile[projectileIndex];
-                    arrowProjectile.arrow = true;
-                    arrowProjectile.noDropItem = true;
-                    BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
-                }
-
-                SpawnLeftMuzzleFX(spawnPosition, shootVelocity, CurrentPreset, 0.88f);
+                Projectile arrowProjectile = Main.projectile[projectileIndex];
+                arrowProjectile.arrow = true;
+                arrowProjectile.noDropItem = true;
+                BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
             }
 
-            SoundEngine.PlaySound(PlagueUseSound with { Volume = 0.34f, Pitch = Main.rand.NextFloat(0.18f, 0.34f) }, Owner.Center);
-            SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.32f, Pitch = 0.42f, PitchVariance = 0.12f }, Owner.Center);
+            SpawnLeftMuzzleFX(spawnPosition, shootVelocity, CurrentPreset, 0.66f);
         }
 
         private void FireParallelVolley(IEntitySource source, Vector2 velocity, int projectileType, int damage, float knockback, BlossomFluxChloroplastPresetType preset)
@@ -1705,7 +1681,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             leftBurstTimer = 0;
             leftShotsFired = 0;
             reconShotsFiredInBurst = 0;
-            plagueNeedlesUntilReaper = 0;
             leftHeldLastFrame = false;
         }
 

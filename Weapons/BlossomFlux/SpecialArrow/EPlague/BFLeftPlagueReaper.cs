@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private const int HomingWarmupFrames = 4;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/EPlague/BFLeftPlagueReaper";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BlossomFluxBOMB";
 
         private ref float Seed => ref Projectile.ai[0];
         private ref float Variant => ref Projectile.ai[1];

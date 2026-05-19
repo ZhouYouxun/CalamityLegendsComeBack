@@ -18,8 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void SetDefaults()
         {
-            Projectile.width = 54;
-            Projectile.height = 54;
+            Projectile.width = 72;
+            Projectile.height = 72;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Ranged;
@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 70;
+            Projectile.timeLeft = 92;
             Projectile.alpha = 255;
             BFArrowCommon.ForceLocalNPCImmunity(Projectile, 12);
         }
@@ -43,11 +43,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 Projectile.scale = 0.35f;
 
             Projectile.rotation += 0.01f * Projectile.direction;
-            Projectile.velocity *= 0.967f;
-            Projectile.velocity.Y -= 0.015f;
+            Projectile.velocity *= 0.982f;
+            Projectile.velocity.Y -= 0.01f;
 
-            float targetScale = MaxVisualScale <= 0f ? 1.15f : MaxVisualScale;
-            Projectile.scale = MathHelper.Lerp(Projectile.scale, targetScale, 0.06f);
+            float targetScale = MaxVisualScale <= 0f ? 1.45f : MaxVisualScale;
+            Projectile.scale = MathHelper.Lerp(Projectile.scale, targetScale, 0.08f);
             Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Projectile.localAI[0], true) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
 
             Lighting.AddLight(Projectile.Center, new Color(130, 205, 80).ToVector3() * 0.35f * Projectile.Opacity);
@@ -55,9 +55,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (Main.rand.NextBool(3))
             {
                 Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
+                    Projectile.Center + Main.rand.NextVector2Circular(24f, 24f),
                     DustID.GreenTorch,
-                    Main.rand.NextVector2Circular(0.8f, 0.8f),
+                    Main.rand.NextVector2Circular(1.1f, 1.1f),
                     100,
                     new Color(172, 228, 92),
                     Main.rand.NextFloat(0.9f, 1.3f));
@@ -67,9 +67,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (Main.rand.NextBool(4))
             {
                 Dust mist = Dust.NewDustPerfect(
-                    Projectile.Center + Main.rand.NextVector2Circular(22f, 22f),
+                    Projectile.Center + Main.rand.NextVector2Circular(30f, 30f),
                     DustID.Smoke,
-                    Main.rand.NextVector2Circular(0.45f, 0.45f) + new Vector2(0f, -0.12f),
+                    Main.rand.NextVector2Circular(0.65f, 0.65f) + new Vector2(0f, -0.1f),
                     120,
                     new Color(92, 128, 40),
                     Main.rand.NextFloat(0.8f, 1.1f));

@@ -11,9 +11,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
         public override int EffectID => 35;
         public override int AmmoType => ModContent.ItemType<NightmareFuel>();
 
-        public override Color ThemeColor => new Color(200, 140, 40);
-        public override Color StartColor => new Color(255, 210, 80);
-        public override Color EndColor => new Color(40, 25, 10);
+        public override Color ThemeColor => new Color(72, 18, 120);
+        public override Color StartColor => new Color(145, 58, 225);
+        public override Color EndColor => new Color(18, 4, 38);
 
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;

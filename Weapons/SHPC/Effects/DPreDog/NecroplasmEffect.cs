@@ -27,12 +27,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         private float sinTimer;
         private int timer;
         private int homingTimer;
+        private int soulsFired;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             sinTimer = 0f;
             timer = 0;
             homingTimer = 0;
+            soulsFired = 0;
 
             projectile.penetrate = 5;
             if (projectile.timeLeft < 240)
@@ -43,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override void AI(Projectile projectile, Player owner)
         {
             timer++;
-            projectile.velocity *= 1.04f;
+            projectile.velocity *= 1.03f;
 
             NPC target = projectile.Center.ClosestNPCAt(3000f);
             if (target != null)
@@ -58,8 +60,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             else
                 homingTimer = 0;
 
+            float soulSpeedFactor = Utils.GetLerpValue(0f, 26f, soulsFired, true);
+            float minSpeed = MathHelper.Lerp(16f, 24f, soulSpeedFactor);
+            float maxSpeed = MathHelper.Lerp(34f, 54f, soulSpeedFactor);
+            float currentSpeed = projectile.velocity.Length();
+            if (currentSpeed > maxSpeed)
+                projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * maxSpeed;
+            else if (currentSpeed < minSpeed)
+                projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * minSpeed;
+
             if (timer % 6 == 0)
             {
+                soulsFired++;
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center,
@@ -103,6 +115,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (projectile.owner == Main.myPlayer)
+                SpawnShortFlightSouls(projectile, target, timer);
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
@@ -269,6 +283,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 3 => new Color(120, 16, 95),
                 _ => new Color(235, 70, 170)
             };
+        }
+
+        private static void SpawnShortFlightSouls(Projectile projectile, NPC target, int flightTime)
+        {
+            float travelFactor = Utils.GetLerpValue(18f, 150f, flightTime, true);
+            int extraCount = (int)MathHelper.Lerp(8f, 2f, travelFactor);
+            int damage = (int)(projectile.damage * 0.65f);
+            if (damage < 1)
+                damage = 1;
+
+            Vector2 aimDirection = (target.Center - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX));
+            for (int i = 0; i < extraCount; i++)
+            {
+                float angle = MathHelper.TwoPi * i / extraCount;
+                Vector2 spreadDirection = aimDirection.RotatedBy(MathHelper.Lerp(-0.75f, 0.75f, i / (float)System.Math.Max(1, extraCount - 1)));
+                Vector2 velocity = (spreadDirection * 10f + angle.ToRotationVector2() * 3f).SafeNormalize(aimDirection) * MathHelper.Lerp(9f, 15f, 1f - travelFactor);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<Necroplasm_Damage>(),
+                    damage,
+                    0f,
+                    projectile.owner);
+            }
         }
     }
 }

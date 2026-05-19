@@ -8,7 +8,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class RuinousSoul_OrbitGhost : ModProjectile, ILocalizedModType
     {
-        public const int ReleaseCap = 6;
+        public const int ReleaseCap = 9;
+        public const int SpawnBatchSize = 3;
+        public const int ForcedReleaseTime = 100;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/DPreDog/RuinousSoul_OrbitGhost";
@@ -94,13 +96,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             time++;
         }
 
-        public void Release(int targetIndex)
+        public void Release(int targetIndex, bool forceReleaseTime = false)
         {
             State = 1f;
             TargetIndex = targetIndex;
             Projectile.penetrate = 1;
             launched = true;
             time = 500;
+
+            if (forceReleaseTime)
+                Projectile.timeLeft = ForcedReleaseTime;
+            else
+                Projectile.timeLeft = System.Math.Max(Projectile.timeLeft, ForcedReleaseTime);
 
             if (Main.npc.IndexInRange(targetIndex) && Main.npc[targetIndex].active)
                 targeted = Main.npc[targetIndex];
@@ -117,10 +124,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 if (Main.npc.IndexInRange((int)TargetIndex) && Main.npc[(int)TargetIndex].active && Main.npc[(int)TargetIndex].CanBeChasedBy(Projectile))
                     targeted = Main.npc[(int)TargetIndex];
                 else
-                    targeted = Projectile.Center.ClosestNPCAt(950f);
+                    targeted = FindLaunchTarget(owner);
             }
 
-            CalamityUtils.HomeInOnSelectedNPC(Projectile, targeted, true, 0.15f, 6f, 0.98f, accelerate: true);
+            if (targeted != null)
+            {
+                int launchAge = System.Math.Max(0, time - 500);
+                float warmup = Utils.GetLerpValue(0f, 42f, launchAge, true);
+                Vector2 predictedCenter = targeted.Center + targeted.velocity * MathHelper.Lerp(4f, 18f, warmup);
+                Vector2 desired = (predictedCenter - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                float speed = MathHelper.Lerp(7.5f, 17.5f, warmup);
+                float inertia = MathHelper.Lerp(21f, 3.8f, warmup);
+
+                Projectile.velocity = (Projectile.velocity * inertia + desired * speed) / (inertia + 1f);
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desired) * MathHelper.Clamp(Projectile.velocity.Length(), 5f, 18.5f);
+            }
 
             if (time < 550 && targeted == null)
             {
@@ -132,8 +150,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
         }
 
+        private NPC FindLaunchTarget(Player owner)
+        {
+            NPC best = null;
+            float bestScore = 1650f;
+            Vector2 mouseWorld = owner.Calamity().mouseWorld;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distanceToGhost = Projectile.Distance(npc.Center);
+                float distanceToMouse = Vector2.Distance(mouseWorld, npc.Center);
+                float score = distanceToGhost * 0.62f + distanceToMouse * 0.38f;
+                if (npc.boss)
+                    score *= 0.74f;
+
+                if (score >= bestScore)
+                    continue;
+
+                best = npc;
+                bestScore = score;
+            }
+
+            return best;
+        }
+
         private void OrbitAI(Player owner)
         {
+            if (Projectile.timeLeft <= 2)
+            {
+                NPC target = FindLaunchTarget(owner);
+                Release(target?.whoAmI ?? -1, true);
+                return;
+            }
+
             if (time <= 15)
                 return;
 

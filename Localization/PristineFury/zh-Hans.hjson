@@ -5,22 +5,22 @@ Mods: {
 				NewLegendPristineFury: {
 					DisplayName: 纯元：传奇归来
 					PristineFuryIntro: "[c/FF9340:当前印记：{0}。]"
-					RightClick: "[c/FFB066:右键：快速六连散射。弹丸击中物块后会留下持续燃烧的地火。]"
+					RightClick: "[c/FFB066:临时调试：右键按顺序切换印记。原右键散射只是在代码中注释掉，没有删除。]"
 					Hook: "[c/9AEAFF:同时按住左键与右键 3 秒会发射提取钩。有效 Boss 会授予对应印记；其他敌人会承受高额钩爪伤害。]"
-					Left_Idle: "[c/FF9340:左键：短程直线纯净焰流。]"
-					Left_EvilT2: "[c/D246EB:左键：红紫双螺旋焰流。]"
-					Left_SlimeGod: "[c/BC4EFF:左键：每秒喷射五发过载弹，弹射并在每次反弹时爆裂。]"
-					Left_HardMode: "[c/FF8E42:左键：压力波吐息，每轮三道递进穿透冲击波。]"
-					Left_Prime: "[c/FFCE5C:左键：传统重型喷火器，附带金热火焰特效。]"
-					Left_BrimstoneElemental: "[c/F63740:左键：连续蓄力 3 秒，自动释放硫火激光和平行分裂弹。]"
-					Left_Plantera: "[c/5EF26C:左键：按住蓄力，满蓄后松开发射四枚治疗型附着孢子。]"
-					Left_Aurora: "[c/7ED2FF:左键：持续喷射星辉极光火焰，与 Aurora Fire 同源不同形。]"
-					Left_Goliath: "[c/8BF249:左键：纳米瘟疫群息，烟雾减速后分裂为瘟疫蜂群，并感染死亡目标。]"
-					Left_Moonlord: "[c/7E9CFF:左键：四天体混合吐息，包含日耀火、星云云团、星旋光束与星尘碎片。]"
-					Left_Providence: "[c/FFDC76:左键：发射亵渎迫击火箭，命中后留下高伤害燃烧区。]"
-					Left_Polterghast: "[c/D288FF:左键：约 550 RPM 的幻影星辰之息，星辰短暂漂浮后追踪敌人。]"
-					Left_Dog: "[c/6049D6:左键：维度裂隙吐息，虚空流会撕开延迟裂隙并复制二次爆发。]"
-					Left_Dragon: "[c/FF6C32:左键：约 330 RPM 的龙息弹，每轮 18 颗弹丸并在命中时散出火花。]"
+					Left_Idle: "[c/FF9340:左键：短距纯元火舌，枪口只使用高级粒子绽放。]"
+					Left_EvilT2: "[c/D246EB:左键：邪恶双螺旋火流，紫黑烟缎与星脉交织并附加脑腐。]"
+					Left_SlimeGod: "[c/BC4EFF:左键：五枚过载电容弹追踪弹跳，每次反弹都爆出紫色弧光。]"
+					Left_HardMode: "[c/FF8E42:左键：血肉墙压力锥，三道橙红冲击吐息逐层膨胀穿透。]"
+					Left_Prime: "[c/FFCE5C:左键：机械齿轮式金焰喷流，火花按齿距跳步咬合。]"
+					Left_BrimstoneElemental: "[c/F63740:左键：蓄能后释放硫火烙印光矛，红黑烬痕沿轴线撕开。]"
+					Left_Plantera: "[c/5EF26C:左键：按住蓄能，松开发射四枚野火花孢，花纹缠绕并追踪。]"
+					Left_Aurora: "[c/7ED2FF:左键：星辉极光雾带，以五段折返轨迹旋转燃烧。]"
+					Left_Goliath: "[c/8BF249:左键：瘟疫群息会脱落蜂群子弹，感染目标并在死亡时释放虫群。]"
+					Left_Moonlord: "[c/7E9CFF:左键：月亮领主综合色焰，轮换日耀、星云、星旋与星尘粒子语法。]"
+					Left_Providence: "[c/FFDC76:左键：亵渎净焰迫击弹落地后展开持续灼烧圣域。]"
+					Left_Polterghast: "[c/D288FF:左键：哈雷幽魂星火先漂移再苏醒追踪，死亡时绽开鬼火玫瑰。]"
+					Left_Dog: "[c/6049D6:左键：光切虚空流撕开延迟裂隙与黑色吸积盘。]"
+					Left_Dragon: "[c/FF6C32:左键：丛林龙式十八连扇形龙息，命中后分裂为压力余烬。]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
 					LegendaryText:
@@ -54,11 +54,40 @@ Mods: {
 				PristineFuryRightPellet.DisplayName: 纯元散射弹
 				PristineFuryGroundFlame.DisplayName: 纯元地火
 				PristineFuryImpactExplosion.DisplayName: 纯元冲击爆裂
+				PFIdleFlame.DisplayName: 纯元短焰
+				PFEvilT2Flame.DisplayName: 邪恶双螺旋焰
+				PFSlimeGodOverloadedFlame.DisplayName: 过载史莱姆电容弹
+				PFHardModePressureFlame.DisplayName: 血肉墙压力焰
+				PFPrimeGearFlame.DisplayName: 机械齿轮金焰
+				PFBrimstoneElementalFlame.DisplayName: 硫火烙印光矛
+				PFPlanteraWildfireFlame.DisplayName: 野火花孢
+				PFAuroraRibbonFlame.DisplayName: 星辉极光缎带
+				PFGoliathBlightFlame.DisplayName: 瘟疫使者群息
+				PFMoonlordChromaticFlame.DisplayName: 月亮领主综合色焰
+				PFProvidenceCleansingFlame.DisplayName: 亵渎净焰
+				PFPolterghastHalleyFlame.DisplayName: 哈雷幽魂星火
+				PFDogPhotovisceratorFlame.DisplayName: 光切虚空流
+				PFDragonPristineFlame.DisplayName: 纯元龙息
+				// PFAurora_Flame.DisplayName: P F Aurora_ Flame
+				// PFBrimstoneElemental_Flame.DisplayName: P F Brimstone Elemental_ Flame
+				// PFDog_Flame.DisplayName: P F Dog_ Flame
+				// PFDragon_Flame.DisplayName: P F Dragon_ Flame
+				// PFEvilT2_Flame.DisplayName: P F Evil T2_ Flame
+				// PFGoliath_Flame.DisplayName: P F Goliath_ Flame
+				// PFHardMode_Flame.DisplayName: P F Hard Mode_ Flame
+				// PFIdle_Flame.DisplayName: P F Idle_ Flame
+				// PFMoonlord_Flame.DisplayName: P F Moonlord_ Flame
+				// PFPlantera_Flame.DisplayName: P F Plantera_ Flame
+				// PFPolterghast_Flame.DisplayName: P F Polterghast_ Flame
+				// PFPrime_Flame.DisplayName: P F Prime_ Flame
+				// PFProvidence_Flame.DisplayName: P F Providence_ Flame
+				// PFSlimeGod_Flame.DisplayName: P F Slime God_ Flame
 			}
 		}
 
 		PristineFury: {
 			MarkExtracted: 已提取{0}的印记
+			DebugMarkSwitched: 调试：已切换到{0}的印记
 
 			Marks: {
 				Idle: 默认

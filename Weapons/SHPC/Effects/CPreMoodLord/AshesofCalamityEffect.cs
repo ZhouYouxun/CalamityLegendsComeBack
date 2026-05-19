@@ -23,30 +23,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.timeLeft = 2;
-            projectile.penetrate = -1;
+            projectile.timeLeft = 90;
+            projectile.penetrate = 1;
             projectile.tileCollide = false;
-            projectile.Kill();
+            projectile.usesLocalNPCImmunity = true;
+            projectile.localNPCHitCooldown = -1;
+            projectile.localAI[0] = 0f;
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            if (projectile.owner != Main.myPlayer)
-                return;
-
-            Vector2 direction = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
-            float speed = MathHelper.Max(projectile.velocity.Length() * 1.8f, 15.5f);
-
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                direction * speed,
-                ModContent.ProjectileType<AshesofCalamity_Soul>(),
-                projectile.damage,
-                projectile.knockBack,
-                projectile.owner,
-                1f
-            );
         }
 
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
@@ -55,6 +41,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (projectile.localAI[0] == 1f)
+                return;
+
+            projectile.localAI[0] = 1f;
+
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<AshesofCalamity_Portal>(),
+                projectile.damage,
+                projectile.knockBack,
+                projectile.owner
+            );
         }
 
 

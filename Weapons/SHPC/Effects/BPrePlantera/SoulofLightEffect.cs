@@ -53,7 +53,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         }
 
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers) { }
-        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone) { }
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            int soulType = ModContent.ProjectileType<NewSHPS>();
+
+            foreach (Projectile soul in Main.ActiveProjectiles)
+            {
+                if (soul.owner != projectile.owner || soul.type != soulType)
+                    continue;
+
+                if ((int)soul.ai[0] != 0 || (int)soul.ai[1] != projectile.whoAmI)
+                    continue;
+
+                soul.ai[2] = 4f;
+                soul.localAI[0] = target.whoAmI;
+                soul.timeLeft = System.Math.Max(soul.timeLeft, 90);
+                soul.netUpdate = true;
+            }
+        }
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 center = projectile.Center;

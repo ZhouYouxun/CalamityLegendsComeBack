@@ -180,6 +180,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
+            if (Projectile.owner == Main.myPlayer && Projectile.numUpdates == 0 && lifeTimer % 4 == 0)
+                ReleaseTrailingNovas(forward, right);
+
             Lighting.AddLight(Projectile.Center, new Vector3(0.8f, 0.6f, 0.1f));
 
             Vector2 head = Projectile.Center + forward * 20f;
@@ -350,6 +353,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override void OnKill(int timeLeft)
         {
             // 清空
+        }
+
+        private void ReleaseTrailingNovas(Vector2 forward, Vector2 right)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                float sideOffset = (i == 0 ? -1f : 1f) * Main.rand.NextFloat(20f, 58f);
+                Vector2 spawnPosition = Projectile.Center - forward * Main.rand.NextFloat(70f, 120f) + right * sideOffset;
+                Vector2 velocity = (-forward * Main.rand.NextFloat(3.5f, 6.5f) + right * Main.rand.NextFloat(-1.4f, 1.4f)).SafeNormalize(-forward) * Main.rand.NextFloat(7f, 10f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    ModContent.ProjectileType<UnholyEssence_HolyNova>(),
+                    (int)(Projectile.damage * 0.24f),
+                    Projectile.knockBack * 0.15f,
+                    Projectile.owner);
+            }
         }
     }
 }

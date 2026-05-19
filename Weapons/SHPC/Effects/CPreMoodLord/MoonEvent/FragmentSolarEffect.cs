@@ -52,6 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             Vector2 center = projectile.Center;
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            const float explosionScale = 0.7f;
 
             if (projectile.localAI[0] != 1f)
                 return;
@@ -77,8 +78,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 if (Main.projectile.IndexInRange(explosionIndex))
                 {
                     Projectile explosion = Main.projectile[explosionIndex];
-                    explosion.width = 320;
-                    explosion.height = 320;
+                    explosion.width = (int)(320 * explosionScale);
+                    explosion.height = (int)(320 * explosionScale);
                     explosion.Center = center;
                 }
 
@@ -100,8 +101,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     "CalamityMod/Particles/BloomCircle",
                     Vector2.One,
                     Main.rand.NextFloat(-8f, 8f),
-                    0.52f + i * 0.2f,
-                    0.28f + i * 0.08f,
+                    (0.52f + i * 0.2f) * explosionScale,
+                    (0.28f + i * 0.08f) * explosionScale,
                     24 - i * 2,
                     true);
                 GeneralParticleHandler.SpawnParticle(outerPulse);
@@ -116,24 +117,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     i == 0 ? "CalamityMod/Particles/SoftRoundExplosion" : "CalamityMod/Particles/FlameExplosion",
                     Vector2.One,
                     Main.rand.NextFloat(-6f, 6f),
-                    0.08f,
-                    0.26f + i * 0.2f,
+                    0.08f * explosionScale,
+                    (0.26f + i * 0.2f) * explosionScale,
                     20 - i * 2);
                 GeneralParticleHandler.SpawnParticle(flamePulse);
             }
 
             for (int i = 0; i < 6; i++)
             {
-                Vector2 sparkVelocity = (MathHelper.TwoPi * i / 6f).ToRotationVector2().RotatedBy(Main.rand.NextFloat(-0.2f, 0.2f)) * Main.rand.NextFloat(5.5f, 9.5f);
+                Vector2 sparkVelocity = (MathHelper.TwoPi * i / 6f).ToRotationVector2().RotatedBy(Main.rand.NextFloat(-0.2f, 0.2f)) * Main.rand.NextFloat(5.5f, 9.5f) * explosionScale;
                 GeneralParticleHandler.SpawnParticle(
                     new GlowSparkParticle(
                         center,
                         sparkVelocity,
                         false,
                         10,
-                        0.2f,
+                        0.2f * explosionScale,
                         Color.Lerp(new Color(255, 150, 45), Color.White, 0.35f),
-                        new Vector2(1.8f, 0.8f),
+                        new Vector2(1.8f, 0.8f) * explosionScale,
                         true,
                         true,
                         1f));
@@ -141,27 +142,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             for (int i = 0; i < 5; i++)
             {
-                Vector2 smokeVelocity = new Vector2(24f, 24f).RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(0.4f, 1.1f) - forward * Main.rand.NextFloat(0.4f, 1.5f);
+                Vector2 smokeVelocity = (new Vector2(24f, 24f).RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(0.4f, 1.1f) - forward * Main.rand.NextFloat(0.4f, 1.5f)) * explosionScale;
                 GeneralParticleHandler.SpawnParticle(
                     new HeavySmokeParticle(
                         center + smokeVelocity,
                         smokeVelocity,
                         Color.Lerp(Color.DimGray, Color.OrangeRed, Main.rand.NextFloat(0.2f, 0.45f)),
                         Main.rand.Next(20, 28),
-                        Main.rand.NextFloat(0.65f, 1.05f),
+                        Main.rand.NextFloat(0.65f, 1.05f) * explosionScale,
                         0.45f));
             }
 
             for (int i = 0; i < 26; i++)
             {
-                Vector2 dustVelocity = new Vector2(30f, 30f).RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(0.25f, 1.35f);
+                Vector2 dustVelocity = new Vector2(30f, 30f).RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(0.25f, 1.35f) * explosionScale;
                 Dust fire = Dust.NewDustPerfect(
                     center,
                     Main.rand.NextBool(3) ? DustID.SolarFlare : DustID.Torch,
                     dustVelocity,
                     0,
                     Color.Lerp(new Color(255, 230, 145), new Color(255, 105, 25), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(0.95f, 1.45f));
+                    Main.rand.NextFloat(0.95f, 1.45f) * explosionScale);
                 fire.noGravity = true;
             }
         }

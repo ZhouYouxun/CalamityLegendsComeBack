@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Ascendant/AscendantSpirit_PROJ";
 
-        private const float DefaultLaunchDelayFrames = 14f;
+        private const float DefaultLaunchDelayFrames = 7f;
         private const float RetargetIntervalFrames = 8f;
         private const float LaunchSpeed = 20.5f;
         private const float CollisionRadius = 5.5f;
@@ -146,7 +146,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         {
             float chargeCompletion = Utils.GetLerpValue(0f, launchDelay, timer, true);
             float chargePower = (float)Math.Pow(chargeCompletion, 2.2f);
-            RefreshTargetPointFromMouse(timer >= launchDelay - 1f);
             Vector2 aimDirection = (targetPoint - Projectile.Center).SafeNormalize(initialDirection);
 
             Projectile.velocity *= MathHelper.Lerp(0.955f, 0.86f, chargeCompletion);

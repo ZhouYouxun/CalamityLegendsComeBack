@@ -19,6 +19,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         private int soulSpawnTimer;
 
+        public override void OnSpawn(Projectile projectile, Player owner)
+        {
+            soulSpawnTimer = 0;
+            projectile.penetrate = -1;
+        }
+
+        public override bool? CanDamage(Projectile projectile, Player owner) => false;
+
         public override void AI(Projectile projectile, Player owner)
         {
             soulSpawnTimer++;
@@ -46,42 +54,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // ===== 骷髅头主体：向外大范围爆散 =====
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 dir = Main.rand.NextVector2Unit();
-                Vector2 velocity = dir * Main.rand.NextFloat(2.5f, 7.5f);
-
-                Particle skull = new DesertProwlerSkullParticle(
-                    projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    velocity,
-                    Color.Lerp(EndColor, Color.Black, Main.rand.NextFloat(0.25f, 0.55f)),
-                    Color.Lerp(ThemeColor, StartColor, Main.rand.NextFloat(0.15f, 0.45f)),
-                    Main.rand.NextFloat(0.75f, 1.35f),
-                    Main.rand.Next(120, 185)
-                );
-
-                GeneralParticleHandler.SpawnParticle(skull);
-            }
-
-            // ===== 第二层骷髅头：沿原本前进方向喷出，强化“恐惧扑脸”感 =====
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            for (int i = 0; i < 6; i++)
-            {
-                Vector2 dir = forward.RotatedByRandom(0.9f) * Main.rand.NextFloat(3.5f, 8.5f);
-
-                Particle skull = new DesertProwlerSkullParticle(
-                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    dir,
-                    Color.Lerp(ThemeColor, EndColor, Main.rand.NextFloat(0.35f, 0.75f)),
-                    Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat(0.2f, 0.5f)),
-                    Main.rand.NextFloat(0.95f, 1.55f),
-                    Main.rand.Next(135, 210)
-                );
-
-                GeneralParticleHandler.SpawnParticle(skull);
-            }
-
             // ===== 光粒子核心：中心炸亮，制造“灵魂爆裂”感 =====
             for (int i = 0; i < 16; i++)
             {

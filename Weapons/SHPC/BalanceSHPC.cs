@@ -7,147 +7,147 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
     {
         public static readonly string[] StageNames =
         {
-            "Initial", // Initial / 初始
-            "Eye of Cthulhu", // Eye of Cthulhu / 克苏鲁之眼
-            "Evil Boss", // Evil Boss / 邪恶Boss
-            "Skeletron", // Skeletron / 骷髅王
-            "Hardmode", // Hardmode / 肉后
-            "Any Mechanical Boss", // Any Mechanical Boss / 任意机械Boss后
-            "Plantera", // Plantera / 世纪之花后
-            "Golem", // Golem / 石巨人后
-            "Moon Lord", // Moon Lord / 月亮领主后
-            "Providence", // Providence / 亵渎天神后
-            "Polterghast", // Polterghast / 幽花后
-            "Devourer of Gods", // Devourer of Gods / 神明吞噬者后
-            "Yharon", // Yharon / 犽戎后
-            "Exo Mechs and Supreme Calamitas" // Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            "Initial",
+            "Eye of Cthulhu",
+            "Evil Boss",
+            "Skeletron",
+            "Hardmode",
+            "Any Mechanical Boss",
+            "Plantera",
+            "Golem",
+            "Moon Lord",
+            "Providence",
+            "Polterghast",
+            "Devourer of Gods",
+            "Yharon",
+            "Exo Mechs and Supreme Calamitas"
         };
 
         public static readonly int[] LeftClickProgressDamage =
         {
-            15, // Initial / 初始
-            24, //24 Eye of Cthulhu / 克苏鲁之眼
-            30, //30 Evil Boss / 邪恶Boss
-            42, //42 Skeletron / 骷髅王
-            42, //54 Hardmode / 肉后
-            42, //72 Any Mechanical Boss / 任意机械Boss后
-            42, //90 Plantera / 世纪之花后
-            42, //120 Golem / 石巨人后
-            42, //180 Moon Lord / 月亮领主后
-            42, //240 Providence / 亵渎天神后
-            42, //300 Polterghast / 幽花后
-            42, //360 Devourer of Gods / 神明吞噬者后
-            42, //500 Yharon / 犽戎后
-            42 //750 Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            15,
+            24,
+            30,
+            42,
+            54,
+            72,
+            90,
+            120,
+            180,
+            240,
+            300,
+            360,
+            500,
+            750
         };
 
         public static readonly int[] RightClickBaseDamage =
         {
-            6, //6 Initial / 初始
-            8, // Eye of Cthulhu / 克苏鲁之眼
-            9, //9 Evil Boss / 邪恶Boss
-            10, //10 Skeletron / 骷髅王
-            17, //17 Hardmode / 肉后
-            24, //24 Any Mechanical Boss / 任意机械Boss后
-            32, //32 Plantera / 世纪之花后
-            40, //40 Golem / 石巨人后
-            54, //54 Moon Lord / 月亮领主后
-            66, //66 Providence / 亵渎天神后
-            77, //77 Polterghast / 幽花后
-            90, //90 Devourer of Gods / 神明吞噬者后
-            100, //100 Yharon / 犽戎后
-            150 //150 Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            6,
+            8,
+            9,
+            10,
+            17,
+            24,
+            32,
+            40,
+            54,
+            66,
+            77,
+            90,
+            100,
+            150
         };
 
-        // Indexed by SHPC effect ID. 0, 16, 20 and 27 are currently unused gaps.
-        public static readonly int[] LeftClickMaterialDamage =
+        // Indexed by SHPC effect ID. Materials multiply the stage-based left-click damage.
+        public static readonly float[] LeftClickMaterialDamageMultipliers =
         {
-            0, // EffectID 0: Unused gap / 未使用空位
-            18, // EffectID 1: Energy Core / 钨钢能源核心
-            22, // EffectID 2: Stormlion Mandible / 风暴之颚
-            28, // EffectID 3: Sulphuric Scale / 硫磺鳞片
-            64, // EffectID 4: Purified Gel / 纯净凝胶
-            34, // EffectID 5: Essence of Havoc / 混沌精华
-            34, // EffectID 6: Essence of Eleum / 冰精华
-            36, // EffectID 7: Essence of Sunlight / 日光精华
-            42, // EffectID 8: Titan Heart / 泰坦之心
-            48, // EffectID 9: Soul of Light / 光明之魂
-            48, // EffectID 10: Soul of Night / 暗影之魂
-            50, // EffectID 11: Soul of Flight / 飞翔之魂
-            58, // EffectID 12: Soul of Fright / 恐惧之魂
-            62, // EffectID 13: Soul of Might / 力量之魂
-            60, // EffectID 14: Soul of Sight / 视域之魂
-            74, // EffectID 15: Living Shard / 生命碎片
-            0, // EffectID 16: Unused gap / 未使用空位
-            82, // EffectID 17: Depth Cells / 深渊细胞
-            86, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
-            94, // EffectID 19: Ashes of Calamity / 灾厄尘
-            0, // EffectID 20: Beetle Husk, not implemented / 甲虫外壳，未实现
-            110, // EffectID 21: Solar Fragment / 日曜碎片
-            112, // EffectID 22: Vortex Fragment / 星旋碎片
-            116, // EffectID 23: Nebula Fragment / 星云碎片
-            114, // EffectID 24: Stardust Fragment / 星尘碎片
-            124, // EffectID 25: Meld Blob / 融合团块
-            140, // EffectID 26: Unholy Essence / 浊火精华
-            0, // EffectID 27: Unused gap / 未使用空位
-            158, // EffectID 28: Divine Geode / 神圣晶石
-            168, // EffectID 29: Bloodstone Core / 血石核心
-            176, // EffectID 30: Ruinous Soul / 毁灭之灵
-            184, // EffectID 31: Necroplasm / 灵质
-            198, // EffectID 32: Dark Plasma / 暗离子体
-            210, // EffectID 33: Twisting Nether / 扭曲虚空
-            260, // EffectID 34: Endothermic Energy / 恒温能量
-            270, // EffectID 35: Nightmare Fuel / 梦魇魔能
-            310, // EffectID 36: Ascendant Spirit Essence / 化神魂精
-            360, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
-            430, // EffectID 38: Exo Prism / 星流棱晶
-            500, // EffectID 39: Ashes of Annihilation / 湮灭余烬
-            520 // EffectID 40: Armored Shell / 装甲外壳
+            0f,
+            0.46f,
+            0.54f,
+            0.58f,
+            0.70f,
+            0.64f,
+            0.60f,
+            0.68f,
+            0.33f,
+            0.76f,
+            0.82f,
+            0.72f,
+            0.90f,
+            0.96f,
+            0.93f,
+            1.05f,
+            0f,
+            1.02f,
+            1.08f,
+            1.12f,
+            0f,
+            0.98f,
+            0.96f,
+            1.04f,
+            1.00f,
+            1.10f,
+            1.16f,
+            0f,
+            1.22f,
+            1.28f,
+            1.34f,
+            1.26f,
+            1.42f,
+            1.46f,
+            1.52f,
+            1.48f,
+            1.56f,
+            1.68f,
+            1.82f,
+            1.90f,
+            1.74f
         };
 
         private static readonly float[] DefaultOrbDamageMultipliers =
         {
-            1f, // Initial / 初始
-            1f, // Eye of Cthulhu / 克苏鲁之眼
-            1f, // Evil Boss / 邪恶Boss
-            1f, // Skeletron / 骷髅王
-            1.12f, // Hardmode / 肉后
-            1.12f, // Any Mechanical Boss / 任意机械Boss后
-            1.18f, // Plantera / 世纪之花后
-            1.18f, // Golem / 石巨人后
-            1.35f, // Moon Lord / 月亮领主后
-            1.35f, // Providence / 亵渎天神后
-            1.35f, // Polterghast / 幽花后
-            1.45f, // Devourer of Gods / 神明吞噬者后
-            1.55f, // Yharon / 犽戎后
-            1.65f // Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            1f,
+            1f,
+            1f,
+            1f,
+            1.12f,
+            1.12f,
+            1.18f,
+            1.18f,
+            1.35f,
+            1.35f,
+            1.35f,
+            1.45f,
+            1.55f,
+            1.65f
         };
 
         private static readonly int[] DefaultOrbExplosionSizes =
         {
-            112, // Initial / 初始
-            112, // Eye of Cthulhu / 克苏鲁之眼
-            112, // Evil Boss / 邪恶Boss
-            128, // Skeletron / 骷髅王
-            168, // Hardmode / 肉后
-            168, // Any Mechanical Boss / 任意机械Boss后
-            184, // Plantera / 世纪之花后
-            184, // Golem / 石巨人后
-            240, // Moon Lord / 月亮领主后
-            240, // Providence / 亵渎天神后
-            240, // Polterghast / 幽花后
-            280, // Devourer of Gods / 神明吞噬者后
-            320, // Yharon / 犽戎后
-            360 // Exo Mechs and Supreme Calamitas / 星流巨械和至尊灾厄后
+            112,
+            112,
+            112,
+            128,
+            168,
+            168,
+            184,
+            184,
+            240,
+            240,
+            240,
+            280,
+            320,
+            360
         };
 
         private static readonly int[] HeatFillTimes =
         {
-            210, // Heat level 1 / 热量等级1
-            96, // Heat level 2 / 热量等级2
-            126, // Heat level 3 / 热量等级3
-            156, // Heat level 4 / 热量等级4
-            186 // Heat level 5 / 热量等级5
+            210,
+            96,
+            126,
+            156,
+            186
         };
 
         public const int OverheatGraceTime = 90;
@@ -160,13 +160,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 NPC.downedBoss1,
                 NPC.downedBoss2,
-                NPC.downedBoss3,                
+                NPC.downedBoss3,
                 Main.hardMode,
                 NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3,
                 NPC.downedPlantBoss,
                 NPC.downedGolemBoss,
                 NPC.downedMoonlord,
-                DownedBossSystem.downedProvidence,                
+                DownedBossSystem.downedProvidence,
                 DownedBossSystem.downedPolterghast,
                 DownedBossSystem.downedDoG,
                 DownedBossSystem.downedYharon,
@@ -190,19 +190,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetLeftClickBaseDamageForEffect(int effectID)
         {
-            int materialDamage = GetMaterialLeftClickDamage(effectID);
-            if (materialDamage > 0)
-                return materialDamage;
+            int baseDamage = GetLeftClickBaseDamage();
+            float materialMultiplier = GetLeftClickMaterialDamageMultiplier(effectID);
+            float finalMultiplier = materialMultiplier > 0f ? materialMultiplier : GetDefaultOrbDamageMultiplier();
 
-            return System.Math.Max(1, (int)(GetLeftClickBaseDamage() * GetDefaultOrbDamageMultiplier()));
+            return System.Math.Max(1, (int)System.Math.Round(baseDamage * finalMultiplier));
         }
 
-        public int GetMaterialLeftClickDamage(int effectID)
+        public float GetLeftClickMaterialDamageMultiplier(int effectID)
         {
-            if (effectID < 0 || effectID >= LeftClickMaterialDamage.Length)
-                return 0;
+            if (effectID < 0 || effectID >= LeftClickMaterialDamageMultipliers.Length)
+                return 0f;
 
-            return System.Math.Max(0, LeftClickMaterialDamage[effectID]);
+            return System.Math.Max(0f, LeftClickMaterialDamageMultipliers[effectID]);
         }
 
         public float GetDefaultOrbDamageMultiplier()

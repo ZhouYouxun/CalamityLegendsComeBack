@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.penetrate = 3;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = 108;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.DamageType = DamageClass.Ranged;
@@ -62,7 +62,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Color(170, 220, 255).ToVector3() * 0.36f);
 
-            if (Main.rand.NextBool(4))
+            if (Main.rand.NextBool(7))
             {
                 float wave = (float)System.Math.Sin(t * 1.15f) * 4.2f;
                 Vector2 spawnPos = Projectile.Center - forward * Main.rand.NextFloat(3f, 7f) + right * wave;
@@ -78,7 +78,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(particle);
             }
 
-            for (int i = 0; i < 2; i++)
+            int sparkCount = Main.rand.NextBool(5) ? 2 : 1;
+            for (int i = 0; i < sparkCount; i++)
             {
                 float side = i == 0 ? -1f : 1f;
                 float phase = t + i * 1.13f;
@@ -104,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(3))
             {
                 float side = Main.rand.NextBool() ? -1f : 1f;
                 float phase = t * 0.92f + side * 2.1f;
@@ -128,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 dust.noGravity = true;
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(5))
             {
                 float angle = t * 0.85f;
                 float radius = Main.rand.NextFloat(3f, 6f);
@@ -147,20 +148,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(mist);
             }
 
-            Particle centerFlare = new CustomSpark(
-                Projectile.Center,
-                Projectile.velocity * 0.02f,
-                "CalamityLegendsComeBack/Texture/KsTexture/window_04",
-                false,
-                7,
-                0.18f,
-                new Color(160, 242, 255) * 1.37f,
-                new Vector2(0.39f, 1.5f),
-                glowCenter: true,
-                shrinkSpeed: 1.2f,
-                glowCenterScale: 0.64f,
-                glowOpacity: 0.5f);
-            GeneralParticleHandler.SpawnParticle(centerFlare);
+            if (Main.rand.NextFloat() < 0.6f)
+            {
+                Particle centerFlare = new CustomSpark(
+                    Projectile.Center,
+                    Projectile.velocity * 0.02f,
+                    "CalamityLegendsComeBack/Texture/KsTexture/window_04",
+                    false,
+                    7,
+                    0.18f,
+                    new Color(160, 242, 255) * 1.37f,
+                    new Vector2(0.39f, 1.5f),
+                    glowCenter: true,
+                    shrinkSpeed: 1.2f,
+                    glowCenterScale: 0.64f,
+                    glowOpacity: 0.5f);
+                GeneralParticleHandler.SpawnParticle(centerFlare);
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -184,28 +188,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 NPC target = Main.npc[state.MarkedTargetIndex];
                 if (target.active && target.CanBeChasedBy(Projectile))
                 {
-                    const int shardCount = 9;
-                    float spiralSeed = Main.rand.NextFloat(MathHelper.TwoPi);
-
-                    for (int i = 0; i < shardCount; i++)
+                    for (int arm = 0; arm < 6; arm++)
                     {
-                        float progress = i / (float)(shardCount - 1);
-                        float angle = spiralSeed + i * MathHelper.TwoPi * 0.38196601125f + Main.rand.NextFloat(-0.08f, 0.08f);
-                        float distance = MathHelper.Lerp(180f, 520f, progress) + (float)System.Math.Sin(i * 1.7f + spiralSeed) * 38f;
-                        Vector2 spawnOffset = angle.ToRotationVector2() * distance;
+                        float armAngle = MathHelper.TwoPi * arm / 6f;
+                        float[] branchAngles =
+                        {
+                            armAngle,
+                            armAngle + MathHelper.Pi / 6f,
+                            armAngle - MathHelper.Pi / 6f
+                        };
+                        float[] distances = { 210f, 330f, 330f };
 
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Center + spawnOffset,
-                            Vector2.Zero,
-                            ModContent.ProjectileType<EndothermicEnergy_Shadow>(),
-                            (int)(Projectile.damage * 0.36f),
-                            Projectile.knockBack,
-                            Projectile.owner,
-                            0f,
-                            target.whoAmI,
-                            angle
-                        );
+                        for (int branch = 0; branch < branchAngles.Length; branch++)
+                        {
+                            float angle = branchAngles[branch];
+                            Vector2 spawnOffset = angle.ToRotationVector2() * distances[branch];
+
+                            Projectile.NewProjectile(
+                                Projectile.GetSource_FromThis(),
+                                target.Center + spawnOffset,
+                                Vector2.Zero,
+                                ModContent.ProjectileType<EndothermicEnergy_Shadow>(),
+                                (int)(Projectile.damage * 0.36f),
+                                Projectile.knockBack,
+                                Projectile.owner,
+                                0f,
+                                target.whoAmI,
+                                angle
+                            );
+                        }
                     }
                 }
             }

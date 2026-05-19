@@ -55,17 +55,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 {
                     gp.isFalling = true;
 
-                    float horizontalVelocity = MathHelper.Clamp((gp.fallTargetX - projectile.Center.X) * 0.12f, -7.5f, 7.5f);
-                    projectile.velocity = new Vector2(horizontalVelocity, 24f);
+                    float horizontalVelocity = MathHelper.Clamp((gp.fallTargetX - projectile.Center.X) * 0.24f, -15f, 15f);
+                    projectile.velocity = new Vector2(horizontalVelocity, 48f);
                     SpawnChargeBackEffect(projectile);
                 }
             }
 
             if (gp.isFalling)
             {
-                float desiredHorizontalVelocity = MathHelper.Clamp((gp.fallTargetX - projectile.Center.X) * 0.1f, -9f, 9f);
-                projectile.velocity.X = MathHelper.Lerp(projectile.velocity.X, desiredHorizontalVelocity, 0.08f);
-                projectile.velocity.Y += 7.2f;
+                float desiredHorizontalVelocity = MathHelper.Clamp((gp.fallTargetX - projectile.Center.X) * 0.2f, -18f, 18f);
+                projectile.velocity.X = MathHelper.Lerp(projectile.velocity.X, desiredHorizontalVelocity, 0.16f);
+                projectile.velocity.Y += 14.4f;
             }
 
             projectile.rotation = projectile.velocity.ToRotation();

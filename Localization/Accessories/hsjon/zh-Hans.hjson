@@ -95,6 +95,10 @@ Mods: {
 				// EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
 				// EndothermicEnergy_LN2.DisplayName: Endothermic Energy_ L N2
 				// FragmentEntropy_CosmicFire.DisplayName: Fragment Entropy_ Cosmic Fire
+				// FragmentNebula_BurstRelay.DisplayName: Fragment Nebula_ Burst Relay
+				// ArmoredShell_Lightning.DisplayName: Armored Shell_ Lightning
+				// UnholyEssence_HolyNova.DisplayName: Unholy Essence_ Holy Nova
+				// RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
 			}
 
 			ChangedWeapons: {

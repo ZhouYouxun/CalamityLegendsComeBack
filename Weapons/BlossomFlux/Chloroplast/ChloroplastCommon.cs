@@ -22,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(255, 228, 92),
             BlossomFluxChloroplastPresetType.Chlo_BRecov => new Color(140, 255, 162),
-            BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(110, 240, 255),
-            BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(255, 94, 68),
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(58, 232, 214),
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(204, 238, 70),
             BlossomFluxChloroplastPresetType.Chlo_EPlague => new Color(182, 220, 82),
             _ => Color.White
         };
@@ -32,8 +32,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             BlossomFluxChloroplastPresetType.Chlo_ABreak => new Color(255, 250, 214),
             BlossomFluxChloroplastPresetType.Chlo_BRecov => new Color(220, 255, 232),
-            BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(220, 250, 255),
-            BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(255, 210, 164),
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => new Color(150, 255, 232),
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => new Color(255, 248, 128),
             BlossomFluxChloroplastPresetType.Chlo_EPlague => new Color(238, 255, 166),
             _ => Color.White
         };
@@ -42,8 +42,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast
         {
             BlossomFluxChloroplastPresetType.Chlo_ABreak => DustID.YellowTorch,
             BlossomFluxChloroplastPresetType.Chlo_BRecov => DustID.GemEmerald,
-            BlossomFluxChloroplastPresetType.Chlo_CDetec => DustID.IceTorch,
-            BlossomFluxChloroplastPresetType.Chlo_DBomb => DustID.RedTorch,
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => DustID.GreenTorch,
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => DustID.YellowTorch,
             BlossomFluxChloroplastPresetType.Chlo_EPlague => DustID.GreenTorch,
             _ => DustID.GemEmerald
         };

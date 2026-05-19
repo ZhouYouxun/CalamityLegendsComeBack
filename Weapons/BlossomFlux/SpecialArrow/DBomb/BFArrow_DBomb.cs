@@ -356,8 +356,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             rainCounter++;
 
-            if (rainCounter % 8 == 0)
-                SpawnArrowRain(bombardCenter);
+            // Temporarily disabled: charged bombard should end at the explosion without follow-up arrow rain.
+            // if (rainCounter % 8 == 0)
+            //     SpawnArrowRain(bombardCenter);
 
             if (rainCounter % 20 == 0)
                 SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.2f, Pitch = 0.42f }, bombardCenter);

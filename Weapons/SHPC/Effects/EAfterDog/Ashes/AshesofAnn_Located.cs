@@ -8,6 +8,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Utilities;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
@@ -21,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private int timer = 0;
         private const float AshEffectIntensity = 0.8f;
         private const int ExplosionTriggerFrame = 15;
-        private const int PixelRingLifetime = 18;
+        private const int PixelRingLifetime = 42;
         private bool exploded;
         private int pixelRingTimer = -1;
         private Vector2 pixelRingCenter;
@@ -158,15 +159,325 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         }
                         
         */
+        // ====================
+        // 颜色定义（放在类里面）
+        // ====================
+
+        // 主紫色
+        private static readonly Color BladePurple = new(185, 35, 255);
+
+        // 血红色
+        private static readonly Color BladeBlood = new(135, 0, 42);
+
+        // 深暗色
+        private static readonly Color BladeDark = new(12, 0, 20);
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (exploded && pixelRingTimer >= 0)
-                DrawCrimsonMagicPixelRing(pixelRingCenter, pixelRingTimer);
+            Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
-            return false; // 完全透明，不绘制
+            // 主颜色
+            Color mainColor = BladePurple;
+
+            // ====================
+            // 原版尾迹
+            // ====================
+
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+
+            for (int i = 1; i < Projectile.oldPos.Length; i++)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                Vector2 pos =
+                    Projectile.oldPos[i] +
+                    Projectile.Size / 2f -
+                    Main.screenPosition;
+
+                float progress =
+                    i / (float)Projectile.oldPos.Length;
+
+                float width =
+                    MathHelper.Lerp(1.2f, 0.1f, progress);
+
+                Color color =
+                    Color.Lerp(
+                        mainColor,
+                        Color.Transparent,
+                        progress) * 1.25f;
+
+                Vector2 dir =
+                    Projectile.oldPos[i - 1] -
+                    Projectile.oldPos[i];
+
+                float rot = dir.ToRotation();
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    pos,
+                    null,
+                    color,
+                    rot,
+                    new Vector2(0f, 0.5f),
+                    new Vector2(dir.Length(), width),
+                    SpriteEffects.None,
+                    0
+                );
+            }
+
+            // ====================
+            // 赤红像素冲击碎片
+            // 不再围成圆
+            // 而是体素碎片化扩散
+            // ====================
+
+            Texture2D shockPixel = TextureAssets.MagicPixel.Value;
+
+            // 世界坐标中心
+            Vector2 shockCenter = Projectile.Center;
+
+            // 扩散进度
+            float progressValue =
+                MathHelper.Clamp(
+                    (260f - Projectile.timeLeft) / 260f,
+                    0f,
+                    1f);
+
+            // 最大扩散范围
+            float maxRadius = 30f * 16f;
+
+            // 当前扩散半径
+            float currentRadius =
+                progressValue * maxRadius;
+
+            // 像素块数量
+            int fragmentCount = 320;
+
+            // 固定随机种子
+            UnifiedRandom seededRandom =
+                new UnifiedRandom(Projectile.identity * 997);
+
+            for (int i = 0; i < fragmentCount; i++)
+            {
+                // ====================
+                // 固定随机方向
+                // ====================
+
+                float angle =
+                    seededRandom.NextFloat(
+                        MathHelper.TwoPi);
+
+                // 固定随机距离
+                float distanceFactor =
+                    seededRandom.NextFloat();
+
+                // 更集中于中间
+                distanceFactor =
+                    (float)Math.Sqrt(distanceFactor);
+
+                // 当前距离
+                float distance =
+                    distanceFactor * currentRadius;
+
+                // 波动
+                float wobble =
+                    (float)Math.Sin(
+                        angle * 5f +
+                        progressValue * 15f)
+                    * 12f;
+
+                // 世界坐标
+                Vector2 worldPos =
+                    shockCenter +
+                    angle.ToRotationVector2() *
+                    (distance + wobble);
+
+                // 转屏幕坐标
+                Vector2 finalDrawPos =
+                    worldPos - Main.screenPosition;
+
+                // ====================
+                // 像素大小
+                // ====================
+
+                float cellSize =
+                    seededRandom.NextFloat(6f, 18f);
+
+                // ====================
+                // 强度
+                // ====================
+
+                float intensity =
+                    0.45f +
+                    0.55f *
+                    (float)Math.Sin(
+                        angle * 9f +
+                        i * 0.15f +
+                        Main.GlobalTimeWrappedHourly * 7f);
+
+                // ====================
+                // 颜色
+                // ====================
+
+                Color shockColor =
+                    Color.Lerp(
+                        new Color(70, 0, 0),
+                        new Color(255, 45, 35),
+                        intensity);
+
+                // 部分高亮
+                if (i % 9 == 0)
+                {
+                    shockColor =
+                        Color.Lerp(
+                            shockColor,
+                            Color.White,
+                            0.3f);
+                }
+
+                // ====================
+                // 透明度
+                // ====================
+
+                float alpha =
+                    MathHelper.Lerp(
+                        0.95f,
+                        0.15f,
+                        distanceFactor);
+
+                // ====================
+                // 绘制像素块
+                // ====================
+
+                Rectangle voxelRect = new Rectangle(
+                  (int)finalDrawPos.X,
+                  (int)finalDrawPos.Y,
+                  (int)cellSize,
+                  (int)cellSize);
+
+                Main.spriteBatch.Draw(
+                    shockPixel,
+                    voxelRect,
+                    null,
+                    shockColor * alpha,
+                    0f,
+                    Vector2.Zero,
+                    SpriteEffects.None,
+                    0f);
+            }
+
+
+
+
+
+
+            // ====================
+            // BloomCircle
+            // ====================
+
+            Texture2D bloom =
+                ModContent.Request<Texture2D>(
+                    "CalamityMod/Particles/BloomCircle").Value;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPos,
+                null,
+                BladeDark * 1.15f,
+                0f,
+                bloom.Size() / 2f,
+                0.0625f,
+                SpriteEffects.None
+            );
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPos,
+                null,
+                mainColor * 1.2f,
+                0f,
+                bloom.Size() / 2f,
+                0.036f,
+                SpriteEffects.None
+            );
+
+            // ====================
+            // VerticalSmearRagged
+            // ====================
+
+            Texture2D smear =
+                ModContent.Request<Texture2D>(
+                    "CalamityMod/Particles/VerticalSmearRagged").Value;
+
+            Vector2 smearPos = drawPos;
+
+            for (int i = 0; i < 7; i++)
+            {
+                float rotation =
+                    Projectile.rotation +
+                    i * MathHelper.TwoPi / 7f +
+                    Main.GlobalTimeWrappedHourly *
+                    (i % 2 == 0 ? 2.1f : -1.7f);
+
+                Color smearColor =
+                    i % 3 == 0
+                    ? BladeDark
+                    : Color.Lerp(
+                        mainColor,
+                        BladeBlood,
+                        i / 6f);
+
+                smearColor.A = 0;
+
+                Main.EntitySpriteDraw(
+                    smear,
+                    smearPos,
+                    null,
+                    smearColor * (0.72f - i * 0.055f),
+                    rotation,
+                    smear.Size() / 2f,
+                    new Vector2(
+                        0.34f + i * 0.025f,
+                        0.96f + i * 0.08f) * 0.05f,
+                    SpriteEffects.None
+                );
+            }
+
+            // ====================
+            // 星芒
+            // ====================
+
+            Texture2D star =
+                ModContent.Request<Texture2D>(
+                    "CalamityMod/ExtraTextures/SimpleStar").Value;
+
+            for (int i = 0; i < 4; i++)
+            {
+                Main.EntitySpriteDraw(
+                    star,
+                    drawPos,
+                    null,
+                    Color.Lerp(
+                        Color.White,
+                        mainColor,
+                        0.45f) * (0.54f - i * 0.07f),
+                    Projectile.rotation +
+                    i * MathHelper.PiOver2,
+                    star.Size() / 2f,
+                    new Vector2(
+                        0.55f,
+                        1.55f + i * 0.24f) * 0.05f,
+                    SpriteEffects.None
+                );
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            return false;
         }
-
 
 
 
@@ -181,37 +492,212 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Vector2 drawCenter = center - Main.screenPosition;
+
+            // 爆炸扩散进度：0 → 1
             float progress = Utils.GetLerpValue(0f, PixelRingLifetime, frame, true);
-            float easedProgress = 1f - (1f - progress) * (1f - progress) * (1f - progress);
-            float radius = MathHelper.Lerp(64f, ScaledPower(960f), easedProgress);
-            float alpha = (1f - progress) * (0.72f + 0.28f * (float)Math.Sin(progress * MathHelper.Pi));
-            float thickness = MathHelper.Lerp(10f, 3.5f, progress) * AshEffectIntensity;
-            int segmentCount = ScaledCount(96);
-            float segmentLength = MathHelper.TwoPi * radius / segmentCount * 0.72f;
+
+            // 平滑进度，让扩散不是匀速死板外推
+            float smoothProgress = progress * progress * (3f - 2f * progress);
+
+            // 冲击波进度：前期快，后期慢，更像爆炸冲出去
+            float shockProgress = 1f - (1f - progress) * (1f - progress);
+
+            // 主圆环半径，从中心炸到超大范围
+            float radius = MathHelper.Lerp(32f, ScaledPower(1280f), shockProgress);
+
+            // 前几帧淡入，最后十几帧淡出
+            float alpha =
+                Utils.GetLerpValue(0f, 5f, frame, true) *
+                Utils.GetLerpValue(PixelRingLifetime, PixelRingLifetime - 13f, frame, true);
+
+            alpha = MathHelper.Clamp(alpha, 0f, 1f);
+
+            // 每发弹幕都有不同相位，避免多个爆炸完全一样
+            float seed = Projectile.identity * 0.731f + Projectile.owner * 0.197f;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
+            // ==============================
+            // 1. 主圆环：方块拼成的赤红数据爆炸环
+            // ==============================
+            int segmentCount = ScaledCount(128);
+            float baseBlockSize = MathHelper.Lerp(20f, 8f, smoothProgress);
+
             for (int i = 0; i < segmentCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / segmentCount;
+                // 用正弦制造“故障断层”，不是纯随机
+                float glitchWave =
+                    (float)Math.Sin(i * 2.391f + seed + frame * 0.04f) * 0.5f +
+                    (float)Math.Sin(i * 5.113f + seed * 1.7f - frame * 0.025f) * 0.5f;
+
+                // 后期让一部分方块消失，形成数据流崩坏感
+                float disappearGate = MathHelper.Lerp(-1.2f, 0.46f, progress);
+                if (glitchWave < disappearGate && i % 3 == 0)
+                    continue;
+
+                float angle = MathHelper.TwoPi * i / segmentCount + glitchWave * 0.018f;
                 Vector2 outward = angle.ToRotationVector2();
                 Vector2 tangent = outward.RotatedBy(MathHelper.PiOver2);
-                Vector2 position = drawCenter + outward * radius;
 
-                Color ringColor = Color.Lerp(new Color(255, 94, 32), new Color(150, 0, 0), progress * 0.72f);
-                ringColor = Color.Lerp(ringColor, new Color(255, 210, 112), 0.16f * (1f - progress));
+                // 半径抖动：让圆不是完美数学圆，而是爆炸故障圆
+                float radialJitter =
+                    (float)Math.Sin(i * 3.71f + seed * 2.3f + frame * 0.11f) *
+                    MathHelper.Lerp(6f, 52f, progress);
+
+                Vector2 position = drawCenter + outward * (radius + radialJitter);
+
+                // 方块呼吸变化
+                float blockPulse = 0.84f + 0.28f * (float)Math.Sin(i * 1.97f + frame * 0.22f + seed);
+                float blockSize = baseBlockSize * blockPulse;
+
+                // 赤红主色，中心早期略带金白高温
+                Color ringColor = Color.Lerp(new Color(255, 84, 24), new Color(120, 0, 0), progress * 0.82f);
+                ringColor = Color.Lerp(ringColor, new Color(255, 210, 100), 0.15f * (1f - progress));
                 ringColor.A = 0;
 
+                // 方块本体
                 Main.EntitySpriteDraw(
                     pixel,
                     position,
                     null,
                     ringColor * alpha,
-                    tangent.ToRotation(),
-                    new Vector2(0f, 0.5f),
-                    new Vector2(segmentLength, thickness),
+                    angle + MathHelper.Pi / 4f,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(blockSize, blockSize),
                     SpriteEffects.None,
-                    0);
+                    0
+                );
+
+                // 少量切线短条：像数据流沿圆周撕裂
+                if (i % 4 == 0)
+                {
+                    float lineLength = MathHelper.Lerp(34f, 82f, progress) * (0.75f + Math.Abs(glitchWave) * 0.35f);
+                    float lineWidth = MathHelper.Lerp(4.5f, 1.8f, progress);
+
+                    Color lineColor = Color.Lerp(new Color(255, 110, 36), new Color(180, 0, 0), progress);
+                    lineColor.A = 0;
+
+                    Main.EntitySpriteDraw(
+                        pixel,
+                        position + tangent * glitchWave * 10f,
+                        null,
+                        lineColor * alpha * 0.72f,
+                        tangent.ToRotation(),
+                        new Vector2(0f, 0.5f),
+                        new Vector2(lineLength, lineWidth),
+                        SpriteEffects.None,
+                        0
+                    );
+                }
+            }
+
+            // ==============================
+            // 2. 内侧残留环：更密、更暗，像矩阵内圈正在崩解
+            // ==============================
+            int innerCount = ScaledCount(84);
+            float innerRadius = radius * MathHelper.Lerp(0.74f, 0.88f, smoothProgress);
+
+            for (int i = 0; i < innerCount; i++)
+            {
+                float wave = (float)Math.Sin(i * 4.817f + seed * 0.9f + frame * 0.16f);
+
+                // 做断裂感，不要画满一整圈
+                if (wave < MathHelper.Lerp(-0.95f, 0.25f, progress))
+                    continue;
+
+                float angle = MathHelper.TwoPi * i / innerCount + wave * 0.026f;
+                Vector2 outward = angle.ToRotationVector2();
+
+                float blockSize = MathHelper.Lerp(12f, 5f, progress) * (0.85f + Math.Abs(wave) * 0.25f);
+
+                Color color = Color.Lerp(new Color(180, 0, 0), new Color(45, 0, 0), progress);
+                color.A = 0;
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    drawCenter + outward * (innerRadius + wave * MathHelper.Lerp(8f, 40f, progress)),
+                    null,
+                    color * alpha * 0.62f,
+                    -angle + frame * 0.025f,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(blockSize, blockSize),
+                    SpriteEffects.None,
+                    0
+                );
+            }
+
+            // ==============================
+            // 3. 外侧碎片：飞出去的赤红像素残骸
+            // ==============================
+            int shardCount = ScaledCount(64);
+            float shardAlpha = alpha * Utils.GetLerpValue(0.06f, 0.22f, progress, true);
+
+            for (int i = 0; i < shardCount; i++)
+            {
+                float wave = (float)Math.Sin(i * 4.119f + seed * 3.1f + frame * 0.07f);
+
+                // 越到后期，碎片越稀疏，像数据块正在消失
+                if (wave < MathHelper.Lerp(-0.8f, 0.5f, progress))
+                    continue;
+
+                float angle = MathHelper.TwoPi * (i + 0.5f) / shardCount + wave * 0.04f;
+                Vector2 outward = angle.ToRotationVector2();
+
+                float shardRadius =
+                    radius +
+                    MathHelper.Lerp(42f, 220f, progress) +
+                    wave * MathHelper.Lerp(12f, 86f, progress);
+
+                float blockSize = MathHelper.Lerp(17f, 6f, progress) * (0.8f + 0.3f * Math.Abs(wave));
+
+                Color shardColor = Color.Lerp(new Color(255, 58, 18), new Color(70, 0, 0), progress);
+                shardColor.A = 0;
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    drawCenter + outward * shardRadius,
+                    null,
+                    shardColor * shardAlpha,
+                    -angle + frame * 0.04f,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(blockSize, blockSize),
+                    SpriteEffects.None,
+                    0
+                );
+            }
+
+            // ==============================
+            // 4. 径向数据流：从中心向外扫出的短线
+            // ==============================
+            int streamCount = ScaledCount(36);
+            for (int i = 0; i < streamCount; i++)
+            {
+                float wave = (float)Math.Sin(i * 6.13f + seed * 1.4f + frame * 0.19f);
+
+                if (wave < 0.05f)
+                    continue;
+
+                float angle = MathHelper.TwoPi * i / streamCount + wave * 0.05f;
+                Vector2 outward = angle.ToRotationVector2();
+
+                float streamRadius = radius * MathHelper.Lerp(0.22f, 0.98f, progress) + wave * 80f;
+                float streamLength = MathHelper.Lerp(40f, 150f, progress) * wave;
+                float streamWidth = MathHelper.Lerp(5f, 1.6f, progress);
+
+                Color streamColor = Color.Lerp(new Color(255, 120, 42), new Color(130, 0, 0), progress);
+                streamColor.A = 0;
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    drawCenter + outward * streamRadius,
+                    null,
+                    streamColor * alpha * 0.48f,
+                    outward.ToRotation(),
+                    new Vector2(0f, 0.5f),
+                    new Vector2(streamLength, streamWidth),
+                    SpriteEffects.None,
+                    0
+                );
             }
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
@@ -443,16 +929,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 float globalScale = Main.rand.NextFloat(0.92f, 1.08f);
 
                 // ===== 中心填充（防空洞）=====
-                for (int i = 0; i < ScaledCount(8); i++)
+                for (int i = 0; i < ScaledCount(10); i++)
                 {
-                    Vector2 offset = Main.rand.NextVector2Circular(ScaledPower(16f), ScaledPower(16f));
-                    float radius = Main.rand.NextFloat(ScaledPower(60f), ScaledPower(90f)) * globalScale;
+                    Vector2 offset = Main.rand.NextVector2Circular(ScaledPower(18f), ScaledPower(18f));
+                    float radius = Main.rand.NextFloat(ScaledPower(42f), ScaledPower(72f)) * globalScale;
 
                     RancorLavaMetaball.SpawnParticle(center + offset, radius);
                 }
 
                 // ===== 同心结构（核心逻辑）=====
-                float[] ringRadii = new float[] { 28f, 56f, 84f, 112f, 136f };
+                float[] ringRadii = new float[] { 44f, 84f, 132f, 188f };
 
                 for (int ringIndex = 0; ringIndex < ringRadii.Length; ringIndex++)
                 {
@@ -463,18 +949,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     int pointCount = Math.Max(8, (int)Math.Ceiling(MathHelper.TwoPi * ringRadius / spacing));
 
                     // 每圈额外随机偏移（但统一）
-                    float ringOffset = Main.rand.NextFloat(-0.08f, 0.08f);
+                    float ringOffset = Main.rand.NextFloat(-0.14f, 0.14f);
 
                     for (int i = 0; i < pointCount; i++)
                     {
                         float angle = MathHelper.TwoPi * i / pointCount + globalRotation + ringOffset;
 
                         // 轻微波动（保证不死板但仍连通）
-                        float radialJitter = (float)Math.Sin(i * 1.4f + ringIndex * 0.7f) * 5f;
+                        float radialJitter = (float)Math.Sin(i * 2.17f + ringIndex * 1.31f) * ScaledPower(10f + ringIndex * 8f);
 
                         Vector2 pos = center + angle.ToRotationVector2() * (ringRadius + radialJitter);
 
-                        float size = ((34f + ringIndex * 5f) * globalScale + Main.rand.NextFloat(-4f, 4f)) * AshEffectIntensity;
+                        float size = Main.rand.NextFloat(ScaledPower(26f + ringIndex * 3f), ScaledPower(48f + ringIndex * 8f)) * globalScale;
 
                         RancorLavaMetaball.SpawnParticle(pos, size);
                     }
@@ -486,24 +972,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             float globalRotation = Main.rand.NextFloat(MathHelper.TwoPi);
             float globalTightness = Main.rand.NextFloat(0.85f, 1.2f) * AshEffectIntensity;
 
-            int armCount = 4;
-            int pointsPerArm = ScaledCount(24);
+            int armCount = 7;
+            int pointsPerArm = ScaledCount(18);
 
             for (int arm = 0; arm < armCount; arm++)
             {
-                float armBaseAngle = MathHelper.TwoPi * arm / armCount + globalRotation;
+                float armBaseAngle = MathHelper.TwoPi * arm / armCount + globalRotation + Main.rand.NextFloat(-0.08f, 0.08f);
 
                 for (int i = 0; i < pointsPerArm; i++)
                 {
                     float t = i / (float)(pointsPerArm - 1);
 
-                    float radius = MathHelper.Lerp(ScaledPower(90f), ScaledPower(480f), t);
+                    float radius = MathHelper.Lerp(ScaledPower(42f), ScaledPower(520f), t);
 
                     // 螺旋强度带随机（但整条臂一致）
-                    float spiral = MathHelper.Lerp(0.2f, 1.4f, t) * globalTightness;
+                    float spiral = 0f;
 
                     // 轻微波动
-                    float wave = (float)Math.Sin(t * MathHelper.TwoPi * 1.6f + arm * 0.7f) * 0.18f;
+                    float wave = (float)Math.Sin(t * MathHelper.TwoPi * 3.2f + arm * 0.9f) * MathHelper.Lerp(0.035f, 0.11f, t) * globalTightness;
 
                     float angle = armBaseAngle + spiral + wave;
 
@@ -513,21 +999,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     Vector2 spawnPos = center + outward * radius;
 
                     Vector2 velocity =
-                        outward * MathHelper.Lerp(ScaledPower(5f), ScaledPower(14f), t) +
-                        tangent * MathHelper.Lerp(ScaledPower(1.2f), ScaledPower(0.25f), t) * (arm % 2 == 0 ? 1f : -1f);
+                        outward * MathHelper.Lerp(ScaledPower(8.5f), ScaledPower(22f), t) +
+                        tangent * Main.rand.NextFloat(ScaledPower(-1.2f), ScaledPower(1.2f));
 
-                    float size = (MathHelper.Lerp(55f, 85f, 1f - t) + Main.rand.NextFloat(-4f, 4f)) * AshEffectIntensity;
+                    float size = MathHelper.Lerp(ScaledPower(62f), ScaledPower(24f), t) + Main.rand.NextFloat(ScaledPower(-4f), ScaledPower(5f));
 
                     GruesomeMetaball.SpawnParticle(spawnPos, velocity, size);
 
                     // ===== 补连接点（关键，防断裂）=====
-                    if (i % 3 == 1 && i < pointsPerArm - 1)
+                    if (i % 4 == 1 && i < pointsPerArm - 1)
                     {
                         float t2 = (i + 1) / (float)(pointsPerArm - 1);
-                        float r2 = MathHelper.Lerp(ScaledPower(90f), ScaledPower(480f), t2);
+                        float r2 = MathHelper.Lerp(ScaledPower(42f), ScaledPower(520f), t2);
 
-                        float spiral2 = MathHelper.Lerp(0.2f, 1.4f, t2) * globalTightness;
-                        float wave2 = (float)Math.Sin(t2 * MathHelper.TwoPi * 1.6f + arm * 0.7f) * 0.18f;
+                        float spiral2 = 0f;
+                        float wave2 = (float)Math.Sin(t2 * MathHelper.TwoPi * 3.2f + arm * 0.9f) * MathHelper.Lerp(0.035f, 0.11f, t2) * globalTightness;
 
                         float angle2 = armBaseAngle + spiral2 + wave2;
 
@@ -539,8 +1025,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                         Vector2 midTan = midDir.RotatedBy(MathHelper.PiOver2);
 
                         Vector2 midVel =
-                            midDir * MathHelper.Lerp(ScaledPower(6f), ScaledPower(12f), t) +
-                            midTan * MathHelper.Lerp(ScaledPower(0.9f), ScaledPower(0.2f), t) * (arm % 2 == 0 ? 1f : -1f);
+                            midDir * MathHelper.Lerp(ScaledPower(7f), ScaledPower(17f), t) +
+                            midTan * Main.rand.NextFloat(ScaledPower(-0.65f), ScaledPower(0.65f));
 
                         GruesomeMetaball.SpawnParticle(mid, midVel, size * 0.9f);
                     }
@@ -870,10 +1356,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 Vector2 outward = angle.ToRotationVector2();
 
-                Vector2 spawnPos = center + outward * Main.rand.NextFloat(ScaledPower(760f), ScaledPower(1180f));
-                Vector2 velocity = outward * Main.rand.NextFloat(ScaledPower(2.4f), ScaledPower(5.5f)) + outward.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(ScaledPower(-0.55f), ScaledPower(0.55f));
+                Vector2 spawnPos = center + outward * Main.rand.NextFloat(ScaledPower(220f), ScaledPower(580f));
+                Vector2 velocity = outward * Main.rand.NextFloat(ScaledPower(10f), ScaledPower(24f)) + outward.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(ScaledPower(-1.4f), ScaledPower(1.4f));
 
-                float size = Main.rand.NextFloat(24f, 52f) * AshEffectIntensity;
+                float size = Main.rand.NextFloat(18f, 42f) * AshEffectIntensity;
                 GruesomeMetaball.SpawnParticle(spawnPos, velocity, size);
             }
         }

@@ -20,6 +20,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private const int RightBurstCooldown = 34;
         private const float HoldoutDistance = 34f;
 
+        private static readonly PristineFuryMark[] TemporaryDebugMarkCycle =
+        {
+            PristineFuryMark.Idle,
+            PristineFuryMark.EvilT2,
+            PristineFuryMark.SlimeGod,
+            PristineFuryMark.HardMode,
+            PristineFuryMark.Prime,
+            PristineFuryMark.BrimstoneElemental,
+            PristineFuryMark.Plantera,
+            PristineFuryMark.Aurora,
+            PristineFuryMark.Goliath,
+            PristineFuryMark.Moonlord,
+            PristineFuryMark.Providence,
+            PristineFuryMark.Polterghast,
+            PristineFuryMark.Dog,
+            PristineFuryMark.Dragon
+        };
+
         private int hookChargeTimer;
         private int hookCooldown;
         private bool hookChargeReady;
@@ -96,6 +114,21 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             ResetLeftStateIfMarkChanged();
 
+            // 临时调试：右键只按顺序切换印记，禁用右键散射和左+右提取钩；这不是永久设计，也不是最终交互。
+            if (rightHeld)
+            {
+                ResetRightBurst();
+                CancelHookChargeForTemporaryDebug();
+
+                if (!rightHeldLastFrame)
+                    CycleMarkForTemporaryDebug();
+
+                PristineFuryLeftEffectRegistry.Update(CurrentMark, this, leftHeld, leftHeld && !leftHeldLastFrame, !leftHeld && leftHeldLastFrame);
+                leftHeldLastFrame = leftHeld;
+                rightHeldLastFrame = rightHeld;
+                return;
+            }
+
             if (bothHeld)
             {
                 ResetRightBurst();
@@ -122,13 +155,38 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 hookChargeReady = false;
             }
 
-            PristineFuryLeftEffect effect = PristineFuryLeftEffectRegistry.Get(CurrentMark);
-            effect.Update(this, leftHeld, leftHeld && !leftHeldLastFrame, !leftHeld && leftHeldLastFrame);
+            PristineFuryLeftEffectRegistry.Update(CurrentMark, this, leftHeld, leftHeld && !leftHeldLastFrame, !leftHeld && leftHeldLastFrame);
 
-            HandleRightClick(rightHeld);
+            // 临时调试：原右键散射攻击暂时禁用，保留入口调用，恢复最终设计时取消下面这一行注释。
+            // HandleRightClick(rightHeld);
 
             leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;
+        }
+
+        private void CycleMarkForTemporaryDebug()
+        {
+            PristineFuryPlayer pristinePlayer = Owner.GetModPlayer<PristineFuryPlayer>();
+            int currentIndex = Array.IndexOf(TemporaryDebugMarkCycle, pristinePlayer.CurrentMark);
+            int nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % TemporaryDebugMarkCycle.Length;
+            PristineFuryMark nextMark = TemporaryDebugMarkCycle[nextIndex];
+
+            pristinePlayer.ExtractMark(nextMark, temporaryDebugSwitch: true);
+            ResetLeftEffectStateForMark(nextMark);
+            ApplyRecoil(2.4f);
+            TriggerMuzzleFlash(8);
+            SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.7f, Pitch = 0.08f }, Owner.Center);
+        }
+
+        private void CancelHookChargeForTemporaryDebug()
+        {
+            hookChargeTimer = 0;
+            hookChargeReady = false;
+            hookFiredForThisHold = false;
+
+            PristineFuryPlayer pristinePlayer = Owner.GetModPlayer<PristineFuryPlayer>();
+            pristinePlayer.HookChargeFrames = 0;
+            pristinePlayer.HookChargeOpacity = 0f;
         }
 
         private void HandleHookCharge()
@@ -282,11 +340,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (leftEffectResetKey == key)
                 return;
 
+            ResetLeftEffectStateForMark(CurrentMark);
+        }
+
+        private void ResetLeftEffectStateForMark(PristineFuryMark mark)
+        {
             LeftTimer = 0;
             LeftChargeTimer = 0;
             LeftAuxTimer = 0;
             LeftBurstIndex = 0;
-            leftEffectResetKey = key;
+            leftEffectResetKey = (int)mark;
         }
 
         private void UpdatePose()
@@ -376,8 +439,28 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             for (int i = 0; i < 9; i++)
             {
-                Dust dust = Dust.NewDustPerfect(muzzle + Main.rand.NextVector2Circular(4f, 4f), DustID.Torch, direction.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.6f, 8f), 90, color, Main.rand.NextFloat(0.8f, 1.35f) * scale);
-                dust.noGravity = true;
+                Vector2 sparkVelocity = direction.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.6f, 8f);
+                Particle ember = i % 3 == 0
+                    ? new SparkParticle(
+                        muzzle + Main.rand.NextVector2Circular(4f, 4f),
+                        sparkVelocity,
+                        false,
+                        Main.rand.Next(12, 20),
+                        Main.rand.NextFloat(0.55f, 0.95f) * scale,
+                        Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.28f)))
+                    : new CustomSpark(
+                        muzzle + Main.rand.NextVector2Circular(4f, 4f),
+                        sparkVelocity,
+                        "CalamityMod/Particles/GlowSpark2",
+                        false,
+                        Main.rand.Next(8, 14),
+                        Main.rand.NextFloat(0.035f, 0.07f) * scale,
+                        color,
+                        new Vector2(0.45f, 1.6f),
+                        glowCenter: true,
+                        shrinkSpeed: 0.66f,
+                        extraRotation: sparkVelocity.ToRotation());
+                GeneralParticleHandler.SpawnParticle(ember);
             }
 
             Particle spark = new CustomSpark(
@@ -407,8 +490,32 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Main.rand.NextFloat() < 0.35f + charge * 0.45f)
             {
                 Vector2 offset = Main.rand.NextVector2CircularEdge(18f + 34f * charge, 18f + 34f * charge);
-                Dust dust = Dust.NewDustPerfect(center + offset, DustID.RainbowMk2, -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.5f, 4.4f), 80, color, Main.rand.NextFloat(0.8f, 1.35f));
-                dust.noGravity = true;
+                Vector2 velocity = -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.5f, 4.4f);
+                Particle mote = new PointParticle(
+                    center + offset,
+                    velocity,
+                    false,
+                    Main.rand.Next(16, 26),
+                    Main.rand.NextFloat(0.72f, 1.15f),
+                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.12f, 0.35f)));
+                GeneralParticleHandler.SpawnParticle(mote);
+
+                if (charge > 0.55f)
+                {
+                    Particle line = new CustomSpark(
+                        center + offset * 0.65f,
+                        velocity * 0.35f,
+                        "CalamityMod/Particles/BloomLineSoftEdge",
+                        false,
+                        12,
+                        0.045f + charge * 0.035f,
+                        color,
+                        new Vector2(0.36f, 1.8f + charge),
+                        glowCenter: true,
+                        shrinkSpeed: 0.58f,
+                        extraRotation: velocity.ToRotation());
+                    GeneralParticleHandler.SpawnParticle(line);
+                }
             }
         }
 

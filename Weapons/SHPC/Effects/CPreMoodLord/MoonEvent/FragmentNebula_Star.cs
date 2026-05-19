@@ -86,15 +86,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         private void UpdateLaunchDrift(float idealSpeed, Vector2 direction, float homingDelay)
         {
             float windup = Utils.GetLerpValue(0f, homingDelay, Timer, true);
-            float weave = (float)Math.Sin((Timer + Projectile.ai[2] * 31f) * 0.055f) * MathHelper.ToRadians(IsBlueVariant ? 0.36f : 0.58f);
 
-            Projectile.velocity = Projectile.velocity.RotatedBy(weave);
             Projectile.velocity = Projectile.velocity.SafeNormalize(direction) * MathHelper.Lerp(Projectile.velocity.Length(), idealSpeed * MathHelper.Lerp(0.82f, 1.04f, windup), 0.06f);
         }
 
         private void UpdateHoming(float idealSpeed, Vector2 currentDirection, float homingDelay)
         {
-            NPC target = FindTarget(IsBlueVariant ? 1900f : 1650f);
+            NPC target = FindTarget(IsBlueVariant ? 5200f : 4600f);
             if (target is null)
             {
                 Projectile.velocity = currentDirection * MathHelper.Lerp(Projectile.velocity.Length(), idealSpeed, 0.08f);
@@ -102,19 +100,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             }
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
-            float turnBoost = Utils.GetLerpValue(0f, 50f * (Projectile.extraUpdates + 1f), Timer - homingDelay, true);
-            float maxTurn = MathHelper.Lerp(
-                IsBlueVariant ? 0.24f : 0.34f,
-                IsBlueVariant ? 1.08f : 1.32f,
-                turnBoost);
-            float angleDelta = currentDirection.AngleTo(desiredDirection);
-            Vector2 limitedDirection = Math.Abs(angleDelta) <= maxTurn
-                ? desiredDirection
-                : currentDirection.RotatedBy(MathHelper.Clamp(angleDelta, -maxTurn, maxTurn));
-            float blend = MathHelper.Lerp(IsBlueVariant ? 0.28f : 0.36f, IsBlueVariant ? 0.74f : 0.86f, turnBoost);
-            Vector2 finalDirection = Vector2.Lerp(currentDirection, limitedDirection, blend).SafeNormalize(desiredDirection);
+            float distance = Projectile.Distance(target.Center);
+            float timePower = Utils.GetLerpValue(0f, 90f * (Projectile.extraUpdates + 1f), Timer - homingDelay, true);
+            float closePower = Utils.GetLerpValue(900f, 120f, distance, true);
+            float trackingPower = MathHelper.Max(timePower, closePower * 0.72f);
+            float targetSpeed = idealSpeed * MathHelper.Lerp(1.04f, IsBlueVariant ? 1.46f : 1.38f, trackingPower);
+            float inertia = MathHelper.Lerp(IsBlueVariant ? 11f : 10f, IsBlueVariant ? 2.35f : 2.05f, trackingPower);
 
-            Projectile.velocity = finalDirection * idealSpeed * (1f + turnBoost * 0.08f);
+            Projectile.velocity = (Projectile.velocity * inertia + desiredDirection * targetSpeed) / (inertia + 1f);
+
+            float speed = Projectile.velocity.Length();
+            float minSpeed = idealSpeed * 0.92f;
+            float maxSpeed = idealSpeed * (IsBlueVariant ? 1.58f : 1.48f);
+            Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MathHelper.Clamp(speed, minSpeed, maxSpeed);
         }
 
         private NPC FindTarget(float range)
@@ -128,11 +126,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     continue;
 
                 float distance = Projectile.Distance(npc.Center);
-                if (distance >= bestScore)
+                if (distance > range)
+                    continue;
+
+                float score = npc.boss ? distance * 0.72f : distance;
+                if (score >= bestScore)
                     continue;
 
                 bestTarget = npc;
-                bestScore = distance;
+                bestScore = score;
             }
 
             return bestTarget;
@@ -162,16 +164,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             if ((int)Timer % (IsBlueVariant ? 5 : 4) == 0)
             {
                 Particle ribbon = new CustomSpark(
-                    Projectile.Center - direction * 14f + normal * Main.rand.NextFloat(-5f, 5f),
-                    -direction * Main.rand.NextFloat(0.35f, 1.1f),
-                    "CalamityMod/Particles/GlowSpark2",
+                    Projectile.Center - direction * 14f + normal * Main.rand.NextFloat(-2.2f, 2.2f),
+                    -direction * Main.rand.NextFloat(0.28f, 0.82f),
+                    "CalamityMod/Particles/FadeStreak",
                     false,
                     Main.rand.Next(14, 22),
                     Main.rand.NextFloat(0.04f, 0.08f) * (IsBlueVariant ? 1.18f : 1f),
                     Color.Lerp(primary, secondary, Main.rand.NextFloat(0.2f, 0.65f)),
-                    new Vector2(Main.rand.NextFloat(1.4f, 2.2f), Main.rand.NextFloat(0.34f, 0.56f)),
+                    new Vector2(Main.rand.NextFloat(0.28f, 0.42f), Main.rand.NextFloat(1.45f, 2.15f)),
                     shrinkSpeed: 0.76f,
-                    extraRotation: direction.ToRotation());
+                    extraRotation: direction.ToRotation() + MathHelper.PiOver2);
                 GeneralParticleHandler.SpawnParticle(ribbon);
             }
 
@@ -503,6 +505,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             float opacity = fadeIn * fadeOut;
             float tipOpacity = MathHelper.Max(opacity, 0.62f * fadeIn);
             float pulse = 1f + (float)Math.Sin((Timer + Projectile.ai[2] * 17f) * 0.16f) * 0.08f;
+            const float magicDrawScale = 1.3f;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -528,7 +531,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     tipColor * tipOpacity * (IsBlueVariant ? 1.8f : 1.45f),
                     angle,
                     magicPoint.Size() * 0.5f,
-                    (0.34f + i * 0.08f) * pulse * Projectile.scale,
+                    (0.34f + i * 0.08f) * pulse * Projectile.scale * magicDrawScale,
                     SpriteEffects.None,
                     0f);
             }
@@ -547,7 +550,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     runeColor * tipOpacity * (IsBlueVariant ? 0.7f : 0.58f),
                     Projectile.rotation + magicRotation * (i % 2 == 0 ? 0.42f : -0.34f) + MathHelper.TwoPi * i / 3f,
                     rune.Size() * 0.5f,
-                    (0.25f * (0.32f + i * 0.08f)) * Projectile.scale * pulse,
+                    (0.25f * (0.32f + i * 0.08f)) * Projectile.scale * pulse * magicDrawScale,
                     SpriteEffects.None,
                     0f);
             }
@@ -566,7 +569,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     ringColor * opacity * (IsBlueVariant ? 1.25f : 1f),
                     angle,
                     magicPoint.Size() * 0.5f,
-                    ringScale * pulse * Projectile.scale,
+                    ringScale * pulse * Projectile.scale * magicDrawScale,
                     SpriteEffects.None,
                     0f);
             }
@@ -578,7 +581,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 primary with { A = 0 } * 0.32f * opacity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                Projectile.scale * (IsBlueVariant ? 0.44f : 0.34f) * pulse,
+                Projectile.scale * (IsBlueVariant ? 0.44f : 0.34f) * pulse * magicDrawScale,
                 SpriteEffects.None,
                 0f);
 
@@ -592,7 +595,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     Color.Lerp(primary, secondary, i / 2f) with { A = 0 } * 0.42f * opacity,
                     rotation,
                     new Vector2(fadeStreak.Width * 0.5f, 0f),
-                    new Vector2(0.84f + i * 0.12f, 0.34f) * Projectile.scale * pulse,
+                    new Vector2(0.84f + i * 0.12f, 0.34f) * Projectile.scale * pulse * magicDrawScale,
                     SpriteEffects.FlipVertically,
                     0f);
             }
@@ -604,7 +607,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 core with { A = 0 } * 0.72f * opacity,
                 Projectile.rotation,
                 star.Size() * 0.5f,
-                new Vector2(0.28f, 0.54f) * Projectile.scale * pulse,
+                new Vector2(0.28f, 0.54f) * Projectile.scale * pulse * magicDrawScale,
                 SpriteEffects.None,
                 0f);
 
@@ -615,7 +618,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 secondary with { A = 0 } * 0.46f * opacity,
                 Projectile.rotation + MathHelper.PiOver2,
                 star.Size() * 0.5f,
-                new Vector2(0.18f, 0.42f) * Projectile.scale * pulse,
+                new Vector2(0.18f, 0.42f) * Projectile.scale * pulse * magicDrawScale,
                 SpriteEffects.None,
                 0f);
 

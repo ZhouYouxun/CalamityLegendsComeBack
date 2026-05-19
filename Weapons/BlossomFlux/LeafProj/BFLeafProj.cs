@@ -39,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
         private ref float FlightTimer => ref Projectile.localAI[1];
         private ref float ReconWanderTimer => ref Projectile.ai[1];
         private ref float BombardExplosionsLeft => ref Projectile.ai[1];
+        private ref float LastReconHitNpcIndex => ref Projectile.ai[2];
         private int bombardExplosionCooldown;
         private int bombardMarkedExplosionCooldown;
 
@@ -92,6 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     Projectile.timeLeft = 170;
                     StoredSpeed = MathHelper.Clamp(StoredSpeed, 11f, 21f);
                     Projectile.localNPCHitCooldown = 18;
+                    LastReconHitNpcIndex = -1f;
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
@@ -172,28 +174,28 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
+                    Projectile.localNPCImmunity[target.whoAmI] = Projectile.timeLeft + 30;
                     target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyPriorityMark(Projectile.owner, BFReconLeftBalance.MarkDuration);
                     if (BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
                         Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, BFReconLeftBalance.MarkDuration);
 
-                    if (IsReconPriorityTarget(target))
-                    {
-                        ReconWanderTimer = 10f;
-                        Projectile.velocity = -Projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Clamp(StoredSpeed * 0.84f, 9f, 18f);
-                        Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.72f));
-                    }
+                    LastReconHitNpcIndex = target.whoAmI;
+                    ReconWanderTimer = 0f;
+                    NPC nextTarget = FindReconTarget(target.whoAmI);
+                    Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                    if (nextTarget != null)
+                        Projectile.velocity = (nextTarget.Center - Projectile.Center).SafeNormalize(currentDirection) * MathHelper.Clamp(StoredSpeed * 1.06f, 11f, 22.5f);
                     else
-                    {
-                        ReconWanderTimer = 24f;
-                        Projectile.velocity = Projectile.velocity.RotatedByRandom(0.72f) * Main.rand.NextFloat(0.72f, 0.94f);
-                    }
+                        Projectile.velocity = currentDirection * StoredSpeed;
+
+                    Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.78f));
 
                     Projectile.netUpdate = true;
                     SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.28f, Pitch = 0.36f }, target.Center);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    SpawnBombardExplosion(target.Center, target);
+                    SpawnBombardExplosion(Projectile.Center, target);
                     break;
             }
         }
@@ -342,7 +344,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             NPC target = FindReconTarget();
             if (target == null)
             {
-                Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(FlightTimer * 0.08f + Projectile.identity) * 0.004f);
+                BFArrowCommon.MaintainSpeed(Projectile, StoredSpeed, 0.12f);
                 return;
             }
 
@@ -351,7 +353,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             BFArrowCommon.MaintainSpeed(Projectile, speed, 0.14f);
         }
 
-        private NPC FindReconTarget()
+        private NPC FindReconTarget(int excludedNpcIndex = -1)
         {
             if (!BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
                 return null;
@@ -362,7 +364,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             if (BFArrowCommon.InBounds(priorityTargetIndex, Main.maxNPCs))
             {
                 NPC priorityTarget = Main.npc[priorityTargetIndex];
-                if (priorityTarget.active &&
+                if (priorityTarget.whoAmI != excludedNpcIndex &&
+                    priorityTarget.whoAmI != (int)LastReconHitNpcIndex &&
+                    Projectile.localNPCImmunity[priorityTarget.whoAmI] <= 0 &&
+                    priorityTarget.active &&
                     priorityTarget.CanBeChasedBy(Projectile) &&
                     priorityTarget.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner) &&
                     Vector2.DistanceSquared(Projectile.Center, priorityTarget.Center) <= 1500f * 1500f)
@@ -376,6 +381,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                if (npc.whoAmI == excludedNpcIndex || npc.whoAmI == (int)LastReconHitNpcIndex)
+                    continue;
+
+                if (Projectile.localNPCImmunity[npc.whoAmI] > 0)
                     continue;
 
                 float distance = Vector2.Distance(Projectile.Center, npc.Center);
@@ -401,8 +412,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         private void EmitLeafTrail(BlossomFluxChloroplastPresetType preset)
         {
+            if (preset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
+            {
+                EmitBombardLeafTrail();
+                return;
+            }
+
             if (Main.rand.NextBool(2))
-                BFArrowCommon.EmitPresetTrail(Projectile, preset, preset == BlossomFluxChloroplastPresetType.Chlo_DBomb ? 0.7f : 0.95f);
+                BFArrowCommon.EmitPresetTrail(Projectile, preset, 0.95f);
 
             if (Main.dedServ || !Projectile.FinalExtraUpdate())
                 return;
@@ -432,6 +449,47 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     0.48f,
                     10));
             }
+        }
+
+        private void EmitBombardLeafTrail()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+
+            if (!Projectile.FinalExtraUpdate())
+                return;
+
+            if ((int)FlightTimer % 4 == 0)
+            {
+                GlowOrbParticle orb = new(
+                    Projectile.Center - forward * Main.rand.NextFloat(2f, 8f) + side * Main.rand.NextFloat(-3f, 3f),
+                    Main.rand.NextVector2Circular(0.12f, 0.12f),
+                    false,
+                    5,
+                    Main.rand.NextFloat(0.46f, 0.62f),
+                    Color.Lerp(mainColor, Color.White, 0.18f),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(orb);
+            }
+
+            if ((int)FlightTimer % 6 != 0)
+                return;
+
+            Particle trail = new SparkParticle(
+                Projectile.Center - forward * Main.rand.NextFloat(6f, 16f) + side * Main.rand.NextFloat(-4f, 4f),
+                -Projectile.velocity * 0.16f + side * Main.rand.NextFloat(-0.24f, 0.24f),
+                false,
+                Main.rand.Next(24, 34),
+                Main.rand.NextFloat(0.5f, 0.72f),
+                Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.2f, 0.55f)));
+            GeneralParticleHandler.SpawnParticle(trail);
         }
 
         private void SpawnLeafImpactFX(Vector2 center, BlossomFluxChloroplastPresetType preset, float intensity)
@@ -583,6 +641,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
         {
+            if (Preset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
+                return;
+
             Vector2[] trailPoints = BuildTrailPoints();
             if (trailPoints.Length < 2)
                 return;

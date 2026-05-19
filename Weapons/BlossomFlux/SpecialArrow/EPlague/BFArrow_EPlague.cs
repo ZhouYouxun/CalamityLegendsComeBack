@@ -18,9 +18,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     {
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/EPlague/BFArrow_EPlague";
-        private const float LeftSporeState = -1f;
-        private const int MaxLeftSporeBounces = 3;
+        public const float LeftSporeState = -1f;
+        private const string LeftSporeBombTexturePath = "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BlossomFluxBOMB";
+        private const string LeftSporeTrailTexturePath = "CalamityLegendsComeBack/Texture/KsTexture/magic_02";
         private const float LeftSporeSearchRange = 620f;
+        private const float RightSporeSearchRange = 920f;
+        private const int SporeHomingDelay = 25;
 
         private int gasTimer;
         private int storedGasDamage = 1;
@@ -40,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void SetDefaults()
         {
-            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 300, penetrate: -1, extraUpdates: 1, tileCollide: true);
+            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 22, height: 22, timeLeft: 300, penetrate: -1, extraUpdates: 1, tileCollide: true);
             Projectile.localNPCHitCooldown = -1;
         }
 
@@ -50,12 +53,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
 
             if (!IsLeftSpore)
+            {
+                Projectile.extraUpdates = 2;
+                Projectile.velocity *= 1.2f;
+                Projectile.scale = 1f;
                 return;
+            }
 
-            Projectile.width = 18;
-            Projectile.height = 18;
+            Projectile.width = 22;
+            Projectile.height = 22;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 170;
+            Projectile.timeLeft = 300;
             Projectile.extraUpdates = 1;
             Projectile.localNPCHitCooldown = 12;
             Projectile.usesLocalNPCImmunity = true;
@@ -79,15 +87,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (State == 0f)
             {
-                FlightTimer++;
-                if (FlightTimer > 5f)
-                {
-                    Projectile.velocity.Y += 0.18f;
-                    Projectile.velocity.X *= 0.9835f;
-                }
-
+                UpdateSporeBombFlight(leftSpore: false);
                 BFArrowCommon.FaceForward(Projectile);
-                BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.02f);
                 EmitPlagueFlightFX(false);
 
                 return;
@@ -153,6 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             target.AddBuff(BuffID.Venom, 120);
             Main.player[Projectile.owner].SetScreenshake(6.5f);
             SpawnPlagueCollapseBurst(target.Center, 1.25f);
+            SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(3, 6), 1.2f);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 0.9f, 3f, 0.85f, 1.15f);
             SpawnPlagueAnchorFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.38f, Pitch = 0.1f }, target.Center);
@@ -180,7 +182,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             if (IsLeftSpore)
             {
-                ReflectLeftSpore(oldVelocity);
+                SpawnSporeGasBurst(Projectile.Center, System.Math.Max(1, (int)(Projectile.damage * 0.24f)), Main.rand.Next(2, 5), 0.9f);
+                Projectile.Kill();
                 return false;
             }
 
@@ -203,8 +206,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         {
             if (State <= 0f)
             {
-                DrawPlagueSprayOverlay();
-                BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_EPlague);
+                if (IsLeftSpore)
+                    DrawLeftSporeBomb(lightColor);
+                else
+                {
+                    DrawPlagueSprayOverlay();
+                    BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.28f);
+                }
             }
             else
                 BFArrowCommon.DrawProjectile(Projectile, Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value, Projectile.GetAlpha(lightColor), Projectile.rotation, Projectile.scale);
@@ -214,38 +222,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private void UpdateLeftSporeFlight()
         {
-            FlightTimer++;
+            UpdateSporeBombFlight(leftSpore: true);
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            if (FlightTimer > 8f)
-                Projectile.velocity = Projectile.velocity.RotatedBy(System.Math.Sin((FlightTimer + Projectile.identity) * 0.19f) * 0.006f);
-
-            if (Projectile.velocity.LengthSquared() > 15.5f * 15.5f)
-                Projectile.velocity = Projectile.velocity.SafeNormalize(direction) * 15.5f;
-
             BFArrowCommon.FaceForward(Projectile);
-            BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.2f);
-            EmitPlagueFlightFX(true);
+            EmitLeftSporeBombFlightFX(direction);
+        }
 
+        private void EmitLeftSporeBombFlightFX(Vector2 direction)
+        {
             if (Main.dedServ || !Projectile.FinalExtraUpdate())
                 return;
 
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
+            Color acidColor = new(190, 255, 84);
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            for (int i = 0; i < 2; i++)
-            {
-                GlowOrbParticle orb = new(
-                    Projectile.Center - direction * Main.rand.NextFloat(6f, 20f) + side * Main.rand.NextFloat(-10f, 10f),
-                    -Projectile.velocity * 0.035f + Main.rand.NextVector2Circular(0.42f, 0.42f),
-                    false,
-                    Main.rand.Next(7, 11),
-                    Main.rand.NextFloat(0.2f, 0.34f),
-                    Color.Lerp(mainColor, Color.White, Main.rand.NextFloat(0.12f, 0.34f)),
-                    true,
-                    false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(orb);
-            }
+
+            Particle customLine = new CustomSpark(
+                Projectile.Center - direction * Main.rand.NextFloat(1f, 5f) + side * Main.rand.NextFloat(-2.5f, 2.5f),
+                Projectile.velocity * 0.15f + Main.rand.NextVector2Circular(0.12f, 0.12f),
+                LeftSporeTrailTexturePath,
+                false,
+                20,
+                Main.rand.NextFloat(0.72f, 0.92f),
+                Color.Lerp(mainColor, acidColor, Main.rand.NextFloat(0.18f, 0.55f)) * 0.85f,
+                new Vector2(2.8f, 0.7f),
+                shrinkSpeed: 0.65f);
+            GeneralParticleHandler.SpawnParticle(customLine);
         }
 
         private void HandleLeftSporeHit(NPC target)
@@ -256,33 +259,50 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 10, 0.9f, 3.4f, 0.76f, 1.18f);
             SpawnLeftSporeImpactFX(target.Center, 1f);
+            SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(Projectile.damage * 0.25f)), Main.rand.Next(3, 6), 1f);
             SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.28f, Pitch = 0.34f }, target.Center);
-
-            NPC nextTarget = FindNextSporeTarget(target);
-            if (BounceCounter >= MaxLeftSporeBounces || nextTarget == null)
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            BounceCounter++;
-            float speed = MathHelper.Clamp(Projectile.velocity.Length() * 0.92f + 1.2f, 8.5f, 15.5f);
-            Vector2 fallback = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Projectile.Center = target.Center + fallback * 12f;
-            Projectile.velocity = (nextTarget.Center - Projectile.Center).SafeNormalize(fallback).RotatedByRandom(0.06f) * speed;
-            Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.86f));
-            Projectile.netUpdate = true;
+            Projectile.Kill();
         }
 
-        private NPC FindNextSporeTarget(NPC currentTarget)
+        private void UpdateSporeBombFlight(bool leftSpore)
+        {
+            FlightTimer++;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float speed = MathHelper.Clamp(Projectile.velocity.Length(), leftSpore ? 8.5f : 10f, leftSpore ? 15.5f : 22.8f);
+            float curveTimer = FlightTimer % 60f;
+            float curveStrength = leftSpore ? 0.24f : 0.18f;
+
+            if (curveTimer >= 20f && curveTimer < 40f)
+            {
+                Projectile.velocity.Y += curveStrength;
+                Projectile.velocity.X *= 0.985f;
+            }
+            else if (curveTimer >= 40f)
+            {
+                Projectile.velocity.Y -= curveStrength;
+                Projectile.velocity.X *= 1.012f;
+            }
+
+            NPC target = FindSporeHomingTarget(leftSpore ? LeftSporeSearchRange : RightSporeSearchRange);
+            if (target != null && FlightTimer >= SporeHomingDelay * Projectile.MaxUpdates)
+            {
+                Vector2 desiredVelocity = (target.Center + target.velocity * 4f - Projectile.Center).SafeNormalize(direction) * speed;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, leftSpore ? 0.075f : 0.095f);
+            }
+
+            Projectile.velocity = Projectile.velocity.SafeNormalize(direction) * MathHelper.Lerp(Projectile.velocity.Length(), speed, 0.08f);
+            Projectile.scale = 1f + 0.1f * (float)System.Math.Sin(FlightTimer * 0.18f + Projectile.identity * 0.23f);
+        }
+
+        private NPC FindSporeHomingTarget(float range)
         {
             NPC bestTarget = null;
-            float bestDistance = LeftSporeSearchRange;
+            float bestDistance = range;
 
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC npc = Main.npc[i];
-                if (!npc.active || npc.whoAmI == currentTarget.whoAmI || npc.dontTakeDamage || npc.friendly || npc.life <= 0)
+                if (!npc.active || npc.dontTakeDamage || npc.friendly || npc.life <= 0)
                     continue;
 
                 if (!Collision.CanHitLine(Projectile.Center, 1, 1, npc.Center, 1, 1))
@@ -297,6 +317,35 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
 
             return bestTarget;
+        }
+
+        private void SpawnSporeGasBurst(Vector2 center, int damage, int sporeAmount, float spreadScale)
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            for (int s = 0; s < sporeAmount; s++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.6f, 5.4f) * spreadScale;
+                velocity.Y += Main.rand.NextFloat(-1.2f, 0.8f);
+                int sporeIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center + Main.rand.NextVector2Circular(8f, 8f),
+                    velocity,
+                    ProjectileID.SporeGas + Main.rand.Next(3),
+                    damage,
+                    0f,
+                    Projectile.owner);
+
+                if (!BFArrowCommon.InBounds(sporeIndex, Main.maxProjectiles))
+                    continue;
+
+                Projectile spore = Main.projectile[sporeIndex];
+                spore.DamageType = DamageClass.Ranged;
+                spore.usesLocalNPCImmunity = true;
+                spore.usesIDStaticNPCImmunity = false;
+                spore.localNPCHitCooldown = 30;
+            }
         }
 
         private void ReflectLeftSpore(Vector2 oldVelocity)
@@ -364,14 +413,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
 
-            if (gasTimer % 12 != 0 || Projectile.owner != Main.myPlayer)
+            if (gasTimer % 8 != 0 || Projectile.owner != Main.myPlayer)
                 return;
 
-            int burstCount = 3;
+            int burstCount = 4;
             float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
             for (int i = 0; i < burstCount; i++)
             {
-                Vector2 velocity = (baseAngle + MathHelper.TwoPi * i / burstCount + Main.rand.NextFloat(-0.22f, 0.22f)).ToRotationVector2() * Main.rand.NextFloat(1.8f, 3.6f) + new Vector2(0f, Main.rand.NextFloat(-0.9f, -0.2f));
+                Vector2 velocity = (baseAngle + MathHelper.TwoPi * i / burstCount + Main.rand.NextFloat(-0.28f, 0.28f)).ToRotationVector2() * Main.rand.NextFloat(3f, 5.8f) + new Vector2(0f, Main.rand.NextFloat(-1.15f, -0.28f));
                 int gasIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
@@ -381,7 +430,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     0f,
                     Projectile.owner,
                     Main.rand.Next(3),
-                    Main.rand.NextFloat(0.9f, 1.2f));
+                    Main.rand.NextFloat(1.35f, 1.75f));
 
                 if (BFArrowCommon.InBounds(gasIndex, Main.maxProjectiles))
                     BFArrowCommon.ForceLocalNPCImmunity(Main.projectile[gasIndex], 12);
@@ -594,6 +643,76 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             dust.noGravity = true;
         }
 
+        private void DrawLeftSporeBomb(Color lightColor)
+        {
+            Texture2D bombTexture = ModContent.Request<Texture2D>(LeftSporeBombTexturePath).Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague) * Projectile.Opacity;
+            Color acidColor = new Color(190, 255, 84) * Projectile.Opacity;
+            float pulse = 1f + 0.08f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 8.5f + Projectile.identity * 0.41f);
+            float drawScale = Projectile.scale * 1.08f;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                float completion = 1f - i / (float)Projectile.oldPos.Length;
+                if (completion <= 0f || Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                Main.EntitySpriteDraw(
+                    bombTexture,
+                    Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
+                    null,
+                    mainColor * (0.13f * completion),
+                    Projectile.oldRot[i],
+                    bombTexture.Size() * 0.5f,
+                    drawScale * MathHelper.Lerp(0.82f, 1f, completion),
+                    SpriteEffects.None,
+                    0);
+            }
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                drawPosition,
+                null,
+                Color.Lerp(mainColor, acidColor, 0.35f) * 0.42f,
+                0f,
+                bloomTexture.Size() * 0.5f,
+                0.34f * pulse,
+                SpriteEffects.None,
+                0);
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (1.15f + pulse * 0.45f);
+                Main.EntitySpriteDraw(
+                    bombTexture,
+                    drawPosition + offset,
+                    null,
+                    Color.Lerp(mainColor, acidColor, 0.5f) * 0.4f,
+                    Projectile.rotation,
+                    bombTexture.Size() * 0.5f,
+                    drawScale,
+                    SpriteEffects.None,
+                    0);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            Main.EntitySpriteDraw(
+                bombTexture,
+                drawPosition,
+                null,
+                Projectile.GetAlpha(lightColor),
+                Projectile.rotation,
+                bombTexture.Size() * 0.5f,
+                drawScale,
+                SpriteEffects.None,
+                0);
+        }
+
         private void DrawPlagueSprayOverlay()
         {
             Texture2D pointTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
@@ -601,6 +720,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float squash = Utils.GetLerpValue(-3f, 10f, Projectile.velocity.Length(), true);
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
+            float visualScale = IsLeftSpore ? 1.5f : 1.28f;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -619,7 +739,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 mainColor * 0.5f,
                 0f,
                 bloomTexture.Size() * 0.5f,
-                0.22f + squash * 0.08f,
+                (0.22f + squash * 0.08f) * visualScale,
                 SpriteEffects.None,
                 0);
 
@@ -633,7 +753,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                     Color.Lerp(Color.White, mainColor, i * 0.4f) * 0.55f,
                     Projectile.velocity.ToRotation() + MathHelper.PiOver2,
                     pointTexture.Size() * 0.5f,
-                    new Vector2(0.68f - 0.16f * i, 0.72f + 0.28f * i) * 0.04f * (0.8f + squash * 0.55f),
+                    new Vector2(0.68f - 0.16f * i, 0.72f + 0.28f * i) * 0.04f * (0.8f + squash * 0.55f) * visualScale,
                     SpriteEffects.None,
                     0);
             }

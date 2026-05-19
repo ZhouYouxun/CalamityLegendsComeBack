@@ -53,8 +53,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             stickVisualTimer[id] = 0;
             orbitAngle[id] = Main.rand.NextFloat(MathHelper.TwoPi);
 
-            if (projectile.owner == Main.myPlayer)
-                SpawnOrReleaseOrbitGhosts(projectile);
         }
 
         // ================= AI =================
@@ -127,17 +125,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }, target.Center);
 
             Vector2 forward = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
+            SpawnRuinousGhostExplosionVisuals(target.Center);
 
             if (projectile.owner == Main.myPlayer)
             {
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    target.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<RuinousSoul_GhostExplosion>(),
-                    (int)(projectile.damage * 0.85f),
-                    projectile.knockBack,
-                    projectile.owner);
+                SpawnGhastlyVisageShards(projectile, target);
+                SpawnOrReleaseOrbitGhosts(projectile);
             }
 
             // ===== 命中时：扇形 SquishyLightParticle（鬼白）=====
@@ -192,7 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
 
             // ===== 额外效果：释放夺舍后的毁灭幽魂 =====
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 0; i++)
             {
                 // ===== 在命中点下方随机生成位置 =====
                 Vector2 spawnPos = target.Center + new Vector2(
@@ -297,6 +290,65 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             orbitAngle.Remove(id);
         }
 
+        private static void SpawnGhastlyVisageShards(Projectile projectile, NPC target)
+        {
+            Vector2 forward = projectile.velocity.SafeNormalize((target.Center - projectile.Center).SafeNormalize(Vector2.UnitX));
+            for (int i = 0; i < 7; i++)
+            {
+                float spread = MathHelper.Lerp(-0.68f, 0.68f, i / 6f);
+                Vector2 velocity = forward.RotatedBy(spread) * Main.rand.NextFloat(8f, 13.5f);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    target.Center + velocity.SafeNormalize(Vector2.UnitX) * 8f,
+                    velocity,
+                    ModContent.ProjectileType<RuinousSoul_GhastlyES>(),
+                    (int)(projectile.damage * 0.72f),
+                    projectile.knockBack * 0.5f,
+                    projectile.owner,
+                    target.whoAmI,
+                    i);
+            }
+        }
+
+        private static void SpawnRuinousGhostExplosionVisuals(Vector2 center)
+        {
+            Lighting.AddLight(center, new Color(200, 220, 255).ToVector3() * 0.45f);
+
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 26; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 26f;
+                float xScale = 1f + 0.22f * (float)System.Math.Sin(angle * 3f);
+                Vector2 offset = new Vector2((float)System.Math.Cos(angle) * 54f * xScale, (float)System.Math.Sin(angle) * 76f);
+                Vector2 velocity = offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2f, 6f);
+
+                SquishyLightParticle particle = new(
+                    center + offset,
+                    velocity,
+                    Main.rand.NextFloat(0.45f, 0.9f),
+                    Color.Lerp(new Color(240, 250, 255), new Color(130, 160, 220), Main.rand.NextFloat()),
+                    Main.rand.Next(18, 28)
+                );
+                GeneralParticleHandler.SpawnParticle(particle);
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 eyeOffset = new Vector2(i < 5 ? -22f : 22f, -22f) + Main.rand.NextVector2Circular(4f, 4f);
+                Dust eye = Dust.NewDustPerfect(
+                    center + eyeOffset,
+                    DustID.SpectreStaff,
+                    Main.rand.NextVector2Circular(1.5f, 1.5f),
+                    0,
+                    Color.White,
+                    Main.rand.NextFloat(1f, 1.4f));
+                eye.noGravity = true;
+            }
+        }
+
         private static void SpawnOrReleaseOrbitGhosts(Projectile projectile)
         {
             int ghostType = ModContent.ProjectileType<RuinousSoul_OrbitGhost>();
@@ -310,18 +362,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             if (ownedGhosts < RuinousSoul_OrbitGhost.ReleaseCap)
             {
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    Main.player[projectile.owner].Center,
-                    Vector2.Zero,
-                    ghostType,
-                    (int)(projectile.damage * 0.35f),
-                    projectile.knockBack,
-                    projectile.owner,
-                    0f,
-                    -1f,
-                    ownedGhosts);
-                return;
+                int ghostsToSpawn = RuinousSoul_OrbitGhost.SpawnBatchSize;
+                if (ownedGhosts + ghostsToSpawn > RuinousSoul_OrbitGhost.ReleaseCap)
+                    ghostsToSpawn = RuinousSoul_OrbitGhost.ReleaseCap - ownedGhosts;
+
+                Player owner = Main.player[projectile.owner];
+                for (int i = 0; i < ghostsToSpawn; i++)
+                {
+                    float spawnAngle = MathHelper.TwoPi * (ownedGhosts + i) / RuinousSoul_OrbitGhost.ReleaseCap;
+                    Vector2 spawnOffset = new Vector2(0f, -30f).RotatedBy(spawnAngle);
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        owner.Center + spawnOffset,
+                        Vector2.Zero,
+                        ghostType,
+                        (int)(projectile.damage * 0.35f),
+                        projectile.knockBack,
+                        projectile.owner,
+                        0f,
+                        -1f,
+                        ownedGhosts + i);
+                }
+
+                ownedGhosts += ghostsToSpawn;
+                if (ownedGhosts < RuinousSoul_OrbitGhost.ReleaseCap)
+                    return;
             }
 
             int targetIndex = FindReleaseTarget(projectile);

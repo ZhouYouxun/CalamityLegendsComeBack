@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.AdditionalText
             {
                 int effectID = Weapons.SHPC.Effects.AAARules.EffectRegistry.GetEffectIDByAmmo(item.type);
                 BalanceSHPC balance = new();
-                int panelDamage = balance.GetMaterialLeftClickDamage(effectID);
+                int panelDamage = balance.GetLeftClickBaseDamageForEffect(effectID);
                 int shotsPerAmmo = Weapons.SHPC.SHPCAmmoCapacity.GetCapacity(effectID);
 
                 // 通用提示

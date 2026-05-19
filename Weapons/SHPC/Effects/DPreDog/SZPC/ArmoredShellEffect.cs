@@ -32,11 +32,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         private const int SequentialShotDelay = 3;
 
         // 圆环整体前冲速度
-        private const float MiddleForwardSpeed = 24f;
+        private const float MiddleForwardSpeed = 19.2f;
         private const float SideForwardSpeedFactor = 0.7f;
 
         // 圆环自身膨胀速度
-        private const float RingExpandSpeed = 12f;
+        private const float RingExpandSpeed = 9.6f;
 
         // 特效层级数量
         private const int OuterFxCountPerRing = 16;

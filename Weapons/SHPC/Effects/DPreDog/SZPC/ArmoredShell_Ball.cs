@@ -1,5 +1,6 @@
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Magic;
+using CalamityMod.Dusts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -18,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public new string LocalizationCategory => "Projectiles.SHPC";
         private const float ExplosionLifetime = 10f;
         private const float ExplosionMaxScale = 2.35f;
-        private const float VolterionShotSpeed = 18f;
+        private const float VolterionShotSpeed = 14.4f;
         private const int VolterionShotLifetime = 12 * 15;
 
         public ref float OrbType => ref Projectile.ai[0];
@@ -48,11 +49,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 38;
-            Projectile.friendly = true;
+            Projectile.friendly = false;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 1;
+            Projectile.penetrate = -1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
             Projectile.timeLeft = 40;
@@ -128,10 +129,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
                 shotDirection * VolterionShotSpeed,
-                ModContent.ProjectileType<VolterionShot>(),
+                ModContent.ProjectileType<ArmoredShell_Lightning>(),
                 Projectile.damage,
                 Projectile.knockBack,
                 Projectile.owner,
+                1f,
                 1f
             );
             lightning.timeLeft = VolterionShotLifetime;
@@ -223,6 +225,44 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 mistDust.fadeIn = 1.18f;
                 mistDust.color = Color.Lerp(color, new Color(124, 255, 211), 0.42f);
             }
+
+            SpawnSkytideDragoonMuzzleFX(inwardDirection, color);
+        }
+
+        private void SpawnSkytideDragoonMuzzleFX(Vector2 direction, Color baseColor)
+        {
+            Vector2 muzzlePos = Projectile.Center + direction * 38f;
+
+            for (int i = 0; i < 2; i++)
+            {
+                Color color = Color.Lerp(Color.White, Main.rand.NextBool() ? Color.Orchid : Color.Cyan, 0.65f);
+                Vector2 pos = muzzlePos + direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-10f, 10f) + Main.rand.NextVector2Circular(3f, 3f);
+                Vector2 vel = direction.RotatedByRandom(0.4f) * Main.rand.NextFloat(2f, 8f);
+
+                Dust dust = Dust.NewDustPerfect(pos, ModContent.DustType<LightDust>(), vel, 0, default, Main.rand.NextFloat(1.85f, 2.2f));
+                dust.noGravity = true;
+                dust.color = color;
+
+                Particle spark = new BoltParticle(
+                    pos,
+                    -vel.RotatedBy(MathHelper.ToRadians(45f)) * Main.rand.NextFloat(1.5f, 1.8f),
+                    false,
+                    13,
+                    Main.rand.NextFloat(0.2f, 0.35f),
+                    color * 0.8f,
+                    new Vector2(1.2f, 1f),
+                    true,
+                    true,
+                    false,
+                    0.25f);
+                GeneralParticleHandler.SpawnParticle(spark);
+
+                if (i % 2 == 0)
+                {
+                    Particle orb = new CustomSpark(pos, Vector2.Zero, "CalamityMod/Particles/BloomCircle", false, 35, 0.75f, color * 0.75f, Vector2.One);
+                    GeneralParticleHandler.SpawnParticle(orb);
+                }
+            }
         }
 
         public static Color GetColor(float type) =>
@@ -247,11 +287,56 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             Texture2D bloomTex = Bloom.Value;
             Main.EntitySpriteDraw(bloomTex, drawPos, null, color * 0.5f, 0f, bloomTex.Size() * 0.5f, 0.42f, SpriteEffects.None);
+            DrawSkytideDragoonTipFlash(color);
             Main.spriteBatch.ExitShaderRegion();
             return true;
         }
 
-        public override bool? CanDamage() => ExplosionTimer > 0f ? false : base.CanDamage();
+        private void DrawSkytideDragoonTipFlash(Color baseColor)
+        {
+            Asset<Texture2D> archSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/ArchSmear");
+            Asset<Texture2D> orb = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");
+            Vector2 direction = Projectile.velocity.SafeNormalize(InwardDirection);
+            float fxRot = direction.ToRotation() + MathHelper.PiOver2;
+            float sine = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 55.5f / MathHelper.Pi);
+            Vector2 tipCenter = Projectile.Center + direction * 30f;
+
+            for (int i = 0; i < 6; i++)
+            {
+                Color tipColor = Color.Lerp(Color.Cyan, Color.Orchid, (i + 4) / 6f) with { A = 0 };
+                tipColor *= 0.3f;
+                Vector2 scale = new Vector2(0.25f - i * 0.04f, 1.5f + i * 0.15f) * Main.rand.NextFloat(0.9f, 1.1f);
+
+                Main.EntitySpriteDraw(
+                    archSmear.Value,
+                    tipCenter - Main.screenPosition + direction * 10f,
+                    null,
+                    tipColor,
+                    fxRot,
+                    archSmear.Size() * 0.5f,
+                    scale,
+                    SpriteEffects.None);
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                Color orbColor = Color.Lerp(Color.Lerp(Color.Cyan, Color.Orchid, (i + 2) / 6f), Color.White, i / 6f) with { A = 0 };
+                orbColor *= 0.5f;
+                Vector2 scale = new Vector2(Math.Abs(sine * 0.5f) + 0.1f, 1f) * (0.05f + i * 0.01f) * Main.rand.NextFloat(0.9f, 1.1f) * 2f;
+
+                Main.EntitySpriteDraw(
+                    orb.Value,
+                    tipCenter - Main.screenPosition + direction * 22f,
+                    null,
+                    orbColor,
+                    Main.rand.NextFloat(-5f, 5f),
+                    orb.Size() * 0.5f,
+                    scale,
+                    SpriteEffects.None);
+            }
+        }
+
+        public override bool? CanDamage() => false;
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
             CircularHitboxCollision(Projectile.Center, 20 * Projectile.scale, targetHitbox);

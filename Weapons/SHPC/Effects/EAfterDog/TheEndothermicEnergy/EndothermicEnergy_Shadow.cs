@@ -117,24 +117,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         private void BurstSplits(NPC target)
         {
-            int splitCount = Main.rand.Next(10, 15);
-            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-
-            for (int i = 0; i < splitCount; i++)
+            for (int arm = 0; arm < 6; arm++)
             {
-                float angle = baseAngle + MathHelper.TwoPi * i / splitCount + (i % 2 == 0 ? 0.12f : -0.12f);
-                float speed = Main.rand.NextFloat(8.5f, 13.5f);
-                Vector2 velocity = angle.ToRotationVector2() * speed;
+                float armAngle = OrbitAngle + MathHelper.TwoPi * arm / 6f;
+                float[] branchAngles =
+                {
+                    armAngle,
+                    armAngle + MathHelper.Pi / 6f,
+                    armAngle - MathHelper.Pi / 6f
+                };
+                float[] speeds = { 13.5f, 10.5f, 10.5f };
 
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    velocity,
-                    ModContent.ProjectileType<EndothermicEnergy_Split>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner
-                );
+                for (int branch = 0; branch < branchAngles.Length; branch++)
+                {
+                    Vector2 velocity = branchAngles[branch].ToRotationVector2() * speeds[branch];
+
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        velocity,
+                        ModContent.ProjectileType<EndothermicEnergy_Split>(),
+                        Projectile.damage,
+                        Projectile.knockBack,
+                        Projectile.owner,
+                        branch);
+                }
             }
 
             Vector2 forward = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);

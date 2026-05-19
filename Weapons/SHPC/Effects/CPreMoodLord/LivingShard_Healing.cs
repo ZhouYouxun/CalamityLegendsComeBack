@@ -21,15 +21,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Projectile.width = 20;
             Projectile.height = 20;
-            Projectile.friendly = false;
+            Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
             Projectile.extraUpdates = 1;
             Projectile.timeLeft = 420;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
-        public override bool? CanDamage() => false;
+        public override bool? CanDamage() => Projectile.ai[0] == 0f ? null : false;
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
@@ -52,6 +56,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             timer++;
             retargetTimer++;
+
+            if (Projectile.ai[0] == 0f && timer > 18)
+            {
+                Projectile.ai[0] = 1f;
+                Projectile.friendly = false;
+                Projectile.netUpdate = true;
+            }
 
             if (!IsValidTarget(targetPlayerIndex) || retargetTimer >= 12)
                 AcquireTargetPlayer();
@@ -77,6 +88,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Projectile.Kill();
 
             SpawnFlightEffects();
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Projectile.ai[0] = 1f;
+            Projectile.friendly = false;
+            Projectile.velocity = (Main.player[Projectile.owner].Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY)) * 16f;
+            Projectile.netUpdate = true;
         }
 
         public override bool PreDraw(ref Color lightColor)

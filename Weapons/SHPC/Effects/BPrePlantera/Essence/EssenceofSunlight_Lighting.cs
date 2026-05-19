@@ -1,20 +1,17 @@
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ModLoader;
-using Terraria.ID;
-using CalamityMod.Particles;
 using Terraria.Audio;
+using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 {
     public class EssenceofSunlight_Lighting : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
-
-        // 透明贴图
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        // 自定义计数器
         private int timer;
 
         public override void SetStaticDefaults()
@@ -25,20 +22,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void SetDefaults()
         {
-            Projectile.width = 16;
-            Projectile.height = 16;
-
+            Projectile.width = 8;
+            Projectile.height = 8;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 60;
-
-            Projectile.extraUpdates = 10; // ⚠️ 超高更新频率
-
+            Projectile.timeLeft = 70;
+            Projectile.extraUpdates = 4;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
+            Projectile.DamageType = DamageClass.Magic;
         }
 
         public override void AI()
@@ -46,16 +40,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             timer++;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            int targetIndex = (int)Projectile.ai[0];
+            float side = Projectile.ai[1] == 0f ? 1f : System.Math.Sign(Projectile.ai[1]);
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), 40f, 0.055f);
 
-            // ===== 前端高速电弧推进 =====
-            Vector2 futurePos = Projectile.Center + Projectile.velocity * 0.5f;
-
-            for (int i = 0; i < 4; i++)
+            if (Main.npc.IndexInRange(targetIndex))
             {
-                Vector2 vel =
-                    forward.RotatedByRandom(MathHelper.ToRadians(6f))
-                    * Main.rand.NextFloat(3.6f, 7.2f);
+                NPC target = Main.npc[targetIndex];
+                if (target.active && target.CanBeChasedBy(Projectile))
+                {
+                    float returnPower = Utils.GetLerpValue(8f, 54f, timer, true);
+                    Vector2 predictedCenter = target.Center + target.velocity * MathHelper.Lerp(0f, 10f, returnPower);
+                    Vector2 toTarget = (predictedCenter - Projectile.Center).SafeNormalize(forward);
+                    float fakeMissPower = 1f - returnPower;
+                    Vector2 perpendicularBias = toTarget.RotatedBy(MathHelper.PiOver2 * side) * 0.42f * fakeMissPower;
+                    Vector2 desired = (toTarget + perpendicularBias).SafeNormalize(toTarget);
+                    float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(1.6f), MathHelper.ToRadians(42f), (float)System.Math.Pow(returnPower, 1.25f));
+                    float easedDesiredRotation = forward.ToRotation().AngleTowards(desired.ToRotation(), maxTurn);
+                    Vector2 easedDesired = easedDesiredRotation.ToRotationVector2();
+                    float turnStrength = MathHelper.Lerp(0.05f, 0.72f, returnPower);
 
+                    forward = Vector2.Lerp(forward, easedDesired, turnStrength).SafeNormalize(desired);
+                    speed = MathHelper.Lerp(speed, 46f, returnPower * 0.08f);
+                }
+            }
+
+            Projectile.velocity = forward * speed;
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, new Color(255, 220, 100).ToVector3() * 0.45f);
+
+            Vector2 futurePos = Projectile.Center + Projectile.velocity * 0.5f;
+            int sparkCount = timer < 12 ? 2 : 3;
+            for (int i = 0; i < sparkCount; i++)
+            {
+                Vector2 vel = forward.RotatedByRandom(MathHelper.ToRadians(timer < 12 ? 3f : 7f)) * Main.rand.NextFloat(3.6f, 7.2f);
                 Particle spark = new GlowSparkParticle(
                     futurePos,
                     vel,
@@ -63,48 +81,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                     8,
                     0.12f,
                     new Color(255, 230, 120),
-                    new Vector2(2.4f, 0.35f),
+                    new Vector2(1.45f, 0.22f),
                     true,
                     false,
-                    1
-                );
+                    1);
 
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            // ===== 后方拖尾 =====
             if (Main.rand.NextBool(2))
             {
-                Vector2 backPos = Projectile.Center - forward * 10f;
-
                 Particle trail = new GlowSparkParticle(
-                    backPos,
+                    Projectile.Center - forward * 10f,
                     -forward * Main.rand.NextFloat(1.2f, 3f),
                     false,
                     10,
                     0.1f,
                     new Color(255, 200, 80),
-                    new Vector2(1.8f, 0.3f),
+                    new Vector2(1.1f, 0.22f),
                     true,
                     false,
-                    1
-                );
+                    1);
 
                 GeneralParticleHandler.SpawnParticle(trail);
             }
-
-            // ===== 直线锁定（不旋转模型）=====
-            Projectile.rotation = Projectile.velocity.ToRotation();
         }
 
-        public override bool? CanDamage() => timer > 2;
+        public override bool? CanDamage() => timer > 10;
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Vector2 pos = target.Center;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
 
-            // ===== 核心爆闪 =====
             for (int i = 0; i < 12; i++)
             {
                 Particle core = new GlowSparkParticle(
@@ -114,21 +123,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                     6,
                     0.2f,
                     new Color(255, 240, 150),
-                    new Vector2(1.5f, 0.5f),
+                    new Vector2(0.95f, 0.32f),
                     true,
                     false,
-                    1
-                );
+                    1);
                 GeneralParticleHandler.SpawnParticle(core);
             }
 
-            // ===== 向下冲击流 =====
             for (int i = 0; i < 18; i++)
             {
-                Vector2 vel =
-                    forward.RotatedByRandom(MathHelper.ToRadians(4.8f))
-                    * Main.rand.NextFloat(4.8f, 9.6f);
-
+                Vector2 vel = forward.RotatedByRandom(MathHelper.ToRadians(4.8f)) * Main.rand.NextFloat(4.8f, 9.6f);
                 Particle jet = new GlowSparkParticle(
                     pos,
                     vel,
@@ -136,22 +140,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                     Main.rand.Next(8, 14),
                     Main.rand.NextFloat(0.12f, 0.2f),
                     new Color(255, 220, 100),
-                    new Vector2(2.8f, 0.4f),
+                    new Vector2(1.55f, 0.26f),
                     true,
                     false,
-                    1
-                );
+                    1);
 
                 GeneralParticleHandler.SpawnParticle(jet);
             }
 
-            // ===== 闪电音效 =====
             SoundEngine.PlaySound(SoundID.Item94, pos);
         }
 
-        public override bool PreDraw(ref Color lightColor)
-        {
-            return false;
-        }
+        public override bool PreDraw(ref Color lightColor) => false;
     }
 }

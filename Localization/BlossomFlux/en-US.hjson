@@ -161,7 +161,11 @@ Mods: {
 				BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
 			}
 
-			Ranged.BFAimScope.DisplayName: BlossomFlux Aim Scope
+			Ranged: {
+				BFAimScope.DisplayName: BlossomFlux Aim Scope
+				SporeBomb.DisplayName: Spore Bomb
+			}
+
 			S_RSU_PhaseResonanceGuardShieldVisual.DisplayName: S_ R S U_ Phase Resonance Guard Shield Visual
 			TeachingProjectile.DisplayName: Teaching Projectile
 

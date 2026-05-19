@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
         private int timer;
         private int lockedTargetIndex = -1;
         private bool hasSplit;
-        private Color arcColor = Color.MediumOrchid;
+        private Color arcColor = new(88, 24, 160);
 
         private bool IsSplit => Projectile.ai[1] == 1f;
         private int CurveDirection => IsSplit ? Math.Sign(Projectile.ai[2]) : 0;
@@ -39,10 +39,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             arcColor = CurveDirection < 0
-                ? Color.MediumOrchid
+                ? new Color(72, 16, 132)
                 : CurveDirection > 0
-                    ? Color.Lerp(Color.DeepPink, Color.Orange, 0.5f)
-                    : Color.Lerp(Color.MediumOrchid, Color.Orange, 0.35f);
+                    ? new Color(126, 36, 205)
+                    : new Color(92, 20, 162);
 
             lockedTargetIndex = FindInitialTarget(1800f);
         }
@@ -102,7 +102,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                         i - 1f);
                 }
 
-                Projectile.Kill();
             }
 
             for (int i = 0; i < 9; i++)
@@ -111,7 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                     target.Center,
                     Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.8f) * Main.rand.NextFloat(3f, 10f),
                     Main.rand.NextFloat(0.7f, 1.1f),
-                    Main.rand.NextBool() ? arcColor : Color.MediumOrchid,
+                    Main.rand.NextBool() ? arcColor : new Color(38, 6, 86),
                     Main.rand.Next(14, 24)
                 );
 
@@ -139,7 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                     spawnPos,
                     velocity,
                     Main.rand.NextFloat(0.62f, 1f),
-                    Color.Lerp(arcColor, Color.White, Main.rand.NextFloat(0.25f, 0.65f)),
+                    Color.Lerp(arcColor, new Color(190, 112, 255), Main.rand.NextFloat(0.25f, 0.65f)),
                     Main.rand.Next(14, 22)
                 );
 
@@ -151,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                 Particle mist = new MediumMistParticle(
                     Projectile.Center - forward * Main.rand.NextFloat(10f, 30f) + right * Main.rand.NextFloat(-8f, 8f),
                     -forward * Main.rand.NextFloat(0.4f, 1.2f),
-                    Color.White,
+                    new Color(82, 24, 132),
                     Color.Transparent,
                     Main.rand.NextFloat(0.48f, 0.72f),
                     Main.rand.NextFloat(90f, 130f)
@@ -167,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                     Main.rand.NextBool() ? DustID.Shadowflame : DustID.PurpleTorch,
                     -forward * Main.rand.NextFloat(0.2f, 1.1f),
                     0,
-                    Main.rand.NextBool() ? arcColor : Color.BlueViolet,
+                    Main.rand.NextBool() ? arcColor : new Color(52, 8, 94),
                     Main.rand.NextFloat(0.9f, 1.2f)
                 );
                 dust.noGravity = true;
@@ -185,7 +184,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                 if (!npc.active || npc.friendly || npc.dontTakeDamage || npc.lifeMax <= 5)
                     continue;
 
-                float score = Vector2.Distance(npc.Center, Projectile.Center) * 0.45f + Vector2.Distance(npc.Center, mouse) * 0.55f;
+                int lineTargets = CountTargetsNearLine(npc.Center, 96f);
+                float score = Vector2.Distance(npc.Center, Projectile.Center) * 0.38f +
+                              Vector2.Distance(npc.Center, mouse) * 0.44f -
+                              lineTargets * 280f;
                 if (score > nearestScore)
                     continue;
 
@@ -194,6 +196,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
             }
 
             return targetIndex;
+        }
+
+        private int CountTargetsNearLine(Vector2 endpoint, float width)
+        {
+            int count = 0;
+            Vector2 start = Projectile.Center;
+            float lengthSquared = Vector2.DistanceSquared(start, endpoint);
+            if (lengthSquared <= 1f)
+                return 0;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.active || npc.friendly || npc.dontTakeDamage || npc.lifeMax <= 5)
+                    continue;
+
+                Vector2 toNPC = npc.Center - start;
+                float progress = MathHelper.Clamp(Vector2.Dot(toNPC, endpoint - start) / lengthSquared, 0f, 1f);
+                Vector2 closest = Vector2.Lerp(start, endpoint, progress);
+                if (Vector2.DistanceSquared(npc.Center, closest) <= width * width)
+                    count++;
+            }
+
+            return count;
         }
 
         private static bool TargetIsValid(int targetIndex)

@@ -155,8 +155,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 if (Main.projectile.IndexInRange(explosionIndex))
                 {
                     Projectile explosion = Main.projectile[explosionIndex];
-                    explosion.width = 100;
-                    explosion.height = 100;
+                    explosion.width = 260;
+                    explosion.height = 260;
                     explosion.Center = center;
                     explosion.netUpdate = true;
                 }
@@ -169,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 launchVel = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
                 // 👉 力度：原版30的80%
-                float launchPower = 30f * 0.8f;
+                float launchPower = 30f * 1.35f;
 
                 target.noTileCollide = false;
                 target.knockBackResist = 1f;
@@ -322,6 +322,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 d.noGravity = true;
             }
+
+            Particle shockwave = new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                Color.Lerp(StartColor, Color.White, 0.22f),
+                new Vector2(2.7f, 2.7f),
+                projectile.velocity.ToRotation(),
+                0.18f,
+                5.4f,
+                26);
+            GeneralParticleHandler.SpawnParticle(shockwave);
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)

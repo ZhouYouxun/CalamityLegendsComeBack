@@ -29,6 +29,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         private const float BarrageSpawnHalfHeight = 360f;
         private const float BarrageCenterShotSpeed = 31f;
         private const float BarrageSideShotSpeed = 19.5f;
+        private const float BarrageShotSpeedMultiplier = 1.2f;
+        private const float BarrageTargetRange = 2200f;
+        private const float BarrageTargetHalfWidth = 420f;
         private const float ChargeScreenEdgeMargin = 96f;
 
         private int timer;
@@ -216,10 +219,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
         private void FireBarrageVolley()
         {
-            Vector2 forward = AimDirection;
+            Vector2 forward = GetCurrentMouseAimDirection();
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 backfieldCenter = Owner.Center - forward * BarrageSpawnBackDistance + Owner.velocity * 0.35f;
             int shotDamage = (int)(Projectile.damage * 0.72f);
+            NPC lockedTarget = FindBarrageTarget(forward);
 
             for (int i = 0; i < BarrageVolleyCount; i++)
             {
@@ -230,18 +234,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 float sideOffset = laneRatio * BarrageSpawnHalfHeight + Main.rand.NextFloat(-28f, 28f);
                 float sideCompletion = MathHelper.Clamp(Math.Abs(sideOffset) / BarrageSpawnHalfHeight, 0f, 1f);
                 float depthOffset = Main.rand.NextFloat(-BarrageSpawnDepth * 0.5f, BarrageSpawnDepth * 0.5f);
-                float shotSpeed = MathHelper.Lerp(BarrageCenterShotSpeed, BarrageSideShotSpeed, MathHelper.SmoothStep(0f, 1f, sideCompletion));
+                float shotSpeed = MathHelper.Lerp(BarrageCenterShotSpeed, BarrageSideShotSpeed, MathHelper.SmoothStep(0f, 1f, sideCompletion)) * BarrageShotSpeedMultiplier;
                 Vector2 spawnPosition =
                     backfieldCenter +
                     right * sideOffset +
                     forward * depthOffset +
                     Main.rand.NextVector2Circular(10f, 10f);
 
-                Vector2 aimPoint =
-                    Owner.Center +
-                    forward * 980f +
-                    right * sideOffset * 0.08f +
-                    Main.rand.NextVector2Circular(32f, 32f);
+                Vector2 aimPoint = lockedTarget is not null
+                    ? lockedTarget.Center + lockedTarget.velocity * 5f
+                    : Owner.Center + forward * 980f + right * sideOffset * 0.08f;
+
+                aimPoint += Main.rand.NextVector2Circular(lockedTarget is not null ? 18f : 32f, lockedTarget is not null ? 18f : 32f);
 
                 Vector2 shotVelocity = (aimPoint - spawnPosition).SafeNormalize(forward) * (shotSpeed + Main.rand.NextFloat(-0.7f, 0.7f));
 
@@ -256,6 +260,47 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                     Main.rand.NextFloat(MathHelper.TwoPi),
                     Main.rand.NextFloat(MathHelper.TwoPi));
             }
+        }
+
+        private Vector2 GetCurrentMouseAimDirection()
+        {
+            Vector2 aimTarget = Owner.Calamity().mouseWorld;
+            if (aimTarget == Vector2.Zero)
+                aimTarget = Main.MouseWorld;
+
+            return (aimTarget - Owner.Center).SafeNormalize(AimDirection);
+        }
+
+        private NPC FindBarrageTarget(Vector2 forward)
+        {
+            NPC bestTarget = null;
+            float bestScore = float.MaxValue;
+            Vector2 origin = Owner.Center;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile, false))
+                    continue;
+
+                Vector2 offset = npc.Center - origin;
+                float along = Vector2.Dot(offset, forward);
+                if (along <= 0f || along > BarrageTargetRange)
+                    continue;
+
+                float lateral = Math.Abs(Vector2.Dot(offset, forward.RotatedBy(MathHelper.PiOver2)));
+                float allowedWidth = BarrageTargetHalfWidth + npc.width * 0.5f;
+                if (lateral > allowedWidth)
+                    continue;
+
+                float score = lateral * 2.8f + along * 0.18f;
+                if (score >= bestScore)
+                    continue;
+
+                bestScore = score;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
         }
 
         private void SpawnChargeConvergenceEffects(float chargeCompletion)

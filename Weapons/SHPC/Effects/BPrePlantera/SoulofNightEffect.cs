@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 dir = forward.RotatedBy(offset);
 
                 // 中间更快，两侧更慢
-                float speed = MathHelper.Lerp(16f, 10f, Math.Abs(offset) / 0.625f);
+                float speed = MathHelper.Lerp(20f, 14f, Math.Abs(offset) / 0.625f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),

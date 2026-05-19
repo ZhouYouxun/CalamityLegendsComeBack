@@ -190,6 +190,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             CurrentEffect.ModifyHitNPC(Projectile, owner, target, ref modifiers);
         }
 
+        public override bool? CanDamage()
+        {
+            Player owner = Main.player[Projectile.owner];
+            return CurrentEffect.CanDamage(Projectile, owner);
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player owner = Main.player[Projectile.owner];

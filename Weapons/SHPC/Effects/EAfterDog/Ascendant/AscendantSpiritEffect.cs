@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 Vector2 spawnOffset = launchDirection * 96f + normal * (i - 2f) * 8f;
                 Vector2 spawnPosition = projectile.Center + spawnOffset;
                 Color themeColor = AscendantSpirit_PROJ.RandomThemeColor();
-                float launchDelay = 9f + i * 10f;
+                float launchDelay = 4f + i * 5f;
 
                 int projectileIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),

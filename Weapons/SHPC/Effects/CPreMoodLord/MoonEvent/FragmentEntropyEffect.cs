@@ -153,8 +153,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             Vector2 center = projectile.Center;
 
-            SpawnEntropyFanBurst(projectile, center);
-            FireEntropyBursts(projectile, owner, center);
+            //SpawnEntropyFanBurst(projectile, center);
+            //FireEntropyBursts(projectile, owner, center);
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = -0.48f }, center);
         }
@@ -165,22 +165,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 return;
 
             Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
-            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
-            float[] offsets = { -5f, 0f, 5f };
-
-            for (int i = 0; i < offsets.Length; i++)
-            {
-                Vector2 direction = forward.RotatedBy(MathHelper.ToRadians(offsets[i]));
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    center + direction * 10f + side * ((i - 1f) * 4f),
-                    direction * 15.5f,
-                    ModContent.ProjectileType<FragmentEntropy_CosmicFire>(),
-                    projectile.damage,
-                    projectile.knockBack,
-                    projectile.owner
-                );
-            }
+            Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                center + forward * 10f,
+                forward * 18.6f,
+                ModContent.ProjectileType<FragmentEntropy_CosmicFire>(),
+                projectile.damage,
+                projectile.knockBack,
+                projectile.owner
+            );
         }
 
         private static void SpawnEntropyFanBurst(Projectile projectile, Vector2 center)

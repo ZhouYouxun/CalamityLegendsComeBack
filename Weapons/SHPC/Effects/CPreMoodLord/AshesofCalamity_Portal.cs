@@ -177,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             shootTimer++;
 
             float shootProgress = Utils.GetLerpValue(0f, 100f, lifeTimer, true);
-            int currentDelay = (int)MathHelper.Lerp(18f, 4f, shootProgress);
+            int currentDelay = (int)MathHelper.Lerp(9f, 2f, shootProgress);
 
             if (shootTimer >= currentDelay && Projectile.owner == Main.myPlayer)
             {

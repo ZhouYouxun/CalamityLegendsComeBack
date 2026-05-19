@@ -91,109 +91,51 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private void SpawnFlightEffects(bool firstSubstep)
         {
+            if (!firstSubstep)
+                return;
+
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
 
             // 二阶段原本的螺旋拖尾
-            float spiralOffsetAmount = 12f + (float)Math.Sin(helixAngle) * 6f;
-            Vector2 spiralOffset = side * spiralOffsetAmount;
+            Vector2 center = Projectile.Center + side * ((float)Math.Sin(helixAngle) * 9f);
+            float intensity = 0.9f + 0.22f * (float)Math.Sin(pulseAngle * 1.4f);
+            Color mainColor = BladePurple;
+            Color acidColor = BladeBlood;
+            Vector2 velocity =
+                -direction * Main.rand.NextFloat(4.6f, 8.2f) +
+                side * (float)Math.Cos(helixAngle * 1.25f) * Main.rand.NextFloat(0.8f, 2.1f);
 
             GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                Projectile.Center + spiralOffset,
-                -Projectile.velocity * 0.28f + side * 0.4f,
-                "CalamityMod/Particles/BloomCircle",
+                center + Main.rand.NextVector2Circular(8f, 8f),
+                velocity,
+                "CalamityMod/Particles/VerticalSmear",
                 false,
-                12,
-                0.046f,
-                Color.Lerp(BladePurple, Color.White, 0.08f),
-                new Vector2(0.55f, 1.55f),
-                true,
-                false,
-                Main.rand.NextFloat(-0.1f, 0.1f),
-                false,
-                false,
-                0.9f));
-
-            GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                Projectile.Center - direction * Main.rand.NextFloat(6f, 20f) + Main.rand.NextVector2Circular(9f, 9f),
-                -Projectile.velocity * Main.rand.NextFloat(0.025f, 0.08f) + side * Main.rand.NextFloat(-0.8f, 0.8f),
-                Main.rand.NextBool(3) ? BladeDark : new Color(24, 0, 34),
-                Main.rand.Next(22, 38),
-                Main.rand.NextFloat(0.72f, 1.35f),
-                0.48f,
-                Main.rand.NextFloat(-0.1f, 0.1f),
-                false));
+                Main.rand.Next(15, 23),
+                Main.rand.NextFloat(1.8f, 2.8f) * intensity,
+                Color.Lerp(mainColor, acidColor, Main.rand.NextFloat(0.25f, 0.8f)),
+                new Vector2(0.18f, 1f)));
 
             if (firstSubstep)
             {
-                for (int i = 0; i < 5; i++)
-                {
-                    Dust dust = Dust.NewDustPerfect(
-                        Projectile.Center + spiralOffset + Main.rand.NextVector2Circular(16f, 16f),
-                        Main.rand.NextBool() ? DustID.Shadowflame : DustID.PurpleTorch,
-                        -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.18f) + side * Main.rand.NextFloat(-2.2f, 2.2f),
-                        0,
-                        Color.Lerp(BladePurple, BladeBlood, Main.rand.NextFloat(0.1f, 0.65f)),
-                        Main.rand.NextFloat(1.35f, 2.2f));
-                    dust.noGravity = true;
-                }
-
-                for (int i = 0; i < 4; i++)
-                {
-                    GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
-                        (-direction).RotatedByRandom(0.72f) * Main.rand.NextFloat(3.5f, 11f),
-                        false,
-                        Main.rand.Next(16, 30),
-                        Main.rand.NextFloat(1.05f, 1.9f),
-                    Color.Lerp(BladeDark, Color.Lerp(BladePurple, BladeBlood, Main.rand.NextFloat(0.15f, 0.75f)), 0.72f)));
-                }
-
                 // 把原一阶段的“蓄能感”脉冲并到现在的直线飞行里
-                if (flightTimer % 2 == 0)
-                {
-                    float chargePulse = 0.5f + 0.5f * (float)Math.Sin(pulseAngle);
-                    Vector2 ringOffset = (pulseAngle * 1.55f).ToRotationVector2() * (8f + chargePulse * 10f);
-
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                        Projectile.Center,
-                        Vector2.Zero,
-                        Color.Lerp(BladeDark, BladePurple, chargePulse) * 0.9f,
-                        "CalamityMod/Particles/LargeBloom",
-                        new Vector2(1.15f, 2.4f),
-                        Main.rand.NextFloat(-0.15f, 0.15f),
-                        (0.35f + chargePulse * 0.16f) * 0.05f,
-                        0f,
-                        14,
-                        false));
-
-                    Dust warningDust = Dust.NewDustPerfect(
-                        Projectile.Center + ringOffset,
-                        Main.rand.NextBool() ? DustID.Shadowflame : DustID.PurpleTorch,
-                        (-ringOffset).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.3f, 1.2f),
-                        0,
-                        Color.Lerp(BladePurple, Color.White, 0.2f),
-                        Main.rand.NextFloat(1.4f, 2.1f));
-                    warningDust.noGravity = true;
-                }
-
-                if (flightTimer % 3 == 0)
+                if (flightTimer % 4 == 0)
                 {
                     GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                        Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                        -direction.RotatedByRandom(0.22f) * Main.rand.NextFloat(4f, 12f),
-                        "CalamityMod/Particles/VerticalSmearRagged",
+                        center,
+                        Vector2.Zero,
+                        "CalamityMod/Particles/BloomCircle",
                         false,
-                        20,
-                    Main.rand.NextFloat(0.08f, 0.14f),
-                    Main.rand.NextBool() ? BladeDark : BladeBlood,
-                    new Vector2(0.011f, 0.0775f),
+                        10,
+                        0.055f,
+                        Color.Lerp(BladePurple, Color.White, 0.12f),
+                        new Vector2(1f, 1f),
+                        true,
+                        false,
+                        Main.rand.NextFloat(-0.12f, 0.12f),
                         false,
                         false,
-                        direction.ToRotation(),
-                        false,
-                        false,
-                        0.86f));
+                        0.65f));
                 }
             }
         }
@@ -260,6 +202,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override bool PreDraw(ref Color lightColor)
         {
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
+            const float magicDrawScale = 2.5f;
 
             // === 主颜色 ===
             Color mainColor = BladePurple;
@@ -310,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 BladeDark * 1.15f,
                 0f,
                 bloom.Size() / 2f,
-                0.0625f,
+                0.0625f * magicDrawScale,
                 SpriteEffects.None
             );
 
@@ -321,12 +264,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 mainColor * 1.2f,
                 0f,
                 bloom.Size() / 2f,
-                0.036f,
+                0.036f * magicDrawScale,
                 SpriteEffects.None
             );
 
             // === VerticalSmearRagged（修前伸过长）===
-            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearRagged").Value;
+            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmear").Value;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
@@ -334,20 +277,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Vector2 smearPos = drawPos + forward * Projectile.velocity.Length() * 0.5f;
             smearPos = drawPos; // 直接用弹幕中心，不往前推
 
-            for (int i = 0; i < 7; i++)
+            float twistSpin = Main.GlobalTimeWrappedHourly * 8.8f + (float)Math.Sin(pulseAngle * 1.7f) * 0.42f;
+            for (int i = 0; i < 9; i++)
             {
-                float rotation = Projectile.rotation + i * MathHelper.TwoPi / 7f + Main.GlobalTimeWrappedHourly * (i % 2 == 0 ? 2.1f : -1.7f);
-                Color smearColor = i % 3 == 0 ? BladeDark : Color.Lerp(mainColor, BladeBlood, i / 6f);
+                float completion = i / 8f;
+                float twist = (float)Math.Sin(twistSpin * 1.6f + i * 0.74f) * 0.26f;
+                float rotation = Projectile.rotation + twistSpin * (i % 2 == 0 ? 0.42f : -0.32f) + i * MathHelper.TwoPi / 9f + twist;
+                Color smearColor = i % 3 == 0 ? BladeDark : Color.Lerp(mainColor, BladeBlood, completion);
                 smearColor.A = 0;
 
                 Main.EntitySpriteDraw(
                     smear,
                     smearPos,
                     null,
-                    smearColor * (0.72f - i * 0.055f),
+                    smearColor * (0.68f - i * 0.045f),
                     rotation,
                     smear.Size() / 2f,
-                    new Vector2(0.34f + i * 0.025f, 0.96f + i * 0.08f) * 0.05f,
+                    new Vector2(0.18f + i * 0.014f, 1.0f + i * 0.08f) * 0.08f * magicDrawScale,
                     SpriteEffects.None
                 );
             }
@@ -362,7 +308,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     Color.Lerp(Color.White, mainColor, 0.45f) * (0.54f - i * 0.07f),
                     Projectile.rotation + i * MathHelper.PiOver2,
                     star.Size() / 2f,
-                    new Vector2(0.55f, 1.55f + i * 0.24f) * 0.05f,
+                    new Vector2(0.55f, 1.55f + i * 0.24f) * 0.05f * magicDrawScale,
                     SpriteEffects.None
                 );
             }

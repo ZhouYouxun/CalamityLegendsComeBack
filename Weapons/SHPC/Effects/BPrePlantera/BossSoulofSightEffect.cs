@@ -27,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             spawnPos = projectile.Center;
             traveledDistance = 0f;
             lifeTimer = 0;
+            projectile.timeLeft = (int)(projectile.timeLeft * 1.3f);
         }
 
         public override void AI(Projectile projectile, Player owner)
@@ -34,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             lifeTimer++;
             traveledDistance = Vector2.Distance(spawnPos, projectile.Center);
 
-            if (traveledDistance >= 30f * 16f)
+            if (traveledDistance >= 39f * 16f)
                 projectile.Kill();
         }
 
@@ -65,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 if (Main.projectile.IndexInRange(soulIndex))
                 {
                     Projectile soul = Main.projectile[soulIndex];
-                    soul.timeLeft = 160;
+                    soul.timeLeft = 208;
                     soul.extraUpdates = 1;
                 }
             }

@@ -5,22 +5,22 @@ Mods: {
 				NewLegendPristineFury: {
 					DisplayName: Pristine Fury - Return of Legends
 					PristineFuryIntro: "[c/FF9340:Current imprint: {0}.]"
-					RightClick: "[c/FFB066:Right Click: fires a rapid six-burst scatter barrage. Pellets leave burning ground fire on tile impact.]"
+					RightClick: "[c/FFB066:Temporary debug: Right Click cycles imprints in order. The original scatter barrage is commented out in code, not removed.]"
 					Hook: "[c/9AEAFF:Hold Left + Right for 3 seconds to launch the extraction hook. Valid bosses grant their imprint; other enemies take heavy hook damage.]"
-					Left_Idle: "[c/FF9340:Left Click: short, direct pristine flame jets.]"
-					Left_EvilT2: "[c/D246EB:Left Click: red and violet twin-helix flame jets.]"
-					Left_SlimeGod: "[c/BC4EFF:Left Click: once per second, fires five overloaded ricochet bolts that burst on every bounce.]"
-					Left_HardMode: "[c/FF8E42:Left Click: pressure-wave breath, three piercing shockwaves per volley.]"
-					Left_Prime: "[c/FFCE5C:Left Click: traditional heavy flamethrower with gold-hot flame.]"
-					Left_BrimstoneElemental: "[c/F63740:Left Click: channels for 3 seconds, then releases a brimstone beam and splitting parallel shards.]"
-					Left_Plantera: "[c/5EF26C:Left Click: hold to charge, release after a full charge to fire four healing adhesive spores.]"
-					Left_Aurora: "[c/7ED2FF:Left Click: sustained astral aurora flame, reshaped from Aurora Fire.]"
-					Left_Goliath: "[c/8BF249:Left Click: plague smoke breath that slows, splits into plague bees, and infects dying targets.]"
-					Left_Moonlord: "[c/7E9CFF:Left Click: mixed celestial breath: solar fire, nebula clouds, vortex beams, and stardust shards.]"
-					Left_Providence: "[c/FFDC76:Left Click: launches a profaned mortar rocket that leaves a burning damage zone.]"
-					Left_Polterghast: "[c/D288FF:Left Click: 550 RPM phantom star breath with drifting soul-like homing stars.]"
-					Left_Dog: "[c/6049D6:Left Click: void-stream breath that tears delayed rifts and impossible secondary bursts.]"
-					Left_Dragon: "[c/FF6C32:Left Click: 330 RPM dragon breath shells; each volley launches 18 spark-splitting pellets.]"
+					Left_Idle: "[c/FF9340:Left Click: compact ember jet with particle-only muzzle bloom.]"
+					Left_EvilT2: "[c/D246EB:Left Click: corrupt twin-helix flame that braids violet smoke, star pulses, and Brain Rot.]"
+					Left_SlimeGod: "[c/BC4EFF:Left Click: five overloaded bolts arc toward targets and ricochet as violet capacitor bursts.]"
+					Left_HardMode: "[c/FF8E42:Left Click: three Wall-pressure cones inflate into orange shock breath and searing waves.]"
+					Left_Prime: "[c/FFCE5C:Left Click: gear-toothed gold firestream with stepping cinders and mechanical spark teeth.]"
+					Left_BrimstoneElemental: "[c/F63740:Left Click: charge, then lance out a brimstone smear beam with red brand geometry.]"
+					Left_Plantera: "[c/5EF26C:Left Click: hold and release four wild-bloom spores that weave, heal, and home through petal runes.]"
+					Left_Aurora: "[c/7ED2FF:Left Click: aurora ribbon fog turns in five-point astral bends and stains enemies with starlight.]"
+					Left_Goliath: "[c/8BF249:Left Click: blight cloud breath sheds plague swarmlets and infects targets for death-release bursts.]"
+					Left_Moonlord: "[c/7E9CFF:Left Click: chromatic lunar fire cycles solar, nebula, vortex, and stardust particle grammars.]"
+					Left_Providence: "[c/FFDC76:Left Click: profaned cleansing mortar blooms into a stationary consecrated fire field.]"
+					Left_Polterghast: "[c/D288FF:Left Click: Halley-soul stars drift, awaken, and chase in violet spectral rose patterns.]"
+					Left_Dog: "[c/6049D6:Left Click: Photoviscerator void stream tears delayed rifts and black accretion disks.]"
+					Left_Dragon: "[c/FF6C32:Left Click: Yharon-style 18-pellet fan that splits into pressure cinders on impact.]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
@@ -54,11 +54,40 @@ Mods: {
 				PristineFuryRightPellet.DisplayName: Pristine Scatter Pellet
 				PristineFuryGroundFlame.DisplayName: Pristine Ground Flame
 				PristineFuryImpactExplosion.DisplayName: Pristine Impact Burst
+				PFIdleFlame.DisplayName: Pristine Ember Jet
+				PFEvilT2Flame.DisplayName: Corrupt Helix Flame
+				PFSlimeGodOverloadedFlame.DisplayName: Overloaded Slime Capacitor
+				PFHardModePressureFlame.DisplayName: Wall Pressure Flame
+				PFPrimeGearFlame.DisplayName: Prime Gear Firestream
+				PFBrimstoneElementalFlame.DisplayName: Brimstone Brand Lance
+				PFPlanteraWildfireFlame.DisplayName: Wildfire Bloom Spore
+				PFAuroraRibbonFlame.DisplayName: Astral Aurora Ribbon
+				PFGoliathBlightFlame.DisplayName: Plaguebringer Blight Breath
+				PFMoonlordChromaticFlame.DisplayName: Chromatic Lunar Flame
+				PFProvidenceCleansingFlame.DisplayName: Cleansing Profaned Blaze
+				PFPolterghastHalleyFlame.DisplayName: Halley Phantom Soul
+				PFDogPhotovisceratorFlame.DisplayName: Photoviscerator Void Stream
+				PFDragonPristineFlame.DisplayName: Pristine Dragon Breath
+				PFAurora_Flame.DisplayName: P F Aurora_ Flame
+				PFBrimstoneElemental_Flame.DisplayName: P F Brimstone Elemental_ Flame
+				PFDog_Flame.DisplayName: P F Dog_ Flame
+				PFDragon_Flame.DisplayName: P F Dragon_ Flame
+				PFEvilT2_Flame.DisplayName: P F Evil T2_ Flame
+				PFGoliath_Flame.DisplayName: P F Goliath_ Flame
+				PFHardMode_Flame.DisplayName: P F Hard Mode_ Flame
+				PFIdle_Flame.DisplayName: P F Idle_ Flame
+				PFMoonlord_Flame.DisplayName: P F Moonlord_ Flame
+				PFPlantera_Flame.DisplayName: P F Plantera_ Flame
+				PFPolterghast_Flame.DisplayName: P F Polterghast_ Flame
+				PFPrime_Flame.DisplayName: P F Prime_ Flame
+				PFProvidence_Flame.DisplayName: P F Providence_ Flame
+				PFSlimeGod_Flame.DisplayName: P F Slime God_ Flame
 			}
 		}
 
 		PristineFury: {
 			MarkExtracted: Extracted {0}'s imprint
+			DebugMarkSwitched: Debug switched to {0}'s imprint
 
 			Marks: {
 				Idle: Default

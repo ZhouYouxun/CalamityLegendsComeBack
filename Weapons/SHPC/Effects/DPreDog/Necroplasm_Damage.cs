@@ -48,9 +48,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 if (target != null)
                 {
                     float trackingPower = Utils.GetLerpValue(20f, 120f, timer, true);
-                    float speed = MathHelper.Lerp(8f, 19f, trackingPower);
+                    float lateLifeBoost = Projectile.timeLeft < 90 ? 2f : 1f;
+                    float speed = MathHelper.Lerp(8f, 19f, trackingPower) * lateLifeBoost;
                     Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, MathHelper.Lerp(0.08f, 0.22f, trackingPower));
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, MathHelper.Lerp(0.08f, 0.34f, trackingPower));
                     return;
                 }
             }

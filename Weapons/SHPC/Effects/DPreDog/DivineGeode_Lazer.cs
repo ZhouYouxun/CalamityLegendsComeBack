@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.hostile = false;
 
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 120;
+            Projectile.timeLeft = 500;
 
             Projectile.tileCollide = true;
             Projectile.penetrate = 6;
@@ -42,6 +42,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override void AI()
         {
             timer++;
+
+            if (timer > 80)
+                ForceConvergeToTarget();
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
@@ -167,6 +170,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile.velocity.Y = -oldVelocity.Y;
 
             return false;
+        }
+
+        private void ForceConvergeToTarget()
+        {
+            NPC target = null;
+            float bestDistance = 1400f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                target = npc;
+            }
+
+            if (target is null)
+                return;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+            float speed = Math.Max(Projectile.velocity.Length(), 18f);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.18f);
         }
 
 

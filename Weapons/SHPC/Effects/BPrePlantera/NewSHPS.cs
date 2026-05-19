@@ -159,6 +159,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         private float orbitOffset; // 每个实例的初始相位偏移
         private void AI_Preset0()
         {
+            if (Projectile.ai[2] == 4f)
+            {
+                int targetIndex = (int)Projectile.localAI[0];
+                if (Main.npc.IndexInRange(targetIndex))
+                {
+                    NPC strikeTarget = Main.npc[targetIndex];
+                    if (strikeTarget.active && strikeTarget.CanBeChasedBy(Projectile))
+                    {
+                        hasDetached = true;
+                        Vector2 desiredDirection = (strikeTarget.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                        float speed = MathHelper.Lerp(18f, 28f, Utils.GetLerpValue(420f, 36f, Projectile.Distance(strikeTarget.Center), true));
+                        Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.28f);
+                        Projectile.rotation = Projectile.velocity.ToRotation();
+                        return;
+                    }
+                }
+
+                Projectile.velocity *= 1.02f;
+                return;
+            }
+
             // ===== 如果已经脱离过，就永远冲锋 =====
             if (hasDetached)
             {
@@ -173,11 +194,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 if (mainProj.active)
                 {
-                    float a = 60f;
-                    float b = 30f;
+                    float syncedPulse = 0.5f + 0.5f * (float)Math.Sin(Main.GameUpdateCount * 0.075f + boundMainProjectileID * 0.23f);
+                    float orbitScale = MathHelper.SmoothStep(0.58f, 1.45f, syncedPulse);
+                    float a = 62f * orbitScale;
+                    float b = 30f * orbitScale;
 
-                    orbitAngle += 0.05f;
-                    ellipseRotation += 0.02f;
+                    orbitAngle += 0.064f;
+                    ellipseRotation += 0.024f;
 
                     Vector2 ellipse = new Vector2(
                         (float)Math.Cos(orbitAngle + orbitOffset) * a,
@@ -187,8 +210,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     Projectile.Center = mainProj.Center + ellipse;
 
                     Vector2 futurePos = mainProj.Center + new Vector2(
-                        (float)Math.Cos(orbitAngle + orbitOffset + 0.1f) * a,
-                        (float)Math.Sin(orbitAngle + orbitOffset + 0.1f) * b
+                        (float)Math.Cos(orbitAngle + orbitOffset + 0.12f) * a,
+                        (float)Math.Sin(orbitAngle + orbitOffset + 0.12f) * b
                     ).RotatedBy(ellipseRotation);
 
                     Projectile.velocity = futurePos - Projectile.Center;
@@ -215,14 +238,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
                 Vector2 normal = forward.RotatedBy(MathHelper.Pi / 2f);
 
-                float wave = (float)Math.Sin(sinTimer * 0.25f) * 8f;
-                Projectile.Center += forward * 10f + normal * wave;
+                float wave = (float)Math.Sin(sinTimer * 0.48f) * 11f;
+                Projectile.Center += forward * 14f + normal * wave;
 
-                if (sinTimer > 30)
+                if (sinTimer > 18)
                 {
                     startedHoming = true;
 
-                    float dist = 800f;
+                    float dist = 1100f;
                     int index = -1;
                     foreach (NPC n in Main.npc)
                     {
@@ -249,12 +272,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
 
                 Projectile.velocity = (
-                    Projectile.velocity * 17f +
-                    desiredDir * (20f * 1.25f)
-                ) / 18f;
+                    Projectile.velocity * 9f +
+                    desiredDir * 34f
+                ) / 10f;
 
                 float speed = Projectile.velocity.Length();
-                speed = MathHelper.Lerp(speed, 14f, 0.08f);
+                speed = MathHelper.Lerp(speed, 21f, 0.18f);
                 Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
             }
             else

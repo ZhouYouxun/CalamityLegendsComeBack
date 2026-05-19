@@ -69,14 +69,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 dust.noGravity = true;
             }
 
-            if (data.empowered && data.linkedPlayerIndex >= 0 && data.linkedPlayerIndex < Main.maxPlayers)
-            {
-                Player linkedPlayer = Main.player[data.linkedPlayerIndex];
-                if (linkedPlayer.active && !linkedPlayer.dead)
-                {
-                    CreateBloodLink(projectile.Center, linkedPlayer.Center);
-                }
-            }
         }
 
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
@@ -351,16 +343,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            int count = empowered ? 8 : 5;
+            const int count = 8;
             for (int i = 0; i < count; i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, empowered ? 10f : 8f);
+                Vector2 velocity = (MathHelper.TwoPi * i / count).ToRotationVector2() * Main.rand.NextFloat(7f, empowered ? 12f : 10f);
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     center + Main.rand.NextVector2Circular(12f, 12f),
                     velocity,
                     ModContent.ProjectileType<BloodstoneCore_BloodOrb>(),
-                    (int)(projectile.damage * 0.35f),
+                    (int)(projectile.damage * (empowered ? 0.95f : 0.75f)),
                     projectile.knockBack * 0.35f,
                     projectile.owner);
             }

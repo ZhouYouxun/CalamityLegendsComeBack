@@ -54,35 +54,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             if (forward == Vector2.Zero)
                 forward = Vector2.UnitX;
 
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            float[] angleOffsets =
-            {
-                MathHelper.ToRadians(-10f),
-                0f,
-                MathHelper.ToRadians(10f)
-            };
-
-            for (int i = 0; i < angleOffsets.Length; i++)
-            {
-                bool isBlueVariant = Main.rand.NextBool(5);
-                Vector2 direction = forward.RotatedBy(angleOffsets[i]).SafeNormalize(forward);
-                Vector2 spawnPosition = projectile.Center + forward * 10f + normal * (i - 1f) * 8f;
-                float speed = isBlueVariant ? 13.8f : 15.6f;
-                int damage = isBlueVariant ? projectile.damage * 3 : projectile.damage;
-                float homingDelayFrames = isBlueVariant ? 46f : 24f;
-
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    direction * speed,
-                    ModContent.ProjectileType<FragmentNebula_Star>(),
-                    damage,
-                    projectile.knockBack,
-                    owner.whoAmI,
-                    isBlueVariant ? 1f : 0f,
-                    homingDelayFrames,
-                    i);
-            }
+            Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center + forward * 10f,
+                Vector2.Zero,
+                ModContent.ProjectileType<FragmentNebula_BurstRelay>(),
+                projectile.damage,
+                projectile.knockBack,
+                owner.whoAmI,
+                forward.X,
+                forward.Y);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
 using CalamityMod.Items.Materials;
@@ -38,11 +39,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         {
             portalTimer = 0f;
             lifeTimer = 0;
+            projectile.localAI[0] = 0f;
+
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+            gp.releaseOnly = HasExistingBlackHole(projectile);
 
             projectile.velocity *= 0.8f;
             projectile.tileCollide = false;
             projectile.penetrate = -1;
             projectile.timeLeft = Math.Max(projectile.timeLeft, 420);
+
+            if (gp.releaseOnly)
+            {
+                projectile.timeLeft = 2;
+                return;
+            }
 
             // 出生时先来一圈黑暗塌缩感
             for (int i = 0; i < 14; i++)
@@ -81,6 +92,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
+            if (projectile.GetGlobalProjectile<DarkPlasma_GP>().releaseOnly)
+            {
+                projectile.Kill();
+                return;
+            }
+
             portalTimer += 0.03f;
             lifeTimer++;
 
@@ -98,6 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             projectile.rotation += 0.045f;
 
             // ===== 吸附敌人 =====
+            bool bossAlive = BossIsAlive();
             float range = 1800f;
             for (int i = 0; i < Main.maxNPCs; i++)
             {
@@ -109,11 +127,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 if (distance < range)
                 {
                     Vector2 pull = (projectile.Center - npc.Center).SafeNormalize(Vector2.UnitY);
-                    float strength = MathHelper.Lerp(0.08f, 0.95f, 1f - distance / range);
+                    float closeness = 1f - distance / range;
 
-                    npc.velocity += pull * strength;
-                    if (distance < 95f)
-                        npc.velocity *= 0.92f;
+                    if (!bossAlive)
+                    {
+                        Vector2 desiredVelocity = pull * MathHelper.Lerp(1.8f, 9.5f, closeness);
+                        npc.velocity = Vector2.Lerp(npc.velocity, desiredVelocity, MathHelper.Lerp(0.025f, 0.18f, closeness));
+                        if (distance < 120f)
+                            npc.velocity *= 0.72f;
+                    }
 
                     // 吸收轨迹 dust
                     if (Main.rand.NextBool(4))
@@ -135,7 +157,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
                     // 稳定持续伤害
                     if (lifeTimer % 8 == 0)
-                        npc.StrikeNPC(npc.CalculateHitInfo(Math.Max(1, projectile.damage / 9), 0));
+                    {
+                        float damageScale = MathHelper.Lerp(0.75f, 3.4f, closeness);
+                        npc.StrikeNPC(npc.CalculateHitInfo(Math.Max(1, (int)(projectile.damage / 10f * damageScale)), 0));
+                    }
                 }
             }
 
@@ -276,8 +301,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 GeneralParticleHandler.SpawnParticle(corePulse);
             }
 
-            TryReleaseDevourOrbs(projectile, owner, lifeFactor);
+            float orbReleaseFactor = MathHelper.Clamp(lifeTimer / 420f, 0f, 1f);
+            TryReleaseDevourOrbs(projectile, owner, (float)Math.Pow(orbReleaseFactor, 0.72f));
             Lighting.AddLight(projectile.Center, new Vector3(0.06f, 0.06f, 0.06f));
+        }
+
+        private static bool HasExistingBlackHole(Projectile projectile)
+        {
+            int shpbType = ModContent.ProjectileType<NewLegendSHPB>();
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (!other.active || other.whoAmI == projectile.whoAmI || other.owner != projectile.owner)
+                    continue;
+
+                if (other.type != shpbType || (int)other.ai[0] != 32)
+                    continue;
+
+                if (other.GetGlobalProjectile<DarkPlasma_GP>().releaseOnly)
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool BossIsAlive()
+        {
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (npc.boss && !npc.friendly && !npc.dontTakeDamage)
+                    return true;
+            }
+
+            return false;
         }
 
         private static void TryReleaseDevourOrbs(Projectile projectile, Player owner, float lifeFactor)
@@ -285,16 +344,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            int interval = (int)MathHelper.Lerp(42f, 7f, MathHelper.Clamp(lifeFactor, 0f, 1f));
-            interval = Math.Max(25, interval);
-            if (projectile.timeLeft % interval != 0)
+            projectile.localAI[0]++;
+            lifeFactor = MathHelper.Clamp(lifeFactor, 0f, 1f);
+            int interval = Math.Max(2, (int)MathHelper.Lerp(7f, 2f, lifeFactor));
+            if ((int)projectile.localAI[0] % interval != 0)
                 return;
 
-            int count = lifeFactor > 0.72f ? 2 : 1;
+            int count = 1;
+            float phase = projectile.localAI[0] * MathHelper.Lerp(0.16f, 0.52f, lifeFactor) + projectile.identity * 0.41f;
             for (int i = 0; i < count; i++)
             {
-                Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
-                Vector2 velocity = direction * Main.rand.NextFloat(7f, MathHelper.Lerp(11f, 19f, lifeFactor));
+                float angle = phase + MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.24f, 0.24f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 velocity = direction.RotatedByRandom(MathHelper.Lerp(0.35f, 0.12f, lifeFactor)) *
+                    Main.rand.NextFloat(8f, MathHelper.Lerp(13f, 23f, lifeFactor));
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center + direction * Main.rand.NextFloat(14f, 28f),
@@ -305,6 +368,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     projectile.owner,
                     0f,
                     Main.rand.NextFloat(MathHelper.TwoPi));
+
+                if (!Main.dedServ)
+                {
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                        projectile.Center + direction * 8f,
+                        velocity * 0.28f,
+                        "CalamityMod/Particles/VerticalSmear",
+                        false,
+                        Main.rand.Next(12, 18),
+                        Main.rand.NextFloat(1.2f, 2f) * MathHelper.Lerp(0.75f, 1.35f, lifeFactor),
+                        GetDarkPlasmaVisibleBurstColor(owner),
+                        new Vector2(0.16f, 1f)));
+                }
             }
         }
 
@@ -321,6 +397,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.GetGlobalProjectile<DarkPlasma_GP>().releaseOnly)
+            {
+                SpawnForwardDarkEnergyBurst(projectile);
+                return;
+            }
+
             SpawnDarkPlasmaAccretionDeath(projectile, owner);
             SpawnDarkPlasmaDeathDamage(projectile);
             SpawnDarkPlasmaDeathOrbs(projectile);
@@ -330,7 +412,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         private static void SpawnDarkPlasmaAccretionDeath(Projectile projectile, Player owner)
         {
             owner.SetScreenshake(8.5f);
-            float power = 1.5f;
+            float power = 1.95f;
             float diskRotation = projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation() + Main.rand.NextFloat(-0.35f, 0.35f);
 
             for (int i = 0; i < 55; i++)
@@ -484,10 +566,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 return;
 
             Projectile proj = Main.projectile[projIndex];
-            proj.width = 280;
-            proj.height = 220;
+            proj.width = 364;
+            proj.height = 286;
             proj.Center = projectile.Center;
             proj.netUpdate = true;
+        }
+
+        private static void SpawnForwardDarkEnergyBurst(Projectile projectile)
+        {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            Player owner = Main.player[projectile.owner];
+            Vector2 forward = projectile.velocity.SafeNormalize(new Vector2(owner.direction == 0 ? 1f : owner.direction, 0f));
+
+            for (int i = 0; i < 8; i++)
+            {
+                float spread = MathHelper.Lerp(-0.48f, 0.48f, i / 7f);
+                Vector2 direction = forward.RotatedBy(spread).SafeNormalize(forward);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center + direction * 18f,
+                    direction * Main.rand.NextFloat(13f, 22f),
+                    ModContent.ProjectileType<EndlessDevourJavOrbSmall>(),
+                    (int)(projectile.damage * 0.62f),
+                    projectile.knockBack * 0.35f,
+                    projectile.owner,
+                    0f,
+                    Main.rand.NextFloat(MathHelper.TwoPi));
+            }
+
+            SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.72f, Pitch = -0.2f }, projectile.Center);
         }
 
         private static void SpawnDarkPlasmaDeathOrbs(Projectile projectile)
@@ -530,7 +640,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         {
             Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleVortex").Value;
             Texture2D bloom = TextureAssets.Extra[98].Value;
-            Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearRagged").Value;
+            Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmear").Value;
 
             Vector2 drawPos = projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
@@ -576,20 +686,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
             // ===== 白色刀盘层：恢复旧版的亮刃切盘感 =====
             float bladePulse = 0.92f + (float)Math.Sin(portalTimer * 7f) * 0.08f;
+            float independentBladeSpin = Main.GlobalTimeWrappedHourly * 7.2f +
+                (float)Math.Sin(Main.GlobalTimeWrappedHourly * 1.8f) * 0.16f;
             for (int i = 0; i < 8; i++)
             {
-                float bladeRotation = projectile.rotation * -2.2f + i * MathHelper.TwoPi / 8f;
-                Color bladeColor = Color.Lerp(Color.White, new Color(95, 95, 95), i / 7f);
+                float bladeRotation = independentBladeSpin * (i % 2 == 0 ? 1f : -0.82f) + i * MathHelper.TwoPi / 8f;
+                Color bladeColor = Color.Lerp(new Color(54, 54, 66), Color.Black, i / 7f);
                 bladeColor.A = 0;
 
                 Main.EntitySpriteDraw(
                     blade,
                     drawPos,
                     null,
-                    bladeColor * scale01 * 0.34f,
+                    bladeColor * scale01 * 0.38f,
                     bladeRotation,
                     bladeOrigin,
-                    new Vector2(0.16f, 0.72f) * scale01 * bladePulse,
+                    new Vector2(0.24f, 1.08f) * scale01 * bladePulse,
                     SpriteEffects.None
                 );
             }
@@ -598,8 +710,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 bloom,
                 drawPos,
                 null,
-                Color.White * 0.16f * scale01,
-                projectile.rotation * 1.6f,
+                new Color(24, 24, 30) * 0.18f * scale01,
+                projectile.rotation * 0.48f,
                 bloomOrigin,
                 0.18f * scale01 * bladePulse,
                 SpriteEffects.None
@@ -708,5 +820,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 );
             }
         }
+    }
+
+    public class DarkPlasma_GP : GlobalProjectile
+    {
+        public new string LocalizationCategory => "Projectiles.SHPC";
+        public override bool InstancePerEntity => true;
+
+        public bool releaseOnly;
     }
 }
