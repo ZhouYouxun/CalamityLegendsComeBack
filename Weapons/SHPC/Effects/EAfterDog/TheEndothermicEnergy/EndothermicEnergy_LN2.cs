@@ -58,9 +58,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             float t = (float)Main.GameUpdateCount * 0.18f + Projectile.identity * 0.31f;
+            bool firstSubstep = Projectile.numUpdates == 0;
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Color(170, 220, 255).ToVector3() * 0.36f);
+
+            if (!firstSubstep)
+                return;
 
             if (Main.rand.NextBool(7))
             {
@@ -182,6 +186,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override void OnKill(int timeLeft)
         {
             EndothermicCopyState state = GetState();
+
+            if (Projectile.owner != Main.myPlayer)
+            {
+                projectileStates.Remove(Projectile.whoAmI);
+                return;
+            }
 
             if (state.PendingShadowRelease && Main.npc.IndexInRange(state.MarkedTargetIndex))
             {

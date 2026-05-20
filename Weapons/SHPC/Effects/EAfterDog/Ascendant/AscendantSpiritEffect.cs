@@ -56,35 +56,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             if (forward == Vector2.Zero)
                 forward = Vector2.UnitX;
 
-            Vector2 targetPoint = Main.MouseWorld;
-            if (float.IsNaN(targetPoint.X) || float.IsNaN(targetPoint.Y) || Vector2.Distance(projectile.Center, targetPoint) < 24f)
-                targetPoint = projectile.Center + forward * 560f;
-
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             int damage = (int)(projectile.damage * 1.5f);
-            float[] angleOffsets =
-            {
-                MathHelper.ToRadians(-20f),
-                MathHelper.ToRadians(-10f),
-                0f,
-                MathHelper.ToRadians(10f),
-                MathHelper.ToRadians(20f)
-            };
+            const int spiritCount = 9;
+            const float releaseRadius = 48f;
 
-            for (int i = 0; i < angleOffsets.Length; i++)
+            for (int i = 0; i < spiritCount; i++)
             {
-                float angleOffset = angleOffsets[i];
-                bool widerArc = Math.Abs(angleOffset) > 0.3f;
-                Vector2 launchDirection = forward.RotatedBy(angleOffset).SafeNormalize(forward);
-                Vector2 spawnOffset = launchDirection * 96f + normal * (i - 2f) * 8f;
-                Vector2 spawnPosition = projectile.Center + spawnOffset;
+                float lane = i - (spiritCount - 1f) * 0.5f;
+                Vector2 randomOffset = Main.rand.NextVector2Circular(releaseRadius, releaseRadius);
+                Vector2 spawnPosition = projectile.Center + randomOffset;
+                Vector2 targetPoint = spawnPosition + forward * 560f;
                 Color themeColor = AscendantSpirit_PROJ.RandomThemeColor();
-                float launchDelay = 4f + i * 5f;
+                float launchDelay = 2f + i * 2f + Main.rand.NextFloat(0f, 0.75f);
 
                 int projectileIndex = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     spawnPosition,
-                    launchDirection * 0.01f,
+                    forward * 0.01f,
                     ModContent.ProjectileType<AscendantSpirit_PROJ>(),
                     damage,
                     projectile.knockBack,
@@ -99,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                     Main.projectile[projectileIndex].netUpdate = true;
                 }
 
-                SpawnNeedleReleaseParticles(spawnPosition, launchDirection, themeColor, widerArc);
+                SpawnNeedleReleaseParticles(spawnPosition, forward, themeColor, Math.Abs(lane) > 2f);
             }
 
             SpawnCentralReleaseParticles(projectile.Center, forward);

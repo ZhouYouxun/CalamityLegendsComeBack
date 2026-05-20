@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+锘縰sing Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             Projectile.velocity *= 0.92f;
             Projectile.rotation += Projectile.ai[1] > 0.5f ? 0.045f : -0.045f;
-            Lighting.AddLight(Projectile.Center, new Color(55, 255, 235).ToVector3() * 0.18f);
+            Lighting.AddLight(Projectile.Center, new Color(55, 255, 235).ToVector3() * 0.08f);
         }
 
         public override bool? CanDamage() => false;
@@ -61,79 +61,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 return false;
 
             float colorFactor = MathHelper.Clamp(Projectile.ai[1], 0f, 1f);
+            float flicker = 0.5f + 0.5f * (float)System.Math.Sin(Projectile.localAI[1] + progress * MathHelper.TwoPi * 2.5f);
+            float size = System.Math.Max(2f, Projectile.ai[0]) * MathHelper.Lerp(1.08f, 0.42f, progress);
+            int cellSize = System.Math.Max(1, (int)System.MathF.Round(size));
 
             Color pixelColor = Color.Lerp(
-                new Color(0, 58, 82),
-                new Color(68, 255, 238),
-                colorFactor);
+                new Color(0, 70, 96),
+                new Color(66, 255, 238),
+                MathHelper.Clamp(colorFactor * 0.78f + flicker * 0.22f, 0f, 1f));
 
-            if (colorFactor > 0.88f)
-                pixelColor = Color.Lerp(pixelColor, Color.White, 0.32f);
+            if (colorFactor > 0.9f)
+                pixelColor = Color.Lerp(pixelColor, new Color(184, 255, 252), 0.25f);
 
             pixelColor.A = 255;
 
-            Color deepColor = Color.Lerp(
-                new Color(0, 18, 34),
-                new Color(0, 92, 126),
-                colorFactor);
-
-            deepColor.A = 255;
-
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-
-            // ====================
-            // 外层深色方块
-            // ====================
-
-            Rectangle outerRect = new Rectangle(
-                (int)drawPos.X - 16,
-                (int)drawPos.Y - 16,
-                32,
-                32);
+            Rectangle pixelRect = new Rectangle(
+                (int)drawPos.X - cellSize / 2,
+                (int)drawPos.Y - cellSize / 2,
+                cellSize,
+                cellSize);
 
             Main.spriteBatch.Draw(
                 pixel,
-                outerRect,
-                null,
-                deepColor * alpha * 0.42f,
-                0f,
-                Vector2.Zero,
-                SpriteEffects.None,
-                0f);
-
-            // ====================
-            // 中层青色方块
-            // ====================
-
-            Rectangle midRect = new Rectangle(
-                (int)drawPos.X - 12,
-                (int)drawPos.Y - 12,
-                24,
-                24);
-
-            Main.spriteBatch.Draw(
-                pixel,
-                midRect,
-                null,
-                pixelColor * alpha * 0.55f,
-                0f,
-                Vector2.Zero,
-                SpriteEffects.None,
-                0f);
-
-            // ====================
-            // 主核心
-            // ====================
-
-            Rectangle coreRect = new Rectangle(
-                (int)drawPos.X - 8,
-                (int)drawPos.Y - 8,
-                16,
-                16);
-
-            Main.spriteBatch.Draw(
-                pixel,
-                coreRect,
+                pixelRect,
                 null,
                 pixelColor * alpha,
                 0f,
@@ -141,30 +92,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 SpriteEffects.None,
                 0f);
 
-            // ====================
-            // 白色中心高光
-            // ====================
-
-            Rectangle whiteRect = new Rectangle(
-                (int)drawPos.X - 4,
-                (int)drawPos.Y - 4,
-                8,
-                8);
-
-            Main.spriteBatch.Draw(
-                pixel,
-                whiteRect,
-                null,
-                Color.White * alpha * 0.72f,
-                0f,
-                Vector2.Zero,
-                SpriteEffects.None,
-                0f);
-
             return false;
         }
-
-
-
     }
 }

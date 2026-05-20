@@ -66,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             float targetDistance = Vector2.Distance(owner.Center, Projectile.Center);
 
             SpawnCosmicFireFlightVisuals(targetDistance);
-            SpawnCosmicFireDoubleHelix(targetDistance, forward, side);
+            SpawnCosmicFireVoidDustHelix(targetDistance, forward, side);
             SpawnStrangeEntropyFlicker(targetDistance, side);
         }
 
@@ -101,7 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     "CalamityMod/Particles/GlowSpark2",
                     false,
                     13,
-                    0.031f,
+                    0.062f,
                     Color.Black,
                     new Vector2(0.6f, 1.3f),
                     false);
@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     "CalamityMod/Particles/GlowSpark",
                     false,
                     13,
-                    0.016f,
+                    0.032f,
                     InnerColor,
                     new Vector2(0.6f, 1.3f),
                     true,
@@ -136,23 +136,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             }
         }
 
-        private void SpawnCosmicFireDoubleHelix(float targetDistance, Vector2 forward, Vector2 side)
+        private void SpawnCosmicFireVoidDustHelix(float targetDistance, Vector2 forward, Vector2 side)
         {
             if (Time <= 12f || targetDistance >= 1400f)
                 return;
 
             float age = Utils.GetLerpValue(12f, 46f, Time, true);
-            float fadeOut = Utils.GetLerpValue(0f, 26f, Projectile.timeLeft, true);
-            float radius = MathHelper.Lerp(4.5f, 21f, age);
-            float basePhase = Time * 0.82f + Projectile.velocity.ToRotation() * 0.45f + Projectile.identity * 0.37f;
+            float radius = MathHelper.Lerp(5f, 19f, age);
+            float basePhase = Time * 0.92f + Projectile.velocity.ToRotation() * 0.45f + Projectile.identity * 0.37f;
 
-            for (int sample = 0; sample < 4; sample++)
+            for (int sample = 0; sample < 3; sample++)
             {
-                float sampleOffset = sample * 0.26f;
+                float sampleOffset = sample * 0.32f;
                 float phase = basePhase - sampleOffset;
                 float sine = (float)System.Math.Sin(phase);
                 float cosine = (float)System.Math.Cos(phase);
-                Vector2 sampleCenter = Projectile.Center - forward * Projectile.velocity.Length() * 0.11f * sample;
+                Vector2 sampleCenter = Projectile.Center - forward * Projectile.velocity.Length() * 0.16f * sample;
 
                 for (int i = 0; i < 2; i++)
                 {
@@ -162,62 +161,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         side * sine * radius * sign +
                         forward * cosine * 5f * sign;
 
-                    Color helixColor = i == 0
-                        ? InnerColor
-                        : Color.Lerp(InnerColor, new Color(120, 255, 170), 0.45f);
-
-                    Particle blackCore = new CustomSpark(
-                        helixPos,
-                        Projectile.velocity * 0.06f - forward * Main.rand.NextFloat(0.15f, 0.65f),
-                        "CalamityMod/Particles/GlowSpark2",
-                        false,
-                        Main.rand.Next(10, 15),
-                        Main.rand.NextFloat(0.014f, 0.024f) * fadeOut,
-                        Color.Black,
-                        new Vector2(0.42f, 0.92f),
-                        false);
-                    GeneralParticleHandler.SpawnParticle(blackCore);
-
-                    Particle greenSheen = new CustomSpark(
-                        helixPos + Main.rand.NextVector2Circular(2f, 2f),
-                        Projectile.velocity * 0.04f - forward.RotatedBy(sign * 0.28f) * Main.rand.NextFloat(0.08f, 0.45f),
-                        "CalamityMod/Particles/GlowSpark",
-                        false,
-                        Main.rand.Next(10, 15),
-                        Main.rand.NextFloat(0.0075f, 0.0145f) * fadeOut,
-                        helixColor,
-                        new Vector2(0.34f, 1.08f),
-                        true,
-                        false);
-                    GeneralParticleHandler.SpawnParticle(greenSheen);
-                    greenSheen.DrawLayer = GeneralDrawLayer.AfterEverything;
-
-                    if (Main.rand.NextBool(2))
-                    {
-                        Dust dust = Dust.NewDustPerfect(
-                            helixPos + Main.rand.NextVector2Circular(4f, 4f),
-                            ModContent.DustType<VoidDustInverted>(),
-                            -forward.RotatedBy(sign * 0.35f) * Main.rand.NextFloat(0.3f, 1.6f));
-                        dust.noGravity = Main.rand.NextBool();
-                        dust.scale = Main.rand.NextFloat(0.22f, 0.43f);
-                        dust.color = helixColor;
-                    }
+                    Dust dust = Dust.NewDustPerfect(
+                        helixPos + Main.rand.NextVector2Circular(7f, 7f),
+                        ModContent.DustType<VoidDustInverted>());
+                    dust.scale = Main.rand.NextFloat(0.36f, 0.72f) * 2f;
+                    dust.velocity = new Vector2(0f, Main.rand.NextFloat(0.1f, 5f));
+                    dust.noGravity = false;
+                    dust.color = InnerColor;
                 }
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                float sine = (float)System.Math.Sin(basePhase);
-                Vector2 bridgePos = Projectile.Center + side * sine * radius * Main.rand.NextFloat(-0.45f, 0.45f);
-                Particle bridge = new GenericBloom(
-                    bridgePos,
-                    -forward * Main.rand.NextFloat(0.15f, 0.8f),
-                    Main.rand.NextBool(3) ? Color.Black : Color.Lerp(InnerColor, Color.White, 0.22f),
-                    Main.rand.NextFloat(0.072f, 0.168f),
-                    Main.rand.Next(7, 11),
-                    true,
-                    false);
-                GeneralParticleHandler.SpawnParticle(bridge);
             }
         }
 

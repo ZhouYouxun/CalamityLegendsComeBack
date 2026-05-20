@@ -141,28 +141,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             );
 
 
-            // ================= 上方激光（ExoPrism_Light） =================
+            // ================= 后方扇形激光（ExoPrism_Light） =================
 
-            // 上方距离：比下方更远一点（比如 24格）
-            Vector2 topCenter = target.Center - new Vector2(0f, 24f * 16f);
+            // 旧逻辑从上方 24 格落下；现在按激光反方向生成，并把距离放大 60%。
+            Vector2 incomingDirection = beamVector.SafeNormalize((target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX));
 
-            // 同样做一个随机圆分布
-            float radiusTop = 12f * 16f;
-            Vector2 topOffset = Main.rand.NextVector2Circular(radiusTop, radiusTop);
-            Vector2 spawnPosTop = topCenter + topOffset;
+            // 左右各一发，形成后方扇形。
+            Vector2 rearAxis = -incomingDirection;
 
-            // 向目标射下来
-            Vector2 velocityTop = (target.Center - spawnPosTop).SafeNormalize(Vector2.UnitY) * 12f;
+            const float rearLightDistance = 24f * 16f * 1.6f;
+            const float minFanAngle = 0.18f;
+            const float maxFanAngle = 0.43f;
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawnPosTop,
-                velocityTop,
-                ModContent.ProjectileType<ExoPrism_Light>(), // ← 你的光线类型
-                (int)(Projectile.damage * 1.6f), // 稍微低一点，避免太爆
-                Projectile.knockBack,
-                Projectile.owner
-            );
+            for (int i = -1; i <= 1; i += 2)
+            {
+                float fanAngle = Main.rand.NextFloat(minFanAngle, maxFanAngle) * i;
+                float spawnDistance = rearLightDistance + Main.rand.NextFloat(0f, 5f * 16f);
+                Vector2 spawnDirection = rearAxis.RotatedBy(fanAngle);
+                Vector2 lightSpawnPosition = target.Center + spawnDirection * spawnDistance;
+
+                // 从后方扇形向目标切入。
+                Vector2 lightVelocity = (target.Center - lightSpawnPosition).SafeNormalize(incomingDirection) * 12f;
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    lightSpawnPosition,
+                    lightVelocity,
+                    ModContent.ProjectileType<ExoPrism_Light>(),
+                    (int)(Projectile.damage * 1.6f),
+                    Projectile.knockBack,
+                    Projectile.owner
+                );
+            }
         }
         private void TryAttachLazerMark(NPC target)
         {

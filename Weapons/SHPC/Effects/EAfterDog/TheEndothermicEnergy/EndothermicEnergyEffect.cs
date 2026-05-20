@@ -9,6 +9,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 {
     internal class EndothermicEnergyEffect : DefaultEffect
     {
+        private static readonly int[] LastPrimarySpawnFrameByOwner = new int[Main.maxPlayers];
+        private const int PrimarySpawnLockoutFrames = 30;
+
         public override int EffectID => 34;
 
         public override int AmmoType => ModContent.ItemType<EndothermicEnergy>();
@@ -23,7 +26,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.GetGlobalProjectile<EndothermicEnergy_GP>().firstFrame = true;
+            EndothermicEnergy_GP gp = projectile.GetGlobalProjectile<EndothermicEnergy_GP>();
+            gp.firstFrame = true;
+            gp.releaseLN2 = false;
+            gp.hasReleasedLN2 = false;
+
+            int ownerIndex = owner.whoAmI;
+            int currentFrame = (int)Main.GameUpdateCount;
+            if (ownerIndex >= 0 && ownerIndex < LastPrimarySpawnFrameByOwner.Length &&
+                (LastPrimarySpawnFrameByOwner[ownerIndex] <= 0 ||
+                currentFrame - LastPrimarySpawnFrameByOwner[ownerIndex] > PrimarySpawnLockoutFrames))
+            {
+                LastPrimarySpawnFrameByOwner[ownerIndex] = currentFrame;
+                gp.releaseLN2 = true;
+            }
         }
 
         public override void AI(Projectile projectile, Player owner)
@@ -51,6 +67,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.owner != Main.myPlayer)
+                return;
+
+            EndothermicEnergy_GP gp = projectile.GetGlobalProjectile<EndothermicEnergy_GP>();
+            if (!gp.releaseLN2 || gp.hasReleasedLN2)
+                return;
+
+            gp.hasReleasedLN2 = true;
+
             Vector2 spawnVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * projectile.velocity.Length();
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
@@ -70,5 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;
+        public bool releaseLN2;
+        public bool hasReleasedLN2;
     }
 }

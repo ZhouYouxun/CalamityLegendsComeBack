@@ -18,8 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private int hitCount;
         private int visualTimer;
-        private Vector2 flameBeamA;
-        private Vector2 flameBeamB;
+        private Vector2 flameBeam;
 
         public override void SetDefaults()
         {
@@ -40,8 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnSpawn(IEntitySource source)
         {
             visualTimer = 0;
-            flameBeamA = Projectile.Center;
-            flameBeamB = Projectile.Center;
+            flameBeam = Projectile.Center;
         }
 
         public override void AI()
@@ -62,31 +60,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             float phase = visualTimer * 0.54f / MathHelper.Pi + Projectile.identity * 0.37f;
             float sine = (float)Math.Sin(phase);
 
-            flameBeamA = Projectile.Center + side * sine * -30f * age - forward * 8f;
-            flameBeamB = Projectile.Center + side * sine * 30f * age - forward * 8f;
+            flameBeam = Projectile.Center + side * sine * 45f * age - forward * 8f;
 
             Lighting.AddLight(Projectile.Center, new Vector3(1.25f, 0.72f, 0.18f) * 0.72f);
 
-            if (Main.dedServ || Projectile.timeLeft > 176)
+            if (Main.dedServ)
                 return;
 
-            for (int i = 0; i < 2; i++)
-            {
-                Vector2 pos = i == 0 ? flameBeamA : flameBeamB;
-                Color beamColor = Color.Lerp(new Color(255, 78, 20), new Color(255, 210, 92), age);
-                Particle beam = new CustomSpark(
-                    pos + Main.rand.NextVector2Circular(2f, 2f),
-                    Projectile.velocity * 0.06f + back * Main.rand.NextFloat(0.45f, 1.4f),
-                    "CalamityMod/Particles/SmallBloom",
-                    false,
-                    Main.rand.Next(6, 9),
-                    Main.rand.NextFloat(0.045f, 0.075f) + 0.035f * age,
-                    beamColor,
-                    new Vector2(1f, 2.25f),
-                    true,
-                    false);
-                GeneralParticleHandler.SpawnParticle(beam);
-            }
+            Color beamColor = Color.Lerp(new Color(255, 78, 20), new Color(255, 210, 92), age);
+            Particle beam = new CustomSpark(
+                flameBeam + Main.rand.NextVector2Circular(2f, 2f),
+                Projectile.velocity * 0.06f + back * Main.rand.NextFloat(0.45f, 1.4f),
+                "CalamityMod/Particles/SmallBloom",
+                false,
+                Main.rand.Next(6, 9),
+                (Main.rand.NextFloat(0.045f, 0.075f) + 0.035f * age) * 1.5f,
+                beamColor,
+                new Vector2(1f, 2.25f) * 1.5f,
+                true,
+                false);
+            GeneralParticleHandler.SpawnParticle(beam);
 
             if (Projectile.numUpdates == 0 && visualTimer % 5 == 0)
             {
@@ -98,6 +91,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     Main.rand.NextFloat(0.55f, 0.95f),
                     Main.rand.NextBool(3) ? Color.Goldenrod : Color.OrangeRed);
                 GeneralParticleHandler.SpawnParticle(ember);
+            }
+
+            if (Projectile.numUpdates == 0 && visualTimer % 4 == 0)
+            {
+                Vector2 flareDir = back.RotatedByRandom(0.28f);
+                Particle solarFlare = new CustomSpark(
+                    Projectile.Center - forward * Main.rand.NextFloat(8f, 18f) + side * Main.rand.NextFloat(-8f, 8f),
+                    flareDir * Main.rand.NextFloat(2.4f, 5.2f),
+                    "CalamityMod/Particles/ProvidenceMarkParticle",
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.42f, 0.62f),
+                    Color.Lerp(new Color(255, 235, 150), new Color(255, 92, 20), Main.rand.NextFloat(0.35f, 0.9f)),
+                    new Vector2(Main.rand.NextFloat(0.95f, 1.25f), Main.rand.NextFloat(0.22f, 0.36f)),
+                    true,
+                    false,
+                    Main.rand.NextFloat(-0.12f, 0.12f),
+                    false,
+                    false,
+                    0.08f);
+                GeneralParticleHandler.SpawnParticle(solarFlare);
             }
 
             if (Main.rand.NextBool(4))
@@ -115,18 +129,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            //if (Main.rand.NextBool(5))
-            //{
-            //    Dust cinder = Dust.NewDustPerfect(
-            //        Projectile.Center + side * Main.rand.NextFloat(-10f, 10f) - forward * Main.rand.NextFloat(2f, 14f),
-            //        DustID.Torch,
-            //        back.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.1f, 3.5f),
-            //        0,
-            //        Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.15f, 0.45f)),
-            //        Main.rand.NextFloat(0.95f, 1.45f));
-            //    cinder.noGravity = true;
-            //    cinder.fadeIn = 1.15f;
-            //}
+            if (Main.rand.NextBool(5))
+            {
+                Dust cinder = Dust.NewDustPerfect(
+                    Projectile.Center + side * Main.rand.NextFloat(-10f, 10f) - forward * Main.rand.NextFloat(2f, 14f),
+                    DustID.Torch,
+                    back.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.1f, 3.5f),
+                    0,
+                    Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.15f, 0.45f)),
+                    Main.rand.NextFloat(0.95f, 1.45f));
+                cinder.noGravity = true;
+                cinder.fadeIn = 1.15f;
+            }
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -136,7 +150,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             hitCount++;
-            //SpawnSolarExplosion();
             SpawnDaybreakExplosion(target.Center);
         }
 
@@ -152,107 +165,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         {
             Vector2 center = Projectile.Center;
             Lighting.AddLight(center, new Vector3(1.8f, 1.05f, 0.28f) * 1.1f);
-
-            for (int i = 0; i < 14; i++)
-            {
-                Dust core = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(4f, 4f),
-                    DustID.Torch,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5.5f, 10.5f),
-                    0,
-                    Color.Lerp(Color.White, new Color(255, 215, 110), Main.rand.NextFloat(0.35f, 0.75f)),
-                    Main.rand.NextFloat(1.5f, 2.7f));
-                core.noGravity = true;
-                core.fadeIn = 2.5f;
-            }
-
-            for (int i = 0; i < 24; i++)
-            {
-                float angle = MathHelper.TwoPi * i / 24f + Main.rand.NextFloat(-0.06f, 0.06f);
-                Vector2 dir = angle.ToRotationVector2();
-
-                Dust jet = Dust.NewDustPerfect(
-                    center,
-                    DustID.Torch,
-                    dir * Main.rand.NextFloat(8f, 15f),
-                    0,
-                    Color.Lerp(new Color(255, 235, 150), new Color(255, 120, 35), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.6f, 2.7f));
-                jet.noGravity = true;
-                jet.fadeIn = 2.5f;
-
-                Dust jetSpark = Dust.NewDustPerfect(
-                    center + dir * Main.rand.NextFloat(2f, 8f),
-                    DustID.Torch,
-                    dir.RotatedByRandom(0.18f) * Main.rand.NextFloat(5f, 11f),
-                    0,
-                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1f, 1.6f));
-                jetSpark.noGravity = true;
-            }
-
-            for (int i = 0; i < 18; i++)
-            {
-                float angle = MathHelper.TwoPi * i / 18f;
-                Vector2 dir = angle.ToRotationVector2();
-
-                Dust ring = Dust.NewDustPerfect(
-                    center + dir * 10f,
-                    DustID.Torch,
-                    dir * Main.rand.NextFloat(3f, 6f),
-                    0,
-                    Color.Lerp(new Color(255, 180, 70), new Color(255, 80, 20), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.4f, 2.2f));
-                ring.noGravity = true;
-                ring.fadeIn = 2.5f;
-            }
-
-            float time = Main.GlobalTimeWrappedHourly * 9f + Projectile.identity * 0.51f;
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 dir = Main.rand.NextVector2CircularEdge(1f, 1f);
-                Particle spark = new CustomSpark(
-                    center + dir * Main.rand.NextFloat(2f, 14f),
-                    dir * Main.rand.NextFloat(3.5f, 8.5f) + Main.rand.NextVector2Circular(1.2f, 1.2f),
-                    "CalamityMod/Particles/ProvidenceMarkParticle",
-                    false,
-                    Main.rand.Next(18, 28),
-                    Main.rand.NextFloat(0.95f, 1.35f),
-                    Color.Lerp(new Color(255, 240, 165), new Color(255, 115, 25), 0.5f + 0.5f * (float)Math.Sin(time + i * 0.4f)),
-                    new Vector2(Main.rand.NextFloat(1.25f, 1.7f), Main.rand.NextFloat(0.32f, 0.55f)),
-                    true,
-                    false,
-                    Main.rand.NextFloat(-0.18f, 0.18f),
-                    false,
-                    false,
-                    0.1f);
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-
-            for (int i = 0; i < 20; i++)
-            {
-                Dust ember = Dust.NewDustPerfect(
-                    center,
-                    DustID.Torch,
-                    Main.rand.NextVector2Circular(1f, 1f) * Main.rand.NextFloat(4.5f, 12f),
-                    0,
-                    Color.Lerp(Color.Yellow, Color.OrangeRed, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.1f, 1.6f));
-                ember.noGravity = true;
-                ember.fadeIn = 2.5f;
-            }
-
-            for (int i = 0; i < 10; i++)
-            {
-                Dust smoke = Dust.NewDustPerfect(
-                    center,
-                    DustID.Smoke,
-                    Vector2.UnitX.RotatedByRandom(Math.PI).RotatedBy(Projectile.velocity.ToRotation()) * Main.rand.NextFloat(2.4f, 6.2f),
-                    0,
-                    Color.Lerp(Color.Gray, Color.DarkGray, Main.rand.NextFloat(0.15f, 0.7f)),
-                    Main.rand.NextFloat(1.2f, 1.65f));
-                smoke.noGravity = true;
-            }
         }
 
         private void SpawnDaybreakExplosion(Vector2 center)
@@ -317,38 +229,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
                 Vector2 trailPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 float wave = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8.5f + Projectile.identity * 0.31f + i * 0.64f);
-                float radius = MathHelper.Lerp(28f, 6f, completion) * flameAge;
-                float mistScale = MathHelper.Lerp(0.42f, 0.10f, completion) * Projectile.scale;
+                float radius = MathHelper.Lerp(42f, 9f, completion) * flameAge;
+                float mistScale = MathHelper.Lerp(0.42f, 0.10f, completion) * Projectile.scale * 1.5f;
                 Color trailColor = Color.Lerp(darkEdge, Color.Lerp(orange, hotCore, 0.45f), 1f - completion);
                 trailColor.A = 0;
 
-                for (int arm = -1; arm <= 1; arm += 2)
-                {
-                    Vector2 helixPos = trailPos + side * wave * radius * arm - forward * MathHelper.Lerp(2f, 16f, completion);
-                    float helixRot = forward.ToRotation() + MathHelper.PiOver2 + arm * wave * 0.18f;
+                Vector2 helixPos = trailPos + side * wave * radius - forward * MathHelper.Lerp(2f, 16f, completion);
+                float helixRot = forward.ToRotation() + MathHelper.PiOver2 + wave * 0.18f;
 
-                    Main.EntitySpriteDraw(
-                        mist,
-                        helixPos,
-                        null,
-                        trailColor * trailFade * 0.45f,
-                        helixRot,
-                        mist.Size() * 0.5f,
-                        new Vector2(mistScale * 0.55f, mistScale * 1.45f),
-                        SpriteEffects.None,
-                        0);
+                Main.EntitySpriteDraw(
+                    mist,
+                    helixPos,
+                    null,
+                    trailColor * trailFade * 0.45f,
+                    helixRot,
+                    mist.Size() * 0.5f,
+                    new Vector2(mistScale * 0.55f, mistScale * 1.45f),
+                    SpriteEffects.None,
+                    0);
 
-                    Main.EntitySpriteDraw(
-                        bloom,
-                        helixPos,
-                        null,
-                        Color.Lerp(orange, hotCore, 0.35f) * trailFade * 0.12f,
-                        0f,
-                        bloom.Size() * 0.5f,
-                        mistScale * 0.28f,
-                        SpriteEffects.None,
-                        0);
-                }
+                Main.EntitySpriteDraw(
+                    bloom,
+                    helixPos,
+                    null,
+                    Color.Lerp(orange, hotCore, 0.35f) * trailFade * 0.12f,
+                    0f,
+                    bloom.Size() * 0.5f,
+                    mistScale * 0.28f,
+                    SpriteEffects.None,
+                    0);
             }
 
             Main.EntitySpriteDraw(
@@ -362,22 +271,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 SpriteEffects.None,
                 0);
 
-            for (int i = 0; i < 2; i++)
-            {
-                Vector2 beamPos = i == 0 ? flameBeamA : flameBeamB;
-                Color beamColor = i == 0 ? hotCore : orange;
-                beamColor.A = 0;
-                Main.EntitySpriteDraw(
-                    bloom,
-                    beamPos - Main.screenPosition,
-                    null,
-                    beamColor * opacity * 0.24f,
-                    0f,
-                    bloom.Size() * 0.5f,
-                    0.2f * Projectile.scale,
-                    SpriteEffects.None,
-                    0);
-            }
+            Color singleBeamColor = hotCore;
+            singleBeamColor.A = 0;
+            Main.EntitySpriteDraw(
+                bloom,
+                flameBeam - Main.screenPosition,
+                null,
+                singleBeamColor * opacity * 0.24f,
+                0f,
+                bloom.Size() * 0.5f,
+                0.3f * Projectile.scale,
+                SpriteEffects.None,
+                0);
 
             sb.End();
             sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,

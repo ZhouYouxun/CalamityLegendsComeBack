@@ -152,44 +152,109 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 dust.noGravity = true;
             }
 
-            SpawnVortexPixelTrail(projectile, true);
+            SpawnVortexPixelTrail(projectile, true, target.Center);
         }
 
-        private void SpawnVortexPixelTrail(Projectile projectile, bool burst = false)
+        private void SpawnVortexPixelTrail(Projectile projectile, bool burst = false, Vector2? centerOverride = null)
         {
             if (projectile.owner != Main.myPlayer)
                 return;
 
+            Vector2 center = centerOverride ?? projectile.Center;
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            int pixelCount = burst ? Main.rand.Next(24, 34) : Main.rand.Next(8, 14);
+            float age = 25f - projectile.timeLeft;
+            float phase = age * 0.53f + projectile.identity * 0.31f;
 
-            for (int i = 0; i < pixelCount; i++)
+            if (burst)
             {
-                float backOffset = burst ? Main.rand.NextFloat(-12f, 58f) : Main.rand.NextFloat(2f, 54f);
-                float lateralOffset = Main.rand.NextFloat(burst ? -76f : -42f, burst ? 76f : 42f);
-                Vector2 spawnPos =
-                    projectile.Center -
-                    forward * backOffset +
-                    normal * lateralOffset +
-                    Main.rand.NextVector2Circular(burst ? 18f : 7f, burst ? 18f : 7f);
+                int ringCount = Main.rand.Next(28, 36);
+                for (int i = 0; i < ringCount; i++)
+                {
+                    float t = i / (float)ringCount;
+                    float angle = MathHelper.TwoPi * t + phase * 0.85f;
+                    float radius = MathHelper.Lerp(18f, 94f, t) + (float)Math.Sin(phase + i * 1.71f) * 9f;
+                    Vector2 dir = angle.ToRotationVector2();
+                    Vector2 spawnPos =
+                        center +
+                        dir * radius +
+                        forward * ((float)Math.Sin(t * MathHelper.TwoPi * 2f + phase) * 11f);
 
-                Vector2 drift =
-                    normal * Main.rand.NextFloat(-0.46f, 0.46f) -
-                    forward * Main.rand.NextFloat(0.04f, 0.24f);
+                    Vector2 drift =
+                        dir * Main.rand.NextFloat(0.18f, 0.72f) -
+                        forward * Main.rand.NextFloat(0.02f, 0.22f);
 
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    spawnPos,
-                    drift,
-                    ModContent.ProjectileType<FragmentVortex_Pixel>(),
-                    0,
-                    0f,
-                    projectile.owner,
-                    Main.rand.NextFloat(burst ? 18f : 12f, burst ? 42f : 28f),
-                    Main.rand.NextFloat(),
-                    Main.rand.Next(burst ? 34 : 30, burst ? 58 : 48));
+                    float colorFactor = 0.35f + 0.65f * (0.5f + 0.5f * (float)Math.Sin(angle * 3f + phase));
+                    SpawnVortexPixel(projectile, spawnPos, drift, Main.rand.NextFloat(5.5f, 13.5f), colorFactor, Main.rand.Next(24, 42));
+                }
+
+                for (int i = -2; i <= 2; i++)
+                {
+                    if (i == 0)
+                        continue;
+
+                    Vector2 spawnPos = center + normal * i * 18f + forward * (float)Math.Sin(phase + i) * 14f;
+                    Vector2 drift = normal * i * 0.12f + forward * Main.rand.NextFloat(-0.18f, 0.28f);
+                    SpawnVortexPixel(projectile, spawnPos, drift, Main.rand.NextFloat(7f, 16f), 0.92f, Main.rand.Next(26, 38));
+                }
+
+                return;
             }
+
+            for (int i = 0; i < 5; i++)
+            {
+                float laneSign = i % 2 == 0 ? 1f : -1f;
+                float trailOffset = 8f + i * 11f + (float)Math.Sin(phase + i * 0.77f) * 3f;
+                float laneOffset =
+                    laneSign * (8f + i * 3.6f) +
+                    (float)Math.Sin(phase * 1.42f + i * 1.11f) * 10f;
+
+                Vector2 spawnPos = center - forward * trailOffset + normal * laneOffset;
+                Vector2 drift = -forward * Main.rand.NextFloat(0.02f, 0.13f) + normal * laneSign * Main.rand.NextFloat(0.02f, 0.1f);
+                float colorFactor = MathHelper.Clamp(0.28f + i * 0.13f + Main.rand.NextFloat(-0.08f, 0.16f), 0f, 1f);
+                SpawnVortexPixel(projectile, spawnPos, drift, Main.rand.NextFloat(3.5f, 8.5f), colorFactor, Main.rand.Next(20, 34));
+            }
+
+            if (((int)age + projectile.identity) % 3 == 0)
+            {
+                float gateOffset = 28f + (float)Math.Sin(phase * 1.8f) * 8f;
+                for (int sideIndex = -1; sideIndex <= 1; sideIndex += 2)
+                {
+                    Vector2 spawnPos =
+                        center -
+                        forward * (18f + (float)Math.Cos(phase) * 6f) +
+                        normal * sideIndex * gateOffset;
+
+                    Vector2 drift = normal * sideIndex * 0.18f - forward * 0.08f;
+                    SpawnVortexPixel(projectile, spawnPos, drift, Main.rand.NextFloat(5f, 10f), Main.rand.NextFloat(0.68f, 1f), Main.rand.Next(22, 36));
+                }
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                Vector2 spawnPos =
+                    center -
+                    forward * Main.rand.NextFloat(16f, 62f) +
+                    normal * Main.rand.NextFloatDirection() * Main.rand.NextFloat(34f, 58f);
+
+                Vector2 drift = Main.rand.NextVector2Circular(0.16f, 0.16f) - forward * 0.06f;
+                SpawnVortexPixel(projectile, spawnPos, drift, Main.rand.NextFloat(4f, 9f), Main.rand.NextFloat(0.18f, 0.95f), Main.rand.Next(18, 30));
+            }
+        }
+
+        private static void SpawnVortexPixel(Projectile projectile, Vector2 position, Vector2 velocity, float size, float colorFactor, int lifetime)
+        {
+            Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                position,
+                velocity,
+                ModContent.ProjectileType<FragmentVortex_Pixel>(),
+                0,
+                0f,
+                projectile.owner,
+                size,
+                MathHelper.Clamp(colorFactor, 0f, 1f),
+                lifetime);
         }
 
         public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
