@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 5;
-            Projectile.timeLeft = 260;
+            Projectile.timeLeft = 312;
             Projectile.extraUpdates = 2;
             Projectile.Opacity = 1f;
             Projectile.usesLocalNPCImmunity = true;
@@ -58,6 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             helixAngle = Projectile.identity * 0.37f;
             pulseAngle = Projectile.identity * 0.21f;
+            flightTimer = 6;
 
             SoundEngine.PlaySound(SoundID.Item104 with { Pitch = -0.25f, Volume = 0.55f }, Projectile.Center);
         }
@@ -69,10 +70,48 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 flightTimer++;
                 helixAngle += 0.28f;
                 pulseAngle += 0.16f;
+                SpawnVisibleFlightEffects();
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.Opacity = 1f;
+        }
+
+        private void SpawnVisibleFlightEffects()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 center = Projectile.Center + forward * Main.rand.NextFloat(18f, 42f) + side * Main.rand.NextFloat(-10f, 10f);
+            Color mainColor = Color.Lerp(BladePurple, BladeBlood, Main.rand.NextFloat(0.15f, 0.55f));
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                center,
+                Projectile.velocity * 0.02f,
+                "CalamityMod/Particles/VerticalSmear",
+                false,
+                Main.rand.Next(13, 18),
+                Main.rand.NextFloat(1.45f, 2.15f),
+                mainColor,
+                new Vector2(0.2f, 1f),
+                true,
+                true,
+                shrinkSpeed: 0.82f,
+                glowOpacity: 0.45f));
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextBool() ? DustID.Shadowflame : DustID.PurpleTorch,
+                    -forward * Main.rand.NextFloat(0.3f, 1.2f) + side * Main.rand.NextFloat(-0.5f, 0.5f),
+                    0,
+                    mainColor,
+                    Main.rand.NextFloat(1.0f, 1.45f));
+                dust.noGravity = true;
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -140,7 +179,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             float opacity = Projectile.Opacity *
-                Utils.GetLerpValue(0f, 12f, flightTimer, true) *
+                Utils.GetLerpValue(0f, 4f, flightTimer, true) *
                 Utils.GetLerpValue(0f, 22f, Projectile.timeLeft, true);
 
             if (opacity <= 0f)
@@ -209,9 +248,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Color blood = BladeBlood;
             dark.A = purple.A = blood.A = 0;
 
-            Main.EntitySpriteDraw(bloom, center, null, dark * opacity * 1.55f, 0f, origin, new Vector2(0.36f, 0.24f) * (1f + pulse * 0.08f), SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, center + forward * 4f, null, purple * opacity * 0.72f, 0f, origin, new Vector2(0.18f, 0.12f) * (1f + pulse * 0.12f), SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, center + forward * 8f, null, Color.White * opacity * 0.12f, 0f, origin, new Vector2(0.06f, 0.04f), SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, center, null, dark * opacity * 1.85f, 0f, origin, new Vector2(0.52f, 0.34f) * (1f + pulse * 0.08f), SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, center + forward * 4f, null, purple * opacity * 0.92f, 0f, origin, new Vector2(0.28f, 0.18f) * (1f + pulse * 0.12f), SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, center + forward * 8f, null, Color.White * opacity * 0.18f, 0f, origin, new Vector2(0.1f, 0.065f), SpriteEffects.None);
         }
 
         private static void DrawTwistedBlade(Texture2D smear, Vector2 center, Vector2 forward, Vector2 side, float opacity, float spin, float pulse)
@@ -237,7 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     color * opacity * (0.78f - completion * 0.22f),
                     baseRotation + angle * 0.55f + twist,
                     origin,
-                    new Vector2(0.07f + completion * 0.025f, 0.55f + pulse * 0.15f) * 0.22f,
+                    new Vector2(0.07f + completion * 0.025f, 0.55f + pulse * 0.15f) * 0.72f,
                     SpriteEffects.None);
             }
         }
@@ -262,7 +301,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     color * opacity * (0.32f + pulse * 0.12f),
                     rotation + lane * 0.035f,
                     origin,
-                    new Vector2(0.05f, 0.72f + pulse * 0.12f) * 0.2f,
+                    new Vector2(0.05f, 0.72f + pulse * 0.12f) * 0.6f,
                     SpriteEffects.None);
             }
         }
@@ -315,7 +354,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     color * opacity * (0.32f - i * 0.06f),
                     Projectile.rotation + spin * (0.12f + i * 0.04f) + i * MathHelper.PiOver2,
                     origin,
-                    new Vector2(0.32f + i * 0.08f, 1.05f + i * 0.22f) * 0.14f,
+                    new Vector2(0.32f + i * 0.08f, 1.05f + i * 0.22f) * 0.34f,
                     SpriteEffects.None);
             }
         }

@@ -23,9 +23,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float GravityDelay = 10f;
         private const float GravityStrength = 0.055f;
         private const int StickTime = 150;
+        private const int StuckDamageInterval = 24;
+        private const float StuckDamageMultiplier = 1.65f;
         private static readonly int[] AbyssDustTypes = { 191, 29, 104 };
 
         private bool IsStuck => Projectile.ai[0] == 1f;
+        private int spreadDust;
+        private Color waterColor = Color.DeepSkyBlue;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -52,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
+            waterColor = Main.rand.NextBool() ? Color.DodgerBlue : Color.DeepSkyBlue;
             SpawnLaunchEffects();
         }
 
@@ -120,6 +125,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.tileCollide = false;
             Projectile.friendly = false;
             Projectile.penetrate = -1;
+            Projectile.extraUpdates = 0;
             Projectile.netUpdate = true;
         }
 
@@ -152,76 +158,159 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 seep.velocity *= 0.35f;
             }
 
+            if (Projectile.owner == Main.myPlayer && Projectile.localAI[1] % StuckDamageInterval == 0f)
+                ApplyStuckDamage(target);
+
             if (Projectile.localAI[1] >= StickTime)
                 Projectile.Kill();
+        }
+
+        private void ApplyStuckDamage(NPC target)
+        {
+            int damage = Math.Max(1, (int)(Projectile.damage * StuckDamageMultiplier));
+            int hitDirection = (target.Center.X >= Projectile.Center.X).ToDirectionInt();
+            target.StrikeNPC(target.CalculateHitInfo(damage, hitDirection));
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Circular(2.8f, 2.8f);
+                Dust burst = CreateFoamDust(
+                    Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    velocity,
+                    Main.rand.NextFloat(0.9f, 1.25f),
+                    Main.rand.NextFloat(0.35f, 1f),
+                    110);
+                burst.velocity *= 0.8f;
+            }
         }
 
         private void SpawnLaunchEffects()
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 back = -forward;
 
-            for (int i = 0; i < 15; i++)
-            {
-                Vector2 velocity = forward.RotatedByRandom(0.42f) * Main.rand.NextFloat(0.8f, 2.7f) + Main.rand.NextVector2Circular(0.9f, 0.9f);
-                CreateAbyssDust(
-                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    velocity,
-                    Main.rand.NextFloat(1.05f, 1.5f),
-                    Main.rand.NextFloat(0.35f, 0.95f),
-                    120);
-            }
+            GeneralParticleHandler.SpawnParticle(new WaterFlavoredParticle(
+                Projectile.Center,
+                back * 0.6f,
+                affectedByGravity: false,
+                24,
+                0.9f,
+                waterColor * 0.18f));
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
             {
-                Dust foam = CreateFoamDust(
+                Dust jetDust = Dust.NewDustPerfect(
                     Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
-                    forward * Main.rand.NextFloat(0.25f, 1.1f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
-                    Main.rand.NextFloat(0.8f, 1.1f),
-                    Main.rand.NextFloat(0.25f, 0.85f),
-                    140);
-                foam.velocity *= 0.7f;
+                    Main.rand.NextBool(3) ? 104 : 29,
+                    forward.RotatedByRandom(0.72f) * Main.rand.NextFloat(0.8f, 3.2f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                    100,
+                    Color.Lerp(AbyssDeep, AbyssToxic, Main.rand.NextFloat(0.45f, 1f)),
+                    Main.rand.NextFloat(1f, 1.65f));
+                jetDust.noGravity = true;
+                jetDust.fadeIn = jetDust.scale * 1.05f;
             }
 
+            for (int i = 0; i < 7; i++)
+            {
+                Particle foam = new CustomSpark(
+                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
+                    back.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.5f, 1.6f),
+                    "CalamityMod/Particles/WaterFoam",
+                    false,
+                    Main.rand.Next(5, 8),
+                    Main.rand.NextFloat(0.16f, 0.24f),
+                    Color.Lerp(waterColor, AbyssFoam, Main.rand.NextFloat(0.25f, 0.65f)) * 0.85f,
+                    Vector2.One,
+                    true,
+                    false);
+                GeneralParticleHandler.SpawnParticle(foam);
+            }
         }
 
         private void SpawnFlightEffects()
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 spawnCenter = Projectile.Center - forward * Main.rand.NextFloat(3f, 8f);
+            Vector2 back = -forward;
+            Vector2 spawnCenter = Projectile.Center + back * Main.rand.NextFloat(1f, 7f);
+            float jetAge = Projectile.localAI[0];
 
-            if (Projectile.numUpdates == 0 || Main.rand.NextBool(2))
+            if (Projectile.timeLeft % 2 == 0 && jetAge > 3f)
             {
-                Dust mist = CreateAbyssDust(
-                    spawnCenter + Main.rand.NextVector2Circular(4f, 4f),
-                    -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.28f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
-                    Main.rand.NextFloat(1.2f, 1.75f),
-                    Main.rand.NextFloat(0.15f, 0.75f),
-                    125);
-                mist.velocity *= 0.85f;
+                Particle foam = new CustomSpark(
+                    Projectile.Center,
+                    Projectile.velocity * Main.rand.NextFloat(0.1f, 0.5f),
+                    "CalamityMod/Particles/WaterFoam",
+                    false,
+                    Main.rand.Next(4, 7),
+                    Main.rand.NextFloat(0.15f, 0.22f),
+                    Color.DodgerBlue * 0.75f,
+                    Vector2.One,
+                    true,
+                    false,
+                    Main.rand.NextFloat(-10f, 10f));
+                GeneralParticleHandler.SpawnParticle(foam);
             }
 
-            if (Main.rand.NextBool(2))
+            if (Projectile.timeLeft > 20)
             {
-                Dust foam = CreateFoamDust(
-                    spawnCenter + Main.rand.NextVector2Circular(4f, 4f),
-                    -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.12f) + Main.rand.NextVector2Circular(0.2f, 0.2f),
-                    Main.rand.NextFloat(0.9f, 1.25f),
-                    Main.rand.NextFloat(0.15f, 0.9f),
-                    135);
-                foam.velocity *= 0.55f;
+                Particle waterLine = new CustomSpark(
+                    Projectile.Center,
+                    back * Projectile.velocity.Length() * 0.05f,
+                    "CalamityMod/Particles/WaterFlavored",
+                    false,
+                    2,
+                    MathHelper.Min(1.45f, 0.85f + jetAge * 0.013f),
+                    waterColor * MathHelper.Clamp(1f - jetAge * 0.006f, 0.25f, 0.9f),
+                    new Vector2(0.2f + MathHelper.Min(jetAge * 0.008f, 0.35f), 1f));
+                GeneralParticleHandler.SpawnParticle(waterLine);
             }
 
-            if (Main.rand.NextBool(3))
+            if (Projectile.numUpdates == 0 && Projectile.timeLeft % 2 == 0)
             {
-                Dust sparkle = CreateAbyssDust(
-                    Projectile.Center + Main.rand.NextVector2Circular(2f, 2f),
-                    Main.rand.NextVector2Circular(0.12f, 0.12f),
-                    Main.rand.NextFloat(0.85f, 1.1f),
-                    Main.rand.NextFloat(0.8f, 1f),
-                    160);
-                sparkle.velocity *= 0.25f;
+                Particle smoke = new HeavySmokeParticle(
+                    Projectile.Center,
+                    Projectile.velocity * -Main.rand.NextFloat(0.2f, 0.6f),
+                    Color.MediumBlue,
+                    30,
+                    Main.rand.NextFloat(0.35f, 0.5f),
+                    0.3f,
+                    Main.rand.NextFloat(-0.2f, 0.2f),
+                    false,
+                    0f,
+                    true);
+                GeneralParticleHandler.SpawnParticle(smoke);
             }
 
+            if (Main.rand.NextBool())
+            {
+                int dustType = Main.rand.NextBool(5) ? 267 : 278;
+                Dust waterDust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(3f + spreadDust, 3f + spreadDust),
+                    dustType,
+                    -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.35f),
+                    0,
+                    Main.rand.NextBool(5) ? Color.Aqua : waterColor,
+                    Main.rand.NextFloat(0.4f, 0.6f));
+                waterDust.noGravity = true;
+                if (waterDust.type == 278)
+                    waterDust.scale *= 0.7f;
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                int dustType = Main.rand.NextBool(3) ? 104 : (Main.rand.NextBool() ? 96 : 29);
+                Dust jetDust = Dust.NewDustPerfect(
+                    spawnCenter,
+                    dustType,
+                    Projectile.velocity * Main.rand.NextFloat(0.25f, 0.7f) + new Vector2(0.5f, 0.5f).RotatedByRandom(100f) * Main.rand.NextFloat(0.2f, 1.1f),
+                    0,
+                    Color.Lerp(AbyssBlue, AbyssToxic, Main.rand.NextFloat(0.25f, 0.85f)),
+                    Main.rand.NextFloat(0.9f, 1.55f));
+                jetDust.noGravity = true;
+            }
+
+            if (Projectile.timeLeft < 20)
+                spreadDust += 2;
         }
 
         private void SpawnImpactEffects(Vector2 center, Vector2 forward, float intensity)

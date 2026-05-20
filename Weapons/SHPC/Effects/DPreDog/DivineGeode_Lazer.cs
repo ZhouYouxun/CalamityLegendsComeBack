@@ -11,6 +11,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
     public class DivineGeode_Lazer : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
+        private const int ExtraUpdateCount = 7;
+        private const int LifetimePerExtraUpdate = 75;
+        private const int ForceConvergeFrame = 80;
+        private const float LaunchSpeed = 17f;
+        private const float PreConvergeLeftTurnRadians = -0.034906586f;
         private int timer;
 
         public override string Texture => "Terraria/Images/Projectile_0"; // 透明占位
@@ -24,12 +29,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.hostile = false;
 
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 500;
-
             Projectile.tileCollide = true;
             Projectile.penetrate = 6;
 
-            Projectile.extraUpdates = 10; // 高更新频率核心
+            Projectile.extraUpdates = ExtraUpdateCount; // 高更新频率核心
+            Projectile.timeLeft = LifetimePerExtraUpdate * Projectile.extraUpdates;
 
             Projectile.ignoreWater = true;
         }
@@ -37,13 +41,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             timer = 0;
+            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * LaunchSpeed;
         }
 
         public override void AI()
         {
             timer++;
 
-            if (timer > 80)
+            if (timer <= ForceConvergeFrame)
+                Projectile.velocity = Projectile.velocity.RotatedBy(PreConvergeLeftTurnRadians);
+            else
                 ForceConvergeToTarget();
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -194,7 +201,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 return;
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-            float speed = Math.Max(Projectile.velocity.Length(), 18f);
+            float speed = Math.Max(Projectile.velocity.Length(), 20f);
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.18f);
         }
 

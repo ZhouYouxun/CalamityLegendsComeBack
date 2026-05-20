@@ -120,28 +120,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             for (int arm = 0; arm < 6; arm++)
             {
                 float armAngle = OrbitAngle + MathHelper.TwoPi * arm / 6f;
-                float[] branchAngles =
-                {
-                    armAngle,
-                    armAngle + MathHelper.Pi / 6f,
-                    armAngle - MathHelper.Pi / 6f
-                };
-                float[] speeds = { 13.5f, 10.5f, 10.5f };
+                Vector2 velocity = armAngle.ToRotationVector2() * 13.5f;
 
-                for (int branch = 0; branch < branchAngles.Length; branch++)
-                {
-                    Vector2 velocity = branchAngles[branch].ToRotationVector2() * speeds[branch];
-
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        velocity,
-                        ModContent.ProjectileType<EndothermicEnergy_Split>(),
-                        Projectile.damage,
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        branch);
-                }
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<EndothermicEnergy_Split>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    arm);
             }
 
             Vector2 forward = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);

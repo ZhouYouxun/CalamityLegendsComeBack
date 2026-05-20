@@ -1,6 +1,5 @@
 ﻿using CalamityMod;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -52,18 +51,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         {
             target.AddBuff(BuffID.Frostburn, 300); // 原版的霜火效果
             target.AddBuff(BuffID.Chilled, 300); // 原版的寒冷效果
-
-            if (Projectile.owner == Main.myPlayer)
-            {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    target.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<EssenceofSnow_N2>(),
-                    (int)(Projectile.damage * 0.35f),
-                    0f,
-                    Projectile.owner);
-            }
         }
 
         public override void AI()

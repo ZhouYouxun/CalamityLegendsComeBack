@@ -183,6 +183,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             // 原版尾迹
             // ====================
 
+            /*
+            // Temporarily disabled: MagicPixel trail effect.
             Texture2D pixel = TextureAssets.MagicPixel.Value;
 
             for (int i = 1; i < Projectile.oldPos.Length; i++)
@@ -225,6 +227,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     0
                 );
             }
+            */
 
             // ====================
             // 赤红像素冲击碎片
@@ -232,6 +235,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             // 而是体素碎片化扩散
             // ====================
 
+            /*
+            // Temporarily disabled: MagicPixel voxel shock effect.
             Texture2D shockPixel = TextureAssets.MagicPixel.Value;
 
             // 世界坐标中心
@@ -366,6 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     SpriteEffects.None,
                     0f);
             }
+            */
 
 
 
@@ -488,6 +494,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private static float ScaledPower(float value) => value * AshEffectIntensity;
 
+        /*
+        // Temporarily disabled: MagicPixel crimson ring helper.
         private void DrawCrimsonMagicPixelRing(Vector2 center, int frame)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
@@ -702,6 +710,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
+
+        */
 
         private void CreateUltimateAshExplosionFX(Vector2 center)
         {

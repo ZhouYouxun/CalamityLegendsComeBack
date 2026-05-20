@@ -71,17 +71,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Color cyan = DepthCells_Drop.AbyssCyan;
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                Color.Lerp(DepthCells_Drop.AbyssDeep, toxic, 0.18f),
-                "CalamityMod/Particles/BloomCircle",
-                Vector2.One,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.08f,
-                0.32f,
-                22,
-                false));
+            //GeneralParticleHandler.SpawnParticle(new CustomPulse(
+            //    projectile.Center,
+            //    Vector2.Zero,
+            //    Color.Lerp(DepthCells_Drop.AbyssDeep, toxic, 0.18f),
+            //    "CalamityMod/Particles/BloomCircle",
+            //    Vector2.One,
+            //    Main.rand.NextFloat(MathHelper.TwoPi),
+            //    0.08f,
+            //    0.32f,
+            //    22,
+            //    false));
 
             for (int i = 0; i < 16; i++)
             {
@@ -127,17 +127,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                projectile.Center,
-                Vector2.Zero,
-                Color.Lerp(DepthCells_Drop.AbyssDeep, DepthCells_Drop.AbyssCyan, 0.22f),
-                "CalamityMod/Particles/BloomRing",
-                Vector2.One,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.06f,
-                0.42f,
-                20,
-                false));
+            //GeneralParticleHandler.SpawnParticle(new CustomPulse(
+            //    projectile.Center,
+            //    Vector2.Zero,
+            //    Color.Lerp(DepthCells_Drop.AbyssDeep, DepthCells_Drop.AbyssCyan, 0.22f),
+            //    "CalamityMod/Particles/BloomRing",
+            //    Vector2.One,
+            //    Main.rand.NextFloat(MathHelper.TwoPi),
+            //    0.06f,
+            //    0.42f,
+            //    20,
+            //    false));
 
             for (int i = 0; i < 22; i++)
             {

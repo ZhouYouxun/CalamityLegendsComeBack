@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Max(projectile.velocity.Length(), 16f);
+            Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Clamp(projectile.velocity.Length(), 14f, 18f);
             Vector2 side = baseVelocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
 
             for (int i = 0; i < 3; i++)

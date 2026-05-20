@@ -27,8 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         public override void SetDefaults()
         {
-            Projectile.width = 16;
-            Projectile.height = 16;
+            Projectile.width = Projectile.height = 36;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
@@ -72,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private void SpawnCosmicFireFlightVisuals(float targetDistance)
         {
-            if (Main.rand.NextBool(2) && Time > 12f && targetDistance < 1400f)
+            if (Main.rand.NextBool(2) && Time >= 1f && targetDistance < 1400f)
             {
                 Particle orb = new GenericBloom(
                     Projectile.Center + Main.rand.NextVector2CircularEdge(4f, 4f),
@@ -93,7 +92,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 dust.color = InnerColor;
             }
 
-            if (Time > 12f && targetDistance < 1400f)
+            if (Time >= 1f && targetDistance < 1400f)
             {
                 Particle spark = new CustomSpark(
                     Projectile.Center,
@@ -122,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 spark2.DrawLayer = GeneralDrawLayer.AfterEverything;
             }
 
-            if (Time == 9f)
+            if (Time == 1f)
             {
                 for (int i = 0; i <= 10; i++)
                 {
@@ -138,10 +137,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private void SpawnCosmicFireVoidDustHelix(float targetDistance, Vector2 forward, Vector2 side)
         {
-            if (Time <= 12f || targetDistance >= 1400f)
+            if (targetDistance >= 1400f)
                 return;
 
-            float age = Utils.GetLerpValue(12f, 46f, Time, true);
+            float age = Utils.GetLerpValue(0f, 34f, Time, true);
             float radius = MathHelper.Lerp(5f, 19f, age);
             float basePhase = Time * 0.92f + Projectile.velocity.ToRotation() * 0.45f + Projectile.identity * 0.37f;
 
@@ -174,7 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private void SpawnStrangeEntropyFlicker(float targetDistance, Vector2 side)
         {
-            if (Time <= 12f || targetDistance >= 1400f || !Main.rand.NextBool(4))
+            if (targetDistance >= 1400f || !Main.rand.NextBool(4))
                 return;
 
             float offset = (float)System.Math.Sin(Time * 0.31f + Projectile.identity) * Main.rand.NextFloat(4f, 13f);

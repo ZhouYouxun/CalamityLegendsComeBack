@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override int EffectID => 34;
 
         public override int AmmoType => ModContent.ItemType<EndothermicEnergy>();
+        private const float ArrowLaunchSpeed = 35f;
 
         public override Color ThemeColor => new Color(120, 170, 255);
         public override Color StartColor => new Color(220, 240, 255);
@@ -28,8 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         {
             EndothermicEnergy_GP gp = projectile.GetGlobalProjectile<EndothermicEnergy_GP>();
             gp.firstFrame = true;
-            gp.releaseLN2 = false;
-            gp.hasReleasedLN2 = false;
+            gp.releaseArrow = false;
+            gp.hasReleasedArrow = false;
 
             int ownerIndex = owner.whoAmI;
             int currentFrame = (int)Main.GameUpdateCount;
@@ -38,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 currentFrame - LastPrimarySpawnFrameByOwner[ownerIndex] > PrimarySpawnLockoutFrames))
             {
                 LastPrimarySpawnFrameByOwner[ownerIndex] = currentFrame;
-                gp.releaseLN2 = true;
+                gp.releaseArrow = true;
             }
         }
 
@@ -71,17 +72,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 return;
 
             EndothermicEnergy_GP gp = projectile.GetGlobalProjectile<EndothermicEnergy_GP>();
-            if (!gp.releaseLN2 || gp.hasReleasedLN2)
+            if (!gp.releaseArrow || gp.hasReleasedArrow)
                 return;
 
-            gp.hasReleasedLN2 = true;
+            gp.hasReleasedArrow = true;
 
-            Vector2 spawnVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * projectile.velocity.Length();
+            Vector2 spawnVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * ArrowLaunchSpeed;
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
                 spawnVelocity,
-                ModContent.ProjectileType<EndothermicEnergy_LN2>(),
+                ModContent.ProjectileType<EndothermicEnergy_ARROW>(),
                 projectile.damage,
                 projectile.knockBack,
                 owner.whoAmI
@@ -95,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;
-        public bool releaseLN2;
-        public bool hasReleasedLN2;
+        public bool releaseArrow;
+        public bool hasReleasedArrow;
     }
 }

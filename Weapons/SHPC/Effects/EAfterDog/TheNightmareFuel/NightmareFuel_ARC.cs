@@ -131,35 +131,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
             {
                 float side = i == 0 ? -1f : 1f;
                 float wave = (float)System.Math.Sin(waveTime + i * 1.4f) * 7f;
-                Vector2 spawnPos = Projectile.Center - forward * 24f + right * wave * side;
-                Vector2 velocity = -forward * Main.rand.NextFloat(0.7f, 1.8f) + right * side * Main.rand.NextFloat(0.08f, 0.42f);
 
-                SquishyLightParticle particle = new(
-                    spawnPos,
-                    velocity,
-                    Main.rand.NextFloat(0.62f, 1f),
-                    Color.Lerp(arcColor, new Color(190, 112, 255), Main.rand.NextFloat(0.25f, 0.65f)),
-                    Main.rand.Next(14, 22)
-                );
+                for (int j = 0; j < 2; j++)
+                {
+                    Vector2 spawnPos = Projectile.Center - forward * Main.rand.NextFloat(20f, 24f) + right * (wave * side + Main.rand.NextFloat(-1.5f, 1.5f));
+                    Vector2 velocity = -forward * Main.rand.NextFloat(0.7f, 1.8f) + right * side * Main.rand.NextFloat(0.08f, 0.42f);
 
-                GeneralParticleHandler.SpawnParticle(particle);
+                    SquishyLightParticle particle = new(
+                        spawnPos,
+                        velocity,
+                        Main.rand.NextFloat(0.62f, 1f),
+                        Color.Lerp(arcColor, new Color(190, 112, 255), Main.rand.NextFloat(0.25f, 0.65f)),
+                        Main.rand.Next(14, 22)
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(particle);
+                }
             }
 
             if (timer % 3 == 0)
             {
-                Particle mist = new MediumMistParticle(
-                    Projectile.Center - forward * Main.rand.NextFloat(10f, 30f) + right * Main.rand.NextFloat(-8f, 8f),
-                    -forward * Main.rand.NextFloat(0.4f, 1.2f),
-                    new Color(82, 24, 132),
-                    Color.Transparent,
-                    Main.rand.NextFloat(0.48f, 0.72f),
-                    Main.rand.NextFloat(90f, 130f)
-                );
+                for (int i = 0; i < 2; i++)
+                {
+                    Particle mist = new MediumMistParticle(
+                        Projectile.Center - forward * Main.rand.NextFloat(10f, 30f) + right * Main.rand.NextFloat(-8f, 8f),
+                        -forward * Main.rand.NextFloat(0.4f, 1.2f),
+                        new Color(82, 24, 132),
+                        Color.Transparent,
+                        Main.rand.NextFloat(0.48f, 0.72f),
+                        Main.rand.NextFloat(90f, 130f)
+                    );
 
-                GeneralParticleHandler.SpawnParticle(mist);
+                    GeneralParticleHandler.SpawnParticle(mist);
+                }
             }
 
-            if (Main.rand.NextBool(4))
+            if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),

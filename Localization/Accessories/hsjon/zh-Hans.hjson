@@ -100,6 +100,8 @@ Mods: {
 				// UnholyEssence_HolyNova.DisplayName: Unholy Essence_ Holy Nova
 				// RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
 				// FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
+				// PlagueCell_Lazer.DisplayName: Plague Cell_ Lazer
+				// EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
 			}
 
 			ChangedWeapons: {
