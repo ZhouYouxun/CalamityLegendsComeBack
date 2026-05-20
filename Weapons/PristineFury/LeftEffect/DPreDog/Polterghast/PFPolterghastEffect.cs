@@ -5,12 +5,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFPolterghastEffect
     {
-        private const int BurstCooldown = 39;
-        private const int BurstCount = 5;
-        private const int BurstSpacing = 5;
-        private const float FireSpeed = 12f;
+        private const int AccelerationFrames = 300;
+        private const int SlowInterval = 8;
+        private const int FastInterval = 3;
+        private const float FireSpeed = 15.5f;
         private const float DamageMultiplier = 0.58f;
-        private const float Recoil = 4.4f;
+        private const float Recoil = 3.8f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -20,24 +20,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
             }
 
-            if (holdout.LeftChargeTimer > 0)
-            {
-                holdout.LeftChargeTimer--;
-                return;
-            }
-
-            if (holdout.LeftAuxTimer <= 0)
-            {
-                holdout.LeftAuxTimer = BurstCount;
-                holdout.LeftTimer = 0;
-            }
-
+            holdout.LeftChargeTimer = System.Math.Min(AccelerationFrames, holdout.LeftChargeTimer + 1);
+            int interval = (int)System.MathF.Round(MathHelper.Lerp(SlowInterval, FastInterval, holdout.LeftChargeTimer / (float)AccelerationFrames));
             holdout.LeftTimer++;
-            if (holdout.LeftTimer < BurstSpacing)
+            if (holdout.LeftTimer < interval)
                 return;
 
             holdout.LeftTimer = 0;
-            holdout.LeftAuxTimer--;
 
             PFLeftEffectRules.FireSingle(
                 holdout,
@@ -50,9 +39,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Color.DodgerBlue,
                 0.75f,
                 16f);
-
-            if (holdout.LeftAuxTimer <= 0)
-                holdout.LeftChargeTimer = BurstCooldown;
         }
     }
 }

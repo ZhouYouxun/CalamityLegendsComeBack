@@ -1,15 +1,12 @@
 using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFAuroraEffect
     {
-        private const int FireInterval = 5;
-        private const float FireSpeed = 7.5f;
-        private const float Spread = 0.08f;
-        private const float DamageMultiplier = 0.5f;
-        private const float Recoil = 4.6f;
+        private const float DamageMultiplier = 3.2f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -19,22 +16,36 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
             }
 
-            holdout.LeftTimer++;
-            if (holdout.LeftTimer < FireInterval)
-                return;
+            EnsureMuzzleOrb(holdout);
+            if (++holdout.LeftTimer % 12 == 0)
+                holdout.SpawnMuzzleBurst(new Color(126, 210, 255), 0.52f);
+        }
 
-            holdout.LeftTimer = 0;
-            PFLeftEffectRules.FireSingle(
-                holdout,
-                ModContent.ProjectileType<PFAurora_Flame>(),
-                FireSpeed,
-                Spread,
-                DamageMultiplier,
-                Recoil,
-                12,
-                new Color(126, 210, 255),
-                0.82f,
-                15f);
+        private static void EnsureMuzzleOrb(NewLegendPristineFuryHoldOut holdout)
+        {
+            int orbType = ModContent.ProjectileType<PFAurora_MuzzleOrb>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != holdout.Projectile.owner || projectile.type != orbType || (int)projectile.ai[0] != holdout.Projectile.whoAmI)
+                    continue;
+
+                projectile.timeLeft = 2;
+                projectile.damage = holdout.GetScaledDamage(DamageMultiplier);
+                projectile.knockBack = holdout.Projectile.knockBack;
+                PFLeftEffectRules.ApplyTheme(projectile.whoAmI, holdout.CurrentMark);
+                return;
+            }
+
+            int orb = Projectile.NewProjectile(
+                holdout.Projectile.GetSource_FromThis(),
+                holdout.GunTipPosition + holdout.AimDirection * 7f,
+                Vector2.Zero,
+                orbType,
+                holdout.GetScaledDamage(DamageMultiplier),
+                holdout.Projectile.knockBack,
+                holdout.Projectile.owner,
+                holdout.Projectile.whoAmI);
+            PFLeftEffectRules.ApplyTheme(orb, holdout.CurrentMark);
         }
     }
 }

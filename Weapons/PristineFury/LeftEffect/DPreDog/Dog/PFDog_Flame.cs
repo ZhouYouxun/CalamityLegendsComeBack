@@ -1,125 +1,350 @@
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Dusts;
+using CalamityMod.Enums;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Linq;
 using Terraria;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
-    internal sealed class PFDog_Flame : ModProjectile, ILocalizedModType
+    internal sealed class PFDog_Flame : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/FireProj";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Ascendant/AscendantSpirit_PROJ";
 
-        private const int Lifetime = 96;
-        private const int FadeTime = 80;
+        private const float CollisionRadius = 12f;
+        private const int Lifetime = 76;
         private ref float Timer => ref Projectile.localAI[0];
-        private int mistFrame = -1;
+        private float squash = 0.42f;
+
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(160, 100, 255));
+        private Color VisualColor
+        {
+            get
+            {
+                Color theme = ThemeColor;
+                float pulse = (float)Math.Sin(Timer * 0.14f + Projectile.identity * 0.31f) * 0.5f + 0.5f;
+                return Color.Lerp(theme, Color.Cyan, 0.18f + pulse * 0.18f);
+            }
+        }
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 30;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 10;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 7;
-            Projectile.timeLeft = Lifetime;
-            Projectile.extraUpdates = 4;
             Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.extraUpdates = 3;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 4;
             Projectile.ignoreWater = true;
-            Projectile.usesIDStaticNPCImmunity = true;
-            Projectile.idStaticNPCHitCooldown = 3;
         }
 
         public override void AI()
         {
             Timer++;
-            mistFrame = mistFrame == -1 ? Main.rand.Next(3) : mistFrame;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Projectile.rotation = direction.ToRotation() + MathHelper.PiOver2;
+            Projectile.scale = MathHelper.Lerp(Projectile.scale, 0.98f, 0.08f);
+            squash = MathHelper.Lerp(squash, 0.2f, 0.12f);
 
-            if (Timer > FadeTime)
-                Projectile.velocity *= 0.95f;
+            Lighting.AddLight(Projectile.Center, VisualColor.ToVector3() * 0.72f);
+            SpawnFlightParticles(direction);
 
-            if (Timer > 6f && Timer < FadeTime)
-            {
-                if (Main.rand.NextBool(16))
-                {
-                    Dust dust = Dust.NewDustDirect(Projectile.Center + Main.rand.NextVector2Circular(60f, 60f) * Utils.Remap(Timer, 0f, FadeTime, 0.5f, 1f), 4, 4, DustID.CorruptTorch, Projectile.velocity.X * 0.2f, Projectile.velocity.Y * 0.2f, 100);
-                    dust.velocity += Projectile.velocity * Utils.Remap(Timer, 0f, FadeTime * 0.75f, 1f, 0.1f);
-                    dust.velocity *= 1.1f;
-                    if (Main.rand.NextBool(5))
-                    {
-                        dust.noGravity = true;
-                        dust.scale *= 2f;
-                    }
-                }
-
-                if (Main.rand.NextBool(19))
-                {
-                    float size = Utils.Remap(Utils.GetLerpValue(0f, Lifetime, Timer), 0.2f, 0.5f, 0.25f, 1f);
-                    Particle trail = new CustomSpark(Projectile.Center, Projectile.velocity + Vector2.UnitY * Main.rand.NextFloat(-10f, -24f) * size, "CalamityMod/Particles/BloomCircle", false, 14, 0.9f * size, (Main.rand.NextBool() ? Color.DarkBlue : Color.BlueViolet) * 0.5f, new Vector2(Main.rand.NextFloat(2f, 3f), 1f), true, true, shrinkSpeed: 0.3f, glowOpacity: 0.5f);
-                    GeneralParticleHandler.SpawnParticle(trail);
-                }
-            }
-            else if (Timer == 5f)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? 295 : 181, Projectile.velocity.RotatedByRandom(MathHelper.ToRadians(30f)) * Main.rand.NextFloat(0.5f, 1f));
-                dust.scale = Main.rand.NextFloat(0.8f, 1.8f);
-                dust.noGravity = true;
-                dust.fadeIn = 0.5f;
-            }
+            if (Timer > 20f)
+                Projectile.velocity *= 1.006f;
         }
 
-        public override void ModifyDamageHitbox(ref Rectangle hitbox)
+        private void SpawnFlightParticles(Vector2 direction)
         {
-            int size = (int)Utils.Remap(Timer, 0f, FadeTime, 10f, 42f);
-            if (Timer > FadeTime)
-                size = (int)Utils.Remap(Timer, FadeTime, Lifetime, 42f, 0f);
-            hitbox.Inflate(size, size);
+            if (Main.dedServ)
+                return;
+
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            Color visualColor = VisualColor;
+
+            if ((int)Timer % 2 == 0)
+            {
+                Particle trail = new CustomSpark(
+                    Projectile.Center - direction * 22f + normal * Main.rand.NextFloat(-3f, 3f),
+                    -direction * Main.rand.NextFloat(0.8f, 2.2f),
+                    "CalamityMod/Particles/DualTrail",
+                    false,
+                    14,
+                    0.11f,
+                    visualColor * 0.84f,
+                    new Vector2(0.7f, 1.72f),
+                    true,
+                    false,
+                    shrinkSpeed: 0.42f,
+                    glowOpacity: 0.58f);
+
+                GeneralParticleHandler.SpawnParticle(trail);
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(4f, 4f), ModContent.DustType<SquashDust>());
+                dust.scale = Main.rand.NextFloat(0.92f, 1.42f);
+                dust.velocity = -direction * Main.rand.NextFloat(2.4f, 5.6f) + normal * Main.rand.NextFloat(-1.2f, 1.2f);
+                dust.noGravity = true;
+                dust.color = Color.Lerp(visualColor, Color.White, Main.rand.NextFloat(0.1f, 0.32f));
+                dust.fadeIn = 3.4f;
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                Particle star = new CustomSpark(
+                    Projectile.Center + normal * Main.rand.NextFloat(-6f, 6f),
+                    -direction * Main.rand.NextFloat(0.6f, 1.8f) + normal * Main.rand.NextFloat(-0.8f, 0.8f),
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(12, 19),
+                    Main.rand.NextFloat(0.08f, 0.15f),
+                    Color.Lerp(visualColor, Color.White, 0.2f),
+                    Vector2.One,
+                    true,
+                    false,
+                    shrinkSpeed: 0.28f,
+                    glowOpacity: 0.7f);
+
+                GeneralParticleHandler.SpawnParticle(star);
+            }
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 1200);
+        public override bool? CanDamage() => Timer > 2f;
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+            CalamityUtils.CircularHitboxCollision(Projectile.Center, CollisionRadius, targetHitbox);
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+            target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 300);
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (Projectile.numHits > 0)
-                Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.75f));
+                modifiers.SourceDamage *= 0.82f;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Color visualColor = VisualColor;
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Circular(2.8f, 2.8f) + direction * Main.rand.NextFloat(0.6f, 2.2f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center,
+                    velocity,
+                    false,
+                    Main.rand.Next(11, 18),
+                    Main.rand.NextFloat(0.24f, 0.42f),
+                    Color.Lerp(visualColor, Color.White, Main.rand.NextFloat(0.12f, 0.34f)),
+                    true,
+                    true));
+            }
+
+            Particle pulse = new DirectionalPulseRing(
+                Projectile.Center,
+                Vector2.Zero,
+                visualColor,
+                Vector2.One,
+                direction.ToRotation(),
+                0.18f,
+                1.75f,
+                19);
+
+            GeneralParticleHandler.SpawnParticle(pulse);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D fire = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
-            Texture2D mist = ModContent.Request<Texture2D>("CalamityMod/Particles/MediumMist").Value;
-            float timeRatio = Utils.GetLerpValue(0f, Lifetime, Timer);
-            float fireSize = Utils.Remap(timeRatio, 0.2f, 0.5f, 0.25f, 1f);
-            float length = Timer > FadeTime - 10f ? 0.1f : 0.15f;
-            float vOffset = MathHelper.Min(Timer, 20f);
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D circularSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmear").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
+            Texture2D fadeStreak = ModContent.Request<Texture2D>("CalamityMod/Particles/FadeStreak").Value;
 
-            if (timeRatio >= 1f || mistFrame < 0)
-                return false;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = texture.Size() * 0.5f;
+            Color visualColor = VisualColor;
+            Color outlineColor = Color.Lerp(visualColor, Color.White, 0.2f);
+            Color bodyColor = Color.Lerp(visualColor, Color.White, 0.16f);
+            float fadeIn = Utils.GetLerpValue(0f, 8f, Timer, true);
+            float fadeOut = Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
+            float opacity = fadeIn * fadeOut;
+            Vector2 needleScale = new Vector2(0.78f + squash * 0.12f, 2.4f + (1f - squash) * 0.85f) * Projectile.scale;
 
-            for (float j = 1f; j >= 0f; j -= length)
+            PFLeftEffectRules.BeginAdditive();
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                visualColor with { A = 0 } * 0.28f * opacity,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                new Vector2(0.22f, 0.64f) * Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                circularSmear,
+                drawPosition,
+                null,
+                visualColor with { A = 0 } * 0.34f * opacity,
+                Projectile.rotation * 1.3f,
+                circularSmear.Size() * 0.5f,
+                Projectile.scale * 0.32f,
+                SpriteEffects.None,
+                0f);
+
+            for (int i = 0; i < 5; i++)
             {
-                Color fireColor =
-                    timeRatio < 0.1f ? Color.Lerp(Color.Transparent, new Color(160, 100, 255, 200), Utils.GetLerpValue(0f, 0.1f, timeRatio)) :
-                    timeRatio < 0.2f ? Color.Lerp(new Color(160, 100, 255, 200), new Color(160, 50, 255, 70), Utils.GetLerpValue(0.1f, 0.2f, timeRatio)) :
-                    timeRatio < 0.7f ? Color.Lerp(new Color(160, 50, 255, 70), new Color(120, 100, 255, 100), Utils.GetLerpValue(0.35f, 0.7f, timeRatio)) :
-                    Color.Lerp(new Color(120, 100, 255, 100), Color.Transparent, Utils.GetLerpValue(0.7f, 1f, timeRatio));
-
-                fireColor *= (1f - j) * Utils.GetLerpValue(0f, 0.2f, timeRatio, true);
-                Vector2 firePos = Projectile.Center - Main.screenPosition - Projectile.velocity * vOffset * j;
-                float mainRot = (-j * MathHelper.PiOver2 - Main.GlobalTimeWrappedHourly * (j + 1f) * 2f / length) * System.Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
-                Vector2 trailOffset = Projectile.velocity * vOffset * length * 0.5f;
-
-                Main.EntitySpriteDraw(fire, firePos - trailOffset, null, fireColor * 0.25f, MathHelper.PiOver4 - mainRot, fire.Size() * 0.5f, fireSize, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(fire, firePos, null, fireColor, mainRot, fire.Size() * 0.5f, fireSize, SpriteEffects.None, 0);
-
-                Rectangle frame = mist.Frame(1, 3, 0, mistFrame);
-                Main.EntitySpriteDraw(mist, firePos, frame, Color.Lerp(fireColor, Color.White, 0.3f) with { A = 0 }, mainRot, frame.Size() * 0.5f, fireSize, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(mist, firePos, frame, fireColor with { A = 0 }, mainRot, frame.Size() * 0.5f, fireSize * 3f, SpriteEffects.None, 0);
+                Vector2 offset = (MathHelper.TwoPi * i / 5f).ToRotationVector2().RotatedBy(Projectile.rotation + MathHelper.Pi);
+                Main.EntitySpriteDraw(
+                    fadeStreak,
+                    drawPosition,
+                    null,
+                    visualColor with { A = 0 } * 0.28f * opacity,
+                    offset.ToRotation(),
+                    new Vector2(fadeStreak.Width * 0.5f, 0f),
+                    new Vector2(0.44f, 0.22f) * Projectile.scale,
+                    SpriteEffects.FlipVertically,
+                    0f);
             }
 
+            Main.EntitySpriteDraw(
+                star,
+                drawPosition,
+                null,
+                Color.White with { A = 0 } * 0.2f * opacity,
+                Projectile.rotation,
+                star.Size() * 0.5f,
+                new Vector2(0.16f, 0.32f) * Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 drawOffset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * 2.75f;
+                Main.EntitySpriteDraw(
+                    texture,
+                    drawPosition + drawOffset,
+                    null,
+                    outlineColor with { A = 0 } * 0.48f * opacity,
+                    Projectile.rotation,
+                    origin,
+                    needleScale,
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                null,
+                bodyColor * opacity,
+                Projectile.rotation,
+                origin,
+                needleScale,
+                SpriteEffects.None,
+                0f);
+
+            PFLeftEffectRules.EndAdditive();
             return false;
+        }
+
+        public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
+        {
+            Vector2[] trailPoints = Projectile.oldPos
+                .Where(position => position != Vector2.Zero)
+                .Select(position => position + Projectile.Size * 0.5f)
+                .ToArray();
+
+            if (trailPoints.Length == 0)
+                trailPoints = new[] { Projectile.Center - Projectile.velocity, Projectile.Center };
+            else if (trailPoints[0] != Projectile.Center)
+                trailPoints = new[] { Projectile.Center }.Concat(trailPoints).ToArray();
+
+            if (trailPoints.Length < 2)
+                return;
+
+            GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+
+            PrimitiveRenderer.RenderTrail(
+                trailPoints,
+                new PrimitiveSettings(
+                    TrailWidthFunction,
+                    TrailColorFunction,
+                    (_, _) => Projectile.Size * 0.5f,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:TrailStreak"]),
+                trailPoints.Length * 2);
+
+            Vector2[] corePoints = trailPoints.Take(Math.Min(10, trailPoints.Length)).ToArray();
+            if (corePoints.Length < 2)
+                return;
+
+            GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+
+            PrimitiveRenderer.RenderTrail(
+                corePoints,
+                new PrimitiveSettings(
+                    TrailCoreWidthFunction,
+                    TrailCoreColorFunction,
+                    (_, _) => Projectile.Size * 0.5f,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:TrailStreak"]),
+                corePoints.Length * 2);
+        }
+
+        private float TrailWidthFunction(float completion, Vector2 _) =>
+            Utils.Remap(completion, 0f, 0.85f, Projectile.scale * 35f, 0f) * Projectile.Opacity;
+
+        private Color TrailColorFunction(float completion, Vector2 _)
+        {
+            Color bodyColor = Color.Lerp(VisualColor, Color.Cyan, 0.22f);
+            Color tailColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.68f, 1f, completion, true));
+            bodyColor.A = 0;
+            tailColor.A = 0;
+            return Color.Lerp(bodyColor, tailColor, completion) * (1f - completion * 0.32f);
+        }
+
+        private float TrailCoreWidthFunction(float completion, Vector2 _) =>
+            Utils.Remap(completion, 0f, 0.82f, Projectile.scale * 13f, 0f) * Projectile.Opacity;
+
+        private Color TrailCoreColorFunction(float completion, Vector2 _)
+        {
+            Color bodyColor = Color.Lerp(Color.White, VisualColor, 0.22f);
+            Color tailColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.74f, 1f, completion, true));
+            bodyColor.A = 0;
+            tailColor.A = 0;
+            return Color.Lerp(bodyColor, tailColor, completion);
         }
     }
 }

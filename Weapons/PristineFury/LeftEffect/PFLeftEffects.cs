@@ -84,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 direction = holdout.AimDirection.RotatedBy(Main.rand.NextFloat(-spreadRadians, spreadRadians));
             Vector2 muzzle = holdout.GunTipPosition + direction * forwardOffset;
 
-            Projectile.NewProjectile(
+            int projectileIndex = Projectile.NewProjectile(
                 holdout.Projectile.GetSource_FromThis(),
                 muzzle,
                 direction * speed,
@@ -94,6 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 holdout.Projectile.owner,
                 ai0,
                 holdout.LeftBurstIndex++);
+            ApplyTheme(projectileIndex, holdout.CurrentMark);
 
             holdout.ApplyRecoil(recoil);
             holdout.TriggerMuzzleFlash(muzzleFlashFrames);
@@ -124,7 +125,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 float spread = MathHelper.Lerp(-fanRadians, fanRadians, ratio);
                 Vector2 velocity = direction.RotatedBy(spread) * (speed + speedStep * i);
 
-                Projectile.NewProjectile(
+                int projectileIndex = Projectile.NewProjectile(
                     holdout.Projectile.GetSource_FromThis(),
                     muzzle + direction * (i * 3f),
                     velocity,
@@ -134,6 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     holdout.Projectile.owner,
                     ai0Base + i,
                     holdout.LeftBurstIndex + i);
+                ApplyTheme(projectileIndex, holdout.CurrentMark);
             }
 
             holdout.LeftBurstIndex += count;
@@ -152,6 +154,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
+        internal static Color GetThemeColor(Projectile projectile, Color fallback)
+        {
+            int markValue = (int)projectile.ai[2];
+            return System.Enum.IsDefined(typeof(PristineFuryMark), markValue)
+                ? PristineFuryMarkHelper.GetColor((PristineFuryMark)markValue)
+                : fallback;
+        }
+
+        internal static void ApplyTheme(int projectileIndex, PristineFuryMark mark)
+        {
+            if (projectileIndex < 0 || projectileIndex >= Main.maxProjectiles)
+                return;
+
+            Main.projectile[projectileIndex].ai[2] = (int)mark;
+            Main.projectile[projectileIndex].netUpdate = true;
         }
     }
 }

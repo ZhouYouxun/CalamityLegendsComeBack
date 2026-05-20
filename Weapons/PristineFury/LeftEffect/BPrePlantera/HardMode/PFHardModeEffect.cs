@@ -5,11 +5,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFHardModeEffect
     {
-        private const int FireInterval = 6;
-        private const float FireSpeed = 9.8f;
-        private const float Spread = 0.12f;
-        private const float DamageMultiplier = 0.82f;
-        private const float Recoil = 5.4f;
+        private const int FireInterval = 5;
+        private const int CatCount = 3;
+        private const float FireSpeed = 12.8f;
+        private const float Fan = 0.18f;
+        private const float DamageMultiplier = 0.48f;
+        private const float Recoil = 4.6f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -24,15 +25,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             holdout.LeftTimer = 0;
-            PFLeftEffectRules.FireSingle(
+            PFLeftEffectRules.FireSpread(
                 holdout,
-                ModContent.ProjectileType<PFHardMode_Flame>(),
+                ModContent.ProjectileType<PFHardMode_MeowCreature>(),
+                CatCount,
+                Fan,
                 FireSpeed,
-                Spread,
+                0.35f,
                 DamageMultiplier,
                 Recoil,
                 14,
-                Color.DeepSkyBlue,
+                new Color(255, 142, 66),
                 0.9f,
                 15f);
         }

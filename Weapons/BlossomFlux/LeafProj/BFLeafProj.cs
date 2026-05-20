@@ -40,6 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
         private ref float ReconWanderTimer => ref Projectile.ai[1];
         private ref float BombardExplosionsLeft => ref Projectile.ai[1];
         private ref float LastReconHitNpcIndex => ref Projectile.ai[2];
+        private readonly bool[] ignoredReconTargets = new bool[Main.maxNPCs];
         private int bombardExplosionCooldown;
         private int bombardMarkedExplosionCooldown;
 
@@ -94,6 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     StoredSpeed = MathHelper.Clamp(StoredSpeed, 11f, 21f);
                     Projectile.localNPCHitCooldown = 18;
                     LastReconHitNpcIndex = -1f;
+                    Array.Clear(ignoredReconTargets, 0, ignoredReconTargets.Length);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
@@ -174,6 +176,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
+                    if (BFArrowCommon.InBounds(target.whoAmI, ignoredReconTargets.Length))
+                        ignoredReconTargets[target.whoAmI] = true;
+
                     Projectile.localNPCImmunity[target.whoAmI] = Projectile.timeLeft + 30;
                     target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyPriorityMark(Projectile.owner, BFReconLeftBalance.MarkDuration);
                     if (BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
@@ -366,6 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                 NPC priorityTarget = Main.npc[priorityTargetIndex];
                 if (priorityTarget.whoAmI != excludedNpcIndex &&
                     priorityTarget.whoAmI != (int)LastReconHitNpcIndex &&
+                    !HasAlreadyHitReconTarget(priorityTarget.whoAmI) &&
                     Projectile.localNPCImmunity[priorityTarget.whoAmI] <= 0 &&
                     priorityTarget.active &&
                     priorityTarget.CanBeChasedBy(Projectile) &&
@@ -386,6 +392,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                 if (npc.whoAmI == excludedNpcIndex || npc.whoAmI == (int)LastReconHitNpcIndex)
                     continue;
 
+                if (HasAlreadyHitReconTarget(npc.whoAmI))
+                    continue;
+
                 if (Projectile.localNPCImmunity[npc.whoAmI] > 0)
                     continue;
 
@@ -398,6 +407,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             }
 
             return bestTarget;
+        }
+
+        private bool HasAlreadyHitReconTarget(int npcIndex)
+        {
+            return BFArrowCommon.InBounds(npcIndex, ignoredReconTargets.Length) && ignoredReconTargets[npcIndex];
         }
 
         private bool IsReconPriorityTarget(NPC target)

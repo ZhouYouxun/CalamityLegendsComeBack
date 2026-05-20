@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         internal static int Spawn(IEntitySource source, Vector2 center, Vector2 velocity, int owner, float healAmount, float spawnMode)
         {
             int targetIndex = BFArrowCommon.InBounds(owner, Main.maxPlayers)
-                ? FindRandomInjuredPlayerIndex(Main.player[owner], center, BaseSearchRange)
+                ? FindRecoveryTargetPlayerIndex(Main.player[owner], center, BaseSearchRange)
                 : -1;
 
             return Projectile.NewProjectile(
@@ -170,7 +170,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
             Texture2D magicTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
             Texture2D circleTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_04").Value;
-            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             Color mainColor = new Color(110, 255, 150, 180) * Projectile.Opacity;
             Color accentColor = new Color(220, 255, 235, 205) * Projectile.Opacity;
             Vector2 drawCenter = Projectile.Center - Main.screenPosition;
@@ -248,22 +247,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 SpriteEffects.None,
                 0f);
 
-            for (int i = 0; i < 4; i++)
-            {
-                float rotation = Projectile.rotation + MathHelper.TwoPi * i / 4f;
-                Vector2 offset = rotation.ToRotationVector2() * (4.5f + 2f * pulse) * Projectile.scale * tinyMagicScale;
-                Main.EntitySpriteDraw(
-                    sparkTexture,
-                    drawCenter + offset,
-                    null,
-                    Color.Lerp(mainColor, accentColor, 0.45f) * 0.22f,
-                    rotation,
-                    sparkTexture.Size() * 0.5f,
-                    new Vector2(0.058f, 0.2f) * Projectile.scale * tinyMagicScale,
-                    SpriteEffects.None,
-                    0f);
-            }
-
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
@@ -301,9 +284,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             return candidates[Main.rand.Next(candidateCount)];
         }
 
+        private static int FindRecoveryTargetPlayerIndex(Player owner, Vector2 center, float maxDistance)
+        {
+            int injuredTarget = FindRandomInjuredPlayerIndex(owner, center, maxDistance);
+            if (injuredTarget >= 0)
+                return injuredTarget;
+
+            if (owner.active && !owner.dead)
+                return owner.whoAmI;
+
+            return -1;
+        }
+
         private void RefreshHealTarget()
         {
-            int newTargetIndex = FindRandomInjuredPlayerIndex(Owner, Projectile.Center, BaseSearchRange);
+            int newTargetIndex = FindRecoveryTargetPlayerIndex(Owner, Projectile.Center, BaseSearchRange);
             if ((int)TargetPlayerIndex == newTargetIndex)
                 return;
 
@@ -317,7 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 return false;
 
             Player target = Main.player[(int)TargetPlayerIndex];
-            return target.active && !target.dead && target.statLife < target.statLifeMax2;
+            return target.active && !target.dead;
         }
 
         private void ScatterBehavior()
@@ -355,12 +350,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private void HealTarget(Player target)
         {
-            int healAmount = Utils.Clamp((int)MathF.Round(StoredHealAmount), 1, 999);
-            target.statLife += healAmount;
-            if (target.statLife > target.statLifeMax2)
-                target.statLife = target.statLifeMax2;
+            int maxHealAmount = Utils.Clamp((int)MathF.Round(StoredHealAmount), 1, 999);
+            int healAmount = Math.Min(maxHealAmount, Math.Max(0, target.statLifeMax2 - target.statLife));
+            if (healAmount > 0)
+            {
+                target.statLife += healAmount;
+                if (target.statLife > target.statLifeMax2)
+                    target.statLife = target.statLifeMax2;
 
-            target.HealEffect(healAmount, true);
+                target.HealEffect(healAmount, true);
+            }
+
             if (!FromChargedRelease)
                 target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);
 

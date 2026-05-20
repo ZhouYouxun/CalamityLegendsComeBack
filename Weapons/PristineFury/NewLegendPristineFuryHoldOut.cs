@@ -50,6 +50,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private int muzzleFlashTimer;
         private int leftEffectResetKey = -1;
         private float recoilOffset;
+        private float leftVisualPower;
+        private int dragonEyeTimer;
 
         internal int LeftTimer;
         internal int LeftChargeTimer;
@@ -62,6 +64,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal Player Owner => Main.player[Projectile.owner];
         internal Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         internal Vector2 GunTipPosition => Projectile.Center + AimDirection * 54f;
+        internal Vector2 DragonMouthPosition => GunTipPosition + AimDirection * 8f;
+        internal Vector2 DragonEyePosition
+        {
+            get
+            {
+                Vector2 right = AimDirection.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
+                return Projectile.Center + AimDirection * 16f - right * 12f;
+            }
+        }
         internal PristineFuryMark CurrentMark => Owner.GetModPlayer<PristineFuryPlayer>().CurrentMark;
 
         public override void SetStaticDefaults()
@@ -113,6 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             bool bothHeld = leftHeld && rightHeld;
 
             ResetLeftStateIfMarkChanged();
+            UpdateLeftVisualState(leftHeld);
 
             // 临时调试：右键只按顺序切换印记，禁用右键散射和左+右提取钩；这不是永久设计，也不是最终交互。
             if (rightHeld)
@@ -162,6 +174,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;
+        }
+
+        private void UpdateLeftVisualState(bool leftHeld)
+        {
+            leftVisualPower = MathHelper.Lerp(leftVisualPower, leftHeld ? 1f : 0f, leftHeld ? 0.28f : 0.12f);
+            if (leftHeld)
+                dragonEyeTimer++;
         }
 
         private void CycleMarkForTemporaryDebug()
@@ -357,6 +376,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Vector2 armPosition = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
             Vector2 aim = AimDirection;
 
+            if (ShouldUseProvidenceMortarPose())
+            {
+                UpdateProvidenceMortarPose(armPosition);
+                return;
+            }
+
             if (Projectile.owner == Main.myPlayer)
             {
                 Vector2 desiredAim = (GetMouseWorld() - armPosition).SafeNormalize(Vector2.UnitX * Owner.direction);
@@ -384,6 +409,61 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             if (recoilOffset > 0f)
                 recoilOffset = MathHelper.Lerp(recoilOffset, 0f, 0.22f);
+        }
+
+        private bool ShouldUseProvidenceMortarPose()
+        {
+            if (CurrentMark != PristineFuryMark.Providence)
+                return false;
+
+            if (Projectile.owner != Main.myPlayer)
+                return leftHeldLastFrame;
+
+            bool validMouse = !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface && !(Main.playerInventory && Main.HoverItem.type == Owner.HeldItem.type);
+            return validMouse && Main.mouseLeft;
+        }
+
+        private void UpdateProvidenceMortarPose(Vector2 armPosition)
+        {
+            Vector2 mouseWorld = GetMouseWorld();
+            Vector2 skyAnchor = new(MathHelper.Lerp(mouseWorld.X, Owner.Center.X, 0.55f), Owner.Center.Y - 500f * Owner.gravDir);
+            Vector2 desiredAim = (skyAnchor - Owner.Center).SafeNormalize(-Vector2.UnitY * Owner.gravDir);
+            Vector2 aim = AimDirection;
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Projectile.velocity = Vector2.Lerp(aim, desiredAim, 0.42f).SafeNormalize(desiredAim);
+                aim = AimDirection;
+                Projectile.netUpdate = true;
+            }
+
+            float upDot = Vector2.Dot(aim, -Vector2.UnitY * Owner.gravDir);
+            int direction = Math.Sign(aim.X);
+            if (direction == 0)
+                direction = Owner.direction;
+
+            Vector2 armOffset = new(
+                Utils.Remap(MathF.Abs(upDot), 0f, 1f, 0f, -14f, true) * direction,
+                -6f * Owner.gravDir + Utils.Remap(MathF.Abs(upDot), 0f, 1f, 0f, 24f, true) * Owner.gravDir);
+
+            Projectile.spriteDirection = direction;
+            Projectile.direction = direction;
+            Projectile.rotation = aim.ToRotation();
+            Projectile.Center = armPosition + aim * (HoldoutDistance + 8f - recoilOffset) + armOffset;
+
+            Owner.ChangeDir(direction);
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.itemRotation = (aim * direction).ToRotation();
+
+            float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir;
+            if (Owner.gravDir == -1f)
+                armRotation += MathHelper.Pi;
+
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Quarter, armRotation);
+            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, armRotation + MathHelper.ToRadians(12f) * direction);
+
+            if (recoilOffset > 0f)
+                recoilOffset = MathHelper.Lerp(recoilOffset, 0f, 0.12f);
         }
 
         private void UpdateAnimation()
@@ -558,9 +638,64 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Main.EntitySpriteDraw(texture, drawPosition, frame, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, effects, 0);
             Main.EntitySpriteDraw(glow, drawPosition, frame, (Color.White with { A = 0 }) * (0.45f + flash), Projectile.rotation, origin, Projectile.scale, effects, 0);
+            DrawDragonEyeGlow(leftVisualPower);
+            DrawDragonMouthSmoke(leftVisualPower);
             DrawMuzzleGlow(flash);
             DrawHookChargeBar();
             return false;
+        }
+
+        private void DrawDragonEyeGlow(float power)
+        {
+            if (power <= 0.025f || Main.dedServ)
+                return;
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Vector2 eye = DragonEyePosition - Main.screenPosition;
+            Color theme = PristineFuryMarkHelper.GetColor(CurrentMark);
+            Color color = (Color.Lerp(theme, Color.White, 0.28f) with { A = 0 }) * power;
+            float pulse = 0.86f + 0.14f * (float)Math.Sin(dragonEyeTimer * 0.22f);
+
+            PFLeftEffectRules.BeginAdditive();
+            Main.EntitySpriteDraw(bloom, eye, null, color * 0.72f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.18f, 0.12f) * pulse, SpriteEffects.None, 0);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float rotation = Projectile.rotation + MathHelper.TwoPi * i / 3f + dragonEyeTimer * 0.035f;
+                Main.EntitySpriteDraw(star, eye, null, color * 0.58f, rotation, star.Size() * 0.5f, new Vector2(0.12f, 0.72f + power * 0.38f), SpriteEffects.None, 0);
+            }
+
+            PFLeftEffectRules.EndAdditive();
+        }
+
+        private void DrawDragonMouthSmoke(float power)
+        {
+            if (power <= 0.025f || Main.dedServ)
+                return;
+
+            Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
+            Texture2D smoke = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/smoke_04").Value;
+            Vector2 mouth = DragonMouthPosition - Main.screenPosition;
+            Vector2 forward = AimDirection;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Color theme = PristineFuryMarkHelper.GetColor(CurrentMark) with { A = 0 };
+            Color white = Color.White with { A = 0 };
+            float time = Main.GlobalTimeWrappedHourly * 4.8f;
+
+            PFLeftEffectRules.BeginAdditive();
+            for (int i = 0; i < 5; i++)
+            {
+                float local = i / 5f;
+                float swirl = time + local * MathHelper.TwoPi;
+                Vector2 offset = forward * (2f + i * 3.2f) + right * (float)Math.Sin(swirl) * (1.1f + i * 0.35f);
+                float opacity = power * (1f - local * 0.12f);
+                float scale = 0.035f + local * 0.012f;
+                Main.EntitySpriteDraw(smoke, mouth + offset, null, theme * opacity * 0.26f, Projectile.rotation + swirl * 0.18f, smoke.Size() * 0.5f, scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(magic, mouth + offset * 0.7f, null, Color.Lerp(theme, white, 0.25f) * opacity * 0.18f, -Projectile.rotation + swirl * 0.12f, magic.Size() * 0.5f, scale * 0.72f, SpriteEffects.None, 0);
+            }
+
+            PFLeftEffectRules.EndAdditive();
         }
 
         private void DrawMuzzleGlow(float flash)

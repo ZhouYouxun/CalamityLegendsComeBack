@@ -25,10 +25,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     internal sealed class NewLegendBlossomFluxHoldOut : BaseIdleHoldoutProjectile, ILocalizedModType
     {
         private const int ParallelArrowCount = 3;
-        private const int RecoveryBurstGroupCount = 4;
+        private const int RecoveryVisualCycleCount = 4;
         private const int BreakthroughFireInterval = 15;
         private const int RecoveryBurstInterval = 7;
-        private const int RecoveryCyclePause = 40;
         private const int ReconBurstShotCount = 5;
         private const int ReconFireInterval = 5;
         private const int ReconCyclePause = 20;
@@ -44,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int RightOutlinePulseFrames = 22;
         private const float ParallelSpacing = 18f;
         private const float RecoveryDnaMaxOffset = 18f;
-        private const float RecoveryDnaPhaseStep = 0.55f;
+        private const float RecoveryDnaPhaseStep = MathHelper.Pi / 8f;
         private const float BreakthroughSpeed = 19f;
         private const float ReconSpread = 0.34f;
         private const float BombardSpeed = 12f;
@@ -334,7 +333,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private int GetInitialLeftFireDelay() => CurrentPreset switch
         {
             BlossomFluxChloroplastPresetType.Chlo_ABreak => 0,
-            BlossomFluxChloroplastPresetType.Chlo_BRecov => RecoveryBurstInterval,
+            BlossomFluxChloroplastPresetType.Chlo_BRecov => 0,
             BlossomFluxChloroplastPresetType.Chlo_CDetec => 0,
             BlossomFluxChloroplastPresetType.Chlo_DBomb => BombardFireInterval,
             BlossomFluxChloroplastPresetType.Chlo_EPlague => 0,
@@ -392,17 +391,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             switch (CurrentPreset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
-                    burstGroupsStarted++;
-                    if (burstGroupsStarted >= RecoveryBurstGroupCount)
-                    {
-                        burstGroupsStarted = 0;
-                        leftBurstTimer = RecoveryCyclePause;
-                    }
-                    else
-                    {
-                        leftBurstTimer = RecoveryBurstInterval;
-                    }
-
+                    burstGroupsStarted = (burstGroupsStarted + 1) % RecoveryVisualCycleCount;
+                    leftBurstTimer = RecoveryBurstInterval;
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
@@ -666,7 +656,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return CurrentPreset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => GetDisplayedBreakthroughFireInterval(),
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => leftBurstTimer > RecoveryBurstInterval ? RecoveryCyclePause : RecoveryBurstInterval,
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => RecoveryBurstInterval,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => leftBurstTimer > ReconFireInterval ? ReconCyclePause : ReconFireInterval,
                 BlossomFluxChloroplastPresetType.Chlo_DBomb => BFBombardLeftBalance.GetStats().FireInterval,
                 BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueFireInterval,
@@ -866,13 +856,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            for (int i = 0; i < stats.FlashCount; i++)
+            int flashCount = stats.FlashCount;
+            Vector2 upward = -Vector2.UnitY * Owner.gravDir;
+            Vector2 side = skyDirection.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.UnitX);
+
+            for (int i = 0; i < flashCount; i++)
             {
-                float progress = stats.FlashCount <= 1 ? 0.5f : i / (stats.FlashCount - 1f);
-                float fan = MathHelper.Lerp(-2.25f, 2.25f, progress) + Main.rand.NextFloat(-0.24f, 0.24f);
-                Vector2 spawnPosition = Owner.Center + new Vector2(fan * 128f, -148f * Owner.gravDir) + Main.rand.NextVector2Circular(78f, 54f);
-                Vector2 velocityDirection = new Vector2(fan * 0.72f, -1f * Owner.gravDir).RotatedByRandom(0.16f).SafeNormalize(skyDirection);
-                Vector2 velocity = velocityDirection * Main.rand.NextFloat(2.1f, 4.9f) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_BRecov);
+                float progress = flashCount <= 1 ? 0.5f : i / (flashCount - 1f);
+                Vector2 treeOffset = GetRecoveryTreeOffset(i, flashCount, upward, side);
+                Vector2 spawnPosition = Owner.Center + treeOffset;
+                Vector2 velocityDirection = Vector2.Lerp(upward, treeOffset.SafeNormalize(upward), 0.34f + progress * 0.2f).SafeNormalize(upward);
+                Vector2 velocity = velocityDirection * MathHelper.Lerp(2.2f, 3.8f, progress) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_BRecov);
 
                 BFArrow_BRecovTransfer.Spawn(
                     Projectile.GetSource_FromThis(),
@@ -882,6 +876,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     stats.HealAmount,
                     BFArrow_BRecovTransfer.ChargedReleaseSpawnMode);
             }
+        }
+
+        private static Vector2 GetRecoveryTreeOffset(int index, int count, Vector2 upward, Vector2 side)
+        {
+            float progress = count <= 1 ? 0f : index / (count - 1f);
+            float smoothed = MathHelper.SmoothStep(0f, 1f, progress);
+            float height = MathHelper.Lerp(26f, 178f, progress);
+            float radius = MathHelper.Lerp(0f, 72f, smoothed);
+            float angle = -MathHelper.PiOver2 + index * 1.72f;
+            float lateral = MathF.Cos(angle) * radius;
+            float verticalCurl = MathF.Sin(angle) * radius * 0.16f;
+
+            return upward * (height + verticalCurl) + side * lateral;
         }
 
         private void FireReconSpecialArrow(float chargeCompletion)
@@ -1386,8 +1393,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             Vector2 origin = GetShootOrigin(shootVelocity);
             Vector2 normal = shootVelocity.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
-            float phase = MathHelper.PiOver2 + leftShotsFired * RecoveryDnaPhaseStep;
-            float offsetAmount = (float)Math.Sin(phase) * RecoveryDnaMaxOffset;
+            float phase = leftShotsFired * RecoveryDnaPhaseStep;
+            float offsetAmount = MathF.Cos(phase) * RecoveryDnaMaxOffset;
 
             SpawnLeftProjectile(source, origin + normal * offsetAmount, shootVelocity, projectileType, damage, knockback, CurrentPreset);
             SpawnLeftProjectile(source, origin - normal * offsetAmount, shootVelocity, projectileType, damage, knockback, CurrentPreset);
@@ -1397,8 +1404,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Vector2 baseVelocity = GetAimVelocity(Math.Max(speed, 15f));
             Vector2 origin = GetShootOrigin(baseVelocity);
+            Vector2 normal = baseVelocity.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
+            const int scatterCount = 3;
 
-            SpawnLeftProjectile(source, origin, baseVelocity, projectileType, damage, knockback, CurrentPreset);
+            for (int i = 0; i < scatterCount; i++)
+            {
+                float progress = scatterCount <= 1 ? 0.5f : i / (scatterCount - 1f);
+                float spread = MathHelper.Lerp(-ReconSpread, ReconSpread, progress);
+                Vector2 shotVelocity = baseVelocity.RotatedBy(spread);
+                Vector2 spawnPosition = origin + normal * MathHelper.Lerp(-8f, 8f, progress);
+                SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, damage, knockback, CurrentPreset);
+            }
+
             SpawnLeftMuzzleFX(origin, baseVelocity, CurrentPreset, 0.92f + reconShotsFiredInBurst * 0.06f);
             SoundEngine.PlaySound(SoundID.Item9 with { Pitch = 0.35f + reconShotsFiredInBurst * 0.03f, Volume = 0.38f }, Owner.Center);
         }
@@ -2008,10 +2025,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private void DrawRecoveryChargeCore()
         {
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D magic03 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
-            Texture2D magic04 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_04").Value;
-            Texture2D circle = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_04").Value;
-            Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             Vector2 center = Vector2.Lerp(Projectile.Center, GunTipPosition, 0.36f) - Main.screenPosition;
             float charge = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
             float pulse = 0.84f + 0.16f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8.5f + Projectile.identity * 0.3f);
@@ -2043,58 +2056,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 SpriteEffects.None,
                 0f);
 
-            for (int i = 0; i < 3; i++)
-            {
-                Texture2D texture = i == 1 ? magic04 : magic03;
-                float rotation = Main.GlobalTimeWrappedHourly * (0.42f + i * 0.28f) * (i == 1 ? -1f : 1f) + Projectile.identity * 0.05f;
-                float scale = (0.22f + i * 0.06f + charge * 0.2f) * pulse * coreDrawScale;
-                Main.EntitySpriteDraw(
-                    texture,
-                    center,
-                    null,
-                    Color.Lerp(green, pale, 0.2f + i * 0.24f) * (0.46f + charge * 0.3f),
-                    rotation,
-                    texture.Size() * 0.5f,
-                    scale,
-                    i == 2 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
-                    0f);
-            }
-
-            Main.EntitySpriteDraw(
-                circle,
-                center,
-                null,
-                Color.Lerp(green, pale, 0.42f) * (0.34f + charge * 0.32f),
-                -Main.GlobalTimeWrappedHourly * 0.62f,
-                circle.Size() * 0.5f,
-                (0.18f + charge * 0.22f) * pulse * coreDrawScale,
-                SpriteEffects.None,
-                0f);
-
-            float sparkRadius = MathHelper.Lerp(18f, 54f, charge) * pulse * coreDrawScale;
-            for (int i = 0; i < 10; i++)
-            {
-                float angle = MathHelper.TwoPi * i / 10f + Main.GlobalTimeWrappedHourly * (i % 2 == 0 ? 1.25f : -1.05f);
-                Vector2 offset = angle.ToRotationVector2() * sparkRadius;
-                Main.EntitySpriteDraw(
-                    spark,
-                    center + offset,
-                    null,
-                    pale * (0.48f + charge * 0.26f),
-                    angle + MathHelper.PiOver2,
-                    spark.Size() * 0.5f,
-                    new Vector2(0.045f, 0.14f + charge * 0.08f) * coreDrawScale,
-                    SpriteEffects.None,
-                    0f);
-            }
-
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
         private void DrawHoldoutChargeBloom(float chargeGlow)
         {
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Color bloomColor = (Color.Lerp(PresetColor, Color.White, 0.62f) with { A = 0 }) * (0.28f + chargeGlow * 0.62f);
             Color starColor = (Color.Lerp(AccentColor, Color.White, 0.74f) with { A = 0 }) * (0.18f + chargeGlow * 0.72f);
             Vector2 bodyCenter = Vector2.Lerp(Projectile.Center, GunTipPosition, 0.45f) - Main.screenPosition;
@@ -2123,9 +2090,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 SpriteEffects.None,
                 0);
 
-            if (chargeGlow <= 0.03f)
+            if (chargeGlow <= 0.03f || CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
                 return;
 
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             for (int i = 0; i < 4; i++)
             {
                 float rotation = Projectile.rotation + MathHelper.PiOver4 * i + Main.GlobalTimeWrappedHourly * (1.2f + i * 0.2f);
