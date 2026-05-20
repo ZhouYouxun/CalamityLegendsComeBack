@@ -58,13 +58,6 @@
 	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Compile Include="Weapons\PristineFury\LeftEffect\BPrePlantera\BrimstoneElemental\BrimstoneFuryC\BrimstoneFuryRe.cs" />
-	  <Compile Include="Weapons\PristineFury\LeftEffect\BPrePlantera\BrimstoneElemental\BrimstoneFuryC\BrimstoneFuryReBEAM.cs" />
-	  <Compile Include="Weapons\PristineFury\LeftEffect\BPrePlantera\BrimstoneElemental\BrimstoneFuryC\BrimstoneFuryReCinderNeedle.cs" />
-	  <Compile Include="Weapons\PristineFury\LeftEffect\BPrePlantera\BrimstoneElemental\BrimstoneFuryC\BrimstoneFuryReHold.cs" />
-	  <Compile Include="Weapons\PristineFury\LeftEffect\BPrePlantera\BrimstoneElemental\BrimstoneFuryC\BrimstoneFuryRePROJ.cs" />
-	</ItemGroup>
 
 	<!-- References -->
 
