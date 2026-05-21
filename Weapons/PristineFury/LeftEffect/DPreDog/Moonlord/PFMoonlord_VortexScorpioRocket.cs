@@ -245,7 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     TrailColorFunction,
                     (_, _) => Vector2.Zero,
                     false,
-                    false,
+                    true,
                     GameShaders.Misc["CalamityMod:TrailStreak"]),
                 25);
         }

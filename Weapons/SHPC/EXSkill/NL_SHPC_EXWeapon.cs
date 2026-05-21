@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityMod;
 using CalamityMod.Particles;
+using CalamityMod.Skies;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Utilities;
@@ -181,6 +182,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private void LaserPhase()
         {
             timer++;
+
+            if (!Main.dedServ)
+                ExoMechsSky.CreateLightningBolt(2);
 
             // ================= 激光循环音效（武器级） =================
             laserSoundTimer++;

@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         private const int MaxUpdateCount = 2;
         private const int Lifetime = 350;
+        private const int TotalLifetime = Lifetime * MaxUpdateCount;
         private const float SuperLaserVisualWidth = 30f;
         private const float SuperLaserVisualScale = 0.7f;
         private const float SpiralAmplitude = (SuperLaserVisualWidth * SuperLaserVisualScale + 180f) * 0.5f;
@@ -50,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.timeLeft = Lifetime * MaxUpdateCount;
+            Projectile.timeLeft = TotalLifetime;
             Projectile.MaxUpdates = MaxUpdateCount;
             Projectile.penetrate = -1;
             Projectile.alpha = 255;
@@ -103,7 +104,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             axialDistance += axialSpeed / (MaxUpdateCount + 1f);
 
-            float lifeRatio = 1f - Projectile.timeLeft / (float)Lifetime;
+            float elapsedLifetime = TotalLifetime - Projectile.timeLeft;
+            float lifeRatio = Utils.GetLerpValue(0f, TotalLifetime, elapsedLifetime, true);
             float wavePhase =
                 axialDistance * (waveFrequency + lifeRatio * waveFrequencyDrift) +
                 Projectile.identity * 0.071f +
@@ -129,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             Projectile.rotation = Projectile.velocity.ToRotation();
             Projectile.Opacity =
-                Utils.GetLerpValue(0f, 16f, Lifetime - Projectile.timeLeft, true) *
+                Utils.GetLerpValue(0f, 16f, elapsedLifetime, true) *
                 Utils.GetLerpValue(0f, 36f, Projectile.timeLeft, true);
         }
 

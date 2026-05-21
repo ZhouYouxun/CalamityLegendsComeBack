@@ -97,17 +97,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private Color ColorFunction(float completionRatio, Vector2 vertexPos)
         {
-            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 142, 66));
-            Color rainbow = Main.hslToRgb(0.5f + 0.5f * completionRatio * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f), 1f, 0.8f);
-            return Color.Lerp(theme, rainbow, 0.35f) * Projectile.Opacity;
+            float hue = 0.5f + 0.5f * completionRatio * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
+            Color trailColor = Main.hslToRgb(hue, 1f, 0.8f);
+            return trailColor * Projectile.Opacity;
         }
 
-        public override bool PreDraw(ref Color lightColor)
+        public override void PostDraw(Color lightColor)
         {
             PrimitiveRenderer.RenderTrail(Projectile.oldPos, new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Projectile.Size * 0.5f), 30);
             Texture2D value = TextureAssets.Projectile[Type].Value;
             Main.EntitySpriteDraw(value, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, value.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0);
-            return false;
         }
     }
 }

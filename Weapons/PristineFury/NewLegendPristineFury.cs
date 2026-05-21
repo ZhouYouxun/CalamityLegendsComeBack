@@ -1,6 +1,7 @@
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Rarities;
+using CalamityLegendsComeBack.Weapons.PristineFury.Passive;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -54,6 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public override void HoldItem(Player player)
         {
             player.GetModPlayer<PristineFuryPlayer>().HoldingPristineFury = true;
+            player.GetModPlayer<PristineFuryPassivePlayer>().SetHoldingPristineFury();
             player.Calamity().mouseWorldListener = true;
 
             if (Main.myPlayer == player.whoAmI)

@@ -128,27 +128,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 dust.fadeIn = 1.8f + charge * 2f;
             }
 
-            if (holdout.LeftChargeTimer % 6 == 0)
-            {
-                Vector2 offset = Main.rand.NextVector2CircularEdge(62f + charge * 86f, 62f + charge * 86f);
-                Particle line = new CustomSpark(
-                    muzzle + offset,
-                    -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(4f, 9f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
-                    false,
-                    Main.rand.Next(12, 18),
-                    0.04f + charge * 0.04f,
-                    theme,
-                    new Vector2(0.38f, 1.9f + charge * 1.2f),
-                    true,
-                    false,
-                    shrinkSpeed: 0.58f,
-                    extraRotation: (-offset).ToRotation(),
-                    glowOpacity: 0.65f);
-
-                GeneralParticleHandler.SpawnParticle(line);
-            }
-
             if (holdout.LeftChargeTimer == ChargeFrames)
             {
                 Particle ring = new DirectionalPulseRing(muzzle, Vector2.Zero, theme, Vector2.One, direction.ToRotation(), 0.1f, 1.4f, 24);

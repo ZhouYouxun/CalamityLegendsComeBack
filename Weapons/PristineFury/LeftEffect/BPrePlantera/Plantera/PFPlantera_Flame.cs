@@ -64,12 +64,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 float wave = MathF.Cos(Projectile.timeLeft / 16f + Main.GlobalTimeWrappedHourly / 20f + i / (float)Projectile.oldPos.Length * MathHelper.Pi) * 0.5f + 0.5f;
-                Color color = Color.Lerp(PureGreen, Color.White, wave * 0.18f) with { A = 0 };
+                Color color = Color.Lerp(PureGreen, Color.White, wave * 0.18f);
                 Vector2 drawPosition = Projectile.oldPos[i] + value.Size() * 0.5f - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY) + new Vector2(-15f, -15f);
                 float scale = (0.9f + 0.15f * MathF.Cos(Main.GlobalTimeWrappedHourly % 60f * MathHelper.TwoPi)) * MathHelper.Lerp(0.15f, 1f, 1f - i / (float)Projectile.oldPos.Length);
                 Main.EntitySpriteDraw(value, drawPosition, null, color * scale * Projectile.scale, 0f, value.Size() * 0.5f, new Vector2(1.25f) * scale * 0.6f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(value, drawPosition, null, Color.Lerp(color, Color.Gold with { A = 0 }, 0.25f) * scale * Projectile.scale * 0.35f, 0f, value.Size() * 0.5f, new Vector2(1.25f) * scale * 0.42f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(value, drawPosition, null, Color.Lerp(color, Color.Gold, 0.25f) * scale * Projectile.scale * 0.35f, 0f, value.Size() * 0.5f, new Vector2(1.25f) * scale * 0.42f, SpriteEffects.None, 0);
             }
+
+            Vector2 currentPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY);
+            Main.EntitySpriteDraw(value, currentPosition, null, Color.Lerp(PureGreen, Color.White, 0.22f) * Projectile.scale, 0f, value.Size() * 0.5f, 0.78f, SpriteEffects.None, 0);
             PFLeftEffectRules.EndAdditive();
 
             return false;

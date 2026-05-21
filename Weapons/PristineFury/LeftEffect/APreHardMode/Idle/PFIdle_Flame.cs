@@ -58,8 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Color.Lerp(color, Color.White, 0.25f),
                 new Vector2(0.35f, 1.25f),
                 glowCenter: true,
-                shrinkSpeed: 0.9f,
-                extraRotation: Projectile.rotation));
+                shrinkSpeed: 0.9f));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<HolyFlames>(), 120);
@@ -79,7 +78,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 float completion = i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(line, drawPosition, null, color * opacity * (1f - completion), Projectile.rotation, line.Size() * 0.5f, new Vector2(0.13f, 0.58f * (1f - completion)), SpriteEffects.None, 0);
+                Vector2 trailDirection = i == 0
+                    ? Projectile.Center - (Projectile.oldPos[i] + Projectile.Size * 0.5f)
+                    : Projectile.oldPos[i - 1] - Projectile.oldPos[i];
+                float trailRotation = trailDirection.SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)).ToRotation() + MathHelper.PiOver2;
+                Main.EntitySpriteDraw(line, drawPosition, null, color * opacity * (1f - completion), trailRotation, line.Size() * 0.5f, new Vector2(0.13f, 0.58f * (1f - completion)), SpriteEffects.None, 0);
             }
 
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, Color.Lerp(color, Color.White with { A = 0 }, 0.35f) * opacity * 0.58f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.12f, 0.075f), SpriteEffects.None, 0);

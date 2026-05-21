@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = MaxHits;
+            Projectile.penetrate = 50;
             Projectile.alpha = 0;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;

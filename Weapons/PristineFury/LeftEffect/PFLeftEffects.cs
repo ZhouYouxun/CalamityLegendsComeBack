@@ -27,6 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 case PristineFuryMark.BrimstoneElemental:
                     PFBrimstoneElementalEffect.Update(holdout, held, justPressed, justReleased);
                     break;
+                case PristineFuryMark.FakeCalamity:
+                    PFFakeCalamityEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
                 case PristineFuryMark.Plantera:
                     PFPlanteraEffect.Update(holdout, held, justPressed, justReleased);
                     break;
@@ -47,6 +50,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     break;
                 case PristineFuryMark.Dog:
                     PFDogEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
+                case PristineFuryMark.ExoTwins:
+                    PFExoTwinsEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
+                case PristineFuryMark.ExoThanatos:
+                    PFExoThanatosEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
+                case PristineFuryMark.ExoAres:
+                    PFExoAresEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Dragon:
                     PFDragonEffect.Update(holdout, held, justPressed, justReleased);

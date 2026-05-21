@@ -13,6 +13,7 @@ Mods: {
 					Left_HardMode: "[c/FF8E42:Left Click: three Wall-pressure cones inflate into orange shock breath and searing waves.]"
 					Left_Prime: "[c/FFCE5C:Left Click: gear-toothed gold firestream with stepping cinders and mechanical spark teeth.]"
 					Left_BrimstoneElemental: "[c/F63740:Left Click: charge, then lance out a brimstone smear beam with red brand geometry.]"
+					Left_FakeCalamity: "[c/FF4236:Left Click: six-round Fake Calamity shotgun bursts ignite the impact zone.]"
 					Left_Plantera: "[c/5EF26C:Left Click: hold and release four wild-bloom spores that weave, heal, and home through petal runes.]"
 					Left_Aurora: "[c/7ED2FF:Left Click: aurora ribbon fog turns in five-point astral bends and stains enemies with starlight.]"
 					Left_Goliath: "[c/8BF249:Left Click: blight cloud breath sheds plague swarmlets and infects targets for death-release bursts.]"
@@ -20,6 +21,9 @@ Mods: {
 					Left_Providence: "[c/FFDC76:Left Click: profaned cleansing mortar blooms into a stationary consecrated fire field.]"
 					Left_Polterghast: "[c/D288FF:Left Click: Halley-soul stars drift, awaken, and chase in violet spectral rose patterns.]"
 					Left_Dog: "[c/6049D6:Left Click: Photoviscerator void stream tears delayed rifts and black accretion disks.]"
+					Left_ExoTwins: "[c/4AFFB4:Left Click: Artemis warning laser snaps forward, then Apollo rockets launch in a three-shot burst.]"
+					Left_ExoThanatos: "[c/66A2FF:Left Click: three Thanatos telegraphs converge before a terminal extinction beam tears open side lasers.]"
+					Left_ExoAres: "[c/FF4C40:Left Click: rapid Ares laser beams fire continuously from the muzzle.]"
 					Left_Dragon: "[c/FF6C32:Left Click: Yharon-style 18-pellet fan that splits into pressure cinders on impact.]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
@@ -82,6 +86,28 @@ Mods: {
 				PFPrime_Flame.DisplayName: P F Prime_ Flame
 				PFProvidence_Flame.DisplayName: P F Providence_ Flame
 				PFSlimeGod_Flame.DisplayName: P F Slime God_ Flame
+				PFAurora_MuzzleOrb.DisplayName: P F Aurora_ Muzzle Orb
+				PFBrimstoneElemental_HellbornProj.DisplayName: P F Brimstone Elemental_ Hellborn Proj
+				PFBrimstoneElemental_Laser.DisplayName: P F Brimstone Elemental_ Laser
+				PFDog_ChargeOrb.DisplayName: P F Dog_ Charge Orb
+				PFGoliath_HiveNukeMissile.DisplayName: P F Goliath_ Hive Nuke Missile
+				PFGoliath_MouseCrosshair.DisplayName: P F Goliath_ Mouse Crosshair
+				PFHardMode_MeowCreature.DisplayName: P F Hard Mode_ Meow Creature
+				PFFakeCalamity_Pellet.DisplayName: P F Fake Calamity_ Pellet
+				PFFakeCalamity_GroundFlame.DisplayName: P F Fake Calamity_ Ground Flame
+				PFMoonlord_SolarExplosion.DisplayName: P F Moonlord_ Solar Explosion
+				PFMoonlord_SolarLaser.DisplayName: P F Moonlord_ Solar Laser
+				PFMoonlord_VortexScorpioRocket.DisplayName: P F Moonlord_ Vortex Scorpio Rocket
+				PFPrime_BounceExplosion.DisplayName: P F Prime_ Bounce Explosion
+				PFProvidence_HolyFireField.DisplayName: P F Providence_ Holy Fire Field
+				PFProvidence_HolyShrapnel.DisplayName: P F Providence_ Holy Shrapnel
+				PFProvidence_NukeOfBliss.DisplayName: P F Providence_ Nuke Of Bliss
+				PFExoTwins_ArtemisLaser.DisplayName: P F Exo Twins_ Artemis Laser
+				PFExoTwins_ApolloRocket.DisplayName: P F Exo Twins_ Apollo Rocket
+				PFExoAresLaserBeamStart.DisplayName: P F Exo Ares Laser Beam
+				PFExoThanatosBeamTelegraph.DisplayName: P F Exo Thanatos Telegraph
+				PFExoThanatosBeamStart.DisplayName: P F Exo Thanatos Beam
+				PFExoThanatosSideLaser.DisplayName: P F Exo Thanatos Side Laser
 			}
 		}
 
@@ -96,6 +122,7 @@ Mods: {
 				HardMode: Wall of Flesh
 				Prime: Skeletron Prime
 				BrimstoneElemental: Brimstone Elemental
+				FakeCalamity: Fake Calamity
 				Plantera: Plantera
 				Aurora: Astrum Aureus
 				Goliath: The Plaguebringer Goliath
@@ -103,6 +130,9 @@ Mods: {
 				Providence: Providence
 				Polterghast: Polterghast
 				Dog: The Devourer of Gods
+				ExoTwins: Apollo and Artemis
+				ExoThanatos: Thanatos
+				ExoAres: Ares
 				Dragon: Yharon
 			}
 		}

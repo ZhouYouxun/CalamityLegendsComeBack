@@ -17,8 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             EnsureMuzzleOrb(holdout);
-            if (++holdout.LeftTimer % 12 == 0)
-                holdout.SpawnMuzzleBurst(new Color(126, 210, 255), 0.52f);
+            holdout.LeftTimer++;
         }
 
         private static void EnsureMuzzleOrb(NewLegendPristineFuryHoldOut holdout)

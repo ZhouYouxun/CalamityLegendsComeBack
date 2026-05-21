@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const int SalvoCount = 9;
         private const int ShotSpacing = 3;
         private const int SalvoCooldown = 20;
-        private const float FireSpeed = 10.8f;
+        private const float FireSpeed = 16.4f;
         private const float DamageMultiplier = 0.56f;
         private const float Recoil = 3.8f;
 
@@ -39,8 +39,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             holdout.LeftTimer = 0;
+            int shotIndex = SalvoCount - holdout.LeftAuxTimer;
             holdout.LeftAuxTimer--;
-            FireMissile(holdout);
+            FireMissile(holdout, shotIndex);
 
             if (holdout.LeftAuxTimer <= 0)
                 holdout.LeftChargeTimer = SalvoCooldown;
@@ -62,11 +63,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             PFLeftEffectRules.ApplyTheme(crosshair, holdout.CurrentMark);
         }
 
-        private static void FireMissile(NewLegendPristineFuryHoldOut holdout)
+        private static void FireMissile(NewLegendPristineFuryHoldOut holdout, int shotIndex)
         {
             Vector2 target = holdout.GetMouseWorld();
-            Vector2 direction = holdout.AimDirection.RotatedBy(Main.rand.NextFloat(-0.12f, 0.12f));
-            Vector2 velocity = direction * FireSpeed + direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-1.6f, 1.6f);
+            float ratio = SalvoCount == 1 ? 0.5f : shotIndex / (float)(SalvoCount - 1);
+            float spread = MathHelper.Lerp(-MathHelper.ToRadians(135f), MathHelper.ToRadians(135f), ratio);
+            Vector2 direction = holdout.AimDirection.RotatedBy(spread + Main.rand.NextFloat(-0.04f, 0.04f));
+            Vector2 velocity = direction * FireSpeed * Main.rand.NextFloat(0.94f, 1.12f);
             int missile = Projectile.NewProjectile(
                 holdout.Projectile.GetSource_FromThis(),
                 holdout.GunTipPosition + direction * 16f,

@@ -6,9 +6,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal static class PFHardModeEffect
     {
         private const int FireInterval = 5;
-        private const int CatCount = 3;
         private const float FireSpeed = 12.8f;
-        private const float Fan = 0.18f;
+        private const float RandomSpread = 0.18f;
         private const float DamageMultiplier = 0.48f;
         private const float Recoil = 4.6f;
 
@@ -25,13 +24,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             holdout.LeftTimer = 0;
-            PFLeftEffectRules.FireSpread(
+            PFLeftEffectRules.FireSingle(
                 holdout,
                 ModContent.ProjectileType<PFHardMode_MeowCreature>(),
-                CatCount,
-                Fan,
                 FireSpeed,
-                0.35f,
+                RandomSpread,
                 DamageMultiplier,
                 Recoil,
                 14,

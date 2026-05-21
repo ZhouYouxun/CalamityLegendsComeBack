@@ -15,9 +15,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
     internal sealed class NewLegendPristineFuryHoldOut : ModProjectile, ILocalizedModType
     {
         private const int HookChargeMaxFrames = 180;
-        private const int RightBurstCount = 6;
-        private const int RightBurstInterval = 4;
-        private const int RightBurstCooldown = 34;
+        private const int RightChargeMaxFrames = 120;
+        private const int RightChargeCooldown = 42;
+        private const float RightFireballSpeed = 15.5f;
+        private const float RightFireballDamageMultiplier = 2.15f;
         private const float HoldoutDistance = 34f;
 
         private static readonly PristineFuryMark[] TemporaryDebugMarkCycle =
@@ -28,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.HardMode,
             PristineFuryMark.Prime,
             PristineFuryMark.BrimstoneElemental,
+            PristineFuryMark.FakeCalamity,
             PristineFuryMark.Plantera,
             PristineFuryMark.Aurora,
             PristineFuryMark.Goliath,
@@ -35,6 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.Providence,
             PristineFuryMark.Polterghast,
             PristineFuryMark.Dog,
+            PristineFuryMark.ExoTwins,
+            PristineFuryMark.ExoThanatos,
+            PristineFuryMark.ExoAres,
             PristineFuryMark.Dragon
         };
 
@@ -44,8 +49,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private bool hookFiredForThisHold;
         private bool leftHeldLastFrame;
         private bool rightHeldLastFrame;
-        private int rightBurstTimer;
-        private int rightBurstShotsLeft;
+        private int rightChargeTimer;
+        private bool rightChargeReady;
         private int rightCooldownTimer;
         private int muzzleFlashTimer;
         private int leftEffectResetKey = -1;
@@ -129,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             // 临时调试：右键只按顺序切换印记，禁用右键散射和左+右提取钩；这不是永久设计，也不是最终交互。
             if (rightHeld)
             {
-                ResetRightBurst();
+                ResetRightCharge();
                 CancelHookChargeForTemporaryDebug();
 
                 if (!rightHeldLastFrame)
@@ -143,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             if (bothHeld)
             {
-                ResetRightBurst();
+                ResetRightCharge();
                 HandleHookCharge();
                 leftHeldLastFrame = leftHeld;
                 rightHeldLastFrame = rightHeld;
@@ -280,77 +285,100 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         private void HandleRightClick(bool rightHeld)
         {
-            if (!rightHeld)
-            {
-                ResetRightBurst();
-                return;
-            }
-
             if (rightCooldownTimer > 0)
-                return;
-
-            if (rightBurstShotsLeft <= 0)
             {
-                rightBurstShotsLeft = RightBurstCount;
-                rightBurstTimer = 0;
-            }
-
-            if (rightBurstShotsLeft <= 0)
-                return;
-
-            if (rightBurstTimer > 0)
-            {
-                rightBurstTimer--;
+                if (!rightHeld)
+                    ResetRightCharge();
                 return;
             }
 
-            FireRightScatter();
-            rightBurstShotsLeft--;
-            rightBurstTimer = RightBurstInterval;
+            if (rightHeld)
+            {
+                if (rightChargeTimer == 0)
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeStart") { Volume = 0.55f }, GunTipPosition);
 
-            if (rightBurstShotsLeft <= 0)
-                rightCooldownTimer = RightBurstCooldown;
+                rightChargeTimer = Math.Min(RightChargeMaxFrames, rightChargeTimer + 1);
+                float chargeCompletion = rightChargeTimer / (float)RightChargeMaxFrames;
+                EnsureRightChargeOrb(chargeCompletion);
+
+                if (!rightChargeReady && rightChargeTimer >= RightChargeMaxFrames)
+                {
+                    rightChargeReady = true;
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV1") { Volume = 0.65f, Pitch = -0.12f }, GunTipPosition);
+                }
+                else if (rightChargeTimer > 10 && rightChargeTimer < RightChargeMaxFrames && rightChargeTimer % 40 == 0)
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLoop") { Volume = 0.36f, Pitch = 0.18f }, GunTipPosition);
+
+                return;
+            }
+
+            if (rightHeldLastFrame && rightChargeTimer >= RightChargeMaxFrames)
+                FireRightNovaFireball();
+
+            ResetRightCharge();
         }
 
-        private void FireRightScatter()
+        private void EnsureRightChargeOrb(float chargeCompletion)
         {
-            Vector2 muzzleDirection = AimDirection;
-            Vector2 muzzle = GunTipPosition + muzzleDirection * 8f;
-            int pelletCount = Main.rand.Next(4, 7);
-            int damage = GetScaledDamage(0.34f);
-            float knockBack = Projectile.knockBack * 0.7f;
-            float speed = 13.5f;
-
-            if (Owner.PickAmmo(Owner.HeldItem, out _, out float pickedSpeed, out int pickedDamage, out float pickedKnockback, out _, dontConsume: Main.rand.NextBool(2)))
+            int chargeType = ModContent.ProjectileType<PristineFuryRightNovaChargeOrb>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
             {
-                speed = Math.Max(10f, pickedSpeed);
-                damage = Math.Max(1, (int)(pickedDamage * 0.34f));
-                knockBack = pickedKnockback;
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == Projectile.owner && projectile.type == chargeType && (int)projectile.ai[0] == Projectile.whoAmI)
+                {
+                    projectile.ai[1] = chargeCompletion;
+                    projectile.netUpdate = true;
+                    return;
+                }
             }
 
-            for (int i = 0; i < pelletCount; i++)
-            {
-                Vector2 velocity = muzzleDirection.RotatedBy(MathHelper.ToRadians(Main.rand.NextFloat(-11f, 11f))) * speed * Main.rand.NextFloat(0.86f, 1.18f);
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    muzzle,
-                    velocity,
-                    ModContent.ProjectileType<PristineFuryRightPellet>(),
-                    damage,
-                    knockBack,
-                    Projectile.owner);
-            }
-
-            ApplyRecoil(4f);
-            TriggerMuzzleFlash(12);
-            SpawnMuzzleBurst(new Color(255, 118, 57), 0.7f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/FlakKrakenShoot") { Volume = 0.5f, Pitch = 0.45f }, muzzle);
+            int orbIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + AimDirection * 8f,
+                AimDirection,
+                chargeType,
+                0,
+                0f,
+                Projectile.owner,
+                Projectile.whoAmI,
+                chargeCompletion);
+            PFLeftEffectRules.ApplyTheme(orbIndex, CurrentMark);
         }
 
-        private void ResetRightBurst()
+        private void FireRightNovaFireball()
         {
-            rightBurstShotsLeft = 0;
-            rightBurstTimer = 0;
+            Vector2 direction = AimDirection;
+            Vector2 muzzle = GunTipPosition + direction * 12f;
+            int fireballIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                muzzle,
+                direction * RightFireballSpeed,
+                ModContent.ProjectileType<PristineFuryRightNovaFireball>(),
+                GetScaledDamage(RightFireballDamageMultiplier),
+                Projectile.knockBack * 1.4f,
+                Projectile.owner);
+            PFLeftEffectRules.ApplyTheme(fireballIndex, CurrentMark);
+
+            ApplyRecoil(20f);
+            TriggerMuzzleFlash(24);
+            SpawnMuzzleBurst(new Color(255, 54, 42), 1.35f);
+            rightCooldownTimer = RightChargeCooldown;
+            Owner.SetScreenshake(6f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { PitchVariance = 0.22f, Volume = 0.82f }, muzzle);
+        }
+
+        private void ResetRightCharge()
+        {
+            rightChargeTimer = 0;
+            rightChargeReady = false;
+
+            int chargeType = ModContent.ProjectileType<PristineFuryRightNovaChargeOrb>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == Projectile.owner && projectile.type == chargeType && (int)projectile.ai[0] == Projectile.whoAmI)
+                    projectile.Kill();
+            }
         }
 
         private void ResetLeftStateIfMarkChanged()
@@ -515,38 +543,38 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
 
             Vector2 direction = AimDirection;
-            Vector2 muzzle = GunTipPosition + direction * 2f;
+            Vector2 muzzle = GunTipPosition - direction * 14f;
 
-            for (int i = 0; i < 9; i++)
-            {
-                Vector2 sparkVelocity = direction.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.6f, 8f);
-                Particle ember = i % 3 == 0
-                    ? new SparkParticle(
-                        muzzle + Main.rand.NextVector2Circular(4f, 4f),
-                        sparkVelocity,
-                        false,
-                        Main.rand.Next(12, 20),
-                        Main.rand.NextFloat(0.55f, 0.95f) * scale,
-                        Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.28f)))
-                    : new CustomSpark(
-                        muzzle + Main.rand.NextVector2Circular(4f, 4f),
-                        sparkVelocity,
-                        "CalamityMod/Particles/GlowSpark2",
-                        false,
-                        Main.rand.Next(8, 14),
-                        Main.rand.NextFloat(0.035f, 0.07f) * scale,
-                        color,
-                        new Vector2(0.45f, 1.6f),
-                        glowCenter: true,
-                        shrinkSpeed: 0.66f,
-                        extraRotation: sparkVelocity.ToRotation());
-                GeneralParticleHandler.SpawnParticle(ember);
-            }
+            //for (int i = 0; i < 9; i++)
+            //{
+            //    Vector2 sparkVelocity = direction.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.6f, 8f);
+            //    Particle ember = i % 3 == 0
+            //        ? new SparkParticle(
+            //            muzzle + Main.rand.NextVector2Circular(4f, 4f),
+            //            sparkVelocity,
+            //            false,
+            //            Main.rand.Next(12, 20),
+            //            Main.rand.NextFloat(0.55f, 0.95f) * scale,
+            //            Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.28f)))
+            //        : new CustomSpark(
+            //            muzzle + Main.rand.NextVector2Circular(4f, 4f),
+            //            sparkVelocity,
+            //            "CalamityMod/Particles/GlowSpark2",
+            //            false,
+            //            Main.rand.Next(8, 14),
+            //            Main.rand.NextFloat(0.035f, 0.07f) * scale,
+            //            color,
+            //            new Vector2(0.45f, 1.6f),
+            //            glowCenter: true,
+            //            shrinkSpeed: 0.66f,
+            //            extraRotation: sparkVelocity.ToRotation());
+            //    GeneralParticleHandler.SpawnParticle(ember);
+            //}
 
             Particle spark = new CustomSpark(
                 muzzle,
                 direction * 4f,
-                "CalamityMod/Particles/BloomLineSoftEdge",
+                "CalamityMod/Particles/GlowSpark2",
                 false,
                 12,
                 0.055f * scale,
@@ -585,7 +613,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Particle line = new CustomSpark(
                         center + offset * 0.65f,
                         velocity * 0.35f,
-                        "CalamityMod/Particles/BloomLineSoftEdge",
+                        "CalamityMod/Particles/GlowSpark2",
                         false,
                         12,
                         0.045f + charge * 0.035f,
@@ -707,7 +735,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Vector2 muzzle = GunTipPosition - AimDirection * 5f - Main.screenPosition;
+            Vector2 muzzle = GunTipPosition - AimDirection * 21f - Main.screenPosition;
             Color color = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, 0.48f) with { A = 0 }) * power;
 
             Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.55f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.34f + power * 0.24f, 0.18f + power * 0.12f), SpriteEffects.None, 0);

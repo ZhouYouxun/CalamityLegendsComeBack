@@ -85,20 +85,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (Projectile.owner == Main.myPlayer)
             {
-                float segmentLength = 135f;
-                for (float distance = 80f; distance < Projectile.ai[0]; distance += segmentLength)
+                const float segmentLength = 6f * 16f;
+                Vector2 normal = beamVector.RotatedBy(MathHelper.PiOver2);
+
+                for (float distance = 72f; distance < Projectile.ai[0] - 24f; distance += segmentLength)
                 {
-                    Vector2 segmentPosition = Projectile.Center + beamVector * distance + beamVector.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-26f, 26f);
-                    Vector2 velocity = beamVector.RotatedBy(Main.rand.NextFloat(-0.18f, 0.18f)) * Main.rand.NextFloat(9.5f, 13.5f);
-                    int proj = Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        segmentPosition,
-                        velocity,
-                        ModContent.ProjectileType<PFBrimstoneElemental_HellbornProj>(),
-                        Math.Max(1, (int)(Projectile.damage * 0.42f)),
-                        Projectile.knockBack * 0.45f,
-                        Projectile.owner);
-                    PFLeftEffectRules.ApplyTheme(proj, (PristineFuryMark)(int)Projectile.ai[2]);
+                    Vector2 segmentPosition = Projectile.Center + beamVector * distance;
+                    for (int side = -1; side <= 1; side += 2)
+                    {
+                        Vector2 velocity = normal * side * Main.rand.NextFloat(9.5f, 12.5f);
+                        int proj = Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            segmentPosition + normal * side * 18f,
+                            velocity,
+                            ModContent.ProjectileType<PFBrimstoneElemental_HellbornProj>(),
+                            Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                            Projectile.knockBack * 0.45f,
+                            Projectile.owner);
+
+                        if (proj >= 0 && proj < Main.maxProjectiles)
+                            Main.projectile[proj].timeLeft = 48;
+
+                        PFLeftEffectRules.ApplyTheme(proj, (PristineFuryMark)(int)Projectile.ai[2]);
+                    }
                 }
             }
 

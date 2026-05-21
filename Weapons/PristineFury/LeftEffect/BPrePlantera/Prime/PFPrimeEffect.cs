@@ -6,7 +6,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal static class PFPrimeEffect
     {
         private const int FireInterval = 4;
-        private const float FireSpeed = 14.5f;
+        private const float FireSpeed = 7.25f;
         private const float Spread = 0.035f;
         private const float DamageMultiplier = 0.62f;
         private const float Recoil = 4.8f;

@@ -110,8 +110,58 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override bool PreDraw(ref Color lightColor)
         {
+            DrawReconOpticOverlay();
             BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.05f);
             return false;
+        }
+
+        private void DrawReconOpticOverlay()
+        {
+            if (Main.dedServ)
+                return;
+
+            Texture2D opticTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/muzzle_02").Value;
+            Vector2 center = Projectile.Center - Main.screenPosition;
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            float fadeIn = Utils.GetLerpValue(0f, 18f, FlightTimer, true);
+            float fadeOut = Utils.GetLerpValue(0f, 24f, Projectile.timeLeft, true);
+            float fade = fadeIn * fadeOut;
+            float scanPulse = 0.5f + 0.5f * (float)System.Math.Sin(FlightTimer * 0.35f + Projectile.identity * 0.47f);
+            float wingOpen = 0.2f + 0.28f * scanPulse;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            DrawReconOpticWing(opticTexture, center, side, 1f, wingOpen, fade);
+            DrawReconOpticWing(opticTexture, center, -side, -1f, wingOpen, fade);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+        }
+
+        private void DrawReconOpticWing(Texture2D opticTexture, Vector2 center, Vector2 wingDirection, float sideSign, float wingOpen, float fade)
+        {
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
+            Vector2 origin = new(opticTexture.Width * 0.5f, opticTexture.Height * 0.84f);
+            float baseRotation = wingDirection.ToRotation() + MathHelper.PiOver2;
+            float flutter = (float)System.Math.Sin(FlightTimer * 0.62f + sideSign * 0.8f + Projectile.identity * 0.13f) * wingOpen;
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 basePosition = center + wingDirection * 4f - forward * 1.5f;
+
+            for (int i = 0; i < 3; i++)
+            {
+                float ghostOffset = i - 1f;
+                float opacity = (i == 1 ? 0.38f : 0.14f) * fade;
+                Color wingColor = Color.Lerp(mainColor, Color.Lerp(accentColor, Color.White, 0.25f), 0.32f + 0.18f * i) with { A = 0 } * opacity;
+                Main.EntitySpriteDraw(
+                    opticTexture,
+                    basePosition + wingDirection * ghostOffset * 1.6f,
+                    null,
+                    wingColor,
+                    baseRotation + flutter + ghostOffset * 0.2f,
+                    origin,
+                    new Vector2(0.072f, 0.105f),
+                    SpriteEffects.None,
+                    0);
+            }
         }
 
         private void ApplyBestTargetMark()

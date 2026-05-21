@@ -355,7 +355,7 @@ namespace CalamityLegendsComeBack
 
                 // 阴险穿刺者的弹射特效有一个
 
-
+                // SHPC大量使用的那个光亮
 
                 // 元素方舟的多种特效，应该在这补充一下
 

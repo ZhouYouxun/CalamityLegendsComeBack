@@ -13,6 +13,7 @@ Mods: {
 					Left_HardMode: "[c/FF8E42:左键：血肉墙压力锥，三道橙红冲击吐息逐层膨胀穿透。]"
 					Left_Prime: "[c/FFCE5C:左键：机械齿轮式金焰喷流，火花按齿距跳步咬合。]"
 					Left_BrimstoneElemental: "[c/F63740:左键：蓄能后释放硫火烙印光矛，红黑烬痕沿轴线撕开。]"
+					Left_FakeCalamity: "[c/FF4236:Left Click: FakeCalamity six-shot scatter burst.]"
 					Left_Plantera: "[c/5EF26C:左键：按住蓄能，松开发射四枚野火花孢，花纹缠绕并追踪。]"
 					Left_Aurora: "[c/7ED2FF:左键：星辉极光雾带，以五段折返轨迹旋转燃烧。]"
 					Left_Goliath: "[c/8BF249:左键：瘟疫群息会脱落蜂群子弹，感染目标并在死亡时释放虫群。]"
@@ -20,6 +21,9 @@ Mods: {
 					Left_Providence: "[c/FFDC76:左键：亵渎净焰迫击弹落地后展开持续灼烧圣域。]"
 					Left_Polterghast: "[c/D288FF:左键：哈雷幽魂星火先漂移再苏醒追踪，死亡时绽开鬼火玫瑰。]"
 					Left_Dog: "[c/6049D6:左键：光切虚空流撕开延迟裂隙与黑色吸积盘。]"
+					Left_ExoTwins: "[c/4AFFB4:左键：阿尔忒弥斯预警激光快速贯穿，随后三连发阿波罗导弹。]"
+					Left_ExoThanatos: "[c/66A2FF:左键：三道塔纳托斯预警线缓慢收束，最终释放灭绝激光并撕出侧向激光。]"
+					Left_ExoAres: "[c/FF4C40:左键：阿瑞斯式普通激光从枪口高速全自动连射。]"
 					Left_Dragon: "[c/FF6C32:左键：丛林龙式十八连扇形龙息，命中后分裂为压力余烬。]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
@@ -82,6 +86,28 @@ Mods: {
 				// PFPrime_Flame.DisplayName: P F Prime_ Flame
 				// PFProvidence_Flame.DisplayName: P F Providence_ Flame
 				// PFSlimeGod_Flame.DisplayName: P F Slime God_ Flame
+				// PFAurora_MuzzleOrb.DisplayName: P F Aurora_ Muzzle Orb
+				// PFBrimstoneElemental_HellbornProj.DisplayName: P F Brimstone Elemental_ Hellborn Proj
+				// PFBrimstoneElemental_Laser.DisplayName: P F Brimstone Elemental_ Laser
+				// PFDog_ChargeOrb.DisplayName: P F Dog_ Charge Orb
+				// PFGoliath_HiveNukeMissile.DisplayName: P F Goliath_ Hive Nuke Missile
+				// PFGoliath_MouseCrosshair.DisplayName: P F Goliath_ Mouse Crosshair
+				// PFHardMode_MeowCreature.DisplayName: P F Hard Mode_ Meow Creature
+				// PFFakeCalamity_Pellet.DisplayName: P F Fake Calamity_ Pellet
+				// PFFakeCalamity_GroundFlame.DisplayName: P F Fake Calamity_ Ground Flame
+				// PFMoonlord_SolarExplosion.DisplayName: P F Moonlord_ Solar Explosion
+				// PFMoonlord_SolarLaser.DisplayName: P F Moonlord_ Solar Laser
+				// PFMoonlord_VortexScorpioRocket.DisplayName: P F Moonlord_ Vortex Scorpio Rocket
+				// PFPrime_BounceExplosion.DisplayName: P F Prime_ Bounce Explosion
+				// PFProvidence_HolyFireField.DisplayName: P F Providence_ Holy Fire Field
+				// PFProvidence_HolyShrapnel.DisplayName: P F Providence_ Holy Shrapnel
+				// PFProvidence_NukeOfBliss.DisplayName: P F Providence_ Nuke Of Bliss
+				PFExoTwins_ArtemisLaser.DisplayName: EXO双子阿尔忒弥斯激光
+				PFExoTwins_ApolloRocket.DisplayName: EXO双子阿波罗导弹
+				PFExoAresLaserBeamStart.DisplayName: EXO阿瑞斯激光
+				PFExoThanatosBeamTelegraph.DisplayName: EXO塔纳托斯预警线
+				PFExoThanatosBeamStart.DisplayName: EXO塔纳托斯灭绝光束
+				PFExoThanatosSideLaser.DisplayName: EXO塔纳托斯侧向激光
 			}
 		}
 
@@ -96,6 +122,7 @@ Mods: {
 				HardMode: 血肉墙
 				Prime: 机械骷髅王
 				BrimstoneElemental: 硫磺火元素
+				FakeCalamity: 灾厄之影
 				Plantera: 世纪之花
 				Aurora: 白金星舰
 				Goliath: 瘟疫使者歌莉娅
@@ -103,6 +130,9 @@ Mods: {
 				Providence: 亵渎天神
 				Polterghast: 鬼妖村正
 				Dog: 神明吞噬者
+				ExoTwins: 阿波罗与阿尔忒弥斯
+				ExoThanatos: 塔纳托斯
+				ExoAres: 阿瑞斯
 				Dragon: 丛林龙
 			}
 		}

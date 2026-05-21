@@ -403,15 +403,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D orb = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D wing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/muzzle_02").Value;
             Texture2D body = TextureAssets.Projectile[Type].Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             float fade = Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
             float homingReadiness = GetHomingReadiness();
-            float wingBeat = (float)System.Math.Sin((Timer + Seed) * 1.72f);
-            float wingOpen = 0.22f + 0.34f * System.Math.Abs(wingBeat);
             float bodyPulse = 0.5f + 0.5f * (float)System.Math.Sin((Timer + Seed) * 0.31f);
 
             Main.spriteBatch.End();
@@ -447,9 +443,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 SpriteEffects.None,
                 0);
 
-            DrawWing(wing, center, side, 1f, wingOpen, fade);
-            DrawWing(wing, center, -side, -1f, wingOpen, fade);
-
             for (int i = 0; i < 5; i++)
             {
                 Color bodyColor = Color.Lerp(PlagueGreen, Color.Lerp(PlagueAcid, Color.White, 0.2f), i * 0.08f + homingReadiness * 0.18f) with { A = 0 } * (0.34f + bodyPulse * 0.06f) * fade;
@@ -481,31 +474,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 0);
 
             return false;
-        }
-
-        private void DrawWing(Texture2D wing, Vector2 center, Vector2 wingDirection, float sideSign, float wingOpen, float fade)
-        {
-            Vector2 origin = new(wing.Width * 0.5f, wing.Height * 0.84f);
-            float baseRotation = wingDirection.ToRotation() + MathHelper.PiOver2;
-            float flutter = (float)System.Math.Sin((Timer + Seed) * 2.45f + sideSign * 0.8f) * wingOpen;
-            Vector2 basePosition = center + wingDirection * 4f - Projectile.velocity.SafeNormalize(Vector2.UnitX) * 1.5f;
-
-            for (int i = 0; i < 3; i++)
-            {
-                float ghostOffset = i - 1f;
-                float opacity = (i == 1 ? 0.34f : 0.13f) * fade;
-                Color wingColor = Color.Lerp(PlagueGreen, PlagueBright, 0.32f + 0.18f * i) with { A = 0 } * opacity;
-                Main.EntitySpriteDraw(
-                    wing,
-                    basePosition + wingDirection * ghostOffset * 1.6f,
-                    null,
-                    wingColor,
-                    baseRotation + flutter + ghostOffset * 0.2f,
-                    origin,
-                    new Vector2(0.072f, 0.105f),
-                    SpriteEffects.None,
-                    0);
-            }
         }
     }
 }

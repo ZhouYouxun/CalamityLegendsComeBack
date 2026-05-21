@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/LeftEffect/CPreMoodLord/Goliath/HiveNuke";
 
         private const int HomingDelay = 34;
-        private const float HomingSpeed = 17f;
+        private const float HomingSpeed = 21.5f;
         private bool hasHit;
         private ref float Time => ref Projectile.localAI[0];
         private Vector2 TargetPoint => new(Projectile.ai[0], Projectile.ai[1]);
@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 25;
+            Projectile.width = Projectile.height = 38;
             Projectile.friendly = true;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 360;
@@ -39,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.extraUpdates = 3;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
+            Projectile.scale = 1.35f;
         }
 
         public override void AI()
@@ -84,7 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Lighting.AddLight(Projectile.Center, theme.ToVector3() * 0.7f);
         }
 
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(Projectile.Center, Projectile.width * 0.4f, targetHitbox);
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(Projectile.Center, Projectile.width * Projectile.scale * 0.42f, targetHitbox);
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {

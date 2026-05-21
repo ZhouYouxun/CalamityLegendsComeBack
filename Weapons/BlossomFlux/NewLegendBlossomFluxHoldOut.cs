@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int ReconBurstShotCount = 5;
         private const int ReconFireInterval = 5;
         private const int ReconCyclePause = 20;
-        private const int BombardFireInterval = 4;
+        private const int BombardFireInterval = 2;
         private const int PlagueFireInterval = 12;
         private const int BombardAmmoSavePercent = 90;
         private const int PlagueAmmoSavePercent = 95;
@@ -416,7 +416,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    leftBurstTimer = BFBombardLeftBalance.GetStats().FireInterval;
+                    leftBurstTimer = Math.Max(1, BFBombardLeftBalance.GetStats().FireInterval / 2);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
@@ -1425,23 +1425,38 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             BFBombardLeftStats stats = BFBombardLeftBalance.GetStats();
             Vector2 mouseWorld = GetCurrentMouseWorld();
             float rainSpeed = Math.Max(BombardSpeed, speed) * stats.ProjectileSpeedMultiplier;
-            int arrowCount = Main.rand.Next(stats.MinArrowCount, stats.MaxArrowCount + 1);
+            int baseArrowCount = Main.rand.Next(stats.MinArrowCount, stats.MaxArrowCount + 1);
+            int arrowCount = Math.Max(1, baseArrowCount / 2);
+            float sweepSideSign = leftShotsFired % 2 == 0 ? -1f : 1f;
+            float sweepProgress = leftShotsFired % 6 / 5f;
+            Vector2 gravityDown = Vector2.UnitY * Owner.gravDir;
+            Vector2 upward = -gravityDown;
+            Vector2 strafeSide = Vector2.UnitX * sweepSideSign;
+            Vector2 diveDirection = (gravityDown * 1.15f - strafeSide * 0.55f).SafeNormalize(gravityDown);
+            Vector2 sweepCenter = mouseWorld + strafeSide * MathHelper.Lerp(-92f, 92f, sweepProgress);
 
             if (leftShotsFired % 2 == 0)
-                SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.54f, PitchVariance = 0.2f }, Owner.Center);
+                SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.48f, PitchVariance = 0.2f }, Owner.Center);
             else
-                SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.34f, Pitch = -0.28f, PitchVariance = 0.08f }, Owner.Center);
+                SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.3f, Pitch = -0.22f, PitchVariance = 0.08f }, Owner.Center);
 
             for (int i = 0; i < arrowCount; i++)
             {
-                float horizontalOffset = Main.rand.NextFloat(-78f, 78f);
-                Vector2 spawnPosition = new(
-                    MathHelper.Lerp(mouseWorld.X, Owner.Center.X, 0.5f) + horizontalOffset,
-                    Owner.Center.Y - Main.rand.NextFloat(560f, 660f) * Owner.gravDir);
-                Vector2 targetPosition = mouseWorld + new Vector2(Main.rand.NextFloat(-58f, 58f), Main.rand.NextFloat(-16f, 34f) * Owner.gravDir);
-                Vector2 shotVelocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY * Owner.gravDir);
-                shotVelocity = shotVelocity.RotatedBy(horizontalOffset * -0.004f) * rainSpeed;
-                int shotDamage = (int)(damage * (i == 0 ? 1.15f : 1f));
+                float progress = arrowCount <= 1 ? 0.5f : i / (arrowCount - 1f);
+                float combOffset = (progress - 0.5f) * 86f;
+                Vector2 targetPosition =
+                    sweepCenter -
+                    strafeSide * combOffset +
+                    gravityDown * Main.rand.NextFloat(-18f, 30f) +
+                    strafeSide * Main.rand.NextFloat(-10f, 10f);
+                Vector2 spawnPosition =
+                    targetPosition -
+                    diveDirection * Main.rand.NextFloat(620f, 760f) +
+                    upward * Main.rand.NextFloat(0f, 80f) +
+                    strafeSide * Main.rand.NextFloat(-28f, 28f);
+                Vector2 shotVelocity = (targetPosition - spawnPosition).SafeNormalize(gravityDown);
+                shotVelocity = shotVelocity.RotatedBy(MathHelper.Lerp(-0.045f, 0.045f, progress)) * rainSpeed * Main.rand.NextFloat(0.96f, 1.12f);
+                int shotDamage = damage;
 
                 int projectileIndex = SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, shotDamage, knockback, CurrentPreset);
                 if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles) && Main.projectile[projectileIndex].type == ModContent.ProjectileType<BFLeafProj>())
@@ -1452,12 +1467,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 }
             }
 
-            SpawnLeftMuzzleFX(mouseWorld, Vector2.UnitY * Owner.gravDir, CurrentPreset, 1.08f);
+            SpawnLeftMuzzleFX(sweepCenter - diveDirection * 28f, diveDirection, CurrentPreset, 0.92f);
         }
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            int finalProjectileType = ModContent.ProjectileType<BFArrow_EPlague>();
+            int finalProjectileType = ModContent.ProjectileType<BFLeftPlagueReaper>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 origin = GunTipPosition;
             float speedMultiplier = GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_EPlague);
@@ -1473,8 +1488,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Math.Max(1, (int)(damage * 1.05f)),
                 knockback * 0.72f,
                 Owner.whoAmI,
-                BFArrow_EPlague.LeftSporeState,
-                Main.rand.NextFloat(1000f));
+                Main.rand.NextFloat(1000f),
+                Main.rand.NextFloat(3f));
 
             if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
             {
@@ -1482,6 +1497,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 arrowProjectile.arrow = true;
                 arrowProjectile.noDropItem = true;
                 BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
+                BFArrow_CDetecEffect arrowEffect = arrowProjectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
+                arrowEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_EPlague;
+                arrowEffect.ConvertedLeafArrow = false;
+
+                BFAccessoryGlobalProjectile accessoryEffect = arrowProjectile.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
+                accessoryEffect.BlossomFluxArrow = true;
+                accessoryEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_EPlague;
             }
 
             SpawnLeftMuzzleFX(spawnPosition, shootVelocity, CurrentPreset, 0.66f);

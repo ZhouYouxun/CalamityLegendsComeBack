@@ -153,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             Player owner = Main.player[Projectile.owner];
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
             Vector2 start = owner.MountedCenter - Main.screenPosition;
             Vector2 end = Projectile.Center - Main.screenPosition;
             Vector2 between = end - start;
