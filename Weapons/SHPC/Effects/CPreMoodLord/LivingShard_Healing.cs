@@ -184,47 +184,80 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
 
+            // 主视觉：数学感 SquishyLightParticle 单链条
+            // 用正弦波 + 相位推进，让链条像活体能量一样轻微摆动
             if (Projectile.numUpdates == 0)
             {
-                for (int i = 0; i < 3; i++)
+                int chainCount = 5;
+                float phase = timer * 0.28f;
+
+                for (int i = 0; i < chainCount; i++)
                 {
-                    Vector2 spawnPosition = Projectile.Center - forward * Main.rand.NextFloat(4f, 14f) + side * Main.rand.NextFloat(-7f, 7f);
-                    Vector2 velocity = -forward.RotatedByRandom(0.42f) * Main.rand.NextFloat(0.7f, 2.8f) + side * Main.rand.NextFloat(-0.35f, 0.35f);
+                    float progress = i / (float)(chainCount - 1);
+                    float wave = (float)System.Math.Sin(phase - progress * MathHelper.Pi * 1.45f);
+
+                    Vector2 chainPosition =
+                        Projectile.Center
+                        - forward * MathHelper.Lerp(6f, 46f, progress)
+                        + side * wave * MathHelper.Lerp(2f, 10f, progress);
+
+                    Vector2 chainVelocity =
+                        -forward * MathHelper.Lerp(0.35f, 1.25f, progress)
+                        + side * wave * 0.18f;
+
+                    float scale = MathHelper.Lerp(0.82f, 0.38f, progress);
+                    int lifeTime = (int)MathHelper.Lerp(18f, 10f, progress);
+
+                    Color chainColor = Color.Lerp(
+                        new Color(95, 255, 145),
+                        new Color(230, 255, 235),
+                        1f - progress * 0.65f
+                    );
 
                     SquishyLightParticle particle = new(
-                        spawnPosition,
-                        velocity,
-                        Main.rand.NextFloat(0.75f, 1.25f),
-                        Color.Lerp(new Color(130, 255, 145), Color.White, Main.rand.NextFloat(0.08f, 0.32f)),
-                        Main.rand.Next(16, 26),
+                        chainPosition,
+                        chainVelocity,
+                        scale,
+                        chainColor,
+                        lifeTime,
                         1f,
-                        Main.rand.NextFloat(1.1f, 1.65f));
+                        MathHelper.Lerp(1.55f, 0.95f, progress)
+                    );
+
                     GeneralParticleHandler.SpawnParticle(particle);
                 }
 
-                for (int i = 0; i < 2; i++)
+                // 陪衬1：极少量绿色 Dust，贴着链条外缘漂散
+                if (timer % 3 == 0)
                 {
+                    float dustWave = (float)System.Math.Sin(phase + MathHelper.PiOver2);
                     Dust dust = Dust.NewDustPerfect(
-                        Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
-                        Main.rand.NextBool() ? 107 : DustID.GreenTorch,
-                        -forward * Main.rand.NextFloat(0.5f, 2.4f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
-                        80,
-                        Main.rand.NextBool() ? Color.LightGreen : new Color(80, 255, 130),
-                        Main.rand.NextFloat(1.0f, 1.65f));
+                        Projectile.Center - forward * 18f + side * dustWave * 9f,
+                        DustID.GreenTorch,
+                        -forward * 0.75f + side * dustWave * 0.35f,
+                        105,
+                        new Color(100, 255, 150),
+                        1.05f
+                    );
                     dust.noGravity = true;
-                    dust.fadeIn = Main.rand.NextFloat(0.3f, 0.7f);
+                    dust.fadeIn = 0.45f;
                 }
-            }
-            else if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center - forward * Main.rand.NextFloat(2f, 8f),
-                    DustID.GreenTorch,
-                    -forward * Main.rand.NextFloat(0.25f, 1.1f),
-                    100,
-                    new Color(100, 255, 130),
-                    Main.rand.NextFloat(0.75f, 1.1f));
-                dust.noGravity = true;
+
+                // 陪衬2：偶尔给中心补一个小光点，避免主体太空
+                if (timer % 5 == 0)
+                {
+                    SquishyLightParticle core = new(
+                        Projectile.Center - forward * 4f,
+                        -forward * 0.25f,
+                        0.36f,
+                        Color.White,
+                        8,
+                        1f,
+                        0.85f
+                    );
+
+                    GeneralParticleHandler.SpawnParticle(core);
+                }
             }
         }
 

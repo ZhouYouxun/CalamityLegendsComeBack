@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class RuinousSoul_OrbitGhost : ModProjectile, ILocalizedModType
     {
-        public const int ReleaseCap = 9;
+        public const int ReleaseCap = 21;
         public const int SpawnBatchSize = 3;
         public const int ForcedReleaseTime = 100;
 
@@ -179,12 +179,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         private void OrbitAI(Player owner)
         {
-            if (Projectile.timeLeft <= 2)
+            if (!OwnerStillHoldingSHPC(owner))
             {
-                NPC target = FindLaunchTarget(owner);
-                Release(target?.whoAmI ?? -1, true);
+                Projectile.Kill();
                 return;
             }
+
+            Projectile.timeLeft = 2;
 
             if (time <= 15)
                 return;
@@ -197,6 +198,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile.velocity += moveToOwnerOrbit * Main.rand.NextFloat(0.2f, 0.4f);
             else
                 Projectile.velocity *= 0.85f;
+        }
+
+        private static bool OwnerStillHoldingSHPC(Player owner)
+        {
+            int heldType = owner.HeldItem?.type ?? ItemID.None;
+            return heldType == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPC>() ||
+                   heldType == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPCTest>();
         }
 
         private void SpawnPhantasmalTrail()

@@ -241,13 +241,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 proj.height = 250;
             }
 
-            for (int i = 0; i < 6; i++)
+            const int shardCount = 6;
+            float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
+            for (int i = 0; i < shardCount; i++)
             {
-                Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f, 12f);
+                float progress = i / (float)System.Math.Max(1, shardCount - 1);
+                float angle = baseRotation + i * MathHelper.Pi * 0.72f + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 tangent = direction.RotatedBy(MathHelper.PiOver2);
+                float radius = MathHelper.Lerp(46f, 174f, progress) + Main.rand.NextFloat(-14f, 18f);
+                Vector2 spawnPosition = projectile.Center + direction * radius + tangent * Main.rand.NextFloat(-18f, 18f);
+                Vector2 velocity = direction * Main.rand.NextFloat(4.5f, 10.5f) + tangent * Main.rand.NextFloat(-2.8f, 2.8f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center,
+                    spawnPosition,
                     velocity,
                     ModContent.ProjectileType<Necroplasm_Damage>(),
                     (int)(projectile.damage * Main.rand.NextFloat(0.8f, 1.2f)),
@@ -288,21 +296,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         private static void SpawnShortFlightSouls(Projectile projectile, NPC target, int flightTime)
         {
             float travelFactor = Utils.GetLerpValue(18f, 150f, flightTime, true);
-            int extraCount = (int)MathHelper.Lerp(8f, 2f, travelFactor);
+            int extraCount = System.Math.Max(1, (int)System.MathF.Round(MathHelper.Lerp(4f, 1f, travelFactor)));
             int damage = (int)(projectile.damage * 0.65f);
             if (damage < 1)
                 damage = 1;
 
             Vector2 aimDirection = (target.Center - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX));
+            Vector2 normal = aimDirection.RotatedBy(MathHelper.PiOver2);
+            float speed = MathHelper.Lerp(9f, 15f, 1f - travelFactor);
             for (int i = 0; i < extraCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / extraCount;
-                Vector2 spreadDirection = aimDirection.RotatedBy(MathHelper.Lerp(-0.75f, 0.75f, i / (float)System.Math.Max(1, extraCount - 1)));
-                Vector2 velocity = (spreadDirection * 10f + angle.ToRotationVector2() * 3f).SafeNormalize(aimDirection) * MathHelper.Lerp(9f, 15f, 1f - travelFactor);
+                float side = i % 2 == 0 ? 1f : -1f;
+                float lane = (i + 1) / (float)extraCount;
+                Vector2 spawnPosition =
+                    target.Center -
+                    aimDirection * MathHelper.Lerp(24f, 62f, lane) +
+                    normal * side * MathHelper.Lerp(10f, 36f, lane);
+                Vector2 velocity = (aimDirection * speed + normal * side * Main.rand.NextFloat(1.2f, 4.2f)).RotatedByRandom(0.12f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center,
+                    spawnPosition,
                     velocity,
                     ModContent.ProjectileType<Necroplasm_Damage>(),
                     damage,

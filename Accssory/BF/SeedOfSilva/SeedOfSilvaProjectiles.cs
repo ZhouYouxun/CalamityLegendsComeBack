@@ -15,10 +15,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 {
     internal sealed class SeedOfSilvaSeed : ModProjectile
     {
-        public const int SeedCount = 4;
+        public const int SeedCount = 5;
 
-        private const float OrbitRadius = 74f;
+        private const float OrbitRadius = 222f;
         private const float OrbitSpeed = 0.018f;
+        private const float DrawScaleFactor = 0.3f;
         private const float DaisyMaxLife = 15f;
         private const float DaisyRegenPerFrame = 1.2f / 60f;
 
@@ -60,7 +61,13 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.timeLeft = 2;
             CurrentPreset = owner.GetModPlayer<BFAccessoryPlayer>().CurrentPreset;
 
-            int slot = Utils.Clamp((int)Projectile.ai[0], 0, SeedCount - 1);
+            int slot = (int)Projectile.ai[0];
+            if (slot < 0 || slot >= SeedCount)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             float angle = Main.GameUpdateCount * OrbitSpeed + MathHelper.TwoPi * slot / SeedCount;
             float pulseRadius = OrbitRadius + (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 1.1f + slot) * 5f;
             Projectile.Center = owner.Center + angle.ToRotationVector2() * pulseRadius + new Vector2(0f, owner.gfxOffY - 8f);
@@ -247,18 +254,18 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            Main.EntitySpriteDraw(bloom, center, null, flowerColor * 0.46f, 0f, bloom.Size() * 0.5f, 0.085f * pulse, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(circle, center, null, accent * 0.32f, -Main.GlobalTimeWrappedHourly * 0.32f, circle.Size() * 0.5f, 0.075f * flowerOpen, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center, null, flowerColor * 0.46f, 0f, bloom.Size() * 0.5f, 0.085f * pulse * DrawScaleFactor, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(circle, center, null, accent * 0.32f, -Main.GlobalTimeWrappedHourly * 0.32f, circle.Size() * 0.5f, 0.075f * flowerOpen * DrawScaleFactor, SpriteEffects.None, 0);
 
             int petals = CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak ? 10 : 8;
             for (int i = 0; i < petals; i++)
             {
                 float angle = MathHelper.TwoPi * i / petals + Main.GlobalTimeWrappedHourly * 0.18f;
-                Vector2 offset = angle.ToRotationVector2() * (8f + 7f * flowerOpen) * pulse;
-                Main.EntitySpriteDraw(spark, center + offset, null, Color.Lerp(flowerColor, accent, 0.45f) * 0.62f, angle + MathHelper.PiOver2, spark.Size() * 0.5f, new Vector2(0.05f, 0.16f + 0.05f * flowerOpen), SpriteEffects.None, 0);
+                Vector2 offset = angle.ToRotationVector2() * (8f + 7f * flowerOpen) * pulse * DrawScaleFactor;
+                Main.EntitySpriteDraw(spark, center + offset, null, Color.Lerp(flowerColor, accent, 0.45f) * 0.62f, angle + MathHelper.PiOver2, spark.Size() * 0.5f, new Vector2(0.05f, 0.16f + 0.05f * flowerOpen) * DrawScaleFactor, SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(magic, center, null, flowerColor * 0.42f, Main.GlobalTimeWrappedHourly * 0.44f, magic.Size() * 0.5f, 0.058f * flowerOpen, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(magic, center, null, flowerColor * 0.42f, Main.GlobalTimeWrappedHourly * 0.44f, magic.Size() * 0.5f, 0.058f * flowerOpen * DrawScaleFactor, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);

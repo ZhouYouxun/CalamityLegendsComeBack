@@ -24,8 +24,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
     internal sealed class NewLegendBlossomFluxHoldOut : BaseIdleHoldoutProjectile, ILocalizedModType
     {
-        private const int ParallelArrowCount = 3;
         private const int RecoveryVisualCycleCount = 4;
+        private const int RecoveryVolleyShotCount = 2;
+        private const int ReconTriangulationShotCount = 3;
         private const int BreakthroughFireInterval = 15;
         private const int RecoveryBurstInterval = 7;
         private const int ReconBurstShotCount = 5;
@@ -41,11 +42,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int BreakthroughQueuedShotGap = 4;
         private const int LeftOutlinePulseFrames = 10;
         private const int RightOutlinePulseFrames = 22;
-        private const float ParallelSpacing = 18f;
         private const float RecoveryDnaMaxOffset = 18f;
         private const float RecoveryDnaPhaseStep = MathHelper.Pi / 8f;
         private const float BreakthroughSpeed = 19f;
-        private const float ReconSpread = 0.34f;
+        private const float ReconTriangulationSpread = 0.24f;
         private const float BombardSpeed = 12f;
         private const float BreakthroughArrowSpread = MathHelper.Pi / 11f;
 
@@ -246,6 +246,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (HasActiveEXWeapon())
             {
                 KillAimScopeProjectiles();
+                Projectile.Kill();
+                return;
+            }
+
+            if (HasEarlierActiveHoldout())
+            {
                 Projectile.Kill();
                 return;
             }
@@ -613,6 +619,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Owner.ChangeDir(Projectile.direction);
             Owner.heldProj = Projectile.whoAmI;
+            if (PastLingeringAssaultActive)
+                Owner.phantasmTime = 2;
 
             float armRotation = Projectile.rotation - MathHelper.PiOver2;
             Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation + extraFrontArmRotation);
@@ -1342,7 +1350,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             int fireSpeedTier = GetPastLingeringFireSpeedTier();
             Vector2 direction = GetAimVelocity(1f).SafeNormalize(Vector2.UnitX * Owner.direction);
-            float projectileSpeed = Math.Max(speed, 14f) * MathHelper.Lerp(1f, 1.2f, fireSpeedTier / 3f) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_ABreak);
+            float projectileSpeed = speed;
             Vector2 visualVelocity = direction * Owner.HeldItem.shootSpeed * 0.55f;
             Projectile.velocity = visualVelocity;
 
@@ -1359,8 +1367,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 arrowProjectile.hostile = false;
                 arrowProjectile.arrow = true;
                 arrowProjectile.noDropItem = true;
-                arrowProjectile.extraUpdates++;
-                BFArrowCommon.ForceLocalNPCImmunity(arrowProjectile, 10);
                 BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
 
                 BFArrow_CDetecEffect arrowEffect = arrowProjectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
@@ -1370,7 +1376,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 BFAccessoryGlobalProjectile accessoryEffect = arrowProjectile.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
                 accessoryEffect.BlossomFluxArrow = true;
                 accessoryEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_ABreak;
-                accessoryEffect.PastLingeringArrow = true;
             }
 
             SpawnLeftMuzzleFX(GunTipPosition, direction * projectileSpeed, CurrentPreset, 0.94f + fireSpeedTier * 0.08f);
@@ -1396,8 +1401,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float phase = leftShotsFired * RecoveryDnaPhaseStep;
             float offsetAmount = MathF.Cos(phase) * RecoveryDnaMaxOffset;
 
-            SpawnLeftProjectile(source, origin + normal * offsetAmount, shootVelocity, projectileType, damage, knockback, CurrentPreset);
-            SpawnLeftProjectile(source, origin - normal * offsetAmount, shootVelocity, projectileType, damage, knockback, CurrentPreset);
+            for (int i = 0; i < RecoveryVolleyShotCount; i++)
+            {
+                float sideSign = i == 0 ? 1f : -1f;
+                SpawnLeftProjectile(source, origin + normal * offsetAmount * sideSign, shootVelocity, projectileType, damage, knockback, CurrentPreset);
+            }
         }
 
         private void FireReconScatter(IEntitySource source, int projectileType, float speed, int damage, float knockback)
@@ -1405,14 +1413,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Vector2 baseVelocity = GetAimVelocity(Math.Max(speed, 15f));
             Vector2 origin = GetShootOrigin(baseVelocity);
             Vector2 normal = baseVelocity.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
-            const int scatterCount = 3;
-
-            for (int i = 0; i < scatterCount; i++)
+            float weaveDirection = reconShotsFiredInBurst % 2 == 0 ? 1f : -1f;
+            float[] offsets = { 0f, 18f * weaveDirection, -26f * weaveDirection };
+            float[] angleOffsets =
             {
-                float progress = scatterCount <= 1 ? 0.5f : i / (scatterCount - 1f);
-                float spread = MathHelper.Lerp(-ReconSpread, ReconSpread, progress);
-                Vector2 shotVelocity = baseVelocity.RotatedBy(spread);
-                Vector2 spawnPosition = origin + normal * MathHelper.Lerp(-8f, 8f, progress);
+                0f,
+                -ReconTriangulationSpread * 0.78f * weaveDirection,
+                ReconTriangulationSpread * 1.12f * weaveDirection
+            };
+            float[] speedMultipliers = { 1.08f, 0.96f, 1.02f };
+
+            for (int i = 0; i < ReconTriangulationShotCount; i++)
+            {
+                Vector2 shotVelocity = baseVelocity.RotatedBy(angleOffsets[i]) * speedMultipliers[i];
+                Vector2 spawnPosition = origin + normal * offsets[i] - baseVelocity.SafeNormalize(Vector2.UnitX * Owner.direction) * (i == 0 ? 0f : 5f + i * 4f);
                 SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, damage, knockback, CurrentPreset);
             }
 
@@ -1424,16 +1438,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             BFBombardLeftStats stats = BFBombardLeftBalance.GetStats();
             Vector2 mouseWorld = GetCurrentMouseWorld();
-            float rainSpeed = Math.Max(BombardSpeed, speed) * stats.ProjectileSpeedMultiplier;
-            int baseArrowCount = Main.rand.Next(stats.MinArrowCount, stats.MaxArrowCount + 1);
-            int arrowCount = Math.Max(1, baseArrowCount / 2);
-            float sweepSideSign = leftShotsFired % 2 == 0 ? -1f : 1f;
-            float sweepProgress = leftShotsFired % 6 / 5f;
-            Vector2 gravityDown = Vector2.UnitY * Owner.gravDir;
-            Vector2 upward = -gravityDown;
-            Vector2 strafeSide = Vector2.UnitX * sweepSideSign;
-            Vector2 diveDirection = (gravityDown * 1.15f - strafeSide * 0.55f).SafeNormalize(gravityDown);
-            Vector2 sweepCenter = mouseWorld + strafeSide * MathHelper.Lerp(-92f, 92f, sweepProgress);
+            int arrowCount = Main.rand.Next(2);
+            const float rainSpeed = 18f;
+
+            if (arrowCount <= 0)
+                return;
 
             if (leftShotsFired % 2 == 0)
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.48f, PitchVariance = 0.2f }, Owner.Center);
@@ -1442,20 +1451,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             for (int i = 0; i < arrowCount; i++)
             {
-                float progress = arrowCount <= 1 ? 0.5f : i / (arrowCount - 1f);
-                float combOffset = (progress - 0.5f) * 86f;
-                Vector2 targetPosition =
-                    sweepCenter -
-                    strafeSide * combOffset +
-                    gravityDown * Main.rand.NextFloat(-18f, 30f) +
-                    strafeSide * Main.rand.NextFloat(-10f, 10f);
-                Vector2 spawnPosition =
-                    targetPosition -
-                    diveDirection * Main.rand.NextFloat(620f, 760f) +
-                    upward * Main.rand.NextFloat(0f, 80f) +
-                    strafeSide * Main.rand.NextFloat(-28f, 28f);
-                Vector2 shotVelocity = (targetPosition - spawnPosition).SafeNormalize(gravityDown);
-                shotVelocity = shotVelocity.RotatedBy(MathHelper.Lerp(-0.045f, 0.045f, progress)) * rainSpeed * Main.rand.NextFloat(0.96f, 1.12f);
+                Vector2 spawnPosition = new(
+                    mouseWorld.X + Main.rand.NextFloat(-240f, 240f),
+                    Owner.MountedCenter.Y - 960f * Owner.gravDir);
+                Vector2 targetPosition = mouseWorld + Main.rand.NextVector2CircularEdge(24f, 24f);
+                Vector2 shotVelocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.Zero) * rainSpeed;
                 int shotDamage = damage;
 
                 int projectileIndex = SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, shotDamage, knockback, CurrentPreset);
@@ -1467,7 +1467,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 }
             }
 
-            SpawnLeftMuzzleFX(sweepCenter - diveDirection * 28f, diveDirection, CurrentPreset, 0.92f);
+            SpawnLeftMuzzleFX(mouseWorld, Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);
         }
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
@@ -1507,24 +1507,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             SpawnLeftMuzzleFX(spawnPosition, shootVelocity, CurrentPreset, 0.66f);
-        }
-
-        private void FireParallelVolley(IEntitySource source, Vector2 velocity, int projectileType, int damage, float knockback, BlossomFluxChloroplastPresetType preset)
-        {
-            Vector2 shootVelocity = velocity.SafeNormalize(Vector2.UnitX * Owner.direction) * velocity.Length();
-            if (shootVelocity == Vector2.Zero)
-                shootVelocity = Vector2.UnitX * Owner.direction * Owner.HeldItem.shootSpeed;
-
-            Vector2 origin = GetShootOrigin(shootVelocity);
-            Vector2 normal = shootVelocity.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
-
-            for (int i = 0; i < ParallelArrowCount; i++)
-            {
-                float offsetAmount = (i - (ParallelArrowCount - 1f) * 0.5f) * ParallelSpacing;
-                Vector2 spawnPosition = origin + normal * offsetAmount;
-
-                SpawnLeftProjectile(source, spawnPosition, shootVelocity, projectileType, damage, knockback, preset);
-            }
         }
 
         private int SpawnLeftProjectile(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BlossomFluxChloroplastPresetType preset, bool noTileCollide = false)
@@ -1874,6 +1856,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
                 if (projectile.active && projectile.owner == Owner.whoAmI && projectile.type == exWeaponType)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool HasEarlierActiveHoldout()
+        {
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != Owner.whoAmI || projectile.type != Type)
+                    continue;
+
+                if (projectile.whoAmI < Projectile.whoAmI)
                     return true;
             }
 
@@ -2257,12 +2253,5 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
-        private static float GetParallelOffset(int index, int count, float spacing)
-        {
-            if (count <= 1)
-                return 0f;
-
-            return (index - (count - 1f) * 0.5f) * spacing;
-        }
     }
 }

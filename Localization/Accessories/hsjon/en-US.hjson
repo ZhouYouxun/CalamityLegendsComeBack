@@ -52,33 +52,93 @@ Mods: {
 			}
 
 			ATunedQuiver: {
-				DisplayName: A Tuned Quiver
-				Tooltip: ""
+				DisplayName: Tuned Quiver
+				Tooltip:
+					'''
+					+15% ranged damage
+					+4 defense
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					Recipe: Magic Quiver + 10 Jungle Spores + 5 Vines @ Anvil
+					'''
 			}
 
 			BResonatingQuiver: {
-				DisplayName: B Resonating Quiver
-				Tooltip: ""
+				DisplayName: Resonating Quiver
+				Tooltip:
+					'''
+					+15% ranged damage
+					+5% ranged critical strike chance
+					+15 ranged projectile armor penetration
+					+6 defense
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					Recipe: Tuned Quiver + Ranger Emblem + 5 Life Alloys + 5 Galactica Singularities @ Ancient Manipulator
+					'''
 			}
 
 			CDominationQuiver: {
-				DisplayName: C Domination Quiver
-				Tooltip: ""
+				DisplayName: Domination Quiver
+				Tooltip:
+					'''
+					+15% ranged damage
+					+5% ranged critical strike chance
+					+15 ranged projectile armor penetration
+					+16 defense
+					+15% maximum life
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					All attacks pass through walls and ignore defense.
+					Recipe: Resonating Quiver + 10 Reaper Teeth + 10 Ruinous Souls @ Ancient Manipulator
+					'''
 			}
 
 			PastLingering: {
-				DisplayName: Past Lingering
-				Tooltip: ""
+				DisplayName: Lingering Remnant
+				Tooltip:
+					'''
+					Changes Breakthrough into a Phantasm-like mode: arrows are no longer converted and release strongly homing shards after hitting enemies.
+					Continuous fire gradually increases attack speed. Reaching the maximum tier plays an extra sound.
+					Recipe: Phantasm + 12 Luminite Bars + 5 Vortex Fragments @ Ancient Manipulator
+					'''
 			}
 
 			SeedOfSilva: {
-				DisplayName: Seed Of Silva
-				Tooltip: ""
+				DisplayName: Seed of Silva
+				Tooltip:
+					'''
+					Generates five seeds that slowly orbit the player and emit a faint green glow.
+					While holding BlossomFlux, the seeds bloom into different flowers based on the current doctrine.
+					Breakthrough: Sunflower
+					Sunflowers create a small field. Breakthrough arrows passing through it gain 30% damage and 15% critical strike chance.
+					Recovery: Daisy
+					Daisies have 15 maximum life, regenerate 1.2 life per second, and inherit the player's defense and damage reduction.
+					If a daisy takes 20 or more damage, it heals the player for its stored regenerated life, rounded down.
+					Reconnaissance: Delphinium
+					Delphiniums attack nearby enemies once every 1.5 seconds with a curving arc that deals light damage and stuns for 1 second.
+					Stunned enemies are heavily slowed and take double damage from reconnaissance arrows.
+					Enemies immune to knockback only receive the damage bonus, reduced to 1.15x.
+					Each successful delphinium stun restores 0.5 seconds of flight time.
+					Bombardment: Torchflower
+					Torchflowers spray flames when enemies approach.
+					Arrows passing through a torchflower also trigger an explosion with an independent cooldown.
+					Plague: Mandrake
+					Mandrakes slow nearby enemies and reduce their contact damage by 15%.
+					Mandrakes constantly create spores, like a Spore Sac, applying debuffs for 3 seconds each. Their cap follows the current weapon.
+					Mandrakes also occasionally fire homing withering-flower projectiles that paralyze and slow enemies.
+					Recipe: Bloom Stone + 50 Planty Mush + 10 Auric Bars @ Mythril Anvil
+					'''
 			}
 
 			SilvaHarp: {
 				DisplayName: Silva Harp
-				Tooltip: ""
+				Tooltip:
+					'''
+					+5 life per second. This regeneration cannot be reduced by any factor.
+					+60 frames of invincibility after taking damage.
+					Modern Silva's revival invincibility is increased to 10 seconds.
+					During that invincibility, incoming life loss is reduced to 10%.
+					After the revival ends, life is restored to at least 50% of maximum life, and the cooldown can tick during boss fights.
+					Massively reduces the revival effect cooldown.
+					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
+					'''
 			}
 		}
 
@@ -111,12 +171,27 @@ Mods: {
 				}
 			}
 
-			PastLingeringShard.DisplayName: Past Lingering Shard
-			SeedOfSilvaDelphiniumArc.DisplayName: Seed Of Silva Delphinium Arc
-			SeedOfSilvaMandrakeDart.DisplayName: Seed Of Silva Mandrake Dart
-			SeedOfSilvaMandrakeSpore.DisplayName: Seed Of Silva Mandrake Spore
-			SeedOfSilvaSeed.DisplayName: Seed Of Silva Seed
-			SeedOfSilvaTorchFlame.DisplayName: Seed Of Silva Torch Flame
+			PastLingeringShard.DisplayName: Lingering Remnant Shard
+			SeedOfSilvaDelphiniumArc.DisplayName: Silva Delphinium Arc
+			SeedOfSilvaMandrakeDart.DisplayName: Silva Mandrake Dart
+			SeedOfSilvaMandrakeSpore.DisplayName: Silva Mandrake Spore
+			SeedOfSilvaSeed.DisplayName: Seed of Silva
+			SeedOfSilvaTorchFlame.DisplayName: Silva Torchflower Flame
+			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
+			TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
+			TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
+			TeachingProjectileD_PulseRingField.DisplayName: Teaching Projectile D_ Pulse Ring Field
+			TeachingProjectileE_ExplosionImpact.DisplayName: Teaching Projectile E_ Explosion Impact
+			TeachingProjectileF_SmokeMistDust.DisplayName: Teaching Projectile F_ Smoke Mist Dust
+			TeachingProjectileG_FireAshBurn.DisplayName: Teaching Projectile G_ Fire Ash Burn
+			TeachingProjectileH_WaterFoamOcean.DisplayName: Teaching Projectile H_ Water Foam Ocean
+			TeachingProjectileI_BloodFleshBiology.DisplayName: Teaching Projectile I_ Blood Flesh Biology
+			TeachingProjectileJ_DebrisMechanicalParts.DisplayName: Teaching Projectile J_ Debris Mechanical Parts
+			TeachingProjectileK_MagicStatusUI.DisplayName: Teaching Projectile K_ Magic Status U I
+			TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
+			TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
+			TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
 		}
 	}
 }

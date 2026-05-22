@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override float ExplosionPulseFactor => 1.85f;
 
         private int timer;
+        private readonly System.Collections.Generic.Dictionary<int, int> laserReleaseCountsByOwner = new();
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
@@ -118,10 +119,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 GeneralParticleHandler.SpawnParticle(p);
             }
 
-            // 八方向几何射线
-            for (int i = 0; i < 8; i++)
+            laserReleaseCountsByOwner.TryGetValue(projectile.owner, out int releaseCount);
+            releaseCount++;
+            laserReleaseCountsByOwner[projectile.owner] = releaseCount;
+
+            float startRotation = releaseCount % 2 == 1 ? -MathHelper.PiOver2 : 0f;
+
+            // 六方向几何射线：奇数次竖向，偶数次横向，间隔始终为60度。
+            for (int i = 0; i < 6; i++)
             {
-                float rot = MathHelper.TwoPi / 8f * i;
+                float rot = startRotation + MathHelper.TwoPi / 6f * i;
 
                 Vector2 velocity = new Vector2(1f, 0f).RotatedBy(rot) * 12f;
 

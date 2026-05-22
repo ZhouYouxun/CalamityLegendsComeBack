@@ -17,16 +17,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         private bool isSmall = true;
         private int stateTimer = 0;
 
-        private int loopCount => (int)Projectile.ai[0];
-        public const int MaxActiveCells = 70;
-        private const int MaxLoop = 5;
+        public const int MaxActiveCells = 15;
+        private const int GrowTime = 120;
 
         private int frame;
         private int frameTimer;
 
         private float wanderAngle;
         private int wanderTimer;
-        private bool finalRound;
 
         public override void SetDefaults()
         {
@@ -51,7 +49,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             wanderTimer = 0;
             wanderAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-            finalRound = false;
         }
 
         public override bool? CanDamage()
@@ -64,17 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             stateTimer++;
             wanderTimer++;
 
-            Player owner = Main.player[Projectile.owner];
-            if (!owner.active || owner.dead || owner.HeldItem.type != ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPC>())
-                finalRound = true;
 
-            // ===== 前5次循环：强制锁时间 =====
-            if (loopCount < MaxLoop - 1)
-            {
-                Projectile.timeLeft = 150;
-            }
-
-            // ===== 粒子铺满碰撞体积 =====
             if (isSmall)
                 SmallStateAI();
             else
@@ -113,7 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.075f);
             Projectile.velocity *= 0.992f;
 
-            if (stateTimer >= 120 && loopCount < MaxLoop)
+            if (stateTimer >= GrowTime)
                 GrowToBig();
         }
 
@@ -198,23 +185,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             if (!isSmall)
             {
-                if (finalRound)
-                {
-                    Projectile.Kill();
-                    return;
-                }
+                if (Projectile.owner == Main.myPlayer)
+                    SpawnChildCells(target);
 
-                int nextLoop = loopCount + 1;
-
-                if (nextLoop <= MaxLoop && ActiveCellCount() < MaxActiveCells)
-                {
-                    SpawnChildCells(target, nextLoop);
-                    Projectile.Kill();
-                }
-                else
-                {
-                    return;
-                }
+                Projectile.Kill();
             }
         }
 
@@ -232,31 +206,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             return count;
         }
 
-        private void SpawnChildCells(NPC target, int nextLoop)
+        private static int GetSplitCountForActiveCells(int activeCellCount)
         {
+            if (activeCellCount <= 3)
+                return 4;
+
+            if (activeCellCount <= 6)
+                return 3;
+
+            if (activeCellCount <= 9)
+                return 2;
+
+            return 1;
+        }
+
+        private void SpawnChildCells(NPC target)
+        {
+            int activeCellCount = ActiveCellCount();
+            int desiredChildCount = GetSplitCountForActiveCells(activeCellCount);
+            int availableSlotsAfterThisCellDies = MaxActiveCells - System.Math.Max(0, activeCellCount - 1);
+            int childCount = System.Math.Min(desiredChildCount, availableSlotsAfterThisCellDies);
+
+            if (childCount <= 0)
+                return;
+
             Vector2 away = (Projectile.Center - target.Center).SafeNormalize(Vector2.UnitX);
+            float baseRotation = away.ToRotation() + Main.rand.NextFloat(-0.18f, 0.18f);
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < childCount; i++)
             {
-                if (ActiveCellCount() >= MaxActiveCells)
-                    break;
-
-                Vector2 direction = away.RotatedBy(i == 0 ? -0.65f : 0.65f);
+                float spread = childCount == 1 ? 0f : MathHelper.Lerp(-0.78f, 0.78f, i / (float)(childCount - 1));
+                Vector2 direction = (baseRotation + spread).ToRotationVector2();
                 int childIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center + direction * 12f,
-                    direction * Main.rand.NextFloat(4.2f, 6.2f),
+                    Projectile.Center + direction * Main.rand.NextFloat(10f, 20f),
+                    direction * Main.rand.NextFloat(4.2f, 6.4f),
                     ModContent.ProjectileType<FragmentStardust_Cell>(),
                     (int)(Projectile.damage * 0.75f),
                     Projectile.knockBack,
                     Projectile.owner,
-                    nextLoop);
+                    0f);
 
                 if (Main.projectile.IndexInRange(childIndex))
                 {
                     Projectile child = Main.projectile[childIndex];
-                    child.scale = MathHelper.Clamp(Projectile.scale * 0.88f, 0.58f, 1f);
-                    child.timeLeft = Math.Max(120, 520 - nextLoop * 55);
+                    child.scale = Projectile.scale;
+                    child.timeLeft = 600;
                 }
             }
         }

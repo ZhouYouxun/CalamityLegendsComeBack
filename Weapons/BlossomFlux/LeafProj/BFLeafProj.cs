@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
     internal sealed class BFLeafProj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         private const int ReconHomingDelayFrames = 25;
+        private const int ReconPostHitStraightFrames = 30;
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -185,13 +186,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                         Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, BFReconLeftBalance.MarkDuration);
 
                     LastReconHitNpcIndex = target.whoAmI;
-                    ReconWanderTimer = 0f;
-                    NPC nextTarget = FindReconTarget(target.whoAmI);
                     Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                    if (nextTarget != null)
-                        Projectile.velocity = (nextTarget.Center - Projectile.Center).SafeNormalize(currentDirection) * MathHelper.Clamp(StoredSpeed * 1.06f, 11f, 22.5f);
-                    else
-                        Projectile.velocity = currentDirection * StoredSpeed;
+                    ReconWanderTimer = ReconPostHitStraightFrames * Projectile.MaxUpdates;
+                    Projectile.velocity = currentDirection * StoredSpeed;
 
                     Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.78f));
 
@@ -342,7 +339,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             if (ReconWanderTimer > 0f)
             {
                 ReconWanderTimer--;
-                Projectile.velocity = Projectile.velocity.RotatedBy(Main.rand.NextFloat(-0.035f, 0.035f));
+                BFArrowCommon.MaintainSpeed(Projectile, StoredSpeed, 0.18f);
                 return;
             }
 

@@ -108,6 +108,10 @@ Mods: {
 				PFExoThanatosBeamTelegraph.DisplayName: P F Exo Thanatos Telegraph
 				PFExoThanatosBeamStart.DisplayName: P F Exo Thanatos Beam
 				PFExoThanatosSideLaser.DisplayName: P F Exo Thanatos Side Laser
+				PristineFuryPassiveTentacle.DisplayName: Pristine Fury Passive Tentacle
+				PristineFuryRightNovaChargeOrb.DisplayName: Pristine Fury Right Nova Charge Orb
+				PristineFuryRightNovaFireball.DisplayName: Pristine Fury Right Nova Fireball
+				PristineFuryRightNovaPseudoLaser.DisplayName: Pristine Fury Right Nova Pseudo Laser
 			}
 		}
 

@@ -2,6 +2,7 @@ using CalamityMod.Particles;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -12,9 +13,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 {
     internal sealed class PristineFuryHook : ModProjectile, ILocalizedModType
     {
+        private const int AttachDurationFrames = 180;
+
         private enum HookState
         {
             Firing,
+            Attached,
             Returning
         }
 
@@ -25,6 +29,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             get => (HookState)(int)Projectile.ai[0];
             set => Projectile.ai[0] = (int)value;
+        }
+
+        private ref float AttachTimer => ref Projectile.ai[1];
+
+        private int AttachedTargetIndex
+        {
+            get => (int)Projectile.localAI[0];
+            set => Projectile.localAI[0] = value;
         }
 
         public override void SetDefaults()
@@ -54,6 +66,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (State == HookState.Firing && Projectile.Distance(owner.Center) > 860f)
                 StartReturning();
 
+            if (State == HookState.Attached)
+            {
+                if (!TryGetAttachedTarget(out NPC target))
+                {
+                    StartReturning();
+                }
+                else
+                {
+                    Projectile.friendly = true;
+                    Projectile.tileCollide = false;
+                    Projectile.Center = target.Center;
+                    Projectile.velocity = Vector2.Zero;
+                    Projectile.timeLeft = Math.Max(Projectile.timeLeft, 30);
+
+                    AttachTimer++;
+                    if (AttachTimer >= AttachDurationFrames)
+                    {
+                        CompleteAttachment(owner, target);
+                        return;
+                    }
+                }
+            }
+
             if (State == HookState.Returning)
             {
                 Projectile.friendly = false;
@@ -68,24 +103,84 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 }
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            Vector2 rotationVector = State == HookState.Attached
+                ? owner.MountedCenter.DirectionTo(Projectile.Center)
+                : Projectile.velocity;
+            Projectile.rotation = rotationVector.SafeNormalize(Vector2.UnitX * owner.direction).ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.26f, 0.54f, 0.72f));
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (!PristineFuryMarkHelper.TryGetMarkFromNPC(target, out _))
+            if (State == HookState.Firing && !PristineFuryMarkHelper.TryGetMarkFromNPC(target, out _))
                 modifiers.SourceDamage *= 5f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Player owner = Main.player[Projectile.owner];
+            if (State == HookState.Attached)
+            {
+                if (target.whoAmI == AttachedTargetIndex)
+                    target.AddBuff(BuffID.Electrified, 90);
+                return;
+            }
+
+            if (State != HookState.Firing)
+                return;
+
+            Color burstColor = PristineFuryMarkHelper.TryGetMarkFromNPC(target, out PristineFuryMark mark)
+                ? PristineFuryMarkHelper.GetColor(mark)
+                : new Color(255, 180, 74);
+            StartAttached(target);
+            SpawnHitBurst(burstColor);
+            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.9f, Pitch = 0.2f }, Projectile.Center);
+        }
+
+        public override bool? CanHitNPC(NPC target)
+        {
+            if (State == HookState.Returning)
+                return false;
+
+            if (State == HookState.Attached)
+                return target.whoAmI == AttachedTargetIndex;
+
+            return null;
+        }
+
+        private bool TryGetAttachedTarget(out NPC target)
+        {
+            int targetIndex = AttachedTargetIndex;
+            if (targetIndex < 0 || targetIndex >= Main.maxNPCs)
+            {
+                target = null;
+                return false;
+            }
+
+            target = Main.npc[targetIndex];
+            return target.active && target.life > 0;
+        }
+
+        private void StartAttached(NPC target)
+        {
+            AttachedTargetIndex = target.whoAmI;
+            AttachTimer = 0f;
+            Projectile.Center = target.Center;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.penetrate = -1;
+            Projectile.extraUpdates = 0;
+            Projectile.tileCollide = false;
+            Projectile.timeLeft = AttachDurationFrames + 90;
+            Projectile.netUpdate = true;
+            State = HookState.Attached;
+        }
+
+        private void CompleteAttachment(Player owner, NPC target)
+        {
             if (PristineFuryMarkHelper.TryGetMarkFromNPC(target, out PristineFuryMark mark))
             {
                 owner.GetModPlayer<PristineFuryPlayer>().ExtractMark(mark);
                 SpawnHitBurst(PristineFuryMarkHelper.GetColor(mark));
-                SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.9f, Pitch = 0.2f }, Projectile.Center);
+                SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.9f, Pitch = -0.05f }, Projectile.Center);
             }
             else
             {
@@ -110,7 +205,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (State == HookState.Returning)
                 return;
 
+            AttachTimer = 0f;
             Projectile.penetrate = -1;
+            Projectile.extraUpdates = 3;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 90);
             Projectile.netUpdate = true;
             State = HookState.Returning;
         }
@@ -123,26 +221,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             for (int i = 0; i < 24; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f);
-                Particle spark = i % 2 == 0
-                    ? new SparkParticle(
-                        Projectile.Center,
-                        velocity,
-                        false,
-                        Main.rand.Next(12, 22),
-                        Main.rand.NextFloat(0.65f, 1.15f),
-                        Color.Lerp(color, Color.White, Main.rand.NextFloat(0.1f, 0.32f)))
-                    : new CustomSpark(
-                        Projectile.Center,
-                        velocity,
-                        "CalamityMod/Particles/GlowSpark2",
-                        false,
-                        Main.rand.Next(10, 18),
-                        Main.rand.NextFloat(0.04f, 0.08f),
-                        color,
-                        new Vector2(0.45f, 1.45f),
-                        glowCenter: true,
-                        shrinkSpeed: 0.64f,
-                        extraRotation: velocity.ToRotation());
+                Particle spark = new SparkParticle(
+                    Projectile.Center,
+                    velocity,
+                    false,
+                    Main.rand.Next(12, 22),
+                    Main.rand.NextFloat(0.65f, 1.15f),
+                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.1f, 0.32f)));
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 

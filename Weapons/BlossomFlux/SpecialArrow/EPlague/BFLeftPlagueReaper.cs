@@ -252,51 +252,22 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
                 return;
 
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
-            float squash = Utils.GetLerpValue(5f, 15f, Projectile.velocity.Length(), true);
             float plagueIntensity = 0.75f + homingReadiness * 0.55f;
+            int dustCount = homingReadiness > 0f ? 2 : 1;
 
-            if (Main.rand.NextBool(2))
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center - forward * Main.rand.NextFloat(4f, 12f) + side * Main.rand.NextFloat(-4f, 4f),
-                    -Projectile.velocity * 0.018f,
-                    "CalamityMod/Particles/DualTrail",
-                    false,
-                    10,
-                    0.052f * plagueIntensity,
-                    Color.Lerp(PlagueMurk, PlagueBright, 0.42f + homingReadiness * 0.22f) * 0.66f,
-                    new Vector2(0.8f - 0.18f * squash, 1.15f + squash),
-                    true,
-                    false,
-                    shrinkSpeed: 0.22f));
-            }
-
-            if (Main.rand.NextBool(4))
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + side * Main.rand.NextFloat(-7f, 7f),
-                    Main.rand.NextVector2Circular(0.7f, 0.7f) - forward * Main.rand.NextFloat(0.2f, 0.75f),
-                    "CalamityMod/Particles/SmallBloom",
-                    false,
-                    Main.rand.Next(7, 12),
-                    Main.rand.NextFloat(0.08f, 0.14f) * plagueIntensity,
-                    Color.Lerp(PlagueAcid, Color.White, Main.rand.NextFloat(0.04f, 0.18f)),
-                    new Vector2(0.9f, 1.2f + squash * 0.6f),
-                    true,
-                    false,
-                    shrinkSpeed: 0.5f));
-            }
-
-            if (Main.rand.NextBool(3))
+            for (int i = 0; i < dustCount; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center - forward * Main.rand.NextFloat(2f, 12f) + side * Main.rand.NextFloat(-6f, 6f),
-                    Main.rand.NextBool(4) ? DustID.TerraBlade : DustID.GreenTorch,
-                    -Projectile.velocity * Main.rand.NextFloat(0.035f, 0.095f) + Main.rand.NextVector2Circular(0.26f, 0.26f),
-                    40,
-                    Color.Lerp(PlagueMurk, PlagueAcid, Main.rand.NextFloat(0.18f, 0.62f)),
-                    Main.rand.NextFloat(0.56f, 1.05f) * plagueIntensity);
+                    Projectile.Center - forward * Main.rand.NextFloat(3f, 14f) + side * Main.rand.NextFloat(-5.5f, 5.5f),
+                    DustID.GreenTorch,
+                    -Projectile.velocity * Main.rand.NextFloat(0.025f, 0.075f) +
+                    side * Main.rand.NextFloat(-0.18f, 0.18f) +
+                    Main.rand.NextVector2Circular(0.18f, 0.18f),
+                    55,
+                    Color.Lerp(PlagueDeep, PlagueBright, Main.rand.NextFloat(0.24f, 0.78f)),
+                    Main.rand.NextFloat(0.58f, 1.04f) * plagueIntensity);
                 dust.noGravity = true;
+                dust.fadeIn = Main.rand.NextFloat(0.28f, 0.64f);
             }
         }
 
@@ -307,33 +278,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
-                Color.Lerp(PlagueMurk, PlagueAcid, 0.42f),
-                "CalamityMod/Particles/BloomRing",
-                Vector2.One,
-                Projectile.rotation,
-                0.12f,
-                0.95f,
-                18,
-                true));
-
-            GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                Projectile.Center - forward * 6f,
-                -forward * 1.2f,
-                "CalamityMod/Particles/VerticalSmear",
-                false,
-                14,
-                1.4f,
-                Color.Lerp(PlagueGreen, PlagueAcid, 0.5f),
-                new Vector2(0.12f, 0.82f)));
-
             for (int i = 0; i < 14; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextBool(3) ? DustID.TerraBlade : DustID.GreenTorch,
+                    DustID.GreenTorch,
                     Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.1f, 3.4f) - forward * Main.rand.NextFloat(0.2f, 1.2f),
                     50,
                     Color.Lerp(PlagueMurk, PlagueAcid, Main.rand.NextFloat(0.2f, 0.85f)),

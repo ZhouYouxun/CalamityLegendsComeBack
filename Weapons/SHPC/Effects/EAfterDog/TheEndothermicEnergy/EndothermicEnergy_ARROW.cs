@@ -76,24 +76,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             if (!firstSubstep)
                 return;
 
-            if (Main.rand.NextBool(7))
-            {
-                float wave = (float)System.Math.Sin(t * 1.15f) * 4.2f;
-                Vector2 spawnPos = Projectile.Center - forward * Main.rand.NextFloat(3f, 7f) + right * wave;
-                Vector2 vel = -forward * Main.rand.NextFloat(0.45f, 1.15f) + right * (float)System.Math.Cos(t * 1.4f) * 0.16f;
+            float wave = (float)System.Math.Sin(t * 1.15f) * 4.2f;
+            Vector2 coreSpawnPos = Projectile.Center - forward * Main.rand.NextFloat(3f, 7f) + right * wave;
+            Vector2 coreVelocity = -forward * Main.rand.NextFloat(0.45f, 1.15f) + right * (float)System.Math.Cos(t * 1.4f) * 0.16f;
 
-                SquishyLightParticle particle = new(
-                    spawnPos,
-                    vel,
-                    Main.rand.NextFloat(0.44f, 0.67f),
-                    Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.18f, 0.55f)) * 0.7f,
-                    Main.rand.Next(13, 19)
-                );
-                GeneralParticleHandler.SpawnParticle(particle);
-            }
+            SquishyLightParticle particle = new(
+                coreSpawnPos,
+                coreVelocity,
+                Main.rand.NextFloat(0.44f, 0.67f),
+                Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.18f, 0.55f)) * 0.7f,
+                Main.rand.Next(13, 19)
+            );
+            GeneralParticleHandler.SpawnParticle(particle);
 
-            int sparkCount = Main.rand.NextBool(5) ? 2 : 1;
-            for (int i = 0; i < sparkCount; i++)
+            for (int i = 0; i < 2; i++)
             {
                 float side = i == 0 ? -1f : 1f;
                 float phase = t + i * 1.13f;
@@ -119,7 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.GameUpdateCount % 2 == 0)
             {
                 Vector2 spikePosition =
                     Projectile.Center
@@ -145,7 +141,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 GeneralParticleHandler.SpawnParticle(iceSpike);
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.GameUpdateCount % 2 == 0)
             {
                 float side = Main.rand.NextBool() ? -1f : 1f;
                 float phase = t * 0.92f + side * 2.1f;
@@ -169,12 +165,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 dust.noGravity = true;
             }
 
-            if (Main.rand.NextBool(5))
+            if (Main.GameUpdateCount % 2 == 0)
             {
                 float angle = t * 0.85f;
                 float radius = Main.rand.NextFloat(3f, 6f);
 
-                Vector2 pos = Projectile.Center - forward * Main.rand.NextFloat(4f, 8f) + angle.ToRotationVector2() * radius;
+                Vector2 pos = Projectile.Center - forward * Main.rand.NextFloat(4f, 8f) + (Projectile.rotation + angle).ToRotationVector2() * radius;
                 Vector2 vel = -forward * Main.rand.NextFloat(0.25f, 0.75f) + right * (float)System.Math.Sin(angle * 1.5f) * 0.18f;
 
                 Particle mist = new MediumMistParticle(
@@ -187,24 +183,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 );
                 GeneralParticleHandler.SpawnParticle(mist);
             }
-
-            if (Main.rand.NextFloat() < 0.6f)
-            {
-                Particle centerFlare = new CustomSpark(
-                    Projectile.Center,
-                    Projectile.velocity * 0.02f,
-                    "CalamityLegendsComeBack/Texture/KsTexture/window_04",
-                    false,
-                    7,
-                    0.18f,
-                    new Color(160, 242, 255) * 1.37f,
-                    new Vector2(0.39f, 1.5f),
-                    glowCenter: true,
-                    shrinkSpeed: 1.2f,
-                    glowCenterScale: 0.64f,
-                    glowOpacity: 0.5f);
-                GeneralParticleHandler.SpawnParticle(centerFlare);
-            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -213,6 +191,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineFade").Value;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             for (int i = 1; i < Projectile.oldPos.Length; i++)
             {
@@ -271,12 +252,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 drawPos,
                 null,
                 new Color(120, 230, 255, 120),
-                0f,
+                rotation,
                 bloom.Size() * 0.5f,
                 new Vector2(0.12f, 0.07f),
                 SpriteEffects.None,
                 0f);
 
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
 

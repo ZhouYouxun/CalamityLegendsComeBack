@@ -96,7 +96,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
         public bool BlossomFluxArrow;
         public BlossomFluxChloroplastPresetType Preset;
-        public bool PastLingeringArrow;
         private bool sunflowerEmpowered;
         private int torchflowerExplosionCooldown;
 
@@ -175,26 +174,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             }
         }
 
-        public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            if (!PastLingeringArrow || projectile.owner != Main.myPlayer)
-                return;
-
-            int shardCount = Main.rand.Next(1, 3);
-            for (int i = 0; i < shardCount; i++)
-            {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7.5f, 11.5f);
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    velocity,
-                    ModContent.ProjectileType<PastLingeringShard>(),
-                    System.Math.Max(1, (int)(projectile.damage * 0.42f)),
-                    projectile.knockBack * 0.35f,
-                    projectile.owner,
-                    target.whoAmI);
-            }
-        }
     }
 
     internal sealed class BFAccessoryGlobalNPC : GlobalNPC

@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         private readonly Dictionary<int, int> hitCountOnCurrentTarget = new();
         private readonly Dictionary<int, int> stickVisualTimer = new();
         private readonly Dictionary<int, float> orbitAngle = new();
+        private static readonly Dictionary<int, int> nextOrbitOrderByOwner = new();
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
@@ -352,49 +353,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         private static void SpawnOrReleaseOrbitGhosts(Projectile projectile)
         {
             int ghostType = ModContent.ProjectileType<RuinousSoul_OrbitGhost>();
-            int ownedGhosts = 0;
+            List<Projectile> orbitGhosts = new();
 
             foreach (Projectile ghost in Main.ActiveProjectiles)
             {
                 if (ghost.owner == projectile.owner && ghost.type == ghostType && ghost.ai[0] == 0f)
-                    ownedGhosts++;
+                    orbitGhosts.Add(ghost);
             }
 
-            if (ownedGhosts < RuinousSoul_OrbitGhost.ReleaseCap)
+            int ghostsToRelease = orbitGhosts.Count + RuinousSoul_OrbitGhost.SpawnBatchSize - RuinousSoul_OrbitGhost.ReleaseCap;
+            if (ghostsToRelease > 0)
             {
-                int ghostsToSpawn = RuinousSoul_OrbitGhost.SpawnBatchSize;
-                if (ownedGhosts + ghostsToSpawn > RuinousSoul_OrbitGhost.ReleaseCap)
-                    ghostsToSpawn = RuinousSoul_OrbitGhost.ReleaseCap - ownedGhosts;
+                orbitGhosts.Sort((a, b) => a.localAI[0].CompareTo(b.localAI[0]));
 
-                Player owner = Main.player[projectile.owner];
-                for (int i = 0; i < ghostsToSpawn; i++)
+                int targetIndex = FindReleaseTarget(projectile);
+                for (int i = 0; i < ghostsToRelease && i < orbitGhosts.Count; i++)
                 {
-                    float spawnAngle = MathHelper.TwoPi * (ownedGhosts + i) / RuinousSoul_OrbitGhost.ReleaseCap;
-                    Vector2 spawnOffset = new Vector2(0f, -30f).RotatedBy(spawnAngle);
-                    Projectile.NewProjectile(
-                        projectile.GetSource_FromThis(),
-                        owner.Center + spawnOffset,
-                        Vector2.Zero,
-                        ghostType,
-                        (int)(projectile.damage * 0.35f),
-                        projectile.knockBack,
-                        projectile.owner,
-                        0f,
-                        -1f,
-                        ownedGhosts + i);
+                    if (orbitGhosts[i].ModProjectile is RuinousSoul_OrbitGhost orbitGhost)
+                        orbitGhost.Release(targetIndex);
                 }
-
-                ownedGhosts += ghostsToSpawn;
-                if (ownedGhosts < RuinousSoul_OrbitGhost.ReleaseCap)
-                    return;
             }
 
-            int targetIndex = FindReleaseTarget(projectile);
-            foreach (Projectile ghost in Main.ActiveProjectiles)
+            Player owner = Main.player[projectile.owner];
+            for (int i = 0; i < RuinousSoul_OrbitGhost.SpawnBatchSize; i++)
             {
-                if (ghost.owner == projectile.owner && ghost.type == ghostType && ghost.ModProjectile is RuinousSoul_OrbitGhost orbitGhost && ghost.ai[0] == 0f)
-                    orbitGhost.Release(targetIndex);
+                int orbitOrder = GetNextOrbitOrder(projectile.owner);
+                int orbitSlot = orbitOrder % RuinousSoul_OrbitGhost.ReleaseCap;
+                float spawnAngle = MathHelper.TwoPi * orbitSlot / RuinousSoul_OrbitGhost.ReleaseCap;
+                Vector2 spawnOffset = new Vector2(0f, -30f).RotatedBy(spawnAngle);
+
+                int ghostIndex = Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    owner.Center + spawnOffset,
+                    Vector2.Zero,
+                    ghostType,
+                    (int)(projectile.damage * 0.35f),
+                    projectile.knockBack,
+                    projectile.owner,
+                    0f,
+                    -1f,
+                    orbitSlot);
+
+                if (Main.projectile.IndexInRange(ghostIndex))
+                    Main.projectile[ghostIndex].localAI[0] = orbitOrder;
             }
+        }
+
+        private static int GetNextOrbitOrder(int owner)
+        {
+            nextOrbitOrderByOwner.TryGetValue(owner, out int nextOrder);
+            nextOrbitOrderByOwner[owner] = nextOrder + 1;
+            return nextOrder;
         }
 
         private static int FindReleaseTarget(Projectile projectile)

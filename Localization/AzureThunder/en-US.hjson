@@ -1,0 +1,51 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Common.NoMana: Not enough mana
+
+		Items: {
+			Weapons: {
+				AzureThunder: {
+					DisplayName: AzureThunder
+					Tooltip: "[GFB]"
+					AzureThunderInfo:
+						'''
+						[c/FFE85A:"Let solemn thunder cleanse evil, call sweet rain, and spare the living."]
+						[c/6FDFFF:Left click] [c/DCD6C8:channels alternating sword swings. The first swing fires AzureThunder light orbs, the second summons 2 flying swords, the third summons 4 flying swords, and the fourth calls repeated lightning. Every real attack consumes mana.]
+						[c/6FDFFF:Right click] [c/DCD6C8:unlocks after Desert Scourge. Spends all Thunder Charge, plants AzureThunder swords around you, and calls sequential lightning. After any mechanical boss, each spent Thunder Charge restores 5 mana. After Plantera, planted swords last 13 seconds longer. After Yharon, if 9 swords are present, the final lightning inflicts Crumbling.]
+						[c/FFE85A:Ultimate] [c/DCD6C8:unlocked by default. At 120 ultimate energy, press [{0}] to gain Heavenly Harmony for 25 seconds. While held, gain 1 energy every 2 seconds; this pauses while not holding AzureThunder. After Dragonfolly, the first two left-click attacks during Heavenly Harmony call one extra lightning strike. After Yharon, the final hit of empowered left and right click deals increased damage.]
+						[c/B8F4FF:Heaven and Earth] [c/DCD6C8:unlocked by default. On the final left-click swing, restore 1 mana for each active AzureThunder sword. After Desert Scourge, each active sword grants +1 mana regeneration. After Hive Mind or Perforators, gain +2 armor penetration. After Duke Fishron, gain +1 life regeneration. After Yharon, gain +2% magic damage.]
+						[c/B8F4FF:Heaven's Ward] [c/DCD6C8:unlocks after Hive Mind or Perforators. While held, dodge one hit every 99 seconds and restore life; during Heavenly Harmony this becomes every 9 seconds. After Wall of Flesh the heal becomes 80, after Plantera 125, after Moon Lord 150, and after Yharon 200.]
+						[c/B8F4FF:Fourfold Accord] [c/DCD6C8:unlocks after Wall of Flesh. If fewer than 3 AzureThunder swords are present, create one every 10 seconds. Right click restores 1 mana for every active sword. After Duke Fishron, triggering this also restores life. After Moon Lord, the automatic sword limit rises to 6.]
+						[c/FFE85A:Heavenly Harmony damage over time] [c/DCD6C8:starts as Static Discharge. After Wall of Flesh it upgrades to Electrified. After Moon Lord it also applies Elemental Mix. After Dragonfolly, Electrified upgrades to Vermillion Flux. After Yharon, Vermillion Flux upgrades to Auric Rebuke.]
+						[c/FFE85A:Thunder Charge] [c/DCD6C8:is gained by striking enemies with electric debuffs, Elemental Mix, or Miracle Blight, up to 10 stacks.]
+						'''
+				}
+			}
+		}
+
+		Buffs: {
+			AzureThunderHarmonyBuff: {
+				DisplayName: Heavenly Harmony
+				Description: Final damage, defense, damage reduction, and life regeneration are increased; AzureThunder attacks are empowered.
+			}
+		}
+
+		Projectiles: {
+			AzureThunder: {
+				AzureThunderSwingHoldout.DisplayName: AzureThunder
+				AzureThunderLightOrb.DisplayName: AzureThunder Light Orb
+				AzureThunderStormLightning.DisplayName: AzureThunder Lightning
+				AzureThunderFlatLightning.DisplayName: AzureThunder Flat Bolt
+				AzureThunderFlyingSword.DisplayName: AzureThunder Flying Sword
+				AzureThunderGroundSword.DisplayName: AzureThunder Ground Sword
+				AzureThunderGrandSword.DisplayName: AzureThunder Grand Sword
+				AzureThunderStrikeSequencer.DisplayName: AzureThunder Strike Sequencer
+			}
+		}
+
+		Cooldowns: {
+			AzureThunder_ThunderCharge: Thunder Charge
+			AzureThunder_Ultimate: AzureThunder Ultimate
+		}
+	}
+}

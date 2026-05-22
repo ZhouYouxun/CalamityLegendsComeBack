@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义计时器
         private int lifeTimer;
+        private int frameTimer;
         public override string Texture => "Terraria/Images/Projectile_0"; // 透明占位
 
         public override void SetStaticDefaults()
@@ -180,8 +181,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
-            if (Projectile.owner == Main.myPlayer && Projectile.numUpdates == 0 && lifeTimer % 4 == 0)
-                ReleaseTrailingNovas(forward, right);
+            if (Projectile.numUpdates == 0)
+            {
+                frameTimer++;
+
+                if (Projectile.owner == Main.myPlayer)
+                {
+                    if (frameTimer % 4 == 0)
+                        ReleaseTrailingNovas(forward, right);
+
+                    if (frameTimer % 2 == 0)
+                        ReleaseTrailingSHPE();
+                }
+            }
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.8f, 0.6f, 0.1f));
 
@@ -371,6 +383,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     (int)(Projectile.damage * 0.24f),
                     Projectile.knockBack * 0.15f,
                     Projectile.owner);
+            }
+        }
+
+        private void ReleaseTrailingSHPE()
+        {
+            int explosionIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner);
+
+            if (Main.projectile.IndexInRange(explosionIndex))
+            {
+                Projectile explosion = Main.projectile[explosionIndex];
+                explosion.width = 100;
+                explosion.height = 100;
+                explosion.Center = Projectile.Center;
+                explosion.DamageType = DamageClass.Magic;
+                explosion.usesLocalNPCImmunity = false;
+                explosion.localNPCHitCooldown = -1;
+                explosion.usesIDStaticNPCImmunity = true;
+                explosion.idStaticNPCHitCooldown = -1;
+                explosion.netUpdate = true;
             }
         }
     }

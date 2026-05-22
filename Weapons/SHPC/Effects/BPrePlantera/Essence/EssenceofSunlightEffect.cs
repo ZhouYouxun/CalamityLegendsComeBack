@@ -19,122 +19,161 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override float SquishyLightParticleFactor => 1.35f;
         public override float ExplosionPulseFactor => 1.35f;
+        public override bool EnableDefaultSlowdown => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.timeLeft = 54;
+            projectile.timeLeft = 64;
             projectile.penetrate = 1;
             projectile.extraUpdates = 3;
             projectile.usesLocalNPCImmunity = true;
             projectile.localNPCHitCooldown = 18;
 
             EssenceofSunlight_GP gp = projectile.GetGlobalProjectile<EssenceofSunlight_GP>();
-            gp.chargeTimer = 0;
-            gp.isCharging = false;
-            gp.chargeDirection = Vector2.Zero;
+            gp.flightTimer = 0;
+            gp.homingTimer = 0;
 
             Vector2 direction = projectile.velocity.SafeNormalize((Main.MouseWorld - owner.Center).SafeNormalize(Vector2.UnitX));
-            projectile.velocity = direction * System.Math.Max(projectile.velocity.Length() * 1.3f, 19f);
+            projectile.velocity = direction * System.Math.Max(projectile.velocity.Length() * 1.2f, 18f);
             projectile.rotation = direction.ToRotation();
-            SpawnChargeBackEffect(projectile);
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float targetSpeed = MathHelper.Lerp(projectile.velocity.Length(), 22f, 0.025f);
+            float targetSpeed = MathHelper.Lerp(projectile.velocity.Length(), 21f, 0.03f);
+            NPC target = FindTarget(projectile, 1200f);
+
+            EssenceofSunlight_GP gp = projectile.GetGlobalProjectile<EssenceofSunlight_GP>();
+
+            if (target is not null)
+            {
+                gp.homingTimer++;
+
+                Vector2 predictedCenter = target.Center + target.velocity * 8f;
+                Vector2 desiredDirection = (predictedCenter - projectile.Center).SafeNormalize(forward);
+                float trackingPower = Utils.GetLerpValue(0f, 80f, gp.homingTimer, true);
+                float closeTargetBoost = Utils.GetLerpValue(260f, 70f, projectile.Distance(target.Center), true);
+                float turnPower = MathHelper.Max(trackingPower, closeTargetBoost * 0.65f);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(1.4f), MathHelper.ToRadians(6.2f), turnPower);
+                float easedRotation = forward.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn);
+
+                forward = easedRotation.ToRotationVector2();
+                targetSpeed = MathHelper.Lerp(targetSpeed, 24f, 0.05f + turnPower * 0.05f);
+            }
+            else
+                gp.homingTimer = 0;
+
             projectile.velocity = forward * targetSpeed;
             projectile.rotation = forward.ToRotation();
 
             Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.42f);
 
-            if (Main.rand.NextBool(2))
+            if (projectile.numUpdates == 0)
             {
-                Particle streak = new GlowSparkParticle(
-                    projectile.Center - forward * Main.rand.NextFloat(4f, 14f),
-                    -forward * Main.rand.NextFloat(1.2f, 3.4f) + Main.rand.NextVector2Circular(0.4f, 0.4f),
-                    false,
-                    Main.rand.Next(6, 10),
-                    Main.rand.NextFloat(0.08f, 0.13f),
-                    Color.Lerp(new Color(255, 255, 170), new Color(255, 196, 70), Main.rand.NextFloat()),
-                    new Vector2(1.15f, 0.22f),
-                    true,
-                    false,
-                    1f);
-                GeneralParticleHandler.SpawnParticle(streak);
+                gp.flightTimer++;
+
+                if (Main.rand.NextBool(3))
+                {
+                    Particle streak = new GlowSparkParticle(
+                        projectile.Center - forward * Main.rand.NextFloat(4f, 14f),
+                        -forward * Main.rand.NextFloat(1.0f, 2.8f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
+                        false,
+                        Main.rand.Next(6, 9),
+                        Main.rand.NextFloat(0.07f, 0.11f),
+                        Color.Lerp(new Color(255, 255, 170), new Color(255, 196, 70), Main.rand.NextFloat()),
+                        new Vector2(1.05f, 0.2f),
+                        true,
+                        false,
+                        1f);
+                    GeneralParticleHandler.SpawnParticle(streak);
+                }
+
+                if (gp.flightTimer % 9 == 0)
+                    SpawnFlightBackEffect(projectile);
             }
         }
 
-        private void SpawnChargeBackEffect(Projectile projectile)
+        private static NPC FindTarget(Projectile projectile, float range)
+        {
+            NPC bestTarget = null;
+            float bestDistance = range;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(projectile))
+                    continue;
+
+                float distance = projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
+        }
+
+        private void SpawnFlightBackEffect(Projectile projectile)
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 back = -forward;
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
 
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 4; i++)
             {
-                float angle = MathHelper.TwoPi * i / 12f;
-                Vector2 dir = angle.ToRotationVector2();
+                Vector2 spawnPosition =
+                    projectile.Center -
+                    forward * Main.rand.NextFloat(5f, 18f) +
+                    normal * Main.rand.NextFloat(-7f, 7f);
 
                 SquishyLightParticle core = new(
-                    projectile.Center,
-                    dir * Main.rand.NextFloat(2f, 6f),
-                    Main.rand.NextFloat(1.2f, 1.8f),
+                    spawnPosition,
+                    back.RotatedByRandom(0.28f) * Main.rand.NextFloat(1.4f, 4.4f),
+                    Main.rand.NextFloat(0.75f, 1.25f),
                     Color.Lerp(new Color(255, 255, 180), new Color(255, 200, 80), Main.rand.NextFloat()),
-                    18);
+                    Main.rand.Next(14, 20));
 
                 GeneralParticleHandler.SpawnParticle(core);
             }
 
             for (int side = -1; side <= 1; side += 2)
             {
-                Vector2 sideOffset = forward.RotatedBy((MathHelper.Pi / 2f) * side);
+                Vector2 sideOffset = normal * side;
 
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < 2; i++)
                 {
-                    float t = i / 6f;
+                    float t = i / 2f;
                     Vector2 velocity =
-                        back * MathHelper.Lerp(4f, 10f, t) +
-                        sideOffset * MathHelper.Lerp(0.5f, 2.5f, t);
+                        back * MathHelper.Lerp(3.4f, 7.2f, t) +
+                        sideOffset * MathHelper.Lerp(0.45f, 1.8f, t);
 
                     SquishyLightParticle jet = new(
-                        projectile.Center + sideOffset * 4f,
+                        projectile.Center - forward * Main.rand.NextFloat(6f, 14f) + sideOffset * Main.rand.NextFloat(2f, 5f),
                         velocity,
-                        MathHelper.Lerp(0.8f, 1.4f, 1f - t),
+                        MathHelper.Lerp(0.65f, 1.05f, 1f - t),
                         Color.Lerp(new Color(255, 255, 160), new Color(255, 180, 60), t),
-                        16 + i * 2);
+                        14 + i * 2);
 
                     GeneralParticleHandler.SpawnParticle(jet);
                 }
             }
 
-            for (int i = 0; i < 2; i++)
+            if (Main.rand.NextBool(2))
             {
-                float rot = projectile.velocity.ToRotation() + (MathHelper.Pi / 2f) * i;
-
                 Particle pulse = new DirectionalPulseRing(
-                    projectile.Center,
-                    back * 2f,
-                    Color.Lerp(new Color(255, 255, 160), new Color(255, 200, 80), 0.5f),
-                    new Vector2(1f, 3f),
-                    rot,
-                    0.25f,
-                    0.02f,
-                    24);
+                    projectile.Center - forward * 8f,
+                    back * 1.6f,
+                    new Color(255, 230, 120),
+                    new Vector2(0.75f, 2.6f),
+                    projectile.rotation - MathHelper.PiOver4,
+                    0.18f,
+                    0.015f,
+                    18);
 
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
-
-            Particle mainPulse = new DirectionalPulseRing(
-                projectile.Center,
-                back * 3f,
-                new Color(255, 230, 120),
-                new Vector2(1f, 4f),
-                projectile.rotation - (MathHelper.Pi / 4f),
-                0.35f,
-                0.015f,
-                28);
-
-            GeneralParticleHandler.SpawnParticle(mainPulse);
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
@@ -173,8 +212,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
     {
         public override bool InstancePerEntity => true;
 
-        public int chargeTimer;
-        public bool isCharging;
-        public Vector2 chargeDirection;
+        public int flightTimer;
+        public int homingTimer;
     }
 }

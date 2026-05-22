@@ -116,8 +116,13 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     continue;
 
                 int slot = (int)projectile.ai[0];
-                if (slot >= 0 && slot < existingSlots.Length)
-                    existingSlots[slot] = true;
+                if (slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
+                {
+                    projectile.Kill();
+                    continue;
+                }
+
+                existingSlots[slot] = true;
             }
 
             for (int i = 0; i < existingSlots.Length; i++)

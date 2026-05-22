@@ -131,8 +131,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             ResetLeftStateIfMarkChanged();
             UpdateLeftVisualState(leftHeld);
 
-            // 临时调试：右键只按顺序切换印记，禁用右键散射和左+右提取钩；这不是永久设计，也不是最终交互。
-            if (rightHeld)
+            // Temporary debug: single right click cycles marks; both buttons charge the extraction hook.
+            if (rightHeld && !bothHeld)
             {
                 ResetRightCharge();
                 CancelHookChargeForTemporaryDebug();
@@ -608,22 +608,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Color.Lerp(color, Color.White, Main.rand.NextFloat(0.12f, 0.35f)));
                 GeneralParticleHandler.SpawnParticle(mote);
 
-                if (charge > 0.55f)
-                {
-                    Particle line = new CustomSpark(
-                        center + offset * 0.65f,
-                        velocity * 0.35f,
-                        "CalamityMod/Particles/GlowSpark2",
-                        false,
-                        12,
-                        0.045f + charge * 0.035f,
-                        color,
-                        new Vector2(0.36f, 1.8f + charge),
-                        glowCenter: true,
-                        shrinkSpeed: 0.58f,
-                        extraRotation: velocity.ToRotation());
-                    GeneralParticleHandler.SpawnParticle(line);
-                }
             }
         }
 

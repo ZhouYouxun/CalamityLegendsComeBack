@@ -373,17 +373,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         // ===== 后坐力 =====TryReduceHeat
         private int recoilFrame;
         private bool recoilActive;
-        private const int RecoilRaiseTime = 6;   // 抬枪：快
-        private const int RecoilHoldTime = 2;    // 顶点短停
-        private const int RecoilReturnTime = 5;  // 收回：快
-        private const float RecoilAngle = 0.72f; // 抬高角度，自行调
+        private int recoilDirection = 1;
+        private float recoilBaseRotation;
+        private float recoilTargetRotation;
+        private float recoilVisualRotation;
 
-        private const float RecoilAngleMultiplier = 3.152778f; // 0.72 * 3.152778 ≈ 2.27 rad ≈ 130°
-
-        private const int CoolingRecoilRaiseTime = RecoilRaiseTime + 2;
-        private const int CoolingRecoilHoldTime = RecoilHoldTime + 40;
-        private const int CoolingRecoilReturnTime = RecoilReturnTime + 5;
-        private const int CoolingRecoilTotalTime = CoolingRecoilRaiseTime + CoolingRecoilHoldTime + CoolingRecoilReturnTime;
+        private const int CoolingRecoilRaiseTime = 22;
+        private const int CoolingRecoilReturnTime = 30;
+        private const int CoolingRecoilTotalTime = 59;
+        private const float CoolingRecoilAngle = MathHelper.PiOver2 * 1.3f;
+        private const float CoolingRecoilCurrentWeight = 0.795f;
 
         private void ForceShutdown(Player player)
         {
@@ -405,64 +404,48 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (!recoilActive)
                 return;
 
-            // ===== 每帧都重新读取“基础瞄准角” =====
-            // 这样回程时不会绕圈，而是始终朝当前鼠标方向收回
-            Vector2 aimDir = (Main.MouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX);
-            float baseAimRotation = aimDir.ToRotation();
-
-            float recoilSide = aimDir.X >= 0f ? -1f : 1f;
-            float recoilOffset;
-
-            if (recoilFrame < CoolingRecoilRaiseTime)
+            if (recoilFrame >= CoolingRecoilTotalTime)
             {
-                // 先快后慢：EaseOut
-                float t = recoilFrame / (float)CoolingRecoilRaiseTime;
-                float eased = 1f - (1f - t) * (1f - t);
-                recoilOffset = recoilSide * RecoilAngle * RecoilAngleMultiplier * eased;
-            }
-            else if (recoilFrame < CoolingRecoilRaiseTime + CoolingRecoilHoldTime)
-            {
-                // 顶点短暂停顿
-                recoilOffset = recoilSide * RecoilAngle * RecoilAngleMultiplier;
-            }
-            else if (recoilFrame < CoolingRecoilTotalTime)
-            {
-                // 快速收回：时间短，视觉上就是“嗖”一下压回去
-                float t = (recoilFrame - CoolingRecoilRaiseTime - CoolingRecoilHoldTime + 1f) / CoolingRecoilReturnTime;
-                float eased = t * t; // 开头快，后面贴近终点时更稳
-                recoilOffset = MathHelper.Lerp(recoilSide * RecoilAngle * RecoilAngleMultiplier, 0f, eased);
-            }
-            else
-            {
-                Projectile.rotation = baseAimRotation;
-                Projectile.velocity = baseAimRotation.ToRotationVector2();
                 recoilActive = false;
                 recoilFrame = 0;
                 return;
             }
 
-            float finalRotation = baseAimRotation + recoilOffset;
+            if (recoilFrame < CoolingRecoilRaiseTime)
+            {
+                recoilVisualRotation = UpdateCoolingRecoil(recoilTargetRotation.ToRotationVector2());
+            }
+            else if (CoolingRecoilTotalTime - recoilFrame < CoolingRecoilReturnTime)
+            {
+                recoilVisualRotation = UpdateCoolingRecoil(recoilBaseRotation.ToRotationVector2());
+            }
 
-            Projectile.rotation = finalRotation;
-            Projectile.velocity = finalRotation.ToRotationVector2();
+            ApplyCoolingRecoilRotation(recoilVisualRotation);
+            recoilFrame++;
+        }
 
-            int direction = Math.Sign(aimDir.X);
-            if (direction == 0)
-                direction = Owner.direction;
+        private float UpdateCoolingRecoil(Vector2 target)
+        {
+            Vector2 current = recoilVisualRotation.ToRotationVector2();
+            return Vector2.Lerp(target, current, CoolingRecoilCurrentWeight).ToRotation();
+        }
 
-            Projectile.spriteDirection = direction;
-            Owner.ChangeDir(direction);
+        private void ApplyCoolingRecoilRotation(float rotation)
+        {
+            Projectile.rotation = rotation;
+            Projectile.velocity = rotation.ToRotationVector2();
+
+            Projectile.spriteDirection = recoilDirection;
+            Owner.ChangeDir(recoilDirection);
 
             // ===== 手臂也同步到这个新角度，否则会有一帧不跟 =====
-            Owner.itemRotation = (Projectile.velocity * direction).ToRotation();
+            Owner.itemRotation = (Projectile.velocity * recoilDirection).ToRotation();
 
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir +
                                 (Owner.gravDir == -1 ? MathHelper.Pi : 0f);
 
-            Owner.SetCompositeArmFront(true, FrontArmStretch, armRotation + ExtraFrontArmRotation * direction);
-            Owner.SetCompositeArmBack(true, BackArmStretch, armRotation + ExtraBackArmRotation * direction);
-
-            recoilFrame++;
+            Owner.SetCompositeArmFront(true, FrontArmStretch, armRotation + ExtraFrontArmRotation * recoilDirection);
+            Owner.SetCompositeArmBack(true, BackArmStretch, armRotation + ExtraBackArmRotation * recoilDirection);
         }
 
         public void TryReduceHeat()
@@ -492,6 +475,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             OffsetLengthFromArm -= 18f;
 
             // ===== 抬枪后坐力：启动三段式动画 =====
+            Vector2 aimDir = (Main.MouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+            recoilDirection = Math.Sign(aimDir.X);
+            if (recoilDirection == 0)
+                recoilDirection = Owner.direction;
+
+            recoilBaseRotation = aimDir.ToRotation();
+            recoilTargetRotation = aimDir.RotatedBy(-CoolingRecoilAngle * recoilDirection).ToRotation();
+            recoilVisualRotation = Projectile.rotation;
             recoilActive = true;
             recoilFrame = 0;
 

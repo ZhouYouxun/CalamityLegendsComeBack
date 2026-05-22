@@ -20,6 +20,7 @@
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\A_Dev\Miao\Testbench\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
+	  <Folder Include="Weapons\A_Dev\MK14EBR\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\特效文件参考\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
@@ -29,6 +30,7 @@
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Thanatos\" />
 	  <Folder Include="Weapons\SHPC\RightClick\枪身特效参考文献\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
+	  <Folder Include="Z_TeachingProjectile\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <AdditionalFiles Remove="Weapons\BlossomFlux\BFUI\**" />

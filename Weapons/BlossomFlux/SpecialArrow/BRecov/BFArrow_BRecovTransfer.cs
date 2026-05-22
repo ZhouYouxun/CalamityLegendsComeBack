@@ -24,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private const int LeftHoverFrames = 8;
         private const int ChargedHoverFrames = 10;
         private const int MaxLifetimeFrames = 150;
+        private const int NoTargetFlashFrames = 8;
         private const float BaseSearchRange = 3200f;
         private const float ContactDistance = 20f;
 
@@ -110,6 +111,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (!HasValidHealTarget() && Projectile.owner == Main.myPlayer)
                 RefreshHealTarget();
+
+            if (!HasValidHealTarget())
+                StartNoTargetFlash();
         }
 
         public override void AI()
@@ -123,6 +127,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             if (finalUpdate && Projectile.owner == Main.myPlayer && (!HasValidHealTarget() || StateTimer <= HoverFramesInUpdates))
                 RefreshHealTarget();
+
+            if (!HasValidHealTarget() && Projectile.timeLeft > NoTargetFlashFrames * Projectile.MaxUpdates)
+                StartNoTargetFlash();
 
             if (StateTimer > HoverFramesInUpdates)
             {
@@ -150,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             }
             else
             {
-                HoverBehavior();
+                NoTargetFlashBehavior();
             }
 
             if (Projectile.velocity.LengthSquared() > 0.01f)
@@ -290,9 +297,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (injuredTarget >= 0)
                 return injuredTarget;
 
-            if (owner.active && !owner.dead)
-                return owner.whoAmI;
-
             return -1;
         }
 
@@ -304,6 +308,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             TargetPlayerIndex = newTargetIndex;
             Projectile.netUpdate = true;
+        }
+
+        private void StartNoTargetFlash()
+        {
+            Projectile.velocity = Vector2.Zero;
+            StateTimer = 0f;
+
+            int flashTimeLeft = NoTargetFlashFrames * Projectile.MaxUpdates;
+            if (Projectile.timeLeft > flashTimeLeft)
+                Projectile.timeLeft = flashTimeLeft;
+
+            Projectile.netUpdate = true;
+
+            if (Projectile.FinalExtraUpdate())
+                SpawnTransferBurst(Projectile.Center, 0.9f, false);
+        }
+
+        private void NoTargetFlashBehavior()
+        {
+            Projectile.velocity = Vector2.Zero;
         }
 
         private bool HasValidHealTarget()

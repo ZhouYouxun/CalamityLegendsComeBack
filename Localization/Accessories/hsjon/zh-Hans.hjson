@@ -8,27 +8,47 @@ Mods: {
 
 			S_OVR_ChargeLimitBreaker: {
 				DisplayName: S-OVR：过载充能限制解除器
-				Tooltip: 大招超级激光的最大充能减半，但是玩家的生命回复也减半
+				Tooltip:
+					'''
+					大招超级激光的最大充能减半
+					但是玩家的生命回复也减半
+					'''
 			}
 
 			S_MLD_MultiLinkDistributor: {
 				DisplayName: S-MLD：多重链路分发器
-				Tooltip: 左键能一下子散射出三个能量光球，但每个的伤害降为33%
+				Tooltip:
+					'''
+					左键能一下子散射出三个能量光球
+					但每个的伤害降为33%
+					'''
 			}
 
 			S_MOT_MortarOverwatchTransceiver: {
 				DisplayName: S-MOT：迫击监控收发器
-				Tooltip: 手持SHPC时，右键改为迫击炮模式，自动蓄力发射弱追踪炮弹，并在爆炸后呼叫多种从天而降的分裂炮弹
+				Tooltip:
+					'''
+					手持SHPC时右键改为迫击炮模式
+					自动蓄力发射弱追踪炮弹并在爆炸后呼叫多种从天而降的分裂炮弹					
+					'''
 			}
 
 			S_RSU_PhaseResonanceGuard: {
 				DisplayName: S-RSU：相位共振防护单元
-				Tooltip: 手持SHPC时展开一层护盾，15秒冷却，可减半一次伤害
+				Tooltip:
+					'''
+					手持SHPC时展开一层护盾
+					15秒冷却，可减半一次伤害					
+					'''
 			}
 
 			S_TAC_TacticalLockCalibrator: {
 				DisplayName: S-TAC：战术锁定校准模块
-				Tooltip: 让右键的激光获得很弱的追踪能力
+				Tooltip:
+					'''
+					手持SHPC时
+					让右键的激光获得很弱的追踪能力					
+					'''
 			}
 
 			OffshoreWindTurbine: {
@@ -52,33 +72,93 @@ Mods: {
 			}
 
 			ATunedQuiver: {
-				// DisplayName: A Tuned Quiver
-				// Tooltip: ""
+				DisplayName: 调谐箭袋
+				Tooltip:
+					'''
+					+15% 远程伤害
+					+4 防御
+					提供箭矢速度加成，不同形态受到的加成不同
+					配方：魔法箭袋 + 10 丛林孢子 + 5 藤蔓 @ 砧
+					'''
 			}
 
 			BResonatingQuiver: {
-				// DisplayName: B Resonating Quiver
-				// Tooltip: ""
+				DisplayName: 共鸣箭袋
+				Tooltip:
+					'''
+					+15% 远程伤害
+					+5% 远程暴击
+					+15 远程弹幕护甲穿透
+					+6 防御
+					提供箭矢速度加成，不同形态受到的加成不同
+					配方：调谐箭袋 + 神射手徽章 + 5 生命合金 + 5 星系异石 @ 远古操纵机
+					'''
 			}
 
 			CDominationQuiver: {
-				// DisplayName: C Domination Quiver
-				// Tooltip: ""
+				DisplayName: 统御箭袋
+				Tooltip:
+					'''
+					+15% 远程伤害
+					+5% 远程暴击
+					+15 远程弹幕护甲穿透
+					+16 防御
+					+15% 最大生命值
+					提供箭矢速度加成，不同形态受到的加成不同
+					所有攻击可以穿透墙壁且无视防御
+					配方：共鸣箭袋 + 10 猎魂鲨牙 + 10 毁灭之灵 @ 远古操纵机
+					'''
 			}
 
 			PastLingering: {
-				// DisplayName: Past Lingering
-				// Tooltip: ""
+				DisplayName: 旧日残影
+				Tooltip:
+					'''
+					将突击模式改为类似幻影弓的模式：不进行弹药转化，命中敌人后释放强追踪弹幕
+					连续攻击会逐步提升发射速度，达到最高层级时播放额外音效
+					配方：幻影弓 + 12 夜明锭 + 5 星璇碎片 @ 远古操纵机
+					'''
 			}
 
 			SeedOfSilva: {
-				// DisplayName: Seed Of Silva
-				// Tooltip: ""
+				DisplayName: 席尔瓦之种
+				Tooltip:
+					'''
+					佩戴时产生五颗种子环绕玩家缓慢旋转，散发微弱的绿色光芒
+					手持叶流时，根据武器的形态，种子会开出不同的花
+					突击：向日葵
+					向日葵会展开一片小型领域，突击箭矢穿过领域时增加 30% 伤害，并获得 15% 暴击加成
+					复苏：雏菊
+					雏菊拥有 15 生命上限，每秒恢复 1.2 生命值，防御和伤害减免同步玩家
+					如果雏菊受到 20 或更高的伤害，雏菊会将已恢复的生命值向下取整并治疗玩家
+					侦察：飞燕草
+					飞燕草每 1.5 秒攻击一次附近敌人，发射弯曲弧线造成少量伤害，并眩晕敌人 1 秒
+					被眩晕的敌人大幅降低移动速度，受到侦察箭矢的伤害翻倍
+					免疫击退的敌人只受到增伤效果，且增伤削弱至 1.15 倍
+					飞燕草每次眩晕目标都会为玩家恢复 0.5 秒飞行时间
+					歼灭：火炬花
+					火炬花会在敌人靠近时喷射火焰
+					箭矢经过火炬花时也会触发爆炸，且独立计算冷却
+					侵染：曼陀罗
+					曼陀罗会减速靠近的敌人，并降低敌人 15% 碰撞伤害
+					曼陀罗不断产生孢子，类似孢子囊，也会对敌人施加负面效果，每次 3 秒，上限与当前武器同步
+					曼陀罗还会偶尔发射类似凋零枯花的追踪弹幕，麻痹并减速敌人
+					配方：绽花石 + 50 植物混凝块 + 10 永恒锭 @ 秘银砧
+					'''
 			}
 
 			SilvaHarp: {
-				// DisplayName: Silva Harp
-				// Tooltip: ""
+				DisplayName: 林海竖琴
+				Tooltip:
+					'''
+					+5 生命/秒 的生命恢复，不会被任何因素降低
+					受伤后 +60 帧无敌时间
+					现代林海的复活无敌时间提升到 10 秒
+					无敌期间受到伤害时损失的生命值降低到 10%
+					复活后至少恢复到 50% 最大生命值，并允许冷却在 Boss 战期间计时
+					复活效果的冷却超大幅度降低
+					配方：12 闪耀金羽 + 30 植物混凝块 + 12 金锭 + 3 化神魂精 @ 星宇砧
+					'''
 			}
 		}
 
@@ -111,12 +191,27 @@ Mods: {
 				}
 			}
 
-			// PastLingeringShard.DisplayName: Past Lingering Shard
-			// SeedOfSilvaDelphiniumArc.DisplayName: Seed Of Silva Delphinium Arc
-			// SeedOfSilvaMandrakeDart.DisplayName: Seed Of Silva Mandrake Dart
-			// SeedOfSilvaMandrakeSpore.DisplayName: Seed Of Silva Mandrake Spore
-			// SeedOfSilvaSeed.DisplayName: Seed Of Silva Seed
-			// SeedOfSilvaTorchFlame.DisplayName: Seed Of Silva Torch Flame
+			PastLingeringShard.DisplayName: 旧日残影碎片
+			SeedOfSilvaDelphiniumArc.DisplayName: 席尔瓦飞燕草弧光
+			SeedOfSilvaMandrakeDart.DisplayName: 席尔瓦曼陀罗飞刺
+			SeedOfSilvaMandrakeSpore.DisplayName: 席尔瓦曼陀罗孢子
+			SeedOfSilvaSeed.DisplayName: 席尔瓦之种
+			SeedOfSilvaTorchFlame.DisplayName: 席尔瓦火炬花火焰
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
+			// TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
+			// TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
+			// TeachingProjectileD_PulseRingField.DisplayName: Teaching Projectile D_ Pulse Ring Field
+			// TeachingProjectileE_ExplosionImpact.DisplayName: Teaching Projectile E_ Explosion Impact
+			// TeachingProjectileF_SmokeMistDust.DisplayName: Teaching Projectile F_ Smoke Mist Dust
+			// TeachingProjectileG_FireAshBurn.DisplayName: Teaching Projectile G_ Fire Ash Burn
+			// TeachingProjectileH_WaterFoamOcean.DisplayName: Teaching Projectile H_ Water Foam Ocean
+			// TeachingProjectileI_BloodFleshBiology.DisplayName: Teaching Projectile I_ Blood Flesh Biology
+			// TeachingProjectileJ_DebrisMechanicalParts.DisplayName: Teaching Projectile J_ Debris Mechanical Parts
+			// TeachingProjectileK_MagicStatusUI.DisplayName: Teaching Projectile K_ Magic Status U I
+			// TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
+			// TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
+			// TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
 		}
 	}
 }

@@ -109,8 +109,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Color white = Color.White with { A = 0 };
 
             Main.EntitySpriteDraw(bloom, drawPosition, null, gold * 0.42f, Projectile.rotation, bloom.Size() * 0.5f, 0.44f * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, drawPosition, null, white * 0.58f, Projectile.rotation, star.Size() * 0.5f, new Vector2(0.18f, 0.46f) * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, drawPosition, null, gold * 0.38f, Projectile.rotation + MathHelper.PiOver2, star.Size() * 0.5f, new Vector2(0.16f, 0.38f) * pulse, SpriteEffects.None);
+            //Main.EntitySpriteDraw(star, drawPosition, null, white * 0.58f, Projectile.rotation, star.Size() * 0.5f, new Vector2(0.18f, 0.46f) * pulse, SpriteEffects.None);
+            //Main.EntitySpriteDraw(star, drawPosition, null, gold * 0.38f, Projectile.rotation + MathHelper.PiOver2, star.Size() * 0.5f, new Vector2(0.16f, 0.38f) * pulse, SpriteEffects.None);
             return false;
         }
     }

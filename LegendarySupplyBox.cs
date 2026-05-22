@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack
 {
     public class LegendarySupplyBox : ModItem, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/传奇补给箱";
+        //public override string Texture => "CalamityLegendsComeBack/传奇补给箱";
         public new string LocalizationCategory => "Items.Consumables";
 
         public override void SetDefaults()
@@ -34,5 +34,10 @@ namespace CalamityLegendsComeBack
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
         }
+
+
+
+
+
     }
 }

@@ -108,6 +108,10 @@ Mods: {
 				PFExoThanatosBeamTelegraph.DisplayName: EXO塔纳托斯预警线
 				PFExoThanatosBeamStart.DisplayName: EXO塔纳托斯灭绝光束
 				PFExoThanatosSideLaser.DisplayName: EXO塔纳托斯侧向激光
+				// PristineFuryPassiveTentacle.DisplayName: Pristine Fury Passive Tentacle
+				// PristineFuryRightNovaChargeOrb.DisplayName: Pristine Fury Right Nova Charge Orb
+				// PristineFuryRightNovaFireball.DisplayName: Pristine Fury Right Nova Fireball
+				// PristineFuryRightNovaPseudoLaser.DisplayName: Pristine Fury Right Nova Pseudo Laser
 			}
 		}
 
