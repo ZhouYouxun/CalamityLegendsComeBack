@@ -7,7 +7,7 @@ Mods: {
 					SHPC_LeftIntro:
 						'''
 						[c/66CCFF:Left Click: Fires an energy sphere.]
-						[c/FFD966:Materials in your inventory can be loaded; loaded materials override left-click displayed damage and may provide different capacities.]
+						[c/FFD966:Materials in your inventory can be loaded; loaded materials multiply the left-click base damage and may provide different capacities.]
 						[c/99CCFF:Automatically reloads once the current charge is depleted.]
 						[c/AAAAAA:Can still fire without any loaded material, but only as a default white orb; its multiplier and blast radius improve with progression.]
 						[c/99CCFF:Right-click the item in your inventory to purge the current load, with a chance to recover the material.]
@@ -59,7 +59,7 @@ Mods: {
 
 		AMMO: {
 			SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
-			SHPCAmmoPanel: Left-click displayed damage: {0}; load capacity: {1} shots
+			SHPCAmmoPanel: Left-click displayed multiplier: {0}x; load capacity: {1} shots
 			SHPCAmmo1: Bounces and releases bursts of electric sparks
 			SHPCAmmo2: Unleashes five chaining lightning arcs
 			SHPCAmmo3: Generates toxic gas upon ground impact

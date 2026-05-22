@@ -7,7 +7,7 @@ Mods: {
 					SHPC_LeftIntro:
 						'''
 						[c/66CCFF:左键：发射能量光球。]
-						[c/FFD966:背包材料可用于装填，材料会覆盖左键面板伤害，部分材料装药量不同。]
+						[c/FFD966:背包材料可用于装填，材料会按倍率强化左键基础伤害，部分材料装药量不同。]
 						[c/99CCFF:能量耗尽后自动重新装填。]
 						[c/AAAAAA:未装药时仍可攻击，但只会发射默认白球；默认白球的倍率和爆炸范围会随流程提升。]
 						[c/99CCFF:对武器点击右键，可以将现有的装药倒出并概率返还。]
@@ -59,47 +59,47 @@ Mods: {
 
 		AMMO: {
 			SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
-			SHPCAmmoPanel: 左键面板伤害：{0}；装填数量：{1} 发
-			SHPCAmmo1: 弹跳并释放大量电火花
-			SHPCAmmo2: 释放5条连锁闪电弧
-			SHPCAmmo3: 击中地面后产生毒气
-			SHPCAmmo4: 能量耗尽后分裂成两个光球
-			SHPCAmmo5: 瞄准并猛击正下方的敌人
-			SHPCAmmo6: 爆炸时形成一片液氮区域
-			SHPCAmmo7: 标记敌人并召唤天罚激光
-			SHPCAmmo8: 把敌人崩飞
-			SHPCAmmo9: 呼唤高伤害的光明之魂绕自身旋转
-			SHPCAmmo10: 喷射追踪敌人的暗影之魂
-			SHPCAmmo11: 翱翔于天空并向下轰炸
-			SHPCAmmo12: 在原地滞留游荡的恐惧之魂
-			SHPCAmmo13: 释放三个延迟爆炸的能量光球
-			SHPCAmmo14: 持久的飞行能够造成更猛烈的爆炸
-			SHPCAmmo15: 追踪并尝试治疗玩家
-			SHPCAmmo16: 撞击后向四周释放静止的灵魂
-			SHPCAmmo17: 释放多发快速下降的渊球
-			SHPCAmmo18: 制造瘟疫核爆
-			SHPCAmmo19: 痛苦的赤色灵魂喷涌而出
+			SHPCAmmoPanel: 左键面板倍率：{0}倍；装填次数：{1} 发
+			SHPCAmmo1: 弹跳电火花
+			SHPCAmmo2: 五重连锁电弧
+			SHPCAmmo3: 落地硫雾爆发
+			SHPCAmmo4: 裂成双生光球
+			SHPCAmmo5: 下砸浩劫冲击
+			SHPCAmmo6: 铺开液氮寒域
+			SHPCAmmo7: 召来日光天罚
+			SHPCAmmo8: 巨型幻核撞击
+			SHPCAmmo9: 光魂环绕轰炸
+			SHPCAmmo10: 暗魂追猎喷涌
+			SHPCAmmo11: 凌空俯冲轰炸
+			SHPCAmmo12: 恐魂滞空游猎
+			SHPCAmmo13: 三枚力魂延爆
+			SHPCAmmo14: 视魂久飞重爆
+			SHPCAmmo15: 生命碎片回疗
+			SHPCAmmo16: "[暂无该物品]"
+			SHPCAmmo17: 深渊渊球坠击
+			SHPCAmmo18: 瘟疫核爆标记
+			SHPCAmmo19: 赤魂喷涌成灾
 			SHPCAmmo20: "[甲虫外壳 未实现]"
-			SHPCAmmo21: 散射一连串日曜穿刺长矛
-			SHPCAmmo22: 飞行期间释放漩涡导弹
-			SHPCAmmo23: 强追踪并蓄力爆炸
-			SHPCAmmo24: "[NPC:406] >> [NPC:405] >> [NPC:406] >> [NPC:405] !!!"
-			SHPCAmmo25: 释放超大范围冥思爆炸
-			SHPCAmmo26: 撞击物块后产生猛烈单向冲击波
+			SHPCAmmo21: 日曜长矛齐射
+			SHPCAmmo22: 星旋导弹护航
+			SHPCAmmo23: 星云追猎蓄爆
+			SHPCAmmo24: 星尘细胞分裂
+			SHPCAmmo25: 冥思黑爆吞场
+			SHPCAmmo26: 浊火定向冲波
 			SHPCAmmo27: "[暂无该物品]"
-			SHPCAmmo28: 爆炸时释放神圣几何弹跳射线
-			SHPCAmmo29: 献祭玩家的血量强化自身，爆炸治疗回血
-			SHPCAmmo30: 唤醒深处的灵魂
-			SHPCAmmo31: 痛苦的赤色灵魂喷涌而出
-			SHPCAmmo32: 制造小型黑洞将敌人吸入
-			SHPCAmmo33: 释放刀锋切割敌人
-			SHPCAmmo34: 在敌人周围制造冰刺攻击
-			SHPCAmmo35: 分裂成强追踪的噩梦激光
-			SHPCAmmo36: 释放4个化神之星冲向前方
-			SHPCAmmo37: 12号口径龙息霰弹
-			SHPCAmmo38: 喷射激光惩戒敌人，释放分形几何
-			SHPCAmmo39: 湮灭目力所及的所有敌人
-			SHPCAmmo40: 喷射出大量的电磁光球并释放闪电
+			SHPCAmmo28: 晶簇折射激光
+			SHPCAmmo29: 血祭强化回疗
+			SHPCAmmo30: 毁灭幽魂苏醒
+			SHPCAmmo31: 灵质连锁魂爆
+			SHPCAmmo32: 暗核吞敌裂爆
+			SHPCAmmo33: 虚空刀锋绞杀
+			SHPCAmmo34: 恒温冰矢裂射
+			SHPCAmmo35: 梦魇弧光裂殖
+			SHPCAmmo36: 化神星针齐发
+			SHPCAmmo37: 龙魂爆燃烙印
+			SHPCAmmo38: 星流几何审判
+			SHPCAmmo39: 湮灭目视全场
+			SHPCAmmo40: 甲壳电磁风暴
 		}
 
 		Projectiles: {

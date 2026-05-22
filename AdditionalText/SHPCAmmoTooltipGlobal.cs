@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,8 @@ namespace CalamityLegendsComeBack.AdditionalText
             {
                 int effectID = Weapons.SHPC.Effects.AAARules.EffectRegistry.GetEffectIDByAmmo(item.type);
                 BalanceSHPC balance = new();
-                int panelDamage = balance.GetLeftClickBaseDamageForEffect(effectID);
+                float panelMultiplier = balance.GetLeftClickMaterialDamageMultiplier(effectID);
+                string panelMultiplierText = panelMultiplier.ToString("0.##", CultureInfo.InvariantCulture);
                 int shotsPerAmmo = Weapons.SHPC.SHPCAmmoCapacity.GetCapacity(effectID);
 
                 // 通用提示
@@ -32,7 +34,7 @@ namespace CalamityLegendsComeBack.AdditionalText
                 });
 
                 tooltips.Add(new TooltipLine(Mod, "SHPCAmmoPanel",
-                    Language.GetTextValue("Mods.CalamityLegendsComeBack.AMMO.SHPCAmmoPanel", panelDamage, shotsPerAmmo))
+                    Language.GetTextValue("Mods.CalamityLegendsComeBack.AMMO.SHPCAmmoPanel", panelMultiplierText, shotsPerAmmo))
                 {
                     OverrideColor = Microsoft.Xna.Framework.Color.Gold
                 });
