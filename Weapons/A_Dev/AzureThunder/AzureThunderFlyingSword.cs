@@ -21,6 +21,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             set => Projectile.localAI[0] = value;
         }
 
+        private int LaunchBoostTimer
+        {
+            get => (int)Projectile.localAI[1];
+            set => Projectile.localAI[1] = value;
+        }
+
         private int Delay => Math.Max(0, (int)Projectile.ai[0]);
         private Vector2 StoredMouseWorld => new(Projectile.ai[1], Projectile.ai[2]);
 
@@ -80,6 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Timer == Delay + 1)
             {
                 Projectile.friendly = true;
+                LaunchBoostTimer = 18;
                 Vector2 direction = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
                 Projectile.velocity = direction * 36f;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.35f, Pitch = 0.24f }, Projectile.Center);
@@ -89,8 +96,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (target != null)
             {
                 Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * 44f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.065f);
+                float homingAcceleration = LaunchBoostTimer > 0 ? 0.13f : 0.065f;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, homingAcceleration);
             }
+
+            if (LaunchBoostTimer > 0)
+                LaunchBoostTimer--;
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             Lighting.AddLight(Projectile.Center, AzureThunderColors.Yellow.ToVector3() * 0.45f);

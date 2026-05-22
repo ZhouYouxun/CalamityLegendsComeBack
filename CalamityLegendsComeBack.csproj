@@ -18,6 +18,7 @@
 	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Sound\SHPC\" />
 	  <Folder Include="Sound\YC\" />
+	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
 	  <Folder Include="Weapons\A_Dev\Miao\Testbench\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Dev\MK14EBR\" />

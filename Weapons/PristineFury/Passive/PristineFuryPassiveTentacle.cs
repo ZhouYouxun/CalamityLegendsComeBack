@@ -1,6 +1,8 @@
 using CalamityMod.Particles;
+using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -18,21 +20,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
         private int TentacleIndex => Utils.Clamp((int)Projectile.ai[0], 0, 2);
         private ref float Timer => ref Projectile.localAI[0];
+        private readonly List<Particle> ownedFlameParticles = new();
 
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 2;
-            Projectile.friendly = false;
+            Projectile.friendly = true;
             Projectile.hostile = false;
-            Projectile.damage = 0;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 2;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.netImportant = false;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 15;
         }
 
-        public override bool? CanDamage() => false;
+        public override bool? CanDamage() => null;
 
         public override bool ShouldUpdatePosition() => true;
 
@@ -47,7 +52,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             Timer++;
             Projectile.timeLeft = 2;
-            Projectile.damage = 0;
+            Projectile.damage = Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * GetLeftClickDamageMultiplier(owner)));
+            Projectile.knockBack = owner.HeldItem.knockBack;
 
             Vector2 buttAnchor = GetButtAnchor(owner);
             Vector2 idlePoint = GetIdlePoint(owner, buttAnchor);
@@ -60,6 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             Vector2 playerMovement = owner.position - owner.oldPosition;
             Projectile.position += playerMovement;
+            UpdateOwnedFlameParticles(playerMovement);
 
             Vector2 toIdle = idlePoint - Projectile.Center;
             Projectile.velocity += toIdle * 0.035f;
@@ -76,6 +83,63 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             if (!Main.dedServ)
                 EmitTentacleFlames(owner, buttAnchor);
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead)
+                return false;
+
+            Vector2 buttAnchor = GetButtAnchor(owner);
+            float collisionPoint = 0f;
+            const int segmentCount = 18;
+
+            Vector2 previous = GetCurvePoint(owner, buttAnchor, 0f);
+            for (int i = 1; i <= segmentCount; i++)
+            {
+                float t = i / (float)segmentCount;
+                Vector2 current = GetCurvePoint(owner, buttAnchor, t);
+                float width = MathHelper.Lerp(24f, 12f, t);
+                if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), previous, current, width, ref collisionPoint))
+                    return true;
+
+                previous = current;
+            }
+
+            return false;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<HolyFlames>(), 120);
+
+        public override void OnKill(int timeLeft)
+        {
+            ownedFlameParticles.Clear();
+        }
+
+        private static float GetLeftClickDamageMultiplier(Player owner)
+        {
+            return owner.GetModPlayer<PristineFuryPlayer>().CurrentMark switch
+            {
+                PristineFuryMark.EvilT2 => 0.54f,
+                PristineFuryMark.SlimeGod => 0.72f,
+                PristineFuryMark.HardMode => 0.48f,
+                PristineFuryMark.Prime => 0.62f,
+                PristineFuryMark.BrimstoneElemental => 1.35f,
+                PristineFuryMark.FakeCalamity => 0.34f,
+                PristineFuryMark.Plantera => 0.62f,
+                PristineFuryMark.Aurora => 3.2f,
+                PristineFuryMark.Goliath => 0.56f,
+                PristineFuryMark.Moonlord => 1.05f,
+                PristineFuryMark.Providence => 1.72f,
+                PristineFuryMark.Polterghast => 0.58f,
+                PristineFuryMark.Dog => 1.36f,
+                PristineFuryMark.Dragon => 0.48f,
+                PristineFuryMark.ExoTwins => 1.05f,
+                PristineFuryMark.ExoAres => 0.68f,
+                PristineFuryMark.ExoThanatos => 1.72f,
+                _ => 0.58f
+            };
         }
 
         private Vector2 GetButtAnchor(Player owner)
@@ -177,8 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             Vector2 dustVelocity =
                 tangent
                 .RotatedByRandom(0.34f)
-                * Main.rand.NextFloat(flowing ? 3.4f : 1.4f, flowing ? 8.8f : 4.6f)
-                - owner.velocity * 0.42f;
+                * Main.rand.NextFloat(flowing ? 3.4f : 1.4f, flowing ? 8.8f : 4.6f);
 
             Color color = Main.rand.NextBool(5)
                 ? VioletFlame
@@ -199,6 +262,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                 new Vector2(width, 1f),
                 shrinkSpeed: 0.91f);
             GeneralParticleHandler.SpawnParticle(flame);
+            ownedFlameParticles.Add(flame);
 
             if (Main.rand.NextBool(3))
             {
@@ -210,6 +274,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                     Color.Lerp(color, Color.White, 0.18f),
                     Main.rand.NextFloat(0.55f, 0.95f) * MathHelper.Lerp(1.05f, 0.36f, t));
                 ember.noGravity = true;
+            }
+        }
+
+        private void UpdateOwnedFlameParticles(Vector2 playerMovement)
+        {
+            if (playerMovement == Vector2.Zero && ownedFlameParticles.Count == 0)
+                return;
+
+            for (int i = ownedFlameParticles.Count - 1; i >= 0; i--)
+            {
+                Particle particle = ownedFlameParticles[i];
+                if (particle.Time >= particle.Lifetime)
+                {
+                    ownedFlameParticles.RemoveAt(i);
+                    continue;
+                }
+
+                particle.Position += playerMovement;
             }
         }
 

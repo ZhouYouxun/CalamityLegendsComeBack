@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override string Texture => "CalamityLegendsComeBack/Texture/KsTexture/light_03";
 
         private int timer;
+        private const float ShaderTrailLength = 34f;
 
         public override void SetStaticDefaults()
         {
@@ -70,6 +71,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     false,
                     true));
             }
+
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 sparkVelocity = -Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.35f) * Main.rand.NextFloat(1.1f, 3.6f);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center - Projectile.velocity * Main.rand.NextFloat(0.12f, 0.48f) + Main.rand.NextVector2Circular(5f, 5f),
+                    sparkVelocity,
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.45f, 0.75f),
+                    Main.rand.NextBool(3) ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure));
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - Projectile.velocity * Main.rand.NextFloat(0.2f, 0.7f) + Main.rand.NextVector2Circular(7f, 7f),
+                    DustID.FireworksRGB,
+                    -Projectile.velocity * Main.rand.NextFloat(0.015f, 0.055f),
+                    0,
+                    Main.rand.NextBool() ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure,
+                    Main.rand.NextFloat(0.65f, 1f));
+                dust.noGravity = true;
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -97,29 +122,67 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 trailDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2[] stableTrailPositions = BuildStableTrailPositions(trailDirection);
 
             GameShaders.Misc["CalamityMod:SideStreakTrail"].UseImage1("Images/Misc/Perlin");
 
             float WidthFunction(float completion, Vector2 _) =>
-                Projectile.width * 0.62f * (float)Math.Sin(completion * MathHelper.Pi) * Projectile.Opacity;
+                Projectile.width * 0.82f * (float)Math.Sin(completion * MathHelper.Pi) * Projectile.Opacity;
 
             Color ColorFunction(float completion, Vector2 _)
             {
                 Color color = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.PaleYellow, completion * 0.75f);
                 color.A = 0;
-                return color * (1f - completion) * 0.9f;
+                return color * (1f - completion) * 1.15f;
             }
 
             PrimitiveRenderer.RenderTrail(
-                Projectile.oldPos,
+                stableTrailPositions,
                 new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Projectile.Size * 0.5f, shader: GameShaders.Misc["CalamityMod:SideStreakTrail"]),
                 38);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            DrawGuaranteedShaderCore(texture, drawPosition, trailDirection);
             Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 0 } * 0.75f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.55f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, drawPosition, null, Color.White with { A = 0 } * 0.45f, Projectile.rotation + MathHelper.PiOver2, texture.Size() * 0.5f, Projectile.scale * 0.3f, SpriteEffects.None);
             Main.spriteBatch.ExitShaderRegion();
             return false;
+        }
+
+        private Vector2[] BuildStableTrailPositions(Vector2 trailDirection)
+        {
+            Vector2[] stablePositions = new Vector2[Projectile.oldPos.Length];
+            Vector2 fallbackTopLeft = Projectile.Center - Projectile.Size * 0.5f;
+
+            for (int i = 0; i < stablePositions.Length; i++)
+            {
+                Vector2 oldPosition = Projectile.oldPos[i];
+                bool invalidOldPosition = oldPosition == Vector2.Zero || Vector2.DistanceSquared(oldPosition, fallbackTopLeft) > 2200f * 2200f;
+                stablePositions[i] = invalidOldPosition
+                    ? fallbackTopLeft - trailDirection * ShaderTrailLength * i / Math.Max(1, stablePositions.Length - 1)
+                    : oldPosition;
+            }
+
+            return stablePositions;
+        }
+
+        private void DrawGuaranteedShaderCore(Texture2D texture, Vector2 drawPosition, Vector2 trailDirection)
+        {
+            Vector2 origin = texture.Size() * 0.5f;
+            float pulse = 0.86f + (float)Math.Sin((Main.GlobalTimeWrappedHourly * 12f) + Projectile.identity) * 0.08f;
+
+            for (int i = 0; i < 5; i++)
+            {
+                float completion = i / 4f;
+                Vector2 trailPosition = drawPosition - trailDirection * completion * ShaderTrailLength;
+                float opacity = (1f - completion) * Projectile.Opacity;
+                Color color = Color.Lerp(AzureThunderColors.PaleYellow, AzureThunderColors.Azure, completion * 0.7f) with { A = 0 };
+                Main.EntitySpriteDraw(texture, trailPosition, null, color * opacity * 0.42f, Projectile.rotation, origin, Projectile.scale * (0.52f - completion * 0.18f), SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.Azure with { A = 0 } * Projectile.Opacity * 0.55f, Projectile.rotation, origin, Projectile.scale * 0.86f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 0 } * Projectile.Opacity * 0.72f, -Projectile.rotation, origin, Projectile.scale * 0.62f, SpriteEffects.None);
         }
     }
 }

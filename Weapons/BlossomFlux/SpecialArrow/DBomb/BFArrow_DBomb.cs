@@ -26,6 +26,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private const float MinMortarApexHeight = 620f;
         private const float MaxMortarApexHeight = 1120f;
         private const int MortarCollisionDelay = 12;
+        private const int ReturnDelayFrames = 45;
+        private const float ReturnSpeedMultiplier = 0.7f;
 
         private int rainCounter;
         private int storedRainDamage = 1;
@@ -37,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private Vector2 stickOffset;
         private Vector2 targetPoint;
         private Vector2 groundAnchorPoint;
+        private Vector2 delayedReturnVelocity;
         private bool passedBombardTarget;
         private bool detonated;
 
@@ -46,6 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private ref float State => ref Projectile.ai[0];
         private ref float AttachedNpcIndex => ref Projectile.ai[1];
         private ref float FlightTimer => ref Projectile.localAI[0];
+        private ref float ReturnDelayTimer => ref Projectile.localAI[1];
 
         private bool InFlight => State == FlightState;
         private bool AttachedToNpc => State == AttachedNpcState;
@@ -64,9 +68,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.localNPCHitCooldown = -1;
         }
 
-        public override bool? CanDamage() => InFlight ? null : false;
+        public override bool? CanDamage() => InFlight && ReturnDelayTimer <= 0f ? null : false;
 
-        public override bool? CanHitNPC(NPC target) => InFlight ? null : false;
+        public override bool? CanHitNPC(NPC target) => InFlight && ReturnDelayTimer <= 0f ? null : false;
 
         public static Vector2 CalculateMortarLaunchVelocity(Vector2 start, Vector2 target, float desiredSpeed)
         {
@@ -99,7 +103,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 fallStart = bombardTarget - Vector2.UnitY * 980f * gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
             Vector2 fallDirection = (bombardTarget - fallStart).SafeNormalize(Vector2.UnitY * gravDir);
             Projectile.Center = fallStart;
-            Projectile.velocity = fallDirection * Math.Max(32f, desiredSpeed * 1.7f);
+            delayedReturnVelocity = fallDirection * Math.Max(32f, desiredSpeed * 1.7f) * ReturnSpeedMultiplier;
+            Projectile.velocity = Vector2.Zero;
+            ReturnDelayTimer = ReturnDelayFrames * (Projectile.extraUpdates + 1);
             FlightTimer = 0f;
             Projectile.tileCollide = false;
             passedBombardTarget = false;
@@ -112,6 +118,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             writer.WriteVector2(targetPoint);
             writer.WriteVector2(groundAnchorPoint);
             writer.WriteVector2(stickOffset);
+            writer.WriteVector2(delayedReturnVelocity);
             writer.Write(rainCounter);
             writer.Write(storedRainDamage);
             writer.Write(storedAmmoType);
@@ -119,6 +126,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             writer.Write(storedAmmoKnockback);
             writer.Write(explosionSize);
             writer.Write(skyRainMultiplier);
+            writer.Write(ReturnDelayTimer);
             writer.Write(passedBombardTarget);
             writer.Write(detonated);
         }
@@ -128,6 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             targetPoint = reader.ReadVector2();
             groundAnchorPoint = reader.ReadVector2();
             stickOffset = reader.ReadVector2();
+            delayedReturnVelocity = reader.ReadVector2();
             rainCounter = reader.ReadInt32();
             storedRainDamage = reader.ReadInt32();
             storedAmmoType = reader.ReadInt32();
@@ -135,6 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             storedAmmoKnockback = reader.ReadSingle();
             explosionSize = reader.ReadSingle();
             skyRainMultiplier = reader.ReadSingle();
+            ReturnDelayTimer = reader.ReadSingle();
             passedBombardTarget = reader.ReadBoolean();
             detonated = reader.ReadBoolean();
         }
@@ -253,6 +263,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private void UpdateMortarFlight()
         {
             FlightTimer++;
+            if (ReturnDelayTimer > 0f)
+            {
+                ReturnDelayTimer--;
+                Projectile.velocity = Vector2.Zero;
+                Projectile.tileCollide = false;
+                Projectile.friendly = false;
+
+                if (ReturnDelayTimer <= 0f)
+                {
+                    Projectile.velocity = delayedReturnVelocity;
+                    Projectile.friendly = true;
+                    Projectile.netUpdate = true;
+                }
+
+                BFArrowCommon.FaceForward(Projectile);
+                return;
+            }
+
             Projectile.velocity.Y += Projectile.velocity.Y > 0f ? MortarGravity * MortarFallGravityMultiplier : MortarGravity;
             AccelerateThroughBombardTarget();
             TryDetonateAtTargetPoint();

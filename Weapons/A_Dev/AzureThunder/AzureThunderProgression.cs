@@ -39,6 +39,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public static int AutomaticSwordLimit => DownedMoonLord ? 6 : 3;
         public static int GroundSwordLifetime => 36 * 60 + (DownedPlantera ? 13 * 60 : 0);
         public static int FourSymbolsLifeRestore => DownedFishron ? 20 : 0;
-        public static float UltimateFinalDamageMultiplier => DownedYharon ? 1.25f : 1f;
+        public static float UltimateGrandSwordDamageFactor => DownedYharon ? 3.6f : 3f;
+        public static float UltimateRightClickFinalDamageFactor => DownedYharon ? 7.2f : 6f;
+        public static float UltimateRightClickChargeDamageBonus => DownedYharon ? 0.9f : 0.3f;
     }
 }

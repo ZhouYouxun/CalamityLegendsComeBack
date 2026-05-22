@@ -102,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             }
 
             Projectile.rotation += 0.01f;
-            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * Projectile.velocity.Length();
+            Projectile.velocity *= 0.95f;
             Projectile.Opacity = 1f;
         }
 

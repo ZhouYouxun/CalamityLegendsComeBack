@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         public const int MaxActiveCells = 15;
         private const int GrowTime = 120;
+        private const int MaxSplitDepth = 5;
 
         private int frame;
         private int frameTimer;
@@ -49,6 +50,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             wanderTimer = 0;
             wanderAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+
+            Projectile.ai[0] = MathHelper.Clamp((int)Projectile.ai[0], 0, MaxSplitDepth);
         }
 
         public override bool? CanDamage()
@@ -222,6 +225,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private void SpawnChildCells(NPC target)
         {
+            int splitDepth = (int)Projectile.ai[0];
+            if (splitDepth >= MaxSplitDepth)
+                return;
+
             int activeCellCount = ActiveCellCount();
             int desiredChildCount = GetSplitCountForActiveCells(activeCellCount);
             int availableSlotsAfterThisCellDies = MaxActiveCells - System.Math.Max(0, activeCellCount - 1);
@@ -245,29 +252,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     (int)(Projectile.damage * 0.75f),
                     Projectile.knockBack,
                     Projectile.owner,
-                    0f);
+                    splitDepth + 1);
 
                 if (Main.projectile.IndexInRange(childIndex))
                 {
                     Projectile child = Main.projectile[childIndex];
                     child.scale = Projectile.scale;
                     child.timeLeft = 600;
+                    child.netUpdate = true;
                 }
             }
-        }
-
-        private void TurnBackToSmall(NPC target)
-        {
-            isSmall = true;
-            stateTimer = 0;
-            frame = 0;
-            frameTimer = 0;
-
-            Vector2 away = (Projectile.Center - target.Center).SafeNormalize(Vector2.UnitX);
-            Vector2 tangent = away.RotatedBy(Main.rand.NextBool() ? (MathHelper.Pi / 3f) : -(MathHelper.Pi / 3f));
-            Vector2 escapeDir = (away * 0.88f + tangent * 0.25f).SafeNormalize(Vector2.UnitX);
-
-            Projectile.velocity = escapeDir * 5.2f;
         }
 
         private NPC FindClosestNPC(float maxDist)

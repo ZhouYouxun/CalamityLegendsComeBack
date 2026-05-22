@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 2;
+            Projectile.penetrate = 3;
             Projectile.timeLeft = 200;
             Projectile.extraUpdates = 18;
             Projectile.tileCollide = false;

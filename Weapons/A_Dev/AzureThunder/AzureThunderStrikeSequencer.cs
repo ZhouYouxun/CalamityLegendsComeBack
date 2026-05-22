@@ -125,12 +125,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             float damageFactor;
             if (finalStrike)
-                damageFactor = HarmonyMode ? 6f + ConsumedCharge * 0.35f : 6f;
+                damageFactor = HarmonyMode ?
+                    AzureThunderProgression.UltimateRightClickFinalDamageFactor + ConsumedCharge * AzureThunderProgression.UltimateRightClickChargeDamageBonus :
+                    6f;
             else
-                damageFactor = HarmonyMode ? 1.55f : 1.1f;
-
-            if (finalStrike && HarmonyMode)
-                damageFactor *= AzureThunderProgression.UltimateFinalDamageMultiplier;
+                damageFactor = HarmonyMode ? 0.81f : 0.45f;
 
             Vector2 strikePoint = target.Center + Main.rand.NextVector2Circular(HarmonyMode ? 95f : 55f, HarmonyMode ? 55f : 35f);
             bool applyCrumbling = finalStrike &&

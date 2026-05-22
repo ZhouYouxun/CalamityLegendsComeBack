@@ -447,11 +447,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             bool applyStaticDischarge = false,
             bool big = false,
             int ultimateEnergyGain = 0,
-            bool applyCrumbling = false)
+            bool applyCrumbling = false,
+            float spawnHeightMultiplier = 1f)
         {
             Vector2 targetPosition = target?.Center ?? impactPosition;
             Vector2 targetVelocity = target?.velocity ?? Vector2.Zero;
-            Vector2 spawnPosition = targetPosition - Vector2.UnitY.RotatedByRandom(0.2f) * 1000f;
+            float spawnDistance = 1000f * Math.Max(0.1f, spawnHeightMultiplier);
+            Vector2 spawnPosition = targetPosition - Vector2.UnitY.RotatedByRandom(0.2f) * spawnDistance;
             Vector2 velocity = (targetPosition - spawnPosition + targetVelocity * 7.5f).SafeNormalize(Vector2.UnitY) * 30f;
             int flags = 0;
             if (gainCharge)

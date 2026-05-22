@@ -175,8 +175,59 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
                 : "Unbound";
 
-            string text = string.Format(this.GetLocalizedValue("AzureThunderInfo"), keyText);
+            string text =
+                this.GetLocalizedValue("AzureThunderLeft") + "\n\n" +
+                this.GetLocalizedValue("AzureThunderRight") + "\n\n" +
+                string.Format(this.GetLocalizedValue("AzureThunderUltimate"), keyText) + "\n\n" +
+                this.GetLocalizedValue(GetHeavenEarthTooltipKey()) + "\n" +
+                this.GetLocalizedValue(GetHeavensWardTooltipKey()) + "\n" +
+                this.GetLocalizedValue(GetFourSymbolsTooltipKey()) + "\n\n" +
+                this.GetLocalizedValue("AzureThunderThunderCharge") + "\n" +
+                this.GetLocalizedValue("AzureThunderDot") + "\n\n" +
+                this.GetLocalizedValue("AzureThunderFinal");
             tooltips.FindAndReplace("[GFB]", text);
+        }
+
+        private static string GetHeavenEarthTooltipKey()
+        {
+            if (AzureThunderProgression.DownedYharon)
+                return "AzureThunderPassiveHeavenEarth4";
+            if (AzureThunderProgression.DownedFishron)
+                return "AzureThunderPassiveHeavenEarth3";
+            if (AzureThunderProgression.DownedEvilTier2)
+                return "AzureThunderPassiveHeavenEarth2";
+            if (AzureThunderProgression.DownedDesertScourge)
+                return "AzureThunderPassiveHeavenEarth1";
+
+            return "AzureThunderPassiveHeavenEarth0";
+        }
+
+        private static string GetHeavensWardTooltipKey()
+        {
+            if (!AzureThunderProgression.DodgeUnlocked)
+                return "AzureThunderPassiveHeavensWard0";
+            if (AzureThunderProgression.DownedYharon)
+                return "AzureThunderPassiveHeavensWard5";
+            if (AzureThunderProgression.DownedMoonLord)
+                return "AzureThunderPassiveHeavensWard4";
+            if (AzureThunderProgression.DownedPlantera)
+                return "AzureThunderPassiveHeavensWard3";
+            if (AzureThunderProgression.DownedWallOfFlesh)
+                return "AzureThunderPassiveHeavensWard2";
+
+            return "AzureThunderPassiveHeavensWard1";
+        }
+
+        private static string GetFourSymbolsTooltipKey()
+        {
+            if (!AzureThunderProgression.FourSymbolsUnlocked)
+                return "AzureThunderPassiveFourSymbols0";
+            if (AzureThunderProgression.DownedMoonLord)
+                return "AzureThunderPassiveFourSymbols3";
+            if (AzureThunderProgression.DownedFishron)
+                return "AzureThunderPassiveFourSymbols2";
+
+            return "AzureThunderPassiveFourSymbols1";
         }
     }
 }

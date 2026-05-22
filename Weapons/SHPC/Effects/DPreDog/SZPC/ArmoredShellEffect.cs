@@ -104,7 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
                 // 自身向四周均匀膨胀
                 Vector2 radialVelocity = angle.ToRotationVector2() * RingExpandSpeed;
-                Vector2 finalVelocity = forwardVelocity + radialVelocity;
+                Vector2 finalVelocity = (forwardVelocity + radialVelocity) * 1.5f;
 
                 Projectile orb = Projectile.NewProjectileDirect(
                     projectile.GetSource_FromThis(),

@@ -35,8 +35,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool releaseRequested;
         private bool releaseFinalStarted;
         private bool stageEventOne;
-        private bool stageEventTwo;
-        private bool stageEventThree;
         private bool swingSoundPlayed;
         private bool postSwing;
         private int harmonyBarrageShotsFired;
@@ -198,11 +196,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             stageActive = true;
             releaseFinalStarted = releaseRequested;
             currentStage = comboIndex % ComboLength;
-            stageDuration = HarmonyActive ? 60 : currentStage == 3 ? 60 : 45;
+            stageDuration = HarmonyActive ? 30 : 45;
             stageTimer = 0;
             stageEventOne = false;
-            stageEventTwo = false;
-            stageEventThree = false;
             harmonyBarrageShotsFired = 0;
             finalLightningFired = 0;
             swingSoundPlayed = false;
@@ -231,7 +227,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             stageTimer++;
 
-            if (stageTimer < stageDuration / 1.5f)
+            if (stageTimer < SwingImpactFrame)
             {
                 UpdateLockedAimFromMouse();
                 postSwing = false;
@@ -303,7 +299,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             return 1f + chainedSwingBoost * 0.35f;
         }
 
-        private bool ReachedSwingImpact(int delay = 0) => stageTimer >= (int)(stageDuration / 1.5f) + delay;
+        private int SwingImpactFrame => HarmonyActive ? stageDuration / 3 : (int)(stageDuration / 1.5f);
+        private bool ReachedSwingImpact(int delay = 0) => stageTimer >= SwingImpactFrame + delay;
 
         private void RunNormalStage()
         {
@@ -321,6 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     if (!stageEventOne && ReachedSwingImpact())
                     {
                         SpawnFlyingSwords(2, 16, false);
+                        SpawnMouseLightning(0.4f, true);
                         stageEventOne = true;
                     }
                     break;
@@ -329,6 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     if (!stageEventOne && ReachedSwingImpact())
                     {
                         SpawnFlyingSwords(4, 17, true);
+                        SpawnMouseLightning(0.5f, true);
                         stageEventOne = true;
                     }
                     break;
@@ -420,7 +419,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     spawnPosition,
                     velocity,
                     ModContent.ProjectileType<AzureThunderLightOrb>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.82f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.35f)),
                     Projectile.knockBack,
                     Projectile.owner);
 
@@ -443,7 +442,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Math.Max(1, (int)(Projectile.damage * damageFactor)),
                 Projectile.knockBack,
                 Projectile.owner,
-                gainCharge);
+                gainCharge,
+                spawnHeightMultiplier: 1.25f);
         }
 
         private void SpawnForwardLightning(int index)
@@ -457,7 +457,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.GetSource_FromThis(),
                 target?.Center ?? impactPosition,
                 target,
-                Math.Max(1, Projectile.damage * 2),
+                Math.Max(1, (int)(Projectile.damage * 1.75f)),
                 Projectile.knockBack,
                 Projectile.owner,
                 gainCharge: true,
@@ -482,7 +482,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
                 lightningDirection * 30f,
-                Math.Max(1, (int)(Projectile.damage * 1.8f)),
+                Math.Max(1, (int)(Projectile.damage * 0.8f)),
                 Projectile.knockBack,
                 Projectile.owner);
         }
@@ -511,7 +511,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     spawnPosition,
                     Vector2.Zero,
                     ModContent.ProjectileType<AzureThunderFlyingSword>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.95f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.25f)),
                     Projectile.knockBack,
                     Projectile.owner,
                     delay + i * 2,
@@ -540,7 +540,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 spawnPosition,
                 mortarVelocity,
                 ModContent.ProjectileType<AzureThunderGrandSword>(),
-                Math.Max(1, (int)(Projectile.damage * 4 * AzureThunderProgression.UltimateFinalDamageMultiplier)),
+                Math.Max(1, (int)(Projectile.damage * AzureThunderProgression.UltimateGrandSwordDamageFactor)),
                 Projectile.knockBack,
                 Projectile.owner,
                 target?.whoAmI ?? -1,

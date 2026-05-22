@@ -7,18 +7,39 @@ Mods: {
 				AzureThunder: {
 					DisplayName: 青霆剑
 					Tooltip: "[GFB]"
-					AzureThunderInfo:
+					AzureThunderLeft:
 						'''
-						[c/FFE85A:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]
-						[c/6FDFFF:左键] [c/DCD6C8:持续交替挥砍。第1段射出青霆光弹，第2段召唤2把飞剑，第3段召唤4把飞剑，第4段连续降下雷击。每段实际攻击都会消耗魔力。]
-						[c/6FDFFF:右键] [c/DCD6C8:荒灾后解锁。消耗全部一息万变，在周围插下青霆剑并依次呼唤雷击。每消耗1层一息万变，三王后额外恢复5点魔力；世花后插下的青霆剑存在时间+13秒；犽戎后，场上9剑时最后一次雷击会给予粉碎。]
-						[c/FFE85A:终结技] [c/DCD6C8:初始解锁。终结技能量达到120后按 [{0}] 获得25秒天理真和；手持时每2秒自动获得1点能量，不手持时暂停。金龙后，持续时间内前两段左键额外生成1道落雷；犽戎后，持续时间内左右键最后一次攻击倍率增加。]
-						[c/B8F4FF:天地造化] [c/DCD6C8:初始解锁。左键最后一段攻击时，场上每存在1把青霆剑就恢复1点魔力。荒灾后，场上每存在1把青霆剑便额外获得+1魔力再生；邪恶T2后获得+2护甲穿透；猪鲨后获得+1生命再生；犽戎后获得+2%魔法伤害。]
-						[c/B8F4FF:承天之佑] [c/DCD6C8:邪恶T2后解锁。手持时，每99秒可以闪避一次攻击并恢复生命；终结技期间改为每9秒一次。肉山后恢复量提高到80，世花后提高到125，月亮领主后提高到150，犽戎后提高到200。]
-						[c/B8F4FF:和合四象] [c/DCD6C8:肉山后解锁。若场上的青霆剑少于3把，每10秒自动生成1把；使用右键时，场上每存在1把剑便恢复1点魔力。猪鲨后触发时额外恢复生命；月亮领主后，场上剑少于6把时也会自动生成。]
-						[c/FFE85A:终结技期间施加的持续伤害] [c/DCD6C8:初始为静电逸散；肉山后升级为带电；月亮领主后额外施加元素谐鸣；金龙后带电升级为赤羽流霆；犽戎后赤羽流霆升级为金源之斥。]
-						[c/FFE85A:一息万变] [c/DCD6C8:攻击带有电系减益、元素协鸣或超界崩解的敌怪时获得，最多10层。]
+						[c/6FDFFF:左键：] [c/DCD6C8:缓慢挥动大剑，释放青霆光弹和多个飞行重剑。]
+						[c/8DEBFF:命中敌人后] [c/DCD6C8:释放额外闪电攻击。]
 						'''
+					AzureThunderRight:
+						'''
+						[c/6FDFFF:右键：] [c/DCD6C8:在附近的地面或者空中创建多把浮空剑。]
+						[c/8DEBFF:浮空剑] [c/DCD6C8:会周期性地对附近敌人释放天降闪电。]
+						'''
+					AzureThunderUltimate:
+						'''
+						[c/FFE85A:终结技：] [c/DCD6C8:终结技能量达到120后按 [{0}] 获得25秒天理真和。]
+						[c/FFE85A:天理真和] [c/DCD6C8:会强化青霆剑的左键、右键与最终攻击。]
+						'''
+					AzureThunderPassiveHeavenEarth0: "[c/B8F4FF:天地造化：] [c/DCD6C8:开局解锁。荒灾会使其得到提升。]"
+					AzureThunderPassiveHeavenEarth1: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生。]"
+					AzureThunderPassiveHeavenEarth2: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；邪恶T2后，+2护甲穿透。]"
+					AzureThunderPassiveHeavenEarth3: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透；猪鲨后，+1生命再生。]"
+					AzureThunderPassiveHeavenEarth4: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透；+1生命再生；犽戎后，+2%魔法伤害。]"
+					AzureThunderPassiveHeavensWard0: "[c/B8F4FF:承天之佑：] [c/8A8A8A:邪恶T2后解锁。]"
+					AzureThunderPassiveHeavensWard1: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁。手持时可周期性闪避一次攻击并恢复生命。]"
+					AzureThunderPassiveHeavensWard2: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；肉山后，回血量增加到80。]"
+					AzureThunderPassiveHeavensWard3: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；世花后，回血量增加到125。]"
+					AzureThunderPassiveHeavensWard4: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；月亮领主后，回血量增加到150。]"
+					AzureThunderPassiveHeavensWard5: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；犽戎后，回血量增加到200。]"
+					AzureThunderPassiveFourSymbols0: "[c/B8F4FF:和合四象：] [c/8A8A8A:肉山后解锁。]"
+					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:和合四象：] [c/DCD6C8:肉山后解锁。若场上青霆剑少于3把，每10秒自动生成1把。]"
+					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:和合四象：] [c/DCD6C8:肉山后解锁。若场上青霆剑少于3把，每10秒自动生成1把；猪鲨后，触发时额外回复生命。]"
+					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:和合四象：] [c/DCD6C8:肉山后解锁。猪鲨后触发时额外回复生命；月亮领主后，只要剑少于6把就能自动生成剑。]"
+					AzureThunderThunderCharge: "[c/FFE85A:一息万变：] [c/DCD6C8:攻击带有电系减益、元素协鸣或超界崩解的敌怪时获得，最多10层。]"
+					AzureThunderDot: "[c/FFE85A:天理真和持续伤害：] [c/DCD6C8:随流程从静电逸散逐步升级，并在高阶阶段追加更强减益。]"
+					AzureThunderFinal: "[c/FFE85A:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]"
 				}
 			}
 		}
