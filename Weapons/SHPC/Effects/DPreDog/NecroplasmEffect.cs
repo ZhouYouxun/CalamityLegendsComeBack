@@ -76,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     Vector2.Zero,
-                    ModContent.ProjectileType<Necroplasm_Damage>(),
+                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
                     (int)(projectile.damage * 0.5f),
                     0f,
                     projectile.owner
@@ -257,7 +257,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.GetSource_FromThis(),
                     spawnPosition,
                     velocity,
-                    ModContent.ProjectileType<Necroplasm_Damage>(),
+                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
                     (int)(projectile.damage * Main.rand.NextFloat(0.8f, 1.2f)),
                     0f,
                     projectile.owner
@@ -318,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.GetSource_FromThis(),
                     spawnPosition,
                     velocity,
-                    ModContent.ProjectileType<Necroplasm_Damage>(),
+                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
                     damage,
                     0f,
                     projectile.owner);

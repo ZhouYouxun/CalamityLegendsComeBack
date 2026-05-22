@@ -11,7 +11,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
-    internal class Necroplasm_Damage : ModProjectile, ILocalizedModType
+    internal class SHPCNecroplasmDamage : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";

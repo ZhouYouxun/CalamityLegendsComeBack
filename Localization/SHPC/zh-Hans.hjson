@@ -122,7 +122,7 @@ Mods: {
 				FragmentStardust_Cell.DisplayName: 星尘碎片细胞
 				DivineGeode_Lazer.DisplayName: 神圣晶簇激光
 				ArmoredShell_Ball.DisplayName: 装甲甲壳球
-				Necroplasm_Damage.DisplayName: 死灵质爆发
+				SHPCNecroplasmDamage.DisplayName: 死灵质爆发
 				UnholyEssence_Wave.DisplayName: 渎神精华波
 				AscendantSpirit_PROJ.DisplayName: 升华之灵弹体
 				AshesofAnn_Located.DisplayName: 安之余烬定位标记

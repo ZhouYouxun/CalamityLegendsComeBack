@@ -122,7 +122,7 @@ Mods: {
 				FragmentStardust_Cell.DisplayName: Stardust Fragment Cell
 				DivineGeode_Lazer.DisplayName: Divine Geode Laser
 				ArmoredShell_Ball.DisplayName: Armored Shell Orb
-				Necroplasm_Damage.DisplayName: Necroplasm Burst
+				SHPCNecroplasmDamage.DisplayName: Necroplasm Burst
 				UnholyEssence_Wave.DisplayName: Unholy Essence Wave
 				AscendantSpirit_PROJ.DisplayName: Ascendant Spirit Projectile
 				AshesofAnn_Located.DisplayName: Ashes of Ann Locator
