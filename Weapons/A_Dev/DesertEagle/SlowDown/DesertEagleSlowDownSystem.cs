@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.SlowDown
 {
     internal sealed class DesertEagleSlowDownSystem : ModSystem
     {
-        private const float SlowMotionTimeScale = 0.5f;
+        private const float SlowMotionTimeScale = 1.0f; // 这个调节加速倍率就行了
 
         public static float TimeScale => SlowMotionActive ? SlowMotionTimeScale : 1f;
         public static bool SlowMotionActive { get; private set; }

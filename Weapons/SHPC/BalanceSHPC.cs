@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (effectID < 0 || effectID >= LeftClickMaterialDamageMultipliers.Length)
                 return 0f;
 
-            return System.Math.Max(0f, LeftClickMaterialDamageMultipliers[effectID]);
+            return 1f + System.Math.Max(0f, LeftClickMaterialDamageMultipliers[effectID]);
         }
 
         public float GetDefaultOrbDamageMultiplier()
