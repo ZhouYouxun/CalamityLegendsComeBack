@@ -26,6 +26,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public int UltimateEnergy;
         public int RightClickCooldown;
         public int ActiveHarmonyDuration;
+        public bool GreenUltimateFilterActive;
+        public float GreenUltimateFilterOpacity;
 
         private bool holdingAzureThunder;
         private int autoGroundSwordTimer = AutoGroundSwordInterval;
@@ -43,6 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void ResetEffects()
         {
             holdingAzureThunder = false;
+            GreenUltimateFilterActive = false;
         }
 
         public override void UpdateDead()
@@ -64,9 +67,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 RightClickCooldown--;
 
             if (HarmonyActive && Player.whoAmI == Main.myPlayer)
+            {
+                GreenUltimateFilterActive = true;
                 EnsureHarmonyBar();
+            }
             else if (!HarmonyActive)
                 ActiveHarmonyDuration = 0;
+
+            float targetFilterOpacity = GreenUltimateFilterActive ? 0.25f : 0f;
+            GreenUltimateFilterOpacity = MathHelper.Lerp(GreenUltimateFilterOpacity, targetFilterOpacity, GreenUltimateFilterActive ? 0.06f : 0.045f);
+            if (!GreenUltimateFilterActive && GreenUltimateFilterOpacity < 0.01f)
+                GreenUltimateFilterOpacity = 0f;
 
             if (HoldingAzureThunder)
             {

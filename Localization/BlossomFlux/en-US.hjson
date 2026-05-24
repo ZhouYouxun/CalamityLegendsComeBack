@@ -5,16 +5,12 @@ Mods: {
 				NewLegendBlossomFlux: {
 					DisplayName: BlossomFlux - Return of Legends
 					Tooltip: "[GFB]"
-					BF_Left:
+					BF_Intro:
 						'''
-						[c/66CCFF:Left Click: Fires with the current doctrine.]
-						[c/99CCFF:Breakthrough, Recovery, Reconnaissance, and Bombardment only convert wooden arrows.]
-						[c/99CCFF:Converted wooden arrows become doctrine-shaped leaf arrows.]
-						[c/DDA0FF:Plague converts any ammo into an invisible plague flame.]
-						[c/7BE495:Breakthrough is maple leaf, Recovery is parasite, and Reconnaissance is wood thorn.]
-						[c/7BE495:Bombardment is branch, while Plague becomes formless toxic flame.]
+						[c/7BE495:Current doctrine: {0}]
+						[c/F7D87C:Tap right click to open the tactical panel and switch doctrine.]
+						[c/F7D87C:Hold right click to enter the current doctrine's charge stance, then release to fire its special arrow.]
 						'''
-					BF_Preset: "[c/7BE495:Current displayed doctrine: {0}; details below.]"
 					PresetName0: Breakthrough
 					PresetName1: Recovery
 					PresetName2: Reconnaissance
@@ -22,70 +18,60 @@ Mods: {
 					PresetName4: Plague
 					PresetLeft0:
 						'''
-						[c/8BE89A:Breakthrough Left]
-						[c/8BE89A:Wooden arrows become breakthrough maple leaves.]
-						[c/8BE89A:They fly straight and pierce twice.]
+						[c/8BE89A:Left Click - Breakthrough: fires stable straight leaf arrows.]
+						[c/8BE89A:Wooden arrows become breakthrough leaf arrows; other arrows fire as their original ammo.]
+						[c/8BE89A:Breakthrough leaf arrows focus on direct hits and continuous piercing.]
 						'''
 					PresetLeft1:
 						'''
-						[c/8BE89A:Recovery Left]
-						[c/8BE89A:Wooden arrows become parasite leaves.]
-						[c/8BE89A:They hit once and restore a small amount of life.]
+						[c/8BE89A:Left Click - Recovery: converts arrows into fast twin-strand leaf shots.]
+						[c/8BE89A:Each volley fires two shots that advance along both sides of the aim line.]
+						[c/8BE89A:Hits can create a recovery flash; when it fades, it heals the player and grants Recovery Leaf.]
 						'''
 					PresetLeft2:
 						'''
-						[c/8BE89A:Reconnaissance Left]
-						[c/8BE89A:Wooden arrows become thorn leaves.]
-						[c/8BE89A:Hits mark enemies for 0.5 seconds.]
-						[c/8BE89A:Marked enemies take 10% more damage from any source.]
+						[c/8BE89A:Left Click - Reconnaissance: converts arrows into single-target tracking scout arrows.]
+						[c/8BE89A:Each volley fires five shots; scout arrows can damage multiple times.]
+						[c/8BE89A:After piercing, they wander briefly before reacquiring a target.]
 						'''
 					PresetLeft3:
 						'''
-						[c/8BE89A:Bombardment Left]
-						[c/8BE89A:Wooden arrows become falling branch leaves.]
-						[c/8BE89A:They are affected by gravity.]
-						[c/8BE89A:Hitting an enemy creates a 75 by 75 blast.]
+						[c/8BE89A:Left Click - Bombardment: converts arrows into falling bombardment volleys.]
+						[c/8BE89A:Bombardment arrows create branch bursts on impact, suppressing the target area with blast damage.]
 						'''
 					PresetLeft4:
 						'''
-						[c/8BE89A:Plague Left]
-						[c/8BE89A:Any ammo becomes an invisible toxic flame.]
-						[c/8BE89A:It flies at a very high update rate.]
-						[c/8BE89A:Hits inflict Miracle Blight.]
-						'''
-					BF_Right:
-						'''
-						[c/F7D87C:Right Click: Tap to open the tactical panel and switch doctrine.]
-						[c/F7D87C:Hold for over 0.15 seconds to enter the charge stance.]
-						[c/F7D87C:Release at full charge to fire the current special arrow.]
-						[c/F7D87C:Right-click special arrows hit harder than normal left arrows.]
+						[c/8BE89A:Left Click - Plague: converts arrows into plague reapers.]
+						[c/8BE89A:Reapers inflict pollution and debuffs on hit; repeated hits refresh or extend them.]
+						[c/8BE89A:Pollution gradually weakens enemy defense.]
 						'''
 					PresetRight0:
 						'''
-						[c/F4D57A:Breakthrough Right: Stores homing breakthrough arrows one by one.]
-						[c/F4D57A:Each unlocked doctrine adds one stored arrow.]
-						[c/F4D57A:Each breakthrough arrow charges 7 frames faster.]
+						[c/F4D57A:Right Click - Breakthrough Charge: loads breakthrough arrows one by one, then releases them in sequence from the aim line.]
+						[c/F4D57A:Loaded arrows fire in parallel, accelerate during flight, and pierce repeatedly.]
 						'''
 					PresetRight1:
 						'''
-						[c/F4D57A:Recovery Right: Fires a fully charged restorative arrow.]
-						[c/F4D57A:The restorative arrow loops back and keeps following the player.]
+						[c/F4D57A:Right Click - Recovery Charge: raises the bow and releases a group of pure recovery flashes.]
+						[c/F4D57A:Pure recovery flashes are larger and more spread out; they heal the player but do not grant Recovery Leaf.]
 						'''
 					PresetRight2:
 						'''
-						[c/F4D57A:Reconnaissance Right: Fires a scanning arrow at full charge.]
-						[c/F4D57A:Marked enemies attract normal left-click arrows.]
-						[c/F4D57A:Normal arrows detonate after striking a marked target.]
+						[c/F4D57A:Right Click - Reconnaissance Charge: fires a high-speed marking arrow.]
+						[c/F4D57A:The arrow ignores gravity, records enemies it hits, and marks the highest-value target when it expires.]
+						[c/F4D57A:The mark improves BlossomFlux left-click fire against that target.]
 						'''
 					PresetRight3:
 						'''
-						[c/F4D57A:Bombardment Right: Fires a bombardment arrow at full charge.]
-						[c/F4D57A:After impact, your current arrows keep falling from above.]
+						[c/F4D57A:Right Click - Bombardment Charge: creates a crimson reticle at the cursor.]
+						[c/F4D57A:After charging, the arrow launches upward, then dives from above to the reticle and detonates.]
+						[c/F4D57A:The reticle keeps following the cursor until the falling arrow locks its final point.]
 						'''
 					PresetRight4:
 						'''
-						[c/F4D57A:Plague Right: Fires a sticky plague arrow at full charge.]
-						[c/F4D57A:After attaching, it keeps venting plague gas around itself.]
+						[c/F4D57A:Right Click - Plague Charge: stores a large spore projectile.]
+						[c/F4D57A:On hit, it creates a plague-themed burst and continuously releases spore clouds.]
+						[c/F4D57A:A charged hit permanently weakens that enemy.]
 						'''
 					BF_Passive:
 						'''
@@ -99,24 +85,14 @@ Mods: {
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
 					PassiveStateCooldown: "[c/F0D070:Cooldown {0}s]"
 					PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
-					PresetUnlock1: "[c/7BFFB7:Recovery: unlocked and selectable in the tactical panel.]"
-					PresetLock1: "[c/9A9A9A:Recovery: unlocked after Queen Bee.]"
-					PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked and selectable in the tactical panel.]"
-					PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode.]"
-					PresetUnlock3: "[c/7BFFB7:Bombardment: unlocked and selectable in the tactical panel.]"
-					PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Skeletron Prime.]"
-					PresetUnlock4: "[c/7BFFB7:Plague: unlocked and selectable in the tactical panel.]"
-					PresetLock4: "[c/9A9A9A:Plague: unlocked after the Plaguebringer Goliath.]"
+					BF_EXHint:
+						'''
+						[c/8EF5A8:Ultimate: Stores up to 60 Bloom Energy.]
+						[c/8EF5A8:While held, restores 1 energy every 2 seconds; releasing a charged right-click arrow restores 3 energy.]
+						[c/8EF5A8:At full energy, press [{0}] to release the verdant arrow curtain barrage.]
+						'''
+					BF_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
 					BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
-					BF_EX:
-						'''
-						[c/8EF5A8:Legendary Skill: Stores up to 60 Bloom Energy.]
-						[c/8EF5A8:While held, restores 1 energy every 2 seconds.]
-						[c/8EF5A8:Releasing a charged right-click arrow restores 3 energy.]
-						[c/8EF5A8:At full energy with the EX accessory, press the Legendary Skill key.]
-						[c/8EF5A8:Then enter the ready stance and left-click.]
-						[c/8EF5A8:Finally releases the verdant arrow curtain barrage.]
-						'''
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''

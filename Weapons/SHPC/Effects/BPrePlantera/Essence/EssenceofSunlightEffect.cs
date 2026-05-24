@@ -23,9 +23,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.timeLeft = 64;
+            projectile.timeLeft = 164;
             projectile.penetrate = 1;
-            projectile.extraUpdates = 3;
+            projectile.extraUpdates = 2;
             projectile.usesLocalNPCImmunity = true;
             projectile.localNPCHitCooldown = 18;
 
@@ -73,7 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             {
                 gp.flightTimer++;
 
-                if (Main.rand.NextBool(3))
+                if (Main.rand.NextBool(1))
                 {
                     Particle streak = new GlowSparkParticle(
                         projectile.Center - forward * Main.rand.NextFloat(4f, 14f),

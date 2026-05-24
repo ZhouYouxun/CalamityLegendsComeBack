@@ -1,0 +1,21 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				SacredThunder: {
+					DisplayName: Sacred Thunder
+					Tooltip: "[GFB]"
+					LegendaryText:
+						'''
+						Throws a holy thunder disk that strikes up to five times before returning
+						Stealth strike: the disk stops in the air for 15 seconds, escalating its borrowed lightning and holy beams before detonating
+						[c/FFE85A:"But I think it is pretty sacred."]
+						[c/6FDFFF:"Sacred? More like thunder."]
+						'''
+				}
+			}
+		}
+
+		Projectiles.SacredThunder.SacredThunderPROJ.DisplayName: Sacred Thunder
+	}
+}

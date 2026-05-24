@@ -1,0 +1,21 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				SacredThunder: {
+					DisplayName: 神圣雷霆
+					Tooltip: "[GFB]"
+					LegendaryText:
+						'''
+						丢出雷电神圣飞盘，反复攻击5次后飞回玩家
+						潜伏攻击：飞盘停在空中滞留15秒，不断释放越来越多的闪电与圣光，结束后巨型爆炸并消失
+						[c/FFE85A:“可是我觉得很神圣啊”]
+						[c/6FDFFF:”神圣你雷霆“]
+						'''
+				}
+			}
+		}
+
+		Projectiles.SacredThunder.SacredThunderPROJ.DisplayName: 神圣雷霆
+	}
+}

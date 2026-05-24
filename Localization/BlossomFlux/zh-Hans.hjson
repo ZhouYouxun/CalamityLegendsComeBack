@@ -5,16 +5,12 @@ Mods: {
 				NewLegendBlossomFlux: {
 					DisplayName: 叶流 - 传奇归来
 					Tooltip: "[GFB]"
-					/* BF_Left:
+					BF_Intro:
 						'''
-						[c/66CCFF:Left Click: Fires with the current doctrine.]
-						[c/99CCFF:Breakthrough, Recovery, Reconnaissance, and Bombardment only convert wooden arrows.]
-						[c/99CCFF:Converted wooden arrows become doctrine-shaped leaf arrows.]
-						[c/DDA0FF:Plague converts any ammo into an invisible plague flame.]
-						[c/7BE495:Breakthrough is maple leaf, Recovery is parasite, and Reconnaissance is wood thorn.]
-						[c/7BE495:Bombardment is branch, while Plague becomes formless toxic flame.]
-						''' */
-					// BF_Preset: "[c/7BE495:Current displayed doctrine: {0}; details below.]"
+						[c/7BE495:当前战术：{0}]
+						[c/F7D87C:右键短按：打开战术面板并切换战术。]
+						[c/F7D87C:右键长按：进入当前战术的蓄力姿态，松开后释放特殊箭。]
+						'''
 					PresetName0: 突击
 					PresetName1: 复苏
 					PresetName2: 侦察
@@ -22,44 +18,33 @@ Mods: {
 					PresetName4: 侵染
 					PresetLeft0:
 						'''
-						[c/8BE89A:左键 - 突击：直线单弹道，无散射、无随机偏移、无复杂附加机制。]
-						[c/8BE89A:只转化木箭；其他箭矢按原弹药发射，但仍属于叶流左键弹幕。]
-						[c/8BE89A:侦察优先标记存在时，命中该目标造成 x1.40 伤害。]
+						[c/8BE89A:左键 - 突击：发射稳定的直线叶箭。]
+						[c/8BE89A:木箭会被转化为突击叶箭；其他箭矢按原弹药发射。]
+						[c/8BE89A:突击叶箭重视直接命中和连续穿透。]
 						'''
 					PresetLeft1:
 						'''
-						[c/8BE89A:左键 - 复苏：全转化，发射快速 DNA 双链叶弹。]
-						[c/8BE89A:每轮发射两发；两发沿“武器到鼠标中轴线”的垂线两侧偏移，偏移会持续靠近中心、越过中心、再从另一侧返回。]
-						[c/8BE89A:命中敌人有 20% 几率产生复苏闪光；闪光消失时治疗玩家并提供 5 秒复苏之叶，持续时间可叠加。]
-						[c/8BE89A:侦察优先标记存在时，复苏闪光冷却改为 1.25 秒，并取消 5 秒最多 2 个的限制。多人模式本身也取消该限制。]
+						[c/8BE89A:左键 - 复苏：将箭矢转化为快速的双链叶弹。]
+						[c/8BE89A:每轮发射两发，沿瞄准线两侧交错推进。]
+						[c/8BE89A:命中敌人时有概率产生复苏闪光；闪光消失时治疗玩家并提供复苏之叶。]
 						'''
 					PresetLeft2:
 						'''
-						[c/8BE89A:左键 - 侦察：全转化，适合对单且输出稳定。]
-						[c/8BE89A:连射五发，每两发间隔 5 帧；每轮五连射之间间隔 20 帧。]
-						[c/8BE89A:侦察箭可造成 3 次伤害；穿透敌人后短暂关闭碰撞，随机游荡，然后重新追踪。]
-						[c/8BE89A:若场上存在侦察优先标记目标，侦察箭会优先追踪该目标，造成 x1.25 伤害，并在命中后折返继续攻击，折返后伤害大幅降低。]
+						[c/8BE89A:左键 - 侦察：将箭矢转化为适合锁定单体的侦察箭。]
+						[c/8BE89A:每轮连射五发；侦察箭可多次造成伤害。]
+						[c/8BE89A:穿透后会短暂游荡并重新追踪目标。]
 						'''
 					PresetLeft3:
 						'''
-						[c/8BE89A:左键 - 歼灭：全转化，从空中落下歼灭箭雨。]
-						[c/8BE89A:歼灭箭穿透次数 -1，命中后触发 BFLeafBombExplosion，并额外生成无伤害视觉弹幕 FuckYou。]
-						[c/8BE89A:若目标被侦察优先标记，爆炸有概率变成更高伤害、更大范围的强化爆炸，并无视普通爆炸次数限制。]
+						[c/8BE89A:左键 - 歼灭：将箭矢转化为从空中落下的歼灭箭雨。]
+						[c/8BE89A:歼灭箭命中后引发枝爆，并用范围伤害压制目标区域。]
 						'''
 					PresetLeft4:
 						'''
-						[c/8BE89A:左键 - 侵染：全转化，发射使用 BlossomFluxBOMB 贴图的收割者弹幕。]
-						[c/8BE89A:发射点位于手持弹幕中心附近；速度约为旧版一半，扩散角度约为旧版一半。]
-						[c/8BE89A:收割者会强力追踪侦察优先标记目标。命中会施加污染和一组负面效果；重复命中会刷新或延长。]
-						[c/8BE89A:污染由 GlobalNPC 管理，切换战术、换武器或丢掉武器后仍存在，直到持续时间结束。污染逐层降低敌人防御倍率，最多 -75%。]
+						[c/8BE89A:左键 - 侵染：将箭矢转化为侵染收割者。]
+						[c/8BE89A:收割者命中后施加污染与负面效果；重复命中会刷新或延长持续时间。]
+						[c/8BE89A:污染会逐层削弱敌人的防御能力。]
 						'''
-					/* BF_Right:
-						'''
-						[c/F7D87C:Right Click: Tap to open the tactical panel and switch doctrine.]
-						[c/F7D87C:Hold for over 0.15 seconds to enter the charge stance.]
-						[c/F7D87C:Release at full charge to fire the current special arrow.]
-						[c/F7D87C:Right-click special arrows hit harder than normal left arrows.]
-						''' */
 					PresetRight0:
 						'''
 						[c/F4D57A:右键 - 突击蓄力：逐根装填突击箭，松手后从中轴线排队依次射出。]
@@ -75,7 +60,7 @@ Mods: {
 						'''
 						[c/F4D57A:右键 - 侦察蓄力：发射高速标记箭。]
 						[c/F4D57A:标记箭额外更新次数提升，不受重力下坠影响，穿透次数 -1，会记录路径上全部命中的敌人。]
-						[c/F4D57A:弹幕死亡时，只标记命中过的最大生命值最高目标；标记会强化所有形态的左键。]
+						[c/F4D57A:弹幕死亡时，只标记命中过的最大生命值最高目标；标记会强化叶流左键对该目标的攻击。]
 						'''
 					PresetRight3:
 						'''
@@ -98,24 +83,14 @@ Mods: {
 					PassiveStateActive: "[c/FF9B8B:终末防线中]"
 					PassiveStateCooldown: "[c/F0D070:冷却 {0} 秒]"
 					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
-					// PresetUnlock1: "[c/7BFFB7:Recovery: unlocked and selectable in the tactical panel.]"
-					// PresetLock1: "[c/9A9A9A:Recovery: unlocked after Queen Bee.]"
-					// PresetUnlock2: "[c/7BFFB7:Reconnaissance: unlocked and selectable in the tactical panel.]"
-					// PresetLock2: "[c/9A9A9A:Reconnaissance: unlocked in Hardmode.]"
-					// PresetUnlock3: "[c/7BFFB7:Bombardment: unlocked and selectable in the tactical panel.]"
-					// PresetLock3: "[c/9A9A9A:Bombardment: unlocked after Skeletron Prime.]"
-					// PresetUnlock4: "[c/7BFFB7:Plague: unlocked and selectable in the tactical panel.]"
-					// PresetLock4: "[c/9A9A9A:Plague: unlocked after the Plaguebringer Goliath.]"
-					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
-					/* BF_EX:
+					BF_EXHint:
 						'''
-						[c/8EF5A8:Legendary Skill: Stores up to 60 Bloom Energy.]
-						[c/8EF5A8:While held, restores 1 energy every 2 seconds.]
-						[c/8EF5A8:Releasing a charged right-click arrow restores 3 energy.]
-						[c/8EF5A8:At full energy with the EX accessory, press the Legendary Skill key.]
-						[c/8EF5A8:Then enter the ready stance and left-click.]
-						[c/8EF5A8:Finally releases the verdant arrow curtain barrage.]
-						''' */
+						[c/8EF5A8:大招：最多储存60点森绿能量。]
+						[c/8EF5A8:手持叶流时，每2秒恢复1点能量；释放蓄力右键箭会恢复3点能量。]
+						[c/8EF5A8:能量充满后，按下 [{0}] 释放森绿箭幕。]
+						'''
+					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
+					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:
 						'''

@@ -25,9 +25,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.AzureThunder_ThunderCharge");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/ThunderCharge";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/ThunderChargeDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/ThunderChargeOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderCharge";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderChargeDownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderChargeOverlay";
 
         public override Color OutlineColor => new(24, 62, 92);
         public override Color CooldownStartColor => Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.Yellow, AdjustedCompletion);

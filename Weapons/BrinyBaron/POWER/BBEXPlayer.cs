@@ -1,19 +1,18 @@
-﻿using Terraria;
-using Terraria.ModLoader;
 using CalamityLegendsComeBack.Accssory.BB;
+using CalamityMod;
+using Terraria;
+using Terraria.ModLoader;
+
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
 {
     internal class BBEXPlayer : ModPlayer
     {
-        public int TideValue;
-        public int CurrentTideMax
-        {
-            get
-            {
-                return BB_Balance.GetCurrentTideMax() + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
-            }
-        }
+        private static readonly int[] TideMaxValues = { 2, 3, 4, 5, 6, 7, 8 };
 
+        public const int MaxDesignedTideCap = 8;
+        public int TideValue;
+
+        public int CurrentTideMax => GetCurrentTideMax() + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
         public bool TideFull => TideValue >= CurrentTideMax;
 
         public override void PostUpdateEquips()
@@ -35,6 +34,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         public void ResetTide()
         {
             TideValue = 0;
+        }
+
+        private static int GetCurrentTideMax()
+        {
+            return TideMaxValues[GetTideGrowthTier()];
+        }
+
+        private static int GetTideGrowthTier()
+        {
+            if (DownedBossSystem.downedYharon)
+                return 6;
+            if (DownedBossSystem.downedBoomerDuke)
+                return 5;
+            if (NPC.downedMoonlord)
+                return 4;
+            if (NPC.downedFishron)
+                return 3;
+            if (DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
+                return 2;
+            if (Main.hardMode)
+                return 1;
+
+            return 0;
         }
     }
 }

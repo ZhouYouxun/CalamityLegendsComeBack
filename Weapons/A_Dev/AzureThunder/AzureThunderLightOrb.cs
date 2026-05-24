@@ -109,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.18f);
                 Vector2 strikePoint = target.Center + Main.rand.NextVector2Circular(18f, 18f);
-                Vector2 spawnPosition = strikePoint + forward * 10f * 16f;
+                Vector2 spawnPosition = strikePoint + forward * 25f * 16f;
 
                 AzureThunderPlayer.SpawnFlatLightning(
                     Projectile.GetSource_FromThis(),

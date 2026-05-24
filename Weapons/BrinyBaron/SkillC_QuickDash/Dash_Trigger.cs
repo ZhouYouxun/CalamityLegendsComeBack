@@ -1,13 +1,11 @@
-﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
 using Terraria.GameInput;
-using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
@@ -17,11 +15,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
         private const int DoubleTapInputWindow = 15;
         private const int DashBaseDamage = 650;
 
+        private static readonly float[] QuickDashBaseDamageMultipliers = { 1f, 1.25f, 1.55f, 2f };
+        private static readonly int[] QuickDashCooldowns = { 120, 120, 90, 60 };
+
         private int doubleTapTimer = 0;
         private int dashCooldownTimer = 0;
         private int lastTapDirection = 0;
+
         public bool IsUsingSlashDash;
-        public bool DashEnabled = true; // 默认开启
+        public bool DashEnabled = true;
 
         public override void ResetEffects()
         {
@@ -43,49 +45,33 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
 
             if (!DashEnabled)
                 return;
-
             if (player.HeldItem.type != ModContent.ItemType<NewLegendBrinyBaron>())
                 return;
-
-            if (!BB_Balance.CanUseQuickDash)
+            if (!CanUseQuickDash())
                 return;
-
-            if (HasAnyActiveSkillProjectile(player) || player.GetModPlayer<Dash_Trigger>().IsUsingSlashDash)
+            if (HasAnyActiveSkillProjectile(player) || IsUsingSlashDash)
                 return;
-
             if (dashCooldownTimer > 0)
                 return;
 
             bool triggerDash = false;
             int dashDirection = 0;
-            BB_Balance.QuickDashProfile growthProfile = ResolveDashGrowthProfile();
+            QuickDashProfile growthProfile = ResolveDashGrowthProfile();
 
-            // =========================
-            // 神秘按键逻辑（优先级最高）
-            // =========================
             var keys = CalamityKeybinds.DashHotkey.GetAssignedKeysOrEmpty();
             bool manualHotkeyBound = (keys?.Count ?? 0) > 0;
             bool pressedManualHotkey = manualHotkeyBound && CalamityKeybinds.DashHotkey.JustPressed;
 
             if (pressedManualHotkey)
             {
-                // 优先用面向方向
                 dashDirection = player.direction;
-
-                // 如果方向异常，用鼠标兜底
                 if (dashDirection == 0)
-                {
                     dashDirection = Main.MouseWorld.X > player.Center.X ? 1 : -1;
-                }
 
                 triggerDash = true;
             }
-            // =========================
-            // fallback：只有“未绑定”时才允许双击
-            // =========================
             else if (!manualHotkeyBound)
             {
-                // 同时按左右 → 锁死（什么都不做）
                 if (player.controlLeft && player.controlRight)
                     return;
 
@@ -118,64 +104,87 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
                 }
             }
 
-            // =========================
-            // 触发冲刺
-            // =========================
-            if (triggerDash)
-            {
-                doubleTapTimer = 0;
-                lastTapDirection = 0;
-                IsUsingSlashDash = true;
-                dashCooldownTimer = focusPlayer.IsFocusModeActive
-                    ? Math.Max(1, growthProfile.DashCooldown / 2)
-                    : growthProfile.DashCooldown;
+            if (!triggerDash)
+                return;
 
-                Vector2 dir = new Vector2(dashDirection, 0f);
-                int dashBaseDamage = (int)(DashBaseDamage * growthProfile.BaseDamageMultiplier);
-                if (focusPlayer.IsFocusModeActive)
-                    dashBaseDamage *= 5;
+            doubleTapTimer = 0;
+            lastTapDirection = 0;
+            IsUsingSlashDash = true;
+            dashCooldownTimer = focusPlayer.IsFocusModeActive
+                ? Math.Max(1, growthProfile.DashCooldown / 2)
+                : growthProfile.DashCooldown;
 
-                int dashDamage = (int)player.GetTotalDamage(player.HeldItem.DamageType).ApplyTo(dashBaseDamage);
+            Vector2 dir = new Vector2(dashDirection, 0f);
+            int dashBaseDamage = (int)(DashBaseDamage * growthProfile.BaseDamageMultiplier);
+            if (focusPlayer.IsFocusModeActive)
+                dashBaseDamage *= 5;
 
-                Projectile.NewProjectile(
-                    player.GetSource_FromThis(),
-                    player.Center,
-                    dir,
-                    ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
-                    dashDamage,
-                    player.GetWeaponKnockback(player.HeldItem),
-                    player.whoAmI,
-                    0f,
-                    dashDirection
-                );
-            }
+            int dashDamage = (int)player.GetTotalDamage(player.HeldItem.DamageType).ApplyTo(dashBaseDamage);
+
+            Projectile.NewProjectile(
+                player.GetSource_FromThis(),
+                player.Center,
+                dir,
+                ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
+                dashDamage,
+                player.GetWeaponKnockback(player.HeldItem),
+                player.whoAmI,
+                0f,
+                dashDirection);
         }
 
-        private BB_Balance.QuickDashProfile ResolveDashGrowthProfile()
+        private static bool CanUseQuickDash()
         {
-            return BB_Balance.GetQuickDashProfile();
+            return Main.hardMode;
+        }
+
+        private static QuickDashProfile ResolveDashGrowthProfile()
+        {
+            int tier = GetQuickDashGrowthTier();
+            return new QuickDashProfile(QuickDashBaseDamageMultipliers[tier], QuickDashCooldowns[tier]);
+        }
+
+        private static int GetQuickDashGrowthTier()
+        {
+            if (CalamityMod.DownedBossSystem.downedYharon)
+                return 3;
+            if (CalamityMod.DownedBossSystem.downedBoomerDuke)
+                return 2;
+            if (NPC.downedFishron)
+                return 1;
+
+            return 0;
         }
 
         private bool HasAnyActiveSkillProjectile(Player player)
         {
-            int p1 = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
-            int p2 = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
-            int p3 = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
-            int p4 = ModContent.ProjectileType<Z_BrinyBaron_SkillSuperCharge_SuperDash>();
+            int left = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
+            int rightDash = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
+            int superDash = ModContent.ProjectileType<Z_BrinyBaron_SkillSuperCharge_SuperDash>();
 
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
-                Projectile p = Main.projectile[i];
-
-                if (!p.active || p.owner != player.whoAmI)
+                Projectile projectile = Main.projectile[i];
+                if (!projectile.active || projectile.owner != player.whoAmI)
                     continue;
 
-                if (p.type == p1 || p.type == p2 || p.type == p3 || p.type == p4)
+                if (projectile.type == left || projectile.type == rightDash || projectile.type == superDash)
                     return true;
             }
 
             return false;
         }
 
+        private readonly struct QuickDashProfile
+        {
+            public readonly float BaseDamageMultiplier;
+            public readonly int DashCooldown;
+
+            public QuickDashProfile(float baseDamageMultiplier, int dashCooldown)
+            {
+                BaseDamageMultiplier = baseDamageMultiplier;
+                DashCooldown = dashCooldown;
+            }
+        }
     }
 }

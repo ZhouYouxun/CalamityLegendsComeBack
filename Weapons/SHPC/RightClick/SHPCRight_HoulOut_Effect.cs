@@ -512,6 +512,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     effectID
                 );
             }
+
+            NewLegendSHPC.GainEXFromLeftShot(player, 3);
         }
 
         private void SpawnRocketSalvoMuzzleEffect(Player player, Vector2 baseDirection)

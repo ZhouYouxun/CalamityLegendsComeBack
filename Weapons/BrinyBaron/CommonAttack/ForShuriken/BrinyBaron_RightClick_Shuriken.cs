@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
+using CalamityMod.Particles;
 using CalamityMod.Projectiles.Melee;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,13 +24,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private const int BaseSize = 50;
         private const int StickyLifetime = 72;
+        private static readonly int[] ShurikenPenetrates = { 1, -1, -1, -1 };
+        private static readonly int[] ShurikenStickySliceCounts = { 0, 3, 4, 5 };
+        private static readonly bool[] ShurikenDeathSpawnsShpcExplosion = { false, false, true, true };
+        private static readonly bool[] ShurikenDeathSpawnsCrossLights = { false, false, false, true };
+        private static readonly float[] ShurikenTideHomingRanges = { 900f, 1040f, 1180f, 1320f };
+        private static readonly float[] ShurikenRotationSpeeds = { 0.55f, 0.59f, 0.63f, 0.67f };
+        private static readonly bool[] ShurikenStickySlashUnlocks = { false, false, true, true };
+        private const float TideHomingBlendTargetWeight = 25f;
+        private const float TideHomingBlendTotalWeight = 18f;
+        private const float TideHomingFinalSpeed = 14f;
+        private const float TideHomingFinalSpeedLerp = 0.08f;
+        private const float NonEmpoweredShurikenAcceleration = 1.01f;
+        private const float StickySlashDamageFactor = 0.42f;
+        private const float StickySlashBaseScale = 0.9f;
+        private const float StickySlashScalePerTier = 0.08f;
 
         private float SizeScale => Projectile.width / (float)BaseSize;
         private float Radius => Projectile.width * 0.5f;
+        private bool ForceHoming => Projectile.ai[0] >= 1f;
         private bool TideEmpowered => Main.player.IndexInRange(Projectile.owner) &&
                                       Main.player[Projectile.owner].active &&
                                       Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().TideFull;
-        private BB_Balance.ShurikenProfile shurikenProfile;
+        private ShurikenProfile shurikenProfile;
 
         private bool stuckInTarget;
         private int stuckTargetIndex = -1;
@@ -64,8 +81,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             slicesPerformed = 0;
             soundTimer = 0;
             stickOffsetFromTarget = Vector2.Zero;
-            shurikenProfile = BB_Balance.GetShurikenProfile();
-            Projectile.penetrate = shurikenProfile.Penetrate;
+            shurikenProfile = CreateShurikenProfile();
+            Projectile.penetrate = ForceHoming ? 1 : shurikenProfile.Penetrate;
+            Projectile.tileCollide = !ForceHoming;
         }
 
         public override void AI()
@@ -256,9 +274,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private void HandleFlightMovement()
         {
-            NPC target = TideEmpowered ? FindNearestTarget(shurikenProfile.TideHomingRange) : null;
+            bool homing = TideEmpowered || ForceHoming;
+            float homingRange = ForceHoming ? 1250f : shurikenProfile.TideHomingRange;
+            NPC target = homing ? FindNearestTarget(homingRange) : null;
 
-            if (TideEmpowered && target != null && target.active)
+            if (homing && target != null && target.active)
             {
                 Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
 
@@ -409,6 +429,342 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Projectile.width = sideLength;
             Projectile.height = sideLength;
             Projectile.Center = center;
+        }
+
+        private static ShurikenProfile CreateShurikenProfile()
+        {
+            int tier = GetShurikenGrowthTier();
+            return new ShurikenProfile(
+                tier,
+                ShurikenPenetrates[tier],
+                ShurikenStickySliceCounts[tier],
+                ShurikenDeathSpawnsShpcExplosion[tier],
+                ShurikenDeathSpawnsCrossLights[tier],
+                ShurikenTideHomingRanges[tier],
+                ShurikenRotationSpeeds[tier],
+                ShurikenStickySlashUnlocks[tier],
+                TideHomingBlendTargetWeight,
+                TideHomingBlendTotalWeight,
+                TideHomingFinalSpeed,
+                TideHomingFinalSpeedLerp,
+                NonEmpoweredShurikenAcceleration,
+                StickySlashDamageFactor,
+                StickySlashBaseScale + tier * StickySlashScalePerTier);
+        }
+
+        private static int GetShurikenGrowthTier()
+        {
+            if (CalamityMod.DownedBossSystem.downedBoomerDuke)
+                return 3;
+            if (NPC.downedFishron)
+                return 2;
+            if (Main.hardMode)
+                return 1;
+
+            return 0;
+        }
+
+        private readonly struct ShurikenProfile
+        {
+            public readonly int GrowthTier;
+            public readonly int Penetrate;
+            public readonly int StickySliceCount;
+            public readonly bool SpawnsShpcExplosionOnDeath;
+            public readonly bool SpawnsCrossLightsOnDeath;
+            public readonly float TideHomingRange;
+            public readonly float RotationSpeed;
+            public readonly bool UnlocksStickySlash;
+            public readonly float TideHomingTargetWeight;
+            public readonly float TideHomingTotalWeight;
+            public readonly float TideHomingFinalSpeed;
+            public readonly float TideHomingFinalSpeedLerp;
+            public readonly float NonEmpoweredAcceleration;
+            public readonly float StickySlashDamageFactor;
+            public readonly float StickySlashScale;
+
+            public bool CanStick => StickySliceCount > 0;
+
+            public ShurikenProfile(int growthTier, int penetrate, int stickySliceCount, bool spawnsShpcExplosionOnDeath, bool spawnsCrossLightsOnDeath, float tideHomingRange, float rotationSpeed, bool unlocksStickySlash, float tideHomingTargetWeight, float tideHomingTotalWeight, float tideHomingFinalSpeed, float tideHomingFinalSpeedLerp, float nonEmpoweredAcceleration, float stickySlashDamageFactor, float stickySlashScale)
+            {
+                GrowthTier = growthTier;
+                Penetrate = penetrate;
+                StickySliceCount = stickySliceCount;
+                SpawnsShpcExplosionOnDeath = spawnsShpcExplosionOnDeath;
+                SpawnsCrossLightsOnDeath = spawnsCrossLightsOnDeath;
+                TideHomingRange = tideHomingRange;
+                RotationSpeed = rotationSpeed;
+                UnlocksStickySlash = unlocksStickySlash;
+                TideHomingTargetWeight = tideHomingTargetWeight;
+                TideHomingTotalWeight = tideHomingTotalWeight;
+                TideHomingFinalSpeed = tideHomingFinalSpeed;
+                TideHomingFinalSpeedLerp = tideHomingFinalSpeedLerp;
+                NonEmpoweredAcceleration = nonEmpoweredAcceleration;
+                StickySlashDamageFactor = stickySlashDamageFactor;
+                StickySlashScale = stickySlashScale;
+            }
+        }
+    }
+
+    internal static class BBShuriken_Initial_Effects
+    {
+        public static void SpawnFlight(Projectile projectile, float sizeScale)
+        {
+            if (!Main.rand.NextBool(3))
+                return;
+
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            float phase = Main.GlobalTimeWrappedHourly * 10f + projectile.identity * 0.55f;
+            float backDistance = projectile.width * Main.rand.NextFloat(0.22f, 0.38f);
+            Vector2 spawnPos = projectile.Center - forward * backDistance + right * (float)Math.Sin(phase) * projectile.width * 0.1f;
+            Vector2 dustVelocity = -forward * Main.rand.NextFloat(0.9f, 2.2f) + right * (float)Math.Cos(phase) * Main.rand.NextFloat(0.2f, 0.95f);
+
+            Dust water = Dust.NewDustPerfect(
+                spawnPos,
+                DustID.Water,
+                dustVelocity,
+                100,
+                new Color(70, 180, 255),
+                Main.rand.NextFloat(0.8f, 1.1f) * sizeScale);
+            water.noGravity = true;
+        }
+
+        public static void SpawnHitBurst(Projectile projectile, NPC target, Vector2 hitForward, float sizeScale, int highestUnlockedStage)
+        {
+            int hitBurstCount = 8 + highestUnlockedStage * 2;
+            Vector2 hitRight = hitForward.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < hitBurstCount; i++)
+            {
+                float t = i / (float)Math.Max(1, hitBurstCount - 1);
+                float spread = MathHelper.Lerp(-0.55f, 0.55f, t);
+                Vector2 burstVelocity = hitForward.RotatedBy(spread) * Main.rand.NextFloat(3.4f, 7.8f) + hitRight * spread * 2f;
+
+                Dust water = Dust.NewDustPerfect(target.Center, DustID.Water, burstVelocity);
+                water.noGravity = true;
+                water.color = new Color(70, 180, 255);
+                water.scale = Main.rand.NextFloat(0.85f, 1.3f) * sizeScale;
+
+                if (i % 2 == 0)
+                {
+                    Dust frost = Dust.NewDustPerfect(target.Center, DustID.Frost, burstVelocity * 0.72f);
+                    frost.noGravity = true;
+                    frost.color = new Color(210, 248, 255);
+                    frost.scale = Main.rand.NextFloat(0.78f, 1.15f) * sizeScale;
+                }
+            }
+        }
+
+        public static void SpawnStickyAmbient(Projectile projectile, NPC target, float sizeScale, int highestUnlockedStage)
+        {
+            int ambientCount = 1 + Math.Min(highestUnlockedStage, 1);
+            for (int i = 0; i < ambientCount; i++)
+            {
+                Vector2 dustVelocity = Main.rand.NextVector2Circular(3.2f, 3.2f) + target.velocity * 0.15f;
+
+                Dust frost = Dust.NewDustPerfect(projectile.Center, DustID.Frost, dustVelocity);
+                frost.noGravity = true;
+                frost.scale = Main.rand.NextFloat(0.85f, 1.18f) * sizeScale;
+
+                if (Main.rand.NextBool())
+                {
+                    Dust water = Dust.NewDustPerfect(projectile.Center, DustID.Water, dustVelocity * 0.8f);
+                    water.noGravity = true;
+                    water.scale = Main.rand.NextFloat(0.92f, 1.22f) * sizeScale;
+                }
+            }
+        }
+
+        public static void SpawnStickySliceBurst(Projectile projectile, float sizeScale, int highestUnlockedStage)
+        {
+            int burstCount = 4 + highestUnlockedStage;
+            for (int i = 0; i < burstCount; i++)
+            {
+                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 6f);
+
+                Dust gem = Dust.NewDustPerfect(projectile.Center, DustID.GemSapphire, burstVelocity);
+                gem.noGravity = true;
+                gem.scale = Main.rand.NextFloat(0.9f, 1.25f) * sizeScale;
+
+                Dust frost = Dust.NewDustPerfect(projectile.Center, DustID.Frost, burstVelocity * 0.7f);
+                frost.noGravity = true;
+                frost.scale = Main.rand.NextFloat(0.82f, 1.12f) * sizeScale;
+            }
+        }
+
+        public static void SpawnDeathBurst(Projectile projectile, float sizeScale)
+        {
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f);
+
+                Dust water = Dust.NewDustPerfect(projectile.Center, DustID.Water, burstVelocity);
+                water.noGravity = true;
+                water.scale = Main.rand.NextFloat(1.05f, 1.45f) * sizeScale;
+
+                Dust frost = Dust.NewDustPerfect(projectile.Center, DustID.Frost, burstVelocity * 0.85f);
+                frost.noGravity = true;
+                frost.scale = Main.rand.NextFloat(0.9f, 1.2f) * sizeScale;
+            }
+        }
+
+        public static void DrawOutlineAndBody(Projectile projectile, Texture2D projectileTexture, Color lightColor)
+        {
+            Vector2 drawPos = projectile.Center - Main.screenPosition;
+            Vector2 origin = projectileTexture.Size() * 0.5f;
+            float drawScale = projectile.width / (float)projectileTexture.Width;
+            float outlineRadius = Math.Max(2f, projectile.width * 0.05f);
+            Color outlineColor = new Color(90, 210, 255, 0) * 0.32f;
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * outlineRadius;
+                Main.EntitySpriteDraw(projectileTexture, drawPos + offset, null, outlineColor, projectile.rotation, origin, drawScale, SpriteEffects.None, 0);
+            }
+
+            Main.EntitySpriteDraw(projectileTexture, drawPos, null, projectile.GetAlpha(lightColor), projectile.rotation, origin, drawScale, SpriteEffects.None, 0);
+        }
+    }
+
+    internal static class BBShuriken_Hardmode_Effects
+    {
+        public static void DrawRotatingCopies(Projectile projectile, Texture2D projectileTexture)
+        {
+            Vector2 drawPos = projectile.Center - Main.screenPosition;
+            Vector2 origin = projectileTexture.Size() * 0.5f;
+            float drawScale = projectile.width / (float)projectileTexture.Width;
+            float orbitRadius = projectile.width * 0.34f;
+            float spin = Main.GlobalTimeWrappedHourly * 8.5f + projectile.identity * 0.37f;
+
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = spin + MathHelper.TwoPi * i / 4f;
+                Vector2 offset = angle.ToRotationVector2() * orbitRadius;
+                Color drawColor = Color.Lerp(new Color(15, 45, 85, 0), new Color(70, 170, 255, 0), 0.68f) * 0.45f;
+
+                Main.EntitySpriteDraw(projectileTexture, drawPos + offset, null, drawColor, projectile.rotation - spin * 0.7f, origin, drawScale * 0.92f, SpriteEffects.None, 0);
+            }
+        }
+    }
+
+    internal static class BBShuriken_Fishron_Effects
+    {
+        public static void SpawnFlight(Projectile projectile, float sizeScale)
+        {
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            float phase = Main.GlobalTimeWrappedHourly * 16f + projectile.identity * 0.55f;
+            float orbitRadius = projectile.width * 0.36f;
+            float helixDepth = projectile.width * 0.12f;
+
+            for (int arm = 0; arm < 4; arm++)
+            {
+                if (!Main.rand.NextBool(2))
+                    continue;
+
+                float armPhase = phase + MathHelper.TwoPi * arm / 4f;
+                Vector2 orbitOffset = right * (float)Math.Cos(armPhase) * orbitRadius + forward * (float)Math.Sin(armPhase) * helixDepth;
+
+                GeneralParticleHandler.SpawnParticle(
+                    new GlowOrbParticle(
+                        projectile.Center + orbitOffset,
+                        right * (float)-Math.Sin(armPhase) * 0.2f + forward * (float)Math.Cos(armPhase) * 0.1f,
+                        false,
+                        8,
+                        0.48f * sizeScale,
+                        arm % 2 == 0 ? new Color(75, 190, 255) : Color.Cyan,
+                        true,
+                        false,
+                        true));
+
+                if (Main.rand.NextBool(3))
+                {
+                    Dust frost = Dust.NewDustPerfect(projectile.Center + orbitOffset * 0.92f, DustID.Frost, -forward * 0.4f);
+                    frost.noGravity = true;
+                    frost.color = new Color(220, 250, 255);
+                    frost.scale = Main.rand.NextFloat(0.82f, 1.08f) * sizeScale;
+                }
+            }
+        }
+
+        public static void SpawnHitBurst(Projectile projectile, NPC target, Vector2 hitForward, float sizeScale)
+        {
+            Vector2 hitRight = hitForward.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < 4; i++)
+            {
+                GlowOrbParticle orb = new GlowOrbParticle(
+                    target.Center + Main.rand.NextVector2Circular(projectile.width * 0.18f, projectile.width * 0.18f),
+                    hitForward * Main.rand.NextFloat(0.4f, 1.3f) + hitRight * Main.rand.NextFloat(-0.7f, 0.7f),
+                    false,
+                    8,
+                    0.52f * sizeScale,
+                    i % 2 == 0 ? Color.DeepSkyBlue : Color.Cyan,
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(orb);
+            }
+        }
+    }
+
+    internal static class BBShuriken_BoomerDuke_Effects
+    {
+        public static void SpawnFlight(Projectile projectile, float sizeScale)
+        {
+            if (!Main.rand.NextBool(2))
+                return;
+
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            float phase = Main.GlobalTimeWrappedHourly * 22f + projectile.identity * 0.63f;
+            float sine = (float)Math.Sin(phase);
+            Vector2 offset = right * sine * (projectile.width * 0.18f + projectile.width * 0.12f);
+            Vector2 sparkVelocity = -forward * MathHelper.Lerp(1.6f, 3f, 0.5f + 0.5f * sine);
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(projectile.Center + offset, sparkVelocity, "CalamityMod/Particles/BloomCircle", false, 10, 0.22f * sizeScale, new Color(90, 210, 255), new Vector2(0.5f, 1f), true, false));
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(projectile.Center - offset, sparkVelocity, "CalamityMod/Particles/BloomCircle", false, 10, 0.22f * sizeScale, new Color(140, 235, 255), new Vector2(0.5f, 1f), true, false));
+        }
+
+        public static void SpawnHitBurst(Projectile projectile, NPC target, Vector2 hitForward, float sizeScale)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(
+                    new CustomSpark(
+                        target.Center,
+                        hitForward.RotatedByRandom(0.45f) * Main.rand.NextFloat(3f, 7f),
+                        "CalamityMod/Particles/BloomCircle",
+                        false,
+                        12,
+                        0.28f * sizeScale,
+                        i % 2 == 0 ? new Color(95, 210, 255) : Color.Cyan,
+                        new Vector2(0.55f, 1.15f),
+                        true,
+                        false));
+            }
+        }
+
+        public static void DrawBladeDisc(Projectile projectile)
+        {
+            Texture2D smearRound = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
+            Texture2D smearHalf = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
+            Texture2D projectileTexture = TextureAssets.Projectile[projectile.type].Value;
+            Vector2 drawPos = projectile.Center - Main.screenPosition;
+            Vector2 origin = projectileTexture.Size() * 0.5f;
+            float baseDrawScale = projectile.width / (float)projectileTexture.Width;
+            float discScale = baseDrawScale * 1.5f;
+            float flash = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f + projectile.identity * 0.9f);
+
+            Main.EntitySpriteDraw(smearHalf, drawPos, null, Color.Lerp(Color.DeepSkyBlue, Color.Cyan, flash) with { A = 0 } * 0.42f, projectile.rotation * 1.35f, smearHalf.Size() * 0.5f, discScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(smearRound, drawPos, null, Color.Lerp(Color.LightSeaGreen, Color.CornflowerBlue, flash) with { A = 0 } * 0.42f, projectile.rotation * 0.85f, smearRound.Size() * 0.5f, discScale, SpriteEffects.None, 0);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * projectile.width * 0.08f;
+                Color auraColor = Color.Lerp(Color.Cyan, Color.DeepSkyBlue, i / 6f) * 0.2f;
+                Main.EntitySpriteDraw(projectileTexture, drawPos + offset, null, auraColor, projectile.rotation, origin, discScale, SpriteEffects.None, 0);
+            }
         }
     }
 }

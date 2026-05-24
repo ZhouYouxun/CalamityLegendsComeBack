@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.BB;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityMod;
 using CalamityMod.Enums;
 using Microsoft.Xna.Framework;
@@ -22,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private const int DashTimeMax = 45;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
-        private const float DashSpeed = 14f;
+        private const float DashSpeed = 18f;
         private const float ReboundSpeed = 9f;
         private const float DashTurnRate = 0.01f; // 转向最大角度限
         private const float ReadyBladeDistance = 28f;
@@ -40,7 +41,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private float dashSpeedMultiplier;
         private float contactDamageMultiplier;
         private bool enemyReboundUnlocked;
+        private int dashShotTimer;
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
+        private static readonly float[] ShortDashSpeedMultipliers = { 1.05f, 1.12f, 1.2f, 1.32f, 1.45f };
+        private static readonly float[] ShortDashContactDamageMultipliers = { 1.05f, 1.1f, 1.2f, 1.35f, 1.55f };
+        private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
 
         public override void SetStaticDefaults()
         {
@@ -115,7 +120,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = false;
             canceledCharge = false;
             oceanPhase = 0f;
-            BB_Balance.ShortDashProfile growthProfile = ResolveDashGrowthProfile();
+            dashShotTimer = 0;
+            ShortDashProfile growthProfile = ResolveDashGrowthProfile();
             dashSpeedMultiplier = growthProfile.SpeedMultiplier;
             contactDamageMultiplier = growthProfile.ContactDamageMultiplier;
             enemyReboundUnlocked = growthProfile.EnemyReboundUnlocked;
@@ -188,12 +194,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void DoDashPhase(Player owner)
         {
-            if (!IsChargeHeld(owner))
-            {
-                Projectile.Kill();
-                return;
-            }
-
             stateTimer++;
             Vector2 aimDirection = GetAimDirection(owner, lockedDirection);
             float turnedRotation = lockedDirection.ToRotation().AngleTowards(aimDirection.ToRotation(), DashTurnRate);
@@ -215,6 +215,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             RecordDashDirection(actualVelocity.SafeNormalize(lockedDirection));
             BrinyBaron_SkillDashTornado_FlightEffects.SpawnDashFlightEffects(Projectile, lockedDirection, bladeRotation, oceanPhase, stateTimer);
+            TryFireDashProjectile(owner, actualVelocity.SafeNormalize(lockedDirection));
 
             if (stateTimer >= DashTimeMax)
                 Projectile.Kill();
@@ -342,9 +343,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             return sum.SafeNormalize(lockedDirection);
         }
 
-        private BB_Balance.ShortDashProfile ResolveDashGrowthProfile()
+        private static ShortDashProfile ResolveDashGrowthProfile()
         {
-            return BB_Balance.GetShortDashProfile();
+            int tier = GetShortDashGrowthTier();
+            return new ShortDashProfile(
+                ShortDashSpeedMultipliers[tier],
+                ShortDashContactDamageMultipliers[tier],
+                ShortDashEnemyReboundUnlocks[tier]);
+        }
+
+        private static int GetShortDashGrowthTier()
+        {
+            if (CalamityMod.DownedBossSystem.downedBoomerDuke)
+                return 4;
+            if (NPC.downedFishron)
+                return 3;
+            if (CalamityMod.DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
+                return 2;
+            if (Main.hardMode)
+                return 1;
+
+            return 0;
         }
 
         private Vector2 GetAimDirection(Player owner, Vector2 fallbackDirection)
@@ -426,6 +445,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     0.75f,
                     1f);
             }
+        }
+
+        private void TryFireDashProjectile(Player owner, Vector2 dashDirection)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            dashShotTimer++;
+            if (dashShotTimer < 7)
+                return;
+
+            dashShotTimer = 0;
+            Vector2 forward = dashDirection.SafeNormalize(lockedDirection);
+            Vector2 spawnPosition = owner.MountedCenter + forward * 34f + forward.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-18f, 18f);
+            Vector2 velocity = forward.RotatedByRandom(0.18f) * Main.rand.NextFloat(12f, 15.5f);
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                Math.Max(1, (int)(Projectile.damage * 0.32f)),
+                Projectile.knockBack * 0.4f,
+                Projectile.owner,
+                0.25f);
         }
 
         private void SpawnStartBurst()
@@ -582,6 +626,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             return false;
+        }
+
+        private readonly struct ShortDashProfile
+        {
+            public readonly float SpeedMultiplier;
+            public readonly float ContactDamageMultiplier;
+            public readonly bool EnemyReboundUnlocked;
+
+            public ShortDashProfile(float speedMultiplier, float contactDamageMultiplier, bool enemyReboundUnlocked)
+            {
+                SpeedMultiplier = speedMultiplier;
+                ContactDamageMultiplier = contactDamageMultiplier;
+                EnemyReboundUnlocked = enemyReboundUnlocked;
+            }
         }
     }
 }

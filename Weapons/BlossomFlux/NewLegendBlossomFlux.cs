@@ -108,9 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             string presetName = this.GetLocalizedValue($"PresetName{(int)currentPreset}");
             string introText = string.Format(this.GetLocalizedValue("BF_Intro"), presetName);
             string leftPresetText = this.GetLocalizedValue($"PresetLeft{(int)currentPreset}");
-            string leftGrowthText = this.GetLocalizedValue($"PresetLeftGrowth{(int)currentPreset}");
             string rightPresetText = this.GetLocalizedValue($"PresetRight{(int)currentPreset}");
-            string rightGrowthText = this.GetLocalizedValue($"PresetRightGrowth{(int)currentPreset}");
             string passiveStatus = !passivePlayer.PassiveUnlocked
                 ? this.GetLocalizedValue("PassiveStateLocked")
                 : passivePlayer.FinalStandActive
@@ -122,14 +120,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
             string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
+            var assignedKeys = KeybindSystem.LegendarySkill.GetAssignedKeys();
+            string keyText = assignedKeys.Count > 0 ? assignedKeys[0] : "Unbound";
+            bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string exHint = legendaryEmblemEquipped
+                ? string.Format(this.GetLocalizedValue("BF_EXHint"), keyText)
+                : this.GetLocalizedValue("BF_EXDisabledHint");
 
             string merged =
                 introText + "\n\n" +
                 passiveText + "\n" +
                 leftPresetText + "\n" +
-                leftGrowthText + "\n\n" +
-                rightPresetText + "\n" +
-                rightGrowthText + "\n\n" +
+                rightPresetText + "\n\n" +
+                exHint + "\n\n" +
                 legendarySection + "\n";
 
             tooltips.FindAndReplace("[GFB]", merged);

@@ -369,20 +369,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return storedEffectPower > 0 && storedEffectID > 0 ? storedEffectID : -1;
         }
 
-        private void GainEXFromLeftShot(Player player)
+        public static void GainEXFromLeftShot(Player player, int multiplier = 1)
         {
             NewLegend_EXPlayer exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
             if (!exPlayer.EXUnlocked || !HasNearbyChargeTarget(player))
                 return;
 
             int currentMaxEX = NewLegend_EXPlayer.GetCurrentEXMax(player);
-            exPlayer.EXValue += NewLegend_EXPlayer.GetFramesPerDisplayUnit(player);
+            exPlayer.EXValue += NewLegend_EXPlayer.GetFramesPerDisplayUnit(player) * Math.Max(1, multiplier);
 
             if (exPlayer.EXValue > currentMaxEX)
                 exPlayer.EXValue = currentMaxEX;
         }
 
-        private bool HasNearbyChargeTarget(Player player)
+        private static bool HasNearbyChargeTarget(Player player)
         {
             const float chargeRange = 900f;
 
@@ -749,12 +749,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 ammoText = Language.GetTextValue(key);
             }
 
-            // ===== 右键固定文案 =====
-            string rightIntro = this.GetLocalizedValue("SHPC_RightIntro");
-
             // ===== 右键阶段 =====
             int state = GetRightClickProgressState();
-            string rightStateText = this.GetLocalizedValue($"SHPCRight{state + 1}");
+            string rightStateText = this.GetLocalizedValue($"SHPC_RightIntro{state + 1}");
 
             // ===== 最后一行 =====
             string finalLine = this.GetLocalizedValue("SHPC_Final");
@@ -771,14 +768,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 legendarySection = legendaryText;
 
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            string exHint = string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText);
+            bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string exHint = legendaryEmblemEquipped
+                ? string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText)
+                : this.GetLocalizedValue("SHPC_EXDisabledHint");
 
             // ===== 拼接 =====
             string finalText =
                 leftIntro + "\n" +
                 ">>> " + ammoText + " <<<" + 
                 "\n\n" +
-                rightIntro + "\n" +
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
                 finalLine + "\n\n" +

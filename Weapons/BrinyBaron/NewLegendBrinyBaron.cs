@@ -1,11 +1,9 @@
-﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,17 +12,18 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
-using Terraria.ModLoader;
 using Terraria.Localization;
+using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     public class NewLegendBrinyBaron : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        private bool CanUseDashTornado => BB_Balance.CanUseShortDash;
-        private bool CanUseSpinRush => BB_Balance.CanUseSpinRush;
-        private BalanceBrinyBaron damageBalance = new();
+
+        private const float RightClickDamageMultiplier = 1.08f;
+        private static bool CanUseQuickDash => Main.hardMode;
+        private static bool HasDesignedSuperDashUnlock => NPC.downedFishron;
 
         public override void SetDefaults()
         {
@@ -33,22 +32,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Item.damage = 120;
             Item.DamageType = DamageClass.Melee;
 
-            // =========================
-            // 左键基础项：沿用 Holdout 近战武器的配置思路
-            // =========================
             Item.useAnimation = 60;
             Item.useTime = 60;
             Item.useTurn = true;
             Item.knockBack = 6f;
             Item.autoReuse = true;
-
-
             Item.channel = true;
             Item.shoot = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
             Item.noUseGraphic = true;
             Item.noMelee = true;
             Item.useStyle = ItemUseStyleID.Swing;
-
             Item.shootSpeed = 0f;
             Item.rare = ItemRarityID.Pink;
             Item.UseSound = null;
@@ -60,27 +53,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             if (player.altFunctionUse == 2)
             {
-                if (player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] > 0)
+                if (HasActiveRightClickDash(player))
                     return false;
 
-                if (!CanUseDashTornado && !CanUseSpinRush)
-                    return false;
+                Projectile activeLeftSwing = FindOwnedProjectile(player, ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>());
+                if (activeLeftSwing != null)
+                {
+                    if (IsLeftHeld(player))
+                        return false;
+
+                    activeLeftSwing.Kill();
+                }
 
                 BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
                 if (!dashCooldown.CanUseDash)
                     return false;
 
-                BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
-                int spinRushType = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
-                int dashType = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
-
-                Item.useTime = 24;
-                Item.useAnimation = 24;
-                Item.shoot = tidePlayer.TideFull ? spinRushType : dashType;
-
-                Item.channel = Item.shoot == dashType;
+                Item.useTime = 20;
+                Item.useAnimation = 20;
+                Item.shoot = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
                 Item.channel = false;
-
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
@@ -89,9 +81,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             }
             else
             {
-                // =========================
-                // 左键：始终交给连斩 Holdout 处理
-                // =========================
+                if (HasActiveRightClickDash(player))
+                    return false;
+
                 Item.useTime = Item.useAnimation = 25;
                 Item.channel = true;
                 Item.noUseGraphic = true;
@@ -107,58 +99,36 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            // =========================
-            // 右键：根据潮汐值切换短突进或回旋冲刺
-            // =========================
             if (player.altFunctionUse == 2)
             {
-                BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                CancelLeftClickHoldout(player);
+
+                Vector2 shootVelocity = (Main.MouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
                 int rightClickDamage = GetCurrentRightClickDamage(player);
 
-                if (type == ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>())
-                {
-                    Projectile.NewProjectile(source, position, velocity, type, rightClickDamage, knockback, player.whoAmI);
-                    dashCooldown.StartCooldown();
-                    BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
-                    tidePlayer.TideValue = Math.Max(0, tidePlayer.TideValue - 1);
-                    return false;
-                }
+                Projectile.NewProjectile(
+                    source,
+                    player.MountedCenter,
+                    shootVelocity,
+                    ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>(),
+                    rightClickDamage,
+                    knockback,
+                    player.whoAmI);
 
-
-                Vector2 shootVelocity = velocity.SafeNormalize(Vector2.UnitX * player.direction);
-                Projectile.NewProjectile(source, position, shootVelocity, type, rightClickDamage, knockback, player.whoAmI);
-                dashCooldown.StartCooldown();
+                player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown();
                 return false;
             }
 
-
-            // =========================
-            // 左键：永远只允许存在一个主 Holdout
-            // =========================
             int holdoutType = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
-            if (player.ownedProjectileCounts[holdoutType] > 0)
-                return false;
-
-            return true;
+            return player.ownedProjectileCounts[holdoutType] <= 0;
         }
 
         public override bool CanShoot(Player player)
         {
             if (player.altFunctionUse != 2)
-                return player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] <= 0;
+                return player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] <= 0 && !HasActiveRightClickDash(player);
 
-            int dashType = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
-            int spinRushType = ModContent.ProjectileType<BrinyBaron_SkillSpinRush_SpinBlade>();
-            foreach (Projectile projectile in Main.projectile)
-            {
-                if (!projectile.active || projectile.owner != player.whoAmI)
-                    continue;
-
-                if (projectile.type == dashType || projectile.type == spinRushType)
-                    return false;
-            }
-
-            return true;
+            return !HasActiveRightClickDash(player);
         }
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
@@ -185,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             else if (superDashCooldown.IsCoolingDown)
                 player.AddCooldown(BBSuperDashCooldownHandler.ID, superDashCooldown.RemainingFrames);
 
-            if (!superDashCooldown.CanUseSuperDash)
+            if (!superDashCooldown.CanUseSuperDash || !HasDesignedSuperDashUnlock || !tidePlayer.TideFull)
                 return;
 
             if (!KeybindSystem.LegendarySkill.JustPressed)
@@ -194,33 +164,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (!player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped)
                 return;
 
-            // ===== 大招释放 =====
-            //if (KeybindSystem.LegendarySkill.JustPressed && NPC.downedFishron && tidePlayer.TideFull)
-
             int target = BBSuperDashTargeting.FindBestTargetIndex(player, player.Center);
-
-            // ❗没有任何敌人 → 直接拒绝
             if (target == -1)
             {
                 if (player.whoAmI == Main.myPlayer)
-                {
-                    CombatText.NewText(
-                        player.Hitbox,
-                        new Color(255, 80, 80),
-                        "大招被拒绝"
-                    );
-                }
+                    CombatText.NewText(player.Hitbox, new Color(255, 80, 80), "大招被拒绝");
+
                 return;
             }
 
-            // ===== 防止重复生成 =====
             foreach (Projectile proj in Main.projectile)
             {
                 if (proj.active && proj.owner == player.whoAmI &&
                     proj.type == ModContent.ProjectileType<Z_BrinyBaron_SkillSuperCharge_SuperDash>())
-                {
                     return;
-                }
             }
 
             Vector2 dir = (Main.MouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
@@ -234,8 +191,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 Item.damage * 5,
                 Item.knockBack,
                 player.whoAmI,
-                consumedTide
-            );
+                consumedTide);
+
             superDashCooldown.StartCooldown();
             tidePlayer.TideValue = 0;
         }
@@ -265,23 +222,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
         }
 
-        #region 传奇属性成长
-
-        // ===== 这里只改武器面板伤害，不影响各个技能自己的倍率 =====
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base = damageBalance.GetLeftClickBaseDamage();
+            damage.Base = BB_Balance.GetLeftClickBaseDamage();
         }
 
         private int GetCurrentRightClickDamage(Player player)
         {
-            int baseDamage = damageBalance.GetRightClickBaseDamage();
-            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
+            int baseDamage = BB_Balance.GetLeftClickBaseDamage();
+            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * RightClickDamageMultiplier);
         }
-
-        #endregion
-
-
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
@@ -289,50 +239,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
             Dash_Trigger dashPlayer = player.GetModPlayer<Dash_Trigger>();
 
-            // ===== 左键 =====
             string left = this.GetLocalizedValue("BB_Left");
-
-            // ===== 潮汐 =====
             string tide = this.GetLocalizedValue("BB_Tide") + tidePlayer.TideValue;
-
-            // ===== 右键通用 =====
             string right = this.GetLocalizedValue("BB_Right");
-
-            // ===== Dash 解锁 =====
-            string dash1 = BB_Balance.CanUseShortDash
-                ? this.GetLocalizedValue("Dash1_Unlock")
-                : this.GetLocalizedValue("Dash1_Lock");
-
-            string dash2 = BB_Balance.CanUseSpinRush
-                ? this.GetLocalizedValue("Dash2_Unlock")
-                : this.GetLocalizedValue("Dash2_Lock");
-
-            string dash3 = BB_Balance.CanUseQuickDash
+            string dash1 = this.GetLocalizedValue("Dash1_Unlock");
+            string dash2 = this.GetLocalizedValue("Dash2_Lock");
+            string dash3 = CanUseQuickDash
                 ? this.GetLocalizedValue("Dash3_Unlock")
                 : this.GetLocalizedValue("Dash3_Lock");
-
-            string dash4 = BB_Balance.HasDesignedSuperDashUnlock
+            string dash4 = HasDesignedSuperDashUnlock
                 ? this.GetLocalizedValue("Dash4_Unlock")
                 : this.GetLocalizedValue("Dash4_Lock");
-
             string passiveState = this.GetLocalizedValue(dashPlayer.DashEnabled ? "PassiveStateOn" : "PassiveStateOff");
             string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState);
-
-            // ===== 最终文本 =====
             string final = this.GetLocalizedValue("BB_Final");
-
-            // ===== 传奇文本 =====
             string legendaryText = this.GetLocalizedValue("LegendaryText");
-
-            // ===== Shift 提示 =====
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
+            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
 
-            // ===== Shift 切换 =====
-            string legendarySection = shiftHint;
-            if (Main.keyState.PressingShift())
-                legendarySection = legendaryText;
-
-            // ===== 拼接 =====
             string finalText =
                left + "\n\n" +
                tide + "\n" +
@@ -348,10 +272,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             tooltips.FindAndReplace("[GFB]", finalText);
         }
 
-
-
-
-        // ===== 背包里右键手动开关快刀斩 =====
         public override bool CanRightClick()
         {
             return true;
@@ -359,21 +279,50 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public override void RightClick(Player player)
         {
-            var dashPlayer = player.GetModPlayer<Dash_Trigger>();
-
-            // ===== 切换开关 =====
+            Dash_Trigger dashPlayer = player.GetModPlayer<Dash_Trigger>();
             dashPlayer.DashEnabled = !dashPlayer.DashEnabled;
-
-            // ===== 播放提示音 =====
             SoundEngine.PlaySound(SoundID.MenuTick, player.Center);
         }
 
-
         public override bool ConsumeItem(Player player)
         {
-            return false; // ===== 阻止右键把武器当作消耗品吃掉 =====
+            return false;
+        }
+
+        private static bool IsLeftHeld(Player player)
+        {
+            return player.channel &&
+                   (Main.myPlayer != player.whoAmI || Main.mouseLeft) &&
+                   !Main.mapFullscreen &&
+                   !Main.blockMouse;
+        }
+
+        private static bool HasActiveRightClickDash(Player player)
+        {
+            return FindOwnedProjectile(player, ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>()) != null;
+        }
+
+        private static void CancelLeftClickHoldout(Player player)
+        {
+            int holdoutType = ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == holdoutType)
+                    projectile.Kill();
+            }
+        }
+
+        private static Projectile FindOwnedProjectile(Player player, int projectileType)
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == projectileType)
+                    return projectile;
+            }
+
+            return null;
         }
     }
 }
-
-

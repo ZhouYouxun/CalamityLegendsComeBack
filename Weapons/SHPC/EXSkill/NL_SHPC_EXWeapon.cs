@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         // 2 = 激光
         // 3 = 过热
         private int timer;
+        private int exSkyLightningTimer;
 
         private const int ChargeTime = 180;
         private const int LaserTime = 60;
@@ -49,6 +50,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public override bool? CanDamage() => false;
 
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            exSkyLightningTimer = 0;
+        }
+
         #endregion
 
         #region AI
@@ -64,6 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Vector2 armPosition = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
             UpdateProjectileHeldVariables(armPosition);
             ManipulatePlayerVariables();
+            MaintainExoSkyEffects();
 
             switch (state)
             {
@@ -182,9 +189,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private void LaserPhase()
         {
             timer++;
-
-            if (!Main.dedServ)
-                ExoMechsSky.CreateLightningBolt(2);
 
             // ================= 激光循环音效（武器级） =================
             laserSoundTimer++;
@@ -360,6 +364,37 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Owner.itemTime = 2;
             Owner.itemAnimation = 2;
             Owner.itemRotation = (Projectile.velocity * Projectile.direction).ToRotation();
+        }
+
+        private void MaintainExoSkyEffects()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            Owner.Calamity().monolithExoShader = 30;
+
+            if (Main.dedServ)
+                return;
+
+            if (exSkyLightningTimer <= 0)
+            {
+                ExoMechsSky.CreateLightningBolt(10, true);
+                exSkyLightningTimer = 45;
+            }
+
+            exSkyLightningTimer--;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Projectile.owner == Main.myPlayer && Owner.active && !Owner.dead)
+                Owner.Calamity().monolithExoShader = 0;
+
+            if (SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var chargeSound))
+                chargeSound?.Stop();
+
+            if (SoundEngine.TryGetActiveSound(LaserSoundSlot, out var laserSound))
+                laserSound?.Stop();
         }
 
         #endregion

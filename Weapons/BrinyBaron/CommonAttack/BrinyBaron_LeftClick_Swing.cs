@@ -1,12 +1,11 @@
-using System;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -19,291 +18,574 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
         public override int AssignedItemID => ModContent.ItemType<NewLegendBrinyBaron>();
-
-        // =========================
-        // Exposed Tuning
-        // =========================
-        private const float BaseHitboxOutset = 125f;
-        private static readonly Vector2 BaseHitboxSize = new Vector2(190f, 190f);
-        private const float NormalSwooshScale = 0.6f;
-        private const float StageFourSwooshScale = 0.75f;
-        private const float GiantSwooshScale = 1.35f;
-        private const float RightSpinTurnsPerCycle = 2f;
-        private const int RightSpinTransitionFrames = 14;
-        private const int RightSpinClockwiseDirection = 1;
-        private const float RightSpinMaxAngularVelocity = 780f / 32f * MathHelper.Pi / 180f;
-        private const float RightSpinAngularAcceleration = 0.18f;
-        private const int RightSpinHitboxInterval = 8;
-
-        // 0/1/2 = 前三刀普通攻击，3 = 第四刀普通攻击+手里剑，4 = 第五刀巨大化攻击
-        private int CurrentComboStage => swingCount % 5;
-        private bool IsGiantComboStage => CurrentComboStage == 4;
-        private float CurrentVisualScale => currentScale;
-        private float CurrentSwooshScaleMultiplier => IsGiantComboStage ? GiantSwooshScale : (CurrentComboStage == 3 ? StageFourSwooshScale : NormalSwooshScale);
-        private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
-
-        public override float HitboxOutset
-        {
-            get
-            {
-                return BaseHitboxOutset * CurrentVisualScale;
-            }
-        }
-
-        public override Vector2 HitboxSize
-        {
-            get
-            {
-                return BaseHitboxSize * CurrentVisualScale;
-            }
-        }
-
+        public override Vector2 SpriteOrigin => new(0f, 102f);
+        public override float HitboxOutset => 118f;
+        public override Vector2 HitboxSize => new Vector2(182f, 182f);
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
 
-        // 雄祖之护 贴图：124×124（正方形）
-        // 雄祖之护 原点：(0, 124)
-        // 月炎之锋 贴图：100×118（非正方形）
-        // 月炎之锋 原点：(0, 118) 那我这个100×102
-        // 我们的贴图是100×102，因此：
-        public override Vector2 SpriteOrigin => new Vector2(0f, 102f);
+        private const int ComboLength = 8;
+        private const int RightSpinTransitionFrames = 14;
+        private const int RightSpinHitboxInterval = 14;
+        private const float RightSpinMaxAngularVelocity = 6.5f * MathHelper.Pi / 180f;
+        private const float RightSpinAngularAcceleration = 0.09f;
 
-        public Vector2 mousePos;
-        public Vector2 aimVel;
-        public bool doSwing = true;
-        public bool postSwing = false;
-        public float fadeIn = 0f;
-        public int useAnim;
-        public int swingCount;
-        public bool finalFlip = false;
-        public bool swingSound = true;
-        public int armoredHits = 0;
+        private int comboIndex;
+        private int currentStage;
+        private int stageTimer;
+        private int gapTimer;
+        private int stageDuration;
+        private int swingDirection = 1;
+        private bool stageActive;
+        private bool releaseRequested;
+        private bool stageEventFired;
+        private bool swingSoundPlayed;
+        private bool postSwing;
+        private float fadeIn;
+        private float currentRangeScale = 1f;
+        private float currentDrawScale = 1f;
+        private float lengthScale = 1f;
+        private float thicknessScale = 1f;
+        private float currentTiltDegrees;
+        private Vector2 lockedMouseWorld;
+        private Vector2 lockedAimDirection = Vector2.UnitX;
 
-        // 第四刀手里剑
-        private bool spawnedStage4Projectiles = false;
-        private bool spawnedNormalSwingWave = false;
-
-        // 第五刀巨大化专属流程
-        private bool giantGrowing = false;
-        private bool giantSlashing = false;
-        private bool giantShrinking = false;
-        private int giantTimer = 0;
-        private float normalModeScale = 1f;
-        private float giantModeScale = 1.2f;
-        private int giantGrowFrames = 15;
-        private int giantShrinkFrames = 15;
-        private int legendaryGrowthTier = 0;
-        private float currentScale = 0.5f;
-        private bool spawnedInvisibleSwingHitbox = false;
-        private float giantHoldRotationOffset = 0f;
-        private bool rightSpinActive = false;
-        private int rightSpinTimer = 0;
+        private bool rightSpinActive;
+        private int rightSpinTimer;
         private int rightSpinDirection = 1;
-        private int rightSpinOwnerDirection = 1;
-        private int rightSpinLastShurikenTurn = 0;
         private bool rightSpinSound = true;
-        private float rightSpinAngularVelocity = 0f;
-        private float rightSpinAccumulatedRotation = 0f;
-        private int rightSpinTransitionTimer = 0;
-        private float rightSpinTransitionStartOffset = 0f;
+        private float rightSpinAngularVelocity;
+        private int rightSpinTransitionTimer;
+        private float rightSpinTransitionStartOffset;
+
+        private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
 
         public override void SetDefaults()
         {
             base.SetDefaults();
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 16;
             Projectile.DamageType = DamageClass.Melee;
             Projectile.extraUpdates = 0;
+            Projectile.scale = 1f;
         }
 
         public override void WhenSpawned()
         {
-            InitializeLegendaryGrowthValues();
-
-            Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
+            IgnoreActiveAnimation = true;
+            DrawUnconditionally = true;
+            Projectile.timeLeft = 2;
             Projectile.knockBack = 0f;
-            SetCurrentScale(normalModeScale);
             Projectile.ai[1] = -1f;
-            spawnedInvisibleSwingHitbox = false;
-
-            mousePos = Main.MouseWorld;
-            aimVel = (Owner.Center - Main.MouseWorld).SafeNormalize(Vector2.UnitX) * 65f;
-            useAnim = Owner.itemAnimationMax;
-
-            if (mousePos.X < Owner.Center.X)
-                Owner.direction = -1;
-            else
-                Owner.direction = 1;
-
-            FlipAsSword = Owner.direction == -1;
+            currentDrawScale = 1f;
+            currentRangeScale = 1f;
+            lengthScale = 1f;
+            thicknessScale = 1f;
+            UpdateLockedAimFromMouse();
         }
+
+        public override void AI()
+        {
+            if (whenSpawned)
+            {
+                WhenSpawned();
+                whenSpawned = false;
+                Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
+                Projectile.netUpdate = true;
+            }
+
+            if (Owner.HeldItem.type != AssignedItemID || Owner.dead)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Owner.Calamity().mouseWorldListener = true;
+            Owner.Calamity().rightClickListener = true;
+            Animation++;
+            UseStyle();
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffset);
+            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffsetBack);
+
+            int itemAnimationMax = Math.Max(1, Owner.itemAnimationMax);
+            AnimationProgress = Animation % itemAnimationMax;
+
+            if (AbsolutePosition == Vector2.Zero)
+                Projectile.position = Owner.position + Owner.Size / 2f - Projectile.Size / 2f + Offset;
+            else
+            {
+                AbsolutePosition += Projectile.velocity;
+                Projectile.position = AbsolutePosition - Projectile.Size / 2f + Offset;
+            }
+
+            if (AnimationProgress == itemAnimationMax - 1)
+            {
+                OnEndUse();
+                NumberOfAnimations++;
+            }
+
+            if (Owner.itemAnimation == itemAnimationMax - 1)
+            {
+                Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
+                OnBeginUse();
+            }
+
+            Projectile.Center = Owner.MountedCenter;
+            Projectile.scale = 1f;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
+        }
+
+        public override bool? CanDamage() => CanHit;
 
         public override void ResetStyle()
         {
             CanHit = false;
         }
 
-        public override bool? CanDamage() => false;
-
-        // =========================
-        // Scale And Placement Helpers
-        // =========================
-        private void InitializeLegendaryGrowthValues()
+        public override void UseStyle()
         {
-            BB_Balance.BladeGrowthProfile growthProfile = ResolveBladeGrowthProfile();
+            Owner.Calamity().mouseWorldListener = true;
+            Owner.Calamity().rightClickListener = true;
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.itemTime = Math.Max(Owner.itemTime, 2);
+            Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
+            Projectile.Center = Owner.MountedCenter;
 
-            legendaryGrowthTier = growthProfile.GrowthTier;
-            normalModeScale = growthProfile.BladeScale;
-            giantModeScale = growthProfile.BladeScale * growthProfile.GiantScaleFactor;
-            giantGrowFrames = growthProfile.GiantGrowFrames;
-            giantShrinkFrames = growthProfile.GiantShrinkFrames;
+            if (!IsLeftHeld())
+                releaseRequested = true;
+
+            if (!releaseRequested && (rightSpinActive || WantsRightSpin()))
+            {
+                DoRightSpin();
+                ApplyArmRotation();
+                return;
+            }
+
+            if (rightSpinActive)
+            {
+                EndRightSpin();
+                ApplyArmRotation();
+                return;
+            }
+
+            if (!stageActive)
+            {
+                CanHit = false;
+                postSwing = false;
+                fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.25f);
+
+                if (releaseRequested)
+                {
+                    Projectile.Kill();
+                    return;
+                }
+
+                if (gapTimer > 0)
+                {
+                    gapTimer--;
+                    ApplyIdleRotation();
+                    ApplyArmRotation();
+                    return;
+                }
+
+                StartStage();
+                ApplyArmRotation();
+                return;
+            }
+
+            RunStage();
+            ApplyArmRotation();
         }
 
-        private BB_Balance.BladeGrowthProfile ResolveBladeGrowthProfile()
+        private void StartStage()
         {
-            return BB_Balance.GetBladeGrowthProfile();
+            StageProfile profile = GetStageProfile(comboIndex % ComboLength);
+            stageActive = true;
+            currentStage = comboIndex % ComboLength;
+            stageDuration = profile.Duration;
+            stageTimer = 0;
+            stageEventFired = false;
+            swingSoundPlayed = false;
+            postSwing = false;
+            CanHit = false;
+            currentDrawScale = 1f;
+            currentRangeScale = 1f;
+            lengthScale = 1f;
+            thicknessScale = 1f;
+            currentTiltDegrees = profile.Tilted ? (currentStage % 2 == 0 ? -32f : 32f) + Main.rand.NextFloat(-10f, 10f) : 0f;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+                Projectile.localNPCImmunity[i] = 0;
+
+            Projectile.numHits = 0;
+            UpdateLockedAimFromMouse();
+            swingDirection = comboIndex % 2 == 0 ? -1 : 1;
+            Projectile.ai[1] = swingDirection;
+            Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
+            FlipAsSword = Owner.direction == -1;
         }
 
-        private void SetCurrentScale(float scale)
+        private void RunStage()
         {
-            currentScale = scale;
-            Projectile.scale = scale;
+            stageTimer++;
+            StageProfile profile = GetStageProfile(currentStage);
+            int impactFrame = Math.Max(3, (int)(profile.Duration * 0.34f));
+
+            if (stageTimer < impactFrame)
+            {
+                UpdateLockedAimFromMouse();
+                CanHit = false;
+                postSwing = false;
+                fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.32f);
+                lengthScale = 1f;
+                thicknessScale = 1f;
+                currentRangeScale = 1f;
+                Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.24f);
+                RotationOffset = MathHelper.Lerp(
+                    RotationOffset,
+                    MathHelper.ToRadians((118f * swingDirection * Owner.direction) + currentTiltDegrees),
+                    0.18f);
+
+                if (stageTimer >= stageDuration)
+                    EndStage(profile);
+
+                return;
+            }
+
+            if (!postSwing)
+                FlipAsSword = Owner.direction < 0;
+
+            postSwing = true;
+            Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.18f);
+
+            float swingTime = stageTimer - impactFrame;
+            float swingTimeMax = Math.Max(1f, stageDuration - impactFrame);
+            float swingProgress = MathHelper.Clamp(swingTime / swingTimeMax, 0f, 1f);
+            float easedProgress = CalamityUtils.ExpInOutEasing(swingProgress, 1);
+            lengthScale = 1f;
+            thicknessScale = 1f;
+            currentRangeScale = 1f;
+            currentDrawScale = 1f;
+
+            bool hitWindow = swingProgress > 0.12f && swingProgress < 0.74f;
+            CanHit = hitWindow;
+            fadeIn = MathHelper.Lerp(fadeIn, hitWindow ? 1f : 0f, hitWindow ? 0.32f : 0.35f);
+
+            if (swingProgress >= 0.1f && !swingSoundPlayed)
+            {
+                SoundEngine.PlaySound(SoundID.Item71 with { Volume = profile.Kind == ComboKind.FinalWave ? 0.92f : 0.78f, Pitch = Main.rand.NextFloat(0.08f, 0.22f) }, Owner.Center);
+                SoundEngine.PlaySound(SoundID.Splash with { Volume = 0.45f, Pitch = Main.rand.NextFloat(0.08f, 0.22f) }, Owner.Center);
+                swingSoundPlayed = true;
+            }
+
+            if (!stageEventFired && swingProgress >= 0.24f)
+            {
+                FireStageProjectile(profile.Kind);
+                stageEventFired = true;
+            }
+
+            float swingFacing = swingDirection * Owner.direction;
+            RotationOffset = MathHelper.Lerp(
+                RotationOffset,
+                MathHelper.ToRadians(MathHelper.Lerp(145f * swingFacing + currentTiltDegrees, 112f * -swingFacing + currentTiltDegrees, easedProgress)),
+                0.28f);
+
+            if (CanHit)
+                SpawnSwingParticles(profile);
+
+            if (stageTimer >= stageDuration)
+                EndStage(profile);
         }
 
-        private float ScaleDistance(float value) => value * CurrentVisualScale;
-
-        private int GetInvisibleHitboxSize()
+        private void EndStage(StageProfile profile)
         {
-            float squareSize = Math.Max(HitboxSize.X, HitboxSize.Y) + HitboxOutset * 2f;
-            return Math.Max(1, (int)Math.Round(squareSize));
+            stageActive = false;
+            CanHit = false;
+            postSwing = false;
+            stageTimer = 0;
+            comboIndex++;
+            gapTimer = profile.GapFrames;
+
+            if (releaseRequested)
+                Projectile.Kill();
         }
 
-        private void TrySpawnInvisibleSwingHitbox(float progress)
+        private void FireStageProjectile(ComboKind kind)
         {
-            if (spawnedInvisibleSwingHitbox || progress < 0.5f || Main.myPlayer != Projectile.owner)
+            if (Main.myPlayer != Projectile.owner)
                 return;
 
-            int squareSize = GetInvisibleHitboxSize();
-            float encodedScale = IsGiantComboStage ? -CurrentVisualScale : CurrentVisualScale;
-            Vector2 spawnCenter;
-
-            if (IsGiantComboStage)
+            switch (kind)
             {
-                spawnCenter = Owner.Center;
+                case ComboKind.OpeningShuriken:
+                    SpawnOpeningShurikenVolley();
+                    ApplyScreenShake(4.5f);
+                    break;
+                case ComboKind.MediumTornado:
+                    SpawnTornadoBolt();
+                    break;
+                case ComboKind.SmallWater:
+                    SpawnWaterStreams();
+                    break;
+                case ComboKind.FinalWave:
+                    SpawnFinalWave();
+                    ApplyScreenShake(6f);
+                    break;
             }
-            else
-            {
-                Vector2 spawnDirection = (Main.MouseWorld - Projectile.Center).SafeNormalize(SlashAngle.ToRotationVector2());
-                spawnCenter = Projectile.Center + spawnDirection * (squareSize * 0.5f);
-            }
+        }
 
-            int projectileIndex = Projectile.NewProjectile(
+        private void SpawnOpeningShurikenVolley()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            for (int i = 0; i < 5; i++)
+            {
+                float progress = i / 4f;
+                float spread = MathHelper.Lerp(-0.34f, 0.34f, progress);
+                Vector2 velocity = shootDirection.RotatedBy(spread).RotatedByRandom(0.035f) * Main.rand.NextFloat(12.5f, 15.5f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 28f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.44f)),
+                    Projectile.knockBack * 0.45f,
+                    Projectile.owner,
+                    1f);
+            }
+        }
+
+        private void SpawnTornadoBolt()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                spawnCenter,
-                Vector2.Zero,
-                ModContent.ProjectileType<BBSwing_INV>(),
-                Projectile.damage,
+                Owner.MountedCenter + shootDirection * 34f,
+                shootDirection.RotatedByRandom(0.075f) * 16.5f,
+                ModContent.ProjectileType<BrinyBaron_TornadoBolt>(),
+                Math.Max(1, (int)(Projectile.damage * 0.58f)),
+                Projectile.knockBack * 0.65f,
+                Projectile.owner);
+        }
+
+        private void SpawnWaterStreams()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            int count = Main.rand.Next(2, 4);
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 velocity = shootDirection.RotatedBy(Main.rand.NextFloat(-0.34f, 0.34f)) * Main.rand.NextFloat(12f, 15f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 30f + shootDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-16f, 16f),
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_WaterStream>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.34f)),
+                    Projectile.knockBack * 0.35f,
+                    Projectile.owner);
+            }
+        }
+
+        private void SpawnFinalWave()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.MountedCenter + shootDirection * 44f,
+                shootDirection * 12.4f,
+                ModContent.ProjectileType<BBSwing_Wave>(),
+                Math.Max(1, (int)(Projectile.damage * 0.86f)),
                 Projectile.knockBack,
                 Projectile.owner,
-                squareSize,
-                encodedScale,
-                SlashAngle);
+                2.42f,
+                3f);
+        }
 
-            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
+        private void DoRightSpin()
+        {
+            if (!WantsRightSpin())
             {
-                Projectile hitboxProjectile = Main.projectile[projectileIndex];
-                hitboxProjectile.Center = spawnCenter;
-                hitboxProjectile.velocity = Vector2.Zero;
-            }
-
-            spawnedInvisibleSwingHitbox = true;
-        }
-
-        private Vector2 GetSlashOffset(float distance)
-        {
-            return new Vector2(ScaleDistance(distance), 0f).RotatedBy(SlashAngle);
-        }
-
-        private Vector2 GetRandomSlashPosition(float minDistance, float maxDistance)
-        {
-            return Owner.Center + GetSlashOffset(Main.rand.NextFloat(minDistance, maxDistance));
-        }
-
-        private static float EvaluateEarthStyleSwingProgress(float progress)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-            float easedProgress = CalamityUtils.ExpInOutEasing(progress, 1);
-            return MathHelper.Lerp(easedProgress, progress, 0.12f);
-        }
-
-        private static float EvaluateEarthStyleTurnLerp(float progress, float minLerp, float maxLerp)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-            float easedProgress = CalamityUtils.ExpInOutEasing(progress, 1);
-            return MathHelper.Lerp(minLerp * 2f, maxLerp, easedProgress);
-        }
-
-        private static float EvaluateGiantSlashProgress(float progress)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-
-            const float fastStartTime = 0.24f;
-            const float middleEndTime = 0.76f;
-            const float fastStartCoverage = 0.33f;
-            const float middleCoverage = 0.78f;
-
-            if (progress <= fastStartTime)
-            {
-                float startProgress = progress / fastStartTime;
-                startProgress = 1f - (float)Math.Pow(1f - startProgress, 1.55f);
-                return MathHelper.Lerp(0f, fastStartCoverage, startProgress);
-            }
-
-            if (progress <= middleEndTime)
-            {
-                float middleProgress = Utils.GetLerpValue(fastStartTime, middleEndTime, progress, true);
-                middleProgress = middleProgress * middleProgress * (3f - 2f * middleProgress);
-                return MathHelper.Lerp(fastStartCoverage, middleCoverage, middleProgress);
-            }
-
-            float endProgress = Utils.GetLerpValue(middleEndTime, 1f, progress, true);
-            endProgress = CalamityUtils.ExpInOutEasing(endProgress, 1);
-            return MathHelper.Lerp(middleCoverage, 1f, endProgress);
-        }
-
-        private void ApplyEarthStyleRotation(float targetDegrees, float progress, float minLerp, float maxLerp, bool forceAngleLerp = false)
-        {
-            float targetRotation = MathHelper.ToRadians(targetDegrees);
-            float rotationLerp = EvaluateEarthStyleTurnLerp(progress, minLerp, maxLerp);
-
-            if (forceAngleLerp)
-            {
-                RotationOffset = Utils.AngleLerp(RotationOffset, targetRotation, rotationLerp);
+                EndRightSpin();
                 return;
             }
 
-            RotationOffset = MathHelper.Lerp(RotationOffset, targetRotation, rotationLerp);
+            if (!rightSpinActive)
+                StartRightSpin();
+
+            rightSpinTimer++;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.itemTime = Math.Max(Owner.itemTime, 2);
+            Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
+            DrawUnconditionally = true;
+            currentDrawScale = 1f;
+            currentRangeScale = 1f;
+            lengthScale = 1f;
+            thicknessScale = MathHelper.Lerp(thicknessScale, 1f, 0.18f);
+            UpdateLockedAimFromMouse();
+
+            Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
+            FlipAsSword = Owner.direction == -1;
+            Projectile.rotation = Projectile.rotation.AngleLerp(lockedAimDirection.ToRotation() + MathHelper.PiOver4, 0.42f);
+
+            if (rightSpinTransitionTimer < RightSpinTransitionFrames)
+            {
+                rightSpinTransitionTimer++;
+                float transitionProgress = rightSpinTransitionTimer / (float)RightSpinTransitionFrames;
+                float easedTransition = 1f - (float)Math.Pow(1f - transitionProgress, 3f);
+                RotationOffset = Utils.AngleLerp(rightSpinTransitionStartOffset, 0f, easedTransition);
+                rightSpinAngularVelocity = 0f;
+                postSwing = true;
+                CanHit = false;
+                return;
+            }
+
+            float targetAngularVelocity = RightSpinMaxAngularVelocity * rightSpinDirection;
+            rightSpinAngularVelocity = MathHelper.Lerp(rightSpinAngularVelocity, targetAngularVelocity, RightSpinAngularAcceleration);
+            RotationOffset += rightSpinAngularVelocity;
+            postSwing = true;
+            CanHit = false;
+
+            float spinSpeedRatio = MathHelper.Clamp(Math.Abs(rightSpinAngularVelocity) / RightSpinMaxAngularVelocity, 0f, 1f);
+            if (rightSpinTimer % 34 == 1 || (rightSpinSound && spinSpeedRatio > 0.72f))
+            {
+                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.66f, Pitch = Main.rand.NextFloat(-0.08f, 0.08f) }, Projectile.Center);
+                rightSpinSound = false;
+            }
+
+            SpawnRightSpinParticles();
+
+            if (spinSpeedRatio > 0.42f && rightSpinTimer % RightSpinHitboxInterval == 1)
+                SpawnRightSpinHitbox();
         }
 
-        private void ResetSwingState()
+        private void StartRightSpin()
         {
-            giantGrowing = false;
-            giantSlashing = false;
-            giantShrinking = false;
-            giantTimer = 0;
-            spawnedNormalSwingWave = false;
-            spawnedInvisibleSwingHitbox = false;
-            SetCurrentScale(normalModeScale);
-            giantHoldRotationOffset = RotationOffset;
+            stageActive = false;
+            CanHit = false;
+            postSwing = true;
+            rightSpinActive = true;
+            rightSpinTimer = 0;
+            rightSpinDirection = comboIndex % 2 == 0 ? 1 : -1;
+            rightSpinSound = true;
+            rightSpinAngularVelocity = 0f;
+            rightSpinTransitionTimer = 0;
+            rightSpinTransitionStartOffset = RotationOffset;
+            currentDrawScale = 1f;
+            currentRangeScale = 1f;
+            lengthScale = 1f;
+            thicknessScale = 1f;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+                Projectile.localNPCImmunity[i] = 0;
+
+            Projectile.numHits = 0;
+            SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.52f, Pitch = -0.2f }, Owner.Center);
+        }
+
+        private void EndRightSpin()
+        {
             rightSpinActive = false;
             rightSpinTimer = 0;
             rightSpinSound = true;
-            rightSpinOwnerDirection = Owner.direction == 0 ? 1 : Owner.direction;
-            rightSpinLastShurikenTurn = 0;
             rightSpinAngularVelocity = 0f;
-            rightSpinAccumulatedRotation = 0f;
             rightSpinTransitionTimer = 0;
             rightSpinTransitionStartOffset = 0f;
-            Projectile.localNPCHitCooldown = -1;
+            CanHit = false;
+            postSwing = false;
+            gapTimer = 0;
+
+            if (releaseRequested)
+                Projectile.Kill();
+        }
+
+        private void SpawnRightSpinHitbox()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            int squareSize = 260;
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.MountedCenter,
+                Vector2.Zero,
+                ModContent.ProjectileType<BBSwing_INV>(),
+                Math.Max(1, (int)(Projectile.damage * 0.48f)),
+                Projectile.knockBack * 0.5f,
+                Projectile.owner,
+                squareSize,
+                1f,
+                SlashAngle);
+        }
+
+        private void SpawnRightSpinParticles()
+        {
+            Vector2 slashDirection = SlashAngle.ToRotationVector2();
+            Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinDirection);
+            float ringPhase = rightSpinTimer * 0.18f * rightSpinDirection;
+
+            for (int i = 0; i < 3; i++)
+            {
+                float angle = ringPhase + MathHelper.TwoPi * i / 3f + Main.rand.NextFloat(-0.16f, 0.16f);
+                Vector2 orbitDirection = angle.ToRotationVector2();
+                Vector2 spawnPosition = Owner.Center + orbitDirection * Main.rand.NextFloat(72f, 142f);
+                Vector2 velocity = tangentDirection * Main.rand.NextFloat(0.6f, 1.6f) + orbitDirection * Main.rand.NextFloat(0.2f, 0.9f);
+
+                Dust dust = Dust.NewDustPerfect(spawnPosition, Main.rand.NextBool() ? DustID.Water : DustID.Frost, velocity, 100, new Color(90, 205, 255), Main.rand.NextFloat(0.75f, 1.1f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void SpawnSwingParticles(StageProfile profile)
+        {
+            Vector2 slashDirection = SlashAngle.ToRotationVector2();
+            Vector2 right = slashDirection.RotatedBy(MathHelper.PiOver2);
+            float distance = 132f;
+
+            for (int i = 0; i < (profile.Tilted ? 2 : 3); i++)
+            {
+                Vector2 position = Owner.Center + slashDirection * Main.rand.NextFloat(40f, distance) + right * Main.rand.NextFloat(-18f, 18f);
+                Vector2 velocity = -slashDirection.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
+
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    position,
+                    velocity,
+                    false,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.45f, 0.85f),
+                    Main.rand.NextBool(3) ? Color.DeepSkyBlue : Color.Cyan));
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Owner.Center + slashDirection * distance + Main.rand.NextVector2Circular(24f, 24f),
+                    DustID.Water,
+                    -slashDirection.RotatedByRandom(0.4f) * Main.rand.NextFloat(1.2f, 4f),
+                    100,
+                    Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
+                    Main.rand.NextFloat(0.85f, 1.25f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void ApplyIdleRotation()
+        {
+            UpdateLockedAimFromMouse();
+            Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.3f);
+            RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(40f * swingDirection * Owner.direction), 0.18f);
+        }
+
+        private void UpdateLockedAimFromMouse()
+        {
+            lockedMouseWorld = Owner.Calamity().mouseWorld;
+            if (lockedMouseWorld == Vector2.Zero)
+                lockedMouseWorld = Main.MouseWorld;
+
+            lockedAimDirection = (lockedMouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+            Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
+            FlipAsSword = Owner.direction == -1;
         }
 
         private bool WantsRightSpin()
@@ -313,7 +595,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             Owner.Calamity().rightClickListener = true;
             return Owner.Calamity().mouseRight &&
-                   Owner.channel &&
+                   IsLeftHeld() &&
                    !Owner.noItems &&
                    !Owner.CCed &&
                    !Owner.mouseInterface &&
@@ -321,1188 +603,137 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                    !Main.blockMouse;
         }
 
-        private void SpawnNormalSwingWave()
+        private bool IsLeftHeld()
         {
-            Projectile.Center = Owner.Center;
-
-            if (Main.myPlayer != Projectile.owner || CurrentComboStage > 2 || spawnedNormalSwingWave)
-                return;
-
-            Vector2 shootDirection = (Main.MouseWorld - Owner.Center).SafeNormalize(SlashAngle.ToRotationVector2());
-            Vector2 spawnPosition = Owner.Center + shootDirection * ScaleDistance(34f);
-            Vector2 waveVelocity = shootDirection * 11.5f;
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawnPosition,
-                waveVelocity,
-                ModContent.ProjectileType<BBSwing_Wave>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner
-            );
-
-            spawnedNormalSwingWave = true;
+            return Owner.channel &&
+                   (Main.myPlayer != Projectile.owner || Main.mouseLeft) &&
+                   !Main.mapFullscreen &&
+                   !Main.blockMouse;
         }
 
-        private void SpawnSwingScaleAccent(float distance, float intensity)
+        private void ApplyScreenShake(float power)
         {
-            if (!CanHit)
-                return;
-
-            float wave = (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 8f + AnimationProgress * 0.35f);
-            Vector2 slashDirection = SlashAngle.ToRotationVector2();
-            Vector2 perpendicular = slashDirection.RotatedBy(MathHelper.PiOver2);
-            Vector2 accentCenter = Owner.Center + GetSlashOffset(distance);
-
-            for (int side = -1; side <= 1; side += 2)
-            {
-                Vector2 accentPosition = accentCenter + perpendicular * side * ScaleDistance(8f + 4f * wave);
-                Vector2 accentVelocity = slashDirection * (1.2f + 0.25f * intensity) + perpendicular * side * 0.25f;
-
-                GeneralParticleHandler.SpawnParticle(
-                    new GlowOrbParticle(
-                        accentPosition,
-                        accentVelocity,
-                        false,
-                        12,
-                        CurrentVisualScale * (0.35f + 0.1f * intensity),
-                        side < 0 ? Color.DeepSkyBlue : Color.Cyan,
-                        true,
-                        false,
-                        true
-                    )
-                );
-            }
+            float distanceFactor = Utils.GetLerpValue(1200f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor);
         }
 
-        private void SpawnRightSpinHitbox()
+        private void ApplyArmRotation()
         {
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            int squareSize = Math.Max(GetInvisibleHitboxSize(), (int)ScaleDistance(250f));
-            int projectileIndex = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Owner.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<BBSwing_INV>(),
-                Math.Max(1, (int)(Projectile.damage * 0.48f)),
-                Projectile.knockBack * 0.5f,
-                Projectile.owner,
-                squareSize,
-                CurrentVisualScale,
-                SlashAngle);
-
-            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
-            {
-                Projectile hitboxProjectile = Main.projectile[projectileIndex];
-                hitboxProjectile.Center = Owner.Center;
-                hitboxProjectile.timeLeft = 2;
-                hitboxProjectile.localNPCHitCooldown = 18;
-            }
-        }
-
-        private void SpawnRightSpinShuriken()
-        {
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            float launchAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-            Vector2 radialDirection = launchAngle.ToRotationVector2();
-            Vector2 tangentDirection = radialDirection.RotatedBy(MathHelper.PiOver2 * rightSpinDirection);
-            Vector2 spawnPosition = Owner.Center + radialDirection * ScaleDistance(Main.rand.NextFloat(38f, 62f));
-            Vector2 velocity = radialDirection * Main.rand.NextFloat(9.5f, 13.5f) +
-                               tangentDirection * Main.rand.NextFloat(1.5f, 3.5f);
-            velocity = velocity.SafeNormalize(radialDirection) * Main.rand.NextFloat(11f, 15f);
-
-            int projectileIndex = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawnPosition,
-                velocity,
-                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
-                Math.Max(1, (int)(Projectile.damage * 0.42f)),
-                Projectile.knockBack * 0.45f,
-                Projectile.owner,
-                1f);
-
-            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
-            {
-                Projectile shuriken = Main.projectile[projectileIndex];
-                shuriken.timeLeft = Math.Min(shuriken.timeLeft, 150);
-                shuriken.netUpdate = true;
-            }
-        }
-
-        private void SpawnRightSpinShurikenBurst()
-        {
-            for (int i = 0; i < 3; i++)
-                SpawnRightSpinShuriken();
-        }
-
-        private int GetEarthSpinUseAnim() => Math.Max(1, Owner.itemAnimationMax * 2);
-
-        private static float GetEarthSpinSlashDelay(float spinUseAnim) => spinUseAnim / 2.5f;
-
-        private static float GetEarthSpinSlashTimeMax(float spinUseAnim) => spinUseAnim - GetEarthSpinSlashDelay(spinUseAnim);
-
-        private void ApplyEarthDoubleSpinRotation(float animationProgress, int completedCycles, float swingDirection, int spinUseAnim)
-        {
-            float cycleBase = -360f * RightSpinTurnsPerCycle * swingDirection * completedCycles;
-
-            if (animationProgress < spinUseAnim / 7f)
-            {
-                float windupPower = 1f + Utils.GetLerpValue(spinUseAnim * 0.35f, spinUseAnim * 0.6f, animationProgress, true) * 0.25f;
-                RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(cycleBase + 120f * swingDirection * windupPower), 0.2f);
-                return;
-            }
-
-            float slashDelay = GetEarthSpinSlashDelay(spinUseAnim);
-            float slashTimeMax = GetEarthSpinSlashTimeMax(spinUseAnim);
-            float time = animationProgress - slashDelay;
-            float progress = MathHelper.Clamp(time / slashTimeMax, 0f, 1f);
-            float start = cycleBase + 150f * swingDirection;
-            float end = start - 360f * RightSpinTurnsPerCycle * swingDirection;
-            float targetRotation = MathHelper.ToRadians(MathHelper.Lerp(start, end, CalamityUtils.ExpInOutEasing(progress, 1)));
-
-            RotationOffset = MathHelper.Lerp(RotationOffset, targetRotation, 0.2f);
-        }
-
-        private void SpawnRightSpinParticles()
-        {
-            if (!CanHit)
-                return;
-
-            Vector2 slashDirection = SlashAngle.ToRotationVector2();
-            Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinDirection);
-            float ringPhase = rightSpinTimer * 0.34f * rightSpinDirection;
-
-            for (int i = 0; i < 4; i++)
-            {
-                float angle = ringPhase + MathHelper.TwoPi * i / 4f + Main.rand.NextFloat(-0.16f, 0.16f);
-                Vector2 orbitDirection = angle.ToRotationVector2();
-                Vector2 spawnPosition = Owner.Center + orbitDirection * ScaleDistance(Main.rand.NextFloat(72f, 154f));
-                Vector2 velocity = tangentDirection * Main.rand.NextFloat(1.3f, 2.9f) +
-                                   orbitDirection * Main.rand.NextFloat(0.4f, 1.4f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    spawnPosition,
-                    Main.rand.NextBool() ? DustID.Frost : DustID.Water,
-                    velocity,
-                    0,
-                    default,
-                    Main.rand.NextFloat(0.9f, 1.35f) * CurrentVisualScale);
-                dust.noGravity = true;
-                dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 glowPosition = Owner.Center + (ringPhase + Main.rand.NextFloat(-0.2f, 0.2f)).ToRotationVector2() * ScaleDistance(135f);
-                GeneralParticleHandler.SpawnParticle(
-                    new GlowOrbParticle(
-                        glowPosition,
-                        tangentDirection * Main.rand.NextFloat(0.8f, 1.8f),
-                        false,
-                        12,
-                        CurrentVisualScale * 0.4f,
-                        Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
-                        true,
-                        false,
-                        true
-                    )
-                );
-            }
-        }
-
-        private void DoRightSpin()
-        {
-            bool keepSpinning = WantsRightSpin();
-            if (!keepSpinning)
-            {
-                if (!Owner.channel)
-                {
-                    Projectile.Kill();
-                    return;
-                }
-
-                rightSpinActive = false;
-                rightSpinTimer = 0;
-                rightSpinSound = true;
-                rightSpinLastShurikenTurn = 0;
-                rightSpinAngularVelocity = 0f;
-                rightSpinAccumulatedRotation = 0f;
-                rightSpinTransitionTimer = 0;
-                rightSpinTransitionStartOffset = 0f;
-                Projectile.localNPCHitCooldown = -1;
-                CanHit = false;
-                postSwing = false;
-                doSwing = false;
-                return;
-            }
-
-            if (!rightSpinActive)
-            {
-                rightSpinActive = true;
-                rightSpinTimer = 0;
-                rightSpinOwnerDirection = Owner.direction == 0 ? 1 : Owner.direction;
-                rightSpinDirection = RightSpinClockwiseDirection;
-                rightSpinLastShurikenTurn = 0;
-                rightSpinSound = true;
-                rightSpinAngularVelocity = 0f;
-                rightSpinAccumulatedRotation = 0f;
-                rightSpinTransitionTimer = 0;
-                rightSpinTransitionStartOffset = RotationOffset;
-                spawnedInvisibleSwingHitbox = false;
-                giantGrowing = false;
-                giantSlashing = false;
-                giantShrinking = false;
-                giantTimer = 0;
-
-                for (int i = 0; i < Main.maxNPCs; i++)
-                    Projectile.localNPCImmunity[i] = 0;
-
-                Projectile.numHits = 0;
-                SetCurrentScale(normalModeScale * 1.08f);
-                Projectile.localNPCHitCooldown = 8;
-            }
-
-            rightSpinTimer++;
-            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
-            Projectile.Center = Owner.Center;
-            Owner.heldProj = Projectile.whoAmI;
-            Owner.itemTime = Math.Max(Owner.itemTime, 2);
-            Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
-            DrawUnconditionally = true;
-            SetCurrentScale(MathHelper.Lerp(CurrentVisualScale, normalModeScale * 1.08f, 0.22f));
-
-            Vector2 mouseWorld = Owner.Calamity().mouseWorld;
-            if (mouseWorld == Vector2.Zero)
-                mouseWorld = Main.MouseWorld;
-
-            Vector2 aimDirection = (mouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
-            if (aimDirection == Vector2.Zero)
-                aimDirection = Vector2.UnitX * rightSpinOwnerDirection;
-
-            mousePos = mouseWorld;
-            aimVel = -aimDirection * 65f;
-            Owner.direction = aimDirection.X >= 0f ? 1 : -1;
-            FlipAsSword = Owner.direction == -1;
-            Projectile.rotation = Projectile.rotation.AngleLerp(aimDirection.ToRotation() + MathHelper.ToRadians(45f), 0.42f);
-
-            if (rightSpinTransitionTimer < RightSpinTransitionFrames)
-            {
-                rightSpinTransitionTimer++;
-                float transitionProgress = rightSpinTransitionTimer / (float)RightSpinTransitionFrames;
-                float easedTransition = 1f - (float)Math.Pow(1f - transitionProgress, 3f);
-                RotationOffset = Utils.AngleLerp(rightSpinTransitionStartOffset, 0f, easedTransition);
-                rightSpinAngularVelocity = 0f;
-                rightSpinAccumulatedRotation = 0f;
-                rightSpinLastShurikenTurn = 0;
-                CanHit = false;
-                postSwing = true;
-
-                if (rightSpinTransitionTimer >= RightSpinTransitionFrames)
-                    RotationOffset = 0f;
-
-                return;
-            }
-
-            float targetAngularVelocity = RightSpinMaxAngularVelocity * rightSpinDirection;
-            rightSpinAngularVelocity = MathHelper.Lerp(rightSpinAngularVelocity, targetAngularVelocity, RightSpinAngularAcceleration);
-            RotationOffset += rightSpinAngularVelocity;
-            rightSpinAccumulatedRotation += Math.Abs(rightSpinAngularVelocity);
-
-            float spinSpeedRatio = MathHelper.Clamp(Math.Abs(rightSpinAngularVelocity) / RightSpinMaxAngularVelocity, 0f, 1f);
-            CanHit = spinSpeedRatio > 0.32f;
-            postSwing = true;
-
-            if (rightSpinTimer % 30 == 1 || (rightSpinSound && spinSpeedRatio > 0.72f))
-            {
-                SoundEngine.PlaySound(
-                    SoundID.Item71 with
-                    {
-                        Volume = 0.8f,
-                        Pitch = Main.rand.NextFloat(-0.08f, 0.08f)
-                    },
-                    Projectile.Center);
-                rightSpinSound = false;
-            }
-
-            int completedTurns = (int)(rightSpinAccumulatedRotation / MathHelper.TwoPi);
-            while (rightSpinLastShurikenTurn < completedTurns)
-            {
-                rightSpinLastShurikenTurn++;
-                SpawnRightSpinShurikenBurst();
-            }
-
-            SpawnRightSpinParticles();
-
-            if (CanHit && rightSpinTimer % RightSpinHitboxInterval == 1)
-                SpawnRightSpinHitbox();
-        }
-
-        public override void UseStyle()
-        {
-            Owner.Calamity().mouseWorldListener = true;
-            Owner.Calamity().rightClickListener = true;
-            AnimationProgress = Animation % useAnim;
-            DrawUnconditionally = false;
-
-            if (CanHit || postSwing)
-                mousePos = Owner.Center - aimVel;
-            else
-                mousePos = Main.MouseWorld;
-
-            if (CanHit)
-                fadeIn = MathHelper.Lerp(fadeIn, 1f, 0.3f);
-            else
-                fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.35f);
-
-            if (!doSwing)
-            {
-                for (int i = 0; i < Main.maxNPCs; i++)
-                    Projectile.localNPCImmunity[i] = 0;
-
-                Projectile.numHits = 0;
-                mousePos = Main.MouseWorld;
-                aimVel = (Owner.Center - Main.MouseWorld).SafeNormalize(Vector2.UnitX) * 65f;
-                CanHit = false;
-
-                if (mousePos.X < Owner.Center.X)
-                    Owner.direction = -1;
-                else
-                    Owner.direction = 1;
-
-                FlipAsSword = Owner.direction == -1;
-
-                doSwing = true;
-                swingCount++;
-                finalFlip = false;
-                swingSound = true;
-                armoredHits = 0;
-                rightSpinActive = false;
-                rightSpinTimer = 0;
-                rightSpinSound = true;
-                rightSpinLastShurikenTurn = 0;
-                rightSpinAngularVelocity = 0f;
-                rightSpinAccumulatedRotation = 0f;
-                rightSpinTransitionTimer = 0;
-                rightSpinTransitionStartOffset = 0f;
-                Projectile.localNPCHitCooldown = -1;
-                spawnedStage4Projectiles = false;
-
-                // 第五刀状态重置
-                ResetSwingState();
-            }
-            else
-            {
-                if (!CanHit && !postSwing)
-                {
-                    if (mousePos.X < Owner.Center.X)
-                        Owner.direction = -1;
-                    else
-                        Owner.direction = 1;
-                }
-                else
-                {
-                    if ((Owner.Center - aimVel).X < Owner.Center.X)
-                        Owner.direction = -1;
-                    else
-                        Owner.direction = 1;
-                }
-
-                // 转动速度的核心
-                bool rightSpinRequested = rightSpinActive || WantsRightSpin();
-
-                if (rightSpinRequested)
-                {
-                    DoRightSpin();
-                    ArmRotationOffset = MathHelper.ToRadians(-140f);
-                    ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
-                    return;
-                }
-
-                Projectile.rotation = Projectile.rotation.AngleLerp(
-                    Owner.AngleTo(mousePos) + MathHelper.ToRadians(45f),
-                    0.5f // 更改转动速度的快慢
-                );
-
-                // =========================
-                // 第五刀：放大 → 挥砍 → 缩小
-                // =========================
-                if (IsGiantComboStage)
-                {
-                    DoGiantSwing();
-                }
-                else
-                {
-                    DoNormalSwing();
-                }
-            }
-
-
-
-
-            // =========================
-            // 手臂抓取角度（贴手校准）
-            // =========================
-            // 雄祖之护（GrandDad）：
-            // - 贴图：124×124（正方形）
-            // - 原点：(0, 124)
-            // - ArmRotationOffset：-140°（完全贴手，无偏移）
-            //
-            // 月炎之锋（StellarStriker）：
-            // - 贴图：100×118（非正方形）
-            // - 原点：(0, 118)
-            // - ArmRotationOffset：-140°（依然贴手，说明该值是“标准模板角度”）
-            //
-            // 我们当前武器：
-            // - 贴图：100×102（非正方形）
-            // - 原点：(0, 102)
-            // - 当前问题：
-            //   已经通过 SpriteOrigin 修正了“旋转轴”
-            //   但由于贴图高度缩短，刀柄在贴图中的相对位置发生变化
-            //   → 导致玩家手抓点与刀柄存在固定偏移
-            //
-            // 结论：
-            // - ArmRotationOffset = -140° 是“标准武器模板值”
-            // - 但当贴图高度变化（尤其变短）时：
-            //   需要微调这个角度，让“手抓刀柄”重新对齐
-            //
-            // 调整方向：
-            // - 如果刀“离手偏远” → 提高角度（-140 → -130）
-            // - 如果刀“压进身体” → 降低角度（-140 → -150）
-            //
-            // 当前武器建议微调范围：
-            // -135° ~ -145°
-            //
-            // ⚠️ 注意：
-            // - 这里不是控制挥舞轨迹（RotationOffset）
-            // - 这里只控制“手抓刀的位置”
-            //
-            // =========================
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
         }
 
-        // =========================
-        // Normal Swing
-        // =========================
-        private void DoNormalSwing()
-        {
-            SetCurrentScale(normalModeScale);
-
-            if (AnimationProgress < (useAnim / 1.5f))
-            {
-                aimVel = (Owner.Center - Main.MouseWorld).SafeNormalize(Vector2.UnitX) * 65f;
-                CanHit = false;
-                postSwing = false;
-
-                if (AnimationProgress == 0)
-                {
-                    doSwing = false;
-                    Projectile.ai[1] = -Projectile.ai[1];
-                }
-
-
-
-                // 这里决定的是整体的挥动角度，角度越大，挥动的角度越大
-                // GrandDad：ToRadians(120f
-                // StellarStriker：ToRadians(-45f
-                float windupProgress = Utils.GetLerpValue(0f, useAnim / 1.5f, AnimationProgress, true);
-                float windupTargetAngle = 118f * Projectile.ai[1] * Owner.direction *
-                    (1f + Utils.GetLerpValue(useAnim * 0.35f, useAnim * 0.6f, Animation, true) * 0.22f);
-
-                ApplyEarthStyleRotation(windupTargetAngle, windupProgress, 0.18f, 0.2f);
-            }
-            else
-            {
-                if (!finalFlip)
-                    FlipAsSword = Owner.direction < 0;
-
-                float time = AnimationProgress - (useAnim / 3f);
-                float timeMax = useAnim - (useAnim / 3f);
-                float linearSlashProgress = Utils.GetLerpValue(0f, timeMax, time, true);
-                float slashProgress = EvaluateGiantSlashProgress(linearSlashProgress);
-                TrySpawnInvisibleSwingHitbox(linearSlashProgress);
-
-                if (time >= (int)(timeMax * 0.4f) && swingSound)
-                {
-                    SoundEngine.PlaySound(
-                        SoundID.Item71 with
-                        {
-                            Volume = 0.8f,
-                            Pitch = Main.rand.NextFloat(0.12f, 0.22f)
-                        },
-                        Projectile.Center
-                    );
-
-                    SoundEngine.PlaySound(
-                        SoundID.Splash with
-                        {
-                            Volume = 0.45f,
-                            Pitch = Main.rand.NextFloat(0.15f, 0.25f)
-                        },
-                        Projectile.Center
-                    );
-
-                    swingSound = false;
-                }
-
-                float hitStart = timeMax * 0.28f;
-                float hitEnd = timeMax * 0.78f;
-
-                if (time >= hitStart && time <= hitEnd)
-                {
-                    CanHit = true;
-                    SpawnNormalSwingWave();
-
-                    for (int i = 0; i < 3; i++)
-                    {
-                        Vector2 particleVel = new Vector2(0f, 10f * -Projectile.ai[1] * Owner.direction)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
-
-                        Vector2 particlePos = GetRandomSlashPosition(30f, CurrentComboStage == 3 ? 210f : 165f);
-
-                        GeneralParticleHandler.SpawnParticle(
-                            new LineParticle(
-                                particlePos,
-                                -particleVel.RotatedByRandom(0.2f) * 2f,
-                                false,
-                                19,
-                                Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
-                                Main.rand.NextBool(4) ? Color.DeepSkyBlue : Color.Cyan
-                            )
-                        );
-
-                        GeneralParticleHandler.SpawnParticle(
-                            new HeavySmokeParticle(
-                                particlePos,
-                                -particleVel.RotatedByRandom(0.2f) * 2f,
-                                Main.rand.NextBool(4) ? Color.MediumBlue : Color.Teal,
-                                23,
-                                Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
-                                0.65f
-                            )
-                        );
-                    }
-
-                    // 第四刀：正常大小攻击 + 放手里剑
-                    if (CurrentComboStage == 3 && !spawnedStage4Projectiles && Main.myPlayer == Projectile.owner)
-                    {
-                        Vector2 shootDir = (Main.MouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX);
-                        int tideValue = Owner.GetModPlayer<BBEXPlayer>().TideValue;
-                        int shurikenCount = BB_Balance.GetShurikenVolleyCount(tideValue);
-
-                        for (int i = 0; i < shurikenCount; i++)
-                        {
-                            float progress = shurikenCount <= 1 ? 0.5f : i / (float)(shurikenCount - 1);
-                            float spread = MathHelper.Lerp(-0.2f, 0.2f, progress);
-                            float speed = 12f + i * 1.8f;
-                            Vector2 velocity = shootDir.RotatedBy(spread).RotatedByRandom(0.04f) * speed;
-
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                Owner.Center + shootDir * ScaleDistance(24f),
-                                velocity,
-                                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
-                                Projectile.damage,
-                                Projectile.knockBack,
-                                Projectile.owner,
-                                2f
-                            );
-                        }
-
-                        spawnedStage4Projectiles = true;
-                    }
-                }
-                else
-                {
-                    CanHit = false;
-                }
-
-                ApplyEarthStyleRotation(
-                    MathHelper.Lerp(
-                        150f * Projectile.ai[1] * Owner.direction,
-                        120f * -Projectile.ai[1] * Owner.direction,
-                        slashProgress
-                    ),
-                    linearSlashProgress,
-                    0.2f,
-                    0.2f,
-                    linearSlashProgress > 0.8f
-                );
-
-                if (time >= timeMax)
-                    doSwing = false;
-
-                if (time < (int)(timeMax * 0.7f))
-                    postSwing = true;
-
-                if (CanHit)
-                {
-                    float dustDistance = CurrentComboStage == 3 ? 225f : 180f;
-
-                    for (int i = 0; i < 6; i++)
-                    {
-                        Vector2 spawnPos = Owner.Center + GetSlashOffset(dustDistance).RotatedByRandom(0.3f);
-
-                        if (Main.rand.NextBool(3))
-                        {
-                            Dust dust = Dust.NewDustPerfect(
-                                spawnPos,
-                                DustID.Water,
-                                Vector2.Zero,
-                                0,
-                                default,
-                                Main.rand.NextFloat(1.15f, 1.5f) * CurrentVisualScale
-                            );
-                            dust.noGravity = true;
-                            dust.color = Color.DeepSkyBlue;
-
-                            GeneralParticleHandler.SpawnParticle(
-                                new GlowOrbParticle(
-                                    spawnPos,
-                                    Vector2.Zero,
-                                    false,
-                                    23,
-                                    Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
-                                    Color.DarkBlue,
-                                    false,
-                                    false,
-                                    false
-                                )
-                            );
-                        }
-                        else
-                        {
-                            Dust dust = Dust.NewDustPerfect(
-                                spawnPos,
-                                DustID.Frost,
-                                Vector2.Zero,
-                                0,
-                                default,
-                                Main.rand.NextFloat(1.15f, 1.5f) * CurrentVisualScale
-                            );
-                            dust.noGravity = true;
-                            dust.color = Color.Cyan;
-
-                            GeneralParticleHandler.SpawnParticle(
-                                new GlowOrbParticle(
-                                    spawnPos,
-                                    Vector2.Zero,
-                                    false,
-                                    23,
-                                    Main.rand.NextFloat(0.5f, 1f) * CurrentVisualScale,
-                                    Main.rand.NextBool(4) ? Color.DeepSkyBlue : Color.Cyan
-                                )
-                            );
-                        }
-                    }
-
-                    for (int i = 0; i < 3; i++)
-                    {
-                        float randRot = Main.rand.NextFloat(-30f, -60f);
-                        Vector2 dustVel = new Vector2(0f, 15f * -Projectile.ai[1] * Owner.direction)
-                            .RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
-
-                        Dust dust2 = Dust.NewDustPerfect(
-                            Owner.Center + GetSlashOffset(dustDistance + 5f).RotatedByRandom(0.3f),
-                            DustID.FireworksRGB,
-                            dustVel * Main.rand.NextFloat(0.1f, 0.5f)
-                        );
-
-                        dust2.scale = Main.rand.NextFloat(0.55f, 1.05f) * CurrentVisualScale;
-                        dust2.noGravity = true;
-                        dust2.color = Main.rand.NextBool(3) ? Color.LightSeaGreen : Color.Aqua;
-                    }
-
-                    SpawnSwingScaleAccent(dustDistance, CurrentComboStage == 3 ? 1.25f : 1f);
-                }
-            }
-        }
-
-        // =========================
-        // Giant Swing
-        // =========================
-        private void DoGiantSwing()
-        {
-            if (!finalFlip)
-                FlipAsSword = Owner.direction < 0;
-
-            // 进入第五刀时，先卡在后方角度并开始放大
-            if (!giantGrowing && !giantSlashing && !giantShrinking)
-            {
-                giantGrowing = true;
-                giantTimer = 0;
-                SetCurrentScale(normalModeScale);
-                CanHit = false;
-                postSwing = false;
-                swingSound = true;
-                giantHoldRotationOffset = RotationOffset;
-            }
-
-            // 放大阶段
-            if (giantGrowing)
-            {
-                giantTimer++;
-                float growProgress = EvaluateEarthStyleSwingProgress(Utils.GetLerpValue(0f, giantGrowFrames, giantTimer, true));
-
-                SetCurrentScale(MathHelper.Lerp(normalModeScale, giantModeScale, growProgress));
-                CanHit = false;
-                postSwing = false;
-                RotationOffset = giantHoldRotationOffset;
-
-                SpawnGiantChargeParticles(growProgress);
-
-                if (giantTimer >= giantGrowFrames)
-                {
-                    giantGrowing = false;
-                    giantSlashing = true;
-                    giantTimer = 0;
-                }
-
-                return;
-            }
-
-            // 挥砍阶段：速度和普通挥砍一致
-            if (giantSlashing)
-            {
-                giantTimer++;
-
-
-                // 然后是巨大化攻击的特效部分
-                {
-                    Vector2 slashDirection = (FinalRotation + MathHelper.ToRadians(-45f)).ToRotationVector2();
-                    Vector2 right = slashDirection.RotatedBy(MathHelper.PiOver2);
-
-                    float sideWave = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
-
-                    // =========================
-                    // 核心中心闪光（稳定锚点）
-                    // =========================
-                    Particle centerFlare = new CustomSpark(
-                        Projectile.Center + right * sideWave * ScaleDistance(150f),
-                        slashDirection * 0.02f,
-                        "CalamityLegendsComeBack/Texture/KsTexture/window_04",
-                        false,
-                        10,
-                        0.26f * CurrentVisualScale,
-                        new Color(160, 242, 255) * 1.96f,
-                        new Vector2(0.56f, 2.15f),
-                        glowCenter: true,
-                        shrinkSpeed: 1.2f,
-                        glowCenterScale: 0.92f,
-                        glowOpacity: 0.72f
-                    );
-                    //GeneralParticleHandler.SpawnParticle(centerFlare);
-
-                    // =========================
-                    // 刀身线（贴刀，不超前）
-                    // =========================
-                    Vector2 tip = Owner.Center + slashDirection * ScaleDistance(120f);
-
-                    Particle customLine = new CustomSpark(
-                        tip + right * sideWave * ScaleDistance(6f),
-                        slashDirection * 0.03f,
-                        "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
-                        false,
-                        2,
-                        0.16f * CurrentVisualScale,
-                        new Color(160, 242, 255) * 0.96f,
-                        new Vector2(0.56f, 1.2f), // 👉 已压短
-                        glowCenter: true,
-                        shrinkSpeed: 1.2f,
-                        glowCenterScale: 0.92f,
-                        glowOpacity: 0.72f
-                    );
-                    GeneralParticleHandler.SpawnParticle(customLine);
-
-                    // =========================
-                    // 中间填充（轻量 BloomCircle，不外扩）
-                    // =========================
-                    for (int i = 0; i < 6; i++)
-                    {
-                        float t = i / 5f;
-
-                        Vector2 pos =
-                            Owner.Center +
-                            slashDirection * ScaleDistance(40f + t * 80f) +
-                            right * Main.rand.NextFloat(-6f, 6f) * CurrentVisualScale;
-
-                        Vector2 vel =
-                            -slashDirection * Main.rand.NextFloat(1f, 3f) +
-                            right * Main.rand.NextFloat(-1f, 1f);
-
-                        GeneralParticleHandler.SpawnParticle(
-                            new CustomSpark(
-                                pos,
-                                vel,
-                                "CalamityMod/Particles/BloomCircle",
-                                false,
-                                14,
-                                Main.rand.NextFloat(0.18f, 0.32f) * CurrentVisualScale,
-                                Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
-                                new Vector2(0.9f, 0.5f), // 👉 扁平一点
-                                shrinkSpeed: 0.95f
-                            )
-                        );
-                    }
-                }
-
-
-
-
-
-
-
-
-
-
-
-                int spinUseAnim = GetEarthSpinUseAnim();
-                float animationProgress = Math.Min(giantTimer - 1, spinUseAnim - 1);
-                float slashTimeMax = GetEarthSpinSlashTimeMax(spinUseAnim);
-                float time = animationProgress - GetEarthSpinSlashDelay(spinUseAnim);
-                float linearSlashProgress = Utils.GetLerpValue(0f, spinUseAnim, animationProgress, true);
-                float swingDirection = Projectile.ai[1] * Owner.direction;
-                
-                TrySpawnInvisibleSwingHitbox(linearSlashProgress);
-                ApplyEarthDoubleSpinRotation(animationProgress, 0, swingDirection, spinUseAnim);
-
-                if (time >= (int)(slashTimeMax * 0.4f) && swingSound)
-                {
-                    SoundEngine.PlaySound(
-                        SoundID.Item71 with
-                        {
-                            Volume = 0.95f,
-                            Pitch = Main.rand.NextFloat(0.05f, 0.15f)
-                        },
-                        Projectile.Center
-                    );
-
-                    SoundEngine.PlaySound(
-                        SoundID.Item84 with
-                        {
-                            Volume = 0.7f,
-                            Pitch = -0.1f
-                        },
-                        Projectile.Center
-                    );
-
-                    swingSound = false;
-                }
-
-                if (time > (int)(slashTimeMax * 0.45f) && time < (int)(slashTimeMax * 0.9f))
-                {
-                    CanHit = true;
-                    postSwing = true;
-                    SpawnGiantSlashParticles();
-                    SpawnSwingScaleAccent(220f, 1.5f);
-                }
-                else
-                    CanHit = false;
-
-                if (time < (int)(slashTimeMax * 0.7f))
-                    postSwing = true;
-
-                if (giantTimer >= spinUseAnim)
-                {
-                    giantSlashing = false;
-                    giantShrinking = true;
-                    giantTimer = 0;
-                    CanHit = false;
-                    postSwing = false;
-                }
-
-                return;
-            }
-
-            // 缩小阶段
-            if (giantShrinking)
-            {
-                giantTimer++;
-                float shrinkProgress = EvaluateEarthStyleSwingProgress(Utils.GetLerpValue(0f, giantShrinkFrames, giantTimer, true));
-
-                SetCurrentScale(MathHelper.Lerp(giantModeScale, normalModeScale, shrinkProgress));
-                CanHit = false;
-                postSwing = false;
-
-                float swingDirection = Projectile.ai[1] * Owner.direction;
-                float slashEnd = 150f * swingDirection - 360f * RightSpinTurnsPerCycle * swingDirection;
-                RotationOffset = MathHelper.ToRadians(slashEnd);
-
-                SpawnGiantShrinkParticles(shrinkProgress);
-
-                if (giantTimer >= giantShrinkFrames)
-                {
-                    giantShrinking = false;
-                    SetCurrentScale(normalModeScale);
-                    doSwing = false;
-                }
-            }
-        }
-
-        // =========================
-        // Effects
-        // =========================
-        private void SpawnGiantChargeParticles(float growProgress)
-        {
-            //float scaledDistance = ScaleDistance(MathHelper.Lerp(120f, 260f, growProgress));
-
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    Vector2 particleVel = new Vector2(0f, 8f * -Projectile.ai[1] * Owner.direction)
-            //        .RotatedBy(FinalRotation + MathHelper.ToRadians(-45f));
-
-            //    Vector2 particlePos = Owner.Center +
-            //        new Vector2(Main.rand.NextFloat(30f * CurrentVisualScale, scaledDistance), 0f)
-            //        .RotatedBy(SlashAngle);
-
-            //    GeneralParticleHandler.SpawnParticle(
-            //        new LineParticle(
-            //            particlePos,
-            //            -particleVel.RotatedByRandom(0.2f) * MathHelper.Lerp(1.2f, 2.2f, growProgress),
-            //            false,
-            //            19,
-            //            Main.rand.NextFloat(0.6f, 1.2f) * CurrentVisualScale * 0.6f,
-            //            Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan
-            //        )
-            //    );
-
-            //    Dust frost = Dust.NewDustPerfect(
-            //        particlePos,
-            //        DustID.Frost,
-            //        -particleVel.RotatedByRandom(0.25f) * Main.rand.NextFloat(0.4f, 1.1f)
-            //    );
-            //    frost.noGravity = true;
-            //    frost.scale = Main.rand.NextFloat(1.0f, 1.6f) * CurrentVisualScale * 0.5f;
-            //    frost.color = Color.Aqua;
-            //}
-        }
-
-        private void SpawnGiantSlashParticles()
-        {
-            //float dustDistance = ScaleDistance(180f);
-
-            //for (int i = 0; i < 12; i++)
-            //{
-            //    Vector2 spawnPos = Owner.Center +
-            //        new Vector2(dustDistance, 0f)
-            //        .RotatedBy(SlashAngle)
-            //        .RotatedByRandom(0.3f);
-
-            //    Dust dust = Dust.NewDustPerfect(
-            //        spawnPos,
-            //        Main.rand.NextBool() ? DustID.GemSapphire : DustID.Frost,
-            //        Vector2.One.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(0.3f, 1.1f)
-            //    );
-            //    dust.noGravity = true;
-            //    dust.scale = Main.rand.NextFloat(1.3f, 2.4f) * CurrentVisualScale * 0.5f;
-            //    dust.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
-            //}
-
-            //for (int i = 0; i < 6; i++)
-            //{
-            //    float randRot = Main.rand.NextFloat(-20f, -100f);
-            //    Vector2 dustVel = new Vector2(0f, 11f * -Projectile.ai[1] * Owner.direction)
-            //        .RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
-
-            //    Vector2 placement = Owner.Center +
-            //        new Vector2(Main.rand.NextFloat(120f * CurrentVisualScale, 520f * CurrentVisualScale), 0f)
-            //        .RotatedBy(SlashAngle);
-
-            //    GeneralParticleHandler.SpawnParticle(
-            //        new CustomSpark(
-            //            placement,
-            //            dustVel,
-            //            "CalamityMod/Particles/BloomCircle",
-            //            false,
-            //            33,
-            //            Main.rand.NextFloat(0.45f, 0.7f) * CurrentVisualScale * 0.5f,
-            //            Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
-            //            new Vector2(1f, 1f),
-            //            shrinkSpeed: 0.1f
-            //        )
-            //    );
-            //}
-
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    Vector2 beamPos = Owner.Center +
-            //        new Vector2(Main.rand.NextFloat(160f * CurrentVisualScale, 560f * CurrentVisualScale), 0f)
-            //        .RotatedBy(SlashAngle);
-
-            //    Vector2 beamVel = -Vector2.UnitY
-            //        .RotatedBy(FinalRotation)
-            //        .RotatedByRandom(0.3f)
-            //        * Main.rand.NextFloat(10f, 20f);
-
-            //    Dust gem = Dust.NewDustPerfect(beamPos, DustID.GemSapphire, beamVel);
-            //    gem.noGravity = true;
-            //    gem.scale = Main.rand.NextFloat(1.5f, 2.6f) * CurrentVisualScale * 0.45f;
-            //    gem.color = Color.DeepSkyBlue;
-            //}
-        }
-
-        private void SpawnGiantShrinkParticles(float shrinkProgress)
-        {
-            //for (int i = 0; i < 2; i++)
-            //{
-            //    Vector2 particlePos = Owner.Center +
-            //        new Vector2(Main.rand.NextFloat(40f * CurrentVisualScale, 180f * CurrentVisualScale), 0f)
-            //        .RotatedBy(SlashAngle);
-
-            //    Dust dust = Dust.NewDustPerfect(
-            //        particlePos,
-            //        DustID.Water,
-            //        Main.rand.NextVector2Circular(1.5f, 1.5f)
-            //    );
-            //    dust.noGravity = true;
-            //    dust.scale = Main.rand.NextFloat(0.9f, 1.5f) * MathHelper.Lerp(1.2f, 0.6f, shrinkProgress) * CurrentVisualScale;
-            //    dust.color = Color.Cyan;
-            //}
-        }
-
-        private static float ResolveGiantSlashRotationDegrees(float startAngle, float loopEndAngle, float slashEndAngle, float progress)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-
-            const float fullSpinPortion = 0.8f;
-            if (progress <= fullSpinPortion)
-            {
-                float spinProgress = EvaluateEarthStyleSwingProgress(progress / fullSpinPortion);
-                return MathHelper.Lerp(startAngle, loopEndAngle, spinProgress);
-            }
-
-            float slashProgress = EvaluateEarthStyleSwingProgress((progress - fullSpinPortion) / (1f - fullSpinPortion));
-            return MathHelper.Lerp(loopEndAngle, slashEndAngle, slashProgress);
-        }
-
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            target.AddBuff(BuffID.Frostburn, 180);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            float minMult = 0.5f;
-            int hitsToMinMult = 15;
-            float damageMult = Utils.Remap(Projectile.numHits - armoredHits, 0, hitsToMinMult, 1f, minMult, true);
+            float damageMult = Utils.Remap(Projectile.numHits, 0, 10, 1f, 0.62f, true);
             modifiers.SourceDamage *= damageMult;
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if ((useAnim > 0 || DrawUnconditionally) && Owner.ItemAnimationActive)
+            if (!DrawUnconditionally && Owner.itemAnimation <= 0)
+                return false;
+
+            Asset<Texture2D> texture = ModContent.Request<Texture2D>(Texture);
+            Asset<Texture2D> ghost = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaronGoest");
+            Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge");
+
+            float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
+            SpriteEffects effects = spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            Vector2 origin = FlipAsSword ? new Vector2(texture.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+            Vector2 bladeScale = Vector2.One * Projectile.scale;
+
+            if (CanHit || postSwing)
             {
-                Asset<Texture2D> tex = ModContent.Request<Texture2D>(Texture);
-                Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge");
-                Asset<Texture2D> earthGhost = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaronGoest");
-
-
-                float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
-                float drawScale = CurrentVisualScale;
-                SpriteEffects drawEffects = spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
-                float giantBodyOpacity = 1f;
-                float giantGhostOpacity = 0f;
-
-                if (IsGiantComboStage)
-                {
-                    if (giantGrowing)
-                    {
-                        float growProgress = Utils.GetLerpValue(0f, giantGrowFrames, giantTimer, true);
-                        float vanishProgress = Utils.GetLerpValue(0f, 0.28f, growProgress, true);
-                        giantBodyOpacity = 1f - vanishProgress;
-                        giantGhostOpacity = vanishProgress >= 1f ? 1f : 0f;
-                    }
-                    else if (giantSlashing)
-                    {
-                        giantBodyOpacity = 0f;
-                        giantGhostOpacity = 1f;
-                    }
-                    else if (giantShrinking)
-                    {
-                        float shrinkProgress = Utils.GetLerpValue(0f, giantShrinkFrames, giantTimer, true);
-                        giantBodyOpacity = Utils.GetLerpValue(0.18f, 1f, shrinkProgress, true);
-                        giantGhostOpacity = 1f - Utils.GetLerpValue(0f, 0.22f, shrinkProgress, true);
-                    }
-                    else if (CurrentComboStage == 4)
-                    {
-                        giantGhostOpacity = 1f;
-                    }
-                }
-
-                Color bladeDrawColor = lightColor * giantBodyOpacity;
-
-                if (Animation > useAnim * 0.2f || giantGrowing || giantSlashing || giantShrinking)
-                {
-                    Main.EntitySpriteDraw(
-                        swoosh.Value,
-                        Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY),
-                        null,
-                        Color.DeepSkyBlue with { A = 0 } * fadeIn * (IsGiantComboStage ? 0.4f : 0.65f),
-                        (FinalRotation + MathHelper.ToRadians(45f)) + MathHelper.ToRadians(Projectile.ai[1] == 1 ? -90f : 90f) * -Owner.direction,
-                        swoosh.Size() * 0.5f,
-                        drawScale * CurrentSwooshScaleMultiplier * (IsGiantComboStage ? 0.5f : 1f),
-                        SpriteEffects.None
-                    );
-                }
-
-                if (giantGrowing || giantSlashing || giantShrinking || CurrentComboStage == 4)
-                {
-                    Color ghostMainColor = Color.Lerp(Color.DeepSkyBlue, Color.Cyan, 0.35f);
-
-                    for (int i = 0; i < 20; i++)
-                    {
-                        float ringRotation = MathHelper.TwoPi * i / 20f;
-                        Vector2 drawOffset = ringRotation.ToRotationVector2() * 6f * fadeIn;
-                        Color auraColor = ghostMainColor with { A = 0 } * 0.15f * fadeIn * giantGhostOpacity;
-
-                        Main.EntitySpriteDraw(
-                            earthGhost.Value,
-                            Projectile.Center - Main.screenPosition + drawOffset + new Vector2(0f, Owner.gfxOffY),
-                            earthGhost.Value.Frame(1, FrameCount, 0, Frame),
-                            auraColor,
-                            Projectile.rotation + RotationOffset + r,
-                            FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
-                            Projectile.scale,
-                            drawEffects
-                        );
-                    }
-                }
-
-                for (int i = 0; i < 20; i++)
-                {
-                    Color auraColor = Color.Aqua with { A = 0 } * 0.12f * fadeIn;
-                    Vector2 drawOffset = (MathHelper.TwoPi * i / 20f).ToRotationVector2() * 4f * drawScale * fadeIn;
-
-                    Main.EntitySpriteDraw(
-                        tex.Value,
-                        Projectile.Center - Main.screenPosition + drawOffset + new Vector2(0f, Owner.gfxOffY),
-                        tex.Frame(1, FrameCount, 0, Frame),
-                        auraColor,
-                        Projectile.rotation + RotationOffset + r,
-                        FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
-                        Projectile.scale,
-                        drawEffects
-                    );
-                }
-
                 Main.EntitySpriteDraw(
-                    tex.Value,
-                    Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY),
-                    tex.Frame(1, FrameCount, 0, Frame),
-                    bladeDrawColor,
-                    Projectile.rotation + RotationOffset + r,
-                    FlipAsSword ? new Vector2(tex.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin,
+                    swoosh.Value,
+                    drawPosition,
+                    null,
+                    Color.DeepSkyBlue with { A = 0 } * fadeIn * 0.42f,
+                    (FinalRotation + MathHelper.ToRadians(45f)) + MathHelper.ToRadians(Projectile.ai[1] == 1f ? -90f : 90f) * -Owner.direction,
+                    swoosh.Size() * 0.5f,
                     Projectile.scale,
-                    drawEffects
-                );
+                    SpriteEffects.None);
             }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * 4.2f * fadeIn;
+                Main.EntitySpriteDraw(
+                    ghost.Value,
+                    drawPosition + offset,
+                    ghost.Value.Frame(1, FrameCount, 0, Frame),
+                    Color.Aqua with { A = 0 } * 0.12f * fadeIn,
+                    Projectile.rotation + RotationOffset + r,
+                    origin,
+                    bladeScale,
+                    effects);
+            }
+
+            Main.EntitySpriteDraw(
+                texture.Value,
+                drawPosition,
+                texture.Value.Frame(1, FrameCount, 0, Frame),
+                lightColor,
+                Projectile.rotation + RotationOffset + r,
+                origin,
+                bladeScale,
+                effects);
 
             return false;
         }
 
+        private static StageProfile GetStageProfile(int stage)
+        {
+            return stage switch
+            {
+                0 => new StageProfile(ComboKind.OpeningShuriken, 46, 5, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                1 or 2 => new StageProfile(ComboKind.MediumTornado, 28, 3, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                >= 3 and <= 6 => new StageProfile(ComboKind.SmallWater, 18, 2, 1f, 1f, 1f, 1f, 1f, 1f, true),
+                _ => new StageProfile(ComboKind.FinalWave, 50, 6, 1f, 1f, 1f, 1f, 1f, 1f, false),
+            };
+        }
+
+        private enum ComboKind
+        {
+            OpeningShuriken,
+            MediumTornado,
+            SmallWater,
+            FinalWave
+        }
+
+        private readonly struct StageProfile
+        {
+            public readonly ComboKind Kind;
+            public readonly int Duration;
+            public readonly int GapFrames;
+            public readonly float DrawScale;
+            public readonly float RangeScale;
+            public readonly float MinLengthScale;
+            public readonly float MaxLengthScale;
+            public readonly float MinThicknessScale;
+            public readonly float SwooshScale;
+            public readonly bool Tilted;
+
+            public StageProfile(ComboKind kind, int duration, int gapFrames, float drawScale, float rangeScale, float minLengthScale, float maxLengthScale, float minThicknessScale, float swooshScale, bool tilted)
+            {
+                Kind = kind;
+                Duration = duration;
+                GapFrames = gapFrames;
+                DrawScale = drawScale;
+                RangeScale = rangeScale;
+                MinLengthScale = minLengthScale;
+                MaxLengthScale = maxLengthScale;
+                MinThicknessScale = minThicknessScale;
+                SwooshScale = swooshScale;
+                Tilted = tilted;
+            }
+        }
     }
 }

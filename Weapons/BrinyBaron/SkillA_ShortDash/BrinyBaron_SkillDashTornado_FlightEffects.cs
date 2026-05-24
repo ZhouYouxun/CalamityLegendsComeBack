@@ -85,20 +85,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
 
-            Particle customLine = new CustomSpark(
-                tip + right * sideWave * 1.9f,
-                projectile.velocity * 0.03f,
-                GlowBladeTexture,
-                false,
-                2,
-                0.16f,
-                new Color(160, 242, 255) * 0.96f,
-                new Vector2(0.56f, 2.15f),
-                glowCenter: true,
-                shrinkSpeed: 1.2f,
-                glowCenterScale: 0.92f,
-                glowOpacity: 0.72f);
-            GeneralParticleHandler.SpawnParticle(customLine);
+            for (int i = 0; i < 2; i++)
+            {
+                Particle customLine = new CustomSpark(
+                    tip - forward * i * 5f + right * (sideWave * 1.9f + (i == 0 ? 0f : Main.rand.NextFloatDirection() * 2.4f)),
+                    projectile.velocity * (0.03f + i * 0.01f),
+                    GlowBladeTexture,
+                    false,
+                    2 + i,
+                    0.16f + i * 0.035f,
+                    new Color(160, 242, 255) * (0.96f - i * 0.12f),
+                    new Vector2(0.56f, 2.15f + i * 0.45f),
+                    glowCenter: true,
+                    shrinkSpeed: 1.2f,
+                    glowCenterScale: 0.92f,
+                    glowOpacity: 0.72f);
+                GeneralParticleHandler.SpawnParticle(customLine);
+            }
 
 
         
@@ -117,7 +120,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 glowOpacity: 0.72f); // 保留中心发光透明度
             GeneralParticleHandler.SpawnParticle(centerFlare);
 
-            SpawnOuterWake(projectile, tip, forward, right, oceanPhase, wakeDrift, wakeSpread, 11.5f, stateTimer % 2 == 0, stateTimer % 3 == 0);
+            SpawnOuterWake(projectile, tip, forward, right, oceanPhase, wakeDrift * 1.18f, wakeSpread * 1.14f, 11.5f, stateTimer % 2 == 0, stateTimer % 2 == 0);
         }
 
         public static void SpawnReboundFlightEffects(Projectile projectile, Vector2 fallbackDirection, float bladeRotation, float oceanPhase, int stateTimer)

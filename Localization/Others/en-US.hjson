@@ -43,6 +43,17 @@ Mods: {
 					SHPB_EX: "[c/BAA0FF:Forged beside SHPC, she refused to speak as a cannon; the string gathers the stars, and every full draw feels like a silent verdict.]"
 					SHPB_Final: "[c/9FD8FF:Same origin, different form. Where the barrel questioned the world, this string pins four answers into the starlight.]"
 				}
+
+				TheNewEnforcer: {
+					DisplayName: The New Enforcer
+					Tooltip:
+						'''
+						[c/9C6DFF:Swings through a 240-degree arc, alternating direction with every strike]
+						[c/59E8FF:Every swing releases several heavily improved homing essence flames]
+						[c/D8C7FF:True melee hits carve multiple execution slashes through the target]
+						[c/8A8A8A:The improved flames spawn three old essence flames on impact]
+						'''
+				}
 			}
 
 			Consumables: {
@@ -58,6 +69,13 @@ Mods: {
 				SHPBowHoldout.DisplayName: S.H.P.B. Holdout
 				SHPBowSelectionPanel.DisplayName: SHP Core Wheel
 				SHPBowArrow.DisplayName: SHP Core Arrow
+			}
+
+			TheEnforcer: {
+				TheNewEnforcerHoldOut.DisplayName: The New Enforcer
+				NewEssenceFlame2.DisplayName: New Essence Flame
+				TheNewEnforcerSlash.DisplayName: Enforcement Slash
+				OldEssenceFlame2.DisplayName: Old Essence Flame
 			}
 		}
 
