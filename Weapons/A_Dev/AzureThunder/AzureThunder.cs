@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.Passive;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -144,11 +145,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             player.Calamity().GeneralScreenShakePower = System.Math.Max(player.Calamity().GeneralScreenShakePower, harmony ? 7f : 5f);
 
             NPC target = AzureThunderPlayer.FindMouseNearestTarget(player);
+            int activeSwordCount = AzureThunderPlayer.CountOwnedGroundSwords(player);
+            player.GetModPlayer<AzureThunderAccessoryPlayer>().OnConsumeThunderCharge(consumedCharge, harmony, activeSwordCount, target);
+
             if (target != null)
             {
+                float swordEffectRadius = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(player);
                 int swordCount = harmony
-                    ? System.Math.Max(3, AzureThunderPlayer.CountGroundSwordsNear(player, target.Center, 50f * 16f))
-                    : System.Math.Max(1, AzureThunderPlayer.CountGroundSwordsNear(player, player.Center, 50f * 16f));
+                    ? System.Math.Max(3, AzureThunderPlayer.CountGroundSwordsNear(player, target.Center, swordEffectRadius))
+                    : System.Math.Max(1, AzureThunderPlayer.CountGroundSwordsNear(player, player.Center, swordEffectRadius));
 
                 int encodedMode = (consumedCharge * 10) + (harmony ? 1 : 0);
                 Projectile.NewProjectile(

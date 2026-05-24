@@ -68,42 +68,31 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 DominationQuiverEquipped = true;
         }
 
-        public float GetQuiverSpeedMultiplier(BlossomFluxChloroplastPresetType preset)
+        public float GetQuiverSpeedMultiplier(BlossomFluxChloroplastPresetType preset, bool convertedLeafArrow = false)
         {
             if (QuiverTier <= 0)
                 return 1f;
 
-            return QuiverTier switch
+            int tierIndex = Utils.Clamp(QuiverTier - 1, 0, 2);
+
+            return preset switch
             {
-                1 => preset switch
-                {
-                    BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.08f,
-                    BlossomFluxChloroplastPresetType.Chlo_BRecov => 1.06f,
-                    BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.10f,
-                    BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.04f,
-                    BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.07f,
-                    _ => 1.08f
-                },
-                2 => preset switch
-                {
-                    BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.16f,
-                    BlossomFluxChloroplastPresetType.Chlo_BRecov => 1.12f,
-                    BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.18f,
-                    BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.10f,
-                    BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.14f,
-                    _ => 1.16f
-                },
-                _ => preset switch
-                {
-                    BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.25f,
-                    BlossomFluxChloroplastPresetType.Chlo_BRecov => 1.18f,
-                    BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.28f,
-                    BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.15f,
-                    BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.20f,
-                    _ => 1.25f
-                }
+                BlossomFluxChloroplastPresetType.Chlo_ABreak => convertedLeafArrow ? BreakthroughWoodArrowSpeed[tierIndex] : BreakthroughOtherArrowSpeed[tierIndex],
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => RecoveryArrowSpeed[tierIndex],
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => ReconArrowSpeed[tierIndex],
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => BombardArrowSpeed[tierIndex],
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueArrowSpeed[tierIndex],
+                _ => 1f
             };
         }
+
+        // 箭袋速度加成：调谐 / 共鸣 / 统御。
+        private static readonly float[] BreakthroughWoodArrowSpeed = { 1.33f, 1.66f, 2.00f };
+        private static readonly float[] BreakthroughOtherArrowSpeed = { 2.00f, 2.25f, 3.00f };
+        private static readonly float[] RecoveryArrowSpeed = { 1.33f, 1.66f, 2.00f };
+        private static readonly float[] ReconArrowSpeed = { 1.15f, 1.30f, 1.45f };
+        private static readonly float[] BombardArrowSpeed = { 1.20f, 1.40f, 1.60f };
+        private static readonly float[] PlagueArrowSpeed = { 1.33f, 1.66f, 2.00f };
 
         private void EnsureSilvaSeeds()
         {

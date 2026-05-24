@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -88,12 +89,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private void CommandGroundSwordsToFocus()
         {
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
+            float maxDistance = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(Main.player[Projectile.owner]);
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
                 if (!projectile.active || projectile.owner != Projectile.owner || projectile.type != groundType)
                     continue;
 
-                if (projectile.Distance(focusPoint) > 50f * 16f)
+                if (projectile.Distance(focusPoint) > maxDistance)
                     continue;
 
                 if (projectile.ModProjectile is AzureThunderGroundSword sword)
@@ -106,7 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
             Player owner = Main.player[Projectile.owner];
             Vector2 pulseCenter = HarmonyMode ? focusPoint : owner.Center;
-            float maxDistance = 50f * 16f;
+            float maxDistance = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(owner);
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
@@ -147,7 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 gainCharge: false,
                 applyStaticDischarge: finalStrike || HarmonyMode,
                 big: finalStrike && HarmonyMode,
-                ultimateEnergyGain: 6,
+                ultimateEnergyGain: AzureThunderAccessoryPlayer.GetRightClickLightningEnergyGain(Main.player[Projectile.owner]),
                 applyCrumbling: applyCrumbling);
 
             if (finalStrike && HarmonyMode)

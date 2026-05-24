@@ -97,7 +97,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool BlossomFluxArrow;
         public BlossomFluxChloroplastPresetType Preset;
         private bool sunflowerEmpowered;
-        private int torchflowerExplosionCooldown;
 
         public override void AI(Projectile projectile)
         {
@@ -117,8 +116,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             if (!accessoryPlayer.SeedOfSilvaEquipped)
                 return;
 
-            if (torchflowerExplosionCooldown > 0)
-                torchflowerExplosionCooldown--;
+            if (!accessoryPlayer.HoldingBlossomFlux)
+                return;
 
             foreach (Projectile seedProjectile in Main.ActiveProjectiles)
             {
@@ -129,7 +128,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     continue;
 
                 float distanceSquared = Vector2.DistanceSquared(projectile.Center, seedProjectile.Center);
-                if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && distanceSquared <= 92f * 92f)
+                if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && seed.IsBlooming && seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && distanceSquared <= 92f * 92f)
                 {
                     sunflowerEmpowered = true;
                     if (!Main.dedServ && Main.rand.NextBool(10))
@@ -139,22 +138,13 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     }
                 }
 
-                if (preset == BlossomFluxChloroplastPresetType.Chlo_DBomb && seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb && torchflowerExplosionCooldown <= 0 && distanceSquared <= 72f * 72f)
-                {
-                    torchflowerExplosionCooldown = 36;
-                    if (projectile.owner == Main.myPlayer)
-                    {
-                        Projectile.NewProjectile(
-                            projectile.GetSource_FromThis(),
-                            seedProjectile.Center,
-                            Vector2.Zero,
-                            ModContent.ProjectileType<FuckYou>(),
-                            System.Math.Max(1, (int)(projectile.damage * 0.55f)),
-                            projectile.knockBack * 0.4f,
-                            projectile.owner,
-                            104f);
-                    }
-                }
+                if (preset == BlossomFluxChloroplastPresetType.Chlo_DBomb &&
+                    projectile.damage > 0 &&
+                    projectile.type != ModContent.ProjectileType<FuckYou>() &&
+                    seed.IsBlooming &&
+                    seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb &&
+                    distanceSquared <= 72f * 72f)
+                    seed.TryTriggerTorchflowerExplosion(projectile);
             }
         }
 

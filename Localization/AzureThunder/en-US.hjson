@@ -24,19 +24,19 @@ Mods: {
 						'''
 					AzureThunderPassiveHeavenEarth0: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:unlocked by default. Desert Scourge will improve it.]"
 					AzureThunderPassiveHeavenEarth1: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword.]"
-					AzureThunderPassiveHeavenEarth2: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword; after Hive Mind or Perforators, +2 armor penetration.]"
-					AzureThunderPassiveHeavenEarth3: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword; +2 armor penetration; after Duke Fishron, +1 life regeneration.]"
-					AzureThunderPassiveHeavenEarth4: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword; +2 armor penetration; +1 life regeneration; after Yharon, +2% magic damage.]"
+					AzureThunderPassiveHeavenEarth2: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword; +2 armor penetration.]"
+					AzureThunderPassiveHeavenEarth3: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword; +2 armor penetration; +1 life regeneration.]"
+					AzureThunderPassiveHeavenEarth4: "[c/B8F4FF:Heaven and Earth:] [c/DCD6C8:+1 mana regeneration for each active AzureThunder sword; +2 armor penetration; +1 life regeneration; +2% magic damage.]"
 					AzureThunderPassiveHeavensWard0: "[c/B8F4FF:Heaven's Ward:] [c/8A8A8A:unlocks after Hive Mind or Perforators.]"
-					AzureThunderPassiveHeavensWard1: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:unlocked after Hive Mind or Perforators. While held, periodically dodge one hit and restore life.]"
-					AzureThunderPassiveHeavensWard2: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:unlocked after Hive Mind or Perforators; after Wall of Flesh, healing increases to 80.]"
-					AzureThunderPassiveHeavensWard3: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:unlocked after Hive Mind or Perforators; after Plantera, healing increases to 125.]"
-					AzureThunderPassiveHeavensWard4: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:unlocked after Hive Mind or Perforators; after Moon Lord, healing increases to 150.]"
-					AzureThunderPassiveHeavensWard5: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:unlocked after Hive Mind or Perforators; after Yharon, healing increases to 200.]"
+					AzureThunderPassiveHeavensWard1: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:while held, periodically dodge one hit and restore 40 life.]"
+					AzureThunderPassiveHeavensWard2: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:while held, periodically dodge one hit and restore 80 life.]"
+					AzureThunderPassiveHeavensWard3: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:while held, periodically dodge one hit and restore 125 life.]"
+					AzureThunderPassiveHeavensWard4: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:while held, periodically dodge one hit and restore 150 life.]"
+					AzureThunderPassiveHeavensWard5: "[c/B8F4FF:Heaven's Ward:] [c/DCD6C8:while held, periodically dodge one hit and restore 200 life.]"
 					AzureThunderPassiveFourSymbols0: "[c/B8F4FF:Fourfold Accord:] [c/8A8A8A:unlocks after Wall of Flesh.]"
-					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:Fourfold Accord:] [c/DCD6C8:unlocked after Wall of Flesh. If fewer than 3 AzureThunder swords exist, automatically create one every 10 seconds.]"
-					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:Fourfold Accord:] [c/DCD6C8:unlocked after Wall of Flesh. If fewer than 3 AzureThunder swords exist, automatically create one every 10 seconds; after Duke Fishron, triggering this also restores life.]"
-					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:Fourfold Accord:] [c/DCD6C8:unlocked after Wall of Flesh. After Duke Fishron, triggering this also restores life; after Moon Lord, swords auto-generate whenever fewer than 6 are present.]"
+					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:Fourfold Accord:] [c/DCD6C8:if fewer than 3 AzureThunder swords exist, automatically create one every 10 seconds.]"
+					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:Fourfold Accord:] [c/DCD6C8:if fewer than 3 AzureThunder swords exist, automatically create one every 10 seconds; triggering this also restores life.]"
+					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:Fourfold Accord:] [c/DCD6C8:triggering this restores life; if fewer than 6 AzureThunder swords exist, automatically create one every 10 seconds.]"
 					AzureThunderThunderCharge: "[c/FFE85A:Thunder Charge:] [c/DCD6C8:gained by striking enemies with electric debuffs, Elemental Mix, or Miracle Blight, up to 10 stacks.]"
 					AzureThunderDot: "[c/FFE85A:Heavenly Harmony damage over time:] [c/DCD6C8:upgrades from Static Discharge through progression and adds stronger debuffs at higher tiers.]"
 					AzureThunderFinal: '''[c/FFE85A:"Let solemn thunder cleanse evil, call sweet rain, and spare the living."]'''
@@ -55,7 +55,6 @@ Mods: {
 			AzureThunder: {
 				AzureThunderSwingHoldout.DisplayName: AzureThunder
 				AzureThunderLightOrb.DisplayName: AzureThunder Light Orb
-				AzureThunderStormLightning.DisplayName: AzureThunder Lightning
 				AzureThunderFlatLightning.DisplayName: AzureThunder Flat Bolt
 				AzureThunderFlyingSword.DisplayName: AzureThunder Flying Sword
 				AzureThunderGroundSword.DisplayName: AzureThunder Ground Sword

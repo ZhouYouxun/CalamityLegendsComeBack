@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -22,6 +23,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private const float DrawScaleFactor = 0.3f;
         private const float DaisyMaxLife = 15f;
         private const float DaisyRegenPerFrame = 1.2f / 60f;
+        private const int TorchflowerExplosionCooldownFrames = 15;
 
         private float daisyLife = DaisyMaxLife;
         private float daisyStoredHeal;
@@ -32,6 +34,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private int mandrakeDartCooldown;
 
         public BlossomFluxChloroplastPresetType CurrentPreset { get; private set; }
+        public bool IsBlooming { get; private set; }
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -45,9 +48,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 2;
             Projectile.DamageType = DamageClass.Ranged;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 30;
         }
 
-        public override bool? CanDamage() => false;
+        public override bool? CanDamage() => Projectile.damage > 0 ? null : false;
 
         public override void AI()
         {
@@ -59,7 +64,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             }
 
             Projectile.timeLeft = 2;
-            CurrentPreset = owner.GetModPlayer<BFAccessoryPlayer>().CurrentPreset;
+            BFAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BFAccessoryPlayer>();
 
             int slot = (int)Projectile.ai[0];
             if (slot < 0 || slot >= SeedCount)
@@ -68,10 +73,20 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 return;
             }
 
+            CurrentPreset = PresetFromSlot(slot);
+            IsBlooming = accessoryPlayer.HoldingBlossomFlux && accessoryPlayer.CurrentPreset == CurrentPreset;
+            Projectile.damage = GetSeedContactDamage(owner, accessoryPlayer.HoldingBlossomFlux);
+
             float angle = Main.GameUpdateCount * OrbitSpeed + MathHelper.TwoPi * slot / SeedCount;
             float pulseRadius = OrbitRadius + (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 1.1f + slot) * 5f;
             Projectile.Center = owner.Center + angle.ToRotationVector2() * pulseRadius + new Vector2(0f, owner.gfxOffY - 8f);
-            Lighting.AddLight(Projectile.Center, GetFlowerColor(CurrentPreset).ToVector3() * 0.38f);
+            Lighting.AddLight(Projectile.Center, GetFlowerColor(CurrentPreset).ToVector3() * (IsBlooming ? 0.38f : 0.12f));
+
+            if (torchflowerCooldown > 0)
+                torchflowerCooldown--;
+
+            if (!IsBlooming)
+                return;
 
             switch (CurrentPreset)
             {
@@ -82,12 +97,38 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                     UpdateDelphinium(owner);
                     break;
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    UpdateTorchflower(owner);
+                    UpdateTorchflower();
                     break;
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
                     UpdateMandrake(owner);
                     break;
             }
+        }
+
+        public bool TryTriggerTorchflowerExplosion(Projectile triggeringProjectile)
+        {
+            if (!IsBlooming || CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_DBomb || torchflowerCooldown > 0)
+                return false;
+
+            torchflowerCooldown = TorchflowerExplosionCooldownFrames;
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int damage = System.Math.Max(1, (int)(triggeringProjectile.damage * 0.55f));
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<BFLeafBombExplosion>(),
+                    damage,
+                    triggeringProjectile.knockBack * 0.4f,
+                    Projectile.owner,
+                    116f,
+                    1f);
+            }
+
+            EmitFlowerBurst(new Color(255, 138, 72), 14);
+            return true;
         }
 
         private void UpdateDaisy(Player owner)
@@ -154,32 +195,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             }
         }
 
-        private void UpdateTorchflower(Player owner)
+        private void UpdateTorchflower()
         {
-            if (torchflowerCooldown > 0)
-                torchflowerCooldown--;
-
-            if (torchflowerCooldown > 0)
-                return;
-
-            NPC target = FindTarget(210f);
-            if (target is null)
-                return;
-
-            torchflowerCooldown = 18;
-            if (Projectile.owner == Main.myPlayer)
-            {
-                int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.22f));
-                Vector2 velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 7.5f;
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    velocity,
-                    ModContent.ProjectileType<SeedOfSilvaTorchFlame>(),
-                    damage,
-                    0.4f,
-                    Projectile.owner);
-            }
+            Lighting.AddLight(Projectile.Center, new Vector3(0.48f, 0.16f, 0.04f));
+            if (!Main.dedServ && Main.rand.NextBool(5))
+                EmitFlowerBurst(new Color(255, 136, 58), 1);
         }
 
         private void UpdateMandrake(Player owner)
@@ -249,11 +269,23 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Color flowerColor = GetFlowerColor(CurrentPreset);
             Color accent = GetFlowerAccentColor(CurrentPreset);
             float pulse = 0.9f + 0.1f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 3.2f + Projectile.identity);
-            float flowerOpen = Main.player[Projectile.owner].GetModPlayer<BFAccessoryPlayer>().HoldingBlossomFlux ? 1f : 0.58f;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
+            if (!IsBlooming)
+            {
+                Color seedColor = Color.Lerp(new Color(74, 118, 70), flowerColor, 0.28f);
+                Main.EntitySpriteDraw(bloom, center, null, seedColor * 0.22f, 0f, bloom.Size() * 0.5f, 0.055f * pulse * DrawScaleFactor, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(magic, center, null, seedColor * 0.34f, Main.GlobalTimeWrappedHourly * 0.26f, magic.Size() * 0.5f, 0.038f * DrawScaleFactor, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(spark, center, null, Color.Lerp(seedColor, Color.White, 0.25f) * 0.48f, Main.GlobalTimeWrappedHourly, spark.Size() * 0.5f, new Vector2(0.035f, 0.095f) * DrawScaleFactor, SpriteEffects.None, 0);
+
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                return false;
+            }
+
+            float flowerOpen = 1f;
             Main.EntitySpriteDraw(bloom, center, null, flowerColor * 0.46f, 0f, bloom.Size() * 0.5f, 0.085f * pulse * DrawScaleFactor, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(circle, center, null, accent * 0.32f, -Main.GlobalTimeWrappedHourly * 0.32f, circle.Size() * 0.5f, 0.075f * flowerOpen * DrawScaleFactor, SpriteEffects.None, 0);
 
@@ -270,6 +302,23 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
+        }
+
+        private static BlossomFluxChloroplastPresetType PresetFromSlot(int slot) => slot switch
+        {
+            1 => BlossomFluxChloroplastPresetType.Chlo_BRecov,
+            2 => BlossomFluxChloroplastPresetType.Chlo_CDetec,
+            3 => BlossomFluxChloroplastPresetType.Chlo_DBomb,
+            4 => BlossomFluxChloroplastPresetType.Chlo_EPlague,
+            _ => BlossomFluxChloroplastPresetType.Chlo_ABreak
+        };
+
+        private static int GetSeedContactDamage(Player owner, bool holdingBlossomFlux)
+        {
+            if (holdingBlossomFlux)
+                return System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.16f));
+
+            return System.Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(18f));
         }
 
         private void EmitFlowerBurst(Color color, int amount)
@@ -314,7 +363,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 14;
+            ProjectileID.Sets.TrailCacheLength[Type] = 24;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -342,7 +391,21 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 Projectile.velocity = Vector2.Lerp(Projectile.velocity.RotatedBy((float)System.Math.Sin(Timer * 0.22f) * 0.035f), desired, 0.18f);
             }
 
-            Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.16f, 0.36f));
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.2f, 0.46f));
+
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                Vector2 sideVelocity = Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedBy(MathHelper.PiOver2 * Main.rand.NextFromList(-1, 1));
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    DustID.Electric,
+                    sideVelocity * Main.rand.NextFloat(0.8f, 2.1f) - Projectile.velocity * 0.04f,
+                    100,
+                    new Color(128, 208, 255),
+                    Main.rand.NextFloat(0.65f, 1.05f));
+                dust.noGravity = true;
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -375,12 +438,19 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private void DrawTrail(Color mainColor, Color accentColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(bloom, drawPosition, null, Color.Lerp(mainColor, accentColor, completion) * (0.34f * completion), 0f, bloom.Size() * 0.5f, 0.04f + completion * 0.026f, SpriteEffects.None, 0);
+                Color trailColor = Color.Lerp(mainColor, accentColor, completion);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, trailColor * (0.34f * completion), 0f, bloom.Size() * 0.5f, 0.035f + completion * 0.03f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(spark, drawPosition, null, trailColor * (0.52f * completion), Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.045f, 0.2f * completion), SpriteEffects.None, 0);
             }
+
+            Vector2 center = Projectile.Center - Main.screenPosition;
+            Main.EntitySpriteDraw(bloom, center, null, accentColor * 0.55f, 0f, bloom.Size() * 0.5f, 0.055f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(spark, center, null, Color.White * 0.82f, Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.06f, 0.24f), SpriteEffects.None, 0);
         }
     }
 

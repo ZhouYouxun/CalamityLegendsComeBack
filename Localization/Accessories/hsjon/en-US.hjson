@@ -140,6 +140,70 @@ Mods: {
 					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
 					'''
 			}
+
+			GuZhou: {
+				DisplayName: Lone Boat
+				Tooltip:
+					'''
+					+10% generic magic damage
+					While holding AzureThunder, gain an additional +5% magic damage
+					When AzureThunder consumes Thunder Charge, each consumed stack grants +5% magic damage for 20 seconds; repeated triggers reset the duration
+					Consuming Thunder Charge during Heavenly Harmony slows the locked non-worm enemy by 15%
+					'''
+			}
+
+			YiGanYiYing: {
+				DisplayName: Sense and Answer
+				Tooltip:
+					'''
+					+50 maximum mana
+					-15% mana cost
+					When AzureThunder's right click consumes Thunder Charge, each active AzureThunder sword grants +2% magic damage for 5 seconds
+					During Heavenly Harmony, each sword instead grants +3% magic damage for 15 seconds
+					This damage bonus is recalculated and its duration reset the next time Thunder Charge is consumed
+					'''
+			}
+
+			QianDingWanDing: {
+				DisplayName: Thousandfold Certainty
+				Tooltip:
+					'''
+					+100 maximum mana
+					-15% mana cost
+					Increases AzureThunder sword effect radius from 50 tiles to 75 tiles
+					Up to 3 AzureThunder swords follow the player and act as mobile turrets
+					AzureThunder right-click lightning grants 7 ultimate energy on hit instead of 6
+					Fourfold Accord creates swords every 6 seconds instead of every 10 seconds
+					'''
+			}
+
+			FengYunZhiBian: {
+				DisplayName: Changing Wind and Cloud
+				Tooltip:
+					'''
+					AzureThunder damage +15%
+					AzureThunder attacks inflict Static Discharge for 1.5 seconds
+					Heavenly Harmony duration increases from 25 seconds to 30 seconds
+					During Heavenly Harmony, gain an additional +9% magic damage and 36 magic armor penetration
+					'''
+			}
+		}
+
+		Buffs: {
+			AzureThunderGuZhouDamageBuff: {
+				DisplayName: Lone Boat
+				Description: Magic damage is increased
+			}
+
+			AzureThunderYiGanDamageBuff: {
+				DisplayName: Sense and Answer
+				Description: Magic damage is increased
+			}
+
+			AzureThunderGuZhouSlowDebuff: {
+				DisplayName: Lone Boat Lock
+				Description: Movement speed reduced by 15%
+			}
 		}
 
 		Projectiles: {
@@ -168,6 +232,7 @@ Mods: {
 				EAfterDog: {
 					EndlessDevourJavBlackHole.DisplayName: Endless Devour Jav Black Hole
 					EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
+					OldEssenceFlame2.DisplayName: Old Essence Flame2
 				}
 			}
 

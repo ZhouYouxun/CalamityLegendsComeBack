@@ -21,7 +21,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 {
     internal sealed class BFLeafProj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private const int ReconHomingDelayFrames = 25;
         private const int ReconPostHitStraightFrames = 30;
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
@@ -330,7 +329,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         private void UpdateReconHoming()
         {
-            if (FlightTimer < ReconHomingDelayFrames * Projectile.MaxUpdates)
+            if (FlightTimer < BFReconLeftBalance.HomingDelayFrames * Projectile.MaxUpdates)
             {
                 Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(FlightTimer * 0.08f + Projectile.identity) * 0.003f);
                 return;
@@ -351,7 +350,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             }
 
             float speed = MathHelper.Clamp(StoredSpeed + (IsReconPriorityTarget(target) ? 2.5f : 0f), 11f, 24f);
-            BFArrowCommon.DirectHomeTowards(Projectile, target, IsReconPriorityTarget(target) ? 0.26f : 0.16f, speed);
+            BFArrowCommon.DirectHomeTowards(
+                Projectile,
+                target,
+                IsReconPriorityTarget(target) ? BFReconLeftBalance.PriorityHomingTurnResponsiveness : BFReconLeftBalance.HomingTurnResponsiveness,
+                speed);
             BFArrowCommon.MaintainSpeed(Projectile, speed, 0.14f);
         }
 

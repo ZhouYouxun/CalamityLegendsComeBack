@@ -398,7 +398,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             {
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
                     burstGroupsStarted = (burstGroupsStarted + 1) % RecoveryVisualCycleCount;
-                    leftBurstTimer = RecoveryBurstInterval;
+                    leftBurstTimer = burstGroupsStarted == 0
+                        ? BFRecoveryLeftBalance.GetStats().VolleyPauseFrames
+                        : RecoveryBurstInterval;
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
@@ -664,7 +666,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return CurrentPreset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => GetDisplayedBreakthroughFireInterval(),
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => RecoveryBurstInterval,
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => burstGroupsStarted == 0 && leftBurstTimer > RecoveryBurstInterval ? BFRecoveryLeftBalance.GetStats().VolleyPauseFrames : RecoveryBurstInterval,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => leftBurstTimer > ReconFireInterval ? ReconCyclePause : ReconFireInterval,
                 BlossomFluxChloroplastPresetType.Chlo_DBomb => BFBombardLeftBalance.GetStats().FireInterval,
                 BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueFireInterval,
@@ -874,7 +876,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Vector2 treeOffset = GetRecoveryTreeOffset(i, flashCount, upward, side);
                 Vector2 spawnPosition = Owner.Center + treeOffset;
                 Vector2 velocityDirection = Vector2.Lerp(upward, treeOffset.SafeNormalize(upward), 0.34f + progress * 0.2f).SafeNormalize(upward);
-                Vector2 velocity = velocityDirection * MathHelper.Lerp(2.2f, 3.8f, progress) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_BRecov);
+                Vector2 velocity = velocityDirection * MathHelper.Lerp(2.2f, 3.8f, progress) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_BRecov, convertedLeafArrow: true);
 
                 BFArrow_BRecovTransfer.Spawn(
                     Projectile.GetSource_FromThis(),
@@ -1527,7 +1529,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && !convertToLeaf)
                 finalVelocity *= 0.7f;
 
-            finalVelocity *= GetAccessoryArrowSpeedMultiplier(preset);
+            finalVelocity *= GetAccessoryArrowSpeedMultiplier(preset, convertToLeaf);
 
             int projectileIndex = Projectile.NewProjectile(source, spawnPosition, finalVelocity, finalProjectileType, damage, knockback, Owner.whoAmI, ai0);
             if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
@@ -1559,9 +1561,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return projectileIndex;
         }
 
-        private float GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType preset)
+        private float GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType preset, bool convertedLeafArrow = false)
         {
-            return BFAccessories.GetQuiverSpeedMultiplier(preset);
+            return BFAccessories.GetQuiverSpeedMultiplier(preset, convertedLeafArrow);
         }
 
         private void SpawnLeftMuzzleFX(Vector2 center, Vector2 velocity, BlossomFluxChloroplastPresetType preset, float intensity)

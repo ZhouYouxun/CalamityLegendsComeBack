@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
@@ -24,6 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public int ThunderCharge;
         public int UltimateEnergy;
         public int RightClickCooldown;
+        public int ActiveHarmonyDuration;
 
         private bool holdingAzureThunder;
         private int autoGroundSwordTimer = AutoGroundSwordInterval;
@@ -48,6 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             ThunderCharge = 0;
             UltimateEnergy = 0;
             RightClickCooldown = 0;
+            ActiveHarmonyDuration = 0;
             autoGroundSwordTimer = AutoGroundSwordInterval;
             ultimateAutoGainTimer = 0;
         }
@@ -62,6 +65,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (HarmonyActive && Player.whoAmI == Main.myPlayer)
                 EnsureHarmonyBar();
+            else if (!HarmonyActive)
+                ActiveHarmonyDuration = 0;
 
             if (HoldingAzureThunder)
             {
@@ -190,7 +195,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             UltimateEnergy = 0;
             ultimateAutoGainTimer = 0;
-            Player.AddBuff(ModContent.BuffType<AzureThunderHarmonyBuff>(), HarmonyDuration);
+            ActiveHarmonyDuration = AzureThunderAccessoryPlayer.GetHarmonyDuration(Player);
+            Player.AddBuff(ModContent.BuffType<AzureThunderHarmonyBuff>(), ActiveHarmonyDuration);
             EnsureHarmonyBar();
 
             for (int i = 0; i < 36; i++)
@@ -211,10 +217,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (!AzureThunderProgression.FourSymbolsUnlocked)
                 return;
 
+            int autoSwordInterval = AzureThunderAccessoryPlayer.GetAutoGroundSwordInterval(Player);
+            if (autoGroundSwordTimer > autoSwordInterval)
+                autoGroundSwordTimer = autoSwordInterval;
+
             int groundSwordCount = CountOwnedGroundSwords(Player);
             if (groundSwordCount >= AzureThunderProgression.AutomaticSwordLimit)
             {
-                autoGroundSwordTimer = AutoGroundSwordInterval;
+                autoGroundSwordTimer = autoSwordInterval;
                 return;
             }
 
@@ -226,7 +236,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             SpawnGroundSword(Player, Player.Center + Main.rand.NextVector2CircularEdge(160f, 80f), Player.GetWeaponDamage(Player.HeldItem), Player.HeldItem.knockBack);
             RestoreLifeFromFourSymbols();
-            autoGroundSwordTimer = AutoGroundSwordInterval;
+            autoGroundSwordTimer = autoSwordInterval;
         }
 
         private void ApplyPassiveStatGrowth()
@@ -451,19 +461,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             float spawnHeightMultiplier = 1f)
         {
             Vector2 targetPosition = target?.Center ?? impactPosition;
-            Vector2 targetVelocity = target?.velocity ?? Vector2.Zero;
             float spawnDistance = 1000f * Math.Max(0.1f, spawnHeightMultiplier);
             Vector2 spawnPosition = targetPosition - Vector2.UnitY.RotatedByRandom(0.2f) * spawnDistance;
-            Vector2 velocity = (targetPosition - spawnPosition + targetVelocity * 7.5f).SafeNormalize(Vector2.UnitY) * 30f;
+            Vector2 velocity = targetPosition - spawnPosition;
             int flags = 0;
             if (gainCharge)
-                flags |= AzureThunderStormLightning.GainChargeFlag;
+                flags |= AzureThunderFlatLightning.GainChargeFlag;
             if (applyStaticDischarge)
-                flags |= AzureThunderStormLightning.StaticDischargeFlag;
+                flags |= AzureThunderFlatLightning.StaticDischargeFlag;
             if (big)
-                flags |= AzureThunderStormLightning.BigLightningFlag;
+                flags |= AzureThunderFlatLightning.BigLightningFlag;
             if (applyCrumbling)
-                flags |= AzureThunderStormLightning.CrumblingFlag;
+                flags |= AzureThunderFlatLightning.CrumblingFlag;
 
             SpawnDirectionalLightning(
                 source,
@@ -491,21 +500,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int lightning = Projectile.NewProjectile(
                 source,
                 spawnPosition,
-                velocity,
-                ModContent.ProjectileType<AzureThunderStormLightning>(),
+                velocity.SafeNormalize(Vector2.UnitY) * 24f,
+                ModContent.ProjectileType<AzureThunderFlatLightning>(),
                 Math.Max(1, damage),
                 knockback,
                 owner,
-                velocity.ToRotation(),
-                Main.rand.Next(100),
-                flags);
+                flags,
+                Main.rand.NextBool() ? -1f : 1f,
+                ultimateEnergyGain);
 
             if (Main.projectile.IndexInRange(lightning))
             {
                 Projectile projectile = Main.projectile[lightning];
                 projectile.CritChance = Main.player[owner].GetWeaponCrit(Main.player[owner].HeldItem);
                 ApplyProjectileGrowth(projectile);
-                projectile.localAI[1] = ultimateEnergyGain;
                 if (big)
                 {
                     projectile.width = 70;
@@ -514,18 +522,28 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
         }
 
-        public static void SpawnFlatLightning(IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner, float size = 1f)
+        public static void SpawnFlatLightning(
+            IEntitySource source,
+            Vector2 position,
+            Vector2 velocity,
+            int damage,
+            float knockback,
+            int owner,
+            float size = 1f,
+            int flags = 0,
+            int ultimateEnergyGain = 0)
         {
             int lightning = Projectile.NewProjectile(
                 source,
                 position,
-                velocity.SafeNormalize(Vector2.UnitX) * Math.Max(velocity.Length(), 14f),
+                velocity.SafeNormalize(Vector2.UnitX) * 24f,
                 ModContent.ProjectileType<AzureThunderFlatLightning>(),
                 Math.Max(1, damage),
                 knockback,
                 owner,
-                0f,
-                size);
+                flags,
+                Main.rand.NextBool() ? -1f : 1f,
+                ultimateEnergyGain);
 
             if (Main.projectile.IndexInRange(lightning))
                 ApplyProjectileGrowth(Main.projectile[lightning]);

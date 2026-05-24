@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -18,6 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private int timer;
         private const float ShaderTrailLength = 34f;
+        private const float MagicDrawScale = 0.4f;
+        private const float MaxHomingSpeed = 25.5f;
 
         public override void SetStaticDefaults()
         {
@@ -50,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             NPC target = AzureThunderPlayer.FindNearestTarget(Projectile.Center, 850f);
             if (target != null)
             {
-                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * 17f;
+                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * MaxHomingSpeed;
                 Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.055f);
             }
             else
@@ -100,6 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 180);
+            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
 
             for (int i = 0; i < 3; i++)
             {
@@ -125,28 +129,33 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 trailDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2[] stableTrailPositions = BuildStableTrailPositions(trailDirection);
 
-            GameShaders.Misc["CalamityMod:SideStreakTrail"].UseImage1("Images/Misc/Perlin");
-
-            float WidthFunction(float completion, Vector2 _) =>
-                Projectile.width * 0.82f * (float)Math.Sin(completion * MathHelper.Pi) * Projectile.Opacity;
-
-            Color ColorFunction(float completion, Vector2 _)
+            if (GameShaders.Misc.TryGetValue("CalamityMod:SideStreakTrail", out MiscShaderData shader))
             {
-                Color color = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.PaleYellow, completion * 0.75f);
-                color.A = 0;
-                return color * (1f - completion) * 1.15f;
-            }
+                shader.UseImage1("Images/Misc/Perlin");
 
-            PrimitiveRenderer.RenderTrail(
-                stableTrailPositions,
-                new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Projectile.Size * 0.5f, shader: GameShaders.Misc["CalamityMod:SideStreakTrail"]),
-                38);
+                float WidthFunction(float completion, Vector2 _) =>
+                    Projectile.width * 0.82f * (float)Math.Sin(completion * MathHelper.Pi) * Projectile.Opacity;
+
+                Color ColorFunction(float completion, Vector2 _)
+                {
+                    Color color = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.PaleYellow, completion * 0.75f);
+                    color.A = 0;
+                    return color * (1f - completion) * 1.15f;
+                }
+
+                PrimitiveRenderer.RenderTrail(
+                    stableTrailPositions,
+                    new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Projectile.Size * 0.5f, shader: shader),
+                    38);
+            }
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             DrawGuaranteedShaderCore(texture, drawPosition, trailDirection);
-            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 0 } * 0.75f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.55f, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, drawPosition, null, Color.White with { A = 0 } * 0.45f, Projectile.rotation + MathHelper.PiOver2, texture.Size() * 0.5f, Projectile.scale * 0.3f, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 0 } * 0.75f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.55f * MagicDrawScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.White with { A = 0 } * 0.45f, Projectile.rotation + MathHelper.PiOver2, texture.Size() * 0.5f, Projectile.scale * 0.3f * MagicDrawScale, SpriteEffects.None);
             Main.spriteBatch.ExitShaderRegion();
+
+            DrawAlphaBlendFallback(texture, drawPosition, trailDirection);
             return false;
         }
 
@@ -177,12 +186,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 float completion = i / 4f;
                 Vector2 trailPosition = drawPosition - trailDirection * completion * ShaderTrailLength;
                 float opacity = (1f - completion) * Projectile.Opacity;
-                Color color = Color.Lerp(AzureThunderColors.PaleYellow, AzureThunderColors.Azure, completion * 0.7f) with { A = 0 };
-                Main.EntitySpriteDraw(texture, trailPosition, null, color * opacity * 0.42f, Projectile.rotation, origin, Projectile.scale * (0.52f - completion * 0.18f), SpriteEffects.None);
+                Color color = Color.Lerp(AzureThunderColors.PaleYellow, AzureThunderColors.Azure, completion * 0.7f) with { A = 120 };
+                Main.EntitySpriteDraw(texture, trailPosition, null, color * opacity * 0.42f, Projectile.rotation, origin, Projectile.scale * (0.52f - completion * 0.18f) * MagicDrawScale, SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.Azure with { A = 0 } * Projectile.Opacity * 0.55f, Projectile.rotation, origin, Projectile.scale * 0.86f * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 0 } * Projectile.Opacity * 0.72f, -Projectile.rotation, origin, Projectile.scale * 0.62f, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.Azure with { A = 150 } * Projectile.Opacity * 0.55f, Projectile.rotation, origin, Projectile.scale * 0.86f * pulse * MagicDrawScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 180 } * Projectile.Opacity * 0.72f, -Projectile.rotation, origin, Projectile.scale * 0.62f * MagicDrawScale, SpriteEffects.None);
+        }
+
+        private void DrawAlphaBlendFallback(Texture2D texture, Vector2 drawPosition, Vector2 trailDirection)
+        {
+            Vector2 origin = texture.Size() * 0.5f;
+            for (int i = 5; i >= 0; i--)
+            {
+                float completion = i / 5f;
+                Vector2 trailPosition = drawPosition - trailDirection * completion * ShaderTrailLength * 0.82f;
+                Color color = Color.Lerp(AzureThunderColors.PaleYellow, AzureThunderColors.Azure, completion) with { A = (byte)(150 * (1f - completion)) };
+                Main.EntitySpriteDraw(texture, trailPosition, null, color * Projectile.Opacity * 0.5f, Projectile.rotation, origin, Projectile.scale * (0.38f - completion * 0.11f) * MagicDrawScale, SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.White with { A = 210 } * Projectile.Opacity * 0.65f, Projectile.rotation, origin, Projectile.scale * 0.28f * MagicDrawScale, SpriteEffects.None);
         }
     }
 }

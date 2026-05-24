@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -411,7 +412,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 right = lockedAimDirection.RotatedBy(MathHelper.PiOver2);
             for (int i = -1; i <= 1; i += 2)
             {
-                Vector2 spawnPosition = Owner.Center + lockedAimDirection * 58f + right * i * 42f;
+                Vector2 spawnPosition = GetDanceOfLightSpawnPosition(lockedAimDirection, i);
                 Vector2 velocity = lockedAimDirection.RotatedBy(i * 0.16f) * 14f;
 
                 int orb = Projectile.NewProjectile(
@@ -435,15 +436,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             NPC target = AzureThunderPlayer.FindMouseNearestTarget(Owner);
             Vector2 impactPosition = target?.Center ?? lockedMouseWorld;
-            AzureThunderPlayer.SpawnVerticalLightning(
+            Vector2 spawnPosition = GetDanceOfLightSpawnPosition((impactPosition - Owner.Center).SafeNormalize(lockedAimDirection), Main.rand.NextBool() ? -1 : 1);
+            AzureThunderPlayer.SpawnFlatLightning(
                 Projectile.GetSource_FromThis(),
-                impactPosition,
-                target,
+                spawnPosition,
+                impactPosition - spawnPosition,
                 Math.Max(1, (int)(Projectile.damage * damageFactor)),
                 Projectile.knockBack,
                 Projectile.owner,
-                gainCharge,
-                spawnHeightMultiplier: 1.25f);
+                1f,
+                gainCharge ? AzureThunderFlatLightning.GainChargeFlag : 0);
         }
 
         private void SpawnForwardLightning(int index)
@@ -453,15 +455,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             Vector2 impactPosition = Owner.Center + Vector2.UnitX * Owner.direction * (210f + 90f * index) - Vector2.UnitY * Main.rand.NextFloat(40f, 120f);
             NPC target = AzureThunderPlayer.FindNearestTarget(impactPosition, 640f);
-            AzureThunderPlayer.SpawnVerticalLightning(
+            Vector2 strikeTarget = target?.Center ?? impactPosition;
+            Vector2 spawnPosition = GetDanceOfLightSpawnPosition((strikeTarget - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction), index % 2 == 0 ? -1 : 1);
+            AzureThunderPlayer.SpawnFlatLightning(
                 Projectile.GetSource_FromThis(),
-                target?.Center ?? impactPosition,
-                target,
+                spawnPosition,
+                strikeTarget - spawnPosition,
                 Math.Max(1, (int)(Projectile.damage * 1.75f)),
                 Projectile.knockBack,
                 Projectile.owner,
-                gainCharge: true,
-                applyStaticDischarge: index == GetFinalLightningCount() - 1);
+                1.2f,
+                AzureThunderFlatLightning.GainChargeFlag | (index == GetFinalLightningCount() - 1 ? AzureThunderFlatLightning.StaticDischargeFlag : 0));
         }
 
         private void SpawnParallelBarrageLightning(int index)
@@ -476,12 +480,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 lightningDirection = new Vector2(sweepDirection, 1f).SafeNormalize(Vector2.UnitY);
             Vector2 lineNormal = lightningDirection.RotatedBy(MathHelper.PiOver2);
             Vector2 lineCenter = focusPoint + lineNormal * ((index - 1.5f) * 80f);
-            Vector2 spawnPosition = lineCenter - lightningDirection * 520f;
+            Vector2 spawnPosition = GetDanceOfLightSpawnPosition(lightningDirection, index % 2 == 0 ? -1 : 1);
 
             AzureThunderPlayer.SpawnDirectionalLightning(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
-                lightningDirection * 30f,
+                lineCenter - spawnPosition,
                 Math.Max(1, (int)(Projectile.damage * 0.8f)),
                 Projectile.knockBack,
                 Projectile.owner);
@@ -501,10 +505,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 {
                     int row = i / 2;
                     int side = i % 2 == 0 ? -1 : 1;
-                    spawnPosition = Owner.Center + lockedAimDirection * (78f - row * 38f) + right * side * (42f + row * 24f);
+                    spawnPosition = GetDanceOfLightSpawnPosition(lockedAimDirection, side) - lockedAimDirection * row * 36f;
                 }
                 else
-                    spawnPosition = Owner.Center + lockedAimDirection * 70f + right * centeredIndex * 92f;
+                    spawnPosition = GetDanceOfLightSpawnPosition(lockedAimDirection, centeredIndex < 0f ? -1 : 1);
 
                 int sword = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -531,14 +535,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             NPC target = AzureThunderPlayer.FindMouseNearestTarget(Owner);
             Vector2 impactPosition = target?.Center ?? lockedMouseWorld;
             Vector2 spawnPosition = Owner.MountedCenter + lockedAimDirection * 48f;
-            int horizontalDirection = Math.Abs((impactPosition - spawnPosition).X) < 8f ? Owner.direction : Math.Sign((impactPosition - spawnPosition).X);
-            float mortarAngle = MathHelper.ToRadians(52f);
-            Vector2 mortarVelocity = new Vector2((float)Math.Cos(mortarAngle) * horizontalDirection, -(float)Math.Sin(mortarAngle)) * 22f;
+            spawnPosition = impactPosition - Vector2.UnitY * 780f;
 
             int grandSword = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
-                mortarVelocity,
+                Vector2.Zero,
                 ModContent.ProjectileType<AzureThunderGrandSword>(),
                 Math.Max(1, (int)(Projectile.damage * AzureThunderProgression.UltimateGrandSwordDamageFactor)),
                 Projectile.knockBack,
@@ -549,6 +551,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.projectile.IndexInRange(grandSword))
                 AzureThunderPlayer.ApplyProjectileGrowth(Main.projectile[grandSword]);
+        }
+
+        private Vector2 GetDanceOfLightSpawnPosition(Vector2 shootDirection, float sideBias)
+        {
+            shootDirection = shootDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            float shootAngle = shootDirection.ToRotation();
+            float side = sideBias == 0f ? (Main.rand.NextBool() ? -1f : 1f) : Math.Sign(sideBias);
+            float offsetAngle = MathHelper.Pi + side * Main.rand.NextFloat(0.18f * MathHelper.Pi, 0.4f * MathHelper.Pi);
+            Vector2 offset = offsetAngle.ToRotationVector2().RotatedBy(shootAngle) * Main.rand.NextFloat(40f, 140f);
+            return Owner.MountedCenter + offset;
         }
 
         private void SpawnSwingParticles(float progress)
@@ -590,6 +602,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 180);
+            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
         }
 
         public override bool PreDraw(ref Color lightColor)

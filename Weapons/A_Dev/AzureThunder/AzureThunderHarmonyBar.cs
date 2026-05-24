@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.TS;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -46,15 +47,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (buffIndex < 0)
                 return false;
 
-            float progress = MathHelper.Clamp(owner.buffTime[buffIndex] / (float)AzureThunderPlayer.HarmonyDuration, 0f, 1f);
-            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;
-            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarFront").Value;
-            Vector2 drawPosition = owner.Center - Main.screenPosition + new Vector2(0f, -62f) - barBackground.Size() / 1.5f;
+            int duration = owner.GetModPlayer<AzureThunderPlayer>().ActiveHarmonyDuration;
+            if (duration <= 0)
+                duration = AzureThunderAccessoryPlayer.GetHarmonyDuration(owner);
+
+            float progress = MathHelper.Clamp(owner.buffTime[buffIndex] / (float)duration, 0f, 1f);
+            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
+            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            Vector2 drawPosition = owner.Center - Main.screenPosition + new Vector2(0f, -62f) - barBackground.Size() * 0.5f;
             Rectangle frameCrop = new(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
             Color color = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.Yellow, 1f - progress) * Projectile.Opacity;
 
-            Main.spriteBatch.Draw(barBackground, drawPosition, null, color * 0.72f, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(barForeground, drawPosition, frameCrop, color, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(barBackground, drawPosition, null, color * 0.72f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(barForeground, drawPosition, frameCrop, color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
             return false;
         }

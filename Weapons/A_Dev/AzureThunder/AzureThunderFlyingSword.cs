@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -87,17 +88,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 Projectile.friendly = true;
                 LaunchBoostTimer = 18;
-                Vector2 direction = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
-                Projectile.velocity = direction * 36f;
+                NPC target = AzureThunderPlayer.FindNearestTarget(targetPoint, 720f) ?? AzureThunderPlayer.FindNearestTarget(Projectile.Center, 720f);
+                Vector2 destination = target?.Center ?? targetPoint;
+                Vector2 direction = (destination - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
+                Projectile.velocity = direction * 72f;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.35f, Pitch = 0.24f }, Projectile.Center);
-            }
-
-            NPC target = AzureThunderPlayer.FindNearestTarget(Projectile.Center, 720f);
-            if (target != null)
-            {
-                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * 44f;
-                float homingAcceleration = LaunchBoostTimer > 0 ? 0.13f : 0.065f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, homingAcceleration);
             }
 
             if (LaunchBoostTimer > 0)
@@ -137,6 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 180);
+            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 spawnPosition = target.Center - forward * 10f * 16f;
 

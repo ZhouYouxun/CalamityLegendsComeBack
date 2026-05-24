@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -37,8 +38,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void SetDefaults()
         {
-            Projectile.width = 48;
-            Projectile.height = 64;
+            Projectile.width = 32;
+            Projectile.height = 42;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
@@ -48,6 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 16;
+            Projectile.scale = 0.66f;
         }
 
         public override bool? CanDamage() => Diving && Timer > 12;
@@ -74,7 +76,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return;
             }
 
-            Projectile.velocity *= 0f;
+            if (AzureThunderAccessoryPlayer.ShouldGroundSwordFollowPlayer(Projectile, out int followSlot))
+                DoFollowOwnerAI(followSlot);
+            else
+                Projectile.velocity *= 0f;
+
             Lighting.AddLight(Projectile.Center, AzureThunderColors.Yellow.ToVector3() * 0.28f);
 
             if (Timer <= 45)
@@ -82,6 +88,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Projectile.timeLeft <= 18)
                 SpawnDeathChargeVisuals();
+        }
+
+        private void DoFollowOwnerAI(int followSlot)
+        {
+            Player owner = Main.player[Projectile.owner];
+            Vector2 slotOffset = new Vector2((followSlot - 1) * 54f, -88f - Math.Abs(followSlot - 1) * 20f);
+            slotOffset.X *= owner.direction == 0 ? 1 : owner.direction;
+            Vector2 desiredCenter = owner.MountedCenter + slotOffset;
+            Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, 0.12f);
+            Projectile.velocity = Vector2.Zero;
+            Projectile.rotation = Projectile.rotation.AngleLerp(MathHelper.PiOver2 + MathHelper.PiOver4 + MathHelper.ToRadians((followSlot - 1) * 8f), 0.12f);
         }
 
         public void BeginDive(Vector2 target, int damage, float knockback)
@@ -224,6 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 240);
+            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             if (Diving)
                 AzureThunderPlayer.ApplyUltimateDot(target, 180);
         }

@@ -24,19 +24,19 @@ Mods: {
 						'''
 					AzureThunderPassiveHeavenEarth0: "[c/B8F4FF:天地造化：] [c/DCD6C8:开局解锁。荒灾会使其得到提升。]"
 					AzureThunderPassiveHeavenEarth1: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生。]"
-					AzureThunderPassiveHeavenEarth2: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；邪恶T2后，+2护甲穿透。]"
-					AzureThunderPassiveHeavenEarth3: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透；猪鲨后，+1生命再生。]"
-					AzureThunderPassiveHeavenEarth4: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透；+1生命再生；犽戎后，+2%魔法伤害。]"
+					AzureThunderPassiveHeavenEarth2: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透。]"
+					AzureThunderPassiveHeavenEarth3: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透；+1生命再生。]"
+					AzureThunderPassiveHeavenEarth4: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生；+2护甲穿透；+1生命再生；+2%魔法伤害。]"
 					AzureThunderPassiveHeavensWard0: "[c/B8F4FF:承天之佑：] [c/8A8A8A:邪恶T2后解锁。]"
-					AzureThunderPassiveHeavensWard1: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁。手持时可周期性闪避一次攻击并恢复生命。]"
-					AzureThunderPassiveHeavensWard2: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；肉山后，回血量增加到80。]"
-					AzureThunderPassiveHeavensWard3: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；世花后，回血量增加到125。]"
-					AzureThunderPassiveHeavensWard4: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；月亮领主后，回血量增加到150。]"
-					AzureThunderPassiveHeavensWard5: "[c/B8F4FF:承天之佑：] [c/DCD6C8:邪恶T2后解锁；犽戎后，回血量增加到200。]"
+					AzureThunderPassiveHeavensWard1: "[c/B8F4FF:承天之佑：] [c/DCD6C8:手持时可周期性闪避一次攻击并恢复40点生命。]"
+					AzureThunderPassiveHeavensWard2: "[c/B8F4FF:承天之佑：] [c/DCD6C8:手持时可周期性闪避一次攻击并恢复80点生命。]"
+					AzureThunderPassiveHeavensWard3: "[c/B8F4FF:承天之佑：] [c/DCD6C8:手持时可周期性闪避一次攻击并恢复125点生命。]"
+					AzureThunderPassiveHeavensWard4: "[c/B8F4FF:承天之佑：] [c/DCD6C8:手持时可周期性闪避一次攻击并恢复150点生命。]"
+					AzureThunderPassiveHeavensWard5: "[c/B8F4FF:承天之佑：] [c/DCD6C8:手持时可周期性闪避一次攻击并恢复200点生命。]"
 					AzureThunderPassiveFourSymbols0: "[c/B8F4FF:和合四象：] [c/8A8A8A:肉山后解锁。]"
-					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:和合四象：] [c/DCD6C8:肉山后解锁。若场上青霆剑少于3把，每10秒自动生成1把。]"
-					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:和合四象：] [c/DCD6C8:肉山后解锁。若场上青霆剑少于3把，每10秒自动生成1把；猪鲨后，触发时额外回复生命。]"
-					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:和合四象：] [c/DCD6C8:肉山后解锁。猪鲨后触发时额外回复生命；月亮领主后，只要剑少于6把就能自动生成剑。]"
+					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:和合四象：] [c/DCD6C8:若场上青霆剑少于3把，每10秒自动生成1把。]"
+					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:和合四象：] [c/DCD6C8:若场上青霆剑少于3把，每10秒自动生成1把；触发时额外回复生命。]"
+					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:和合四象：] [c/DCD6C8:触发时额外回复生命；若场上青霆剑少于6把，每10秒自动生成1把。]"
 					AzureThunderThunderCharge: "[c/FFE85A:一息万变：] [c/DCD6C8:攻击带有电系减益、元素协鸣或超界崩解的敌怪时获得，最多10层。]"
 					AzureThunderDot: "[c/FFE85A:天理真和持续伤害：] [c/DCD6C8:随流程从静电逸散逐步升级，并在高阶阶段追加更强减益。]"
 					AzureThunderFinal: "[c/FFE85A:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]"
@@ -55,7 +55,6 @@ Mods: {
 			AzureThunder: {
 				AzureThunderSwingHoldout.DisplayName: 青霆剑
 				AzureThunderLightOrb.DisplayName: 青霆光弹
-				AzureThunderStormLightning.DisplayName: 青霆落雷
 				AzureThunderFlatLightning.DisplayName: 青霆平雷
 				AzureThunderFlyingSword.DisplayName: 青霆飞剑
 				AzureThunderGroundSword.DisplayName: 青霆插剑

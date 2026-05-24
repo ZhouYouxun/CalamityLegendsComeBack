@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public readonly int FlashWindowLimit;
         public readonly int LeafTimePerFlash;
         public readonly int LeafMaxTime;
+        public readonly int VolleyPauseFrames;
         public readonly int Defense;
         public readonly int LifeRegen;
         public readonly int LifeRegenPerMissingQuarter;
@@ -23,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             int flashWindowLimit,
             int leafTimePerFlash,
             int leafMaxTime,
+            int volleyPauseFrames,
             int defense,
             int lifeRegen,
             int lifeRegenPerMissingQuarter,
@@ -36,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             FlashWindowLimit = flashWindowLimit;
             LeafTimePerFlash = leafTimePerFlash;
             LeafMaxTime = leafMaxTime;
+            VolleyPauseFrames = volleyPauseFrames;
             Defense = defense;
             LifeRegen = lifeRegen;
             LifeRegenPerMissingQuarter = lifeRegenPerMissingQuarter;
@@ -48,6 +51,25 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         public static BFRecoveryLeftStats GetStats()
         {
+            // ### 复苏普攻
+            // 复苏普攻每轮发射 4 组，然后停顿片刻。停顿按成长均匀缩短：
+            // 初始 / Initial：一轮后停顿 60 帧
+            // 击败血肉墙 / Wall of Flesh：一轮后停顿 40 帧
+            // 击败任意机械 Boss / Any Mechanical Boss：一轮后停顿 20 帧
+            // 击败世纪之花 / Plantera：一轮后停顿 0 帧
+            int volleyPauseFrames = 60;
+
+            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh))
+                volleyPauseFrames = 40;
+
+            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss))
+                volleyPauseFrames = 20;
+
+            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
+                volleyPauseFrames = 0;
+
+            // ### 复苏命中与生态增益
+            // 以下数值是平衡组常用调整项：治疗量、绿叶持续时间、防御、生命恢复和减伤。
             int heal = 5;
             int maxTime = 10 * 60;
             int defense = 5;
@@ -102,7 +124,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 damageReduction = 0.20f;
             }
 
-            return new BFRecoveryLeftStats(heal, 120, 75, 5 * 60, 2, 5 * 60, maxTime, defense, regen, missingQuarterRegen, regenTime, damageReduction);
+            // -------------------- 内部固定参数 --------------------
+            // 闪现冷却、标记闪现冷却、闪现窗口、窗口上限、单次绿叶时间。
+            return new BFRecoveryLeftStats(heal, 120, 75, 5 * 60, 2, 5 * 60, maxTime, volleyPauseFrames, defense, regen, missingQuarterRegen, regenTime, damageReduction);
         }
     }
 }

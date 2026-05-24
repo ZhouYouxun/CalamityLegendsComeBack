@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -14,30 +15,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
     internal sealed class AzureThunderGrandSword : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.AzureThunder";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AT4";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunder";
 
         private int TargetIndex => (int)Projectile.ai[0];
         private Vector2 StoredImpactPosition => new(Projectile.ai[1], Projectile.ai[2]);
         private Vector2 impactPosition;
-        private Vector2 lockedDashDirection;
         private int timer;
         private bool dashing;
         private bool exploding;
 
         public override void SetDefaults()
         {
-            Projectile.width = 150;
-            Projectile.height = 150;
+            Projectile.width = 96;
+            Projectile.height = 128;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = -1;
+            Projectile.penetrate = 5;
             Projectile.timeLeft = 210;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-            Projectile.scale = 1.35f;
+            Projectile.scale = 1.65f;
         }
 
         public override bool? CanDamage() => dashing || exploding;
@@ -48,9 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return CalamityUtils.CircularHitboxCollision(Projectile.Center, 170f * Projectile.scale, targetHitbox);
 
             float collisionPoint = float.NaN;
-            Vector2 bladeDirection = dashing
-                ? Projectile.velocity.SafeNormalize(Projectile.rotation.ToRotationVector2())
-                : Projectile.rotation.ToRotationVector2();
+            Vector2 bladeDirection = Vector2.UnitY;
             Vector2 start = Projectile.Center - bladeDirection * 42f * Projectile.scale;
             Vector2 end = Projectile.Center + bladeDirection * 145f * Projectile.scale;
             return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), start, end, 42f * Projectile.scale, ref collisionPoint);
@@ -65,24 +63,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (!dashing && !exploding)
             {
-                Projectile.velocity.Y += 0.48f;
-                Projectile.velocity.X *= 0.992f;
-                Projectile.rotation += MathHelper.TwoPi * 2f / 34f * Math.Sign(Projectile.velocity.X == 0f ? Main.player[Projectile.owner].direction : Projectile.velocity.X);
+                Projectile.velocity = Vector2.Zero;
+                Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
                 Projectile.scale = MathHelper.Lerp(Projectile.scale, 1.75f, 0.045f);
                 SpawnChargeVisuals();
 
-                if (timer >= 34)
-                    BeginLockedDash();
+                if (timer >= 24)
+                    BeginDrop();
 
                 return;
             }
 
             if (dashing)
             {
-                float dashCompletion = Utils.GetLerpValue(0f, 24f, timer, true);
-                float dashSpeed = MathHelper.Lerp(18f, 52f, dashCompletion * dashCompletion);
-                Projectile.velocity = lockedDashDirection * dashSpeed;
-                Projectile.rotation = Projectile.rotation.AngleLerp(lockedDashDirection.ToRotation() + MathHelper.PiOver4, 0.3f);
+                float dashCompletion = Utils.GetLerpValue(0f, 22f, timer, true);
+                Projectile.velocity = Vector2.UnitY * MathHelper.Lerp(30.6f, 98.6f, dashCompletion * dashCompletion);
+                Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
                 SpawnFallingVisuals();
 
                 if (Projectile.Distance(impactPosition) < 46f)
@@ -116,14 +112,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             return StoredImpactPosition == Vector2.Zero ? Projectile.Center + Vector2.UnitY * 560f : StoredImpactPosition;
         }
 
-        private void BeginLockedDash()
+        private void BeginDrop()
         {
             dashing = true;
             timer = 0;
             impactPosition = ResolveImpactPosition();
-            lockedDashDirection = (impactPosition - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY));
-            Projectile.velocity = lockedDashDirection * 18f;
-            Projectile.rotation = lockedDashDirection.ToRotation() + MathHelper.PiOver4;
+            Projectile.Center = new Vector2(impactPosition.X, Projectile.Center.Y);
+            Projectile.velocity = Vector2.UnitY * 30.6f;
+            Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
             Projectile.friendly = true;
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.82f, Pitch = -0.15f }, Projectile.Center);
         }
@@ -136,21 +132,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.Center = explosionCenter;
             Projectile.velocity = Vector2.Zero;
             Projectile.friendly = true;
-            Projectile.localNPCHitCooldown = 8;
+            Projectile.localNPCHitCooldown = 5;
 
             if (Main.myPlayer == Projectile.owner)
             {
-                NPC target = AzureThunderPlayer.FindNearestTarget(Projectile.Center, 700f);
-                AzureThunderPlayer.SpawnVerticalLightning(
-                    Projectile.GetSource_FromThis(),
-                    target?.Center ?? Projectile.Center,
-                    target,
-                    Math.Max(1, (int)(Projectile.damage * 0.55f)),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    gainCharge: true,
-                    applyStaticDischarge: true,
-                    big: true);
+                int flags = AzureThunderFlatLightning.GainChargeFlag | AzureThunderFlatLightning.StaticDischargeFlag | AzureThunderFlatLightning.BigLightningFlag;
+                for (int i = 0; i < 10; i++)
+                {
+                    Vector2 direction = (MathHelper.TwoPi * i / 10f).ToRotationVector2();
+                    Vector2 spawnPosition = Projectile.Center - direction * Main.rand.NextFloat(90f, 180f);
+                    AzureThunderPlayer.SpawnFlatLightning(
+                        Projectile.GetSource_FromThis(),
+                        spawnPosition,
+                        Projectile.Center - spawnPosition,
+                        Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                        Projectile.knockBack,
+                        Projectile.owner,
+                        i % 3 == 0 ? 1.35f : 0.95f,
+                        flags);
+                }
             }
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = 0.08f }, Projectile.Center);
@@ -204,10 +204,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 240);
+            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderPlayer.ApplyUltimateDot(target, 240);
             Main.player[Projectile.owner].GetModPlayer<AzureThunderPlayer>().TryGainThunderChargeFromTarget(target);
 
-            if (dashing && !exploding)
+            if (dashing && !exploding && Projectile.numHits >= 5)
                 BeginExplosion(target.Center);
         }
 
