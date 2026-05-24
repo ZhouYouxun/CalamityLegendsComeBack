@@ -168,6 +168,7 @@ Mods: {
 				EAfterDog: {
 					EndlessDevourJavBlackHole.DisplayName: Endless Devour Jav Black Hole
 					EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
+					OldEssenceFlame2.DisplayName: Old Essence Flame2
 				}
 			}
 

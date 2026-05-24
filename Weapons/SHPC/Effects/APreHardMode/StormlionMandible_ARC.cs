@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.extraUpdates = 10;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-            Projectile.ArmorPenetration = 25;
+            Projectile.ArmorPenetration = 20;
         }
 
         public override bool? CanDamage() => ableToHit ? (bool?)null : false;

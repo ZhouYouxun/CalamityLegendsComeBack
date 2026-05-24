@@ -82,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.Center,
                     velocity,
                     ModContent.ProjectileType<StormlionMandible_ARC>(),
-                    (int)(projectile.damage * 0.225f),
+                    (int)(projectile.damage * 0.2f),
                     hit.Knockback,
                     projectile.owner,
                     targetIndex, // ai[0]：锁定目标
