@@ -26,39 +26,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public static readonly int[] LeftClickProgressDamage =
         {
-            15, // Initial / 初始
-            24, // Eye of Cthulhu / 克苏鲁之眼
-            30, // Evil Boss / 腐化或猩红 Boss T2
-            42, // Skeletron / 骷髅王
-            54, // Hardmode / 困难模式
-            72, // Any Mechanical Boss / 任意机械 Boss
-            90, // Plantera / 世纪之花
-            120, // Golem / 石巨人
-            180, // Moon Lord / 月亮领主
-            240, // Providence / 亵渎天神
-            300, // Polterghast / 噬魂幽花
-            360, // Devourer of Gods / 神明吞噬者
-            500, // Yharon / 犽戎
-            750 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            15, // 15Initial / 初始
+            24, // 24Eye of Cthulhu / 克苏鲁之眼
+            30, // 30Evil Boss / 腐化或猩红 Boss T2
+            42, // 42Skeletron / 骷髅王
+            50, // 54Hardmode / 困难模式
+            50, // 72Any Mechanical Boss / 任意机械 Boss
+            50, // 90Plantera / 世纪之花
+            50, // 120Golem / 石巨人
+            50, // 180Moon Lord / 月亮领主
+            50, // 240Providence / 亵渎天神
+            50, // 300Polterghast / 噬魂幽花
+            50, // 360Devourer of Gods / 神明吞噬者
+            50, // 500Yharon / 犽戎
+            50 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
         public static readonly int[] RightClickBaseDamage =
         {
-            6, // Initial / 初始
-            8, // Eye of Cthulhu / 克苏鲁之眼
-            9, // Evil Boss / 腐化或猩红 Boss T2
-            10, // Skeletron / 骷髅王
-            17, // Hardmode / 困难模式
-            24, // Any Mechanical Boss / 任意机械 Boss
-            32, // Plantera / 世纪之花
-            40, // Golem / 石巨人
-            54, // Moon Lord / 月亮领主
-            66, // Providence / 亵渎天神
-            77, // Polterghast / 噬魂幽花
-            90, // Devourer of Gods / 神明吞噬者
-            100, // Yharon / 犽戎
-            150 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            6, // 6Initial / 初始
+            8, // 8Eye of Cthulhu / 克苏鲁之眼
+            9, // 9Evil Boss / 腐化或猩红 Boss T2
+            11, // 11Skeletron / 骷髅王
+            17, // 17Hardmode / 困难模式
+            24, // 24Any Mechanical Boss / 任意机械 Boss
+            32, // 32Plantera / 世纪之花
+            40, // 40Golem / 石巨人
+            54, // 54Moon Lord / 月亮领主
+            66, // 66Providence / 亵渎天神
+            77, // 77Polterghast / 噬魂幽花
+            90, // 90Devourer of Gods / 神明吞噬者
+            100, // 100Yharon / 犽戎
+            150 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 3. 左键材料控制倍率：按 SHPC EffectID 索引，材料会乘到左键基础伤害上。
@@ -66,9 +66,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             0f, // EffectID 0: Unused gap / 未使用空位
             0.46f, // EffectID 1: Energy Core / 钨钢能量核心
-            0.54f, // EffectID 2: Stormlion Mandible / 风暴之颚
+            0.50f, // EffectID 2: Stormlion Mandible / 风暴之颚
             0.58f, // EffectID 3: Sulphuric Scale / 硫磺鳞片
-            0.70f, // EffectID 4: Purified Gel / 纯净凝胶
+            0.80f, // EffectID 4: Purified Gel / 纯净凝胶
             0.64f, // EffectID 5: Essence of Havoc / 混沌精华
             0.60f, // EffectID 6: Essence of Eleum / 冰精华
             0.68f, // EffectID 7: Essence of Sunlight / 日光精华
