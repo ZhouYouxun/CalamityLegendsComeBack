@@ -56,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (HarmonyMode && !commandedSwords)
             {
+                AzureThunderSounds.PlayCommandPulse(focusPoint);
                 CommandGroundSwordsToFocus();
                 commandedSwords = true;
             }

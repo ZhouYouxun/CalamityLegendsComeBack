@@ -104,6 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             target.AddBuff(BuffID.Electrified, 180);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            AzureThunderSounds.PlayOrbImpact(target.Center);
 
             for (int i = 0; i < 3; i++)
             {

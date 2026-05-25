@@ -56,11 +56,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 projectile.GetSource_FromThis(),
                 projectile.Center + forward * 12f,
                 forward * speed,
-                ModContent.ProjectileType<AshesofCalamity_Soul>(),
+                ModContent.ProjectileType<AshesofCalamity_Fire>(),
                 projectile.damage,
                 projectile.knockBack,
                 projectile.owner,
-                1f
+                forward.X,
+                forward.Y
             );
         }
     }

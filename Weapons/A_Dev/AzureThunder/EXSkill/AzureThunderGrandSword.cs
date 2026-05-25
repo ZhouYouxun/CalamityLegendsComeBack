@@ -121,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.velocity = Vector2.UnitY * 30.6f;
             Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
             Projectile.friendly = true;
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.82f, Pitch = -0.15f }, Projectile.Center);
+            AzureThunderSounds.PlayHeavyDrop(Projectile.Center);
         }
 
         private void BeginExplosion(Vector2 explosionCenter)
@@ -153,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 }
             }
 
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = 0.08f }, Projectile.Center);
+            AzureThunderSounds.PlayHeavyImpact(Projectile.Center);
         }
 
         private void SpawnChargeVisuals()

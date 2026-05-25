@@ -135,8 +135,7 @@ Mods: {
 				EssenceofSnow_N2.DisplayName: Essence of Snow Nitrogen
 				EssenceofSunlight_Lighting.DisplayName: Essence of Sunlight Bolt
 				NewSHPS.DisplayName: SHPS Support Core
-				AshesofCalamity_Portal.DisplayName: Ashes of Calamity Portal
-				AshesofCalamity_Soul.DisplayName: Ashes of Calamity Soul
+				AshesofCalamity_Fire.DisplayName: Ashes of Calamity Fire
 				LivingShard_Healing.DisplayName: Living Shard Heal
 				FragmentEntropyExplosion.DisplayName: Entropy Fragment Explosion
 				FragmentSolar_Spear.DisplayName: Solar Fragment Spear
@@ -148,6 +147,8 @@ Mods: {
 				AscendantSpirit_PROJ.DisplayName: Ascendant Spirit Projectile
 				AshesofAnn_Located.DisplayName: Ashes of Ann Locator
 				AshesofAnn_SuperEXP.DisplayName: Ashes of Ann Super Burst
+				AshesofAnn_BurstRelay.DisplayName: Ashes of Ann Burst Relay
+				AshesofAnn_CurseFire.DisplayName: Ashes of Ann Curse Fire
 				EndothermicEnergy_Copy.DisplayName: Endothermic Energy Copy
 				EndothermicEnergy_Shadow.DisplayName: Endothermic Energy Shadow
 				EndothermicEnergy_Split.DisplayName: Endothermic Energy Split

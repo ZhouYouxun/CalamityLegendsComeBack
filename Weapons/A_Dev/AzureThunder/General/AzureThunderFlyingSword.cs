@@ -66,6 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 initialized = true;
                 hoverAnchor = Projectile.Center;
+                AzureThunderSounds.PlaySwordMaterialize(Projectile.Center);
                 Vector2 aimDirection = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
                 float sideOffset = ((Projectile.identity & 1) == 0 ? -1f : 1f) * (6f + Projectile.identity % 3 * 2f);
                 retreatOffset = -aimDirection * 34f + aimDirection.RotatedBy(MathHelper.PiOver2) * sideOffset;
@@ -92,7 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Vector2 destination = target?.Center ?? targetPoint;
                 Vector2 direction = (destination - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
                 Projectile.velocity = direction * 72f;
-                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.35f, Pitch = 0.24f }, Projectile.Center);
+                AzureThunderSounds.PlaySwordLaunch(Projectile.Center);
             }
 
             if (LaunchBoostTimer > 0)
@@ -133,6 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             target.AddBuff(BuffID.Electrified, 180);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            AzureThunderSounds.PlaySwordHit(target.Center);
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 spawnPosition = target.Center - forward * 10f * 16f;
 

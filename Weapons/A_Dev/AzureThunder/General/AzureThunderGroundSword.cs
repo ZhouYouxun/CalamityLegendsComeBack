@@ -61,6 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 initialized = true;
                 SnapToGroundIfPossible();
                 Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4 + MathHelper.ToRadians(Main.rand.NextBool() ? 5f : -5f);
+                AzureThunderSounds.PlaySwordMaterialize(Projectile.Center);
                 SpawnIntroBurst();
                 PulseLightningOutline();
                 Projectile.netUpdate = true;
@@ -110,6 +111,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.knockBack = knockback;
             Projectile.friendly = false;
             Projectile.timeLeft = Math.Min(Projectile.timeLeft, 90);
+            AzureThunderSounds.PlaySwordLaunch(Projectile.Center);
             Projectile.netUpdate = true;
         }
 
@@ -235,13 +237,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 }
             }
 
-            SoundEngine.PlaySound(SoundID.Item94 with { Volume = 0.45f, Pitch = 0.16f }, Projectile.Center);
+            AzureThunderSounds.PlaySwordBurst(Projectile.Center, Diving);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 240);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            if (Diving)
+                AzureThunderSounds.PlaySwordHit(target.Center);
             if (Diving)
                 AzureThunderPlayer.ApplyUltimateDot(target, 180);
         }

@@ -135,8 +135,7 @@ Mods: {
 				EssenceofSnow_N2.DisplayName: 冰雪精华氮流
 				EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
 				NewSHPS.DisplayName: SHPS支援核心
-				AshesofCalamity_Portal.DisplayName: 灾厄余烬传送门
-				AshesofCalamity_Soul.DisplayName: 灾厄余烬之魂
+				AshesofCalamity_Fire.DisplayName: 灾厄余烬火线
 				LivingShard_Healing.DisplayName: 活体碎片治愈波
 				FragmentEntropyExplosion.DisplayName: 熵碎爆炸
 				FragmentSolar_Spear.DisplayName: 太阳碎片长矛
@@ -148,6 +147,8 @@ Mods: {
 				AscendantSpirit_PROJ.DisplayName: 升华之灵弹体
 				AshesofAnn_Located.DisplayName: 安之余烬定位标记
 				AshesofAnn_SuperEXP.DisplayName: 安之余烬超爆
+				AshesofAnn_BurstRelay.DisplayName: 安之余烬连发核心
+				AshesofAnn_CurseFire.DisplayName: 安之余烬诅咒火
 				EndothermicEnergy_Copy.DisplayName: 吸热能量复制体
 				EndothermicEnergy_Shadow.DisplayName: 吸热能量影体
 				EndothermicEnergy_Split.DisplayName: 吸热能量裂片

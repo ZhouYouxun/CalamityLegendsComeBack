@@ -409,6 +409,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Main.myPlayer != Projectile.owner)
                 return;
 
+            AzureThunderSounds.PlayOrbRelease(Owner.Center);
             Vector2 right = lockedAimDirection.RotatedBy(MathHelper.PiOver2);
             for (int i = -1; i <= 1; i += 2)
             {
@@ -496,6 +497,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Main.myPlayer != Projectile.owner)
                 return;
 
+            AzureThunderSounds.PlaySwordMaterialize(Owner.Center);
             Vector2 right = lockedAimDirection.RotatedBy(MathHelper.PiOver2);
             for (int i = 0; i < count; i++)
             {

@@ -201,8 +201,7 @@ Mods: {
 			LeonidTrailMushroom.DisplayName: Leonid Trail Mushroom
 			PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
 			NewSHPS.DisplayName: New S H P S
-			AshesofCalamity_Portal.DisplayName: Ashesof Calamity_ Portal
-			AshesofCalamity_Soul.DisplayName: Ashesof Calamity_ Soul
+			// AshesofCalamity_Fire.DisplayName: Ashesof Calamity_ Fire
 			DepthCells_Drop.DisplayName: Depth Cells_ Drop
 			PlagueCell_Marked.DisplayName: Plague Cell_ Marked
 			ArmoredShell_Ball.DisplayName: Armored Shell_ Ball

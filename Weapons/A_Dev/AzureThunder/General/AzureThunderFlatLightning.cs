@@ -56,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 colorValue += 30f;
                 sizeMult = BigLightning ? 1.35f : 1f;
+                AzureThunderSounds.PlayLightningSpawn(Projectile.Center, BigLightning);
             }
 
             float targetDist = Vector2.Distance(owner.Center, Projectile.Center);
@@ -114,6 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 5);
                 float fxScale = BigLightning ? 3.6f : 3f;
                 Vector2 pos = target.Center;
+                AzureThunderSounds.PlayLightningImpact(pos, BigLightning);
                 for (int i = 0; i < (int)(7 * fxScale); i++)
                 {
                     Particle bolt = new BoltParticle(pos, (new Vector2(4f, 4f) * fxScale).RotatedByRandom(100f) * Main.rand.NextFloat(0.3f, 1.9f), true, 13, Main.rand.NextFloat(0.1f, 0.15f) * fxScale, Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid, new Vector2(1.8f, 0.8f), true, true, false, 0.7f);
