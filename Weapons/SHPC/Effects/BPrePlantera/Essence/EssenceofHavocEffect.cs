@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                         projectile.Center,
                         dir * speed,
                         ModContent.ProjectileType<EssenceofHavoc_INV>(),
-                        (int)(projectile.damage * (movingDownward ? 1.2f : 0.5f)),
+                        (int)(projectile.damage * (movingDownward ? 0.9f : 0.5f)),
                         projectile.knockBack,
                         projectile.owner
                     );

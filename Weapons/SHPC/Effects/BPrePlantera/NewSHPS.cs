@@ -301,6 +301,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             Projectile.rotation = Projectile.velocity.ToRotation();
             Projectile.velocity *= 1.020408f;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+            Projectile.penetrate += 1;
         }
 
         // =========================

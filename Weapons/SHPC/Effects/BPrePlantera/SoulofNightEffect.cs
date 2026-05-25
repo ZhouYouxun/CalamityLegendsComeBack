@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     projectile.Center,
                     dir * speed,
                     ModContent.ProjectileType<NewSHPS>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 0.88),
                     projectile.knockBack,
                     projectile.owner,
                     1 // 套用第1套预设

@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.timeLeft = 164;
+            projectile.timeLeft = 360;
             projectile.penetrate = 1;
             projectile.extraUpdates = 2;
             projectile.usesLocalNPCImmunity = true;
@@ -196,7 +196,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                     spawnPos,
                     direction * 38f,
                     ModContent.ProjectileType<EssenceofSunlight_Lighting>(),
-                    System.Math.Max(1, (int)(projectile.damage * 0.72f)),
+                    System.Math.Max(1, (int)(projectile.damage * 0.77f)),
                     0f,
                     projectile.owner,
                     target.whoAmI,

@@ -38,7 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     projectile.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<NewSHPS>(),
-                    (projectile.damage) * 3,
+                    (projectile.damage) * 2,
                     projectile.knockBack,
                     projectile.owner,
                     0,                      // presetIndex = 0
