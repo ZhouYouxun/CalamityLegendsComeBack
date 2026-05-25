@@ -512,7 +512,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 phase,
                 englishName,
                 chineseName,
-                $"CalamityLegendsComeBack/Weapons/A_Dev/Tools/Icon/{folder}/{textureName}",
+                $"CalamityLegendsComeBack/Weapons/A_Tools/Icon/{folder}/{textureName}",
                 getDowned,
                 setDowned);
         }

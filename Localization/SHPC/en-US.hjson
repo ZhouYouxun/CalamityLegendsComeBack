@@ -78,6 +78,8 @@ Mods: {
 			}
 		}
 
+		TheSpecialText.SHPCAmmoWheelHover: "{0} - {1} shots"
+
 		AMMO: {
 			SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
 			SHPCAmmoPanel: Left-click displayed multiplier: {0}x; load capacity: {1} shots

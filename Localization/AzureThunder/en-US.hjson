@@ -41,6 +41,11 @@ Mods: {
 					AzureThunderDot: "[c/FFE85A:Heavenly Harmony damage over time:] [c/DCD6C8:upgrades from Static Discharge through progression and adds stronger debuffs at higher tiers.]"
 					AzureThunderFinal: '''[c/FFE85A:"Let solemn thunder cleanse evil, call sweet rain, and spare the living."]'''
 				}
+
+				GhostSniperRifle: {
+					DisplayName: Ghost Sniper Rifle
+					Tooltip: ""
+				}
 			}
 		}
 

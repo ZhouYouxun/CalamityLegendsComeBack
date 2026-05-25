@@ -247,6 +247,7 @@ Mods: {
 				// FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
 				// PlagueCell_Lazer.DisplayName: Plague Cell_ Lazer
 				// EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
+				// SHPCAmmoSelectionPanel.DisplayName: S H P C Ammo Selection Panel
 			}
 
 			ChangedWeapons: {
@@ -278,6 +279,11 @@ Mods: {
 			// TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
 			// TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
 			// TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
+
+			GhostSniperRifle: {
+				// GhostSniperRound.DisplayName: Ghost Sniper Round
+				// GhostSniperSpectreOrb.DisplayName: Ghost Sniper Spectre Orb
+			}
 		}
 	}
 }

@@ -276,9 +276,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void HandleOwnerLogic(BFRightUIPlayer rightUIPlayer)
         {
-            rightUIPlayer.ProcessRightClickState(HasActiveSelectionPanel(Owner));
+            bool selectionPanelOpen = HasActiveSelectionPanel(Owner);
+            rightUIPlayer.ProcessRightClickState(selectionPanelOpen);
+            HandleFormSwitchKeyInput();
 
-            if (rightUIPlayer.ShortTapReleasedThisFrame && !rightChargeActive)
+            if (rightUIPlayer.ShortDoubleTapReleasedThisFrame && !rightChargeActive)
                 ToggleSelectionPanel();
 
             if (rightUIPlayer.LongHoldReachedThisFrame && !rightChargeActive)
@@ -302,6 +304,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
                 !Owner.GetModPlayer<BFRightUIPlayer>().RightMouseHeld &&
+                !Owner.GetModPlayer<BFRightUIPlayer>().FormSwitchKeyHeld &&
                 Main.mouseLeft &&
                 !Owner.mouseInterface &&
                 !(Main.playerInventory && Main.HoverItem.type == Owner.HeldItem.type);
@@ -334,6 +337,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             FireCurrentPresetLeftAttack(Projectile.GetSource_FromThis(), projectileType, speed, damage, knockback);
             ScheduleNextLeftFire();
+        }
+
+        private void HandleFormSwitchKeyInput()
+        {
+            if (KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed != true)
+                return;
+
+            if (rightChargeActive ||
+                Owner.HeldItem.type != AssociatedItemID ||
+                Owner.noItems ||
+                Owner.CCed ||
+                Main.mapFullscreen ||
+                Main.blockMouse ||
+                Owner.mouseInterface ||
+                (Main.playerInventory && Main.HoverItem.type == Owner.HeldItem.type))
+            {
+                return;
+            }
+
+            OpenFormSwitchSelectionPanel();
         }
 
         private int GetInitialLeftFireDelay() => CurrentPreset switch
@@ -1474,7 +1497,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            int finalProjectileType = ModContent.ProjectileType<BFLeftPlagueReaper>();
+            int finalProjectileType = ModContent.ProjectileType<BFArrow_EPlague>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 origin = GunTipPosition;
             float speedMultiplier = GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_EPlague);
@@ -1490,14 +1513,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Math.Max(1, (int)(damage * 1.05f)),
                 knockback * 0.72f,
                 Owner.whoAmI,
-                Main.rand.NextFloat(1000f),
-                Main.rand.NextFloat(3f));
+                0f,
+                BFArrow_EPlague.LeftSporeState);
 
             if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
             {
                 Projectile arrowProjectile = Main.projectile[projectileIndex];
-                arrowProjectile.arrow = true;
-                arrowProjectile.noDropItem = true;
+                arrowProjectile.arrow = false;
+                arrowProjectile.noDropItem = false;
                 BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
                 BFArrow_CDetecEffect arrowEffect = arrowProjectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
                 arrowEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_EPlague;
@@ -1763,6 +1786,36 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 0,
                 0f,
                 Owner.whoAmI);
+
+            SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.1f, Volume = 0.55f }, Owner.Center);
+        }
+
+        private void OpenFormSwitchSelectionPanel()
+        {
+            int selectionPanelType = ModContent.ProjectileType<BFSelectionPanel>();
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != Owner.whoAmI || projectile.type != selectionPanelType)
+                    continue;
+
+                if (projectile.ai[1] == BFSelectionPanel.FormSwitchMode && projectile.ai[0] != 1f && projectile.Opacity > 0.02f)
+                    return;
+
+                projectile.ai[0] = 1f;
+                projectile.netUpdate = true;
+            }
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.Center,
+                Vector2.Zero,
+                selectionPanelType,
+                0,
+                0f,
+                Owner.whoAmI,
+                0f,
+                BFSelectionPanel.FormSwitchMode);
 
             SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.1f, Volume = 0.55f }, Owner.Center);
         }

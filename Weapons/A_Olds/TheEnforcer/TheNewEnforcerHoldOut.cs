@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
         private bool firedFlames;
 
         public new string LocalizationCategory => "Projectiles.TheEnforcer";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/TheEnforcer/TheNewEnforcer";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Olds/TheEnforcer/TheNewEnforcer";
         public override Item BaseItem => ModContent.GetModItem(ModContent.ItemType<TheNewEnforcer>()).Item;
         public override int swingWidth => 240;
         public override int AfterImageLength => 8;

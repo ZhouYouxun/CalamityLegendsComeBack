@@ -22,7 +22,6 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
-using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -133,36 +132,86 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 但结构上已经允许以后扩成很多种。
         public static int FindEffectAmmo(Player player)
         {
-            int ammoType = -1;
-            bool foundInAmmoSlots = false;
+            List<SHPCAmmoCandidate> candidates = FindEffectAmmoCandidates(player, 1);
+            return candidates.Count > 0 ? candidates[0].AmmoType : -1;
+        }
 
-            // 先检查弹药栏
-            for (int i = 54; i < 58; i++)
+        public readonly struct SHPCAmmoCandidate
+        {
+            public SHPCAmmoCandidate(int ammoType, int effectID, int inventoryIndex)
+            {
+                AmmoType = ammoType;
+                EffectID = effectID;
+                InventoryIndex = inventoryIndex;
+            }
+
+            public int AmmoType { get; }
+            public int EffectID { get; }
+            public int InventoryIndex { get; }
+        }
+
+        public static List<SHPCAmmoCandidate> FindEffectAmmoCandidates(Player player, int maxCount)
+        {
+            List<SHPCAmmoCandidate> candidates = new();
+            HashSet<int> seenAmmoTypes = new();
+
+            AddEffectAmmoCandidates(player, candidates, seenAmmoTypes, maxCount, 0, 54);
+            AddEffectAmmoCandidates(player, candidates, seenAmmoTypes, maxCount, 54, 58);
+
+            return candidates;
+        }
+
+        private static void AddEffectAmmoCandidates(Player player, List<SHPCAmmoCandidate> candidates, HashSet<int> seenAmmoTypes, int maxCount, int startIndex, int endIndex)
+        {
+            for (int i = startIndex; i < endIndex && candidates.Count < maxCount; i++)
             {
                 Item item = player.inventory[i];
-                if (item != null && item.stack > 0 && EffectRegistry.IsRegisteredAmmo(item.type))
-                {
-                    ammoType = item.type;
-                    foundInAmmoSlots = true;
-                    break;
-                }
-            }
+                if (item == null || item.stack <= 0 || !EffectRegistry.IsRegisteredAmmo(item.type))
+                    continue;
 
-            // 如果弹药栏没找到，再检查普通背包
-            if (!foundInAmmoSlots)
-            {
-                for (int i = 0; i < 54; i++)
-                {
-                    Item item = player.inventory[i];
-                    if (item != null && item.stack > 0 && EffectRegistry.IsRegisteredAmmo(item.type))
-                    {
-                        ammoType = item.type;
-                        break;
-                    }
-                }
-            }
+                if (!seenAmmoTypes.Add(item.type))
+                    continue;
 
-            return ammoType;
+                candidates.Add(new SHPCAmmoCandidate(item.type, EffectRegistry.GetEffectIDByAmmo(item.type), i));
+            }
+        }
+
+        public bool TryLoadSelectedEffectAmmo(Player player, SHPCAmmoCandidate candidate)
+        {
+            int ammoType = candidate.AmmoType;
+            if (ammoType <= ItemID.None || !EffectRegistry.IsRegisteredAmmo(ammoType))
+                return false;
+
+            if (candidate.InventoryIndex < 0 || candidate.InventoryIndex >= player.inventory.Length)
+                return false;
+
+            Item sourceItem = player.inventory[candidate.InventoryIndex];
+            if (sourceItem == null || sourceItem.stack <= 0 || sourceItem.type != ammoType)
+                return false;
+
+            TryReturnStoredAmmo(player);
+            sourceItem.stack--;
+            if (sourceItem.stack <= 0)
+                sourceItem.TurnToAir();
+
+            storedAmmoType = ammoType;
+            storedEffectID = EffectRegistry.GetEffectIDByAmmo(ammoType);
+            storedEffectPower = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
+            return true;
+        }
+
+        private void TryReturnStoredAmmo(Player player)
+        {
+            if (storedEffectID <= 0 || storedAmmoType <= ItemID.None || storedEffectPower <= 0)
+                return;
+
+            int maxShots = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
+            if (maxShots <= 0)
+                return;
+
+            float returnChance = storedEffectPower / (float)maxShots;
+            if (Main.rand.NextFloat() < returnChance)
+                player.QuickSpawnItem(player.GetSource_FromThis(), storedAmmoType, 1);
         }
 
         // 根据当前效果ID获取主题色
@@ -210,6 +259,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override bool CanUseItem(Player player)
         {
             if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
+                return false;
+
+            if (Main.myPlayer == player.whoAmI && KeybindSystem.LegendaryWeaponFormSwitch?.Current == true)
                 return false;
 
             if (player.altFunctionUse == 2)
@@ -593,11 +645,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== 关键：开启右键监听 =====
             if (Main.myPlayer == player.whoAmI)
+            {
                 player.Calamity().rightClickListener = true;
+                HandleAmmoSelectionKey(player);
+            }
 
             // ===== 右键长按逻辑 =====
             if (player.Calamity().mouseRight &&
                 player.whoAmI == Main.myPlayer &&
+                KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
                 !(Main.playerInventory && Main.HoverItem.type == Item.type)) // ❗新增
@@ -652,6 +708,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (player.itemAnimation > 0 && player.altFunctionUse != 2)
                 return;
+        }
+
+        private void HandleAmmoSelectionKey(Player player)
+        {
+            if (KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed != true)
+                return;
+
+            if (player.noItems ||
+                player.CCed ||
+                Main.mapFullscreen ||
+                Main.blockMouse ||
+                player.mouseInterface ||
+                (Main.playerInventory && Main.HoverItem.type == Item.type))
+            {
+                return;
+            }
+
+            int panelType = ModContent.ProjectileType<SHPCAmmoSelectionPanel>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != player.whoAmI || projectile.type != panelType)
+                    continue;
+
+                return;
+            }
+
+            Projectile.NewProjectile(
+                Item.GetSource_FromThis(),
+                player.Center,
+                Vector2.Zero,
+                panelType,
+                0,
+                0f,
+                player.whoAmI);
+
+            SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f }, player.Center);
         }
         #endregion
 

@@ -10,8 +10,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
     internal class BFRightUIPlayer : ModPlayer
     {
         public const int TapThresholdFrames = 9;
+        public const int DoubleTapWindowFrames = 18;
 
         private int rightPressFrames;
+        private int rightDoubleTapTimer;
         private bool trackingRightPress;
         private ulong lastProcessedFrame;
 
@@ -20,12 +22,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         public int ReconPriorityTimeLeft { get; private set; }
         public bool PassiveRainEnabled { get; private set; } = true;
         public bool ShortTapReleasedThisFrame { get; private set; }
+        public bool ShortDoubleTapReleasedThisFrame { get; private set; }
         public bool LongHoldReleasedThisFrame { get; private set; }
         public bool LongHoldReachedThisFrame { get; private set; }
 
         public int RightPressFrames => rightPressFrames;
         public bool TrackingRightPress => trackingRightPress;
         public bool RightMouseHeld => Player.Calamity().mouseRight || Main.mouseRight;
+        public bool FormSwitchKeyHeld => KeybindSystem.LegendaryWeaponFormSwitch?.Current == true;
         public float RightHoldProgress => MathHelper.Clamp(rightPressFrames / (float)TapThresholdFrames, 0f, 1f);
         public bool ShowRightHoldBar => trackingRightPress && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool LongHoldActive => trackingRightPress && rightPressFrames > TapThresholdFrames;
@@ -87,8 +91,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
             lastProcessedFrame = Main.GameUpdateCount;
             ShortTapReleasedThisFrame = false;
+            ShortDoubleTapReleasedThisFrame = false;
             LongHoldReleasedThisFrame = false;
             LongHoldReachedThisFrame = false;
+            if (rightDoubleTapTimer > 0)
+                rightDoubleTapTimer--;
 
             bool validRightInput =
                 Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
@@ -120,9 +127,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 return;
 
             if (rightPressFrames <= TapThresholdFrames)
+            {
                 ShortTapReleasedThisFrame = true;
+                if (rightDoubleTapTimer > 0)
+                {
+                    ShortDoubleTapReleasedThisFrame = true;
+                    rightDoubleTapTimer = 0;
+                }
+                else
+                {
+                    rightDoubleTapTimer = DoubleTapWindowFrames;
+                }
+            }
             else
+            {
                 LongHoldReleasedThisFrame = true;
+                rightDoubleTapTimer = 0;
+            }
 
             trackingRightPress = false;
             rightPressFrames = 0;
@@ -174,7 +195,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         {
             trackingRightPress = false;
             rightPressFrames = 0;
+            rightDoubleTapTimer = 0;
             ShortTapReleasedThisFrame = false;
+            ShortDoubleTapReleasedThisFrame = false;
             LongHoldReleasedThisFrame = false;
             LongHoldReachedThisFrame = false;
         }

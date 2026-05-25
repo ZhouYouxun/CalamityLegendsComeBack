@@ -8,7 +8,7 @@ Mods: {
 					BF_Intro:
 						'''
 						[c/7BE495:Current doctrine: {0}]
-						[c/F7D87C:Tap right click to open the tactical panel and switch doctrine.]
+						[c/F7D87C:Double-tap right click to open the tactical panel and switch doctrine.]
 						[c/F7D87C:Hold right click to enter the current doctrine's charge stance, then release to fire its special arrow.]
 						'''
 					PresetName0: Breakthrough

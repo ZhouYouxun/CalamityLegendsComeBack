@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.SacredThunder
         private bool Hovering => Projectile.ai[2] == 2f;
         private Player Owner => Main.player[Projectile.owner];
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/SacredThunder/SacredThunder";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Olds/SacredThunder/SacredThunder";
 
         public override void SetStaticDefaults()
         {

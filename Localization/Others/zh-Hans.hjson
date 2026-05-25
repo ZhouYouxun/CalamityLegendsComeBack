@@ -96,7 +96,16 @@ Mods: {
 
 		Keybinds: {
 			LegendarySkill: 传奇技能
-			// Mods.CalamityLegendsComeBack.Keybinds.LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
+			LegendaryWeaponFormSwitch: 传奇武器形态切换
+
+			Mods: {
+				CalamityLegendsComeBack: {
+					Keybinds: {
+						// LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
+						// LegendaryWeaponFormSwitch.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Weapon Form Switch
+					}
+				}
+			}
 		}
 	}
 }

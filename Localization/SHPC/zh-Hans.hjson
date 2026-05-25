@@ -78,6 +78,8 @@ Mods: {
 			}
 		}
 
+		TheSpecialText.SHPCAmmoWheelHover: "{0} - {1} 发"
+
 		AMMO: {
 			SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
 			SHPCAmmoPanel: 左键面板倍率：{0}倍；装填次数：{1} 发

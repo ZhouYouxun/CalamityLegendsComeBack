@@ -41,6 +41,11 @@ Mods: {
 					AzureThunderDot: "[c/FFE85A:天理真和持续伤害：] [c/DCD6C8:随流程从静电逸散逐步升级，并在高阶阶段追加更强减益。]"
 					AzureThunderFinal: "[c/FFE85A:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]"
 				}
+
+				GhostSniperRifle: {
+					// DisplayName: Ghost Sniper Rifle
+					// Tooltip: ""
+				}
 			}
 		}
 
