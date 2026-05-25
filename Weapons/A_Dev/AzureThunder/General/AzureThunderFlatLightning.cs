@@ -17,6 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public const int StaticDischargeFlag = 2;
         public const int BigLightningFlag = 4;
         public const int CrumblingFlag = 8;
+        // Visual-only bolts are used for forging/despawn spectacle and must never become hidden damage sources.
+        public const int VisualOnlyFlag = 16;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -26,6 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool ApplyStaticDischarge => (Flags & StaticDischargeFlag) != 0;
         private bool BigLightning => (Flags & BigLightningFlag) != 0;
         private bool ApplyCrumbling => (Flags & CrumblingFlag) != 0;
+        private bool VisualOnly => (Flags & VisualOnlyFlag) != 0;
         public int time;
         public float colorValue;
         public float sizeMult = 1f;
@@ -45,6 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
+
+        public override bool? CanDamage() => VisualOnly ? false : null;
 
         public override void AI()
         {
@@ -102,12 +107,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
+            if (VisualOnly)
+                return;
+
             float damageMult = Utils.Remap(Projectile.numHits, 0f, 3f, 1f, 0.15f, true);
             modifiers.SourceDamage *= damageMult;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (VisualOnly)
+                return;
+
             target.AddBuff(BuffID.Electrified, 300);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             if (Projectile.numHits == 0)

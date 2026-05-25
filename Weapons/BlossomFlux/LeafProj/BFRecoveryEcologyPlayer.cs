@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -12,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 {
     internal class BFRecoveryLeafBuff : ModBuff
     {
-        public override string Texture => "Terraria/Images/Projectile_0";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/复苏之叶贴图";
 
         public override void SetStaticDefaults()
         {
@@ -51,8 +52,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                 return;
 
             BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
-            int cooldownFrames = markedTarget ? stats.MarkedFlashCooldownFrames : stats.FlashCooldownFrames;
-            bool windowLimited = !markedTarget;
+            int cooldownFrames = markedTarget ? stats.MarkedFlashCooldownFrames : GetMultiplayerFlashCooldown(stats.FlashCooldownFrames);
+            bool windowLimited = !markedTarget && Main.netMode == NetmodeID.SinglePlayer;
 
             if (flashCooldown > 0)
                 return;
@@ -64,10 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             }
 
             if (windowLimited && flashesInWindow >= stats.FlashWindowLimit)
-            {
-                RemoveOldestOwnedRecoveryTransfer();
-                flashesInWindow = System.Math.Max(0, stats.FlashWindowLimit - 1);
-            }
+                return;
 
             flashCooldown = cooldownFrames;
             flashesInWindow++;
@@ -112,9 +110,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                 return;
 
             BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
-            Player.statDefense += stats.Defense;
-            Player.endurance += stats.DamageReduction;
-            EmitRecoveryParticles();
+            bool fullRecoveryForm = IsHoldingRecoveryMode();
+            Player.statDefense += fullRecoveryForm ? stats.Defense : stats.Defense / 2;
+            Player.endurance += fullRecoveryForm ? stats.DamageReduction : stats.DamageReduction * 0.5f;
+
+            if (fullRecoveryForm)
+            {
+                ApplyRecoveryLeafImmunities(stats);
+                EmitRecoveryParticles();
+            }
 
             int buffType = ModContent.BuffType<BFRecoveryLeafBuff>();
             int buffIndex = Player.FindBuffIndex(buffType);
@@ -126,12 +130,29 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         public override void UpdateLifeRegen()
         {
-            if (leafTimeLeft <= 0)
+            if (leafTimeLeft <= 0 || !IsHoldingRecoveryMode())
                 return;
 
             BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
+            if (stats.DebuffDamageMultiplier < 1f && Player.lifeRegen < 0)
+                Player.lifeRegen = (int)(Player.lifeRegen * stats.DebuffDamageMultiplier);
+
             Player.lifeRegen += stats.LifeRegen + GetMissingHealthRegenBonus(stats);
             Player.lifeRegenTime += stats.RegenTimePerTick;
+
+            if (stats.MovingRegenIgnoresPenalty && Player.velocity.LengthSquared() > 0.05f)
+                Player.runSlowdown = 1f;
+
+            if (stats.HealthThresholdRegenTime && Player.statLifeMax2 > 0)
+            {
+                float lifeRatio = Player.statLife / (float)Player.statLifeMax2;
+                if (lifeRatio <= 0.25f)
+                    Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, 3600);
+                else if (lifeRatio <= 0.5f)
+                    Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, 1800);
+                else if (lifeRatio <= 0.75f)
+                    Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, 900);
+            }
         }
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
@@ -148,6 +169,99 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             float lifeRatio = MathHelper.Clamp(Player.statLife / (float)Player.statLifeMax2, 0f, 1f);
             int missingQuarters = Utils.Clamp((int)System.Math.Ceiling((1f - lifeRatio) * 4f), 0, 4);
             return missingQuarters * stats.LifeRegenPerMissingQuarter;
+        }
+
+        private static int GetMultiplayerFlashCooldown(int baseCooldown)
+        {
+            if (Main.netMode == NetmodeID.SinglePlayer)
+                return baseCooldown;
+
+            int activePlayers = 0;
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player player = Main.player[i];
+                if (player.active && !player.dead)
+                    activePlayers++;
+            }
+
+            int reduction = System.Math.Max(0, activePlayers - 1) * 30;
+            return Utils.Clamp(baseCooldown - reduction, 60, baseCooldown);
+        }
+
+        private void ApplyRecoveryLeafImmunities(BFRecoveryLeftStats stats)
+        {
+            if (stats.ImmunePoisonAndFire)
+            {
+                Player.buffImmune[BuffID.Poisoned] = true;
+                Player.buffImmune[BuffID.OnFire] = true;
+                Player.buffImmune[BuffID.OnFire3] = true;
+            }
+
+            if (stats.ImmuneAcidVenom)
+            {
+                Player.buffImmune[BuffID.Venom] = true;
+                TrySetCalamityBuffImmune("AcidVenom");
+            }
+
+            if (stats.ImmunePlague)
+                TrySetCalamityBuffImmune<Plague>();
+
+            if (!stats.ImmuneMostPreDragonDebuffs)
+                return;
+
+            Player.buffImmune[BuffID.Chilled] = true;
+            Player.buffImmune[BuffID.Frostburn] = true;
+            Player.buffImmune[BuffID.Frostburn2] = true;
+            Player.buffImmune[BuffID.Electrified] = true;
+            Player.buffImmune[BuffID.Burning] = true;
+            Player.buffImmune[BuffID.CursedInferno] = true;
+            Player.buffImmune[BuffID.Daybreak] = true;
+            Player.buffImmune[BuffID.OnFire] = true;
+            Player.buffImmune[BuffID.OnFire3] = true;
+            Player.buffImmune[BuffID.ShadowFlame] = true;
+            Player.buffImmune[BuffID.Poisoned] = true;
+            Player.buffImmune[BuffID.Venom] = true;
+
+            TrySetCalamityBuffImmune("AbsorberAffliction");
+            TrySetCalamityBuffImmune("AcidVenom");
+            TrySetCalamityBuffImmune<AstralInfectionDebuff>();
+            TrySetCalamityBuffImmune<BrainRot>();
+            TrySetCalamityBuffImmune<BrimstoneFlames>();
+            TrySetCalamityBuffImmune<BurningBlood>();
+            TrySetCalamityBuffImmune<CrushDepth>();
+            TrySetCalamityBuffImmune<Dragonfire>();
+            TrySetCalamityBuffImmune("Eutrophication");
+            TrySetCalamityBuffImmune("GalvanicCorrosion");
+            TrySetCalamityBuffImmune("GlacialState");
+            TrySetCalamityBuffImmune<GodSlayerInferno>();
+            TrySetCalamityBuffImmune<HadopelagicPressure>();
+            TrySetCalamityBuffImmune<HolyFlames>();
+            TrySetCalamityBuffImmune<Nightwither>();
+            TrySetCalamityBuffImmune<Plague>();
+            TrySetCalamityBuffImmune<RiptideDebuff>();
+            TrySetCalamityBuffImmune<SagePoison>();
+            TrySetCalamityBuffImmune<StaticDischarge>();
+            TrySetCalamityBuffImmune<SulphuricPoisoning>();
+            TrySetCalamityBuffImmune<VulnerabilityHex>();
+            TrySetCalamityBuffImmune<WeakBrimstoneFlames>();
+            TrySetCalamityBuffImmune("WhisperingDeath");
+        }
+
+        private void TrySetCalamityBuffImmune<T>() where T : ModBuff
+        {
+            int type = ModContent.BuffType<T>();
+            if (type > 0 && type < Player.buffImmune.Length)
+                Player.buffImmune[type] = true;
+        }
+
+        private void TrySetCalamityBuffImmune(string internalName)
+        {
+            if (!ModContent.TryFind("CalamityMod/" + internalName, out ModBuff buff))
+                return;
+
+            int type = buff.Type;
+            if (type > 0 && type < Player.buffImmune.Length)
+                Player.buffImmune[type] = true;
         }
 
         private void RemoveOldestOwnedRecoveryTransfer()

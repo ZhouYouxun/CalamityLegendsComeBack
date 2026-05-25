@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
@@ -21,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 5;
+            Projectile.timeLeft = 45;
             Projectile.alpha = 255;
         }
 
@@ -45,6 +46,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Projectile.Center = npc.Center;
             Projectile.Opacity = Utils.GetLerpValue(0f, 2f, Projectile.timeLeft, true);
             Lighting.AddLight(Projectile.Center, new Vector3(0.12f, 0.34f, 0.4f) * Projectile.Opacity);
+
+            if (Main.dedServ || Main.rand.NextBool(2))
+                return;
+
+            Vector2 offset = Main.rand.NextVector2CircularEdge(npc.width * 0.58f + 10f, npc.height * 0.58f + 10f);
+            Dust dust = Dust.NewDustPerfect(
+                npc.Center + offset,
+                DustID.Electric,
+                -offset.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.32f) * Main.rand.NextFloat(1.2f, 2.6f),
+                80,
+                Color.Lerp(new Color(80, 232, 255), Color.White, Main.rand.NextFloat(0.15f, 0.42f)),
+                Main.rand.NextFloat(0.88f, 1.22f));
+            dust.noGravity = true;
         }
 
         public override bool PreDraw(ref Color lightColor)

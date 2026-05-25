@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
@@ -101,6 +102,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
             drawColor = Color.Lerp(drawColor, new Color(112, 225, 255), 0.45f * intensity);
             Lighting.AddLight(npc.Center, new Vector3(0.08f, 0.34f, 0.4f) * intensity);
+
+            if (Main.dedServ || !Main.rand.NextBool(3))
+                return;
+
+            Vector2 offset = Main.rand.NextVector2CircularEdge(npc.width * 0.55f + 8f, npc.height * 0.55f + 8f);
+            Dust dust = Dust.NewDustPerfect(
+                npc.Center + offset,
+                DustID.Electric,
+                -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.8f, 1.9f),
+                100,
+                Color.Lerp(new Color(96, 230, 255), Color.White, Main.rand.NextFloat(0.18f, 0.42f)),
+                Main.rand.NextFloat(0.75f, 1.08f) * intensity);
+            dust.noGravity = true;
         }
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

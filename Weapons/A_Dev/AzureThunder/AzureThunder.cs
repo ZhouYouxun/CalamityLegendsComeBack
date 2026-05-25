@@ -125,17 +125,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int consumedCharge = thunderPlayer.ConsumeThunderCharge();
             thunderPlayer.RestoreManaFromConsumedCharge(consumedCharge);
             int existingGroundSwords = AzureThunderPlayer.CountOwnedGroundSwords(player);
-            int spawnCount = harmony ? 3 : consumedCharge + (existingGroundSwords < 3 ? 1 : 0);
+
+            // Right-click keeps the same sword creation logic during Empyrean of Truth; only the strike visuals/AOE change.
+            int spawnCount = consumedCharge + (existingGroundSwords < 3 ? 1 : 0);
             spawnCount = Utils.Clamp(spawnCount, 0, AzureThunderGroundSword.MaxGroundSwords - existingGroundSwords);
 
-            Vector2 mouseWorld = AzureThunderPlayer.GetMouseWorld(player);
             for (int i = 0; i < spawnCount; i++)
             {
                 float angle = MathHelper.TwoPi * (i / (float)System.Math.Max(1, spawnCount)) + Main.rand.NextFloat(-0.2f, 0.2f);
-                float radius = harmony ? 190f : Main.rand.NextFloat(130f, 250f);
+                float radius = Main.rand.NextFloat(130f, 250f);
                 Vector2 spawnPosition = player.Center + angle.ToRotationVector2() * radius;
-                if (harmony)
-                    spawnPosition = Vector2.Lerp(spawnPosition, mouseWorld + Main.rand.NextVector2Circular(160f, 70f), 0.45f);
 
                 AzureThunderPlayer.SpawnGroundSword(player, spawnPosition, player.GetWeaponDamage(Item), Item.knockBack);
             }
@@ -151,9 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (target != null)
             {
                 float swordEffectRadius = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(player);
-                int swordCount = harmony
-                    ? System.Math.Max(3, AzureThunderPlayer.CountGroundSwordsNear(player, target.Center, swordEffectRadius))
-                    : System.Math.Max(1, AzureThunderPlayer.CountGroundSwordsNear(player, player.Center, swordEffectRadius));
+                int swordCount = System.Math.Max(1, AzureThunderPlayer.CountGroundSwordsNear(player, player.Center, swordEffectRadius));
 
                 int encodedMode = (consumedCharge * 10) + (harmony ? 1 : 0);
                 Projectile.NewProjectile(

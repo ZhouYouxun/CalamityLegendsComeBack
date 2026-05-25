@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -14,6 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const int Lifetime = 30;
         private const float MaxBeamLength = 100f * 16f;
         private const float BeamWidth = 24f;
+        private const float MinMuzzleDistance = 42f;
+        private const float MaxMuzzleDistance = 92f;
         private const int MaxHits = 3;
         private const int DamageChannelCloseHits = 2;
         private static readonly Color OuterColor = new(255, 24, 16);
@@ -27,6 +30,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private bool damageChannelClosed;
         private Vector2 beamVector = Vector2.UnitX;
         private ref float BeamLength => ref Projectile.localAI[0];
+
+        private Vector2 ForwardDirection
+        {
+            get
+            {
+                Vector2 storedDirection = new(Projectile.ai[0], Projectile.ai[1]);
+                if (storedDirection.LengthSquared() > 0.0001f)
+                    return storedDirection.SafeNormalize(Vector2.UnitX);
+
+                return Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            }
+        }
 
         public override void SetStaticDefaults()
         {
@@ -54,6 +69,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override bool? CanDamage() => damageChannelClosed ? false : null;
 
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            Player owner = Main.player[Projectile.owner];
+            Vector2 forward = GetOwnerAimDirection(owner, ForwardDirection);
+
+            Projectile.ai[2] = MathHelper.Clamp(Vector2.Distance(owner.Center, Projectile.Center), MinMuzzleDistance, MaxMuzzleDistance);
+            SetForwardDirection(forward);
+            Projectile.Center = GetAnchoredMuzzlePosition(owner, forward);
+            Projectile.velocity = forward;
+            Projectile.rotation = forward.ToRotation();
+            beamVector = forward;
+            BeamLength = MaxBeamLength;
+            Projectile.netUpdate = true;
+        }
+
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
             overPlayers.Add(index);
@@ -69,14 +99,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void AI()
         {
-            if (Projectile.velocity != Vector2.Zero)
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead)
             {
-                beamVector = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                Projectile.velocity = beamVector;
-                Projectile.rotation = beamVector.ToRotation();
-                BeamLength = MaxBeamLength;
+                Projectile.Kill();
+                return;
             }
 
+            beamVector = GetOwnerAimDirection(owner, ForwardDirection);
+            SetForwardDirection(beamVector);
+            Projectile.Center = GetAnchoredMuzzlePosition(owner, beamVector);
+            Projectile.velocity = beamVector;
+            Projectile.rotation = beamVector.ToRotation();
             BeamLength = MaxBeamLength;
 
             EmitBeamDust();
@@ -84,6 +118,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             DelegateMethods.v3_1 = OuterColor.ToVector3() * CalculateOpacity() * 0.28f;
             Utils.PlotTileLine(Projectile.Center, Projectile.Center + beamVector * BeamLength, BeamWidth, DelegateMethods.CastLight);
             elapsedTime++;
+        }
+
+        private void SetForwardDirection(Vector2 direction)
+        {
+            Vector2 safeDirection = direction.SafeNormalize(Vector2.UnitX);
+            Projectile.ai[0] = safeDirection.X;
+            Projectile.ai[1] = safeDirection.Y;
+        }
+
+        private Vector2 GetAnchoredMuzzlePosition(Player owner, Vector2 forward)
+        {
+            float muzzleDistance = Projectile.ai[2];
+            if (muzzleDistance <= 0f)
+                muzzleDistance = 68f;
+
+            return owner.Center + forward * MathHelper.Clamp(muzzleDistance, MinMuzzleDistance, MaxMuzzleDistance);
+        }
+
+        private static Vector2 GetOwnerAimDirection(Player owner, Vector2 fallback)
+        {
+            Vector2 mouseWorld = owner.whoAmI == Main.myPlayer && !Main.dedServ ? Main.MouseWorld : owner.Calamity().mouseWorld;
+            return (mouseWorld - owner.Center).SafeNormalize(fallback.SafeNormalize(Vector2.UnitX * owner.direction));
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)

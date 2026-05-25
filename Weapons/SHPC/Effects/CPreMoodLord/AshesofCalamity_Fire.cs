@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
             Projectile.MaxUpdates = 10;
-            Projectile.timeLeft = 60;
+            Projectile.timeLeft = 35;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
             Projectile.alpha = 255;

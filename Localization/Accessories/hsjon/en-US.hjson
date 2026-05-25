@@ -142,66 +142,66 @@ Mods: {
 			}
 
 			GuZhou: {
-				DisplayName: Lone Boat
+				DisplayName: Long Barge
 				Tooltip:
 					'''
 					+10% generic magic damage
-					While holding AzureThunder, gain an additional +5% magic damage
-					When AzureThunder consumes Thunder Charge, each consumed stack grants +5% magic damage for 20 seconds; repeated triggers reset the duration
-					Consuming Thunder Charge during Heavenly Harmony slows the locked non-worm enemy by 15%
+					While holding SunderBlade, gain an additional +5% magic damage
+					When SunderBlade consumes Breath of Transformation, each consumed stack grants +5% magic damage for 20 seconds; repeated triggers reset the duration
+					Consuming Breath of Transformation during Empyrean of Truth slows the locked non-worm enemy by 15%
 					'''
 			}
 
 			YiGanYiYing: {
-				DisplayName: Sense and Answer
+				DisplayName: Sense and Response
 				Tooltip:
 					'''
 					+50 maximum mana
 					-15% mana cost
-					When AzureThunder's right click consumes Thunder Charge, each active AzureThunder sword grants +2% magic damage for 5 seconds
-					During Heavenly Harmony, each sword instead grants +3% magic damage for 15 seconds
-					This damage bonus is recalculated and its duration reset the next time Thunder Charge is consumed
+					When SunderBlade's right click consumes Breath of Transformation, each active SunderBlade sword grants +2% magic damage for 5 seconds
+					During Empyrean of Truth, each sword instead grants +3% magic damage for 15 seconds
+					This damage bonus is recalculated and its duration reset the next time Breath of Transformation is consumed
 					'''
 			}
 
 			QianDingWanDing: {
-				DisplayName: Thousandfold Certainty
+				DisplayName: Absolute Composure
 				Tooltip:
 					'''
 					+100 maximum mana
 					-15% mana cost
-					Increases AzureThunder sword effect radius from 50 tiles to 75 tiles
-					Up to 3 AzureThunder swords follow the player and act as mobile turrets
-					AzureThunder right-click lightning grants 7 ultimate energy on hit instead of 6
-					Fourfold Accord creates swords every 6 seconds instead of every 10 seconds
+					Increases SunderBlade sword effect radius from 50 tiles to 75 tiles
+					Up to 3 SunderBlade swords orbit the player on an elliptical path and act as mobile turrets
+					SunderBlade right-click lightning grants 7 ultimate energy on hit instead of 6
+					Four Symbols of Harmony creates swords every 6 seconds instead of every 10 seconds
 					'''
 			}
 
 			FengYunZhiBian: {
-				DisplayName: Changing Wind and Cloud
+				DisplayName: Storm of Transform
 				Tooltip:
 					'''
-					AzureThunder damage +15%
-					AzureThunder attacks inflict Static Discharge for 1.5 seconds
-					Heavenly Harmony duration increases from 25 seconds to 30 seconds
-					During Heavenly Harmony, gain an additional +9% magic damage and 36 magic armor penetration
+					SunderBlade damage +15%
+					SunderBlade attacks inflict Static Discharge for 1.5 seconds
+					Empyrean of Truth duration increases from 25 seconds to 30 seconds
+					During Empyrean of Truth, gain an additional +9% magic damage and 36 magic armor penetration
 					'''
 			}
 		}
 
 		Buffs: {
 			AzureThunderGuZhouDamageBuff: {
-				DisplayName: Lone Boat
+				DisplayName: Long Barge
 				Description: Magic damage is increased
 			}
 
 			AzureThunderYiGanDamageBuff: {
-				DisplayName: Sense and Answer
+				DisplayName: Sense and Response
 				Description: Magic damage is increased
 			}
 
 			AzureThunderGuZhouSlowDebuff: {
-				DisplayName: Lone Boat Lock
+				DisplayName: Long Barge Lock
 				Description: Movement speed reduced by 15%
 			}
 		}
@@ -250,7 +250,7 @@ Mods: {
 			SeedOfSilvaMandrakeSpore.DisplayName: Silva Mandrake Spore
 			SeedOfSilvaSeed.DisplayName: Seed of Silva
 			SeedOfSilvaTorchFlame.DisplayName: Silva Torchflower Flame
-			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
 			TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
 			TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
 			TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
@@ -270,6 +270,12 @@ Mods: {
 				GhostSniperRound.DisplayName: Ghost Sniper Round
 				GhostSniperSpectreOrb.DisplayName: Ghost Sniper Spectre Orb
 			}
+
+			BFBreakthroughChargeConvergeFX.DisplayName: B F Breakthrough Charge Converge F X
+			BFBombardStrafeFX.DisplayName: B F Bombard Strafe F X
+			BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
+			BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
+			BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
 		}
 	}
 }

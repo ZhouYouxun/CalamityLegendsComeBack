@@ -369,6 +369,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return false;
             }
 
+            int shotEffectID = GetProjectileEffectIDForShot();
             bool tripleScatter = player.GetModPlayer<S_MLD_MultiLinkDistributorPlayer>().S_MLD_MultiLinkDistributorEquipped;
             if (tripleScatter)
             {
@@ -393,7 +394,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         scatterDamage,
                         knockback,
                         player.whoAmI,
-                        GetProjectileEffectIDForShot()
+                        shotEffectID
                     );
                 }
             }
@@ -407,9 +408,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     damage,
                     knockback,
                     player.whoAmI,
-                    GetProjectileEffectIDForShot()
+                    shotEffectID
                 );
             }
+            SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
             leftClickCooldown = Item.useTime; // 60帧锁死
             GainEXFromLeftShot(player);
 
@@ -637,6 +639,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                     // ❗手动触发音效（否则不会响）
                     SoundEngine.PlaySound(FireSound, player.Center);
+                    SHPCLeftClickSounds.PlayForEffect(storedEffectID > 0 ? storedEffectID : -1, player.Center);
                 }
             }
 

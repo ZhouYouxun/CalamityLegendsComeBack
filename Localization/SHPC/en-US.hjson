@@ -148,6 +148,7 @@ Mods: {
 				SHPCNecroplasmDamage.DisplayName: Necroplasm Burst
 				UnholyEssence_Wave.DisplayName: Unholy Essence Wave
 				AscendantSpirit_PROJ.DisplayName: Ascendant Spirit Projectile
+				AscendantSpirit_BurstRelay.DisplayName: Ascendant Spirit Burst Relay
 				AshesofAnn_Located.DisplayName: Ashes of Ann Locator
 				AshesofAnn_SuperEXP.DisplayName: Ashes of Ann Super Burst
 				AshesofAnn_BurstRelay.DisplayName: Ashes of Ann Burst Relay

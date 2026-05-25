@@ -11,7 +11,7 @@ using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC
+namespace CalamityLegendsComeBack.Weapons.SHPC.QOL
 {
     internal class AdditionGN : GlobalNPC
     {

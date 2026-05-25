@@ -57,7 +57,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
                 if (holdingAzureThunder)
                     Player.GetDamage(DamageClass.Magic) += 0.15f;
 
-                if (Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()))
+                if (holdingAzureThunder && Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()))
                 {
                     Player.GetDamage(DamageClass.Magic) += 0.09f;
                     Player.GetArmorPenetration(DamageClass.Magic) += 36f;

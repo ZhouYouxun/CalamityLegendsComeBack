@@ -21,6 +21,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool initialized;
         private Vector2 diveTarget;
         private int outlinePulse;
+        private const float FollowEllipseRadiusX = 92f;
+        private const float FollowEllipseRadiusY = 42f;
+        private const float FollowOrbitSpeed = 0.045f;
 
         private int Mode
         {
@@ -62,6 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 SnapToGroundIfPossible();
                 Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4 + MathHelper.ToRadians(Main.rand.NextBool() ? 5f : -5f);
                 AzureThunderSounds.PlaySwordMaterialize(Projectile.Center);
+                SpawnForgingLightning();
                 SpawnIntroBurst();
                 PulseLightningOutline();
                 Projectile.netUpdate = true;
@@ -94,12 +98,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private void DoFollowOwnerAI(int followSlot)
         {
             Player owner = Main.player[Projectile.owner];
-            Vector2 slotOffset = new Vector2((followSlot - 1) * 54f, -88f - Math.Abs(followSlot - 1) * 20f);
-            slotOffset.X *= owner.direction == 0 ? 1 : owner.direction;
+            float phase = (float)Main.GameUpdateCount * FollowOrbitSpeed + followSlot * MathHelper.TwoPi / 3f;
+
+            // QianDingWanDing turns the first 3 ground swords into titanium-shard-like turrets on an ellipse.
+            Vector2 slotOffset = new(
+                (float)Math.Cos(phase) * FollowEllipseRadiusX * (owner.direction == 0 ? 1 : owner.direction),
+                -82f + (float)Math.Sin(phase) * FollowEllipseRadiusY);
             Vector2 desiredCenter = owner.MountedCenter + slotOffset;
             Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, 0.12f);
             Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = Projectile.rotation.AngleLerp(MathHelper.PiOver2 + MathHelper.PiOver4 + MathHelper.ToRadians((followSlot - 1) * 8f), 0.12f);
+            Vector2 outward = (Projectile.Center - owner.MountedCenter).SafeNormalize(Vector2.UnitY);
+            Projectile.rotation = Projectile.rotation.AngleLerp(outward.ToRotation() + MathHelper.PiOver4, 0.14f);
         }
 
         public void BeginDive(Vector2 target, int damage, float knockback)
@@ -190,6 +199,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
         }
 
+        private void SpawnForgingLightning()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            // This strike is visual-only: it sells the sword being forged by a falling bolt, but never deals damage.
+            AzureThunderPlayer.SpawnVerticalLightning(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                null,
+                1,
+                0f,
+                Projectile.owner,
+                big: false,
+                spawnHeightMultiplier: 0.58f,
+                visualOnly: true);
+        }
+
         private void SpawnDeathChargeVisuals()
         {
             if (!Main.rand.NextBool(2))
@@ -219,24 +246,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 dust.noGravity = true;
             }
 
-            if (Main.myPlayer == Projectile.owner)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    Vector2 direction = (MathHelper.PiOver2 + MathHelper.TwoPi * i / 3f).ToRotationVector2();
-                    Vector2 spawnPosition = Projectile.Center + direction * 10f * 16f;
-
-                    AzureThunderPlayer.SpawnFlatLightning(
-                        Projectile.GetSource_FromThis(),
-                        spawnPosition,
-                        Projectile.Center - spawnPosition,
-                        Math.Max(1, (int)(Projectile.damage * 0.35f)),
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        Diving ? 1.05f : 0.7f);
-                }
-            }
-
+            // Despawning is intentionally simple now; all dramatic lightning happens on creation.
             AzureThunderSounds.PlaySwordBurst(Projectile.Center, Diving);
         }
 

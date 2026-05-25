@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -56,12 +57,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (HarmonyMode && !commandedSwords)
             {
+                // Empyrean of Truth only upgrades the spectacle/AOE; it no longer drags ground swords to the target.
                 AzureThunderSounds.PlayCommandPulse(focusPoint);
-                CommandGroundSwordsToFocus();
                 commandedSwords = true;
             }
 
-            int firstStrikeFrame = HarmonyMode ? 26 : 12;
+            int firstStrikeFrame = 12;
             int interval = 5;
 
             if (strikesDone < StrikeCount && timer >= firstStrikeFrame + strikesDone * interval)
@@ -108,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
             Player owner = Main.player[Projectile.owner];
-            Vector2 pulseCenter = HarmonyMode ? focusPoint : owner.Center;
+            Vector2 pulseCenter = owner.Center;
             float maxDistance = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(owner);
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
@@ -153,8 +154,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 ultimateEnergyGain: AzureThunderAccessoryPlayer.GetRightClickLightningEnergyGain(Main.player[Projectile.owner]),
                 applyCrumbling: applyCrumbling);
 
+            if (HarmonyMode)
+                SpawnHarmonyAoe(strikePoint, finalStrike);
+
             if (finalStrike && HarmonyMode)
             {
+                int visualFlags = AzureThunderFlatLightning.VisualOnlyFlag | AzureThunderFlatLightning.BigLightningFlag;
                 for (int i = 0; i < 5; i++)
                 {
                     AzureThunderPlayer.SpawnFlatLightning(
@@ -164,9 +169,37 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                         Math.Max(1, (int)(Projectile.damage * 0.45f)),
                         Projectile.knockBack,
                         Projectile.owner,
-                        1.2f);
+                        1.2f,
+                        visualFlags);
                 }
             }
+        }
+
+        private void SpawnHarmonyAoe(Vector2 strikePoint, bool finalStrike)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            int aoeDamage = Math.Max(1, (int)(Projectile.damage * (finalStrike ? 0.95f : 0.38f)));
+            int aoe = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                strikePoint,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                aoeDamage,
+                Projectile.knockBack,
+                Projectile.owner);
+
+            if (!Main.projectile.IndexInRange(aoe))
+                return;
+
+            // SHPE is invisible; resizing gives the ultimate right-click its requested transparent AOE footprint.
+            Terraria.Projectile explosion = Main.projectile[aoe];
+            Vector2 center = explosion.Center;
+            int size = finalStrike ? 260 : 190;
+            explosion.width = size;
+            explosion.height = size;
+            explosion.Center = center;
         }
 
         public override bool PreDraw(ref Color lightColor)

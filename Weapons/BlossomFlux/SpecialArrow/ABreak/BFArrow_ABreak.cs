@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         public override void SetDefaults()
         {
             BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 260, penetrate: 5, extraUpdates: 1, tileCollide: true);
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)

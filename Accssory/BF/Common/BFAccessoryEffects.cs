@@ -72,19 +72,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 return true;
             }
 
-            if (type == ModContent.ProjectileType<BlossomFluxChloroplast>())
-            {
-                preset = projectile.ai[0] switch
-                {
-                    1f => BlossomFluxChloroplastPresetType.Chlo_BRecov,
-                    2f => BlossomFluxChloroplastPresetType.Chlo_CDetec,
-                    3f => BlossomFluxChloroplastPresetType.Chlo_DBomb,
-                    4f => BlossomFluxChloroplastPresetType.Chlo_EPlague,
-                    _ => BlossomFluxChloroplastPresetType.Chlo_ABreak
-                };
-                return true;
-            }
-
             return false;
         }
 

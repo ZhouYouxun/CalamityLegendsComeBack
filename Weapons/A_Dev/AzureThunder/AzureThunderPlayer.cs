@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -62,14 +63,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             ThunderCharge = Utils.Clamp(ThunderCharge, 0, ThunderChargeMax);
             UltimateEnergy = Utils.Clamp(UltimateEnergy, 0, UltimateEnergyMax);
+            CancelHarmonyIfWeaponChanged();
 
             if (RightClickCooldown > 0)
                 RightClickCooldown--;
 
-            if (HarmonyActive && Player.whoAmI == Main.myPlayer)
+            if (HarmonyActive)
             {
-                GreenUltimateFilterActive = true;
-                EnsureHarmonyBar();
+                if (Player.whoAmI == Main.myPlayer)
+                {
+                    GreenUltimateFilterActive = true;
+                    EnsureHarmonyBar();
+                }
+
+                SpawnHarmonyPlayerParticles();
             }
             else if (!HarmonyActive)
                 ActiveHarmonyDuration = 0;
@@ -111,6 +118,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void AddThunderCharge(int amount)
         {
+            // Empyrean of Truth locks charge gain so the ultimate cannot refill itself while active.
+            if (HarmonyActive)
+                return;
+
             if (amount <= 0)
                 return;
 
@@ -127,6 +138,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void AddUltimateEnergy(int amount)
         {
+            // This blocks all ultimate-energy recovery during Empyrean of Truth, including on-hit lightning rewards.
+            if (HarmonyActive)
+                return;
+
             if (amount <= 0)
                 return;
 
@@ -139,6 +154,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void TryGainThunderChargeFromTarget(NPC target)
         {
+            if (HarmonyActive)
+                return;
+
             if (target == null || !target.active || target.friendly || target.dontTakeDamage)
                 return;
 
@@ -264,6 +282,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void HandleUltimateAutoGain()
         {
+            // Passive ultimate recharge is disabled for the entire ultimate window.
+            if (HarmonyActive)
+            {
+                ultimateAutoGainTimer = 0;
+                return;
+            }
+
             if (UltimateEnergy >= UltimateEnergyMax)
             {
                 ultimateAutoGainTimer = 0;
@@ -469,7 +494,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             bool big = false,
             int ultimateEnergyGain = 0,
             bool applyCrumbling = false,
-            float spawnHeightMultiplier = 1f)
+            float spawnHeightMultiplier = 1f,
+            bool visualOnly = false)
         {
             Vector2 targetPosition = target?.Center ?? impactPosition;
             float spawnDistance = 1000f * Math.Max(0.1f, spawnHeightMultiplier);
@@ -484,6 +510,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 flags |= AzureThunderFlatLightning.BigLightningFlag;
             if (applyCrumbling)
                 flags |= AzureThunderFlatLightning.CrumblingFlag;
+            if (visualOnly)
+                flags |= AzureThunderFlatLightning.VisualOnlyFlag;
 
             SpawnDirectionalLightning(
                 source,
@@ -558,6 +586,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.projectile.IndexInRange(lightning))
                 ApplyProjectileGrowth(Main.projectile[lightning]);
+        }
+
+        private void CancelHarmonyIfWeaponChanged()
+        {
+            bool stillHoldingAzureThunder =
+                Player.HeldItem != null &&
+                !Player.HeldItem.IsAir &&
+                Player.HeldItem.type == ModContent.ItemType<AzureThunder>();
+
+            if (!HarmonyActive || stillHoldingAzureThunder)
+                return;
+
+            int buffIndex = Player.FindBuffIndex(ModContent.BuffType<AzureThunderHarmonyBuff>());
+            if (buffIndex >= 0)
+                Player.DelBuff(buffIndex);
+
+            ActiveHarmonyDuration = 0;
+            GreenUltimateFilterActive = false;
+        }
+
+        private void SpawnHarmonyPlayerParticles()
+        {
+            if (Main.dedServ || !HarmonyActive || Main.rand.NextBool(2))
+                return;
+
+            Vector2 auraPoint = Player.Center + Main.rand.NextVector2Circular(Player.width * 0.75f, Player.height * 0.85f);
+            Vector2 upwardDrift = -Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(1.4f, 4.2f);
+            Color green = new(80, 255, 130);
+            Color paleGreen = new(210, 255, 210);
+
+            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                auraPoint,
+                upwardDrift,
+                false,
+                Main.rand.Next(14, 22),
+                Main.rand.NextFloat(0.028f, 0.048f),
+                Color.Lerp(green, paleGreen, Main.rand.NextFloat(0.15f, 0.55f)),
+                new Vector2(1.5f, 0.42f),
+                true,
+                true,
+                0.85f));
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Player.Center + Main.rand.NextVector2Circular(28f, 36f),
+                    upwardDrift * 0.7f,
+                    false,
+                    Main.rand.Next(16, 26),
+                    Main.rand.NextFloat(0.45f, 0.85f),
+                    Main.rand.NextBool() ? green : paleGreen));
+            }
         }
     }
 

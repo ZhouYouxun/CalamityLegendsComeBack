@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
     internal sealed class BFLeafProj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         private const int ReconPostHitStraightFrames = 30;
+        private const int ReconHomingDelayFrames = 5;
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -79,6 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             {
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
                     Projectile.penetrate = 3;
+                    Projectile.localNPCHitCooldown = -1;
                     Projectile.timeLeft = 150;
                     StoredSpeed = MathHelper.Clamp(StoredSpeed + 2.2f, 15f, 27f);
                     break;
@@ -329,7 +331,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 
         private void UpdateReconHoming()
         {
-            if (FlightTimer < BFReconLeftBalance.HomingDelayFrames * Projectile.MaxUpdates)
+            if (FlightTimer < ReconHomingDelayFrames * Projectile.MaxUpdates)
             {
                 Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(FlightTimer * 0.08f + Projectile.identity) * 0.003f);
                 return;
@@ -383,7 +385,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
             }
 
             NPC bestTarget = null;
-            float bestDistance = 760f;
+            float bestDistance = 520f;
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile))

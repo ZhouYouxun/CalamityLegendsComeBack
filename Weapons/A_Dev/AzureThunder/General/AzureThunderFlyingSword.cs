@@ -89,9 +89,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 Projectile.friendly = true;
                 LaunchBoostTimer = 18;
-                NPC target = AzureThunderPlayer.FindNearestTarget(targetPoint, 720f) ?? AzureThunderPlayer.FindNearestTarget(Projectile.Center, 720f);
-                Vector2 destination = target?.Center ?? targetPoint;
-                Vector2 direction = (destination - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
+                Vector2 direction = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
+
+                // 72f is the lock-mouse burst speed; the sword no longer retargets enemies after the click is captured.
                 Projectile.velocity = direction * 72f;
                 AzureThunderSounds.PlaySwordLaunch(Projectile.Center);
             }

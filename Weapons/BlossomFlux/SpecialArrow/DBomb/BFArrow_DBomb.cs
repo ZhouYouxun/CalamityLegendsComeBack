@@ -266,6 +266,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             if (ReturnDelayTimer > 0f)
             {
                 ReturnDelayTimer--;
+                UpdateOffscreenBombardTarget();
                 Projectile.velocity = Vector2.Zero;
                 Projectile.tileCollide = false;
                 Projectile.friendly = false;
@@ -289,6 +290,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             BFArrowCommon.FaceForward(Projectile);
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 1.08f);
             EmitBombardFlightFX();
+        }
+
+        private void UpdateOffscreenBombardTarget()
+        {
+            if (!BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers) || ReturnDelayTimer <= 4f)
+                return;
+
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead)
+                return;
+
+            targetPoint = owner.Calamity().mouseWorld == Vector2.Zero ? Main.MouseWorld : owner.Calamity().mouseWorld;
+            Vector2 fallDirection = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitY * owner.gravDir);
+            float desiredSpeed = Math.Max(32f, storedAmmoSpeed * 1.7f);
+            delayedReturnVelocity = fallDirection * desiredSpeed * ReturnSpeedMultiplier;
+
+            if (Projectile.owner == Main.myPlayer)
+                Projectile.netUpdate = true;
         }
 
         private void TryDetonateAtTargetPoint()

@@ -2,6 +2,7 @@ using System;
 using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -23,6 +24,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private int timer;
         private bool dashing;
         private bool exploding;
+        private const int DropAnticipationFrames = 16;
+        private const float InitialDropSpeed = 92f;
+        private const float DropAcceleration = 12.5f;
+        private const float MaxDropSpeed = 176f;
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 18;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
@@ -68,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.scale = MathHelper.Lerp(Projectile.scale, 1.75f, 0.045f);
                 SpawnChargeVisuals();
 
-                if (timer >= 24)
+                if (timer >= DropAnticipationFrames)
                     BeginDrop();
 
                 return;
@@ -76,14 +87,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (dashing)
             {
-                float dashCompletion = Utils.GetLerpValue(0f, 22f, timer, true);
-                Projectile.velocity = Vector2.UnitY * MathHelper.Lerp(30.6f, 98.6f, dashCompletion * dashCompletion);
-                Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
+                // Heavy drop tuning: start fast, then gain 12.5 px/frame so it reads as a sudden execution stroke.
+                float lateralCorrection = (impactPosition.X - Projectile.Center.X) * 0.08f;
+                float trailSway = (float)Math.Sin(timer * 0.55f + Projectile.identity) * 2.2f;
+                Projectile.velocity.X = MathHelper.Lerp(Projectile.velocity.X, lateralCorrection + trailSway, 0.25f);
+                Projectile.velocity.Y = Math.Min(MaxDropSpeed, Projectile.velocity.Y + DropAcceleration);
+                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
                 SpawnFallingVisuals();
 
                 if (Projectile.Distance(impactPosition) < 46f)
                     BeginExplosion(impactPosition);
-                else if (timer >= 54)
+                else if (timer >= 34)
                     BeginExplosion(Projectile.Center);
 
                 return;
@@ -118,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             timer = 0;
             impactPosition = ResolveImpactPosition();
             Projectile.Center = new Vector2(impactPosition.X, Projectile.Center.Y);
-            Projectile.velocity = Vector2.UnitY * 30.6f;
+            Projectile.velocity = Vector2.UnitY * InitialDropSpeed;
             Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
             Projectile.friendly = true;
             AzureThunderSounds.PlayHeavyDrop(Projectile.Center);
@@ -173,6 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnFallingVisuals()
         {
+            Vector2 upwardTrail = -Projectile.velocity.SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 2; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -184,6 +199,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     Main.rand.NextFloat(1f, 1.6f));
                 dust.noGravity = true;
             }
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(38f, 38f),
+                    upwardTrail * Main.rand.NextFloat(4f, 9f) + Main.rand.NextVector2Circular(1.2f, 1.2f),
+                    false,
+                    Main.rand.Next(14, 21),
+                    Main.rand.NextFloat(0.045f, 0.075f),
+                    Main.rand.NextBool() ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure,
+                    new Vector2(2.2f, 0.46f),
+                    true,
+                    true,
+                    0.9f));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new LineParticle(
+                Projectile.Center - Projectile.velocity * Main.rand.NextFloat(0.12f, 0.35f),
+                upwardTrail * Main.rand.NextFloat(2.5f, 5.5f),
+                false,
+                Main.rand.Next(12, 18),
+                Main.rand.NextFloat(0.55f, 0.9f),
+                Main.rand.NextBool(3) ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure));
         }
 
         private void SpawnExplosionVisuals()
@@ -217,6 +255,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                if (oldCenter == Projectile.Size * 0.5f)
+                    continue;
+
+                float opacity = (1f - i / (float)Projectile.oldPos.Length) * (dashing ? 0.34f : 0.12f);
+                Color trailColor = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.PaleYellow, i / (float)Projectile.oldPos.Length) with { A = 0 };
+                Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, null, trailColor * opacity, Projectile.rotation, origin, Projectile.scale * (1f - i * 0.018f), SpriteEffects.None);
+            }
 
             HoldoutOutlineHelper.DrawSolidOutline(
                 texture,

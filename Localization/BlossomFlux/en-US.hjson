@@ -111,7 +111,6 @@ Mods: {
 
 		Projectiles: {
 			BlossomFlux: {
-				BlossomFluxChloroplast.DisplayName: Chloroplast Drone
 				NewLegendBlossomFluxHoldOut.DisplayName: BlossomFlux Holdout
 				BFSelectionPanel.DisplayName: Tactical Selection Panel
 				BFArrow_ABreak.DisplayName: Breakthrough Arrow

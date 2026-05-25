@@ -18,13 +18,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override string Texture => "CalamityLegendsComeBack/Texture/KsTexture/light_03";
 
         private int timer;
-        private const float ShaderTrailLength = 34f;
+        private const float ShaderTrailLength = 54f;
         private const float MagicDrawScale = 0.4f;
         private const float MaxHomingSpeed = 25.5f;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 20;
+            ProjectileID.Sets.TrailCacheLength[Type] = 54;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -105,53 +105,45 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             target.AddBuff(BuffID.Electrified, 180);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderSounds.PlayOrbImpact(target.Center);
-
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.18f);
-                Vector2 strikePoint = target.Center + Main.rand.NextVector2Circular(18f, 18f);
-                Vector2 spawnPosition = strikePoint + forward * 25f * 16f;
-
-                AzureThunderPlayer.SpawnFlatLightning(
-                    Projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    strikePoint - spawnPosition,
-                    Math.Max(1, (int)(Projectile.damage * 0.28f)),
-                    Projectile.knockBack * 0.25f,
-                    Projectile.owner,
-                    0.55f);
-            }
+            SpawnDisappearanceEffects(target.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/BloomCirclePinpoint").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 trailDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2[] stableTrailPositions = BuildStableTrailPositions(trailDirection);
 
-            if (GameShaders.Misc.TryGetValue("CalamityMod:SideStreakTrail", out MiscShaderData shader))
+            if (GameShaders.Misc.TryGetValue("CalamityMod:SylvestaffProjectile", out MiscShaderData shader))
             {
-                shader.UseImage1("Images/Misc/Perlin");
+                shader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
 
                 float WidthFunction(float completion, Vector2 _) =>
-                    Projectile.width * 0.82f * (float)Math.Sin(completion * MathHelper.Pi) * Projectile.Opacity;
+                    Projectile.scale *
+                    ((float)Math.Cos(MathHelper.Pi * completion * 5f - Main.GlobalTimeWrappedHourly * 23f) * 2.4f + 32f) *
+                    (1f - (float)Math.Pow(1f - Utils.GetLerpValue(0f, 0.3f, completion, true), 2f));
 
                 Color ColorFunction(float completion, Vector2 _)
                 {
-                    Color color = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.PaleYellow, completion * 0.75f);
+                    float increment = (float)Math.Cos(MathHelper.Pi * completion - Main.GlobalTimeWrappedHourly * 7.2f) * 0.5f + 0.5f;
+                    Color color = CalamityUtils.MulticolorLerp(increment, new Color(255, 147, 255), Color.White, new Color(109, 224, 255), Color.White);
                     color.A = 0;
-                    return color * (1f - completion) * 1.15f;
+                    return color * Projectile.Opacity;
                 }
 
+                // This mirrors SylvRay's ScarletDevilStreak shader trail so the first-combo orb reads as the same energy family.
                 PrimitiveRenderer.RenderTrail(
                     stableTrailPositions,
-                    new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Projectile.Size * 0.5f, shader: shader),
-                    38);
+                    new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Projectile.Size * 0.5f, true, false, shader: shader),
+                    32);
             }
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             DrawGuaranteedShaderCore(texture, drawPosition, trailDirection);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, new Color(109, 224, 255) with { A = 0 } * 0.65f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.58f, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White with { A = 0 } * 0.38f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.28f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, drawPosition, null, AzureThunderColors.PaleYellow with { A = 0 } * 0.75f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.55f * MagicDrawScale, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, drawPosition, null, Color.White with { A = 0 } * 0.45f, Projectile.rotation + MathHelper.PiOver2, texture.Size() * 0.5f, Projectile.scale * 0.3f * MagicDrawScale, SpriteEffects.None);
             Main.spriteBatch.ExitShaderRegion();
@@ -175,6 +167,40 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
 
             return stablePositions;
+        }
+
+        private void SpawnDisappearanceEffects(Vector2 impactCenter)
+        {
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            // On-hit now dissolves into lightning visuals only; it does not create extra damaging bolts.
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = forward.RotatedByRandom(0.9f) * Main.rand.NextFloat(-4.5f, 4.5f);
+                GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                    impactCenter + Main.rand.NextVector2Circular(14f, 14f),
+                    velocity,
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.14f, 0.22f),
+                    Main.rand.NextBool() ? AzureThunderColors.Azure : AzureThunderColors.PaleYellow,
+                    new Vector2(1.7f, 0.72f),
+                    true,
+                    true,
+                    false,
+                    0.45f));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                impactCenter,
+                Vector2.Zero,
+                new Color(109, 224, 255),
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                0f,
+                0.7f,
+                0.12f,
+                12));
         }
 
         private void DrawGuaranteedShaderCore(Texture2D texture, Vector2 drawPosition, Vector2 trailDirection)

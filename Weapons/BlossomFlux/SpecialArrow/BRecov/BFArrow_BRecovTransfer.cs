@@ -293,11 +293,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         private static int FindRecoveryTargetPlayerIndex(Player owner, Vector2 center, float maxDistance)
         {
-            int injuredTarget = FindRandomInjuredPlayerIndex(owner, center, maxDistance);
-            if (injuredTarget >= 0)
-                return injuredTarget;
+            int bestIndex = -1;
+            float bestScore = float.MinValue;
 
-            return -1;
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player candidate = Main.player[i];
+                if (!candidate.active || candidate.dead)
+                    continue;
+
+                float allowedDistance = candidate.lifeMagnet ? maxDistance * 1.5f : maxDistance;
+                if (Vector2.Distance(candidate.Center, center) > allowedDistance)
+                    continue;
+
+                BFRecoveryEcologyPlayer ecology = candidate.GetModPlayer<BFRecoveryEcologyPlayer>();
+                float healthMissing = candidate.statLifeMax2 > 0 ? 1f - candidate.statLife / (float)candidate.statLifeMax2 : 0f;
+                float leafMissing = 1f - MathHelper.Clamp(ecology.LeafTimeLeft / (float)Math.Max(1, BFRecoveryLeftBalance.GetStats().LeafMaxTime), 0f, 1f);
+                float ownerBias = candidate.whoAmI == owner.whoAmI ? 0.04f : 0f;
+                float score = healthMissing * 2.4f + leafMissing + ownerBias;
+
+                if (score <= bestScore)
+                    continue;
+
+                bestScore = score;
+                bestIndex = i;
+            }
+
+            return bestIndex;
         }
 
         private void RefreshHealTarget()

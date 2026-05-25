@@ -148,6 +148,7 @@ Mods: {
 				SHPCNecroplasmDamage.DisplayName: 死灵质爆发
 				UnholyEssence_Wave.DisplayName: 渎神精华波
 				AscendantSpirit_PROJ.DisplayName: 升华之灵弹体
+				// AscendantSpirit_BurstRelay.DisplayName: Ascendant Spirit Burst Relay
 				AshesofAnn_Located.DisplayName: 安之余烬定位标记
 				AshesofAnn_SuperEXP.DisplayName: 安之余烬超爆
 				AshesofAnn_BurstRelay.DisplayName: 安之余烬连发核心

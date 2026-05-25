@@ -17,11 +17,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void Update(Player player, ref int buffIndex)
         {
+            if (player.HeldItem?.type != ModContent.ItemType<AzureThunder>())
+            {
+                player.DelBuff(buffIndex);
+                buffIndex--;
+                return;
+            }
+
             player.statDefense += 9;
             player.endurance += 0.09f;
             player.buffImmune[BuffID.ManaSickness] = true;
 
-            // TODO: Adrenaline immunity.
+            // This 35% final-damage style buff is tied to SunderBlade only; weapon swaps immediately cancel it.
             player.GetDamage(DamageClass.Generic) *= 1.35f;
 
             player.lifeRegenTime += 2;

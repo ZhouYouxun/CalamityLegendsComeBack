@@ -24,7 +24,6 @@
 	  <Folder Include="Weapons\A_Olds\GhostSniperRifle\" />
 	  <Folder Include="Weapons\A_Olds\DeathMagnum\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
-	  <Folder Include="Weapons\BlossomFlux\EXSkill\特效文件参考\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />

@@ -109,7 +109,6 @@ Mods: {
 
 		Projectiles: {
 			BlossomFlux: {
-				BlossomFluxChloroplast.DisplayName: 叶绿体浮游器
 				NewLegendBlossomFluxHoldOut.DisplayName: 叶流持弓
 				BFSelectionPanel.DisplayName: 战术选择面板
 				BFArrow_ABreak.DisplayName: 突击箭
