@@ -15,8 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
     internal sealed class AzureThunderPlayer : ModPlayer
     {
         public const int AttackManaCost = 8;
-        public const int ThunderChargeMax = 10;
-        public const int UltimateEnergyMax = 120;
+        public const int ThunderChargeMax = 3;
+        public const int UltimateEnergyMax = 240;
         public const int HarmonyDuration = 25 * 60;
         public const int RightClickCooldownMax = 3 * 60;
         public const int AutoGroundSwordInterval = 10 * 60;

@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public const int MaxGroundSwords = 9;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunder";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/GroundAzureThunder";
 
         private bool initialized;
         private Vector2 diveTarget;
