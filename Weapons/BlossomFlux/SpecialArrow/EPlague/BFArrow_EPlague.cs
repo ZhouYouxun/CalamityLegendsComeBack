@@ -2,7 +2,6 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
-using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,10 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
     {
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/SpecialArrow/EPlague/BFArrow_EPlague";
-        public const float LeftSporeState = -1f;
         private const float RightSporeSearchRange = 920f;
         private const int SporeHomingDelay = 25;
-        private const string SporeBombTexturePath = "CalamityLegendsComeBack/Weapons/BlossomFlux/LeafProj/BlossomFluxBOMB";
 
         private int gasTimer;
         private int storedGasDamage = 1;
@@ -32,12 +29,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
         private ref float AttachedNpcIndex => ref Projectile.ai[1];
         private ref float FlightTimer => ref Projectile.localAI[0];
         private ref float BounceCounter => ref Projectile.localAI[1];
-        private bool IsLeftSpore => AttachedNpcIndex == LeftSporeState || State == LeftSporeState;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
-            ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
+            ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
         public override void SetDefaults()
@@ -51,51 +47,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             storedGasDamage = System.Math.Max(Projectile.damage, 1);
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
 
-            if (IsLeftSpore)
-            {
-                State = 0f;
-                AttachedNpcIndex = LeftSporeState;
-                Projectile.width = 14;
-                Projectile.height = 14;
-                Projectile.alpha = 255;
-                Projectile.extraUpdates = 1;
-                Projectile.penetrate = 1;
-                Projectile.timeLeft = 300;
-                Projectile.light = 0.2f;
-                Projectile.scale = 1f;
-                Projectile.rotation = 0f;
-                Projectile.localAI[0] = 0f;
-                Projectile.localAI[1] = 0f;
-                Projectile.DamageType = DamageClass.Ranged;
-                Projectile.ignoreWater = false;
-                Projectile.arrow = false;
-                Projectile.noDropItem = false;
-                Projectile.usesLocalNPCImmunity = false;
-                Projectile.usesIDStaticNPCImmunity = false;
-                Projectile.localNPCHitCooldown = -1;
-                BFArrowCommon.TagBlossomFluxLeftArrow(Projectile);
-                return;
-            }
-
             Projectile.extraUpdates = 2;
             Projectile.velocity *= 1.2f;
             Projectile.scale = 1f;
         }
 
-        public override bool? CanDamage() => IsLeftSpore || State <= 0f ? null : false;
+        public override bool? CanDamage() => State <= 0f ? null : false;
 
-        public override bool? CanHitNPC(NPC target) => IsLeftSpore || State <= 0f ? null : false;
+        public override bool? CanHitNPC(NPC target) => State <= 0f ? null : false;
 
         public override void AI()
         {
-            if (IsLeftSpore)
-            {
-                UpdateLeftSporeBombAI();
-                return;
-            }
-
-            if (!IsLeftSpore)
-                Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague).ToVector3() * 0.42f);
+            Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague).ToVector3() * 0.42f);
 
             if (State == 0f)
             {
@@ -138,12 +101,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (IsLeftSpore)
-            {
-                HandleLeftSporeHit(target);
-                return;
-            }
-
             if (State != 0f)
                 return;
 
@@ -192,9 +149,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            if (IsLeftSpore)
-                return true;
-
             State = 2f;
             Projectile.velocity = Vector2.Zero;
             Projectile.timeLeft = 180;
@@ -207,123 +161,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
 
         public override void OnKill(int timeLeft)
         {
-            if (IsLeftSpore)
-            {
-                SpawnLeftSporeBombKillEffects();
-                return;
-            }
-
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 14, 1.2f, 4.2f, 0.9f, 1.25f);
-        }
-
-        public override Color? GetAlpha(Color lightColor)
-        {
-            if (IsLeftSpore)
-                return new Color(Main.DiscoR, 203, 103, Projectile.alpha);
-
-            return null;
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             if (State <= 0f)
             {
-                if (IsLeftSpore)
-                {
-                    Texture2D sporeBombTexture = ModContent.Request<Texture2D>(SporeBombTexturePath).Value;
-                    CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], lightColor, 1, sporeBombTexture);
-                }
-                else
-                {
-                    DrawPlagueSprayOverlay();
-                    BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.28f);
-                }
+                DrawPlagueSprayOverlay();
+                BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_EPlague, 1.28f);
             }
             else
                 BFArrowCommon.DrawProjectile(Projectile, Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value, Projectile.GetAlpha(lightColor), Projectile.rotation, Projectile.scale);
 
             return false;
-        }
-
-        private void HandleLeftSporeHit(NPC target)
-        {
-            bool markedTarget = target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner);
-            BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
-            pollution.ApplyPollution(target, markedTarget);
-            pollution.ApplyPlagueDebuffs(target, markedTarget);
-            target.AddBuff(BuffID.Poisoned, 180);
-            target.AddBuff(BuffID.Venom, 100);
-            target.AddBuff(ModContent.BuffType<MiracleBlight>(), markedTarget ? 480 : 240);
-        }
-
-        private void UpdateLeftSporeBombAI()
-        {
-            Projectile.alpha -= 2;
-            if (Projectile.localAI[0] == 0f)
-            {
-                Projectile.scale += 0.05f;
-                if (Projectile.scale > 1.2f)
-                    Projectile.localAI[0] = 1f;
-            }
-            else
-            {
-                Projectile.scale -= 0.05f;
-                if (Projectile.scale < 0.8f)
-                    Projectile.localAI[0] = 0f;
-            }
-
-            Projectile.ai[0] += 1f;
-            if (Projectile.ai[0] >= 20f && Projectile.ai[0] < 40f)
-            {
-                Projectile.velocity.Y += 0.3f;
-                Projectile.velocity.X *= 0.98f;
-            }
-            else if (Projectile.ai[0] >= 40f && Projectile.ai[0] < 60f)
-            {
-                Projectile.velocity.Y -= 0.3f;
-                Projectile.velocity.X *= 1.02f;
-            }
-            else if (Projectile.ai[0] >= 60f)
-            {
-                Projectile.ai[0] = 0f;
-            }
-        }
-
-        private void SpawnLeftSporeBombKillEffects()
-        {
-            SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
-            for (int d = 0; d < 25; d++)
-            {
-                int index = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.ChlorophyteWeapon, 0f, 0f, 0, new Color(Main.DiscoR, 203, 103), 1f);
-                Main.dust[index].noGravity = true;
-                Main.dust[index].velocity *= 1.5f;
-                Main.dust[index].scale = 1.5f;
-            }
-
-            int sporeAmt = Main.rand.Next(3, 7);
-            if (Projectile.owner != Main.myPlayer)
-                return;
-
-            for (int s = 0; s < sporeAmt; s++)
-            {
-                Vector2 velocity = CalamityUtils.RandomVelocity(100f, 70f, 100f);
-                int proj = Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    velocity,
-                    ProjectileID.SporeGas + Main.rand.Next(3),
-                    (int)(Projectile.damage * 0.25f),
-                    0f,
-                    Projectile.owner);
-
-                if (!BFArrowCommon.InBounds(proj, Main.maxProjectiles))
-                    continue;
-
-                Main.projectile[proj].DamageType = DamageClass.Ranged;
-                Main.projectile[proj].usesLocalNPCImmunity = true;
-                Main.projectile[proj].usesIDStaticNPCImmunity = false;
-                Main.projectile[proj].localNPCHitCooldown = 30;
-            }
         }
 
         private void UpdateSporeBombFlight()
@@ -653,7 +504,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float squash = Utils.GetLerpValue(-3f, 10f, Projectile.velocity.Length(), true);
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
-            float visualScale = IsLeftSpore ? 1.5f : 1.28f;
+            float visualScale = 1.28f;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(

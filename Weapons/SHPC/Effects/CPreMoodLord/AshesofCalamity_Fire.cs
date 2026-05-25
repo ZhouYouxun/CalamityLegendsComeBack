@@ -60,8 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void SetDefaults()
         {
-            Projectile.width = 42;
-            Projectile.height = 42;
+            Projectile.width = Projectile.height = 200;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.ignoreWater = true;

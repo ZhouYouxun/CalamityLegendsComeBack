@@ -90,6 +90,7 @@ Mods: {
 						[c/8EF5A8:能量充满后，按下 [{0}] 释放森绿箭幕。]
 						'''
 					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
+					BF_FormWheelHint: "[c/F7D87C:按住 [{0}] 打开战术轮盘；松开时会切换到当前扇区的战术。]"
 					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:

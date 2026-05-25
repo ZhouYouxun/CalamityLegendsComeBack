@@ -122,10 +122,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
             var assignedKeys = KeybindSystem.LegendarySkill.GetAssignedKeys();
             string keyText = assignedKeys.Count > 0 ? assignedKeys[0] : "Unbound";
+            var formAssignedKeys = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys();
+            string formKeyText = formAssignedKeys.Count > 0 ? formAssignedKeys[0] : "Unbound";
             bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
             string exHint = legendaryEmblemEquipped
                 ? string.Format(this.GetLocalizedValue("BF_EXHint"), keyText)
                 : this.GetLocalizedValue("BF_EXDisabledHint");
+            string formWheelHint = string.Format(this.GetLocalizedValue("BF_FormWheelHint"), formKeyText);
 
             string merged =
                 introText + "\n\n" +
@@ -133,6 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 leftPresetText + "\n" +
                 rightPresetText + "\n\n" +
                 exHint + "\n\n" +
+                formWheelHint + "\n\n" +
                 legendarySection + "\n";
 
             tooltips.FindAndReplace("[GFB]", merged);

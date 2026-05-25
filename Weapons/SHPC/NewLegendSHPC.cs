@@ -860,10 +860,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 legendarySection = legendaryText;
 
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
             bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
             string exHint = legendaryEmblemEquipped
                 ? string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText)
                 : this.GetLocalizedValue("SHPC_EXDisabledHint");
+            string ammoWheelHint = string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), formKeyText);
 
             // ===== 拼接 =====
             string finalText =
@@ -872,6 +874,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 "\n\n" +
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
+                ammoWheelHint + "\n\n" +
                 finalLine + "\n\n" +
                 legendarySection + "\n";
 

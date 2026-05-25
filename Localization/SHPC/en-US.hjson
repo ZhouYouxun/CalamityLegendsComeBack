@@ -54,6 +54,7 @@ Mods: {
 						[c/FF7043:After a brief charge, unleash a colossal laser that pierces through everything.]
 						'''
 					SHPC_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					SHPC_AmmoWheelHint: "[c/F7D87C:Hold [{0}] to open the material wheel; release over a sector to load that material.]"
 					Tooltip: "[GFB]"
 					TooltipGFB: Have you finally arrived here?
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"

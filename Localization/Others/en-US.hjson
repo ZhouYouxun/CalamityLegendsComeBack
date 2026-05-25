@@ -80,17 +80,8 @@ Mods: {
 		}
 
 		Keybinds: {
-			LegendarySkill: Legendary skill
-			LegendaryWeaponFormSwitch: Legendary Weapon Form Switch
-
-			Mods: {
-				CalamityLegendsComeBack: {
-					Keybinds: {
-						LegendarySkill.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Skill
-						LegendaryWeaponFormSwitch.DisplayName: Mods. Calamity Legends Come Back. Keybinds. Legendary Weapon Form Switch
-					}
-				}
-			}
+			LegendarySkill.DisplayName: Legendary Skill
+			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
 		}
 	}
 }

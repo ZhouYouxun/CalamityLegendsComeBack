@@ -1497,7 +1497,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            int finalProjectileType = ModContent.ProjectileType<BFArrow_EPlague>();
+            int finalProjectileType = ModContent.ProjectileType<BFLeftPlagueReaper>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 origin = GunTipPosition;
             float speedMultiplier = GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_EPlague);
@@ -1513,14 +1513,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Math.Max(1, (int)(damage * 1.05f)),
                 knockback * 0.72f,
                 Owner.whoAmI,
-                0f,
-                BFArrow_EPlague.LeftSporeState);
+                Main.rand.NextFloat(1000f),
+                Main.rand.NextFloat(3f));
 
             if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
             {
                 Projectile arrowProjectile = Main.projectile[projectileIndex];
-                arrowProjectile.arrow = false;
-                arrowProjectile.noDropItem = false;
+                arrowProjectile.arrow = true;
+                arrowProjectile.noDropItem = true;
                 BFArrowCommon.TagBlossomFluxLeftArrow(arrowProjectile);
                 BFArrow_CDetecEffect arrowEffect = arrowProjectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
                 arrowEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_EPlague;

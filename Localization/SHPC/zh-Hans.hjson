@@ -54,6 +54,7 @@ Mods: {
 						[c/FF7043:经过短暂蓄力，释放一道短暂但足以贯穿一切的超巨型激光。]
 						'''
 					SHPC_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
+					SHPC_AmmoWheelHint: "[c/F7D87C:按住 [{0}] 打开装药轮盘；松开时会装填当前扇区的材料。]"
 					Tooltip: "[GFB]"
 					TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。
 					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
