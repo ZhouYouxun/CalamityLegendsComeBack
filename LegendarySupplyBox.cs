@@ -1,6 +1,5 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
-using CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod.Rarities;
@@ -8,6 +7,7 @@ using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 
 namespace CalamityLegendsComeBack
 {

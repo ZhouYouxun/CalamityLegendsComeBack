@@ -11,7 +11,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.SacredThunder
+namespace CalamityLegendsComeBack.Weapons.A_Olds.SacredThunder
 {
     public class SacredThunderPROJ : ModProjectile, ILocalizedModType
     {

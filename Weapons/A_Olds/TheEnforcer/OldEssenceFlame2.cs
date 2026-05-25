@@ -9,7 +9,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
+namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
 {
     internal class OldEssenceFlame2 : ModProjectile, ILocalizedModType
     {

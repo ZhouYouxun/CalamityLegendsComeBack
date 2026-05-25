@@ -11,7 +11,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.Tools
+namespace CalamityLegendsComeBack.Weapons.A_Tools
 {
     public class CTRLBoss : ModItem, ILocalizedModType
     {

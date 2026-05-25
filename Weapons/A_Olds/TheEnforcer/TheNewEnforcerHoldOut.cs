@@ -11,12 +11,14 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
+namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
 {
     internal class TheNewEnforcerHoldOut : BaseSwordHoldoutProjectile, ILocalizedModType
     {
         private const float FlameDamageFactor = 0.42f;
         private const float SlashDamageFactor = 0.34f;
+        private const float FlameTargetRange = 4400f;
+        private static readonly Vector2 GripOffsetFromTextureCenter = new(-10f, 10f);
 
         private bool firedFlames;
 
@@ -99,7 +101,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
                 if (!firedFlames && SwingCompletion >= 0.34f)
                 {
                     FireEssenceVolley(owner);
-                    ApplyScreenShake(4.2f);
                     firedFlames = true;
                 }
 
@@ -107,6 +108,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
             }
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.42f, 0.18f, 0.74f) * Projectile.Opacity);
+        }
+
+        public override void PostAI()
+        {
+            Player owner = Main.player[Projectile.owner];
+            Vector2 gripPosition = GetGripWorldPosition();
+            Vector2 armCenter = owner.MountedCenter - new Vector2(5f * owner.direction, 2f);
+            Vector2 armDirection = armCenter - gripPosition;
+            armDirection.Y *= owner.gravDir;
+
+            owner.heldProj = Projectile.whoAmI;
+            owner.itemRotation = ((gripPosition - armCenter).SafeNormalize(Vector2.UnitX * owner.direction) * owner.direction).ToRotation();
+            owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armDirection.ToRotation() + MathHelper.PiOver2);
         }
 
         private void FireEssenceVolley(Player owner)
@@ -118,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
             Vector2 bladeTip = GetBladeTip(owner);
             Vector2 bladeBase = Vector2.Lerp(owner.MountedCenter, Projectile.Center, 0.45f);
             Vector2 normal = bladeDirection.RotatedBy(MathHelper.PiOver2);
-            NPC target = FindBestTarget(bladeTip, bladeDirection, 2800f);
+            NPC target = FindBestTarget(bladeTip, bladeDirection, FlameTargetRange);
             const int flameCount = 7;
 
             for (int i = 0; i < flameCount; i++)
@@ -254,6 +268,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
         private Vector2 GetBladeTip(Player owner) =>
             Projectile.Center + GetBladeDirection(owner) * lineCollisionLength * 0.48f * Projectile.scale;
 
+        private Vector2 GetGripWorldPosition()
+        {
+            Vector2 gripOffset = GripOffsetFromTextureCenter;
+            if (Projectile.spriteDirection == -1)
+                gripOffset.X *= -1f;
+
+            return Projectile.Center + gripOffset.RotatedBy(Projectile.rotation) * Projectile.scale;
+        }
+
         private static NPC FindBestTarget(Vector2 origin, Vector2 aimDirection, float range)
         {
             NPC bestTarget = null;
@@ -317,12 +340,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
                     Main.rand.NextFloat(0.48f, 0.78f),
                     color));
             }
-        }
-
-        private void ApplyScreenShake(float power)
-        {
-            float distanceFactor = Utils.GetLerpValue(1400f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower = System.Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

@@ -13,12 +13,13 @@ using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
+namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
 {
     internal sealed class NewEssenceFlame2 : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private const int Lifetime = 300;
-        private const float HomingRange = 2800f;
+        private const int Lifetime = 420;
+        private const float HomingRange = 4400f;
+        private const float TargetRetentionRange = HomingRange * 1.45f;
 
         private ref float TargetIndex => ref Projectile.ai[0];
         private ref float Phase => ref Projectile.ai[1];
@@ -35,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
         public override void SetStaticDefaults()
         {
             Main.projFrames[Type] = 4;
-            ProjectileID.Sets.TrailCacheLength[Type] = 34;
+            ProjectileID.Sets.TrailCacheLength[Type] = 54;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -77,9 +78,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
             if (target is not null)
             {
                 float distance = Projectile.Distance(target.Center);
-                float lockIn = Utils.GetLerpValue(ReleaseDelay, ReleaseDelay + 70f, Timer, true);
-                float terminal = Utils.GetLerpValue(320f, 85f, distance, true);
-                float farBoost = Utils.GetLerpValue(620f, 1650f, distance, true);
+                float lockIn = Utils.GetLerpValue(ReleaseDelay, ReleaseDelay + 110f, Timer, true);
+                float terminal = Utils.GetLerpValue(380f, 92f, distance, true);
+                float farBoost = Utils.GetLerpValue(780f, 2600f, distance, true);
                 Vector2 aimPoint = ComputeHomingAimPoint(target, currentDirection, currentSpeed, distance, lockIn, terminal);
                 Vector2 desiredDirection = (aimPoint - Projectile.Center).SafeNormalize(currentDirection);
 
@@ -94,10 +95,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
                 {
                     float side = CenteredLane == 0f ? (Projectile.identity % 2 == 0 ? 1f : -1f) : Math.Sign(CenteredLane);
                     Vector2 tangent = desiredDirection.RotatedBy(MathHelper.PiOver2 * side);
-                    float slip = MathF.Sin(Timer * (0.085f + FlameProfile * 0.008f) + Seed) * (1f - terminal) * (0.22f + Math.Abs(CenteredLane) * 0.045f);
+                    float lateStability = Utils.GetLerpValue(180f, 360f, Timer, true);
+                    float slip = MathF.Sin(Timer * (0.075f + FlameProfile * 0.006f) + Seed) * (1f - terminal) * (0.24f + Math.Abs(CenteredLane) * 0.04f) * (1f - lateStability * 0.45f);
                     Vector2 curvedDirection = (desiredDirection + tangent * slip).SafeNormalize(desiredDirection);
-                    float targetSpeed = MathHelper.Lerp(13.5f, 24f + FlameProfile * 1.4f, lockIn) + farBoost * 8.5f + terminal * 5.5f;
-                    float turnStrength = MathHelper.Lerp(0.045f, 0.18f, lockIn) + terminal * 0.14f + farBoost * 0.035f;
+                    float targetSpeed = MathHelper.Lerp(14.5f, 30f + FlameProfile * 1.8f, lockIn) + farBoost * 11.5f + terminal * 6.5f;
+                    float turnStrength = MathHelper.Lerp(0.052f, 0.22f, lockIn) + terminal * 0.18f + farBoost * 0.06f + lateStability * 0.04f;
                     Projectile.velocity = Vector2.Lerp(Projectile.velocity, curvedDirection * targetSpeed, turnStrength);
                 }
 
@@ -107,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
             {
                 float searchWeave = MathF.Sin(Timer * 0.06f + Seed) * 0.035f;
                 Vector2 searchDirection = currentDirection.RotatedBy(searchWeave);
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, searchDirection * MathHelper.Clamp(currentSpeed + 0.08f, 12f, 24f), 0.055f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, searchDirection * MathHelper.Clamp(currentSpeed + 0.11f, 14f, 32f), 0.06f);
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
@@ -123,11 +125,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
             if (targetIndex >= 0 && targetIndex < Main.maxNPCs)
             {
                 lockedTarget = Main.npc[targetIndex];
-                if (lockedTarget.active && lockedTarget.CanBeChasedBy(Projectile) && Projectile.Distance(lockedTarget.Center) <= HomingRange * 1.25f)
-                {
-                    if (Timer < ReleaseDelay + 42f)
-                        return lockedTarget;
-                }
+                if (lockedTarget.active && lockedTarget.CanBeChasedBy(Projectile) && Projectile.Distance(lockedTarget.Center) <= TargetRetentionRange)
+                    return lockedTarget;
                 else
                     lockedTarget = null;
             }
@@ -146,7 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
 
                 Vector2 toTarget = (npc.Center - Projectile.Center).SafeNormalize(currentDirection);
                 float forwardness = Vector2.Dot(currentDirection, toTarget);
-                float anglePenalty = (1f - forwardness) * 260f;
+                float anglePenalty = (1f - forwardness) * MathHelper.Lerp(170f, 330f, Utils.GetLerpValue(0f, ReleaseDelay + 90f, Timer, true));
                 float lanePenalty = Math.Abs(CenteredLane) * 7f;
                 float score = distance + anglePenalty + lanePenalty;
                 if (lockedTarget is not null && npc.whoAmI == lockedTarget.whoAmI)
@@ -168,8 +167,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
         {
             float side = CenteredLane == 0f ? (Projectile.identity % 2 == 0 ? 1f : -1f) : Math.Sign(CenteredLane);
             float laneMagnitude = Math.Abs(CenteredLane);
-            float leadTime = MathHelper.Clamp(distance / Math.Max(currentSpeed, 1f), 8f, 54f);
-            float leadScale = MathHelper.Lerp(0.35f, 0.88f, lockIn);
+            float leadTime = MathHelper.Clamp(distance / Math.Max(currentSpeed, 1f), 10f, 72f);
+            float leadScale = MathHelper.Lerp(0.42f, 1.08f, lockIn);
             Vector2 predictedCenter = target.Center + target.velocity * leadTime * leadScale;
             Vector2 targetDirection = (predictedCenter - Projectile.Center).SafeNormalize(currentDirection);
             Vector2 tangent = targetDirection.RotatedBy(MathHelper.PiOver2 * side);
@@ -182,9 +181,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
                 _ => 0.34f
             };
 
-            float orbitRadius = MathHelper.Lerp(190f + laneMagnitude * 24f, 10f + laneMagnitude * 4f, MathHelper.Clamp(lockIn + terminal * 0.65f, 0f, 1f));
-            float weave = MathF.Sin(Timer * (0.055f + FlameProfile * 0.006f) + Seed) * (46f + laneMagnitude * 11f) * (1f - terminal) * (1f - lockIn * 0.32f);
-            float pullBack = MathHelper.Lerp(118f, 0f, lockIn) * (FlameProfile == 1 ? 1.25f : 0.56f) * (1f - terminal);
+            float orbitRadius = MathHelper.Lerp(230f + laneMagnitude * 28f, 8f + laneMagnitude * 3f, MathHelper.Clamp(lockIn + terminal * 0.75f, 0f, 1f));
+            float weave = MathF.Sin(Timer * (0.044f + FlameProfile * 0.005f) + Seed) * (54f + laneMagnitude * 12f) * (1f - terminal) * (1f - lockIn * 0.42f);
+            float pullBack = MathHelper.Lerp(136f, 0f, lockIn) * (FlameProfile == 1 ? 1.18f : 0.5f) * (1f - terminal);
 
             return predictedCenter + tangent * (orbitRadius * profileBias + weave) - targetDirection * pullBack;
         }
@@ -305,34 +304,45 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(
                 streak,
-                drawPosition - direction * 8f,
+                drawPosition - direction * 14f,
                 null,
-                additiveColor * 0.58f * fade,
+                additiveColor * 0.72f * fade,
                 direction.ToRotation(),
                 streak.Size() * 0.5f,
-                new Vector2(0.82f, 0.24f) * Projectile.scale * pulse,
+                new Vector2(1.18f, 0.28f) * Projectile.scale * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                streak,
+                drawPosition + direction * 12f,
+                null,
+                Color.White with { A = 0 } * 0.38f * fade,
+                direction.ToRotation(),
+                streak.Size() * 0.5f,
+                new Vector2(0.42f, 0.16f) * Projectile.scale * pulse,
                 SpriteEffects.None,
                 0f);
 
             Main.EntitySpriteDraw(
                 bloom,
-                drawPosition,
+                drawPosition + direction * 7f,
                 null,
-                additiveColor * 0.42f * fade,
+                additiveColor * 0.62f * fade,
                 0f,
                 bloom.Size() * 0.5f,
-                0.18f * Projectile.scale * pulse,
+                0.28f * Projectile.scale * pulse,
                 SpriteEffects.None,
                 0f);
 
             Main.EntitySpriteDraw(
                 texture,
-                drawPosition,
+                drawPosition + direction * 2f,
                 frame,
-                Color.Lerp(color, Color.White, 0.18f) * fade,
+                Color.Lerp(color, Color.White, 0.36f) * fade,
                 Projectile.rotation,
                 frame.Size() * 0.5f,
-                Projectile.scale * 1.12f,
+                Projectile.scale * 1.32f,
                 SpriteEffects.None,
                 0f);
 
@@ -344,13 +354,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
         {
             Vector2[] trailPoints = Projectile.oldPos
                 .Where(position => position != Vector2.Zero)
-                .Select(position => position + Projectile.Size * 0.5f)
                 .ToArray();
 
             if (trailPoints.Length == 0)
-                trailPoints = new[] { Projectile.Center - Projectile.velocity, Projectile.Center };
-            else if (trailPoints[0] != Projectile.Center)
-                trailPoints = new[] { Projectile.Center }.Concat(trailPoints).ToArray();
+                trailPoints = new[] { Projectile.position - Projectile.velocity, Projectile.position };
+            else if (trailPoints[0] != Projectile.position)
+                trailPoints = new[] { Projectile.position }.Concat(trailPoints).ToArray();
 
             if (trailPoints.Length < 2)
                 return;
@@ -363,13 +372,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
                 new PrimitiveSettings(
                     TrailWidth,
                     TrailColor,
-                    (_, _) => Projectile.Size * 0.5f,
+                    PrimitiveTrailOffset,
                     true,
                     true,
                     GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
-                trailPoints.Length * 3);
+                trailPoints.Length * 4);
 
-            Vector2[] corePoints = trailPoints.Take(Math.Min(12, trailPoints.Length)).ToArray();
+            Vector2[] corePoints = trailPoints.Take(Math.Min(20, trailPoints.Length)).ToArray();
             if (corePoints.Length < 2)
                 return;
 
@@ -381,27 +390,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
                 new PrimitiveSettings(
                     CoreTrailWidth,
                     CoreTrailColor,
-                    (_, _) => Projectile.Size * 0.5f,
+                    PrimitiveTrailOffset,
                     true,
                     true,
                     GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
-                corePoints.Length * 3);
+                corePoints.Length * 4);
         }
 
+        private Vector2 PrimitiveTrailOffset(float completion, Vector2 _) =>
+            Projectile.Size * 0.5f + Projectile.velocity.SafeNormalize(Vector2.Zero) * Utils.Remap(completion, 0f, 0.18f, 6f, 0f);
+
         private float TrailWidth(float completion, Vector2 _) =>
-            Utils.Remap(completion, 0f, 0.86f, Projectile.scale * 34f, 0f) * Projectile.Opacity;
+            Utils.Remap(completion, 0f, 0.9f, Projectile.scale * 46f, 0f) * Projectile.Opacity;
 
         private Color TrailColor(float completion, Vector2 _)
         {
-            Color head = EnergyColor(Phase + completion * 0.25f);
+            Color head = Color.Lerp(Color.White, EnergyColor(Phase + completion * 0.25f), Utils.GetLerpValue(0f, 0.22f, completion, true) * 0.55f);
             Color tail = Color.Lerp(new Color(28, 8, 64), Color.Transparent, Utils.GetLerpValue(0.58f, 1f, completion, true));
             head.A = 0;
             tail.A = 0;
-            return Color.Lerp(head, tail, completion) * (1f - completion * 0.32f) * Projectile.Opacity;
+            return Color.Lerp(head, tail, completion) * (1f - completion * 0.24f) * Projectile.Opacity;
         }
 
         private float CoreTrailWidth(float completion, Vector2 _) =>
-            Utils.Remap(completion, 0f, 0.78f, Projectile.scale * 11f, 0f) * Projectile.Opacity;
+            Utils.Remap(completion, 0f, 0.82f, Projectile.scale * 17f, 0f) * Projectile.Opacity;
 
         private Color CoreTrailColor(float completion, Vector2 _)
         {

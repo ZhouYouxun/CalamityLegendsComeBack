@@ -11,7 +11,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.SacredThunder
+namespace CalamityLegendsComeBack.Weapons.A_Olds.SacredThunder
 {
     public class SacredThunder : RogueWeapon, ILocalizedModType
     {

@@ -5,7 +5,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Dev.TheEnforcer
+namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
 {
     public class TheNewEnforcer : ModItem, ILocalizedModType
     {
