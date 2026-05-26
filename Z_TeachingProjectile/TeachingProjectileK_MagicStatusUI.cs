@@ -116,21 +116,21 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
             );
             GeneralParticleHandler.SpawnParticle(manaDrainBlob);
 
-            // 8.魔力吸取线（ManaDrainStreak）---------------------------------
-            // 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索
-            // 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
-            Particle manaDrainStreak = new ManaDrainStreak(
-                owner, // 生成位置
-                1.0f, // 初始速度
-                Projectile.Center - owner.Center, // 是否受重力影响
-                120f, // 生命周期，单位是帧
-                Color.Blue, // 缩放大小
-                Color.Cyan, // 颜色
-                35, // 拉伸或压缩比例
-                Projectile.Center, // 开关参数
-                true // 开关参数
-            );
-            GeneralParticleHandler.SpawnParticle(manaDrainStreak);
+            //// 8.魔力吸取线（ManaDrainStreak）---------------------------------
+            //// 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索
+            //// 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
+            //Particle manaDrainStreak = new ManaDrainStreak(
+            //    owner, // 生成位置
+            //    1.0f, // 初始速度
+            //    Projectile.Center - owner.Center, // 是否受重力影响
+            //    120f, // 生命周期，单位是帧
+            //    Color.Blue, // 缩放大小
+            //    Color.Cyan, // 颜色
+            //    35, // 拉伸或压缩比例
+            //    Projectile.Center, // 开关参数
+            //    true // 开关参数
+            //);
+            //GeneralParticleHandler.SpawnParticle(manaDrainStreak);
 
             // 9.终末百合心形（LiliesOfFinalityHeartParticle）---------------------------------
             // 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索

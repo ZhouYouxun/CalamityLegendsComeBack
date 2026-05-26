@@ -71,11 +71,6 @@ Mods: {
 						[c/66E6FF:Without timely intervention, this optimization will ultimately consume the operator.]
 						'''
 				}
-
-				NewLegendSHPCTest: {
-					DisplayName: New Legend SHPC Test
-					Tooltip: ""
-				}
 			}
 		}
 

@@ -187,6 +187,11 @@ Mods: {
 					During Empyrean of Truth, gain an additional +9% magic damage and 36 magic armor penetration
 					'''
 			}
+
+			TestWeapon: {
+				DisplayName: Test Weapon
+				Tooltip: ""
+			}
 		}
 
 		Buffs: {
@@ -276,6 +281,7 @@ Mods: {
 			BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
 			BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
 			BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
+			TestWeaponProj.DisplayName: Test Weapon Proj
 		}
 	}
 }

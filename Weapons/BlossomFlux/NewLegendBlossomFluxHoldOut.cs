@@ -578,7 +578,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (breakthroughLoadFlashTimer > 0)
                 breakthroughLoadFlashTimer--;
 
-            if (chargeFxTimer % 6 == 0)
+            if (chargeFxTimer % 2 == 0)
                 SpawnBreakthroughChargeConvergenceFx();
 
             if (breakthroughLoadedArrows >= BreakthroughMaxLoadedArrows)
@@ -1207,22 +1207,22 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             switch (CurrentPreset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
-                    if (chargeFxTimer % 3 == 0)
+                    if (chargeFxTimer % 2 == 0)
                         SpawnRecoveryHeartConvergenceFx();
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                    if (chargeFxTimer % 9 == 0)
+                    if (chargeFxTimer % 4 == 0)
                         SpawnReconContractingWaveFx();
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    if (chargeFxTimer % 4 == 0)
+                    if (chargeFxTimer % 2 == 0)
                         SpawnBombardStrafeFx();
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                    if (chargeFxTimer % 16 == 1)
+                    if (chargeFxTimer % 5 == 1)
                         SpawnPlagueNanomachineCloudFx();
                     break;
             }
@@ -1232,7 +1232,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Vector2 side = AimDirection.RotatedBy(MathHelper.PiOver2);
             Vector2 down = Vector2.UnitY * Owner.gravDir;
-            int spawnCount = chargeFxTimer % 9 == 0 ? 2 : 1;
+            int spawnCount = 3;
 
             for (int i = 0; i < spawnCount; i++)
             {
@@ -1259,7 +1259,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void SpawnReconContractingWaveFx()
         {
-            float startRadius = MathHelper.Lerp(132f, 76f, MathHelper.SmoothStep(0f, 1f, ChargeCompletion));
+            float startRadius = MathHelper.Lerp(86f, 48f, MathHelper.SmoothStep(0f, 1f, ChargeCompletion));
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 GunTipPosition,
@@ -1275,7 +1275,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void SpawnBombardStrafeFx()
         {
-            int lanes = 3;
+            int lanes = 4;
             for (int i = 0; i < lanes; i++)
             {
                 float laneOffset = (i - 1) * Main.rand.NextFloat(18f, 30f) + Main.rand.NextFloat(-4f, 4f);

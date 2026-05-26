@@ -72,10 +72,6 @@ Mods: {
 						'''
 				}
 
-				NewLegendSHPCTest: {
-					DisplayName: SHPC测试武器
-					Tooltip: ""
-				}
 			}
 		}
 

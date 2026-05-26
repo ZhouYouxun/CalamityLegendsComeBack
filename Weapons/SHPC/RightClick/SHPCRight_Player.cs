@@ -83,8 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public bool IsHoldingSHPCLike()
         {
             int heldType = Player.HeldItem?.type ?? 0;
-            return heldType == ModContent.ItemType<NewLegendSHPC>() ||
-                   heldType == ModContent.ItemType<NewLegendSHPCTest>();
+            return heldType == ModContent.ItemType<NewLegendSHPC>();
         }
 
         public bool HasActiveRightClickHoldout()

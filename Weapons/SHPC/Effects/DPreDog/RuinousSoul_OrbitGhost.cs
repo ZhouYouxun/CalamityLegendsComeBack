@@ -203,8 +203,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         private static bool OwnerStillHoldingSHPC(Player owner)
         {
             int heldType = owner.HeldItem?.type ?? ItemID.None;
-            return heldType == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPC>() ||
-                   heldType == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPCTest>();
+            return heldType == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPC>();
         }
 
         private void SpawnPhantasmalTrail()

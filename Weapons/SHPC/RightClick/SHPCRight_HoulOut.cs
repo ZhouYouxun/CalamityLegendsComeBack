@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             int heldType = Owner.HeldItem.type;
-            if (heldType != AssociatedItemID && heldType != ModContent.ItemType<NewLegendSHPCTest>())
+            if (heldType != AssociatedItemID)
             {
                 Projectile.Kill();
                 return;
@@ -180,7 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #region ===== 基础生存判定 =====
 
             if (!player.active || player.dead ||
-                (player.HeldItem.type != AssociatedItemID && player.HeldItem.type != ModContent.ItemType<NewLegendSHPCTest>()))
+                player.HeldItem.type != AssociatedItemID)
             {
                 Projectile.Kill();
                 return;

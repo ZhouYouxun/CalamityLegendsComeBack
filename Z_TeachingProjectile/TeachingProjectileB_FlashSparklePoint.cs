@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
             );
             GeneralParticleHandler.SpawnParticle(sparkleParticle);
 
-            // 5.圆润星粒（RoundedStarParticle）---------------------------------
+            // 5.大五角星（RoundedStarParticle）---------------------------------
             // 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索
             // 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
             Particle roundedStarParticle = new RoundedStarParticle(
@@ -148,9 +148,9 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 Vector2.Zero, // 初始速度
                 Color.White, // 是否受重力影响
                 Color.Orange, // 生命周期，单位是帧
-                forward.ToRotation(), // 缩放大小
+                forward.ToRotation() + MathHelper.PiOver2, // 缩放大小
                 new Vector2(0.4f, 1.8f), // 颜色
-                new Vector2(0.05f, 2.8f), // 拉伸或压缩比例
+                new Vector2(0.5f, 6.8f), // 拉伸或压缩比例
                 18, // 开关参数
                 0.01f, // 开关参数
                 1.4f, // 旋转角度或方向

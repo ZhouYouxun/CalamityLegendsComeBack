@@ -201,6 +201,11 @@ Mods: {
 					天理真和期间额外获得9%魔法伤害与36点魔法护甲穿透
 					'''
 			}
+
+			TestWeapon: {
+				// DisplayName: Test Weapon
+				// Tooltip: ""
+			}
 		}
 
 		Buffs: {
@@ -290,6 +295,7 @@ Mods: {
 			// BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
 			// BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
 			// BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
+			// TestWeaponProj.DisplayName: Test Weapon Proj
 		}
 	}
 }

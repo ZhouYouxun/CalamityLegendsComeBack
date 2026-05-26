@@ -72,9 +72,9 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 Color.Cyan, // 是否受重力影响
                 Vector2.One, // 生命周期，单位是帧
                 Main.rand.NextFloat(-0.4f, 0.4f), // 缩放大小
-                0.05f, // 颜色
-                0.8f, // 拉伸或压缩比例
-                18 // 开关参数
+                0.05f, // 初始大小
+                0.18f, // 最终大小
+                18 // 持续时间
             );
             GeneralParticleHandler.SpawnParticle(plasmaExplosion);
 

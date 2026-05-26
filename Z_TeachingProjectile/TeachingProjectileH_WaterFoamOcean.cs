@@ -68,19 +68,19 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
             );
             GeneralParticleHandler.SpawnParticle(waterGlobParticle);
 
-            // 4.海沫粒子（SeaFoamParticle）---------------------------------
-            // 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索
-            // 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
-            Particle seaFoamParticle = new SeaFoamParticle(
-                Projectile.Center, // 生成位置
-                Main.rand.NextVector2Circular(1f, 1f), // 初始速度
-                Color.White, // 是否受重力影响
-                Color.LightBlue, // 生命周期，单位是帧
-                1.0f, // 缩放大小
-                0.8f, // 颜色
-                0.03f // 拉伸或压缩比例
-            );
-            GeneralParticleHandler.SpawnParticle(seaFoamParticle);
+            //// 4.海沫粒子（SeaFoamParticle）---------------------------------
+            //// 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索
+            //// 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
+            //Particle seaFoamParticle = new SeaFoamParticle(
+            //    Projectile.Center, // 生成位置
+            //    Main.rand.NextVector2Circular(1f, 1f), // 初始速度
+            //    Color.White, // 是否受重力影响
+            //    Color.LightBlue, // 生命周期，单位是帧
+            //    1.0f, // 缩放大小
+            //    0.8f, // 颜色
+            //    0.03f // 拉伸或压缩比例
+            //);
+            //GeneralParticleHandler.SpawnParticle(seaFoamParticle);
 
             // 5.海棱镜粒子（SeaPrismParticle）---------------------------------
             // 原灾示范：反编译 CalamityMod.Particles 后按构造函数整理，具体调用点可继续用类名搜索
@@ -113,6 +113,9 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 50 // 缩放大小
             );
             GeneralParticleHandler.SpawnParticle(genericBubbleParticle);
+
+
+
         }
     }
 }

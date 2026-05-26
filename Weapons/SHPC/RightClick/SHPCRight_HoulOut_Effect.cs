@@ -456,11 +456,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player player = Main.player[Projectile.owner];
             NewLegendSHPC weapon = player.HeldItem.ModItem as NewLegendSHPC;
-            NewLegendSHPCTest testWeapon = player.HeldItem.ModItem as NewLegendSHPCTest;
 
             player.CheckMana(player.HeldItem, 150, true, false);
 
-            if (weapon == null && testWeapon == null)
+            if (weapon == null)
                 return;
 
             if (weapon != null && weapon.storedEffectPower > 0)
@@ -469,14 +468,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 if (weapon.storedEffectPower < 0)
                     weapon.storedEffectPower = 0;
-            }
-
-            if (testWeapon != null && testWeapon.storedEffectPower > 0)
-            {
-                testWeapon.storedEffectPower -= 3;
-
-                if (testWeapon.storedEffectPower < 0)
-                    testWeapon.storedEffectPower = 0;
             }
 
             int effectID = currentEffectID;

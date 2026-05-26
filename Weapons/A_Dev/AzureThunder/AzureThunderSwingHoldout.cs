@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;

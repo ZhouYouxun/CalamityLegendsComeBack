@@ -61,11 +61,6 @@ Mods: {
 					Tooltip: ""
 				}
 
-				NewLegendSHPCTest: {
-					DisplayName: New Legend S H P C Test
-					Tooltip: ""
-				}
-
 				NewLegendYharimsCrystal: {
 					DisplayName: New Legend Yharims Crystal
 					Tooltip: ""

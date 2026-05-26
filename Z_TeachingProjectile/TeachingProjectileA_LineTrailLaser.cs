@@ -65,7 +65,7 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 Projectile.velocity * 0.15f, // 初始速度
                 "CalamityMod/Particles/BloomLineSoftEdge", // 是否受重力影响
                 false, // 生命周期，单位是帧
-                20, // 缩放大小
+                3, // 缩放大小
                 0.9f, // 颜色
                 Color.Orange * 0.85f, // 拉伸或压缩比例
                 new Vector2(2.8f, 0.7f), // 开关参数
@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 22, // 生命周期，单位是帧
                 0.8f, // 缩放大小
                 Color.DeepSkyBlue, // 颜色
-                new Vector2(1.8f, 0.45f), // 拉伸或压缩比例
+                new Vector2(0.05f, 0.5f), // 拉伸或压缩比例
                 false, // 开关参数
                 true, // 开关参数
                 0.8f // 旋转角度或方向
@@ -110,7 +110,7 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 26, // 生命周期，单位是帧
                 0.7f, // 缩放大小
                 Color.Magenta, // 颜色
-                new Vector2(1.6f, 0.5f), // 拉伸或压缩比例
+                new Vector2(0.05f, 0.5f), // 拉伸或压缩比例
                 false, // 开关参数
                 true, // 开关参数
                 0.8f, // 旋转角度或方向
@@ -124,18 +124,18 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
             Particle velChangingSpark = new VelChangingSpark(
                 Projectile.Center, // 生成位置
                 forward * 6f, // 初始速度
-                forward * 0.5f, // 是否受重力影响
-                "CalamityMod/Particles/BloomLineSoftEdge", // 生命周期，单位是帧
-                28, // 缩放大小
-                0.7f, // 颜色
-                Color.Lime, // 拉伸或压缩比例
-                new Vector2(2.2f, 0.45f), // 开关参数
-                true, // 开关参数
-                true, // 旋转角度或方向
-                0f, // 开关参数
-                false, // 开关参数
-                0.55f, // 数值参数
-                0.08f // 数值参数
+                forward * 0.5f, // 目标减速速度
+                "CalamityMod/Particles/BloomLineSoftEdge", // 贴图路径
+                28, // 生命周期
+                0.7f, // 缩放
+                Color.Lime, // 颜色
+                new Vector2(0.05f, 0.5f), // 拉伸比例
+                true,
+                true,
+                0f,
+                false,
+                0.55f,
+                0.08f
             );
             GeneralParticleHandler.SpawnParticle(velChangingSpark);
 
@@ -149,7 +149,7 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 24, // 生命周期，单位是帧
                 0.9f, // 缩放大小
                 Color.Purple, // 颜色
-                0.75f // 拉伸或压缩比例
+                0.975f // 数字越大越拉的长
             );
             GeneralParticleHandler.SpawnParticle(voidSparkParticle);
 
@@ -208,28 +208,28 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
             );
             GeneralParticleHandler.SpawnParticle(staticGlowLine);
 
-            // 12.蓄力收束线（ChargeUpLineVFX）---------------------------------
-            // 原灾示范：AresCannonChargeParticleSet、Draedon、ExoMechs
-            // 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
-            Particle chargeUpLineVFX = new ChargeUpLineVFX(
-                Projectile.Center + Main.rand.NextVector2CircularEdge(80f, 80f), // 生成位置
-                forward.ToRotation(), // 初始速度
-                0.8f, // 是否受重力影响
-                Color.Gold, // 生命周期，单位是帧
-                32, // 缩放大小
-                0.9f, // 颜色
-                true, // 拉伸或压缩比例
-                0.35f, // 开关参数
-                12f // 开关参数
-            );
-            GeneralParticleHandler.SpawnParticle(chargeUpLineVFX);
+            //// 12.蓄力收束线（ChargeUpLineVFX）---------------------------------
+            //// 原灾示范：AresCannonChargeParticleSet、Draedon、ExoMechs
+            //// 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
+            //Particle chargeUpLineVFX = new ChargeUpLineVFX(
+            //    Projectile.Center + Main.rand.NextVector2CircularEdge(80f, 80f), // 生成位置
+            //    forward.ToRotation(), // 初始速度
+            //    0.8f, // 是否受重力影响
+            //    Color.Gold, // 生命周期，单位是帧
+            //    32, // 缩放大小
+            //    0.9f, // 颜色
+            //    true, // 拉伸或压缩比例
+            //    0.35f, // 开关参数
+            //    12f // 开关参数
+            //);
+            //GeneralParticleHandler.SpawnParticle(chargeUpLineVFX);
 
             // 13.闪电线（ThunderBoltVFX）---------------------------------
             // 原灾示范：StormWeaver、Lightning、Ares
             // 适用于该类别下的模块化特效；适合按颜色、速度、缩放和生命周期改成自己的武器表现
             Particle thunderBoltVFX = new ThunderBoltVFX(
                 Projectile.Center, // 生成位置
-                forward.ToRotation(), // 初始速度
+                forward.ToRotation() + MathHelper.PiOver2, // 初始速度
                 1.0f, // 是否受重力影响
                 Color.Cyan, // 生命周期，单位是帧
                 18, // 缩放大小
