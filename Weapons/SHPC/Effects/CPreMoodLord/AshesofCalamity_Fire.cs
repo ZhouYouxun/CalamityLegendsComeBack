@@ -95,8 +95,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.95f, Pitch = -0.32f, PitchVariance = 0.12f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item38 with { Volume = 0.52f, Pitch = -0.48f, PitchVariance = 0.08f }, Projectile.Center);
 
-            if (!Main.dedServ)
-                SpawnMuzzleLine(direction);
+            //if (!Main.dedServ)
+            //    SpawnMuzzleLine(direction);
         }
 
         public override void AI()
@@ -153,8 +153,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             target.AddBuff(BuffID.OnFire, 240);
             target.AddBuff(BuffID.CursedInferno, 180);
 
-            if (!Main.dedServ)
-                SpawnHitEffects(target.Center);
+            //if (!Main.dedServ)
+            //    SpawnHitEffects(target.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -178,15 +178,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 dust.noGravity = !Main.rand.NextBool(4);
             }
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center,
-                Vector2.Zero,
-                burstColor,
-                new Vector2(1.25f, 0.54f),
-                direction.ToRotation(),
-                0.08f,
-                1.85f,
-                18));
+            //GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+            //    Projectile.Center,
+            //    Vector2.Zero,
+            //    burstColor,
+            //    new Vector2(1.25f, 0.54f),
+            //    direction.ToRotation(),
+            //    0.08f,
+            //    1.85f,
+            //    18));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -400,69 +400,91 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 dust.fadeIn = Main.rand.NextFloat(0.12f, 0.5f);
             }
 
-            for (int i = 0; i < 8; i++)
+            //for (int i = 0; i < 7; i++)
+            //{
+            //    float fanT = Main.rand.NextFloat(-1f, 1f);
+            //    float lineT = Main.rand.NextFloat(-0.75f, 1f);
+            //    Vector2 glowPosition = Projectile.Center
+            //        + direction * MathHelper.Lerp(-LineBackLength * 0.68f, LineForwardLength * 0.94f, (lineT + 1f) * 0.5f)
+            //        + normal * fanT * Main.rand.NextFloat(4f, LineWidth * 0.58f);
+            //    Vector2 glowVelocity = direction.RotatedBy(fanHalfAngle * fanT * 0.54f) * Main.rand.NextFloat(6.5f, 18f)
+            //        + normal * fanT * Main.rand.NextFloat(1.1f, 4.6f)
+            //        - direction * Main.rand.NextFloat(0.1f, 1.1f);
+
+            //    GlowSparkParticle coreSpark = new GlowSparkParticle(
+            //        glowPosition,
+            //        glowVelocity,
+            //        false,
+            //        Main.rand.Next(8, 14),
+            //        Main.rand.NextFloat(0.018f, 0.034f) * Projectile.scale,
+            //        Main.rand.NextBool(3) ? emberColor : mainColor,
+            //        new Vector2(Main.rand.NextFloat(2.25f, 3.9f), Main.rand.NextFloat(0.62f, 1.02f)),
+            //        true,
+            //        false,
+            //        1.12f);
+            //    GeneralParticleHandler.SpawnParticle(coreSpark);
+            //}
+
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    float fanT = Main.rand.NextFloat(-1f, 1f);
+            //    Vector2 sparkPosition = Projectile.Center
+            //        + direction * Main.rand.NextFloat(-LineBackLength * 0.55f, LineForwardLength * 0.9f)
+            //        + normal * fanT * Main.rand.NextFloat(8f, LineWidth * 0.72f);
+            //    Vector2 sparkVelocity = direction.RotatedBy(fanHalfAngle * fanT * 0.8f) * Main.rand.NextFloat(4.2f, 13f)
+            //        + normal * fanT * Main.rand.NextFloat(1f, 4.8f);
+
+            //    SparkParticle emberSpark = new SparkParticle(
+            //        sparkPosition,
+            //        sparkVelocity,
+            //        false,
+            //        Main.rand.Next(13, 23),
+            //        Main.rand.NextFloat(0.58f, 1.05f) * Projectile.scale,
+            //        Main.rand.NextBool(4) ? emberColor : Color.Lerp(darkColor, mainColor, 0.72f));
+            //    GeneralParticleHandler.SpawnParticle(emberSpark);
+            //}
+
+            for (int i = 0; i < 3; i++)
             {
                 float fanT = Main.rand.NextFloat(-1f, 1f);
-                float angle = fanHalfAngle * fanT * 0.72f;
-                Vector2 sparkPosition = Projectile.Center
-                    + direction * Main.rand.NextFloat(-LineBackLength * 0.72f, LineForwardLength * 0.92f)
-                    + normal * fanT * Main.rand.NextFloat(5f, LineWidth * 0.66f);
-                Vector2 sparkVelocity = direction.RotatedBy(angle) * Main.rand.NextFloat(5.5f, 18f)
-                    + normal * fanT * Main.rand.NextFloat(1.2f, 5.8f)
-                    - direction * Main.rand.NextFloat(0.4f, 2.2f);
+                Vector2 orbPosition = Projectile.Center
+                    + direction * Main.rand.NextFloat(-LineBackLength * 0.46f, LineForwardLength * 0.72f)
+                    + normal * fanT * Main.rand.NextFloat(2f, LineWidth * 0.42f);
+                Vector2 orbVelocity = direction * Main.rand.NextFloat(0.25f, 1.15f)
+                    + normal * fanT * Main.rand.NextFloat(0.25f, 1.2f);
 
-                string texture = i % 3 == 0 ? "CalamityMod/Particles/VerticalSmear" : "CalamityMod/Particles/SmallBloom";
-                Vector2 squash = texture.Contains("VerticalSmear")
-                    ? new Vector2(Main.rand.NextFloat(0.18f, 0.34f), Main.rand.NextFloat(1.25f, 2.1f))
-                    : new Vector2(Main.rand.NextFloat(1.2f, 2.3f), Main.rand.NextFloat(0.5f, 0.94f));
-
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    sparkPosition,
-                    sparkVelocity,
-                    texture,
+                GlowOrbParticle heatOrb = new GlowOrbParticle(
+                    orbPosition,
+                    orbVelocity,
                     false,
-                    Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.18f, 0.42f) * Projectile.scale,
-                    Main.rand.NextBool(4) ? Color.White : Color.Lerp(mainColor, emberColor, Main.rand.NextFloat(0.16f, 0.62f)),
-                    squash,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.42f, 0.74f) * Projectile.scale,
+                    Color.Lerp(mainColor, emberColor, Main.rand.NextFloat(0.28f, 0.68f)),
                     true,
                     false,
-                    shrinkSpeed: Main.rand.NextFloat(0.58f, 0.82f),
-                    glowOpacity: Main.rand.NextFloat(0.45f, 0.75f)));
+                    true);
+                GeneralParticleHandler.SpawnParticle(heatOrb);
             }
 
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 2; i++)
             {
                 float fanT = Main.rand.NextFloat(-1f, 1f);
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                    Projectile.Center + direction * Main.rand.NextFloat(-LineBackLength * 0.55f, LineForwardLength) + normal * fanT * Main.rand.NextFloat(10f, LineWidth * 0.85f),
-                    direction.RotatedBy(fanHalfAngle * fanT) * Main.rand.NextFloat(4.5f, 16f) + normal * fanT * Main.rand.NextFloat(1.2f, 5.4f),
-                    false,
-                    Main.rand.Next(14, 25),
-                    Main.rand.NextFloat(0.72f, 1.28f) * Projectile.scale,
-                    Main.rand.NextBool(4) ? emberColor : mainColor));
-            }
+                Vector2 critPosition = Projectile.Center
+                    + direction * Main.rand.NextFloat(-LineBackLength * 0.22f, LineForwardLength * 0.86f)
+                    + normal * fanT * Main.rand.NextFloat(6f, LineWidth * 0.5f);
+                Vector2 critVelocity = direction.RotatedBy(fanHalfAngle * fanT * 0.66f) * Main.rand.NextFloat(3.6f, 8.8f)
+                    + normal * fanT * Main.rand.NextFloat(0.6f, 2.6f);
 
-            for (int i = 0; i < 5; i++)
-            {
-                float fanT = Main.rand.NextFloat(-1f, 1f);
-                Vector2 glowPosition = Projectile.Center
-                    + direction * Main.rand.NextFloat(-LineBackLength * 0.42f, LineForwardLength * 0.8f)
-                    + normal * fanT * Main.rand.NextFloat(4f, LineWidth * 0.55f);
-                Vector2 glowVelocity = direction.RotatedBy(fanHalfAngle * fanT * 0.62f) * Main.rand.NextFloat(7f, 20f)
-                    + normal * fanT * Main.rand.NextFloat(1.8f, 6.4f);
-
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    glowPosition,
-                    glowVelocity,
-                    false,
-                    Main.rand.Next(9, 15),
-                    Main.rand.NextFloat(0.022f, 0.042f) * Projectile.scale,
-                    Main.rand.NextBool(3) ? emberColor : mainColor,
-                    new Vector2(Main.rand.NextFloat(2.6f, 4.2f), Main.rand.NextFloat(0.85f, 1.28f)),
-                    true,
-                    false,
-                    1.15f));
+                CritSpark critSpark = new CritSpark(
+                    critPosition,
+                    critVelocity,
+                    Color.White,
+                    Main.rand.NextBool() ? emberColor : mainColor,
+                    Main.rand.NextFloat(0.72f, 1.08f) * Projectile.scale,
+                    Main.rand.Next(12, 18),
+                    0.12f,
+                    1.24f);
+                GeneralParticleHandler.SpawnParticle(critSpark);
             }
 
             for (int i = 0; i < 3; i++)

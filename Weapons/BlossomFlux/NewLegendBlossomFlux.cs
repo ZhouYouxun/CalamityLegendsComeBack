@@ -1,6 +1,6 @@
-using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
+using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.World;

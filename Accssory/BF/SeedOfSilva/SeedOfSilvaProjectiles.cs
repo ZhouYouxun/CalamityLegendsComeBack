@@ -1,8 +1,7 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.SpecialArrow;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

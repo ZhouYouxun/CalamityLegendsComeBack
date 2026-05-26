@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Z_TeachingProjectile
                 22, // 生命周期，单位是帧
                 0.8f, // 缩放大小
                 Color.DeepSkyBlue, // 颜色
-                new Vector2(0.05f, 0.5f), // 拉伸或压缩比例
+                new Vector2(0.01f, 0.05f), // 拉伸或压缩比例
                 false, // 开关参数
                 true, // 开关参数
                 0.8f // 旋转角度或方向

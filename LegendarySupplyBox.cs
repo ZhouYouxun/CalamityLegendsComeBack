@@ -7,7 +7,6 @@ using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
-using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 
 namespace CalamityLegendsComeBack
 {
@@ -34,7 +33,6 @@ namespace CalamityLegendsComeBack
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBrinyBaron>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<TheNewEnforcer>()));
         }
 
 

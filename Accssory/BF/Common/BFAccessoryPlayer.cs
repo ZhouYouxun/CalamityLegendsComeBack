@@ -1,6 +1,5 @@
 using CalamityLegendsComeBack.Accssory.BF.SeedOfSilva;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using Microsoft.Xna.Framework;
 using Terraria;

@@ -1,5 +1,4 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
-using CalamityLegendsComeBack.Weapons.BlossomFlux.Chloroplast;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
