@@ -18,8 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void SetDefaults()
         {
-            Projectile.width = 500;
-            Projectile.height = 500;
+            Projectile.width = 550;
+            Projectile.height = 550;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;

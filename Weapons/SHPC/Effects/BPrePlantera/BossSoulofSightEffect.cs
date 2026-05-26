@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         {
             float progress = MathHelper.Clamp(MathHelper.Max(traveledDistance / (30f * 16f), lifeTimer / 60f), 0.2f, 1f);
             int soulCount = (int)MathHelper.Lerp(2f, 10f, progress);
-            float damageScale = MathHelper.Lerp(0.6f, 1.25f, progress);
+            float damageScale = MathHelper.Lerp(0.6f, 1f, progress);
 
             for (int i = 0; i < soulCount; i++)
             {

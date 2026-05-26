@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             soulSpawnTimer = 0;
+            projectile.timeLeft = 240;
             projectile.penetrate = -1;
         }
 
@@ -42,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
                 dir * speed,
                 ModContent.ProjectileType<NewSHPS>(),
-                (int)(projectile.damage * 0.55f),
+                (int)(projectile.damage * 0.77f),
                 projectile.knockBack,
                 projectile.owner,
                 3

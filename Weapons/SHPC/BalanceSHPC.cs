@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             28, // 30Evil Boss / 腐化或猩红 Boss T2
             36, // 42Skeletron / 骷髅王
             40, // 54Hardmode / 困难模式
-            48, // 72Any Mechanical Boss / 任意机械 Boss
+            47, // 72Any Mechanical Boss / 任意机械 Boss
             54, // 90Plantera / 世纪之花
             64, // 120Golem / 石巨人
             80, // 180Moon Lord / 月亮领主
@@ -49,9 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             13, // 8Eye of Cthulhu / 克苏鲁之眼
             17, // 9Evil Boss / 腐化或猩红 Boss T2
             24, // 11Skeletron / 骷髅王
-            37, // 17Hardmode / 困难模式
-            44, // 24Any Mechanical Boss / 任意机械 Boss
-            52, // 32Plantera / 世纪之花
+            40, // 17Hardmode / 困难模式
+            46, // 24Any Mechanical Boss / 任意机械 Boss
+            55, // 32Plantera / 世纪之花
             64, // 40Golem / 石巨人
             77, // 54Moon Lord / 月亮领主
             90, // 66Providence / 亵渎天神
@@ -70,15 +70,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.58f, // EffectID 3: Sulphuric Scale / 硫磺鳞片
             0.80f, // EffectID 4: Purified Gel / 纯净凝胶
             1.00f, // EffectID 5: Essence of Havoc / 混沌精华
-            0.77f, // EffectID 6: Essence of Eleum / 冰精华
+            0.84f, // EffectID 6: Essence of Eleum / 冰精华
             1.07f, // EffectID 7: Essence of Sunlight / 日光精华
             1.33f, // EffectID 8: Titan Heart / 泰坦之心
             0.90f, // EffectID 9: Soul of Light / 光明之魂
             0.84f, // EffectID 10: Soul of Night / 暗影之魂
-            0.93f, // EffectID 11: Soul of Flight / 飞翔之魂
-            0.90f, // EffectID 12: Soul of Fright / 恐惧之魂
-            0.96f, // EffectID 13: Soul of Might / 力量之魂
-            0.93f, // EffectID 14: Soul of Sight / 视域之魂
+            0.90f, // EffectID 11: Soul of Flight / 飞翔之魂
+            0.97f, // EffectID 12: Soul of Fright / 恐惧之魂
+            1.14f, // EffectID 13: Soul of Might / 力量之魂
+            0.90f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
             1.02f, // EffectID 17: Depth Cells / 深渊细胞
