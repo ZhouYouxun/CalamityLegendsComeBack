@@ -21,8 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
 {
     internal sealed class BFLeafProj : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private const int ReconPostHitStraightFrames = 30;
-        private const int ReconHomingDelayFrames = 5;
+        private const int ReconPostHitStraightFrames = 10;
+        private const int ReconHomingDelayFrames = 1;
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -94,7 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
                     Projectile.penetrate = 3;
                     Projectile.timeLeft = 170;
-                    StoredSpeed = MathHelper.Clamp(StoredSpeed, 11f, 21f);
+                    StoredSpeed = MathHelper.Clamp(StoredSpeed, 12f, 20f);
                     Projectile.localNPCHitCooldown = 18;
                     LastReconHitNpcIndex = -1f;
                     Array.Clear(ignoredReconTargets, 0, ignoredReconTargets.Length);
@@ -139,7 +139,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                    Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * StoredSpeed;
                     UpdateReconHoming();
                     break;
 
@@ -333,31 +332,52 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
         {
             if (FlightTimer < ReconHomingDelayFrames * Projectile.MaxUpdates)
             {
-                Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(FlightTimer * 0.08f + Projectile.identity) * 0.003f);
+                BFArrowCommon.MaintainSpeed(Projectile, StoredSpeed, 0.35f);
                 return;
             }
 
             if (ReconWanderTimer > 0f)
             {
                 ReconWanderTimer--;
-                BFArrowCommon.MaintainSpeed(Projectile, StoredSpeed, 0.18f);
+                ApplyReconMagicMissileSteering(null, 0.1f);
                 return;
             }
 
             NPC target = FindReconTarget();
             if (target == null)
             {
-                BFArrowCommon.MaintainSpeed(Projectile, StoredSpeed, 0.12f);
+                ApplyReconMagicMissileSteering(null, 0.08f);
                 return;
             }
 
-            float speed = MathHelper.Clamp(StoredSpeed + (IsReconPriorityTarget(target) ? 2.5f : 0f), 11f, 24f);
-            BFArrowCommon.DirectHomeTowards(
-                Projectile,
+            ApplyReconMagicMissileSteering(
                 target,
-                IsReconPriorityTarget(target) ? BFReconLeftBalance.PriorityHomingTurnResponsiveness : BFReconLeftBalance.HomingTurnResponsiveness,
-                speed);
-            BFArrowCommon.MaintainSpeed(Projectile, speed, 0.14f);
+                IsReconPriorityTarget(target) ? BFReconLeftBalance.PriorityHomingTurnResponsiveness : BFReconLeftBalance.HomingTurnResponsiveness);
+        }
+
+        private void ApplyReconMagicMissileSteering(NPC target, float responsiveness)
+        {
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float currentSpeed = Math.Max(Projectile.velocity.Length(), StoredSpeed);
+
+            if (target == null)
+            {
+                float idleCurve = (float)Math.Sin(FlightTimer * 0.045f + Projectile.identity * 0.37f) * 0.018f;
+                Projectile.velocity = currentDirection.RotatedBy(idleCurve) * MathHelper.Lerp(currentSpeed, StoredSpeed, 0.16f);
+                return;
+            }
+
+            bool priority = IsReconPriorityTarget(target);
+            Vector2 aimPoint = target.Center + target.velocity * (priority ? 14f : 9f);
+            Vector2 toTarget = aimPoint - Projectile.Center;
+            float distance = toTarget.Length();
+            Vector2 desiredDirection = toTarget.SafeNormalize(currentDirection);
+            float closeTargetBoost = Utils.GetLerpValue(360f, 96f, distance, true) * 0.2f;
+            float steering = MathHelper.Clamp(responsiveness + closeTargetBoost, 0.08f, 0.58f);
+            float desiredSpeed = MathHelper.Clamp(StoredSpeed + (priority ? 3.4f : 1.4f) + Utils.GetLerpValue(640f, 180f, distance, true) * 1.8f, 12f, 25f);
+
+            Vector2 steeredDirection = Vector2.Lerp(currentDirection, desiredDirection, steering).SafeNormalize(desiredDirection);
+            Projectile.velocity = steeredDirection * MathHelper.Lerp(currentSpeed, desiredSpeed, 0.24f);
         }
 
         private NPC FindReconTarget(int excludedNpcIndex = -1)
@@ -378,14 +398,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeafProj
                     priorityTarget.active &&
                     priorityTarget.CanBeChasedBy(Projectile) &&
                     priorityTarget.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner) &&
-                    Vector2.DistanceSquared(Projectile.Center, priorityTarget.Center) <= 1500f * 1500f)
+                    Vector2.DistanceSquared(Projectile.Center, priorityTarget.Center) <= 2000f * 2000f)
                 {
                     return priorityTarget;
                 }
             }
 
             NPC bestTarget = null;
-            float bestDistance = 520f;
+            float bestDistance = 880f;
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile))

@@ -88,11 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         // 瞄准镜弹幕类型缓存，便于统一生成与清理
         private static int AimScopeProjectileType => ModContent.ProjectileType<BFAimScope>();
-        private static int BreakthroughChargeFxProjectileType => ModContent.ProjectileType<BFBreakthroughChargeConvergeFX>();
-        private static int RecoveryHeartFxProjectileType => ModContent.ProjectileType<BFRecoveryHeartConvergeFX>();
-        private static int ReconWaveFxProjectileType => ModContent.ProjectileType<BFReconContractingWaveFX>();
-        private static int BombardStrafeFxProjectileType => ModContent.ProjectileType<BFBombardStrafeFX>();
-        private static int PlagueNanomachineCloudFxProjectileType => ModContent.ProjectileType<BFPlagueNanomachineCloudFX>();
+        private static int ChargeGlowSparkFxProjectileType => ModContent.ProjectileType<BFChargeGlowSparkFX>();
         private float offsetLengthFromArm = IdleOffsetLength;
         private float extraFrontArmRotation;
         private float extraBackArmRotation;
@@ -578,8 +574,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (breakthroughLoadFlashTimer > 0)
                 breakthroughLoadFlashTimer--;
 
-            if (chargeFxTimer % 2 == 0)
-                SpawnBreakthroughChargeConvergenceFx();
+            SpawnBreakthroughChargeConvergenceFx();
 
             if (breakthroughLoadedArrows >= BreakthroughMaxLoadedArrows)
             {
@@ -1180,23 +1175,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
 
             Vector2 side = AimDirection.RotatedBy(MathHelper.PiOver2);
-            Vector2 spawnOffset =
-                -AimDirection * Main.rand.NextFloat(64f, 118f) +
-                side * Main.rand.NextFloat(-92f, 92f) +
-                Main.rand.NextVector2Circular(12f, 12f);
-            Vector2 spawnPosition = ChargeFxAnchor + spawnOffset;
+            int spawnCount = 2;
+            for (int i = 0; i < spawnCount; i++)
+            {
+                Vector2 spawnOffset =
+                    -AimDirection * Main.rand.NextFloat(74f, 132f) +
+                    side * Main.rand.NextFloat(-104f, 104f) +
+                    Main.rand.NextVector2Circular(12f, 12f);
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawnPosition,
-                Vector2.Zero,
-                BreakthroughChargeFxProjectileType,
-                0,
-                0f,
-                Projectile.owner,
-                Projectile.whoAmI,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                ChargeCompletion);
+                SpawnChargeGlowSparkFx(ChargeFxAnchor + spawnOffset, Vector2.Zero, 0, Main.rand.NextFloat(MathHelper.TwoPi));
+            }
         }
 
         private void UpdateChargeVisualProjectiles()
@@ -1212,7 +1200,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                    if (chargeFxTimer % 4 == 0)
+                    if (chargeFxTimer % 3 == 0)
                         SpawnReconContractingWaveFx();
                     break;
 
@@ -1222,7 +1210,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                    if (chargeFxTimer % 5 == 1)
+                    if (chargeFxTimer % 3 == 1)
                         SpawnPlagueNanomachineCloudFx();
                     break;
             }
@@ -1232,7 +1220,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Vector2 side = AimDirection.RotatedBy(MathHelper.PiOver2);
             Vector2 down = Vector2.UnitY * Owner.gravDir;
-            int spawnCount = 3;
+            int spawnCount = 4;
 
             for (int i = 0; i < spawnCount; i++)
             {
@@ -1243,75 +1231,61 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     side * sideSign * Main.rand.NextFloat(18f, 86f) +
                     Main.rand.NextVector2Circular(8f, 6f);
 
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    Vector2.Zero,
-                    RecoveryHeartFxProjectileType,
-                    0,
-                    0f,
-                    Projectile.owner,
-                    Projectile.whoAmI,
-                    sideSign,
-                    Main.rand.NextFloat(MathHelper.TwoPi));
+                SpawnChargeGlowSparkFx(spawnPosition, Vector2.Zero, 1, Main.rand.NextFloat(MathHelper.TwoPi) + sideSign);
             }
         }
 
         private void SpawnReconContractingWaveFx()
         {
             float startRadius = MathHelper.Lerp(86f, 48f, MathHelper.SmoothStep(0f, 1f, ChargeCompletion));
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition,
-                Vector2.Zero,
-                ReconWaveFxProjectileType,
-                0,
-                0f,
-                Projectile.owner,
-                Projectile.whoAmI,
-                startRadius,
-                Main.rand.NextFloat(MathHelper.TwoPi));
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 sideOffset = AimDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-startRadius, startRadius);
+                SpawnChargeGlowSparkFx(GunTipPosition + sideOffset, Vector2.Zero, 2, Main.rand.NextFloat(MathHelper.TwoPi));
+            }
         }
 
         private void SpawnBombardStrafeFx()
         {
-            int lanes = 4;
+            int lanes = 5;
             for (int i = 0; i < lanes; i++)
             {
                 float laneOffset = (i - 1) * Main.rand.NextFloat(18f, 30f) + Main.rand.NextFloat(-4f, 4f);
                 float backOffset = Main.rand.NextFloat(-28f, 34f);
+                Vector2 side = AimDirection.RotatedBy(MathHelper.PiOver2);
+                Vector2 spawnPosition = Projectile.Center + AimDirection * backOffset + side * laneOffset;
+                Vector2 velocity = AimDirection.RotatedBy(Main.rand.NextFloat(-0.16f, 0.16f)) * Main.rand.NextFloat(12f, 20f) + side * Main.rand.NextFloat(-2.8f, 2.8f);
 
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center + AimDirection * backOffset + AimDirection.RotatedBy(MathHelper.PiOver2) * laneOffset,
-                    Vector2.Zero,
-                    BombardStrafeFxProjectileType,
-                    0,
-                    0f,
-                    Projectile.owner,
-                    Projectile.whoAmI,
-                    laneOffset,
-                    backOffset);
+                SpawnChargeGlowSparkFx(spawnPosition, velocity, 3, Main.rand.NextFloat(MathHelper.TwoPi));
             }
         }
 
         private void SpawnPlagueNanomachineCloudFx()
         {
-            Vector2 spawnPosition =
-                ChargeFxAnchor +
-                AimDirection * Main.rand.NextFloat(0f, 20f) +
-                Main.rand.NextVector2Circular(16f, 12f);
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 spawnPosition =
+                    ChargeFxAnchor +
+                    AimDirection * Main.rand.NextFloat(-8f, 24f) +
+                    Main.rand.NextVector2Circular(28f, 18f);
 
+                SpawnChargeGlowSparkFx(spawnPosition, Main.rand.NextVector2Circular(0.9f, 0.9f), 4, Main.rand.NextFloat(MathHelper.TwoPi));
+            }
+        }
+
+        private void SpawnChargeGlowSparkFx(Vector2 spawnPosition, Vector2 velocity, int mode, float seed)
+        {
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
-                Main.rand.NextVector2Circular(0.35f, 0.35f),
-                PlagueNanomachineCloudFxProjectileType,
+                velocity,
+                ChargeGlowSparkFxProjectileType,
                 0,
                 0f,
                 Projectile.owner,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                Main.rand.NextFloat(0.82f, 1.22f));
+                Projectile.whoAmI,
+                mode,
+                seed);
         }
 
         private void SpawnReadyIdleDust()
@@ -1606,37 +1580,68 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private void FireBombardRain(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
             BFBombardLeftStats stats = BFBombardLeftBalance.GetStats();
-            Vector2 mouseWorld = GetCurrentMouseWorld();
-            int arrowCount = Main.rand.Next(2);
-            const float rainSpeed = 18f;
+            float arrowSpeed = Main.rand.Next(25, 30) * stats.ProjectileSpeedMultiplier;
+            Vector2 realPlayerPos = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
+            float mouseXDist = Main.mouseX + Main.screenPosition.X - realPlayerPos.X;
+            float mouseYDist = Main.mouseY + Main.screenPosition.Y - realPlayerPos.Y;
 
-            if (arrowCount <= 0)
-                return;
+            if (Owner.gravDir == -1f)
+                mouseYDist = Main.screenPosition.Y + Main.screenHeight - Main.mouseY - realPlayerPos.Y;
+
+            float mouseDistance = (float)Math.Sqrt(mouseXDist * mouseXDist + mouseYDist * mouseYDist);
+            if ((float.IsNaN(mouseXDist) && float.IsNaN(mouseYDist)) || (mouseXDist == 0f && mouseYDist == 0f))
+            {
+                mouseXDist = Owner.direction;
+                mouseYDist = 0f;
+                mouseDistance = arrowSpeed;
+            }
+            else
+                mouseDistance = arrowSpeed / mouseDistance;
 
             if (leftShotsFired % 2 == 0)
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.48f, PitchVariance = 0.2f }, Owner.Center);
             else
                 SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.3f, Pitch = -0.22f, PitchVariance = 0.08f }, Owner.Center);
 
-            for (int i = 0; i < arrowCount; i++)
+            for (int i = 0; i < 3; i++)
             {
-                Vector2 spawnPosition = new(
-                    mouseWorld.X + Main.rand.NextFloat(-240f, 240f),
-                    Owner.MountedCenter.Y - 960f * Owner.gravDir);
-                Vector2 targetPosition = mouseWorld + Main.rand.NextVector2CircularEdge(24f, 24f);
-                Vector2 shotVelocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.Zero) * rainSpeed;
-                int shotDamage = damage;
+                realPlayerPos = new Vector2(
+                    Owner.position.X + Owner.width * 0.5f + Main.rand.Next(201) * -Owner.direction + Main.mouseX + Main.screenPosition.X - Owner.position.X,
+                    Owner.MountedCenter.Y - 600f);
+                realPlayerPos.X = (realPlayerPos.X + Owner.Center.X) / 2f + Main.rand.Next(-200, 201);
+                realPlayerPos.Y -= 100f * i;
 
-                int projectileIndex = SpawnLeftProjectile(source, spawnPosition, shotVelocity, projectileType, shotDamage, knockback, CurrentPreset);
-                if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles) && Main.projectile[projectileIndex].type == ModContent.ProjectileType<BFLeafProj>())
-                {
-                    Main.projectile[projectileIndex].ai[1] = stats.ExplosionsPerArrow;
-                    Main.projectile[projectileIndex].scale *= stats.ExplosionRadiusMultiplier;
-                    Main.projectile[projectileIndex].netUpdate = true;
-                }
+                mouseXDist = Main.mouseX + Main.screenPosition.X - realPlayerPos.X;
+                mouseYDist = Main.mouseY + Main.screenPosition.Y - realPlayerPos.Y;
+                if (mouseYDist < 0f)
+                    mouseYDist *= -1f;
+
+                if (mouseYDist < 20f)
+                    mouseYDist = 20f;
+
+                mouseDistance = (float)Math.Sqrt(mouseXDist * mouseXDist + mouseYDist * mouseYDist);
+                mouseDistance = arrowSpeed / mouseDistance;
+                mouseXDist *= mouseDistance;
+                mouseYDist *= mouseDistance;
+
+                float speedX = mouseXDist + Main.rand.Next(-120, 121) * 0.01f;
+                float speedY = mouseYDist + Main.rand.Next(-120, 121) * 0.01f;
+                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * 0.9f), projectileType, damage, knockback, stats);
+                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * 0.8f), projectileType, damage, knockback, stats);
             }
 
-            SpawnLeftMuzzleFX(mouseWorld, Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);
+            SpawnLeftMuzzleFX(GetCurrentMouseWorld(), Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);
+        }
+
+        private void SpawnBombardStormArrow(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BFBombardLeftStats stats)
+        {
+            int projectileIndex = SpawnLeftProjectile(source, spawnPosition, velocity, projectileType, damage, knockback, CurrentPreset);
+            if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles) || Main.projectile[projectileIndex].type != ModContent.ProjectileType<BFLeafProj>())
+                return;
+
+            Main.projectile[projectileIndex].ai[1] = stats.ExplosionsPerArrow;
+            Main.projectile[projectileIndex].scale *= stats.ExplosionRadiusMultiplier;
+            Main.projectile[projectileIndex].netUpdate = true;
         }
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
