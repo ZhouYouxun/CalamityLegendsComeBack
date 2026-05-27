@@ -49,5 +49,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         {
             return AmmoToEffectID.ContainsKey(ammoType);
         }
+
+        public static IEnumerable<RulesOfEffect> GetRegisteredEffects()
+        {
+            return EffectsByID.Values;
+        }
     }
 }

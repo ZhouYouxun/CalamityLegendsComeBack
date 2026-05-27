@@ -462,15 +462,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (weapon == null)
                 return;
 
-            if (weapon != null && weapon.storedEffectPower > 0)
+            int effectID = weapon.GetProjectileEffectIDForShot();
+            int leftClickDamage = weapon.GetCurrentLeftClickDamage(player, effectID);
+
+            if (weapon.storedEffectPower > 0)
             {
-                weapon.storedEffectPower -= 3;
+                weapon.storedEffectPower -= 5;
 
                 if (weapon.storedEffectPower < 0)
                     weapon.storedEffectPower = 0;
             }
 
-            int effectID = currentEffectID;
             Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
 
             float shakePower = 20f;
@@ -484,9 +486,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, dir);
             SpawnRocketSalvoMuzzleEffect(player, dir);
 
-            for (int i = 0; i < 3; i++)
+            const int orbCount = 5;
+            for (int i = 0; i < orbCount; i++)
             {
-                float t = i / 2f;
+                float t = i / (float)(orbCount - 1);
                 float angle = MathHelper.Lerp(-0.22f, 0.22f, t);
                 float distFromCenter = Math.Abs(t - 0.5f) * 2f;
                 float speedFactor = (float)Math.Pow(1f - distFromCenter, 1.5f);
@@ -497,14 +500,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     GunTipPosition,
                     dir.RotatedBy(angle) * speed,
                     ModContent.ProjectileType<NewLegendSHPB>(),
-                    Projectile.damage,
+                    leftClickDamage,
                     Projectile.knockBack,
                     Projectile.owner,
                     effectID
                 );
             }
 
-            NewLegendSHPC.GainEXFromLeftShot(player, 3);
+            NewLegendSHPC.GainEXFromLeftShot(player, orbCount);
         }
 
         private void SpawnRocketSalvoMuzzleEffect(Player player, Vector2 baseDirection)

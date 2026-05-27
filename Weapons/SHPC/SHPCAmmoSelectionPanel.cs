@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -14,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 {
     internal sealed class SHPCAmmoSelectionPanel : ModProjectile, ILocalizedModType
     {
-        private const int MaxCandidates = 3;
+        private const int MaxCandidates = NewLegendSHPC.MagazineCount;
         private const int SlotSize = 56;
         private const int InnerFrameSize = 44;
         private const int BorderThickness = 2;
@@ -100,27 +101,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (owner.HeldItem.ModItem is not NewLegendSHPC weapon)
                 return false;
 
-            List<NewLegendSHPC.SHPCAmmoCandidate> candidates = NewLegendSHPC.FindEffectAmmoCandidates(owner, MaxCandidates);
-            int hoveredIndex = GetHoveredCandidateIndex(candidates.Count);
+            NewLegendSHPC.SHPCMagazineSlot[] slots = new NewLegendSHPC.SHPCMagazineSlot[MaxCandidates];
+            for (int i = 0; i < MaxCandidates; i++)
+                slots[i] = weapon.GetMagazineSlot(i);
+
+            int hoveredIndex = GetHoveredCandidateIndex(slots.Length);
             bool keyReleased = KeybindSystem.LegendaryWeaponFormSwitch?.JustReleased == true;
 
-            DrawPanelRings(candidates.Count, hoveredIndex);
+            DrawPanelRings(slots.Length, hoveredIndex);
 
-            for (int i = 0; i < candidates.Count; i++)
+            for (int i = 0; i < slots.Length; i++)
             {
-                NewLegendSHPC.SHPCAmmoCandidate candidate = candidates[i];
-                Rectangle slotArea = GetSlotArea(i, candidates.Count);
+                NewLegendSHPC.SHPCMagazineSlot slot = slots[i];
+                Rectangle slotArea = GetSlotArea(i, slots.Length);
                 bool hovered = i == hoveredIndex;
 
                 if (hovered)
                 {
-                    Main.hoverItemName = GetHoverText(candidate);
+                    Main.hoverItemName = GetHoverText(slot);
 
                     if (!hoveredLastFrame[i] && Projectile.Opacity >= 0.92f)
                         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
                 }
 
-                DrawAmmoSlot(candidate, slotArea, hovered, clickFeedbackTimers[i], Projectile.Opacity);
+                DrawAmmoSlot(slot, slotArea, hovered, clickFeedbackTimers[i], Projectile.Opacity);
 
                 hoveredLastFrame[i] = hovered;
                 if (clickFeedbackTimers[i] > 0)
@@ -129,20 +133,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (keyReleased && Projectile.Opacity > 0.08f)
             {
-                if (hoveredIndex >= 0 && hoveredIndex < candidates.Count)
+                if (hoveredIndex >= 0 && hoveredIndex < slots.Length)
                 {
-                    NewLegendSHPC.SHPCAmmoCandidate candidate = candidates[hoveredIndex];
-                    if (weapon.TryLoadSelectedEffectAmmo(owner, candidate))
-                    {
-                        clickFeedbackTimers[hoveredIndex] = 10;
-                        Color textColor = GetEffectColor(candidate.EffectID);
-                        CombatText.NewText(owner.Hitbox, textColor, Lang.GetItemNameValue(candidate.AmmoType), dramatic: false, dot: false);
-                        SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
-                    }
-                    else
-                    {
-                        SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.42f, Pitch = 0.2f }, owner.Center);
-                    }
+                    weapon.SelectMagazine(hoveredIndex);
+                    clickFeedbackTimers[hoveredIndex] = 10;
+                    NewLegendSHPC.SHPCMagazineSlot selectedSlot = weapon.GetMagazineSlot(hoveredIndex);
+                    Color textColor = selectedSlot.HasAmmo ? GetEffectColor(selectedSlot.EffectID) : Color.LightGray;
+                    CombatText.NewText(owner.Hitbox, textColor, GetMagazineSwitchText(selectedSlot), dramatic: false, dot: false);
+                    SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
                 }
                 else
                 {
@@ -240,9 +238,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             DrawScreenLine(screenCenter, screenCenter + hoverDirection * (radius * 0.92f), Color.White * (0.3f * Projectile.Opacity), 3f);
         }
 
-        private static void DrawAmmoSlot(NewLegendSHPC.SHPCAmmoCandidate candidate, Rectangle slotArea, bool hovered, int clickTimer, float opacity)
+        private static void DrawAmmoSlot(NewLegendSHPC.SHPCMagazineSlot slot, Rectangle slotArea, bool hovered, int clickTimer, float opacity)
         {
-            Color effectColor = GetEffectColor(candidate.EffectID);
+            Color effectColor = slot.HasAmmo ? GetEffectColor(slot.EffectID) : new Color(86, 92, 104);
             Color slotBack = Color.Lerp(new Color(24, 28, 36), effectColor, 0.18f);
             Color slotBorder = Color.Lerp(new Color(112, 126, 150), effectColor, 0.42f);
 
@@ -265,11 +263,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             DrawRectangle(innerArea, Color.Lerp(new Color(10, 12, 18), effectColor, 0.08f) * (opacity * 0.82f));
             DrawBorder(innerArea, slotBorder * (opacity * 0.68f), 1);
 
-            Texture2D texture = TryGetAmmoTexture(candidate.EffectID, candidate.AmmoType);
+            if (!slot.HasAmmo)
+            {
+                CalamityUtils.DrawBorderStringEightWay(
+                    Main.spriteBatch,
+                    FontAssets.MouseText.Value,
+                    (slot.Index + 1).ToString(),
+                    slotArea.Center.ToVector2() - new Vector2(5f, 11f),
+                    Color.Gray * opacity,
+                    Color.Black * opacity,
+                    0.8f);
+                return;
+            }
+
+            Texture2D texture = TryGetAmmoTexture(slot.EffectID, slot.AmmoType);
             if (texture == null)
                 return;
 
-            Rectangle source = GetCurrentFrame(texture, GetFrameCount(candidate.EffectID));
+            Rectangle source = GetCurrentFrame(texture, GetFrameCount(slot.EffectID));
             Vector2 iconCenter = slotArea.Center.ToVector2();
             Vector2 sourceSize = source.Size();
             float fitScale = Math.Min(MaxIconDrawSize / Math.Max(1f, sourceSize.X), MaxIconDrawSize / Math.Max(1f, sourceSize.Y));
@@ -288,9 +299,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 fitScale * hoverScale * clickScale * bob,
                 SpriteEffects.None,
                 0f);
+
+            CalamityUtils.DrawBorderStringEightWay(
+                Main.spriteBatch,
+                FontAssets.MouseText.Value,
+                slot.Power.ToString(),
+                new Vector2(slotArea.Right, slotArea.Bottom) - new Vector2(18f, 18f),
+                Color.White * opacity,
+                Color.Black * opacity,
+                0.55f);
         }
 
-        private static Rectangle GetCurrentFrame(Texture2D texture, int frameCount)
+        internal static Rectangle GetCurrentFrame(Texture2D texture, int frameCount)
         {
             frameCount = Math.Max(1, frameCount);
             int frameHeight = Math.Max(1, texture.Height / frameCount);
@@ -298,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return new Rectangle(0, frameHeight * frameIndex, texture.Width, frameHeight);
         }
 
-        private static Texture2D TryGetAmmoTexture(int effectID, int ammoType)
+        internal static Texture2D TryGetAmmoTexture(int effectID, int ammoType)
         {
             string texturePath = GetTexturePath(effectID);
             if (!string.IsNullOrEmpty(texturePath))
@@ -361,7 +381,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             };
         }
 
-        private static int GetFrameCount(int effectID)
+        internal static int GetFrameCount(int effectID)
         {
             return effectID switch
             {
@@ -375,7 +395,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             };
         }
 
-        private static Color GetEffectColor(int effectID)
+        internal static Color GetEffectColor(int effectID)
         {
             Color color = EffectRegistry.GetEffectByID(effectID).ThemeColor;
             if (color == Color.Transparent || color == default)
@@ -384,11 +404,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return color;
         }
 
-        private static string GetHoverText(NewLegendSHPC.SHPCAmmoCandidate candidate)
+        private static string GetHoverText(NewLegendSHPC.SHPCMagazineSlot slot)
         {
-            string itemName = Lang.GetItemNameValue(candidate.AmmoType);
-            int capacity = SHPCAmmoCapacity.GetCapacity(candidate.EffectID);
-            return Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.SHPCAmmoWheelHover", itemName, capacity);
+            if (!slot.HasAmmo)
+                return $"{slot.Index + 1}号弹夹: 空";
+
+            string itemName = Lang.GetItemNameValue(slot.AmmoType);
+            int capacity = SHPCAmmoCapacity.GetCapacity(slot.EffectID);
+            return $"{slot.Index + 1}号弹夹: {Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.SHPCAmmoWheelHover", itemName, capacity)} ({slot.Power}/{capacity})";
+        }
+
+        private static string GetMagazineSwitchText(NewLegendSHPC.SHPCMagazineSlot slot)
+        {
+            if (!slot.HasAmmo)
+                return $"{slot.Index + 1}号弹夹: 空";
+
+            return $"{slot.Index + 1}号弹夹: {Lang.GetItemNameValue(slot.AmmoType)}";
         }
 
         private static void DrawScreenLine(Vector2 start, Vector2 end, Color color, float thickness)

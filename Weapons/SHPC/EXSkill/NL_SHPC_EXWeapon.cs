@@ -31,6 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         // 3 = 过热
         private int timer;
         private int exSkyLightningTimer;
+        private int superLaserIndex = -1;
 
         private const int ChargeTime = 180;
         private const int LaserTime = 60;
@@ -53,6 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             exSkyLightningTimer = 0;
+            superLaserIndex = -1;
         }
 
         #endregion
@@ -222,17 +224,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             if (Main.myPlayer == Projectile.owner)
             {
-                int laser = Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    GunTip,
-                    Projectile.velocity,
-                    ModContent.ProjectileType<SHPC_SuperLazer>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner);
-
-                Main.projectile[laser].ai[0] = Projectile.whoAmI;
-
+                EnsureSuperLaser();
                 SpawnSpiralInvs();
             }
 
@@ -249,9 +241,60 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             LaserSoundSlot = default;
             laserSoundTimer = 0;
+            KillSuperLaser();
 
             state = 3;
             timer = 0;
+        }
+
+        private void EnsureSuperLaser()
+        {
+            int laserType = ModContent.ProjectileType<SHPC_SuperLazer>();
+            if (superLaserIndex >= 0 && superLaserIndex < Main.maxProjectiles)
+            {
+                Projectile existingLaser = Main.projectile[superLaserIndex];
+                if (existingLaser.active &&
+                    existingLaser.owner == Projectile.owner &&
+                    existingLaser.type == laserType &&
+                    (int)existingLaser.ai[0] == Projectile.whoAmI)
+                {
+                    return;
+                }
+            }
+
+            int laser = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTip,
+                Projectile.velocity,
+                laserType,
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner,
+                Projectile.whoAmI);
+
+            if (laser >= 0 && laser < Main.maxProjectiles)
+            {
+                superLaserIndex = laser;
+                Main.projectile[laser].netUpdate = true;
+            }
+        }
+
+        private void KillSuperLaser()
+        {
+            int laserType = ModContent.ProjectileType<SHPC_SuperLazer>();
+            if (superLaserIndex < 0 || superLaserIndex >= Main.maxProjectiles)
+                return;
+
+            Projectile laser = Main.projectile[superLaserIndex];
+            if (laser.active &&
+                laser.owner == Projectile.owner &&
+                laser.type == laserType &&
+                (int)laser.ai[0] == Projectile.whoAmI)
+            {
+                laser.Kill();
+            }
+
+            superLaserIndex = -1;
         }
 
         private void SpawnSpiralInvs()
@@ -387,6 +430,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public override void OnKill(int timeLeft)
         {
+            KillSuperLaser();
+
             if (Projectile.owner == Main.myPlayer && Owner.active && !Owner.dead)
                 Owner.Calamity().monolithExoShader = 0;
 

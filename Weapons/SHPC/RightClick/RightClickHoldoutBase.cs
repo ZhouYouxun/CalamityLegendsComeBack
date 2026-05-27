@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CalamityLegendsComeBack.Weapons.SHPC;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
@@ -81,7 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
-            if (!Main.mouseRight)
+            if (!Main.mouseRight ||
+                (Projectile.owner == Main.myPlayer && !NewLegendSHPC.CanUseWorldRightClick(Owner)))
             {
                 Projectile.Kill();
                 return;

@@ -71,10 +71,19 @@ Mods: {
 						[c/66E6FF:Without timely intervention, this optimization will ultimately consume the operator.]
 						'''
 				}
+
+				SHPCBook: {
+					DisplayName: SHPC Material Manual
+					Tooltip: Left click to open or close the SHPC material index.
+				}
 			}
 		}
 
-		TheSpecialText.SHPCAmmoWheelHover: "{0} - {1} shots"
+		TheSpecialText: {
+			SHPCAmmoWheelHover: "{0} - {1} shots"
+			SHPCBookNoRecords: No registered SHPC material records.
+			SHPCBookMissingEffect: No effect record
+		}
 
 		AMMO: {
 			SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
@@ -175,6 +184,8 @@ Mods: {
 				RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
 				RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
 			}
+
+			A_Dev.SHPCBookPanel.DisplayName: SHPC Material Manual Panel
 		}
 
 		Cooldowns.SHPC_EX: SHPC Cooldown

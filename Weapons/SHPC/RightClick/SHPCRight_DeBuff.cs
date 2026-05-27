@@ -57,16 +57,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 if (Main.GameUpdateCount % 5 == 0)
                     ApplyOverheatDamage(player, Main.rand.Next(1, 3));
 
-                if (Main.rand.NextBool(12))
-                {
-                    Vector2 pos = player.Center;
-
-                    CombatText.NewText(
-                        new Rectangle((int)pos.X, (int)pos.Y, player.width, player.height),
-                        Color.Red,
-                        "锟斤拷烫烫烫！！！"
-                    );
-                }
             }
 
 

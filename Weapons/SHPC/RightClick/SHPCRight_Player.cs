@@ -12,10 +12,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public int HeatMaxStage;
         public int HeatUiFadeTimer;
         public int AttackLockoutTimer;
+        public int ForcedShutdownCoolingTimer;
 
         private const int DetachedUiFadeTime = 24;
         private readonly BalanceSHPC balance = new();
-        private int heatDecayTimer;
+        private int forcedShutdownCoolingDuration;
 
         public override void PostUpdate()
         {
@@ -26,6 +27,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 HeatMaxStage > 0 ? HeatMaxStage : balance.GetRightClickMaxHeatLevel(),
                 1,
                 balance.GetRightClickMaxHeatLevel());
+
+            if (ForcedShutdownCoolingTimer > 0)
+            {
+                UpdateForcedShutdownCooling();
+                return;
+            }
 
             bool holdingRightClick = HasActiveRightClickHoldout();
             bool holdingSHPC = IsHoldingSHPCLike();
@@ -40,32 +47,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 EnsureDetachedHeatUI();
 
             if (holdingRightClick || AttackLockoutTimer > 0)
-            {
-                heatDecayTimer = 0;
                 return;
-            }
 
             if (!hasHeat)
-            {
-                heatDecayTimer = 0;
                 return;
-            }
 
-            int coolingStep = holdingSHPC ? 2 : 1;
-            if (HeatProgressTimer > 0)
-            {
-                HeatProgressTimer = System.Math.Max(0, HeatProgressTimer - coolingStep);
-                heatDecayTimer = 0;
-                return;
-            }
-
-            int decayTime = GetHeatDecayTime(holdingSHPC);
-            heatDecayTimer++;
-            if (heatDecayTimer >= decayTime)
-            {
-                HeatStage--;
-                heatDecayTimer = 0;
-            }
+            float heatUnits = GetTotalHeatUnits();
+            heatUnits -= 1f / BalanceSHPC.NormalHeatDecayTime;
+            ApplyHeatUnits(heatUnits);
         }
 
         public void SyncHeatFromHoldout(int heatStage, int heatProgressTimer, int maxHeatStage)
@@ -77,7 +66,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 ? fillTime
                 : Utils.Clamp(heatProgressTimer, 0, fillTime);
             HeatUiFadeTimer = DetachedUiFadeTime;
-            heatDecayTimer = 0;
+        }
+
+        public bool IsForcedShutdownCooling()
+        {
+            return ForcedShutdownCoolingTimer > 0;
+        }
+
+        public void StartForcedShutdownCooling(int frames, int maxHeatStage)
+        {
+            forcedShutdownCoolingDuration = System.Math.Max(1, frames);
+            ForcedShutdownCoolingTimer = forcedShutdownCoolingDuration;
+            HeatMaxStage = Utils.Clamp(maxHeatStage, 1, balance.GetRightClickMaxHeatLevel());
+            ApplyHeatUnits(HeatMaxStage);
+            HeatUiFadeTimer = DetachedUiFadeTime;
+            SetAttackLockout(frames);
         }
 
         public bool IsHoldingSHPCLike()
@@ -108,8 +111,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return Utils.Clamp(HeatProgressTimer / (float)fillTime, 0f, 1f);
             }
 
-            int decayTime = GetHeatDecayTime(IsHoldingSHPCLike());
-            return 1f - Utils.Clamp(heatDecayTimer / (float)decayTime, 0f, 1f);
+            return HeatStage > 0 ? 1f : 0f;
         }
 
         public void SetAttackLockout(int frames)
@@ -118,13 +120,47 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 AttackLockoutTimer = frames;
         }
 
-        private int GetHeatDecayTime(bool holdingSHPC)
+        private void UpdateForcedShutdownCooling()
         {
-            int completedHeatLevel = Utils.Clamp(HeatStage - 1, 0, 4);
-            int normalFillTime = balance.GetHeatFillTime(completedHeatLevel);
-            return holdingSHPC
-                ? System.Math.Max(1, normalFillTime / 2)
-                : System.Math.Max(90, normalFillTime);
+            int duration = System.Math.Max(1, forcedShutdownCoolingDuration);
+            ForcedShutdownCoolingTimer--;
+
+            float heatUnits = HeatMaxStage * Utils.Clamp(ForcedShutdownCoolingTimer / (float)duration, 0f, 1f);
+            ApplyHeatUnits(heatUnits);
+            HeatUiFadeTimer = DetachedUiFadeTime;
+
+            if (Main.myPlayer == Player.whoAmI && HasAnyHeat())
+                EnsureDetachedHeatUI();
+        }
+
+        private float GetTotalHeatUnits()
+        {
+            int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4));
+            float progress = fillTime > 0 ? HeatProgressTimer / (float)fillTime : 0f;
+            return System.Math.Max(0f, HeatStage + Utils.Clamp(progress, 0f, 1f));
+        }
+
+        private void ApplyHeatUnits(float heatUnits)
+        {
+            heatUnits = Utils.Clamp(heatUnits, 0f, HeatMaxStage);
+            if (heatUnits <= 0f)
+            {
+                HeatStage = 0;
+                HeatProgressTimer = 0;
+                return;
+            }
+
+            if (heatUnits >= HeatMaxStage)
+            {
+                HeatStage = HeatMaxStage;
+                HeatProgressTimer = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4));
+                return;
+            }
+
+            HeatStage = Utils.Clamp((int)System.MathF.Floor(heatUnits), 0, HeatMaxStage);
+            float fractionalHeat = heatUnits - HeatStage;
+            int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4));
+            HeatProgressTimer = Utils.Clamp((int)System.MathF.Round(fractionalHeat * fillTime), 0, fillTime);
         }
 
         private void EnsureDetachedHeatUI()

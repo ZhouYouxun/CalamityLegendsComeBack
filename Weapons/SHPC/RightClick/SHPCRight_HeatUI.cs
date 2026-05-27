@@ -67,10 +67,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Color color = GetHeatBarColor(heatColorProgress) * Projectile.Opacity;
 
             Vector2 drawPos = owner.Center - Main.screenPosition + new Vector2(0f, -56f) - barBG.Size() / 1.5f;
-            Rectangle frameCrop = new Rectangle(0, 0, (int)(barFG.Width * progress), barFG.Height);
 
-            Main.spriteBatch.Draw(barBG, drawPos, null, color, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(barFG, drawPos, frameCrop, color * 0.8f, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
+            SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, progress, color, color * 0.8f, 1.5f);
 
             return false;
         }

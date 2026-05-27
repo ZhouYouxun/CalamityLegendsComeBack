@@ -21,6 +21,7 @@
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Dev\MK14EBR\" />
+	  <Folder Include="Weapons\A_Tools\新文件夹\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />

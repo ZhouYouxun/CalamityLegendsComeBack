@@ -43,7 +43,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
-            if (!Main.mouseRight)
+            if (!Main.mouseRight ||
+                (Projectile.owner == Main.myPlayer && !NewLegendSHPC.CanUseWorldRightClick(Owner)))
                 Projectile.Kill();
         }
 
@@ -214,7 +215,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     PlayStartupSound();
 
                 spawnDelay--;
-                return;
+                if (spawnDelay > 0)
+                    return;
+
+                frameCounter = Math.Max(frameCounter, 4);
             }
 
             #endregion
@@ -222,10 +226,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #region ===== 常规运行 =====
 
             frameCounter++;
-            stageTimer++;
 
             // Sync after stage changes so detached heat UI and cooling use the final value.
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
+            if (fireStopTimer <= 0)
+                stageTimer++;
 
             #endregion
 
@@ -242,16 +247,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 frameCounter = 0;
             }
 
+            if (heatPlayer.IsForcedShutdownCooling())
+            {
+                stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+            }
+
             #endregion
 
             #region ===== 升级系统 =====
 
+            bool stageFilledThisFrame = false;
             if (fireStopTimer <= 0)
             {
                 int stageUpTime = GetStageUpTime();
 
                 if (stage < MaxHeatStage && stageTimer >= stageUpTime)
                 {
+                    stageFilledThisFrame = true;
+                    visualProgress = 1f;
+                    heatPlayer.SyncHeatFromHoldout(stage, stageUpTime, MaxHeatStage);
                     stage++;
                     stageTimer = 0;
                     overheatTimer = 0;
@@ -273,7 +288,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #region ===== 后坐力 & 充能 =====
 
-            heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
+            if (heatPlayer.IsForcedShutdownCooling())
+            {
+                stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+            }
+            else if (!stageFilledThisFrame)
+                heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
 
             OffsetLengthFromArm -= 2f;
 
@@ -284,7 +305,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== 正常充能 =====
             if (fireStopTimer <= 0)
             {
-                if (stage >= MaxHeatStage)
+                if (heatPlayer.IsForcedShutdownCooling())
+                {
+                    targetProgress = heatPlayer.GetDetachedHeatProgress();
+                }
+                else if (stageFilledThisFrame)
+                {
+                    targetProgress = 1f;
+                }
+                else if (stage >= MaxHeatStage)
                 {
                     targetProgress = 1f; // 满级锁满
                 }
@@ -306,7 +335,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 manualCoolingVisualTimer--;
 
             // ===== 平滑过渡（关键）=====
-            visualProgress = MathHelper.Lerp(visualProgress, targetProgress, 0.25f);
+            visualProgress = targetProgress;
 
 
 
@@ -386,15 +415,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void ForceShutdown(Player player)
         {
-            stage = Math.Max(0, stage - 1);
-            stageTimer = 0;
+            stage = MaxHeatStage;
+            stageTimer = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4));
             overheatTimer = 0;
             fireStopTimer = BalanceSHPC.ForcedShutdownTime;
             manualCoolingVisualTimer = 0;
             frameCounter = 0;
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
-            heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
-            heatPlayer.SetAttackLockout(BalanceSHPC.ForcedShutdownTime);
+            heatPlayer.StartForcedShutdownCooling(BalanceSHPC.ForcedShutdownTime, MaxHeatStage);
             TriggerStageOutlinePulse();
             SpawnCoolingVentMist();
         }
@@ -751,7 +779,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 var barFG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarFront").Value;
 
                 Vector2 drawPos = Owner.Center - Main.screenPosition + new Vector2(0, -56f) - barBG.Size() / 1.5f;
-                Rectangle frameCrop = new Rectangle(0, 0, (int)(barFG.Width * visualProgress), barFG.Height);
 
                 float opacity = 1f;
                 float heatColorProgress = MathHelper.Clamp((stage + visualProgress) / Math.Max(1f, MaxHeatStage), 0f, 1f);
@@ -759,8 +786,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 if (fireStopTimer > 0)
                     color = Color.Lerp(color, Color.White, 0.25f);
 
-                Main.spriteBatch.Draw(barBG, drawPos, null, color * opacity, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
-                Main.spriteBatch.Draw(barFG, drawPos, frameCrop, color * opacity * 0.8f, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0f);
+                SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, visualProgress, color * opacity, color * opacity * 0.8f, 1.5f);
             }
 
             return base.PreDraw(ref lightColor);

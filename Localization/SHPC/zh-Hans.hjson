@@ -71,10 +71,19 @@ Mods: {
 						[c/66E6FF:若操作者无法及时干预，这种“优化”将反过来燃尽自身。]
 						'''
 				}
+
+				SHPCBook: {
+					DisplayName: SHPC材料手册
+					Tooltip: 左键打开或关闭 SHPC 材料索引。
+				}
 			}
 		}
 
-		TheSpecialText.SHPCAmmoWheelHover: "{0} - {1} 发"
+		TheSpecialText: {
+			SHPCAmmoWheelHover: "{0} - {1} 发"
+			SHPCBookNoRecords: 暂无已注册的 SHPC 材料记录。
+			SHPCBookMissingEffect: 暂无效果记录
+		}
 
 		AMMO: {
 			SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
@@ -175,6 +184,8 @@ Mods: {
 				// RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
 				// RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
 			}
+
+			A_Dev.SHPCBookPanel.DisplayName: SHPC材料手册面板
 		}
 
 		Cooldowns.SHPC_EX: SHPC冷却

@@ -58,19 +58,45 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region ===== 灌注与动画状态 =====
 
-        // ==================== 基础常量 ====================
-        // 一颗弹药能灌注多少发
-        //public const int ShotsPerEffectAmmo = 50;
+        public const int MagazineCount = 3;
 
-        // ==================== 当前灌注状态 ====================
-        // 当前还剩多少发
-        public int storedEffectPower = 0;
+        private readonly int[] magazineEffectPowers = new int[MagazineCount];
+        private readonly int[] magazineAmmoTypes = new int[MagazineCount];
+        private readonly int[] magazineEffectIDs = new int[MagazineCount];
+        private int selectedMagazineIndex;
 
-        // 当前灌注用的弹药类型
-        public int storedAmmoType = ItemID.None;
+        public int storedEffectPower
+        {
+            get => magazineEffectPowers[CurrentMagazineIndex];
+            set
+            {
+                int index = CurrentMagazineIndex;
+                magazineEffectPowers[index] = Math.Max(0, value);
+                if (magazineEffectPowers[index] <= 0)
+                    ClearMagazine(index);
+            }
+        }
 
-        // 当前灌注得到的效果ID
-        public int storedEffectID = 0;
+        public int storedAmmoType
+        {
+            get => magazineAmmoTypes[CurrentMagazineIndex];
+            set => magazineAmmoTypes[CurrentMagazineIndex] = value;
+        }
+
+        public int storedEffectID
+        {
+            get => magazineEffectIDs[CurrentMagazineIndex];
+            set => magazineEffectIDs[CurrentMagazineIndex] = value;
+        }
+
+        public int CurrentMagazineIndex
+        {
+            get
+            {
+                selectedMagazineIndex = Utils.Clamp(selectedMagazineIndex, 0, MagazineCount - 1);
+                return selectedMagazineIndex;
+            }
+        }
 
         // 后坐力动画计数
         public int recoilProgress = 0;
@@ -150,6 +176,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             public int InventoryIndex { get; }
         }
 
+        public readonly struct SHPCMagazineSlot
+        {
+            public SHPCMagazineSlot(int index, int ammoType, int effectID, int power, bool selected)
+            {
+                Index = index;
+                AmmoType = ammoType;
+                EffectID = effectID;
+                Power = power;
+                Selected = selected;
+            }
+
+            public int Index { get; }
+            public int AmmoType { get; }
+            public int EffectID { get; }
+            public int Power { get; }
+            public bool Selected { get; }
+            public bool HasAmmo => AmmoType > ItemID.None && EffectID > 0 && Power > 0;
+        }
+
         public static List<SHPCAmmoCandidate> FindEffectAmmoCandidates(Player player, int maxCount)
         {
             List<SHPCAmmoCandidate> candidates = new();
@@ -200,18 +245,123 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return true;
         }
 
-        private void TryReturnStoredAmmo(Player player)
+        public SHPCMagazineSlot GetMagazineSlot(int index)
         {
-            if (storedEffectID <= 0 || storedAmmoType <= ItemID.None || storedEffectPower <= 0)
+            index = Utils.Clamp(index, 0, MagazineCount - 1);
+            return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], index == CurrentMagazineIndex);
+        }
+
+        public bool SelectMagazine(int index)
+        {
+            if (index < 0 || index >= MagazineCount)
+                return false;
+
+            selectedMagazineIndex = index;
+            return true;
+        }
+
+        private bool IsMagazineLoaded(int index)
+        {
+            return magazineAmmoTypes[index] > ItemID.None &&
+                   magazineEffectIDs[index] > 0 &&
+                   magazineEffectPowers[index] > 0;
+        }
+
+        private bool TryFillEmptyMagazines(Player player)
+        {
+            HashSet<int> unavailableAmmoTypes = new();
+            for (int i = 0; i < MagazineCount; i++)
+            {
+                if (IsMagazineLoaded(i))
+                    unavailableAmmoTypes.Add(magazineAmmoTypes[i]);
+            }
+
+            List<SHPCAmmoCandidate> candidates = FindEffectAmmoCandidates(player, player.inventory.Length);
+            bool loadedAny = false;
+
+            for (int magazineIndex = 0; magazineIndex < MagazineCount; magazineIndex++)
+            {
+                if (IsMagazineLoaded(magazineIndex))
+                    continue;
+
+                SHPCAmmoCandidate selectedCandidate = default;
+                bool foundCandidate = false;
+                foreach (SHPCAmmoCandidate candidate in candidates)
+                {
+                    if (unavailableAmmoTypes.Contains(candidate.AmmoType))
+                        continue;
+
+                    if (candidate.InventoryIndex < 0 || candidate.InventoryIndex >= player.inventory.Length)
+                        continue;
+
+                    Item sourceItem = player.inventory[candidate.InventoryIndex];
+                    if (sourceItem == null || sourceItem.stack <= 0 || sourceItem.type != candidate.AmmoType)
+                        continue;
+
+                    selectedCandidate = candidate;
+                    foundCandidate = true;
+                    break;
+                }
+
+                if (!foundCandidate)
+                    continue;
+
+                Item consumedItem = player.inventory[selectedCandidate.InventoryIndex];
+                consumedItem.stack--;
+                if (consumedItem.stack <= 0)
+                    consumedItem.TurnToAir();
+
+                magazineAmmoTypes[magazineIndex] = selectedCandidate.AmmoType;
+                magazineEffectIDs[magazineIndex] = selectedCandidate.EffectID;
+                magazineEffectPowers[magazineIndex] = EffectRegistry.GetEffectByID(selectedCandidate.EffectID).ShotsPerAmmo;
+                unavailableAmmoTypes.Add(selectedCandidate.AmmoType);
+                loadedAny = true;
+            }
+
+            return loadedAny;
+        }
+
+        private void ConsumeCurrentMagazineShot()
+        {
+            int index = CurrentMagazineIndex;
+            if (!IsMagazineLoaded(index))
                 return;
 
-            int maxShots = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
+            magazineEffectPowers[index]--;
+            if (magazineEffectPowers[index] <= 0)
+                ClearMagazine(index);
+        }
+
+        private void ClearMagazine(int index)
+        {
+            index = Utils.Clamp(index, 0, MagazineCount - 1);
+            magazineEffectPowers[index] = 0;
+            magazineAmmoTypes[index] = ItemID.None;
+            magazineEffectIDs[index] = 0;
+        }
+
+        private void TryReturnStoredAmmo(Player player)
+        {
+            TryReturnMagazineAmmo(player, CurrentMagazineIndex);
+        }
+
+        private void TryReturnMagazineAmmo(Player player, int index)
+        {
+            index = Utils.Clamp(index, 0, MagazineCount - 1);
+            int effectID = magazineEffectIDs[index];
+            int ammoType = magazineAmmoTypes[index];
+            int power = magazineEffectPowers[index];
+
+            if (effectID <= 0 || ammoType <= ItemID.None || power <= 0)
+                return;
+
+            int maxShots = EffectRegistry.GetEffectByID(effectID).ShotsPerAmmo;
             if (maxShots <= 0)
                 return;
 
-            float returnChance = storedEffectPower / (float)maxShots;
+            float returnChance = power / (float)maxShots;
             if (Main.rand.NextFloat() < returnChance)
-                player.QuickSpawnItem(player.GetSource_FromThis(), storedAmmoType, 1);
+                player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
         }
 
         // 根据当前效果ID获取主题色
@@ -249,9 +399,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void OnCreated(ItemCreationContext context)
         {
-            // 和原版一样：通过合成生成的武器，默认自带满灌注
-            if (context is RecipeItemCreationContext)
-                storedEffectPower = EffectRegistry.GetEffectByID(-1).ShotsPerAmmo;
         }
         #endregion
 
@@ -284,6 +431,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 zenithBurstTimer = 8; // 间隔8帧
             }
 
+            if (player.altFunctionUse != 2 && !IsMagazineLoaded(CurrentMagazineIndex))
+                TryFillEmptyMagazines(player);
+
             // 只要当前还有灌注次数，或者玩家包里还能找到可灌注弹药，就允许使用
             //return storedEffectPower > 0 || FindEffectAmmo(player) != -1;
             // 改主意了，没有弹药也允许开火，只是一切为默认
@@ -295,40 +445,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ⭐ 右键：完全不参与弹药系统
             if (player.altFunctionUse == 2)
                 return true;
-
-            // 左键开火时先消耗一发内部灌注
-            if (storedEffectPower > 0)
-                storedEffectPower--;
-
-            // 如果已经打空，则自动重新装填一颗注册表认可的弹药
-            if (storedEffectPower <= 0)
-            {
-                bool ammoConsumed = false;
-                int ammoType = FindEffectAmmo(player);
-
-                if (ammoType != -1)
-                {
-                    // 消耗这一颗弹药
-                    player.ConsumeItem(ammoType);
-
-                    // 记录当前灌注来源
-                    storedAmmoType = ammoType;
-
-                    // 从注册表查询它对应的效果ID
-                    storedEffectID = EffectRegistry.GetEffectIDByAmmo(ammoType);
-
-                    ammoConsumed = true;
-                }
-
-                // 成功装填后恢复发数
-                if (ammoConsumed)
-                    storedEffectPower = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
-                else
-                {
-                    storedAmmoType = ItemID.None;
-                    storedEffectID = 0;
-                }
-            }
 
             return base.UseItem(player);
         }
@@ -414,11 +530,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
             leftClickCooldown = Item.useTime; // 60帧锁死
             GainEXFromLeftShot(player);
+            ConsumeCurrentMagazineShot();
 
             return false;
         }
 
-        private int GetProjectileEffectIDForShot()
+        internal int GetProjectileEffectIDForShot()
         {
             return storedEffectPower > 0 && storedEffectID > 0 ? storedEffectID : -1;
         }
@@ -515,16 +632,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Texture2D barFG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
 
             Vector2 drawPos = position + new Vector2((frame.Width - barBG.Width * 0.5f) * scale, (frame.Height + 45f) * scale);
-            int maxShots = EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo;
+            int maxShots = storedEffectID > 0 ? EffectRegistry.GetEffectByID(storedEffectID).ShotsPerAmmo : 1;
+            float currentProgress = storedEffectID > 0 && storedEffectPower > 0
+                ? MathHelper.Clamp(storedEffectPower / (float)maxShots, 0f, 1f)
+                : 0f;
             Rectangle frameCrop = new Rectangle(
                 0,
                 0,
-                (int)(storedEffectPower / (float)maxShots * barFG.Width),
+                (int)(currentProgress * barFG.Width),
                 barFG.Height
             );
 
             Color colorBG = Color.Black;
-            Color colorFG = Color.Lerp(Color.DarkGray, FindColorForCurrentEffect(), storedEffectPower / (float)maxShots);
+            Color colorFG = Color.Lerp(Color.DarkGray, FindColorForCurrentEffect(), currentProgress);
 
             spriteBatch.Draw(barBG, drawPos, null, colorBG, 0f, origin, scale * barScale, 0, 0f);
             spriteBatch.Draw(barFG, drawPos, frameCrop, colorFG * 0.8f, 0f, origin, scale * barScale, 0, 0f);
@@ -654,12 +774,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             // ===== 右键长按逻辑 =====
-            if (player.Calamity().mouseRight &&
-                player.whoAmI == Main.myPlayer &&
-                KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
-                !Main.mapFullscreen &&
-                !Main.blockMouse &&
-                !(Main.playerInventory && Main.HoverItem.type == Item.type)) // ❗新增
+            if (CanStartRightClickHoldout(player))
             {
                 if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
                     return;
@@ -713,6 +828,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
         }
 
+        private bool CanStartRightClickHoldout(Player player)
+        {
+            return player.whoAmI == Main.myPlayer &&
+                   player.Calamity().mouseRight &&
+                   KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
+                   CanUseWorldRightClick(player);
+        }
+
+        internal static bool CanUseWorldRightClick(Player player)
+        {
+            if (player.noItems ||
+                player.CCed ||
+                Main.mapFullscreen ||
+                Main.blockMouse ||
+                player.mouseInterface)
+            {
+                return false;
+            }
+
+            if (Main.playerInventory && !Main.HoverItem.IsAir)
+                return false;
+
+            return true;
+        }
+
         private void HandleAmmoSelectionKey(Player player)
         {
             if (KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed != true)
@@ -720,10 +860,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (player.noItems ||
                 player.CCed ||
-                Main.mapFullscreen ||
-                Main.blockMouse ||
-                player.mouseInterface ||
-                (Main.playerInventory && Main.HoverItem.type == Item.type))
+                Main.mapFullscreen)
             {
                 return;
             }
@@ -820,6 +957,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
         }
 
+        internal int GetCurrentLeftClickDamage(Player player, int effectID)
+        {
+            int baseDamage = balance.GetLeftClickBaseDamageForEffect(effectID);
+            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
+        }
+
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             // 直接覆写面板基础伤害
@@ -836,13 +979,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== 左键固定文案 =====
             string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro");
 
-            // ===== 左键弹药文案 =====
-            string ammoText = "";
-            if (storedEffectID > 0)
-            {
-                string key = $"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{storedEffectID}";
-                ammoText = Language.GetTextValue(key);
-            }
+            string ammoText = BuildMagazineTooltipText();
 
             // ===== 右键阶段 =====
             int state = GetRightClickProgressState();
@@ -873,7 +1010,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== 拼接 =====
             string finalText =
                 leftIntro + "\n" +
-                ">>> " + ammoText + " <<<" + 
+                ammoText +
                 "\n\n" +
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
@@ -883,6 +1020,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== 替换 Tooltip =====
             tooltips.FindAndReplace("[GFB]", finalText);
+        }
+
+        private string BuildMagazineTooltipText()
+        {
+            List<string> lines = new();
+            for (int i = 0; i < MagazineCount; i++)
+            {
+                string marker = i == CurrentMagazineIndex ? ">>> [CURRENT] " : "    ";
+                string slotName = $"{i + 1}号弹夹";
+
+                if (!IsMagazineLoaded(i))
+                {
+                    lines.Add($"{marker}{slotName}: 空");
+                    continue;
+                }
+
+                string key = $"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{magazineEffectIDs[i]}";
+                string ammoText = Language.GetTextValue(key);
+                int maxShots = EffectRegistry.GetEffectByID(magazineEffectIDs[i]).ShotsPerAmmo;
+                lines.Add($"{marker}{slotName}: {ammoText} ({magazineEffectPowers[i]}/{maxShots})");
+            }
+
+            return string.Join("\n", lines);
         }
         #endregion
 
@@ -965,9 +1125,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (clone is NewLegendSHPC newItem && item.ModItem is NewLegendSHPC oldItem)
             {
-                newItem.storedEffectPower = oldItem.storedEffectPower;
-                newItem.storedAmmoType = oldItem.storedAmmoType;
-                newItem.storedEffectID = oldItem.storedEffectID;
+                newItem.selectedMagazineIndex = oldItem.CurrentMagazineIndex;
+                for (int i = 0; i < MagazineCount; i++)
+                {
+                    newItem.magazineEffectPowers[i] = oldItem.magazineEffectPowers[i];
+                    newItem.magazineAmmoTypes[i] = oldItem.magazineAmmoTypes[i];
+                    newItem.magazineEffectIDs[i] = oldItem.magazineEffectIDs[i];
+                }
             }
 
             return clone;
@@ -975,30 +1139,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void SaveData(TagCompound tag)
         {
-            tag["storedEffectPower"] = storedEffectPower;
-            tag["storedAmmoType"] = storedAmmoType;
-            tag["storedEffectID"] = storedEffectID;
+            tag["selectedMagazineIndex"] = CurrentMagazineIndex;
+            for (int i = 0; i < MagazineCount; i++)
+            {
+                tag[$"magazineEffectPower{i}"] = magazineEffectPowers[i];
+                tag[$"magazineAmmoType{i}"] = magazineAmmoTypes[i];
+                tag[$"magazineEffectID{i}"] = magazineEffectIDs[i];
+            }
         }
 
         public override void LoadData(TagCompound tag)
         {
-            storedEffectPower = tag.GetInt("storedEffectPower");
-            storedAmmoType = tag.GetInt("storedAmmoType");
-            storedEffectID = tag.GetInt("storedEffectID");
+            selectedMagazineIndex = Utils.Clamp(tag.GetInt("selectedMagazineIndex"), 0, MagazineCount - 1);
+
+            bool hasMagazineData = tag.ContainsKey("magazineEffectPower0");
+            if (hasMagazineData)
+            {
+                for (int i = 0; i < MagazineCount; i++)
+                {
+                    magazineEffectPowers[i] = tag.GetInt($"magazineEffectPower{i}");
+                    magazineAmmoTypes[i] = tag.GetInt($"magazineAmmoType{i}");
+                    magazineEffectIDs[i] = tag.GetInt($"magazineEffectID{i}");
+                }
+
+                return;
+            }
+
+            magazineEffectPowers[CurrentMagazineIndex] = tag.GetInt("storedEffectPower");
+            magazineAmmoTypes[CurrentMagazineIndex] = tag.GetInt("storedAmmoType");
+            magazineEffectIDs[CurrentMagazineIndex] = tag.GetInt("storedEffectID");
         }
 
         public override void NetSend(BinaryWriter writer)
         {
-            writer.Write(storedEffectPower);
-            writer.Write(storedAmmoType);
-            writer.Write(storedEffectID);
+            writer.Write(CurrentMagazineIndex);
+            for (int i = 0; i < MagazineCount; i++)
+            {
+                writer.Write(magazineEffectPowers[i]);
+                writer.Write(magazineAmmoTypes[i]);
+                writer.Write(magazineEffectIDs[i]);
+            }
         }
 
         public override void NetReceive(BinaryReader reader)
         {
-            storedEffectPower = reader.ReadInt32();
-            storedAmmoType = reader.ReadInt32();
-            storedEffectID = reader.ReadInt32();
+            selectedMagazineIndex = Utils.Clamp(reader.ReadInt32(), 0, MagazineCount - 1);
+            for (int i = 0; i < MagazineCount; i++)
+            {
+                magazineEffectPowers[i] = reader.ReadInt32();
+                magazineAmmoTypes[i] = reader.ReadInt32();
+                magazineEffectIDs[i] = reader.ReadInt32();
+            }
         }
         #endregion
         #endregion
