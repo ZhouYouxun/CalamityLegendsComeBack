@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             projectile.velocity *= 2f;
 
             // 只存活很短时间
-            projectile.timeLeft = 25;
+            projectile.timeLeft = 15;
         }
 
         private int fireTimer;
@@ -42,14 +42,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void AI(Projectile projectile, Player owner)
         {
             // 抵消默认减速，尽量保持高速感
-            projectile.velocity *= 1.020408f;
+            projectile.velocity *= 1.235f;
 
 
             {
                 // ===== 单螺旋导弹释放 =====
                 fireTimer++;
 
-                if (fireTimer >= 2)
+                if (fireTimer >= 1)
                 {
                     fireTimer = 0;
 
@@ -71,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         projectile.Center,
                         velocity,
                         ProjectileID.VortexBeaterRocket,
-                        (int)(projectile.damage * 0.2f),
+                        (int)(projectile.damage * 0.72f),
                         1f,
                         projectile.owner
                     );

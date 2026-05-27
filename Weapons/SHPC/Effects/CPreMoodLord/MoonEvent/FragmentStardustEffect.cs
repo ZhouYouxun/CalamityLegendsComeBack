@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     projectile.Center,
                     velocity,
                     ModContent.ProjectileType<FragmentStardust_Cell>(),
-                    (int)(projectile.damage * 0.5f),
+                    (int)(projectile.damage * 1.33f),
                     projectile.knockBack,
                     projectile.owner,
                     0f

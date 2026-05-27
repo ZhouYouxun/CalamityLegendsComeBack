@@ -31,33 +31,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             28, // 30Evil Boss / 腐化或猩红 Boss T2
             36, // 42Skeletron / 骷髅王
             40, // 54Hardmode / 困难模式
-            47, // 72Any Mechanical Boss / 任意机械 Boss
-            54, // 90Plantera / 世纪之花
-            64, // 120Golem / 石巨人
-            80, // 180Moon Lord / 月亮领主
-            85, // 240Providence / 亵渎天神
-            93, // 300Polterghast / 噬魂幽花
-            100, // 360Devourer of Gods / 神明吞噬者
-            125, // 500Yharon / 犽戎
-            150 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            45, // 72Any Mechanical Boss / 任意机械 Boss
+            48, // 90Plantera / 世纪之花
+            52, // 120Golem / 石巨人
+            57, // 180Moon Lord / 月亮领主
+            60, // 240Providence / 亵渎天神
+            64, // 300Polterghast / 噬魂幽花
+            66, // 360Devourer of Gods / 神明吞噬者
+            72, // 500Yharon / 犽戎
+            90 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
         public static readonly int[] RightClickBaseDamage =
         {
-            9, // 6Initial / 初始
-            13, // 8Eye of Cthulhu / 克苏鲁之眼
-            17, // 9Evil Boss / 腐化或猩红 Boss T2
-            24, // 11Skeletron / 骷髅王
-            40, // 17Hardmode / 困难模式
-            46, // 24Any Mechanical Boss / 任意机械 Boss
-            55, // 32Plantera / 世纪之花
-            64, // 40Golem / 石巨人
-            77, // 54Moon Lord / 月亮领主
-            90, // 66Providence / 亵渎天神
-            103, // 77Polterghast / 噬魂幽花
-            133, // 90Devourer of Gods / 神明吞噬者
-            166, // 100Yharon / 犽戎
+            15, // 6Initial / 初始
+            21, // 8Eye of Cthulhu / 克苏鲁之眼
+            27, // 9Evil Boss / 腐化或猩红 Boss T2
+            33, // 11Skeletron / 骷髅王
+            52, // 17Hardmode / 困难模式
+            62, // 24Any Mechanical Boss / 任意机械 Boss
+            72, // 32Plantera / 世纪之花
+            88, // 40Golem / 石巨人
+            105, // 54Moon Lord / 月亮领主
+            120, // 66Providence / 亵渎天神
+            137, // 77Polterghast / 噬魂幽花
+            160, // 90Devourer of Gods / 神明吞噬者
+            180, // 100Yharon / 犽戎
             233 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
@@ -76,20 +76,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.90f, // EffectID 9: Soul of Light / 光明之魂
             0.84f, // EffectID 10: Soul of Night / 暗影之魂
             0.90f, // EffectID 11: Soul of Flight / 飞翔之魂
-            0.97f, // EffectID 12: Soul of Fright / 恐惧之魂
-            1.14f, // EffectID 13: Soul of Might / 力量之魂
-            0.90f, // EffectID 14: Soul of Sight / 视域之魂
+            0.93f, // EffectID 12: Soul of Fright / 恐惧之魂
+            1.08f, // EffectID 13: Soul of Might / 力量之魂
+            0.81f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
-            1.02f, // EffectID 17: Depth Cells / 深渊细胞
-            1.08f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
-            1.12f, // EffectID 19: Ashes of Calamity / 灾厄尘
+            1.10f, // EffectID 17: Depth Cells / 深渊细胞
+            1.44f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
+            1.13f, // EffectID 19: Ashes of Calamity / 灾厄尘
             0f, // EffectID 20: Beetle Husk / 甲虫外壳，未实现
-            0.98f, // EffectID 21: Solar Fragment / 日曜碎片
-            0.96f, // EffectID 22: Vortex Fragment / 星旋碎片
-            1.04f, // EffectID 23: Nebula Fragment / 星云碎片
-            1.00f, // EffectID 24: Stardust Fragment / 星尘碎片
-            1.10f, // EffectID 25: Meld Blob / 冥思溶剂
+            1.66f, // EffectID 21: Solar Fragment / 日曜碎片
+            1.77f, // EffectID 22: Vortex Fragment / 星旋碎片
+            1.50f, // EffectID 23: Nebula Fragment / 星云碎片
+            1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
+            1.85f, // EffectID 25: Meld Blob / 冥思溶剂
             1.16f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
             1.22f, // EffectID 28: Divine Geode / 神圣晶石

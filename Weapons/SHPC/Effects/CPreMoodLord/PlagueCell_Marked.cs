@@ -102,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 spawnPos,
                 velocity,
                 ModContent.ProjectileType<HiveNuke>(),
-                Projectile.damage,
+                (int)(Projectile.damage * 4),
                 0f,
                 Projectile.owner,
                 ItemID.RocketI
