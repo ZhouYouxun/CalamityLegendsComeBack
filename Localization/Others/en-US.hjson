@@ -44,6 +44,38 @@ Mods: {
 					SHPB_Final: "[c/9FD8FF:Same origin, different form. Where the barrel questioned the world, this string pins four answers into the starlight.]"
 				}
 
+				Tetris: {
+					DisplayName: Tetris
+					Tooltip:
+						'''
+						Hold this item to unfold a pixel Tetris board.
+						A/D or Left/Right moves the falling piece. S or Down soft drops. Space hard drops.
+						W, Up, or X rotates clockwise. Z rotates counterclockwise. C stores the current piece.
+						Clear full rows to score and survive. If the stack reaches the top, game over. Press R after game over to restart.
+						'''
+				}
+
+				Snake: {
+					DisplayName: Snake
+					Tooltip:
+						'''
+						Hold this item to unfold a pixel Snake board.
+						Tap W/A/S/D once to turn the snake. Eat apples to grow longer and faster.
+						Hitting a wall or your own body ends the game. Press R after game over to restart.
+						'''
+				}
+
+				Minesweeper: {
+					DisplayName: Minesweeper
+					Tooltip:
+						'''
+						Hold this item to unfold a pixel Minesweeper board.
+						Left-click a covered tile to reveal it. Right-click a covered tile to place or remove a flag.
+						Numbers show how many mines touch that tile. Revealing a mine ends the game.
+						Correctly flag every mine, with no wrong flags, or reveal every safe tile to win. Left-click after the game ends to restart.
+						'''
+				}
+
 				TheNewEnforcer: {
 					DisplayName: The New Enforcer
 					Tooltip:
@@ -66,6 +98,9 @@ Mods: {
 
 		Projectiles: {
 			A_Dev: {
+				TetrisPanel.DisplayName: Tetris Board
+				SnakePanel.DisplayName: Snake Board
+				MinesweeperPanel.DisplayName: Minesweeper Board
 				SHPBowHoldout.DisplayName: S.H.P.B. Holdout
 				SHPBowSelectionPanel.DisplayName: SHP Core Wheel
 				SHPBowArrow.DisplayName: SHP Core Arrow
@@ -77,6 +112,19 @@ Mods: {
 				TheNewEnforcerSlash.DisplayName: Enforcement Slash
 				OldEssenceFlame2.DisplayName: Old Essence Flame
 			}
+		}
+
+		TheSpecialText: {
+			TetrisLevel: LEVEL {0}
+			TetrisGameOver: GAME OVER
+			TetrisRestart: Press R to restart
+			SnakeSpeed: SPEED {0}
+			SnakeGameOver: GAME OVER
+			SnakeRestart: Press R to restart
+			MinesweeperMines: "{0} MINES"
+			MinesweeperGameOver: GAME OVER
+			MinesweeperWin: You Win
+			MinesweeperRestart: Left-click to restart
 		}
 
 		Keybinds: {

@@ -405,6 +405,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 使用条件与消耗 =====
         public override bool CanUseItem(Player player)
         {
+            if (IsUsingEX(player))
+                return false;
+
             if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
                 return false;
 
@@ -717,6 +720,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     }
                 }
 
+                InterruptNormalSHPCUse(player);
+
                 Vector2 dir = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
 
                 Projectile.NewProjectile(
@@ -732,6 +737,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 // 清空EX条（如果你之后想改，可以删这句）
                 exPlayer.EXValue = 0;
             }
+
+            if (IsUsingEX(player))
+                return;
 
             // ===== 天顶世界三连发补射 =====
             if (Main.zenithWorld && zenithBurstCount > 0)
@@ -831,9 +839,50 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private bool CanStartRightClickHoldout(Player player)
         {
             return player.whoAmI == Main.myPlayer &&
+                   !IsUsingEX(player) &&
                    player.Calamity().mouseRight &&
                    KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
                    CanUseWorldRightClick(player);
+        }
+
+        private void InterruptNormalSHPCUse(Player player)
+        {
+            player.itemAnimation = 0;
+            player.itemTime = 0;
+            leftClickCooldown = 0;
+            zenithBurstCount = 0;
+            zenithBurstTimer = 0;
+            recoilProgress = 0;
+
+            int rightHoldoutType = ModContent.ProjectileType<SHPCRight_HoulOut>();
+            int mortarHoldoutType = ModContent.ProjectileType<RightClickMortar_HoldOut>();
+            int wheelType = ModContent.ProjectileType<SHPCAmmoSelectionPanel>();
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != player.whoAmI)
+                    continue;
+
+                if (projectile.type == rightHoldoutType ||
+                    projectile.type == mortarHoldoutType ||
+                    projectile.type == wheelType)
+                {
+                    projectile.Kill();
+                    projectile.netUpdate = true;
+                }
+            }
+        }
+
+        private static bool IsUsingEX(Player player)
+        {
+            int exType = ModContent.ProjectileType<NL_SHPC_EXWeapon>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == exType)
+                    return true;
+            }
+
+            return false;
         }
 
         internal static bool CanUseWorldRightClick(Player player)

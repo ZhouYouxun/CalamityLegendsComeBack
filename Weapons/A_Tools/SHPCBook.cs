@@ -153,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             int panelHeight = GetPanelHeight(entries.Length);
             if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
             {
-                panelTopLeft = GetClampedPanelTopLeft(Main.MouseScreen + new Vector2(14f, 14f), panelHeight);
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen, panelHeight);
                 panelPositionInitialized = true;
             }
 
@@ -288,6 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         {
             return effectID switch
             {
+                19 => 16.5f,
                 31 => 25.5f,
                 40 => 30.5f,
                 _ => effectID
@@ -325,6 +326,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             return new Vector2(
                 MathHelper.Clamp(desiredTopLeft.X, screenMargin, maxX),
                 MathHelper.Clamp(desiredTopLeft.Y, screenMargin, maxY));
+        }
+
+        private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter, int panelHeight)
+        {
+            return GetClampedPanelTopLeft(desiredCenter - new Vector2(PanelWidth, panelHeight) * 0.5f, panelHeight);
         }
 
         private Rectangle GetSlotArea(int index)

@@ -56,6 +56,38 @@ Mods: {
 						'''
 				}
 
+				Tetris: {
+					DisplayName: 俄罗斯方块
+					Tooltip:
+						'''
+						手持该物品即可展开像素俄罗斯方块面板。
+						A/D 或左右方向键控制方块左右移动。S 或下方向键快速下落。空格键硬降到底。
+						W、上方向键或 X 顺时针旋转。Z 逆时针旋转。C 暂存当前方块。
+						填满整行即可消行得分并继续生存。方块堆到顶部则游戏结束，游戏结束后按 R 重新开始。
+						'''
+				}
+
+				Snake: {
+					DisplayName: 贪吃蛇
+					Tooltip:
+						'''
+						手持该物品即可展开像素贪吃蛇面板。
+						单次点击 W/A/S/D 控制蛇转向。吃苹果会变长，并逐渐加快速度。
+						撞到墙壁或自己的身体会游戏结束，游戏结束后按 R 重新开始。
+						'''
+				}
+
+				Minesweeper: {
+					DisplayName: 扫雷
+					Tooltip:
+						'''
+						手持该物品即可展开像素扫雷面板。
+						左键点击未打开的格子来揭开它。右键点击未打开的格子可以标记或取消标记。
+						阿拉伯数字表示该格周围接触的炸弹数量。揭开炸弹会游戏结束。
+						正确标记所有炸弹且没有错误标记，或揭开所有安全格子即可获胜。游戏结束后左键点击重新开始。
+						'''
+				}
+
 				TheNewEnforcer: {
 					DisplayName: 暴政
 					Tooltip:
@@ -90,6 +122,9 @@ Mods: {
 
 		Projectiles: {
 			A_Dev: {
+				TetrisPanel.DisplayName: 俄罗斯方块面板
+				SnakePanel.DisplayName: 贪吃蛇面板
+				MinesweeperPanel.DisplayName: 扫雷面板
 				SHPBowHoldout.DisplayName: S.H.P.B. 悬持弓
 				SHPBowSelectionPanel.DisplayName: SHP 核心轮盘
 				SHPBowArrow.DisplayName: SHP 核心箭
@@ -101,6 +136,19 @@ Mods: {
 				TheNewEnforcerSlash.DisplayName: 执法斩痕
 				OldEssenceFlame2.DisplayName: 旧式灵魂火
 			}
+		}
+
+		TheSpecialText: {
+			TetrisLevel: 等级 {0}
+			TetrisGameOver: 游戏结束
+			TetrisRestart: 按 R 重新开始
+			SnakeSpeed: 速度 {0}
+			SnakeGameOver: 游戏结束
+			SnakeRestart: 按 R 重新开始
+			MinesweeperMines: 剩余 {0} 雷
+			MinesweeperGameOver: 游戏结束
+			MinesweeperWin: You Win
+			MinesweeperRestart: 左键点击重新开始
 		}
 
 		Keybinds: {
