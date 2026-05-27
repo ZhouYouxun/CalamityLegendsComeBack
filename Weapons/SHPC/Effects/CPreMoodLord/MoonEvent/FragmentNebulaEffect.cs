@@ -59,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 projectile.Center + forward * 10f,
                 Vector2.Zero,
                 ModContent.ProjectileType<FragmentNebula_BurstRelay>(),
-                projectile.damage,
+                (int)(projectile.damage * 1.15),
                 projectile.knockBack,
                 owner.whoAmI,
                 forward.X,

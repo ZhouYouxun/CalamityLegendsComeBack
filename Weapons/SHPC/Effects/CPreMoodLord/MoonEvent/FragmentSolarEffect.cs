@@ -181,7 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     spawnPos,
                     velocity,
                     ModContent.ProjectileType<FragmentSolar_Spear>(),
-                    (int)(projectile.damage * 0.65f),
+                    (int)(projectile.damage * 0.9f),
                     projectile.knockBack,
                     projectile.owner
                 );

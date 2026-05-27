@@ -17,8 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         private bool isSmall = true;
         private int stateTimer = 0;
 
-        public const int MaxActiveCells = 15;
-        private const int GrowTime = 120;
+        public const int MaxActiveCells = 18;
+        private const int GrowTime = 105;
         private const int MaxSplitDepth = 5;
 
         private int frame;
@@ -111,8 +111,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= 大细胞（强化版） =================
         private void BigStateAI()
         {
-            float maxSpeed = 22f;        // 你自己调上限
-            float accel = 0.35f;         // 加速度
+            float maxSpeed = 39f;        // 你自己调上限
+            float accel = 0.45f;         // 加速度
 
             NPC target = FindClosestNPC(2700f);
 
@@ -249,7 +249,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     Projectile.Center + direction * Main.rand.NextFloat(10f, 20f),
                     direction * Main.rand.NextFloat(4.2f, 6.4f),
                     ModContent.ProjectileType<FragmentStardust_Cell>(),
-                    (int)(Projectile.damage * 0.75f),
+                    (int)(Projectile.damage * 1f),
                     Projectile.knockBack,
                     Projectile.owner,
                     splitDepth + 1);

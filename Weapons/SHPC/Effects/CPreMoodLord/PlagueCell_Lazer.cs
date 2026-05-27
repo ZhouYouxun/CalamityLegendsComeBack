@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 target.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<PlagueCell_Marked>(),
-                Projectile.damage,
+                (int)(Projectile.damage * 1),
                 0f,
                 Projectile.owner,
                 target.whoAmI);
