@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
+using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod.Rarities;
@@ -33,6 +34,7 @@ namespace CalamityLegendsComeBack
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBrinyBaron>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
+            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Malachite>()));
         }
 
 

@@ -261,6 +261,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             GeneralParticleHandler.SpawnParticle(smoke);
         }
 
+        private void SpawnForcedShutdownGasBurst()
+        {
+            Vector2 forward = Vector2.UnitX.RotatedBy(Projectile.rotation);
+            Vector2 basePos = GunBackPosition - forward * 4f;
+            Color toxicCore = new(178, 235, 92);
+            Color toxicEdge = new(72, 112, 58);
+
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 8f + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 spawnPos = basePos + direction * Main.rand.NextFloat(2f, 8f);
+                Vector2 velocity = direction * Main.rand.NextFloat(2.6f, 5.4f);
+
+                Particle gas = new MediumMistParticle(
+                    spawnPos,
+                    velocity,
+                    Color.Lerp(toxicCore, Color.White, Main.rand.NextFloat(0.05f, 0.28f)),
+                    toxicEdge * 0.12f,
+                    Main.rand.NextFloat(0.72f, 1.05f),
+                    Main.rand.NextFloat(110f, 150f)
+                );
+
+                GeneralParticleHandler.SpawnParticle(gas);
+            }
+        }
+
         #endregion
 
         #region ===== 特效：普通开火 =====
@@ -531,16 +558,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (weapon == null)
                 return;
 
+            if (weapon.storedEffectPower <= 0)
+                weapon.TryFillEmptyMagazines(player);
+
             int effectID = weapon.GetProjectileEffectIDForShot();
             int leftClickDamage = weapon.GetCurrentLeftClickDamage(player, effectID);
 
-            if (weapon.storedEffectPower > 0)
-            {
-                weapon.storedEffectPower -= 5;
-
-                if (weapon.storedEffectPower < 0)
-                    weapon.storedEffectPower = 0;
-            }
+            weapon.ConsumeCurrentMagazineShots(1);
 
             Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
 
@@ -555,7 +579,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, dir);
             SpawnRocketSalvoMuzzleEffect(player, dir);
 
-            const int orbCount = 5;
+            const int orbCount = 3;
             for (int i = 0; i < orbCount; i++)
             {
                 float t = i / (float)(orbCount - 1);

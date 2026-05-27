@@ -267,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                    magazineEffectPowers[index] > 0;
         }
 
-        private bool TryFillEmptyMagazines(Player player)
+        public bool TryFillEmptyMagazines(Player player)
         {
             HashSet<int> unavailableAmmoTypes = new();
             for (int i = 0; i < MagazineCount; i++)
@@ -328,6 +328,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             magazineEffectPowers[index]--;
+            if (magazineEffectPowers[index] <= 0)
+                ClearMagazine(index);
+        }
+
+        public void ConsumeCurrentMagazineShots(int amount)
+        {
+            int index = CurrentMagazineIndex;
+            if (!IsMagazineLoaded(index))
+                return;
+
+            magazineEffectPowers[index] -= Math.Max(1, amount);
             if (magazineEffectPowers[index] <= 0)
                 ClearMagazine(index);
         }

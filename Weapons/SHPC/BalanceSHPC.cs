@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.74f // EffectID 40: Armored Shell / 装甲外壳
         };
 
-        public const int OverheatGraceTime = 30;
+        public const int OverheatGraceTime = 60;
         public const int ForcedShutdownTime = 120;
         public const int NormalHeatDecayTime = 90;
         public const int ManualCoolingExtraLockout = 30;

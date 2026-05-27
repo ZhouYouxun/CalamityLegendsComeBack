@@ -1,0 +1,40 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Malachite: {
+					DisplayName: Peacock Plume
+					Tooltip: "[GFB]"
+					LeftClick: "[c/7DFF9A:Left click:] Throw a fast poisonous kunai. Normal kunai start with slight gravity, then gradually ignore it. If generated kunai are waiting behind you, one of them is thrown first."
+					RightClick: "[c/80FFC8:Right click:] Generate 3 frenzied kunai behind you. They deal higher damage, pierce, and ignore gravity. 3 second cooldown. Existing batches of at least 3 kunai are awakened before the new fan appears."
+					StealthStrike: "[c/B5FF74:Stealth strike:] Generate 23 peacock kunai behind you. They cannot pierce, but they home in on enemies. The ace kunai orbits the cursor when awakened, then dives and causes a miniature blast on hit."
+					Finale: "[c/D6FF9A:Finale:] At full stealth, press [{0}] to call a spotlight and falling petals. After 2 seconds, slash with Peacock Plume and erupt multi-hit green explosions around nearby enemies."
+					Passive:
+						'''
+						[c/9AFFC8:Passives while held:]
+						Nimble Step: enables grazing; each graze grants 1 stealth point.
+						Phantom Blade: stealth strikes restore 15 stealth points.
+						Into Shadow: above 50% stealth, gain 15% damage reduction and movement speed.
+						'''
+					LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
+					LegendaryText:
+						'''
+						[c/7DFF9A:When the plume opens, it is not the blade that moves, but the time left to its target.]
+						[c/80FFC8:The frenzied kunai obey the fan only until they are awakened.]
+						[c/B5FF74:The peacock spread waits in shadow, each blade watching for the first wrong step.]
+						[c/D6FF9A:Once the spotlight falls, one cut is enough; the blasts finish the curtain call.]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			Malachite: {
+				MalachiteKunai.DisplayName: Peacock Kunai
+				MalachiteGreenExplosion.DisplayName: Peacock Blast
+				MalachiteFinaleController.DisplayName: Peacock Finale
+				MalachiteFinaleSlash.DisplayName: Peacock Slash
+			}
+		}
+	}
+}

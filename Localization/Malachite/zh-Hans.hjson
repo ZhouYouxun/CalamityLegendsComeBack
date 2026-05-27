@@ -1,0 +1,40 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Malachite: {
+					DisplayName: 孔雀翎
+					Tooltip: "[GFB]"
+					LeftClick: "[c/7DFF9A:左键：]掷出高速苦无，命中敌人会造成中毒。普通苦无会轻微下坠，飞行越久越接近无视重力；若背后已有右键或潜伏生成的苦无，则优先投出那些苦无。"
+					RightClick: "[c/80FFC8:右键：]在身后生成 3 把急疯苦无构成刀扇。急疯苦无倍率更高、能够穿透且不受重力影响；冷却 3 秒。若背后已有至少 3 把苦无，会先激发旧批次再生成新刀扇。"
+					StealthStrike: "[c/B5FF74:潜伏攻击：]生成 23 根孔雀苦无在背后开屏。孔雀苦无不能穿透，但会追踪目标；其中的王牌苦无被激发后会环绕鼠标并延迟突刺，命中时引发迷你爆破。"
+					Finale: "[c/D6FF9A:终结技：]满潜伏时按 [{0}]，聚光灯落下，花瓣飘坠；2 秒后挥出孔雀翎斩击，并在周边敌怪身上引发多段绿色爆炸。"
+					Passive:
+						'''
+						[c/9AFFC8:被动（手持）：]
+						灵动步伐：允许擦弹，每次擦弹获得 1 点潜伏值。
+						幻影之刃：使用潜伏攻击后恢复 15 点潜伏值。
+						遁入暗影：潜伏值高于 50% 时，获得 15% 伤害减免与移速加成。
+						'''
+					LegendaryHint: "[c/BABABA:按住 Shift 读取记录]"
+					LegendaryText:
+						'''
+						[c/7DFF9A:翎羽开合时，真正移动的不是刀，而是敌人余下的时间。]
+						[c/80FFC8:急疯苦无会先听从背后的秩序，再在激发的一瞬全部失控。]
+						[c/B5FF74:孔雀苦无看似停在影子里，实际上每一根都在等待猎物暴露逃跑的方向。]
+						[c/D6FF9A:当聚光灯落下，孔雀翎只需要一次斩击，剩下的爆破会替它把谢幕补完。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			Malachite: {
+				MalachiteKunai.DisplayName: 孔雀苦无
+				MalachiteGreenExplosion.DisplayName: 孔雀翎爆破
+				MalachiteFinaleController.DisplayName: 孔雀翎终结式
+				MalachiteFinaleSlash.DisplayName: 孔雀翎斩击
+			}
+		}
+	}
+}

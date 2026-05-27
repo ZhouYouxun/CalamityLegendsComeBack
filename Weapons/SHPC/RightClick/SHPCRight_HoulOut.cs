@@ -447,7 +447,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
             heatPlayer.StartForcedShutdownCooling(BalanceSHPC.ForcedShutdownTime, MaxHeatStage);
             TriggerStageOutlinePulse();
-            SpawnCoolingVentMist();
+            SpawnForcedShutdownGasBurst();
         }
 
         private void ApplyRecoilRotation()
