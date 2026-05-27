@@ -18,6 +18,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.QOL
 
         public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
         {
+            if (CalamityLegendsComeBackConfig.Instance?.AllowMassMaterialRecipes != true)
+                return;
+
             if (npc.type == ModContent.NPCType<Stormlion>())
             {
                 // 添加：每次必掉（可自行调整为概率掉落）

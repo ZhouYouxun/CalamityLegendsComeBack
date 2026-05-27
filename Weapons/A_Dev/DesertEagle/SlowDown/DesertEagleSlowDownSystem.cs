@@ -1,4 +1,6 @@
 using System;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
 using ReLogic.Utilities;
 using Terraria;
@@ -10,8 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.SlowDown
 {
     internal sealed class DesertEagleSlowDownSystem : ModSystem
     {
-        private const float SlowMotionTimeScale = 1.0f; // 这个调节加速倍率就行了
-
+        private const float SlowMotionTimeScale = 0.5f;
         public static float TimeScale => SlowMotionActive ? SlowMotionTimeScale : 1f;
         public static bool SlowMotionActive { get; private set; }
 
@@ -63,11 +64,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.SlowDown
             if (Main.netMode != NetmodeID.SinglePlayer || Main.gameMenu || Main.myPlayer < 0 || Main.myPlayer >= Main.maxPlayers)
                 return false;
 
-            Player player = Main.LocalPlayer;
-            if (player == null || !player.active || player.dead || player.HeldItem.type != ModContent.ItemType<DesertEagle>())
+            if (CalamityLegendsComeBackConfig.Instance?.AllowWheelSlowdown != true)
                 return false;
 
-            return player.ownedProjectileCounts[ModContent.ProjectileType<DesertEagleHoldout>()] > 0;
+            Player player = Main.LocalPlayer;
+            if (player == null || !player.active || player.dead)
+                return false;
+
+            return HasActiveWheel(player, ModContent.ProjectileType<SHPCAmmoSelectionPanel>()) ||
+                HasActiveWheel(player, ModContent.ProjectileType<BFSelectionPanel>());
+        }
+
+        private static bool HasActiveWheel(Player player, int projectileType)
+        {
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != player.whoAmI || projectile.type != projectileType)
+                    continue;
+
+                if (projectile.ai[0] == 1f || projectile.Opacity <= 0.02f)
+                    continue;
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

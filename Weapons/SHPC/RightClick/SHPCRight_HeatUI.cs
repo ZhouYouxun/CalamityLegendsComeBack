@@ -62,31 +62,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Texture2D barFG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarFront").Value;
 
             float progress = heatPlayer.GetDetachedHeatProgress();
-            int maxHeat = Utils.Clamp(heatPlayer.HeatMaxStage, 1, 5);
-            float heatColorProgress = MathHelper.Clamp((heatPlayer.HeatStage + progress) / maxHeat, 0f, 1f);
-            Color color = GetHeatBarColor(heatColorProgress) * Projectile.Opacity;
+            Color color = Color.White * Projectile.Opacity;
 
             Vector2 drawPos = owner.Center - Main.screenPosition + new Vector2(0f, -56f) - barBG.Size() / 1.5f;
 
-            SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, progress, color, color * 0.8f, 1.5f);
+            SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, progress, color, color, 1.5f);
 
             return false;
-        }
-
-        private static Color GetHeatBarColor(float progress)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-
-            if (progress < 0.25f)
-                return Color.Lerp(new Color(70, 210, 255), new Color(120, 245, 255), progress / 0.25f);
-
-            if (progress < 0.5f)
-                return Color.Lerp(new Color(120, 245, 255), new Color(255, 230, 90), (progress - 0.25f) / 0.25f);
-
-            if (progress < 0.75f)
-                return Color.Lerp(new Color(255, 230, 90), new Color(255, 112, 67), (progress - 0.5f) / 0.25f);
-
-            return Color.Lerp(new Color(255, 112, 67), Color.White, (progress - 0.75f) / 0.25f);
         }
     }
 }

@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Configs: {
+			CalamityLegendsComeBackConfig: {
+				DisplayName: Calamity Legends Come Back Settings
+
+				AllowWheelSlowdown: {
+					Label: Allow Wheel Slowdown
+					Tooltip: If enabled, opening the SHPC or Blossom Flux wheel slows the game to 50% speed in single player only. This has no effect in multiplayer.
+				}
+
+				AllowMassMaterialRecipes: {
+					Label: Allow Bulk Material Crafting
+					Tooltip: If enabled, material recipes and related drops in Weapons/A_Tools/QOL are active. Reloading is required for changes to take effect.
+				}
+			}
+		}
+	}
+}

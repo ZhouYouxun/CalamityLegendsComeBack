@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #region ===== 特效状态 =====
 
         private int stageOutlineTimer;
+        private int heatBarOutlineTimer;
         private const int StageOutlineDuration = 24;
 
         private Vector2 normalShotFXLastCenter = Vector2.Zero;
@@ -72,6 +73,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 },
                 GunTipPosition
             );
+
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Custom/ExoMechs/ApolloMissileLaunch")
+                {
+                    Volume = 0.55f,
+                    Pitch = 0.35f,
+                    MaxInstances = 6
+                },
+                GunTipPosition
+            );
         }
 
         private void PlayManualCooldownSound()
@@ -81,6 +92,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 {
                     Volume = 2.7f,
                     Pitch = 0.2f
+                },
+                Projectile.Center
+            );
+
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Custom/ExoMechs/ApolloMissileLaunch")
+                {
+                    Volume = 1.1f,
+                    Pitch = -0.12f,
+                    MaxInstances = 4
                 },
                 Projectile.Center
             );
@@ -98,6 +119,45 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             );
         }
 
+        private void PlayManaStarvedSound()
+        {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Custom/ExoMechs/ArtemisApolloDash")
+                {
+                    Volume = 0.42f,
+                    Pitch = 0.25f,
+                    MaxInstances = 2
+                },
+                Projectile.Center
+            );
+        }
+
+        private void PlayMaxHeatEntrySound()
+        {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Custom/ExoMechs/ArtemisApolloDash")
+                {
+                    Volume = 0.95f,
+                    Pitch = -0.18f,
+                    MaxInstances = 2
+                },
+                Projectile.Center
+            );
+        }
+
+        private void PlayForcedShutdownSound()
+        {
+            SoundEngine.PlaySound(
+                new SoundStyle("CalamityMod/Sounds/Custom/ExoMechs/AresEnraged")
+                {
+                    Volume = 1.15f,
+                    Pitch = -0.08f,
+                    MaxInstances = 2
+                },
+                Projectile.Center
+            );
+        }
+
         #endregion
 
         #region ===== 特效：阶段与状态 =====
@@ -105,6 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void TriggerStageOutlinePulse()
         {
             stageOutlineTimer = StageOutlineDuration;
+            heatBarOutlineTimer = StageOutlineDuration;
         }
 
         private void SpawnStageUpEnergyBurst()
@@ -216,18 +277,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             float manaPercent = Owner.statManaMax2 <= 0 ? 0f : Owner.statMana / (float)Owner.statManaMax2;
             float manaPower = MathHelper.Clamp(visualProgress, 0f, 1f);
-            bool cooling = fireStopTimer > 0;
-            bool firing = !cooling;
+            bool manaStarved = manaStarvedStopTimer > 0;
+            bool cooling = fireStopTimer > 0 && !manaStarved;
+            bool firing = !cooling && !manaStarved;
             float targetRedInterpolant = stage >= MaxHeatStage ? 1f : 0f;
             apoctosisCoreHeatRedInterpolant = MathHelper.Lerp(apoctosisCoreHeatRedInterpolant, targetRedInterpolant, 0.08f);
 
             Color techBlue = new(70, 190, 255);
             Color redHeat = new(255, 55, 38);
+            Color manaStarvedRed = new(255, 34, 42);
             Color coolingYellow = new(255, 235, 80);
-            Color effectsColor = cooling
+            Color effectsColor = manaStarved
+                ? manaStarvedRed
+                : cooling
                 ? coolingYellow
                 : Color.Lerp(techBlue, redHeat, apoctosisCoreHeatRedInterpolant);
-            Color coreWhite = cooling
+            Color coreWhite = manaStarved
+                ? new Color(255, 188, 188)
+                : cooling
                 ? new Color(255, 255, 205)
                 : Color.Lerp(new Color(205, 245, 255), new Color(255, 188, 160), apoctosisCoreHeatRedInterpolant);
             Texture2D tex2 = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
@@ -259,11 +326,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 for (int b = -1; b <= 1; b += 2)
                 {
-                    float pulseRate = (firing ? 20f : 35f) * (cooling ? 2f : 1f);
+                    float pulseRate = manaStarved ? 82f : (firing ? 20f : 35f) * (cooling ? 2f : 1f);
                     float sine = MathHelper.Lerp((float)Math.Sin(Main.GlobalTimeWrappedHourly * pulseRate / MathHelper.Pi), reverseManaPower * b, 0.75f);
                     Vector2 scale = new Vector2(0.3f, 1f * sine * b) * (Main.rand.NextFloat(3f, 4.5f) * iMult + manaPower * 1.2f);
+                    float starvedRotationBoost = manaStarved ? time * 0.68f : 0f;
                     float rotation = Projectile.rotation
-                        + time * manaPower * Math.Max(i - 2, 0) * 0.2f
+                        + time * manaPower * Math.Max(i - 2, 0) * (manaStarved ? 0.55f : 0.2f)
+                        + starvedRotationBoost
                         + MathHelper.PiOver4 * b;
 
                     Main.EntitySpriteDraw(

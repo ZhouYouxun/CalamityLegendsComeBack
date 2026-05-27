@@ -102,6 +102,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private int reduceCooldown;
         private int fireStopTimer;
+        private int manaStarvedStopTimer;
+        private bool manaStarvedSoundPlayed;
+        private bool maxHeatEntrySoundPlayed;
 
         #endregion
 
@@ -229,7 +232,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             // Sync after stage changes so detached heat UI and cooling use the final value.
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
-            if (fireStopTimer <= 0)
+            bool hasEnoughManaToFire = player.CheckMana(player.HeldItem, 2, false, false);
+            if (hasEnoughManaToFire)
+                manaStarvedSoundPlayed = false;
+
+            if (fireStopTimer <= 0 && hasEnoughManaToFire)
                 stageTimer++;
 
             #endregion
@@ -239,7 +246,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (fireStopTimer > 0)
             {
                 fireStopTimer--;
-                SpawnCoolingVentMist();
+                if (manaStarvedStopTimer > 0)
+                    manaStarvedStopTimer--;
+                else
+                    SpawnCoolingVentMist();
             }
             else if (frameCounter >= 5)
             {
@@ -272,6 +282,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     overheatTimer = 0;
                     TriggerStageOutlinePulse();
                     SpawnStageUpEnergyBurst();
+
+                    if (stage >= MaxHeatStage && !maxHeatEntrySoundPlayed)
+                    {
+                        maxHeatEntrySoundPlayed = true;
+                        PlayMaxHeatEntrySound();
+                    }
                 }
                 else if (stage >= MaxHeatStage)
                 {
@@ -295,6 +311,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
             else if (!stageFilledThisFrame)
                 heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
+
+            if (stage < MaxHeatStage)
+                maxHeatEntrySoundPlayed = false;
 
             OffsetLengthFromArm -= 2f;
 
@@ -326,7 +345,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== 手动降温（反向）=====
             else
             {
-                targetProgress = manualCoolingVisualTimer > 0
+                if (manaStarvedStopTimer > 0)
+                    targetProgress = visualProgress;
+                else
+                    targetProgress = manualCoolingVisualTimer > 0
                     ? manualCoolingVisualTimer / (float)CoolingRecoilTotalTime
                     : fireStopTimer / (float)BalanceSHPC.ForcedShutdownTime;
             }
@@ -415,6 +437,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void ForceShutdown(Player player)
         {
+            PlayForcedShutdownSound();
             stage = MaxHeatStage;
             stageTimer = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4));
             overheatTimer = 0;
@@ -529,7 +552,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (!player.CheckMana(player.HeldItem, 2, true, false))
             {
                 // 蓝不够 → 停火
+                if (!manaStarvedSoundPlayed)
+                {
+                    manaStarvedSoundPlayed = true;
+                    PlayManaStarvedSound();
+                }
+
                 fireStopTimer = Math.Max(fireStopTimer, 2);
+                manaStarvedStopTimer = Math.Max(manaStarvedStopTimer, 2);
                 frameCounter = 0;
                 return;
             }
@@ -778,34 +808,44 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 var barBG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;
                 var barFG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarFront").Value;
 
-                Vector2 drawPos = Owner.Center - Main.screenPosition + new Vector2(0, -56f) - barBG.Size() / 1.5f;
+                const float heatBarScale = 1.5f;
+                Vector2 drawPos = Owner.Center - Main.screenPosition + new Vector2(0, -56f) - barBG.Size() / heatBarScale;
 
                 float opacity = 1f;
-                float heatColorProgress = MathHelper.Clamp((stage + visualProgress) / Math.Max(1f, MaxHeatStage), 0f, 1f);
-                Color color = GetHeatBarColor(heatColorProgress);
-                if (fireStopTimer > 0)
-                    color = Color.Lerp(color, Color.White, 0.25f);
-
-                SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, visualProgress, color * opacity, color * opacity * 0.8f, 1.5f);
+                Color color = Color.White * opacity;
+                DrawHeatBarOutlinePulse(barBG, drawPos, heatBarScale, opacity);
+                SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, visualProgress, color, color, heatBarScale);
             }
 
             return base.PreDraw(ref lightColor);
         }
 
-        private Color GetHeatBarColor(float progress)
+        private void DrawHeatBarOutlinePulse(Texture2D barBG, Vector2 drawPos, float scale, float opacity)
         {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
+            if (heatBarOutlineTimer <= 0)
+                return;
 
-            if (progress < 0.25f)
-                return Color.Lerp(new Color(70, 210, 255), new Color(120, 245, 255), progress / 0.25f);
+            float pulse = heatBarOutlineTimer / (float)StageOutlineDuration;
+            float fade = pulse * pulse;
+            float outlineStrength = MathHelper.Lerp(0.6f, 3.4f, fade);
+            Color outlineColor = Color.Lerp(new Color(255, 74, 42), Color.White, 0.35f) * (opacity * fade * 0.85f);
 
-            if (progress < 0.5f)
-                return Color.Lerp(new Color(120, 245, 255), new Color(255, 230, 90), (progress - 0.25f) / 0.25f);
+            Vector2[] offsets =
+            {
+                new(outlineStrength, 0f),
+                new(-outlineStrength, 0f),
+                new(0f, outlineStrength),
+                new(0f, -outlineStrength),
+                new(outlineStrength, outlineStrength),
+                new(-outlineStrength, outlineStrength),
+                new(outlineStrength, -outlineStrength),
+                new(-outlineStrength, -outlineStrength),
+            };
 
-            if (progress < 0.75f)
-                return Color.Lerp(new Color(255, 230, 90), new Color(255, 112, 67), (progress - 0.5f) / 0.25f);
+            foreach (Vector2 offset in offsets)
+                Main.spriteBatch.Draw(barBG, drawPos + offset, null, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
 
-            return Color.Lerp(new Color(255, 112, 67), Color.White, (progress - 0.75f) / 0.25f);
+            heatBarOutlineTimer--;
         }
 
         #endregion

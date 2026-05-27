@@ -277,11 +277,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 .Where(effect => effect.EffectID > 0 && effect.AmmoType > ItemID.None)
                 .GroupBy(effect => effect.EffectID)
                 .Select(group => group.OrderBy(effect => effect.AmmoType).First())
-                .OrderBy(effect => effect.EffectID)
+                .OrderBy(effect => GetBookSortOrder(effect.EffectID))
                 .Select(effect => new SHPCBookEntry(effect.EffectID, effect.AmmoType))
                 .ToArray();
 
             return cachedEntries;
+        }
+
+        private static float GetBookSortOrder(int effectID)
+        {
+            return effectID switch
+            {
+                31 => 25.5f,
+                40 => 30.5f,
+                _ => effectID
+            };
         }
 
         private void EnsureStateSize(int entryCount)
@@ -377,7 +387,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             DrawFitText(itemName, nameArea, Color.White, 0.62f, 0.42f, opacity);
 
             Rectangle idArea = new(slotArea.X + 40, slotArea.Y + 20, slotArea.Width - 44, 14);
-            DrawFitText($"#{entry.EffectID} / {SHPCAmmoCapacity.GetCapacity(entry.EffectID)}", idArea, new Color(190, 218, 255), 0.52f, 0.38f, opacity);
+            DrawFitText(GetSlotStatsText(entry.EffectID), idArea, new Color(190, 218, 255), 0.52f, 0.38f, opacity);
+        }
+
+        private static string GetSlotStatsText(int effectID)
+        {
+            int capacity = SHPCAmmoCapacity.GetCapacity(effectID);
+            string multiplierText = new BalanceSHPC()
+                .GetLeftClickMaterialDamageMultiplier(effectID)
+                .ToString("0.##", CultureInfo.InvariantCulture);
+
+            return $"#{capacity} / {multiplierText}x";
         }
 
         private static void DrawDetailBox(SHPCBookEntry entry, Rectangle detailArea, float opacity)

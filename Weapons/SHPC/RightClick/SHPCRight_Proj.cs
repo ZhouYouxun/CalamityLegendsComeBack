@@ -332,16 +332,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             if (IsMainBeam)
             {
-                for (int i = 0; i < 2; i++)
-                {
-                    float completion = (i + 1f) / 2f;
-                    Vector2 spawnPos = Vector2.Lerp(previousCenter, Projectile.Center, completion);
-                    Dust core = Dust.NewDustPerfect(spawnPos, 267);
-                    core.velocity = forward * Main.rand.NextFloat(0.45f, 1.05f) + Main.rand.NextVector2Circular(0.18f, 0.18f);
-                    core.color = Color.Lerp(new Color(70, 210, 255), Color.White, Main.rand.NextFloat(0.35f, 0.8f));
-                    core.scale = Main.rand.NextFloat(0.42f, 0.62f);
-                    core.noGravity = true;
-                }
+                //for (int i = 0; i < 2; i++)
+                //{
+                //    float completion = (i + 1f) / 2f;
+                //    Vector2 spawnPos = Vector2.Lerp(previousCenter, Projectile.Center, completion);
+                //    Dust core = Dust.NewDustPerfect(spawnPos, 267);
+                //    core.velocity = forward * Main.rand.NextFloat(0.45f, 1.05f) + Main.rand.NextVector2Circular(0.18f, 0.18f);
+                //    core.color = Color.Lerp(new Color(70, 210, 255), Color.White, Main.rand.NextFloat(0.35f, 0.8f));
+                //    core.scale = Main.rand.NextFloat(0.42f, 0.62f);
+                //    core.noGravity = true;
+                //}
 
                 return;
             }
@@ -373,15 +373,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     float wave = (float)Math.Sin(time + phases[i] + BeamIndex * 0.7f);
                     Vector2 spawnPos = center + right * wave * radius;
 
-                    Dust dust = Dust.NewDustPerfect(spawnPos, 267);
-                    dust.velocity =
-                        forward * Main.rand.NextFloat(0.35f, 0.9f) +
-                        right * wave * Main.rand.NextFloat(0.08f, 0.22f);
-                    dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
-                    dust.scale = thickStrand
-                        ? Main.rand.NextFloat(0.34f, 0.52f)
-                        : Main.rand.NextFloat(0.22f, 0.34f);
-                    dust.noGravity = true;
+                    //Dust dust = Dust.NewDustPerfect(spawnPos, 267);
+                    //dust.velocity =
+                    //    forward * Main.rand.NextFloat(0.35f, 0.9f) +
+                    //    right * wave * Main.rand.NextFloat(0.08f, 0.22f);
+                    //dust.color = Color.Lerp(brightYellow, hotYellow, Main.rand.NextFloat(0.2f, 0.75f));
+                    //dust.scale = thickStrand
+                    //    ? Main.rand.NextFloat(0.34f, 0.52f)
+                    //    : Main.rand.NextFloat(0.22f, 0.34f);
+                    //dust.noGravity = true;
                 }
             }
         }

@@ -18,6 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.QOL
     {
         public override void AddRecipes()
         {
+            if (CalamityLegendsComeBackConfig.Instance?.AllowMassMaterialRecipes != true)
+                return;
 
             // 能量核心
             Recipe recipe1 = Recipe.Create(ModContent.ItemType<EnergyCore>());

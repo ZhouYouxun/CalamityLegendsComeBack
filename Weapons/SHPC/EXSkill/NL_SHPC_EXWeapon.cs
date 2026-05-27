@@ -72,7 +72,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Vector2 armPosition = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
             UpdateProjectileHeldVariables(armPosition);
             ManipulatePlayerVariables();
-            MaintainExoSkyEffects();
+            // TODO: 待办，大招的黑天和雷暴雨特效
+            // MaintainExoSkyEffects();
 
             switch (state)
             {
@@ -414,14 +415,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            Owner.Calamity().monolithExoShader = 30;
+            // TODO: 待办，大招的黑天和雷暴雨特效
+            // Owner.Calamity().monolithExoShader = 30;
 
             if (Main.dedServ)
                 return;
 
             if (exSkyLightningTimer <= 0)
             {
-                ExoMechsSky.CreateLightningBolt(10, true);
+                // TODO: 待办，大招的黑天和雷暴雨特效
+                // ExoMechsSky.CreateLightningBolt(10, true);
                 exSkyLightningTimer = 45;
             }
 
@@ -432,8 +435,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             KillSuperLaser();
 
-            if (Projectile.owner == Main.myPlayer && Owner.active && !Owner.dead)
-                Owner.Calamity().monolithExoShader = 0;
+            // TODO: 待办，大招的黑天和雷暴雨特效
+            // if (Projectile.owner == Main.myPlayer && Owner.active && !Owner.dead)
+            //     Owner.Calamity().monolithExoShader = 0;
 
             if (SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var chargeSound))
                 chargeSound?.Stop();

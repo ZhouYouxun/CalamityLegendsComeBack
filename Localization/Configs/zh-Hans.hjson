@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Configs: {
+			CalamityLegendsComeBackConfig: {
+				DisplayName: 传奇归来设置
+
+				AllowWheelSlowdown: {
+					Label: 允许轮盘减速
+					Tooltip: 开启后，单人模式中 SHPC 和叶流呼出轮盘期间会将游戏速度放慢 50%。多人模式无效。
+				}
+
+				AllowMassMaterialRecipes: {
+					Label: 允许大量材料可制作
+					Tooltip: 开启后启用 Weapons/A_Tools/QOL 路径中的材料配方与相关掉落。关闭后需要重新加载才会生效。
+				}
+			}
+		}
+	}
+}
