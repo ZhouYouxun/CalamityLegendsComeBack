@@ -256,11 +256,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static readonly int[] HeatFillTimes =
         {
-            96,
-            96,
-            96,
-            96,
-            96
+            116,
+            116,
+            116,
+            116,
+            116
         };
 
         private int GetValueForStage(int[] values, int stageIndex)

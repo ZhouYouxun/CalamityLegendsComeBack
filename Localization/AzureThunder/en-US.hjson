@@ -37,7 +37,7 @@ Mods: {
 					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:Four Symbols of Harmony:] [c/DCD6C8:if fewer than 3 SunderBlade swords exist, automatically create one every 10 seconds.]"
 					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:Four Symbols of Harmony:] [c/DCD6C8:if fewer than 3 SunderBlade swords exist, automatically create one every 10 seconds; triggering this also restores life.]"
 					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:Four Symbols of Harmony:] [c/DCD6C8:triggering this restores life; if fewer than 6 SunderBlade swords exist, automatically create one every 10 seconds.]"
-					AzureThunderThunderCharge: "[c/FFE85A:Breath of Transformation:] [c/DCD6C8:gained by striking enemies with electric debuffs, Elemental Mix, or Miracle Blight, up to 10 stacks.]"
+					AzureThunderThunderCharge: "[c/FFE85A:Breath of Transformation:] [c/DCD6C8:gained by final left-click lightning based on the target's electric debuffs and Elemental Mix, up to 3 stacks; disabled during Empyrean of Truth.]"
 					AzureThunderDot: "[c/FFE85A:Empyrean of Truth damage over time:] [c/DCD6C8:upgrades from Static Discharge through progression and adds stronger debuffs at higher tiers.]"
 					AzureThunderFinal: '''[c/FFE85A:"Let solemn thunder cleanse evil, call sweet rain, and spare the living."]'''
 				}

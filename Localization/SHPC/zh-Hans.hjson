@@ -88,46 +88,46 @@ Mods: {
 		AMMO: {
 			SHPCAmmoPrompt: 该物品可用为SHPC充能，效果为：
 			SHPCAmmoPanel: 左键面板倍率：{0}倍；装填次数：{1} 发
-			SHPCAmmo1: 弹跳电火花
-			SHPCAmmo2: 五重连锁电弧
-			SHPCAmmo3: 落地硫雾爆发
-			SHPCAmmo4: 裂成双生光球
-			SHPCAmmo5: 下砸浩劫冲击
-			SHPCAmmo6: 铺开液氮寒域
-			SHPCAmmo7: 召来日光天罚
-			SHPCAmmo8: 巨型幻核撞击
-			SHPCAmmo9: 光魂环绕轰炸
-			SHPCAmmo10: 暗魂追猎喷涌
-			SHPCAmmo11: 凌空俯冲轰炸
-			SHPCAmmo12: 恐魂滞空游猎
-			SHPCAmmo13: 三枚力魂延爆
-			SHPCAmmo14: 视魂久飞重爆
-			SHPCAmmo15: 生命碎片回疗
-			SHPCAmmo16: "[暂无该物品]"
-			SHPCAmmo17: 深渊渊球坠击
-			SHPCAmmo18: 瘟疫核爆标记
-			SHPCAmmo19: 赤魂喷涌成灾
-			SHPCAmmo20: "[甲虫外壳 未实现]"
-			SHPCAmmo21: 日曜长矛齐射
-			SHPCAmmo22: 星旋导弹护航
-			SHPCAmmo23: 星云追猎蓄爆
-			SHPCAmmo24: 星尘细胞分裂
-			SHPCAmmo25: 冥思黑爆吞场
-			SHPCAmmo26: 浊火定向冲波
-			SHPCAmmo27: "[暂无该物品]"
-			SHPCAmmo28: 晶簇折射激光
-			SHPCAmmo29: 血祭强化回疗
-			SHPCAmmo30: 毁灭幽魂苏醒
-			SHPCAmmo31: 灵质连锁魂爆
-			SHPCAmmo32: 暗核吞敌裂爆
-			SHPCAmmo33: 虚空刀锋绞杀
-			SHPCAmmo34: 恒温冰矢裂射
-			SHPCAmmo35: 梦魇弧光裂殖
-			SHPCAmmo36: 化神星针齐发
-			SHPCAmmo37: 龙魂爆燃烙印
-			SHPCAmmo38: 星流几何审判
-			SHPCAmmo39: 湮灭目视全场
-			SHPCAmmo40: 甲壳电磁风暴
+			SHPCAmmo1: 能量核心会让光球弹跳，并在路径上迸出密集的电火花。
+			SHPCAmmo2: 风暴之颚会释放五重连锁电弧，在敌群之间快速跳跃。
+			SHPCAmmo3: 硫磺鳞片会在光球落地时炸开，留下腐蚀性的硫雾区域。
+			SHPCAmmo4: 纯净凝胶会在能量耗尽后裂成两枚继续追击的光球。
+			SHPCAmmo5: 浩劫精华会瞄准下方目标，砸出沉重的浩劫冲击。
+			SHPCAmmo6: 冰雪精华会在爆炸处铺开液氮寒域，持续压制区域内敌人。
+			SHPCAmmo7: 日光精华会从爆点展开连发核心，快速射出七道微弱追踪的日光激光。
+			SHPCAmmo8: 泰坦之心会凝成巨型幻核，以厚重冲击撞开并撕裂敌人。
+			SHPCAmmo9: 光明之魂会召来高伤害光魂，环绕光球并持续轰炸周围目标。
+			SHPCAmmo10: 暗影之魂会喷涌出追猎暗魂，让它们自动搜寻附近敌人。
+			SHPCAmmo11: 飞翔之魂会先升上空中，再从高处向目标俯冲轰炸。
+			SHPCAmmo12: 恐惧之魂会留下滞空游猎的恐魂，在原地附近持续寻找猎物。
+			SHPCAmmo13: 力量之魂会释放三枚延迟爆炸的能量光球。
+			SHPCAmmo14: 视觉之魂会让光球飞行越久爆炸越猛烈。
+			SHPCAmmo15: 生命碎片会追踪敌人，并尝试将造成的力量转化为治疗。
+			SHPCAmmo16: 该材料槽位暂未接入实际物品，因此不会提供装药效果。
+			SHPCAmmo17: 深渊细胞会凝成深渊渊球，从上方坠下并爆开。
+			SHPCAmmo18: 瘟疫细胞罐会标记目标，并引发带有瘟疫性质的核爆。
+			SHPCAmmo19: 灾厄余烬会喷涌赤色灵魂，让爆点附近化为灼热灾场。
+			SHPCAmmo20: 甲虫外壳的 SHPC 效果尚未实现，目前只作为预留记录。
+			SHPCAmmo21: 日曜碎片会齐射多柄穿刺长矛，从爆点撕开前方敌人。
+			SHPCAmmo22: 星旋碎片会在飞行途中释放导弹护航，并拦截附近目标。
+			SHPCAmmo23: 星云碎片会召出追猎星体，蓄力后引发集中爆炸。
+			SHPCAmmo24: 星尘碎片会分裂出细胞弹体，让它们继续扩散攻击。
+			SHPCAmmo25: 冥思溶剂会制造黑色爆点，把视野内的敌人卷入其中。
+			SHPCAmmo26: 浊火精华会在撞击物块后释放猛烈的定向冲击波。
+			SHPCAmmo27: 该材料槽位暂未接入实际物品，因此不会提供装药效果。
+			SHPCAmmo28: 神圣晶簇会在爆炸时折射出多道几何激光。
+			SHPCAmmo29: 血石核心会以玩家生命为代价强化自身，并在爆炸后返还治疗。
+			SHPCAmmo30: 毁灭之灵会唤醒深处幽魂，让它们向敌人持续逼近。
+			SHPCAmmo31: 灵质会制造连锁魂爆，在敌人之间接续引发灵魂冲击。
+			SHPCAmmo32: 暗离子体会制造小型暗核，将敌人吸入后裂爆。
+			SHPCAmmo33: 扭曲虚空会展开虚空刀锋，以多次交错轨迹绞杀目标。
+			SHPCAmmo34: 恒温能量会反弹飞行，并裂射出穿刺冰矢。
+			SHPCAmmo35: 梦魇魔能会分裂出梦魇弧光，持续切割命中的敌人。
+			SHPCAmmo36: 化神魂精会召来大量星针，对一片区域进行火力覆盖。
+			SHPCAmmo37: 龙魂碎片会烙下爆燃印记，让敌人承受巨龙怒火。
+			SHPCAmmo38: 星流棱晶会发射审判激光，并展开分形几何追击。
+			SHPCAmmo39: 湮灭余烬会锁定视野内敌人，释放大范围湮灭打击。
+			SHPCAmmo40: 装甲外壳会喷射大量电磁光球，形成持续风暴。
 		}
 
 		Projectiles: {
@@ -141,6 +141,7 @@ Mods: {
 				EssenceofHavoc_INV.DisplayName: 浩劫精华冲击波
 				EssenceofSnow_N2.DisplayName: 冰雪精华氮流
 				EssenceofSunlight_Lighting.DisplayName: 日光精华闪电
+				EssenceofSunlight_BurstRelay.DisplayName: 日光精华连发核心
 				NewSHPS.DisplayName: SHPS支援核心
 				AshesofCalamity_Fire.DisplayName: 灾厄余烬火线
 				LivingShard_Healing.DisplayName: 活体碎片治愈波

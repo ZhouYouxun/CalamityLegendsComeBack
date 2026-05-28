@@ -140,6 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 !HarmonyMode &&
                 AzureThunderProgression.DownedYharon &&
                 AzureThunderPlayer.CountOwnedGroundSwords(Main.player[Projectile.owner]) >= AzureThunderGroundSword.MaxGroundSwords;
+            bool applyElectricDebuff = HarmonyMode;
 
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
@@ -149,10 +150,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.knockBack,
                 Projectile.owner,
                 gainCharge: false,
-                applyStaticDischarge: finalStrike || HarmonyMode,
+                applyStaticDischarge: applyElectricDebuff,
                 big: finalStrike && HarmonyMode,
                 ultimateEnergyGain: AzureThunderAccessoryPlayer.GetRightClickLightningEnergyGain(Main.player[Projectile.owner]),
-                applyCrumbling: applyCrumbling);
+                applyCrumbling: applyCrumbling,
+                applyBaseElectricDebuff: applyElectricDebuff);
 
             if (HarmonyMode)
                 SpawnHarmonyAoe(strikePoint, finalStrike);

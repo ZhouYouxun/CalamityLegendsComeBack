@@ -113,6 +113,8 @@ Mods: {
 				PristineFuryRightNovaFireball.DisplayName: Pristine Fury Right Nova Fireball
 				PristineFuryRightNovaPseudoLaser.DisplayName: Pristine Fury Right Nova Pseudo Laser
 			}
+
+			TacticalComputerReticle.DisplayName: Tactical Computer Reticle
 		}
 
 		PristineFury: {

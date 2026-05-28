@@ -15,7 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 {
     internal sealed class AzureThunderPlayer : ModPlayer
     {
-        public const int AttackManaCost = 8;
+        public const int LeftAttackManaCost = 9;
+        public const int RightClickManaCost = 100;
+        public const int AttackManaCost = LeftAttackManaCost;
         public const int ThunderChargeMax = 3;
         public const int UltimateEnergyMax = 240;
         public const int HarmonyDuration = 25 * 60;
@@ -111,9 +113,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             holdingAzureThunder = true;
         }
 
-        public bool TrySpendMana()
+        public bool TrySpendMana(int manaCost = LeftAttackManaCost)
         {
-            return Player.CheckMana(Player.HeldItem, AttackManaCost, true, false);
+            return Player.CheckMana(Player.HeldItem, manaCost, true, false);
         }
 
         public void AddThunderCharge(int amount)
@@ -347,8 +349,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 stacks++;
             if (target.HasBuff(ModContent.BuffType<ElementalMix>()))
                 stacks++;
-            if (target.HasBuff(ModContent.BuffType<MiracleBlight>()))
-                stacks++;
 
             return stacks;
         }
@@ -495,11 +495,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int ultimateEnergyGain = 0,
             bool applyCrumbling = false,
             float spawnHeightMultiplier = 1f,
-            bool visualOnly = false)
+            bool visualOnly = false,
+            float? fixedTiltRadians = null,
+            bool applyBaseElectricDebuff = true)
         {
             Vector2 targetPosition = target?.Center ?? impactPosition;
             float spawnDistance = 1000f * Math.Max(0.1f, spawnHeightMultiplier);
-            Vector2 spawnPosition = targetPosition - Vector2.UnitY.RotatedByRandom(0.2f) * spawnDistance;
+            Vector2 fallDirection = fixedTiltRadians.HasValue ?
+                Vector2.UnitY.RotatedBy(fixedTiltRadians.Value) :
+                Vector2.UnitY.RotatedByRandom(0.2f);
+            Vector2 spawnPosition = targetPosition - fallDirection * spawnDistance;
             Vector2 velocity = targetPosition - spawnPosition;
             int flags = 0;
             if (gainCharge)
@@ -512,6 +517,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 flags |= AzureThunderFlatLightning.CrumblingFlag;
             if (visualOnly)
                 flags |= AzureThunderFlatLightning.VisualOnlyFlag;
+            if (!applyBaseElectricDebuff)
+                flags |= AzureThunderFlatLightning.NoBaseElectricDebuffFlag;
 
             SpawnDirectionalLightning(
                 source,

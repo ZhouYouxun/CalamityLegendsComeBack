@@ -206,6 +206,18 @@ Mods: {
 					'''
 			}
 
+			JiDianFa: {
+				DisplayName: Jolting Arts
+				Tooltip:
+					'''
+					Double-tap a horizontal direction to become lightning and dash; dash direction follows your current velocity vector
+					Briefly grants invincibility during the dash and leaves modest momentum in the same direction
+					If the Calamity dash hotkey is bound, the bound single-sword dash takes priority
+					While holding SunderBlade, dash distance +30% and dash cooldown -30%
+					While holding SunderBlade, dashing releases up to 3 lightning bolts based on nearby SunderBlade swords, with a 15-second cooldown
+					'''
+			}
+
 			TestWeapon: {
 				DisplayName: Test Weapon
 				Tooltip: ""
@@ -302,5 +314,7 @@ Mods: {
 			TestWeaponProj.DisplayName: Test Weapon Proj
 			BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
 		}
+
+		Cooldowns.JoltingArts_Lightning: Jolting Arts Lightning
 	}
 }

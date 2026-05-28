@@ -287,6 +287,81 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
         }
 
+        private void SpawnTopHeatPlayerGlow(Player player, SHPCRight_Player heatPlayer)
+        {
+            if (Main.dedServ || MaxHeatStage <= 1)
+                return;
+
+            bool displayedTopHeat = heatPlayer.HasAnyHeat() &&
+                heatPlayer.GetDisplayedHeatLevel() >= MaxHeatStage;
+            if (!displayedTopHeat && stage < MaxHeatStage)
+                return;
+
+            Color gold = new(255, 226, 54);
+            Color paleGold = new(255, 255, 190);
+            int sparkCount = heatPlayer.IsForcedShutdownCooling() ? 5 : 3;
+
+            for (int i = 0; i < sparkCount; i++)
+            {
+                Vector2 bodyPoint = player.Center + new Vector2(
+                    Main.rand.NextFloat(-player.width * 0.58f, player.width * 0.58f),
+                    Main.rand.NextFloat(-player.height * 0.58f, player.height * 0.28f));
+                Vector2 velocity = new Vector2(
+                    Main.rand.NextFloat(-2.8f, 2.8f),
+                    Main.rand.NextFloat(-5.4f, -1.8f)).RotatedByRandom(0.35f);
+
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    bodyPoint,
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 23),
+                    Main.rand.NextFloat(0.035f, 0.065f),
+                    Color.Lerp(gold, paleGold, Main.rand.NextFloat(0.18f, 0.72f)),
+                    new Vector2(1.45f, 0.38f),
+                    true,
+                    true,
+                    0.85f));
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Vector2 bodyPoint = player.Center + Main.rand.NextVector2Circular(
+                    player.width * 0.44f,
+                    player.height * 0.55f);
+                Vector2 velocity = -Vector2.UnitY.RotatedByRandom(0.75f) * Main.rand.NextFloat(1.7f, 4.4f);
+
+                SquishyLightParticle flare = new(
+                    bodyPoint,
+                    velocity,
+                    Main.rand.NextFloat(0.52f, 0.9f),
+                    Color.Lerp(gold, Color.White, Main.rand.NextFloat(0.18f, 0.5f)),
+                    Main.rand.Next(14, 24),
+                    1f,
+                    Main.rand.NextFloat(1.6f, 2.4f));
+
+                GeneralParticleHandler.SpawnParticle(flare);
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 bodyPoint = player.Center + new Vector2(
+                    Main.rand.NextFloat(-player.width * 0.5f, player.width * 0.5f),
+                    Main.rand.NextFloat(-player.height * 0.62f, player.height * 0.3f));
+                Vector2 velocity = new Vector2(
+                    Main.rand.NextFloat(-1.8f, 1.8f),
+                    Main.rand.NextFloat(-4.8f, -1.4f)).RotatedByRandom(0.55f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    bodyPoint,
+                    Main.rand.NextBool() ? DustID.GoldFlame : DustID.YellowTorch,
+                    velocity,
+                    0,
+                    Color.Lerp(gold, paleGold, Main.rand.NextFloat(0.1f, 0.55f)),
+                    Main.rand.NextFloat(1.0f, 1.55f));
+                dust.noGravity = true;
+            }
+        }
+
         #endregion
 
         #region ===== 特效：普通开火 =====

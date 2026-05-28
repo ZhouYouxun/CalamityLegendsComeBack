@@ -1,6 +1,7 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons.Visuals;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -107,8 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 desiredCenter = owner.MountedCenter + slotOffset;
             Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, 0.12f);
             Projectile.velocity = Vector2.Zero;
-            Vector2 outward = (Projectile.Center - owner.MountedCenter).SafeNormalize(Vector2.UnitY);
-            Projectile.rotation = Projectile.rotation.AngleLerp(outward.ToRotation() + MathHelper.PiOver4, 0.14f);
+            Projectile.rotation = Projectile.rotation.AngleLerp(MathHelper.PiOver2 + MathHelper.PiOver4, 0.14f);
         }
 
         public void BeginDive(Vector2 target, int damage, float knockback)
@@ -289,7 +289,49 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 outlinePulse > 0 ? 22 : 16);
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, drawScale, SpriteEffects.None);
+            if (!Diving)
+                DrawBladeShine(texture, drawScale, fadeIn);
+
             return false;
+        }
+
+        private void DrawBladeShine(Texture2D texture, float drawScale, float opacity)
+        {
+            Texture2D shineTex = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Vector2 shineScale = new Vector2(1.67f, 3f) * Projectile.scale;
+            shineScale *= MathHelper.Lerp(
+                0.9f,
+                1.1f,
+                (float)Math.Cos(Main.GlobalTimeWrappedHourly * 7.4f + Projectile.identity) * 0.5f + 0.5f);
+
+            Vector2 bladeDirection = (Projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
+            Vector2 lensFlareWorldPosition = Projectile.Center + bladeDirection * texture.Height * drawScale * 0.42f;
+            Color lensFlareColor = (Color.Lerp(AzureThunderColors.Azure, Color.White, 0.18f) * opacity) with { A = 0 };
+            float slowRotation = Main.GlobalTimeWrappedHourly * 0.42f + Projectile.identity * 0.17f;
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            Main.EntitySpriteDraw(
+                shineTex,
+                lensFlareWorldPosition - Main.screenPosition,
+                null,
+                lensFlareColor,
+                Projectile.rotation - MathHelper.PiOver4 + slowRotation,
+                shineTex.Size() * 0.5f,
+                shineScale * 0.6f,
+                SpriteEffects.None);
+
+            Main.EntitySpriteDraw(
+                shineTex,
+                lensFlareWorldPosition - Main.screenPosition,
+                null,
+                lensFlareColor,
+                Projectile.rotation + MathHelper.PiOver4 - slowRotation * 0.65f,
+                shineTex.Size() * 0.5f,
+                shineScale,
+                SpriteEffects.None);
+
+            Main.spriteBatch.ExitShaderRegion();
         }
     }
 }

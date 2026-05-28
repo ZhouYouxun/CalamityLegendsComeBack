@@ -74,6 +74,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (!dashing && !exploding)
             {
+                impactPosition = ResolveImpactPosition();
+                Vector2 hoverPosition = impactPosition - Vector2.UnitY * 780f;
+                Projectile.Center = Vector2.Lerp(Projectile.Center, hoverPosition, 0.28f);
                 Projectile.velocity = Vector2.Zero;
                 Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
                 Projectile.scale = MathHelper.Lerp(Projectile.scale, 1.75f, 0.045f);
@@ -88,6 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (dashing)
             {
                 // Heavy drop tuning: start fast, then gain 12.5 px/frame so it reads as a sudden execution stroke.
+                impactPosition = ResolveImpactPosition();
                 float lateralCorrection = (impactPosition.X - Projectile.Center.X) * 0.08f;
                 float trailSway = (float)Math.Sin(timer * 0.55f + Projectile.identity) * 2.2f;
                 Projectile.velocity.X = MathHelper.Lerp(Projectile.velocity.X, lateralCorrection + trailSway, 0.25f);
@@ -150,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.myPlayer == Projectile.owner)
             {
-                int flags = AzureThunderFlatLightning.GainChargeFlag | AzureThunderFlatLightning.StaticDischargeFlag | AzureThunderFlatLightning.BigLightningFlag;
+                int flags = AzureThunderFlatLightning.StaticDischargeFlag | AzureThunderFlatLightning.BigLightningFlag;
                 for (int i = 0; i < 10; i++)
                 {
                     Vector2 direction = (MathHelper.TwoPi * i / 10f).ToRotationVector2();
@@ -244,7 +248,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             target.AddBuff(BuffID.Electrified, 240);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderPlayer.ApplyUltimateDot(target, 240);
-            Main.player[Projectile.owner].GetModPlayer<AzureThunderPlayer>().TryGainThunderChargeFromTarget(target);
 
             if (dashing && !exploding && Projectile.numHits >= 5)
                 BeginExplosion(target.Center);

@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
         private int timer;
 
-        private const float MaxHomingSpeed = 25.5f;
+        private const float MaxHomingSpeed = 51f;
 
         public override void SetStaticDefaults()
         {

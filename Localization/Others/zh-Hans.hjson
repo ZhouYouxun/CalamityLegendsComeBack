@@ -89,7 +89,6 @@ Mods: {
 				}
 
 				Strikers1945: {
-					DisplayName: 1945
 					Tooltip:
 						'''
 						手持该物品即可展开纵屏1945面板。
@@ -97,6 +96,7 @@ Mods: {
 						击落随机来袭的敌机获得分数。命中敌机、敌弹或被敌机撞到都会损失生命。
 						敌机偶尔掉落 P 强化，提升子弹数量与散射。三条命耗尽后游戏结束，按 R 重新开始。
 						'''
+					// DisplayName: "1945"
 				}
 
 				TheNewEnforcer: {
@@ -131,10 +131,7 @@ Mods: {
 
 				RetroGameConsoleSupplyBox: {
 					DisplayName: 复古游戏机补给包
-					Tooltip:
-						'''
-						右键打开，领取目前已经准备好的复古游戏机。
-						'''
+					Tooltip: 右键打开，领取目前已经准备好的复古游戏机。
 				}
 			}
 		}

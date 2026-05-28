@@ -35,13 +35,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             Texture2D sparkle = GetNoBlackTexture(ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value, spriteBatch.GraphicsDevice);
-            Vector2 starCenter = drawPosition + new Vector2(32f, backTexture.Height * scale * 0.5f);
+            Vector2 starCenter = drawPosition + new Vector2(32f - 1.5f * 16f, backTexture.Height * scale * 0.5f + 3f);
             Vector2 origin = sparkle.Size() * 0.5f;
             Color color = GetHeatStarColor(heatLevel);
             float time = Main.GlobalTimeWrappedHourly;
             float flicker = heatLevel >= 5 ? 0.78f + (float)System.Math.Sin(time * 12f) * 0.22f : 1f;
             float levelScale = MathHelper.Lerp(0.72f, 1.08f, Utils.Clamp((heatLevel - 1f) / 4f, 0f, 1f));
-            Vector2 drawScale = new Vector2(0.18f, 0.58f) * scale * levelScale * flicker;
+            Vector2 drawScale = new Vector2(0.3f, 1f) * scale * levelScale * flicker;
             float rotation = time * 0.35f;
 
             spriteBatch.Draw(sparkle, starCenter, null, color * (opacity * 0.78f), rotation, origin, drawScale, SpriteEffects.None, 0f);

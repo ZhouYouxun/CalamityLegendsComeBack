@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (player.ownedProjectileCounts[ModContent.ProjectileType<AzureThunderSwingHoldout>()] > 0)
                 return false;
 
-            return player.CheckMana(Item, AzureThunderPlayer.AttackManaCost, false, false);
+            return player.CheckMana(Item, AzureThunderPlayer.LeftAttackManaCost, false, false);
         }
 
         public override bool CanShoot(Player player)
@@ -115,7 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (thunderPlayer.RightClickCooldown > 0)
                 return;
 
-            if (!thunderPlayer.TrySpendMana())
+            if (!thunderPlayer.TrySpendMana(AzureThunderPlayer.RightClickManaCost))
             {
                 CombatText.NewText(player.Hitbox, new Color(255, 80, 80), Language.GetTextValue("Mods.CalamityLegendsComeBack.Common.NoMana"));
                 return;

@@ -42,9 +42,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             bool hasHeat = heatPlayer.HasAnyHeat();
             bool shouldStay = holdingSHPC || (hasHeat && (holdingHoldout || heatPlayer.HeatUiFadeTimer > 0));
 
-            float targetOpacity = hasHeat
-                ? (holdingHoldout || holdingSHPC ? 1f : heatPlayer.GetHeatUiFadeOpacity())
-                : 0f;
+            float targetOpacity = holdingHoldout || holdingSHPC
+                ? 1f
+                : hasHeat ? heatPlayer.GetHeatUiFadeOpacity() : 0f;
             float lerpAmount = targetOpacity > Projectile.Opacity ? 0.25f : 0.08f;
             Projectile.Opacity = MathHelper.Lerp(Projectile.Opacity, targetOpacity, lerpAmount);
 
@@ -59,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player owner = Main.player[Projectile.owner];
             SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
-            if (!heatPlayer.HasAnyHeat() || Projectile.Opacity <= 0.03f)
+            if ((!heatPlayer.IsHoldingSHPCLike() && !heatPlayer.HasAnyHeat()) || Projectile.Opacity <= 0.03f)
                 return false;
 
             Texture2D barBG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;

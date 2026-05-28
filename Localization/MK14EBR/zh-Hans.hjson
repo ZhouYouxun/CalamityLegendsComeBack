@@ -1,0 +1,179 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendMK14EBR: {
+					DisplayName: MK14EBR-缄花
+					Tooltip: "[GFB]"
+					MK14_Intro: "[c/85D7FF:聆听传统主义的轰鸣]"
+					MK14_Stage: "[c/B6E7FF:当前流程：{0}]"
+					MK14_Ammo: "[c/F7D87C:发射玩家的子弹；火枪子弹会转化为 M61 穿甲弹。]"
+					MK14_RightClick: "[c/F7D87C:右键打开或关闭改枪界面。]"
+					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
+					LegendaryText:
+						'''
+						[c/85D7FF:一把旧时代的精确射手步枪被重新装进现代化枪身。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			MK14EBR: {
+				MK14EBRHoldout.DisplayName: MK14EBR-缄花
+				MK14ModificationPanel.DisplayName: MK14EBR-缄花 改枪界面
+				M61Bullet.DisplayName: M61 穿甲弹
+				MK14GrenadeProjectile.DisplayName: MK14 枪挂榴弹
+				MK14GrenadeExplosion.DisplayName: MK14 榴弹爆炸
+				MK14GrenadeShard.DisplayName: MK14 榴弹碎片
+				MK14DragonBreathPellet.DisplayName: 龙息霰弹
+			}
+		}
+
+		MK14EBR: {
+			UI: {
+				Title: MK14EBR-缄花
+				Locked: 未解锁
+				LockedWithStage: 未解锁：{0}。解锁条件：{1}。{2}
+				EffectHeader: 已安装配件效果
+
+				Stage: {
+					PostPlantera: 世纪之花后
+					Golem: 击败石巨人后
+					Plaguebringer: 击败瘟疫使者歌莉娅后
+					MoonLord: 击败月亮领主后
+					Providence: 击败亵渎天神后
+					Polterghast: 击败噬魂幽花后
+					DevourerOfGods: 击败神明吞噬者后
+					Yharon: 击败犽戎后
+					Endgame: 击败星流巨械与至尊灾厄后
+				}
+
+				Category: {
+					Barrel: 枪管
+					Muzzle: 枪口
+					Underbarrel: 下挂
+					Stock: 枪托
+					Sight: 瞄具
+				}
+			}
+
+			Attachments: {
+				Barrel: {
+					Long: {
+						Name: 默认长枪管
+						Effect: 660 RPM；无附加属性；默认散布从 1 度开始，连续射击约 100 发后线性提高到 5 度。
+					}
+
+					SniperHeavy: {
+						Name: 重型狙击枪管
+						Effect: 射速降低至 330 RPM；子弹大小 x1.7；子弹穿透次数 +20；子弹面板伤害 x1.2。
+					}
+
+					CQBShort: {
+						Name: CQB 短枪管
+						Effect: 射速提高至 990 RPM；散布改为从 5 度开始，连续射击约 100 发后线性提高到 15 度。
+					}
+				}
+
+				Muzzle: {
+					None: {
+						Name: 无枪口
+						Effect: 不改变枪口表现。
+					}
+
+					UniversalSuppressor: {
+						Name: 通用消音器
+						Effect: 提供消音效果；降低玩家仇恨值。
+					}
+
+					UniversalBrake: {
+						Name: 通用制退器
+						Effect: 持续射击时线性提高子弹伤害，连续射击约 100 发后最高达到 x1.15。
+					}
+
+					HeavySuppressor: {
+						Name: 重型消音器
+						Effect: 提供更强的消音效果；大幅降低玩家仇恨值；子弹速度 +20%；子弹出膛后 5 帧内无限穿透。
+					}
+
+					SpiderBrake: {
+						Name: 蛛网制退器
+						Effect: 子弹命中敌人后附加 0.5 秒移速降低效果；持续命中会刷新时间。
+					}
+
+					HeavyCompensator: {
+						Name: 重型补偿器
+						Effect: 让子弹只能造成一次的两倍高伤害。
+					}
+				}
+
+				Underbarrel: {
+					None: {
+						Name: 无下挂
+						Effect: 不安装下挂武器。
+					}
+
+					GrenadeLauncher: {
+						Name: 榴弹发射器
+						Effect: 自动发射略受重力影响的榴弹，爆炸并散出碎片。
+					}
+
+					DragonBreathShotgun: {
+						Name: 龙息霰弹发射器
+						Effect: 自动发射中距离火焰霰弹；命中后点燃目标并强化主攻击伤害。
+					}
+
+					FoldingBipod: {
+						Name: 折叠脚架
+						Effect: 静止或缓慢移动时 +15% 子弹伤害和速度，全速移动时各 -15%。
+					}
+
+					LaserPointer: {
+						Name: 激光指示器
+						Effect: 子弹散布永远固定为 1 度，不会随持续射击提高。
+					}
+				}
+
+				Stock: {
+					EBR: {
+						Name: EBR 枪托
+						Effect: 玩家移动速度 +8%；水平最高速度 +8%；水平加速度 +12%。
+					}
+
+					Heavy: {
+						Name: 重型枪托
+						Effect: 水平最高速度 -10%；水平加速度 -10%；防御力 +10%，并额外 +10 防御力。
+					}
+
+					Skeleton: {
+						Name: 骨架枪托
+						Effect: 下挂武器冷却时间 -30%。
+					}
+				}
+
+				Sight: {
+					RedDot: {
+						Name: 红点瞄具
+						Effect: 25 格内视为近距离，伤害 x1.15；60 格外视为远距离，伤害 x0.9。
+					}
+
+					FireControl: {
+						Name: 火控瞄准镜
+						Effect: 允许子弹追踪目标。
+					}
+
+					Thermal: {
+						Name: 红外热成像
+						Effect: 夜晚或日食时造成 x1.9 伤害。
+					}
+
+					HighPower: {
+						Name: 高倍率瞄具
+						Effect: 远距离伤害线性提高，最多可 75 格 +30% 伤害；近距离不会降低伤害。
+					}
+				}
+			}
+		}
+	}
+}

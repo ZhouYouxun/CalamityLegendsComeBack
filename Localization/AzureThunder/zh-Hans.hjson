@@ -38,7 +38,7 @@ Mods: {
 					AzureThunderPassiveFourSymbols1: "[c/B8F4FF:和合四象：] [c/DCD6C8:若场上青霆剑少于3把，则每10秒自动生成1把。]"
 					AzureThunderPassiveFourSymbols2: "[c/B8F4FF:和合四象：] [c/DCD6C8:若场上青霆剑少于3把，则每10秒自动生成1把；触发时额外回复生命。]"
 					AzureThunderPassiveFourSymbols3: "[c/B8F4FF:和合四象：] [c/DCD6C8:若场上青霆剑少于6把，则每10秒自动生成1把；触发时额外回复生命。]"
-					AzureThunderThunderCharge: "[c/FFE85A:一息万变:] [c/DCD6C8:左键最后一次攻击命中时根据目标的电系减益数、元素谐鸣与超位崩解相应获得层数，最多3层.]"
+					AzureThunderThunderCharge: "[c/FFE85A:一息万变:] [c/DCD6C8:左键最后一次攻击命中时根据目标的电系减益数与元素谐鸣相应获得层数，最多3层；天理真和期间无法获得.]"
 					AzureThunderDot: "[c/FFE85A:天理真和：] [c/DCD6C8:左键与右键的最后一次攻击会随着进度推进施加不同的电系减益]"
 					AzureThunderFinal: "[c/32FF82:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]"
 				}

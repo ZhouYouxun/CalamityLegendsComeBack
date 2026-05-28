@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 Math.Abs(Player.velocity.X) <= 0.08f;
 
             if (Main.hardMode)
-                return notMovingHorizontally;
+                return notFiring && notMovingHorizontally;
 
             bool stationary = Player.velocity.LengthSquared() <= 0.01f && Player.grapCount <= 0;
             return stationary && notFiring;

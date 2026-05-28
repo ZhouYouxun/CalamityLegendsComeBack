@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             bool holdingSHPC = IsHoldingSHPCLike();
             bool hasHeat = HasAnyHeat();
 
-            if (holdingSHPC && hasHeat)
+            if (holdingSHPC)
                 HeatUiFadeTimer = DetachedUiFadeTime;
             else if (HeatUiFadeTimer > 0)
                 HeatUiFadeTimer--;

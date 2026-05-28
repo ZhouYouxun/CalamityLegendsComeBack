@@ -77,7 +77,6 @@ Mods: {
 				}
 
 				Strikers1945: {
-					DisplayName: 1945
 					Tooltip:
 						'''
 						Hold this item to unfold a vertical retro shooter panel.
@@ -85,6 +84,7 @@ Mods: {
 						Destroy randomly incoming enemy aircraft to score. Enemy planes, enemy bullets, and collisions cost one life.
 						Enemies sometimes drop P upgrades that add extra shots and spread. Lose all three lives and it is game over. Press R to restart.
 						'''
+					DisplayName: "1945"
 				}
 
 				TheNewEnforcer: {

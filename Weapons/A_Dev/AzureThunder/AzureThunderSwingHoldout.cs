@@ -324,7 +324,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     if (!stageEventOne && ReachedSwingImpact())
                     {
                         SpawnFlyingSwords(2, 16, false);
-                        SpawnMouseLightning(0.4f, true);
+                        SpawnMouseLightning(0.4f, false);
                         stageEventOne = true;
                     }
                     break;
@@ -333,7 +333,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     if (!stageEventOne && ReachedSwingImpact())
                     {
                         SpawnFlyingSwords(4, 17, true);
-                        SpawnMouseLightning(0.5f, true);
+                        SpawnMouseLightning(0.5f, false);
                         stageEventOne = true;
                     }
                     break;
@@ -415,11 +415,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return;
 
             AzureThunderSounds.PlayOrbRelease(Owner.Center);
-            Vector2 right = lockedAimDirection.RotatedBy(MathHelper.PiOver2);
-            for (int i = -1; i <= 1; i += 2)
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 spawnPosition = GetDanceOfLightSpawnPosition(lockedAimDirection, i);
-                Vector2 velocity = lockedAimDirection.RotatedBy(i * 0.16f) * 14f;
+                int side = i % 2 == 0 ? -1 : 1;
+                int row = i / 2;
+                Vector2 spawnPosition = GetDanceOfLightSpawnPosition(lockedAimDirection, side) - lockedAimDirection * row * 92f;
+                Vector2 velocity = lockedAimDirection.RotatedBy(side * (0.14f + row * 0.05f)) * 28f;
 
                 int orb = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -478,10 +479,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Math.Max(1, (int)(Projectile.damage * 1.75f)),
                 Projectile.knockBack,
                 Projectile.owner,
-                gainCharge: true,
+                gainCharge: index == totalStrikes - 1,
                 applyStaticDischarge: index == totalStrikes - 1,
                 big: index == totalStrikes - 1,
-                spawnHeightMultiplier: 0.95f);
+                spawnHeightMultiplier: 0.95f,
+                fixedTiltRadians: GetFixedLightningTilt());
         }
 
         private void SpawnParallelBarrageLightning(int index)
@@ -489,15 +491,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            NPC target = AzureThunderPlayer.FindMouseNearestTarget(Owner);
-            Vector2 focusPoint = target?.Center ?? lockedMouseWorld;
             int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
             Vector2 sweepAxis = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
             float centeredIndex = index - (strikeCount - 1) * 0.5f;
+            Vector2 focusPoint = lockedMouseWorld + Main.rand.NextVector2Circular(44f, 34f);
             Vector2 lineCenter = focusPoint + sweepAxis * (centeredIndex * 82f + Main.rand.NextFloat(-22f, 22f));
             lineCenter += lockedAimDirection * Main.rand.NextFloat(-38f, 38f);
 
-            // Harmony barrage still sweeps across the aim line, but every bolt falls from above.
+            // Harmony barrage sweeps around the captured mouse area instead of hard-locking a target.
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
                 lineCenter,
@@ -506,9 +507,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.knockBack,
                 Projectile.owner,
                 gainCharge: false,
-                applyStaticDischarge: index == strikeCount - 1,
+                applyStaticDischarge: true,
                 big: index == strikeCount - 1,
-                spawnHeightMultiplier: 0.82f);
+                spawnHeightMultiplier: 0.82f,
+                fixedTiltRadians: GetFixedLightningTilt());
         }
 
         private void SpawnFlyingSwords(int count, int delay, bool behindOwner)
@@ -584,6 +586,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             return Owner.MountedCenter + offset;
         }
 
+        private float GetFixedLightningTilt()
+        {
+            int sweepDirection = Math.Abs(lockedAimDirection.X) > 0.05f ? Math.Sign(lockedAimDirection.X) : Owner.direction;
+            return MathHelper.ToRadians(sweepDirection < 0 ? 10f : -10f);
+        }
+
         private void SpawnSwingParticles(float progress)
         {
             if (!CanHit)
@@ -623,6 +631,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 180);
+            if (HarmonyActive)
+                AzureThunderPlayer.ApplyUltimateDot(target, 180);
+
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
         }
 

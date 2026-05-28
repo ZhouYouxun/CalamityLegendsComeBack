@@ -178,33 +178,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (projectile.owner != Main.myPlayer)
+            projectile.Center = target.Center;
+            projectile.Kill();
+        }
+
+        public override void OnKill(Projectile projectile, Player owner, int timeLeft)
+        {
+            base.OnKill(projectile, owner, timeLeft);
+
+            if (owner.whoAmI != Main.myPlayer)
                 return;
 
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
+            Vector2 relativeOffset = projectile.Center - owner.Center;
+            if (relativeOffset.LengthSquared() < 16f)
+                relativeOffset = forward * 72f;
 
-            for (int i = 0; i < 2; i++)
-            {
-                float side = i == 0 ? -1f : 1f;
-                Vector2 spawnPos = target.Center + normal * side * Main.rand.NextFloat(560f, 680f) - forward * Main.rand.NextFloat(40f, 110f);
-                Vector2 missPoint = target.Center + forward * Main.rand.NextFloat(150f, 230f) + normal * side * Main.rand.NextFloat(70f, 120f);
-                Vector2 direction = (missPoint - spawnPos).SafeNormalize(-normal * side);
-
-                int beamIndex = Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    spawnPos,
-                    direction * 38f,
-                    ModContent.ProjectileType<EssenceofSunlight_Lighting>(),
-                    System.Math.Max(1, (int)(projectile.damage * 0.77f)),
-                    0f,
-                    projectile.owner,
-                    target.whoAmI,
-                    side);
-
-                if (Main.projectile.IndexInRange(beamIndex))
-                    Main.projectile[beamIndex].netUpdate = true;
-            }
+            Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center,
+                forward,
+                ModContent.ProjectileType<EssenceofSunlight_BurstRelay>(),
+                projectile.damage,
+                projectile.knockBack,
+                owner.whoAmI,
+                relativeOffset.X,
+                relativeOffset.Y);
         }
     }
 

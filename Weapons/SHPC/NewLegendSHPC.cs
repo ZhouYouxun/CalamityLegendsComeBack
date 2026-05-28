@@ -439,6 +439,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             TryReturnMagazineAmmo(player, CurrentMagazineIndex);
         }
 
+        private void ClearMagazineWithAmmoReturn(Player player, int index)
+        {
+            TryReturnMagazineAmmo(player, index);
+            ClearMagazine(index);
+        }
+
         private void TryReturnMagazineAmmo(Player player, int index)
         {
             index = Utils.Clamp(index, 0, MagazineCount - 1);
@@ -567,7 +573,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
 
             // ❌ 新增：左键冷却锁
-            if (leftClickCooldown > 0 || player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
+            SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
+            if (leftClickCooldown > 0 || heatPlayer.AttackLockoutTimer > 0)
                 return false;
 
             // 右键 → 不发射左键弹幕
@@ -628,7 +635,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
             SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
             leftClickCooldown = Item.useTime; // 60帧锁死
-            player.GetModPlayer<SHPCRight_Player>().PauseHeatDissipation(30);
+            if (!heatPlayer.IsForcedShutdownCooling())
+                heatPlayer.PauseHeatDissipation(30);
             GainEXFromLeftShot(player);
             ConsumeCurrentMagazineShot();
 
@@ -1222,30 +1230,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ClampSelectedMagazineToActiveCount(player);
 
-            // ===== 如果当前有装填 =====
-            if (storedEffectID > 0 && storedAmmoType > ItemID.None && storedEffectPower > 0)
+            if (Main.keyState.PressingShift())
             {
-                // 获取当前弹药总容量（动态）
-                int maxShots = GetAdjustedAmmoCapacity(player, storedEffectID);
-
-                if (maxShots > 0)
-                {
-                    // 概率 = 当前剩余 / 总量
-                    float returnChance = MathHelper.Clamp(storedEffectPower / (float)maxShots, 0f, 1f);
-
-                    // 判定是否返还
-                    if (Main.rand.NextFloat() < returnChance)
-                    {
-                        // 返还材料（1个）
-                        player.QuickSpawnItem(player.GetSource_FromThis(), storedAmmoType, 1);
-                    }
-                }
+                for (int i = 0; i < MagazineCount; i++)
+                    ClearMagazineWithAmmoReturn(player, i);
             }
-
-            // ===== 清空灌注 =====
-            storedEffectPower = 0;
-            storedAmmoType = ItemID.None;
-            storedEffectID = 0;
+            else
+                ClearMagazineWithAmmoReturn(player, CurrentMagazineIndex);
 
             // ===== 音效 =====
             SoundEngine.PlaySound(SoundID.MenuClose, player.Center);

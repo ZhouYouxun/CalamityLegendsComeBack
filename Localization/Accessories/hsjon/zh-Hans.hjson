@@ -46,10 +46,7 @@ Mods: {
 
 			TacticalComputer: {
 				DisplayName: 战术电脑
-				Tooltip:
-					'''
-					使SHPC右键具备自动锁定能力
-					'''
+				Tooltip: 使SHPC右键具备自动锁定能力
 			}
 
 			ExpansionCanisterI: {
@@ -221,6 +218,18 @@ Mods: {
 					'''
 			}
 
+			JiDianFa: {
+				DisplayName: 疾电法
+				Tooltip:
+					'''
+					允许双击方向键化作雷电冲刺，冲刺方向会参考当前速度向量
+					冲刺期间短暂无敌，并在结束后保留少量同方向动能
+					绑定灾厄冲刺键时，优先使用已绑定的单剑冲刺
+					手持青霆剑时，冲刺距离 +30%，冲刺冷却 -30%
+					手持青霆剑冲刺后，根据附近青霆剑数量最多释放3道雷击，冷却15秒
+					'''
+			}
+
 			TestWeapon: {
 				// DisplayName: Test Weapon
 				// Tooltip: ""
@@ -317,5 +326,7 @@ Mods: {
 			// TestWeaponProj.DisplayName: Test Weapon Proj
 			// BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
 		}
+
+		Cooldowns.JoltingArts_Lightning: 疾电法雷击
 	}
 }

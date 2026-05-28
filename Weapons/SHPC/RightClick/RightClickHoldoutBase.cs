@@ -64,6 +64,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             HeldItem ??= Owner.HeldItem;
 
             KillHoldoutLogic();
+            if (!Projectile.active)
+                return;
+
             ManageHoldout();
             HoldoutAI();
         }

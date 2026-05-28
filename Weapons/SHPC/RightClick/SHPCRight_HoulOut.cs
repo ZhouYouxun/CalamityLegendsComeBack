@@ -33,20 +33,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             if (!Owner.active || Owner.dead)
             {
-                Projectile.Kill();
+                KillAndPreserveHeat();
                 return;
             }
 
             int heldType = Owner.HeldItem.type;
             if (heldType != AssociatedItemID)
             {
-                Projectile.Kill();
+                KillAndPreserveHeat();
                 return;
             }
 
-            if (!Main.mouseRight ||
-                (Projectile.owner == Main.myPlayer && !NewLegendSHPC.CanUseWorldRightClick(Owner)))
-                Projectile.Kill();
+            bool wantsToRelease = !Main.mouseRight ||
+                (Projectile.owner == Main.myPlayer && !NewLegendSHPC.CanUseWorldRightClick(Owner));
+
+            if (!wantsToRelease)
+                return;
+
+            if (ShouldBlockReleaseWhileTopHeat())
+                return;
+
+            KillAndPreserveHeat();
+        }
+
+        private bool ShouldBlockReleaseWhileTopHeat()
+        {
+            if (MaxHeatStage <= 1)
+                return false;
+
+            SHPCRight_Player heatPlayer = Owner.GetModPlayer<SHPCRight_Player>();
+            bool displayedTopHeat = heatPlayer.HasAnyHeat() &&
+                heatPlayer.GetDisplayedHeatLevel() >= MaxHeatStage;
+
+            return heatPlayer.IsForcedShutdownCooling() && displayedTopHeat;
         }
 
         #region ===== Energy Core Position =====
@@ -312,6 +331,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
             else if (!stageFilledThisFrame)
                 heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
+
+            SpawnTopHeatPlayerGlow(player, heatPlayer);
 
             if (stage < MaxHeatStage)
                 maxHeatEntrySoundPlayed = false;
@@ -804,8 +825,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
         public override void OnKill(int timeLeft)
         {
-            stage = 0;
-            stageTimer = 0;
+            PreserveHeatState();
+        }
+
+        private void KillAndPreserveHeat()
+        {
+            PreserveHeatState();
+            Projectile.Kill();
+        }
+
+        private void PreserveHeatState()
+        {
+            if (!Main.player.IndexInRange(Projectile.owner))
+                return;
+
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active)
+                return;
+
+            SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
+            if (heatPlayer.IsForcedShutdownCooling())
+                return;
+
+            int maxHeatStage = MaxHeatStage > 0 ? MaxHeatStage : balance.GetRightClickMaxHeatLevel();
+            maxHeatStage = Utils.Clamp(maxHeatStage, 1, balance.GetRightClickMaxHeatLevel());
+            int safeStage = Utils.Clamp(stage, 0, maxHeatStage);
+            int fillTime = balance.GetHeatFillTime(Utils.Clamp(safeStage, 0, 4));
+            int safeTimer = Utils.Clamp(stageTimer, 0, fillTime);
+
+            heatPlayer.SyncHeatFromHoldout(safeStage, safeTimer, maxHeatStage);
         }
     }
 }

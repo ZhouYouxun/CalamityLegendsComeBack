@@ -49,19 +49,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 NPC target = Main.npc[targetIndex];
                 if (target.active && target.CanBeChasedBy(Projectile))
                 {
-                    float returnPower = Utils.GetLerpValue(8f, 54f, timer, true);
-                    Vector2 predictedCenter = target.Center + target.velocity * MathHelper.Lerp(0f, 10f, returnPower);
+                    float returnPower = Utils.GetLerpValue(16f, 82f, timer, true);
+                    Vector2 predictedCenter = target.Center + target.velocity * MathHelper.Lerp(0f, 3f, returnPower);
                     Vector2 toTarget = (predictedCenter - Projectile.Center).SafeNormalize(forward);
                     float fakeMissPower = 1f - returnPower;
-                    Vector2 perpendicularBias = toTarget.RotatedBy(MathHelper.PiOver2 * side) * 0.42f * fakeMissPower;
+                    Vector2 perpendicularBias = toTarget.RotatedBy(MathHelper.PiOver2 * side) * 0.12f * fakeMissPower;
                     Vector2 desired = (toTarget + perpendicularBias).SafeNormalize(toTarget);
-                    float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(1.6f), MathHelper.ToRadians(42f), (float)System.Math.Pow(returnPower, 1.25f));
+                    float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(0.05f), MathHelper.ToRadians(0.62f), (float)System.Math.Pow(returnPower, 1.35f));
                     float easedDesiredRotation = forward.ToRotation().AngleTowards(desired.ToRotation(), maxTurn);
                     Vector2 easedDesired = easedDesiredRotation.ToRotationVector2();
-                    float turnStrength = MathHelper.Lerp(0.05f, 0.72f, returnPower);
+                    float turnStrength = MathHelper.Lerp(0.015f, 0.095f, returnPower);
 
                     forward = Vector2.Lerp(forward, easedDesired, turnStrength).SafeNormalize(desired);
-                    speed = MathHelper.Lerp(speed, 46f, returnPower * 0.08f);
+                    speed = MathHelper.Lerp(speed, 42f, returnPower * 0.025f);
                 }
             }
 

@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.Vesuvius;
+using CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR;
 using CalamityMod.Rarities;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
@@ -37,6 +38,7 @@ namespace CalamityLegendsComeBack
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Malachite>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewVesuvius>()));
+            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendMK14EBR>()));
         }
 
 

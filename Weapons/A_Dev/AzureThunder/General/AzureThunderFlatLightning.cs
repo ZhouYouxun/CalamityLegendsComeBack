@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public const int CrumblingFlag = 8;
         // Visual-only bolts are used for forging/despawn spectacle and must never become hidden damage sources.
         public const int VisualOnlyFlag = 16;
+        public const int NoBaseElectricDebuffFlag = 32;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -29,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool BigLightning => (Flags & BigLightningFlag) != 0;
         private bool ApplyCrumbling => (Flags & CrumblingFlag) != 0;
         private bool VisualOnly => (Flags & VisualOnlyFlag) != 0;
+        private bool ApplyBaseElectricDebuff => (Flags & NoBaseElectricDebuffFlag) == 0;
         public int time;
         public float colorValue;
         public float sizeMult = 1f;
@@ -119,7 +121,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (VisualOnly)
                 return;
 
-            target.AddBuff(BuffID.Electrified, 300);
+            Player owner = Main.player[Projectile.owner];
+            AzureThunderPlayer thunderPlayer = owner.GetModPlayer<AzureThunderPlayer>();
+
+            if (GainCharge)
+                thunderPlayer.TryGainThunderChargeFromTarget(target);
+
+            if (ApplyBaseElectricDebuff)
+                target.AddBuff(BuffID.Electrified, 300);
+
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             if (Projectile.numHits == 0)
             {
@@ -148,10 +158,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 }
             }
 
-            Player owner = Main.player[Projectile.owner];
             if (ApplyStaticDischarge)
             {
-                if (owner.GetModPlayer<AzureThunderPlayer>().HarmonyActive)
+                if (thunderPlayer.HarmonyActive)
                     AzureThunderPlayer.ApplyUltimateDot(target, 180);
                 else
                     target.AddBuff(ModContent.BuffType<StaticDischarge>(), 180);
@@ -162,9 +171,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Projectile.ai[2] > 0f)
                 owner.GetModPlayer<AzureThunderPlayer>().AddUltimateEnergy((int)Projectile.ai[2]);
-
-            if (GainCharge)
-                owner.GetModPlayer<AzureThunderPlayer>().TryGainThunderChargeFromTarget(target);
 
             colorValue += 18f;
         }
