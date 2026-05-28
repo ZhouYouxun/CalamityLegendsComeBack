@@ -229,11 +229,6 @@ Mods: {
 					手持青霆剑冲刺后，根据附近青霆剑数量最多释放3道雷击，冷却15秒
 					'''
 			}
-
-			TestWeapon: {
-				// DisplayName: Test Weapon
-				// Tooltip: ""
-			}
 		}
 
 		Buffs: {
@@ -256,38 +251,38 @@ Mods: {
 		Projectiles: {
 			BrinyBaron: {
 				SurgeChainWaterBurst.DisplayName: 电涌水爆
-				// BrinyBaron_HomingBubble.DisplayName: Briny Baron_ Homing Bubble
-				// BrinyBaron_Tornado.DisplayName: Briny Baron_ Tornado
-				// BrinyBaron_TornadoBolt.DisplayName: Briny Baron_ Tornado Bolt
-				// BrinyBaron_WaterStream.DisplayName: Briny Baron_ Water Stream
+				BrinyBaron_HomingBubble.DisplayName: 海爵追踪泡泡
+				BrinyBaron_Tornado.DisplayName: 海爵龙卷
+				BrinyBaron_TornadoBolt.DisplayName: 海爵龙卷弹
+				BrinyBaron_WaterStream.DisplayName: 海爵水流
 			}
 
-			// SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面
 
 			SHPC: {
-				// BloodstoneCore_BloodOrb.DisplayName: Bloodstone Core_ Blood Orb
-				// RuinousSoul_GhostExplosion.DisplayName: Ruinous Soul_ Ghost Explosion
-				// RuinousSoul_OrbitGhost.DisplayName: Ruinous Soul_ Orbit Ghost
-				// Necroplasm_Orb.DisplayName: Necroplasm_ Orb
-				// FragmentNebula_Star.DisplayName: Fragment Nebula_ Star
-				// EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
-				// EndothermicEnergy_LN2.DisplayName: Endothermic Energy_ L N2
-				// FragmentEntropy_CosmicFire.DisplayName: Fragment Entropy_ Cosmic Fire
-				// FragmentNebula_BurstRelay.DisplayName: Fragment Nebula_ Burst Relay
-				// ArmoredShell_Lightning.DisplayName: Armored Shell_ Lightning
-				// UnholyEssence_HolyNova.DisplayName: Unholy Essence_ Holy Nova
-				// RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
-				// FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
-				// PlagueCell_Lazer.DisplayName: Plague Cell_ Lazer
-				// EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
-				// SHPCAmmoSelectionPanel.DisplayName: S H P C Ammo Selection Panel
+				BloodstoneCore_BloodOrb.DisplayName: 血石核心血球
+				RuinousSoul_GhostExplosion.DisplayName: 毁灭之魂幽灵爆炸
+				RuinousSoul_OrbitGhost.DisplayName: 毁灭之魂环绕幽灵
+				Necroplasm_Orb.DisplayName: 死灵质球
+				FragmentNebula_Star.DisplayName: 星云碎片星辰
+				EndlessDevourJavOrbSmall.DisplayName: 无尽吞噬标枪小球
+				EndothermicEnergy_LN2.DisplayName: 吸热能量液氮
+				FragmentEntropy_CosmicFire.DisplayName: 熵碎片宇宙火焰
+				FragmentNebula_BurstRelay.DisplayName: 星云碎片爆发中继
+				ArmoredShell_Lightning.DisplayName: 装甲壳闪电
+				UnholyEssence_HolyNova.DisplayName: 污痕精华神圣新星
+				RuinousSoul_GhastlyES.DisplayName: 毁灭之魂幽魂ES
+				FragmentVortex_Pixel.DisplayName: 星旋碎片像素
+				PlagueCell_Lazer.DisplayName: 瘟疫细胞激光
+				EndothermicEnergy_ARROW.DisplayName: 吸热能量箭矢
+				SHPCAmmoSelectionPanel.DisplayName: SHPC弹药选择面板
 			}
 
 			ChangedWeapons: {
 				EAfterDog: {
-					// EndlessDevourJavBlackHole.DisplayName: Endless Devour Jav Black Hole
-					// EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
-					// OldEssenceFlame2.DisplayName: Old Essence Flame2
+					EndlessDevourJavBlackHole.DisplayName: 无尽吞噬标枪黑洞
+					EndlessDevourJavOrbSmall.DisplayName: 无尽吞噬标枪小球
+					OldEssenceFlame2.DisplayName: 旧日精华火焰2
 				}
 			}
 
@@ -297,34 +292,34 @@ Mods: {
 			SeedOfSilvaMandrakeSpore.DisplayName: 席尔瓦曼陀罗孢子
 			SeedOfSilvaSeed.DisplayName: 席尔瓦之种
 			SeedOfSilvaTorchFlame.DisplayName: 席尔瓦火炬花火焰
-			// AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
-			// TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
-			// TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
-			// TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
-			// TeachingProjectileD_PulseRingField.DisplayName: Teaching Projectile D_ Pulse Ring Field
-			// TeachingProjectileE_ExplosionImpact.DisplayName: Teaching Projectile E_ Explosion Impact
-			// TeachingProjectileF_SmokeMistDust.DisplayName: Teaching Projectile F_ Smoke Mist Dust
-			// TeachingProjectileG_FireAshBurn.DisplayName: Teaching Projectile G_ Fire Ash Burn
-			// TeachingProjectileH_WaterFoamOcean.DisplayName: Teaching Projectile H_ Water Foam Ocean
-			// TeachingProjectileI_BloodFleshBiology.DisplayName: Teaching Projectile I_ Blood Flesh Biology
-			// TeachingProjectileJ_DebrisMechanicalParts.DisplayName: Teaching Projectile J_ Debris Mechanical Parts
-			// TeachingProjectileK_MagicStatusUI.DisplayName: Teaching Projectile K_ Magic Status U I
-			// TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
-			// TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
-			// TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
+			AzureThunderHarmonyBar.DisplayName: 破天刃苍穹条
+			TeachingProjectileA_LineTrailLaser.DisplayName: 教学弹幕A线状拖尾激光
+			TeachingProjectileB_FlashSparklePoint.DisplayName: 教学弹幕B闪光星点
+			TeachingProjectileC_BloomGlowCore.DisplayName: 教学弹幕C绽放辉光核心
+			TeachingProjectileD_PulseRingField.DisplayName: 教学弹幕D脉冲环场
+			TeachingProjectileE_ExplosionImpact.DisplayName: 教学弹幕E爆炸冲击
+			TeachingProjectileF_SmokeMistDust.DisplayName: 教学弹幕F烟雾粉尘
+			TeachingProjectileG_FireAshBurn.DisplayName: 教学弹幕G火灰燃烧
+			TeachingProjectileH_WaterFoamOcean.DisplayName: 教学弹幕H水沫海洋
+			TeachingProjectileI_BloodFleshBiology.DisplayName: 教学弹幕I血肉生物
+			TeachingProjectileJ_DebrisMechanicalParts.DisplayName: 教学弹幕J机械碎片
+			TeachingProjectileK_MagicStatusUI.DisplayName: 教学弹幕K魔法状态界面
+			TeachingProjectileL_SlashSmearAfterimage.DisplayName: 教学弹幕L斩击残影拖痕
+			TeachingProjectileM_TechHoloSquare.DisplayName: 教学弹幕M科技全息方块
+			TeachingProjectileN_ParticleSetsControllers.DisplayName: 教学弹幕N粒子组控制器
 
 			GhostSniperRifle: {
-				// GhostSniperRound.DisplayName: Ghost Sniper Round
-				// GhostSniperSpectreOrb.DisplayName: Ghost Sniper Spectre Orb
+				GhostSniperRound.DisplayName: 幽灵狙击弹
+				GhostSniperSpectreOrb.DisplayName: 幽灵狙击幽魂球
 			}
 
-			// BFBreakthroughChargeConvergeFX.DisplayName: B F Breakthrough Charge Converge F X
-			// BFBombardStrafeFX.DisplayName: B F Bombard Strafe F X
-			// BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
-			// BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
-			// BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
-			// TestWeaponProj.DisplayName: Test Weapon Proj
-			// BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
+			BFBreakthroughChargeConvergeFX.DisplayName: 叶流突破充能汇聚特效
+			BFBombardStrafeFX.DisplayName: 叶流轰炸扫射特效
+			BFPlagueNanomachineCloudFX.DisplayName: 叶流瘟疫纳米机械云特效
+			BFReconContractingWaveFX.DisplayName: 叶流侦察收缩波特效
+			BFRecoveryHeartConvergeFX.DisplayName: 叶流恢复之心汇聚特效
+			TestWeaponProj.DisplayName: 测试武器弹幕
+			BFChargeGlowSparkFX.DisplayName: 叶流充能辉光火花特效
 		}
 
 		Cooldowns.JoltingArts_Lightning: 疾电法雷击

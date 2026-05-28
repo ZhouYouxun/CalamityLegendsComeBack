@@ -43,10 +43,6 @@ Mods: {
 					AzureThunderFinal: "[c/32FF82:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]"
 				}
 
-				GhostSniperRifle: {
-					// DisplayName: Ghost Sniper Rifle
-					// Tooltip: ""
-				}
 			}
 		}
 

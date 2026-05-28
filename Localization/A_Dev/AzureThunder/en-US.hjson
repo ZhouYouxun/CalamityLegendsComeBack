@@ -42,10 +42,6 @@ Mods: {
 					AzureThunderFinal: '''[c/FFE85A:"Let solemn thunder cleanse evil, call sweet rain, and spare the living."]'''
 				}
 
-				GhostSniperRifle: {
-					DisplayName: Ghost Sniper Rifle
-					Tooltip: ""
-				}
 			}
 		}
 

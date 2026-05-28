@@ -217,11 +217,6 @@ Mods: {
 					While holding SunderBlade, dashing releases up to 3 lightning bolts based on nearby SunderBlade swords, with a 15-second cooldown
 					'''
 			}
-
-			TestWeapon: {
-				DisplayName: Test Weapon
-				Tooltip: ""
-			}
 		}
 
 		Buffs: {

@@ -16,6 +16,7 @@
 	  <Folder Include="Accssory\BB\" />
 	  <Folder Include="Accssory\YC\" />
 	  <Folder Include="Accssory\CD\" />
+	  <Folder Include="Accssory\VV\" />
 	  <Folder Include="Sound\SHPC\" />
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />

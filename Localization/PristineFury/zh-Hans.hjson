@@ -72,49 +72,49 @@ Mods: {
 				PFPolterghastHalleyFlame.DisplayName: 哈雷幽魂星火
 				PFDogPhotovisceratorFlame.DisplayName: 光切虚空流
 				PFDragonPristineFlame.DisplayName: 纯元龙息
-				// PFAurora_Flame.DisplayName: P F Aurora_ Flame
-				// PFBrimstoneElemental_Flame.DisplayName: P F Brimstone Elemental_ Flame
-				// PFDog_Flame.DisplayName: P F Dog_ Flame
-				// PFDragon_Flame.DisplayName: P F Dragon_ Flame
-				// PFEvilT2_Flame.DisplayName: P F Evil T2_ Flame
-				// PFGoliath_Flame.DisplayName: P F Goliath_ Flame
-				// PFHardMode_Flame.DisplayName: P F Hard Mode_ Flame
-				// PFIdle_Flame.DisplayName: P F Idle_ Flame
-				// PFMoonlord_Flame.DisplayName: P F Moonlord_ Flame
-				// PFPlantera_Flame.DisplayName: P F Plantera_ Flame
-				// PFPolterghast_Flame.DisplayName: P F Polterghast_ Flame
-				// PFPrime_Flame.DisplayName: P F Prime_ Flame
-				// PFProvidence_Flame.DisplayName: P F Providence_ Flame
-				// PFSlimeGod_Flame.DisplayName: P F Slime God_ Flame
-				// PFAurora_MuzzleOrb.DisplayName: P F Aurora_ Muzzle Orb
-				// PFBrimstoneElemental_HellbornProj.DisplayName: P F Brimstone Elemental_ Hellborn Proj
-				// PFBrimstoneElemental_Laser.DisplayName: P F Brimstone Elemental_ Laser
-				// PFDog_ChargeOrb.DisplayName: P F Dog_ Charge Orb
-				// PFGoliath_HiveNukeMissile.DisplayName: P F Goliath_ Hive Nuke Missile
-				// PFGoliath_MouseCrosshair.DisplayName: P F Goliath_ Mouse Crosshair
-				// PFHardMode_MeowCreature.DisplayName: P F Hard Mode_ Meow Creature
-				// PFFakeCalamity_Pellet.DisplayName: P F Fake Calamity_ Pellet
-				// PFFakeCalamity_GroundFlame.DisplayName: P F Fake Calamity_ Ground Flame
-				// PFMoonlord_SolarExplosion.DisplayName: P F Moonlord_ Solar Explosion
-				// PFMoonlord_SolarLaser.DisplayName: P F Moonlord_ Solar Laser
-				// PFMoonlord_VortexScorpioRocket.DisplayName: P F Moonlord_ Vortex Scorpio Rocket
-				// PFPrime_BounceExplosion.DisplayName: P F Prime_ Bounce Explosion
-				// PFProvidence_HolyFireField.DisplayName: P F Providence_ Holy Fire Field
-				// PFProvidence_HolyShrapnel.DisplayName: P F Providence_ Holy Shrapnel
-				// PFProvidence_NukeOfBliss.DisplayName: P F Providence_ Nuke Of Bliss
+				PFAurora_Flame.DisplayName: 纯净怒火极光火焰
+				PFBrimstoneElemental_Flame.DisplayName: 纯净怒火硫火元素火焰
+				PFDog_Flame.DisplayName: 纯净怒火神噬火焰
+				PFDragon_Flame.DisplayName: 纯净怒火巨龙火焰
+				PFEvilT2_Flame.DisplayName: 纯净怒火邪恶T2火焰
+				PFGoliath_Flame.DisplayName: 纯净怒火巨像火焰
+				PFHardMode_Flame.DisplayName: 纯净怒火困难模式火焰
+				PFIdle_Flame.DisplayName: 纯净怒火待机火焰
+				PFMoonlord_Flame.DisplayName: 纯净怒火月亮领主火焰
+				PFPlantera_Flame.DisplayName: 纯净怒火世纪之花火焰
+				PFPolterghast_Flame.DisplayName: 纯净怒火噬魂幽花火焰
+				PFPrime_Flame.DisplayName: 纯净怒火机械骷髅王火焰
+				PFProvidence_Flame.DisplayName: 纯净怒火亵渎天神火焰
+				PFSlimeGod_Flame.DisplayName: 纯净怒火史莱姆之神火焰
+				PFAurora_MuzzleOrb.DisplayName: 纯净怒火极光枪口球
+				PFBrimstoneElemental_HellbornProj.DisplayName: 纯净怒火硫火元素狱生弹幕
+				PFBrimstoneElemental_Laser.DisplayName: 纯净怒火硫火元素激光
+				PFDog_ChargeOrb.DisplayName: 纯净怒火神噬蓄力球
+				PFGoliath_HiveNukeMissile.DisplayName: 纯净怒火巨像蜂巢核弹导弹
+				PFGoliath_MouseCrosshair.DisplayName: 纯净怒火巨像鼠标准星
+				PFHardMode_MeowCreature.DisplayName: 纯净怒火困难模式喵星生物
+				PFFakeCalamity_Pellet.DisplayName: 纯净怒火伪灾厄弹丸
+				PFFakeCalamity_GroundFlame.DisplayName: 纯净怒火伪灾厄地面火焰
+				PFMoonlord_SolarExplosion.DisplayName: 纯净怒火月亮领主日耀爆炸
+				PFMoonlord_SolarLaser.DisplayName: 纯净怒火月亮领主日耀激光
+				PFMoonlord_VortexScorpioRocket.DisplayName: 纯净怒火月亮领主星旋天蝎火箭
+				PFPrime_BounceExplosion.DisplayName: 纯净怒火机械骷髅王弹跳爆炸
+				PFProvidence_HolyFireField.DisplayName: 纯净怒火亵渎天神圣火领域
+				PFProvidence_HolyShrapnel.DisplayName: 纯净怒火亵渎天神圣光破片
+				PFProvidence_NukeOfBliss.DisplayName: 纯净怒火亵渎天神极乐核爆
 				PFExoTwins_ArtemisLaser.DisplayName: EXO双子阿尔忒弥斯激光
 				PFExoTwins_ApolloRocket.DisplayName: EXO双子阿波罗导弹
 				PFExoAresLaserBeamStart.DisplayName: EXO阿瑞斯激光
 				PFExoThanatosBeamTelegraph.DisplayName: EXO塔纳托斯预警线
 				PFExoThanatosBeamStart.DisplayName: EXO塔纳托斯灭绝光束
 				PFExoThanatosSideLaser.DisplayName: EXO塔纳托斯侧向激光
-				// PristineFuryPassiveTentacle.DisplayName: Pristine Fury Passive Tentacle
-				// PristineFuryRightNovaChargeOrb.DisplayName: Pristine Fury Right Nova Charge Orb
-				// PristineFuryRightNovaFireball.DisplayName: Pristine Fury Right Nova Fireball
-				// PristineFuryRightNovaPseudoLaser.DisplayName: Pristine Fury Right Nova Pseudo Laser
+				PristineFuryPassiveTentacle.DisplayName: 纯净怒火被动触手
+				PristineFuryRightNovaChargeOrb.DisplayName: 纯净怒火右键新星蓄力球
+				PristineFuryRightNovaFireball.DisplayName: 纯净怒火右键新星火球
+				PristineFuryRightNovaPseudoLaser.DisplayName: 纯净怒火右键新星伪激光
 			}
 
-			// TacticalComputerReticle.DisplayName: Tactical Computer Reticle
+			TacticalComputerReticle.DisplayName: 战术计算机准星
 		}
 
 		PristineFury: {

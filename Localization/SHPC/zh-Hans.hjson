@@ -92,7 +92,7 @@ Mods: {
 			SHPCAmmo2: 风暴之颚会释放五重连锁电弧，在敌群之间快速跳跃。
 			SHPCAmmo3: 硫磺鳞片会在光球落地时炸开，留下腐蚀性的硫雾区域。
 			SHPCAmmo4: 纯净凝胶会在能量耗尽后裂成两枚继续追击的光球。
-			SHPCAmmo5: 浩劫精华会瞄准下方目标，砸出沉重的浩劫冲击。
+			SHPCAmmo5: 混乱精华会瞄准下方目标，砸出沉重的浩劫冲击。
 			SHPCAmmo6: 冰雪精华会在爆炸处铺开液氮寒域，持续压制区域内敌人。
 			SHPCAmmo7: 日光精华会从爆点展开连发核心，快速射出七道微弱追踪的日光激光。
 			SHPCAmmo8: 泰坦之心会凝成巨型幻核，以厚重冲击撞开并撕裂敌人。
@@ -101,20 +101,20 @@ Mods: {
 			SHPCAmmo11: 飞翔之魂会先升上空中，再从高处向目标俯冲轰炸。
 			SHPCAmmo12: 恐惧之魂会留下滞空游猎的恐魂，在原地附近持续寻找猎物。
 			SHPCAmmo13: 力量之魂会释放三枚延迟爆炸的能量光球。
-			SHPCAmmo14: 视觉之魂会让光球飞行越久爆炸越猛烈。
+			SHPCAmmo14: 视域之魂会让光球飞行越久爆炸越猛烈。
 			SHPCAmmo15: 生命碎片会追踪敌人，并尝试将造成的力量转化为治疗。
 			SHPCAmmo16: 该材料槽位暂未接入实际物品，因此不会提供装药效果。
 			SHPCAmmo17: 深渊细胞会凝成深渊渊球，从上方坠下并爆开。
 			SHPCAmmo18: 瘟疫细胞罐会标记目标，并引发带有瘟疫性质的核爆。
 			SHPCAmmo19: 灾厄余烬会喷涌赤色灵魂，让爆点附近化为灼热灾场。
-			SHPCAmmo20: 甲虫外壳的 SHPC 效果尚未实现，目前只作为预留记录。
+			SHPCAmmo20: 【甲虫外壳的 SHPC 效果尚未实现，目前只作为预留记录。】
 			SHPCAmmo21: 日曜碎片会齐射多柄穿刺长矛，从爆点撕开前方敌人。
 			SHPCAmmo22: 星旋碎片会在飞行途中释放导弹护航，并拦截附近目标。
 			SHPCAmmo23: 星云碎片会召出追猎星体，蓄力后引发集中爆炸。
 			SHPCAmmo24: 星尘碎片会分裂出细胞弹体，让它们继续扩散攻击。
 			SHPCAmmo25: 冥思溶剂会制造黑色爆点，把视野内的敌人卷入其中。
 			SHPCAmmo26: 浊火精华会在撞击物块后释放猛烈的定向冲击波。
-			SHPCAmmo27: 该材料槽位暂未接入实际物品，因此不会提供装药效果。
+			SHPCAmmo27: 【该材料槽位暂未接入实际物品，因此不会提供装药效果。】
 			SHPCAmmo28: 神圣晶簇会在爆炸时折射出多道几何激光。
 			SHPCAmmo29: 血石核心会以玩家生命为代价强化自身，并在爆炸后返还治疗。
 			SHPCAmmo30: 毁灭之灵会唤醒深处幽魂，让它们向敌人持续逼近。
@@ -153,7 +153,7 @@ Mods: {
 				SHPCNecroplasmDamage.DisplayName: 死灵质爆发
 				UnholyEssence_Wave.DisplayName: 渎神精华波
 				AscendantSpirit_PROJ.DisplayName: 升华之灵弹体
-				// AscendantSpirit_BurstRelay.DisplayName: Ascendant Spirit Burst Relay
+				AscendantSpirit_BurstRelay.DisplayName: 升华之灵爆发中继
 				AshesofAnn_Located.DisplayName: 安之余烬定位标记
 				AshesofAnn_SuperEXP.DisplayName: 安之余烬超爆
 				AshesofAnn_BurstRelay.DisplayName: 安之余烬连发核心
@@ -179,11 +179,11 @@ Mods: {
 				TwistingNether_BlackSLASH.DisplayName: 扭曲虚空暗斩
 				TwistingNether_Blade.DisplayName: 扭曲虚空之刃
 				TwistingNether_Shadow.DisplayName: 扭曲虚空残影
-				// ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
-				// SHPC_SLINV.DisplayName: S H P C_ S L I N V
-				// RightClickMortar_HoldOut.DisplayName: Right Click Mortar_ Hold Out
-				// RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
-				// RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
+				ExoPrism_LazerMark.DisplayName: 外骨棱镜激光标记
+				SHPC_SLINV.DisplayName: SHPC SLINV
+				RightClickMortar_HoldOut.DisplayName: 右键迫击炮持握体
+				RightClickMortar_Proj.DisplayName: 右键迫击炮弹幕
+				RightClickMortar_Lazer.DisplayName: 右键迫击炮激光
 			}
 
 			A_Dev.SHPCBookPanel.DisplayName: SHPC材料手册面板

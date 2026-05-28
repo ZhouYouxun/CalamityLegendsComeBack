@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack
 {
-    internal class GiveYouLWeapon : GlobalItem
+    internal class NeverGonnaGiveYouWeapon : GlobalItem
     {
         public override bool AppliesToEntity(Item entity, bool lateInstantiation)
         {

@@ -1,0 +1,46 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				SHPBow: {
+				DisplayName: SHPB
+				Tooltip: "[GFB]"
+				ModeName0: 穿透
+				ModeName1: 反弹
+				ModeName2: 散射
+				ModeName3: 追踪
+				SHPB_CurrentSequence: "[c/78E6FF:当前 SHP 弓弦序列：{0}]"
+				SHPB_Left: "[c/9FD8FF:左键发射由弓弦序列构成的一份箭式，从左到右依次加工，允许重复。]"
+				SHPB_StackHint:
+				'''
+				[c/C7F3FF:在核心面板中左键点击核心会把它追加到序列末端；]"
+				[c/C7F3FF:序列满时向前滚动。右键点击核心会把序列重置为该核心。]"
+				'''
+				SHPB_Mode0: "[c/60E2FF:穿透：提高飞行速度、穿透次数、护甲穿透与局部无敌帧。]"
+				SHPB_Mode1: "[c/FFD464:反弹：增加物块反弹次数与命中后的再索敌范围。]"
+				SHPB_Mode2: "[c/FF7AAA:散射：增加分裂次数，增加分裂后的弹幕伤害。]"
+				SHPB_Mode3: "[c/A476FF:追踪：提高索敌范围与转向强度。]"
+				SHPB_Right: "[c/F7D87C:右键短按打开核心面板；右键按住超过 0.15 秒会为整条序列蓄力，蓄满后松手释放。]"
+				SHPB_EX:
+				'''
+				[c/BAA0FF:序列结构决定输出形态，箭矢不再独立存在。]
+				[c/BAA0FF:所有行为均由弓弦序列驱动并逐段叠加。]
+				'''
+				SHPB_Final:
+				'''
+				[c/9FD8FF:理论上可构建无限组合，但稳定性完全依赖操作者。]
+				[c/9FD8FF:错误的序列不会失效，只会以另一种形式生效。]
+				'''
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				SHPBowHoldout.DisplayName: S.H.P.B. 悬持弓
+				SHPBowSelectionPanel.DisplayName: SHPB 核心面板
+				SHPBowArrow.DisplayName: SHPB 核心箭
+			}
+		}
+	}
+}

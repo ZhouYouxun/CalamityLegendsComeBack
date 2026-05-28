@@ -2,59 +2,6 @@ Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
-				MiaoGun: {
-					DisplayName: 非常棒的枪
-					Tooltip:
-						'''
-						射出随机的弹幕
-						“不是吧，又整这一套？”
-						“距离上次我们做出类似的东西才过了不到几个月啊。”
-						“什么？你说这是我们的特色？”
-						“好吧，满足你。”
-						'''
-				}
-
-				DesertEagle: {
-					DisplayName: 沙漠之鹰
-					Tooltip:
-						'''
-						左键轮流散射动能灌注弹，以及强力吸血弹
-						按住右键将高速旋转手里的沙漠之鹰，切碎撞到它的敌人
-						充能满时点击左键将释放一枚强力的闪光爆弹
-						“传奇神射手同款”
-						'''
-				}
-
-				SHPBow: {
-					DisplayName: SHPB
-					Tooltip: "[GFB]"
-					ModeName0: 穿透
-					ModeName1: 反弹
-					ModeName2: 散射
-					ModeName3: 追踪
-					SHPB_CurrentSequence: "[c/78E6FF:当前 SHP 弓弦序列：{0}]"
-					SHPB_Left: "[c/9FD8FF:左键发射由弓弦序列构成的一份箭式，从左到右依次加工，允许重复。]"
-					SHPB_StackHint:
-						'''
-						[c/C7F3FF:在核心面板中左键点击核心会把它追加到序列末端；]"
-						[c/C7F3FF:序列满时向前滚动。右键点击核心会把序列重置为该核心。]"
-						'''
-					SHPB_Mode0: "[c/60E2FF:穿透：提高飞行速度、穿透次数、护甲穿透与局部无敌帧。]"
-					SHPB_Mode1: "[c/FFD464:反弹：增加物块反弹次数与命中后的再索敌范围。]"
-					SHPB_Mode2: "[c/FF7AAA:散射：增加分裂次数，增加分裂后的弹幕伤害。]"
-					SHPB_Mode3: "[c/A476FF:追踪：提高索敌范围与转向强度。]"
-					SHPB_Right: "[c/F7D87C:右键短按打开核心面板；右键按住超过 0.15 秒会为整条序列蓄力，蓄满后松手释放。]"
-					SHPB_EX:
-						'''
-						[c/BAA0FF:序列结构决定输出形态，箭矢不再独立存在。]
-						[c/BAA0FF:所有行为均由弓弦序列驱动并逐段叠加。]
-						'''
-					SHPB_Final:
-						'''
-						[c/9FD8FF:理论上可构建无限组合，但稳定性完全依赖操作者。]
-						[c/9FD8FF:错误的序列不会失效，只会以另一种形式生效。]
-						'''
-				}
 
 				Tetris: {
 					DisplayName: 俄罗斯方块
@@ -89,6 +36,7 @@ Mods: {
 				}
 
 				Strikers1945: {
+					DisplayName: 1945
 					Tooltip:
 						'''
 						手持该物品即可展开纵屏1945面板。
@@ -96,26 +44,23 @@ Mods: {
 						击落随机来袭的敌机获得分数。命中敌机、敌弹或被敌机撞到都会损失生命。
 						敌机偶尔掉落 P 强化，提升子弹数量与散射。三条命耗尽后游戏结束，按 R 重新开始。
 						'''
-					// DisplayName: "1945"
 				}
 
-				TheNewEnforcer: {
-					DisplayName: 暴政
-					Tooltip:
+			SacredThunder: {
+					DisplayName: 神圣雷霆
+					Tooltip: "[GFB]"
+					LegendaryText:
 						'''
-						[c/9C6DFF:快速挥动大剑，命中敌人时释放星界斩杀]
-						[c/59E8FF:每次挥舞都会释放多枚完全改进的灵魂火]
-						[c/8A8A8A:灵魂火能够追踪敌人，并释放额外的火焰]
+						丢出雷电神圣飞盘，反复攻击5次后飞回玩家
+						潜伏攻击：飞盘停在空中滞留15秒，不断释放越来越多的闪电与圣光，结束后巨型爆炸并消失
+						[c/FFE85A:“可是我觉得很神圣啊”]
+						[c/6FDFFF:”神圣你雷霆“]
+						'''
+				}
 
-						[c/6E0000:我从深渊归来]
-						[c/8B0000:带着你们亲手留下的伤痕]
-						[c/B10000:背叛、遗弃、沉默]
-						[c/C80000:我会让这一切，百倍奉还]
-						[c/FF3C3C:永噬之颚、湮灭之弦、终灭裂隙]
-						[c/FF6A00:还有你——诺法雷]
-						[c/FF0000:你们曾将我抛入黑暗]
-						[c/FF0000:如今，我会让整个世界，听见你们的惨叫]
-						'''
+			CTRLBoss: {
+					DisplayName: Boss进度修改器
+					Tooltip: 左键打开或关闭 Boss 进度调试面板。
 				}
 			}
 
@@ -142,17 +87,11 @@ Mods: {
 				SnakePanel.DisplayName: 贪吃蛇面板
 				MinesweeperPanel.DisplayName: 扫雷面板
 				Strikers1945Panel.DisplayName: 1945 战机面板
-				SHPBowHoldout.DisplayName: S.H.P.B. 悬持弓
-				SHPBowSelectionPanel.DisplayName: SHP 核心面板
-				SHPBowArrow.DisplayName: SHP 核心箭
+				CTRLBossPanel.DisplayName: Boss进度面板
 			}
 
-			TheEnforcer: {
-				TheNewEnforcerHoldOut.DisplayName: 新执法者
-				NewEssenceFlame2.DisplayName: 新灵魂火
-				TheNewEnforcerSlash.DisplayName: 执法斩痕
-				OldEssenceFlame2.DisplayName: 旧式灵魂火
-			}
+
+			SacredThunder.SacredThunderPROJ.DisplayName: 神圣雷霆
 		}
 
 		TheSpecialText: {
@@ -168,6 +107,9 @@ Mods: {
 			MinesweeperRestart: 左键点击重新开始
 			Strikers1945GameOver: 游戏结束
 			Strikers1945Restart: 按 R 重新开始
+			CTRLBossDefeated: 已击杀
+			CTRLBossUndefeated: 未击杀
+			CTRLBossStatusSet: "{0} 已被调整为{1}。"
 		}
 
 		Keybinds: {

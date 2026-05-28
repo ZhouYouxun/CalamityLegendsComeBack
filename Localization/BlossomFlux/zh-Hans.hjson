@@ -131,101 +131,101 @@ Mods: {
 				BFLeftPlagueReaper.DisplayName: 侵染收割者
 				BFRecoveryFlash.DisplayName: 复苏闪光
 				BFArrow_DBombVisual.DisplayName: 歼灭上射视觉箭
-				// BFEXConvergingLeaf.DisplayName: B F E X Converging Leaf
-				// BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
+				BFEXConvergingLeaf.DisplayName: 叶流EX汇聚叶片
+				BFEXConvergingWisp.DisplayName: 叶流EX汇聚鬼火
 			}
 
 			Ranged: {
 				BFAimScope.DisplayName: 叶流瞄准镜
-				// SporeBomb.DisplayName: Spore Bomb
+				SporeBomb.DisplayName: 孢子炸弹
 			}
 
-			// BarrierShieldVisual.DisplayName: Barrier Shield Visual
-			// TeachingProjectile.DisplayName: Teaching Projectile
+			BarrierShieldVisual.DisplayName: 屏障护盾视觉体
+			TeachingProjectile.DisplayName: 教学弹幕
 
 			A_Dev: {
-				// DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				// DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
+				DesertEagleHeavyRound.DisplayName: 沙漠之鹰重型弹
+				DesertEagleLifeRound.DisplayName: 沙漠之鹰生命弹
 			}
 
-			// DesertEagleHoldout.DisplayName: Desert Eagle Holdout
-			// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
-			// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
-			// BFArrow_BRecovBlast.DisplayName: B F Arrow_ B Recov Blast
-			// BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
-			// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
-			// BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
-			// BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
-			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
-			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
-			// BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
-			// FuckYou.DisplayName: Fuck You
-			// BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
-			// BBShuriken_Light.DisplayName: B B Shuriken_ Light
-			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
-			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
-			// BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
-			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
-			// BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
-			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
-			// BBSD_Star.DisplayName: B B S D_ Star
-			// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
-			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+			DesertEagleHoldout.DisplayName: 沙漠之鹰持握体
+			BFArrow_ABreak.DisplayName: 叶流箭A破防
+			BFArrow_BRecov.DisplayName: 叶流箭B恢复
+			BFArrow_BRecovBlast.DisplayName: 叶流箭B恢复爆破
+			BFArrow_BRecovTransfer.DisplayName: 叶流箭B恢复转移
+			BFArrow_CDetec.DisplayName: 叶流箭C探测
+			BFArrow_CDetecReticle.DisplayName: 叶流箭C探测准星
+			BFArrow_DBomb.DisplayName: 叶流箭D炸弹
+			BFArrow_EPlague.DisplayName: 叶流箭E瘟疫
+			BFArrow_EPlagueGas.DisplayName: 叶流箭E瘟疫毒气
+			BFLeftPlagueFlame.DisplayName: 叶流左键瘟疫火焰
+			FuckYou.DisplayName: 去你的
+			BBShuriken_Lazer.DisplayName: BB手里剑激光
+			BBShuriken_Light.DisplayName: BB手里剑光芒
+			BrinyBaron_LeftClick_Swing.DisplayName: 海爵左键挥砍
+			BrinyBaron_RightClick_Shuriken.DisplayName: 海爵右键手里剑
+			BrinyBaron.BBASD_Lighting.DisplayName: BBASD闪电
+			BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 海爵技能冲刺龙卷刃冲
+			BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 海爵技能旋转突进旋刃
+			BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 海爵技能斩击冲刺
+			BBSD_Star.DisplayName: BBSD星辰
+			BBSD_VirtualPROJ.DisplayName: BBSD虚拟弹幕
+			Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z海爵技能超级蓄力冲刺
 
 			Melee: {
-				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
-				// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
-				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
-				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
-				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
-				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
-				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
-				// CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
+				CosmicDischargeComboHoldout.DisplayName: 宇宙放电连击持握体
+				CosmicDischargeEndothermicSplit.DisplayName: 宇宙放电吸热分裂体
+				CosmicDischargeHookHead.DisplayName: 宇宙放电钩头
+				CosmicDischargeHookLimb.DisplayName: 宇宙放电钩链节
+				CosmicDischargeKillModeReady.DisplayName: 宇宙放电击杀模式就绪
+				CosmicDischargeKillModeSlash.DisplayName: 宇宙放电击杀模式斩击
+				CosmicDischargeScytheProjectile.DisplayName: 宇宙放电镰刀弹幕
+				CosmicDischargeFlail.DisplayName: 宇宙放电脱链锤
 			}
 
-			// LeonidAstralBlast.DisplayName: Leonid Astral Blast
-			// LeonidChainLightning.DisplayName: Leonid Chain Lightning
-			// LeonidEvilWisp.DisplayName: Leonid Evil Wisp
-			// LeonidHealingOrb.DisplayName: Leonid Healing Orb
-			// LeonidHolyLaser.DisplayName: Leonid Holy Laser
-			// LeonidLavaGlob.DisplayName: Leonid Lava Glob
-			// LeonidLingeringField.DisplayName: Leonid Lingering Field
-			// LeonidLunarStrike.DisplayName: Leonid Lunar Strike
-			// LeonidOrbitFlame.DisplayName: Leonid Orbit Flame
-			// LeonidPetalBolt.DisplayName: Leonid Petal Bolt
-			// LeonidShockwave.DisplayName: Leonid Shockwave
-			// LeonidSimpleShard.DisplayName: Leonid Simple Shard
-			// LeonidSplitMeteor.DisplayName: Leonid Split Meteor
-			// LeonidTrailMushroom.DisplayName: Leonid Trail Mushroom
-			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-			// NewSHPS.DisplayName: New S H P S
-			// AshesofCalamity_Fire.DisplayName: Ashesof Calamity_ Fire
-			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
-			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
-			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
-			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
-			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
-			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
-			// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
-			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
-			// Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
-			// Demonite_Wisp.DisplayName: Demonite_ Wisp
-			// Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
-			// Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
-			// Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
-			// Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
-			// Hallowed_Laser.DisplayName: Hallowed_ Laser
-			// Lunar_Strike.DisplayName: Lunar_ Strike
-			// Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
-			// Astral_Blast.DisplayName: Astral_ Blast
-			// PostLunar_Shard.DisplayName: Post Lunar_ Shard
-			// Shared_LingeringField.DisplayName: Shared_ Lingering Field
-			// Shared_Shockwave.DisplayName: Shared_ Shockwave
-			// Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
-			// NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
+			LeonidAstralBlast.DisplayName: 狮子座星界爆破
+			LeonidChainLightning.DisplayName: 狮子座链式闪电
+			LeonidEvilWisp.DisplayName: 狮子座邪恶鬼火
+			LeonidHealingOrb.DisplayName: 狮子座治疗球
+			LeonidHolyLaser.DisplayName: 狮子座神圣激光
+			LeonidLavaGlob.DisplayName: 狮子座熔岩团
+			LeonidLingeringField.DisplayName: 狮子座滞留力场
+			LeonidLunarStrike.DisplayName: 狮子座月之打击
+			LeonidOrbitFlame.DisplayName: 狮子座环绕火焰
+			LeonidPetalBolt.DisplayName: 狮子座花瓣弹
+			LeonidShockwave.DisplayName: 狮子座冲击波
+			LeonidSimpleShard.DisplayName: 狮子座简易碎片
+			LeonidSplitMeteor.DisplayName: 狮子座分裂流星
+			LeonidTrailMushroom.DisplayName: 狮子座拖尾蘑菇
+			PurifiedGel_Ball.DisplayName: 净化凝胶球
+			NewSHPS.DisplayName: 新SHPS
+			AshesofCalamity_Fire.DisplayName: 灾厄余烬火焰
+			DepthCells_Drop.DisplayName: 深渊细胞滴液
+			PlagueCell_Marked.DisplayName: 瘟疫细胞标记
+			ArmoredShell_Ball.DisplayName: 装甲壳球
+			AshesofAnn_Located.DisplayName: 安之余烬定位标记
+			ExoPrism_Geometry.DisplayName: 外骨棱镜几何体
+			NightmareFuel_ARC.DisplayName: 梦魇燃料弧光
+			NightmareFuel_Scythe.DisplayName: 梦魇燃料镰刀
+			NL_SHPC_EXWeapon.DisplayName: NL SHPC EX武器
+			Copper_ChainLightning.DisplayName: 铜链式闪电
+			Demonite_Wisp.DisplayName: 魔矿鬼火
+			Perennial_HealingOrb.DisplayName: 亘青治疗球
+			Scoria_LavaGlob.DisplayName: 熔渣熔岩团
+			Mythril_OrbitFlame.DisplayName: 秘银环绕火焰
+			Orichalcum_PetalBolt.DisplayName: 山铜花瓣弹
+			Hallowed_Laser.DisplayName: 神圣激光
+			Lunar_Strike.DisplayName: 月之打击
+			Shroomite_TrailMushroom.DisplayName: 蘑菇矿拖尾蘑菇
+			Astral_Blast.DisplayName: 星辉爆破
+			PostLunar_Shard.DisplayName: 月后碎片
+			Shared_LingeringField.DisplayName: 通用滞留力场
+			Shared_Shockwave.DisplayName: 通用冲击波
+			Shared_SplitMeteor.DisplayName: 通用分裂流星
+			NewWeapons.DPreDog.SODLazer.DisplayName: SOD激光
 		}
 
-		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+		Projectile.EndothermicEnergy_Split.DisplayName: 吸热能量分裂体
 
 		Cooldowns: {
 			BlossomFlux_Passive: 叶流终末防线
