@@ -21,7 +21,6 @@
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Dev\MK14EBR\" />
-	  <Folder Include="Weapons\A_Tools\新文件夹\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />
@@ -69,6 +68,8 @@
 	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
+	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
+	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
 	</ItemGroup>
 
 	<!-- References -->

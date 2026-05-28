@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -526,7 +527,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             OffsetLengthFromArm -= 18f;
 
             // ===== 抬枪后坐力：启动三段式动画 =====
-            Vector2 aimDir = (Main.MouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 aimWorld = TacticalComputerPlayer.GetAimWorld(Owner, Main.MouseWorld);
+            Vector2 aimDir = (aimWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
             recoilDirection = Math.Sign(aimDir.X);
             if (recoilDirection == 0)
                 recoilDirection = Owner.direction;
@@ -572,22 +574,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             for (int i = 0; i < count; i++)
             {
-                float fixedAngle = i switch
-                {
-                    1 => MathHelper.ToRadians(1.15f),
-                    2 => MathHelper.ToRadians(-2.35f),
-                    _ => 0f
-                };
-                float waveAngle = i == 0
-                    ? 0f
-                    : (float)Math.Sin(spiralCounter * 0.26f + i * 1.7f) * MathHelper.ToRadians(i == 1 ? 0.25f : 0.4f);
+                float fixedAngle = i == 0 ? 0f : Main.rand.NextFloat(MathHelper.ToRadians(-2.2f), MathHelper.ToRadians(2.2f));
+                if (i > 0 && Math.Abs(fixedAngle) < MathHelper.ToRadians(0.45f))
+                    fixedAngle = Math.Sign(fixedAngle == 0f ? Main.rand.NextFloat(-1f, 1f) : fixedAngle) * MathHelper.ToRadians(0.45f);
+
                 float sideOffset = i switch
                 {
                     1 => 2.5f,
                     2 => -4f,
                     _ => 0f
                 };
-                Vector2 velocity = baseVelocity.RotatedBy(fixedAngle + waveAngle);
+                Vector2 velocity = baseVelocity.RotatedBy(fixedAngle);
 
                 int projIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -801,51 +798,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 stageOutlineTimer--;
             }
 
-
-            // 👉我们只要绘制阶段充能条，不影响主视觉
-            if (Main.myPlayer == Projectile.owner)
-            {          
-                var barBG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;
-                var barFG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarFront").Value;
-
-                const float heatBarScale = 1.5f;
-                Vector2 drawPos = Owner.Center - Main.screenPosition + new Vector2(0, -56f) - barBG.Size() / heatBarScale;
-
-                float opacity = 1f;
-                Color color = Color.White * opacity;
-                DrawHeatBarOutlinePulse(barBG, drawPos, heatBarScale, opacity);
-                SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, visualProgress, color, color, heatBarScale);
-            }
-
             return base.PreDraw(ref lightColor);
-        }
-
-        private void DrawHeatBarOutlinePulse(Texture2D barBG, Vector2 drawPos, float scale, float opacity)
-        {
-            if (heatBarOutlineTimer <= 0)
-                return;
-
-            float pulse = heatBarOutlineTimer / (float)StageOutlineDuration;
-            float fade = pulse * pulse;
-            float outlineStrength = MathHelper.Lerp(0.6f, 3.4f, fade);
-            Color outlineColor = Color.Lerp(new Color(255, 74, 42), Color.White, 0.35f) * (opacity * fade * 0.85f);
-
-            Vector2[] offsets =
-            {
-                new(outlineStrength, 0f),
-                new(-outlineStrength, 0f),
-                new(0f, outlineStrength),
-                new(0f, -outlineStrength),
-                new(outlineStrength, outlineStrength),
-                new(-outlineStrength, outlineStrength),
-                new(outlineStrength, -outlineStrength),
-                new(-outlineStrength, -outlineStrength),
-            };
-
-            foreach (Vector2 offset in offsets)
-                Main.spriteBatch.Draw(barBG, drawPos + offset, null, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-
-            heatBarOutlineTimer--;
         }
 
         #endregion

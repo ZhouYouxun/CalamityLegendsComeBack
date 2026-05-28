@@ -17,7 +17,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #region ===== 特效状态 =====
 
         private int stageOutlineTimer;
-        private int heatBarOutlineTimer;
         private const int StageOutlineDuration = 24;
 
         private Vector2 normalShotFXLastCenter = Vector2.Zero;
@@ -165,7 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void TriggerStageOutlinePulse()
         {
             stageOutlineTimer = StageOutlineDuration;
-            heatBarOutlineTimer = StageOutlineDuration;
+            Owner.GetModPlayer<SHPCRight_Player>().TriggerHeatBarOutlinePulse(StageOutlineDuration);
         }
 
         private void SpawnStageUpEnergyBurst()

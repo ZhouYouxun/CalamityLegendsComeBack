@@ -6,8 +6,8 @@ Mods: {
 				Tooltip: 佩戴后才可以开启传奇武器的大招
 			}
 
-			S_OVR_ChargeLimitBreaker: {
-				DisplayName: S-OVR：过载充能限制解除器
+			FastChargeModule: {
+				DisplayName: 快充模块
 				Tooltip:
 					'''
 					大招超级激光的最大充能减半
@@ -15,8 +15,8 @@ Mods: {
 					'''
 			}
 
-			S_MLD_MultiLinkDistributor: {
-				DisplayName: S-MLD：多重链路分发器
+			ChargedDiffusionChip: {
+				DisplayName: 带电扩散芯片
 				Tooltip:
 					'''
 					左键能一下子散射出三个能量光球
@@ -24,8 +24,8 @@ Mods: {
 					'''
 			}
 
-			S_MOT_MortarOverwatchTransceiver: {
-				DisplayName: S-MOT：迫击监控收发器
+			CommandAscend: {
+				DisplayName: 《指令：升天》
 				Tooltip:
 					'''
 					手持SHPC时右键改为迫击炮模式
@@ -33,21 +33,40 @@ Mods: {
 					'''
 			}
 
-			S_RSU_PhaseResonanceGuard: {
-				DisplayName: S-RSU：相位共振防护单元
+			Barrier: {
+				DisplayName: 屏障
 				Tooltip:
 					'''
-					手持SHPC时展开一层护盾
-					15秒冷却，可减半一次伤害
+					手持SHPC时充能一层护盾
+					护盾血量为最大生命值的25%，向下取5的倍数
+					受伤后延迟10秒开始充能，5秒充满
+					护盾存在时受到的防前伤害降低10%
 					'''
 			}
 
-			S_TAC_TacticalLockCalibrator: {
-				DisplayName: S-TAC：战术锁定校准模块
+			TacticalComputer: {
+				DisplayName: 战术电脑
 				Tooltip:
 					'''
-					手持SHPC时
-					让右键的激光获得很弱的追踪能力
+					使SHPC右键具备自动锁定能力
+					'''
+			}
+
+			ExpansionCanisterI: {
+				DisplayName: 一级扩容罐
+				Tooltip:
+					'''
+					SHPC伤害+7%
+					SHPC左键增加1个储罐，可识别背包中的前4个弹药，装填弹药量增加25%并向上取5的倍数
+					'''
+			}
+
+			ExpansionCanisterII: {
+				DisplayName: 二级扩容罐
+				Tooltip:
+					'''
+					SHPC伤害+12%
+					SHPC左键增加3个储罐，可识别背包中的前6个弹药，装填弹药量增加50%并向上取5的倍数
 					'''
 			}
 

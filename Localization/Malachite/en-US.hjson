@@ -5,10 +5,10 @@ Mods: {
 				Malachite: {
 					DisplayName: Peacock Plume
 					Tooltip: "[GFB]"
-					LeftClick: "[c/7DFF9A:Left click:] Throw a fast poisonous kunai. Normal kunai start with slight gravity, then gradually ignore it. If generated kunai are waiting behind you, one of them is thrown first."
-					RightClick: "[c/80FFC8:Right click:] Generate 3 frenzied kunai behind you. They deal higher damage, pierce, and ignore gravity. 3 second cooldown. Existing batches of at least 3 kunai are awakened before the new fan appears."
-					StealthStrike: "[c/B5FF74:Stealth strike:] Generate 23 peacock kunai behind you. They cannot pierce, but they home in on enemies. The ace kunai orbits the cursor when awakened, then dives and causes a miniature blast on hit."
-					Finale: "[c/D6FF9A:Finale:] At full stealth, press [{0}] to call a spotlight and falling petals. After 2 seconds, slash with Peacock Plume and erupt multi-hit green explosions around nearby enemies."
+					LeftClick: "[c/7DFF9A:Left click:] Throw a fast poisonous kunai. Normal kunai start with slight gravity, then gradually ignore it. Stored peacock kunai are thrown one by one first; if none exist, stored frenzied kunai are thrown instead."
+					RightClick: "[c/80FFC8:Right click:] Generate 3 frenzied kunai behind you. They deal higher damage, pierce, and ignore gravity. 3 second cooldown. They can coexist with the 23 peacock kunai; only an existing full frenzied fan is awakened before the new one appears."
+					StealthStrike: "[c/B5FF74:Stealth strike:] Left and right stealth strikes are identical: any stored peacock kunai are fired as left-click shots, then 23 new peacock kunai open behind you. Peacock kunai cannot pierce but home in on enemies; the ace causes a miniature blast on hit."
+					Finale: "[c/D6FF9A:Finale:] At full stealth and when off cooldown, press [{0}] to call a green spotlight and falling petals. After 2 seconds, slash with Peacock Plume and erupt multi-hit green explosions around nearby enemies."
 					Passive:
 						'''
 						[c/9AFFC8:Passives while held:]
@@ -36,5 +36,7 @@ Mods: {
 				MalachiteFinaleSlash.DisplayName: Peacock Slash
 			}
 		}
+
+		Cooldowns.Malachite_EX: Peacock Finale Cooldown
 	}
 }

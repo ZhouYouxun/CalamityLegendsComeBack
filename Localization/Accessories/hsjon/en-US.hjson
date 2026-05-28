@@ -6,29 +6,47 @@ Mods: {
 				Tooltip: Must be equipped to activate legendary weapon ultimates
 			}
 
-			S_OVR_ChargeLimitBreaker: {
-				DisplayName: S-OVR: Charge Limit Breaker
+			FastChargeModule: {
+				DisplayName: Fast Charge Module
 				Tooltip: Halves the maximum charge time of the EX super laser, but also halves the player's life regeneration
 			}
 
-			S_MLD_MultiLinkDistributor: {
-				DisplayName: S-MLD: Multi-Link Distributor
+			ChargedDiffusionChip: {
+				DisplayName: Charged Diffusion Chip
 				Tooltip: Left click scatters three energy orbs at once, but each deals only 33% damage
 			}
 
-			S_MOT_MortarOverwatchTransceiver: {
-				DisplayName: S-MOT: Mortar Overwatch Transceiver
+			CommandAscend: {
+				DisplayName: Command: Ascend
 				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
 			}
 
-			S_RSU_PhaseResonanceGuard: {
-				DisplayName: S-RSU: Phase Resonance Guard
-				Tooltip: While holding SHPC, deploys a shield with a 15 second cooldown that halves one incoming hit
+			Barrier: {
+				DisplayName: Barrier
+				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life rounded down to a multiple of 5. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
 			}
 
-			S_TAC_TacticalLockCalibrator: {
-				DisplayName: S-TAC: Tactical Lock Calibrator
-				Tooltip: Grants the right-click laser a very weak homing effect
+			TacticalComputer: {
+				DisplayName: Tactical Computer
+				Tooltip: Gives SHPC right click automatic lock-on
+			}
+
+			ExpansionCanisterI: {
+				DisplayName: Tier 1 Expansion Canister
+				Tooltip:
+					'''
+					+7% SHPC damage
+					SHPC left click gains 1 extra soul canister, recognizes the first 4 backpack ammo materials, and loads 25% more ammo rounded up to a multiple of 5
+					'''
+			}
+
+			ExpansionCanisterII: {
+				DisplayName: Tier 2 Expansion Canister
+				Tooltip:
+					'''
+					+12% SHPC damage
+					SHPC left click gains 3 extra soul canisters, recognizes the first 6 backpack ammo materials, and loads 50% more ammo rounded up to a multiple of 5
+					'''
 			}
 
 			OffshoreWindTurbine: {

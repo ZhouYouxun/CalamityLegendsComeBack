@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.MC;
+using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
 using CalamityMod;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
@@ -98,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (calamity.StealthStrikeAvailable())
             {
-                MalachiteKunai.PrepareForNewBatch(player, mouseWorld);
+                MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(player, mouseWorld);
                 MalachiteKunai.SpawnPeacockFan(player, source, damage, knockback);
                 calamity.ConsumeStealthByAttacking();
                 player.GetModPlayer<MalachitePlayer>().RestoreStealthPoints(15f);
@@ -108,26 +109,15 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (player.altFunctionUse == 2)
             {
-                calamity.stealthStrikeThisFrame = true;
-                MalachiteKunai.PrepareForNewBatch(player, mouseWorld);
+                MalachiteKunai.PrepareForNewFrenzyFan(player, mouseWorld);
                 MalachiteKunai.SpawnFrenzyFan(player, source, damage, knockback);
                 player.GetModPlayer<MalachitePlayer>().StartRightClickCooldown();
                 SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.85f, Pitch = 0.08f }, player.Center);
                 return false;
             }
 
-            if (MalachiteKunai.HasFullStoredPeacockFan(player))
-            {
-                calamity.stealthStrikeThisFrame = true;
-                MalachiteKunai.PrepareForNewBatch(player, mouseWorld);
-                MalachiteKunai.SpawnPeacockFan(player, source, damage, knockback);
-                SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.88f, Pitch = 0.18f }, player.Center);
-                return false;
-            }
-
             if (MalachiteKunai.TryThrowStoredKunai(player, mouseWorld))
             {
-                calamity.stealthStrikeThisFrame = true;
                 TryRegenerateFrenzyFanFromScroll(player, source, damage, knockback, mouseWorld, accessoryPlayer);
                 SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.78f, Pitch = 0.22f }, player.Center);
                 return false;
@@ -197,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
 
             int finaleType = ModContent.ProjectileType<MalachiteFinaleController>();
-            if (player.ownedProjectileCounts[finaleType] > 0)
+            if (player.ownedProjectileCounts[finaleType] > 0 || IsFinaleCoolingDown(player))
                 return;
 
             calamity.ConsumeStealthByAttacking();
@@ -217,7 +207,22 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 Item.knockBack,
                 player.whoAmI);
 
+            StartFinaleCooldown(player);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.95f, Pitch = -0.25f }, player.Center);
+        }
+
+        private static bool IsFinaleCoolingDown(Player player)
+        {
+            return player.Calamity().cooldowns.TryGetValue(MalachiteEXCooldown.ID, out var cooldown) &&
+                cooldown.timeLeft > 0;
+        }
+
+        private static void StartFinaleCooldown(Player player)
+        {
+            if (player.Calamity().cooldowns.TryGetValue(MalachiteEXCooldown.ID, out var cooldown))
+                cooldown.timeLeft = MalachiteEXCooldown.CooldownFrames;
+            else
+                player.AddCooldown(MalachiteEXCooldown.ID, MalachiteEXCooldown.CooldownFrames);
         }
 
         private static void TryRegenerateFrenzyFanFromScroll(
@@ -231,7 +236,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (!accessoryPlayer.ShouldRegenerateFrenzyFan)
                 return;
 
-            MalachiteKunai.PrepareForNewBatch(player, mouseWorld);
+            MalachiteKunai.PrepareForNewFrenzyFan(player, mouseWorld);
             MalachiteKunai.SpawnFrenzyFan(player, source, damage, knockback);
         }
 

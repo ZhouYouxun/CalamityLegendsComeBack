@@ -7,6 +7,7 @@ using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Terraria.Audio;
 using System;
+using System.Collections.Generic;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
@@ -15,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义计时器
         private int timer;
+        private static readonly Dictionary<int, int> SharedBounceTargets = new();
 
         public override void SetStaticDefaults()
         {
@@ -165,6 +167,82 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
             // 光照
             Lighting.AddLight(Projectile.Center, Color.Lerp(pink, blue, 0.5f).ToVector3() * 0.45f);
+        }
+
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            if (Projectile.localAI[0] >= 1f)
+                return true;
+
+            Projectile.localAI[0] = 1f;
+            float speed = Math.Max(8f, oldVelocity.Length());
+
+            if (Projectile.velocity.X != oldVelocity.X)
+                Projectile.velocity.X = -oldVelocity.X;
+            if (Projectile.velocity.Y != oldVelocity.Y)
+                Projectile.velocity.Y = -oldVelocity.Y;
+
+            NPC target = GetSharedBounceTarget();
+            if (target != null)
+                Projectile.velocity = Projectile.DirectionTo(target.Center) * speed;
+            else
+                Projectile.velocity = Projectile.velocity.SafeNormalize(oldVelocity.SafeNormalize(Vector2.UnitX)) * speed;
+
+            Projectile.netUpdate = true;
+            return false;
+        }
+
+        private NPC GetSharedBounceTarget()
+        {
+            int groupKey = (int)Projectile.ai[0];
+            if (SharedBounceTargets.Count > 256)
+                SharedBounceTargets.Clear();
+
+            if (SharedBounceTargets.TryGetValue(groupKey, out int targetIndex) &&
+                targetIndex >= 0 &&
+                targetIndex < Main.maxNPCs)
+            {
+                NPC cachedTarget = Main.npc[targetIndex];
+                if (cachedTarget.active && cachedTarget.CanBeChasedBy(Projectile, false))
+                    return cachedTarget;
+            }
+
+            NPC target = FindBounceTarget(1100f);
+            if (target != null)
+                SharedBounceTargets[groupKey] = target.whoAmI;
+
+            return target;
+        }
+
+        private NPC FindBounceTarget(float maxRange)
+        {
+            NPC bossTarget = null;
+            NPC normalTarget = null;
+            float bestBossDistance = maxRange;
+            float bestNormalDistance = maxRange;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile, false))
+                    continue;
+
+                float distance = Vector2.Distance(Projectile.Center, npc.Center);
+                if (npc.boss)
+                {
+                    if (distance < bestBossDistance)
+                    {
+                        bestBossDistance = distance;
+                        bossTarget = npc;
+                    }
+                }
+                else if (distance < bestNormalDistance)
+                {
+                    bestNormalDistance = distance;
+                    normalTarget = npc;
+                }
+            }
+
+            return bossTarget ?? normalTarget;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

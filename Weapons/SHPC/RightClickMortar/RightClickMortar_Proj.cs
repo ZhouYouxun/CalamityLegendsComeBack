@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
 using CalamityMod;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
@@ -207,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
 
-            return mouseWorld;
+            return TacticalComputerPlayer.GetAimWorld(owner, mouseWorld);
         }
 
         private void UpdateAnimation()

@@ -1,0 +1,73 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewVesuvius: {
+					DisplayName: 维苏维阿斯
+					Tooltip: "[GFB]"
+					LeftClick:
+						'''
+						[c/FF8A3D:左键：按住蓄力“超级火山蓄力”，松手后释放。]
+						[c/FFCA70:短点会被强制压到第0层，只发射三颗弱流星。]
+						'''
+					ChargeStage1: "[c/FF8A3D:当前解锁：第1层，玄武岩喷流。]"
+					ChargeStage2: "[c/FF9F45:当前解锁：第2层，斯特龙博利喷发。]"
+					ChargeStage3: "[c/FFC45B:当前解锁：第3层，武尔卡诺式喷发。]"
+					ChargeStage4: "[c/FF754F:当前解锁：第4层，维苏威式喷发。]"
+					ChargeStage5: "[c/D84BFF:当前解锁：第5层，Toba级超级喷发。]"
+					RightClick:
+						'''
+						[c/FFB15C:右键：像标枪一样投掷法杖。]
+						[c/FF8A3D:插入地形后形成活动断层核心；流程推进后会追加炮台火球、火山碎屑流和俯冲带。]
+						'''
+					Passive:
+						'''
+						[c/CC9A6A:被动：手持时周围持续飘落火山灰。]
+						[c/FFB15C:从空中落地会引发地震；坠落速度越高，范围和伤害越高。]
+						'''
+					EXHint:
+						'''
+						[c/FFD86B:手持维苏维阿斯时会积蓄终极能量，最高60点。]
+						[c/FF7043:能量满后按 [{0}] 将法杖举过头顶并开始蓄力大招。]
+						[c/D84BFF:准备音效响起后，点击左键释放5秒的火山灰、岩浆、陨石、火焰弹和黑曜石碎片。]
+						'''
+					EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招被禁用。]"
+					Final: "[c/FFB15C:地壳崩裂、灰烬遮天、火山碎屑流横扫整个战场。]"
+					LegendaryHint: "[c/BABABA:按住 Shift 读取记录]"
+					LegendaryText:
+						'''
+						[c/FFB15C:维苏维阿斯不再只是模仿一颗坠落的陨石。]
+						[c/FF8A3D:它把喷流、火山弹、岩浆柱、火焰风暴和破火山口崩塌全部压进了同一根法杖。]
+						[c/D84BFF:最终阶段投出的不是熔岩，而是把战场本身撕开，让山体替它发声。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			Vesuvius: {
+				VesuviusLeftHoldout.DisplayName: 维苏维阿斯
+				VesuviusMoltenAsteroid.DisplayName: 熔融陨石
+				VesuviusVolcanicAsh.DisplayName: 火山灰
+				VesuviusVolcanicBomb.DisplayName: 火山弹
+				VesuviusLingeringLava.DisplayName: 残留熔岩
+				VesuviusMagmaPillar.DisplayName: 岩浆喷柱
+				VesuviusMagmaResidual.DisplayName: 岩浆残迹
+				VesuviusHomingCinder.DisplayName: 追踪火焰弹
+				VesuviusObsidianShard.DisplayName: 黑曜石碎片
+				VesuviusObsidianSlash.DisplayName: 黑曜石斩击
+				VesuviusObsidianBlast.DisplayName: 黑曜石爆破
+				VesuviusFaultJavelin.DisplayName: 断层法杖
+				VesuviusFaultCore.DisplayName: 活动断层核心
+				VesuviusFaultFireball.DisplayName: 火山火球
+				VesuviusPyroclasticFlow.DisplayName: 火山碎屑流
+				VesuviusSubductionZone.DisplayName: 俯冲带
+				VesuviusAshFall.DisplayName: 火山灰
+				VesuviusLandingQuake.DisplayName: 地震落地
+				VesuviusEXWeapon.DisplayName: 超级火山喷发
+			}
+		}
+
+		Cooldowns.Vesuvius_EX: 维苏维阿斯终极能量
+	}
+}

@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.A_Tools.GAMES;
 using CalamityMod.Items.TreasureBags.MiscGrabBags;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
@@ -15,7 +16,10 @@ namespace CalamityLegendsComeBack
         public override void ModifyItemLoot(Item item, ItemLoot itemLoot)
         {
             if (item.type == ModContent.ItemType<StarterBag>())
+            {
                 itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<LegendarySupplyBox>()));
+                itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<RetroGameConsoleSupplyBox>()));
+            }
         }
     }
 }

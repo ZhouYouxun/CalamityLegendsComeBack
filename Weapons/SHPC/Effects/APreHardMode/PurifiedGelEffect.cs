@@ -66,7 +66,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     ModContent.ProjectileType<PurifiedGel_Ball>(),
                     projectile.damage,
                     projectile.knockBack,
-                    projectile.owner);
+                    projectile.owner,
+                    projectile.identity);
             }
         }
     }

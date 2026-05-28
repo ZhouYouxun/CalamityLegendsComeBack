@@ -312,7 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     GunTip,
                     forward * speed,
                     ModContent.ProjectileType<SHPC_SLINV>(),
-                    Projectile.damage,
+                    0,
                     0f,
                     Projectile.owner,
                     Projectile.whoAmI,

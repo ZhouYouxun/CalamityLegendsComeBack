@@ -1,4 +1,3 @@
-using CalamityLegendsComeBack.Accssory.SHPC.S_TAC_TacticalLockCalibrator;
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -127,22 +126,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private Vector2 TrailOffsetFunction(float completion, Vector2 _)
         {
-            float lateralWave = IsMainBeam
-                ? 0f
-                : (float)Math.Sin(completion * MathHelper.Pi * 1.15f + Main.GlobalTimeWrappedHourly * 10f) * 0.6f;
-
-            if (BeamIndex > 0)
-            {
-                float amplitude = BeamIndex == 1 ? 4f : 6f;
-                lateralWave += (float)Math.Sin(completion * MathHelper.TwoPi * 2f + Main.GlobalTimeWrappedHourly * 8f + BeamIndex * 1.35f) * amplitude;
-            }
-
-            return Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * lateralWave;
+            return Vector2.Zero;
         }
 
         private float TrailWidthFunction(float completion, Vector2 _)
         {
-            float maxBodyWidth = Projectile.scale * (IsMainBeam ? 30f : 15f);
+            float maxBodyWidth = Projectile.scale * 30f;
             float curveRatio = 0.18f;
 
             if (completion < curveRatio)
@@ -164,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private float TrailCoreWidthFunction(float completion, Vector2 _)
         {
-            float maxBodyWidth = Projectile.scale * (IsMainBeam ? 17f : 8.5f);
+            float maxBodyWidth = Projectile.scale * 17f;
             float curveRatio = 0.18f;
 
             if (completion < curveRatio)
@@ -224,7 +213,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void AI()
         {
-            ApplyWeakHoming();
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
             if (Projectile.alpha > 0)
@@ -275,51 +263,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 helixTimer++;
                 SpawnHelixFlightEffects();
             }
-        }
-
-        private void ApplyWeakHoming()
-        {
-            Player owner = Main.player[Projectile.owner];
-            if (!owner.active || owner.dead || !owner.GetModPlayer<S_TAC_TacticalLockCalibratorPlayer>().S_TAC_TacticalLockCalibratorEquipped)
-                return;
-
-            NPC target = FindHomingTarget(420f);
-            if (target == null)
-                return;
-
-            float speed = Projectile.velocity.Length();
-            if (speed <= 0f)
-                return;
-
-            Vector2 desiredDirection = Projectile.DirectionTo(target.Center);
-            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 newDirection = Vector2.Lerp(currentDirection, desiredDirection, 0.04f).SafeNormalize(currentDirection);
-            Projectile.velocity = newDirection * speed;
-        }
-
-        private NPC FindHomingTarget(float maxRange)
-        {
-            NPC target = null;
-            float bestDistance = maxRange;
-
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (!npc.CanBeChasedBy(Projectile, false))
-                    continue;
-
-                float distance = Vector2.Distance(Projectile.Center, npc.Center);
-                if (distance >= bestDistance)
-                    continue;
-
-                Vector2 toTarget = npc.Center - Projectile.Center;
-                if (Vector2.Dot(Projectile.velocity.SafeNormalize(Vector2.UnitX), toTarget.SafeNormalize(Vector2.UnitX)) < 0.2f)
-                    continue;
-
-                bestDistance = distance;
-                target = npc;
-            }
-
-            return target;
         }
 
         private void SpawnHelixFlightEffects()

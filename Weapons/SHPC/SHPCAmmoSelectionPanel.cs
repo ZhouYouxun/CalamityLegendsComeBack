@@ -101,9 +101,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (owner.HeldItem.ModItem is not NewLegendSHPC weapon)
                 return false;
 
-            NewLegendSHPC.SHPCMagazineSlot[] slots = new NewLegendSHPC.SHPCMagazineSlot[MaxCandidates];
-            for (int i = 0; i < MaxCandidates; i++)
-                slots[i] = weapon.GetMagazineSlot(i);
+            int activeSlotCount = weapon.GetActiveMagazineCount(owner);
+            NewLegendSHPC.SHPCMagazineSlot[] slots = new NewLegendSHPC.SHPCMagazineSlot[activeSlotCount];
+            for (int i = 0; i < activeSlotCount; i++)
+                slots[i] = weapon.GetMagazineSlot(i, owner);
 
             int hoveredIndex = GetHoveredCandidateIndex(slots.Length);
             bool keyReleased = KeybindSystem.LegendaryWeaponFormSwitch?.JustReleased == true;
@@ -118,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                 if (hovered)
                 {
-                    Main.hoverItemName = GetHoverText(slot);
+                    Main.hoverItemName = GetHoverText(slot, owner);
 
                     if (!hoveredLastFrame[i] && Projectile.Opacity >= 0.92f)
                         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
@@ -135,9 +136,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 if (hoveredIndex >= 0 && hoveredIndex < slots.Length)
                 {
-                    weapon.SelectMagazine(hoveredIndex);
+                    weapon.SelectMagazine(hoveredIndex, owner);
                     clickFeedbackTimers[hoveredIndex] = 10;
-                    NewLegendSHPC.SHPCMagazineSlot selectedSlot = weapon.GetMagazineSlot(hoveredIndex);
+                    NewLegendSHPC.SHPCMagazineSlot selectedSlot = weapon.GetMagazineSlot(hoveredIndex, owner);
                     Color textColor = selectedSlot.HasAmmo ? GetEffectColor(selectedSlot.EffectID) : Color.LightGray;
                     CombatText.NewText(owner.Hitbox, textColor, GetMagazineSwitchText(selectedSlot), dramatic: false, dot: false);
                     SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
@@ -200,12 +201,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (count == 2)
                 return index == 0 ? new Vector2(-50f, -22f) : new Vector2(50f, -22f);
 
-            return index switch
+            if (count == 3)
             {
-                0 => new Vector2(0f, -64f),
-                1 => new Vector2(58f, 34f),
-                _ => new Vector2(-58f, 34f)
-            };
+                return index switch
+                {
+                    0 => new Vector2(0f, -64f),
+                    1 => new Vector2(58f, 34f),
+                    _ => new Vector2(-58f, 34f)
+                };
+            }
+
+            float radius = count <= 4 ? 76f : 90f;
+            float angle = -MathHelper.PiOver2 + MathHelper.TwoPi * index / count;
+            return angle.ToRotationVector2() * radius;
         }
 
         private void DrawPanelRings(int candidateCount, int hoveredIndex)
@@ -404,13 +412,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return color;
         }
 
-        private static string GetHoverText(NewLegendSHPC.SHPCMagazineSlot slot)
+        private static string GetHoverText(NewLegendSHPC.SHPCMagazineSlot slot, Player owner)
         {
             if (!slot.HasAmmo)
                 return $"{slot.Index + 1}号弹夹: 空";
 
             string itemName = Lang.GetItemNameValue(slot.AmmoType);
-            int capacity = SHPCAmmoCapacity.GetCapacity(slot.EffectID);
+            int capacity = NewLegendSHPC.GetAdjustedAmmoCapacity(owner, slot.EffectID);
             return $"{slot.Index + 1}号弹夹: {Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.SHPCAmmoWheelHover", itemName, capacity)} ({slot.Power}/{capacity})";
         }
 

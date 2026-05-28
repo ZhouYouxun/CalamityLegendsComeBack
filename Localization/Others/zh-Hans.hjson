@@ -36,14 +36,14 @@ Mods: {
 					SHPB_Left: "[c/9FD8FF:左键发射由弓弦序列构成的一份箭式，从左到右依次加工，允许重复。]"
 					SHPB_StackHint:
 						'''
-						[c/C7F3FF:在轮盘中左键点击核心会把它追加到序列末端；]"
+						[c/C7F3FF:在核心面板中左键点击核心会把它追加到序列末端；]"
 						[c/C7F3FF:序列满时向前滚动。右键点击核心会把序列重置为该核心。]"
 						'''
 					SHPB_Mode0: "[c/60E2FF:穿透：提高飞行速度、穿透次数、护甲穿透与局部无敌帧。]"
 					SHPB_Mode1: "[c/FFD464:反弹：增加物块反弹次数与命中后的再索敌范围。]"
 					SHPB_Mode2: "[c/FF7AAA:散射：增加分裂次数，增加分裂后的弹幕伤害。]"
 					SHPB_Mode3: "[c/A476FF:追踪：提高索敌范围与转向强度。]"
-					SHPB_Right: "[c/F7D87C:右键短按打开核心轮盘；右键按住超过 0.15 秒会为整条序列蓄力，蓄满后松手释放。]"
+					SHPB_Right: "[c/F7D87C:右键短按打开核心面板；右键按住超过 0.15 秒会为整条序列蓄力，蓄满后松手释放。]"
 					SHPB_EX:
 						'''
 						[c/BAA0FF:序列结构决定输出形态，箭矢不再独立存在。]
@@ -88,6 +88,17 @@ Mods: {
 						'''
 				}
 
+				Strikers1945: {
+					DisplayName: 1945
+					Tooltip:
+						'''
+						手持该物品即可展开纵屏1945面板。
+						A/D 控制左右，W/S 控制前后，飞机会自动开火。
+						击落随机来袭的敌机获得分数。命中敌机、敌弹或被敌机撞到都会损失生命。
+						敌机偶尔掉落 P 强化，提升子弹数量与散射。三条命耗尽后游戏结束，按 R 重新开始。
+						'''
+				}
+
 				TheNewEnforcer: {
 					DisplayName: 暴政
 					Tooltip:
@@ -117,6 +128,14 @@ Mods: {
 						“你根本想象不到在另一个世界的人们想要获得这个箱子两个月的使用权需要经历多少种苦难”
 						'''
 				}
+
+				RetroGameConsoleSupplyBox: {
+					DisplayName: 复古游戏机补给包
+					Tooltip:
+						'''
+						右键打开，领取目前已经准备好的复古游戏机。
+						'''
+				}
 			}
 		}
 
@@ -125,8 +144,9 @@ Mods: {
 				TetrisPanel.DisplayName: 俄罗斯方块面板
 				SnakePanel.DisplayName: 贪吃蛇面板
 				MinesweeperPanel.DisplayName: 扫雷面板
+				Strikers1945Panel.DisplayName: 1945 战机面板
 				SHPBowHoldout.DisplayName: S.H.P.B. 悬持弓
-				SHPBowSelectionPanel.DisplayName: SHP 核心轮盘
+				SHPBowSelectionPanel.DisplayName: SHP 核心面板
 				SHPBowArrow.DisplayName: SHP 核心箭
 			}
 
@@ -149,6 +169,8 @@ Mods: {
 			MinesweeperGameOver: 游戏结束
 			MinesweeperWin: You Win
 			MinesweeperRestart: 左键点击重新开始
+			Strikers1945GameOver: 游戏结束
+			Strikers1945Restart: 按 R 重新开始
 		}
 
 		Keybinds: {

@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron;
 using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Weapons.Vesuvius;
 using CalamityMod.Rarities;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
@@ -35,6 +36,7 @@ namespace CalamityLegendsComeBack
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Malachite>()));
+            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewVesuvius>()));
         }
 
 

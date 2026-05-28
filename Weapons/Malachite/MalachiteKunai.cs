@@ -166,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return count;
         }
 
-        private static int CountStoredPeacockKunai(Player player)
+        public static int CountStoredPeacockKunai(Player player)
         {
             int count = 0;
             foreach (Projectile projectile in Main.ActiveProjectiles)
@@ -181,51 +181,60 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return count;
         }
 
-        public static void PrepareForNewBatch(Player player, Vector2 mouseWorld)
+        public static int CountStoredFrenzyKunai(Player player)
         {
-            int storedCount = CountStoredKunai(player);
+            int count = 0;
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != player.whoAmI || projectile.type != ModContent.ProjectileType<MalachiteKunai>())
+                    continue;
+
+                if ((MalachiteKunaiMode)(int)projectile.ai[0] == MalachiteKunaiMode.StoredFrenzy)
+                    count++;
+            }
+
+            return count;
+        }
+
+        public static void PrepareForNewFrenzyFan(Player player, Vector2 mouseWorld)
+        {
+            int storedCount = CountStoredFrenzyKunai(player);
             if (storedCount >= FrenzyCount)
             {
-                ActivateStoredKunai(player, mouseWorld);
+                ActivateStoredFrenzyKunai(player, mouseWorld);
                 return;
             }
+
+            KillStoredKunai(player, MalachiteKunaiMode.StoredFrenzy);
+        }
+
+        public static bool FireStoredPeacockKunaiAsLeftThrows(Player player, Vector2 mouseWorld)
+        {
+            bool firedAny = false;
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
                 if (projectile.owner != player.whoAmI || projectile.type != ModContent.ProjectileType<MalachiteKunai>())
                     continue;
 
-                MalachiteKunaiMode mode = (MalachiteKunaiMode)(int)projectile.ai[0];
-                if (mode == MalachiteKunaiMode.StoredFrenzy || mode == MalachiteKunaiMode.StoredPeacock)
-                    projectile.Kill();
+                if ((MalachiteKunaiMode)(int)projectile.ai[0] != MalachiteKunaiMode.StoredPeacock)
+                    continue;
+
+                Vector2 direction = (mouseWorld - projectile.Center).SafeNormalize(Vector2.UnitX * player.direction);
+                FireKunai(projectile, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true);
+                firedAny = true;
             }
+
+            if (firedAny)
+                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.8f, Pitch = 0.28f }, player.Center);
+
+            return firedAny;
         }
 
         public static bool TryThrowStoredKunai(Player player, Vector2 mouseWorld)
         {
-            Projectile selected = null;
-            Projectile ace = null;
-
-            foreach (Projectile projectile in Main.ActiveProjectiles)
-            {
-                if (projectile.owner != player.whoAmI || projectile.type != ModContent.ProjectileType<MalachiteKunai>())
-                    continue;
-
-                MalachiteKunaiMode mode = (MalachiteKunaiMode)(int)projectile.ai[0];
-                if (mode != MalachiteKunaiMode.StoredFrenzy && mode != MalachiteKunaiMode.StoredPeacock)
-                    continue;
-
-                if ((MalachiteKunaiVariant)(int)projectile.ai[2] == MalachiteKunaiVariant.Ace)
-                {
-                    ace ??= projectile;
-                    continue;
-                }
-
-                selected = projectile;
-                break;
-            }
-
-            selected ??= ace;
+            Projectile selected = FindNextStoredKunai(player, MalachiteKunaiMode.StoredPeacock) ??
+                FindNextStoredKunai(player, MalachiteKunaiMode.StoredFrenzy);
             if (selected == null)
                 return false;
 
@@ -236,6 +245,43 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             FireKunai(selected, direction, modeToFire, leftThrow: true);
             return true;
+        }
+
+        private static Projectile FindNextStoredKunai(Player player, MalachiteKunaiMode wantedMode)
+        {
+            Projectile selected = null;
+            Projectile aceFallback = null;
+            int selectedSlot = int.MaxValue;
+            int aceSlot = int.MaxValue;
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != player.whoAmI || projectile.type != ModContent.ProjectileType<MalachiteKunai>())
+                    continue;
+
+                if ((MalachiteKunaiMode)(int)projectile.ai[0] != wantedMode)
+                    continue;
+
+                int slot = (int)projectile.ai[1];
+                if ((MalachiteKunaiVariant)(int)projectile.ai[2] == MalachiteKunaiVariant.Ace)
+                {
+                    if (slot < aceSlot)
+                    {
+                        aceSlot = slot;
+                        aceFallback = projectile;
+                    }
+
+                    continue;
+                }
+
+                if (slot < selectedSlot)
+                {
+                    selectedSlot = slot;
+                    selected = projectile;
+                }
+            }
+
+            return selected ?? aceFallback;
         }
 
         public static void SpawnFrenzyFan(Player player, IEntitySource source, int damage, float knockback)
@@ -299,8 +345,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
         }
 
-        private static void ActivateStoredKunai(Player player, Vector2 mouseWorld)
+        private static void ActivateStoredFrenzyKunai(Player player, Vector2 mouseWorld)
         {
+            bool activatedAny = false;
+
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
                 if (projectile.owner != player.whoAmI || projectile.type != ModContent.ProjectileType<MalachiteKunai>())
@@ -315,37 +363,24 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     projectile.penetrate = -1;
                     projectile.tileCollide = false;
                     projectile.localNPCHitCooldown = 4;
-                }
-                else if (mode == MalachiteKunaiMode.StoredPeacock)
-                {
-                    if ((MalachiteKunaiVariant)(int)projectile.ai[2] == MalachiteKunaiVariant.Ace)
-                    {
-                        projectile.damage = (int)(projectile.damage * 1.75f);
-                        projectile.ai[0] = (float)MalachiteKunaiMode.ActivatedAce;
-                        projectile.ai[1] = mouseWorld.X;
-                        projectile.ai[2] = mouseWorld.Y;
-                        projectile.localAI[0] = 0f;
-                        projectile.localAI[1] = 0f;
-                        projectile.localAI[2] = 1f;
-                        projectile.penetrate = 1;
-                        projectile.tileCollide = false;
-                        projectile.netUpdate = true;
-                        continue;
-                    }
-
-                    Vector2 away = (projectile.Center - player.Center).SafeNormalize(Main.rand.NextVector2Unit());
-                    projectile.damage = (int)(projectile.damage * 1.35f);
-                    projectile.ai[0] = (float)MalachiteKunaiMode.ActivatedPeacock;
-                    projectile.velocity = away.RotatedBy(Main.rand.NextFloat(-0.25f, 0.25f)) * Main.rand.NextFloat(12f, 16f);
-                    projectile.localAI[0] = 0f;
-                    projectile.localAI[2] = 1f;
-                    projectile.penetrate = 1;
-                    projectile.tileCollide = false;
-                    projectile.netUpdate = true;
+                    activatedAny = true;
                 }
             }
 
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.8f, Pitch = 0.15f }, player.Center);
+            if (activatedAny)
+                SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.8f, Pitch = 0.15f }, player.Center);
+        }
+
+        private static void KillStoredKunai(Player player, MalachiteKunaiMode wantedMode)
+        {
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != player.whoAmI || projectile.type != ModContent.ProjectileType<MalachiteKunai>())
+                    continue;
+
+                if ((MalachiteKunaiMode)(int)projectile.ai[0] == wantedMode)
+                    projectile.Kill();
+            }
         }
 
         public static bool ActivateStoredKunaiAsAces(Player player, Vector2 mouseWorld)
@@ -397,6 +432,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             projectile.tileCollide = true;
             projectile.penetrate = mode == MalachiteKunaiMode.FiredFrenzy ? (leftThrow ? 5 : -1) : 1;
             projectile.localNPCHitCooldown = mode == MalachiteKunaiMode.FiredFrenzy ? 6 : 12;
+            projectile.Calamity().stealthStrike = false;
             Player owner = Main.player[projectile.owner];
             float speedMultiplier = owner.active
                 ? owner.GetModPlayer<MalachiteAccessoryPlayer>().MalachiteProjectileVelocityMultiplier

@@ -7,6 +7,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal sealed class SHPCRight_HeatUI : ModProjectile
     {
+        private const int HeatBarOutlineDuration = 24;
+
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetDefaults()
@@ -38,10 +40,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             bool holdingHoldout = heatPlayer.HasActiveRightClickHoldout();
             bool holdingSHPC = heatPlayer.IsHoldingSHPCLike();
             bool hasHeat = heatPlayer.HasAnyHeat();
-            bool shouldStay = hasHeat && (holdingHoldout || holdingSHPC || heatPlayer.HeatUiFadeTimer > 0);
+            bool shouldStay = holdingSHPC || (hasHeat && (holdingHoldout || heatPlayer.HeatUiFadeTimer > 0));
 
-            float targetOpacity = hasHeat && (holdingHoldout || holdingSHPC) ? 1f : 0f;
-            float lerpAmount = targetOpacity > Projectile.Opacity ? 0.25f : 0.35f;
+            float targetOpacity = hasHeat
+                ? (holdingHoldout || holdingSHPC ? 1f : heatPlayer.GetHeatUiFadeOpacity())
+                : 0f;
+            float lerpAmount = targetOpacity > Projectile.Opacity ? 0.25f : 0.08f;
             Projectile.Opacity = MathHelper.Lerp(Projectile.Opacity, targetOpacity, lerpAmount);
 
             if (!shouldStay && Projectile.Opacity <= 0.03f)
@@ -55,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player owner = Main.player[Projectile.owner];
             SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
-            if (heatPlayer.HasActiveRightClickHoldout() || !heatPlayer.HasAnyHeat() || Projectile.Opacity <= 0.03f)
+            if (!heatPlayer.HasAnyHeat() || Projectile.Opacity <= 0.03f)
                 return false;
 
             Texture2D barBG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;
@@ -66,7 +70,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Vector2 drawPos = owner.Center - Main.screenPosition + new Vector2(0f, -56f) - barBG.Size() / 1.5f;
 
+            SHPCHeatBarDrawer.DrawOutlinePulse(Main.spriteBatch, barBG, drawPos, 1.5f, Projectile.Opacity, heatPlayer.HeatBarOutlineTimer, HeatBarOutlineDuration);
+            if (heatPlayer.HeatBarOutlineTimer > 0)
+                heatPlayer.HeatBarOutlineTimer--;
+
             SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, progress, color, color, 1.5f);
+            SHPCHeatBarDrawer.DrawHeatStar(Main.spriteBatch, barBG, drawPos, heatPlayer.GetDisplayedHeatLevel(), Projectile.Opacity, 1.5f);
 
             return false;
         }

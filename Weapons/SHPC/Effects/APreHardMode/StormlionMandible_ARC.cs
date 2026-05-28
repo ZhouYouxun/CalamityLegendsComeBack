@@ -30,8 +30,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
+            Projectile.width = 20;
+            Projectile.height = 20;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
@@ -143,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 }
             }
 
-            float hitDistance = Math.Max(28f, target.Size.Length() * 0.28f);
+            float hitDistance = Math.Max(56f, target.Size.Length() * 0.56f);
 
             bool intersects = Projectile.Hitbox.Intersects(target.Hitbox);
             bool closeEnough = distanceToTarget <= hitDistance;

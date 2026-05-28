@@ -13,8 +13,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public int HeatUiFadeTimer;
         public int AttackLockoutTimer;
         public int ForcedShutdownCoolingTimer;
+        public int HeatDissipationPauseTimer;
+        public int HeatBarOutlineTimer;
 
-        private const int DetachedUiFadeTime = 24;
+        private const int DetachedUiFadeTime = 60;
         private readonly BalanceSHPC balance = new();
         private int forcedShutdownCoolingDuration;
 
@@ -22,6 +24,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             if (AttackLockoutTimer > 0)
                 AttackLockoutTimer--;
+
+            if (HeatDissipationPauseTimer > 0)
+                HeatDissipationPauseTimer--;
 
             HeatMaxStage = Utils.Clamp(
                 HeatMaxStage > 0 ? HeatMaxStage : balance.GetRightClickMaxHeatLevel(),
@@ -43,10 +48,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             else if (HeatUiFadeTimer > 0)
                 HeatUiFadeTimer--;
 
-            if (Main.myPlayer == Player.whoAmI && hasHeat && (holdingSHPC || HeatUiFadeTimer > 0))
+            if (Main.myPlayer == Player.whoAmI && (holdingSHPC || (hasHeat && HeatUiFadeTimer > 0)))
                 EnsureDetachedHeatUI();
 
-            if (holdingRightClick || AttackLockoutTimer > 0)
+            if (holdingRightClick || AttackLockoutTimer > 0 || HeatDissipationPauseTimer > 0)
                 return;
 
             if (!hasHeat)
@@ -114,10 +119,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             return HeatStage > 0 ? 1f : 0f;
         }
 
+        public float GetHeatUiFadeOpacity()
+        {
+            return Utils.Clamp(HeatUiFadeTimer / (float)DetachedUiFadeTime, 0f, 1f);
+        }
+
+        public int GetDisplayedHeatLevel()
+        {
+            if (!HasAnyHeat())
+                return 0;
+
+            if (HeatStage >= HeatMaxStage)
+                return HeatMaxStage;
+
+            return Utils.Clamp(HeatStage + 1, 1, HeatMaxStage);
+        }
+
         public void SetAttackLockout(int frames)
         {
             if (frames > AttackLockoutTimer)
                 AttackLockoutTimer = frames;
+        }
+
+        public void PauseHeatDissipation(int frames)
+        {
+            if (frames > HeatDissipationPauseTimer)
+                HeatDissipationPauseTimer = frames;
+        }
+
+        public void TriggerHeatBarOutlinePulse(int frames)
+        {
+            if (frames > HeatBarOutlineTimer)
+                HeatBarOutlineTimer = frames;
         }
 
         private void UpdateForcedShutdownCooling()

@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
@@ -283,7 +284,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
 
-            return mouseWorld;
+            return TacticalComputerPlayer.GetAimWorld(Owner, mouseWorld);
         }
 
         public override bool PreDraw(ref Color lightColor)

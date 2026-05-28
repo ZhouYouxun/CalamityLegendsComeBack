@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -97,7 +98,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             if (Projectile.owner == Main.myPlayer)
             {
-                Vector2 ownerToMouse = Main.MouseWorld - armPosition;
+                Vector2 aimWorld = TacticalComputerPlayer.GetAimWorld(Owner, Main.MouseWorld);
+                Vector2 ownerToMouse = aimWorld - armPosition;
                 float proximityLookingUpwards = Vector2.Dot(ownerToMouse.SafeNormalize(Vector2.Zero), -Vector2.UnitY * Owner.gravDir);
                 int direction = MathF.Sign(ownerToMouse.X);
 
