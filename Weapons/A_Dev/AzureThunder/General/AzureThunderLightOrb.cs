@@ -12,6 +12,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 {
+    // 左键第一段释放的发光体：高速追踪目标，并用 PrimitiveRenderer 绘制雷光拖尾。
     internal sealed class AzureThunderLightOrb : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.AzureThunder";
@@ -21,16 +22,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
         private int timer;
 
+        // 追踪期望速度上限，实际速度通过 Lerp 慢慢贴近。
         private const float MaxHomingSpeed = 51f;
 
         public override void SetStaticDefaults()
         {
+            // 长拖尾缓存用于 Sylvestaff 风格 shader 轨迹。
             ProjectileID.Sets.TrailCacheLength[Type] = 54;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
         {
+            // 光球是轻量多段魔法弹幕，最多穿透 3 个敌人。
             Projectile.width = 24;
             Projectile.height = 24;
 
@@ -56,9 +60,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
         {
             timer++;
 
+            // 贴图朝向跟随速度方向。
             Projectile.rotation =
                 Projectile.velocity.ToRotation();
 
+            // 常驻青色照明，强化发光体存在感。
             Lighting.AddLight(
                 Projectile.Center,
                 new Vector3(0.2f, 0.8f, 1f) * 1.2f);
@@ -70,6 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
             if (target != null)
             {
+                // 找到目标后缓慢转向最高 51 速度，避免瞬间折角太硬。
                 Vector2 desiredVelocity =
                     (target.Center - Projectile.Center)
                     .SafeNormalize(
@@ -84,10 +91,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             }
             else
             {
+                // 无目标时略微加速直飞，保持射出去的动势。
                 Projectile.velocity *= 1.012f;
             }
 
-            // 青雷粒子
+            // 青雷粒子：核心周围的 GlowOrb 负责亮点。
             if (Main.rand.NextBool(2))
             {
                 GeneralParticleHandler.SpawnParticle(
@@ -115,6 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
             if (Main.rand.NextBool(3))
             {
+                // LineParticle 向后喷射，补出细长电火花。
                 Vector2 sparkVelocity =
                     -Projectile.velocity
                     .SafeNormalize(Vector2.UnitX)
@@ -143,6 +152,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
             if (Main.rand.NextBool(4))
             {
+                // 原版 RGB dust 作为第三层粒子，保证低端画质仍有反馈。
                 Dust dust =
                     Dust.NewDustPerfect(
                         Projectile.Center -
@@ -172,6 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             NPC.HitInfo hit,
             int damageDone)
         {
+            // 命中附加电击、触发饰品联动，并播放短促电击音。
             target.AddBuff(BuffID.Electrified, 180);
 
             AzureThunderAccessoryPlayer
@@ -184,7 +195,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             SpawnDisappearanceEffects(target.Center);
         }
 
-        // Shader颜色控制
+        // Shader 颜色控制：拖尾从透明青白之间脉动。
         internal Color ColorFunction(
             float completionRatio,
             Vector2 vertexPos)
@@ -222,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             return baseColor * opacity;
         }
 
-        // Shader宽度控制
+        // Shader 宽度控制：拖尾前端展开，后段用余弦轻微起伏。
         internal float WidthFunction(
             float completionRatio,
             Vector2 vertexPos)
@@ -255,7 +266,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
                 expansionCompletion);
         }
 
-        // Shader偏移
+        // Shader 偏移：让拖尾顶点围绕弹幕中心计算。
         internal Vector2 OffsetFunction(
             float completionRatio,
             Vector2 vertexPos)
@@ -265,6 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // bloom 绘制光球核心，trail shader 绘制高速拖尾。
             Texture2D bloom =
                 ModContent.Request<Texture2D>(
                     "CalamityMod/ExtraTextures/BloomCirclePinpoint")
@@ -274,7 +286,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
                 Projectile.Center -
                 Main.screenPosition;
 
-            // 核心闪烁
+            // 核心闪烁：随时间和弹幕 identity 错开，避免多颗完全同步。
             float pulse =
                 1f +
                 (float)Math.Sin(
@@ -285,7 +297,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             Main.spriteBatch.EnterShaderRegion(
                 BlendState.Additive);
 
-            // 外层青雷光
+            // 外层青雷光。
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
@@ -296,7 +308,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
                 Projectile.scale * 0.9f * pulse,
                 SpriteEffects.None);
 
-            // 白色核心
+            // 白色核心。
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
@@ -309,7 +321,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
             Main.spriteBatch.ExitShaderRegion();
 
-            // SylvRay 同款 Shader 拖尾
+            // SylvRay 同款 Shader 拖尾，使用旧位置缓存作为曲线输入。
             MiscShaderData rayShader =
                 GameShaders.Misc[
                     "CalamityMod:SylvestaffProjectile"];
@@ -333,7 +345,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             return false;
         }
 
-        // 雷暴命中特效
+        // 雷暴命中特效：命中点喷射电弧、dust 和两层脉冲。
         private void SpawnDisappearanceEffects(
             Vector2 impactCenter)
         {

@@ -1,0 +1,7 @@
+// AzureThunderLightOrb.cs 的说明文件。
+// 发光体是青霆剑普通左键第一段释放的追踪光球。
+// 它会寻找 850 像素内最近的可追踪 NPC，并缓慢转向最高追踪速度。
+// 找不到目标时会继续直线略微加速，保持发射动势。
+// PreDraw 使用加法 bloom 和 Sylvestaff 风格 PrimitiveRenderer 拖尾表现青雷轨迹。
+// 命中时施加 Electrified，触发饰品联动，播放光球命中音并生成雷暴消失特效。
+// ColorFunction、WidthFunction、OffsetFunction 分别控制拖尾颜色、宽度和顶点偏移。

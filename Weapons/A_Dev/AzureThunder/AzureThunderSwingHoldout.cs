@@ -15,8 +15,10 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 {
+    // 青霆剑左键自定义挥舞弹幕：负责连段状态机、近战判定、飞剑/光球/落雷/巨剑生成和绘制。
     internal sealed class AzureThunderSwingHoldout : BaseCustomUseStyleProjectile, ILocalizedModType
     {
+        // 旧资源尺寸和当前贴图尺寸不同，用比例补偿绘制缩放。
         private const float OldTextureSize = 158f;
         private const float CurrentTextureSize = 80f;
         private const float HoldoutDrawScale = OldTextureSize / CurrentTextureSize;
@@ -30,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override Vector2 HitboxSize => new(170f, 170f);
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
 
+        // 连段状态：comboIndex 决定当前招式，stageTimer/stageDuration 控制单段生命周期。
         private int comboIndex;
         private int currentStage;
         private int stageTimer;
@@ -37,6 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private int gapTimer;
         private int swingDirection = 1;
 
+        // 单段事件锁，确保每段技能只触发一次或按计数触发。
         private bool stageActive;
         private bool releaseRequested;
         private bool releaseFinalStarted;
@@ -46,16 +50,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private int harmonyBarrageShotsFired;
         private int finalLightningFired;
         private float fadeIn;
+
+        // 每段开始时锁定鼠标点和方向，保证后续弹幕围绕同一攻击意图展开。
         private Vector2 lockedMouseWorld;
         private Vector2 lockedAimDirection;
 
+        // 常用玩家态快捷入口。
         private AzureThunderPlayer ThunderPlayer => Owner.GetModPlayer<AzureThunderPlayer>();
         private bool HarmonyActive => ThunderPlayer.HarmonyActive;
+
+        // 普通状态四段连招，天理真和压缩为三段。
         private int ComboLength => HarmonyActive ? 3 : 4;
 
         public override void SetDefaults()
         {
             base.SetDefaults();
+            // 近战 holdout 自身是魔法伤害，局部 NPC 免疫避免同段挥砍多次刷命中。
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 16;
@@ -65,10 +75,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void WhenSpawned()
         {
+            // 自定义状态机接管物品动画，弹幕至少存活到玩家松开左键。
             IgnoreActiveAnimation = true;
             DrawUnconditionally = true;
             Projectile.timeLeft = 2;
             Projectile.knockBack = 0f;
+
+            // 生成首帧锁定当前鼠标方向并决定玩家朝向。
             lockedMouseWorld = AzureThunderPlayer.GetMouseWorld(Owner);
             lockedAimDirection = (lockedMouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
             Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
@@ -80,6 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             if (whenSpawned)
             {
+                // BaseCustomUseStyleProjectile 的首帧初始化延迟到 AI 中执行。
                 WhenSpawned();
                 whenSpawned = false;
                 Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
@@ -89,15 +103,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             bool itemAnimationActive = Owner.ItemAnimationActive;
             if (Owner.HeldItem.type != AssignedItemID || Owner.dead)
             {
+                // 切武器或死亡时立刻清理 holdout。
                 Projectile.Kill();
                 return;
             }
 
+            // 左键挥舞和派生弹幕都需要灾厄鼠标监听。
             Owner.Calamity().mouseWorldListener = true;
             Owner.Calamity().rightClickListener = true;
 
             if (itemAnimationActive || IgnoreActiveAnimation)
             {
+                // 物品动画仍在时推进自定义 UseStyle，并强制玩家手臂跟随剑。
                 Animation++;
                 UseStyle();
                 Owner.heldProj = Projectile.whoAmI;
@@ -105,6 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
             else
             {
+                // 动画停下时重置基类状态，但 DrawUnconditionally 仍允许收尾绘制。
                 Animation = 0f;
                 if (DrawUnconditionally)
                 {
@@ -119,6 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int itemAnimationMax = Math.Max(1, Owner.itemAnimationMax);
             AnimationProgress = Animation % itemAnimationMax;
 
+            // 同步弹幕位置到玩家中心；AbsolutePosition 非零时支持基类位移逻辑。
             if (AbsolutePosition == Vector2.Zero)
                 Projectile.position = Owner.position + Owner.Size / 2f - Projectile.Size / 2f + Offset;
             else
@@ -129,12 +148,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (AnimationProgress == itemAnimationMax - 1)
             {
+                // 基类动画循环结束钩子。
                 OnEndUse();
                 NumberOfAnimations++;
             }
 
             if (Owner.itemAnimation == itemAnimationMax - 1)
             {
+                // 新一轮物品动画开始钩子。
                 Projectile.timeLeft = Owner.HeldItem.useAnimation + 1;
                 OnBeginUse();
             }
@@ -147,6 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void UseStyle()
         {
+            // 玩家失效时终止全部连段。
             if (!Owner.active || Owner.dead || Owner.HeldItem.type != AssignedItemID)
             {
                 Projectile.Kill();
@@ -161,6 +183,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.timeLeft = 2;
             Projectile.Center = Owner.MountedCenter;
 
+            // 按住左键继续连段；松开、开地图或被 UI 拦截会请求收尾。
             bool holdingLeft = Owner.channel &&
                 (Main.myPlayer != Projectile.owner || Main.mouseLeft) &&
                 !Main.mapFullscreen &&
@@ -171,6 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (!stageActive)
             {
+                // 段间隙阶段不造成伤害，只做回正和等待。
                 CanHit = false;
                 fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.25f);
 
@@ -182,6 +206,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     return;
                 }
 
+                // 没有间隙时立即进入下一段。
                 StartStage();
                 ApplyArmRotation();
                 return;
@@ -193,6 +218,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void StartStage()
         {
+            // 每段开始扣一次左键魔力；本地玩家负责扣费。
             if (Main.myPlayer == Projectile.owner && !ThunderPlayer.TrySpendMana())
             {
                 Projectile.Kill();
@@ -203,6 +229,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             releaseFinalStarted = releaseRequested;
             currentStage = comboIndex % ComboLength;
             stageDuration = HarmonyActive ? 30 : 45;
+
+            // 重置本段事件和命中状态。
             stageTimer = 0;
             stageEventOne = false;
             harmonyBarrageShotsFired = 0;
@@ -211,10 +239,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             postSwing = false;
             CanHit = false;
 
+            // 清空本弹幕对所有 NPC 的局部免疫，保证新一段能重新命中。
             for (int i = 0; i < Main.maxNPCs; i++)
                 Projectile.localNPCImmunity[i] = 0;
 
             Projectile.numHits = 0;
+
+            // 每段起手重新锁定鼠标，后续派生弹幕都基于这个方向。
             lockedMouseWorld = AzureThunderPlayer.GetMouseWorld(Owner);
             lockedAimDirection = (lockedMouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
             Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
@@ -225,6 +256,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (HarmonyActive && Main.myPlayer == Projectile.owner)
                 Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, currentStage == 2 ? 7.5f : 5f);
 
+            // 普通四段最后一段触发手持地剑数量返魔成长。
             if (!HarmonyActive && currentStage == 3)
                 ThunderPlayer.RestoreManaForOwnedSwords(includeLeftClickGrowth: true);
         }
@@ -235,6 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (stageTimer < SwingImpactFrame)
             {
+                // 前摇期持续跟随鼠标修正方向，直到进入挥砍命中帧。
                 UpdateLockedAimFromMouse();
                 postSwing = false;
                 CanHit = false;
@@ -251,6 +284,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return;
             }
 
+            // 进入挥砍期后锁定 sprite 翻转，避免挥砍中途跳边。
             if (!postSwing)
                 FlipAsSword = Owner.direction < 0;
 
@@ -261,12 +295,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             float swingTimeMax = stageDuration - stageDuration / 3f;
             float swingProgress = MathHelper.Clamp(swingTime / swingTimeMax, 0f, 1f);
 
+            // 只有挥砍中段打开 melee hitbox，前后摇都不伤害。
             bool hitWindow = swingTime > (int)(swingTimeMax * 0.4f) && swingTime < (int)(swingTimeMax * 0.7f);
             CanHit = hitWindow;
             fadeIn = MathHelper.Lerp(fadeIn, hitWindow ? 1f : 0f, hitWindow ? 0.3f : 0.35f);
 
             if (swingTime >= (int)(swingTimeMax * 0.4f) && !swingSoundPlayed)
             {
+                // 命中窗口开始时播放挥剑音。
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.75f, Pitch = Main.rand.NextFloat(0.08f, 0.18f) }, Owner.Center);
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.35f, Pitch = 0.3f }, Owner.Center);
                 swingSoundPlayed = true;
@@ -280,6 +316,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     CalamityUtils.ExpInOutEasing(swingProgress, 1))),
                 0.2f);
 
+            // 终极状态和普通状态使用完全不同的派生弹幕表。
             if (HarmonyActive)
                 RunHarmonyStage();
             else
@@ -293,6 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void UpdateLockedAimFromMouse()
         {
+            // 前摇期允许玩家微调方向，更新锁定点和朝向。
             lockedMouseWorld = AzureThunderPlayer.GetMouseWorld(Owner);
             lockedAimDirection = (lockedMouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
             Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
@@ -301,15 +339,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private float GetWindupAngleScale()
         {
+            // 第一段接近释放时加大蓄力角度，后续连段保持更直接的挥砍。
             float chainedSwingBoost = comboIndex > 0 ? 1f : Utils.GetLerpValue(stageDuration * 0.8f, stageDuration, stageTimer, true);
             return 1f + chainedSwingBoost * 0.35f;
         }
 
+        // 终极状态更快进入命中帧，普通状态保留较长前摇。
         private int SwingImpactFrame => HarmonyActive ? stageDuration / 3 : (int)(stageDuration / 1.5f);
         private bool ReachedSwingImpact(int delay = 0) => stageTimer >= SwingImpactFrame + delay;
 
         private void RunNormalStage()
         {
+            // 普通四段：光球、飞剑+雷、更多飞剑+雷、连续终结落雷。
             switch (currentStage)
             {
                 case 0:
@@ -351,6 +392,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void RunHarmonyStage()
         {
+            // 终极前两段变成平行雷幕。
             if (currentStage <= 1)
             {
                 int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
@@ -363,6 +405,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return;
             }
 
+            // 终极第三段召唤巨剑。
             if (!stageEventOne && ReachedSwingImpact())
             {
                 SpawnGrandSword();
@@ -372,6 +415,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private int GetFinalLightningCount()
         {
+            // 犽戎后且地剑满上限时，普通最终段升级为 9 道雷。
             if (AzureThunderProgression.DownedYharon && AzureThunderPlayer.CountOwnedGroundSwords(Owner) >= AzureThunderGroundSword.MaxGroundSwords)
                 return 9;
 
@@ -380,6 +424,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void EndStage()
         {
+            // 结束当前段并进入 5 帧段间隙；如果松手已请求收尾则直接销毁。
             stageActive = false;
             CanHit = false;
             stageTimer = 0;
@@ -398,6 +443,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void ApplyIdleRotation()
         {
+            // 段间隙持续看向鼠标，保持手感跟随。
             UpdateLockedAimFromMouse();
             Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.3f);
             RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(40f * Projectile.ai[1] * Owner.direction), 0.18f);
@@ -405,18 +451,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void ApplyArmRotation()
         {
+            // 手臂固定为全伸展握剑角度。
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
         }
 
         private void SpawnLightOrbs()
         {
+            // 第一段在锁定方向两侧生成四颗追踪光球。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
             AzureThunderSounds.PlayOrbRelease(Owner.Center);
             for (int i = 0; i < 4; i++)
             {
+                // 两列两排排布，避免光球从完全同一点发射。
                 int side = i % 2 == 0 ? -1 : 1;
                 int row = i / 2;
                 Vector2 spawnPosition = GetDanceOfLightSpawnPosition(lockedAimDirection, side) - lockedAimDirection * row * 92f;
@@ -438,13 +487,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnMouseLightning(float damageFactor, bool gainCharge)
         {
+            // 第二、三段落雷优先打鼠标附近目标，没有目标就劈鼠标点。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
             NPC target = AzureThunderPlayer.FindMouseNearestTarget(Owner);
             Vector2 impactPosition = target?.Center ?? lockedMouseWorld;
 
-            // Stage 2/3 left-click thunder is now a true overhead strike instead of a side shot.
+            // 第二/三段左键雷现在是真正的头顶落雷，不再从侧边发射。
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
                 impactPosition,
@@ -460,6 +510,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnForwardLightning(int index)
         {
+            // 普通最终段沿玩家瞄准方向铺开多道落雷。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
@@ -471,7 +522,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             float sideOffset = centeredIndex * 86f + Main.rand.NextFloat(-34f, 34f);
             Vector2 strikeTarget = Owner.Center + forward * forwardDistance + right * sideOffset - Vector2.UnitY * Main.rand.NextFloat(20f, 90f);
 
-            // The final chain keeps a 5-frame cadence, but these offsets prevent the three bolts from stacking.
+            // 最终连雷保持 5 帧节奏，前后和侧向偏移避免多道雷完全重叠。
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
                 strikeTarget,
@@ -488,6 +539,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnParallelBarrageLightning(int index)
         {
+            // 终极前两段围绕锁定鼠标点横向扫出雷幕。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
@@ -498,7 +550,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 lineCenter = focusPoint + sweepAxis * (centeredIndex * 82f + Main.rand.NextFloat(-22f, 22f));
             lineCenter += lockedAimDirection * Main.rand.NextFloat(-38f, 38f);
 
-            // Harmony barrage sweeps around the captured mouse area instead of hard-locking a target.
+            // 天理真和雷幕围绕捕获的鼠标区域扫过，而不是强锁一个目标。
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
                 lineCenter,
@@ -515,6 +567,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnFlyingSwords(int count, int delay, bool behindOwner)
         {
+            // 飞剑由本地玩家生成，并把锁定鼠标点塞入 ai[1]/ai[2]。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
@@ -522,6 +575,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 right = lockedAimDirection.RotatedBy(MathHelper.PiOver2);
             for (int i = 0; i < count; i++)
             {
+                // behindOwner=true 时按两侧队列从玩家身后出现。
                 float centeredIndex = i - (count - 1) * 0.5f;
                 Vector2 spawnPosition;
                 if (behindOwner)
@@ -552,6 +606,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnGrandSword()
         {
+            // 终极第三段召唤巨剑，目标优先取鼠标附近 NPC。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
@@ -560,6 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 spawnPosition = Owner.MountedCenter + lockedAimDirection * 48f;
             spawnPosition = impactPosition - Vector2.UnitY * 780f;
 
+            // ai[0] 传目标索引，ai[1]/ai[2] 传兜底落点。
             int grandSword = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
@@ -578,6 +634,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private Vector2 GetDanceOfLightSpawnPosition(Vector2 shootDirection, float sideBias)
         {
+            // 根据射击方向和左右偏置，计算光球/飞剑的散布出生点。
             shootDirection = shootDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             float shootAngle = shootDirection.ToRotation();
             float side = sideBias == 0f ? (Main.rand.NextBool() ? -1f : 1f) : Math.Sign(sideBias);
@@ -588,12 +645,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private float GetFixedLightningTilt()
         {
+            // 让落雷略微向瞄准方向倾斜，视觉上更像从前方斩落。
             int sweepDirection = Math.Abs(lockedAimDirection.X) > 0.05f ? Math.Sign(lockedAimDirection.X) : Owner.direction;
             return MathHelper.ToRadians(sweepDirection < 0 ? 10f : -10f);
         }
 
         private void SpawnSwingParticles(float progress)
         {
+            // 只有命中窗口生成挥砍线粒子，避免前摇粒子误导 hitbox。
             if (!CanHit)
                 return;
 
@@ -603,6 +662,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             for (int i = 0; i < 3; i++)
             {
+                // 沿斩击方向随机撒线粒子，表现剑气轨迹。
                 Vector2 position = Owner.Center + slashDirection * Main.rand.NextFloat(40f, distance) + right * Main.rand.NextFloat(-20f, 20f);
                 Vector2 velocity = -slashDirection.RotatedByRandom(0.25f) * Main.rand.NextFloat(2f, 5f);
 
@@ -617,6 +677,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.rand.NextBool(2))
             {
+                // 斩击末端补一颗 dust，增强刀尖扫过感。
                 Dust dust = Dust.NewDustPerfect(
                     Owner.Center + slashDirection * distance + Main.rand.NextVector2Circular(24f, 24f),
                     DustID.FireworksRGB,
@@ -630,6 +691,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            // holdout 本体命中始终附加基础电击，终极期间额外升级为终极 DoT。
             target.AddBuff(BuffID.Electrified, 180);
             if (HarmonyActive)
                 AzureThunderPlayer.ApplyUltimateDot(target, 180);
@@ -639,9 +701,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // 非强制绘制且物品动画结束时不绘制 holdout。
             if (!DrawUnconditionally && Owner.itemAnimation <= 0)
                 return false;
 
+            // 主体、幽灵和 smear 三层贴图共同组成挥砍表现。
             Asset<Texture2D> texture = ModContent.Request<Texture2D>(Texture);
             Asset<Texture2D> ghost = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunderGhost");
             Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge");
@@ -652,6 +716,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
             float drawScale = Projectile.scale * HoldoutDrawScale;
 
+            // smear 贴图是主挥砍弧光，fadeIn 只在命中窗口附近升高。
             Main.EntitySpriteDraw(
                 swoosh.Value,
                 drawPosition,
@@ -664,6 +729,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             for (int i = 0; i < 20; i++)
             {
+                // 环形幽灵影作为剑身辉光，终极状态颜色更偏金。
                 Vector2 offset = (MathHelper.TwoPi * i / 20f).ToRotationVector2() * 4.5f * fadeIn;
                 Color auraColor = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.Yellow, HarmonyActive ? 0.65f : 0.22f) with { A = 0 };
 

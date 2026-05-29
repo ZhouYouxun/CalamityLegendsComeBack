@@ -13,17 +13,23 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 {
+    // 天理真和左键第三段召唤的巨剑：高空锁定、急坠、落地爆雷。
     internal sealed class AzureThunderGrandSword : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunder";
 
+        // ai[0] 锁定目标，ai[1]/ai[2] 保存兜底落点。
         private int TargetIndex => (int)Projectile.ai[0];
         private Vector2 StoredImpactPosition => new(Projectile.ai[1], Projectile.ai[2]);
+
+        // 三段状态：预备悬停、下坠、爆炸。
         private Vector2 impactPosition;
         private int timer;
         private bool dashing;
         private bool exploding;
+
+        // 巨剑下坠调校参数，决定前摇时长和落下速度曲线。
         private const int DropAnticipationFrames = 16;
         private const float InitialDropSpeed = 92f;
         private const float DropAcceleration = 12.5f;
@@ -31,12 +37,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void SetStaticDefaults()
         {
+            // 残影缓存用于绘制巨剑下坠拖影。
             ProjectileID.Sets.TrailCacheLength[Type] = 18;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
         {
+            // 巨剑预备期不伤害，下坠和爆炸阶段才打开判定。
             Projectile.width = 96;
             Projectile.height = 128;
             Projectile.friendly = false;
@@ -55,9 +63,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
+            // 爆炸阶段使用大圆形命中盒。
             if (exploding)
                 return CalamityUtils.CircularHitboxCollision(Projectile.Center, 170f * Projectile.scale, targetHitbox);
 
+            // 下坠阶段用剑身线段碰撞，贴合巨剑纵向形状。
             float collisionPoint = float.NaN;
             Vector2 bladeDirection = Vector2.UnitY;
             Vector2 start = Projectile.Center - bladeDirection * 42f * Projectile.scale;
@@ -69,11 +79,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             timer++;
 
+            // impactPosition 首帧解析，之后根据目标存活情况持续校正。
             if (impactPosition == Vector2.Zero)
                 impactPosition = ResolveImpactPosition();
 
             if (!dashing && !exploding)
             {
+                // 预备阶段停在落点上方，逐渐放大并生成蓄势粒子。
                 impactPosition = ResolveImpactPosition();
                 Vector2 hoverPosition = impactPosition - Vector2.UnitY * 780f;
                 Projectile.Center = Vector2.Lerp(Projectile.Center, hoverPosition, 0.28f);
@@ -90,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (dashing)
             {
-                // Heavy drop tuning: start fast, then gain 12.5 px/frame so it reads as a sudden execution stroke.
+                // 重坠调校：起步很快，再每帧增加 12.5 像素速度，读起来像处决式落剑。
                 impactPosition = ResolveImpactPosition();
                 float lateralCorrection = (impactPosition.X - Projectile.Center.X) * 0.08f;
                 float trailSway = (float)Math.Sin(timer * 0.55f + Projectile.identity) * 2.2f;
@@ -102,6 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 if (Projectile.Distance(impactPosition) < 46f)
                     BeginExplosion(impactPosition);
                 else if (timer >= 34)
+                    // 最长下坠时间兜底，避免追不上高速目标而永远不爆。
                     BeginExplosion(Projectile.Center);
 
                 return;
@@ -109,6 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (exploding)
             {
+                // 爆炸阶段扩大贴图并淡出，同时持续喷出粒子。
                 Projectile.velocity = Vector2.Zero;
                 Projectile.scale = MathHelper.Lerp(Projectile.scale, 2.35f, 0.18f);
                 Projectile.Opacity = MathHelper.Lerp(Projectile.Opacity, 0f, 0.16f);
@@ -120,6 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private Vector2 ResolveImpactPosition()
         {
+            // 目标仍有效时持续追踪中心，否则使用创建时记录的落点。
             if (TargetIndex >= 0 && Main.npc.IndexInRange(TargetIndex))
             {
                 NPC target = Main.npc[TargetIndex];
@@ -132,6 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void BeginDrop()
         {
+            // 切入下坠状态并把 X 对齐落点，保证巨剑是从正上方砸下。
             dashing = true;
             timer = 0;
             impactPosition = ResolveImpactPosition();
@@ -144,6 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void BeginExplosion(Vector2 explosionCenter)
         {
+            // 下坠结束后切成爆炸状态，扩大局部无敌间隔以允许 AOE 命中。
             dashing = false;
             exploding = true;
             timer = 0;
@@ -154,6 +171,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.myPlayer == Projectile.owner)
             {
+                // 落地爆炸由拥有者生成一圈平雷，避免多人重复生成伤害弹幕。
                 int flags = AzureThunderFlatLightning.StaticDischargeFlag | AzureThunderFlatLightning.BigLightningFlag;
                 for (int i = 0; i < 10; i++)
                 {
@@ -176,6 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnChargeVisuals()
         {
+            // 预备悬停时的聚能粒子。
             if (!Main.rand.NextBool(2))
                 return;
 
@@ -191,6 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnFallingVisuals()
         {
+            // 下坠阶段沿反方向拉出尘埃、火花和线粒子。
             Vector2 upwardTrail = -Projectile.velocity.SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 2; i++)
             {
@@ -230,6 +250,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnExplosionVisuals()
         {
+            // 爆炸阶段的外扩青金尘埃。
             if (!Main.rand.NextBool(2))
                 return;
 
@@ -245,22 +266,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            // 巨剑命中统一附加电击、饰品效果和终极 DoT。
             target.AddBuff(BuffID.Electrified, 240);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderPlayer.ApplyUltimateDot(target, 240);
 
+            // 下坠过程中穿透数用完时提前在目标处爆开。
             if (dashing && !exploding && Projectile.numHits >= 5)
                 BeginExplosion(target.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // 先画旧位置拖影，再画描边和主体。
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
+                // 下坠时拖影更亮，预备/爆炸时只保留淡影。
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 if (oldCenter == Projectile.Size * 0.5f)
                     continue;
@@ -270,6 +295,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, null, trailColor * opacity, Projectile.rotation, origin, Projectile.scale * (1f - i * 0.018f), SpriteEffects.None);
             }
 
+            // 爆炸时描边半径扩大，表现落地冲击波。
             HoldoutOutlineHelper.DrawSolidOutline(
                 texture,
                 drawPosition,

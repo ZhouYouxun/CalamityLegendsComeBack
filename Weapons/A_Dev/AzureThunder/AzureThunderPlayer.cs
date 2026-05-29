@@ -13,8 +13,10 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 {
+    // 青霆剑的玩家态中心：记录充能、终极能量、右键冷却、终极滤镜和被动计时。
     internal sealed class AzureThunderPlayer : ModPlayer
     {
+        // 主要资源与节奏常量，所有弹幕和物品入口统一从这里读取。
         public const int LeftAttackManaCost = 9;
         public const int RightClickManaCost = 100;
         public const int AttackManaCost = LeftAttackManaCost;
@@ -25,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public const int AutoGroundSwordInterval = 10 * 60;
         public const int UltimateAutoGainInterval = 2 * 60;
 
+        // 对外暴露的运行时状态：UI、右键、终极技都会读取这些字段。
         public int ThunderCharge;
         public int UltimateEnergy;
         public int RightClickCooldown;
@@ -32,11 +35,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public bool GreenUltimateFilterActive;
         public float GreenUltimateFilterOpacity;
 
+        // holdingAzureThunder 每帧重置，只有物品 HoldItem 会重新置 true。
         private bool holdingAzureThunder;
         private int autoGroundSwordTimer = AutoGroundSwordInterval;
         private int ultimateAutoGainTimer;
         private int lastThunderChargeGrantFrame = -9999;
 
+        // 双重确认玩家仍然真实手持青霆剑，防止状态标记滞留。
         public bool HoldingAzureThunder =>
             holdingAzureThunder &&
             Player.HeldItem != null &&
@@ -47,12 +52,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void ResetEffects()
         {
+            // 每帧先清空，由 AzureThunder.HoldItem 在本帧重新写入。
             holdingAzureThunder = false;
             GreenUltimateFilterActive = false;
         }
 
         public override void UpdateDead()
         {
+            // 死亡清空所有青霆资源和计时器。
             ThunderCharge = 0;
             UltimateEnergy = 0;
             RightClickCooldown = 0;
@@ -63,15 +70,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void PostUpdate()
         {
+            // 所有资源先钳制，避免同步或外部写入导致越界。
             ThunderCharge = Utils.Clamp(ThunderCharge, 0, ThunderChargeMax);
             UltimateEnergy = Utils.Clamp(UltimateEnergy, 0, UltimateEnergyMax);
             CancelHarmonyIfWeaponChanged();
 
+            // 右键冷却每帧递减。
             if (RightClickCooldown > 0)
                 RightClickCooldown--;
 
             if (HarmonyActive)
             {
+                // 终极期间本地开启绿色滤镜并确保头顶时间条存在。
                 if (Player.whoAmI == Main.myPlayer)
                 {
                     GreenUltimateFilterActive = true;
@@ -81,8 +91,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 SpawnHarmonyPlayerParticles();
             }
             else if (!HarmonyActive)
+                // Buff 不在时清空持续时间，避免下一次 UI 读取旧值。
                 ActiveHarmonyDuration = 0;
 
+            // 绿色终极滤镜用 lerp 淡入淡出，避免瞬间闪屏。
             float targetFilterOpacity = GreenUltimateFilterActive ? 0.25f : 0f;
             GreenUltimateFilterOpacity = MathHelper.Lerp(GreenUltimateFilterOpacity, targetFilterOpacity, GreenUltimateFilterActive ? 0.06f : 0.045f);
             if (!GreenUltimateFilterActive && GreenUltimateFilterOpacity < 0.01f)
@@ -90,6 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (HoldingAzureThunder)
             {
+                // 手持期间才增长能量、同步 UI、读取终极键和处理自动地剑。
                 HandleUltimateAutoGain();
                 SyncCooldownDisplays();
                 HandleUltimateInput();
@@ -97,6 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
             else if (ThunderCharge > 0 || UltimateEnergy > 0)
             {
+                // 切走武器时保留充能/能量，但重置自动地剑节奏。
                 autoGroundSwordTimer = AutoGroundSwordInterval;
             }
             else
@@ -115,12 +129,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public bool TrySpendMana(int manaCost = LeftAttackManaCost)
         {
+            // CheckMana 第三个参数为 true，会真正扣除魔力并播放缺魔反馈。
             return Player.CheckMana(Player.HeldItem, manaCost, true, false);
         }
 
         public void AddThunderCharge(int amount)
         {
-            // Empyrean of Truth locks charge gain so the ultimate cannot refill itself while active.
+            // 天理真和锁住一息万变获取，避免终极期间边打边回满层数。
             if (HarmonyActive)
                 return;
 
@@ -133,6 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public int ConsumeThunderCharge()
         {
+            // 右键一次性消费所有层数，返回值用于决定召剑数和终结倍率。
             int consumed = ThunderCharge;
             ThunderCharge = 0;
             return consumed;
@@ -140,7 +156,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void AddUltimateEnergy(int amount)
         {
-            // This blocks all ultimate-energy recovery during Empyrean of Truth, including on-hit lightning rewards.
+            // 天理真和期间禁止所有终极能量回复，包括命中雷击奖励。
             if (HarmonyActive)
                 return;
 
@@ -150,12 +166,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int oldValue = UltimateEnergy;
             UltimateEnergy = Utils.Clamp(UltimateEnergy + amount, 0, UltimateEnergyMax);
 
+            // 第一次充满时播放提示音，避免能量溢出时重复响。
             if (oldValue < UltimateEnergyMax && UltimateEnergy >= UltimateEnergyMax && Player.whoAmI == Main.myPlayer)
                 SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.65f, Pitch = 0.1f }, Player.Center);
         }
 
         public void TryGainThunderChargeFromTarget(NPC target)
         {
+            // 终极期间或无效目标不允许获取雷息层数。
             if (HarmonyActive)
                 return;
 
@@ -165,6 +183,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Main.GameUpdateCount - lastThunderChargeGrantFrame < 24)
                 return;
 
+            // 层数来自目标身上的电系 debuff 数量，最多一次给 3 层。
             int stacks = CountElectroDebuffs(target);
             if (stacks <= 0)
                 return;
@@ -175,6 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void RestoreManaForOwnedSwords(bool includeLeftClickGrowth = false)
         {
+            // 每把青霆剑系弹幕返还 1 点魔力，机械后左键最终段额外按地剑规模返还。
             int amount = CountOwnedAzureThunderSwords(Player);
             if (includeLeftClickGrowth && AzureThunderProgression.DownedAnyMech)
                 amount += CountOwnedAzureThunderSwords(Player) / 3 * 5;
@@ -182,6 +202,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (amount <= 0)
                 return;
 
+            // 手动改 statMana 后调用 ManaEffect 显示实际回复量。
             int oldMana = Player.statMana;
             Player.statMana = Math.Min(Player.statManaMax2, Player.statMana + amount);
             int restored = Player.statMana - oldMana;
@@ -191,6 +212,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void RestoreManaFromConsumedCharge(int consumedCharge)
         {
+            // 机械后右键消耗雷息会按层数返还魔力。
             if (!AzureThunderProgression.DownedAnyMech || consumedCharge <= 0)
                 return;
 
@@ -204,6 +226,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void RestoreLifeFromFourSymbols()
         {
+            // 猪鲨前 FourSymbolsLifeRestore 为 0，因此这里自然跳过。
             int amount = AzureThunderProgression.FourSymbolsLifeRestore;
             if (amount <= 0)
                 return;
@@ -218,18 +241,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void HandleUltimateInput()
         {
+            // 终极键只由本地玩家读取，且必须满能量。
             if (Main.myPlayer != Player.whoAmI || !KeybindSystem.LegendarySkill.JustPressed)
                 return;
 
             if (UltimateEnergy < UltimateEnergyMax)
                 return;
 
+            // 启动终极：清能量、记录持续时间、加 Buff 并创建时间条。
             UltimateEnergy = 0;
             ultimateAutoGainTimer = 0;
             ActiveHarmonyDuration = AzureThunderAccessoryPlayer.GetHarmonyDuration(Player);
             Player.AddBuff(ModContent.BuffType<AzureThunderHarmonyBuff>(), ActiveHarmonyDuration);
             EnsureHarmonyBar();
 
+            // 启动爆发粒子和提示音。
             for (int i = 0; i < 36; i++)
             {
                 Vector2 velocity = Vector2.UnitY.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(2.5f, 8.5f);
@@ -242,12 +268,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void HandleAutomaticGroundSword()
         {
+            // 自动地剑只在本地拥有者生成，避免多人重复生成。
             if (Main.myPlayer != Player.whoAmI)
                 return;
 
+            // 和合四象解锁前不进行自动召剑。
             if (!AzureThunderProgression.FourSymbolsUnlocked)
                 return;
 
+            // 饰品可能缩短自动召剑间隔，现有计时不能超过新上限。
             int autoSwordInterval = AzureThunderAccessoryPlayer.GetAutoGroundSwordInterval(Player);
             if (autoGroundSwordTimer > autoSwordInterval)
                 autoGroundSwordTimer = autoSwordInterval;
@@ -255,16 +284,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int groundSwordCount = CountOwnedGroundSwords(Player);
             if (groundSwordCount >= AzureThunderProgression.AutomaticSwordLimit)
             {
+                // 达到进度上限时重置计时，等场上少剑后再重新倒计时。
                 autoGroundSwordTimer = autoSwordInterval;
                 return;
             }
 
             if (autoGroundSwordTimer > 0)
             {
+                // 还没到时间，只递减计时器。
                 autoGroundSwordTimer--;
                 return;
             }
 
+            // 计时结束后在玩家附近边缘生成一把地剑，并触发四象回血。
             SpawnGroundSword(Player, Player.Center + Main.rand.NextVector2CircularEdge(160f, 80f), Player.GetWeaponDamage(Player.HeldItem), Player.HeldItem.knockBack);
             RestoreLifeFromFourSymbols();
             autoGroundSwordTimer = autoSwordInterval;
@@ -272,9 +304,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void ApplyPassiveStatGrowth()
         {
+            // 天地造化：每把青霆剑系弹幕提供魔力再生。
             if (AzureThunderProgression.DownedDesertScourge)
                 Player.manaRegenBonus += CountOwnedAzureThunderSwords(Player);
 
+            // 猪鲨后补生命再生，犽戎后补魔法伤害。
             if (AzureThunderProgression.DownedFishron)
                 Player.lifeRegen += 2;
 
@@ -284,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void HandleUltimateAutoGain()
         {
-            // Passive ultimate recharge is disabled for the entire ultimate window.
+            // 终极期间禁用被动回能，并重置计时器。
             if (HarmonyActive)
             {
                 ultimateAutoGainTimer = 0;
@@ -293,6 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (UltimateEnergy >= UltimateEnergyMax)
             {
+                // 满能后不继续累计计时，防止释放后立刻多跳一次能量。
                 ultimateAutoGainTimer = 0;
                 return;
             }
@@ -307,6 +342,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SyncCooldownDisplays()
         {
+            // 灾厄 cooldown 字典只负责显示；真实数值仍存放在本 ModPlayer。
             if (Player.Calamity().cooldowns.TryGetValue(AzureThunderChargeCooldown.ID, out var chargeCooldown))
                 chargeCooldown.timeLeft = ThunderCharge;
             else
@@ -320,6 +356,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void EnsureHarmonyBar()
         {
+            // 已经有时间条时不重复生成。
             int barType = ModContent.ProjectileType<AzureThunderHarmonyBar>();
             if (Player.ownedProjectileCounts[barType] > 0)
                 return;
@@ -336,6 +373,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static int CountElectroDebuffs(NPC target)
         {
+            // 统计所有被青霆剑视为“电系”的 debuff，用于最后雷击结算雷息层数。
             int stacks = 0;
             if (target.HasBuff(BuffID.Electrified))
                 stacks++;
@@ -355,6 +393,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static int CountOwnedAzureThunderSwords(Player player)
         {
+            // 天地造化把地剑和飞剑都算作“青霆剑”数量。
             int count = 0;
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
             int flyingType = ModContent.ProjectileType<AzureThunderFlyingSword>();
@@ -373,6 +412,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static int CountOwnedGroundSwords(Player player)
         {
+            // 单独统计地剑，用于右键、自动召剑和终极终结条件。
             int count = 0;
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
 
@@ -387,6 +427,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static int CountGroundSwordsNear(Player player, Vector2 center, float radius)
         {
+            // 右键和饰品效果只关心一定范围内的地剑。
             int count = 0;
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
             float radiusSquared = radius * radius;
@@ -405,6 +446,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static NPC FindMouseNearestTarget(Player player, float maxDistance = 1600f)
         {
+            // 灾厄 mouseWorld 优先，缺失时回退到 Main.MouseWorld。
             Vector2 mouseWorld = player.Calamity().mouseWorld;
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
@@ -414,6 +456,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static NPC FindNearestTarget(Vector2 point, float maxDistance = 1600f)
         {
+            // 简单最近敌人搜索，只接受可被追踪的 NPC。
             NPC bestTarget = null;
             float bestDistance = maxDistance;
 
@@ -435,12 +478,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static Vector2 GetMouseWorld(Player player)
         {
+            // 所有青霆输入统一通过此方法取鼠标，保持多人和灾厄监听一致。
             Vector2 mouseWorld = player.Calamity().mouseWorld;
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
         }
 
         public static void SpawnGroundSword(Player player, Vector2 position, int damage, float knockback)
         {
+            // 达到地剑硬上限时拒绝生成，防止右键和自动召剑超量。
             int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
             if (CountOwnedGroundSwords(player) >= AzureThunderGroundSword.MaxGroundSwords)
                 return;
@@ -460,12 +505,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static void ApplyProjectileGrowth(Projectile projectile)
         {
+            // 邪恶二阶后所有青霆子弹获得护甲穿透成长。
             if (AzureThunderProgression.DownedEvilTier2)
                 projectile.ArmorPenetration += 2;
         }
 
         public static void ApplyUltimateDot(NPC target, int duration)
         {
+            // 终极 DoT 随进度从静电升级到更高阶灾厄 debuff。
             if (target == null || !target.active)
                 return;
 
@@ -478,6 +525,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             else
                 target.AddBuff(ModContent.BuffType<StaticDischarge>(), duration);
 
+            // 月总后额外施加元素谐鸣。
             if (AzureThunderProgression.DownedMoonLord)
                 target.AddBuff(ModContent.BuffType<ElementalMix>(), duration);
         }
@@ -499,6 +547,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             float? fixedTiltRadians = null,
             bool applyBaseElectricDebuff = true)
         {
+            // 竖直雷通过目标点向上偏移生成，再朝落点移动。
             Vector2 targetPosition = target?.Center ?? impactPosition;
             float spawnDistance = 1000f * Math.Max(0.1f, spawnHeightMultiplier);
             Vector2 fallDirection = fixedTiltRadians.HasValue ?
@@ -507,6 +556,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 spawnPosition = targetPosition - fallDirection * spawnDistance;
             Vector2 velocity = targetPosition - spawnPosition;
             int flags = 0;
+
+            // 将布尔参数压缩到 FlatLightning 的 bit flag。
             if (gainCharge)
                 flags |= AzureThunderFlatLightning.GainChargeFlag;
             if (applyStaticDischarge)
@@ -543,6 +594,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int ultimateEnergyGain = 0,
             bool big = false)
         {
+            // 通用方向雷生成函数，竖直雷和平雷最终都走这里。
             int lightning = Projectile.NewProjectile(
                 source,
                 spawnPosition,
@@ -557,6 +609,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.projectile.IndexInRange(lightning))
             {
+                // 生成后同步玩家当前暴击率，并应用进度成长。
                 Projectile projectile = Main.projectile[lightning];
                 projectile.CritChance = Main.player[owner].GetWeaponCrit(Main.player[owner].HeldItem);
                 ApplyProjectileGrowth(projectile);
@@ -579,6 +632,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int flags = 0,
             int ultimateEnergyGain = 0)
         {
+            // 平雷直接从 position 按给定方向飞行，常用于命中补刀和终极演出。
             int lightning = Projectile.NewProjectile(
                 source,
                 position,
@@ -597,6 +651,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void CancelHarmonyIfWeaponChanged()
         {
+            // Buff.Update 已经会删 Buff，这里额外兜底处理玩家态和滤镜。
             bool stillHoldingAzureThunder =
                 Player.HeldItem != null &&
                 !Player.HeldItem.IsAir &&
@@ -615,6 +670,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnHarmonyPlayerParticles()
         {
+            // 终极状态下围绕玩家生成绿色上升粒子；服务端不做视觉。
             if (Main.dedServ || !HarmonyActive || Main.rand.NextBool(2))
                 return;
 
@@ -648,6 +704,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         }
     }
 
+    // 青霆剑共享调色板，避免各弹幕重复写颜色常量。
     internal static class AzureThunderColors
     {
         public static readonly Color Yellow = new(255, 232, 66);

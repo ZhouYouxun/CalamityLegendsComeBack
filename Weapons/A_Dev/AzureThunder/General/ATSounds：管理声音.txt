@@ -1,0 +1,7 @@
+// AzureThunderSounds.cs 的说明文件。
+// 这个静态类集中管理青霆剑所有共享音效，避免各弹幕重复写 SoundStyle。
+// ElectricHit 是通用电击命中音，被平雷、光球和剑体命中复用。
+// LauncherHeavyShot 专门给终极巨剑下坠和重击爆发使用。
+// PlayLightningSpawn / PlayLightningImpact 区分普通雷和 big 巨雷的音量、音高。
+// PlaySwordMaterialize / PlaySwordLaunch / PlaySwordHit / PlaySwordBurst 分别覆盖成型、发射、命中和消散。
+// PlayHeavyDrop / PlayHeavyImpact 负责终极巨剑的下坠和落地冲击音。

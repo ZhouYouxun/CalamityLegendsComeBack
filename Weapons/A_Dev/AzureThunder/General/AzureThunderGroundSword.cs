@@ -12,26 +12,33 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 {
+    // 右键和被动生成的地剑：平时插地/环绕，收到命令后可俯冲攻击。
     internal sealed class AzureThunderGroundSword : ModProjectile, ILocalizedModType
     {
+        // 全局地剑上限，右键和自动召剑都不能超过这个值。
         public const int MaxGroundSwords = 9;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/GroundAzureThunder";
 
+        // initialized 控制首帧锻造演出；diveTarget 只在俯冲模式使用。
         private bool initialized;
         private Vector2 diveTarget;
         private int outlinePulse;
+
+        // 饰品牵引地剑时使用椭圆轨道参数。
         private const float FollowEllipseRadiusX = 92f;
         private const float FollowEllipseRadiusY = 42f;
         private const float FollowOrbitSpeed = 0.045f;
 
+        // ai[0] 表示行为模式：0=待机/跟随，1=俯冲。
         private int Mode
         {
             get => (int)Projectile.ai[0];
             set => Projectile.ai[0] = value;
         }
 
+        // localAI[0] 是当前模式计时器，BeginDive 会重置。
         private int Timer
         {
             get => (int)Projectile.localAI[0];
@@ -42,6 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void SetDefaults()
         {
+            // 地剑默认不攻击，只有进入俯冲并过前摇后才打开 friendly。
             Projectile.width = 32;
             Projectile.height = 42;
             Projectile.friendly = false;
@@ -56,12 +64,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.scale = 0.66f;
         }
 
+        // 俯冲前 12 帧是蓄势，不参与伤害。
         public override bool? CanDamage() => Diving && Timer > 12;
 
         public override void AI()
         {
             if (!initialized)
             {
+                // 首帧对齐地面、播放锻造雷和出生粒子，并同步给其他客户端。
                 initialized = true;
                 SnapToGroundIfPossible();
                 Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4 + MathHelper.ToRadians(Main.rand.NextBool() ? 5f : -5f);
@@ -78,10 +88,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Diving)
             {
+                // 俯冲模式完全交给 DoDiveAI，跳过待机和跟随逻辑。
                 DoDiveAI();
                 return;
             }
 
+            // 饰品效果可让部分地剑绕玩家运动，否则地剑保持插地不动。
             if (AzureThunderAccessoryPlayer.ShouldGroundSwordFollowPlayer(Projectile, out int followSlot))
                 DoFollowOwnerAI(followSlot);
             else
@@ -92,6 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Timer <= 45)
                 SpawnChargeVisuals();
 
+            // 即将消失时上浮粒子提示玩家地剑寿命快结束。
             if (Projectile.timeLeft <= 18)
                 SpawnDeathChargeVisuals();
         }
@@ -101,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Player owner = Main.player[Projectile.owner];
             float phase = (float)Main.GameUpdateCount * FollowOrbitSpeed + followSlot * MathHelper.TwoPi / 3f;
 
-            // QianDingWanDing turns the first 3 ground swords into titanium-shard-like turrets on an ellipse.
+            // 千叮万叮会把前三把地剑变成类似钛金碎片的椭圆环绕炮台。
             Vector2 slotOffset = new(
                 (float)Math.Cos(phase) * FollowEllipseRadiusX * (owner.direction == 0 ? 1 : owner.direction),
                 -82f + (float)Math.Sin(phase) * FollowEllipseRadiusY);
@@ -113,6 +126,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void BeginDive(Vector2 target, int damage, float knockback)
         {
+            // 外部序列器调用此方法，把待机地剑切成一次性俯冲弹幕。
             Mode = 1;
             Timer = 0;
             diveTarget = target;
@@ -126,16 +140,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void PulseLightningOutline()
         {
+            // 右键序列击发时调用，刷新描边脉冲计时。
             outlinePulse = Math.Max(outlinePulse, 20);
         }
 
         private void DoDiveAI()
         {
+            // 没有目标时向下俯冲，避免零向量导致停住。
             if (diveTarget == Vector2.Zero)
                 diveTarget = Projectile.Center + Vector2.UnitY * 320f;
 
             if (Timer <= 12)
             {
+                // 俯冲前摇：转向目标并生成蓄势粒子，但不造成伤害。
                 Projectile.friendly = false;
                 Projectile.velocity *= 0.8f;
                 Projectile.rotation = Projectile.rotation.AngleLerp((diveTarget - Projectile.Center).ToRotation() + MathHelper.PiOver4, 0.18f);
@@ -143,6 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return;
             }
 
+            // 正式俯冲后缓动到 26 像素/帧，接近目标即销毁。
             Projectile.friendly = true;
             Vector2 desiredVelocity = (diveTarget - Projectile.Center).SafeNormalize(Vector2.UnitY) * 26f;
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.22f);
@@ -154,6 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SnapToGroundIfPossible()
         {
+            // 生成点往下扫描实体方块，让地剑看起来插在地面上。
             Vector2 originalCenter = Projectile.Center;
             Point startTile = originalCenter.ToTileCoordinates();
 
@@ -170,6 +189,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnChargeVisuals()
         {
+            // 出生和俯冲前摇阶段的青金蓄势粒子。
             if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -185,6 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnIntroBurst()
         {
+            // 地剑成型瞬间环形喷出粒子。
             for (int i = 0; i < 18; i++)
             {
                 Vector2 velocity = Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / 18f) * Main.rand.NextFloat(1.2f, 4.2f);
@@ -201,10 +222,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnForgingLightning()
         {
+            // 只由拥有者生成锻造雷，避免多人重复造视觉弹幕。
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            // This strike is visual-only: it sells the sword being forged by a falling bolt, but never deals damage.
+            // 这道雷只负责表现“天雷锻剑”，不造成任何伤害。
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
@@ -219,6 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnDeathChargeVisuals()
         {
+            // 寿命末尾的淡金上升粒子。
             if (!Main.rand.NextBool(2))
                 return;
 
@@ -234,6 +257,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override void OnKill(int timeLeft)
         {
+            // 消失时爆出一圈粒子，并按是否俯冲决定音效重量。
             for (int i = 0; i < 16; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -246,12 +270,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 dust.noGravity = true;
             }
 
-            // Despawning is intentionally simple now; all dramatic lightning happens on creation.
+            // 消失演出保持克制，主要戏剧性雷击已经放在生成时。
             AzureThunderSounds.PlaySwordBurst(Projectile.Center, Diving);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            // 地剑命中统一附加电击和饰品联动；俯冲命中额外施加终极 DoT。
             target.AddBuff(BuffID.Electrified, 240);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             if (Diving)
@@ -262,6 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // 绘制阶段把淡入、蓄势、右键脉冲和俯冲状态合成到描边参数。
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
@@ -275,6 +301,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             float drawScale = Projectile.scale * (0.72f + 0.28f * fadeIn + (float)Math.Sin(fadeIn * MathHelper.Pi) * 0.05f);
             Color drawColor = lightColor * fadeIn;
 
+            // 描边颜色会在脉冲、俯冲和普通待机之间切换。
             HoldoutOutlineHelper.DrawSolidOutline(
                 texture,
                 drawPosition,
@@ -297,6 +324,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void DrawBladeShine(Texture2D texture, float drawScale, float opacity)
         {
+            // 待机地剑额外绘制慢速镜头光，俯冲时关闭以免拖影过乱。
             Texture2D shineTex = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Vector2 shineScale = new Vector2(1.67f, 3f) * Projectile.scale;
             shineScale *= MathHelper.Lerp(
@@ -309,6 +337,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Color lensFlareColor = (Color.Lerp(AzureThunderColors.Azure, Color.White, 0.18f) * opacity) with { A = 0 };
             float slowRotation = Main.GlobalTimeWrappedHourly * 0.42f + Projectile.identity * 0.17f;
 
+            // 加法混合绘制两层交叉星光。
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
             Main.EntitySpriteDraw(
