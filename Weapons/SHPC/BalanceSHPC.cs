@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             45, // 72Any Mechanical Boss / 任意机械 Boss
             48, // 90Plantera / 世纪之花
             52, // 120Golem / 石巨人
-            57, // 180Moon Lord / 月亮领主
+            56, // 180Moon Lord / 月亮领主
             60, // 240Providence / 亵渎天神
             64, // 300Polterghast / 噬魂幽花
             66, // 360Devourer of Gods / 神明吞噬者
@@ -89,22 +89,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.77f, // EffectID 22: Vortex Fragment / 星旋碎片
             1.50f, // EffectID 23: Nebula Fragment / 星云碎片
             1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
-            1.85f, // EffectID 25: Meld Blob / 冥思溶剂
-            1.16f, // EffectID 26: Unholy Essence / 浊火精华
+            1.9f, // EffectID 25: Meld Blob / 冥思溶剂
+            2.25f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
-            1.22f, // EffectID 28: Divine Geode / 神圣晶石
+            2.33f, // EffectID 28: Divine Geode / 神圣晶石
             1.28f, // EffectID 29: Bloodstone Core / 血神核心
             1.34f, // EffectID 30: Ruinous Soul / 毁灭之灵
-            1.26f, // EffectID 31: Necroplasm / 灵质
-            1.42f, // EffectID 32: Dark Plasma / 暗离子体
-            1.46f, // EffectID 33: Twisting Nether / 扭曲虚空
-            1.52f, // EffectID 34: Endothermic Energy / 恒温能量
+            2.16f, // EffectID 31: Necroplasm / 灵质
+            2.15f, // EffectID 32: Dark Plasma / 暗离子体
+            2.33f, // EffectID 33: Twisting Nether / 扭曲虚空
+            2.52f, // EffectID 34: Endothermic Energy / 恒温能量
             1.48f, // EffectID 35: Nightmare Fuel / 梦魇魔能
             1.56f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
             1.68f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
             1.82f, // EffectID 38: Exo Prism / 星流棱晶
             1.90f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
-            1.74f // EffectID 40: Armored Shell / 装甲外壳
+            2.80f // EffectID 40: Armored Shell / 装甲外壳
         };
 
         public const int OverheatGraceTime = 60;

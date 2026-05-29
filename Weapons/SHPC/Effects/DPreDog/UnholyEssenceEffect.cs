@@ -63,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 projectile.Center,
                 spawnVelocity,
                 ModContent.ProjectileType<UnholyEssence_Wave>(),
-                projectile.damage,
+                (int)(projectile.damage * 1.3),
                 projectile.knockBack,
                 projectile.owner);
 

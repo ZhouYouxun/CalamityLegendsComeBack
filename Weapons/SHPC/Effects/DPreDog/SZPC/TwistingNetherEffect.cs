@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     projectile.Center + side * ((i - 1) * 28f),
                     baseVelocity,
                     ModContent.ProjectileType<TwistingNether_Blade>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 0.77),
                     projectile.knockBack,
                     projectile.owner
                 );

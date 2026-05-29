@@ -40,11 +40,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 5;
-            Projectile.timeLeft = 312;
-            Projectile.extraUpdates = 2;
+            Projectile.timeLeft = 100;
+            Projectile.extraUpdates = 3;
             Projectile.Opacity = 1f;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 12;
+            Projectile.localNPCHitCooldown = 5;
         }
 
         public override bool? CanCutTiles() => false;
@@ -124,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     target.Center,
                     slashVelocity,
                     ModContent.ProjectileType<TwistingNether_BlackSLASH>(),
-                    (int)(Projectile.damage * 1.1f),
+                    (int)(Projectile.damage * 0.77f),
                     Projectile.knockBack,
                     Projectile.owner);
             }

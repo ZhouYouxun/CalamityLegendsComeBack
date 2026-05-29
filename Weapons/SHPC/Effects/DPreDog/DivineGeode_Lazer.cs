@@ -28,13 +28,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.friendly = true;
             Projectile.hostile = false;
 
-            Projectile.penetrate = -1;
+            Projectile.penetrate = 3;
             Projectile.tileCollide = true;
-            Projectile.penetrate = 6;
 
             Projectile.extraUpdates = ExtraUpdateCount; // 高更新频率核心
             Projectile.timeLeft = LifetimePerExtraUpdate * Projectile.extraUpdates;
 
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 10;
+            
             Projectile.ignoreWater = true;
         }
 

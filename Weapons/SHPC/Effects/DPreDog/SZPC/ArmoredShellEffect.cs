@@ -111,7 +111,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     projectile.Center,
                     finalVelocity,
                     ModContent.ProjectileType<ArmoredShell_Ball>(),
-                    (int)(projectile.damage * 0.1f),
+                    (int)(projectile.damage * 0.77f),
                     projectile.knockBack,
                     projectile.owner,
                     i % OrbTypeCount // 只传 0~4，避免超范围类型

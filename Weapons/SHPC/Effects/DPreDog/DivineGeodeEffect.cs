@@ -137,7 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.Center,
                     velocity,
                     ModContent.ProjectileType<DivineGeode_Lazer>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 0.8),
                     projectile.knockBack,
                     projectile.owner
                 );
