@@ -2,7 +2,6 @@ Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
-
 				Tetris: {
 					DisplayName: 俄罗斯方块
 					Tooltip:
@@ -36,7 +35,6 @@ Mods: {
 				}
 
 				Strikers1945: {
-					DisplayName: 1945
 					Tooltip:
 						'''
 						手持该物品即可展开纵屏1945面板。
@@ -44,9 +42,10 @@ Mods: {
 						击落随机来袭的敌机获得分数。命中敌机、敌弹或被敌机撞到都会损失生命。
 						敌机偶尔掉落 P 强化，提升子弹数量与散射。三条命耗尽后游戏结束，按 R 重新开始。
 						'''
+					// DisplayName: "1945"
 				}
 
-			SacredThunder: {
+				SacredThunder: {
 					DisplayName: 神圣雷霆
 					Tooltip: "[GFB]"
 					LegendaryText:
@@ -58,7 +57,7 @@ Mods: {
 						'''
 				}
 
-			CTRLBoss: {
+				CTRLBoss: {
 					DisplayName: Boss进度修改器
 					Tooltip: 左键打开或关闭 Boss 进度调试面板。
 				}
@@ -89,7 +88,6 @@ Mods: {
 				Strikers1945Panel.DisplayName: 1945 战机面板
 				CTRLBossPanel.DisplayName: Boss进度面板
 			}
-
 
 			SacredThunder.SacredThunderPROJ.DisplayName: 神圣雷霆
 		}

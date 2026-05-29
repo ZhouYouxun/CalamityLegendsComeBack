@@ -3,22 +3,20 @@ Mods: {
 		Items: {
 			Weapons: {
 				DesertEagle: {
-				DisplayName: 沙漠之鹰
-				Tooltip:
-				'''
-				左键轮流散射动能灌注弹，以及强力吸血弹
-				按住右键将高速旋转手里的沙漠之鹰，切碎撞到它的敌人
-				充能满时点击左键将释放一枚强力的闪光爆弹
-				“传奇神射手同款”
-				'''
+					DisplayName: 沙漠之鹰
+					Tooltip:
+						'''
+						左键轮流散射动能灌注弹，以及强力吸血弹
+						按住右键将高速旋转手里的沙漠之鹰，切碎撞到它的敌人
+						充能满时点击左键将释放一枚强力的闪光爆弹
+						“传奇神射手同款”
+						'''
 				}
 			}
 		}
 
 		Projectiles: {
 			A_Dev: {
-				DesertEagleLifeRound.DisplayName: 沙漠之鹰吸血弹
-				/DesertEagleHeavyRound.DisplayName: 沙漠之鹰重型弹
 			}
 		}
 	}

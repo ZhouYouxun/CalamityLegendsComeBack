@@ -2,8 +2,6 @@ Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
-
-
 				Tetris: {
 					DisplayName: Tetris
 					Tooltip:
@@ -47,7 +45,7 @@ Mods: {
 					DisplayName: "1945"
 				}
 
-			SacredThunder: {
+				SacredThunder: {
 					DisplayName: Sacred Thunder
 					Tooltip: "[GFB]"
 					LegendaryText:
@@ -59,7 +57,7 @@ Mods: {
 						'''
 				}
 
-			CTRLBoss: {
+				CTRLBoss: {
 					DisplayName: Boss Progress Controller
 					Tooltip: Left click to open or close the boss progress debug panel.
 				}
@@ -86,7 +84,6 @@ Mods: {
 				Strikers1945Panel.DisplayName: 1945 Striker Board
 				CTRLBossPanel.DisplayName: Boss Progress Panel
 			}
-
 
 			SacredThunder.SacredThunderPROJ.DisplayName: Sacred Thunder
 		}

@@ -217,6 +217,31 @@ Mods: {
 					While holding SunderBlade, dashing releases up to 3 lightning bolts based on nearby SunderBlade swords, with a 15-second cooldown
 					'''
 			}
+
+			GaleAce: {
+				DisplayName: Gale Ace
+				Tooltip: ""
+			}
+
+			MalachiteFeather: {
+				DisplayName: Malachite Feather
+				Tooltip: ""
+			}
+
+			PeacockScroll: {
+				DisplayName: Peacock Scroll
+				Tooltip: ""
+			}
+
+			PrecisionEmblem: {
+				DisplayName: Precision Emblem
+				Tooltip: ""
+			}
+
+			TestWeapon: {
+				DisplayName: Test Weapon
+				Tooltip: ""
+			}
 		}
 
 		Buffs: {

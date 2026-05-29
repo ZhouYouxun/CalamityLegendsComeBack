@@ -10,10 +10,7 @@ Mods: {
 					MK14_Ammo: "[c/F7D87C:发射玩家的子弹；火枪子弹会转化为 M61 穿甲弹。]"
 					MK14_RightClick: "[c/F7D87C:右键打开或关闭改枪界面。]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
-					LegendaryText:
-						'''
-						[c/85D7FF:一把旧时代的精确射手步枪被重新装进现代化枪身。]
-						'''
+					LegendaryText: "[c/85D7FF:一把旧时代的精确射手步枪被重新装进现代化枪身。]"
 				}
 			}
 		}

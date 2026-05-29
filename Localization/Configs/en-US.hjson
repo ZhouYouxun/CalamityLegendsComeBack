@@ -6,12 +6,12 @@ Mods: {
 
 				AllowWheelSlowdown: {
 					Label: Allow Wheel Slowdown
-					Tooltip: If enabled, opening the SHPC or Blossom Flux wheel slows the game to 50% speed in single player only. This has no effect in multiplayer.
+					Tooltip: If enabled, some legendary weapons will slow the game speed by 50% while their wheels are open in single player.
 				}
 
 				AllowMassMaterialRecipes: {
 					Label: Allow Bulk Material Crafting
-					Tooltip: If enabled, material recipes and related drops in Weapons/A_Tools/QOL are active. Reloading is required for changes to take effect.
+					Tooltip: If enabled, many materials can be copied or crafted in a simpler way.
 				}
 			}
 		}

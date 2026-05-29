@@ -229,6 +229,31 @@ Mods: {
 					手持青霆剑冲刺后，根据附近青霆剑数量最多释放3道雷击，冷却15秒
 					'''
 			}
+
+			GaleAce: {
+				// DisplayName: Gale Ace
+				// Tooltip: ""
+			}
+
+			MalachiteFeather: {
+				// DisplayName: Malachite Feather
+				// Tooltip: ""
+			}
+
+			PeacockScroll: {
+				// DisplayName: Peacock Scroll
+				// Tooltip: ""
+			}
+
+			PrecisionEmblem: {
+				// DisplayName: Precision Emblem
+				// Tooltip: ""
+			}
+
+			TestWeapon: {
+				// DisplayName: Test Weapon
+				// Tooltip: ""
+			}
 		}
 
 		Buffs: {
