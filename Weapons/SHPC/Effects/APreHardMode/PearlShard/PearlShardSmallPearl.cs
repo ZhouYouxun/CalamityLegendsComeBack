@@ -1,0 +1,111 @@
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
+{
+    public class PearlShardSmallPearl : ModProjectile, ILocalizedModType
+    {
+        private const float HomingStartFrame = 40f;
+
+        public new string LocalizationCategory => "Projectiles.SHPC";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/APreHardMode/PearlShard/PearlShardParticle";
+
+        private ref float FrameTimer => ref Projectile.ai[1];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 10;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 17;
+            Projectile.height = 17;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Magic;
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 120;
+            Projectile.tileCollide = true;
+            Projectile.ignoreWater = true;
+            Projectile.extraUpdates = 2;
+        }
+
+        public override void AI()
+        {
+            FrameTimer += 1f / (Projectile.extraUpdates + 1f);
+
+            if (FrameTimer >= HomingStartFrame)
+                HomingAI();
+            else
+                Projectile.velocity *= 1.004f;
+
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, new Vector3(0.28f, 0.18f, 0.26f));
+
+            if (Main.rand.NextBool(5))
+                PearlShardVisuals.SpawnPearlParticle(Projectile.Center, -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.12f), 0.18f, 14);
+        }
+
+        private void HomingAI()
+        {
+            NPC target = FindTarget();
+            if (target == null)
+            {
+                Projectile.velocity *= 1.012f;
+                return;
+            }
+
+            float homingTimer = FrameTimer - HomingStartFrame;
+            float loosen = Utils.GetLerpValue(0f, 70f, homingTimer, true);
+            float closeLoosen = Utils.GetLerpValue(220f, 42f, Projectile.Distance(target.Center), true);
+            float power = MathHelper.Clamp(loosen + closeLoosen * 0.55f, 0f, 1f);
+            float speed = MathHelper.Lerp(8.5f, 17.5f, power);
+            float turnLimit = MathHelper.ToRadians(MathHelper.Lerp(4f, 28f, power));
+            Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * speed;
+
+            float currentSpeed = MathHelper.Lerp(Projectile.velocity.Length(), speed, MathHelper.Lerp(0.06f, 0.22f, power));
+            float rotation = Projectile.velocity.ToRotation().AngleTowards(desired.ToRotation(), turnLimit);
+            Projectile.velocity = rotation.ToRotationVector2() * currentSpeed;
+        }
+
+        private NPC FindTarget()
+        {
+            NPC bestTarget = null;
+            float bestDistance = 640f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance || !Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1))
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
+        }
+
+        public override bool? CanDamage()
+        {
+            return FrameTimer >= HomingStartFrame;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            PearlShardVisuals.SpawnBurst(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitY), 0.5f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            PearlShardVisuals.DrawPearl(Projectile, 0.5f);
+            return false;
+        }
+    }
+}

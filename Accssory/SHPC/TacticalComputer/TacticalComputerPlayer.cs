@@ -8,7 +8,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer
     public class TacticalComputerPlayer : ModPlayer
     {
         public const float ReticleLockRange = 15f * 16f;
-        private const float ReticleSnapSpeed = 30f;
+        private const float ReticleMinEaseSpeed = 2.5f;
+        private const float ReticleMaxEaseSpeed = 72f;
+        private const float ReticleFullSpeedDistance = 900f;
 
         public bool TacticalComputerEquipped;
         public Vector2 ReticleWorld;
@@ -61,19 +63,14 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer
         private void UpdateReticlePosition()
         {
             Vector2 mouseWorld = Main.MouseWorld;
-            if (ReticleWorld == Vector2.Zero || Vector2.DistanceSquared(ReticleWorld, mouseWorld) > 2400f * 2400f)
-                ReticleWorld = mouseWorld;
+            if (ReticleWorld == Vector2.Zero)
+                ReticleWorld = Player.Center;
 
             NPC target = FindTargetNearMouse(mouseWorld);
             ReticleTargetIndex = target?.whoAmI ?? -1;
 
-            if (target == null)
-            {
-                ReticleWorld = mouseWorld;
-                return;
-            }
-
-            ReticleWorld = MoveTowards(ReticleWorld, target.Center, ReticleSnapSpeed);
+            Vector2 destination = target?.Center ?? mouseWorld;
+            ReticleWorld = EaseTowards(ReticleWorld, destination);
         }
 
         private NPC FindTargetNearMouse(Vector2 mouseWorld)
@@ -105,14 +102,21 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer
             return Vector2.Distance(point, new Vector2(closestX, closestY));
         }
 
-        private static Vector2 MoveTowards(Vector2 current, Vector2 target, float maxDistance)
+        private static Vector2 EaseTowards(Vector2 current, Vector2 target)
         {
             Vector2 offset = target - current;
             float distance = offset.Length();
-            if (distance <= maxDistance || distance <= 0f)
+            if (distance <= 0.5f)
                 return target;
 
-            return current + offset / distance * maxDistance;
+            float distanceInterpolant = Utils.GetLerpValue(0f, ReticleFullSpeedDistance, distance, true);
+            float easeOut = 1f - (float)System.Math.Pow(1f - distanceInterpolant, 3);
+            float step = MathHelper.Lerp(ReticleMinEaseSpeed, ReticleMaxEaseSpeed, easeOut);
+
+            if (distance <= step)
+                return target;
+
+            return current + offset / distance * step;
         }
 
         private void EnsureReticleVisual()
@@ -134,6 +138,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer
 
     internal sealed class TacticalComputerReticle : ModProjectile
     {
+        private const float VisualScale = 1f / 3f;
+
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetDefaults()
@@ -192,14 +198,14 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer
             Color outerColor = Color.Lerp(techBlue, cyan, locked ? 0.7f : 0.35f);
             Color innerColor = Color.Lerp(cyan, white, locked ? 0.65f : 0.35f);
             float lockInterpolant = locked ? 1f : 0f;
-            float ringScale = MathHelper.Lerp(0.34f, 0.48f, lockInterpolant) * pulse;
-            float tickRadius = MathHelper.Lerp(28f, 42f, lockInterpolant);
+            float ringScale = MathHelper.Lerp(0.34f, 0.48f, lockInterpolant) * pulse * VisualScale;
+            float tickRadius = MathHelper.Lerp(28f, 42f, lockInterpolant) * VisualScale;
 
             Main.EntitySpriteDraw(glow, drawPosition, null, outerColor * 0.52f, 0f, glow.Size() * 0.5f, ringScale, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(glow, drawPosition, null, innerColor * 0.34f, 0f, glow.Size() * 0.5f, ringScale * 0.48f, SpriteEffects.None, 0f);
 
-            Main.EntitySpriteDraw(ringA, drawPosition, null, outerColor * 0.88f, time * 0.95f, ringA.Size() * 0.5f, MathHelper.Lerp(0.46f, 0.58f, lockInterpolant), SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(ringB, drawPosition, null, cyan * 0.76f, -time * 0.72f, ringB.Size() * 0.5f, MathHelper.Lerp(0.42f, 0.54f, lockInterpolant), SpriteEffects.FlipHorizontally, 0f);
+            Main.EntitySpriteDraw(ringA, drawPosition, null, outerColor * 0.88f, time * 0.95f, ringA.Size() * 0.5f, MathHelper.Lerp(0.46f, 0.58f, lockInterpolant) * VisualScale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ringB, drawPosition, null, cyan * 0.76f, -time * 0.72f, ringB.Size() * 0.5f, MathHelper.Lerp(0.42f, 0.54f, lockInterpolant) * VisualScale, SpriteEffects.FlipHorizontally, 0f);
 
             for (int i = 0; i < 4; i++)
             {
@@ -213,13 +219,13 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer
                     outerColor * 0.85f,
                     angle + MathHelper.PiOver2,
                     line.Size() * 0.5f,
-                    new Vector2(0.036f, MathHelper.Lerp(0.14f, 0.22f, lockInterpolant)),
+                    new Vector2(0.036f, MathHelper.Lerp(0.14f, 0.22f, lockInterpolant)) * VisualScale,
                     SpriteEffects.None,
                     0f);
             }
 
             if (locked)
-                Main.EntitySpriteDraw(glow, drawPosition, null, white * 0.32f, 0f, glow.Size() * 0.5f, 0.14f * pulse, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(glow, drawPosition, null, white * 0.32f, 0f, glow.Size() * 0.5f, 0.14f * pulse * VisualScale, SpriteEffects.None, 0f);
 
             return false;
         }

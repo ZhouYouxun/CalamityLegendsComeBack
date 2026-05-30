@@ -385,6 +385,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 38 => "CalamityMod/Items/Materials/ExoPrism",
                 39 => "CalamityMod/Items/Materials/AshesofAnnihilation",
                 40 => "CalamityMod/Items/Materials/ArmoredShell",
+                41 => "CalamityMod/Items/Materials/PearlShard",
                 _ => null
             };
         }

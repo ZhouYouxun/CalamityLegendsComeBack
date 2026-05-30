@@ -12,6 +12,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText: "[c/85D7FF:一把旧时代的精确射手步枪被重新装进现代化枪身。]"
 				}
+
+				NewLegendM14: {
+					DisplayName: M14
+					Tooltip: "[c/F7D87C:全自动射击。持续射击 100 发内散射从 1 度线性提高到 15 度，松开左键后立刻恢复。]"
+				}
 			}
 		}
 
@@ -19,10 +24,9 @@ Mods: {
 			MK14EBR: {
 				MK14EBRHoldout.DisplayName: MK14EBR-缄花
 				MK14ModificationPanel.DisplayName: MK14EBR-缄花 改枪界面
+				// NewLegendM14.DisplayName: M14
 				M61Bullet.DisplayName: M61 穿甲弹
 				MK14GrenadeProjectile.DisplayName: MK14 枪挂榴弹
-				MK14GrenadeExplosion.DisplayName: MK14 榴弹爆炸
-				MK14GrenadeShard.DisplayName: MK14 榴弹碎片
 				MK14DragonBreathPellet.DisplayName: 龙息霰弹
 			}
 		}

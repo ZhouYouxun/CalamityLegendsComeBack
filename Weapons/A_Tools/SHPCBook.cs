@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         public new string LocalizationCategory => "Items.Weapons";
 
         private static int PanelType => ModContent.ProjectileType<SHPCBookPanel>();
+        private static int RightPanelType => ModContent.ProjectileType<SHPCBookRightPanel>();
 
         public override void SetDefaults()
         {
@@ -48,8 +49,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 !(Main.playerInventory && Main.HoverItem.type == Type);
         }
 
+        public override bool AltFunctionUse(Player player) => true;
+
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
+            int panelType = player.altFunctionUse == 2 ? RightPanelType : PanelType;
             if (TryCloseExistingPanel(player))
             {
                 SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);
@@ -60,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 source,
                 player.Center,
                 Vector2.Zero,
-                PanelType,
+                panelType,
                 0,
                 0f,
                 player.whoAmI);
@@ -75,10 +79,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
-                if (!projectile.active || projectile.owner != player.whoAmI || projectile.type != PanelType)
+                if (!projectile.active || projectile.owner != player.whoAmI || (projectile.type != PanelType && projectile.type != RightPanelType))
                     continue;
 
-                SHPCBookPanel.RequestClose(projectile);
+                if (projectile.type == PanelType)
+                    SHPCBookPanel.RequestClose(projectile);
+                else
+                    SHPCBookRightPanel.RequestClose(projectile);
                 return true;
             }
 
@@ -532,6 +539,414 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         {
             overWiresUI.Add(index);
         }
+    }
+
+    internal sealed class SHPCBookRightPanel : ModProjectile, ILocalizedModType
+    {
+        private const int PanelWidth = 548;
+        private const int PanelPadding = 10;
+        private const int RowHeight = 58;
+        private const int RowGap = 5;
+        private const int BorderThickness = 2;
+        private const float NumberIconSize = 34f;
+        private const float BossIconSize = 30f;
+
+        private static readonly RightHeatEntry[] HeatEntries =
+        {
+            new(1, ItemID.AlphabetStatue1, null, null, "Initial"),
+            new(2, ItemID.AlphabetStatue2, "Wall of Flesh", "Hardmode", "Wall of Flesh"),
+            new(3, ItemID.AlphabetStatue3, "Plantera", null, "Plantera"),
+            new(4, ItemID.AlphabetStatue4, "Moon Lord", null, "Moon Lord"),
+            new(5, ItemID.AlphabetStatue5, "The Devourer of Gods", null, "Devourer of Gods")
+        };
+
+        private readonly int[] clickFeedbackTimers = new int[HeatEntries.Length];
+        private readonly bool[] hoveredLastFrame = new bool[HeatEntries.Length];
+        private Vector2 panelTopLeft;
+        private bool panelPositionInitialized;
+
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public new string LocalizationCategory => "Projectiles.A_Dev";
+
+        private bool FadeOut
+        {
+            get => Projectile.ai[0] == 1f;
+            set => Projectile.ai[0] = value ? 1f : 0f;
+        }
+
+        private static int PanelHeight => PanelPadding * 2 + HeatEntries.Length * RowHeight + (HeatEntries.Length - 1) * RowGap;
+        private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 9999999;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = PanelWidth;
+            Projectile.height = PanelHeight;
+            Projectile.penetrate = -1;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.hide = true;
+            Projectile.Opacity = 0f;
+        }
+
+        public override bool ShouldUpdatePosition() => false;
+        public override bool? CanDamage() => false;
+
+        public override void AI()
+        {
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            if (owner.HeldItem.type != ModContent.ItemType<SHPCBook>())
+                FadeOut = true;
+
+            if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
+            {
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen);
+                panelPositionInitialized = true;
+            }
+
+            Vector2 panelCenter = panelTopLeft + new Vector2(PanelWidth, PanelHeight) * 0.5f;
+            Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
+            Projectile.timeLeft = 2;
+            Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
+
+            if (FadeOut && Projectile.Opacity <= 0f)
+                Projectile.Kill();
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return false;
+
+            Player owner = Main.player[Projectile.owner];
+            Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, PanelHeight);
+            bool mouseOverPanel = panelArea.Intersects(MouseRectangle);
+            bool closePressed = (Main.mouseLeft && Main.mouseLeftRelease) || (Main.mouseRight && Main.mouseRightRelease);
+            int maxHeat = new BalanceSHPC().GetRightClickMaxHeatLevel();
+
+            DrawPanel(panelArea, Projectile.Opacity);
+
+            for (int i = 0; i < HeatEntries.Length; i++)
+            {
+                RightHeatEntry entry = HeatEntries[i];
+                Rectangle rowArea = GetRowArea(i);
+                bool hovered = rowArea.Intersects(MouseRectangle);
+                bool unlocked = entry.Level <= maxHeat;
+
+                if (hovered)
+                {
+                    mouseOverPanel = true;
+                    Main.hoverItemName = GetHoverText(entry, unlocked);
+
+                    if (!hoveredLastFrame[i] && Projectile.Opacity >= 0.95f)
+                        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
+                }
+
+                DrawHeatRow(entry, rowArea, unlocked, hovered, clickFeedbackTimers[i], Projectile.Opacity);
+                hoveredLastFrame[i] = hovered;
+                if (clickFeedbackTimers[i] > 0)
+                    clickFeedbackTimers[i]--;
+            }
+
+            if (!mouseOverPanel && !FadeOut && Projectile.Opacity >= 0.95f && closePressed)
+            {
+                FadeOut = true;
+                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
+            }
+
+            if (mouseOverPanel)
+            {
+                Main.blockMouse = true;
+                owner.mouseInterface = true;
+            }
+
+            return false;
+        }
+
+        public static void RequestClose(Projectile projectile)
+        {
+            if (projectile.ModProjectile is SHPCBookRightPanel panel)
+                panel.FadeOut = true;
+            else
+                projectile.ai[0] = 1f;
+        }
+
+        private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter)
+        {
+            const float screenMargin = 12f;
+            Vector2 desiredTopLeft = desiredCenter - new Vector2(PanelWidth, PanelHeight) * 0.5f;
+            float maxX = Math.Max(screenMargin, Main.screenWidth - PanelWidth - screenMargin);
+            float maxY = Math.Max(screenMargin, Main.screenHeight - PanelHeight - screenMargin);
+
+            return new Vector2(
+                MathHelper.Clamp(desiredTopLeft.X, screenMargin, maxX),
+                MathHelper.Clamp(desiredTopLeft.Y, screenMargin, maxY));
+        }
+
+        private Rectangle GetRowArea(int index)
+        {
+            return new Rectangle(
+                (int)panelTopLeft.X + PanelPadding,
+                (int)panelTopLeft.Y + PanelPadding + index * (RowHeight + RowGap),
+                PanelWidth - PanelPadding * 2,
+                RowHeight);
+        }
+
+        private static void DrawPanel(Rectangle panelArea, float opacity)
+        {
+            DrawRectangle(panelArea, new Color(12, 14, 20, 232) * opacity);
+            DrawBorder(panelArea, new Color(94, 110, 132) * opacity, BorderThickness);
+
+            Rectangle innerArea = new(
+                panelArea.X + BorderThickness,
+                panelArea.Y + BorderThickness,
+                panelArea.Width - BorderThickness * 2,
+                panelArea.Height - BorderThickness * 2);
+
+            DrawBorder(innerArea, new Color(31, 41, 58, 210) * opacity, 1);
+        }
+
+        private static void DrawHeatRow(RightHeatEntry entry, Rectangle rowArea, bool unlocked, bool hovered, int clickTimer, float opacity)
+        {
+            Color heatColor = GetHeatColor(entry.Level);
+            Color muted = new(126, 130, 140);
+            Color rowColor = unlocked ? heatColor : muted;
+            Color slotBack = Color.Lerp(new Color(24, 28, 36), rowColor, unlocked ? 0.18f : 0.08f);
+            Color slotBorder = Color.Lerp(new Color(112, 126, 150), rowColor, unlocked ? 0.58f : 0.22f);
+
+            if (hovered)
+            {
+                slotBack = Color.Lerp(slotBack, new Color(78, 88, 104), 0.45f);
+                slotBorder = Color.Lerp(slotBorder, Color.White, 0.3f);
+            }
+
+            if (clickTimer > 0)
+            {
+                slotBack = Color.Lerp(slotBack, new Color(132, 116, 70), 0.35f);
+                slotBorder = Color.Lerp(slotBorder, new Color(255, 228, 150), 0.5f);
+            }
+
+            DrawRectangle(rowArea, slotBack * (opacity * 0.94f));
+            DrawBorder(rowArea, slotBorder * opacity, unlocked ? 2 : 1);
+
+            Rectangle numberFrame = new(rowArea.X + 6, rowArea.Y + 8, 42, 42);
+            DrawRectangle(numberFrame, Color.Lerp(new Color(10, 12, 18), rowColor, 0.08f) * (opacity * 0.82f));
+            DrawBorder(numberFrame, slotBorder * (opacity * 0.62f), 1);
+            DrawItemIcon(entry.NumberItemID, numberFrame.Center.ToVector2(), NumberIconSize, unlocked ? Color.White : Color.Gray, opacity);
+
+            string description = GetHeatDescription(entry.Level);
+            Rectangle descriptionArea = new(rowArea.X + 56, rowArea.Y + 5, rowArea.Width - 126, 48);
+            DrawWrappedFitText(description, descriptionArea, unlocked ? Color.White : new Color(170, 174, 184), 0.56f, 0.38f, opacity);
+
+            Rectangle unlockFrame = new(rowArea.Right - 58, rowArea.Y + 8, 42, 42);
+            DrawRectangle(unlockFrame, Color.Lerp(new Color(10, 12, 18), rowColor, unlocked ? 0.12f : 0.04f) * (opacity * 0.82f));
+            DrawBorder(unlockFrame, slotBorder * (opacity * 0.62f), 1);
+            DrawUnlockIcon(entry, unlockFrame, unlocked, opacity);
+        }
+
+        private static void DrawUnlockIcon(RightHeatEntry entry, Rectangle frame, bool unlocked, float opacity)
+        {
+            Texture2D icon = TryGetUnlockTexture(entry);
+            if (icon == null)
+            {
+                DrawFitText(entry.Level == 1 ? "OK" : "?", frame, unlocked ? Color.White : Color.Gray, 0.62f, 0.42f, opacity);
+                return;
+            }
+
+            Rectangle source = icon.Frame();
+            Vector2 sourceSize = source.Size();
+            float fitScale = Math.Min(BossIconSize / Math.Max(1f, sourceSize.X), BossIconSize / Math.Max(1f, sourceSize.Y));
+            Color color = unlocked ? Color.White : Color.Gray;
+            Main.EntitySpriteDraw(icon, frame.Center.ToVector2(), source, color * opacity, 0f, sourceSize * 0.5f, fitScale, SpriteEffects.None, 0f);
+        }
+
+        private static Texture2D TryGetUnlockTexture(RightHeatEntry entry)
+        {
+            if (entry.UnlockBossEnglishName == null)
+                return null;
+
+            BossProgressEntry bossEntry = CTRLBossRegistry.Entries.FirstOrDefault(boss => boss.EnglishName == entry.UnlockBossEnglishName);
+            if (bossEntry == null)
+                return null;
+
+            try
+            {
+                return ModContent.Request<Texture2D>(bossEntry.TexturePath).Value;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static void DrawItemIcon(int itemID, Vector2 center, float maxSize, Color color, float opacity)
+        {
+            Texture2D texture = TextureAssets.Item[itemID].Value;
+            Rectangle source = texture.Frame();
+            Vector2 sourceSize = source.Size();
+            float fitScale = Math.Min(maxSize / Math.Max(1f, sourceSize.X), maxSize / Math.Max(1f, sourceSize.Y));
+            Main.EntitySpriteDraw(texture, center, source, color * opacity, 0f, sourceSize * 0.5f, fitScale, SpriteEffects.None, 0f);
+        }
+
+        private static Color GetHeatColor(int level)
+        {
+            return level switch
+            {
+                1 => new Color(78, 190, 255),
+                2 => new Color(255, 226, 82),
+                3 => new Color(255, 132, 38),
+                4 => new Color(255, 58, 34),
+                _ => new Color(255, 38, 70)
+            };
+        }
+
+        private static string GetHeatDescription(int level)
+        {
+            string key = $"Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendSHPC.SHPC_RightIntro{level}";
+            string text = Language.GetTextValue(key);
+            if (text == key)
+                return level switch
+                {
+                    1 => "Heat I: precise beam fire. Sustained fire builds heat until forced shutdown.",
+                    2 => "Heat II: adds a secondary beam and improves piercing.",
+                    3 => "Heat III: heat blasts can trigger on hit.",
+                    4 => "Heat IV: adds another secondary beam and applies overheat pressure.",
+                    _ => "Heat V: beams gain infinite piercing and severe overheat risk."
+                };
+
+            return StripColorTags(text).Replace('\n', ' ').Replace("  ", " ").Trim();
+        }
+
+        private static string GetHoverText(RightHeatEntry entry, bool unlocked)
+        {
+            string state = unlocked ? "已解锁 / Unlocked" : $"未解锁 / Unlock: {entry.UnlockText}";
+            return $"Heat {entry.Level}\n{state}\n{GetHeatDescription(entry.Level)}";
+        }
+
+        private static string StripColorTags(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            string output = text;
+            int start;
+            while ((start = output.IndexOf("[c/", StringComparison.Ordinal)) >= 0)
+            {
+                int colon = output.IndexOf(':', start);
+                if (colon < 0)
+                    break;
+
+                output = output.Remove(start, colon - start + 1);
+            }
+
+            return output.Replace("]", string.Empty);
+        }
+
+        private static void DrawWrappedFitText(string text, Rectangle area, Color color, float maxScale, float minScale, float opacity)
+        {
+            if (string.IsNullOrWhiteSpace(text) || area.Width <= 0 || area.Height <= 0)
+                return;
+
+            string displayText = TrimTextToFit(text, area.Width, area.Height, minScale);
+            DrawFitText(displayText, area, color, maxScale, minScale, opacity);
+        }
+
+        private static void DrawFitText(string text, Rectangle area, Color color, float maxScale, float minScale, float opacity)
+        {
+            if (string.IsNullOrWhiteSpace(text) || area.Width <= 0 || area.Height <= 0)
+                return;
+
+            var font = FontAssets.MouseText.Value;
+            Vector2 size = font.MeasureString(text);
+            if (size.X <= 0f || size.Y <= 0f)
+                return;
+
+            float scale = maxScale;
+            if (size.X * scale > area.Width)
+                scale = area.Width / size.X;
+            if (size.Y * scale > area.Height)
+                scale = Math.Min(scale, area.Height / size.Y);
+
+            scale = MathHelper.Clamp(scale, minScale, maxScale);
+            Vector2 position = new(area.X, area.Y + Math.Max(0f, (area.Height - size.Y * scale) * 0.5f));
+            DrawTextWithShadow(text, position, color * opacity, scale, opacity);
+        }
+
+        private static string TrimTextToFit(string text, int width, int height, float scale)
+        {
+            var font = FontAssets.MouseText.Value;
+            if (font.MeasureString(text).X * scale <= width && font.MeasureString(text).Y * scale <= height)
+                return text;
+
+            const string suffix = "...";
+            string trimmed = text;
+            while (trimmed.Length > 0)
+            {
+                Vector2 size = font.MeasureString(trimmed + suffix);
+                if (size.X * scale <= width && size.Y * scale <= height)
+                    break;
+
+                trimmed = trimmed[..^1];
+            }
+
+            return trimmed.Length > 0 ? trimmed + suffix : suffix;
+        }
+
+        private static void DrawTextWithShadow(string text, Vector2 position, Color color, float scale, float opacity)
+        {
+            CalamityUtils.DrawBorderStringEightWay(
+                Main.spriteBatch,
+                FontAssets.MouseText.Value,
+                text,
+                position,
+                color,
+                Color.Black * (0.75f * opacity),
+                scale);
+        }
+
+        private static void DrawRectangle(Rectangle rectangle, Color color)
+        {
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, rectangle, color);
+        }
+
+        private static void DrawBorder(Rectangle rectangle, Color color, int thickness)
+        {
+            DrawRectangle(new Rectangle(rectangle.X, rectangle.Y, rectangle.Width, thickness), color);
+            DrawRectangle(new Rectangle(rectangle.X, rectangle.Bottom - thickness, rectangle.Width, thickness), color);
+            DrawRectangle(new Rectangle(rectangle.X, rectangle.Y, thickness, rectangle.Height), color);
+            DrawRectangle(new Rectangle(rectangle.Right - thickness, rectangle.Y, thickness, rectangle.Height), color);
+        }
+
+        public override void DrawBehind(int index, System.Collections.Generic.List<int> behindNPCsAndTiles, System.Collections.Generic.List<int> behindNPCs, System.Collections.Generic.List<int> behindProjectiles, System.Collections.Generic.List<int> overPlayers, System.Collections.Generic.List<int> overWiresUI)
+        {
+            overWiresUI.Add(index);
+        }
+    }
+
+    internal readonly struct RightHeatEntry
+    {
+        public RightHeatEntry(int level, int numberItemID, string unlockBossEnglishName, string unlockTextOverride, string unlockText)
+        {
+            Level = level;
+            NumberItemID = numberItemID;
+            UnlockBossEnglishName = unlockBossEnglishName;
+            UnlockText = unlockTextOverride ?? unlockText;
+        }
+
+        public int Level { get; }
+        public int NumberItemID { get; }
+        public string UnlockBossEnglishName { get; }
+        public string UnlockText { get; }
     }
 
     internal readonly struct SHPCBookEntry

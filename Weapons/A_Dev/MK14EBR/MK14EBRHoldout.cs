@@ -33,6 +33,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             MaxInstances = 6
         };
 
+        private static readonly SoundStyle GrenadeLauncherFireSound = new("CalamityLegendsComeBack/Sound/SHPC/解放者机甲左手火箭弹")
+        {
+            Volume = 0.72f,
+            Pitch = -0.18f,
+            PitchVariance = 0.04f,
+            MaxInstances = 4
+        };
+
+        private static readonly SoundStyle DragonBreathFireSound = new("CalamityMod/Sounds/Item/DragonsBreathStrongStart")
+        {
+            Volume = 0.7f,
+            Pitch = 0.12f,
+            PitchVariance = 0.04f,
+            MaxInstances = 4
+        };
+
         private float shotAccumulator;
         private int consecutiveShots;
         private int underbarrelCooldown;
@@ -45,6 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         private Player Owner => Main.player[Projectile.owner];
         private NewLegendMK14EBR Weapon => Owner.HeldItem.ModItem as NewLegendMK14EBR;
+        private bool HoldingM14 => Owner.HeldItem.ModItem is NewLegendM14;
 
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Math.Max(Owner.direction, 1));
 
@@ -85,18 +102,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Owner.HeldItem.ModItem is not NewLegendMK14EBR weapon)
+            NewLegendMK14EBR weapon = Owner.HeldItem.ModItem as NewLegendMK14EBR;
+            bool holdingMK14 = weapon != null;
+            if (!Owner.active || Owner.dead || (!holdingMK14 && !HoldingM14))
             {
                 Projectile.Kill();
                 return;
             }
 
-            weapon.ClampLockedAttachments();
+            if (holdingMK14)
+                weapon.ClampLockedAttachments();
+
             Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
             Owner.Calamity().mouseWorldListener = true;
-            if (Main.myPlayer == Owner.whoAmI)
+            if (holdingMK14 && Main.myPlayer == Owner.whoAmI)
                 Owner.Calamity().rightClickListener = true;
 
             ManageHoldout();
@@ -127,7 +148,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
             KeepWeaponUseAnimation();
 
-            MK14RuntimeStats stats = MK14AttachmentDatabase.BuildStats(weapon, Owner);
+            MK14RuntimeStats stats = holdingMK14
+                ? MK14AttachmentDatabase.BuildStats(weapon, Owner)
+                : MK14AttachmentDatabase.BuildM14Stats();
             shotAccumulator += Math.Max(0.01f, stats.Rpm / 3600f);
 
             int guard = 0;
@@ -143,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 }
             }
 
-            if (consecutiveShots > 0)
+            if (holdingMK14 && consecutiveShots > 0)
                 TryFireUnderbarrel(weapon, stats);
         }
 
@@ -207,7 +230,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 Math.Max(4f, shootSpeed * stats.ProjectileSpeedMultiplier);
             float sustainedDamageMultiplier = MK14AttachmentDatabase.ComputeSustainedFireDamageMultiplier(stats, consecutiveShots);
             damage = Math.Max(1, (int)Math.Round(damage * sustainedDamageMultiplier));
-            int projectileType = ammoItemType == ItemID.MusketBall
+            int projectileType = weapon != null && ammoItemType == ItemID.MusketBall
                 ? ModContent.ProjectileType<M61Bullet>()
                 : pickedProjectileType;
 
@@ -224,6 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             {
                 Projectile shot = Main.projectile[projectileIndex];
                 shot.DamageType = DamageClass.Ranged;
+                shot.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
                 ApplyProjectileScale(shot, stats.ProjectileScaleMultiplier);
                 shot.GetGlobalProjectile<MK14GlobalProjectile>().Configure(
                     shot,
@@ -232,10 +256,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                     spreadDegrees);
             }
 
-            recoilOffset = weapon.Barrel == MK14Barrel.SniperHeavy ? 10f : 5f;
-            Owner.velocity -= direction * (weapon.Barrel == MK14Barrel.SniperHeavy ? 0.42f : 0.18f);
+            recoilOffset = weapon?.Barrel == MK14Barrel.SniperHeavy ? 10f : 5f;
+            Owner.velocity -= direction * (weapon?.Barrel == MK14Barrel.SniperHeavy ? 0.42f : 0.18f);
 
-            if (Main.myPlayer == Owner.whoAmI && weapon.Barrel == MK14Barrel.SniperHeavy)
+            if (Main.myPlayer == Owner.whoAmI && weapon?.Barrel == MK14Barrel.SniperHeavy)
             {
                 Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 1.1f);
             }
@@ -259,7 +283,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         private static SoundStyle GetFireSound(NewLegendMK14EBR weapon)
         {
-            return weapon.Muzzle switch
+            return weapon?.Muzzle switch
             {
                 MK14Muzzle.UniversalSuppressor => UniversalSuppressorFireSound,
                 MK14Muzzle.HeavySuppressor => HeavySuppressorFireSound,
@@ -296,7 +320,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         {
             Vector2 direction = AimDirection;
             int damage = Math.Max(1, (int)(Projectile.damage * 0.92f));
-            Projectile.NewProjectile(
+            int grenadeIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 GunTipPosition - direction * 10f + new Vector2(0f, 8f * Owner.gravDir),
                 direction * 12f + new Vector2(0f, -1.2f),
@@ -305,7 +329,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 Projectile.knockBack * 1.25f,
                 Projectile.owner);
 
-            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.58f, Pitch = -0.18f }, GunTipPosition);
+            if (Main.projectile.IndexInRange(grenadeIndex))
+                Main.projectile[grenadeIndex].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+
+            SoundEngine.PlaySound(GrenadeLauncherFireSound, GunTipPosition);
         }
 
         private void FireDragonBreath(MK14RuntimeStats stats)
@@ -314,8 +341,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             int damage = Math.Max(1, (int)(Projectile.damage * 0.38f));
             for (int i = 0; i < 3; i++)
             {
-                Vector2 velocity = direction.RotatedBy(MathHelper.ToRadians(MathHelper.Lerp(-7f, 7f, i / 2f))) * Main.rand.NextFloat(13.5f, 16.5f);
-                Projectile.NewProjectile(
+                Vector2 velocity = direction.RotatedBy(MathHelper.ToRadians(MathHelper.Lerp(-7f, 7f, i / 2f))) * Main.rand.NextFloat(27f, 33f);
+                int pelletIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     GunTipPosition - direction * 8f,
                     velocity,
@@ -323,9 +350,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                     damage,
                     Projectile.knockBack * 0.55f,
                     Projectile.owner);
+
+                if (Main.projectile.IndexInRange(pelletIndex))
+                    Main.projectile[pelletIndex].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
             }
 
-            SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.62f, Pitch = 0.18f }, GunTipPosition);
+            SoundEngine.PlaySound(DragonBreathFireSound, GunTipPosition);
         }
 
         private bool HasCloseTarget(float range)
@@ -371,18 +401,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         public override bool PreDraw(ref Color lightColor)
         {
             NewLegendMK14EBR weapon = Weapon;
-            if (weapon == null)
+            if (weapon == null && !HoldingM14)
                 return false;
 
             SpriteEffects effects = Projectile.spriteDirection == -1 ? SpriteEffects.FlipVertically : SpriteEffects.None;
-            MK14TextureComposer.DrawComposite(
-                Main.spriteBatch,
-                weapon,
-                Projectile.Center - Main.screenPosition,
-                lightColor,
-                Projectile.rotation,
-                Projectile.scale,
-                effects);
+            if (weapon != null)
+            {
+                MK14TextureComposer.DrawComposite(
+                    Main.spriteBatch,
+                    weapon,
+                    Projectile.Center - Main.screenPosition,
+                    lightColor,
+                    Projectile.rotation,
+                    Projectile.scale,
+                    effects);
+            }
+            else
+            {
+                Texture2D texture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/A_Dev/MK14EBR/M14/m14").Value;
+                Main.EntitySpriteDraw(
+                    texture,
+                    Projectile.Center - Main.screenPosition,
+                    null,
+                    lightColor,
+                    Projectile.rotation,
+                    texture.Size() * 0.5f,
+                    Projectile.scale,
+                    effects,
+                    0);
+            }
 
             return false;
         }

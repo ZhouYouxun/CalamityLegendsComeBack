@@ -1,6 +1,7 @@
 ﻿// SHPCEffectLoader.cs
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord;
@@ -10,6 +11,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicEnergy;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFuel;
@@ -80,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             EffectRegistry.RegisterEffect(new EndothermicEnergyEffect()); // 恒温能量 33
             EffectRegistry.RegisterEffect(new NightmareFuelEffect()); // 梦魇魔能 34
-            //EffectRegistry.RegisterEffect(new XXXXXXXXX()); // 日蚀之阴 35
+            EffectRegistry.RegisterEffect(new DarksunFragmentEffect()); // 日蚀之阴
             EffectRegistry.RegisterEffect(new AscendantSpiritEffect()); // 化神魂晶 36
             EffectRegistry.RegisterEffect(new YharonSoulFragmentEffect()); // 龙魂碎片 37
             EffectRegistry.RegisterEffect(new ExoPrismEffect()); // 星流棱晶 38
@@ -89,6 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
 
             EffectRegistry.RegisterEffect(new ArmoredShellEffect()); // 装甲外壳，[补充] 40
+            EffectRegistry.RegisterEffect(new PearlShardEffect()); // 珍珠碎片 41
 
             
 

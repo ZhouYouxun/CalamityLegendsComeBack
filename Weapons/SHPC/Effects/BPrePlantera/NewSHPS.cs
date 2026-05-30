@@ -48,6 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         private int sinTimer;
         private bool startedHoming;
         private NPC target;
+        private int homingTimer;
 
         // ===== 力量之魂 =====
         private int preset4State;
@@ -270,15 +271,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (target != null && target.active)
             {
                 Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                homingTimer++;
 
-                Projectile.velocity = (
-                    Projectile.velocity * 9f +
-                    desiredDir * 34f
-                ) / 10f;
+                float loosen = Utils.GetLerpValue(0f, 72f, homingTimer, true);
+                float closeLoosen = Utils.GetLerpValue(210f, 42f, Projectile.Distance(target.Center), true);
+                float turnSpeed = MathHelper.Lerp(0.045f, 0.28f, MathHelper.Max(loosen, closeLoosen));
+                float targetSpeed = MathHelper.Lerp(18f, 27f, loosen);
+                float acceleration = MathHelper.Lerp(0.22f, 0.52f, MathHelper.Max(loosen, closeLoosen));
 
-                float speed = Projectile.velocity.Length();
-                speed = MathHelper.Lerp(speed, 21f, 0.18f);
-                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
+                Vector2 currentDir = Projectile.velocity.SafeNormalize(desiredDir);
+                Vector2 steeredDir = currentDir.ToRotation().AngleTowards(desiredDir.ToRotation(), turnSpeed).ToRotationVector2();
+                float speed = MathHelper.Lerp(Projectile.velocity.Length(), targetSpeed, acceleration);
+                Projectile.velocity = steeredDir * speed;
             }
             else
             {

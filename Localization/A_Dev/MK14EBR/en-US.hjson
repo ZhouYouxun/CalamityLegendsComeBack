@@ -17,6 +17,11 @@ Mods: {
 						[c/85D7FF:Attachments do not turn it into another gun; they push the same ballistic line toward different extremes.]
 						'''
 				}
+
+				NewLegendM14: {
+					DisplayName: M14
+					Tooltip: "[c/F7D87C:Fully automatic fire. Spread linearly rises from 1 degree to 15 degrees across 100 sustained shots, then resets immediately when released.]"
+				}
 			}
 		}
 
@@ -24,10 +29,9 @@ Mods: {
 			MK14EBR: {
 				MK14EBRHoldout.DisplayName: MK14EBR-缄花
 				MK14ModificationPanel.DisplayName: MK14EBR-缄花 Modification Panel
+				NewLegendM14.DisplayName: M14
 				M61Bullet.DisplayName: M61 AP Round
 				MK14GrenadeProjectile.DisplayName: MK14 Underbarrel Grenade
-				MK14GrenadeExplosion.DisplayName: MK14 Grenade Explosion
-				MK14GrenadeShard.DisplayName: MK14 Grenade Fragment
 				MK14DragonBreathPellet.DisplayName: Dragon's Breath Pellet
 			}
 		}

@@ -102,6 +102,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                     0.7f);
                 GeneralParticleHandler.SpawnParticle(glow);
             }
+
+            if (Projectile.numUpdates == 0 && Projectile.timeLeft % 7 == 0)
+            {
+                Particle sideWave = new DirectionalPulseRing(
+                    Projectile.Center - forward * 4f,
+                    normal * Main.rand.NextFloat(-0.7f, 0.7f),
+                    Color.Lerp(new Color(255, 184, 72), new Color(120, 214, 255), 0.38f) * 0.48f,
+                    new Vector2(0.5f, 1.45f),
+                    normal.ToRotation(),
+                    0.035f,
+                    Main.rand.NextFloat(0.08f, 0.12f),
+                    13);
+                GeneralParticleHandler.SpawnParticle(sideWave);
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -124,34 +138,41 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         public override void OnKill(int timeLeft)
         {
-            if (Projectile.owner == Main.myPlayer)
-            {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<MK14GrenadeExplosion>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    126f);
-
-                for (int i = 0; i < 5; i++)
-                {
-                    Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 8f);
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        velocity,
-                        ModContent.ProjectileType<MK14GrenadeShard>(),
-                        System.Math.Max(1, (int)(Projectile.damage * 0.26f)),
-                        Projectile.knockBack * 0.25f,
-                        Projectile.owner);
-                }
-            }
-
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.62f, Pitch = -0.1f }, Projectile.Center);
+            SpawnTotalityFire();
             SpawnGrenadeImpactVisuals();
+        }
+
+        private void SpawnTotalityFire()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            if (!ModContent.TryFind("CalamityMod/TotalityFire", out ModProjectile totalityFire))
+                return;
+
+            int damage = Math.Max(1, (int)(Projectile.damage * 0.32f));
+            for (int i = 0; i < 7; i++)
+            {
+                Vector2 velocity = (MathHelper.TwoPi * i / 7f).ToRotationVector2().RotatedByRandom(0.16f) * Main.rand.NextFloat(4.5f, 7.8f);
+                int fireIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + velocity.SafeNormalize(Vector2.UnitX) * 8f,
+                    velocity,
+                    totalityFire.Type,
+                    damage,
+                    Projectile.knockBack * 0.25f,
+                    Projectile.owner);
+
+                if (!Main.projectile.IndexInRange(fireIndex))
+                    continue;
+
+                Projectile fire = Main.projectile[fireIndex];
+                fire.DamageType = DamageClass.Ranged;
+                fire.usesLocalNPCImmunity = true;
+                fire.localNPCHitCooldown = 15;
+                fire.CritChance = Projectile.CritChance;
+            }
         }
 
         private void SpawnGrenadeImpactVisuals()
@@ -180,75 +201,69 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 0.62f);
             GeneralParticleHandler.SpawnParticle(flame);
 
-            for (int i = 0; i < 24; i++)
+            Particle brightPulse = new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(255, 198, 82),
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                Main.rand.NextFloat(-0.3f, 0.3f),
+                0.06f,
+                0.72f,
+                20);
+            GeneralParticleHandler.SpawnParticle(brightPulse);
+
+            Particle smokeRing = new DirectionalPulseRing(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(255, 150, 72) * 0.72f,
+                new Vector2(1.7f, 1.7f),
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.14f,
+                1.35f,
+                22);
+            GeneralParticleHandler.SpawnParticle(smokeRing);
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 15f);
+                Particle trapSpark = new SparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    velocity,
+                    false,
+                    Main.rand.Next(16, 30),
+                    Main.rand.NextFloat(0.58f, 1.12f),
+                    Main.rand.NextBool() ? new Color(255, 218, 86) : new Color(255, 96, 42));
+                GeneralParticleHandler.SpawnParticle(trapSpark);
+            }
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 12f);
+                Particle glowSpark = new GlowSparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    velocity,
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.014f, 0.026f),
+                    Main.rand.NextBool() ? new Color(255, 164, 54) : new Color(255, 72, 38),
+                    new Vector2(Main.rand.NextFloat(2.4f, 4.2f), Main.rand.NextFloat(0.65f, 1.05f)),
+                    true,
+                    false,
+                    0.7f);
+                GeneralParticleHandler.SpawnParticle(glowSpark);
+            }
+
+            for (int i = 0; i < 36; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center,
                     Main.rand.NextBool() ? DustID.Smoke : DustID.Torch,
-                    Main.rand.NextVector2Circular(6f, 6f),
+                    Main.rand.NextVector2Circular(9f, 9f),
                     120,
                     Main.rand.NextBool() ? Color.Gray : Color.Orange,
-                    Main.rand.NextFloat(0.85f, 1.35f));
+                    Main.rand.NextFloat(0.9f, 1.65f));
                 dust.noGravity = true;
-            }
-        }
-    }
-
-    internal sealed class MK14GrenadeExplosion : ModProjectile, ILocalizedModType
-    {
-        public new string LocalizationCategory => "Projectiles.MK14EBR";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
-        public override void SetDefaults()
-        {
-            Projectile.width = Projectile.height = 10;
-            Projectile.friendly = true;
-            Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = -1;
-            Projectile.timeLeft = 3;
-            Projectile.tileCollide = false;
-            Projectile.ignoreWater = true;
-            Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
-        }
-
-        public override void AI()
-        {
-            if (Projectile.localAI[0] != 0f)
-                return;
-
-            Projectile.localAI[0] = 1f;
-            int size = (int)MathHelper.Clamp(Projectile.ai[0] <= 0f ? 126f : Projectile.ai[0], 80f, 180f);
-            Projectile.Resize(size, size);
-            Projectile.Damage();
-        }
-    }
-
-    internal sealed class MK14GrenadeShard : ModProjectile, ILocalizedModType
-    {
-        public new string LocalizationCategory => "Projectiles.MK14EBR";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/MK14EBR/M61Bullet";
-
-        public override void SetDefaults()
-        {
-            Projectile.width = Projectile.height = 6;
-            Projectile.friendly = true;
-            Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 1;
-            Projectile.timeLeft = 70;
-            Projectile.extraUpdates = 1;
-            Projectile.tileCollide = true;
-            Projectile.ignoreWater = true;
-        }
-
-        public override void AI()
-        {
-            Projectile.rotation = Projectile.velocity.ToRotation();
-            Projectile.velocity.Y += 0.035f;
-            if (Main.rand.NextBool(3))
-            {
-                Dust spark = Dust.NewDustPerfect(Projectile.Center, DustID.Torch, -Projectile.velocity * 0.05f, 150, Color.Gold, 0.55f);
-                spark.noGravity = true;
             }
         }
     }
@@ -263,8 +278,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             Projectile.width = Projectile.height = 34;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 1;
-            Projectile.timeLeft = 46;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 23;
             Projectile.extraUpdates = 1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -289,14 +304,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 float fanT = Main.rand.NextFloat(-1f, 1f);
                 float angle = fanHalfAngle * fanT;
                 Vector2 velocity = forward.RotatedBy(angle) * Main.rand.NextFloat(5.5f, 12f) + right * fanT * Main.rand.NextFloat(0.8f, 2.4f);
-                Dust flame = Dust.NewDustPerfect(
+                Particle flame = new CustomSpark(
                     Projectile.Center + right * fanT * Main.rand.NextFloat(2f, 9f),
-                    Main.rand.NextBool(3) ? DustID.Smoke : DustID.Torch,
                     velocity,
-                    115,
-                    Main.rand.NextBool(3) ? new Color(96, 72, 64) : Color.Lerp(new Color(255, 92, 44), new Color(255, 174, 70), Main.rand.NextFloat(0.2f, 0.75f)),
-                    Main.rand.NextFloat(0.9f, 1.65f));
-                flame.noGravity = true;
+                    "CalamityMod/Particles/SmallBloom",
+                    false,
+                    Main.rand.Next(9, 16),
+                    Main.rand.NextFloat(0.14f, 0.24f),
+                    Color.Lerp(new Color(255, 92, 44), new Color(255, 174, 70), Main.rand.NextFloat(0.2f, 0.75f)),
+                    new Vector2(Main.rand.NextFloat(1.4f, 2.3f), Main.rand.NextFloat(0.75f, 1.15f)),
+                    true,
+                    false,
+                    0f,
+                    false,
+                    false,
+                    0.45f);
+                GeneralParticleHandler.SpawnParticle(flame);
             }
 
             for (int i = 0; i < 2; i++)
@@ -361,14 +384,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             for (int i = 0; i < 24; i++)
             {
                 Vector2 velocity = upwardForward.RotatedByRandom(0.42f) * Main.rand.NextFloat(4f, 13f);
-                Dust dust = Dust.NewDustPerfect(
+                Particle flame = new CustomSpark(
                     target.Center + Main.rand.NextVector2Circular(10f, 8f),
-                    Main.rand.NextBool(3) ? DustID.Smoke : DustID.Torch,
                     velocity,
-                    115,
-                    Main.rand.NextBool(3) ? Color.DimGray : new Color(255, 104, 48),
-                    Main.rand.NextFloat(1.0f, 2.0f));
-                dust.noGravity = true;
+                    "CalamityMod/Particles/SmallBloom",
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.16f, 0.28f),
+                    Main.rand.NextBool(3) ? new Color(120, 82, 70) : new Color(255, 104, 48),
+                    new Vector2(Main.rand.NextFloat(1.2f, 2.1f), Main.rand.NextFloat(0.7f, 1.1f)),
+                    true,
+                    false,
+                    0f,
+                    false,
+                    false,
+                    0.4f);
+                GeneralParticleHandler.SpawnParticle(flame);
             }
 
             for (int i = 0; i < 4; i++)

@@ -32,11 +32,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         public void Configure(Projectile projectile, NewLegendMK14EBR weapon, MK14RuntimeStats stats, float spreadDegrees)
         {
             FiredByMK14 = true;
-            Barrel = weapon.Barrel;
-            Muzzle = weapon.Muzzle;
-            Underbarrel = weapon.Underbarrel;
-            Stock = weapon.Stock;
-            Sight = weapon.Sight;
+            Barrel = weapon?.Barrel ?? MK14Barrel.Long;
+            Muzzle = weapon?.Muzzle ?? MK14Muzzle.None;
+            Underbarrel = weapon?.Underbarrel ?? MK14Underbarrel.None;
+            Stock = weapon?.Stock ?? MK14Stock.EBR;
+            Sight = weapon?.Sight ?? MK14Sight.RedDot;
             ArmorPenetration = stats.ArmorPenetration;
             InfinitePenetrationFrames = stats.InfinitePenetrationFrames;
             ForceSingleHitAndDoubleStrike = stats.ForceSingleHitAndDoubleStrike;

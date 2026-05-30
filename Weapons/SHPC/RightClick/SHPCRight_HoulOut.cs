@@ -621,6 +621,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 if (Main.projectile.IndexInRange(projIndex) &&
                     Main.projectile[projIndex].ModProjectile is SHPCRight_Proj beam)
                 {
+                    Main.projectile[projIndex].CritChance = Projectile.CritChance;
                     beam.WeaponStage = stage;
                     beam.HeatLevel = stage;
                     beam.BeamIndex = i;

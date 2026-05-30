@@ -258,11 +258,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
 
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
+
         }
 
         public override void OnKill(int timeLeft)
         {
             int sourceDamage = Projectile.damage;
+            Vector2 explosionCenter = Projectile.Center;
 
             int projIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -277,10 +279,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             Projectile proj = Main.projectile[projIndex];
             proj.width = 375;
             proj.height = 375;
-
-
-
-            Vector2 explosionCenter = Projectile.Center;
+            proj.CritChance = Projectile.CritChance;
 
             int oldWidth = Projectile.width;
             int oldHeight = Projectile.height;
@@ -315,7 +314,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                 Vector2 targetPos = targetCenter + Main.rand.NextVector2Circular(260f, 130f);
                 Vector2 velocity = (targetPos - spawnPos).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(20f, 28f);
 
-                Projectile.NewProjectile(
+                int laserIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPos,
                     velocity,
@@ -323,6 +322,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                     laserDamage,
                     Projectile.knockBack * 0.35f,
                     Projectile.owner);
+
+                if (Main.projectile.IndexInRange(laserIndex))
+                    Main.projectile[laserIndex].CritChance = Projectile.CritChance;
             }
         }
 

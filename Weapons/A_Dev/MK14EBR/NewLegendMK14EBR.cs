@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.Items;
+using CalamityMod.Items.Materials;
 using CalamityMod.Rarities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -67,6 +68,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         public override bool ConsumeItem(Player player) => false;
 
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<NewLegendM14>()
+                .AddIngredient(ItemID.ChlorophyteBar, 10)
+                .AddIngredient<PerennialBar>(10)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
+        }
+
         public override void HoldItem(Player player)
         {
             ClampLockedAttachments();
@@ -85,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             if (player.ownedProjectileCounts[HoldoutType] <= 0)
             {
                 Vector2 aimDirection = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-                Projectile.NewProjectile(
+                int holdoutIndex = Projectile.NewProjectile(
                     Item.GetSource_FromThis(),
                     player.MountedCenter,
                     aimDirection,
@@ -93,6 +104,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                     player.GetWeaponDamage(Item),
                     Item.knockBack,
                     player.whoAmI);
+
+                if (Main.projectile.IndexInRange(holdoutIndex))
+                    Main.projectile[holdoutIndex].CritChance = player.GetWeaponCrit(Item);
             }
         }
 

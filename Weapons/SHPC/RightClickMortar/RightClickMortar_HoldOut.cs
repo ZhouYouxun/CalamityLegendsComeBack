@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
 
             if (Main.myPlayer == Projectile.owner)
             {
-                Projectile.NewProjectile(
+                int shellIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
                     direction.RotatedByRandom(MathHelper.ToRadians(3f)) * MortarSpeed,
@@ -146,6 +146,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                     Projectile.owner,
                     mouseWorld.X,
                     mouseWorld.Y);
+
+                if (Main.projectile.IndexInRange(shellIndex))
+                    Main.projectile[shellIndex].CritChance = Projectile.CritChance;
             }
 
             SoundEngine.PlaySound(NewLegendSHPC.MortarSentryShot, GunTipPosition);

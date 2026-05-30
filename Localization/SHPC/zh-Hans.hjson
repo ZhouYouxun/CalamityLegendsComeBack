@@ -74,7 +74,7 @@ Mods: {
 
 				SHPCBook: {
 					DisplayName: SHPC材料手册
-					Tooltip: 左键打开或关闭 SHPC 材料索引。
+					Tooltip: 左键打开 SHPC 材料索引，右键打开右键热量系统索引。
 				}
 			}
 		}
@@ -128,11 +128,15 @@ Mods: {
 			SHPCAmmo38: 星流棱晶会发射审判激光，并展开分形几何追击。
 			SHPCAmmo39: 湮灭余烬会锁定视野内敌人，释放大范围湮灭打击。
 			SHPCAmmo40: 装甲外壳会喷射大量电磁光球，形成持续风暴。
+			SHPCAmmo41: 珍珠碎片会射出三颗大珍珠，破碎后分裂成逐渐加速的追踪小珍珠。
+			SHPCAmmo42: 日蚀之阴碎片会制造黑蚀之日，叠层后形成更强的持续压制。
 		}
 
 		Projectiles: {
 			SHPC: {
 				EnergyCore_Spark.DisplayName: 能源核心火花
+				PearlShardLargePearl.DisplayName: 珍珠碎片
+				PearlShardSmallPearl.DisplayName: 珍珠碎片
 				PurifiedGel_Ball.DisplayName: 净化凝胶球
 				StormlionMandible_ARC.DisplayName: 风暴狮颚电弧
 				BossSoulofMight_Ball.DisplayName: 力量之魂能量球
@@ -184,9 +188,15 @@ Mods: {
 				RightClickMortar_HoldOut.DisplayName: 右键迫击炮持握体
 				RightClickMortar_Proj.DisplayName: 右键迫击炮弹幕
 				RightClickMortar_Lazer.DisplayName: 右键迫击炮激光
+				DarksunFragmentBlackSun.DisplayName: 黑蚀之日
+				DarksunFragmentEclipseBolt.DisplayName: 日蚀小弹幕
+				DarksunFragmentBlackSunExplosion.DisplayName: 黑日爆炸
 			}
 
-			A_Dev.SHPCBookPanel.DisplayName: SHPC材料手册面板
+			A_Dev: {
+				SHPCBookPanel.DisplayName: SHPC材料手册面板
+				SHPCBookRightPanel.DisplayName: SHPC热量手册面板
+			}
 		}
 
 		Cooldowns.SHPC_EX: SHPC冷却

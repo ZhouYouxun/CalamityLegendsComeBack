@@ -88,6 +88,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             return stats;
         }
 
+        public static MK14RuntimeStats BuildM14Stats()
+        {
+            return new MK14RuntimeStats
+            {
+                BarrelBaseSpreadDegrees = 1f,
+                BarrelMaxSpreadDegrees = 15f,
+                BarrelSpreadRampEnd = 100
+            };
+        }
+
         public static float ComputeSpreadDegrees(MK14RuntimeStats stats, int consecutiveShots)
         {
             if (stats.LaserLocksSpread)

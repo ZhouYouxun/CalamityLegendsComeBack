@@ -104,7 +104,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.68f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
             1.82f, // EffectID 38: Exo Prism / 星流棱晶
             1.90f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
-            2.80f // EffectID 40: Armored Shell / 装甲外壳
+            2.80f, // EffectID 40: Armored Shell / 装甲外壳
+            0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
+            2.52f // EffectID 42: Darksun Fragment / 日蚀之阴碎片
         };
 
         public const int OverheatGraceTime = 60;

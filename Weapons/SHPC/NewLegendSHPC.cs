@@ -942,6 +942,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     (storedEffectPower > 0 && storedEffectID > 0)
                         ? storedEffectID
                         : EffectRegistry.GetEffectIDByAmmo(FindEffectAmmo(player)));
+
+                if (Main.projectile.IndexInRange(projIndex))
+                    Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);
             }       
 
             if (player.itemAnimation > 0 && player.altFunctionUse != 2)

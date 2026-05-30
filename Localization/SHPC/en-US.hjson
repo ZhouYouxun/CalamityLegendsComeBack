@@ -74,7 +74,7 @@ Mods: {
 
 				SHPCBook: {
 					DisplayName: SHPC Material Manual
-					Tooltip: Left click to open or close the SHPC material index.
+					Tooltip: Left click opens the SHPC material index. Right click opens the right-click heat system index.
 				}
 			}
 		}
@@ -128,11 +128,15 @@ Mods: {
 			SHPCAmmo38: Exo Prism fires judgment lasers and follows with fractal geometry attacks.
 			SHPCAmmo39: Ashes of Annihilation locks onto visible enemies and unleashes a wide annihilation strike.
 			SHPCAmmo40: Armored Shell fires a large swarm of electromagnetic orbs to form a sustained storm.
+			SHPCAmmo41: Pearl Shard releases three large pearls that split into accelerating homing pearls.
+			SHPCAmmo42: Darksun Fragment creates an eclipsed black sun that stacks into stronger sustained fire.
 		}
 
 		Projectiles: {
 			SHPC: {
 				EnergyCore_Spark.DisplayName: Energy Core Spark
+				PearlShardLargePearl.DisplayName: Pearl Shard
+				PearlShardSmallPearl.DisplayName: Pearl Shard
 				PurifiedGel_Ball.DisplayName: Purified Gel Orb
 				StormlionMandible_ARC.DisplayName: Stormlion Arc
 				BossSoulofMight_Ball.DisplayName: Soul of Might Orb
@@ -184,9 +188,15 @@ Mods: {
 				RightClickMortar_HoldOut.DisplayName: Right Click Mortar_ Hold Out
 				RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
 				RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
+				DarksunFragmentBlackSun.DisplayName: Eclipsed Black Sun
+				DarksunFragmentEclipseBolt.DisplayName: Eclipsed Solar Bolt
+				DarksunFragmentBlackSunExplosion.DisplayName: Eclipsed Black Sun Burst
 			}
 
-			A_Dev.SHPCBookPanel.DisplayName: SHPC Material Manual Panel
+			A_Dev: {
+				SHPCBookPanel.DisplayName: SHPC Material Manual Panel
+				SHPCBookRightPanel.DisplayName: SHPC Heat Manual Panel
+			}
 		}
 
 		Cooldowns.SHPC_EX: SHPC Cooldown

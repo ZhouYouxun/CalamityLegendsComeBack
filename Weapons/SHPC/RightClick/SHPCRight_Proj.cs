@@ -370,7 +370,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 : (heat >= 4 ? 104 : 84);
             int explosionDamage = Math.Max(1, (int)(Projectile.damage * (IsMainBeam ? 0.65f : 0.45f)));
 
-            Projectile.NewProjectile(
+            int explosionIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 target.Center,
                 Vector2.Zero,
@@ -381,6 +381,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 target.whoAmI,
                 explosionSize
             );
+
+            if (Main.projectile.IndexInRange(explosionIndex))
+                Main.projectile[explosionIndex].CritChance = Projectile.CritChance;
         }
 
         public override void OnKill(int timeLeft)
