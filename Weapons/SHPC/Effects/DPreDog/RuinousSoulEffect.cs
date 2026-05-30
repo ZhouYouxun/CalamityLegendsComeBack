@@ -203,7 +203,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     spawnPos,
                     shootVelocity,
                     ModContent.ProjectileType<RuinousSoul_OrbitGhost>(),
-                    (int)(projectile.damage * 0.35f),
+                    (int)(projectile.damage * 0.77f),
                     1f,
                     projectile.owner,
                     0f,
@@ -294,7 +294,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         private static void SpawnGhastlyVisageShards(Projectile projectile, NPC target)
         {
             Vector2 forward = projectile.velocity.SafeNormalize((target.Center - projectile.Center).SafeNormalize(Vector2.UnitX));
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 9; i++)
             {
                 float spread = MathHelper.Lerp(-0.68f, 0.68f, i / 6f);
                 Vector2 velocity = forward.RotatedBy(spread) * Main.rand.NextFloat(8f, 13.5f);
@@ -304,7 +304,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     target.Center + velocity.SafeNormalize(Vector2.UnitX) * 8f,
                     velocity,
                     ModContent.ProjectileType<RuinousSoul_GhastlyES>(),
-                    (int)(projectile.damage * 0.72f),
+                    (int)(projectile.damage * 0.88f),
                     projectile.knockBack * 0.5f,
                     projectile.owner,
                     target.whoAmI,
@@ -387,7 +387,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     owner.Center + spawnOffset,
                     Vector2.Zero,
                     ghostType,
-                    (int)(projectile.damage * 0.35f),
+                    (int)(projectile.damage * 0.77f),
                     projectile.knockBack,
                     projectile.owner,
                     0f,

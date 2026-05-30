@@ -36,10 +36,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             52, // 120Golem / 石巨人
             56, // 180Moon Lord / 月亮领主
             60, // 240Providence / 亵渎天神
-            64, // 300Polterghast / 噬魂幽花
-            66, // 360Devourer of Gods / 神明吞噬者
-            72, // 500Yharon / 犽戎
-            90 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            77, // 300Polterghast / 噬魂幽花
+            81, // 360Devourer of Gods / 神明吞噬者
+            90, // 500Yharon / 犽戎
+            100 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
@@ -92,12 +92,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.9f, // EffectID 25: Meld Blob / 冥思溶剂
             2.25f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
-            2.33f, // EffectID 28: Divine Geode / 神圣晶石
+            2.29f, // EffectID 28: Divine Geode / 神圣晶石
             1.28f, // EffectID 29: Bloodstone Core / 血神核心
-            1.34f, // EffectID 30: Ruinous Soul / 毁灭之灵
+            2.63f, // EffectID 30: Ruinous Soul / 毁灭之灵
             2.16f, // EffectID 31: Necroplasm / 灵质
-            2.15f, // EffectID 32: Dark Plasma / 暗离子体
-            2.33f, // EffectID 33: Twisting Nether / 扭曲虚空
+            1.97f, // EffectID 32: Dark Plasma / 暗离子体
+            2.35f, // EffectID 33: Twisting Nether / 扭曲虚空
             2.52f, // EffectID 34: Endothermic Energy / 恒温能量
             1.48f, // EffectID 35: Nightmare Fuel / 梦魇魔能
             1.56f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
