@@ -54,11 +54,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             72, // 32Plantera / 世纪之花
             88, // 40Golem / 石巨人
             105, // 54Moon Lord / 月亮领主
-            120, // 66Providence / 亵渎天神
-            137, // 77Polterghast / 噬魂幽花
-            160, // 90Devourer of Gods / 神明吞噬者
-            180, // 100Yharon / 犽戎
-            233 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            130, // 66Providence / 亵渎天神
+            160, // 77Polterghast / 噬魂幽花
+            210, // 90Devourer of Gods / 神明吞噬者
+            250, // 100Yharon / 犽戎
+            333 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 3. 左键材料控制倍率：按 SHPC EffectID 索引，材料会乘到左键基础伤害上。
@@ -98,12 +98,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.16f, // EffectID 31: Necroplasm / 灵质
             1.97f, // EffectID 32: Dark Plasma / 暗离子体
             2.35f, // EffectID 33: Twisting Nether / 扭曲虚空
-            2.52f, // EffectID 34: Endothermic Energy / 恒温能量
-            1.48f, // EffectID 35: Nightmare Fuel / 梦魇魔能
-            1.56f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
-            1.68f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
-            1.82f, // EffectID 38: Exo Prism / 星流棱晶
-            1.90f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
+            2.85f, // EffectID 34: Endothermic Energy / 恒温能量
+            2.07f, // EffectID 35: Nightmare Fuel / 梦魇魔能
+            2.42f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
+            3.25f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
+            2.22f, // EffectID 38: Exo Prism / 星流棱晶
+            2.69f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.52f // EffectID 42: Darksun Fragment / 日蚀之阴碎片
