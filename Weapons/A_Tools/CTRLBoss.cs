@@ -10,6 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools
 {
@@ -83,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         }
     }
 
-    internal sealed class CTRLBossPanel : ModProjectile, ILocalizedModType
+    internal sealed class CTRLBossPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int Columns = 5;
         private const int SlotSize = 52;
@@ -387,7 +388,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 

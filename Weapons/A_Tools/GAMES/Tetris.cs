@@ -10,6 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 {
@@ -79,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
         }
     }
 
-    internal sealed class TetrisPanel : ModProjectile, ILocalizedModType
+    internal sealed class TetrisPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int BoardColumns = 10;
         private const int VisibleRows = 20;
@@ -966,7 +967,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 }

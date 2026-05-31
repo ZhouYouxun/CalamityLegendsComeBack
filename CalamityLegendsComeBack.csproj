@@ -28,6 +28,7 @@
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\ApolloArtemis\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Thanatos\" />
+	  <Folder Include="Weapons\SHPC\Effects\CPreMoodLord\CoreOfCalamity\" />
 	  <Folder Include="Weapons\YharimsCrystal\Lazer\参考文献\" />
 	  <Folder Include="Z_TeachingProjectile\" />
 	</ItemGroup>
@@ -71,6 +72,26 @@
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
 	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
 	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
+	  <AdditionalFiles Remove="Shader\**\*.zip" />
+	  <AdditionalFiles Remove="Shader\XNBcoder\*.dll" />
+	  <AdditionalFiles Remove="Shader\XNBcoder\*.exe" />
+	  <AdditionalFiles Remove="Shader\XNBcoder\*.txt" />
+	  <AdditionalFiles Remove="Shader\XNBcoder\logfile.txt" />
+	  <Content Remove="Shader\**\*.zip" />
+	  <Content Remove="Shader\XNBcoder\*.dll" />
+	  <Content Remove="Shader\XNBcoder\*.exe" />
+	  <Content Remove="Shader\XNBcoder\*.txt" />
+	  <Content Remove="Shader\XNBcoder\logfile.txt" />
+	  <EmbeddedResource Remove="Shader\**\*.zip" />
+	  <EmbeddedResource Remove="Shader\XNBcoder\*.dll" />
+	  <EmbeddedResource Remove="Shader\XNBcoder\*.exe" />
+	  <EmbeddedResource Remove="Shader\XNBcoder\*.txt" />
+	  <EmbeddedResource Remove="Shader\XNBcoder\logfile.txt" />
+	  <None Remove="Shader\**\*.zip" />
+	  <None Remove="Shader\XNBcoder\*.dll" />
+	  <None Remove="Shader\XNBcoder\*.exe" />
+	  <None Remove="Shader\XNBcoder\*.txt" />
+	  <None Remove="Shader\XNBcoder\logfile.txt" />
 	</ItemGroup>
 
 	<!-- References -->

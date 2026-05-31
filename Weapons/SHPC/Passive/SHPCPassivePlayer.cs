@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
+using CalamityLegendsComeBack.Accssory.SHPC.General;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 {
@@ -12,6 +13,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         private bool holdingSHPC;
         private float manaRegenAccumulator;
         private int passiveVisualTimer;
+        private int fastManaDelayTimer;
+        private int unscaledManaSicknessTime;
 
         public override void ResetEffects()
         {
@@ -23,6 +26,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             holdingSHPC = false;
             manaRegenAccumulator = 0f;
             passiveVisualTimer = 0;
+            fastManaDelayTimer = 0;
+            unscaledManaSicknessTime = 0;
         }
 
         public void SetHoldingSHPC()
@@ -30,20 +35,68 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             holdingSHPC = true;
         }
 
+        public bool HoldingSHPC => holdingSHPC && Player.HeldItem.type == ModContent.ItemType<NewLegendSHPC>();
+
+        public override void PreUpdateBuffs()
+        {
+            if (!HoldingSHPC)
+            {
+                unscaledManaSicknessTime = 0;
+                return;
+            }
+
+            int buffIndex = Player.FindBuffIndex(BuffID.ManaSickness);
+            if (buffIndex < 0)
+            {
+                unscaledManaSicknessTime = 0;
+                return;
+            }
+
+            if (unscaledManaSicknessTime <= 0)
+                unscaledManaSicknessTime = Utils.Clamp(Player.buffTime[buffIndex], 0, Player.manaSickTimeMax);
+
+            Player.buffTime[buffIndex] = GetScaledManaSicknessTime(unscaledManaSicknessTime);
+            unscaledManaSicknessTime--;
+        }
+
         public override void PostUpdate()
         {
-            if (!holdingSHPC || Player.HeldItem.type != ModContent.ItemType<NewLegendSHPC>())
+            if (!HoldingSHPC)
             {
                 manaRegenAccumulator = 0f;
                 passiveVisualTimer = 0;
+                fastManaDelayTimer = 0;
+                return;
+            }
+
+            Player.statManaMax2 += 100;
+
+            SHPCEnergyCorePlayer energyCore = Player.GetModPlayer<SHPCEnergyCorePlayer>();
+            if (energyCore.HasInfiniteSHPCMana)
+            {
+                Player.statMana = Player.statManaMax2;
+                return;
+            }
+
+            TryAutoUseManaPotion(energyCore);
+
+            if (!energyCore.HasEnergyCore)
+            {
+                manaRegenAccumulator = 0f;
+                passiveVisualTimer = 0;
+                fastManaDelayTimer = 0;
                 return;
             }
 
             if (!PassiveCanTrigger())
             {
                 passiveVisualTimer = 0;
+                fastManaDelayTimer = 0;
                 return;
             }
+
+            if (++fastManaDelayTimer < 10)
+                return;
 
             RestoreManaPerFrame();
 
@@ -62,13 +115,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             }
         }
 
+        public void RegisterManaPotionUse()
+        {
+            unscaledManaSicknessTime = Math.Min(Player.manaSickTimeMax, Math.Max(0, unscaledManaSicknessTime) + Player.manaSickTime);
+            ApplyScaledManaSicknessTime();
+        }
+
         private bool PassiveCanTrigger()
         {
             if (Player.dead || Player.pulley || Player.statMana >= Player.statManaMax2)
                 return false;
 
             bool notFiring = IsNotFiring();
-            if (NPC.downedPlantBoss)
+            int tier = Player.GetModPlayer<SHPCEnergyCorePlayer>().EnergyCoreTier;
+            if (tier >= 3)
                 return notFiring;
 
             bool notMovingHorizontally =
@@ -76,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 !Player.controlRight &&
                 Math.Abs(Player.velocity.X) <= 0.08f;
 
-            if (Main.hardMode)
+            if (tier >= 2)
                 return notFiring && notMovingHorizontally;
 
             bool stationary = Player.velocity.LengthSquared() <= 0.01f && Player.grapCount <= 0;
@@ -101,7 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             if (Player.statMana >= Player.statManaMax2)
                 return;
 
-            manaRegenAccumulator += Player.statManaMax2 * 0.01f;
+            manaRegenAccumulator += Player.statManaMax2 * 0.02f;
             int manaToRestore = (int)manaRegenAccumulator;
             if (manaToRestore <= 0)
                 return;
@@ -113,6 +173,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             int restored = Player.statMana - previousMana;
             if (restored > 0 && Main.GameUpdateCount % 15 == 0)
                 Player.ManaEffect(restored);
+        }
+
+        private void TryAutoUseManaPotion(SHPCEnergyCorePlayer energyCore)
+        {
+            if (!energyCore.AutoManaPotion || Player.statMana > Player.statManaMax2 - 60)
+                return;
+
+            Player.QuickMana();
+        }
+
+        private void ApplyScaledManaSicknessTime()
+        {
+            int buffIndex = Player.FindBuffIndex(BuffID.ManaSickness);
+            if (buffIndex < 0)
+                return;
+
+            Player.buffTime[buffIndex] = GetScaledManaSicknessTime(unscaledManaSicknessTime);
+        }
+
+        private static int GetScaledManaSicknessTime(int unscaledTime)
+        {
+            return Utils.Clamp((int)MathF.Ceiling(unscaledTime / 3f), 1, Player.manaSickTimeMax);
         }
 
         private void SpawnGravityOrbBurst()

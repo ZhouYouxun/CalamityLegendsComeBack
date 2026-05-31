@@ -48,17 +48,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             SpawnSplitBurst(projectile);
 
-            Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float[] spread = { -0.08f, 0f, 0.08f };
-            float[] speedScale = { 12.2f, 13.6f, 12.8f };
-
-            for (int i = 0; i < spread.Length; i++)
+            // 深渊细胞不再直接射出三枚液滴。
+            // 普通 SHPC 光球只负责转换成一条受重力影响的深渊鲨鱼，液滴会在鲨鱼死亡时喷出。
+            if (projectile.owner == Main.myPlayer)
             {
+                Vector2 sharkVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * 13.5f;
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center + baseVelocity * 10f,
-                    baseVelocity.RotatedBy(spread[i]) * speedScale[i],
-                    ModContent.ProjectileType<DepthCells_Drop>(),
+                    projectile.Center + sharkVelocity.SafeNormalize(Vector2.UnitX) * 12f,
+                    sharkVelocity,
+                    ModContent.ProjectileType<DepthCells_Shark>(),
                     projectile.damage,
                     projectile.knockBack,
                     owner.whoAmI);

@@ -52,6 +52,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             return null;
         }
 
+        public virtual bool? CanHitNPC(Projectile projectile, Player owner, NPC target)
+        {
+            return null;
+        }
+
         // 命中后逻辑
         public virtual void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {

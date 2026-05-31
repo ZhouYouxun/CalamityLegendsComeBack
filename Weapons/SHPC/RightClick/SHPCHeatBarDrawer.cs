@@ -35,9 +35,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             Texture2D sparkle = GetNoBlackTexture(ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value, spriteBatch.GraphicsDevice);
-            Vector2 starCenter = drawPosition + new Vector2(32f - 1.5f * 16f, backTexture.Height * scale * 0.5f + 3f);
+            Vector2 starCenter = drawPosition + new Vector2(32f - 1.5f * 16f - 16f, backTexture.Height * scale * 0.5f + 3f);
             Vector2 origin = sparkle.Size() * 0.5f;
-            Color color = GetHeatStarColor(heatLevel);
+            Color color = GetHeatColor(heatLevel);
             float time = Main.GlobalTimeWrappedHourly;
             float flicker = heatLevel >= 5 ? 0.78f + (float)System.Math.Sin(time * 12f) * 0.22f : 1f;
             float levelScale = MathHelper.Lerp(0.72f, 1.08f, Utils.Clamp((heatLevel - 1f) / 4f, 0f, 1f));
@@ -47,6 +47,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             spriteBatch.Draw(sparkle, starCenter, null, color * (opacity * 0.78f), rotation, origin, drawScale, SpriteEffects.None, 0f);
             spriteBatch.Draw(sparkle, starCenter, null, color * (opacity * 0.56f), rotation + MathHelper.PiOver2, origin, drawScale * 0.86f, SpriteEffects.None, 0f);
             spriteBatch.Draw(sparkle, starCenter, null, Color.White * (opacity * 0.28f * flicker), rotation, origin, drawScale * 0.52f, SpriteEffects.None, 0f);
+        }
+
+        public static void DrawHeatBackOutline(SpriteBatch spriteBatch, Texture2D backTexture, Vector2 drawPosition, int heatLevel, float opacity, float scale)
+        {
+            if (heatLevel <= 0 || opacity <= 0f)
+                return;
+
+            Color outlineColor = GetHeatColor(heatLevel) * (opacity * 0.55f);
+            float outlineStrength = 1.65f + Utils.Clamp(heatLevel, 1, 5) * 0.18f;
+
+            for (int i = 0; i < 12; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * outlineStrength;
+                spriteBatch.Draw(backTexture, drawPosition + offset, null, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
         }
 
         public static void DrawOutlinePulse(SpriteBatch spriteBatch, Texture2D backTexture, Vector2 drawPosition, float scale, float opacity, int timer, int duration)
@@ -75,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 spriteBatch.Draw(backTexture, drawPosition + offset, null, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
-        private static Color GetHeatStarColor(int heatLevel)
+        public static Color GetHeatColor(int heatLevel)
         {
             return heatLevel switch
             {

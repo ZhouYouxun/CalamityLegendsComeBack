@@ -1,0 +1,645 @@
+CalamityLegendsComeBack Shader 使用教程
+======================================
+
+这份文档写给完全没接触过 Shader 的人。
+目标不是讲 GPU 理论，而是让你知道：
+
+1. 现有 Shader 怎么调用。
+2. 新 Shader 文件应该放哪里。
+3. 添加新 Shader 后要改哪些 C# 注册代码。
+4. 常见错误在哪里。
+
+
+一、先认识本文件夹
+------------------
+
+Shader/
+  ShaderGames.cs
+    当前模组的 Shader 加载与注册中心。
+    新增 Shader 时，大部分情况下只需要改这个文件。
+
+  ShaderFullScreenSystem.cs
+    全屏 Shader 示例入口。
+    默认不会一直开启全屏 Shader，需要你在代码里主动调用。
+
+  XNBcoder/Effects/
+    主要 Shader 文件夹。
+    .fx 是 Shader 源码。
+    .xnb 是 tModLoader 实际读取的编译后文件。
+
+  222/
+    旧测试 Shader 文件夹。
+    目前也会被 ShaderGames.cs 加载，其中 HGTShader 已注册为可调用拖尾 Shader。
+
+  XNBcoder/
+    里面有旧的 XNB 编译工具、dll、日志。
+    这些工具文件保留给开发者使用，但已经在 csproj 中排除，不会被打包进 mod。
+
+
+二、三种 Shader 类型
+-------------------
+
+目前最常用的是这三类：
+
+1. 拖尾 Shader
+   用 GameShaders.Misc 调用。
+   通常配合 Calamity 的 PrimitiveRenderer.RenderTrail 使用。
+   适合弹幕拖尾、激光、斩击、能量线。
+
+2. 普通 Effect Shader
+   直接从 ShaderGames.GetEffect("名字") 取 Effect。
+   适合你自己手动 Begin SpriteBatch、Apply、Draw 一张贴图。
+   这种方式更自由，但更容易写错。
+
+3. 全屏 Shader
+   用 Filters.Scene 注册和 Activate。
+   适合屏幕扭曲、画面滤镜、全屏变色、黑洞屏幕效果。
+
+染料 Shader 是另一套系统，走 GameShaders.Armor 和 ArmorShaderData。
+本文件夹目前主要管理拖尾、普通 Effect、全屏滤镜，不是染料系统。
+
+
+三、当前已经注册好的拖尾 Shader
+------------------------------
+
+这些 key 可以直接在代码里使用：
+
+GameShaders.Misc["CalamityLegendsComeBack:TailFirstEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TailSecondEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TailMagicEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TailModernEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TailTechnologyEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TrailFrostCrystalEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TrailGhostlyPhantomEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TrailBlazingFlameEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:TrailWarpDistortionEffect"]
+GameShaders.Misc["CalamityLegendsComeBack:ArtAttackTrail"]
+GameShaders.Misc["CalamityLegendsComeBack:HGTShader"]
+
+注意：
+key 必须完整写对。
+不要写旧的：
+GameShaders.Misc["ModNamespace:TailModernEffect"]
+
+也不要写旧模组名：
+GameShaders.Misc["CalamityThrowingSpear:TailModernEffect"]
+
+
+四、拖尾 Shader 最小调用模板
+---------------------------
+
+这是最常用的写法：在 ModProjectile 的 PreDraw 里画拖尾。
+
+需要 using：
+
+using CalamityMod.Graphics.Primitives;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria;
+using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+在弹幕 SetStaticDefaults 里设置 oldPos：
+
+public override void SetStaticDefaults()
+{
+    ProjectileID.Sets.TrailCacheLength[Projectile.type] = 24;
+    ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
+}
+
+写宽度函数：
+
+private float TrailWidth(float completionRatio, Vector2 _)
+{
+    return MathHelper.Lerp(18f, 2f, completionRatio);
+}
+
+写颜色函数：
+
+private Color TrailColor(float completionRatio, Vector2 _)
+{
+    float opacity = 1f - completionRatio;
+    return new Color(80, 220, 255, 0) * opacity;
+}
+
+在 PreDraw 里调用：
+
+public override bool PreDraw(ref Color lightColor)
+{
+    Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+    Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+    Vector2 origin = texture.Size() * 0.5f;
+
+    var shader = GameShaders.Misc["CalamityLegendsComeBack:TailModernEffect"];
+
+    shader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+    shader.UseColor(new Color(50, 200, 255));
+    shader.UseSecondaryColor(new Color(200, 255, 255));
+    shader.UseOpacity(1f);
+
+    PrimitiveRenderer.RenderTrail(
+        Projectile.oldPos,
+        new PrimitiveSettings(
+            TrailWidth,
+            TrailColor,
+            (_, _) => Projectile.Size * 0.5f,
+            shader: shader),
+        32);
+
+    Main.EntitySpriteDraw(
+        texture,
+        drawPosition,
+        null,
+        lightColor,
+        Projectile.rotation,
+        origin,
+        Projectile.scale,
+        SpriteEffects.None);
+
+    return false;
+}
+
+说明：
+
+Projectile.oldPos
+  弹幕之前的位置数组。拖尾就是靠它连成一条线。
+
+TrailWidth
+  控制拖尾从头到尾的宽度。
+
+TrailColor
+  控制拖尾每一段的颜色和透明度。
+
+SetShaderTexture
+  给 Shader 的 uImage1 传一张灰度/噪声/拖尾贴图。
+  很多拖尾 Shader 都靠这张图控制透明度、流动、形状。
+
+UseColor / UseSecondaryColor
+  对应 .fx 里的 uColor 和 uSecondaryColor。
+
+UseOpacity
+  对应 .fx 里的 uOpacity。
+
+
+五、不同拖尾 Shader 的简单建议
+-----------------------------
+
+TailModernEffect
+  比较干净的蓝白科技拖尾。适合激光、能量弹。
+
+TailMagicEffect
+  魔法感强。适合法术弹幕、灵魂类弹幕。
+
+TailTechnologyEffect
+  偏科技、扫描感。适合机械、星舰、炮弹。
+
+TrailFrostCrystalEffect
+  冰霜感。适合冰、寒气、晶体。
+
+TrailGhostlyPhantomEffect
+  幽灵感。适合灵魂、暗影、幻影。
+
+TrailBlazingFlameEffect
+  火焰感。适合火球、燃烧弹。
+
+TrailWarpDistortionEffect
+  扭曲感。适合空间、黑洞、传送。
+
+ArtAttackTrail
+  接近 Calamity ArtAttack 风格，比较适合明亮高速拖尾。
+
+HGTShader
+  旧测试区里的 Heavenly Gale Trail 风格。pass 是 PiercePass，已经注册好。
+
+
+六、普通 Effect Shader 怎么调用
+------------------------------
+
+有些 Shader 没有注册进 GameShaders.Misc，只是加载进了 ShaderGames.LoadedShaders。
+可以这样拿：
+
+using CalamityLegendsComeBack.Shader;
+using Microsoft.Xna.Framework.Graphics;
+
+Effect effect = ShaderGames.GetEffect("RainbowShader");
+
+例子：
+
+public override bool PreDraw(ref Color lightColor)
+{
+    Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+    Effect effect = ShaderGames.GetEffect("RainbowShader");
+    if (effect is null)
+        return true;
+
+    Main.spriteBatch.End();
+    Main.spriteBatch.Begin(
+        SpriteSortMode.Immediate,
+        BlendState.AlphaBlend,
+        Main.DefaultSamplerState,
+        DepthStencilState.None,
+        RasterizerState.CullCounterClockwise,
+        effect,
+        Main.GameViewMatrix.TransformationMatrix);
+
+    effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
+    effect.Parameters["uOpacity"]?.SetValue(1f);
+    effect.CurrentTechnique.Passes[0].Apply();
+
+    Main.spriteBatch.Draw(
+        texture,
+        Projectile.Center - Main.screenPosition,
+        null,
+        Color.White,
+        Projectile.rotation,
+        texture.Size() * 0.5f,
+        Projectile.scale,
+        SpriteEffects.None,
+        0f);
+
+    Main.spriteBatch.End();
+    Main.spriteBatch.Begin(
+        SpriteSortMode.Deferred,
+        BlendState.AlphaBlend,
+        Main.DefaultSamplerState,
+        DepthStencilState.None,
+        RasterizerState.CullCounterClockwise,
+        null,
+        Main.GameViewMatrix.TransformationMatrix);
+
+    return false;
+}
+
+注意：
+普通 Effect 方式需要你自己管理 SpriteBatch.Begin/End。
+如果不会管理 SpriteBatch，优先用 GameShaders.Misc + PrimitiveRenderer 的拖尾方式。
+
+
+七、全屏 Shader 怎么调用
+-----------------------
+
+目前已经注册：
+
+Filters.Scene["CalamityLegendsComeBack:ScreenSimplyDistorted"]
+
+最简单的临时启用：
+
+using CalamityLegendsComeBack.Systems;
+
+ShaderFullScreenSystem.ActivateScreenSimplyDistorted();
+
+更正规的做法是写 ModSceneEffect，然后让玩家 ManageSpecialBiomeVisuals。
+可以参考：
+
+Scenes/MiscScenes/AzureThunderGreenUltimateFilterScene.cs
+
+全屏 Shader 注意事项：
+
+1. 不要每个弹幕都随便 Activate 全屏 Shader。
+   全屏滤镜是全玩家画面效果，应该由玩家状态、场景、Boss、技能状态控制。
+
+2. 如果 Shader 需要屏幕尺寸，必须传 uScreenResolution。
+   ScreenSimplyDistorted 已经在 ShaderGames.cs 里自动传了。
+
+3. ScreenShaderData 第二个参数是 pass 名，不是 technique 名。
+   例如 ScreenSimplyDistorted.fx 里：
+   technique Technique1
+   {
+       pass Pass1
+   }
+   注册时要写 "Pass1"，不是 "Technique1"。
+
+
+八、新增一个拖尾 Shader 的完整流程
+---------------------------------
+
+假设你要新增一个叫 MyCoolTrail 的拖尾 Shader。
+
+第 1 步：写 .fx 文件
+
+放到：
+Shader/XNBcoder/Effects/MyCoolTrail.fx
+
+拖尾 Shader 至少应该有：
+
+sampler uImage0 : register(s0);
+sampler uImage1 : register(s1);
+float3 uColor;
+float3 uSecondaryColor;
+float uOpacity;
+float uTime;
+matrix uWorldViewProjection;
+
+struct VertexShaderInput
+{
+    float4 Position : POSITION0;
+    float4 Color : COLOR0;
+    float3 TextureCoordinates : TEXCOORD0;
+};
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float3 TextureCoordinates : TEXCOORD0;
+};
+
+VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
+{
+    VertexShaderOutput output;
+    output.Position = mul(input.Position, uWorldViewProjection);
+    output.Color = input.Color;
+    output.TextureCoordinates = input.TextureCoordinates;
+    return output;
+}
+
+float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
+{
+    float2 coords = input.TextureCoordinates.xy;
+    coords.y = (coords.y - 0.5) / input.TextureCoordinates.z + 0.5;
+
+    float4 fade = tex2D(uImage1, coords);
+    return input.Color * fade.r * uOpacity;
+}
+
+technique Technique1
+{
+    pass TrailPass
+    {
+        VertexShader = compile vs_2_0 VertexShaderFunction();
+        PixelShader = compile ps_2_0 PixelShaderFunction();
+    }
+}
+
+第 2 步：编译成 .xnb
+
+用 Shader/XNBcoder 里的工具把 MyCoolTrail.fx 编译成 MyCoolTrail.xnb。
+最终要有：
+
+Shader/XNBcoder/Effects/MyCoolTrail.fx
+Shader/XNBcoder/Effects/MyCoolTrail.xnb
+
+tModLoader 实际加载的是 .xnb。
+.fx 主要留给人类修改和重新编译。
+
+第 3 步：在 ShaderGames.cs 里加入加载列表
+
+找到 LoadBundledShaders() 里的 effectShaderNames：
+
+"MyCoolTrail",
+
+第 4 步：注册到 GameShaders.Misc
+
+找到 RegisterTrailShaders()，添加：
+
+RegisterMiscShader("MyCoolTrail", "TrailPass", "MyCoolTrail");
+
+这代表以后这样调用：
+
+GameShaders.Misc["CalamityLegendsComeBack:MyCoolTrail"]
+
+第 5 步：在弹幕里调用
+
+var shader = GameShaders.Misc["CalamityLegendsComeBack:MyCoolTrail"];
+shader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+shader.UseColor(Color.Cyan);
+shader.UseSecondaryColor(Color.White);
+shader.UseOpacity(1f);
+
+PrimitiveRenderer.RenderTrail(
+    Projectile.oldPos,
+    new PrimitiveSettings(TrailWidth, TrailColor, (_, _) => Projectile.Size * 0.5f, shader: shader),
+    32);
+
+第 6 步：build
+
+运行：
+dotnet build CalamityLegendsComeBack.csproj
+
+必须 0 errors。
+
+
+九、新增一个普通 Effect Shader 的流程
+-----------------------------------
+
+如果你的 Shader 不是拖尾，只是要对一张贴图变色、扭曲、扫描线处理：
+
+1. 把 .fx 和 .xnb 放进：
+   Shader/XNBcoder/Effects/
+
+2. 在 ShaderGames.cs 的 effectShaderNames 里加名字：
+   "MySpriteShader",
+
+3. 不需要 RegisterMiscShader。
+
+4. 代码里这样拿：
+   Effect effect = ShaderGames.GetEffect("MySpriteShader");
+
+5. 自己 SpriteBatch.Begin(... effect ...) 后 Draw。
+
+
+十、新增一个全屏 Shader 的流程
+-----------------------------
+
+假设叫 MyScreenShader。
+
+1. 放文件：
+   Shader/XNBcoder/Effects/MyScreenShader.fx
+   Shader/XNBcoder/Effects/MyScreenShader.xnb
+
+2. 在 effectShaderNames 加：
+   "MyScreenShader",
+
+3. 在 RegisterScreenShaders() 加：
+   RegisterSceneFilter("MyScreenShader", "Pass1", "MyScreenShader", EffectPriority.Medium);
+
+4. 调用：
+   Filters.Scene.Activate("CalamityLegendsComeBack:MyScreenShader");
+
+5. 如果需要每帧传参数，在 ShaderGames.PostUpdateEverything() 或专门的 ModSystem 里设置：
+
+Filter filter = Filters.Scene["CalamityLegendsComeBack:MyScreenShader"];
+if (filter != null && filter.IsActive())
+{
+    Effect shader = filter.GetShader().Shader;
+    shader.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
+}
+
+
+十一、Shader 参数和 C# 调用的对应关系
+------------------------------------
+
+.fx 参数：
+float3 uColor;
+
+C#：
+shader.UseColor(Color.Cyan);
+
+.fx 参数：
+float3 uSecondaryColor;
+
+C#：
+shader.UseSecondaryColor(Color.White);
+
+.fx 参数：
+float uOpacity;
+
+C#：
+shader.UseOpacity(1f);
+
+.fx 参数：
+sampler uImage1 : register(s1);
+
+C#：
+shader.SetShaderTexture(ModContent.Request<Texture2D>("路径"));
+
+.fx 参数：
+sampler uImage2 : register(s2);
+
+C#：
+shader.UseImage2("Images/Extra_189");
+或者：
+shader.UseImage2(ModContent.Request<Texture2D>("路径"));
+
+.fx 参数：
+matrix uWorldViewProjection;
+
+C#：
+PrimitiveRenderer 会自动设置。
+你自己写普通 Effect 时不会自动设置。
+
+.fx 参数：
+float uTime;
+
+C#：
+GameShaders.Misc 通常会自动维护。
+如果直接用 Effect，建议自己传：
+effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
+
+
+十二、常见错误
+--------------
+
+错误 1：GameShaders.Misc key 写错
+
+错误写法：
+GameShaders.Misc["TailModernEffect"]
+
+正确写法：
+GameShaders.Misc["CalamityLegendsComeBack:TailModernEffect"]
+
+
+错误 2：只放了 .fx，没有 .xnb
+
+tModLoader 运行时读取的是 .xnb。
+只有 .fx 不够。
+
+
+错误 3：ShaderGames.cs 加载列表忘记加名字
+
+你放了 MyCoolTrail.xnb，但 LoadBundledShaders() 里没写 "MyCoolTrail"。
+结果就是 ShaderGames.GetEffect("MyCoolTrail") 返回 null。
+
+
+错误 4：pass 名写错
+
+.fx 里是：
+pass TrailPass
+
+C# 就要写：
+RegisterMiscShader("MyCoolTrail", "TrailPass", "MyCoolTrail");
+
+不要写 technique 名。
+
+
+错误 5：拖尾 Shader 没有 uWorldViewProjection
+
+PrimitiveRenderer 会设置：
+uWorldViewProjection
+
+如果 .fx 里没有这个参数，或者名字拼错，拖尾就很容易画不出来。
+
+
+错误 6：Projectile.oldPos 没有设置
+
+如果没写：
+
+ProjectileID.Sets.TrailCacheLength[Projectile.type] = 24;
+ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
+
+oldPos 可能没有足够点，拖尾会很短或完全看不出来。
+
+
+错误 7：pow(sin(...), 小数) 出 NaN
+
+很多旧 Shader 有这种写法：
+
+pow(sin(coords.y * 3.141 + uTime), 1.5)
+
+如果 sin 结果为负数，小数次幂会出问题。
+更稳的写法：
+
+pow(abs(sin(coords.y * 3.141 + uTime)), 1.5)
+
+
+错误 8：ps_3_0 / vs_3_0 兼容性问题
+
+如果能用 ps_2_0 / vs_2_0，就优先用 2_0。
+一些环境下 3_0 更容易出问题。
+
+
+错误 9：普通 Effect 忘记恢复 SpriteBatch
+
+如果你自己 End/Begin 了 SpriteBatch，画完必须恢复。
+否则后面的 Terraria 绘制可能异常。
+
+
+十三、推荐的修改习惯
+-------------------
+
+1. 每新增一个 Shader，都先只做最小效果。
+   先让它变色或透明变化成功，再加复杂噪声、扭曲、火焰。
+
+2. 每次改 .fx 后都重新编译 .xnb。
+   只改 .fx 不会影响游戏实际加载结果。
+
+3. 每次改 ShaderGames.cs 后运行：
+   dotnet build CalamityLegendsComeBack.csproj
+
+4. 命名保持一致：
+   MyCoolTrail.fx
+   MyCoolTrail.xnb
+   "MyCoolTrail"
+   GameShaders.Misc["CalamityLegendsComeBack:MyCoolTrail"]
+
+5. 不要把旧模组名写进新代码。
+   当前模组统一使用：
+   CalamityLegendsComeBack
+
+
+十四、最快可复制调用模板
+------------------------
+
+var shader = GameShaders.Misc["CalamityLegendsComeBack:TailModernEffect"];
+shader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+shader.UseColor(Color.Cyan);
+shader.UseSecondaryColor(Color.White);
+shader.UseOpacity(1f);
+
+PrimitiveRenderer.RenderTrail(
+    Projectile.oldPos,
+    new PrimitiveSettings(
+        (completionRatio, _) => MathHelper.Lerp(18f, 2f, completionRatio),
+        (completionRatio, _) => Color.Cyan * (1f - completionRatio),
+        (_, _) => Projectile.Size * 0.5f,
+        shader: shader),
+    32);
+
+如果这段不显示，优先检查：
+1. oldPos 有没有设置 TrailCacheLength。
+2. key 有没有写完整。
+3. Shader 是否已经在 ShaderGames.cs 注册。
+4. .xnb 是否存在。
+5. build 是否 0 errors。

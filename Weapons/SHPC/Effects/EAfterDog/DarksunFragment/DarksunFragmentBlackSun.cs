@@ -140,23 +140,62 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Texture2D face = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/ScreamyFace").Value;
+            Texture2D[] sunsetVortexTextures =
+            {
+                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_003").Value,
+                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_004").Value,
+                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_005").Value,
+                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_006").Value,
+                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/gradationline_004").Value
+            };
 
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float radiusScale = GetRadiusForLevel(Level) / 96f;
             float fade = Projectile.timeLeft < 24 ? Projectile.timeLeft / 24f : Utils.GetLerpValue(0f, 18f, Timer, true);
             float pulse = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.2f) * 0.05f;
 
+            // 这里直接参考 SunsetASunsetRightEXPMagic2：
+            // 10 组沿圆周偏移的旋转纹理，每组叠加 5 张噪声/线纹理。
+            // 之前这部分错误地放在一次性飞行光球上，命中后立即消失，所以黑日本体看不到漩涡。
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            for (int i = 0; i < 7; i++)
+            float sunsetVortexScale = radiusScale * pulse * (1.38f + Level * 0.035f);
+            for (int i = 0; i < 10; i++)
             {
-                Color color = Color.Lerp(new Color(255, 198, 42), Color.Black, i / 6f) * fade * (0.42f - i * 0.035f);
-                color.A = 0;
-                Main.EntitySpriteDraw(vortex, drawPos, null, color, Projectile.rotation * (i % 2 == 0 ? 1f : -1.35f) + i, vortex.Size() * 0.5f, radiusScale * pulse * (1f + i * 0.035f), SpriteEffects.None);
+                float angle = MathHelper.TwoPi * i / 3f + Main.GlobalTimeWrappedHourly * MathHelper.TwoPi;
+                Color baseColor = i % 2 == 0 ? new Color(255, 205, 56) : new Color(70, 42, 8);
+                Color drawColor = Color.Lerp(baseColor, Color.Black, MathHelper.Clamp(i * 0.09f, 0f, 0.82f)) * fade * 0.56f;
+                Vector2 offset = (angle + Main.GlobalTimeWrappedHourly * i / 16f).ToRotationVector2() * (5f + Level * 0.7f);
+
+                foreach (Texture2D texture in sunsetVortexTextures)
+                {
+                    Main.EntitySpriteDraw(
+                        texture,
+                        drawPos + offset,
+                        null,
+                        drawColor,
+                        -angle + MathHelper.PiOver2,
+                        texture.Size() * 0.5f,
+                        sunsetVortexScale,
+                        SpriteEffects.None);
+                }
             }
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            for (int i = 0; i < 7; i++)
+            {
+                Color color = new Color(4 + i * 4, 3 + i * 3, 1, 205 - i * 18) * fade;
+                Main.EntitySpriteDraw(vortex, drawPos, null, color, Projectile.rotation * (i % 2 == 0 ? 1f : -1.35f) + i, vortex.Size() * 0.5f, radiusScale * pulse * (1f + i * 0.035f), SpriteEffects.None);
+            }
+            Main.EntitySpriteDraw(face, drawPos, null, new Color(8, 5, 1, 225) * fade, -Projectile.rotation * 0.5f, face.Size() * 0.5f, radiusScale * 0.33f, SpriteEffects.None);
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            for (int i = 0; i < 3; i++)
+            {
+                Color edge = new Color(255, 205, 64, 0) * fade * (0.64f - i * 0.13f);
+                Main.EntitySpriteDraw(ring, drawPos, null, edge, -Projectile.rotation * (1.35f + i * 0.28f), ring.Size() * 0.5f, radiusScale * (0.62f + i * 0.12f), SpriteEffects.None);
+            }
             Main.EntitySpriteDraw(ring, drawPos, null, new Color(255, 205, 64, 0) * 0.55f * fade, -Projectile.rotation * 1.8f, ring.Size() * 0.5f, radiusScale * 0.7f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, drawPos, null, Color.Black * 0.68f * fade, Projectile.rotation, bloom.Size() * 0.5f, radiusScale * 0.5f, SpriteEffects.None);
-            Main.EntitySpriteDraw(face, drawPos, null, new Color(25, 18, 4, 0) * 0.36f * fade, -Projectile.rotation * 0.5f, face.Size() * 0.5f, radiusScale * 0.33f, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPos, null, new Color(255, 180, 36, 0) * 0.26f * fade, Projectile.rotation, bloom.Size() * 0.5f, radiusScale * 0.74f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;

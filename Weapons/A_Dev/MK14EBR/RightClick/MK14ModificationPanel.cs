@@ -9,10 +9,11 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 {
-    internal sealed class MK14ModificationPanel : ModProjectile, ILocalizedModType
+    internal sealed class MK14ModificationPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int PanelPadding = 16;
         private const int BorderThickness = 2;
@@ -493,7 +494,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 }

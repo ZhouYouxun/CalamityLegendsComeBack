@@ -9,6 +9,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 {
@@ -78,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
         }
     }
 
-    internal sealed class MinesweeperPanel : ModProjectile, ILocalizedModType
+    internal sealed class MinesweeperPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int GridSize = 16;
         private const int MineCount = 40;
@@ -648,7 +649,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 }

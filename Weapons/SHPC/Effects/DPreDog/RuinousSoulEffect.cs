@@ -109,6 +109,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
         }
 
+        public override bool? CanHitNPC(Projectile projectile, Player owner, NPC target)
+        {
+            if (!AnyBossActive())
+                return null;
+
+            return target.boss ? null : false;
+        }
+
         // ================= OnHitNPC =================
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -425,6 +433,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
 
             return targetIndex;
+        }
+
+        private static bool AnyBossActive()
+        {
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (npc.active && npc.boss && !npc.friendly && !npc.dontTakeDamage)
+                    return true;
+            }
+
+            return false;
         }
 
      

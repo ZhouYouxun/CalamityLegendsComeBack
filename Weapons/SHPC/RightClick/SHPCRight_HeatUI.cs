@@ -34,17 +34,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
+            if (heatPlayer.ShouldSuppressHeatUI())
+            {
+                Projectile.Kill();
+                return;
+            }
+
             Projectile.Center = owner.Center + new Vector2(0f, -56f);
             Projectile.timeLeft = 2;
 
-            bool holdingHoldout = heatPlayer.HasActiveRightClickHoldout();
-            bool holdingSHPC = heatPlayer.IsHoldingSHPCLike();
             bool hasHeat = heatPlayer.HasAnyHeat();
-            bool shouldStay = holdingSHPC || (hasHeat && (holdingHoldout || heatPlayer.HeatUiFadeTimer > 0));
+            bool shouldStay = hasHeat || heatPlayer.HeatUiFadeTimer > 0;
 
-            float targetOpacity = holdingHoldout || holdingSHPC
-                ? 1f
-                : hasHeat ? heatPlayer.GetHeatUiFadeOpacity() : 0f;
+            float targetOpacity = hasHeat ? 1f : heatPlayer.GetHeatUiFadeOpacity();
             float lerpAmount = targetOpacity > Projectile.Opacity ? 0.25f : 0.08f;
             Projectile.Opacity = MathHelper.Lerp(Projectile.Opacity, targetOpacity, lerpAmount);
 
@@ -59,7 +61,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Player owner = Main.player[Projectile.owner];
             SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
-            if ((!heatPlayer.IsHoldingSHPCLike() && !heatPlayer.HasAnyHeat()) || Projectile.Opacity <= 0.03f)
+            if (heatPlayer.ShouldSuppressHeatUI() ||
+                (!heatPlayer.HasAnyHeat() && heatPlayer.HeatUiFadeTimer <= 0) ||
+                Projectile.Opacity <= 0.03f)
                 return false;
 
             Texture2D barBG = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/RightClick/SHPCBarBack").Value;
@@ -70,12 +74,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             Vector2 drawPos = owner.Center - Main.screenPosition + new Vector2(0f, -56f) - barBG.Size() / 1.5f;
 
+            int heatLevel = heatPlayer.GetDisplayedHeatLevel();
+            SHPCHeatBarDrawer.DrawHeatBackOutline(Main.spriteBatch, barBG, drawPos, heatLevel, Projectile.Opacity, 1.5f);
             SHPCHeatBarDrawer.DrawOutlinePulse(Main.spriteBatch, barBG, drawPos, 1.5f, Projectile.Opacity, heatPlayer.HeatBarOutlineTimer, HeatBarOutlineDuration);
             if (heatPlayer.HeatBarOutlineTimer > 0)
                 heatPlayer.HeatBarOutlineTimer--;
 
             SHPCHeatBarDrawer.Draw(Main.spriteBatch, barBG, barFG, drawPos, progress, color, color, 1.5f);
-            SHPCHeatBarDrawer.DrawHeatStar(Main.spriteBatch, barBG, drawPos, heatPlayer.GetDisplayedHeatLevel(), Projectile.Opacity, 1.5f);
+            SHPCHeatBarDrawer.DrawHeatStar(Main.spriteBatch, barBG, drawPos, heatLevel, Projectile.Opacity, 1.5f);
 
             return false;
         }

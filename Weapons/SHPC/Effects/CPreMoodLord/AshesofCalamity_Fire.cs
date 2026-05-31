@@ -2,6 +2,7 @@ using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
+using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -120,7 +121,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Lighting.AddLight(Projectile.Center, new Vector3(0.82f, 0.06f, 0.02f) * (0.68f * Projectile.Opacity));
 
             if (!Main.dedServ)
+            {
                 SpawnFlightEffects(direction);
+                if (Projectile.numUpdates == 0)
+                    SpawnCalamitousFireballMetaballs();
+            }
         }
 
         public override bool? CanDamage() => Timer > 2f && Projectile.Opacity > 0.12f ? null : false;
@@ -499,6 +504,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     Main.rand.NextFloat(-0.05f, 0.05f),
                     true));
             }
+        }
+
+        private void SpawnCalamitousFireballMetaballs()
+        {
+            CalamitasMetaball.SpawnParticle(
+                Projectile.Center + Projectile.velocity,
+                Main.rand.NextVector2Circular(2f, 2f),
+                64f * Projectile.scale);
         }
 
         private void SpawnHitEffects(Vector2 hitCenter)

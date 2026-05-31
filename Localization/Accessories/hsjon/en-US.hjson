@@ -31,21 +31,63 @@ Mods: {
 				Tooltip: Gives SHPC right click automatic lock-on
 			}
 
-			ExpansionCanisterI: {
-				DisplayName: Tier 1 Expansion Canister
+			HeatRedirectModule: {
+				DisplayName: Heat Redirect Module
 				Tooltip:
 					'''
-					+7% SHPC damage
-					SHPC left click gains 1 extra soul canister, recognizes the first 4 backpack ammo materials, and loads 25% more ammo rounded up to a multiple of 5
+					SHPC right-click shots generate 20% more heat and natural heat dissipation is reduced by 33%
+					Each heat level grants an additional 33% SHPC right-click damage
+					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
+					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
 					'''
 			}
 
-			ExpansionCanisterII: {
-				DisplayName: Tier 2 Expansion Canister
+			WastelandEnergyCore: {
+				DisplayName: Wasteland Energy Core
 				Tooltip:
 					'''
-					+12% SHPC damage
-					SHPC left click gains 3 extra soul canisters, recognizes the first 6 backpack ammo materials, and loads 50% more ammo rounded up to a multiple of 5
+					+7% SHPC damage
+					SHPC left-click mana cost -8%; right-click mana cost -12%
+					SHPC left click gains 1 extra soul canister and loads 25% more ammo rounded up to a multiple of 5
+					While holding SHPC, stand still and cease fire to rapidly restore mana
+					Automatically drinks mana potions when needed
+					'''
+			}
+
+			EverfrostEnergyCore: {
+				DisplayName: Everfrost Energy Core
+				Tooltip:
+					'''
+					+15% SHPC damage
+					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
+					SHPC left click gains 2 extra soul canisters and loads 50% more ammo rounded up to a multiple of 5
+					While holding SHPC, stop moving horizontally and cease fire to rapidly restore mana
+					Automatically drinks mana potions when needed
+					Shortens right-click startup
+					'''
+			}
+
+			EvolutionEnergyCore: {
+				DisplayName: Evolution Energy Core
+				Tooltip:
+					'''
+					+15% SHPC damage, +5% critical strike chance, allows right-click critical hits
+					SHPC left-click mana cost -15%; right-click mana cost -30%; left click has a 20% chance not to consume ammo
+					SHPC left click gains 3 extra soul canisters and loads 75% more ammo rounded up to a multiple of 5
+					While holding SHPC, cease fire to rapidly restore mana
+					Automatically drinks mana potions when needed
+					Shortens right-click startup
+					'''
+			}
+
+			StarstreamEnergyCore: {
+				DisplayName: Starstream Energy Core
+				Tooltip:
+					'''
+					+20% SHPC damage, +10% critical strike chance, allows right-click critical hits
+					While holding SHPC, gain infinite mana; left click has a 50% chance not to consume ammo
+					SHPC left click gains 4 extra soul canisters and loads 100% more ammo rounded up to a multiple of 5
+					Shortens right-click startup
 					'''
 			}
 
@@ -287,8 +329,12 @@ Mods: {
 				RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
 				FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
 				PlagueCell_Lazer.DisplayName: Plague Cell_ Lazer
+				AshesofCalamity_SoulRelay.DisplayName: Ashes of Calamity Soul Relay
+				AshesofCalamity_Soul.DisplayName: Ashes of Calamity Soul
+				StarblightSootShard.DisplayName: Starblight Soot Soul
 				EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
 				SHPCAmmoSelectionPanel.DisplayName: S H P C Ammo Selection Panel
+				SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
 			}
 
 			ChangedWeapons: {

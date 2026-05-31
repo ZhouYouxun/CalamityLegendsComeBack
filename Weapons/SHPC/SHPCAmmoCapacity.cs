@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             50, // EffectID 5: Essence of Havoc
             50, // EffectID 6: Essence of Eleum
             50, // EffectID 7: Essence of Sunlight
-            200, // EffectID 8: Titan Heart
+            50, // EffectID 8: Starblight Soot
             50, // EffectID 9: Soul of Light
             50, // EffectID 10: Soul of Night
             50, // EffectID 11: Soul of Flight
@@ -47,7 +47,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             200, // EffectID 39: Ashes of Annihilation
             225, // EffectID 40: Armored Shell
             75, // EffectID 41: Pearl Shard
-            100 // EffectID 42: Darksun Fragment
+            100, // EffectID 42: Darksun Fragment
+            999, // EffectID 43: Cynosure
+            225 // EffectID 44: Core of Calamity
         };
 
         public static int GetCapacity(int effectID)

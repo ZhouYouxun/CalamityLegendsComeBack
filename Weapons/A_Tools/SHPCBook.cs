@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using CalamityLegendsComeBack.Weapons.SHPC;
@@ -13,6 +14,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools
 {
@@ -93,16 +95,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         }
     }
 
-    internal sealed class SHPCBookPanel : ModProjectile, ILocalizedModType
+    internal sealed class SHPCBookPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int Columns = 4;
-        private const int SlotWidth = 136;
-        private const int SlotHeight = 38;
-        private const int SlotGap = 4;
-        private const int PanelPadding = 10;
-        private const int DetailGap = 6;
-        private const int BorderThickness = 2;
-        private const float MaxIconDrawSize = 28f;
+        private const int SlotWidth = 204;
+        private const int SlotHeight = 57;
+        private const int SlotGap = 6;
+        private const int PanelPadding = 15;
+        private const int DetailGap = 9;
+        private const int BorderThickness = 3;
+        private const float MaxIconDrawSize = 42f;
 
         private static SHPCBookEntry[] cachedEntries;
 
@@ -537,19 +539,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
 
         public override void DrawBehind(int index, System.Collections.Generic.List<int> behindNPCsAndTiles, System.Collections.Generic.List<int> behindNPCs, System.Collections.Generic.List<int> behindProjectiles, System.Collections.Generic.List<int> overPlayers, System.Collections.Generic.List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 
-    internal sealed class SHPCBookRightPanel : ModProjectile, ILocalizedModType
+    internal sealed class SHPCBookRightPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
-        private const int PanelWidth = 548;
-        private const int PanelPadding = 10;
-        private const int RowHeight = 58;
-        private const int RowGap = 5;
-        private const int BorderThickness = 2;
-        private const float NumberIconSize = 34f;
-        private const float BossIconSize = 30f;
+        private const int PanelWidth = 822;
+        private const int PanelPadding = 15;
+        private const int RowHeight = 87;
+        private const int RowGap = 8;
+        private const int BorderThickness = 3;
+        private const float NumberIconSize = 51f;
+        private const float BossIconSize = 45f;
 
         private static readonly RightHeatEntry[] HeatEntries =
         {
@@ -739,16 +740,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             DrawRectangle(rowArea, slotBack * (opacity * 0.94f));
             DrawBorder(rowArea, slotBorder * opacity, unlocked ? 2 : 1);
 
-            Rectangle numberFrame = new(rowArea.X + 6, rowArea.Y + 8, 42, 42);
+            Rectangle numberFrame = new(rowArea.X + 9, rowArea.Y + 12, 63, 63);
             DrawRectangle(numberFrame, Color.Lerp(new Color(10, 12, 18), rowColor, 0.08f) * (opacity * 0.82f));
             DrawBorder(numberFrame, slotBorder * (opacity * 0.62f), 1);
             DrawItemIcon(entry.NumberItemID, numberFrame.Center.ToVector2(), NumberIconSize, unlocked ? Color.White : Color.Gray, opacity);
 
             string description = GetHeatDescription(entry.Level);
-            Rectangle descriptionArea = new(rowArea.X + 56, rowArea.Y + 5, rowArea.Width - 126, 48);
-            DrawWrappedFitText(description, descriptionArea, unlocked ? Color.White : new Color(170, 174, 184), 0.56f, 0.38f, opacity);
+            Rectangle descriptionArea = new(rowArea.X + 84, rowArea.Y + 8, rowArea.Width - 189, 72);
+            DrawWrappedFitText(description, descriptionArea, unlocked ? Color.White : new Color(170, 174, 184), 0.73f, 0.49f, opacity);
 
-            Rectangle unlockFrame = new(rowArea.Right - 58, rowArea.Y + 8, 42, 42);
+            Rectangle unlockFrame = new(rowArea.Right - 87, rowArea.Y + 12, 63, 63);
             DrawRectangle(unlockFrame, Color.Lerp(new Color(10, 12, 18), rowColor, unlocked ? 0.12f : 0.04f) * (opacity * 0.82f));
             DrawBorder(unlockFrame, slotBorder * (opacity * 0.62f), 1);
             DrawUnlockIcon(entry, unlockFrame, unlocked, opacity);
@@ -857,8 +858,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             if (string.IsNullOrWhiteSpace(text) || area.Width <= 0 || area.Height <= 0)
                 return;
 
-            string displayText = TrimTextToFit(text, area.Width, area.Height, minScale);
-            DrawFitText(displayText, area, color, maxScale, minScale, opacity);
+            string[] lines = WrapTextToArea(text, area.Width, area.Height, minScale);
+            DrawMultilineFitText(lines, area, color, maxScale, minScale, opacity);
+        }
+
+        private static void DrawMultilineFitText(string[] lines, Rectangle area, Color color, float maxScale, float minScale, float opacity)
+        {
+            if (lines.Length == 0)
+                return;
+
+            var font = FontAssets.MouseText.Value;
+            float scale = maxScale;
+            float lineHeight = font.LineSpacing * scale;
+            float widest = 0f;
+
+            foreach (string line in lines)
+                widest = Math.Max(widest, font.MeasureString(line).X);
+
+            if (widest * scale > area.Width)
+                scale = area.Width / Math.Max(1f, widest);
+
+            if (lineHeight * lines.Length > area.Height)
+                scale = Math.Min(scale, area.Height / Math.Max(1f, font.LineSpacing * lines.Length));
+
+            scale = MathHelper.Clamp(scale, minScale, maxScale);
+            lineHeight = font.LineSpacing * scale;
+            Vector2 position = new(area.X, area.Y + Math.Max(0f, (area.Height - lineHeight * lines.Length) * 0.5f));
+
+            for (int i = 0; i < lines.Length; i++)
+                DrawTextWithShadow(lines[i], position + new Vector2(0f, i * lineHeight), color * opacity, scale, opacity);
         }
 
         private static void DrawFitText(string text, Rectangle area, Color color, float maxScale, float minScale, float opacity)
@@ -902,6 +930,43 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             return trimmed.Length > 0 ? trimmed + suffix : suffix;
         }
 
+        private static string[] WrapTextToArea(string text, int width, int height, float scale)
+        {
+            var font = FontAssets.MouseText.Value;
+            int maxLines = Math.Max(1, (int)Math.Floor(height / Math.Max(1f, font.LineSpacing * scale)));
+            string[] words = text.Replace('\n', ' ').Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            List<string> lines = new();
+            string currentLine = string.Empty;
+
+            foreach (string word in words)
+            {
+                string candidate = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
+                if (font.MeasureString(candidate).X * scale <= width)
+                {
+                    currentLine = candidate;
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(currentLine))
+                    lines.Add(currentLine);
+
+                currentLine = TrimTextToFit(word, width, font.LineSpacing, scale);
+                if (lines.Count >= maxLines)
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(currentLine) && lines.Count < maxLines)
+                lines.Add(currentLine);
+
+            if (lines.Count > maxLines)
+                lines.RemoveRange(maxLines, lines.Count - maxLines);
+
+            if (lines.Count == maxLines && words.Length > 0)
+                lines[^1] = TrimTextToFit(lines[^1], width, font.LineSpacing, scale);
+
+            return lines.ToArray();
+        }
+
         private static void DrawTextWithShadow(string text, Vector2 position, Color color, float scale, float opacity)
         {
             CalamityUtils.DrawBorderStringEightWay(
@@ -929,7 +994,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
 
         public override void DrawBehind(int index, System.Collections.Generic.List<int> behindNPCsAndTiles, System.Collections.Generic.List<int> behindNPCs, System.Collections.Generic.List<int> behindProjectiles, System.Collections.Generic.List<int> overPlayers, System.Collections.Generic.List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 

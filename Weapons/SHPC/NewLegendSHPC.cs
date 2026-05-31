@@ -1,13 +1,13 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
-using CalamityLegendsComeBack.Accssory.SHPC.ChargedDiffusionChip;
-using CalamityLegendsComeBack.Accssory.SHPC.CommandAscend;
-using CalamityLegendsComeBack.Accssory.SHPC.ExpansionCanisterI;
-using CalamityLegendsComeBack.Accssory.SHPC.ExpansionCanisterII;
-using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
+using CalamityLegendsComeBack.Accssory.SHPC.General;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.Passive;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
@@ -62,7 +62,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 灌注与动画状态 =====
 
         public const int BaseMagazineCount = 3;
-        public const int MagazineCount = 6;
+        public const int MagazineCount = BaseMagazineCount + 4;
 
         private readonly int[] magazineEffectPowers = new int[MagazineCount];
         private readonly int[] magazineAmmoTypes = new int[MagazineCount];
@@ -76,8 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 int index = CurrentMagazineIndex;
                 magazineEffectPowers[index] = Math.Max(0, value);
-                if (magazineEffectPowers[index] <= 0)
-                    ClearMagazine(index);
+                HandleDepletedMagazine(index);
             }
         }
 
@@ -109,19 +108,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (player == null)
                 return BaseMagazineCount;
 
-            if (player.GetModPlayer<ExpansionCanisterIIPlayer>().ExpansionCanisterIIEquipped)
-                return 6;
-
-            if (player.GetModPlayer<ExpansionCanisterIPlayer>().ExpansionCanisterIEquipped)
-                return 4;
-
-            return BaseMagazineCount;
+            int bonusMagazineCount = player.GetModPlayer<SHPCEnergyCorePlayer>().BonusMagazineCount;
+            return Utils.Clamp(BaseMagazineCount + bonusMagazineCount, BaseMagazineCount, MagazineCount);
         }
 
         public static int GetAdjustedAmmoCapacity(Player player, int effectID)
         {
+            // Cynosure 是唯一 Lore 材料。它始终只装填 999 发，不接受能源核心的容量倍率。
+            if (effectID == CynosureEffect.CynosureEffectID)
+                return 999;
+
             int baseCapacity = GetBaseAmmoCapacity(effectID);
-            float multiplier = GetSoulCanisterCapacityMultiplier(player);
+            float multiplier = GetEnergyCoreCapacityMultiplier(player);
             if (multiplier <= 1f)
                 return baseCapacity;
 
@@ -141,32 +139,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return ((capacity + 4) / 5) * 5;
         }
 
-        private static float GetSoulCanisterCapacityMultiplier(Player player)
+        private static float GetEnergyCoreCapacityMultiplier(Player player)
         {
             if (player == null)
                 return 1f;
 
-            if (player.GetModPlayer<ExpansionCanisterIIPlayer>().ExpansionCanisterIIEquipped)
-                return 1.5f;
-
-            if (player.GetModPlayer<ExpansionCanisterIPlayer>().ExpansionCanisterIEquipped)
-                return 1.25f;
-
-            return 1f;
-        }
-
-        private static float GetSoulCanisterDamageMultiplier(Player player)
-        {
-            if (player == null)
-                return 1f;
-
-            if (player.GetModPlayer<ExpansionCanisterIIPlayer>().ExpansionCanisterIIEquipped)
-                return 1.12f;
-
-            if (player.GetModPlayer<ExpansionCanisterIPlayer>().ExpansionCanisterIEquipped)
-                return 1.07f;
-
-            return 1f;
+            return player.GetModPlayer<SHPCEnergyCorePlayer>().AmmoCapacityMultiplier;
         }
 
         private void ClampSelectedMagazineToActiveCount(Player player)
@@ -360,6 +338,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                    magazineEffectPowers[index] > 0;
         }
 
+        /// <summary>
+        /// 供唯一材料检查使用：材料装入 SHPC 后不再作为背包物品存在，但仍然属于玩家。
+        /// </summary>
+        public bool HasLoadedAmmoType(int ammoType)
+        {
+            for (int i = 0; i < MagazineCount; i++)
+            {
+                if (IsMagazineLoaded(i) && magazineAmmoTypes[i] == ammoType)
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool TryFillEmptyMagazines(Player player)
         {
             ClampSelectedMagazineToActiveCount(player);
@@ -411,8 +403,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             magazineEffectPowers[index]--;
-            if (magazineEffectPowers[index] <= 0)
-                ClearMagazine(index);
+            HandleDepletedMagazine(index);
         }
 
         public void ConsumeCurrentMagazineShots(int amount)
@@ -422,8 +413,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             magazineEffectPowers[index] -= Math.Max(1, amount);
-            if (magazineEffectPowers[index] <= 0)
-                ClearMagazine(index);
+            HandleDepletedMagazine(index);
+        }
+
+        private void HandleDepletedMagazine(int index)
+        {
+            if (magazineEffectPowers[index] > 0)
+                return;
+
+            // Cynosure 只能获得一次，因此最后一发保留为不可销毁的占位。
+            // 这使玩家即使耗尽可用装填，也仍然能通过取出操作拿回材料。
+            if (magazineEffectIDs[index] == CynosureEffect.CynosureEffectID)
+            {
+                magazineEffectPowers[index] = 1;
+                return;
+            }
+
+            ClearMagazine(index);
         }
 
         private void ClearMagazine(int index)
@@ -454,6 +460,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (effectID <= 0 || ammoType <= ItemID.None || power <= 0)
                 return;
+
+            // 普通材料按剩余弹量概率返还；唯一 Lore 材料必须无条件返还。
+            if (effectID == CynosureEffect.CynosureEffectID && ammoType == ModContent.ItemType<Cynosure>())
+            {
+                player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
+                return;
+            }
 
             int maxShots = GetAdjustedAmmoCapacity(player, effectID);
             if (maxShots <= 0)
@@ -518,9 +531,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (player.altFunctionUse == 2)
             {
-                Item.channel = true;         // ✅ 右键长按核心
-                Item.noUseGraphic = true;    // ✅ 不画物品（Holdout接管）
-                Item.UseSound = null;        // 可选
+                Item.channel = true;         // Right-click channel
+                Item.noUseGraphic = true;    // Holdout draws the weapon
+                Item.UseSound = null;
             }
             else
             {
@@ -532,8 +545,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== 天顶世界三连发初始化 =====
             if (Main.zenithWorld)
             {
-                zenithBurstCount = 2; // 还要补两发（总共3发）
-                zenithBurstTimer = 8; // 间隔8帧
+                zenithBurstCount = 2; // Two follow-up shots, three total
+                zenithBurstTimer = 8;
             }
 
             if (player.altFunctionUse != 2 && !IsMagazineLoaded(CurrentMagazineIndex))
@@ -558,7 +571,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 使用参数覆写 =====
         public override void ModifyManaCost(Player player, ref float reduce, ref float mult)
         {
-            // 右键暂不做，这里先保持左键默认耗蓝
+            SHPCEnergyCorePlayer energyCore = player.GetModPlayer<SHPCEnergyCorePlayer>();
+            mult *= 1.5f * energyCore.LeftManaCostMultiplier;
+        }
+
+        public override void ModifyWeaponCrit(Player player, ref float crit)
+        {
+            crit += player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCCritBonus;
         }
 
         public override float UseSpeedMultiplier(Player player)
@@ -634,11 +653,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 );
             }
             SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
-            leftClickCooldown = Item.useTime; // 60帧锁死
+            leftClickCooldown = Item.useTime;
             if (!heatPlayer.IsForcedShutdownCooling())
                 heatPlayer.PauseHeatDissipation(30);
             GainEXFromLeftShot(player);
-            ConsumeCurrentMagazineShot();
+            if (!player.GetModPlayer<SHPCEnergyCorePlayer>().ShouldSaveLeftClickAmmo())
+                ConsumeCurrentMagazineShot();
 
             return false;
         }
@@ -874,7 +894,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     );
 
                     zenithBurstCount--;
-                    zenithBurstTimer = 8; // 下一发间隔
+                    zenithBurstTimer = 8;
 
                     // ❗手动触发音效（否则不会响）
                     SoundEngine.PlaySound(FireSound, player.Center);
@@ -944,7 +964,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         : EffectRegistry.GetEffectIDByAmmo(FindEffectAmmo(player)));
 
                 if (Main.projectile.IndexInRange(projIndex))
-                    Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);
+                {
+                    SHPCEnergyCorePlayer energyCore = player.GetModPlayer<SHPCEnergyCorePlayer>();
+                    Main.projectile[projIndex].CritChance = energyCore.AllowRightClickCrit ? player.GetWeaponCrit(Item) : 0;
+                }
             }       
 
             if (player.itemAnimation > 0 && player.altFunctionUse != 2)
@@ -1119,14 +1142,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             int baseDamage = balance.GetRightClickBaseDamage();
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
-            return Math.Max(1, (int)Math.Round(damage * GetSoulCanisterDamageMultiplier(player)));
+            float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
+            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier));
         }
 
         internal int GetCurrentLeftClickDamage(Player player, int effectID)
         {
             int baseDamage = balance.GetLeftClickBaseDamageForEffect(effectID);
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
-            return Math.Max(1, (int)Math.Round(damage * GetSoulCanisterDamageMultiplier(player)));
+            float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
+            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier));
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -1136,7 +1161,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 直接覆写面板基础伤害
             int targetDamage = balance.GetLeftClickBaseDamageForEffect(GetProjectileEffectIDForShot());
             damage.Base += targetDamage - Item.damage;
-            damage *= GetSoulCanisterDamageMultiplier(player);
+            damage *= player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
         }
         #endregion
 
@@ -1224,7 +1249,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 背包里点击右键，倒掉左键材料
         public override bool CanRightClick()
         {
-            return true; // 允许背包右键
+            return true;
         }
         #endregion
 
@@ -1249,7 +1274,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 阻止物品自身被消耗 =====
         public override bool ConsumeItem(Player player)
         {
-            return false; // ❗阻止右键把武器消耗掉
+            return false;
         }
         #endregion
         #endregion

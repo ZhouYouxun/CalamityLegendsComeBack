@@ -1,20 +1,20 @@
-ï»¿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
-using CalamityLegendsComeBack.Accssory.SHPC.FastChargeModule;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChargeModule;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
     internal class NewLegend_EXPlayer : ModPlayer
     {
-        // EXæ¡å½“å‰å€¼
+        // EXÌõµ±Ç°Öµ
         public int EXValue;
 
-        // ä¸¤åˆ†é’Ÿæ”’æ»¡ï¼š2 Ã— 60 Ã— 60 = 7200å¸§
+        // Á½·ÖÖÓÔÜÂú£º2 ¡Á 60 ¡Á 60 = 7200Ö¡
         public const int BaseEXMax = 7200;
         public const int EXDisplayMax = 60;
         private const int PassiveChargeTime = 60;
 
-        // æ˜¯å¦å·²æ»¡
+        // ÊÇ·ñÒÑÂú
         public bool EXFull => EXValue >= GetCurrentEXMax(Player);
         public int EXDisplayValue => Utils.Clamp(EXValue / GetFramesPerDisplayUnit(Player), 0, EXDisplayMax);
         public bool EXUnlocked => NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3;
@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public override void ResetEffects()
         {
-            // è¿™é‡Œå…ˆä¸æ”¾åˆ«çš„æ•ˆæœï¼Œä¿æŒå¹²å‡€
+            // ÕâÀïÏÈ²»·Å±ğµÄĞ§¹û£¬±£³Ö¸É¾»
         }
 
         public override void PostUpdate()
@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 return;
             }
 
-            // æ£€æµ‹å½“å‰æ˜¯å¦æ‰‹æŒ SHPC
+            // ¼ì²âµ±Ç°ÊÇ·ñÊÖ³Ö SHPC
             bool holdingSHPC = Player.HeldItem != null &&
                                !Player.HeldItem.IsAir &&
                                Player.HeldItem.ModItem is NewLegendSHPC;
@@ -59,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             }
             else
             {
-                // ä¸æ‰‹æŒï¼šä»¥ä¸¤å€é€Ÿåº¦ä¸‹é™
+                // ²»ÊÖ³Ö£ºÒÔÁ½±¶ËÙ¶ÈÏÂ½µ
                 EXValue -= 2;
 
                 if (EXValue < 0)
@@ -70,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 EXValue = maxEX;
         }
 
-        // ä¾›å¤–éƒ¨è°ƒç”¨ï¼šæ¸…ç©º EX æ¡
+        // ¹©Íâ²¿µ÷ÓÃ£ºÇå¿Õ EX Ìõ
         public void ResetEX()
         {
             EXValue = 0;

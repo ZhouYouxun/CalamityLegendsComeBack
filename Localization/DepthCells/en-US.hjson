@@ -1,0 +1,10 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Projectiles: {
+			SHPC: {
+				DepthCells_Shark.DisplayName: Abyssal Cell Shark
+				DepthCells_SharkExplosion.DisplayName: Abyssal Cell Rupture
+			}
+		}
+	}
+}

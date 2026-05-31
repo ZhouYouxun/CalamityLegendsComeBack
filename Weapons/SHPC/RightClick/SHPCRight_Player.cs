@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -40,15 +41,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             bool holdingRightClick = HasActiveRightClickHoldout();
-            bool holdingSHPC = IsHoldingSHPCLike();
             bool hasHeat = HasAnyHeat();
+            bool suppressHeatUI = ShouldSuppressHeatUI();
 
-            if (holdingSHPC)
+            if (hasHeat)
                 HeatUiFadeTimer = DetachedUiFadeTime;
             else if (HeatUiFadeTimer > 0)
                 HeatUiFadeTimer--;
 
-            if (Main.myPlayer == Player.whoAmI && (holdingSHPC || (hasHeat && HeatUiFadeTimer > 0)))
+            if (Main.myPlayer == Player.whoAmI && !suppressHeatUI && (hasHeat || HeatUiFadeTimer > 0))
                 EnsureDetachedHeatUI();
 
             if (holdingRightClick || AttackLockoutTimer > 0 || HeatDissipationPauseTimer > 0)
@@ -58,7 +59,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             float heatUnits = GetTotalHeatUnits();
-            heatUnits -= 1f / BalanceSHPC.NormalHeatDecayTime;
+            float dissipationMultiplier = Player.GetModPlayer<HeatRedirectModulePlayer>().HeatDissipationMultiplier;
+            heatUnits -= dissipationMultiplier / BalanceSHPC.NormalHeatDecayTime;
             ApplyHeatUnits(heatUnits);
         }
 
@@ -96,13 +98,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public bool HasActiveRightClickHoldout()
         {
-            return Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0 ||
-                   Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] > 0;
+            return Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0;
         }
 
         public bool HasAnyHeat()
         {
             return HeatStage > 0 || HeatProgressTimer > 0;
+        }
+
+        public bool ShouldSuppressHeatUI()
+        {
+            return Player.GetModPlayer<CommandAscendPlayer>().CommandAscendEquipped;
         }
 
         public float GetDetachedHeatProgress()
@@ -162,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             ApplyHeatUnits(heatUnits);
             HeatUiFadeTimer = DetachedUiFadeTime;
 
-            if (Main.myPlayer == Player.whoAmI && HasAnyHeat())
+            if (Main.myPlayer == Player.whoAmI && !ShouldSuppressHeatUI() && HasAnyHeat())
                 EnsureDetachedHeatUI();
         }
 

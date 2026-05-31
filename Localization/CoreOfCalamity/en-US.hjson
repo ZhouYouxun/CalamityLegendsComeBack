@@ -1,0 +1,15 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		AMMO: {
+			SHPCAmmo44: Core of Calamity fires a wide gray energy stream that ruptures into four curving, homing fragments.
+		}
+
+		Projectiles: {
+			SHPC: {
+				CoreOfCalamityEnergyOrb.DisplayName: Calamitous Energy Orb
+				CoreOfCalamityExplosion.DisplayName: Calamitous Energy Rupture
+				CoreOfCalamitySplitOrb.DisplayName: Calamitous Energy Fragment
+			}
+		}
+	}
+}

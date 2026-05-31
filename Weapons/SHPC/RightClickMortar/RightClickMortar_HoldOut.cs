@@ -1,4 +1,5 @@
-using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
@@ -49,6 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             FrontArmStretch = Player.CompositeArmStretchAmount.Quarter;
             BackArmStretch = Player.CompositeArmStretchAmount.Full;
             ExtraBackArmRotation = MathHelper.ToRadians(12f);
+            startupTimer = Owner.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickStartupFrames(StartupFrames);
             SoundEngine.PlaySound(SoundID.Item149 with { Volume = 0.55f, Pitch = -0.35f }, Projectile.Center);
         }
 
@@ -116,7 +118,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             if (chargeTimer < FireInterval)
                 return;
 
-            if (Owner.CheckMana(Owner.HeldItem, ManaPerShot, true, false))
+            int manaCost = Owner.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickManaCost(ManaPerShot);
+            if (manaCost <= 0 || Owner.CheckMana(Owner.HeldItem, manaCost, true, false))
             {
                 FireMortarShell();
                 chargeTimer = 0;
@@ -292,6 +295,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (Owner is null)
+                return false;
+
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;

@@ -1,16 +1,20 @@
 using CalamityMod;
+using CalamityMod.Enums;
+using CalamityMod.Graphics.Primitives;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
-using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 {
-    internal class DarksunFragmentEclipseBolt : ModProjectile, ILocalizedModType
+    internal class DarksunFragmentEclipseBolt : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
+        public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
+
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -98,28 +102,47 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            for (int i = 1; i < Projectile.oldPos.Length; i++)
-            {
-                Vector2 current = Projectile.oldPos[i - 1] + Projectile.Size * 0.5f;
-                Vector2 next = Projectile.oldPos[i] + Projectile.Size * 0.5f;
-                if (current == Vector2.Zero || next == Vector2.Zero)
-                    continue;
-
-                float progress = i / (float)Projectile.oldPos.Length;
-                Color color = Color.Lerp(new Color(255, 205, 62), Color.Black, progress) * (1f - progress) * 0.72f;
-                color.A = 0;
-                Vector2 line = current - next;
-                Main.EntitySpriteDraw(pixel, next - Main.screenPosition, null, color, line.ToRotation(), new Vector2(0f, 0.5f), new Vector2(line.Length(), MathHelper.Lerp(5f, 1f, progress)), SpriteEffects.None);
-            }
-
             Main.EntitySpriteDraw(bloom, center, null, new Color(255, 205, 64, 0) * 0.85f, Projectile.rotation, bloom.Size() * 0.5f, 0.12f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
+        }
+
+        public float WidthFunc(float completionRatio, Vector2 trailPoint)
+        {
+            completionRatio = MathHelper.Clamp(completionRatio, 0f, 1f);
+            float headFade = Utils.GetLerpValue(0f, 0.08f, completionRatio, true);
+            float tailFade = Utils.GetLerpValue(1f, 0.68f, completionRatio, true);
+            return 14f * headFade * tailFade;
+        }
+
+        public Color ColorFunc(float completionRatio, Vector2 trailPoint)
+        {
+            completionRatio = MathHelper.Clamp(completionRatio, 0f, 1f);
+            Color dark = new(34, 21, 4, 220);
+            Color gold = new(255, 198, 48, 0);
+            Color color = Color.Lerp(gold, dark, Utils.GetLerpValue(0.1f, 0.55f, completionRatio, true));
+            return color * Utils.GetLerpValue(1f, 0.72f, completionRatio, true);
+        }
+
+        public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
+        {
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"]
+                .SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+
+            PrimitiveRenderer.RenderTrail(
+                Projectile.oldPos,
+                new PrimitiveSettings(
+                    WidthFunc,
+                    ColorFunc,
+                    (_, _) => Projectile.Size * 0.5f,
+                    true,
+                    true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                30);
         }
     }
 }

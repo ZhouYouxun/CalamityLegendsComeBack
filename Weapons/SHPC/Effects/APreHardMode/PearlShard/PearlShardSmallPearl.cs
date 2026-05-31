@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 {
     public class PearlShardSmallPearl : ModProjectile, ILocalizedModType
     {
-        private const float HomingStartFrame = 40f;
+        private const float HomingStartFrame = 0f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/APreHardMode/PearlShard/PearlShardParticle";
@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 2;
             Projectile.timeLeft = 120;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 2;
         }
@@ -37,10 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
         {
             FrameTimer += 1f / (Projectile.extraUpdates + 1f);
 
-            if (FrameTimer >= HomingStartFrame)
-                HomingAI();
-            else
-                Projectile.velocity *= 1.004f;
+            HomingAI();
 
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.28f, 0.18f, 0.26f));
@@ -82,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                     continue;
 
                 float distance = Projectile.Distance(npc.Center);
-                if (distance >= bestDistance || !Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1))
+                if (distance >= bestDistance)
                     continue;
 
                 bestDistance = distance;
@@ -94,7 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override bool? CanDamage()
         {
-            return FrameTimer >= HomingStartFrame;
+            return true;
         }
 
         public override void OnKill(int timeLeft)

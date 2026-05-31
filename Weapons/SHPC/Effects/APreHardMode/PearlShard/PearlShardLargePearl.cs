@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 120;
+            Projectile.timeLeft = 25;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 2;

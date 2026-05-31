@@ -92,10 +92,10 @@ Mods: {
 			SHPCAmmo2: Stormlion Mandible releases five chaining lightning arcs that jump through enemy groups.
 			SHPCAmmo3: Sulphuric Scale bursts into corrosive sulphur mist when the orb hits the ground.
 			SHPCAmmo4: Purified Gel splits into two pursuing energy orbs when its charge is spent.
-			SHPCAmmo5: Essence of Havoc targets enemies below and crushes them with a heavy impact.
+			SHPCAmmo5: Essence of Havoc is pulled by extreme gravity and deals stronger damage while falling.
 			SHPCAmmo6: Essence of Eleum creates a cryogenic zone that suppresses enemies near the detonation.
 			SHPCAmmo7: Essence of Sunlight opens a burst relay at the blast point and rapidly fires seven faintly homing sunlight lasers.
-			SHPCAmmo8: Titan Heart condenses into a giant phantom core that slams through enemies.
+			SHPCAmmo8: Starblight Soot directly scatters star souls that create medium explosions and inflict Astral Infection.
 			SHPCAmmo9: Soul of Light summons high-damage light souls to orbit the orb and bombard nearby targets.
 			SHPCAmmo10: Soul of Night releases shadow souls that automatically hunt nearby enemies.
 			SHPCAmmo11: Soul of Flight rises skyward before diving back down in an aerial bombardment.
@@ -129,7 +129,7 @@ Mods: {
 			SHPCAmmo39: Ashes of Annihilation locks onto visible enemies and unleashes a wide annihilation strike.
 			SHPCAmmo40: Armored Shell fires a large swarm of electromagnetic orbs to form a sustained storm.
 			SHPCAmmo41: Pearl Shard releases three large pearls that split into accelerating homing pearls.
-			SHPCAmmo42: Darksun Fragment creates an eclipsed black sun that stacks into stronger sustained fire.
+			SHPCAmmo42: Darksun Fragment creates an eclipsed black sun, uses its eight-frame material guide, and stacks into sustained pressure.
 		}
 
 		Projectiles: {

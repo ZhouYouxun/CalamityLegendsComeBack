@@ -10,6 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 {
@@ -79,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
         }
     }
 
-    internal sealed class SnakePanel : ModProjectile, ILocalizedModType
+    internal sealed class SnakePanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int GridSize = 15;
         private const int CellSize = 32;
@@ -598,7 +599,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 }

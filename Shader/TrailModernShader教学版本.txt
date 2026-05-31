@@ -1,0 +1,69 @@
+﻿// ModernTrailShader.fx - 现代风格拖尾
+// **最终修正版本**，已成功编译 ✅
+
+// 定义采样器，分别用于拖尾纹理和附加特效
+sampler uImage0 : register(s0); // 主拖尾纹理
+sampler uImage1 : register(s1); // 额外的动态模糊特效
+sampler uImage2 : register(s2); // 备用的纹理（可用于未来扩展）
+
+// 颜色参数
+float3 uColor;           // 主色
+float3 uSecondaryColor;  // 次要颜色
+float uOpacity;          // 拖尾透明度
+float uBlurAmount;       // 模糊程度
+float uTime;             // 时间变量（用于动画）
+
+// 视图投影矩阵
+matrix uWorldViewProjection;
+
+// **错误修正 1：结构体 `VertexShaderOutput` 使用 `POSITION` 而非 `SV_POSITION`**
+// ❌ 原错误：使用 `SV_POSITION` 可能导致 `ps_2_0` 版本不兼容
+// ✅ 解决方案：改成 `POSITION`，保证与 `vs_2_0` 兼容
+struct VertexShaderInput {
+    float4 Position : POSITION0;
+    float4 Color : COLOR0;
+    float3 TextureCoordinates : TEXCOORD0;
+};
+
+struct VertexShaderOutput {
+    float4 Position : POSITION; // ✅ 确保 `vs_2_0` 兼容性
+    float4 Color : COLOR;
+    float3 TextureCoordinates : TEXCOORD0;
+};
+
+// **顶点着色器**
+VertexShaderOutput VertexShaderFunction(VertexShaderInput input) {
+    VertexShaderOutput output;
+    output.Position = mul(input.Position, uWorldViewProjection);
+    output.Color = input.Color;
+    output.TextureCoordinates = input.TextureCoordinates;
+    return output;
+}
+
+// **错误修正 2：`tex2D` 结果必须取 `.r` 分量**
+// ❌ 原错误：`tex2D()` 直接返回 `float4`，导致 `ps_2_0` 解析失败
+// ✅ 解决方案：取 `.r` 分量，确保计算时是 `float`
+float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0 {
+    float2 coords = input.TextureCoordinates.xy;
+
+    // **错误修正 3：优化 `motionBlur` 计算方式**
+    // ❌ 原错误：`tex2D(uImage1, coords + float2(uTime * uBlurAmount, 0));`
+    // ✅ 解决方案：取 `.r` 确保是 `float`，避免与 `float4` 类型混用
+    float motionBlur = tex2D(uImage1, coords + float2(uTime * uBlurAmount, 0)).r;
+
+    // 计算拖尾的最终颜色
+    float4 baseColor = float4(lerp(uColor, uSecondaryColor, motionBlur), uOpacity);
+
+    // 返回最终的颜色
+    return baseColor * motionBlur;
+}
+
+// **错误修正 4：`technique` 目标改回 `vs_2_0 / ps_2_0`**
+// ❌ 原错误：`vs_3_0 / ps_3_0` 在 `tModLoader` 编译失败
+// ✅ 解决方案：使用 `vs_2_0 / ps_2_0`，确保兼容 `tModLoader`
+technique ModernTrail {
+    pass P0 {
+        VertexShader = compile vs_2_0 VertexShaderFunction();
+        PixelShader = compile ps_2_0 PixelShaderFunction();
+    }
+}

@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Lore: {
+				Cynosure: {
+					DisplayName: Cynosure
+					Tooltip: A singular auric guidance core
+					ShortTooltip: "[c/BABABA:Hold Shift to read the record]"
+					Lore:
+						'''
+						[c/66E6FF:Its remaining energy refuses to settle into any measurable state.]
+						[c/66E6FF:Even after the chamber has discharged, the core remains intact.]
+						'''
+				}
+			}
+		}
+
+		AMMO.SHPCAmmo43: Cynosure fires a heavy armor-piercing round that ruptures into electromagnetic lightning, two auric-orb ellipses, and an outer charged-cell ring.
+
+		Projectiles: {
+			SHPC: {
+				CynosureArmorPiercingRound.DisplayName: Cynosure Armor-Piercing Round
+				CynosureAuricBall.DisplayName: Cynosure Auric Orb
+				CynosureChargedCell.DisplayName: Cynosure Charged Cell
+				CynosureLightningExplosion.DisplayName: Cynosure Lightning Burst
+				CynosureLightningArc.DisplayName: Cynosure Lightning Arc
+			}
+		}
+	}
+}

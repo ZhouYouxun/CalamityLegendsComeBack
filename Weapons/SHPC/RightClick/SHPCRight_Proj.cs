@@ -2,6 +2,8 @@ using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -213,6 +215,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void AI()
         {
+            TryTrackTacticalReticle();
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
             if (Projectile.alpha > 0)
@@ -244,8 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
             Lighting.AddLight(Projectile.Center, new Color(255, 220, 120).ToVector3() * 0.6f);
 
-            // 穿透设置
-            if (!penetratedSet)
+            // 穿透设�?            if (!penetratedSet)
             {
                 int heat = Math.Max(WeaponStage, HeatLevel);
                 Projectile.penetrate = heat switch
@@ -263,6 +265,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 helixTimer++;
                 SpawnHelixFlightEffects();
             }
+        }
+
+        private void TryTrackTacticalReticle()
+        {
+            if (Projectile.numUpdates != 0 || (int)Main.GameUpdateCount % 2 != 0)
+                return;
+
+            Player owner = Main.player[Projectile.owner];
+            TacticalComputerPlayer tacticalPlayer = owner.GetModPlayer<TacticalComputerPlayer>();
+            if (!tacticalPlayer.TacticalComputerEquipped || tacticalPlayer.ReticleWorld == Vector2.Zero)
+                return;
+
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 desiredDirection = (tacticalPlayer.ReticleWorld - Projectile.Center).SafeNormalize(currentDirection);
+            if (Vector2.Dot(currentDirection, desiredDirection) <= 0f)
+                return;
+
+            float speed = Projectile.velocity.Length();
+            Projectile.velocity = currentDirection.ToRotation()
+                .AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(1f))
+                .ToRotationVector2() * speed;
+            Projectile.netUpdate = true;
         }
 
         private void SpawnHelixFlightEffects()
@@ -332,8 +356,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         // ===== 核心：伤害倍率 + 防御处理 =====
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-
-            // Heat5：附加最大生命百分比伤害
+            int heat = Math.Max(WeaponStage, HeatLevel);
+            Player owner = Main.player[Projectile.owner];
+            modifiers.SourceDamage *= owner.GetModPlayer<HeatRedirectModulePlayer>().GetHeatDamageMultiplier(heat);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -413,7 +438,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         //    }
         //    else if (roll == 1)
         //    {
-        //        // 辉光球
+        //        // 辉光�?
         //        Vector2 dir = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
         //        Vector2 position = Projectile.Center + dir * Main.rand.NextFloat(4f, 10f);
         //        Vector2 velocity = dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.5f, 2.2f);
@@ -473,7 +498,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 light.noGravity = true;
             }
 
-            // 扇形辉光球
+            // 扇形辉光�?
             int orbCount = 4;
             for (int i = 0; i < orbCount; i++)
             {
@@ -496,7 +521,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(glow);
             }
 
-            // 命中光粒子
+            // 命中光粒�?
             int lightCount = 3;
             for (int i = 0; i < lightCount; i++)
             {
@@ -553,7 +578,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(particle);
             }
 
-            // 扩散辉光球
+            // 扩散辉光�?
             int orbCount = 3;
             for (int i = 0; i < orbCount; i++)
             {

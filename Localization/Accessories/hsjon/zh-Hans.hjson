@@ -49,21 +49,63 @@ Mods: {
 				Tooltip: 使SHPC右键具备自动锁定能力
 			}
 
-			ExpansionCanisterI: {
-				DisplayName: 一级扩容罐
+			HeatRedirectModule: {
+				DisplayName: 热量重导模块
 				Tooltip:
 					'''
-					SHPC伤害+7%
-					SHPC左键增加1个储罐，可识别背包中的前4个弹药，装填弹药量增加25%并向上取5的倍数
+					SHPC右键射击产生的热量增加20%，自然散热速度降低33%
+					每一级热量额外增加33% SHPC右键伤害
+					武器过热停机时释放范围扩大的烟雾场，持续伤害周围敌人
+					达到五级满热后继续射击，会持续在玩家周围释放伤害烟雾场
 					'''
 			}
 
-			ExpansionCanisterII: {
-				DisplayName: 二级扩容罐
+			WastelandEnergyCore: {
+				DisplayName: 废土级能源核心
 				Tooltip:
 					'''
-					SHPC伤害+12%
-					SHPC左键增加3个储罐，可识别背包中的前6个弹药，装填弹药量增加50%并向上取5的倍数
+					SHPC伤害+7%
+					SHPC左键魔力消耗-8%，右键魔力消耗-12%
+					SHPC左键增加1个储罐，装药量增加25%并向上取5的倍数
+					手持SHPC站立不动且停火时，快速恢复魔力
+					需要时自动饮用魔力药水
+					'''
+			}
+
+			EverfrostEnergyCore: {
+				DisplayName: 永霜级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+15%
+					SHPC左键魔力消耗-10%，右键魔力消耗-20%，左键攻击20%不消耗弹药
+					SHPC左键增加2个储罐，装药量增加50%并向上取5的倍数
+					手持SHPC不左右移动并停火时，快速恢复魔力
+					需要时自动饮用魔力药水
+					缩短右键攻击的前摇
+					'''
+			}
+
+			EvolutionEnergyCore: {
+				DisplayName: 进化级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+15%，暴击率+5%，允许右键暴击
+					SHPC左键魔力消耗-15%，右键魔力消耗-30%，左键攻击20%不消耗弹药
+					SHPC左键增加3个储罐，装药量增加75%并向上取5的倍数
+					手持SHPC且停火时，快速恢复魔力
+					需要时自动饮用魔力药水
+					缩短右键攻击的前摇
+					'''
+			}
+
+			StarstreamEnergyCore: {
+				DisplayName: 星流级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+20%，暴击率+10%，允许右键暴击
+					手持SHPC时获得无限魔力，左键攻击50%不消耗弹药
+					SHPC左键增加4个储罐，装药量增加100%并向上取5的倍数
+					缩短右键攻击的前摇
 					'''
 			}
 
@@ -299,8 +341,12 @@ Mods: {
 				RuinousSoul_GhastlyES.DisplayName: 毁灭之魂幽魂ES
 				FragmentVortex_Pixel.DisplayName: 星旋碎片像素
 				PlagueCell_Lazer.DisplayName: 瘟疫细胞激光
+				AshesofCalamity_SoulRelay.DisplayName: 灾厄尘灵魂中继
+				AshesofCalamity_Soul.DisplayName: 灾厄尘灵魂
+				StarblightSootShard.DisplayName: 凋星微尘星魂
 				EndothermicEnergy_ARROW.DisplayName: 吸热能量箭矢
 				SHPCAmmoSelectionPanel.DisplayName: SHPC弹药选择面板
+				// SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
 			}
 
 			ChangedWeapons: {

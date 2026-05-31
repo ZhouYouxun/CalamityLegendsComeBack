@@ -142,6 +142,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     Play(SoundID.Item38 with { Volume = 0.3f, Pitch = -0.12f, PitchVariance = 0.08f, MaxInstances = 5 }, position);
                     Play(SoundID.Item122 with { Volume = 0.18f, Pitch = 0.16f, MaxInstances = 5 }, position);
                     break;
+                case 44:
+                    Play(ArcNovaSmallShot with { Volume = 0.42f, Pitch = -0.2f, PitchVariance = 0.08f, MaxInstances = 5 }, position);
+                    Play(SoundID.Item84 with { Volume = 0.2f, Pitch = -0.34f, MaxInstances = 4 }, position);
+                    break;
                 default:
                     Play(SoundID.Item68 with { Volume = 0.18f, Pitch = 0.32f, MaxInstances = 5 }, position);
                     break;

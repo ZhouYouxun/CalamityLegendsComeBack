@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                 Vector2 velocity = forward.RotatedBy(angles[i]) * speed;
                 int pearl = Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center + forward * 12f,
+                    projectile.Center + forward * 5f,
                     velocity,
                     ModContent.ProjectileType<PearlShardLargePearl>(),
                     projectile.damage,

@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalamity;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC;
@@ -12,6 +13,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicEnergy;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFuel;
@@ -40,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new EssenceofSnowEffect()); // 冰川精华 6
             EffectRegistry.RegisterEffect(new EssenceofSunlightEffect()); // 日光精华 7
 
-            EffectRegistry.RegisterEffect(new TitanHeartEffect()); // 泰坦之星 8
+            EffectRegistry.RegisterEffect(new StarblightSootEffect()); // 泰坦之星 8
 
 
             EffectRegistry.RegisterEffect(new SoulofLightEffect());   // 光明之魂 9
@@ -92,6 +94,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             EffectRegistry.RegisterEffect(new ArmoredShellEffect()); // 装甲外壳，[补充] 40
             EffectRegistry.RegisterEffect(new PearlShardEffect()); // 珍珠碎片 41
+            EffectRegistry.RegisterEffect(new CynosureEffect()); // 唯一材料 Cynosure 43
+            EffectRegistry.RegisterEffect(new CoreOfCalamityEffect()); // 灾劫核心 44
 
             
 

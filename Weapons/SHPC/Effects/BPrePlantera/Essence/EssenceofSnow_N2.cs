@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             Projectile.ignoreWater = false;
             Projectile.tileCollide = false;
 
-            Projectile.penetrate = 15;
+            Projectile.penetrate = -1;
             Projectile.timeLeft = 50;
 
             Projectile.DamageType = DamageClass.Magic;
@@ -154,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
 
             // ===== 生命周期 / 命中次数限制 =====
-            if (timer > 90 || hitCount >= 12)
+            if (timer > 90)
             {
                 Projectile.Kill();
             }

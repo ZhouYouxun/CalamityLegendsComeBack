@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 3;
+            Projectile.penetrate = 4;
             Projectile.timeLeft = 200;
             Projectile.extraUpdates = 18;
             Projectile.tileCollide = false;
@@ -73,27 +73,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         {
             Vector2 pos = Projectile.Center;
 
+            // 这段才是闪电的核心
             if (Projectile.timeLeft % 4 == 0)
             {
                 if (time < 120)
                 {
-                    float velMult = Projectile.ai[1] == 0.5f ? 0.2f : 3f * sizeMult;
-                    Particle spark = new CustomSpark(
-                        pos,
-                        Projectile.velocity * 1.2f * velMult,
-                        "CalamityMod/Particles/GlowSpark",
-                        false,
-                        11,
-                        0.15f * sizeMult,
-                        usedColor,
-                        new Vector2(2f, 0.8f),
-                        true,
-                        true,
-                        shrinkSpeed: 1f);
-                    GeneralParticleHandler.SpawnParticle(spark);
-                    sizeMult *= 0.97f;
+                    // 这个是一个很粗的光效[我们选择只保留后者]
+                    //float velMult = Projectile.ai[1] == 0.5f ? 0.2f : 3f * sizeMult;
+                    //Particle spark = new CustomSpark(
+                    //    pos,
+                    //    Projectile.velocity * 1.2f * velMult,
+                    //    "CalamityMod/Particles/GlowSpark",
+                    //    false,
+                    //    11,
+                    //    0.15f * sizeMult,
+                    //    usedColor,
+                    //    new Vector2(2f, 0.8f),
+                    //    true,
+                    //    true,
+                    //    shrinkSpeed: 1f);
+                    //GeneralParticleHandler.SpawnParticle(spark);
+                    //sizeMult *= 0.97f;
                 }
 
+                // 这个则是那个很细的闪电方向
                 Particle bolt = new BoltParticle(
                     pos,
                     -Projectile.velocity * 0.05f,

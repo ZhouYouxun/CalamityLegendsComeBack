@@ -10,10 +10,11 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC
 {
-    internal sealed class SHPCAmmoSelectionPanel : ModProjectile, ILocalizedModType
+    internal sealed class SHPCAmmoSelectionPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int MaxCandidates = NewLegendSHPC.MagazineCount;
         private const int SlotSize = 56;
@@ -355,7 +356,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 5 => "CalamityMod/Items/Materials/EssenceofHavoc",
                 6 => "CalamityMod/Items/Materials/EssenceofEleum",
                 7 => "CalamityMod/Items/Materials/EssenceofSunlight",
-                8 => "CalamityMod/Items/Materials/TitanHeart",
+                8 => "CalamityMod/Items/Materials/StarblightSoot",
                 9 => "Terraria/Images/Item_520",
                 10 => "Terraria/Images/Item_521",
                 11 => "Terraria/Images/Item_575",
@@ -386,6 +387,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 39 => "CalamityMod/Items/Materials/AshesofAnnihilation",
                 40 => "CalamityMod/Items/Materials/ArmoredShell",
                 41 => "CalamityMod/Items/Materials/PearlShard",
+                42 => "CalamityMod/Items/Materials/DarksunFragment",
+                43 => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricCell",
+                44 => "CalamityMod/Items/Materials/CoreofCalamity",
                 _ => null
             };
         }
@@ -400,6 +404,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 26 => 7,
                 30 or 31 or 34 or 35 or 36 or 39 => 6,
                 32 => 4,
+                42 => 8,
                 _ => 1
             };
         }
@@ -465,7 +470,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 }

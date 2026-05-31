@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityMod;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;

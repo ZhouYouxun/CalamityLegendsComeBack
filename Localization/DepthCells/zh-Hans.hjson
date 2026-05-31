@@ -1,0 +1,10 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Projectiles: {
+			SHPC: {
+				DepthCells_Shark.DisplayName: 深渊细胞鲨鱼
+				DepthCells_SharkExplosion.DisplayName: 深渊细胞爆裂
+			}
+		}
+	}
+}

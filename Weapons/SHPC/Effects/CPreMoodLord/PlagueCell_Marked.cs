@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.timeLeft = 35;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
+            Projectile.DamageType = DamageClass.Magic;
 
             Projectile.friendly = false;
             Projectile.hostile = false;
@@ -114,6 +115,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 missile.friendly = true;
                 missile.hostile = false;
                 missile.DamageType = DamageClass.Magic;
+                missile.tileCollide = false;
+                missile.ignoreWater = true;
                 missile.usesLocalNPCImmunity = true;
                 missile.localNPCHitCooldown = 10;
             }

@@ -8,10 +8,11 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 {
-    internal class BFSelectionPanel : ModProjectile, ILocalizedModType
+    internal class BFSelectionPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         public const float FormSwitchMode = 1f;
         private const float IconScale = 0.75f;
@@ -448,7 +449,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
 
         public override bool? CanDamage() => false;

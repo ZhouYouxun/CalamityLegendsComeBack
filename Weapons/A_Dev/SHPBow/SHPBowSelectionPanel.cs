@@ -9,10 +9,11 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using System;
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 {
-    internal sealed class SHPBowSelectionPanel : ModProjectile, ILocalizedModType
+    internal sealed class SHPBowSelectionPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int PanelWidth = 386;
         private const int PanelHeight = 188;
@@ -441,7 +442,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
-            overWiresUI.Add(index);
         }
     }
 }

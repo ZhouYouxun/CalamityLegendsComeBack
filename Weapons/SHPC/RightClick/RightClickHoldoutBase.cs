@@ -1,5 +1,5 @@
-ï»¿using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Accssory.SHPC.TacticalComputer;
+using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal abstract class RightClickHoldoutBase : ModProjectile
     {
-        // ===== å¿…é¡»æä¾› =====
+        // ===== ±ØĞëÌá¹© =====
         public abstract int AssociatedItemID { get; }
 
         public virtual Vector2 GunTipPosition =>
@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public virtual float OffsetYUpwards { get; }
         public virtual float OffsetYDownwards { get; }
 
-        // ===== è¿è¡Œæ—¶æ•°æ® =====
+        // ===== ÔËĞĞÊ±Êı¾İ =====
         public Player Owner { get; private set; }
         public Item HeldItem { get; private set; }
 
@@ -52,6 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void OnSpawn(IEntitySource source)
         {
+            ResolveOwner();
             OffsetLengthFromArm = MaxOffsetLengthFromArm;
         }
 
@@ -60,8 +61,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void AI()
         {
-            Owner ??= Main.player[Projectile.owner];
-            HeldItem ??= Owner.HeldItem;
+            if (!ResolveOwner())
+            {
+                Projectile.Kill();
+                return;
+            }
 
             KillHoldoutLogic();
             if (!Projectile.active)
@@ -71,9 +75,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             HoldoutAI();
         }
 
-        // ===== æ”¹æˆå³é”®æ§åˆ¶ =====
+        // ===== ¸Ä³ÉÓÒ¼ü¿ØÖÆ =====
         public virtual void KillHoldoutLogic()
         {
+            if (Owner is null)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             if (!Owner.active || Owner.dead)
             {
                 Projectile.Kill();
@@ -162,7 +172,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Projectile.netUpdate = true;
         }
 
-        // ===== å­ç±»å†™è¿™é‡Œ =====
+        private bool ResolveOwner()
+        {
+            if (Projectile.owner < 0 || Projectile.owner >= Main.maxPlayers)
+                return false;
+
+            Owner ??= Main.player[Projectile.owner];
+            HeldItem = Owner.HeldItem;
+            return Owner is not null;
+        }
+
+        // ===== ×ÓÀàĞ´ÕâÀï =====
         public abstract void HoldoutAI();
 
 
@@ -170,6 +190,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override bool PreDraw(ref Color lightColor)
         {
             if (!UseBaseDraw)
+                return false;
+
+            if (Owner is null)
                 return false;
 
             Texture2D texture = TextureAssets.Projectile[Type].Value;

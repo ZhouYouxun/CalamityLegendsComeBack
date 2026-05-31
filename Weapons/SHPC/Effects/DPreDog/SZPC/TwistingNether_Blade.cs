@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = 5;
+            Projectile.penetrate = 24;
             Projectile.timeLeft = 100;
             Projectile.extraUpdates = 3;
             Projectile.Opacity = 1f;
@@ -56,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
             Projectile.Opacity = 1f;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.damage *= 2;
             helixAngle = Projectile.identity * 0.37f;
             pulseAngle = Projectile.identity * 0.21f;
             flightTimer = 6;
@@ -100,6 +101,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 true,
                 shrinkSpeed: 0.82f,
                 glowOpacity: 0.45f));
+
+            for (int strand = 0; strand < 2; strand++)
+            {
+                float phase = helixAngle + strand * MathHelper.Pi;
+                float sideOffset = (float)Math.Sin(phase) * 30f;
+                float forwardOffset = MathHelper.Lerp(-28f, 14f, 0.5f + 0.5f * (float)Math.Cos(phase));
+                Vector2 sparkPosition = Projectile.Center + forward * forwardOffset + side * sideOffset;
+                Vector2 sparkVelocity = -forward * (1.05f + strand * 0.22f);
+                Color sparkColor = Color.Lerp(BladePurple, strand == 0 ? GlitchGreen : BladeBlood, 0.32f);
+
+                GeneralParticleHandler.SpawnParticle(new VoidSparkParticle(
+                    sparkPosition,
+                    sparkVelocity,
+                    false,
+                    18,
+                    0.12f,
+                    sparkColor,
+                    0.78f));
+            }
 
             if (Main.rand.NextBool(2))
             {

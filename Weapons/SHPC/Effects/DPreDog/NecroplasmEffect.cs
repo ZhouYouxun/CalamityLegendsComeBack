@@ -115,8 +115,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (projectile.owner == Main.myPlayer)
-                SpawnShortFlightSouls(projectile, target, timer);
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
