@@ -5,11 +5,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFEvilT2Effect
     {
-        private const int FireInterval = 10;
-        private const float FireSpeed = 8.8f;
-        private const float Spread = 0.08f;
-        private const float DamageMultiplier = 0.54f;
-        private const float Recoil = 3.8f;
+        private const int BurstCount = 6;
+        private const int BurstCooldown = 20;
+        private const int ShotInterval = 3;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -20,21 +18,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             holdout.LeftTimer++;
-            if (holdout.LeftTimer < FireInterval)
+            int requiredDelay = holdout.LeftAuxTimer <= 0 ? BurstCooldown : ShotInterval;
+            if (holdout.LeftTimer < requiredDelay)
                 return;
 
             holdout.LeftTimer = 0;
             PFLeftEffectRules.FireSingle(
                 holdout,
                 ModContent.ProjectileType<PFEvilT2_Flame>(),
-                FireSpeed,
-                Spread,
-                DamageMultiplier,
-                Recoil,
-                12,
-                new Color(111, 38, 164),
-                0.76f,
-                13f);
+                10.8f,
+                0.045f,
+                0.82f,
+                5.2f,
+                14,
+                PristineFuryMarkHelper.GetColor(holdout.CurrentMark),
+                0.9f,
+                16f);
+
+            holdout.LeftAuxTimer++;
+            if (holdout.LeftAuxTimer >= BurstCount)
+                holdout.LeftAuxTimer = 0;
         }
     }
 }

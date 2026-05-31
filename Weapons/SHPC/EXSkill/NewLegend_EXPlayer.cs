@@ -1,15 +1,16 @@
 using Terraria;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChargeModule;
-
+using CalamityLegendsComeBack.Weapons;
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
     internal class NewLegend_EXPlayer : ModPlayer
     {
         // EX条当前值
         public int EXValue;
+        private bool wasEXReady;
 
-        // 两分钟攒满：2 × 60 × 60 = 7200帧
+// 两分钟攒满：2 × 60 × 60 = 7200帧
         public const int BaseEXMax = 7200;
         public const int EXDisplayMax = 60;
         private const int PassiveChargeTime = 60;
@@ -44,6 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (!EXUnlocked)
             {
                 EXValue = 0;
+                LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, false);
                 return;
             }
 
@@ -68,7 +70,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             if (EXValue > maxEX)
                 EXValue = maxEX;
-        }
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXValue >= maxEX);
+}
 
         // 供外部调用：清空 EX 条
         public void ResetEX()

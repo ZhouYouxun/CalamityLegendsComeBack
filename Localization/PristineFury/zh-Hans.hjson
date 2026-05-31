@@ -7,24 +7,24 @@ Mods: {
 					PristineFuryIntro: "[c/FF9340:当前印记：{0}。]"
 					RightClick: "[c/FFB066:临时调试：右键按顺序切换印记。原右键散射只是在代码中注释掉，没有删除。]"
 					Hook: "[c/9AEAFF:同时按住左键与右键 3 秒会发射提取钩。有效 Boss 会授予对应印记；其他敌人会承受高额钩爪伤害。]"
-					Left_Idle: "[c/FF9340:左键：短距纯元火舌，枪口只使用高级粒子绽放。]"
-					Left_EvilT2: "[c/D246EB:左键：邪恶双螺旋火流，紫黑烟缎与星脉交织并附加脑腐。]"
-					Left_SlimeGod: "[c/BC4EFF:左键：五枚过载电容弹追踪弹跳，每次反弹都爆出紫色弧光。]"
-					Left_HardMode: "[c/FF8E42:左键：血肉墙压力锥，三道橙红冲击吐息逐层膨胀穿透。]"
-					Left_Prime: "[c/FFCE5C:左键：机械齿轮式金焰喷流，火花按齿距跳步咬合。]"
-					Left_BrimstoneElemental: "[c/F63740:左键：蓄能后释放硫火烙印光矛，红黑烬痕沿轴线撕开。]"
-					Left_FakeCalamity: "[c/FF4236:Left Click: FakeCalamity six-shot scatter burst.]"
-					Left_Plantera: "[c/5EF26C:左键：按住蓄能，松开发射四枚野火花孢，花纹缠绕并追踪。]"
-					Left_Aurora: "[c/7ED2FF:左键：星辉极光雾带，以五段折返轨迹旋转燃烧。]"
-					Left_Goliath: "[c/8BF249:左键：瘟疫群息会脱落蜂群子弹，感染目标并在死亡时释放虫群。]"
-					Left_Moonlord: "[c/7E9CFF:左键：月亮领主综合色焰，轮换日耀、星云、星旋与星尘粒子语法。]"
-					Left_Providence: "[c/FFDC76:左键：亵渎净焰迫击弹落地后展开持续灼烧圣域。]"
-					Left_Polterghast: "[c/D288FF:左键：哈雷幽魂星火先漂移再苏醒追踪，死亡时绽开鬼火玫瑰。]"
-					Left_Dog: "[c/6049D6:左键：光切虚空流撕开延迟裂隙与黑色吸积盘。]"
+					Left_Idle: "[c/FFE05C:左键：短距纯元火舌，使用 PristineFire 同款双侧火花与消散烟柱。]"
+					Left_EvilT2: "[c/FFE05C:左键：快速打出六发亮黄色炮弹，短暂减速后重新加速并弱追踪。]"
+					Left_SlimeGod: "[c/FFE05C:左键：沉重亮黄色史莱姆球不再追踪，最多弹射五次。]"
+					Left_HardMode: "[c/FFE05C:左键：缓慢发射重型火球，落地炸出终焉火碎片与持续地火。]"
+					Left_Prime: "[c/FFE05C:左键：机械齿轮式金焰喷流，火花按齿距跳步咬合。]"
+					Left_BrimstoneElemental: "[c/FFE05C:左键：蓄能后释放粗重亮黄射线，并分裂出追踪硫火弹幕。]"
+					Left_FakeCalamity: "[c/FFE05C:左键：在鼠标附近产生痛苦魂火，贯穿敌人后柔和地返回玩家。]"
+					Left_Plantera: "[c/5EF26C:左键：八次视觉伪激光后释放一次递归分裂的绿色重型闪电。]"
+					Left_Aurora: "[c/FFE05C:左键：蓄力工业焊枪射线，路径伤害较低，末端伤害极高。]"
+					Left_Goliath: "[c/FFE05C:左键：短暂蓄力后向前方持续散射收割者无人机群。]"
+					Left_Moonlord: "[c/FFE05C:左键：月曜射线逐步暖机，短暂停火后释放瞬时巨型激光。]"
+					Left_Providence: "[c/FFE05C:左键：亵渎迫击弹爆炸后生成地火，并按昼夜召唤圣光球或熔岩球雨。]"
+					Left_Polterghast: "[c/FFE05C:左键：不断加速的亮黄色哈雷幽魂星火贯穿敌人。]"
+					Left_Dog: "[c/FFE05C:左键：光切虚空流撕开延迟裂隙与黑色吸积盘。]"
 					Left_ExoTwins: "[c/4AFFB4:左键：阿尔忒弥斯预警激光快速贯穿，随后三连发阿波罗导弹。]"
-					Left_ExoThanatos: "[c/66A2FF:左键：三道塔纳托斯预警线缓慢收束，最终释放灭绝激光并撕出侧向激光。]"
+					Left_ExoThanatos: "[c/FFE05C:左键：三道塔纳托斯预警线缓慢收束，最终释放灭绝激光并撕出侧向激光。]"
 					Left_ExoAres: "[c/FF4C40:左键：阿瑞斯式普通激光从枪口高速全自动连射。]"
-					Left_Dragon: "[c/FF6C32:左键：丛林龙式十八连扇形龙息，命中后分裂为压力余烬。]"
+					Left_Dragon: "[c/FFE05C:左键：250RPM 的 S12K 龙息齐射，每轮五发速度与角度不同的龙息弹，十穿透且每次命中爆炸。]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
 					LegendaryText:
@@ -76,6 +76,7 @@ Mods: {
 				PFBrimstoneElemental_Flame.DisplayName: 纯净怒火硫火元素火焰
 				PFDog_Flame.DisplayName: 纯净怒火神噬火焰
 				PFDragon_Flame.DisplayName: 纯净怒火巨龙火焰
+				PFDragon_Burst.DisplayName: 纯净怒火龙息爆炸
 				PFEvilT2_Flame.DisplayName: 纯净怒火邪恶T2火焰
 				PFGoliath_Flame.DisplayName: 纯净怒火巨像火焰
 				PFHardMode_Flame.DisplayName: 纯净怒火困难模式火焰
@@ -92,9 +93,14 @@ Mods: {
 				PFDog_ChargeOrb.DisplayName: 纯净怒火神噬蓄力球
 				PFGoliath_HiveNukeMissile.DisplayName: 纯净怒火巨像蜂巢核弹导弹
 				PFGoliath_MouseCrosshair.DisplayName: 纯净怒火巨像鼠标准星
+				PFGoliath_ReaperDrone.DisplayName: 纯净怒火收割者无人机
 				PFHardMode_MeowCreature.DisplayName: 纯净怒火困难模式喵星生物
+				PFHardMode_HeavyFireball.DisplayName: 纯净怒火重型火球
+				PFHardMode_TotalityFire.DisplayName: 纯净怒火终焉火碎片
+				PFHardMode_GroundFire.DisplayName: 纯净怒火持续地火
 				PFFakeCalamity_Pellet.DisplayName: 纯净怒火伪灾厄弹丸
 				PFFakeCalamity_GroundFlame.DisplayName: 纯净怒火伪灾厄地面火焰
+				PFFakeCalamity_SoulFlame.DisplayName: 纯净怒火痛苦魂火
 				PFMoonlord_SolarExplosion.DisplayName: 纯净怒火月亮领主日耀爆炸
 				PFMoonlord_SolarLaser.DisplayName: 纯净怒火月亮领主日耀激光
 				PFMoonlord_VortexScorpioRocket.DisplayName: 纯净怒火月亮领主星旋天蝎火箭
@@ -102,6 +108,10 @@ Mods: {
 				PFProvidence_HolyFireField.DisplayName: 纯净怒火亵渎天神圣火领域
 				PFProvidence_HolyShrapnel.DisplayName: 纯净怒火亵渎天神圣光破片
 				PFProvidence_NukeOfBliss.DisplayName: 纯净怒火亵渎天神极乐核爆
+				PFProvidence_HolyRainOrb.DisplayName: 纯净怒火神圣追踪光球
+				PFProvidence_MoltenRainBlob.DisplayName: 纯净怒火重型熔岩球
+				PFBrimstoneElemental_Barrage.DisplayName: 纯净怒火硫火分裂弹幕
+				PFPlantera_PseudoLaser.DisplayName: 纯净怒火视觉伪激光
 				PFExoTwins_ArtemisLaser.DisplayName: EXO双子阿尔忒弥斯激光
 				PFExoTwins_ApolloRocket.DisplayName: EXO双子阿波罗导弹
 				PFExoAresLaserBeamStart.DisplayName: EXO阿瑞斯激光
@@ -134,7 +144,7 @@ Mods: {
 				Goliath: 瘟疫使者歌莉娅
 				Moonlord: 月亮领主
 				Providence: 亵渎天神
-				Polterghast: 鬼妖村正
+				Polterghast: 恶鬼
 				Dog: 神明吞噬者
 				ExoTwins: 阿波罗与阿尔忒弥斯
 				ExoThanatos: 塔纳托斯

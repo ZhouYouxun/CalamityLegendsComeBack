@@ -16,11 +16,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/LaserProj";
 
-        private const int Lifetime = 24;
-        private const float MaxBeamScale = 1.15f;
+        private const int Lifetime = 30;
+        private const float MaxBeamScale = 2.15f;
         private const float MaxBeamLength = 1100f;
         private const float BeamTileCollisionWidth = 1f;
-        private const float BeamHitboxCollisionWidth = 16f;
+        private const float BeamHitboxCollisionWidth = 28f;
         private const int NumSamplePoints = 3;
         private const float BeamLengthChangeFactor = 0.75f;
         private Vector2 beamVector = Vector2.Zero;
@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                             Projectile.GetSource_FromThis(),
                             segmentPosition + normal * side * 18f,
                             velocity,
-                            ModContent.ProjectileType<PFBrimstoneElemental_HellbornProj>(),
+                            ModContent.ProjectileType<PFBrimstoneElemental_Barrage>(),
                             Math.Max(1, (int)(Projectile.damage * 0.42f)),
                             Projectile.knockBack * 0.45f,
                             Projectile.owner);
@@ -146,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             return false;
         }
 
-        private Color GetBeamColor() => Color.Lerp(PFLeftEffectRules.GetThemeColor(Projectile, new Color(246, 55, 64)), Color.White, 0.18f) with { A = 64 };
+        private Color GetBeamColor() => Color.Lerp(PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92)), Color.White, 0.34f) with { A = 48 };
 
         private void ProduceBeamDust()
         {

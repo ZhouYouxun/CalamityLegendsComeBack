@@ -71,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.Owner.velocity -= direction * 7.5f;
             holdout.Owner.Calamity().GeneralScreenShakePower = System.Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 9f);
             holdout.TriggerMuzzleFlash(30);
-            holdout.SpawnMuzzleBurst(new Color(160, 100, 255), 1.55f);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.55f);
 
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.82f, Pitch = -0.18f, MaxInstances = 2 }, muzzle);
         }
@@ -112,6 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             Vector2 direction = holdout.AimDirection.SafeNormalize(Vector2.UnitX * holdout.Owner.direction);
             Vector2 muzzle = holdout.GunTipPosition + direction * 10f;
+            Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
             Color theme = Color.Lerp(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), Color.White, charge * 0.38f);
             Lighting.AddLight(muzzle, theme.ToVector3() * (0.35f + charge * 0.95f));
 
@@ -128,9 +129,86 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 dust.fadeIn = 1.8f + charge * 2f;
             }
 
+            if (Main.rand.NextFloat() < 0.28f + charge * 0.42f)
+            {
+                Vector2 offset = -direction * Main.rand.NextFloat(30f, 90f + charge * 55f) + side * Main.rand.NextFloat(-18f - charge * 32f, 18f + charge * 32f);
+                Vector2 velocity = -offset.SafeNormalize(direction) * Main.rand.NextFloat(2.6f, 6.4f + charge * 2.4f);
+                Particle spark = Main.rand.NextBool(3)
+                    ? new SparkParticle(
+                        muzzle + offset,
+                        velocity,
+                        false,
+                        Main.rand.Next(14, 24),
+                        Main.rand.NextFloat(0.55f, 1.08f) * (0.78f + charge * 0.6f),
+                        Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.42f)))
+                    : new GlowOrbParticle(
+                        muzzle + offset,
+                        velocity,
+                        false,
+                        Main.rand.Next(11, 19),
+                        Main.rand.NextFloat(0.24f, 0.46f) * (0.9f + charge),
+                        Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.04f, 0.28f)),
+                        true,
+                        false,
+                        true);
+
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            if (charge > 0.2f && Main.rand.NextBool(5))
+            {
+                Vector2 smokePosition = muzzle - direction * Main.rand.NextFloat(8f, 38f) + side * Main.rand.NextFloat(-12f, 12f);
+                Particle smoke = new HeavySmokeParticle(
+                    smokePosition,
+                    -direction * Main.rand.NextFloat(0.35f, 1.25f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    Color.Lerp(theme, Color.DarkGoldenrod, 0.36f),
+                    Main.rand.Next(18, 31),
+                    Main.rand.NextFloat(0.4f, 0.82f) * (0.85f + charge * 0.45f),
+                    0.58f,
+                    Main.rand.NextFloat(-0.055f, 0.055f),
+                    glowing: true);
+
+                GeneralParticleHandler.SpawnParticle(smoke);
+            }
+
+            if (charge > 0.52f && Main.rand.NextBool(4))
+            {
+                Vector2 crackPosition = muzzle + side * Main.rand.NextFloat(-24f, 24f) - direction * Main.rand.NextFloat(4f, 32f);
+                Vector2 crackVelocity = -direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(0.7f, 1.9f);
+                Particle crack = new GlowOrbParticle(
+                    crackPosition,
+                    crackVelocity,
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.22f, 0.4f) * (0.9f + charge * 0.5f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.08f, 0.32f)),
+                    true,
+                    false,
+                    true);
+
+                GeneralParticleHandler.SpawnParticle(crack);
+            }
+
+            if (charge > 0.72f && holdout.LeftChargeTimer % 24 == 0)
+            {
+                Particle pulse = new CustomPulse(
+                    muzzle,
+                    Vector2.Zero,
+                    Color.Lerp(theme, Color.White, 0.22f) * 0.58f,
+                    "CalamityMod/Particles/BloomCircle",
+                    Vector2.One,
+                    direction.ToRotation(),
+                    0.04f,
+                    0.48f + charge * 0.38f,
+                    16,
+                    false);
+
+                GeneralParticleHandler.SpawnParticle(pulse);
+            }
+
             if (holdout.LeftChargeTimer == ChargeFrames)
             {
-                Particle ring = new DirectionalPulseRing(muzzle, Vector2.Zero, theme, Vector2.One, direction.ToRotation(), 0.1f, 1.4f, 24);
+                Particle ring = new DirectionalPulseRing(muzzle, Vector2.Zero, theme, Vector2.One, direction.ToRotation(), 0.1f, 1.6f, 24);
                 GeneralParticleHandler.SpawnParticle(ring);
             }
         }

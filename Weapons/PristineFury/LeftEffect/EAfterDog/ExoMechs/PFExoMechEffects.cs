@@ -13,6 +13,8 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
+#if false
+    // Temporarily disabled: Pristine Fury currently retains only Thanatos among the Exo Mechs.
     internal static class PFExoTwinsEffect
     {
         private const int RocketCount = 3;
@@ -598,6 +600,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         }
     }
 
+#endif
+
     internal static class PFExoThanatosEffect
     {
         private const int ChargeFrames = 150;
@@ -675,7 +679,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.Owner.velocity -= direction * 3.2f;
             holdout.Owner.Calamity().GeneralScreenShakePower = Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 6f);
             holdout.TriggerMuzzleFlash(28);
-            holdout.SpawnMuzzleBurst(new Color(102, 162, 255), 1.5f);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.5f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, Pitch = 0.08f, MaxInstances = 2 }, muzzle);
         }
 
@@ -799,7 +803,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 origin = laserTelegraph.Size() * new Vector2(0f, 0.5f);
             Vector2 scaleOuter = scaleInner * new Vector2(1f, 2.6f);
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(102, 162, 255));
-            Color colorOuter = Color.Lerp(theme, Color.CornflowerBlue, Time / Lifetime * 1.8f % 1f) * 0.62f;
+            Color colorOuter = Color.Lerp(theme, Color.White, Time / Lifetime * 1.8f % 1f * 0.3f) * 0.62f;
             Color colorInner = Color.Lerp(colorOuter, Color.White, 0.78f) * 0.76f;
 
             Main.EntitySpriteDraw(laserTelegraph, Projectile.Center - Main.screenPosition, null, colorInner, Projectile.rotation, origin, scaleInner, SpriteEffects.None, 0);
@@ -1086,7 +1090,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 origin = laserTelegraph.Size() * new Vector2(0f, 0.5f);
             Vector2 scaleOuter = scaleInner * new Vector2(1f, 2.2f);
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(102, 162, 255));
-            Color colorOuter = Color.Lerp(Color.Blue, theme, TelegraphDelay / TelegraphTotalTime * 2f % 1f) * 0.62f;
+            Color colorOuter = Color.Lerp(theme, Color.White, TelegraphDelay / TelegraphTotalTime * 2f % 1f * 0.3f) * 0.62f;
             Color colorInner = Color.Lerp(colorOuter, Color.White, 0.75f) * 0.72f;
 
             Main.EntitySpriteDraw(laserTelegraph, Projectile.Center - Main.screenPosition, null, colorInner, DirectionRotation, origin, scaleInner, SpriteEffects.None, 0);

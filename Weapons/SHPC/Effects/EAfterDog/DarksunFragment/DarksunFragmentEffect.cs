@@ -122,81 +122,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public override void PostDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
         {
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-            Texture2D face = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/ScreamyFace").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D softRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
+            Texture2D reticle = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_04").Value;
             Vector2 drawPos = projectile.Center - Main.screenPosition;
             float opacity = MathHelper.Clamp(projectile.timeLeft / 18f, 0f, 1f);
 
-            Main.spriteBatch.End();
-            Effect shieldEffect = Filters.Scene["CalamityMod:HellBall"].GetShader().Shader;
-            Main.spriteBatch.Begin(
-                SpriteSortMode.Immediate,
-                BlendState.AlphaBlend,
-                Main.DefaultSamplerState,
-                DepthStencilState.None,
-                Main.Rasterizer,
-                shieldEffect,
-                Main.GameViewMatrix.TransformationMatrix);
-
-            shieldEffect.Parameters["time"].SetValue(Main.GlobalTimeWrappedHourly * 0.25f);
-            shieldEffect.Parameters["blowUpPower"].SetValue(2.9f);
-            shieldEffect.Parameters["blowUpSize"].SetValue(0.32f);
-            shieldEffect.Parameters["noiseScale"].SetValue(0.58f);
-            shieldEffect.Parameters["shieldOpacity"].SetValue(0.86f * opacity);
-            shieldEffect.Parameters["shieldEdgeBlendStrenght"].SetValue(4f);
-            shieldEffect.Parameters["shieldColor"].SetValue(new Color(32, 18, 4).ToVector3());
-            shieldEffect.Parameters["shieldEdgeColor"].SetValue(new Color(255, 198, 48).ToVector3());
-
-            Main.spriteBatch.Draw(
-                face,
-                drawPos,
-                null,
-                Color.White * opacity,
-                projectile.rotation * 0.4f,
-                face.Size() * 0.5f,
-                projectile.scale * 0.17f,
-                SpriteEffects.None,
-                0f);
-
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                Main.DefaultSamplerState,
-                DepthStencilState.None,
-                Main.Rasterizer,
-                null,
-                Main.GameViewMatrix.TransformationMatrix);
-
-            Texture2D[] vortexTextures =
-            {
-                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_003").Value,
-                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_004").Value,
-                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_005").Value,
-                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_006").Value,
-                ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/gradationline_004").Value
-            };
-
-            for (int i = 0; i < 3; i++)
-            {
-                float angle = Main.GlobalTimeWrappedHourly * MathHelper.TwoPi * (0.35f + i * 0.08f) + i * MathHelper.TwoPi / 3f;
-                Color darkColor = new Color(16 + i * 5, 10 + i * 4, 2, 116 - i * 18) * opacity;
-                Vector2 offset = angle.ToRotationVector2() * (2f + i * 1.5f);
-                foreach (Texture2D vortex in vortexTextures)
-                {
-                    Main.EntitySpriteDraw(
-                        vortex,
-                        drawPos + offset,
-                        null,
-                        darkColor,
-                        -angle + MathHelper.PiOver2,
-                        vortex.Size() * 0.5f,
-                        projectile.scale * (0.18f + i * 0.035f),
-                        SpriteEffects.None);
-                }
-            }
-
             Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, drawPos, null, new Color(255, 190, 44, 0) * (0.34f * opacity), projectile.rotation, bloom.Size() * 0.5f, projectile.scale * 0.28f, SpriteEffects.None);
             for (int i = 0; i < 4; i++)
             {
                 float rotation = Main.GlobalTimeWrappedHourly * (2.8f + i * 0.4f) + i * MathHelper.PiOver2;
@@ -204,6 +137,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 color.A = 0;
                 Main.EntitySpriteDraw(ring, drawPos, null, color, rotation, ring.Size() * 0.5f, projectile.scale * (0.2f + i * 0.035f), SpriteEffects.None);
             }
+            Main.EntitySpriteDraw(softRing, drawPos, null, new Color(255, 150, 34, 0) * (0.28f * opacity), projectile.rotation * 0.7f, softRing.Size() * 0.5f, projectile.scale * 0.13f, SpriteEffects.None);
+            Main.EntitySpriteDraw(reticle, drawPos, null, new Color(255, 218, 84, 0) * (0.18f * opacity), -projectile.rotation * 0.55f, reticle.Size() * 0.5f, projectile.scale * 0.11f, SpriteEffects.FlipHorizontally);
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }

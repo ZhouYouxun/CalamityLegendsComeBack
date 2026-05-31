@@ -3,7 +3,6 @@ using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -14,167 +13,209 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private Vector2 fixedDirection;
         private int time;
-        private bool postHit;
-        private int hitBloomReduction;
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 180;
+            Projectile.width = Projectile.height = 24;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = -1;
-            Projectile.timeLeft = 78;
-            Projectile.extraUpdates = 10;
+            Projectile.penetrate = 10;
+            Projectile.timeLeft = 84;
+            Projectile.extraUpdates = 4;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
-        }
-
-        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
-        {
-            fixedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            if (Main.LocalPlayer.active)
-            {
-                float distanceFactor = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = System.Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 2.6f * distanceFactor);
-            }
-
-            SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.5f, Pitch = -0.18f }, Projectile.Center);
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void AI()
         {
-            if (fixedDirection == Vector2.Zero)
-                fixedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.86f);
 
-            Lighting.AddLight(Projectile.Center, new Vector3(0.255f, 0.07f, 0.01f) * 3f);
-            Projectile.velocity *= 1.006f;
-            EmitYharonFan();
+            if (time == 0)
+                SpawnMuzzleWash();
+
+            EmitDragonBreath();
+            if (time < 70)
+                Projectile.velocity *= 1.01f;
+
             time++;
         }
 
-        private void EmitYharonFan()
+        private void SpawnMuzzleWash()
         {
             if (Main.dedServ)
                 return;
 
-            Vector2 forward = fixedDirection;
-            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            float fanHalfAngle = MathHelper.ToRadians(52f);
-            float edgeCompression = 0.68f;
-
-            for (int i = 0; i < 9; i++)
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            for (int i = 0; i < 8; i++)
             {
-                float fanT = Main.rand.NextFloat(-1f, 1f);
-                float angle = fanHalfAngle * fanT * 0.72f;
-                Vector2 sparkVelocity = forward.RotatedBy(angle) * Main.rand.NextFloat(14f, 28f) + right * fanT * Main.rand.NextFloat(1.8f, 5.4f);
-                Vector2 sparkOffset = right * fanT * Main.rand.NextFloat(4f, 18f) + forward * Main.rand.NextFloat(4f, 14f);
-                Particle beamCore = new CustomSpark(Projectile.Center + sparkOffset, sparkVelocity, "CalamityMod/Particles/SmallBloom", false, Main.rand.Next(12, 18), Main.rand.NextFloat(0.26f, 0.42f), Main.rand.NextBool(3) ? Color.OrangeRed : Color.Lerp(Color.Orange, Color.White, 0.45f), new Vector2(Main.rand.NextFloat(1.6f, 2.5f), Main.rand.NextFloat(1.1f, 1.7f)), true, false, glowOpacity: 0.5f);
-                GeneralParticleHandler.SpawnParticle(beamCore);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.Torch : DustID.GoldFlame);
+                dust.velocity = forward.RotatedByRandom(0.45f) * Main.rand.NextFloat(2.4f, 8.4f);
+                dust.scale = Main.rand.NextFloat(0.8f, 1.55f);
+                dust.noGravity = true;
+                dust.color = Main.rand.NextBool() ? ThemeColor : Color.Lerp(ThemeColor, Color.White, 0.4f);
             }
 
-            if (Main.rand.NextBool())
+            for (int i = 0; i < 5; i++)
             {
-                for (int i = 0; i < 7; i++)
-                {
-                    float fanT = Main.rand.NextFloat(-1f, 1f);
-                    float angle = fanHalfAngle * fanT * 0.94f;
-                    Vector2 sparkPos = Projectile.Center + right * fanT * Main.rand.NextFloat(10f, 24f) + forward * Main.rand.NextFloat(6f, 18f);
-                    Vector2 sparkVel = forward.RotatedBy(angle) * Main.rand.NextFloat(12f, 24f) + right * fanT * Main.rand.NextFloat(2f, 7f);
-                    SparkParticle spark = new SparkParticle(sparkPos, sparkVel, false, Main.rand.Next(14, 24), Main.rand.NextFloat(0.8f, 1.35f), Main.rand.NextBool() ? Color.DarkOrange : Color.OrangeRed);
-                    GeneralParticleHandler.SpawnParticle(spark);
-                }
+                Vector2 smokeVelocity = forward.RotatedByRandom(0.45f) * Main.rand.NextFloat(2.1f, 5.8f);
+                GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(Projectile.Center, smokeVelocity, Color.DimGray, Main.rand.NextBool() ? Color.SlateGray : Color.Black, Main.rand.NextFloat(0.45f, 1.05f), 100f));
             }
+        }
 
-            if (Main.rand.NextBool(2))
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    float fanT = Main.rand.NextFloat(-1f, 1f);
-                    float angle = fanHalfAngle * fanT * 0.8f;
-                    Vector2 glowOffset = right * fanT * Main.rand.NextFloat(6f, 20f) + forward * Main.rand.NextFloat(5f, 16f);
-                    Vector2 glowVel = forward.RotatedBy(angle) * Main.rand.NextFloat(16f, 30f) + right * fanT * Main.rand.NextFloat(2.5f, 7.5f);
-                    Particle glowSpark = new GlowSparkParticle(Projectile.Center + glowOffset, glowVel, false, Main.rand.Next(9, 14), Main.rand.NextFloat(0.018f, 0.032f), Main.rand.NextBool() ? Color.DarkOrange : Color.OrangeRed, new Vector2(Main.rand.NextFloat(3.2f, 4.6f), Main.rand.NextFloat(1.0f, 1.35f)), true, false, 1.3f);
-                    GeneralParticleHandler.SpawnParticle(glowSpark);
-                }
-            }
+        private void EmitDragonBreath()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float pulse = MathHelper.Clamp(System.MathF.Abs(System.MathF.Sin((time + Projectile.ai[1]) * 0.575f / MathHelper.Pi)), 0.45f + time * 0.0015f, 1f);
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center,
+                forward,
+                "CalamityMod/Particles/SmallBloom",
+                false,
+                10,
+                0.09f + time * 0.0014f,
+                ThemeColor * 0.62f,
+                Vector2.One,
+                true,
+                false,
+                glowOpacity: 0.55f));
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center,
+                forward,
+                "CalamityMod/Particles/SmallBloom",
+                false,
+                10,
+                0.04f + time * 0.0012f,
+                Color.Lerp(ThemeColor, Color.White, 0.32f) * 0.55f,
+                Vector2.One,
+                true,
+                false,
+                glowOpacity: 0.52f));
 
             if (time % 5 == 0)
             {
-                float fanT = Main.rand.NextFloat(-1f, 1f);
-                float curvedT = (float)System.Math.Sin(fanT * MathHelper.PiOver2) * edgeCompression;
-                Vector2 smokeVel = forward.RotatedBy(fanHalfAngle * curvedT) * Main.rand.NextFloat(4f, 10f) + right * fanT * Main.rand.NextFloat(1f, 3f);
-                Particle smoke = new SmallSmokeParticle(Projectile.Center + right * fanT * Main.rand.NextFloat(8f, 22f), smokeVel, Color.DimGray, Main.rand.NextBool() ? Color.SlateGray : Color.Black, Main.rand.NextFloat(0.45f, 1.1f), 100);
-                GeneralParticleHandler.SpawnParticle(smoke);
+                Vector2 offset = Main.rand.NextVector2Circular(1f + time * 0.14f, 1f + time * 0.14f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center + offset, -Projectile.velocity * 0.45f, false, 15, Main.rand.NextFloat(0.38f, 0.68f) * pulse, Main.rand.NextBool() ? ThemeColor : Color.Lerp(ThemeColor, Color.White, 0.35f)));
             }
-        }
 
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            if (time <= 1)
+            if (time % 7 == 0)
             {
-                Player owner = Main.player[Projectile.owner];
-                float collisionPoint = 0f;
-                return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center, owner.Center, Projectile.width, ref collisionPoint);
+                Vector2 smokeVelocity = forward.RotatedByRandom(0.52f) * Main.rand.NextFloat(2.6f, 6.6f);
+                GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(Projectile.Center + Main.rand.NextVector2Circular(7f, 7f), smokeVelocity, Color.DimGray, Main.rand.NextBool() ? Color.SlateGray : Color.Black, Main.rand.NextFloat(0.4f, 0.9f), 90f));
             }
-
-            return CalamityUtils.CircularHitboxCollision(Projectile.Center, Projectile.width + time * 0.14f, targetHitbox);
         }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+            CalamityUtils.CircularHitboxCollision(Projectile.Center, Projectile.width + time * 0.12f, targetHitbox);
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (Projectile.numHits > 0)
-                Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.8f));
+                Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.92f));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (hitBloomReduction < 3 && !Main.dedServ)
-            {
-                Particle blast = new CustomSpark(Projectile.Center, Vector2.Zero, "CalamityMod/Particles/SmallBloom", false, 7, Main.rand.NextFloat(0.6f, 0.7f), Color.OrangeRed, Vector2.One, true, false);
-                GeneralParticleHandler.SpawnParticle(blast);
-                Particle blastRing = new CustomPulse(target.Center, Vector2.Zero, Color.Lerp(Color.Orange, Color.OrangeRed, Main.rand.NextFloat()) * 0.7f, "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-10f, 10f), Main.rand.NextFloat(0.2f, 1.2f), 2.5f, 15, true);
-                GeneralParticleHandler.SpawnParticle(blastRing);
-                hitBloomReduction++;
-            }
+            target.AddBuff(ModContent.BuffType<Dragonfire>(), 420);
+            SpawnHitEffects(target.Center);
 
-            if (!postHit)
-            {
-                EmitUpwardImpact(target.Center);
-                postHit = true;
-            }
+            if (Main.myPlayer != Projectile.owner)
+                return;
 
-            target.AddBuff(BuffID.OnFire, 300);
-            target.AddBuff(BuffID.CursedInferno, 300);
-            target.AddBuff(BuffID.Daybreak, 300);
-            target.AddBuff(ModContent.BuffType<ElementalMix>(), 300);
-            target.AddBuff(ModContent.BuffType<HolyFlames>(), 300);
-            target.AddBuff(ModContent.BuffType<Dragonfire>(), 1200);
-            target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 300);
+            int burst = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<PFDragon_Burst>(),
+                System.Math.Max(1, (int)(Projectile.damage * 0.55f)),
+                Projectile.knockBack * 0.25f,
+                Projectile.owner);
+
+            PFLeftEffectRules.ApplyTheme(burst, (PristineFuryMark)(int)Projectile.ai[2]);
         }
 
-        private void EmitUpwardImpact(Vector2 center)
+        private void SpawnHitEffects(Vector2 center)
         {
             if (Main.dedServ)
                 return;
 
-            Vector2 upwardForward = (-Vector2.UnitY).RotatedBy(MathHelper.ToRadians(5f));
-            for (int i = 0; i < 18; i++)
+            Vector2 backward = -Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center, Vector2.Zero, "CalamityMod/Particles/SmallBloom", false, 7, Main.rand.NextFloat(0.54f, 0.68f), ThemeColor, Vector2.One, true, false));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.Lerp(ThemeColor, Color.White, 0.2f) * 0.68f, "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-10f, 10f), Main.rand.NextFloat(0.2f, 1.2f), 2.2f, 15, true));
+
+            for (int i = 0; i < 6; i++)
             {
-                Vector2 sparkVel = upwardForward.RotatedByRandom(0.3f) * Main.rand.NextFloat(10f, 26f);
-                SparkParticle spark = new SparkParticle(center + Main.rand.NextVector2Circular(10f, 10f), sparkVel, true, Main.rand.Next(20, 34), Main.rand.NextFloat(0.85f, 1.45f), Main.rand.NextBool(4) ? Color.OrangeRed : Color.Orange);
-                GeneralParticleHandler.SpawnParticle(spark);
+                Vector2 velocity = backward.RotatedByRandom(0.55f) * Main.rand.NextFloat(9f, 22f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(center + Main.rand.NextVector2Circular(10f, 10f), velocity, true, Main.rand.Next(18, 30), Main.rand.NextFloat(0.75f, 1.25f), Main.rand.NextBool(4) ? ThemeColor : Color.Lerp(ThemeColor, Color.White, 0.35f)));
+            }
+        }
+
+        public override bool PreDraw(ref Color lightColor) => false;
+    }
+
+    internal sealed class PFDragon_Burst : ModProjectile, ILocalizedModType
+    {
+        public new string LocalizationCategory => "Projectiles.PristineFury";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+
+        public override void SetDefaults()
+        {
+            Projectile.width = Projectile.height = 260;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 8;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        public override void AI()
+        {
+            if (Projectile.localAI[0]++ == 0f)
+                SpawnBurstEffects();
+        }
+
+        private void SpawnBurstEffects()
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 12; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 18f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center + Main.rand.NextVector2Circular(24f, 24f), velocity, true, Main.rand.Next(18, 32), Main.rand.NextFloat(0.85f, 1.45f), Main.rand.NextBool(4) ? ThemeColor : Color.Lerp(ThemeColor, Color.White, 0.38f)));
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 8; i++)
             {
-                Vector2 smokeVel = upwardForward.RotatedByRandom(0.42f) * Main.rand.NextFloat(3f, 12f);
-                Particle smoke = new SmallSmokeParticle(center + Main.rand.NextVector2Circular(18f, 12f), smokeVel, Color.DimGray, Main.rand.NextBool() ? Color.SlateGray : Color.Black, Main.rand.NextFloat(0.65f, 1.45f), 100);
-                GeneralParticleHandler.SpawnParticle(smoke);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 10f);
+                GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(Projectile.Center + Main.rand.NextVector2Circular(44f, 44f), velocity, Color.DimGray, Main.rand.NextBool() ? Color.SlateGray : Color.Black, Main.rand.NextFloat(0.7f, 1.5f), 110f));
             }
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, (ThemeColor with { A = 0 }) * 0.75f, "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.42f, 3.0f, 16, true));
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+            CalamityUtils.CircularHitboxCollision(Projectile.Center, 130f, targetHitbox);
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            target.AddBuff(ModContent.BuffType<Dragonfire>(), 420);
+            if (Projectile.numHits > 0)
+                Projectile.damage = System.Math.Max(1, (int)(Projectile.damage * 0.95f));
         }
 
         public override bool PreDraw(ref Color lightColor) => false;

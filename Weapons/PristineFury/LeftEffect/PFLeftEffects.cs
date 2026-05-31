@@ -51,14 +51,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 case PristineFuryMark.Dog:
                     PFDogEffect.Update(holdout, held, justPressed, justReleased);
                     break;
-                case PristineFuryMark.ExoTwins:
-                    PFExoTwinsEffect.Update(holdout, held, justPressed, justReleased);
-                    break;
                 case PristineFuryMark.ExoThanatos:
                     PFExoThanatosEffect.Update(holdout, held, justPressed, justReleased);
-                    break;
-                case PristineFuryMark.ExoAres:
-                    PFExoAresEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Dragon:
                     PFDragonEffect.Update(holdout, held, justPressed, justReleased);

@@ -236,6 +236,30 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     required: true);
 
                 GeneralParticleHandler.SpawnParticle(smoke);
+
+                if (Main.rand.NextBool(2))
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + back * Main.rand.NextFloat(4f, 14f) + Main.rand.NextVector2Circular(5f, 5f),
+                        back * Main.rand.NextFloat(0.5f, 1.5f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
+                        false,
+                        Main.rand.Next(12, 22),
+                        Main.rand.NextFloat(0.24f, 0.48f),
+                        Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.42f)),
+                        true,
+                        false,
+                        true));
+                }
+
+                if (Main.rand.NextBool(3))
+                {
+                    GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                        back * Main.rand.NextFloat(0.35f, 1.2f),
+                        Main.rand.NextFloat(0.24f, 0.44f),
+                        Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.36f)),
+                        Main.rand.Next(12, 20)));
+                }
             }
         }
 
@@ -263,7 +287,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             DamageCircle(center, 178, blastDamage);
 
             if (Main.myPlayer == Projectile.owner)
+            {
                 SpawnFlameFields(center, blastDamage);
+                PFProvidence_RainSpawner.Spawn(center, Projectile, blastDamage);
+            }
 
             SpawnExplosionEffects(center, 1.25f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MineralMortarExplode") { Volume = 0.9f, Pitch = 0.32f }, center);

@@ -82,6 +82,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                     22 + i * 4);
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
+
+            for (int directionIndex = 0; directionIndex < 8; directionIndex++)
+            {
+                Vector2 direction = (MathHelper.TwoPi * directionIndex / 8f).ToRotationVector2();
+                Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+                for (int i = 0; i < 12 + Level * 2; i++)
+                {
+                    float distanceFactor = i / (11f + Level * 2f);
+                    Vector2 start = Projectile.Center + normal * Main.rand.NextFloat(-10f, 10f) + direction * Main.rand.NextFloat(8f, 28f);
+                    Vector2 velocity = direction * MathHelper.Lerp(7f, 24f + Level * 2.2f, distanceFactor) + normal * Main.rand.NextFloat(-1.9f, 1.9f);
+                    Color color = i % 3 == 0 ? Color.Black : Color.Lerp(new Color(255, 210, 72), Color.White, Main.rand.NextFloat(0.18f));
+
+                    GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                        start,
+                        velocity,
+                        false,
+                        Main.rand.Next(18, 34),
+                        Main.rand.NextFloat(0.07f, 0.16f),
+                        color,
+                        new Vector2(3.4f, 0.42f),
+                        true));
+                }
+            }
         }
 
         public override void AI()

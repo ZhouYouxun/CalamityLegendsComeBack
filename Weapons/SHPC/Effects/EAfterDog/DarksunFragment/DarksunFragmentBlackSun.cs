@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -53,12 +54,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
             ShotTimer++;
             float lifeProgress = Utils.GetLerpValue(Lifetime, 0f, Projectile.timeLeft, true);
-            int interval = Math.Max(5, (int)MathHelper.Lerp(15f, 9f, lifeProgress) - (Level - 1));
+            int interval = Math.Max(3, (int)MathHelper.Lerp(16f, 7f, lifeProgress) - Level * 2);
             if (Projectile.owner == Main.myPlayer && ShotTimer >= interval)
             {
                 ShotTimer = 0f;
                 SpawnEclipseBolt(radius);
             }
+
+            MaintainOrbitingShps();
 
             if (Timer % 6f == 0f && !Main.dedServ)
             {
@@ -78,12 +81,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         private void SpawnEclipseBolt(float radius)
         {
+            float levelProgress = Utils.GetLerpValue(1f, MaxLevel, Level, true);
             float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-            Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(radius + 110f, radius + 180f);
+            Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(
+                radius + MathHelper.Lerp(105f, 255f, levelProgress),
+                radius + MathHelper.Lerp(175f, 440f, levelProgress));
             Vector2 tangent = (Projectile.Center - spawn).SafeNormalize(Vector2.UnitY).RotatedBy(-MathHelper.PiOver2);
-            Vector2 control = Projectile.Center + tangent * Main.rand.NextFloat(80f, 155f) + Main.rand.NextVector2Circular(26f, 26f);
+            Vector2 control = Projectile.Center + tangent * Main.rand.NextFloat(
+                MathHelper.Lerp(82f, 170f, levelProgress),
+                MathHelper.Lerp(160f, 285f, levelProgress)) + Main.rand.NextVector2Circular(26f + Level * 5f, 26f + Level * 5f);
 
-            Projectile.NewProjectile(
+            int bolt = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawn,
                 Vector2.Zero,
@@ -94,6 +102,47 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 Projectile.whoAmI,
                 control.X,
                 control.Y);
+
+            if (Main.projectile.IndexInRange(bolt))
+                Main.projectile[bolt].localAI[0] = MathHelper.Lerp(78f, 44f, levelProgress);
+        }
+
+        private void MaintainOrbitingShps()
+        {
+            if (Level < 3 || Projectile.owner != Main.myPlayer)
+                return;
+
+            int soulType = ModContent.ProjectileType<NewSHPS>();
+            int desiredCount = Utils.Clamp(Level + 3, 6, 9);
+            int activeCount = 0;
+            foreach (Projectile soul in Main.ActiveProjectiles)
+            {
+                if (soul.type == soulType && soul.owner == Projectile.owner && (int)soul.ai[0] == 0 && (int)soul.ai[1] == Projectile.whoAmI && soul.ai[2] == 3f)
+                    activeCount++;
+            }
+
+            if (activeCount >= desiredCount || Timer % 5f != 0f)
+                return;
+
+            int spawnCount = Math.Min(2, desiredCount - activeCount);
+            for (int i = 0; i < spawnCount; i++)
+            {
+                Vector2 spawnOffset = Main.rand.NextVector2CircularEdge(128f + Level * 18f, 82f + Level * 10f).RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                Vector2 spawn = Projectile.Center + spawnOffset;
+                Vector2 velocity = spawnOffset.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2 * (Main.rand.NextBool() ? 1f : -1f)) * Main.rand.NextFloat(14f, 23f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawn,
+                    velocity,
+                    soulType,
+                    Math.Max(1, Projectile.damage / 5),
+                    Projectile.knockBack * 0.15f,
+                    Projectile.owner,
+                    0f,
+                    Projectile.whoAmI,
+                    3f);
+            }
         }
 
         public override void OnKill(int timeLeft)
@@ -139,7 +188,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Texture2D vortex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleVortex").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-            Texture2D face = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/ScreamyFace").Value;
             Texture2D[] sunsetVortexTextures =
             {
                 ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_003").Value,
@@ -186,7 +234,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 Color color = new Color(4 + i * 4, 3 + i * 3, 1, 205 - i * 18) * fade;
                 Main.EntitySpriteDraw(vortex, drawPos, null, color, Projectile.rotation * (i % 2 == 0 ? 1f : -1.35f) + i, vortex.Size() * 0.5f, radiusScale * pulse * (1f + i * 0.035f), SpriteEffects.None);
             }
-            Main.EntitySpriteDraw(face, drawPos, null, new Color(8, 5, 1, 225) * fade, -Projectile.rotation * 0.5f, face.Size() * 0.5f, radiusScale * 0.33f, SpriteEffects.None);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = 0; i < 3; i++)

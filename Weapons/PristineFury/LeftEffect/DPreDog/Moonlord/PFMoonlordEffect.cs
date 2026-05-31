@@ -1,4 +1,6 @@
+using CalamityMod;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -8,11 +10,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFMoonlordEffect
     {
-        private const int FireInterval = 15;
-        private const int NebulaBlaze1ID = 634;
-        private const int NebulaBlaze2ID = 635;
-        private const int StardustSoldierLaserID = 537;
-        private const float Recoil = 5.8f;
+        private const int WarmupFrames = 210;
+        private const int SuperLaserPauseFrames = 46;
+        private const int SlowInterval = 24;
+        private const int FastInterval = 4;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -22,133 +23,80 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
             }
 
+            if (holdout.LeftAuxTimer > 0)
+            {
+                holdout.LeftAuxTimer--;
+                if (holdout.LeftAuxTimer == 0)
+                {
+                    FireSuperLaser(holdout);
+                    holdout.LeftChargeTimer = 0;
+                }
+                return;
+            }
+
+            if (holdout.LeftChargeTimer >= WarmupFrames)
+            {
+                holdout.LeftAuxTimer = SuperLaserPauseFrames;
+                holdout.LeftTimer = 0;
+                return;
+            }
+
+            holdout.LeftChargeTimer++;
+            float warmup = holdout.LeftChargeTimer / (float)WarmupFrames;
+            int interval = (int)System.MathF.Round(MathHelper.Lerp(SlowInterval, FastInterval, warmup));
             holdout.LeftTimer++;
-            if (holdout.LeftTimer < FireInterval)
+            if (holdout.LeftTimer < interval)
                 return;
 
             holdout.LeftTimer = 0;
-
-            switch (holdout.LeftBurstIndex++ % 4)
-            {
-                case 0:
-                    FireSolar(holdout);
-                    break;
-                case 1:
-                    FireVortex(holdout);
-                    break;
-                case 2:
-                    FireNebula(holdout);
-                    break;
-                default:
-                    FireStardust(holdout);
-                    break;
-            }
+            FireLunarFlare(holdout);
         }
 
-        private static void FireSolar(NewLegendPristineFuryHoldOut holdout)
+        private static void FireLunarFlare(NewLegendPristineFuryHoldOut holdout)
         {
             Vector2 direction = holdout.AimDirection;
-            Vector2 muzzle = holdout.GunTipPosition + direction * 12f;
             int projectileIndex = Projectile.NewProjectile(
                 holdout.Projectile.GetSource_FromThis(),
-                muzzle,
+                holdout.GunTipPosition + direction * 15f,
+                direction * 18f,
+                ProjectileID.LunarFlare,
+                holdout.GetScaledDamage(0.68f),
+                holdout.Projectile.knockBack * 0.6f,
+                holdout.Projectile.owner);
+            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
+            {
+                Projectile projectile = Main.projectile[projectileIndex];
+                projectile.friendly = true;
+                projectile.hostile = false;
+                projectile.DamageType = DamageClass.Ranged;
+                projectile.tileCollide = false;
+                projectile.penetrate = 2;
+            }
+
+            holdout.ApplyRecoil(3.2f);
+            holdout.TriggerMuzzleFlash(9);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.7f);
+            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.34f, Pitch = 0.32f }, holdout.GunTipPosition);
+        }
+
+        private static void FireSuperLaser(NewLegendPristineFuryHoldOut holdout)
+        {
+            Vector2 direction = holdout.AimDirection;
+            int projectileIndex = Projectile.NewProjectile(
+                holdout.Projectile.GetSource_FromThis(),
+                holdout.GunTipPosition + direction * 18f,
                 direction,
                 ModContent.ProjectileType<PFMoonlord_SolarLaser>(),
-                holdout.GetScaledDamage(1.05f),
-                holdout.Projectile.knockBack,
+                holdout.GetScaledDamage(5.3f),
+                holdout.Projectile.knockBack * 1.8f,
                 holdout.Projectile.owner);
-
             PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
-            ApplyShotFeedback(holdout, new Color(255, 184, 54), 1.08f, Recoil + 1.6f, SoundID.Item33);
-        }
 
-        private static void FireVortex(NewLegendPristineFuryHoldOut holdout)
-        {
-            Vector2 direction = holdout.AimDirection;
-            Vector2 muzzle = holdout.GunTipPosition + direction * 15f;
-            const int count = 4;
-            const float fan = 0.42f;
-
-            for (int i = 0; i < count; i++)
-            {
-                float ratio = count == 1 ? 0.5f : i / (float)(count - 1);
-                float rotation = MathHelper.Lerp(-fan, fan, ratio);
-                Vector2 velocity = direction.RotatedBy(rotation) * 13.5f;
-
-                int projectileIndex = Projectile.NewProjectile(
-                    holdout.Projectile.GetSource_FromThis(),
-                    muzzle + direction * (i * 3f),
-                    velocity,
-                    ModContent.ProjectileType<PFMoonlord_VortexScorpioRocket>(),
-                    holdout.GetScaledDamage(0.58f),
-                    holdout.Projectile.knockBack * 0.8f,
-                    holdout.Projectile.owner,
-                    13.5f,
-                    i);
-
-                PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
-            }
-
-            ApplyShotFeedback(holdout, new Color(78, 255, 170), 0.92f, Recoil, SoundID.Item11);
-        }
-
-        private static void FireNebula(NewLegendPristineFuryHoldOut holdout)
-        {
-            Vector2 direction = holdout.AimDirection;
-            Vector2 muzzle = holdout.GunTipPosition + direction * 14f;
-            for (int i = 0; i < 3; i++)
-            {
-                float spread = MathHelper.Lerp(-0.14f, 0.14f, i / 2f);
-                int type = i == 1 ? NebulaBlaze2ID : NebulaBlaze1ID;
-                int projectileIndex = Projectile.NewProjectile(
-                    holdout.Projectile.GetSource_FromThis(),
-                    muzzle,
-                    direction.RotatedBy(spread) * 12.2f,
-                    type,
-                    holdout.GetScaledDamage(0.54f),
-                    holdout.Projectile.knockBack * 0.6f,
-                    holdout.Projectile.owner);
-
-                NormalizeVanillaProjectile(projectileIndex);
-            }
-
-            ApplyShotFeedback(holdout, new Color(255, 98, 230), 0.92f, Recoil * 0.82f, SoundID.Item88);
-        }
-
-        private static void FireStardust(NewLegendPristineFuryHoldOut holdout)
-        {
-            Vector2 direction = holdout.AimDirection;
-            int projectileIndex = Projectile.NewProjectile(
-                holdout.Projectile.GetSource_FromThis(),
-                holdout.GunTipPosition + direction * 16f,
-                direction * 16f,
-                StardustSoldierLaserID,
-                holdout.GetScaledDamage(0.78f),
-                holdout.Projectile.knockBack * 0.7f,
-                holdout.Projectile.owner);
-
-            NormalizeVanillaProjectile(projectileIndex);
-            ApplyShotFeedback(holdout, new Color(100, 220, 255), 0.96f, Recoil, SoundID.Item12);
-        }
-
-        private static void NormalizeVanillaProjectile(int projectileIndex)
-        {
-            if (projectileIndex < 0 || projectileIndex >= Main.maxProjectiles)
-                return;
-
-            Projectile projectile = Main.projectile[projectileIndex];
-            projectile.friendly = true;
-            projectile.hostile = false;
-            projectile.DamageType = DamageClass.Ranged;
-            projectile.netUpdate = true;
-        }
-
-        private static void ApplyShotFeedback(NewLegendPristineFuryHoldOut holdout, Color color, float scale, float recoil, SoundStyle sound)
-        {
-            holdout.ApplyRecoil(recoil);
-            holdout.TriggerMuzzleFlash(14);
-            holdout.SpawnMuzzleBurst(color, scale);
-            SoundEngine.PlaySound(sound with { Volume = 0.55f, PitchVariance = 0.12f }, holdout.GunTipPosition);
+            holdout.ApplyRecoil(28f);
+            holdout.TriggerMuzzleFlash(30);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 2.8f);
+            holdout.Owner.Calamity().GeneralScreenShakePower = Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 12f);
+            SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.92f, Pitch = -0.42f }, holdout.GunTipPosition);
         }
     }
 }

@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4;
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5;
 using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
 using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick;
+using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using CalamityMod.Cooldowns;
 using CalamityMod.Graphics.Metaballs;
@@ -31,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
 
         public int EXValue;
         private bool holdingVesuvius;
+        private bool wasEXReady;
 
         public bool EXReady => EXValue >= EXMax;
 
@@ -45,6 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
                 EXValue = Utils.Clamp(EXValue + 1, 0, EXMax);
             else
                 EXValue = Utils.Clamp(EXValue - 2, 0, EXMax);
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXReady);
         }
 
         public void SetHoldingVesuvius()

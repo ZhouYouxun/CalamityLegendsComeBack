@@ -130,6 +130,8 @@ Mods: {
 			SHPCAmmo40: Armored Shell fires a large swarm of electromagnetic orbs to form a sustained storm.
 			SHPCAmmo41: Pearl Shard releases three large pearls that split into accelerating homing pearls.
 			SHPCAmmo42: Darksun Fragment creates an eclipsed black sun, uses its eight-frame material guide, and stacks into sustained pressure.
+			SHPCAmmo43: Cynosure fires a heavy armor-piercing round that ruptures into electromagnetic lightning, two auric-orb ellipses, and an outer charged-cell ring.
+			SHPCAmmo44: Core of Calamity fires a wide gray energy stream that ruptures into four curving, homing fragments.
 		}
 
 		Projectiles: {
@@ -191,6 +193,16 @@ Mods: {
 				DarksunFragmentBlackSun.DisplayName: Eclipsed Black Sun
 				DarksunFragmentEclipseBolt.DisplayName: Eclipsed Solar Bolt
 				DarksunFragmentBlackSunExplosion.DisplayName: Eclipsed Black Sun Burst
+				DepthCells_Shark.DisplayName: Abyssal Cell Shark
+				DepthCells_SharkExplosion.DisplayName: Abyssal Cell Rupture
+				CynosureArmorPiercingRound.DisplayName: Cynosure Armor-Piercing Round
+				CynosureAuricBall.DisplayName: Cynosure Auric Orb
+				CynosureChargedCell.DisplayName: Cynosure Charged Cell
+				CynosureLightningExplosion.DisplayName: Cynosure Lightning Burst
+				CynosureLightningArc.DisplayName: Cynosure Lightning Arc
+				CoreOfCalamityEnergyOrb.DisplayName: Calamitous Energy Orb
+				CoreOfCalamityExplosion.DisplayName: Calamitous Energy Rupture
+				CoreOfCalamitySplitOrb.DisplayName: Calamitous Energy Fragment
 			}
 
 			A_Dev: {

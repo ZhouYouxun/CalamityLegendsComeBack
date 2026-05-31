@@ -1,5 +1,6 @@
 using Terraria;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 {
@@ -12,6 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
         private int passiveRegenTimer;
         private bool holdingBlossomFlux;
+        private bool wasEXReady;
 
         public bool EXReady => EXValue >= EXMax;
         public bool ShouldShowDisplay =>
@@ -28,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             if (!holdingBlossomFlux)
             {
                 passiveRegenTimer = 0;
+                LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXReady);
                 return;
             }
 
@@ -35,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             {
                 passiveRegenTimer = 0;
                 EXValue = EXMax;
+                LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, true);
                 return;
             }
 
@@ -44,6 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 passiveRegenTimer = 0;
                 GainEX(1);
             }
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXReady);
         }
 
         public void SetHoldingBlossomFlux()

@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 {
     public class PearlShardSmallPearl : ModProjectile, ILocalizedModType
     {
-        private const float HomingStartFrame = 0f;
+        private const float HomingStartFrame = 24f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/APreHardMode/PearlShard/PearlShardParticle";
@@ -26,11 +26,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.height = 17;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 2;
+            Projectile.penetrate = 1;
             Projectile.timeLeft = 120;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = 2;
+            Projectile.extraUpdates = 1;
         }
 
         public override void AI()
@@ -49,21 +49,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
         private void HomingAI()
         {
             NPC target = FindTarget();
-            if (target == null)
+            if (FrameTimer < HomingStartFrame)
             {
-                Projectile.velocity *= 1.012f;
+                Projectile.velocity *= 0.99f;
                 return;
             }
 
             float homingTimer = FrameTimer - HomingStartFrame;
-            float loosen = Utils.GetLerpValue(0f, 70f, homingTimer, true);
+            if (target == null)
+            {
+                Projectile.velocity *= 1.006f;
+                return;
+            }
+
+            float loosen = Utils.GetLerpValue(0f, 62f, homingTimer, true);
             float closeLoosen = Utils.GetLerpValue(220f, 42f, Projectile.Distance(target.Center), true);
             float power = MathHelper.Clamp(loosen + closeLoosen * 0.55f, 0f, 1f);
-            float speed = MathHelper.Lerp(8.5f, 17.5f, power);
-            float turnLimit = MathHelper.ToRadians(MathHelper.Lerp(4f, 28f, power));
+            float speed = MathHelper.Lerp(7.2f, 19.5f, power);
+            float turnLimit = MathHelper.ToRadians(MathHelper.Lerp(3f, 31f, power));
             Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * speed;
 
-            float currentSpeed = MathHelper.Lerp(Projectile.velocity.Length(), speed, MathHelper.Lerp(0.06f, 0.22f, power));
+            float currentSpeed = MathHelper.Lerp(Projectile.velocity.Length(), speed, MathHelper.Lerp(0.05f, 0.26f, power));
             float rotation = Projectile.velocity.ToRotation().AngleTowards(desired.ToRotation(), turnLimit);
             Projectile.velocity = rotation.ToRotationVector2() * currentSpeed;
         }

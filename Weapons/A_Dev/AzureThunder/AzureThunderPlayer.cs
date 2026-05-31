@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
@@ -37,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         // holdingAzureThunder 每帧重置，只有物品 HoldItem 会重新置 true。
         private bool holdingAzureThunder;
+        private bool wasUltimateReady;
         private int autoGroundSwordTimer = AutoGroundSwordInterval;
         private int ultimateAutoGainTimer;
         private int lastThunderChargeGrantFrame = -9999;
@@ -62,6 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             // 死亡清空所有青霆资源和计时器。
             ThunderCharge = 0;
             UltimateEnergy = 0;
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
             RightClickCooldown = 0;
             ActiveHarmonyDuration = 0;
             autoGroundSwordTimer = AutoGroundSwordInterval;
@@ -156,21 +159,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void AddUltimateEnergy(int amount)
         {
-            // 天理真和期间禁止所有终极能量回复，包括命中雷击奖励。
-            if (HarmonyActive)
+            if (HarmonyActive || amount <= 0)
                 return;
 
-            if (amount <= 0)
-                return;
-
-            int oldValue = UltimateEnergy;
             UltimateEnergy = Utils.Clamp(UltimateEnergy + amount, 0, UltimateEnergyMax);
-
-            // 第一次充满时播放提示音，避免能量溢出时重复响。
-            if (oldValue < UltimateEnergyMax && UltimateEnergy >= UltimateEnergyMax && Player.whoAmI == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.65f, Pitch = 0.1f }, Player.Center);
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, UltimateEnergy >= UltimateEnergyMax);
         }
-
         public void TryGainThunderChargeFromTarget(NPC target)
         {
             // 终极期间或无效目标不允许获取雷息层数。
@@ -250,6 +244,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // 启动终极：清能量、记录持续时间、加 Buff 并创建时间条。
             UltimateEnergy = 0;
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
             ultimateAutoGainTimer = 0;
             ActiveHarmonyDuration = AzureThunderAccessoryPlayer.GetHarmonyDuration(Player);
             Player.AddBuff(ModContent.BuffType<AzureThunderHarmonyBuff>(), ActiveHarmonyDuration);

@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 32;
@@ -38,18 +39,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Timer > 6f && drawingUpdate)
             {
                 float scaleBoost = MathHelper.Clamp(Timer * 0.005f, 0f, 2f);
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, Projectile.velocity, false, 7, 3.2f + scaleBoost, new Color(8, 35, 156)));
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, Projectile.velocity, false, 7, 1.6f + scaleBoost, new Color(184, 215, 245)));
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, Projectile.velocity, false, 7, 3.2f + scaleBoost, ThemeColor));
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, Projectile.velocity, false, 7, 1.6f + scaleBoost, Color.Lerp(ThemeColor, Color.White, 0.65f)));
             }
             else if (Timer == 5f)
             {
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Projectile.velocity * 0.75f, Color.Aqua, new Vector2(1f, 2.5f), Projectile.rotation, 0.2f, 0.03f, 20));
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Projectile.velocity * 0.4f, Color.DodgerBlue, new Vector2(1f, 2.5f), Projectile.rotation, 0.1f, 0.025f, 35));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Projectile.velocity * 0.75f, ThemeColor, new Vector2(1f, 2.5f), Projectile.rotation, 0.2f, 0.03f, 20));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Projectile.velocity * 0.4f, Color.Lerp(ThemeColor, Color.White, 0.45f), new Vector2(1f, 2.5f), Projectile.rotation, 0.1f, 0.025f, 35));
                 ReleaseCometDust(24, 0.4f);
             }
 
             if (Projectile.numUpdates == 0)
-                Lighting.AddLight(Projectile.Center, Color.MediumBlue.ToVector3() * 0.4f);
+                Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.4f);
         }
 
         private void ReleaseCometDust(int count, float spread)
@@ -59,10 +60,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             for (int i = 0; i < count; i++)
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? 172 : 206, Projectile.velocity);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch, Projectile.velocity);
                 dust.scale = Main.rand.NextFloat(1.2f, 2.4f);
                 dust.velocity = Projectile.velocity.RotatedByRandom(spread) * Main.rand.NextFloat(0.3f, 2.4f);
                 dust.noGravity = true;
+                dust.color = Main.rand.NextBool() ? ThemeColor : Color.Lerp(ThemeColor, Color.White, 0.45f);
             }
         }
 
@@ -79,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
             PFLeftEffectRules.BeginAdditive();
-            Main.EntitySpriteDraw(bloom, drawPosition, null, new Color(55, 140, 255, 0) * 0.45f, Projectile.rotation, bloom.Size() * 0.5f, 0.16f + Timer * 0.0008f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, (ThemeColor with { A = 0 }) * 0.45f, Projectile.rotation, bloom.Size() * 0.5f, 0.16f + Timer * 0.0008f, SpriteEffects.None, 0);
             PFLeftEffectRules.EndAdditive();
             return false;
         }

@@ -7,24 +7,24 @@ Mods: {
 					PristineFuryIntro: "[c/FF9340:Current imprint: {0}.]"
 					RightClick: "[c/FFB066:Temporary debug: Right Click cycles imprints in order. The original scatter barrage is commented out in code, not removed.]"
 					Hook: "[c/9AEAFF:Hold Left + Right for 3 seconds to launch the extraction hook. Valid bosses grant their imprint; other enemies take heavy hook damage.]"
-					Left_Idle: "[c/FF9340:Left Click: compact ember jet with particle-only muzzle bloom.]"
-					Left_EvilT2: "[c/D246EB:Left Click: corrupt twin-helix flame that braids violet smoke, star pulses, and Brain Rot.]"
-					Left_SlimeGod: "[c/BC4EFF:Left Click: five overloaded bolts arc toward targets and ricochet as violet capacitor bursts.]"
-					Left_HardMode: "[c/FF8E42:Left Click: three Wall-pressure cones inflate into orange shock breath and searing waves.]"
-					Left_Prime: "[c/FFCE5C:Left Click: gear-toothed gold firestream with stepping cinders and mechanical spark teeth.]"
-					Left_BrimstoneElemental: "[c/F63740:Left Click: charge, then lance out a brimstone smear beam with red brand geometry.]"
-					Left_FakeCalamity: "[c/FF4236:Left Click: six-round Fake Calamity shotgun bursts ignite the impact zone.]"
-					Left_Plantera: "[c/5EF26C:Left Click: hold and release four wild-bloom spores that weave, heal, and home through petal runes.]"
-					Left_Aurora: "[c/7ED2FF:Left Click: aurora ribbon fog turns in five-point astral bends and stains enemies with starlight.]"
-					Left_Goliath: "[c/8BF249:Left Click: blight cloud breath sheds plague swarmlets and infects targets for death-release bursts.]"
-					Left_Moonlord: "[c/7E9CFF:Left Click: chromatic lunar fire cycles solar, nebula, vortex, and stardust particle grammars.]"
-					Left_Providence: "[c/FFDC76:Left Click: profaned cleansing mortar blooms into a stationary consecrated fire field.]"
-					Left_Polterghast: "[c/D288FF:Left Click: Halley-soul stars drift, awaken, and chase in violet spectral rose patterns.]"
-					Left_Dog: "[c/6049D6:Left Click: Photoviscerator void stream tears delayed rifts and black accretion disks.]"
+					Left_Idle: "[c/FFE05C:Left Click: compact Pristine Fire jet with its paired sparks and short flight distance.]"
+					Left_EvilT2: "[c/FFE05C:Left Click: six yellow shells briefly decelerate, then accelerate with weak target correction.]"
+					Left_SlimeGod: "[c/FFE05C:Left Click: heavy yellow slime globes bounce up to five times without tracking.]"
+					Left_HardMode: "[c/FFE05C:Left Click: slow heavy fireballs burst into Totality fragments and persistent ground fire.]"
+					Left_Prime: "[c/FFE05C:Left Click: gear-toothed gold firestream with stepping cinders and mechanical spark teeth.]"
+					Left_BrimstoneElemental: "[c/FFE05C:Left Click: charge a heavy yellow ray that divides into homing brimstone barrages.]"
+					Left_FakeCalamity: "[c/FFE05C:Left Click: summon pain-flames near the cursor; they pierce enemies before returning like souls.]"
+					Left_Plantera: "[c/5EF26C:Left Click: eight visual pseudo-lasers prime one recursively splitting green lightning strike.]"
+					Left_Aurora: "[c/FFE05C:Left Click: charge an industrial welding ray; its endpoint deals extreme damage.]"
+					Left_Goliath: "[c/FFE05C:Left Click: briefly charge, then release a forward locust swarm of reaper drones.]"
+					Left_Moonlord: "[c/FFE05C:Left Click: warm up straight lunar bolts, pause, then release an instant massive laser.]"
+					Left_Providence: "[c/FFE05C:Left Click: profaned mortars explode into ground fire and summon day-or-night celestial rain.]"
+					Left_Polterghast: "[c/FFE05C:Left Click: accelerating yellow comet-souls pierce through targets.]"
+					Left_Dog: "[c/FFE05C:Left Click: Photoviscerator void stream tears delayed rifts and black accretion disks.]"
 					Left_ExoTwins: "[c/4AFFB4:Left Click: Artemis warning laser snaps forward, then Apollo rockets launch in a three-shot burst.]"
-					Left_ExoThanatos: "[c/66A2FF:Left Click: three Thanatos telegraphs converge before a terminal extinction beam tears open side lasers.]"
+					Left_ExoThanatos: "[c/FFE05C:Left Click: three Thanatos telegraphs converge before a terminal extinction beam tears open side lasers.]"
 					Left_ExoAres: "[c/FF4C40:Left Click: rapid Ares laser beams fire continuously from the muzzle.]"
-					Left_Dragon: "[c/FF6C32:Left Click: Yharon-style 18-pellet fan that splits into pressure cinders on impact.]"
+					Left_Dragon: "[c/FFE05C:Left Click: 250 RPM S12K dragon-breath volleys; five uneven flames pierce ten enemies and explode on each hit.]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
@@ -76,6 +76,7 @@ Mods: {
 				PFBrimstoneElemental_Flame.DisplayName: P F Brimstone Elemental_ Flame
 				PFDog_Flame.DisplayName: P F Dog_ Flame
 				PFDragon_Flame.DisplayName: P F Dragon_ Flame
+				PFDragon_Burst.DisplayName: Pristine Dragon Breath Burst
 				PFEvilT2_Flame.DisplayName: P F Evil T2_ Flame
 				PFGoliath_Flame.DisplayName: P F Goliath_ Flame
 				PFHardMode_Flame.DisplayName: P F Hard Mode_ Flame
@@ -92,9 +93,14 @@ Mods: {
 				PFDog_ChargeOrb.DisplayName: P F Dog_ Charge Orb
 				PFGoliath_HiveNukeMissile.DisplayName: P F Goliath_ Hive Nuke Missile
 				PFGoliath_MouseCrosshair.DisplayName: P F Goliath_ Mouse Crosshair
+				PFGoliath_ReaperDrone.DisplayName: Pristine Fury Reaper Drone
 				PFHardMode_MeowCreature.DisplayName: P F Hard Mode_ Meow Creature
+				PFHardMode_HeavyFireball.DisplayName: Pristine Fury Heavy Fireball
+				PFHardMode_TotalityFire.DisplayName: Pristine Fury Totality Fragment
+				PFHardMode_GroundFire.DisplayName: Pristine Fury Ground Fire
 				PFFakeCalamity_Pellet.DisplayName: P F Fake Calamity_ Pellet
 				PFFakeCalamity_GroundFlame.DisplayName: P F Fake Calamity_ Ground Flame
+				PFFakeCalamity_SoulFlame.DisplayName: Pristine Fury Pain Soul
 				PFMoonlord_SolarExplosion.DisplayName: P F Moonlord_ Solar Explosion
 				PFMoonlord_SolarLaser.DisplayName: P F Moonlord_ Solar Laser
 				PFMoonlord_VortexScorpioRocket.DisplayName: P F Moonlord_ Vortex Scorpio Rocket
@@ -102,6 +108,10 @@ Mods: {
 				PFProvidence_HolyFireField.DisplayName: P F Providence_ Holy Fire Field
 				PFProvidence_HolyShrapnel.DisplayName: P F Providence_ Holy Shrapnel
 				PFProvidence_NukeOfBliss.DisplayName: P F Providence_ Nuke Of Bliss
+				PFProvidence_HolyRainOrb.DisplayName: Pristine Fury Holy Rain Orb
+				PFProvidence_MoltenRainBlob.DisplayName: Pristine Fury Molten Rain Blob
+				PFBrimstoneElemental_Barrage.DisplayName: Pristine Fury Brimstone Barrage
+				PFPlantera_PseudoLaser.DisplayName: Pristine Fury Pseudo Laser
 				PFExoTwins_ArtemisLaser.DisplayName: P F Exo Twins_ Artemis Laser
 				PFExoTwins_ApolloRocket.DisplayName: P F Exo Twins_ Apollo Rocket
 				PFExoAresLaserBeamStart.DisplayName: P F Exo Ares Laser Beam
@@ -134,7 +144,7 @@ Mods: {
 				Goliath: The Plaguebringer Goliath
 				Moonlord: Moon Lord
 				Providence: Providence
-				Polterghast: Polterghast
+				Polterghast: Oni
 				Dog: The Devourer of Gods
 				ExoTwins: Apollo and Artemis
 				ExoThanatos: Thanatos

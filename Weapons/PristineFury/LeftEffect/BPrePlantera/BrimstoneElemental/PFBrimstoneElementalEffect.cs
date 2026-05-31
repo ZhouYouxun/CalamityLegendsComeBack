@@ -19,14 +19,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             holdout.LeftTimer++;
-            if (holdout.LeftTimer == 1 || holdout.LeftTimer >= LaserInterval)
+            if (holdout.LeftTimer >= LaserInterval)
             {
-                holdout.LeftTimer = 1;
+                holdout.LeftTimer = 0;
                 Fire(holdout);
             }
 
             if (holdout.LeftTimer % 8 == 0)
-                holdout.SpawnMuzzleBurst(new Color(246, 55, 64), 0.58f);
+                holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.58f);
         }
 
         private static void Fire(NewLegendPristineFuryHoldOut holdout)
@@ -44,7 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(20);
-            holdout.SpawnMuzzleBurst(new Color(246, 55, 64), 1.08f);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.3f);
         }
     }
 }

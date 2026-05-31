@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.LeftBurstIndex += count;
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(16);
-            holdout.SpawnMuzzleBurst(new Color(133, 133, 224), 0.95f);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.95f);
         }
     }
 }

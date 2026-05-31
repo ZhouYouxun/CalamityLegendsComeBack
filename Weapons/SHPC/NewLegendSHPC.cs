@@ -10,6 +10,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
 using CalamityMod;
 using CalamityMod.Items;
+using CalamityMod.Items.LoreItems;
 using CalamityMod.Items.Materials;
 using CalamityMod.Items.Weapons.Magic;
 using CalamityMod.Rarities;
@@ -462,7 +463,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             // 普通材料按剩余弹量概率返还；唯一 Lore 材料必须无条件返还。
-            if (effectID == CynosureEffect.CynosureEffectID && ammoType == ModContent.ItemType<Cynosure>())
+            if (effectID == CynosureEffect.CynosureEffectID && ammoType == ModContent.ItemType<LoreCynosure>())
             {
                 player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
                 return;

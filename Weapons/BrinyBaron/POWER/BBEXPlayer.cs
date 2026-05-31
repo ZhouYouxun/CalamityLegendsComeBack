@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.BB;
+using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using Terraria;
 using Terraria.ModLoader;
@@ -11,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
 
         public const int MaxDesignedTideCap = 8;
         public int TideValue;
+        private bool wasTideReady;
 
         public int CurrentTideMax => GetCurrentTideMax() + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
         public bool TideFull => TideValue >= CurrentTideMax;
@@ -19,6 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         {
             if (TideValue > CurrentTideMax)
                 TideValue = CurrentTideMax;
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasTideReady, TideFull);
         }
 
         public void AddTide(int amount = 1)

@@ -1,0 +1,29 @@
+我看了一遍源码，DoG 的华丽感主要不是单一粒子，而是“双色主题 + shader 背景 + rift/portal + 全屏激光墙 + 像素 primitive 火焰轨迹”叠起来的。
+核心视觉语言
+主色是青色 Cyan / DoGLightBlue、洋红 Fuchsia、偏紫的 DoGTwlight。SpecialMoveColor 会在洋红和青色之间随时间平滑变色：DevourerofGodsHead.cs (line 49)。
+本体分头、身体、尾巴三类 NPC。头部、下颚、P2 贴图都有 glowmask，绘制时叠青/紫两套发光层：DevourerofGodsHead.cs (line 2533)。
+传送冲刺后，嘴部额外叠加 GodSlayerDashJaw，用 additive blend 画一层大号洋红和一层小号青色：DevourerofGodsHead.cs (line 2517)。
+近身咬合会开合下颚，咬中瞬间生成 20 个 SparkParticle、屏幕震动和特殊命中音效：DevourerofGodsHead.cs (line 2081)。
+出场与转阶段
+召唤物 CosmicWorm 直接在玩家上方约 1600 像素生成 Boss，并播放 DevourerSpawn：CosmicWorm.cs (line 40)。
+OnSpawn 会广播开场台词，并启动 Boss 对话系统：DevourerofGodsHead.cs (line 307)。
+一阶段结束时，它会向前飞入 DoGP1EndPortal。这个 portal 使用 DoGPortal shader，把 Voronoi 噪声旋成青/洋红旋涡：DoGP1EndPortal.cs (line 62)。
+战斗背景
+只要 DoG 活着，DoGBackgroundScene 激活 CalamityMod:DevourerofGodsHead 天空：DoGBackgroundScene.cs (line 12)。
+背景不是普通贴图，而是 DoGSky 生成“Distortion”裂隙：3 个玻璃裂纹、14 条主裂隙臂、12-16 条外围裂缝：DoGSky.cs (line 86)。
+绘制顺序是风、滚动雾、裂隙光环、现实裂纹、扭曲裂隙本体：DoGSky.cs (line 224)。
+天空颜色随状态变：攻击态洋红、被动态青色、激光墙/传送/转阶段紫色：DoGSky.cs (line 444)。
+DoGVisualsManager 还会暗化太阳/月亮、改变世界光照，并用 render target 给裂隙内部和前景 distortion metaball 准备内容：DoGVisualsManager.cs (line 116)。
+主要弹幕特效
+DoGFire 火球本体是 invisible projectile，真正画面由 primitive trail 生成。外层用 ScarletDevilStreak，内核用 SylvestaffStreak，走 ImpFlameTrail shader；被动火球偏青，传送扩散火球偏紫/洋红：DoGFire.cs (line 118)。
+DoG 从嘴里喷火球前，会在嘴部喷 HeavySmokeParticle 和 SquishyLightParticle，然后生成 DoGFire：DevourerofGodsHead.cs (line 2141)。
+传送出现点会先生成 DoGTeleportRift。蓄力期间画星芒、玻璃裂纹、内缩 bloom ring，并不断放火花、光粒子和屏幕震动：DoGTeleportRift.cs (line 80)。
+rift 爆开时会生成 25 条 DoGRiftCrack、大量方形/圆形 distortion metaball、火花、光粒子、plasma pulse、shine explosion、bloom 和强震屏：DoGTeleportRift.cs (line 158)。
+激光墙 DoGLaserWalls 是全屏线阵：先低透明预警，30 tick 后攻击，颜色从青向洋红过渡；类型 0-5 是网格/斜线/交叉，类型 6 是圆环墙：DoGLaserWalls.cs (line 151)。
+大激光 DoGLaserWallsBigBeam 是从屏外扫向玩家的大线段，开火时屏幕震动，颜色从洋红转青：DoGLaserWallsBigBeam.cs (line 48)。
+死亡特效
+死亡时 Boss 进入长动画：血条关闭、逐段销毁身体、每段爆 BoneTorch dust 和 gore，最后生成 DoGDeathBoom：DevourerofGodsHead.cs (line 2332)。
+本体绘制使用通用 Dissolve shader，以噪声阈值把身体逐渐溶解，并用 SpecialMoveColor 做边缘过渡色：DevourerofGodsHead.cs (line 2470)。
+最终爆炸 DoGDeathBoom 是 180 tick、半径 4200 的 massive explosion，颜色从青到洋红，并带最高 28 强度震屏：DoGDeathBoom.cs (line 9)。
+补充：DoGBeamPortal / DoGBeam 虽然名字带 DoG，但源码里是无尽虚空等内容使用，不是神明吞噬者战斗中由 DoG 直接生成的主要弹幕。
+

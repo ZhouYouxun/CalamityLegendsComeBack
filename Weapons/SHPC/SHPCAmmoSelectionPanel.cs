@@ -388,7 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 40 => "CalamityMod/Items/Materials/ArmoredShell",
                 41 => "CalamityMod/Items/Materials/PearlShard",
                 42 => "CalamityMod/Items/Materials/DarksunFragment",
-                43 => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricCell",
+                43 => "CalamityMod/Items/LoreItems/LoreCynosure",
                 44 => "CalamityMod/Items/Materials/CoreofCalamity",
                 _ => null
             };

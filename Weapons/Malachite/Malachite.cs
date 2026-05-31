@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Accssory.MC;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
+using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
@@ -23,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
 
         public new string LocalizationCategory => "Items.Weapons";
+        private bool wasFinaleReady;
 
         public override bool WeaponPrefix() => true;
 
@@ -139,6 +141,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
+
+            CalamityPlayer calamity = player.Calamity();
+            bool finaleReady = calamity.rogueStealthMax > 0f &&
+                calamity.rogueStealth >= calamity.rogueStealthMax * 0.999f &&
+                !IsFinaleCoolingDown(player);
+            LegendaryUltimateReadySound.PlayIfReadyTransition(player, ref wasFinaleReady, finaleReady);
 
             TryUseFinale(player);
         }

@@ -2,9 +2,6 @@ using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.CalClone;
 using CalamityMod.NPCs.DevourerofGods;
-using CalamityMod.NPCs.ExoMechs.Apollo;
-using CalamityMod.NPCs.ExoMechs.Ares;
-using CalamityMod.NPCs.ExoMechs.Artemis;
 using CalamityMod.NPCs.ExoMechs.Thanatos;
 using CalamityMod.NPCs.PlaguebringerGoliath;
 using CalamityMod.NPCs.Polterghast;
@@ -103,29 +100,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return true;
             }
 
-            if (target.type == ModContent.NPCType<Apollo>() ||
-                target.type == ModContent.NPCType<Artemis>())
-            {
-                mark = PristineFuryMark.ExoTwins;
-                return true;
-            }
-
             if (target.type == ModContent.NPCType<ThanatosHead>() ||
                 target.type == ModContent.NPCType<ThanatosBody1>() ||
                 target.type == ModContent.NPCType<ThanatosBody2>() ||
                 target.type == ModContent.NPCType<ThanatosTail>())
             {
                 mark = PristineFuryMark.ExoThanatos;
-                return true;
-            }
-
-            if (target.type == ModContent.NPCType<AresBody>() ||
-                target.type == ModContent.NPCType<AresGaussNuke>() ||
-                target.type == ModContent.NPCType<AresLaserCannon>() ||
-                target.type == ModContent.NPCType<AresPlasmaFlamethrower>() ||
-                target.type == ModContent.NPCType<AresTeslaCannon>())
-            {
-                mark = PristineFuryMark.ExoAres;
                 return true;
             }
 
@@ -172,27 +152,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         internal static Color GetColor(PristineFuryMark mark)
         {
-            return mark switch
-            {
-                PristineFuryMark.EvilT2 => new Color(210, 58, 235),
-                PristineFuryMark.SlimeGod => new Color(188, 78, 255),
-                PristineFuryMark.HardMode => new Color(255, 142, 66),
-                PristineFuryMark.Prime => new Color(255, 206, 92),
-                PristineFuryMark.BrimstoneElemental => new Color(246, 55, 64),
-                PristineFuryMark.Plantera => new Color(94, 242, 108),
-                PristineFuryMark.Aurora => new Color(126, 210, 255),
-                PristineFuryMark.Goliath => new Color(139, 242, 73),
-                PristineFuryMark.Moonlord => new Color(126, 156, 255),
-                PristineFuryMark.Providence => new Color(255, 220, 118),
-                PristineFuryMark.Polterghast => new Color(210, 136, 255),
-                PristineFuryMark.Dog => new Color(96, 73, 214),
-                PristineFuryMark.Dragon => new Color(255, 108, 50),
-                PristineFuryMark.FakeCalamity => new Color(255, 66, 54),
-                PristineFuryMark.ExoTwins => new Color(74, 255, 180),
-                PristineFuryMark.ExoThanatos => new Color(102, 162, 255),
-                PristineFuryMark.ExoAres => new Color(255, 76, 64),
-                _ => new Color(255, 146, 62)
-            };
+            return new Color(255, 224, 92);
         }
 
         internal static int GetDisplayedBaseDamage(PristineFuryMark mark)

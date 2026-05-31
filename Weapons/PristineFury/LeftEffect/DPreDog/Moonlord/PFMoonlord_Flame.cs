@@ -1,6 +1,7 @@
-using CalamityMod.Dusts;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -9,138 +10,63 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal sealed class PFMoonlord_Flame : ModProjectile, ILocalizedModType
     {
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+
         public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => $"Terraria/Images/Projectile_{ProjectileID.LunarFlare}";
 
-        private ref float Timer => ref Projectile.localAI[0];
-        private ref float BounceHits => ref Projectile.localAI[1];
-        private readonly Color innerColor = Color.LightGreen;
-
-        public override void SetStaticDefaults() => ProjectileID.Sets.CultistIsResistantTo[Type] = true;
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 10;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 16;
+            Projectile.width = Projectile.height = 20;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 1;
-            Projectile.timeLeft = 45 * 13;
-            Projectile.extraUpdates = 13;
-            Projectile.tileCollide = true;
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 34;
+            Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 10;
         }
 
         public override void AI()
         {
-            Timer++;
-            Lighting.AddLight(Projectile.Center, innerColor.ToVector3() * 0.2f);
-            Player owner = Main.player[Projectile.owner];
-            float targetDist = Vector2.Distance(owner.Center, Projectile.Center);
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.62f);
 
-            if (!Main.dedServ && Main.rand.NextBool(5) && Timer > 12f && targetDist < 1400f)
-            {
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(Projectile.Center + Main.rand.NextVector2CircularEdge(5f, 5f), Projectile.velocity * Main.rand.NextFloat(0.05f, 0.5f), Color.Black, Main.rand.NextFloat(0.2f, 0.4f), Main.rand.Next(9, 12), true, false));
-
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(10f, 10f), ModContent.DustType<VoidDustInverted>());
-                dust.scale = Main.rand.NextFloat(0.6f, 1.2f);
-                dust.velocity = new Vector2(0f, Main.rand.NextFloat(0.1f, 5f));
-                dust.noGravity = false;
-                dust.color = innerColor;
-            }
-
-            if (!Main.dedServ && Projectile.timeLeft % 2 == 0 && Timer > 12f && targetDist < 1400f)
-            {
-                Particle black = new CustomSpark(Projectile.Center, -Projectile.velocity * 0.05f, "CalamityMod/Particles/GlowSpark2", false, 17, 0.052f, Color.Black, new Vector2(0.6f, 1.3f), false);
-                GeneralParticleHandler.SpawnParticle(black);
-                Particle green = new CustomSpark(Projectile.Center, -Projectile.velocity * 0.05f, "CalamityMod/Particles/GlowSpark", false, 17, 0.027f, innerColor, new Vector2(0.6f, 1.3f), true, false);
-                GeneralParticleHandler.SpawnParticle(green);
-                green.DrawLayer = CalamityMod.Enums.GeneralDrawLayer.AfterEverything;
-            }
-
-            if (Timer == 9f)
-                ReleaseVoidDust(10, Projectile.velocity * 2f, 0.7f);
-
-            if (BounceHits > 0f)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(6) ? 278 : 263, -Projectile.velocity);
-                dust.scale = dust.type == 278 ? Main.rand.NextFloat(0.3f, 0.6f) : Main.rand.NextFloat(0.6f, 1.4f);
-                dust.velocity = -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.3f, 1.7f);
-                dust.noGravity = true;
-                dust.color = innerColor;
-                HomeAfterBounce();
-            }
+            if (!Main.dedServ && Main.rand.NextBool(2))
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(Projectile.Center, -Projectile.velocity * 0.06f, false, 10, Main.rand.NextFloat(0.35f, 0.65f), ThemeColor, true, false, true));
         }
 
-        private void HomeAfterBounce()
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+            target.AddBuff(ModContent.BuffType<HolyFlames>(), 180);
+
+        public override bool PreDraw(ref Color lightColor)
         {
-            NPC best = null;
-            float bestDistance = 600f;
-            foreach (NPC npc in Main.ActiveNPCs)
+            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Color theme = ThemeColor with { A = 0 };
+            Vector2 center = Projectile.Center - Main.screenPosition;
+
+            PFLeftEffectRules.BeginAdditive();
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
-                if (!npc.CanBeChasedBy(Projectile))
+                if (Projectile.oldPos[i] == Vector2.Zero)
                     continue;
 
-                float distance = Projectile.Distance(npc.Center);
-                if (distance < bestDistance)
-                {
-                    bestDistance = distance;
-                    best = npc;
-                }
+                float completion = i / (float)Projectile.oldPos.Length;
+                Vector2 trailPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(line, trailPosition, null, theme * (1f - completion) * 0.48f, Projectile.rotation, line.Size() * 0.5f, new Vector2(0.14f, 0.68f), SpriteEffects.None, 0);
             }
 
-            if (best != null)
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, (best.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 7f, 0.08f);
-        }
-
-        private void ReleaseVoidDust(int count, Vector2 baseVelocity, float spread)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < count; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<VoidDustInverted>());
-                dust.scale = Main.rand.NextFloat(1.6f, 2.2f);
-                dust.velocity = baseVelocity.RotatedByRandom(spread) * Main.rand.NextFloat(0.35f, 1f);
-                dust.noGravity = true;
-                dust.color = innerColor;
-            }
-        }
-
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Black, "CalamityMod/Particles/LargeBloom", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.35f, 0.4f, 38, false));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, innerColor, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.48f, 0.52f, 38));
-            ReleaseVoidDust(12, Main.rand.NextVector2CircularEdge(5f, 5f), 100f);
-        }
-
-        public override bool OnTileCollide(Vector2 oldVelocity)
-        {
-            Projectile.timeLeft = 45 * 13;
-
-            if (!Main.dedServ)
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Black, "CalamityMod/Particles/LargeBloom", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.35f, 0.4f, 38, false));
-                for (int i = 0; i < 3; i++)
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, innerColor, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.48f, 0.52f, 38));
-                ReleaseVoidDust(10, Main.rand.NextVector2CircularEdge(5f, 5f), 100f);
-            }
-
-            BounceHits++;
-            if (BounceHits >= 4f)
-                Projectile.Kill();
-
-            if (Projectile.velocity.X != oldVelocity.X)
-                Projectile.velocity.X = -oldVelocity.X;
-            if (Projectile.velocity.Y != oldVelocity.Y)
-                Projectile.velocity.Y = -oldVelocity.Y;
-
+            Main.EntitySpriteDraw(texture, center, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.44f), Projectile.rotation, texture.Size() * 0.5f, 0.72f, SpriteEffects.None, 0);
+            PFLeftEffectRules.EndAdditive();
             return false;
         }
-
-        public override bool PreDraw(ref Color lightColor) => false;
     }
 }

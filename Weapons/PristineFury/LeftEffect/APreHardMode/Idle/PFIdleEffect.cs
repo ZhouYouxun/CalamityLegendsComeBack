@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 DamageMultiplier,
                 Recoil,
                 9,
-                new Color(255, 146, 62),
+                PristineFuryMarkHelper.GetColor(holdout.CurrentMark),
                 0.62f,
                 14f);
         }

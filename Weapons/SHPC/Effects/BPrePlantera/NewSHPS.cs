@@ -91,6 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             themeColor = PresetColors[presetIndex];
             if (Projectile.ai[2] == 2f)
                 themeColor = new Color(96, 255, 156);
+            if (Projectile.ai[2] == 3f)
+                themeColor = Main.rand.NextBool() ? new Color(255, 210, 64) : new Color(44, 28, 8);
 
             if (presetIndex == 4)
             {
@@ -109,6 +111,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // 让他平分角度，占满三个轨道
             orbitOffset = (Projectile.whoAmI % 3) * MathHelper.TwoPi / 3f;
+
+            if (Projectile.ai[2] == 3f)
+            {
+                Projectile.timeLeft = Main.rand.Next(54, 84);
+                Projectile.extraUpdates = 1;
+                orbitOffset = Main.rand.NextFloat(MathHelper.TwoPi);
+                orbitAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+                ellipseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
+                darksunOrbitSpeed = Main.rand.NextFloat(0.22f, 0.39f) * (Main.rand.NextBool() ? 1f : -1f);
+                darksunOrbitRadiusA = Main.rand.NextFloat(88f, 154f);
+                darksunOrbitRadiusB = Main.rand.NextFloat(28f, 78f);
+                darksunOrbitTwist = Main.rand.NextFloat(0.045f, 0.095f) * (Main.rand.NextBool() ? 1f : -1f);
+                darksunOrbitSeed = Main.rand.NextFloat(MathHelper.TwoPi);
+            }
         }
 
         public override void AI()
@@ -158,8 +174,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         // =========================
         private bool hasDetached; // 是否已经进入冲锋状态（锁死）
         private float orbitOffset; // 每个实例的初始相位偏移
+        private float darksunOrbitSpeed;
+        private float darksunOrbitRadiusA;
+        private float darksunOrbitRadiusB;
+        private float darksunOrbitTwist;
+        private float darksunOrbitSeed;
+
         private void AI_Preset0()
         {
+            if (Projectile.ai[2] == 3f)
+            {
+                AI_DarksunOrbit();
+                return;
+            }
+
             if (Projectile.ai[2] == 4f)
             {
                 int targetIndex = (int)Projectile.localAI[0];
@@ -230,6 +258,44 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         // =========================
         // ===== 预设1：黑暗之魂 =====
         // =========================
+        private void AI_DarksunOrbit()
+        {
+            if (!Main.projectile.IndexInRange(boundMainProjectileID) || !Main.projectile[boundMainProjectileID].active)
+            {
+                Projectile.velocity *= 0.98f;
+                if (Projectile.timeLeft > 18)
+                    Projectile.timeLeft = 18;
+                return;
+            }
+
+            Projectile boundProjectile = Main.projectile[boundMainProjectileID];
+            float pulse = 1f + (float)Math.Sin(timer * 0.31f + darksunOrbitSeed) * 0.18f;
+            float skew = (float)Math.Sin(timer * 0.19f + darksunOrbitSeed * 1.7f) * 20f;
+
+            orbitAngle += darksunOrbitSpeed + (float)Math.Sin(timer * 0.13f + darksunOrbitSeed) * 0.035f;
+            ellipseRotation += darksunOrbitTwist;
+
+            Vector2 ellipse = new Vector2(
+                (float)Math.Cos(orbitAngle + orbitOffset) * (darksunOrbitRadiusA * pulse + skew),
+                (float)Math.Sin(orbitAngle + orbitOffset) * (darksunOrbitRadiusB / pulse)
+            ).RotatedBy(ellipseRotation);
+
+            Vector2 noise = new Vector2(
+                (float)Math.Sin(timer * 0.53f + darksunOrbitSeed),
+                (float)Math.Cos(timer * 0.41f + darksunOrbitSeed * 0.6f)
+            ) * 13f;
+
+            Vector2 previous = Projectile.Center;
+            Projectile.Center = boundProjectile.Center + ellipse + noise;
+            Vector2 nextEllipse = new Vector2(
+                (float)Math.Cos(orbitAngle + darksunOrbitSpeed + orbitOffset) * darksunOrbitRadiusA,
+                (float)Math.Sin(orbitAngle + darksunOrbitSpeed + orbitOffset) * darksunOrbitRadiusB
+            ).RotatedBy(ellipseRotation + darksunOrbitTwist);
+            Projectile.velocity = (boundProjectile.Center + nextEllipse - Projectile.Center) * 0.72f + (Projectile.Center - previous) * 0.6f;
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.scale = 0.86f + 0.2f * (0.5f + 0.5f * (float)Math.Sin(timer * 0.38f + darksunOrbitSeed));
+        }
+
         private void AI_Preset1()
         {
             sinTimer++;

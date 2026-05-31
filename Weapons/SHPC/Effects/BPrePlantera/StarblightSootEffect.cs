@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             {
                 float angle = Main.rand.NextFloat(MathHelper.ToRadians(-20f), MathHelper.ToRadians(20f));
                 float speedScale = Main.rand.NextFloat(0.8f, 1.2f);
-                Vector2 velocity = forward.RotatedBy(angle) * baseSpeed * speedScale;
+                Vector2 velocity = forward.RotatedBy(angle) * baseSpeed * speedScale * 1.5f;
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),

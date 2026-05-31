@@ -10,6 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
     {
         private static readonly Dictionary<Texture2D, Rectangle> OpaqueBoundsCache = new();
         private static readonly Dictionary<Texture2D, Texture2D> NoBlackTextureCache = new();
+        private static readonly Dictionary<Texture2D, Texture2D> OutlineTextureCache = new();
 
         public static void Draw(SpriteBatch spriteBatch, Texture2D backTexture, Texture2D frontTexture, Vector2 drawPosition, float progress, Color backColor, Color frontColor, float scale)
         {
@@ -34,19 +35,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatLevel <= 0 || opacity <= 0f)
                 return;
 
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D sparkle = GetNoBlackTexture(ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value, spriteBatch.GraphicsDevice);
-            Vector2 starCenter = drawPosition + new Vector2(32f - 1.5f * 16f - 16f, backTexture.Height * scale * 0.5f + 3f);
-            Vector2 origin = sparkle.Size() * 0.5f;
-            Color color = GetHeatColor(heatLevel);
+            Vector2 starCenter = drawPosition + new Vector2(32f - 1.5f * 16f + 6f, backTexture.Height * scale * 0.5f + 3f);
+            Color effectsColor = GetHeatColor(heatLevel);
+            Color coreWhite = Color.Lerp(new Color(205, 245, 255), Color.White, Utils.Clamp((heatLevel - 1f) / 4f, 0f, 1f) * 0.55f);
             float time = Main.GlobalTimeWrappedHourly;
-            float flicker = heatLevel >= 5 ? 0.78f + (float)System.Math.Sin(time * 12f) * 0.22f : 1f;
-            float levelScale = MathHelper.Lerp(0.72f, 1.08f, Utils.Clamp((heatLevel - 1f) / 4f, 0f, 1f));
-            Vector2 drawScale = new Vector2(0.3f, 1f) * scale * levelScale * flicker;
-            float rotation = time * 0.35f;
+            float heatPower = MathHelper.Lerp(0.72f, 1f, Utils.Clamp((heatLevel - 1f) / 4f, 0f, 1f));
+            float reverseHeatPower = MathHelper.Lerp(0.7f, 0.1f, heatPower);
+            float topHeatPulse = heatLevel >= 5 ? 0.9f + (float)System.Math.Sin(time * 12f) * 0.1f : 1f;
 
-            spriteBatch.Draw(sparkle, starCenter, null, color * (opacity * 0.78f), rotation, origin, drawScale, SpriteEffects.None, 0f);
-            spriteBatch.Draw(sparkle, starCenter, null, color * (opacity * 0.56f), rotation + MathHelper.PiOver2, origin, drawScale * 0.86f, SpriteEffects.None, 0f);
-            spriteBatch.Draw(sparkle, starCenter, null, Color.White * (opacity * 0.28f * flicker), rotation, origin, drawScale * 0.52f, SpriteEffects.None, 0f);
+            for (int i = 0; i < 5; i++)
+            {
+                float iMult = 1f - 0.1f * i;
+                Color layerColor = Color.Lerp(effectsColor, coreWhite, i * 0.1f) with { A = 0 };
+
+                spriteBatch.Draw(
+                    bloom,
+                    starCenter,
+                    null,
+                    layerColor * (opacity * 0.6f),
+                    Main.rand.NextFloat(-5f, 5f),
+                    bloom.Size() * 0.5f,
+                    new Vector2(1f, 0.35f) * 0.75f * heatPower * topHeatPulse * Main.rand.NextFloat(0.7f, 1.3f) * iMult,
+                    SpriteEffects.None,
+                    0f);
+
+                for (int b = -1; b <= 1; b += 2)
+                {
+                    float sine = MathHelper.Lerp((float)System.Math.Sin(time * 20f / MathHelper.Pi), reverseHeatPower * b, 0.75f);
+                    Vector2 starScale = new Vector2(0.3f, sine * b) *
+                        (Main.rand.NextFloat(3f, 4.5f) * iMult + heatPower * 1.2f) *
+                        topHeatPulse;
+                    float rotation = time * heatPower * System.Math.Max(i - 2, 0) * 0.2f + MathHelper.PiOver4 * b;
+
+                    spriteBatch.Draw(
+                        sparkle,
+                        starCenter,
+                        null,
+                        layerColor * opacity,
+                        rotation,
+                        sparkle.Size() * 0.5f,
+                        starScale,
+                        SpriteEffects.None,
+                        0f);
+                }
+            }
         }
 
         public static void DrawHeatBackOutline(SpriteBatch spriteBatch, Texture2D backTexture, Vector2 drawPosition, int heatLevel, float opacity, float scale)
@@ -54,14 +88,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatLevel <= 0 || opacity <= 0f)
                 return;
 
-            Color outlineColor = GetHeatColor(heatLevel) * (opacity * 0.55f);
-            float outlineStrength = 1.65f + Utils.Clamp(heatLevel, 1, 5) * 0.18f;
-
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * outlineStrength;
-                spriteBatch.Draw(backTexture, drawPosition + offset, null, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-            }
+            Texture2D outlineTexture = GetOutlineTexture(backTexture, spriteBatch.GraphicsDevice);
+            Color outlineColor = GetHeatColor(heatLevel) * (opacity * 0.82f);
+            spriteBatch.Draw(outlineTexture, drawPosition, null, outlineColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         public static void DrawOutlinePulse(SpriteBatch spriteBatch, Texture2D backTexture, Vector2 drawPosition, float scale, float opacity, int timer, int duration)
@@ -160,6 +189,53 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             filteredTexture.SetData(pixels);
             NoBlackTextureCache[texture] = filteredTexture;
             return filteredTexture;
+        }
+
+        private static Texture2D GetOutlineTexture(Texture2D texture, GraphicsDevice graphicsDevice)
+        {
+            if (OutlineTextureCache.TryGetValue(texture, out Texture2D cachedTexture))
+                return cachedTexture;
+
+            Color[] source = new Color[texture.Width * texture.Height];
+            Color[] outline = new Color[source.Length];
+            texture.GetData(source);
+
+            for (int y = 0; y < texture.Height; y++)
+            {
+                for (int x = 0; x < texture.Width; x++)
+                {
+                    int index = y * texture.Width + x;
+                    bool opaque = source[index].A > 16;
+                    bool edge = false;
+
+                    for (int oy = -2; oy <= 2 && !edge; oy++)
+                    {
+                        for (int ox = -2; ox <= 2; ox++)
+                        {
+                            if (ox == 0 && oy == 0)
+                                continue;
+                            if (ox * ox + oy * oy > 5)
+                                continue;
+
+                            int nx = x + ox;
+                            int ny = y + oy;
+                            bool neighborOpaque = nx >= 0 && nx < texture.Width && ny >= 0 && ny < texture.Height && source[ny * texture.Width + nx].A > 16;
+                            if (opaque != neighborOpaque)
+                            {
+                                edge = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    outline[index] = edge ? Color.White * (opaque ? 0.62f : 1f) : Color.Transparent;
+                }
+            }
+
+            Texture2D outlineTexture = new(graphicsDevice, texture.Width, texture.Height);
+            outlineTexture.SetData(outline);
+            OutlineTextureCache[texture] = outlineTexture;
+            return outlineTexture;
         }
     }
 }

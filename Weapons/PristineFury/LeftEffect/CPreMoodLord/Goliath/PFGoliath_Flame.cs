@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private bool postEnemyHit;
         private NPC attachedTarget;
         private Vector2 attachedOffset;
-        private readonly Color fogColor = new(30, 255, 30);
+        private Color FogColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
 
         public override void SetStaticDefaults() => ProjectileID.Sets.CultistIsResistantTo[Type] = true;
 
@@ -46,11 +46,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.rotation += Main.rand.NextFloat(0.2f, 0.9f);
 
             if (time > 6 && time < 540 && Main.rand.NextBool(2 + time / 7))
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center + Main.rand.NextVector2Circular(10f + time * 0.5f, 10f + time * 0.5f), Vector2.Zero, Main.rand.NextBool(3) ? Color.LimeGreen : Color.Green, Vector2.One, 0f, Main.rand.NextFloat(0.03f, 0.09f) + time * 0.00055f, 0f, 25));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center + Main.rand.NextVector2Circular(10f + time * 0.5f, 10f + time * 0.5f), Vector2.Zero, Main.rand.NextBool(3) ? FogColor : Color.Lerp(FogColor, new Color(180, 255, 80), 0.25f), Vector2.One, 0f, Main.rand.NextFloat(0.03f, 0.09f) + time * 0.00055f, 0f, 25));
 
             if (time > 6 && time < 150 && !postTileHit && !postEnemyHit && Main.rand.NextBool(3 + time / 7))
             {
-                Particle smoke = new MediumMistParticle(Projectile.Center + Main.rand.NextVector2Circular(5f + time * 0.2f, 5f + time * 0.2f), -Projectile.velocity * 0.05f, Main.rand.NextBool(3) ? Color.LimeGreen : Color.Lime, Color.Black, Main.rand.NextFloat(0.3f, 0.8f) + time * 0.013f, 160);
+                Particle smoke = new MediumMistParticle(Projectile.Center + Main.rand.NextVector2Circular(5f + time * 0.2f, 5f + time * 0.2f), -Projectile.velocity * 0.05f, Main.rand.NextBool(3) ? FogColor : Color.Lerp(FogColor, new Color(180, 255, 80), 0.25f), Color.Black, Main.rand.NextFloat(0.3f, 0.8f) + time * 0.013f, 160);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 dust.scale = Main.rand.NextFloat(1.1f, 1.9f);
                 dust.velocity = Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.3f, 2.1f);
                 dust.noGravity = true;
-                dust.color = Main.rand.NextBool() ? Color.Chartreuse : Color.LimeGreen;
+                dust.color = Main.rand.NextBool() ? FogColor : Color.Lerp(FogColor, new Color(180, 255, 80), 0.35f);
                 dust.noLight = true;
                 dust.alpha = 90;
             }
@@ -124,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             for (int i = 0; i <= 3; i++)
             {
-                Particle smoke = new MediumMistParticle(Projectile.Center + Main.rand.NextVector2Circular(5f + time * 0.2f, 5f + time * 0.2f), new Vector2(Main.rand.NextFloat(2f, 6f), Main.rand.NextFloat(2f, 6f)).RotatedByRandom(60f), Main.rand.NextBool(3) ? Color.LimeGreen : Color.Lime, Color.Black, Main.rand.NextFloat(1.2f, 2.3f), 140);
+                Particle smoke = new MediumMistParticle(Projectile.Center + Main.rand.NextVector2Circular(5f + time * 0.2f, 5f + time * 0.2f), new Vector2(Main.rand.NextFloat(2f, 6f), Main.rand.NextFloat(2f, 6f)).RotatedByRandom(60f), Main.rand.NextBool(3) ? FogColor : Color.Lerp(FogColor, new Color(180, 255, 80), 0.25f), Color.Black, Main.rand.NextFloat(1.2f, 2.3f), 140);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
         }
@@ -155,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float opacity = Projectile.Opacity * 0.3f * Utils.GetLerpValue(0f, 0.08f, LightPower, true);
-            Color drawColor = (fogColor with { A = 0 }) * opacity;
+            Color drawColor = (FogColor with { A = 0 }) * opacity;
 
             Main.EntitySpriteDraw(texture, drawPosition + Main.rand.NextVector2Circular(19f, 19f), null, drawColor * 0.55f, Projectile.rotation, texture.Size() * 0.5f, ScaleFactor * 1.2f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, -Projectile.rotation * 0.9f, texture.Size() * 0.5f, ScaleFactor, SpriteEffects.None, 0);

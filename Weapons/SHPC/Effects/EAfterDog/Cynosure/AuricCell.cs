@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// </summary>
     public class CynosureChargedCell : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricCell";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricBall";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private Vector2 OrbitCenter
@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 100;
+            Projectile.timeLeft = 74;
         }
 
         public override void AI()
@@ -48,27 +48,48 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             {
                 Projectile.localAI[0] = 1f;
                 OrbitCenter = Projectile.Center;
+                Projectile.velocity = Projectile.ai[1].ToRotationVector2() * Main.rand.NextFloat(18f, 25f);
             }
 
-            float age = 100f - Projectile.timeLeft;
-            float radius = 156f * CalamityUtils.SineOutEasing(MathHelper.Clamp(age / 34f, 0f, 1f), 1);
-            Projectile.Center = OrbitCenter + Projectile.ai[1].ToRotationVector2() * radius;
-            Projectile.rotation += 0.18f;
-            Lighting.AddLight(Projectile.Center, new Vector3(0.25f, 0.72f, 1f) * 0.45f);
+            float age = 74f - Projectile.timeLeft;
+            Projectile.rotation += 0.22f;
+            Lighting.AddLight(Projectile.Center, new Vector3(0.35f, 0.62f, 1f) * 0.45f);
 
-            if (age == 62f)
+            if (age < 38f)
             {
-                NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
-                if (target != null && Projectile.owner == Main.myPlayer)
-                {
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
-                        ModContent.ProjectileType<CynosureLightningArc>(), Projectile.damage, Projectile.knockBack,
-                        Projectile.owner, target.whoAmI, target.Center.X, target.Center.Y);
-                }
+                Projectile.velocity *= 0.9f;
 
-                CynosureVisuals.SpawnElectricBurst(Projectile.Center, 9, 3f, 10f);
-                Projectile.Kill();
+                if (Main.rand.NextBool(3))
+                    CynosureVisuals.SpawnElectricBurst(Projectile.Center, 1, 0.8f, 2.2f);
+                return;
             }
+
+            Projectile.velocity *= 0.82f;
+            if (age >= 58f)
+                Projectile.Kill();
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
+            if (target != null && Projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
+                    ModContent.ProjectileType<CynosureLightningArc>(), Projectile.damage, Projectile.knockBack,
+                    Projectile.owner, target.whoAmI, target.Center.X, target.Center.Y);
+            }
+
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 14, 2.4f, 10f);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(255, 214, 88),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.035f,
+                0.18f,
+                12));
         }
 
         public override bool? CanDamage() => false;
@@ -171,12 +192,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             if (target != null)
                 end = target.Center;
 
-            for (int i = 0; i <= 8; i++)
+            for (int i = 0; i <= 10; i++)
             {
-                float progress = i / 8f;
+                float progress = i / 10f;
                 Vector2 point = Vector2.Lerp(start, end, progress);
-                if (i != 0 && i != 8)
-                    point += Main.rand.NextVector2Circular(10f, 10f);
+                if (i != 0 && i != 10)
+                    point += Main.rand.NextVector2Circular(12f, 12f);
                 points.Add(point);
             }
         }
@@ -195,8 +216,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             return false;
         }
 
-        internal float Width(float completion, Vector2 _) => 3f;
-        internal Color ColorFunction(float completion, Vector2 _) => Color.Lerp(Color.White, Color.Cyan, completion);
+        internal float Width(float completion, Vector2 _) => MathHelper.Lerp(4.2f, 1.15f, completion);
+        internal Color ColorFunction(float completion, Vector2 _)
+        {
+            Color hotCore = Color.Lerp(Color.White, new Color(255, 224, 92), 0.4f);
+            Color coldEdge = Color.Lerp(new Color(255, 196, 54), Color.Cyan, completion * 0.55f);
+            return Color.Lerp(hotCore, coldEdge, completion) * (1f - completion * 0.18f);
+        }
 
         public override bool PreDraw(ref Color lightColor)
         {
@@ -245,7 +271,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             for (int i = 0; i < count; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(minSpeed, maxSpeed);
-                Dust dust = Dust.NewDustPerfect(center, DustID.Electric, velocity, 0, Main.rand.NextBool(4) ? Color.White : Color.Cyan, Main.rand.NextFloat(0.8f, 1.5f));
+                Color color = Main.rand.NextBool(3) ? new Color(255, 214, 86) : (Main.rand.NextBool(4) ? Color.White : Color.Cyan);
+                Dust dust = Dust.NewDustPerfect(center, DustID.Electric, velocity, 0, color, Main.rand.NextFloat(0.8f, 1.5f));
                 dust.noGravity = true;
             }
         }

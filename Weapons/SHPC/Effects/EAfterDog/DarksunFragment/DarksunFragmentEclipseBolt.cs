@@ -1,6 +1,7 @@
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         private Vector2 startPosition;
         private Vector2 controlPosition;
         private Vector2 targetPosition;
+        private int ActualLifetime => Projectile.localAI[0] > 0f ? (int)Projectile.localAI[0] : Lifetime;
 
         public override void SetStaticDefaults()
         {
@@ -53,6 +55,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override void AI()
         {
+            int actualLifetime = ActualLifetime;
+            if (Projectile.localAI[0] > 0f && Projectile.timeLeft > actualLifetime)
+                Projectile.timeLeft = actualLifetime;
+
             if (startPosition == Vector2.Zero)
             {
                 startPosition = Projectile.Center;
@@ -60,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             }
 
             targetPosition = GetParentCenter();
-            float completion = 1f - Projectile.timeLeft / (float)Lifetime;
+            float completion = 1f - Projectile.timeLeft / (float)actualLifetime;
             completion = MathHelper.Clamp(completion, 0f, 1f);
             float curvedCompletion = 1f - (float)Math.Pow(1f - completion, 1.65f);
             Vector2 previous = Projectile.Center;
@@ -77,6 +83,56 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, -Projectile.velocity * 0.25f, 0, Main.rand.NextBool() ? new Color(255, 205, 66) : Color.Black, Main.rand.NextFloat(0.65f, 1f));
                 dust.noGravity = true;
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            SpawnHitBurst(target.Center);
+        }
+
+        private void SpawnHitBurst(Vector2 center)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                new Color(255, 202, 56),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.04f,
+                0.34f,
+                18));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                new Color(22, 16, 4),
+                "CalamityMod/Particles/PlasmaExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.03f,
+                0.26f,
+                15));
+
+            for (int i = 0; i < 28; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 28f;
+                float rose = 0.75f + 0.35f * (float)Math.Sin(angle * 4f + Projectile.identity * 0.17f);
+                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(4.4f, 11.8f) * rose;
+                Color color = i % 4 == 0 ? Color.Black : Color.Lerp(new Color(255, 212, 68), Color.White, Main.rand.NextFloat(0.25f));
+
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    center + velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(3f, 18f),
+                    velocity,
+                    false,
+                    Main.rand.Next(13, 24),
+                    Main.rand.NextFloat(0.04f, 0.11f),
+                    color,
+                    new Vector2(2.6f, 0.46f),
+                    true));
             }
         }
 

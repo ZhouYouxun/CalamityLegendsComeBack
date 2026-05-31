@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -17,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// </summary>
     public class CynosureArmorPiercingRound : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricCell";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private bool PayloadReleased
@@ -40,11 +41,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
-            Projectile.penetrate = 4;
+            Projectile.penetrate = 1;
             Projectile.timeLeft = 300;
             Projectile.extraUpdates = 2;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 12;
+            Projectile.localNPCHitCooldown = -1;
             Projectile.ArmorPenetration = 100;
         }
 
@@ -79,6 +80,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     5,
                     0f,
                     0.8f));
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 smearOffset = normal * Main.rand.NextFloat(-7f, 7f);
+                Color smearColor = Main.rand.NextBool() ? new Color(255, 218, 86) : new Color(74, 208, 255);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + smearOffset,
+                    -forward * Main.rand.NextFloat(2.2f, 4.6f),
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.07f, 0.13f),
+                    smearColor,
+                    new Vector2(1.4f, 0.55f),
+                    true,
+                    true));
             }
         }
 
@@ -145,6 +163,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         private void SpawnImpactSparks()
         {
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(Color.Cyan, Color.White, 0.35f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.045f,
+                0.42f,
+                18));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(255, 214, 84),
+                "CalamityMod/Particles/PlasmaExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.035f,
+                0.28f,
+                16));
+
             // 绯红恶魔式火花：数量固定，但每条火花的飞行距离在 0.5 到 2 倍之间变化。
             for (int i = 0; i < 28; i++)
             {
@@ -157,6 +196,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     Main.rand.NextFloat(0.04f, 0.09f),
                     Main.rand.NextBool(4) ? Color.White : Color.Cyan,
                     new Vector2(2.4f, 0.55f),
+                    true));
+            }
+
+            for (int i = 0; i < 36; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 36f;
+                float rose = 0.78f + 0.32f * (float)Math.Sin(angle * 5f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 velocity = direction * Main.rand.NextFloat(4f, 15f) * rose;
+                Color color = Color.Lerp(new Color(255, 214, 82), Color.Cyan, i % 2 == 0 ? 0.25f : 0.65f);
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    Projectile.Center + direction * Main.rand.NextFloat(4f, 16f),
+                    velocity,
+                    false,
+                    Main.rand.Next(13, 24),
+                    Main.rand.NextFloat(0.035f, 0.08f),
+                    color,
+                    new Vector2(2.2f, 0.5f),
                     true));
             }
         }
@@ -176,6 +233,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             PrimitiveRenderer.RenderTrail(Projectile.oldPos,
                 new PrimitiveSettings(TrailWidth, TrailColor, (_, _) => Projectile.Size * 0.5f, shader: GameShaders.Misc["CalamityMod:OverpoweredTouhouSpearShader"]),
                 42);
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Main.EntitySpriteDraw(
+                texture,
+                Projectile.Center - Main.screenPosition,
+                null,
+                Color.White,
+                Projectile.rotation,
+                texture.Size() * 0.5f,
+                Projectile.scale,
+                SpriteEffects.None);
             return false;
         }
     }

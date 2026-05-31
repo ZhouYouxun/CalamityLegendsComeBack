@@ -1,4 +1,3 @@
-using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -10,125 +9,159 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
-    internal sealed class PFHardMode_Flame : ModProjectile, ILocalizedModType
+    internal sealed class PFHardMode_TotalityFire : ModProjectile, ILocalizedModType
     {
-        public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        private bool initialized;
+        private bool spawnedGroundFire;
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
 
-        private const int Lifetime = 108;
-        private ref float Timer => ref Projectile.localAI[0];
-        private ref float HueDrift => ref Projectile.localAI[1];
+        public new string LocalizationCategory => "Projectiles.PristineFury";
+        public override string Texture => "CalamityMod/Projectiles/Rogue/TotalityFire";
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 18;
-            ProjectileID.Sets.TrailingMode[Type] = 2;
+            Main.projFrames[Type] = 3;
+            ProjectileID.Sets.TrailCacheLength[Type] = 2;
+            ProjectileID.Sets.TrailingMode[Type] = 0;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 52;
+            Projectile.width = Projectile.height = 14;
             Projectile.friendly = true;
-            Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 5;
-            Projectile.timeLeft = Lifetime;
-            Projectile.extraUpdates = 4;
-            Projectile.tileCollide = false;
-            Projectile.ignoreWater = true;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 150;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 18;
+            Projectile.DamageType = DamageClass.Magic;
+            Projectile.ignoreWater = true;
         }
 
         public override void AI()
         {
-            Timer++;
-            HueDrift += 0.022f;
-
-            Projectile.scale = 1.75f * Utils.GetLerpValue(4f, 30f, Timer, true) * Utils.GetLerpValue(0f, 20f, Projectile.timeLeft, true);
-            Projectile.rotation = Projectile.velocity.ToRotation();
-            Projectile.velocity = Projectile.velocity.RotatedBy((float)Math.Sin(Timer * 0.1f + Projectile.ai[1]) * 0.01f) * 0.993f;
-
-            EmitChromaticBody();
-        }
-
-        private Color RandomChromaticColor() => Main.rand.Next(4) switch
-        {
-            0 => Color.DeepSkyBlue,
-            1 => Color.MediumSpringGreen,
-            2 => Color.DarkOrange,
-            _ => Color.Violet
-        };
-
-        private void EmitChromaticBody()
-        {
-            Color color = RandomChromaticColor();
-
-            if (Timer == 1f && !Main.dedServ)
+            if (!initialized)
             {
-                for (int i = 0; i < 12; i++)
-                {
-                    float rotMulti = Main.rand.NextFloat(0.7f, 1.1f);
-                    Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool() ? 66 : 247);
-                    dust.scale = Main.rand.NextFloat(1.8f, 2.5f) - rotMulti;
-                    dust.noGravity = true;
-                    dust.velocity = Projectile.velocity.RotatedByRandom(0.5f * rotMulti) * Main.rand.NextFloat(0.5f, 1.8f) * rotMulti;
-                    dust.alpha = Main.rand.Next(90, 150);
-                    dust.color = color;
-                }
+                initialized = true;
+                Projectile.frame = Main.rand.Next(Main.projFrames[Type]);
             }
 
-            if (Main.dedServ)
-                return;
-
-            if (Timer > 9f)
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter > 6)
             {
-                float dustArea = Main.rand.NextFloat(0.1f, 1.7f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(9f, 9f) + Projectile.velocity * Main.rand.NextFloat(-1.8f, 1.8f), Main.rand.NextBool() ? 66 : 247);
-                dust.scale = (1.8f - dustArea) * 0.65f;
+                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+                Projectile.frameCounter = 0;
+            }
+
+            Projectile.rotation = Projectile.ai[1] > 0f
+                ? -Projectile.velocity.X * 0.05f + MathHelper.PiOver2
+                : Projectile.velocity.ToRotation();
+            Projectile.ai[1]--;
+
+            Projectile.localAI[0] = Math.Min(5f, Projectile.localAI[0] + 1f);
+            if (Projectile.localAI[0] >= 5f)
+            {
+                if (Projectile.velocity.Y == 0f)
+                    Projectile.velocity.X *= 0.97f;
+                Projectile.velocity.Y = Math.Min(16f, Projectile.velocity.Y + 0.2f);
+            }
+
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.42f);
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, -Projectile.velocity * 0.08f, 80, ThemeColor, Main.rand.NextFloat(0.7f, 1.25f));
                 dust.noGravity = true;
-                dust.velocity = new Vector2(4f, 4f).RotatedByRandom(100f) * dustArea;
-                dust.alpha = Main.rand.Next(90, 150);
-                dust.color = color;
             }
-
-            float hue = 0.5f * (HueDrift % 1f) + 0.5f * Utils.GetLerpValue(28f, Lifetime, Timer, true) * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
-            Color smokeColor = Main.hslToRgb(hue, 1f, 0.7f);
-            float smokeRot = MathHelper.ToRadians(3f);
-            Particle smoke = new HeavySmokeParticle(Projectile.Center, Projectile.velocity * 0.5f, smokeColor, 12, Projectile.scale * Main.rand.NextFloat(0.6f, 1.2f), 0.45f, smokeRot, true, required: true);
-            GeneralParticleHandler.SpawnParticle(smoke);
-
-            if (Main.rand.NextBool(5))
-            {
-                Particle glow = new HeavySmokeParticle(Projectile.Center, Projectile.velocity * 0.5f, Color.Lerp(smokeColor, Color.White, 0.3f), 9, Projectile.scale * Main.rand.NextFloat(0.4f, 0.7f), 0.2f, smokeRot, true, 0.005f);
-                GeneralParticleHandler.SpawnParticle(glow);
-            }
-
-            if (Timer % 18f == 0f)
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(Projectile.Center, Main.rand.NextVector2Circular(14f, 14f), Main.hslToRgb(Main.rand.NextFloat(), 1f, 0.8f), Color.Black, Main.rand.NextFloat(0.6f, 1.4f), 150, 0.1f));
-
-            Lighting.AddLight(Projectile.Center, smokeColor.ToVector3() * Projectile.scale * 0.34f);
         }
 
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(Projectile.Center, 52f * Projectile.scale * 0.5f, targetHitbox);
-
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<ElementalMix>(), 900);
-
-        public override bool PreDraw(ref Color lightColor)
+        public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            Texture2D flare = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SmallGreyscaleCircle").Value;
+            Projectile.ai[1] = 10f;
+            if (Projectile.velocity.X != oldVelocity.X)
+                Projectile.velocity.X = -oldVelocity.X * 0.35f;
+            if (Projectile.velocity.Y != oldVelocity.Y && oldVelocity.Y > 1f)
+                Projectile.velocity.Y = -oldVelocity.Y * 0.32f;
 
-            PFLeftEffectRules.BeginAdditive();
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            if (!spawnedGroundFire && Projectile.owner == Main.myPlayer)
             {
-                float completion = i / (float)Projectile.oldPos.Length;
-                float hue = 0.5f + 0.5f * completion * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
-                Color color = Main.hslToRgb(hue, 1f, 0.6f) * (1f - completion) * 1.6f;
-                Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(flare, drawPosition, null, color, Projectile.rotation, flare.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.12f, 0.7f, 1f - completion), SpriteEffects.None, 0);
+                spawnedGroundFire = true;
+                int field = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Bottom,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<PFHardMode_GroundFire>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.72f)),
+                    0f,
+                    Projectile.owner);
+                PFLeftEffectRules.ApplyTheme(field, (PristineFuryMark)(int)Projectile.ai[2]);
             }
-            PFLeftEffectRules.EndAdditive();
 
             return false;
         }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+            target.AddBuff(ModContent.BuffType<HolyFlames>(), 300);
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            CalamityMod.CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], Color.Lerp(lightColor, ThemeColor, 0.72f));
+            return false;
+        }
+
+        internal static void SpawnBurstEffects(Vector2 center, Color theme, float scale)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, theme, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0f, 0.34f * scale, 18, true));
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 velocity = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * Main.rand.NextFloat(2.8f, 8.2f) * scale;
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(center, velocity, false, Main.rand.Next(12, 20), Main.rand.NextFloat(0.65f, 1.2f) * scale, Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f))));
+            }
+        }
+    }
+
+    internal sealed class PFHardMode_GroundFire : ModProjectile, ILocalizedModType
+    {
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+
+        public new string LocalizationCategory => "Projectiles.PristineFury";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 82;
+            Projectile.height = 34;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Magic;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 210;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 24;
+        }
+
+        public override void AI()
+        {
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.34f);
+            if (Main.dedServ || !Main.rand.NextBool(2))
+                return;
+
+            Vector2 position = Projectile.Bottom + new Vector2(Main.rand.NextFloat(-34f, 34f), Main.rand.NextFloat(-5f, 4f));
+            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                position,
+                new Vector2(Main.rand.NextFloat(-0.8f, 0.8f), Main.rand.NextFloat(-2.8f, -0.7f)),
+                ThemeColor,
+                Color.DarkGoldenrod,
+                Main.rand.NextFloat(0.5f, 1f),
+                Main.rand.Next(22, 40),
+                Main.rand.NextFloat(-0.07f, 0.07f)));
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+            target.AddBuff(ModContent.BuffType<HolyFlames>(), 300);
+
+        public override bool PreDraw(ref Color lightColor) => false;
     }
 }

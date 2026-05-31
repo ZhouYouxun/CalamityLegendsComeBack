@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod.Items.LoreItems;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -13,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public const int CynosureEffectID = 43;
 
         public override int EffectID => CynosureEffectID;
-        public override int AmmoType => ModContent.ItemType<Cynosure>();
+        public override int AmmoType => ModContent.ItemType<LoreCynosure>();
         public override int ShotsPerAmmo => 999;
         public override Color ThemeColor => new(38, 172, 255);
         public override Color StartColor => Color.White;
@@ -29,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             if (projectile.owner == Main.myPlayer)
             {
                 Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
-                Projectile.NewProjectile(projectile.GetSource_FromThis(), projectile.Center, direction * 34f,
+                Projectile.NewProjectile(projectile.GetSource_FromThis(), projectile.Center, direction * 27.2f,
                     ModContent.ProjectileType<CynosureArmorPiercingRound>(), projectile.damage, projectile.knockBack,
                     projectile.owner);
             }

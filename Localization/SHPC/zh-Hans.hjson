@@ -130,6 +130,8 @@ Mods: {
 			SHPCAmmo40: 装甲外壳会喷射大量电磁光球，形成持续风暴。
 			SHPCAmmo41: 珍珠碎片会射出三颗大珍珠，破碎后分裂成逐渐加速的追踪小珍珠。
 			SHPCAmmo42: 日蚀之阴碎片会制造黑蚀之日，使用八帧材质指引并叠层形成持续压制。
+			SHPCAmmo43: 终极指引会发射一枚重型穿甲弹，命中后释放电磁闪电、两层金源珠椭圆和外层充能单元环。
+			SHPCAmmo44: 灾劫核心会发射宽大的灰色能量流，爆裂后生成四枚弯曲飞行并追踪敌人的分裂弹。
 		}
 
 		Projectiles: {
@@ -191,6 +193,16 @@ Mods: {
 				DarksunFragmentBlackSun.DisplayName: 黑蚀之日
 				DarksunFragmentEclipseBolt.DisplayName: 日蚀小弹幕
 				DarksunFragmentBlackSunExplosion.DisplayName: 黑日爆炸
+				DepthCells_Shark.DisplayName: 深渊细胞鲨鱼
+				DepthCells_SharkExplosion.DisplayName: 深渊细胞爆裂
+				CynosureArmorPiercingRound.DisplayName: 终极指引穿甲弹
+				CynosureAuricBall.DisplayName: 终极指引金源珠
+				CynosureChargedCell.DisplayName: 终极指引充能单元
+				CynosureLightningExplosion.DisplayName: 终极指引闪电爆裂
+				CynosureLightningArc.DisplayName: 终极指引电弧
+				CoreOfCalamityEnergyOrb.DisplayName: 灾劫能量弹
+				CoreOfCalamityExplosion.DisplayName: 灾劫能量爆裂
+				CoreOfCalamitySplitOrb.DisplayName: 灾劫能量分裂弹
 			}
 
 			A_Dev: {

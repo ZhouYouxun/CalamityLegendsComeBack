@@ -37,10 +37,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.Providence,
             PristineFuryMark.Polterghast,
             PristineFuryMark.Dog,
-            PristineFuryMark.ExoTwins,
+            PristineFuryMark.Dragon,
             PristineFuryMark.ExoThanatos,
-            PristineFuryMark.ExoAres,
-            PristineFuryMark.Dragon
         };
 
         private int hookChargeTimer;

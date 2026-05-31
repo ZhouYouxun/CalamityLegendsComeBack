@@ -24,7 +24,7 @@ Mods: {
 			MK14EBR: {
 				MK14EBRHoldout.DisplayName: MK14EBR-缄花
 				MK14ModificationPanel.DisplayName: MK14EBR-缄花 改枪界面
-				// NewLegendM14.DisplayName: M14
+				NewLegendM14.DisplayName: M14
 				M61Bullet.DisplayName: M61 穿甲弹
 				MK14GrenadeProjectile.DisplayName: MK14 枪挂榴弹
 				MK14DragonBreathPellet.DisplayName: 龙息霰弹

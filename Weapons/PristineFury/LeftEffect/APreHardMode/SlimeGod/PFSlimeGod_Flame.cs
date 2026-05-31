@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal sealed class PFSlimeGod_Flame : ModProjectile, ILocalizedModType
     {
-        private static readonly Color SlimeColor = new(133, 133, 224);
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/ExtraTextures/TinyGreyscaleCircle";
@@ -64,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             else
                 Projectile.rotation += Projectile.velocity.X * 0.02f;
 
-            Lighting.AddLight(Projectile.Center, new Vector3(0.3f, 0.3f, 0.5f));
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * (Empowered ? 0.64f : 0.38f));
             EmitSlimeTrail();
         }
 
@@ -94,19 +94,36 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
+            Color theme = Color.Lerp(ThemeColor, Color.White, Empowered ? 0.28f : 0.08f);
             if (Empowered)
             {
                 if (Timer % 6f == 0f)
-                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, SlimeColor * 0.75f, Vector2.One, Projectile.rotation, 0.02f, 0.18f + BloomPower * 0.1f, 18));
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme * 0.75f, Vector2.One, Projectile.rotation, 0.02f, 0.18f + BloomPower * 0.1f, 18));
+
+                if (Timer % 5f == 0f)
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                        Main.rand.NextVector2Circular(0.35f, 0.35f),
+                        false,
+                        Main.rand.Next(10, 16),
+                        Main.rand.NextFloat(0.22f, 0.4f) * (0.8f + BloomPower * 0.35f),
+                        Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.42f)),
+                        true,
+                        false,
+                        true));
+                }
+
                 return;
             }
 
             if (Main.rand.NextBool(BounceCount > 0f ? 2 : 7))
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(10f, 10f), Main.rand.NextBool(3) ? 16 : 20);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(10f, 10f), Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch);
                 dust.scale = Main.rand.NextFloat(0.35f, 0.75f);
                 dust.velocity = -Projectile.velocity * 0.7f;
                 dust.noGravity = true;
+                dust.color = Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.04f, 0.22f));
             }
         }
 
@@ -115,13 +132,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
+            Color theme = Color.Lerp(ThemeColor, Color.White, 0.24f);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, Projectile.rotation, 0.02f, 0.38f, 20));
+
             for (int i = 0; i < count; i++)
             {
                 float rot = MathHelper.TwoPi * i / count;
                 Vector2 velocity = rot.ToRotationVector2() * speed;
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + velocity, Main.rand.NextBool(3) ? 59 : 20, velocity);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center + velocity, Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch, velocity, 0, theme, Main.rand.NextFloat(1.1f, 1.65f));
                 dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(1.2f, 1.9f);
+
+                if (i % 2 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + velocity,
+                        velocity * 0.25f,
+                        false,
+                        Main.rand.Next(14, 22),
+                        Main.rand.NextFloat(0.28f, 0.48f),
+                        Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.38f)),
+                        true,
+                        false,
+                        true));
+                }
             }
         }
 
@@ -136,10 +169,30 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             BounceCount++;
             if (BounceCount > 4f && !Empowered)
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 80);
+
+            ReleaseSlimeRing(8, 2.4f);
             return false;
         }
 
-        public override void OnKill(int timeLeft) => GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, SlimeColor, Vector2.One, 0f, 0.01f, 0.42f, 24));
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color theme = Color.Lerp(ThemeColor, Color.White, Empowered ? 0.24f : 0.08f);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, 0f, 0.01f, 0.42f, 24));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                theme * 0.55f,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                Projectile.rotation,
+                0.04f,
+                Empowered ? 0.38f : 0.24f,
+                14,
+                false));
+        }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -157,24 +210,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
-            Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Color theme = (Color.Lerp(ThemeColor, Color.White, Empowered ? 0.22f : 0.04f) with { A = 0 }) * Projectile.Opacity;
 
             PFLeftEffectRules.BeginAdditive();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 float completion = i / (float)Projectile.oldPos.Length;
                 Vector2 trailPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Color trailColor = Color.Lerp(SlimeColor, Color.Black, completion) * (1f - completion);
+                Color trailColor = Color.Lerp(theme, Color.Transparent, completion) * (1f - completion);
                 Main.EntitySpriteDraw(texture, trailPos, null, trailColor, 0f, texture.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.16f, 1f, 1f - completion), SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, SlimeColor, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, drawPosition, null, theme, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0);
             if (Empowered)
             {
-                Main.EntitySpriteDraw(bloom, drawPosition, null, SlimeColor * 0.5f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.28f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(sparkle, drawPosition, null, SlimeColor, Projectile.rotation, sparkle.Size() * 0.5f, BloomPower * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, theme * 0.5f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.28f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.32f) * 0.42f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.14f, SpriteEffects.None, 0);
             }
 
             PFLeftEffectRules.EndAdditive();

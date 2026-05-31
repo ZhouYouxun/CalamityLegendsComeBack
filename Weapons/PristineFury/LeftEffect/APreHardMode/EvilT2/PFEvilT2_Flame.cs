@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,70 +12,84 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal sealed class PFEvilT2_Flame : ModProjectile, ILocalizedModType
     {
+        private const int DecelerationFrames = 22;
+        private const int Lifetime = 100;
+        private ref float Timer => ref Projectile.localAI[0];
+
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const int Lifetime = 110;
-        private ref float Timer => ref Projectile.localAI[0];
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 18;
+            Projectile.width = Projectile.height = 26;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 4;
+            Projectile.penetrate = 1;
             Projectile.timeLeft = Lifetime;
-            Projectile.extraUpdates = 2;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
         }
 
         public override void AI()
         {
             Timer++;
+            float speed = Projectile.velocity.Length();
+            if (Timer <= DecelerationFrames)
+                speed = Math.Max(3.2f, speed * 0.925f);
+            else
+                speed = Math.Min(16.8f, speed * 1.055f + 0.04f);
 
-            float speed = MathHelper.Clamp(Projectile.velocity.Length(), 9f, 16.5f);
-            Projectile.scale = Utils.GetLerpValue(0f, 18f, Timer, true) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
-            Projectile.velocity = Projectile.velocity.RotatedBy(MathF.Sin(Timer * 0.22f + Projectile.ai[1]) * 0.018f) * 0.996f;
+            NPC target = Timer > 14f ? FindTarget(520f) : null;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            if (target != null)
+                direction = Vector2.Lerp(direction, Projectile.SafeDirectionTo(target.Center), 0.035f).SafeNormalize(direction);
 
-            if (Timer > 10f)
-            {
-                NPC target = FindTarget(520f);
-                if (target != null)
-                {
-                    Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center) * speed;
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.055f);
-                }
-            }
+            Projectile.velocity = direction * speed;
+            Projectile.rotation = direction.ToRotation();
+            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+            Lighting.AddLight(Projectile.Center, theme.ToVector3() * 0.7f);
 
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-
-            Color purple = PFLeftEffectRules.GetThemeColor(Projectile, new Color(210, 58, 235));
-            Color blood = new(255, 44, 82);
-            Color smokeColor = Color.Lerp(purple, Color.Black, 0.52f + 0.16f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f));
-            Lighting.AddLight(Projectile.Center, Color.Lerp(purple, blood, 0.35f).ToVector3() * Projectile.scale * 0.58f);
-
-            if (Main.dedServ)
+            if (Main.dedServ || Timer % 2f != 0f)
                 return;
 
-            float smokeRot = MathHelper.ToRadians(3f);
-            Particle smoke = new HeavySmokeParticle(Projectile.Center, Projectile.velocity * 0.36f, smokeColor, 20, Projectile.scale * Main.rand.NextFloat(0.55f, 1.05f), 0.82f, smokeRot, required: true);
-            GeneralParticleHandler.SpawnParticle(smoke);
+            GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                Projectile.Center - direction * 8f,
+                -direction * Main.rand.NextFloat(0.4f, 1.4f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                Color.Lerp(theme, Color.DarkGoldenrod, 0.38f),
+                18,
+                Main.rand.NextFloat(0.42f, 0.72f),
+                0.66f,
+                Main.rand.NextFloat(-0.05f, 0.05f),
+                glowing: true));
 
-            if (Main.rand.NextBool(4))
+            if (Main.rand.NextBool(2))
             {
-                Color inner = Color.Lerp(smokeColor, blood, 0.3f);
-                Particle glow = new HeavySmokeParticle(Projectile.Center + Main.rand.NextVector2Circular(5f, 5f), Projectile.velocity * 0.34f, inner, 14, Projectile.scale * Main.rand.NextFloat(0.36f, 0.68f), 0.8f, smokeRot, true, 0.005f);
-                GeneralParticleHandler.SpawnParticle(glow);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center - direction * 5f + Main.rand.NextVector2Circular(4f, 4f),
+                    -direction * Main.rand.NextFloat(0.55f, 1.6f),
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.22f, 0.42f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.16f, 0.46f)),
+                    true,
+                    false,
+                    true));
             }
 
-            if (Timer % 9f == 0f)
+            if (Main.rand.NextBool(3))
             {
-                Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                Particle spark = new SparkParticle(Projectile.Center - forward * 12f, -forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 4.6f), false, 16, Main.rand.NextFloat(0.55f, 1f), Color.Lerp(purple, blood, Main.rand.NextFloat(0.2f, 0.6f)));
-                GeneralParticleHandler.SpawnParticle(spark);
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    -direction * Main.rand.NextFloat(0.35f, 1.1f) + Main.rand.NextVector2Circular(0.25f, 0.25f),
+                    Main.rand.NextFloat(0.28f, 0.48f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.36f)),
+                    Main.rand.Next(12, 20)));
             }
         }
 
@@ -100,52 +113,74 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             return closest;
         }
 
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(Projectile.Center, 22f * Projectile.scale, targetHitbox);
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+            CalamityUtils.CircularHitboxCollision(Projectile.Center, 18f, targetHitbox);
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<BrainRot>(), 720);
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(ModContent.BuffType<BrainRot>(), 360);
+            SpawnImpactSmoke();
+        }
 
-        public override void OnKill(int timeLeft)
+        public override void OnKill(int timeLeft) => SpawnImpactSmoke();
+
+        private void SpawnImpactSmoke()
         {
             if (Main.dedServ)
                 return;
 
-            Color purple = PFLeftEffectRules.GetThemeColor(Projectile, new Color(210, 58, 235));
-            for (int i = 0; i < 14; i++)
+            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+            for (int i = 0; i < 12; i++)
             {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    Main.rand.NextBool() ? DustID.PurpleTorch : DustID.CrimsonTorch,
-                    Main.rand.NextVector2Circular(5f, 5f),
-                    100,
-                    Main.rand.NextBool() ? purple : new Color(255, 44, 82),
-                    Main.rand.NextFloat(0.7f, 1.15f));
-                dust.noGravity = true;
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(9f, 9f),
+                    Main.rand.NextVector2Circular(3.8f, 3.8f),
+                    Color.Lerp(theme, Color.DarkGoldenrod, Main.rand.NextFloat(0.2f, 0.6f)),
+                    Main.rand.Next(20, 32),
+                    Main.rand.NextFloat(0.65f, 1.2f),
+                    0.72f,
+                    Main.rand.NextFloat(-0.06f, 0.06f),
+                    glowing: true));
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5.2f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.34f, 0.72f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.42f)),
+                    true,
+                    false,
+                    true));
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    Main.rand.NextVector2Circular(2.2f, 2.2f),
+                    Color.Lerp(theme, Color.Goldenrod, Main.rand.NextFloat(0.14f, 0.38f)),
+                    Color.Black,
+                    Main.rand.NextFloat(0.38f, 0.78f),
+                    Main.rand.Next(22, 36),
+                    Main.rand.NextFloat(-0.04f, 0.04f)));
             }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D eater = TextureAssets.Projectile[ProjectileID.TinyEater].Value;
-            Texture2D knife = TextureAssets.Projectile[ProjectileID.VampireKnife].Value;
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            float opacity = Utils.GetLerpValue(6f, 18f, Timer, true) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
-            Color purple = PFLeftEffectRules.GetThemeColor(Projectile, new Color(210, 58, 235)) * opacity;
-            Color blood = new Color(255, 44, 82) * opacity;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Color theme = (PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92)) with { A = 0 }) * Projectile.Opacity;
+            Vector2 center = Projectile.Center - Main.screenPosition;
 
             PFLeftEffectRules.BeginAdditive();
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
-            {
-                if (Projectile.oldPos[i] == Vector2.Zero)
-                    continue;
-
-                float completion = i / (float)Projectile.oldPos.Length;
-                Vector2 oldDrawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Color trailColor = Color.Lerp(purple, blood, completion) * (1f - completion) * 0.42f;
-                Main.EntitySpriteDraw(eater, oldDrawPosition, null, trailColor, Projectile.rotation, eater.Size() * 0.5f, Projectile.scale * (0.72f - completion * 0.18f), SpriteEffects.None, 0);
-            }
-
-            Main.EntitySpriteDraw(eater, drawPosition, null, Color.Lerp(purple, Color.White, 0.18f) * 0.86f, Projectile.rotation, eater.Size() * 0.5f, Projectile.scale * 0.86f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(knife, drawPosition - Projectile.velocity.SafeNormalize(Vector2.UnitX) * 4f, null, Color.Lerp(blood, Color.White with { A = 0 }, 0.25f) * 0.75f, Projectile.rotation + MathHelper.PiOver4, knife.Size() * 0.5f, Projectile.scale * 0.72f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(line, center - Projectile.velocity.SafeNormalize(Vector2.UnitX) * 13f, null, theme * 0.68f, Projectile.rotation + MathHelper.PiOver2, line.Size() * 0.5f, new Vector2(0.22f, 0.9f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.45f), Projectile.rotation, bloom.Size() * 0.5f, 0.17f, SpriteEffects.None, 0);
             PFLeftEffectRules.EndAdditive();
             return false;
         }

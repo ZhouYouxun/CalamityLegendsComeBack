@@ -12,17 +12,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal sealed class PFMoonlord_SolarLaser : ModProjectile, ILocalizedModType
     {
-        private const int Lifetime = 15;
-        private const float MaxBeamScale = 1.15f;
+        private const int Lifetime = 7;
+        private const float MaxBeamScale = 6.2f;
         private const float MaxBeamLength = 1800f;
-        private const float HitboxWidth = 19f;
+        private const float HitboxWidth = 68f;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/LaserProj";
 
         private Vector2 beamVector = Vector2.UnitX;
         private ref float BeamLength => ref Projectile.ai[0];
-        private Color SolarColor => new(255, 188, 54);
+        private Color SolarColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
 
         public override void SetDefaults()
         {
@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             float completion = 1f - Projectile.timeLeft / (float)Lifetime;
             float fade = Utils.GetLerpValue(0f, 0.2f, completion, true) * Utils.GetLerpValue(1f, 0.68f, completion, true);
             Projectile.scale = MaxBeamScale * fade;
-            Lighting.AddLight(Projectile.Center, SolarColor.ToVector3() * (0.5f + fade * 0.7f));
+            Lighting.AddLight(Projectile.Center, SolarColor.ToVector3() * (0.65f + fade * 1.05f));
             ProduceBeamDust();
         }
 
@@ -100,15 +100,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Color gold = SolarColor;
             Color orange = new(255, 92, 32);
             Color white = Color.White;
-            int points = Math.Clamp((int)(BeamLength / 46f), 12, 38);
+            int points = Math.Clamp((int)(BeamLength / 34f), 18, 56);
             float time = Main.GlobalTimeWrappedHourly;
 
             GeneralParticleHandler.SpawnParticle(new BloomLineVFX(
                 Projectile.Center,
                 beamVector * BeamLength,
-                0.72f,
-                Color.Lerp(gold, white, 0.42f) * 0.25f * Projectile.scale,
-                8));
+                0.95f,
+                Color.Lerp(gold, white, 0.42f) * 0.38f * Projectile.scale,
+                10));
 
             for (int i = 0; i < points; i++)
             {
@@ -121,20 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 if ((i & 1) == 0)
                 {
-                    Particle centerSpark = new CustomSpark(
-                        basePosition,
-                        beamVector * 0.55f,
-                        "CalamityMod/Particles/SmallBloom",
-                        false,
-                        6,
-                        0.16f,
-                        Color.Lerp(color, white, 0.32f),
-                        Vector2.One,
-                        true,
-                        true,
-                        glowOpacity: 0.16f);
-
-                    GeneralParticleHandler.SpawnParticle(centerSpark);
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(basePosition, beamVector * 0.55f + normal * wave * 0.2f, false, 7, 0.34f, Color.Lerp(color, white, 0.32f), true, false, true));
                 }
 
                 Particle cut = new GlowSparkParticle(
@@ -142,9 +129,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     beamVector.RotatedBy(wave * 0.42f) * 1.9f,
                     false,
                     6,
-                    0.022f,
+                    0.03f,
                     color,
-                    new Vector2(2.1f, 1f),
+                    new Vector2(2.6f, 1f),
                     true,
                     false,
                     1.15f);

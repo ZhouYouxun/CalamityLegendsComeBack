@@ -25,14 +25,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float Timer => ref Projectile.localAI[0];
         private float squash = 0.42f;
 
-        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(160, 100, 255));
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
         private Color VisualColor
         {
             get
             {
                 Color theme = ThemeColor;
                 float pulse = (float)Math.Sin(Timer * 0.14f + Projectile.identity * 0.31f) * 0.5f + 0.5f;
-                return Color.Lerp(theme, Color.Cyan, 0.18f + pulse * 0.18f);
+                return Color.Lerp(theme, Color.White, 0.18f + pulse * 0.18f);
             }
         }
 
@@ -58,6 +58,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void AI()
         {
+            if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers && Main.player[Projectile.owner].GetModPlayer<PristineFuryPlayer>().CurrentMark != PristineFuryMark.Dog)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             Timer++;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Projectile.rotation = direction.ToRotation() + MathHelper.PiOver2;
@@ -81,19 +87,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if ((int)Timer % 2 == 0)
             {
-                Particle trail = new CustomSpark(
+                Particle trail = new GlowOrbParticle(
                     Projectile.Center - direction * 22f + normal * Main.rand.NextFloat(-3f, 3f),
                     -direction * Main.rand.NextFloat(0.8f, 2.2f),
-                    "CalamityMod/Particles/DualTrail",
                     false,
-                    14,
-                    0.11f,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.2f, 0.38f),
                     visualColor * 0.84f,
-                    new Vector2(0.7f, 1.72f),
                     true,
                     false,
-                    shrinkSpeed: 0.42f,
-                    glowOpacity: 0.58f);
+                    true);
 
                 GeneralParticleHandler.SpawnParticle(trail);
             }
@@ -110,21 +113,45 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (Main.rand.NextBool(4))
             {
-                Particle star = new CustomSpark(
+                Particle star = new GlowOrbParticle(
                     Projectile.Center + normal * Main.rand.NextFloat(-6f, 6f),
                     -direction * Main.rand.NextFloat(0.6f, 1.8f) + normal * Main.rand.NextFloat(-0.8f, 0.8f),
-                    "CalamityMod/Particles/PulseStar",
                     false,
                     Main.rand.Next(12, 19),
-                    Main.rand.NextFloat(0.08f, 0.15f),
+                    Main.rand.NextFloat(0.18f, 0.32f),
                     Color.Lerp(visualColor, Color.White, 0.2f),
-                    Vector2.One,
                     true,
                     false,
-                    shrinkSpeed: 0.28f,
-                    glowOpacity: 0.7f);
+                    true);
 
                 GeneralParticleHandler.SpawnParticle(star);
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Particle node = new SquishyLightParticle(
+                    Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + normal * Main.rand.NextFloat(-7f, 7f),
+                    -direction * Main.rand.NextFloat(0.35f, 1.2f) + normal * Main.rand.NextFloat(-0.5f, 0.5f),
+                    Main.rand.NextFloat(0.32f, 0.58f),
+                    Color.Lerp(visualColor, Color.White, Main.rand.NextFloat(0.14f, 0.42f)),
+                    Main.rand.Next(13, 22));
+
+                GeneralParticleHandler.SpawnParticle(node);
+            }
+
+            if (Main.rand.NextBool(5))
+            {
+                Particle smoke = new HeavySmokeParticle(
+                    Projectile.Center - direction * Main.rand.NextFloat(12f, 28f) + normal * Main.rand.NextFloat(-6f, 6f),
+                    -direction * Main.rand.NextFloat(0.35f, 1.1f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
+                    Color.Lerp(visualColor, Color.DarkGoldenrod, 0.35f),
+                    Main.rand.Next(18, 30),
+                    Main.rand.NextFloat(0.38f, 0.7f),
+                    0.58f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    glowing: true);
+
+                GeneralParticleHandler.SpawnParticle(smoke);
             }
         }
 
@@ -133,8 +160,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
             CalamityUtils.CircularHitboxCollision(Projectile.Center, CollisionRadius, targetHitbox);
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
             target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 300);
+            SpawnImpactEffects(target.Center);
+        }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
@@ -175,15 +205,96 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 19);
 
             GeneralParticleHandler.SpawnParticle(pulse);
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(visualColor, Color.White, 0.18f) * 0.55f,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                Main.rand.NextFloat(-0.25f, 0.25f),
+                0.06f,
+                0.68f,
+                14,
+                false));
+
+            for (int i = 0; i < 4; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.1f, 3.2f),
+                    Color.Lerp(visualColor, Color.DarkGoldenrod, Main.rand.NextFloat(0.22f, 0.55f)),
+                    Main.rand.Next(18, 30),
+                    Main.rand.NextFloat(0.48f, 0.86f),
+                    0.56f,
+                    Main.rand.NextFloat(-0.06f, 0.06f),
+                    glowing: true));
+            }
+        }
+
+        private void SpawnImpactEffects(Vector2 center)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Color visualColor = VisualColor;
+
+            for (int i = 0; i < 18; i++)
+            {
+                float ratio = i / 17f;
+                float angle = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, ratio);
+                Vector2 velocity = direction.RotatedBy(angle + Main.rand.NextFloat(-0.18f, 0.18f)) * Main.rand.NextFloat(2.2f, 7.6f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center + velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0f, 8f),
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.55f, 1.12f),
+                    Main.rand.NextBool(4) ? Color.White : Color.Lerp(visualColor, Color.Gold, Main.rand.NextFloat(0.08f, 0.36f))));
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.1f, 5.4f);
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    center + Main.rand.NextVector2Circular(8f, 8f),
+                    velocity,
+                    Main.rand.NextFloat(0.48f, 0.92f),
+                    Color.Lerp(visualColor, Color.White, Main.rand.NextFloat(0.12f, 0.45f)),
+                    Main.rand.Next(16, 28)));
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    center + Main.rand.NextVector2Circular(14f, 14f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 4.2f),
+                    Color.Lerp(visualColor, Color.DarkGoldenrod, Main.rand.NextFloat(0.22f, 0.55f)),
+                    Main.rand.Next(20, 34),
+                    Main.rand.NextFloat(0.62f, 1.08f),
+                    0.58f,
+                    Main.rand.NextFloat(-0.075f, 0.075f),
+                    glowing: true));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                visualColor * 0.82f,
+                Vector2.One,
+                direction.ToRotation(),
+                0.16f,
+                1.25f,
+                16));
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Texture2D circularSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmear").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
-            Texture2D fadeStreak = ModContent.Request<Texture2D>("CalamityMod/Particles/FadeStreak").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
@@ -219,29 +330,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 SpriteEffects.None,
                 0f);
 
-            for (int i = 0; i < 5; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / 5f).ToRotationVector2().RotatedBy(Projectile.rotation + MathHelper.Pi);
-                Main.EntitySpriteDraw(
-                    fadeStreak,
-                    drawPosition,
-                    null,
-                    visualColor with { A = 0 } * 0.28f * opacity,
-                    offset.ToRotation(),
-                    new Vector2(fadeStreak.Width * 0.5f, 0f),
-                    new Vector2(0.44f, 0.22f) * Projectile.scale,
-                    SpriteEffects.FlipVertically,
-                    0f);
-            }
-
             Main.EntitySpriteDraw(
-                star,
+                bloomRing,
                 drawPosition,
                 null,
-                Color.White with { A = 0 } * 0.2f * opacity,
-                Projectile.rotation,
-                star.Size() * 0.5f,
-                new Vector2(0.16f, 0.32f) * Projectile.scale,
+                visualColor with { A = 0 } * 0.22f * opacity,
+                -Projectile.rotation + Timer * 0.045f,
+                bloomRing.Size() * 0.5f,
+                Projectile.scale * 0.2f,
                 SpriteEffects.None,
                 0f);
 
@@ -328,7 +424,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private Color TrailColorFunction(float completion, Vector2 _)
         {
-            Color bodyColor = Color.Lerp(VisualColor, Color.Cyan, 0.22f);
+            Color bodyColor = Color.Lerp(VisualColor, Color.White, 0.22f);
             Color tailColor = Color.Lerp(bodyColor, Color.Transparent, Utils.GetLerpValue(0.68f, 1f, completion, true));
             bodyColor.A = 0;
             tailColor.A = 0;

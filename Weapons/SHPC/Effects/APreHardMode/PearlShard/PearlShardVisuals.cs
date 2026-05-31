@@ -56,13 +56,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public static void SpawnBurst(Vector2 center, Vector2 forward, float scale)
         {
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 14; i++)
             {
-                Vector2 velocity = (forward.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(1.2f, 4.2f)) + Main.rand.NextVector2Circular(0.8f, 0.8f);
-                SpawnPearlParticle(center + Main.rand.NextVector2Circular(8f, 8f) * scale, velocity, Main.rand.NextFloat(0.25f, 0.48f) * scale, Main.rand.Next(18, 32));
+                Color color = RandomPearlColor();
+                Vector2 velocity = (forward.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(1.2f, 5.2f)) + Main.rand.NextVector2Circular(0.8f, 0.8f);
+                SpawnPearlParticle(center + Main.rand.NextVector2Circular(8f, 8f) * scale, velocity, Main.rand.NextFloat(0.28f, 0.58f) * scale, Main.rand.Next(22, 42));
+
+                if (i % 2 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                        center + Main.rand.NextVector2Circular(6f, 6f) * scale,
+                        velocity * Main.rand.NextFloat(0.65f, 1.25f),
+                        false,
+                        Main.rand.Next(10, 18),
+                        Main.rand.NextFloat(0.012f, 0.026f) * scale,
+                        color,
+                        new Vector2(0.55f, 1.65f),
+                        false,
+                        false));
+                }
             }
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, new Color(255, 196, 224), "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-0.3f, 0.3f), 0.04f * scale, 0.22f * scale, 18));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, new Color(170, 220, 255), "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-0.3f, 0.3f), 0.025f * scale, 0.32f * scale, 20));
         }
     }
 }

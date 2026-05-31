@@ -76,11 +76,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         private static void SpawnMuzzlePearls(Vector2 center, Vector2 forward)
         {
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
             {
                 Color color = PearlShardVisuals.RandomPearlColor();
-                Vector2 velocity = forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 5f);
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(center, velocity, false, Main.rand.Next(18, 26), Main.rand.NextFloat(0.35f, 0.58f), color));
+                Vector2 velocity = forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 5.5f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(center + forward * 10f, velocity, false, Main.rand.Next(18, 26), Main.rand.NextFloat(0.35f, 0.58f), color));
+
+                if (i < 7)
+                {
+                    PearlParticle pearl = new(
+                        center + forward * 12f + Main.rand.NextVector2Circular(4f, 4f),
+                        velocity.RotatedByRandom(0.18f) * Main.rand.NextFloat(0.18f, 0.72f),
+                        false,
+                        Main.rand.Next(34, 48),
+                        Main.rand.NextFloat(0.42f, 0.7f),
+                        color,
+                        0.95f,
+                        Main.rand.NextFloat(-0.25f, 0.25f),
+                        true);
+                    GeneralParticleHandler.SpawnParticle(pearl);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -15,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         public const int CooldownDisplayMax = 120;
 
         private bool WasUltimateActiveLastFrame;
+        private bool wasUltimateReady;
 
         public bool IsUltimateActive => Player.ownedProjectileCounts[ModContent.ProjectileType<YC_EX_VIP>()] > 0;
         public bool IsCoolingDown => CooldownValue > 0;
@@ -49,6 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 ChargeValue = ChargeMax;
                 CooldownValue = 0;
                 WasUltimateActiveLastFrame = true;
+                LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
                 return;
             }
 
@@ -57,12 +60,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 WasUltimateActiveLastFrame = false;
                 ChargeValue = 0;
                 CooldownValue = CooldownMax;
+                LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
                 return;
             }
 
             if (CooldownValue > 0)
             {
                 CooldownValue--;
+                LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
                 return;
             }
 
@@ -77,6 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 if (ChargeValue < 0)
                     ChargeValue = 0;
             }
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, IsReady);
         }
     }
 }
