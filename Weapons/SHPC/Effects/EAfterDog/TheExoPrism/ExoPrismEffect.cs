@@ -50,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                     projectile.Center + normal * (40f * i),
                     forward * 7.5f,
                     ModContent.ProjectileType<ExoPrism_Light>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 0.5),
                     projectile.knockBack,
                     owner.whoAmI,
                     projectile.ai[0], // ✅ 继承EffectID

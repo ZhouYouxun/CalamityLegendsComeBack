@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
                 projectile.Center,
                 direction * 12f,
                 ModContent.ProjectileType<YharonSoulFragment_Flame>(),
-                projectile.damage,
+                (int)(projectile.damage * 1.1),
                 projectile.knockBack,
                 projectile.owner,
                 projectile.ai[0], // ✅ 继承EffectID（关键）

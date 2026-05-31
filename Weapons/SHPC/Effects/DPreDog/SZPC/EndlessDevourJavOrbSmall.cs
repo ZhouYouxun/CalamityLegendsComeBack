@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.MaxUpdates = MaxUpdateCount;
             Projectile.penetrate = 2;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 18 * MaxUpdateCount;
+            Projectile.localNPCHitCooldown = 30 * MaxUpdateCount;
         }
 
         public override void AI()

@@ -63,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 projectile.Center + forward * 14f,
                 forward * 6f,
                 ModContent.ProjectileType<AshesofAnn_BurstRelay>(),
-                projectile.damage,
+                (int)(projectile.damage * 1.33),
                 projectile.knockBack,
                 owner.whoAmI,
                 forward.X,

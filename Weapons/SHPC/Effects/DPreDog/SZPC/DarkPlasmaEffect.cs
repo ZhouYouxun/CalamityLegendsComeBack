@@ -558,7 +558,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPE>(),
-                (int)(projectile.damage * 3f),
+                (int)(projectile.damage * 2f),
                 projectile.knockBack,
                 projectile.owner);
 
@@ -590,7 +590,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     projectile.Center + direction * 18f,
                     direction * Main.rand.NextFloat(13f, 22f),
                     ModContent.ProjectileType<EndlessDevourJavOrbSmall>(),
-                    (int)(projectile.damage * 0.42f),
+                    (int)(projectile.damage * 0.37f),
                     projectile.knockBack * 0.35f,
                     projectile.owner,
                     0f,
@@ -605,7 +605,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 20; i++)
             {
                 float angle = MathHelper.TwoPi * i / 28f + Main.rand.NextFloat(-0.08f, 0.08f);
                 Vector2 direction = angle.ToRotationVector2();
@@ -615,7 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     projectile.Center + direction * Main.rand.NextFloat(8f, 28f),
                     orbVelocity,
                     ModContent.ProjectileType<EndlessDevourJavOrbSmall>(),
-                    (int)(projectile.damage * 0.52f),
+                    (int)(projectile.damage * 0.42f),
                     projectile.knockBack * 0.5f,
                     projectile.owner,
                     0f,

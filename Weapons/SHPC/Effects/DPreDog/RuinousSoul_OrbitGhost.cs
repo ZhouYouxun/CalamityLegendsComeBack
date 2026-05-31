@@ -8,8 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class RuinousSoul_OrbitGhost : ModProjectile, ILocalizedModType
     {
-        public const int ReleaseCap = 21;
-        public const int SpawnBatchSize = 3;
+        public const int ReleaseCap = 27;
+        public const int SpawnBatchSize = 4;
         public const int ForcedReleaseTime = 100;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
