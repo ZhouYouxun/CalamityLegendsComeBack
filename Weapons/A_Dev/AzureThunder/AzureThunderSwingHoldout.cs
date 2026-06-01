@@ -549,8 +549,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Math.Max(1, (int)(Projectile.damage * 1.75f)),
                 Projectile.knockBack,
                 Projectile.owner,
-                gainCharge: index == totalStrikes - 1,
-                applyStaticDischarge: index == totalStrikes - 1,
+                gainCharge: true,//index == totalStrikes - 1,
+                applyStaticDischarge: false,//施加静电逸散
                 big: true,
                 spawnHeightMultiplier: 0.95f,
                 fixedTiltRadians: GetFixedLightningTilt(),
