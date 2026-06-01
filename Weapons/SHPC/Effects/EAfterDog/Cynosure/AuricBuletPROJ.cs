@@ -82,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     0.8f));
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(1))
             {
                 Vector2 smearOffset = normal * Main.rand.NextFloat(-7f, 7f);
                 Color smearColor = Main.rand.NextBool() ? new Color(255, 218, 86) : new Color(74, 208, 255);

@@ -37,6 +37,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
             if (Main.rand.NextBool(3))
                 PearlShardVisuals.SpawnPearlParticle(Projectile.Center, -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.18f), 0.34f, 18);
+
+            PearlShardVisuals.SpawnPearlGodTrail(Projectile, 1f);
         }
 
         public override bool? CanDamage()

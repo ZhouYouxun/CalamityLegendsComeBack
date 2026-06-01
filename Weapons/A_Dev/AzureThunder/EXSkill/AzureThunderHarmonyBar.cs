@@ -60,14 +60,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // buffTime/duration 转成剩余比例，进度越低颜色越偏青。
             float progress = MathHelper.Clamp(owner.buffTime[buffIndex] / (float)duration, 0f, 1f);
-            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
-            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/天理真和倒计时").Value;
+            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/天理真和倒计时条").Value;
             Vector2 drawPosition = owner.Center - Main.screenPosition + new Vector2(0f, -62f) - barBackground.Size() * 0.5f;
             Rectangle frameCrop = new(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
-            Color color = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.Yellow, 1f - progress) * Projectile.Opacity;
+            Color color = Color.Lerp(new Color(54, 255, 214), AzureThunderColors.PaleYellow, 1f - progress) * Projectile.Opacity;
 
             // 先画背景，再用裁剪矩形绘制剩余长度。
-            Main.spriteBatch.Draw(barBackground, drawPosition, null, color * 0.72f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(barBackground, drawPosition, null, Color.White * Projectile.Opacity, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(barForeground, drawPosition, frameCrop, color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
             return false;

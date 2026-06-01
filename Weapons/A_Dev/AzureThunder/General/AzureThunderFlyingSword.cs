@@ -160,7 +160,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Math.Max(1, (int)(Projectile.damage * 0.45f)),
                 Projectile.knockBack * 0.25f,
                 Projectile.owner,
-                0.8f);
+                0.72f,
+                AzureThunderFlatLightning.WeakLightningFlag);
         }
 
         public override bool PreDraw(ref Color lightColor)

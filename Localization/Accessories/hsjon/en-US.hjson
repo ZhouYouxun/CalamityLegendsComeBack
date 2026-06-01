@@ -335,6 +335,8 @@ Mods: {
 				EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
 				SHPCAmmoSelectionPanel.DisplayName: S H P C Ammo Selection Panel
 				SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
+				PlagueCell_Fog.DisplayName: Plague Cell_ Fog
+				PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
 			}
 
 			ChangedWeapons: {
@@ -379,6 +381,7 @@ Mods: {
 			BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
 			TestWeaponProj.DisplayName: Test Weapon Proj
 			BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
+			AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 		}
 
 		Cooldowns.JoltingArts_Lightning: Jolting Arts Lightning

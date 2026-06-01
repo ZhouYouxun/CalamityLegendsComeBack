@@ -9,6 +9,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     internal class BossSoulofFrightEffect : DefaultEffect
     {
+        private const float MaxTravelDistance = 75f * 16f;
+        private const int SplitCount = 16;
+        private const int MaxDamagingHits = 3;
+
         public override int EffectID => 12;
         public override int AmmoType => ItemID.SoulofFright;
 
@@ -17,40 +21,72 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override Color StartColor => new Color(255, 80, 80);
         public override Color EndColor => new Color(120, 10, 10);
 
-        private int soulSpawnTimer;
+        public override bool EnableDefaultSlowdown => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            soulSpawnTimer = 0;
-            projectile.timeLeft = 240;
+            projectile.localAI[0] = 0f;
+            projectile.localAI[1] = 0f;
+            projectile.ai[1] = 0f;
+            projectile.ai[2] = 0f;
+            projectile.timeLeft = System.Math.Max(45, (int)(MaxTravelDistance / System.Math.Max(projectile.velocity.Length(), 1f)) + 30);
             projectile.penetrate = -1;
+            projectile.usesLocalNPCImmunity = true;
+            projectile.localNPCHitCooldown = 14;
+            projectile.Resize(48, 48);
         }
 
-        public override bool? CanDamage(Projectile projectile, Player owner) => false;
+        public override bool? CanDamage(Projectile projectile, Player owner) => projectile.localAI[1] < MaxDamagingHits ? null : false;
 
         public override void AI(Projectile projectile, Player owner)
         {
-            soulSpawnTimer++;
+            projectile.ai[1] = 0f;
+            projectile.ai[2] = 0f;
+            projectile.Resize(48, 48);
+            projectile.localAI[0] += projectile.velocity.Length();
 
-            if (projectile.owner != Main.myPlayer || soulSpawnTimer % 4 != 0)
+            if (projectile.owner != Main.myPlayer || projectile.localAI[0] < MaxTravelDistance)
                 return;
 
-            Vector2 dir = Main.rand.NextVector2Unit();
-            float speed = Main.rand.NextFloat(5f, 10f);
+            SpawnEvenSplit(projectile);
+            projectile.Kill();
+        }
 
-            int soulIndex = Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
-                dir * speed,
-                ModContent.ProjectileType<NewSHPS>(),
-                (int)(projectile.damage * 0.77f),
-                projectile.knockBack,
-                projectile.owner,
-                3
-            );
+        public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.SourceDamage *= 1.54f;
+        }
 
-            if (Main.projectile.IndexInRange(soulIndex))
-                Main.projectile[soulIndex].timeLeft = 75;
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            projectile.localAI[1]++;
+        }
+
+        private static void SpawnEvenSplit(Projectile projectile)
+        {
+            float baseAngle = projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation();
+            float offset = Main.rand.NextFloat(MathHelper.TwoPi / SplitCount);
+            int splitDamage = System.Math.Max(1, (int)(projectile.damage * 0.77f));
+
+            for (int i = 0; i < SplitCount; i++)
+            {
+                float angle = baseAngle + offset + MathHelper.TwoPi * i / SplitCount;
+                Vector2 direction = angle.ToRotationVector2();
+                float speed = 7.5f + (i % 2) * 1.2f;
+
+                int soulIndex = Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center + direction * 18f,
+                    direction * speed,
+                    ModContent.ProjectileType<NewSHPS>(),
+                    splitDamage,
+                    projectile.knockBack,
+                    projectile.owner,
+                    3);
+
+                if (Main.projectile.IndexInRange(soulIndex))
+                    Main.projectile[soulIndex].timeLeft = 110;
+            }
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)

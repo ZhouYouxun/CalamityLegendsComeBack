@@ -22,12 +22,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private const float OldTextureSize = 158f;
         private const float CurrentTextureSize = 80f;
         private const float HoldoutDrawScale = OldTextureSize / CurrentTextureSize;
+        private const float GripOriginX = 0f;
+        private const float GripOriginY = 172f / HoldoutDrawScale;
+        private const float LeftSweepLightningScale = 2.5f;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunder";
         public override int AssignedItemID => ModContent.ItemType<AzureThunder>();
 
-        public override Vector2 SpriteOrigin => new(0f, 172f / HoldoutDrawScale);
+        public override Vector2 SpriteOrigin => new(0, 78); // 左右和上下偏移
         public override float HitboxOutset => 118f;
         public override Vector2 HitboxSize => new(170f, 170f);
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
@@ -37,6 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private int currentStage;
         private int stageTimer;
         private int stageDuration;
+        private int stageImpactFrame;
         private int gapTimer;
         private int swingDirection = 1;
 
@@ -229,6 +233,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             releaseFinalStarted = releaseRequested;
             currentStage = comboIndex % ComboLength;
             stageDuration = HarmonyActive ? 30 : 45;
+            stageImpactFrame = HarmonyActive ? stageDuration / 3 : (int)(stageDuration / 1.5f);
+
+            if (!HarmonyActive && currentStage == 3)
+            {
+                stageImpactFrame = 30;
+                stageDuration = Math.Max(stageDuration, stageImpactFrame + (GetFinalLightningCount() - 1) * 8 + 10);
+            }
+            else if (HarmonyActive && currentStage <= 1)
+            {
+                int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
+                stageImpactFrame = 10;
+                stageDuration = Math.Max(stageDuration, stageImpactFrame + (strikeCount - 1) * 8 + 10);
+            }
 
             // 重置本段事件和命中状态。
             stageTimer = 0;
@@ -345,7 +362,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         }
 
         // 终极状态更快进入命中帧，普通状态保留较长前摇。
-        private int SwingImpactFrame => HarmonyActive ? stageDuration / 3 : (int)(stageDuration / 1.5f);
+        private int SwingImpactFrame => stageImpactFrame;
         private bool ReachedSwingImpact(int delay = 0) => stageTimer >= SwingImpactFrame + delay;
 
         private void RunNormalStage()
@@ -381,7 +398,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
                 case 3:
                     int strikeCount = GetFinalLightningCount();
-                    if (finalLightningFired < strikeCount && ReachedSwingImpact(finalLightningFired * 5))
+                    if (finalLightningFired < strikeCount && ReachedSwingImpact(finalLightningFired * 8))
                     {
                         SpawnForwardLightning(finalLightningFired);
                         finalLightningFired++;
@@ -396,7 +413,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (currentStage <= 1)
             {
                 int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
-                if (harmonyBarrageShotsFired < strikeCount && ReachedSwingImpact(harmonyBarrageShotsFired * 5))
+                if (harmonyBarrageShotsFired < strikeCount && ReachedSwingImpact(harmonyBarrageShotsFired * 8))
                 {
                     SpawnParallelBarrageLightning(harmonyBarrageShotsFired);
                     harmonyBarrageShotsFired++;
@@ -432,7 +449,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             swingDirection = comboIndex % 2 == 0 ? -1 : 1;
             Projectile.ai[1] = swingDirection;
 
-            if (releaseFinalStarted)
+            if (releaseRequested || releaseFinalStarted)
             {
                 Projectile.Kill();
                 return;
@@ -505,7 +522,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 gainCharge: gainCharge,
                 applyStaticDischarge: false,
                 big: false,
-                spawnHeightMultiplier: 0.9f);
+                spawnHeightMultiplier: 0.9f,
+                weak: true,
+                lightningScale: 0.72f);
         }
 
         private void SpawnForwardLightning(int index)
@@ -518,11 +537,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 forward = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             float centeredIndex = index - (totalStrikes - 1) * 0.5f;
-            float forwardDistance = 240f + index * 118f + Main.rand.NextFloat(-32f, 42f);
-            float sideOffset = centeredIndex * 86f + Main.rand.NextFloat(-34f, 34f);
+            float forwardDistance = 250f + index * 170f + Main.rand.NextFloat(-42f, 56f);
+            float sideOffset = centeredIndex * 128f + Main.rand.NextFloat(-48f, 48f);
             Vector2 strikeTarget = Owner.Center + forward * forwardDistance + right * sideOffset - Vector2.UnitY * Main.rand.NextFloat(20f, 90f);
 
-            // 最终连雷保持 5 帧节奏，前后和侧向偏移避免多道雷完全重叠。
+            // 最终连雷拉大间距并放大到覆盖约三分之一屏幕。
             AzureThunderPlayer.SpawnVerticalLightning(
                 Projectile.GetSource_FromThis(),
                 strikeTarget,
@@ -532,9 +551,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.owner,
                 gainCharge: index == totalStrikes - 1,
                 applyStaticDischarge: index == totalStrikes - 1,
-                big: index == totalStrikes - 1,
+                big: true,
                 spawnHeightMultiplier: 0.95f,
-                fixedTiltRadians: GetFixedLightningTilt());
+                fixedTiltRadians: GetFixedLightningTilt(),
+                normalVisualIntensity: true,
+                lightningScale: LeftSweepLightningScale);
         }
 
         private void SpawnParallelBarrageLightning(int index)
@@ -547,8 +568,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 sweepAxis = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
             float centeredIndex = index - (strikeCount - 1) * 0.5f;
             Vector2 focusPoint = lockedMouseWorld + Main.rand.NextVector2Circular(44f, 34f);
-            Vector2 lineCenter = focusPoint + sweepAxis * (centeredIndex * 82f + Main.rand.NextFloat(-22f, 22f));
-            lineCenter += lockedAimDirection * Main.rand.NextFloat(-38f, 38f);
+            Vector2 lineCenter = focusPoint + sweepAxis * (centeredIndex * 138f + Main.rand.NextFloat(-34f, 34f));
+            lineCenter += lockedAimDirection * Main.rand.NextFloat(-54f, 54f);
 
             // 天理真和雷幕围绕捕获的鼠标区域扫过，而不是强锁一个目标。
             AzureThunderPlayer.SpawnVerticalLightning(
@@ -560,9 +581,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.owner,
                 gainCharge: false,
                 applyStaticDischarge: true,
-                big: index == strikeCount - 1,
+                big: true,
                 spawnHeightMultiplier: 0.82f,
-                fixedTiltRadians: GetFixedLightningTilt());
+                fixedTiltRadians: GetFixedLightningTilt(),
+                lightningScale: LeftSweepLightningScale);
         }
 
         private void SpawnFlyingSwords(int count, int delay, bool behindOwner)

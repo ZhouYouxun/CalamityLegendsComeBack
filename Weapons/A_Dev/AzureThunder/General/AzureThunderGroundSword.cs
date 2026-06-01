@@ -325,36 +325,47 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private void DrawBladeShine(Texture2D texture, float drawScale, float opacity)
         {
             // 待机地剑额外绘制慢速镜头光，俯冲时关闭以免拖影过乱。
-            Texture2D shineTex = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Vector2 shineScale = new Vector2(1.67f, 3f) * Projectile.scale;
+            Texture2D shineTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
+            Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 shineScale = new Vector2(1.25f, 2.35f) * Projectile.scale;
             shineScale *= MathHelper.Lerp(
-                0.9f,
-                1.1f,
+                0.98f,
+                1.2f,
                 (float)Math.Cos(Main.GlobalTimeWrappedHourly * 7.4f + Projectile.identity) * 0.5f + 0.5f);
 
             Vector2 bladeDirection = (Projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
-            Vector2 lensFlareWorldPosition = Projectile.Center + bladeDirection * texture.Height * drawScale * 0.42f;
-            Color lensFlareColor = (Color.Lerp(AzureThunderColors.Azure, Color.White, 0.18f) * opacity) with { A = 0 };
+            Vector2 lensFlareWorldPosition = Projectile.Center + bladeDirection * texture.Height * drawScale * 0.48f;
+            Color lensFlareColor = (Color.Lerp(new Color(58, 255, 214), Color.White, 0.2f) * opacity) with { A = 0 };
             float slowRotation = Main.GlobalTimeWrappedHourly * 0.42f + Projectile.identity * 0.17f;
 
             // 加法混合绘制两层交叉星光。
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
             Main.EntitySpriteDraw(
-                shineTex,
+                bloomTex,
                 lensFlareWorldPosition - Main.screenPosition,
                 null,
-                lensFlareColor,
-                Projectile.rotation - MathHelper.PiOver4 + slowRotation,
-                shineTex.Size() * 0.5f,
-                shineScale * 0.6f,
+                new Color(42, 255, 205, 0) * (0.18f * opacity),
+                0f,
+                bloomTex.Size() * 0.5f,
+                Projectile.scale * 0.15f,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 shineTex,
                 lensFlareWorldPosition - Main.screenPosition,
                 null,
-                lensFlareColor,
+                lensFlareColor * 1.2f,
+                Projectile.rotation - MathHelper.PiOver4 + slowRotation,
+                shineTex.Size() * 0.5f,
+                shineScale * 0.78f,
+                SpriteEffects.None);
+
+            Main.EntitySpriteDraw(
+                shineTex,
+                lensFlareWorldPosition - Main.screenPosition,
+                null,
+                lensFlareColor * 1.35f,
                 Projectile.rotation + MathHelper.PiOver4 - slowRotation * 0.65f,
                 shineTex.Size() * 0.5f,
                 shineScale,

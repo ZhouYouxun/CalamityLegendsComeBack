@@ -29,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private int damagingHits;
         private bool damageChannelClosed;
         private Vector2 beamVector = Vector2.UnitX;
+        private readonly HashSet<int> markedTargets = new();
         private ref float BeamLength => ref Projectile.localAI[0];
 
         private Vector2 ForwardDirection
@@ -94,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             if (Projectile.numHits >= MaxHits)
                 return false;
 
-            return target.CanBeChasedBy(Projectile) ? null : false;
+            return IsValidLaserTarget(target) ? null : false;
         }
 
         public override void AI()
@@ -117,7 +118,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Lighting.AddLight(Projectile.Center, OuterColor.ToVector3() * 0.28f);
             DelegateMethods.v3_1 = OuterColor.ToVector3() * CalculateOpacity() * 0.28f;
             Utils.PlotTileLine(Projectile.Center, Projectile.Center + beamVector * BeamLength, BeamWidth, DelegateMethods.CastLight);
+            TryLockInvulnerableBosses();
             elapsedTime++;
+        }
+
+        private void TryLockInvulnerableBosses()
+        {
+            if (Projectile.owner != Main.myPlayer || damageChannelClosed || elapsedTime % 4 != 0)
+                return;
+
+            foreach (NPC target in Main.ActiveNPCs)
+            {
+                if (!IsValidLaserTarget(target) || !IsBossLikeTarget(target) || markedTargets.Contains(target.whoAmI))
+                    continue;
+
+                float collisionPoint = 0f;
+                bool touching = Collision.CheckAABBvLineCollision(
+                    target.Hitbox.TopLeft(),
+                    target.Hitbox.Size(),
+                    Projectile.Center,
+                    Projectile.Center + beamVector * BeamLength,
+                    BeamWidth,
+                    ref collisionPoint);
+
+                if (touching)
+                    TrySpawnMark(target);
+            }
         }
 
         private void SetForwardDirection(Vector2 direction)
@@ -174,7 +200,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             if (damagingHits >= DamageChannelCloseHits)
                 damageChannelClosed = true;
 
-            if (Projectile.owner != Main.myPlayer)
+            TrySpawnMark(target);
+        }
+
+        private void TrySpawnMark(NPC target)
+        {
+            if (Projectile.owner != Main.myPlayer || !IsValidLaserTarget(target) || !markedTargets.Add(target.whoAmI))
                 return;
 
             Projectile.NewProjectile(
@@ -182,10 +213,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 target.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<PlagueCell_Marked>(),
-                (int)(Projectile.damage * 1),
+                Projectile.damage,
                 0f,
                 Projectile.owner,
                 target.whoAmI);
+        }
+
+        private static bool IsValidLaserTarget(NPC target)
+        {
+            if (target == null || !target.active || target.friendly)
+                return false;
+
+            return target.CanBeChasedBy() || IsBossLikeTarget(target);
+        }
+
+        private static bool IsBossLikeTarget(NPC target)
+        {
+            return target.boss ||
+                NPCID.Sets.ShouldBeCountedAsBoss[target.type] ||
+                target.type == NPCID.CultistBoss ||
+                target.type == NPCID.CultistBossClone;
         }
 
         public override bool PreDraw(ref Color lightColor)

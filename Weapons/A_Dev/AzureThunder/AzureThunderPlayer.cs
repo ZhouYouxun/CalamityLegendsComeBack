@@ -36,12 +36,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public bool GreenUltimateFilterActive;
         public float GreenUltimateFilterOpacity;
 
+        private static int harmonyHeadSlot = -1;
+        private static int harmonyBodySlot = -1;
+        private static int harmonyLegsSlot = -1;
+
         // holdingAzureThunder 每帧重置，只有物品 HoldItem 会重新置 true。
         private bool holdingAzureThunder;
         private bool wasUltimateReady;
         private int autoGroundSwordTimer = AutoGroundSwordInterval;
         private int ultimateAutoGainTimer;
-        private int lastThunderChargeGrantFrame = -9999;
 
         // 双重确认玩家仍然真实手持青霆剑，防止状态标记滞留。
         public bool HoldingAzureThunder =>
@@ -52,11 +55,65 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public bool HarmonyActive => Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>());
 
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+
+            harmonyHeadSlot = EquipLoader.AddEquipTexture(
+                Mod,
+                "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/天理真和头部",
+                EquipType.Head,
+                name: "AzureThunderHarmonyHead");
+            harmonyBodySlot = EquipLoader.AddEquipTexture(
+                Mod,
+                "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/天理真和身体",
+                EquipType.Body,
+                name: "AzureThunderHarmonyBody");
+            harmonyLegsSlot = EquipLoader.AddEquipTexture(
+                Mod,
+                "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/天理真和腿部",
+                EquipType.Legs,
+                name: "AzureThunderHarmonyLegs");
+
+        }
+
+        public override void SetStaticDefaults()
+        {
+            if (Main.dedServ)
+                return;
+
+            int headSlot = EquipLoader.GetEquipSlot(Mod, "AzureThunderHarmonyHead", EquipType.Head);
+            if (headSlot >= 0)
+                ArmorIDs.Head.Sets.DrawHead[headSlot] = false;
+        }
+
+        public override void Unload()
+        {
+            harmonyHeadSlot = -1;
+            harmonyBodySlot = -1;
+            harmonyLegsSlot = -1;
+        }
+
         public override void ResetEffects()
         {
             // 每帧先清空，由 AzureThunder.HoldItem 在本帧重新写入。
             holdingAzureThunder = false;
             GreenUltimateFilterActive = false;
+        }
+
+        public override void FrameEffects()
+        {
+            // 终极期间只替换玩家外观装备槽，不提供任何装备属性。
+            if (!HarmonyActive)
+                return;
+
+            if (harmonyHeadSlot >= 0)
+                Player.head = harmonyHeadSlot;
+            if (harmonyBodySlot >= 0)
+                Player.body = harmonyBodySlot;
+            if (harmonyLegsSlot >= 0)
+                Player.legs = harmonyLegsSlot;
         }
 
         public override void UpdateDead()
@@ -106,6 +163,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (HoldingAzureThunder)
             {
                 // 手持期间才增长能量、同步 UI、读取终极键和处理自动地剑。
+                if (Player.whoAmI == Main.myPlayer)
+                    EnsureGroundSwordMatrix();
+
                 HandleUltimateAutoGain();
                 SyncCooldownDisplays();
                 HandleUltimateInput();
@@ -174,15 +234,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (target == null || !target.active || target.friendly || target.dontTakeDamage)
                 return;
 
-            if (Main.GameUpdateCount - lastThunderChargeGrantFrame < 24)
-                return;
-
             // 层数来自目标身上的电系 debuff 数量，最多一次给 3 层。
             int stacks = CountElectroDebuffs(target);
             if (stacks <= 0)
                 return;
 
-            lastThunderChargeGrantFrame = (int)Main.GameUpdateCount;
             AddThunderCharge(Math.Min(3, stacks));
         }
 
@@ -366,6 +422,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Player.whoAmI);
         }
 
+        private void EnsureGroundSwordMatrix()
+        {
+            int matrixType = ModContent.ProjectileType<AzureThunderGroundSwordMatrix>();
+            if (Player.ownedProjectileCounts[matrixType] > 0)
+                return;
+
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center,
+                Vector2.Zero,
+                matrixType,
+                0,
+                0f,
+                Player.whoAmI);
+        }
+
         public static int CountElectroDebuffs(NPC target)
         {
             // 统计所有被青霆剑视为“电系”的 debuff，用于最后雷击结算雷息层数。
@@ -507,22 +579,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public static void ApplyUltimateDot(NPC target, int duration)
         {
-            // 终极 DoT 随进度从静电升级到更高阶灾厄 debuff。
+            // 终极 DoT 使用青霆剑的完整电系减益包，后续叠层也按同一组 buff 统计。
             if (target == null || !target.active)
                 return;
 
-            if (AzureThunderProgression.DownedYharon)
-                target.AddBuff(ModContent.BuffType<AuricRebuke>(), duration);
-            else if (AzureThunderProgression.DownedDragonfolly)
-                target.AddBuff(ModContent.BuffType<VermillionFlux>(), duration);
-            else if (AzureThunderProgression.DownedWallOfFlesh)
-                target.AddBuff(BuffID.Electrified, duration);
-            else
-                target.AddBuff(ModContent.BuffType<StaticDischarge>(), duration);
+            target.AddBuff(BuffID.Electrified, duration);
+            target.AddBuff(ModContent.BuffType<StaticDischarge>(), duration);
 
-            // 月总后额外施加元素谐鸣。
+            if (AzureThunderProgression.DownedWallOfFlesh)
+                target.AddBuff(ModContent.BuffType<GalvanicCorrosion>(), duration);
+            if (AzureThunderProgression.DownedDragonfolly)
+                target.AddBuff(ModContent.BuffType<VermillionFlux>(), duration);
             if (AzureThunderProgression.DownedMoonLord)
                 target.AddBuff(ModContent.BuffType<ElementalMix>(), duration);
+            if (AzureThunderProgression.DownedYharon)
+                target.AddBuff(ModContent.BuffType<AuricRebuke>(), duration);
         }
 
         public static void SpawnVerticalLightning(
@@ -540,7 +611,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             float spawnHeightMultiplier = 1f,
             bool visualOnly = false,
             float? fixedTiltRadians = null,
-            bool applyBaseElectricDebuff = true)
+            bool applyBaseElectricDebuff = true,
+            bool weak = false,
+            bool speedLines = false,
+            bool normalVisualIntensity = false,
+            float lightningScale = 1f)
         {
             // 竖直雷通过目标点向上偏移生成，再朝落点移动。
             Vector2 targetPosition = target?.Center ?? impactPosition;
@@ -565,6 +640,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 flags |= AzureThunderFlatLightning.VisualOnlyFlag;
             if (!applyBaseElectricDebuff)
                 flags |= AzureThunderFlatLightning.NoBaseElectricDebuffFlag;
+            if (weak)
+                flags |= AzureThunderFlatLightning.WeakLightningFlag;
+            if (speedLines)
+                flags |= AzureThunderFlatLightning.SpeedLineFlag;
+            if (normalVisualIntensity)
+                flags |= AzureThunderFlatLightning.NormalVisualIntensityFlag;
 
             SpawnDirectionalLightning(
                 source,
@@ -575,7 +656,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 owner,
                 flags,
                 ultimateEnergyGain,
-                big);
+                big,
+                lightningScale);
         }
 
         public static void SpawnDirectionalLightning(
@@ -587,7 +669,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int owner,
             int flags = 0,
             int ultimateEnergyGain = 0,
-            bool big = false)
+            bool big = false,
+            float size = 1f)
         {
             // 通用方向雷生成函数，竖直雷和平雷最终都走这里。
             int lightning = Projectile.NewProjectile(
@@ -599,7 +682,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 knockback,
                 owner,
                 flags,
-                Main.rand.NextBool() ? -1f : 1f,
+                Math.Max(0.1f, size),
                 ultimateEnergyGain);
 
             if (Main.projectile.IndexInRange(lightning))
@@ -610,8 +693,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 ApplyProjectileGrowth(projectile);
                 if (big)
                 {
-                    projectile.width = 70;
-                    projectile.height = 70;
+                    Vector2 center = projectile.Center;
+                    int hitboxSize = (int)(70f * Math.Max(0.1f, size));
+                    projectile.width = hitboxSize;
+                    projectile.height = hitboxSize;
+                    projectile.Center = center;
                 }
             }
         }
@@ -637,7 +723,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 knockback,
                 owner,
                 flags,
-                Main.rand.NextBool() ? -1f : 1f,
+                Math.Max(0.1f, size),
                 ultimateEnergyGain);
 
             if (Main.projectile.IndexInRange(lightning))

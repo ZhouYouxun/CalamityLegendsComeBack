@@ -44,6 +44,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
             if (Main.rand.NextBool(5))
                 PearlShardVisuals.SpawnPearlParticle(Projectile.Center, -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.12f), 0.18f, 14);
+
+            PearlShardVisuals.SpawnPearlGodTrail(Projectile, 0.5f);
         }
 
         private void HomingAI()

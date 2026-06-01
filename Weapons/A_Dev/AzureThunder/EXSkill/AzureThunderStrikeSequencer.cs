@@ -150,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 !HarmonyMode &&
                 AzureThunderProgression.DownedYharon &&
                 AzureThunderPlayer.CountOwnedGroundSwords(Main.player[Projectile.owner]) >= AzureThunderGroundSword.MaxGroundSwords;
-            bool applyElectricDebuff = HarmonyMode;
+            bool applyElectricDebuff = true;
 
             // 右键序列用竖直雷击，终极模式最后一击生成巨雷。
             AzureThunderPlayer.SpawnVerticalLightning(
@@ -165,7 +165,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 big: finalStrike && HarmonyMode,
                 ultimateEnergyGain: AzureThunderAccessoryPlayer.GetRightClickLightningEnergyGain(Main.player[Projectile.owner]),
                 applyCrumbling: applyCrumbling,
-                applyBaseElectricDebuff: applyElectricDebuff);
+                applyBaseElectricDebuff: true,
+                weak: !HarmonyMode,
+                speedLines: HarmonyMode,
+                lightningScale: HarmonyMode ? 1.5f : 0.72f);
 
             // 终极右键每发落雷额外补透明 AOE，最后一发范围更大。
             if (HarmonyMode)
@@ -174,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (finalStrike && HarmonyMode)
             {
                 // 终极最后一击补一圈纯视觉平雷，不额外造成隐藏伤害。
-                int visualFlags = AzureThunderFlatLightning.VisualOnlyFlag | AzureThunderFlatLightning.BigLightningFlag;
+                int visualFlags = AzureThunderFlatLightning.VisualOnlyFlag | AzureThunderFlatLightning.BigLightningFlag | AzureThunderFlatLightning.SpeedLineFlag;
                 for (int i = 0; i < 5; i++)
                 {
                     AzureThunderPlayer.SpawnFlatLightning(
@@ -184,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                         Math.Max(1, (int)(Projectile.damage * 0.45f)),
                         Projectile.knockBack,
                         Projectile.owner,
-                        1.2f,
+                        1.5f,
                         visualFlags);
                 }
             }

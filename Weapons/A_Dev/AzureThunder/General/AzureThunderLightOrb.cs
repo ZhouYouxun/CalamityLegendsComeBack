@@ -1,6 +1,7 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -25,10 +26,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
         // 追踪期望速度上限，实际速度通过 Lerp 慢慢贴近。
         private const float MaxHomingSpeed = 51f;
 
+        private static readonly Color[] AscendantTealPalette =
+        {
+            new(42, 255, 205),
+            new(112, 246, 255),
+            new(88, 255, 155)
+        };
+
+        private Color AscendantVisualColor
+        {
+            get
+            {
+                float rate = timer * 0.035f + Math.Abs(Projectile.identity) * 0.19f;
+                int colorIndex = (int)(rate % AscendantTealPalette.Length);
+                float colorInterpolant = rate % 1f;
+                Color cyclingColor = Color.Lerp(AscendantTealPalette[colorIndex], AscendantTealPalette[(colorIndex + 1) % AscendantTealPalette.Length], colorInterpolant);
+                return Color.Lerp(cyclingColor, Color.White, 0.12f);
+            }
+        }
+
         public override void SetStaticDefaults()
         {
             // 长拖尾缓存用于 Sylvestaff 风格 shader 轨迹。
-            ProjectileID.Sets.TrailCacheLength[Type] = 54;
+            ProjectileID.Sets.TrailCacheLength[Type] = 44;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -45,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
             Projectile.penetrate = 3;
 
-            Projectile.timeLeft = 150;
+            Projectile.timeLeft = 550;
 
             Projectile.extraUpdates = 1;
 
@@ -175,6 +195,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
                 dust.noGravity = true;
             }
+
+            SpawnAscendantSpiritVisuals();
         }
 
         public override void OnHitNPC(
@@ -281,6 +303,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
                 ModContent.Request<Texture2D>(
                     "CalamityMod/ExtraTextures/BloomCirclePinpoint")
                 .Value;
+            Texture2D circularSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmear").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
+            Texture2D fadeStreak = ModContent.Request<Texture2D>("CalamityMod/Particles/FadeStreak").Value;
 
             Vector2 drawPosition =
                 Projectile.Center -
@@ -318,6 +343,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
                 bloom.Size() * 0.5f,
                 Projectile.scale * 0.42f,
                 SpriteEffects.None);
+
+            DrawAscendantSpiritOverlay(circularSmear, star, fadeStreak, drawPosition, pulse);
 
             Main.spriteBatch.ExitShaderRegion();
 
@@ -450,6 +477,102 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
 
                 GeneralParticleHandler.SpawnParticle(whiteOrb);
             }
+        }
+
+        private void SpawnAscendantSpiritVisuals()
+        {
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            Color visualColor = AscendantVisualColor;
+
+            if (timer % 3 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center - direction * 18f + normal * Main.rand.NextFloat(-5f, 5f),
+                    -direction * Main.rand.NextFloat(0.4f, 1.2f),
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    Main.rand.Next(10, 15),
+                    Main.rand.NextFloat(0.1f, 0.17f),
+                    visualColor * 0.65f,
+                    new Vector2(0.68f, 1.35f),
+                    glowCenter: true,
+                    shrinkSpeed: 0.46f,
+                    glowOpacity: 0.52f));
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + normal * Main.rand.NextFloat(-7f, 7f),
+                    -direction * Main.rand.NextFloat(0.8f, 2.4f) + normal * Main.rand.NextFloat(-0.8f, 0.8f),
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(12, 19),
+                    Main.rand.NextFloat(0.075f, 0.13f),
+                    Color.Lerp(visualColor, Color.White, 0.24f),
+                    Vector2.One,
+                    glowCenter: true,
+                    shrinkSpeed: 0.28f,
+                    glowOpacity: 0.66f));
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
+                    ModContent.DustType<SquashDust>());
+
+                dust.scale = Main.rand.NextFloat(0.75f, 1.12f);
+                dust.velocity = -direction * Main.rand.NextFloat(2.2f, 4.8f) + normal * Main.rand.NextFloat(-0.9f, 0.9f);
+                dust.noGravity = true;
+                dust.color = visualColor;
+                dust.fadeIn = 2.8f;
+            }
+        }
+
+        private void DrawAscendantSpiritOverlay(Texture2D circularSmear, Texture2D star, Texture2D fadeStreak, Vector2 drawPosition, float pulse)
+        {
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float rotation = direction.ToRotation() + MathHelper.PiOver2;
+            Color visualColor = AscendantVisualColor with { A = 0 };
+            float opacity = Utils.GetLerpValue(0f, 12f, timer, true) * Utils.GetLerpValue(0f, 24f, Projectile.timeLeft, true);
+
+            Main.EntitySpriteDraw(
+                circularSmear,
+                drawPosition,
+                null,
+                visualColor * 0.18f * opacity,
+                rotation * 1.25f,
+                circularSmear.Size() * 0.5f,
+                Projectile.scale * 0.24f * pulse,
+                SpriteEffects.None);
+
+            for (int i = 0; i < 5; i++)
+            {
+                Vector2 armDirection = (MathHelper.TwoPi * i / 5f).ToRotationVector2().RotatedBy(rotation);
+                float armBoost = i == 1 || i == 4 ? 1.24f : 1f;
+
+                Main.EntitySpriteDraw(
+                    fadeStreak,
+                    drawPosition,
+                    null,
+                    visualColor * 0.18f * opacity,
+                    armDirection.ToRotation(),
+                    new Vector2(fadeStreak.Width * 0.5f, 0f),
+                    new Vector2(0.33f * armBoost, 0.18f) * Projectile.scale,
+                    SpriteEffects.FlipVertically);
+            }
+
+            Main.EntitySpriteDraw(
+                star,
+                drawPosition,
+                null,
+                Color.White with { A = 0 } * 0.16f * opacity,
+                rotation,
+                star.Size() * 0.5f,
+                Projectile.scale * 0.16f * pulse,
+                SpriteEffects.None);
         }
     }
 }

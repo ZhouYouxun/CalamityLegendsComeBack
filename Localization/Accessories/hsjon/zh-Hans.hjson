@@ -347,6 +347,8 @@ Mods: {
 				EndothermicEnergy_ARROW.DisplayName: 吸热能量箭矢
 				SHPCAmmoSelectionPanel.DisplayName: SHPC弹药选择面板
 				// SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
+				// PlagueCell_Fog.DisplayName: Plague Cell_ Fog
+				// PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
 			}
 
 			ChangedWeapons: {
@@ -391,6 +393,7 @@ Mods: {
 			BFRecoveryHeartConvergeFX.DisplayName: 叶流恢复之心汇聚特效
 			TestWeaponProj.DisplayName: 测试武器弹幕
 			BFChargeGlowSparkFX.DisplayName: 叶流充能辉光火花特效
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 		}
 
 		Cooldowns.JoltingArts_Lightning: 疾电法雷击

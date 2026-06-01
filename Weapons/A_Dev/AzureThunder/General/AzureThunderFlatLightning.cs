@@ -32,6 +32,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         // 跳过基础 Electrified，用于只想表现终极 DoT 的雷击。
         public const int NoBaseElectricDebuffFlag = 32;
 
+        // 缩小普通形态命中特效和碰撞盒，削弱常态对群覆盖。
+        public const int WeakLightningFlag = 64;
+
+        // 终极右键专用速度线。
+        public const int SpeedLineFlag = 128;
+
+        // 保持旧版粒子强度，只让碰撞/覆盖读取 ai[1] 放大。
+        public const int NormalVisualIntensityFlag = 256;
+
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -43,9 +52,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool ApplyCrumbling => (Flags & CrumblingFlag) != 0;
         private bool VisualOnly => (Flags & VisualOnlyFlag) != 0;
         private bool ApplyBaseElectricDebuff => (Flags & NoBaseElectricDebuffFlag) == 0;
+        private bool WeakLightning => (Flags & WeakLightningFlag) != 0;
+        private bool SpeedLines => (Flags & SpeedLineFlag) != 0;
+        private bool NormalVisualIntensity => (Flags & NormalVisualIntensityFlag) != 0;
+        private float RequestedScale => MathHelper.Clamp(Projectile.ai[1] <= 0f ? 1f : Math.Abs(Projectile.ai[1]), 0.1f, 3f);
+        private float VisualScale => NormalVisualIntensity ? 1f : RequestedScale;
         public int time;
         public float colorValue;
         public float sizeMult = 1f;
+        public float visualSizeMult = 1f;
+
+        private static readonly Color LightningTeal = new(58, 255, 214);
+        private static readonly Color LightningCyan = new(116, 248, 255);
+        private static readonly Color LightningGreen = new(75, 255, 154);
 
         public override void SetDefaults()
         {
@@ -71,15 +90,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             Player owner = Main.player[Projectile.owner];
 
-            // colorValue 逐渐推向 50，用于在青色和紫色之间漂移。
+            // colorValue 逐渐推向 50，用于在青绿和浅青之间漂移。
             colorValue = MathHelper.Lerp(colorValue, 50f, 0.025f);
-            Color usedColor = Color.Lerp(Color.Cyan, Color.Orchid, Utils.GetLerpValue(0f, 50f, colorValue));
+            float colorInterpolant = Utils.GetLerpValue(0f, 50f, colorValue);
+            Color usedColor = CalamityUtils.MulticolorLerp(colorInterpolant, LightningTeal, LightningCyan, LightningGreen, Color.White);
 
             if (time == 0)
             {
                 // 首帧初始化视觉强度并播放出生音，巨雷会略微放大粒子。
                 colorValue += 30f;
-                sizeMult = BigLightning ? 1.35f : 1f;
+                sizeMult = RequestedScale * (BigLightning ? 1.35f : 1f) * (WeakLightning ? 0.68f : 1f);
+                visualSizeMult = VisualScale * (BigLightning ? 1.35f : 1f) * (WeakLightning ? 0.68f : 1f);
                 AzureThunderSounds.PlayLightningSpawn(Projectile.Center, BigLightning);
             }
 
@@ -93,12 +114,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     // 前 120 帧喷射正向火花，之后保留较轻的雷粒。
                     if (time < 120)
                     {
-                        Particle forwardSpark = new CustomSpark(pos, Projectile.velocity * 3.6f * sizeMult, "CalamityMod/Particles/GlowSpark", false, 11, 0.15f * sizeMult, usedColor, new Vector2(2f, 0.8f), true, true, shrinkSpeed: 1f);
+                        Particle forwardSpark = new CustomSpark(pos, Projectile.velocity * 3.6f * visualSizeMult, "CalamityMod/Particles/GlowSpark", false, 11, 0.15f * visualSizeMult, usedColor, new Vector2(2f, 0.8f), true, true, shrinkSpeed: 1f);
                         GeneralParticleHandler.SpawnParticle(forwardSpark);
                         sizeMult *= 0.985f;
+                        visualSizeMult *= 0.985f;
                     }
 
-                    Particle bolt = new BoltParticle(pos, -Projectile.velocity * 0.05f, false, 30, 0.6f, usedColor, new Vector2(1.8f, 0.8f), true, true, false, 0.3f);
+                    Particle bolt = new BoltParticle(pos, -Projectile.velocity * 0.05f, false, 30, 0.6f * visualSizeMult, usedColor, new Vector2(1.8f, 0.8f), true, true, false, 0.3f);
                     GeneralParticleHandler.SpawnParticle(bolt);
                 }
 
@@ -112,9 +134,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 if (Main.rand.NextBool(5))
                 {
                     // DrainLineBloom 拉出长尾，强调雷线速度。
-                    Particle drainLine = new CustomSpark(pos, Projectile.velocity * Main.rand.NextFloat(-0.4f, 0.4f), "CalamityMod/Particles/DrainLineBloom", false, 80, Main.rand.NextFloat(1.2f, 1.3f) * sizeMult, usedColor, new Vector2(1f, 4f), true, true);
+                    Particle drainLine = new CustomSpark(pos, Projectile.velocity * Main.rand.NextFloat(-0.4f, 0.4f), "CalamityMod/Particles/DrainLineBloom", false, 80, Main.rand.NextFloat(1.2f, 1.3f) * visualSizeMult, usedColor, new Vector2(1f, 4f), true, true);
                     GeneralParticleHandler.SpawnParticle(drainLine);
                 }
+
+                if (SpeedLines && time % 2 == 0)
+                    SpawnSpeedLines(pos, usedColor);
 
                 if (time % 3 == 0)
                 {
@@ -160,24 +185,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 // 第一次命中后快速消失并生成主爆点，后续穿透不重复播放完整爆炸。
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 5);
-                float fxScale = BigLightning ? 3.6f : 3f;
+                float fxScale = (BigLightning ? 3.6f : 3f) * VisualScale * (WeakLightning ? 0.52f : 1f);
                 Vector2 pos = target.Center;
                 AzureThunderSounds.PlayLightningImpact(pos, BigLightning);
                 for (int i = 0; i < (int)(7 * fxScale); i++)
                 {
-                    Particle bolt = new BoltParticle(pos, (new Vector2(4f, 4f) * fxScale).RotatedByRandom(100f) * Main.rand.NextFloat(0.3f, 1.9f), true, 13, Main.rand.NextFloat(0.1f, 0.15f) * fxScale, Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid, new Vector2(1.8f, 0.8f), true, true, false, 0.7f);
+                    Color boltColor = Main.rand.NextBool(5) ? LightningCyan : LightningTeal;
+                    Particle bolt = new BoltParticle(pos, (new Vector2(4f, 4f) * fxScale).RotatedByRandom(100f) * Main.rand.NextFloat(0.3f, 1.9f), true, 13, Main.rand.NextFloat(0.1f, 0.15f) * fxScale, boltColor, new Vector2(1.8f, 0.8f), true, true, false, 0.7f);
                     GeneralParticleHandler.SpawnParticle(bolt);
 
                     Dust dust = Dust.NewDustPerfect(pos, ModContent.DustType<LightDust>(), (new Vector2(5f, 5f) * fxScale).RotatedByRandom(100f) * Main.rand.NextFloat(0.5f, 1f), 0, default, Main.rand.NextFloat(0.4f, 0.55f) * fxScale);
                     dust.noGravity = !Main.rand.NextBool(3);
-                    dust.color = Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid;
+                    dust.color = boltColor;
                 }
 
-                Particle pulse = new CustomPulse(pos, Vector2.Zero, Color.Cyan, "CalamityMod/Particles/HighResFoggyCircleHardEdge", new Vector2(1f, 1f), 0f, 0f, 0.0815f * fxScale, 10);
+                Particle pulse = new CustomPulse(pos, Vector2.Zero, LightningTeal, "CalamityMod/Particles/HighResFoggyCircleHardEdge", new Vector2(1f, 1f), 0f, 0f, 0.0815f * fxScale, 10);
                 GeneralParticleHandler.SpawnParticle(pulse);
                 for (int i = 0; i < 2; i++)
                 {
-                    Particle orb = new CustomPulse(pos, Vector2.Zero, Color.Orchid, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 1.38f * fxScale, 0.5f * fxScale, 14);
+                    Particle orb = new CustomPulse(pos, Vector2.Zero, LightningGreen, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 1.38f * fxScale, 0.5f * fxScale, 14);
                     GeneralParticleHandler.SpawnParticle(orb);
                     Particle whiteOrb = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 0.925f * fxScale, 0.2f * fxScale, 14);
                     GeneralParticleHandler.SpawnParticle(whiteOrb);
@@ -203,10 +229,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             colorValue += 18f;
         }
 
+        private void SpawnSpeedLines(Vector2 position, Color usedColor)
+        {
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            float lineScale = Main.rand.NextFloat(0.16f, 0.24f) * Math.Max(1f, RequestedScale);
+
+            Particle speedLine = new CustomSpark(
+                position - direction * Main.rand.NextFloat(14f, 32f) + normal * Main.rand.NextFloat(-14f, 14f),
+                -direction * Main.rand.NextFloat(0.8f, 2.2f),
+                "CalamityMod/Particles/ForwardSmear",
+                false,
+                Main.rand.Next(10, 16),
+                lineScale,
+                Main.rand.NextBool(3) ? Color.White : usedColor,
+                Vector2.One,
+                shrinkSpeed: 0.38f);
+            GeneralParticleHandler.SpawnParticle(speedLine);
+        }
+
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             Player owner = Main.player[Projectile.owner];
             float size = 45f * Math.Max(sizeMult, BigLightning ? 1.15f : 0.9f) * (Projectile.numHits > 0 ? 6f : 1f);
+            if (WeakLightning)
+                size *= 0.58f;
+
             if (time <= 1)
             {
                 // 首帧用玩家到雷点的线段碰撞，表现“从天/远处劈向目标”的路径。
