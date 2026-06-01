@@ -169,25 +169,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.friendly = true;
             Projectile.localNPCHitCooldown = 5;
 
-            if (Main.myPlayer == Projectile.owner)
-            {
-                // 落地爆炸由拥有者生成一圈平雷，避免多人重复生成伤害弹幕。
-                int flags = AzureThunderFlatLightning.StaticDischargeFlag | AzureThunderFlatLightning.BigLightningFlag;
-                for (int i = 0; i < 10; i++)
-                {
-                    Vector2 direction = (MathHelper.TwoPi * i / 10f).ToRotationVector2();
-                    Vector2 spawnPosition = Projectile.Center - direction * Main.rand.NextFloat(90f, 180f);
-                    AzureThunderPlayer.SpawnFlatLightning(
-                        Projectile.GetSource_FromThis(),
-                        spawnPosition,
-                        Projectile.Center - spawnPosition,
-                        Math.Max(1, (int)(Projectile.damage * 0.28f)),
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        i % 3 == 0 ? 1.35f : 0.95f,
-                        flags);
-                }
-            }
+            // 左键巨剑落地同样使用向上的闪电束；伤害仍由巨剑自身的落地 AOE 负责。
+            AzureThunderPlayer.SpawnUpwardThunderBoltBurst(Projectile.Center, 7, 1.75f);
 
             AzureThunderSounds.PlayHeavyImpact(Projectile.Center);
         }

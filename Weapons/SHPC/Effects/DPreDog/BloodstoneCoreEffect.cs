@@ -1,6 +1,8 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Healing;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -29,6 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
             data.empowered = false;
             data.linkedPlayerIndex = -1;
+            data.trackingTimer = 0;
             projectile.velocity *= 1.85f;
             projectile.timeLeft = 360;
 
@@ -52,6 +55,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override void AI(Projectile projectile, Player owner)
         {
             BloodstoneCoreEffectData data = projectile.GetGlobalProjectile<BloodstoneCoreEffectData>();
+
+            NPC target = projectile.Center.ClosestNPCAt(1500f);
+            if (target != null)
+            {
+                data.trackingTimer++;
+                Vector2 currentDirection = projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Vector2 desiredDirection = (target.Center - projectile.Center).SafeNormalize(currentDirection);
+                float trackingPower = Utils.GetLerpValue(0f, 75f, data.trackingTimer, true);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(2.5f), MathHelper.ToRadians(8f), trackingPower);
+                projectile.velocity = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2() * projectile.velocity.Length();
+            }
+            else
+                data.trackingTimer = 0;
 
             Color lightColor = data.empowered ? new Color(255, 70, 70) : new Color(170, 35, 35);
             Lighting.AddLight(projectile.Center, lightColor.ToVector3() * (data.empowered ? 0.75f : 0.45f));
@@ -120,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             int radius = empowered ? 260 : 90;
             proj.width = radius;
             proj.height = radius;
-            SpawnBloodOrbs(projectile, target.Center, empowered);
+            SpawnBloodstoneHealOrbs(projectile, target);
 
             // ================= 统计范围内敌人数量 =================
             int enemyCount = 0;
@@ -338,22 +354,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             return closest;
         }
 
-        private void SpawnBloodOrbs(Projectile projectile, Vector2 center, bool empowered)
+        private static void SpawnBloodstoneHealOrbs(Projectile projectile, NPC target)
         {
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            const int count = 8;
+            int count = Main.rand.Next(11, 19);
+            Vector2 outwardDirection = -projectile.velocity.SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < count; i++)
             {
-                Vector2 velocity = (MathHelper.TwoPi * i / count).ToRotationVector2() * Main.rand.NextFloat(7f, empowered ? 12f : 10f);
+                Vector2 velocity = outwardDirection.RotatedByRandom(MathHelper.TwoPi) * 3.5f * Main.rand.NextFloat(0.75f, 1.25f);
                 Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    center + Main.rand.NextVector2Circular(12f, 12f),
+                    projectile.GetSource_OnHit(target),
+                    target.Center,
                     velocity,
-                    ModContent.ProjectileType<BloodstoneCore_BloodOrb>(),
-                    (int)(projectile.damage * (empowered ? 0.95f : 0.75f)),
-                    projectile.knockBack * 0.35f,
+                    ModContent.ProjectileType<BloodstoneHealOrb>(),
+                    20,
+                    0f,
                     projectile.owner);
             }
         }
@@ -397,5 +414,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public bool empowered;
         public int linkedPlayerIndex = -1;
+        public int trackingTimer;
     }
 }

@@ -28,7 +28,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.StarstreamEnergyCore
 
         public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
         {
-            return SHPCEnergyCorePlayer.CanEquipWith(incomingItem);
+            return SHPCEnergyCorePlayer.CanEquipWith(equippedItem, incomingItem) &&
+                   base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
         }
 
         public override void AddRecipes()

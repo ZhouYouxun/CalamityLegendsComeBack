@@ -730,6 +730,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 ApplyProjectileGrowth(Main.projectile[lightning]);
         }
 
+        public static void SpawnUpwardThunderBoltBurst(Vector2 position, int count, float scale)
+        {
+            // 终结爆点使用向上的灾厄闪电束，不再向四周散射平雷。
+            if (Main.dedServ)
+                return;
+
+            count = Math.Max(1, count);
+            for (int i = 0; i < count; i++)
+            {
+                float centeredIndex = i - (count - 1) * 0.5f;
+                float rotation = MathHelper.ToRadians(centeredIndex * 4f + Main.rand.NextFloat(-3f, 3f));
+                Vector2 spawnOffset = new(Main.rand.NextFloat(-22f, 22f), Main.rand.NextFloat(-8f, 8f));
+                Color color = Main.rand.NextBool(3) ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure;
+
+                GeneralParticleHandler.SpawnParticle(new ThunderBoltVFX(
+                    position + spawnOffset,
+                    rotation,
+                    scale * Main.rand.NextFloat(0.88f, 1.12f),
+                    color,
+                    Main.rand.Next(18, 25),
+                    Main.rand.NextFloat(4f, 7f),
+                    0.9f,
+                    new Vector2(Main.rand.NextFloat(0.72f, 0.95f), Main.rand.NextFloat(1.05f, 1.35f))));
+            }
+        }
+
         private void CancelHarmonyIfWeaponChanged()
         {
             // Buff.Update 已经会删 Buff，这里额外兜底处理玩家态和滤镜。

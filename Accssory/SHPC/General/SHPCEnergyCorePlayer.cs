@@ -99,9 +99,12 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General
                    itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.General.StarstreamEnergyCore.StarstreamEnergyCore>();
         }
 
-        public static bool CanEquipWith(Item incomingItem)
+        public static bool CanEquipWith(Item equippedItem, Item incomingItem)
         {
-            return incomingItem == null || !IsEnergyCoreItem(incomingItem.type);
+            return equippedItem == null ||
+                   incomingItem == null ||
+                   !IsEnergyCoreItem(equippedItem.type) ||
+                   !IsEnergyCoreItem(incomingItem.type);
         }
     }
 }

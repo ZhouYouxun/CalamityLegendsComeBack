@@ -10,32 +10,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 {
     internal sealed class SHPCPassivePlayer : ModPlayer
     {
-        private bool holdingSHPC;
-        private float manaRegenAccumulator;
-        private int passiveVisualTimer;
-        private int fastManaDelayTimer;
+        private int passiveOrbTimer;
+        private int passiveWarmupTimer;
         private int unscaledManaSicknessTime;
-
-        public override void ResetEffects()
-        {
-            holdingSHPC = false;
-        }
 
         public override void UpdateDead()
         {
-            holdingSHPC = false;
-            manaRegenAccumulator = 0f;
-            passiveVisualTimer = 0;
-            fastManaDelayTimer = 0;
+            passiveOrbTimer = 0;
+            passiveWarmupTimer = 0;
             unscaledManaSicknessTime = 0;
         }
 
-        public void SetHoldingSHPC()
+        public bool HoldingSHPC => Player.HeldItem.type == ModContent.ItemType<NewLegendSHPC>();
+
+        public override void PostUpdateEquips()
         {
-            holdingSHPC = true;
+            if (HoldingSHPC)
+                Player.statManaMax2 += 100;
         }
 
-        public bool HoldingSHPC => holdingSHPC && Player.HeldItem.type == ModContent.ItemType<NewLegendSHPC>();
+        public override void GetHealMana(Item item, bool quickHeal, ref int healValue)
+        {
+            if (HoldingSHPC)
+                healValue *= 2;
+        }
 
         public override void PreUpdateBuffs()
         {
@@ -63,17 +61,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         {
             if (!HoldingSHPC)
             {
-                manaRegenAccumulator = 0f;
-                passiveVisualTimer = 0;
-                fastManaDelayTimer = 0;
+                passiveOrbTimer = 0;
+                passiveWarmupTimer = 0;
                 return;
             }
-
-            Player.statManaMax2 += 100;
 
             SHPCEnergyCorePlayer energyCore = Player.GetModPlayer<SHPCEnergyCorePlayer>();
             if (energyCore.HasInfiniteSHPCMana)
             {
+                passiveOrbTimer = 0;
+                passiveWarmupTimer = 0;
                 Player.statMana = Player.statManaMax2;
                 return;
             }
@@ -82,30 +79,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 
             if (!energyCore.HasEnergyCore)
             {
-                manaRegenAccumulator = 0f;
-                passiveVisualTimer = 0;
-                fastManaDelayTimer = 0;
+                passiveOrbTimer = 0;
+                passiveWarmupTimer = 0;
                 return;
             }
 
             if (!PassiveCanTrigger())
             {
-                passiveVisualTimer = 0;
-                fastManaDelayTimer = 0;
+                passiveOrbTimer = 0;
+                passiveWarmupTimer = 0;
                 return;
             }
 
-            if (++fastManaDelayTimer < 10)
+            if (++passiveWarmupTimer < 10)
                 return;
-
-            RestoreManaPerFrame();
 
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            if (++passiveVisualTimer >= 5)
+            if (++passiveOrbTimer >= 5)
             {
-                passiveVisualTimer = 0;
+                passiveOrbTimer = 0;
 
                 // ⭐关键：二次判断（最终判定）
                 if (Player.statMana < Player.statManaMax2)
@@ -139,7 +133,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             if (tier >= 2)
                 return notFiring && notMovingHorizontally;
 
-            bool stationary = Player.velocity.LengthSquared() <= 0.01f && Player.grapCount <= 0;
+            bool noMovementInput =
+                !Player.controlLeft &&
+                !Player.controlRight &&
+                !Player.controlUp &&
+                !Player.controlDown &&
+                !Player.controlJump;
+            bool stationary = noMovementInput &&
+                              Player.velocity.LengthSquared() <= 0.01f &&
+                              Player.grapCount <= 0;
             return stationary && notFiring;
         }
 
@@ -154,25 +156,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                    noHeldProjectile &&
                    !Player.controlUseItem &&
                    !Player.controlUseTile;
-        }
-
-        private void RestoreManaPerFrame()
-        {
-            if (Player.statMana >= Player.statManaMax2)
-                return;
-
-            manaRegenAccumulator += Player.statManaMax2 * 0.02f;
-            int manaToRestore = (int)manaRegenAccumulator;
-            if (manaToRestore <= 0)
-                return;
-
-            manaRegenAccumulator -= manaToRestore;
-            int previousMana = Player.statMana;
-            Player.statMana = Utils.Clamp(Player.statMana + manaToRestore, 0, Player.statManaMax2);
-
-            int restored = Player.statMana - previousMana;
-            if (restored > 0 && Main.GameUpdateCount % 15 == 0)
-                Player.ManaEffect(restored);
         }
 
         private void TryAutoUseManaPotion(SHPCEnergyCorePlayer energyCore)

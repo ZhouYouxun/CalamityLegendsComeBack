@@ -75,6 +75,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         public virtual float SquishyLightParticleFactor => 1f;
 
         public virtual float ExplosionPulseFactor => 1f;
+
+        public virtual bool SuppressDefaultOnKillEffects => false;
+
         // 死亡/爆炸逻辑 
         public virtual void OnKill(Projectile projectile, Player owner, int timeLeft)
         {

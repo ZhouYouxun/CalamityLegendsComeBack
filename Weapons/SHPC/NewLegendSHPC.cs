@@ -4,7 +4,6 @@ using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
-using CalamityLegendsComeBack.Weapons.SHPC.Passive;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
@@ -812,9 +811,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void HoldItem(Player player)
         {
             ClampSelectedMagazineToActiveCount(player);
-
-            // 当你找到这里，并且试图去找被动技能Passive在主武器代码里的锚点时，你就说明找到了，就是这句话，只是很难翻到而已
-            player.GetModPlayer<SHPCPassivePlayer>().SetHoldingSHPC();
 
             if (leftClickCooldown > 0)
                 leftClickCooldown--;

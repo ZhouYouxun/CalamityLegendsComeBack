@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         private static readonly Color TechBlue = new(38, 170, 255);
         private static readonly Color TechBlueBright = new(160, 245, 255);
         private static readonly Color TechBlueDeep = new(28, 88, 200);
+        private const float ManaRestoreRatio = 0.07f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -46,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             Projectile.hostile = false;
             Projectile.penetrate = -1;
             Projectile.extraUpdates = 5;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = 540;
             Projectile.tileCollide = false;
         }
 
@@ -156,7 +157,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, returnVelocity, 0.24f);
 
             if (Vector2.Distance(Projectile.Center, owner.Center) < 20f)
+            {
+                RestoreOwnerMana(owner);
                 Projectile.Kill();
+            }
+        }
+
+        private static void RestoreOwnerMana(Player owner)
+        {
+            if (!owner.active || owner.dead || owner.statMana >= owner.statManaMax2)
+                return;
+
+            int previousMana = owner.statMana;
+            int manaToRestore = Math.Max(1, (int)MathF.Ceiling(owner.statManaMax2 * ManaRestoreRatio));
+            owner.statMana = Utils.Clamp(owner.statMana + manaToRestore, 0, owner.statManaMax2);
+
+            int restored = owner.statMana - previousMana;
+            if (restored > 0 && owner.whoAmI == Main.myPlayer)
+                owner.ManaEffect(restored);
         }
 
         private void ConfigureOrbit(Player owner)

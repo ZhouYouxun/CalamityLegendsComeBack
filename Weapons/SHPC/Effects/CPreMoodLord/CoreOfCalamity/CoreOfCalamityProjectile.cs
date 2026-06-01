@@ -97,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 Vector2 direction = forward.RotatedBy(splitRotations[i]);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center + direction * 12f,
+                    Projectile.Center + direction * 20f,
                     direction * 11.5f,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
                     Math.Max(1, (int)(Projectile.damage * 0.62f)),
@@ -358,8 +358,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
     /// </summary>
     internal sealed class CoreOfCalamitySplitOrb : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private const int HomingDelay = 28;
-        private const float LeftTurnPerFrame = -MathHelper.Pi / 180f;
+        private const int ActivationDelay = 12;
+        private const int HomingDelay = 42;
+        private const float LeftTurnPerUpdate = -MathHelper.Pi / 360f;
         private static readonly Color[] Palette =
         {
             new(24, 62, 188),
@@ -387,10 +388,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.height = 22;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 210;
+            Projectile.extraUpdates = 1;
+            Projectile.timeLeft = 420;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -398,10 +400,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         public override void AI()
         {
             Timer++;
+            Projectile.tileCollide = Timer >= ActivationDelay;
 
             // 固定左转始终存在；开始追踪后，再在此基础上向最近敌人转向。
             float speed = MathHelper.Lerp(Projectile.velocity.Length(), 14.5f, 0.045f);
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(LeftTurnPerFrame);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(LeftTurnPerUpdate);
             if (Timer >= HomingDelay)
             {
                 NPC target = Projectile.Center.ClosestNPCAt(1350f);
@@ -417,6 +420,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Lighting.AddLight(Projectile.Center, OrbColor.ToVector3() * 0.58f);
             SpawnFlightEffects(direction);
         }
+
+        public override bool? CanDamage() => Timer >= ActivationDelay;
 
         public override void OnKill(int timeLeft)
         {

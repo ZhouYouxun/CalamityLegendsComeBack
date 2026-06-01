@@ -176,20 +176,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (finalStrike && HarmonyMode)
             {
-                // 终极最后一击补一圈纯视觉平雷，不额外造成隐藏伤害。
-                int visualFlags = AzureThunderFlatLightning.VisualOnlyFlag | AzureThunderFlatLightning.BigLightningFlag | AzureThunderFlatLightning.SpeedLineFlag;
-                for (int i = 0; i < 5; i++)
-                {
-                    AzureThunderPlayer.SpawnFlatLightning(
-                        Projectile.GetSource_FromThis(),
-                        strikePoint,
-                        Vector2.UnitX.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(16f, 24f),
-                        Math.Max(1, (int)(Projectile.damage * 0.45f)),
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        1.5f,
-                        visualFlags);
-                }
+                // 终极右键最后一击改为从爆点向上炸开的闪电束。
+                AzureThunderPlayer.SpawnUpwardThunderBoltBurst(strikePoint, 5, 1.5f);
             }
         }
 

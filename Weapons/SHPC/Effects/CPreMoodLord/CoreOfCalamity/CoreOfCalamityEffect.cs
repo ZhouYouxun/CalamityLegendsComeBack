@@ -23,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         public override float ExplosionPulseFactor => 0f;
         public override float GlowScaleFactor => 0f;
         public override float GlowIntensityFactor => 0f;
+        public override bool SuppressDefaultOnKillEffects => true;
         public override bool EnableDefaultSlowdown => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)

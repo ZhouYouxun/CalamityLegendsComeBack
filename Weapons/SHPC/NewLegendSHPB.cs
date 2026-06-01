@@ -76,8 +76,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             cachedEffect = EffectRegistry.GetEffectByID((int)Projectile.ai[0]) ?? DefaultEffectInstance;
 
-            cachedEffect.OnSpawn(Projectile, owner);
-
             // 同步粒子系数（关键）
             SquishyLightParticleFactor = cachedEffect.SquishyLightParticleFactor;
             ExplosionPulseFactor = cachedEffect.ExplosionPulseFactor;
@@ -85,6 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // 同步光芒控制
             GlowScaleFactor = cachedEffect.GlowScaleFactor;
             GlowIntensityFactor = cachedEffect.GlowIntensityFactor;
+
+            cachedEffect.OnSpawn(Projectile, owner);
         }
         // 是否启用默认减速（默认开启）
         public virtual bool EnableDefaultSlowdown => true;
@@ -223,6 +223,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void OnKill(int timeLeft)
         {
             Player owner = Main.player[Projectile.owner];
+            if (CurrentEffect.SuppressDefaultOnKillEffects)
+            {
+                CurrentEffect.OnKill(Projectile, owner, timeLeft);
+                return;
+            }
 
 
             // 经典音效
