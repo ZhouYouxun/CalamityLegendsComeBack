@@ -92,6 +92,8 @@ Mods: {
 				YC_TyrantPrismBolt.DisplayName: Tyrant Crystal Prism Bolt
 				YC_TyrantPrismMainBeam.DisplayName: Tyrant Crystal Destruction Ray
 				YC_TyrantPrismConvergeBeam.DisplayName: Tyrant Crystal Convergence Beam
+				YC_TyrantPrismLaserLance.DisplayName: Y C_ Tyrant Prism Laser Lance
+				YC_TyrantPrismMissile.DisplayName: Y C_ Tyrant Prism Missile
 			}
 		}
 

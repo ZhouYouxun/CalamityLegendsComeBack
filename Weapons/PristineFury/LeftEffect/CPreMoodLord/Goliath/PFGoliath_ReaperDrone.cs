@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const int CurveFrames = 30;
         private const float HomingSpeed = 16.8f;
         private const float TargetRange = 680f;
+        private const float ExplosionVisualScale = 0.67f;
         private bool hasHit;
 
         private ref float CurveDirection => ref Projectile.ai[0];
@@ -153,17 +154,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Color theme = Color.Lerp(ThemeColor, new Color(180, 255, 80), 0.12f);
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.24f, Pitch = 0.42f, PitchVariance = 0.16f }, center);
-            if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
-                Main.player[Projectile.owner].Calamity().GeneralScreenShakePower = Math.Max(Main.player[Projectile.owner].Calamity().GeneralScreenShakePower, 2.4f);
 
             if (Projectile.owner == Main.myPlayer)
             {
-                Projectile.ExpandHitboxBy(30);
+                Projectile.ExpandHitboxBy((int)(30 * ExplosionVisualScale));
                 Projectile.damage = Math.Max(1, (int)(sourceDamage * 0.58f));
                 Projectile.penetrate = -1;
                 Projectile.Damage();
 
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     Vector2 beeVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4.2f, 8.2f);
                     int bee = Projectile.NewProjectile(
@@ -194,7 +193,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Vector2.One,
                 Main.rand.NextFloat(-10f, 10f),
                 0.05f,
-                0.17f,
+                0.17f * ExplosionVisualScale,
                 16));
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
@@ -205,7 +204,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Vector2.One,
                 Main.rand.NextFloat(-10f, 10f),
                 0.06f,
-                0.23f,
+                0.23f * ExplosionVisualScale,
                 14,
                 true));
 
@@ -217,7 +216,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     velocity,
                     false,
                     Main.rand.Next(18, 32),
-                    Main.rand.NextFloat(0.35f, 0.72f),
+                    Main.rand.NextFloat(0.35f, 0.72f) * ExplosionVisualScale,
                     Main.rand.NextBool(4) ? Color.Lerp(theme, new Color(180, 255, 80), 0.24f) : theme,
                     true,
                     true));
@@ -230,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 3.8f),
                     Color.Lerp(theme, Color.DarkOliveGreen, Main.rand.NextFloat(0.2f, 0.48f)),
                     Main.rand.Next(18, 32),
-                    Main.rand.NextFloat(0.46f, 0.92f),
+                    Main.rand.NextFloat(0.46f, 0.92f) * ExplosionVisualScale,
                     0.55f,
                     Main.rand.NextFloat(-0.07f, 0.07f),
                     glowing: true));
@@ -295,8 +294,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Main.EntitySpriteDraw(body, afterimagePosition, null, additiveTheme * opacity, Projectile.rotation, origin, Projectile.scale * 0.96f, SpriteEffects.None, 0f);
             }
 
-            DrawWingPair(frontWing, drawPosition + forward * 5.5f, forward, side, 0f, 1.08f, additiveTheme);
-            DrawWingPair(backWing, drawPosition - forward * 8.5f, forward, side, MathHelper.Pi, 0.92f, additiveTheme * 0.92f);
+            DrawWingPair(frontWing, drawPosition + forward * 6.5f, forward, side, 0f, 1.78f, additiveTheme);
+            DrawWingPair(backWing, drawPosition - forward * 9.5f, forward, side, MathHelper.Pi, 1.48f, additiveTheme * 0.96f);
 
             for (int i = 0; i < 8; i++)
             {
@@ -322,13 +321,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Vector2 wingDirection = (side * sideSign * (1.2f + Math.Abs(sampleFlap) * 0.3f) - forward * (0.42f - sampleFlap * 0.2f)).SafeNormalize(side * sideSign);
                 Vector2 drawPosition = root + side * sideSign * (7.5f + snap * 3.6f) - forward * (2.4f + Math.Abs(sampleFlap) * 1.6f);
                 float rotation = wingDirection.ToRotation() - MathHelper.PiOver2;
-                Vector2 wingScale = new(0.13f * size * Projectile.scale, (0.105f + snap * 0.022f) * size * Projectile.scale);
+                Vector2 wingScale = new(0.16f * size * Projectile.scale, (0.13f + snap * 0.028f) * size * Projectile.scale);
 
                 Main.EntitySpriteDraw(
                     wing,
                     drawPosition,
                     null,
-                    color * 1.45f,
+                    color * 1.75f,
                     rotation,
                     new Vector2(wing.Width * 0.5f, 0f),
                     wingScale,

@@ -129,11 +129,43 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
             Color theme = ThemeColor with { A = 0 };
             Vector2 center = Projectile.Center - Main.screenPosition;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
             PFLeftEffectRules.BeginAdditive();
+            for (int i = 1; i < Projectile.oldPos.Length; i++)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero || Projectile.oldPos[i - 1] == Vector2.Zero)
+                    continue;
+
+                float completion = i / (float)Projectile.oldPos.Length;
+                Vector2 current = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                Vector2 previous = Projectile.oldPos[i - 1] + Projectile.Size * 0.5f;
+                Vector2 between = previous - current;
+                float length = between.Length();
+                if (length <= 1f)
+                    continue;
+
+                Main.EntitySpriteDraw(
+                    line,
+                    (current + previous) * 0.5f - Main.screenPosition,
+                    null,
+                    Color.Lerp(theme, Color.White with { A = 0 }, 0.24f) * (0.42f * (1f - completion)),
+                    between.ToRotation() + MathHelper.PiOver2,
+                    line.Size() * 0.5f,
+                    new Vector2(0.18f * (1f - completion), length / line.Height),
+                    SpriteEffects.None,
+                    0f);
+            }
+
             Main.EntitySpriteDraw(bloom, center, null, theme * 0.75f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.58f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center - direction * 8f, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.34f) * 0.58f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * new Vector2(0.42f, 0.28f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, center, null, theme * 0.46f, Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.8f, ring.Size() * 0.5f, Projectile.scale * 0.42f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(magic, center, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.18f) * 0.35f, -Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.4f, magic.Size() * 0.5f, Projectile.scale * 0.072f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, center, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.36f), Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.3f, SpriteEffects.None, 0);
             PFLeftEffectRules.EndAdditive();
             return false;

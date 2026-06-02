@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (Main.myPlayer == Player.whoAmI && !suppressHeatUI && (hasHeat || HeatUiFadeTimer > 0))
                 EnsureDetachedHeatUI();
 
-            if (holdingRightClick || AttackLockoutTimer > 0 || HeatDissipationPauseTimer > 0)
+            if (holdingRightClick)
                 return;
 
             if (!hasHeat)

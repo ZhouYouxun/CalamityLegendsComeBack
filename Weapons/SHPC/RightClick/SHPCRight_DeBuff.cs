@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
     {
         // 1 = 普通过热，2 = 高烈度过热
         public static int FireMode = 1;
+        private const float BurnVisualScale = 0.67f;
 
         public override void SetStaticDefaults()
         {
@@ -120,23 +121,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             );
 
             // ===== ① 火焰主体（Squishy）=====
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(3))
             {
                 SquishyLightParticle flame = new(
                     randPos,
                     upward.RotatedByRandom(0.4f),
-                    Main.rand.NextFloat(0.35f, 0.6f),
+                    Main.rand.NextFloat(0.35f, 0.6f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.3f, 0.8f)),
                     Main.rand.Next(12, 20),
                     1f,
-                    Main.rand.NextFloat(1.2f, 1.8f)
+                    Main.rand.NextFloat(1.2f, 1.8f) * BurnVisualScale
                 );
 
                 GeneralParticleHandler.SpawnParticle(flame);
             }
 
             // ===== ② 火星（Dust）=====
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(3))
             {
                 Dust d = Dust.NewDustPerfect(
                     randPos,
@@ -144,20 +145,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     upward.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.8f, 2.2f),
                     0,
                     Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.0f, 1.6f)
+                    Main.rand.NextFloat(1.0f, 1.6f) * BurnVisualScale
                 );
                 d.noGravity = true;
             }
 
             // ===== ③ 慌张感：微爆闪 =====
-            if (Main.rand.NextBool(4))
+            if (Main.rand.NextBool(6))
             {
                 PointParticle spark = new PointParticle(
                     randPos,
                     upward * 0.5f,
                     false,
                     10,
-                    1.1f,
+                    1.1f * BurnVisualScale,
                     Color.OrangeRed
                 );
 
@@ -176,21 +177,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Main.rand.NextFloat(-1.3f, 1.3f),
                 Main.rand.NextFloat(-4.6f, -2.2f));
 
-            if (Main.rand.NextBool())
+            if (Main.rand.NextBool(3))
             {
                 SquishyLightParticle panicFlame = new(
                     panicSource,
                     upwardBurst.RotatedByRandom(0.65f),
-                    Main.rand.NextFloat(0.52f, 0.88f),
+                    Main.rand.NextFloat(0.52f, 0.88f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.35f, 0.95f)),
                     Main.rand.Next(14, 24),
                     1f,
-                    Main.rand.NextFloat(1.7f, 2.5f)
+                    Main.rand.NextFloat(1.7f, 2.5f) * BurnVisualScale
                 );
                 GeneralParticleHandler.SpawnParticle(panicFlame);
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(3))
             {
                 Dust flash = Dust.NewDustPerfect(
                     panicSource,
@@ -198,11 +199,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     upwardBurst.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.6f, 3.4f),
                     0,
                     Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat(0.25f, 0.9f)),
-                    Main.rand.NextFloat(1.25f, 2.1f));
+                    Main.rand.NextFloat(1.25f, 2.1f) * BurnVisualScale);
                 flash.noGravity = true;
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(5))
             {
                 Vector2 sideKick = new Vector2(Main.rand.NextBool() ? -1f : 1f, 0f) * Main.rand.NextFloat(0.9f, 2.2f);
                 PointParticle panicSpark = new PointParticle(
@@ -210,19 +211,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     upwardBurst * 0.42f + sideKick,
                     false,
                     Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(1.15f, 1.55f),
+                    Main.rand.NextFloat(1.15f, 1.55f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.12f, 0.28f)));
                 GeneralParticleHandler.SpawnParticle(panicSpark);
             }
 
-            if (Main.rand.NextBool(5))
+            if (Main.rand.NextBool(8))
             {
                 GlowOrbParticle heatCore = new GlowOrbParticle(
                     center + Main.rand.NextVector2Circular(player.width * 0.18f, player.height * 0.22f),
                     upwardBurst * 0.08f,
                     false,
                     Main.rand.Next(7, 10),
-                    Main.rand.NextFloat(0.36f, 0.54f),
+                    Main.rand.NextFloat(0.36f, 0.54f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Gold, Main.rand.NextFloat(0.35f, 0.75f)),
                     true,
                     false,
@@ -248,11 +249,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 SquishyLightParticle meltdownFlame = new(
                     bodyCore + new Vector2(fanT * player.width * 0.18f, Main.rand.NextFloat(-player.height * 0.18f, player.height * 0.12f)),
                     eruptionVelocity.RotatedByRandom(0.8f),
-                    Main.rand.NextFloat(0.72f, 1.18f),
+                    Main.rand.NextFloat(0.72f, 1.18f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.45f, 0.98f)),
                     Main.rand.Next(18, 30),
                     1f,
-                    Main.rand.NextFloat(2.3f, 3.4f)
+                    Main.rand.NextFloat(2.3f, 3.4f) * BurnVisualScale
                 );
                 GeneralParticleHandler.SpawnParticle(meltdownFlame);
             }
@@ -265,30 +266,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     new Vector2(Main.rand.NextFloat(-2.8f, 2.8f), Main.rand.NextFloat(-6.2f, -2.6f)).RotatedByRandom(0.7f),
                     0,
                     Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.08f, 0.22f)),
-                    Main.rand.NextFloat(1.65f, 2.75f));
+                    Main.rand.NextFloat(1.65f, 2.75f) * BurnVisualScale);
                 infernoDust.noGravity = true;
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextBool(3))
             {
                 PointParticle panicFlash = new PointParticle(
                     bodyCore + Main.rand.NextVector2Circular(player.width * 0.12f, player.height * 0.16f),
                     new Vector2(Main.rand.NextFloat(-2.6f, 2.6f), Main.rand.NextFloat(-3.8f, -1.6f)),
                     false,
                     Main.rand.Next(8, 14),
-                    Main.rand.NextFloat(1.5f, 2f),
+                    Main.rand.NextFloat(1.5f, 2f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.25f, 0.65f)));
                 GeneralParticleHandler.SpawnParticle(panicFlash);
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(5))
             {
                 GlowOrbParticle overloadPulse = new GlowOrbParticle(
                     center + Main.rand.NextVector2Circular(player.width * 0.22f, player.height * 0.28f),
                     new Vector2(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-0.9f, -0.15f)),
                     false,
                     Main.rand.Next(8, 12),
-                    Main.rand.NextFloat(0.48f, 0.7f),
+                    Main.rand.NextFloat(0.48f, 0.7f) * BurnVisualScale,
                     Color.Lerp(Color.Red, Color.Gold, Main.rand.NextFloat(0.45f, 0.85f)),
                     true,
                     false,

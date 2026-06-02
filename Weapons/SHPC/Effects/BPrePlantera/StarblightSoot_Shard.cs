@@ -160,14 +160,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         {
             float spinPhase = Main.GlobalTimeWrappedHourly * 16f + Projectile.identity * 0.37f;
             float orbitRadius = 9f;
-            Color sparkColor = Color.Lerp(new Color(255, 130, 68), new Color(92, 205, 255), 0.35f) * 0.82f;
+            Color sparkColor = Color.Lerp(new Color(255, 130, 68), new Color(92, 205, 255), 0.35f) * 0.46f;
 
             for (int i = 0; i < 4; i++)
             {
                 float angle = spinPhase + MathHelper.PiOver2 * i;
                 Vector2 radialDirection = angle.ToRotationVector2();
                 Vector2 sparkCenter = Projectile.Center + radialDirection * orbitRadius;
-                Vector2 finalVelocity = radialDirection.RotatedBy(MathHelper.PiOver2) * 2.05f + Projectile.velocity * 0.04f;
+                Vector2 finalVelocity = radialDirection.RotatedBy(MathHelper.PiOver2) * 1.05f;
                 float extraRot = radialDirection.ToRotation() - finalVelocity.ToRotation();
 
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     glowCenter: true,
                     shrinkSpeed: 1.2f,
                     glowCenterScale: 0.62f,
-                    glowOpacity: 0.56f,
+                    glowOpacity: 0.38f,
                     extraRotation: extraRot));
             }
         }
@@ -323,8 +323,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             float pulse = 1f + (float)Math.Sin(Timer * 0.22f) * 0.08f;
             Main.EntitySpriteDraw(bloom, center, null, mainColor * 0.36f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.22f * pulse, SpriteEffects.None);
 
-            Main.EntitySpriteDraw(texture, center, frame, mainColor * 0.86f, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, center, frame, Color.White * 0.28f, -Projectile.rotation * 0.7f, origin, Projectile.scale * 0.58f, SpriteEffects.None);
+            Color outlineColor = Color.Lerp(mainColor, blueColor, 0.42f) * 0.62f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 2.6f * Projectile.scale;
+                Main.EntitySpriteDraw(texture, center + offset, frame, outlineColor, Projectile.rotation, origin, Projectile.scale * 1.02f, SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(texture, center, frame, mainColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, center, frame, Color.White * 0.4f, -Projectile.rotation * 0.7f, origin, Projectile.scale * 0.62f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }

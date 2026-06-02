@@ -361,6 +361,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
         private int attackTimer;
         private int burstShotsRemaining;
         private int lastCommandSerial = -1;
+        private int lastRhythmStep = -1;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YCRight/YC_Right_Drone";
@@ -566,6 +567,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
                 lastCommandSerial = holdout.CommandSerial;
                 burstShotsRemaining = 0;
                 attackTimer = 48 + SlotIndex * 4;
+                lastRhythmStep = -1;
 
                 if (Projectile.owner == Main.myPlayer)
                     FireHeavySalvo();
@@ -574,99 +576,81 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             if (holdout.CurrentState == YC_TyrantPrismHoldout.TyrantPrismState.HeavyRest)
                 return;
 
-            if (!combatAttackInitialized)
-            {
-                combatAttackInitialized = true;
-                attackTimer = 10 + SlotIndex * 5;
-            }
-
-            if (attackTimer > 0)
-                attackTimer--;
-
-            if (attackTimer > 0)
+            int rhythmStep = holdout.StateTimer / 18;
+            if (rhythmStep == lastRhythmStep)
                 return;
 
-            if (burstShotsRemaining <= 0)
-                burstShotsRemaining = 6;
+            lastRhythmStep = rhythmStep;
+            if (!IsRhythmPair(rhythmStep % 3))
+                return;
 
             if (Projectile.owner == Main.myPlayer)
-                FireBurstShot();
-
-            burstShotsRemaining--;
-            attackTimer = burstShotsRemaining > 0 ? 4 : 62 + SlotIndex * 4;
+                FireRhythmVolley(rhythmStep);
         }
 
-        private void FireBurstShot()
+        private bool IsRhythmPair(int pair) => pair switch
+        {
+            0 => SlotIndex is 0 or 3,
+            1 => SlotIndex is 1 or 4,
+            _ => SlotIndex is 2 or 5
+        };
+
+        private void FireRhythmVolley(int rhythmStep)
         {
             Vector2 direction = CurrentForwardDirection.SafeNormalize(Vector2.UnitX);
             Vector2 muzzle = Projectile.Center + direction * 18f;
+            Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 muzzle,
-                direction.RotatedByRandom(0.028f) * Main.rand.NextFloat(6.2f, 7.4f),
-                ModContent.ProjectileType<YC_TyrantPrismBolt>(),
-                (int)(Projectile.damage * 0.48f),
-                Projectile.knockBack * 0.18f,
+                direction,
+                ModContent.ProjectileType<YC_TyrantPrismLaserLance>(),
+                (int)(Projectile.damage * 0.58f),
+                Projectile.knockBack * 0.25f,
                 Projectile.owner,
-                SlotIndex + Main.rand.NextFloat(),
-                0.9f);
+                620f + (rhythmStep % 3) * 60f,
+                SlotIndex);
 
-            EmitMuzzleBurst(direction, 5, 3.8f);
-            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.12f, Pitch = 0.1f + SlotIndex * 0.025f }, Projectile.Center);
+            for (int i = 0; i < 2; i++)
+            {
+                float spread = i == 0 ? -0.025f : 0.025f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    muzzle + side * (i == 0 ? -3.5f : 3.5f),
+                    direction.RotatedBy(spread + Main.rand.NextFloat(-0.012f, 0.012f)) * Main.rand.NextFloat(12.4f, 14.2f),
+                    ModContent.ProjectileType<YC_TyrantPrismBolt>(),
+                    (int)(Projectile.damage * 0.42f),
+                    Projectile.knockBack * 0.18f,
+                    Projectile.owner,
+                    SlotIndex + Main.rand.NextFloat(),
+                    0.9f);
+            }
+
+            EmitMuzzleBurst(direction, 6, 4.8f);
+            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.16f, Pitch = 0.18f + SlotIndex * 0.02f }, Projectile.Center);
         }
 
         private void FireHeavySalvo()
         {
             Vector2 direction = CurrentForwardDirection.SafeNormalize(Vector2.UnitX);
             Vector2 muzzle = Projectile.Center + direction * 18f;
-            Vector2 grenadeVelocity = direction * 10f;
-
-            Projectile firstGrenade = Projectile.NewProjectileDirect(
-                Projectile.GetSource_FromThis(),
-                muzzle,
-                grenadeVelocity,
-                ModContent.ProjectileType<WingmanGrenade>(),
-                (int)(Projectile.damage * 2.4f),
-                Projectile.knockBack * 2.2f,
-                Projectile.owner,
-                0f,
-                2f);
-            firstGrenade.timeLeft = 530;
+            Vector2 missileVelocity = direction.RotatedBy(Main.rand.NextFloat(-0.06f, 0.06f)) * 12.5f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 muzzle,
-                grenadeVelocity * 1.2f,
-                ModContent.ProjectileType<WingmanGrenade>(),
-                (int)(Projectile.damage * 2.4f),
+                missileVelocity,
+                ModContent.ProjectileType<YC_TyrantPrismMissile>(),
+                (int)(Projectile.damage * 2.65f),
                 Projectile.knockBack * 2.2f,
                 Projectile.owner,
-                0f,
-                2f);
-
-            for (int i = 0; i < 6; i++)
-            {
-                float spread = MathHelper.Lerp(-0.12f, 0.12f, i / 5f);
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    muzzle,
-                    direction.RotatedBy(spread) * Main.rand.NextFloat(9.5f, 11.8f),
-                    ModContent.ProjectileType<WingmanShot>(),
-                    (int)(Projectile.damage * 0.42f),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    0f,
-                    2f);
-            }
+                SlotIndex);
 
             EmitHeavyMuzzleFX(muzzle, direction);
 
-            SoundStyle grenadeSound = new("CalamityMod/Sounds/Item/DeadSunExplosion");
-            SoundEngine.PlaySound(grenadeSound with { Volume = 0.2f, Pitch = -0.4f, PitchVariance = 0.2f }, Projectile.Center);
-
-            SoundStyle shotSound = new("CalamityMod/Sounds/Item/MagnaCannonShot");
-            SoundEngine.PlaySound(shotSound with { Volume = 0.16f, Pitch = 1f, PitchVariance = 0.25f }, Projectile.Center);
+            SoundStyle missileSound = new("CalamityMod/Sounds/Item/MagnaCannonShot");
+            SoundEngine.PlaySound(missileSound with { Volume = 0.22f, Pitch = -0.18f + SlotIndex * 0.02f, PitchVariance = 0.12f }, Projectile.Center);
         }
 
         private static void EmitHeavyMuzzleFX(Vector2 muzzle, Vector2 direction)
@@ -674,11 +658,11 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             if (Main.dedServ)
                 return;
 
-            Color effectColor = Color.MediumVioletRed;
+            Color effectColor = new(255, 214, 92);
             for (int i = 0; i < 7; i++)
             {
                 Vector2 dustVelocity = (direction * 10f).RotatedByRandom(0.5f) * Main.rand.NextFloat(0.1f, 1.6f);
-                Dust dust = Dust.NewDustPerfect(muzzle, Main.rand.NextBool(4) ? DustID.PortalBoltTrail : DustID.PinkTorch, dustVelocity);
+                Dust dust = Dust.NewDustPerfect(muzzle, Main.rand.NextBool(4) ? DustID.YellowTorch : DustID.GoldFlame, dustVelocity);
                 dust.scale = Main.rand.NextFloat(1.05f, 1.35f);
                 dust.noGravity = true;
                 dust.color = Main.rand.NextBool() ? Color.Lerp(effectColor, Color.White, 0.5f) : effectColor;
@@ -885,6 +869,253 @@ public class YC_TyrantPrismBolt : ModProjectile, ILocalizedModType
                 Main.rand.NextFloat(0.9f, 1.28f));
             dust.noGravity = true;
         }
+    }
+}
+
+public class YC_TyrantPrismLaserLance : ModProjectile, ILocalizedModType
+{
+    public new string LocalizationCategory => "Projectiles.YharimsCrystal";
+    public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+    private ref float BeamLength => ref Projectile.ai[0];
+    private ref float SlotIndex => ref Projectile.ai[1];
+    private ref float Timer => ref Projectile.localAI[0];
+
+    public override void SetDefaults()
+    {
+        Projectile.width = 14;
+        Projectile.height = 14;
+        Projectile.friendly = true;
+        Projectile.DamageType = DamageClass.Magic;
+        Projectile.penetrate = -1;
+        Projectile.timeLeft = 14;
+        Projectile.tileCollide = false;
+        Projectile.ignoreWater = true;
+        Projectile.usesLocalNPCImmunity = true;
+        Projectile.localNPCHitCooldown = 8;
+    }
+
+    public override bool ShouldUpdatePosition() => false;
+
+    public override void AI()
+    {
+        Timer++;
+        Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+        Projectile.rotation = Projectile.velocity.ToRotation();
+        if (BeamLength <= 0f)
+            BeamLength = 620f;
+
+        Lighting.AddLight(Projectile.Center, new Color(255, 224, 112).ToVector3() * 0.72f);
+        if (Main.dedServ || Timer % 3f != 0f)
+            return;
+
+        Vector2 direction = Projectile.velocity;
+        Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(24f, BeamLength) + direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-5f, 5f);
+        GlowOrbParticle glow = new(
+            position,
+            -direction * Main.rand.NextFloat(0.15f, 0.55f),
+            false,
+            Main.rand.Next(7, 12),
+            Main.rand.NextFloat(0.16f, 0.28f),
+            Color.Lerp(new Color(255, 204, 92), Color.White, Main.rand.NextFloat(0.18f, 0.52f)),
+            true,
+            false,
+            true);
+        GeneralParticleHandler.SpawnParticle(glow);
+    }
+
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+    {
+        float collisionPoint = 0f;
+        return Collision.CheckAABBvLineCollision(
+            targetHitbox.TopLeft(),
+            targetHitbox.Size(),
+            Projectile.Center,
+            Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitX) * BeamLength,
+            12f,
+            ref collisionPoint);
+    }
+
+    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        target.AddBuff(ModContent.BuffType<Dragonfire>(), 120);
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+        Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+        Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+        Vector2 start = Projectile.Center - Main.screenPosition;
+        Vector2 end = Projectile.Center + direction * BeamLength - Main.screenPosition;
+        Vector2 mid = (start + end) * 0.5f;
+        float fadeIn = Utils.GetLerpValue(0f, 3f, Timer, true);
+        float fadeOut = Utils.GetLerpValue(0f, 8f, Projectile.timeLeft, true);
+        float opacity = fadeIn * fadeOut;
+        float pulse = 0.9f + 0.1f * (float)System.Math.Sin(Timer * 0.7f + SlotIndex);
+        Color gold = new Color(255, 208, 86, 0);
+        Color white = Color.White with { A = 0 };
+
+        Main.spriteBatch.SetBlendState(BlendState.Additive);
+        Main.EntitySpriteDraw(line, mid, null, gold * 0.82f * opacity, direction.ToRotation() + MathHelper.PiOver2, line.Size() * 0.5f, new Vector2(0.18f * pulse, BeamLength / line.Height), SpriteEffects.None, 0f);
+        Main.EntitySpriteDraw(line, mid, null, white * 0.28f * opacity, direction.ToRotation() + MathHelper.PiOver2, line.Size() * 0.5f, new Vector2(0.075f, BeamLength / line.Height), SpriteEffects.None, 0f);
+        Main.EntitySpriteDraw(bloom, start, null, gold * 0.58f * opacity, Projectile.rotation, bloom.Size() * 0.5f, 0.15f * pulse, SpriteEffects.None, 0f);
+        Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+        return false;
+    }
+}
+
+public class YC_TyrantPrismMissile : ModProjectile, ILocalizedModType
+{
+    public new string LocalizationCategory => "Projectiles.YharimsCrystal";
+    public override string Texture => "CalamityMod/Projectiles/Ranged/ThePackMissile";
+
+    private ref float SlotIndex => ref Projectile.ai[0];
+    private ref float Timer => ref Projectile.localAI[0];
+
+    public override void SetStaticDefaults()
+    {
+        Main.projFrames[Type] = 9;
+        ProjectileID.Sets.TrailCacheLength[Type] = 8;
+        ProjectileID.Sets.TrailingMode[Type] = 0;
+    }
+
+    public override void SetDefaults()
+    {
+        Projectile.width = 40;
+        Projectile.height = 40;
+        Projectile.friendly = true;
+        Projectile.DamageType = DamageClass.Magic;
+        Projectile.penetrate = 1;
+        Projectile.timeLeft = 260;
+        Projectile.tileCollide = false;
+        Projectile.ignoreWater = true;
+        Projectile.usesLocalNPCImmunity = true;
+        Projectile.localNPCHitCooldown = -1;
+    }
+
+    public override void AI()
+    {
+        Timer++;
+        Projectile.rotation = Projectile.velocity.ToRotation();
+        Projectile.frameCounter++;
+        Projectile.frame = Projectile.frameCounter / 4 % Main.projFrames[Type];
+
+        if (Timer > 18f)
+            HomeTowardTarget();
+        else
+            Projectile.velocity *= 1.012f;
+
+        Color glow = Color.Lerp(new Color(255, 196, 72), Color.White, 0.28f);
+        Lighting.AddLight(Projectile.Center, glow.ToVector3() * 0.85f);
+        EmitMissileTrail(glow);
+    }
+
+    private void HomeTowardTarget()
+    {
+        NPC target = Projectile.Center.ClosestNPCAt(1500f);
+        Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+        float speed = MathHelper.Clamp(Projectile.velocity.Length(), 12f, 24f);
+        if (target is null)
+        {
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, currentDirection * MathHelper.Min(speed + 0.08f, 20f), 0.08f);
+            return;
+        }
+
+        Vector2 predicted = target.Center + target.velocity * MathHelper.Clamp(Projectile.Distance(target.Center) / System.Math.Max(speed, 1f), 6f, 26f);
+        Vector2 desiredDirection = (predicted - Projectile.Center).SafeNormalize(currentDirection);
+        float lockIn = Utils.GetLerpValue(18f, 70f, Timer, true);
+        float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(4f), MathHelper.ToRadians(18f), lockIn);
+        Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
+        Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * MathHelper.Lerp(speed, 23f, 0.12f), 0.12f + lockIn * 0.08f);
+    }
+
+    private void EmitMissileTrail(Color glow)
+    {
+        if (Main.dedServ)
+            return;
+
+        Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+        Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+        if (Main.rand.NextBool(2))
+        {
+            Dust dust = Dust.NewDustPerfect(
+                Projectile.Center - direction * Main.rand.NextFloat(16f, 34f) + normal * Main.rand.NextFloat(-5f, 5f),
+                Main.rand.NextBool(3) ? DustID.YellowTorch : DustID.GoldFlame,
+                -direction * Main.rand.NextFloat(0.9f, 2.8f) + normal * Main.rand.NextFloat(-0.35f, 0.35f),
+                0,
+                glow,
+                Main.rand.NextFloat(0.78f, 1.25f));
+            dust.noGravity = true;
+        }
+
+        if (Timer % 3f == 0f)
+        {
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center - direction * 24f + normal * Main.rand.NextFloat(-7f, 7f),
+                -direction * Main.rand.NextFloat(0.5f, 1.6f),
+                "CalamityMod/Particles/BloomCircle",
+                false,
+                Main.rand.Next(10, 16),
+                Main.rand.NextFloat(0.24f, 0.42f),
+                Main.rand.NextBool(4) ? Color.White : glow,
+                new Vector2(0.28f, 1.5f),
+                true,
+                true,
+                extraRotation: -MathHelper.PiOver2,
+                shrinkSpeed: 0.28f,
+                glowOpacity: 0.78f));
+        }
+    }
+
+    public override void OnKill(int timeLeft)
+    {
+        if (Projectile.owner == Main.myPlayer)
+        {
+            int oldWidth = Projectile.width;
+            int oldHeight = Projectile.height;
+            Vector2 center = Projectile.Center;
+            Projectile.width = Projectile.height = 184;
+            Projectile.Center = center;
+            Projectile.penetrate = -1;
+            Projectile.Damage();
+            Projectile.width = oldWidth;
+            Projectile.height = oldHeight;
+            Projectile.Center = center;
+        }
+
+        if (Main.dedServ)
+            return;
+
+        Color gold = new(255, 205, 78);
+        SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion") { Volume = 0.32f, Pitch = -0.15f, PitchVariance = 0.12f }, Projectile.Center);
+        GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, gold * 0.78f, "CalamityMod/Particles/FlameExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.05f, 0.56f, 18, true));
+        GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, Color.Lerp(gold, Color.White, 0.24f), Vector2.One, Projectile.rotation, 0.14f, 1.18f, 22));
+
+        for (int i = 0; i < 28; i++)
+        {
+            Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.8f, 10.5f);
+            Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(4) ? DustID.YellowTorch : DustID.GoldFlame, velocity, 0, Main.rand.NextBool(4) ? Color.White : gold, Main.rand.NextFloat(0.9f, 1.65f));
+            dust.noGravity = true;
+        }
+
+        for (int i = 0; i < 12; i++)
+        {
+            Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 7.8f);
+            GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, velocity, false, Main.rand.Next(16, 28), Main.rand.NextFloat(0.7f, 1.3f), Color.Lerp(gold, Color.White, Main.rand.NextFloat(0.1f, 0.45f))));
+        }
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        Texture2D texture = TextureAssets.Projectile[Type].Value;
+        Rectangle frame = texture.Frame(verticalFrames: Main.projFrames[Type], frameY: Projectile.frame);
+        Vector2 origin = frame.Size() * 0.5f;
+        Color afterimageColor = new Color(255, 205, 86, 0) * 0.5f;
+
+        CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], afterimageColor, 1);
+        Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.Lerp(lightColor, Color.White, 0.48f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+        return false;
     }
 }
 
@@ -1139,7 +1370,7 @@ public class YC_TyrantPrismMainBeam : ModProjectile, ILocalizedModType
             Projectile.Center = droneProjectile.Center + direction * 14f;
             Projectile.velocity = direction;
             Projectile.rotation = direction.ToRotation();
-            Projectile.scale = MathHelper.Lerp(0.46f, 0.78f, holdout.ConvergenceRatio) * Utils.GetLerpValue(0.96f, 0.38f, holdout.MainBeamStrength, true);
+            Projectile.scale = MathHelper.Lerp(0.72f, 1.2f, holdout.ConvergenceRatio) * Utils.GetLerpValue(0.98f, 0.42f, holdout.MainBeamStrength, true);
             Projectile.damage = (int)(holdoutProjectile.damage * MathHelper.Lerp(0.35f, 0.52f, holdout.ConvergenceRatio));
 
             UpdateBeamLength();
@@ -1157,7 +1388,7 @@ public class YC_TyrantPrismMainBeam : ModProjectile, ILocalizedModType
                 targetHitbox.Size(),
                 Projectile.Center,
                 Projectile.Center + Projectile.velocity * BeamLength,
-                10f * Projectile.scale,
+                18f * Projectile.scale,
                 ref collisionPoint);
         }
 
@@ -1171,16 +1402,16 @@ public class YC_TyrantPrismMainBeam : ModProjectile, ILocalizedModType
             Vector2 unit = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 start = Projectile.Center + unit * 6f - Main.screenPosition;
             Vector2 end = start + unit * MathHelper.Max(8f, BeamLength - 10f);
-            float opacity = MathHelper.Clamp(Projectile.scale / 0.78f, 0f, 1f);
+            float opacity = MathHelper.Clamp(Projectile.scale / 1.2f, 0f, 1f);
             Color gold = Color.Lerp(new Color(255, 166, 78), new Color(255, 238, 172), 0.35f);
 
             DelegateMethods.f_1 = 1f;
             Utils.LaserLineFraming framing = new(DelegateMethods.RainbowLaserDraw);
-            DelegateMethods.c_1 = gold * (0.56f * opacity);
-            Utils.DrawLaser(Main.spriteBatch, beamTexture, start, end, new Vector2(Projectile.scale * 0.22f), framing);
-            DelegateMethods.c_1 = Color.White * (0.15f * opacity);
-            Utils.DrawLaser(Main.spriteBatch, beamTexture, start, end, new Vector2(Projectile.scale * 0.08f), framing);
-            Main.EntitySpriteDraw(glow, start, null, (gold with { A = 0 }) * (0.24f * opacity), Projectile.rotation, glow.Size() * 0.5f, 0.075f * Projectile.scale, SpriteEffects.None, 0);
+            DelegateMethods.c_1 = gold * (0.84f * opacity);
+            Utils.DrawLaser(Main.spriteBatch, beamTexture, start, end, new Vector2(Projectile.scale * 0.4f), framing);
+            DelegateMethods.c_1 = Color.White * (0.32f * opacity);
+            Utils.DrawLaser(Main.spriteBatch, beamTexture, start, end, new Vector2(Projectile.scale * 0.16f), framing);
+            Main.EntitySpriteDraw(glow, start, null, (gold with { A = 0 }) * (0.46f * opacity), Projectile.rotation, glow.Size() * 0.5f, 0.16f * Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
 

@@ -633,6 +633,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Main.EntitySpriteDraw(glow, drawPosition, frame, (Color.White with { A = 0 }) * (0.45f + flash), Projectile.rotation, origin, Projectile.scale, effects, 0);
             DrawDragonEyeGlow(leftVisualPower);
             DrawDragonMouthSmoke(leftVisualPower);
+            DrawFakeCalamityArcNovaCharge();
             DrawMuzzleGlow(flash);
             DrawHookChargeBar();
             return false;
@@ -686,6 +687,57 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 float scale = 0.035f + local * 0.012f;
                 Main.EntitySpriteDraw(smoke, mouth + offset, null, theme * opacity * 0.26f, Projectile.rotation + swirl * 0.18f, smoke.Size() * 0.5f, scale, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(magic, mouth + offset * 0.7f, null, Color.Lerp(theme, white, 0.25f) * opacity * 0.18f, -Projectile.rotation + swirl * 0.12f, magic.Size() * 0.5f, scale * 0.72f, SpriteEffects.None, 0);
+            }
+
+            PFLeftEffectRules.EndAdditive();
+        }
+
+        private void DrawFakeCalamityArcNovaCharge()
+        {
+            if (CurrentMark != PristineFuryMark.FakeCalamity || LeftChargeTimer <= 0 || Main.dedServ)
+                return;
+
+            const float chargeFrames = 108f;
+            float charge = MathHelper.Clamp(LeftChargeTimer / chargeFrames, 0f, 1f);
+            if (charge <= 0.02f)
+                return;
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Vector2 direction = AimDirection;
+            Vector2 tip = GunTipPosition + direction * (8f + charge * 6f) - Main.screenPosition;
+            Color theme = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, charge * 0.32f) with { A = 0 }) * charge;
+            Color white = (Color.White with { A = 0 }) * charge;
+            float chargeScale = charge * 2f;
+            float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
+
+            PFLeftEffectRules.BeginAdditive();
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 7f) * charge;
+                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(18f, 42f) + direction * -8f * (6f - chargeScale * 2f);
+                Vector2 smearScale = new(0.28f * chargeScale, (1.8f + (Main.rand.NextBool(4) ? 1.9f : 0f)) * 0.055f * chargeScale);
+                Main.EntitySpriteDraw(smear, drawPosition, null, theme * 0.86f, direction.RotatedByRandom(0.26f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Color layerColor = Color.Lerp(theme, white, i * 0.22f);
+                Vector2 layerScale = new Vector2(1.42f, 1.02f) * chargeScale * (1f - i * 0.24f) * 0.25f * pulse;
+                Main.EntitySpriteDraw(bloom, tip, null, layerColor * (0.88f - i * 0.13f), Projectile.rotation, bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
+            }
+
+            Main.EntitySpriteDraw(ring, tip, null, theme * (0.36f + charge * 0.22f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.85f, ring.Size() * 0.5f, (0.16f + charge * 0.5f) * pulse, SpriteEffects.None, 0f);
+
+            if (charge >= 0.98f)
+            {
+                for (int satellite = 0; satellite < 3; satellite++)
+                {
+                    Vector2 orbit = (MathHelper.TwoPi * satellite / 3f + Main.GlobalTimeWrappedHourly * 7.2f).ToRotationVector2();
+                    Vector2 offset = new Vector2(orbit.X * 0.72f, orbit.Y * 1.18f).RotatedBy(Projectile.rotation) * chargeScale * 13f;
+                    Main.EntitySpriteDraw(bloom, tip + offset, null, Color.Lerp(theme, white, 0.45f) * 0.82f, Projectile.rotation, bloom.Size() * 0.5f, chargeScale * 0.082f, SpriteEffects.None, 0f);
+                }
             }
 
             PFLeftEffectRules.EndAdditive();

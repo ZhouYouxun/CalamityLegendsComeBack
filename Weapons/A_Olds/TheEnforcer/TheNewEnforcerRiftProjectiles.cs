@@ -458,7 +458,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
             TheNewEnforcerMagicCoreDraw.Draw(
                 drawPosition,
                 Projectile.rotation,
-                Projectile.scale * 1.12f,
+                Projectile.scale * 1.7f,
                 Fade,
                 color,
                 Projectile.identity);

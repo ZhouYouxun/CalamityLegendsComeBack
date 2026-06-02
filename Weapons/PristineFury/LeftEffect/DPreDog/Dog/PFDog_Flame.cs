@@ -4,6 +4,7 @@ using CalamityMod.Dusts;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -340,6 +341,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Projectile.scale * 0.2f,
                 SpriteEffects.None,
                 0f);
+
+            TheNewEnforcerMagicCoreDraw.Draw(
+                drawPosition,
+                Projectile.rotation,
+                Projectile.scale * 1.48f,
+                opacity * 0.82f,
+                visualColor,
+                Projectile.identity);
 
             for (int i = 0; i < 10; i++)
             {

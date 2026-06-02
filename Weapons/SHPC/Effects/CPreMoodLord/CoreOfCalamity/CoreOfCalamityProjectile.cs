@@ -2,6 +2,7 @@ using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -52,6 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
+            Projectile.extraUpdates = 4;
             Projectile.timeLeft = 300;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
@@ -80,14 +82,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            Projectile.NewProjectile(
+            int explosion = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<CoreOfCalamityExplosion>(),
+                ModContent.ProjectileType<NewLegendSHPE>(),
                 Math.Max(1, (int)(Projectile.damage * 0.88f)),
                 Projectile.knockBack,
                 Projectile.owner);
+            if (Main.projectile.IndexInRange(explosion))
+            {
+                Projectile hitbox = Main.projectile[explosion];
+                Vector2 center = Projectile.Center;
+                hitbox.width = 196;
+                hitbox.height = 196;
+                hitbox.Center = center;
+                hitbox.DamageType = DamageClass.Magic;
+                hitbox.netUpdate = true;
+            }
 
             // 前、左、右、后四枚分裂弹。颜色编号通过 ai[0] 同步给所有客户端。
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -208,6 +220,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 Main.rand.NextBool(3) ? BrightGray : MidGray,
                 Main.rand.NextFloat(0.82f, 1.35f));
             dust.noGravity = true;
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center - forward * Main.rand.NextFloat(12f, 30f) + forward.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-8f, 8f),
+                    backward * Main.rand.NextFloat(1.2f, 3.8f),
+                    "CalamityMod/Particles/SmallBloom",
+                    false,
+                    Main.rand.Next(11, 18),
+                    Main.rand.NextFloat(0.18f, 0.36f),
+                    Color.Lerp(BrightGray, Color.White, Main.rand.NextFloat(0.08f, 0.36f)),
+                    new Vector2(0.34f, 1.65f),
+                    true,
+                    true,
+                    extraRotation: -MathHelper.PiOver2,
+                    shrinkSpeed: 0.42f,
+                    glowOpacity: 0.76f));
+            }
+
+            if (Main.rand.NextBool(5))
+            {
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    backward.RotatedByRandom(0.45f) * Main.rand.NextFloat(0.25f, 1.4f),
+                    Main.rand.NextFloat(0.28f, 0.48f),
+                    Color.Lerp(MidGray, BrightGray, Main.rand.NextFloat(0.22f, 0.72f)),
+                    Main.rand.Next(10, 16)));
+            }
         }
 
         private void SpawnExplosionEffects()
@@ -279,6 +319,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
+            Texture2D needle = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Ascendant/AscendantSpirit_PROJ").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Vector2 screenCenter = center - Main.screenPosition;
             Vector2 perpendicular = forward.RotatedBy(MathHelper.PiOver2);
 
@@ -324,34 +366,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     new Vector2(0.42f, 0.34f) * layerScale,
                     SpriteEffects.None);
             }
+
+            float pulse = 0.9f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + center.X * 0.003f);
+            Vector2 needleScale = new(0.58f, 1.84f);
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2.2f + pulse * 1.4f) * scale;
+                Main.EntitySpriteDraw(
+                    needle,
+                    screenCenter + offset,
+                    null,
+                    BrightGray with { A = 0 } * opacity * 0.32f,
+                    forward.ToRotation() + MathHelper.PiOver2,
+                    needle.Size() * 0.5f,
+                    needleScale * scale,
+                    SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(
+                needle,
+                screenCenter,
+                null,
+                Color.Lerp(MidGray, Color.White, 0.32f) with { A = 0 } * opacity * 0.82f,
+                forward.ToRotation() + MathHelper.PiOver2,
+                needle.Size() * 0.5f,
+                needleScale * scale * pulse,
+                SpriteEffects.None);
+
+            for (int i = 0; i < 4; i++)
+            {
+                float rotation = forward.ToRotation() + MathHelper.PiOver2 * i + Main.GlobalTimeWrappedHourly * 0.9f;
+                Main.EntitySpriteDraw(
+                    star,
+                    screenCenter,
+                    null,
+                    Color.Lerp(MidGray, BrightGray, 0.55f) with { A = 0 } * opacity * 0.34f,
+                    rotation,
+                    star.Size() * 0.5f,
+                    new Vector2(0.16f, 0.78f) * scale * pulse,
+                    SpriteEffects.None);
+            }
         }
     }
 
     /// <summary>
     /// 主弹爆炸时的短命伤害判定。视觉由主弹自身生成，这里保持不可见。
     /// </summary>
-    internal sealed class CoreOfCalamityExplosion : ModProjectile, ILocalizedModType
-    {
-        public new string LocalizationCategory => "Projectiles.SHPC";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
-        public override void SetDefaults()
-        {
-            Projectile.width = 196;
-            Projectile.height = 196;
-            Projectile.friendly = true;
-            Projectile.DamageType = DamageClass.Magic;
-            Projectile.tileCollide = false;
-            Projectile.ignoreWater = true;
-            Projectile.penetrate = -1;
-            Projectile.timeLeft = 3;
-            Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
-        }
-
-        public override bool PreDraw(ref Color lightColor) => false;
-    }
-
     /// <summary>
     /// 灾劫核心爆炸后的四色分裂弹。
     /// 每帧固定向左拐一度，经过短暂展开后再对最近目标追加追踪修正。
@@ -401,17 +461,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         {
             Timer++;
             Projectile.tileCollide = Timer >= ActivationDelay;
+            if (Projectile.localAI[1] == 0f)
+                Projectile.localAI[1] = Main.rand.NextFloat(30f, 900f);
 
             // 固定左转始终存在；开始追踪后，再在此基础上向最近敌人转向。
             float speed = MathHelper.Lerp(Projectile.velocity.Length(), 14.5f, 0.045f);
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(LeftTurnPerUpdate);
+            float updateScale = 1f / (Projectile.extraUpdates + 1f);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(LeftTurnPerUpdate * updateScale);
             if (Timer >= HomingDelay)
             {
                 NPC target = Projectile.Center.ClosestNPCAt(1350f);
                 if (target is not null)
                 {
                     float desiredRotation = (target.Center - Projectile.Center).ToRotation();
-                    direction = direction.ToRotation().AngleTowards(desiredRotation, 0.072f).ToRotationVector2();
+                    direction = direction.ToRotation().AngleTowards(desiredRotation, 0.072f * updateScale).ToRotationVector2();
                 }
             }
 
@@ -419,6 +482,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.rotation = direction.ToRotation();
             Lighting.AddLight(Projectile.Center, OrbColor.ToVector3() * 0.58f);
             SpawnFlightEffects(direction);
+            SpawnHyperiusFlightEffects(direction);
         }
 
         public override bool? CanDamage() => Timer >= ActivationDelay;
@@ -454,6 +518,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 position = Projectile.Center - Main.screenPosition;
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = 0; i < 3; i++)
             {
                 Main.EntitySpriteDraw(
@@ -464,9 +529,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Projectile.rotation,
                     bloom.Size() * 0.5f,
                     new Vector2(0.21f, 0.15f) * (1f - i * 0.2f),
-                    SpriteEffects.None);
+                        SpriteEffects.None);
             }
 
+            TheNewEnforcerMagicCoreDraw.Draw(
+                position,
+                Projectile.rotation,
+                Projectile.scale * 2.05f,
+                0.86f,
+                OrbColor,
+                Projectile.identity);
+
+            DrawHyperiusGlow(position);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
 
@@ -509,6 +584,70 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 OrbColor,
                 Main.rand.NextFloat(0.64f, 1.08f));
             dust.noGravity = true;
+        }
+
+        private void SpawnHyperiusFlightEffects(Vector2 direction)
+        {
+            if (Main.dedServ || (Projectile.numUpdates != 0 && Main.rand.NextBool(3)))
+                return;
+
+            float phase = Projectile.localAI[1] + Timer * 0.09f;
+            Color secondary = Color.Lerp(OrbColor, Color.White, 0.42f);
+            float wave = 0.12f + 0.08f * MathF.Sin(phase * 1.7f);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector2 waveDirection = direction.RotatedBy(side * wave);
+                Vector2 orbPos = Projectile.Center + waveDirection * 5.5f - direction * 15f;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    orbPos,
+                    -direction * Main.rand.NextFloat(0.35f, 1.2f) + waveDirection.RotatedBy(MathHelper.PiOver2) * side * Main.rand.NextFloat(0.2f, 0.7f),
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.12f, 0.23f),
+                    Main.rand.NextBool() ? OrbColor : secondary,
+                    new Vector2(0.34f, 1.15f),
+                    true,
+                    true,
+                    extraRotation: -MathHelper.PiOver2,
+                    shrinkSpeed: 0.48f,
+                    glowOpacity: 0.78f));
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - direction * Main.rand.NextFloat(8f, 22f),
+                    DustID.RainbowMk2,
+                    -direction.RotatedByRandom(0.26f) * Main.rand.NextFloat(0.45f, 1.8f),
+                    90,
+                    secondary,
+                    Main.rand.NextFloat(0.62f, 1.05f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void DrawHyperiusGlow(Vector2 drawPosition)
+        {
+            Texture2D glowSpark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Color color = OrbColor with { A = 0 };
+            Color white = Color.White with { A = 0 };
+            float pulse = 0.92f + 0.08f * MathF.Sin(Timer * 0.24f + Projectile.identity);
+
+            for (int i = 0; i < 4; i++)
+            {
+                float rotation = Projectile.rotation + MathHelper.PiOver2 * i + Timer * 0.025f;
+                Main.EntitySpriteDraw(
+                    glowSpark,
+                    drawPosition,
+                    null,
+                    Color.Lerp(color, white, i * 0.16f) * (0.42f - i * 0.045f),
+                    rotation,
+                    glowSpark.Size() * 0.5f,
+                    new Vector2(0.12f + i * 0.014f, 0.82f + i * 0.12f) * Projectile.scale * pulse,
+                    SpriteEffects.None,
+                    0f);
+            }
         }
     }
 }

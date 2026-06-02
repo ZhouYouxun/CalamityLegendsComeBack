@@ -127,6 +127,7 @@ Mods: {
 				PristineFuryRightNovaFireball.DisplayName: 纯净怒火右键新星火球
 				PristineFuryRightNovaPseudoLaser.DisplayName: 纯净怒火右键新星伪激光
 				PFRavager_Laser.DisplayName: 纯净怒火毁灭魔像血石激光
+				// PFRavager_BloodBoilerOrb.DisplayName: P F Ravager_ Blood Boiler Orb
 			}
 
 			TacticalComputerReticle.DisplayName: 战术计算机准星

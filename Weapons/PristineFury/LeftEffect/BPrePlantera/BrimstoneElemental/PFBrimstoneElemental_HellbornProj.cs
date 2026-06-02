@@ -50,13 +50,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             float trackingPower = Utils.GetLerpValue(0f, 72f, Timer, true);
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), MathHelper.Lerp(15f, 31f, trackingPower), 0.075f + trackingPower * 0.075f);
-            NPC target = FindTarget(1050f);
+            float releasePower = Utils.GetLerpValue(72f, 156f, Timer, true);
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), MathHelper.Lerp(15f, 33f, trackingPower), 0.075f + trackingPower * 0.075f + releasePower * 0.06f);
+            NPC target = FindTarget(MathHelper.Lerp(1050f, 1800f, releasePower));
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             if (target != null)
             {
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center, direction);
-                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(7f), MathHelper.ToRadians(34f), trackingPower);
+                float maxTurn = MathHelper.Lerp(
+                    MathHelper.Lerp(MathHelper.ToRadians(7f), MathHelper.ToRadians(34f), trackingPower),
+                    MathHelper.Pi,
+                    releasePower);
                 direction = direction.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
             }
             Projectile.velocity = direction * speed;

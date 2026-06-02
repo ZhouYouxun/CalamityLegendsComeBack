@@ -19,8 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BounceCount => ref Projectile.localAI[1];
         private bool HasBounced => BounceCount > 0f;
-        private bool CanHome => Timer >= 120f && !HasBounced;
-        private float BloomPower => Utils.Remap(Timer, 0f, 160f, 0.32f, CanHome ? 1.6f : 0.92f, true) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true);
+        private bool CanHome => Timer >= 78f && !HasBounced;
+        private float BloomPower => Utils.Remap(Timer, 0f, 130f, 0.82f, CanHome ? 1.9f : 1.22f, true) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true);
 
         public override void SetStaticDefaults()
         {
@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 if (!npc.CanBeChasedBy(Projectile))
                     continue;
 
-                float score = Projectile.Distance(npc.Center) + Vector2.Distance(Main.MouseWorld, npc.Center) * 0.12f;
+                float score = Projectile.Distance(npc.Center) + Vector2.Distance(Main.MouseWorld, npc.Center) * 0.08f;
                 if (score < bestScore)
                 {
                     bestScore = score;
@@ -88,13 +88,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (best != null)
             {
-                float trackingPower = Utils.GetLerpValue(120f, 210f, Timer, true);
+                float trackingPower = Utils.GetLerpValue(78f, 156f, Timer, true);
                 Vector2 currentDirection = Projectile.velocity.SafeNormalize(Projectile.SafeDirectionTo(best.Center));
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(best.Center, currentDirection);
-                float speed = MathHelper.Lerp(2.2f, 9.2f, trackingPower);
-                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(1.5f), MathHelper.ToRadians(6.5f), trackingPower);
+                float speed = MathHelper.Lerp(3.8f, 14.5f, trackingPower);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(4.5f), MathHelper.ToRadians(26f), trackingPower);
                 Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.055f + trackingPower * 0.075f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.12f + trackingPower * 0.16f);
             }
         }
 
@@ -104,6 +104,20 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             Color theme = Color.Lerp(ThemeColor, Color.White, CanHome ? 0.28f : 0.08f);
+            if ((int)Timer % 8 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    -Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.25f, 0.9f),
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.24f, 0.42f) * (0.9f + BloomPower * 0.26f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.4f)),
+                    true,
+                    false,
+                    true));
+            }
+
             if (CanHome)
             {
                 if (Timer % 6f == 0f)

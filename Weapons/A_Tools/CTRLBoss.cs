@@ -61,7 +61,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 PanelType,
                 0,
                 0f,
-                player.whoAmI);
+                player.whoAmI,
+                0f,
+                Main.MouseScreen.X,
+                Main.MouseScreen.Y);
 
             SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.68f, Pitch = 0.08f }, player.Center);
             SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.42f, Pitch = 0.2f }, player.Center);
@@ -164,7 +167,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
 
             if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
             {
-                panelTopLeft = GetClampedPanelTopLeft(Main.MouseScreen + new Vector2(14f, 14f));
+                Vector2 requestedTopLeft = Projectile.ai[1] != 0f || Projectile.ai[2] != 0f
+                    ? new Vector2(Projectile.ai[1], Projectile.ai[2])
+                    : Main.MouseScreen;
+                panelTopLeft = GetClampedPanelTopLeft(requestedTopLeft);
                 panelPositionInitialized = true;
             }
 
