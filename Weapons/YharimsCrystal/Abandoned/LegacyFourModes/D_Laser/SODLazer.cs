@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+// ABANDONED: Legacy YharimsCrystal four-mode implementation. Kept only for reference; do not wire into gameplay.
 using System;
 using Terraria;
 using Terraria.Enums;

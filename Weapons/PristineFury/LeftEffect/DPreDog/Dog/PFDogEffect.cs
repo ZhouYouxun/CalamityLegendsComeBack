@@ -201,7 +201,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     0.04f,
                     0.48f + charge * 0.38f,
                     16,
-                    false);
+                    true);
 
                 GeneralParticleHandler.SpawnParticle(pulse);
             }

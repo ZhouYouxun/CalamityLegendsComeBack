@@ -1,5 +1,6 @@
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -113,6 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 holdout.Projectile.owner);
             PFLeftEffectRules.ApplyTheme(orb, holdout.CurrentMark);
 
+            SpawnArcNovaDischarge(muzzle, direction, PristineFuryMarkHelper.GetColor(holdout.CurrentMark));
             holdout.LeftAuxTimer = CooldownFrames;
             holdout.LeftChargeTimer = 0;
             holdout.ApplyRecoil(22f);
@@ -120,6 +122,52 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.45f);
             holdout.Owner.SetScreenshake(6f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { PitchVariance = 0.22f, Volume = 0.84f }, muzzle);
+        }
+
+        private static void SpawnArcNovaDischarge(Vector2 muzzle, Vector2 direction, Color theme)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 45; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(muzzle, ModContent.DustType<SquashDust>());
+                dust.velocity = direction.RotatedByRandom(0.36f) * Main.rand.NextFloat(7f, 18f);
+                dust.scale = Main.rand.NextFloat(1.05f, 1.85f);
+                dust.noGravity = true;
+                dust.color = Main.rand.NextBool(4) ? Color.White : theme;
+                dust.fadeIn = 1f;
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    muzzle,
+                    direction * Main.rand.NextFloat(20f, 27f),
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    18,
+                    0.82f - i * 0.14f,
+                    i == 0 ? theme : Color.White,
+                    new Vector2(1.8f, 0.8f),
+                    true,
+                    true,
+                    shrinkSpeed: 0.3f,
+                    glowOpacity: 0.88f));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                muzzle,
+                direction * 9f,
+                "CalamityMod/Particles/BloomRing",
+                false,
+                20,
+                0.92f,
+                theme,
+                Vector2.One,
+                true,
+                false,
+                shrinkSpeed: 0.15f));
         }
 
         private static void SpawnChargeDust(NewLegendPristineFuryHoldOut holdout, float charge)
@@ -223,17 +271,40 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Color theme = (Color.Lerp(ThemeColor, Color.White, charge * 0.22f) with { A = 0 }) * charge;
             float pulse = 0.88f + (float)Math.Sin(Timer * 0.16f) * 0.14f;
+            float chargeScale = charge * 2f;
 
             PFLeftEffectRules.BeginAdditive();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 smearPosition = drawPosition - direction * Main.rand.NextFloat(18f, 54f + charge * 44f) + Main.rand.NextVector2Circular(5f, 5f) * charge;
-                Main.EntitySpriteDraw(smear, smearPosition, null, theme * (0.32f + charge * 0.34f), direction.ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), new Vector2(0.08f + charge * 0.18f, 0.12f + charge * 0.14f), SpriteEffects.None, 0f);
+                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 5.5f) * charge;
+                Vector2 smearPosition = drawPosition + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(15f, 35f) + direction * -8f * (6f - chargeScale * 2f);
+                Vector2 smearScale = new(0.25f * chargeScale, (1.7f + (Main.rand.NextBool(4) ? 1.8f : 0f)) * 0.05f * chargeScale);
+                Main.EntitySpriteDraw(smear, smearPosition, null, theme * 0.8f, direction.RotatedByRandom(0.3f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
             }
 
-            Main.EntitySpriteDraw(bloom, drawPosition, null, theme * 0.86f, Projectile.rotation, bloom.Size() * 0.5f, (0.16f + charge * 0.48f) * pulse, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, (Color.White with { A = 0 }) * 0.32f * charge, Projectile.rotation, bloom.Size() * 0.5f, (0.08f + charge * 0.2f) * pulse, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(ring, drawPosition, null, theme * (0.2f + charge * 0.42f), Projectile.rotation + Timer * 0.035f, ring.Size() * 0.5f, (0.16f + charge * 0.5f) * pulse, SpriteEffects.None, 0f);
+            for (int i = 0; i < 3; i++)
+            {
+                Color layerColor = (Color.Lerp(ThemeColor, Color.White, i * 0.25f) with { A = 0 }) * 0.8f;
+                Vector2 layerScale = new Vector2(1.35f, 1f) * chargeScale * (1f - 0.27f * i) * 0.23f * pulse;
+                Main.EntitySpriteDraw(bloom, drawPosition, null, layerColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
+            }
+
+            Main.EntitySpriteDraw(ring, drawPosition, null, theme * 0.36f, Projectile.rotation + Timer * 0.035f, ring.Size() * 0.5f, (0.14f + charge * 0.42f) * pulse, SpriteEffects.None, 0f);
+
+            if (charge >= 1f)
+            {
+                for (int satellite = 0; satellite < 3; satellite++)
+                {
+                    Vector2 orbit = (MathHelper.TwoPi * satellite / 3f + Timer * 0.18f).ToRotationVector2();
+                    Vector2 offset = new Vector2(orbit.X * 0.7f, orbit.Y * 1.2f).RotatedBy(Projectile.rotation) * chargeScale * 12f;
+                    for (int layer = 0; layer < 2; layer++)
+                    {
+                        Color satelliteColor = (Color.Lerp(ThemeColor, Color.White, layer) with { A = 0 }) * 0.82f;
+                        float satelliteScale = chargeScale * (1f - 0.25f * layer) * 0.085f;
+                        Main.EntitySpriteDraw(bloom, drawPosition + offset, null, satelliteColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, satelliteScale, SpriteEffects.None, 0f);
+                    }
+                }
+            }
 
             PFLeftEffectRules.EndAdditive();
             return false;
@@ -260,10 +331,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 150;
+            Projectile.timeLeft = 720;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = 1;
+            Projectile.extraUpdates = 7;
         }
 
         public override void AI()
@@ -276,6 +347,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Dust squash = Dust.NewDustPerfect(
+                Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
+                ModContent.DustType<SquashDust>());
+            squash.noGravity = true;
+            squash.scale = Main.rand.NextFloat(0.9f, 1.3f);
+            squash.color = Main.rand.NextBool(4) ? Color.White : ThemeColor;
+            squash.fadeIn = -0.4f;
+
             if (Main.rand.NextBool(2))
             {
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
@@ -288,6 +367,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     true,
                     false,
                     true));
+            }
+
+            if (Timer < 128f && Main.rand.NextBool())
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    Projectile.velocity * 0.2f,
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    32,
+                    Main.rand.NextFloat(0.48f, 0.72f),
+                    Main.rand.NextBool(4) ? Color.White : ThemeColor,
+                    new Vector2(0.2f, 1.4f),
+                    true,
+                    true,
+                    shrinkSpeed: 0.1f));
             }
 
             if (Main.rand.NextBool(3))
@@ -413,7 +508,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, theme * 0.88f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.12f, 1.7f * scale, 24));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.White * 0.55f, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.05f, 1.35f * scale, 20, true));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, theme * 0.65f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.06f, 0.95f * scale, 18, false));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, theme * 0.65f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.06f, 0.95f * scale, 18, true));
 
             for (int i = 0; i < 42; i++)
             {

@@ -706,20 +706,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (holdout.LeftChargeTimer % 10 == 0)
             {
-                Particle line = new CustomSpark(
+                Particle line = new PointParticle(
                     muzzle + Main.rand.NextVector2CircularEdge(56f + charge * 76f, 56f + charge * 76f),
                     -direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(3.2f, 7.5f),
-                    "CalamityMod/Particles/GlowSpark2",
                     false,
-                    14,
-                    0.045f + charge * 0.04f,
-                    theme,
-                    new Vector2(0.42f, 2.1f + charge),
-                    true,
-                    false,
-                    shrinkSpeed: 0.58f,
-                    extraRotation: direction.ToRotation(),
-                    glowOpacity: 0.68f);
+                    Main.rand.Next(18, 30),
+                    0.76f + charge * 0.58f,
+                    theme);
 
                 GeneralParticleHandler.SpawnParticle(line);
             }

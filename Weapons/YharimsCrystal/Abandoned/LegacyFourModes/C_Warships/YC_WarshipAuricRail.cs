@@ -1,3 +1,4 @@
+// ABANDONED: Legacy YharimsCrystal four-mode implementation. Kept only for reference; do not wire into gameplay.
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;

@@ -61,11 +61,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 GeneralParticleHandler.SpawnParticle(new SparkParticle(BeamEnd, velocity, true, Main.rand.Next(10, 18), Main.rand.NextFloat(0.75f, 1.25f), Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.22f, 0.72f))));
             }
 
-            if (Main.rand.NextBool(2))
+            for (int i = 0; i < 2; i++)
             {
                 float completion = Main.rand.NextFloat();
                 Vector2 point = Projectile.Center + Direction * BeamLength * completion;
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(point, Direction * 0.2f, "CalamityMod/Particles/BloomLineSoftEdge", false, 8, 0.08f, ThemeColor, new Vector2(0.5f, 1.8f), true, true));
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(point, Direction * 0.2f, "CalamityMod/Particles/BloomLineSoftEdge", false, 10, Main.rand.NextFloat(0.1f, 0.14f), ThemeColor, new Vector2(0.5f, 1.8f), true, true));
             }
         }
 

@@ -17,17 +17,17 @@ namespace CalamityLegendsComeBack.Shader
 
         private static readonly ShaderDefinition[] TrailShaders =
         [
-            // 拖尾类：用于 PrimitiveRenderer、刀光、弹幕运动轨迹。
-            new("TailFirst", TrailCategory, "TrailPass", "TailFirstEffect"),
-            new("TailSecond", TrailCategory, "TrailPass", "TailSecondEffect"),
-            new("TailMagic", TrailCategory, "TrailPass", "TailMagicEffect"),
-            new("TailModern", TrailCategory, "TrailPass", "TailModernEffect"),
-            new("TailTechnology", TrailCategory, "TrailPass", "TailTechnologyEffect"),
-            new("TrailFrostCrystal", TrailCategory, "TrailPass", "TrailFrostCrystalEffect"),
-            new("TrailGhostlyPhantom", TrailCategory, "TrailPass", "TrailGhostlyPhantomEffect"),
-            new("TrailBlazingFlame", TrailCategory, "TrailPass", "TrailBlazingFlameEffect"),
-            new("TrailWarpDistortion", TrailCategory, "TrailPass", "TrailWarpDistortionEffect"),
-            new("ArtAttackTrail", TrailCategory, "TrailPass", "ArtAttackTrail")
+            // Trail shaders are rendered by PrimitiveRenderer.
+            new("TailFirst", ShaderCategory.Trail, "TrailPass", "TailFirstEffect"),
+            new("TailSecond", ShaderCategory.Trail, "TrailPass", "TailSecondEffect"),
+            new("TailMagic", ShaderCategory.Trail, "TrailPass", "TailMagicEffect"),
+            new("TailModern", ShaderCategory.Trail, "TrailPass", "TailModernEffect"),
+            new("TailTechnology", ShaderCategory.Trail, "TrailPass", "TailTechnologyEffect"),
+            new("TrailFrostCrystal", ShaderCategory.Trail, "TrailPass", "TrailFrostCrystalEffect"),
+            new("TrailGhostlyPhantom", ShaderCategory.Trail, "TrailPass", "TrailGhostlyPhantomEffect"),
+            new("TrailBlazingFlame", ShaderCategory.Trail, "TrailPass", "TrailBlazingFlameEffect"),
+            new("TrailWarpDistortion", ShaderCategory.Trail, "TrailPass", "TrailWarpDistortionEffect"),
+            new("ArtAttackTrail", ShaderCategory.Trail, "TrailPass", "ArtAttackTrail")
         ];
 
         private static void RegisterTrailShaders()

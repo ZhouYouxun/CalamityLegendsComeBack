@@ -542,45 +542,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Vector2 direction = AimDirection;
             Vector2 muzzle = GunTipPosition - direction * 14f;
 
-            //for (int i = 0; i < 9; i++)
-            //{
-            //    Vector2 sparkVelocity = direction.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.6f, 8f);
-            //    Particle ember = i % 3 == 0
-            //        ? new SparkParticle(
-            //            muzzle + Main.rand.NextVector2Circular(4f, 4f),
-            //            sparkVelocity,
-            //            false,
-            //            Main.rand.Next(12, 20),
-            //            Main.rand.NextFloat(0.55f, 0.95f) * scale,
-            //            Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.28f)))
-            //        : new CustomSpark(
-            //            muzzle + Main.rand.NextVector2Circular(4f, 4f),
-            //            sparkVelocity,
-            //            "CalamityMod/Particles/GlowSpark2",
-            //            false,
-            //            Main.rand.Next(8, 14),
-            //            Main.rand.NextFloat(0.035f, 0.07f) * scale,
-            //            color,
-            //            new Vector2(0.45f, 1.6f),
-            //            glowCenter: true,
-            //            shrinkSpeed: 0.66f,
-            //            extraRotation: sparkVelocity.ToRotation());
-            //    GeneralParticleHandler.SpawnParticle(ember);
-            //}
-
-            Particle spark = new CustomSpark(
-                muzzle,
-                direction * 4f,
-                "CalamityMod/Particles/GlowSpark2",
+            Particle glow = new GlowOrbParticle(
+                muzzle + direction * 2f,
+                direction * 1.8f,
                 false,
-                12,
-                0.055f * scale,
+                16,
+                0.46f * scale,
                 Color.Lerp(color, Color.White, 0.42f),
-                new Vector2(0.8f, 1.6f),
-                glowCenter: true,
-                shrinkSpeed: 0.78f);
+                true,
+                false,
+                true);
+            GeneralParticleHandler.SpawnParticle(glow);
 
-            GeneralParticleHandler.SpawnParticle(spark);
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 velocity = direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.6f, 4.2f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    muzzle + Main.rand.NextVector2Circular(3f, 3f),
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.62f, 1f) * scale,
+                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.18f, 0.5f))));
+            }
         }
 
         private void SpawnHookChargeEffects(float charge)
@@ -719,6 +703,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Vector2 muzzle = GunTipPosition - AimDirection * 21f - Main.screenPosition;
             Color color = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, 0.48f) with { A = 0 }) * power;
 
+            PFLeftEffectRules.BeginAdditive();
             Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.55f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.34f + power * 0.24f, 0.18f + power * 0.12f), SpriteEffects.None, 0);
 
             for (int i = 0; i < 4; i++)
@@ -726,6 +711,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 float rotation = Projectile.rotation + MathHelper.PiOver4 * i + Main.GlobalTimeWrappedHourly * (1.1f + i * 0.15f);
                 Main.EntitySpriteDraw(star, muzzle, null, color * 0.62f, rotation, star.Size() * 0.5f, new Vector2(0.24f + power * 0.18f, 1.1f + power * 1.4f), SpriteEffects.None, 0);
             }
+            PFLeftEffectRules.EndAdditive();
         }
 
         private void DrawHookChargeBar()

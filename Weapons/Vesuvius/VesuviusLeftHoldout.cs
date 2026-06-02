@@ -119,8 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Projectile.rotation = Direction.ToRotation();
 
             float recoil = released ? MathHelper.Clamp(32f - releaseTimer * 1.1f, 0f, 32f) : 34f;
-            float breathingOffset = released ? 0f : (float)Math.Sin(chargeFrames * 0.08f) * (3f + currentStage);
-            Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true) + Direction * recoil + Direction.RotatedBy(MathHelper.PiOver2) * breathingOffset;
+            Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true) + Direction * recoil;
         }
 
         private void ManipulateOwner()
@@ -731,16 +730,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             int coreFrame = ((released ? releaseTimer : chargeFrames) / (stageForDraw >= 4 ? 1 : 2)) % 6;
             Rectangle coreSource = volatileCore.Frame(1, 6, 0, coreFrame);
 
-            Vector2 coreJitter = Vector2.Zero;
-            if (!released && chargeFrames >= HeliumChargeStartFrames)
+            if (!released && !FullyCharged)
             {
-                float rumble = MathHelper.Lerp(0.12f, 3.55f, chargeIntensity) + (FullyCharged ? Main.rand.NextFloat(0.55f, 1.35f) : 0f);
-                Vector2 staffJitter = Main.rand.NextVector2Circular(rumble, rumble);
-                drawPosition += staffJitter;
-                coreJitter = staffJitter * 0.42f + Main.rand.NextVector2Circular(rumble * 0.55f, rumble * 0.55f);
+                float rumble = MathHelper.Clamp(chargeFrames, 0f, FullChargeFrameTarget);
+                drawPosition += Main.rand.NextVector2Circular(rumble / 25f, rumble / 25f);
             }
 
-            Vector2 tipScreen = GunTip - Main.screenPosition + coreJitter;
+            Vector2 tipScreen = GunTip - Main.screenPosition;
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             float coreScale = (0.32f + stageForDraw * 0.075f + chargeIntensity * 0.36f) * fullChargeBonus;
             float rotationTime = Main.GlobalTimeWrappedHourly;
@@ -844,16 +840,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     SpriteEffects.None);
             }
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-
-            if (!released && currentStage > 0)
-            {
-                int afterimageCount = 1 + currentStage;
-                for (int i = 0; i < afterimageCount; i++)
-                {
-                    Vector2 offset = (MathHelper.TwoPi * i / afterimageCount + Main.GlobalTimeWrappedHourly * 2.2f).ToRotationVector2() * (1.5f + currentStage * 0.9f);
-                    Main.EntitySpriteDraw(texture, drawPosition + offset, null, stageColor * 0.18f, staffRotation, origin, Projectile.scale, effects);
-                }
-            }
 
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, staffRotation, origin, Projectile.scale, effects);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.72f + pulse * 0.28f), staffRotation, origin, Projectile.scale, effects);

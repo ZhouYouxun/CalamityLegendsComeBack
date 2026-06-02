@@ -1,10 +1,5 @@
 using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.A_Drill;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.B_Flamethrower;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.C_Warships;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.D_Laser;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPrism;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -146,20 +141,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         private static bool HasAnyActiveMainHoldout(Player player)
         {
-            return player.ownedProjectileCounts[MainHoldoutType] > 0 ||
-                   player.ownedProjectileCounts[ModContent.ProjectileType<YC_DrillHoldout>()] > 0 ||
-                   player.ownedProjectileCounts[ModContent.ProjectileType<YC_FlamethrowerHoldout>()] > 0 ||
-                   player.ownedProjectileCounts[ModContent.ProjectileType<YC_WarshipHoldout>()] > 0 ||
-                   player.ownedProjectileCounts[ModContent.ProjectileType<YC_HelixLaserHoldout>()] > 0;
+            return player.ownedProjectileCounts[MainHoldoutType] > 0;
         }
 
         private static bool IsMainHoldoutType(int projectileType)
         {
-            return projectileType == MainHoldoutType ||
-                   projectileType == ModContent.ProjectileType<YC_DrillHoldout>() ||
-                   projectileType == ModContent.ProjectileType<YC_FlamethrowerHoldout>() ||
-                   projectileType == ModContent.ProjectileType<YC_WarshipHoldout>() ||
-                   projectileType == ModContent.ProjectileType<YC_HelixLaserHoldout>();
+            return projectileType == MainHoldoutType;
         }
 
         private static bool HasActiveVIP(Player player) => player.ownedProjectileCounts[VipType] > 0;

@@ -169,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 0.08f,
                 0.82f,
                 18,
-                false));
+                true));
 
             for (int i = 0; i < 28; i++)
             {

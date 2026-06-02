@@ -91,7 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 ScaleFactor *= 1.035f;
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, IgnitionFrames);
                 if (Timer % 8f == 0f && !Main.dedServ)
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, FogColor, "CalamityMod/Particles/ProvidenceMarkParticle", Vector2.One, Projectile.rotation, 0.04f, 0.8f * Projectile.scale, 20, false));
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, FogColor, "CalamityMod/Particles/ProvidenceMarkParticle", Vector2.One, Projectile.rotation, 0.04f, 0.8f * Projectile.scale, 20, true));
             }
 
             ScaleFactor += 0.014f;

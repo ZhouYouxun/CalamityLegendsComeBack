@@ -393,7 +393,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinTransitionTimer = Math.Min(rightSpinTransitionTimer + 1, RightSpinTransitionFrames);
             float transitionProgress = rightSpinTransitionTimer / (float)RightSpinTransitionFrames;
             float transitionSpeed = MathHelper.SmoothStep(0.18f, 1f, transitionProgress);
-            float spinRate = MathHelper.Clamp(RightSpinChargeRatio, 0.4f, 1f) * MathHelper.PiOver4 * 0.2f * rightSpinOrbitDirection * transitionSpeed;
+            float spinSpeedMultiplier = MathHelper.Lerp(1.2f, 2f, RightSpinChargeRatio);
+            float spinRate = spinSpeedMultiplier * MathHelper.PiOver4 * 0.2f * rightSpinOrbitDirection * transitionSpeed;
             rightSpinDirectionVector = rightSpinDirectionVector.RotatedBy(spinRate);
             rightSpinDirectionVector.Normalize();
             Projectile.rotation = rightSpinDirectionVector.ToRotation() + MathHelper.PiOver4;

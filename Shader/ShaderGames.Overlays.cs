@@ -23,23 +23,23 @@ namespace CalamityLegendsComeBack.Shader
 
         private static readonly ShaderDefinition[] OverlayShaders =
         [
-            // 覆盖类：只处理当前绘制的贴图，不接管整个屏幕。
-            new("AuroraWaveShader", OverlayCategory, "P0", "AuroraWaveShader"),
-            new("CyberNeonGlow", OverlayCategory, "P0", "CyberNeonGlow"),
-            new("DistortionShader", OverlayCategory, "P0", "DistortionShader"),
-            new("EdgeGlowShader", OverlayCategory, "P0", "EdgeGlowShader"),
-            new("EnchantmentShader", OverlayCategory, "P0", "EnchantmentShader"),
-            new("FireBurnShader", OverlayCategory, "P0", "FireBurnShader"),
-            new("GlassRefractionShader", OverlayCategory, "P0", "GlassRefractionShader"),
-            new("GlitchBlocksShader", OverlayCategory, "P0", "GlitchBlocksShader"),
-            new("GrayscaleShader", OverlayCategory, "P0", "GrayscaleShader"),
-            new("KaleidoscopeShader", OverlayCategory, "P0", "KaleidoscopeShader"),
-            new("LiquidFlowShader", OverlayCategory, "P0", "LiquidFlowShader"),
-            new("MagnifyDistortionShader", OverlayCategory, "P0", "MagnifyDistortionShader"),
-            new("PixelationShader", OverlayCategory, "P0", "PixelationShader"),
-            new("RainbowShader", OverlayCategory, "P0", "RainbowShader"),
-            new("ScanlineShader", OverlayCategory, "P0", "ScanlineShader"),
-            new("WormShader", OverlayCategory, "P0", "WormShader")
+            // Overlay shaders affect only the sprite currently being drawn.
+            new("AuroraWaveShader", ShaderCategory.Overlay, "P0", "AuroraWaveShader"),
+            new("CyberNeonGlow", ShaderCategory.Overlay, "P0", "CyberNeonGlow"),
+            new("DistortionShader", ShaderCategory.Overlay, "P0", "DistortionShader"),
+            new("EdgeGlowShader", ShaderCategory.Overlay, "P0", "EdgeGlowShader"),
+            new("EnchantmentShader", ShaderCategory.Overlay, "P0", "EnchantmentShader"),
+            new("FireBurnShader", ShaderCategory.Overlay, "P0", "FireBurnShader"),
+            new("GlassRefractionShader", ShaderCategory.Overlay, "P0", "GlassRefractionShader"),
+            new("GlitchBlocksShader", ShaderCategory.Overlay, "P0", "GlitchBlocksShader"),
+            new("GrayscaleShader", ShaderCategory.Overlay, "P0", "GrayscaleShader"),
+            new("KaleidoscopeShader", ShaderCategory.Overlay, "P0", "KaleidoscopeShader"),
+            new("LiquidFlowShader", ShaderCategory.Overlay, "P0", "LiquidFlowShader"),
+            new("MagnifyDistortionShader", ShaderCategory.Overlay, "P0", "MagnifyDistortionShader"),
+            new("PixelationShader", ShaderCategory.Overlay, "P0", "PixelationShader"),
+            new("RainbowShader", ShaderCategory.Overlay, "P0", "RainbowShader"),
+            new("ScanlineShader", ShaderCategory.Overlay, "P0", "ScanlineShader"),
+            new("WormShader", ShaderCategory.Overlay, "P0", "WormShader")
         ];
 
         private static void RegisterOverlayShaders()

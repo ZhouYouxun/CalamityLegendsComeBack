@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -68,6 +69,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             SpawnHitEffects(Projectile, SpawnStage, StageIntensity);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().AddTide();
         }
 
         public override bool PreDraw(ref Color lightColor)

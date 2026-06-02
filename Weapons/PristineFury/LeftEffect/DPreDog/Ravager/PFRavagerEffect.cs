@@ -219,7 +219,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, ThemeColor * 0.52f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.05f, 0.34f, 12, false));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, ThemeColor * 0.52f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.05f, 0.34f, 12, true));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.Lerp(ThemeColor, Color.White, 0.26f) * 0.68f, "CalamityMod/Particles/WaterFoam", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.08f, 0.46f, 16, true));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, ThemeColor * 0.72f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.06f, 0.54f, 18));
+
+            for (int i = 0; i < 7; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5.6f);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(center, velocity, "CalamityMod/Particles/PearlParticleGlow", false, Main.rand.Next(10, 18), Main.rand.NextFloat(0.12f, 0.24f), Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.08f, 0.36f)), new Vector2(0.5f, 1f), true, false));
+            }
+
             for (int i = 0; i < 4; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -241,16 +250,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.rand.NextBool(2))
             {
                 Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(BeamLength) + direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-7f, 7f);
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     position,
-                    Main.rand.NextVector2Circular(0.35f, 0.35f),
+                    -direction * Main.rand.NextFloat(0.2f, 1.1f),
+                    "CalamityMod/Particles/PearlParticleGlow",
                     false,
                     Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.18f, 0.32f),
+                    Main.rand.NextFloat(0.1f, 0.2f),
                     Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.06f, 0.32f)),
+                    new Vector2(0.5f, 1f),
                     true,
-                    false,
-                    true));
+                    false));
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(BeamLength);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(position, direction * 0.22f, "CalamityMod/Particles/WaterFoam", false, 8, Main.rand.NextFloat(0.055f, 0.1f), ThemeColor * 0.72f, Vector2.One, true, false, Main.rand.NextFloat(-10f, 10f)));
+            }
+
+            if ((int)Timer % 4 == 0)
+            {
+                Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(BeamLength);
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(position, Vector2.Zero, ThemeColor * 0.58f, Vector2.One, direction.ToRotation(), 0.025f, 0.16f, 16));
             }
 
             if ((int)Timer % 5 == 0)

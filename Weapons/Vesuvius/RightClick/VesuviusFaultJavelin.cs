@@ -52,27 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 Projectile.tileCollide = true;
 
             if (!Main.dedServ)
-            {
-                if (Main.rand.NextBool(2))
-                {
-                    Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(10f, 10f), DustID.Torch, -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.14f), 100, Color.OrangeRed, Main.rand.NextFloat(0.8f, 1.35f));
-                    dust.noGravity = true;
-                }
-
-                if (Main.rand.NextBool(4))
-                {
-                    Particle smoke = new HeavySmokeParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                        -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.11f),
-                        Color.Lerp(Color.Gray, Color.OrangeRed, 0.18f),
-                        Main.rand.Next(24, 40),
-                        Main.rand.NextFloat(0.45f, 0.88f),
-                        0.62f,
-                        Main.rand.NextFloat(-0.04f, 0.04f),
-                        Stage >= 4);
-                    GeneralParticleHandler.SpawnParticle(smoke);
-                }
-            }
+                VesuviusVolcanicVisuals.SpawnTravelMix(Projectile.Center, -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.14f), 0.9f + Stage * 0.08f, Stage >= 4);
 
             if (Stage >= 4 && Projectile.owner == Main.myPlayer && Projectile.localAI[0] % 8f == 0f)
             {
@@ -151,6 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             }
 
             RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(6f, 6f), Main.rand.NextFloat(24f, 42f));
+            VesuviusVolcanicVisuals.SpawnImpactMix(center, 0.72f + Stage * 0.1f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -206,20 +187,11 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                         Main.rand.NextFloat(20f, 40f));
                 }
 
-                if (Main.rand.NextBool(3))
-                {
-                    Particle smoke = new HeavySmokeParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(32f, 20f),
-                        -Vector2.UnitY * Main.rand.NextFloat(1.2f, 3.8f) + Main.rand.NextVector2Circular(0.8f, 0.8f),
-                        Color.Lerp(Color.Gray, Color.OrangeRed, 0.16f),
-                        Main.rand.Next(26, 46),
-                        Main.rand.NextFloat(0.55f, 1.25f),
-                        0.72f,
-                        Main.rand.NextFloat(-0.04f, 0.04f),
-                        Stage >= 4,
-                        required: true);
-                    GeneralParticleHandler.SpawnParticle(smoke);
-                }
+                if (Projectile.localAI[0] % 2f == 0f)
+                    VesuviusVolcanicVisuals.SpawnVentMix(Projectile.Center + Main.rand.NextVector2Circular(24f, 14f), 0.82f + Stage * 0.08f, Stage >= 4);
+
+                if (Projectile.localAI[0] % Math.Max(12, 26 - Stage * 2) == 0f)
+                    VesuviusVolcanicVisuals.SpawnHeatPulse(Projectile.Center, 0.72f + Stage * 0.1f);
             }
 
             if (Stage >= 2)
@@ -269,6 +241,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 Stage);
 
             SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.44f, Pitch = Stage >= 3 ? 0.1f : -0.1f }, Projectile.Center);
+            if (!Main.dedServ)
+                VesuviusVolcanicVisuals.SpawnImpactMix(Projectile.Center + direction * 42f, 0.44f + Stage * 0.06f);
         }
 
         private NPC FindTarget(float range)
@@ -345,11 +319,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             Lighting.AddLight(Projectile.Center, 0.55f, 0.18f, 0f);
 
-            if (!Main.dedServ && Main.rand.NextBool(3))
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Projectile.velocity, Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke, -Projectile.velocity * 0.08f, 100, Color.OrangeRed, Main.rand.NextFloat(0.8f, 1.2f));
-                dust.noGravity = true;
-            }
+            if (!Main.dedServ)
+                VesuviusVolcanicVisuals.SpawnTravelMix(Projectile.Center + Projectile.velocity, -Projectile.velocity * 0.08f, 0.74f, false);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -409,19 +380,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             if (!Main.dedServ)
             {
-                if (Main.rand.NextBool(2))
+                if (Main.rand.NextBool(3))
                 {
-                    Particle smoke = new HeavySmokeParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(Projectile.width * 0.45f, Projectile.height * 0.45f),
-                        new Vector2(-Math.Sign(Projectile.velocity.X) * Main.rand.NextFloat(0.4f, 1.8f), -Main.rand.NextFloat(0.4f, 2.8f)),
-                        Color.Lerp(Color.DarkGray, Color.OrangeRed, 0.16f),
-                        Main.rand.Next(30, 58),
-                        Main.rand.NextFloat(0.65f, 1.35f),
-                        0.78f,
-                        Main.rand.NextFloat(-0.03f, 0.03f),
-                        false,
-                        required: true);
-                    GeneralParticleHandler.SpawnParticle(smoke);
+                    Vector2 lavaPosition = Projectile.Center + Main.rand.NextVector2Circular(Projectile.width * 0.5f, Projectile.height * 0.42f);
+                    RancorLavaMetaball.SpawnParticle(lavaPosition, Main.rand.NextFloat(16f, 34f));
                 }
 
                 if (Main.rand.NextBool(3))
@@ -434,6 +396,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                         Color.Lerp(Color.Gray, Color.OrangeRed, 0.22f));
                     GeneralParticleHandler.SpawnParticle(ash);
                 }
+
+                VesuviusVolcanicVisuals.SpawnPyroclasticMix(
+                    Projectile.Center + Main.rand.NextVector2Circular(Projectile.width * 0.42f, Projectile.height * 0.38f),
+                    Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X));
             }
         }
 
@@ -476,22 +442,11 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     float along = Main.rand.NextFloat(0f, 260f);
                     Vector2 pos = start + dir * along + Main.rand.NextVector2Circular(18f, 18f);
                     RancorLavaMetaball.SpawnParticle(pos, Main.rand.NextFloat(26f, 54f));
+                    VesuviusVolcanicVisuals.SpawnSubductionMix(pos, dir, i == 0);
                 }
 
-                if (Projectile.localAI[0] % 2f == 0f)
-                {
-                    Particle smoke = new HeavySmokeParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(90f, 42f),
-                        -Vector2.UnitY * Main.rand.NextFloat(1.5f, 4.8f),
-                        Color.Lerp(Color.DarkGray, Color.OrangeRed, 0.16f),
-                        Main.rand.Next(36, 70),
-                        Main.rand.NextFloat(0.9f, 1.9f),
-                        0.82f,
-                        Main.rand.NextFloat(-0.04f, 0.04f),
-                        true,
-                        required: true);
-                    GeneralParticleHandler.SpawnParticle(smoke);
-                }
+                if (Projectile.localAI[0] % 12f == 0f)
+                    VesuviusVolcanicVisuals.SpawnHeatPulse(Projectile.Center + dir * Main.rand.NextFloat(32f, 190f), 1.15f);
             }
         }
 
@@ -528,6 +483,258 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 new Vector2(line.Length(), 72f),
                 SpriteEffects.None);
             return false;
+        }
+    }
+
+    internal static class VesuviusVolcanicVisuals
+    {
+        private static readonly Color LavaColor = new(255, 104, 28);
+        private static readonly Color HotColor = new(255, 188, 72);
+        private static readonly Color SmokeColor = new(92, 78, 72);
+
+        internal static void SpawnTravelMix(Vector2 position, Vector2 velocity, float intensity, bool allowSmoke)
+        {
+            if (Main.dedServ)
+                return;
+
+            intensity = MathHelper.Clamp(intensity, 0.3f, 1.6f);
+
+            if (Main.rand.NextFloat() < 0.36f * intensity)
+                RancorLavaMetaball.SpawnParticle(position + Main.rand.NextVector2Circular(5f, 5f), Main.rand.NextFloat(10f, 19f) * intensity);
+
+            if (Main.rand.NextFloat() < 0.72f * intensity)
+            {
+                Dust flame = Dust.NewDustPerfect(
+                    position + Main.rand.NextVector2Circular(7f, 7f),
+                    DustID.InfernoFork,
+                    velocity.RotatedByRandom(0.28f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    80,
+                    Main.rand.NextBool(4) ? HotColor : LavaColor,
+                    Main.rand.NextFloat(0.72f, 1.22f) * intensity);
+                flame.noGravity = true;
+            }
+
+            if (Main.rand.NextFloat() < 0.42f * intensity)
+            {
+                Particle ember = new GlowOrbParticle(
+                    position + Main.rand.NextVector2Circular(8f, 8f),
+                    velocity.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.45f, 0.9f),
+                    false,
+                    Main.rand.Next(8, 15),
+                    Main.rand.NextFloat(0.18f, 0.46f) * intensity,
+                    Main.rand.NextBool(4) ? Color.White : Color.Lerp(LavaColor, HotColor, Main.rand.NextFloat(0.2f, 0.72f)));
+                GeneralParticleHandler.SpawnParticle(ember);
+            }
+
+            if (Main.rand.NextFloat() < 0.13f * intensity)
+            {
+                Particle heatMist = new MediumMistParticle(
+                    position,
+                    velocity * Main.rand.NextFloat(0.25f, 0.55f),
+                    Color.Lerp(LavaColor, HotColor, 0.28f),
+                    Color.DarkSlateGray,
+                    Main.rand.NextFloat(0.32f, 0.62f) * intensity,
+                    Main.rand.Next(74, 126),
+                    Main.rand.NextFloat(-0.08f, 0.08f));
+                GeneralParticleHandler.SpawnParticle(heatMist);
+            }
+
+            if (allowSmoke && Main.rand.NextFloat() < 0.055f * intensity)
+                SpawnRareSmoke(position, velocity * 0.4f, intensity * 0.72f, false);
+        }
+
+        internal static void SpawnVentMix(Vector2 position, float intensity, bool glowing)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 riseVelocity = -Vector2.UnitY.RotatedByRandom(0.38f) * Main.rand.NextFloat(1.1f, 3.4f);
+            SpawnTravelMix(position, riseVelocity, intensity, false);
+
+            if (Main.rand.NextBool(7))
+            {
+                Particle heatMist = new MediumMistParticle(
+                    position,
+                    riseVelocity * Main.rand.NextFloat(0.35f, 0.7f),
+                    Color.Lerp(LavaColor, HotColor, 0.36f),
+                    SmokeColor,
+                    Main.rand.NextFloat(0.5f, 0.92f) * intensity,
+                    Main.rand.Next(92, 148),
+                    Main.rand.NextFloat(-0.075f, 0.075f));
+                GeneralParticleHandler.SpawnParticle(heatMist);
+            }
+
+            if (Main.rand.NextBool(glowing ? 13 : 18))
+                SpawnRareSmoke(position, riseVelocity, intensity * 0.85f, glowing);
+        }
+
+        internal static void SpawnPyroclasticMix(Vector2 position, int direction)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 drift = new(-direction * Main.rand.NextFloat(0.45f, 1.65f), -Main.rand.NextFloat(0.55f, 2.7f));
+
+            if (Main.rand.NextBool(2))
+            {
+                Dust flame = Dust.NewDustPerfect(position, DustID.InfernoFork, drift * Main.rand.NextFloat(0.32f, 0.72f), 110, LavaColor, Main.rand.NextFloat(0.62f, 1.12f));
+                flame.noGravity = !Main.rand.NextBool(4);
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Particle heatMist = new MediumMistParticle(
+                    position,
+                    drift,
+                    Color.Lerp(LavaColor, SmokeColor, 0.32f),
+                    Color.DarkSlateGray,
+                    Main.rand.NextFloat(0.54f, 1f),
+                    Main.rand.Next(108, 172),
+                    Main.rand.NextFloat(-0.055f, 0.055f));
+                GeneralParticleHandler.SpawnParticle(heatMist);
+            }
+
+            if (Main.rand.NextBool(14))
+                SpawnRareSmoke(position, drift, Main.rand.NextFloat(0.52f, 0.82f), false);
+        }
+
+        internal static void SpawnSubductionMix(Vector2 position, Vector2 direction, bool allowMist)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 riseVelocity = -Vector2.UnitY.RotatedByRandom(0.5f) * Main.rand.NextFloat(1.4f, 4.6f) - direction * Main.rand.NextFloat(0.1f, 0.8f);
+
+            Dust flame = Dust.NewDustPerfect(
+                position,
+                DustID.InfernoFork,
+                riseVelocity.RotatedByRandom(0.28f),
+                90,
+                Main.rand.NextBool(3) ? HotColor : LavaColor,
+                Main.rand.NextFloat(0.88f, 1.52f));
+            flame.noGravity = true;
+
+            if (Main.rand.NextBool(2))
+            {
+                Particle ember = new GlowOrbParticle(
+                    position + Main.rand.NextVector2Circular(9f, 9f),
+                    riseVelocity * Main.rand.NextFloat(0.3f, 0.72f),
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.32f, 0.72f),
+                    Color.Lerp(LavaColor, Color.White, Main.rand.NextFloat(0.08f, 0.32f)));
+                GeneralParticleHandler.SpawnParticle(ember);
+            }
+
+            if (allowMist && Main.rand.NextBool(3))
+            {
+                Particle heatMist = new MediumMistParticle(
+                    position,
+                    riseVelocity * 0.42f,
+                    Color.Lerp(LavaColor, HotColor, 0.28f),
+                    Color.DarkSlateGray,
+                    Main.rand.NextFloat(0.62f, 1.12f),
+                    Main.rand.Next(96, 164),
+                    Main.rand.NextFloat(-0.07f, 0.07f));
+                GeneralParticleHandler.SpawnParticle(heatMist);
+            }
+
+            if (Main.rand.NextBool(26))
+                SpawnRareSmoke(position, riseVelocity * 0.7f, Main.rand.NextFloat(0.72f, 1.08f), true);
+        }
+
+        internal static void SpawnHeatPulse(Vector2 center, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                LavaColor * 0.42f,
+                "CalamityMod/Particles/SoftRoundExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.015f * intensity,
+                0.085f * intensity,
+                16));
+        }
+
+        internal static void SpawnImpactMix(Vector2 center, float strength)
+        {
+            if (Main.dedServ)
+                return;
+
+            strength = MathHelper.Clamp(strength, 0.3f, 1.8f);
+            RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(7f, 7f), Main.rand.NextFloat(26f, 46f) * strength);
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                LavaColor,
+                "CalamityMod/Particles/FlameExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(-5f, 5f),
+                0f,
+                0.075f * strength,
+                18));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                HotColor * 0.52f,
+                "CalamityMod/Particles/SoftRoundExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.02f,
+                0.11f * strength,
+                20));
+
+            int burstCount = Math.Max(6, (int)(11f * strength));
+            for (int i = 0; i < burstCount; i++)
+            {
+                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 7.2f) * strength;
+                Dust flame = Dust.NewDustPerfect(center, DustID.InfernoFork, burstVelocity, 80, Main.rand.NextBool(3) ? LavaColor : HotColor, Main.rand.NextFloat(0.82f, 1.42f));
+                flame.noGravity = true;
+
+                if (i % 3 == 0)
+                {
+                    Particle ember = new GlowOrbParticle(
+                        center,
+                        burstVelocity * 0.72f,
+                        false,
+                        Main.rand.Next(9, 16),
+                        Main.rand.NextFloat(0.24f, 0.54f) * strength,
+                        Main.rand.NextBool(4) ? Color.White : HotColor);
+                    GeneralParticleHandler.SpawnParticle(ember);
+                }
+            }
+
+            if (strength > 0.7f)
+            {
+                Particle heatMist = new MediumMistParticle(
+                    center,
+                    -Vector2.UnitY * Main.rand.NextFloat(0.6f, 1.8f),
+                    Color.Lerp(LavaColor, HotColor, 0.24f),
+                    SmokeColor,
+                    Main.rand.NextFloat(0.72f, 1.12f) * strength,
+                    Main.rand.Next(86, 138),
+                    Main.rand.NextFloat(-0.07f, 0.07f));
+                GeneralParticleHandler.SpawnParticle(heatMist);
+            }
+        }
+
+        private static void SpawnRareSmoke(Vector2 position, Vector2 velocity, float scale, bool glowing)
+        {
+            Particle smoke = new HeavySmokeParticle(
+                position + Main.rand.NextVector2Circular(6f, 6f),
+                velocity + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                Color.Lerp(SmokeColor, LavaColor, Main.rand.NextFloat(0.08f, 0.24f)),
+                Main.rand.Next(18, 34),
+                Main.rand.NextFloat(0.32f, 0.72f) * scale,
+                0.56f,
+                Main.rand.NextFloat(-0.045f, 0.045f),
+                glowing);
+            GeneralParticleHandler.SpawnParticle(smoke);
         }
     }
 }

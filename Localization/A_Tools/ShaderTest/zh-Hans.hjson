@@ -4,11 +4,16 @@ Mods: {
 			Weapons: {
 				ShaderTestItem: {
 					DisplayName: Shader 测试器
-					Tooltip: 左键发射测试弹幕；右键切换全屏 Shader。离手或死亡会自动关闭全屏效果。
+					Tooltip: 右键打开 Shader 选择矩阵。左键运行当前选择；离手或死亡会自动关闭全屏效果。
 				}
 			}
 		}
 
-		Projectiles.A_Dev.ShaderTestProjectile.DisplayName: Shader 测试弹幕
+		Projectiles: {
+			A_Dev: {
+				ShaderTestProjectile.DisplayName: Shader 测试弹幕
+				ShaderTestPanel.DisplayName: Shader 选择矩阵
+			}
+		}
 	}
 }

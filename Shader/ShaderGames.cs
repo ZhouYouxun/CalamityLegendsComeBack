@@ -9,21 +9,25 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Shader
 {
+    internal enum ShaderCategory
+    {
+        Trail,
+        Overlay,
+        Screen
+    }
+
     [Autoload(Side = ModSide.Client)]
     public sealed partial class ShaderGames : ModSystem
     {
         public const string ShaderPrefix = "CalamityLegendsComeBack:";
 
         private const string LibraryRoot = "CalamityLegendsComeBack/Shader/Library/";
-        private const string TrailCategory = "Trail";
-        private const string OverlayCategory = "Overlay";
-        private const string ScreenCategory = "Screen";
 
         public static readonly Dictionary<string, Asset<Effect>> LoadedShaders = [];
 
-        private readonly record struct ShaderDefinition(
+        internal readonly record struct ShaderDefinition(
             string Name,
-            string Category,
+            ShaderCategory Category,
             string PassName,
             string RegistrationName);
 
@@ -70,6 +74,64 @@ namespace CalamityLegendsComeBack.Shader
         public static bool TryGetMiscShader(string registrationName, out MiscShaderData shader)
         {
             return GameShaders.Misc.TryGetValue(ShaderPrefix + registrationName, out shader) && shader is not null;
+        }
+
+        internal static IReadOnlyList<ShaderDefinition> GetShaders(ShaderCategory category)
+        {
+            return category switch
+            {
+                ShaderCategory.Trail => TrailShaders,
+                ShaderCategory.Overlay => OverlayShaders,
+                ShaderCategory.Screen => ScreenShaders,
+                _ => Array.Empty<ShaderDefinition>()
+            };
+        }
+
+        internal static bool TryGetShaderByCatalogIndex(int catalogIndex, out ShaderDefinition shader)
+        {
+            int currentIndex = 0;
+            foreach (ShaderCategory category in Enum.GetValues<ShaderCategory>())
+            {
+                foreach (ShaderDefinition candidate in GetShaders(category))
+                {
+                    if (currentIndex == catalogIndex)
+                    {
+                        shader = candidate;
+                        return true;
+                    }
+
+                    currentIndex++;
+                }
+            }
+
+            shader = default;
+            return false;
+        }
+
+        internal static int GetCatalogIndex(ShaderCategory category, int categoryIndex)
+        {
+            int catalogIndex = categoryIndex;
+            foreach (ShaderCategory candidateCategory in Enum.GetValues<ShaderCategory>())
+            {
+                if (candidateCategory == category)
+                    return catalogIndex;
+
+                catalogIndex += GetShaders(candidateCategory).Count;
+            }
+
+            return -1;
+        }
+
+        internal static int FindCatalogIndex(ShaderCategory category, string shaderName)
+        {
+            IReadOnlyList<ShaderDefinition> shaders = GetShaders(category);
+            for (int i = 0; i < shaders.Count; i++)
+            {
+                if (shaders[i].Name == shaderName)
+                    return GetCatalogIndex(category, i);
+            }
+
+            return -1;
         }
 
         private static void LoadShaderGroup(IEnumerable<ShaderDefinition> shaders)

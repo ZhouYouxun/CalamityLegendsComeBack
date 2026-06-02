@@ -390,7 +390,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 0f,
                 1.05f * intensity,
                 32,
-                false));
+                true));
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,

@@ -53,7 +53,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 beamVector = Projectile.velocity.SafeNormalize(Vector2.UnitX);
                 Projectile.rotation = beamVector.ToRotation() - MathHelper.PiOver2;
                 Projectile.velocity = beamVector;
-                SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.72f, Pitch = -0.18f }, Projectile.Center);
+                if (Projectile.localAI[0] == 0f)
+                    SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.72f, Pitch = -0.18f }, Projectile.Center);
             }
 
             Projectile.localAI[0]++;
@@ -115,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                             Projectile.owner);
 
                         if (proj >= 0 && proj < Main.maxProjectiles)
-                            Main.projectile[proj].timeLeft = 144;
+                            Main.projectile[proj].timeLeft = 450;
 
                         PFLeftEffectRules.ApplyTheme(proj, (PristineFuryMark)(int)Projectile.ai[2]);
                     }

@@ -13,9 +13,9 @@ namespace CalamityLegendsComeBack.Shader
 
         private static readonly ShaderDefinition[] ScreenShaders =
         [
-            // 全屏类：通过 Filters.Scene 接管屏幕后处理。
-            new("BlackHoleDistortion", ScreenCategory, "Pass1", "BlackHoleDistortion"),
-            new("ScreenSimplyDistorted", ScreenCategory, "Pass1", "ScreenSimplyDistorted")
+            // Screen shaders are activated through Filters.Scene.
+            new("BlackHoleDistortion", ShaderCategory.Screen, "Pass1", "BlackHoleDistortion"),
+            new("ScreenSimplyDistorted", ShaderCategory.Screen, "Pass1", "ScreenSimplyDistorted")
         ];
 
         private static void RegisterScreenShaders()

@@ -201,7 +201,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 0.04f,
                 CanHome ? 0.38f : 0.24f,
                 14,
-                false));
+                true));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

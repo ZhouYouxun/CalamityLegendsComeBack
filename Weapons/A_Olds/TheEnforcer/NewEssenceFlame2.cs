@@ -368,6 +368,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                 SpriteEffects.None,
                 0f);
 
+            TheNewEnforcerMagicCoreDraw.Draw(
+                drawPosition + direction * 3f,
+                Projectile.rotation,
+                Projectile.scale * 0.82f,
+                fade,
+                color,
+                Projectile.identity);
+
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition + direction * 2f,

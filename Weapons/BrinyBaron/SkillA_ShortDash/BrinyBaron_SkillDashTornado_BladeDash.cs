@@ -1,6 +1,7 @@
 using System;
 using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityMod;
 using CalamityMod.Enums;
 using Microsoft.Xna.Framework;
@@ -424,6 +425,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             if (Main.myPlayer != Projectile.owner)
                 return;
+
+            Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().AddTide();
 
             Vector2 baseDirection = dashDirection.SafeNormalize(lockedDirection);
             float boltSpeed = 6.5f;

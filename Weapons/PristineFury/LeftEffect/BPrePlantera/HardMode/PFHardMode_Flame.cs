@@ -116,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, warm * 0.82f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.08f, 1.08f * scale, 22));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, theme * 0.55f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.18f, 1.85f * scale, 28));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, warm, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.03f, 0.42f * scale, 18, true));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.White * 0.55f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.05f, 0.24f * scale, 12, false));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.White * 0.55f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.05f, 0.24f * scale, 12, true));
 
             for (int i = 0; i < 5; i++)
             {
