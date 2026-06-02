@@ -261,7 +261,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D body = TextureAssets.Projectile[Type].Value;
-            Texture2D wing = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark2").Value;
+            Texture2D wing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -294,8 +294,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Main.EntitySpriteDraw(body, afterimagePosition, null, additiveTheme * opacity, Projectile.rotation, origin, Projectile.scale * 0.96f, SpriteEffects.None, 0f);
             }
 
-            DrawWingPair(wing, drawPosition + forward * 4.5f, forward, side, 0f, 0.72f, additiveTheme);
-            DrawWingPair(wing, drawPosition - forward * 7.5f, forward, side, MathHelper.Pi, 0.56f, additiveTheme * 0.86f);
+            DrawWingPair(wing, drawPosition + forward * 5.5f, forward, side, 0f, 1.08f, additiveTheme);
+            DrawWingPair(wing, drawPosition - forward * 8.5f, forward, side, MathHelper.Pi, 0.88f, additiveTheme * 0.92f);
 
             for (int i = 0; i < 8; i++)
             {
@@ -325,16 +325,28 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     Vector2 drawPosition = root + side * sideSign * (8.2f + snap * 4.4f) - forward * (2.8f + Math.Abs(sampleFlap) * 1.8f);
                     float rotation = wingDirection.ToRotation() + MathHelper.PiOver2;
                     float opacity = sample == 0 ? 0.72f : 0.32f;
-                    float wingScale = (0.34f + snap * 0.08f) * size;
+                    float wingLength = (28f + snap * 8f + Math.Abs(sampleFlap) * 7f) * size;
+                    Vector2 wingScale = new(0.22f * size * Projectile.scale, wingLength / wing.Height * Projectile.scale);
 
                     Main.EntitySpriteDraw(
                         wing,
                         drawPosition,
                         null,
-                        color * opacity,
+                        color * opacity * 1.35f,
                         rotation,
-                        new Vector2(wing.Width * 0.5f, wing.Height * 0.86f),
-                        wingScale * Projectile.scale,
+                        new Vector2(wing.Width * 0.5f, wing.Height),
+                        wingScale,
+                        SpriteEffects.None,
+                        0f);
+
+                    Main.EntitySpriteDraw(
+                        wing,
+                        drawPosition + wingDirection * wingLength * 0.08f,
+                        null,
+                        Color.Lerp(color, Color.White with { A = 0 }, 0.65f) * opacity * 0.42f,
+                        rotation,
+                        new Vector2(wing.Width * 0.5f, wing.Height),
+                        new Vector2(0.09f * size * Projectile.scale, wingLength / wing.Height * 0.74f * Projectile.scale),
                         SpriteEffects.None,
                         0f);
                 }

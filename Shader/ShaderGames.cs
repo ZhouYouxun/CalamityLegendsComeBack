@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
@@ -11,53 +10,34 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Shader
 {
     [Autoload(Side = ModSide.Client)]
-    public sealed class ShaderGames : ModSystem
+    public sealed partial class ShaderGames : ModSystem
     {
         public const string ShaderPrefix = "CalamityLegendsComeBack:";
 
-        private const string EffectsPath = "CalamityLegendsComeBack/Shader/XNBcoder/Effects/";
-        private const string LegacyPath = "CalamityLegendsComeBack/Shader/222/";
+        private const string LibraryRoot = "CalamityLegendsComeBack/Shader/Library/";
+        private const string TrailCategory = "Trail";
+        private const string OverlayCategory = "Overlay";
+        private const string ScreenCategory = "Screen";
 
         public static readonly Dictionary<string, Asset<Effect>> LoadedShaders = [];
 
-        public static Effect RainbowShader => GetEffect("RainbowShader");
-        public static Effect EdgeGlowShader => GetEffect("EdgeGlowShader");
-        public static Effect GlassRefractionShader => GetEffect("GlassRefractionShader");
-        public static Effect DistortionShader => GetEffect("DistortionShader");
-        public static Effect EnchantmentShader => GetEffect("EnchantmentShader");
-        public static Effect GlitchBlocksShader => GetEffect("GlitchBlocksShader");
-        public static Effect KaleidoscopeShader => GetEffect("KaleidoscopeShader");
-        public static Effect KaleidoscopeScreenShader => GetEffect("KaleidoscopeScreenShader");
-        public static Effect ScanlineShader => GetEffect("ScanlineShader");
-        public static Effect WormShader => GetEffect("WormShader");
-        public static Effect GrayscaleShader => GetEffect("GrayscaleShader");
-        public static Effect MagnifyDistortionShader => GetEffect("MagnifyDistortionShader");
-        public static Effect CyberNeonGlow => GetEffect("CyberNeonGlow");
-        public static Effect LiquidFlowShader => GetEffect("LiquidFlowShader");
-        public static Effect FireBurnShader => GetEffect("FireBurnShader");
-        public static Effect AuroraWaveShader => GetEffect("AuroraWaveShader");
-        public static Effect PixelationShader => GetEffect("PixelationShader");
-        public static Effect BlackHoleDistortionShader => GetEffect("BlackHoleDistortion");
-        public static Effect ScreenSimplyDistortedShader => GetEffect("ScreenSimplyDistorted");
-
-        public static Effect TailFirst => GetEffect("TailFirst");
-        public static Effect TailSecond => GetEffect("TailSecond");
-        public static Effect TailMagic => GetEffect("TailMagic");
-        public static Effect TailModern => GetEffect("TailModern");
-        public static Effect TailTechnology => GetEffect("TailTechnology");
-        public static Effect TrailFrostCrystal => GetEffect("TrailFrostCrystal");
-        public static Effect TrailGhostlyPhantom => GetEffect("TrailGhostlyPhantom");
-        public static Effect TrailBlazingFlame => GetEffect("TrailBlazingFlame");
-        public static Effect TrailWarpDistortion => GetEffect("TrailWarpDistortion");
-        public static Effect ArtAttackTrail => GetEffect("ArtAttackTrail");
+        private readonly record struct ShaderDefinition(
+            string Name,
+            string Category,
+            string PassName,
+            string RegistrationName);
 
         public override void PostSetupContent()
         {
             if (Main.dedServ)
                 return;
 
-            LoadBundledShaders();
+            LoadShaderGroup(TrailShaders);
+            LoadShaderGroup(OverlayShaders);
+            LoadShaderGroup(ScreenShaders);
+
             RegisterTrailShaders();
+            RegisterOverlayShaders();
             RegisterScreenShaders();
         }
 
@@ -82,75 +62,20 @@ namespace CalamityLegendsComeBack.Shader
             return GetShaderAsset(name)?.Value;
         }
 
-        private static void LoadBundledShaders()
+        public static string SceneFilterKey(string registrationName)
         {
-            string[] effectShaderNames =
-            [
-                "ArtAttackTrail",
-                "AuroraWaveShader",
-                "BlackHoleDistortion",
-                "CyberNeonGlow",
-                "DistortionShader",
-                "EdgeGlowShader",
-                "EnchantmentShader",
-                "FireBurnShader",
-                "GlassRefractionShader",
-                "GlitchBlocksShader",
-                "GrayscaleShader",
-                "KaleidoscopeScreenShader",
-                "KaleidoscopeShader",
-                "LiquidFlowShader",
-                "MagnifyDistortionShader",
-                "PixelationShader",
-                "RainbowShader",
-                "ScanlineShader",
-                "ScreenSimplyDistorted",
-                "TailFirst",
-                "TailMagic",
-                "TailModern",
-                "TailSecond",
-                "TailTechnology",
-                "TrailBlazingFlame",
-                "TrailFrostCrystal",
-                "TrailGhostlyPhantom",
-                "TrailWarpDistortion",
-                "WormShader"
-            ];
-
-            foreach (string name in effectShaderNames)
-                TryLoadShader(name, EffectsPath + name);
-
-            string[] legacyShaderNames =
-            [
-                "DistortShader",
-                "FirstShader",
-                "HGTShader",
-                "SecondShader",
-                "ThirdShader"
-            ];
-
-            foreach (string name in legacyShaderNames)
-                TryLoadShader(name, LegacyPath + name);
+            return ShaderPrefix + registrationName;
         }
 
-        private static void RegisterTrailShaders()
+        public static bool TryGetMiscShader(string registrationName, out MiscShaderData shader)
         {
-            RegisterMiscShader("TailFirst", "TrailPass", "TailFirstEffect");
-            RegisterMiscShader("TailSecond", "TrailPass", "TailSecondEffect");
-            RegisterMiscShader("TailMagic", "TrailPass", "TailMagicEffect");
-            RegisterMiscShader("TailModern", "TrailPass", "TailModernEffect");
-            RegisterMiscShader("TailTechnology", "TrailPass", "TailTechnologyEffect");
-            RegisterMiscShader("TrailFrostCrystal", "TrailPass", "TrailFrostCrystalEffect");
-            RegisterMiscShader("TrailGhostlyPhantom", "TrailPass", "TrailGhostlyPhantomEffect");
-            RegisterMiscShader("TrailBlazingFlame", "TrailPass", "TrailBlazingFlameEffect");
-            RegisterMiscShader("TrailWarpDistortion", "TrailPass", "TrailWarpDistortionEffect");
-            RegisterMiscShader("ArtAttackTrail", "TrailPass", "ArtAttackTrail");
-            RegisterMiscShader("HGTShader", "PiercePass", "HGTShader");
+            return GameShaders.Misc.TryGetValue(ShaderPrefix + registrationName, out shader) && shader is not null;
         }
 
-        private static void RegisterScreenShaders()
+        private static void LoadShaderGroup(IEnumerable<ShaderDefinition> shaders)
         {
-            RegisterSceneFilter("ScreenSimplyDistorted", "Pass1", "ScreenSimplyDistorted", EffectPriority.Medium);
+            foreach (ShaderDefinition shader in shaders)
+                TryLoadShader(shader.Name, LibraryRoot + shader.Category + "/" + shader.Name);
         }
 
         private static void TryLoadShader(string name, string path)
@@ -183,20 +108,9 @@ namespace CalamityLegendsComeBack.Shader
             if (shader is null)
                 return;
 
-            string key = ShaderPrefix + registrationName;
+            string key = SceneFilterKey(registrationName);
             Filters.Scene[key] = new Filter(new ScreenShaderData(shader, passName), priority);
             Filters.Scene[key].Load();
-        }
-
-        private static void UpdateScreenShaderParameters()
-        {
-            string key = ShaderPrefix + "ScreenSimplyDistorted";
-            Filter filter = Filters.Scene[key];
-            if (filter is null || !filter.IsActive())
-                return;
-
-            Effect shader = filter.GetShader().Shader;
-            shader.Parameters["uScreenResolution"]?.SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
         }
     }
 }

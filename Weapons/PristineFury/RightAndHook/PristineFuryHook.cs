@@ -112,8 +112,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (State == HookState.Firing && !PristineFuryMarkHelper.TryGetMarkFromNPC(target, out _))
+            if (State == HookState.Firing &&
+                !PristineFuryMarkHelper.TryGetMarkFromNPC(target, out _) &&
+                !PristineFuryMarkHelper.IsProvidenceLockedRavager(target))
+            {
                 modifiers.SourceDamage *= 5f;
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -127,6 +131,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             if (State != HookState.Firing)
                 return;
+
+            if (PristineFuryMarkHelper.IsProvidenceLockedRavager(target))
+            {
+                StartReturning();
+                return;
+            }
 
             Color burstColor = PristineFuryMarkHelper.TryGetMarkFromNPC(target, out PristineFuryMark mark)
                 ? PristineFuryMarkHelper.GetColor(mark)

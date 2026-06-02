@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 150;
+            Projectile.timeLeft = 450;
         }
 
         public override void AI()
@@ -49,11 +49,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Projectile.frameCounter = 0;
             }
 
-            float speed = Math.Min(19f, Projectile.velocity.Length() * 1.018f + 0.02f);
+            float trackingPower = Utils.GetLerpValue(0f, 100f, Timer, true);
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), MathHelper.Lerp(14f, 27f, trackingPower), 0.055f + trackingPower * 0.05f);
             NPC target = FindTarget(720f);
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             if (target != null)
-                direction = Vector2.Lerp(direction, Projectile.SafeDirectionTo(target.Center), 0.052f).SafeNormalize(direction);
+            {
+                Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center, direction);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(4f), MathHelper.ToRadians(18f), trackingPower);
+                direction = direction.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
+            }
             Projectile.velocity = direction * speed;
 
             Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.68f);

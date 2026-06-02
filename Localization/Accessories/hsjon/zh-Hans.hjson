@@ -6,6 +6,11 @@ Mods: {
 				Tooltip: 佩戴后才可以开启传奇武器的大招
 			}
 
+			TestItem: {
+				DisplayName: PF 测试配饰
+				Tooltip: 佩戴时，纯元单击右键改为按顺序切换印记
+			}
+
 			FastChargeModule: {
 				DisplayName: 快充模块
 				Tooltip:

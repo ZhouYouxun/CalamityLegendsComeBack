@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.A_Drill;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.B_Flamethrower;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.C_Warships;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.D_Laser;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPrism;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -22,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private BalanceYharimsCrystal damageBalance = new();
 
         private static int VipType => ModContent.ProjectileType<YC_EX_VIP>();
+        private static int MainHoldoutType => ModContent.ProjectileType<YC_TyrantPrismHoldout>();
 
         public override void SetDefaults()
         {
@@ -38,14 +40,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             Item.knockBack = 2f;
             Item.channel = true;
             Item.autoReuse = true;
-            Item.shoot = ModContent.ProjectileType<YC_WarshipHoldout>();
+            Item.shoot = MainHoldoutType;
             Item.shootSpeed = 30f;
             Item.UseSound = null;
             Item.value = Item.sellPrice(0, 20);
             Item.rare = ItemRarityID.Red;
         }
-
-        public override bool AltFunctionUse(Player player) => true;
 
         public override bool CanUseItem(Player player)
         {
@@ -55,15 +55,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             if (player.altFunctionUse == 2)
                 return false;
 
-            YharimsCrystalModePlayer modePlayer = player.GetModPlayer<YharimsCrystalModePlayer>();
-
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
             Item.noUseGraphic = true;
             Item.channel = true;
             Item.autoReuse = true;
             Item.shootSpeed = 30f;
-            Item.shoot = GetHoldoutType(modePlayer.CurrentMode);
+            Item.shoot = MainHoldoutType;
             Item.UseSound = null;
 
             return !HasAnyActiveMainHoldout(player) && base.CanUseItem(player);
@@ -110,17 +108,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
-
-            if (Main.myPlayer == player.whoAmI &&
-                player.Calamity().mouseRight &&
-                Main.mouseRightRelease &&
-                !HasAnyActiveMainHoldout(player) &&
-                !Main.mapFullscreen &&
-                !Main.blockMouse &&
-                !(Main.playerInventory && Main.HoverItem.type == Item.type))
-            {
-                CycleMode(player);
-            }
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
@@ -128,15 +115,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             if (player.altFunctionUse == 2 || HasActiveVIP(player) || HasAnyActiveMainHoldout(player))
                 return false;
 
-            YharimsCrystalAttackMode mode = player.GetModPlayer<YharimsCrystalModePlayer>().CurrentMode;
-            int holdoutType = GetHoldoutType(mode);
             Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
 
             Projectile.NewProjectile(
                 source,
                 player.MountedCenter,
                 aimDirection,
-                holdoutType,
+                MainHoldoutType,
                 damage,
                 knockback,
                 player.whoAmI);
@@ -151,56 +136,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            YharimsCrystalAttackMode mode = Main.LocalPlayer.GetModPlayer<YharimsCrystalModePlayer>().CurrentMode;
-            string modeName = this.GetLocalizedValue($"Mode_{mode}");
-            string stateLine = string.Format(this.GetLocalizedValue("CurrentMode"), modeName);
-            string modeInfo =
-                this.GetLocalizedValue("Mode_Drill_Desc") + "\n" +
-                this.GetLocalizedValue("Mode_Flamethrower_Desc") + "\n" +
-                this.GetLocalizedValue("Mode_Warships_Desc") + "\n" +
-                this.GetLocalizedValue("Mode_HelixLaser_Desc");
-            string switchInfo = this.GetLocalizedValue("SwitchInfo");
-            string focusInfo = this.GetLocalizedValue("FocusInfo");
+            string modeInfo = this.GetLocalizedValue("PrismReworkInfo");
+            string commandInfo = this.GetLocalizedValue("RightCommandInfo");
+            string resetInfo = this.GetLocalizedValue("ResetInfo");
             string exInfo = this.GetLocalizedValue("EXInfo");
 
-            tooltips.FindAndReplace("[GFB]", stateLine + "\n\n" + modeInfo + "\n\n" + switchInfo + "\n" + focusInfo + "\n\n" + exInfo);
-        }
-
-        private void CycleMode(Player player)
-        {
-            int direction = Main.MouseWorld.X >= player.Center.X ? 1 : -1;
-            YharimsCrystalModePlayer modePlayer = player.GetModPlayer<YharimsCrystalModePlayer>();
-            modePlayer.CycleMode(direction);
-            KillOwnedCrystalHoldouts(player);
-
-            Projectile.NewProjectile(
-                Item.GetSource_FromThis(),
-                player.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<YC_ModeSwitchGlyph>(),
-                0,
-                0f,
-                player.whoAmI,
-                (float)modePlayer.CurrentMode,
-                direction);
-
-            SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.42f, Pitch = 0.12f * direction }, player.Center);
-        }
-
-        private static int GetHoldoutType(YharimsCrystalAttackMode mode)
-        {
-            return mode switch
-            {
-                YharimsCrystalAttackMode.Drill => ModContent.ProjectileType<YC_DrillHoldout>(),
-                YharimsCrystalAttackMode.Flamethrower => ModContent.ProjectileType<YC_FlamethrowerHoldout>(),
-                YharimsCrystalAttackMode.HelixLaser => ModContent.ProjectileType<YC_HelixLaserHoldout>(),
-                _ => ModContent.ProjectileType<YC_WarshipHoldout>()
-            };
+            tooltips.FindAndReplace("[GFB]", modeInfo + "\n" + commandInfo + "\n" + resetInfo + "\n\n" + exInfo);
         }
 
         private static bool HasAnyActiveMainHoldout(Player player)
         {
-            return player.ownedProjectileCounts[ModContent.ProjectileType<YC_DrillHoldout>()] > 0 ||
+            return player.ownedProjectileCounts[MainHoldoutType] > 0 ||
+                   player.ownedProjectileCounts[ModContent.ProjectileType<YC_DrillHoldout>()] > 0 ||
                    player.ownedProjectileCounts[ModContent.ProjectileType<YC_FlamethrowerHoldout>()] > 0 ||
                    player.ownedProjectileCounts[ModContent.ProjectileType<YC_WarshipHoldout>()] > 0 ||
                    player.ownedProjectileCounts[ModContent.ProjectileType<YC_HelixLaserHoldout>()] > 0;
@@ -208,7 +155,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         private static bool IsMainHoldoutType(int projectileType)
         {
-            return projectileType == ModContent.ProjectileType<YC_DrillHoldout>() ||
+            return projectileType == MainHoldoutType ||
+                   projectileType == ModContent.ProjectileType<YC_DrillHoldout>() ||
                    projectileType == ModContent.ProjectileType<YC_FlamethrowerHoldout>() ||
                    projectileType == ModContent.ProjectileType<YC_WarshipHoldout>() ||
                    projectileType == ModContent.ProjectileType<YC_HelixLaserHoldout>();

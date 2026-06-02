@@ -5,26 +5,27 @@ Mods: {
 				NewLegendPristineFury: {
 					DisplayName: Pristine Fury - Return of Legends
 					PristineFuryIntro: "[c/FF9340:Current imprint: {0}.]"
-					RightClick: "[c/FFB066:Temporary debug: Right Click cycles imprints in order. The original scatter barrage is commented out in code, not removed.]"
+					RightClick: "[c/FFB066:Right Click: charge a Nova shot. Equip the PF Test Item to make single right clicks cycle imprints for testing.]"
 					Hook: "[c/9AEAFF:Hold Left + Right for 3 seconds to launch the extraction hook. Valid bosses grant their imprint; other enemies take heavy hook damage.]"
-					Left_Idle: "[c/FFE05C:Left Click: compact Pristine Fire jet with its paired sparks and short flight distance.]"
-					Left_EvilT2: "[c/FFE05C:Left Click: six yellow shells briefly decelerate, then accelerate with weak target correction.]"
-					Left_SlimeGod: "[c/FFE05C:Left Click: heavy yellow slime globes bounce up to five times without tracking.]"
+					Left_Idle: "[c/FFE05C:Left Click: 400 RPM slow gravity sparks in a Spark Spreader style.]"
+					Left_EvilT2: "[c/FFE05C:Left Click: launch magic-drawn yellow worms that repeatedly rush nearby targets.]"
+					Left_SlimeGod: "[c/FFE05C:Left Click: overloaded yellow slime globes favor ricochet; only unbounced globes curve-home after slowing down.]"
 					Left_HardMode: "[c/FFE05C:Left Click: slow heavy fireballs burst into Totality fragments and persistent ground fire.]"
 					Left_Prime: "[c/FFE05C:Left Click: gear-toothed gold firestream with stepping cinders and mechanical spark teeth.]"
-					Left_BrimstoneElemental: "[c/FFE05C:Left Click: charge a heavy yellow ray that divides into homing brimstone barrages.]"
-					Left_FakeCalamity: "[c/FFE05C:Left Click: summon pain-flames near the cursor; they pierce enemies before returning like souls.]"
+					Left_BrimstoneElemental: "[c/FFE05C:Left Click: fire a Brimstone Ray-style laser that seeds stronger homing brimstone barrages.]"
+					Left_FakeCalamity: "[c/FFE05C:Left Click: single-charge an Arc Nova-style yellow orb that detonates for high burst damage.]"
 					Left_Plantera: "[c/5EF26C:Left Click: eight visual pseudo-lasers prime one recursively splitting green lightning strike.]"
 					Left_Aurora: "[c/FFE05C:Left Click: charge an industrial welding ray; its endpoint deals extreme damage.]"
 					Left_Goliath: "[c/FFE05C:Left Click: briefly charge, then release a forward locust swarm of reaper drones.]"
 					Left_Moonlord: "[c/FFE05C:Left Click: warm up straight lunar bolts, pause, then release an instant massive laser.]"
 					Left_Providence: "[c/FFE05C:Left Click: profaned mortars explode into ground fire and summon day-or-night celestial rain.]"
+					Left_Ravager: "[c/FFE05C:Left Click: channel a single-target Bloodstone laser that sustains the user through direct healing and healing orbs.]"
 					Left_Polterghast: "[c/FFE05C:Left Click: accelerating yellow comet-souls pierce through targets.]"
 					Left_Dog: "[c/FFE05C:Left Click: Photoviscerator void stream tears delayed rifts and black accretion disks.]"
 					Left_ExoTwins: "[c/4AFFB4:Left Click: Artemis warning laser snaps forward, then Apollo rockets launch in a three-shot burst.]"
 					Left_ExoThanatos: "[c/FFE05C:Left Click: three Thanatos telegraphs converge before a terminal extinction beam tears open side lasers.]"
 					Left_ExoAres: "[c/FF4C40:Left Click: rapid Ares laser beams fire continuously from the muzzle.]"
-					Left_Dragon: "[c/FFE05C:Left Click: 250 RPM S12K dragon-breath volleys; five uneven flames pierce ten enemies and explode on each hit.]"
+					Left_Dragon: "[c/FFE05C:Left Click: dragon-breath volleys ramp from slow fire into a short frenzy, rest, then repeat.]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
@@ -101,6 +102,9 @@ Mods: {
 				PFFakeCalamity_Pellet.DisplayName: P F Fake Calamity_ Pellet
 				PFFakeCalamity_GroundFlame.DisplayName: P F Fake Calamity_ Ground Flame
 				PFFakeCalamity_SoulFlame.DisplayName: Pristine Fury Pain Soul
+				PFFakeCalamity_ChargeOrb.DisplayName: Pristine Fury Clone Charge Orb
+				PFFakeCalamity_NovaOrb.DisplayName: Pristine Fury Clone Nova Orb
+				PFFakeCalamity_NovaExplosion.DisplayName: Pristine Fury Clone Nova Explosion
 				PFMoonlord_SolarExplosion.DisplayName: P F Moonlord_ Solar Explosion
 				PFMoonlord_SolarLaser.DisplayName: P F Moonlord_ Solar Laser
 				PFMoonlord_VortexScorpioRocket.DisplayName: P F Moonlord_ Vortex Scorpio Rocket
@@ -122,6 +126,7 @@ Mods: {
 				PristineFuryRightNovaChargeOrb.DisplayName: Pristine Fury Right Nova Charge Orb
 				PristineFuryRightNovaFireball.DisplayName: Pristine Fury Right Nova Fireball
 				PristineFuryRightNovaPseudoLaser.DisplayName: Pristine Fury Right Nova Pseudo Laser
+				PFRavager_Laser.DisplayName: Pristine Fury Ravager Bloodstone Laser
 			}
 
 			TacticalComputerReticle.DisplayName: Tactical Computer Reticle
@@ -144,6 +149,7 @@ Mods: {
 				Goliath: The Plaguebringer Goliath
 				Moonlord: Moon Lord
 				Providence: Providence
+				Ravager: Ravager
 				Polterghast: Oni
 				Dog: The Devourer of Gods
 				ExoTwins: Apollo and Artemis

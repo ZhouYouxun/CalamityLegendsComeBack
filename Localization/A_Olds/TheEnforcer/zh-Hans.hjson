@@ -29,6 +29,10 @@ Mods: {
 				NewEssenceFlame2.DisplayName: 新灵魂火
 				TheNewEnforcerSlash.DisplayName: 暴政斩痕
 				OldEssenceFlame2.DisplayName: 旧式灵魂火
+				TheNewEnforcerRiftSeed.DisplayName: 暴政裂隙核心
+				TheNewEnforcerRiftField.DisplayName: 暴政裂隙
+				TheNewEnforcerLaserWall.DisplayName: 暴政激光墙
+				TheNewEnforcerRiftCrack.DisplayName: 暴政裂痕
 			}
 		}
 	}

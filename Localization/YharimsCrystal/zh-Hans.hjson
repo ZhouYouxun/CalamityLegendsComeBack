@@ -16,6 +16,9 @@ Mods: {
 					Mode_HelixLaser_Desc: "[c/F8E28A:螺旋棱镜] [c/DCD6C8:编织螺旋光束、折射针光与短促金色切线激光；开火时按住右键可加速聚焦到一点。]"
 					SwitchInfo: "[c/B5E7FF:切换] [c/DCD6C8:右键玩家左半边切换到上一个形态，右键玩家右半边切换到下一个形态。]"
 					FocusInfo: "[c/F8E28A:聚焦] [c/DCD6C8:只在螺旋棱镜左键开火时生效，光束会逐渐加速收束，而不是瞬间贴到同一点。]"
+					PrismReworkInfo: "[c/F8E28A:左键] [c/DCD6C8:按住后部署六枚带惯性的棱镜；它们的辅助光束会逐渐汇聚成由本体发射的持续破坏死光。]"
+					RightCommandInfo: "[c/73DFFF:开火时右键] [c/DCD6C8:棱镜进入阵列后，命令所有棱镜同步发射一次重型激光，随后冷却，冷却结束继续六连发。]"
+					ResetInfo: "[c/FF7A45:重置] [c/DCD6C8:松开左键、死亡或魔力耗尽都会清空整个展开进度。]"
 					EXInfo: "[c/F6D06B:传奇技能] [c/DCD6C8:召唤12艘金色激光舰进入轨道；准备完成后点击左键齐射。]"
 				}
 			}
@@ -84,6 +87,12 @@ Mods: {
 				YC_WarshipSuperLaser.DisplayName: 金辉舰队超级激光
 				YC_PrismNeedleLaser.DisplayName: 棱镜针状激光
 				SODLazer.DisplayName: 金辉折射枪
+				YC_TyrantPrismHoldout.DisplayName: 暴君水晶破坏棱镜
+				YC_TyrantPrismDrone.DisplayName: 暴君水晶棱镜
+				YC_TyrantPrismBolt.DisplayName: 暴君水晶棱镜光弹
+				YC_TyrantPrismMainBeam.DisplayName: 暴君水晶破坏死光
+				YC_TyrantPrismConvergeBeam.DisplayName: 暴君水晶汇聚光束
+				YC_TyrantPrismHeavyLaser.DisplayName: 暴君水晶同步重激光
 			}
 		}
 

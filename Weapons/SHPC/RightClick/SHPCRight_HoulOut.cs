@@ -330,11 +330,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 }
                 else if (stage >= MaxHeatStage)
                 {
-                    overheatTimer++;
-
-                    if (MaxHeatStage < 5 && overheatTimer >= BalanceSHPC.OverheatGraceTime)
+                    if (heatPlayer.CanSustainMaximumHeat())
                     {
-                        ForceShutdown(player);
+                        overheatTimer = 0;
+                    }
+                    else
+                    {
+                        overheatTimer++;
+
+                        if (overheatTimer >= BalanceSHPC.OverheatGraceTime)
+                            ForceShutdown(player);
                     }
                 }
             }

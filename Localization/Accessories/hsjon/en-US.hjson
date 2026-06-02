@@ -6,6 +6,11 @@ Mods: {
 				Tooltip: Must be equipped to activate legendary weapon ultimates
 			}
 
+			TestItem: {
+				DisplayName: PF Test Item
+				Tooltip: While equipped, Pristine Fury single right clicks cycle imprints for testing
+			}
+
 			FastChargeModule: {
 				DisplayName: Fast Charge Module
 				Tooltip: Halves the maximum charge time of the EX super laser, but also halves the player's life regeneration

@@ -1,0 +1,41 @@
+当前 Shader 目录只保留四个用途明确的区域：
+
+1. Shader/Library
+   游戏实际加载的 .fx/.xnb 资源。
+   Trail 是拖尾，Overlay 是贴图覆盖，Screen 是全屏后处理。
+
+2. Shader/XNBcoder
+   编译工具所在目录，不移动。
+   其中 Effects 只作为临时编译入口，不作为正式资源库。
+
+3. Shader/Archive
+   旧版、实验型和旧教程封存区。
+   这里的内容不加载，也不参与打包。
+
+4. Shader/Docs
+   当前维护说明。
+
+新增 Shader 的流程：
+
+1. 写好 .fx，放进 Shader/XNBcoder/Effects。
+2. 运行 Shader/XNBcoder/XNBCompiler.exe。
+3. 编译成功后，把 .fx/.xnb 移到 Shader/Library 的正确分类。
+4. 在对应注册文件中加一行：
+   - 拖尾：ShaderGames.Trails.cs
+   - 覆盖：ShaderGames.Overlays.cs
+   - 全屏：ShaderGames.Screens.cs
+
+演示测试器：
+
+Weapons/A_Tools/ShaderTest/ShaderTestItem.cs
+
+左键发射测试弹幕。
+右键切换全屏 Shader。
+离手或死亡会自动关闭全屏 Shader。
+
+测试器顶部暴露了当前演示用的 shader 名称：
+
+TrailShaderEffectName
+TrailShaderRegistrationName
+OverlayShaderName
+ScreenShaderRegistrationName

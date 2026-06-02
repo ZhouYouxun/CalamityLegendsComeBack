@@ -6,8 +6,10 @@ using CalamityMod.NPCs.ExoMechs.Thanatos;
 using CalamityMod.NPCs.PlaguebringerGoliath;
 using CalamityMod.NPCs.Polterghast;
 using CalamityMod.NPCs.Providence;
+using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.Yharon;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -35,7 +37,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         FakeCalamity = 14,
         ExoTwins = 15,
         ExoThanatos = 16,
-        ExoAres = 17
+        ExoAres = 17,
+        Ravager = 18
     }
 
     internal static class PristineFuryMarkHelper
@@ -77,6 +80,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (target.type == ModContent.NPCType<Providence>())
             {
                 mark = PristineFuryMark.Providence;
+                return true;
+            }
+
+            if (IsRavagerTarget(target))
+            {
+                if (!DownedBossSystem.downedProvidence)
+                    return false;
+
+                mark = PristineFuryMark.Ravager;
                 return true;
             }
 
@@ -147,6 +159,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             return false;
         }
 
+        internal static bool IsRavagerTarget(NPC target) =>
+            target.type == ModContent.NPCType<RavagerBody>() ||
+            target.type == ModContent.NPCType<RavagerHead>() ||
+            target.type == ModContent.NPCType<RavagerHead2>() ||
+            target.type == ModContent.NPCType<RavagerClawLeft>() ||
+            target.type == ModContent.NPCType<RavagerClawRight>() ||
+            target.type == ModContent.NPCType<RavagerLegLeft>() ||
+            target.type == ModContent.NPCType<RavagerLegRight>();
+
+        internal static bool IsProvidenceLockedRavager(NPC target) =>
+            IsRavagerTarget(target) && !DownedBossSystem.downedProvidence;
+
         internal static string GetName(PristineFuryMark mark) =>
             Language.GetTextValue($"Mods.CalamityLegendsComeBack.PristineFury.Marks.{mark}");
 
@@ -168,6 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 PristineFuryMark.Goliath => 230,
                 PristineFuryMark.Moonlord => 270,
                 PristineFuryMark.Providence => 420,
+                PristineFuryMark.Ravager => 440,
                 PristineFuryMark.Polterghast => 285,
                 PristineFuryMark.Dog => 330,
                 PristineFuryMark.Dragon => 360,

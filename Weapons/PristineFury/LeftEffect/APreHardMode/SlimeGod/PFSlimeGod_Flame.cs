@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,8 +18,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BounceCount => ref Projectile.localAI[1];
-        private bool Empowered => Timer >= 120f;
-        private float BloomPower => Empowered ? Utils.Remap(Timer, 120f, 230f, 0.25f, 1.5f) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true) : 0f;
+        private bool HasBounced => BounceCount > 0f;
+        private bool CanHome => Timer >= 120f && !HasBounced;
+        private float BloomPower => Utils.Remap(Timer, 0f, 160f, 0.32f, CanHome ? 1.6f : 0.92f, true) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true);
 
         public override void SetStaticDefaults()
         {
@@ -44,27 +46,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Timer++;
 
-            if (Timer == 120f)
+            if (Timer == 120f && !HasBounced)
             {
                 Projectile.penetrate = 1;
                 Projectile.damage = (int)(Projectile.originalDamage * 1.55f);
-                Projectile.velocity *= 0.12f;
+                Projectile.velocity *= 0.16f;
                 Projectile.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
                 ReleaseSlimeRing(10, 3.1f);
             }
-            else if (Timer > 84f)
+            else if (Timer > 54f && !CanHome)
                 Projectile.velocity *= 0.972f;
 
-            if (Empowered)
+            if (CanHome)
             {
                 Projectile.rotation += MathHelper.ToRadians(2f);
-                if (Timer > 138f)
-                    HomeToCursorBiasedTarget();
+                HomeToCursorBiasedTarget();
             }
             else
                 Projectile.rotation += Projectile.velocity.X * 0.02f;
 
-            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * (Empowered ? 0.64f : 0.38f));
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * (CanHome ? 0.72f : 0.42f));
             EmitSlimeTrail();
         }
 
@@ -86,7 +87,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             if (best != null)
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, (best.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 7.8f, 0.045f);
+            {
+                float trackingPower = Utils.GetLerpValue(120f, 210f, Timer, true);
+                Vector2 currentDirection = Projectile.velocity.SafeNormalize(Projectile.SafeDirectionTo(best.Center));
+                Vector2 desiredDirection = Projectile.SafeDirectionTo(best.Center, currentDirection);
+                float speed = MathHelper.Lerp(2.2f, 9.2f, trackingPower);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(1.5f), MathHelper.ToRadians(6.5f), trackingPower);
+                Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.055f + trackingPower * 0.075f);
+            }
         }
 
         private void EmitSlimeTrail()
@@ -94,8 +103,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            Color theme = Color.Lerp(ThemeColor, Color.White, Empowered ? 0.28f : 0.08f);
-            if (Empowered)
+            Color theme = Color.Lerp(ThemeColor, Color.White, CanHome ? 0.28f : 0.08f);
+            if (CanHome)
             {
                 if (Timer % 6f == 0f)
                     GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme * 0.75f, Vector2.One, Projectile.rotation, 0.02f, 0.18f + BloomPower * 0.1f, 18));
@@ -160,14 +169,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            float bouncePower = BounceCount <= 0f ? Utils.Remap(Timer, 0f, 120f, 2.2f, 3f) : Math.Max(0.55f, 1f / BounceCount);
+            float bouncePower = BounceCount <= 0f ? Utils.Remap(Timer, 0f, 120f, 2.05f, 2.75f) : MathHelper.Clamp(1.14f - BounceCount * 0.12f, 0.62f, 1f);
             if (Projectile.velocity.X != oldVelocity.X)
                 Projectile.velocity.X = -oldVelocity.X * bouncePower;
             if (Projectile.velocity.Y != oldVelocity.Y)
                 Projectile.velocity.Y = -oldVelocity.Y * bouncePower;
 
             BounceCount++;
-            if (BounceCount > 4f && !Empowered)
+            Projectile.penetrate = -1;
+            if (BounceCount > 7f)
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 80);
 
             ReleaseSlimeRing(8, 2.4f);
@@ -179,7 +189,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            Color theme = Color.Lerp(ThemeColor, Color.White, Empowered ? 0.24f : 0.08f);
+            Color theme = Color.Lerp(ThemeColor, Color.White, CanHome ? 0.24f : 0.08f);
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, 0f, 0.01f, 0.42f, 24));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
@@ -189,21 +199,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Vector2.One,
                 Projectile.rotation,
                 0.04f,
-                Empowered ? 0.38f : 0.24f,
+                CanHome ? 0.38f : 0.24f,
                 14,
                 false));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(BuffID.Slimed, Empowered ? 480 : 180);
-            if (Empowered)
+            target.AddBuff(BuffID.Slimed, CanHome ? 480 : 240);
+            target.AddBuff(BuffID.Slow, CanHome ? 240 : 120);
+            if (CanHome)
                 ReleaseSlimeRing(14, 3.4f);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (Projectile.numHits > 0 && !Empowered)
+            if (Projectile.numHits > 0 && !CanHome)
                 Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.85f));
         }
 
@@ -212,7 +223,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Color theme = (Color.Lerp(ThemeColor, Color.White, Empowered ? 0.22f : 0.04f) with { A = 0 }) * Projectile.Opacity;
+            Color theme = (Color.Lerp(ThemeColor, Color.White, CanHome ? 0.22f : 0.04f) with { A = 0 }) * Projectile.Opacity;
 
             PFLeftEffectRules.BeginAdditive();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
@@ -224,11 +235,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             Main.EntitySpriteDraw(texture, drawPosition, null, theme, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0);
-            if (Empowered)
-            {
-                Main.EntitySpriteDraw(bloom, drawPosition, null, theme * 0.5f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.28f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(bloom, drawPosition, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.32f) * 0.42f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.14f, SpriteEffects.None, 0);
-            }
+            Main.EntitySpriteDraw(bloom, drawPosition, null, theme * (CanHome ? 0.58f : 0.34f), Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.24f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.32f) * 0.38f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.11f, SpriteEffects.None, 0);
 
             PFLeftEffectRules.EndAdditive();
             return false;

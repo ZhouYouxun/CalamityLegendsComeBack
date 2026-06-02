@@ -7,14 +7,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFDragonEffect
     {
-        private static readonly SoundStyle S12KFireSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/S12K开火")
+        private static readonly SoundStyle DragonFireSound = new("CalamityMod/Sounds/Custom/Yharon/YharonFireball", 3)
         {
-            Volume = 0.82f,
-            PitchVariance = 0.05f,
+            Volume = 0.72f,
+            PitchVariance = 0.22f,
             MaxInstances = 6
         };
 
-        private const int FireInterval = 14;
+        private static readonly SoundStyle FrenzyStartSound = new("CalamityMod/Sounds/Item/DragonsBreathStrongStart")
+        {
+            Volume = 0.85f,
+            Pitch = 0.18f
+        };
+
+        private const int WarmupFrames = 120;
+        private const int RampFrames = 120;
+        private const int FrenzyFrames = 120;
+        private const int RestFrames = 70;
         private const int PelletCount = 5;
         private const float Fan = 0.26f;
         private const float FireSpeed = 12.8f;
@@ -29,12 +38,52 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
             }
 
+            if (justPressed)
+            {
+                holdout.LeftTimer = 0;
+                holdout.LeftChargeTimer = 0;
+                holdout.LeftAuxTimer = 0;
+            }
+
+            holdout.LeftChargeTimer++;
+            int cycleLength = WarmupFrames + RampFrames + FrenzyFrames + RestFrames;
+            if (holdout.LeftChargeTimer >= cycleLength)
+            {
+                holdout.LeftChargeTimer = 0;
+                holdout.LeftTimer = 0;
+                holdout.LeftAuxTimer = 0;
+            }
+
+            if (holdout.LeftChargeTimer == WarmupFrames + RampFrames)
+                SoundEngine.PlaySound(FrenzyStartSound, holdout.GunTipPosition);
+
+            if (holdout.LeftChargeTimer >= WarmupFrames + RampFrames + FrenzyFrames)
+                return;
+
+            int fireInterval = GetFireInterval(holdout.LeftChargeTimer);
             holdout.LeftTimer++;
-            if (holdout.LeftTimer < FireInterval)
+            if (holdout.LeftTimer < fireInterval)
                 return;
 
             holdout.LeftTimer = 0;
             FireDragonBreath(holdout);
+        }
+
+        private static int GetFireInterval(int cycleTimer)
+        {
+            if (cycleTimer < WarmupFrames)
+            {
+                float completion = cycleTimer / (float)WarmupFrames;
+                return (int)MathHelper.Lerp(30f, 14f, completion);
+            }
+
+            if (cycleTimer < WarmupFrames + RampFrames)
+            {
+                float completion = (cycleTimer - WarmupFrames) / (float)RampFrames;
+                return (int)MathHelper.Lerp(12f, 5f, completion);
+            }
+
+            return 3;
         }
 
         private static void FireDragonBreath(NewLegendPristineFuryHoldOut holdout)
@@ -67,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(18);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.18f);
-            SoundEngine.PlaySound(S12KFireSound, muzzle);
+            SoundEngine.PlaySound(DragonFireSound, muzzle);
         }
     }
 }

@@ -1,0 +1,19 @@
+Shader/Library 是实际参与加载的着色器资源库。
+
+Trail/
+  拖尾 Shader。用于 PrimitiveRenderer、刀光、弹幕运动轨迹。
+  典型 pass 名称是 TrailPass，注册到 GameShaders.Misc。
+
+Overlay/
+  覆盖 Shader。只处理当前绘制的贴图，例如弹幕本体、武器贴图、UI 图标。
+  典型 pass 名称是 P0，注册到 GameShaders.Misc。
+
+Screen/
+  全屏 Shader / 屏幕后处理。通过 Filters.Scene 激活或关闭。
+  这类会影响整个屏幕，必须谨慎处理激活条件。
+
+新增流程：
+  1. 把 .fx 放到 Shader/XNBcoder/Effects 编译。
+  2. 运行 Shader/XNBcoder/XNBCompiler.exe 生成 .xnb。
+  3. 把 .fx 和 .xnb 移动到上面对应分类。
+  4. 在 ShaderGames.Trails.cs / Overlays.cs / Screens.cs 里加一行注册。

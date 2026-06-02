@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
         private const int Lifetime = 420;
         private const float HomingRange = 4400f;
         private const float TargetRetentionRange = HomingRange * 1.45f;
+        private const float RiftCrackDamageFactor = 0.22f;
 
         private ref float TargetIndex => ref Projectile.ai[0];
         private ref float Phase => ref Projectile.ai[1];
@@ -212,6 +213,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                 Main.rand.NextFloat(0.75f, 1.15f) * Projectile.scale);
             dust.noGravity = true;
 
+            for (int i = 0; i < 2; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    Projectile.Center - direction * Main.rand.NextFloat(4f, 16f) + normal * Main.rand.NextFloat(-6f, 6f),
+                    -direction * Main.rand.NextFloat(0.3f, 1.4f) + normal * Main.rand.NextFloat(-0.5f, 0.5f),
+                    Main.rand.NextFloat(0.22f, 0.42f) * Projectile.scale,
+                    Color.Lerp(mainColor, Color.White, Main.rand.NextFloat(0.08f, 0.28f)),
+                    Main.rand.Next(10, 17)));
+            }
+
             if (Main.rand.NextBool(2))
             {
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
@@ -233,6 +244,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 180);
+            SpawnImpactRiftCrack(target);
 
             if (Main.myPlayer != Projectile.owner)
                 return;
@@ -253,6 +265,27 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                     Projectile.knockBack * 0.35f,
                     Projectile.owner);
             }
+        }
+
+        private void SpawnImpactRiftCrack(NPC target)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float crackRotation = direction.ToRotation() + Main.rand.NextFloat(-0.76f, 0.76f);
+            Vector2 spawnPosition = target.Center - direction * Main.rand.NextFloat(16f, 38f) + Main.rand.NextVector2Circular(22f, 22f);
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_OnHit(target),
+                spawnPosition,
+                Vector2.Zero,
+                ModContent.ProjectileType<TheNewEnforcerRiftCrack>(),
+                Math.Max(1, (int)(Projectile.damage * RiftCrackDamageFactor)),
+                Projectile.knockBack * 0.24f,
+                Projectile.owner,
+                crackRotation,
+                Main.rand.NextFloat(170f, 260f));
         }
 
         public override void OnKill(int timeLeft)
@@ -424,10 +457,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
 
         private Color EnergyColor(float offset)
         {
-            float pulse = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.6f + offset + Projectile.identity * 0.11f) * 0.5f + 0.5f;
-            Color violet = new(126, 58, 255);
-            Color cyan = new(72, 230, 255);
-            Color color = Color.Lerp(violet, cyan, 0.18f + pulse * 0.24f);
+            Color color = TheNewEnforcerDogPalette.SpecialMoveColor(offset + Projectile.identity * 0.11f);
             color.A = 0;
             return color;
         }

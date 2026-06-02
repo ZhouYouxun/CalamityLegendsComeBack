@@ -45,6 +45,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 case PristineFuryMark.Providence:
                     PFProvidenceEffect.Update(holdout, held, justPressed, justReleased);
                     break;
+                case PristineFuryMark.Ravager:
+                    PFRavagerEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
                 case PristineFuryMark.Polterghast:
                     PFPolterghastEffect.Update(holdout, held, justPressed, justReleased);
                     break;

@@ -11,12 +11,25 @@ namespace CalamityLegendsComeBack.Systems
         // instead of enabling the screen shader globally every frame.
         public static void ActivateScreenSimplyDistorted()
         {
+            ActivateScreenShader("ScreenSimplyDistorted");
+        }
+
+        public static void ActivateScreenShader(string registrationName)
+        {
             if (Main.dedServ)
                 return;
 
-            string key = ShaderGames.ShaderPrefix + "ScreenSimplyDistorted";
+            string key = ShaderGames.SceneFilterKey(registrationName);
             if (!Filters.Scene[key].IsActive())
                 Filters.Scene.Activate(key);
+        }
+
+        public static void DeactivateScreenShader(string registrationName)
+        {
+            if (Main.dedServ)
+                return;
+
+            Filters.Scene.Deactivate(ShaderGames.SceneFilterKey(registrationName));
         }
     }
 }

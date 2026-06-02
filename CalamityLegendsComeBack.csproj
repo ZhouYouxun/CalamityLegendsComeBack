@@ -78,24 +78,36 @@
 	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
 	  <Content Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <AdditionalFiles Remove="Shader\**\*.zip" />
+	  <AdditionalFiles Remove="Shader\Archive\**" />
+	  <AdditionalFiles Remove="Shader\Docs\**" />
 	  <AdditionalFiles Remove="Shader\XNBcoder\*.dll" />
 	  <AdditionalFiles Remove="Shader\XNBcoder\*.exe" />
 	  <AdditionalFiles Remove="Shader\XNBcoder\*.txt" />
+	  <AdditionalFiles Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <AdditionalFiles Remove="Shader\XNBcoder\logfile.txt" />
 	  <Content Remove="Shader\**\*.zip" />
+	  <Content Remove="Shader\Archive\**" />
+	  <Content Remove="Shader\Docs\**" />
 	  <Content Remove="Shader\XNBcoder\*.dll" />
 	  <Content Remove="Shader\XNBcoder\*.exe" />
 	  <Content Remove="Shader\XNBcoder\*.txt" />
+	  <Content Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <Content Remove="Shader\XNBcoder\logfile.txt" />
 	  <EmbeddedResource Remove="Shader\**\*.zip" />
+	  <EmbeddedResource Remove="Shader\Archive\**" />
+	  <EmbeddedResource Remove="Shader\Docs\**" />
 	  <EmbeddedResource Remove="Shader\XNBcoder\*.dll" />
 	  <EmbeddedResource Remove="Shader\XNBcoder\*.exe" />
 	  <EmbeddedResource Remove="Shader\XNBcoder\*.txt" />
+	  <EmbeddedResource Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <EmbeddedResource Remove="Shader\XNBcoder\logfile.txt" />
 	  <None Remove="Shader\**\*.zip" />
+	  <None Remove="Shader\Archive\**" />
+	  <None Remove="Shader\Docs\**" />
 	  <None Remove="Shader\XNBcoder\*.dll" />
 	  <None Remove="Shader\XNBcoder\*.exe" />
 	  <None Remove="Shader\XNBcoder\*.txt" />
+	  <None Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <None Remove="Shader\XNBcoder\logfile.txt" />
 	</ItemGroup>
 

@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
 using Terraria;
@@ -78,6 +79,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public bool IsForcedShutdownCooling()
         {
             return ForcedShutdownCoolingTimer > 0;
+        }
+
+        public bool CanSustainMaximumHeat()
+        {
+            return Player.GetModPlayer<SHPCEnergyCorePlayer>().HasInfiniteSHPCMana;
         }
 
         public void StartForcedShutdownCooling(int frames, int maxHeatStage)

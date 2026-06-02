@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
     {
         private const float FlameDamageFactor = 0.42f;
         private const float SlashDamageFactor = 0.34f;
+        private const float RiftSeedDamageFactor = 0.32f;
         private const float FlameTargetRange = 4400f;
         private const float lineCollisionLength = 226f;
 
@@ -265,7 +266,43 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                 SpawnFlameReleaseVFX(spawnPosition, flameVelocity, i);
             }
 
+            FireRiftSeed(owner, bladeTip, bladeDirection, target);
             SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.55f, Pitch = 0.16f }, bladeTip);
+        }
+
+        private void FireRiftSeed(Player owner, Vector2 bladeTip, Vector2 bladeDirection, NPC target)
+        {
+            Vector2 spawnPosition = bladeTip + bladeDirection * 18f + Main.rand.NextVector2Circular(8f, 8f);
+            Vector2 seedDirection = bladeDirection;
+
+            if (target is not null)
+            {
+                Vector2 predictedTarget = PredictTargetPosition(target, spawnPosition, 18f);
+                seedDirection = Vector2.Lerp(
+                    bladeDirection,
+                    (predictedTarget - spawnPosition).SafeNormalize(bladeDirection),
+                    0.64f).SafeNormalize(bladeDirection);
+            }
+
+            Vector2 seedVelocity = seedDirection.RotatedBy(Main.rand.NextFloat(-0.08f, 0.08f)) * Main.rand.NextFloat(15f, 18.5f);
+            int seed = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosition,
+                seedVelocity,
+                ModContent.ProjectileType<TheNewEnforcerRiftSeed>(),
+                Math.Max(1, (int)(Projectile.damage * RiftSeedDamageFactor)),
+                Projectile.knockBack * 0.72f,
+                Projectile.owner,
+                target?.whoAmI ?? -1f,
+                swingCount % 3);
+
+            if (Main.projectile.IndexInRange(seed))
+            {
+                Main.projectile[seed].scale = Main.rand.NextFloat(0.94f, 1.12f);
+                Main.projectile[seed].netUpdate = true;
+            }
+
+            SpawnRiftReleaseVFX(spawnPosition, seedVelocity, swingCount);
         }
 
         private void SpawnSwingVFX(Player owner, float intensity)
@@ -278,6 +315,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
             Vector2 normal = bladeDirection.RotatedBy(MathHelper.PiOver2);
             Color violet = new(125, 70, 255);
             Color cyan = new(80, 225, 255);
+            Color fuchsia = new(255, 48, 210);
 
             for (int i = 0; i < 2; i++)
             {
@@ -289,7 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                     false,
                     Main.rand.Next(12, 19),
                     Main.rand.NextFloat(0.5f, 0.95f) * Projectile.scale,
-                    Main.rand.NextBool(3) ? cyan : violet));
+                    Main.rand.NextBool(3) ? cyan : (Main.rand.NextBool() ? fuchsia : violet)));
             }
 
             if (Main.rand.NextBool(2))
@@ -301,7 +339,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                     false,
                     Main.rand.Next(10, 15),
                     Main.rand.NextFloat(0.035f, 0.06f) * Projectile.scale,
-                    Color.Lerp(violet, cyan, Main.rand.NextFloat(0.18f, 0.55f)) * (0.58f + intensity * 0.36f),
+                    Color.Lerp(fuchsia, cyan, Main.rand.NextFloat(0.18f, 0.72f)) * (0.58f + intensity * 0.36f),
                     new Vector2(0.85f, 1.55f),
                     true));
             }
@@ -391,7 +429,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
             Vector2 direction = velocity.SafeNormalize(Vector2.UnitX);
             Color violet = new(126, 58, 255);
             Color cyan = new(72, 230, 255);
-            Color color = Color.Lerp(violet, cyan, index / 6f);
+            Color fuchsia = new(255, 48, 210);
+            Color color = Color.Lerp(Color.Lerp(fuchsia, violet, 0.24f), cyan, index / 6f);
 
             Dust dust = Dust.NewDustPerfect(
                 position,
@@ -411,6 +450,40 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                     Main.rand.Next(9, 14),
                     Main.rand.NextFloat(0.48f, 0.78f),
                     color));
+            }
+        }
+
+        private static void SpawnRiftReleaseVFX(Vector2 position, Vector2 velocity, int swingIndex)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = velocity.SafeNormalize(Vector2.UnitX);
+            Color cyan = new(72, 230, 255);
+            Color fuchsia = new(255, 48, 210);
+            Color twilight = new(126, 58, 255);
+            Color theme = Color.Lerp(fuchsia, cyan, swingIndex % 3 / 2f);
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                position,
+                Vector2.Zero,
+                Color.Lerp(theme, twilight, 0.24f),
+                Vector2.One,
+                direction.ToRotation(),
+                0.08f,
+                1.18f,
+                16));
+
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 outward = direction.RotatedByRandom(0.9f) * Main.rand.NextFloat(1.8f, 5.2f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    position + Main.rand.NextVector2Circular(10f, 10f),
+                    outward,
+                    false,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.45f, 0.82f),
+                    Main.rand.NextBool() ? cyan : fuchsia));
             }
         }
 

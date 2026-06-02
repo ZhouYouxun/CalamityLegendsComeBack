@@ -35,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.Goliath,
             PristineFuryMark.Moonlord,
             PristineFuryMark.Providence,
+            PristineFuryMark.Ravager,
             PristineFuryMark.Polterghast,
             PristineFuryMark.Dog,
             PristineFuryMark.Dragon,
@@ -125,12 +126,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             bool leftHeld = validMouse && Main.mouseLeft;
             bool rightHeld = validMouse && (Main.mouseRight || Owner.Calamity().mouseRight);
             bool bothHeld = leftHeld && rightHeld;
+            bool debugCycleEquipped = Owner.GetModPlayer<PristineFuryPlayer>().DebugCycleEquipped;
 
             ResetLeftStateIfMarkChanged();
             UpdateLeftVisualState(leftHeld);
 
-            // Temporary debug: single right click cycles marks; both buttons charge the extraction hook.
-            if (rightHeld && !bothHeld)
+            if (debugCycleEquipped && rightHeld && !bothHeld)
             {
                 ResetRightCharge();
                 CancelHookChargeForTemporaryDebug();
@@ -171,9 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             }
 
             PristineFuryLeftEffectRegistry.Update(CurrentMark, this, leftHeld, leftHeld && !leftHeldLastFrame, !leftHeld && leftHeldLastFrame);
-
-            // 临时调试：原右键散射攻击暂时禁用，保留入口调用，恢复最终设计时取消下面这一行注释。
-            // HandleRightClick(rightHeld);
+            HandleRightClick(rightHeld);
 
             leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;

@@ -85,7 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
             Vector2 direction = Projectile.rotation.ToRotationVector2();
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Vector2 velocity = direction.RotatedByRandom(0.5f) * Main.rand.NextFloat(1.4f, 4.6f) + normal * Main.rand.NextFloat(-1.5f, 1.5f);
                 Color color = Color.Lerp(new Color(126, 58, 255), new Color(70, 220, 255), Main.rand.NextFloat(0.12f, 0.55f));

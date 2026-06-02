@@ -76,7 +76,9 @@ Mods: {
 			}
 		}
 
-		Cooldowns.BrinyBaron_Tide: Briny Baron Tide
-		Cooldowns.BrinyBaron_SuperDash: Briny Baron Finisher
+		Cooldowns: {
+			BrinyBaron_Tide: Briny Baron Tide
+			BrinyBaron_SuperDash: Briny Baron Finisher
+		}
 	}
 }

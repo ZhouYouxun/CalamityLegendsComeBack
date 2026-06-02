@@ -9,12 +9,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
     {
         internal PristineFuryMark CurrentMark = PristineFuryMark.Idle;
         internal bool HoldingPristineFury;
+        internal bool DebugCycleEquipped;
         internal int HookChargeFrames;
         internal float HookChargeOpacity;
 
         public override void ResetEffects()
         {
             HoldingPristineFury = false;
+            DebugCycleEquipped = false;
             HookChargeFrames = 0;
             HookChargeOpacity = MathHelper.Clamp(HookChargeOpacity - 0.04f, 0f, 1f);
         }

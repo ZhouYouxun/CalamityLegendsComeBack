@@ -5,26 +5,27 @@ Mods: {
 				NewLegendPristineFury: {
 					DisplayName: 纯元：传奇归来
 					PristineFuryIntro: "[c/FF9340:当前印记：{0}。]"
-					RightClick: "[c/FFB066:临时调试：右键按顺序切换印记。原右键散射只是在代码中注释掉，没有删除。]"
+					RightClick: "[c/FFB066:右键：蓄力发射新星弹。佩戴 PF 测试配饰时，单击右键改为按顺序切换印记。]"
 					Hook: "[c/9AEAFF:同时按住左键与右键 3 秒会发射提取钩。有效 Boss 会授予对应印记；其他敌人会承受高额钩爪伤害。]"
-					Left_Idle: "[c/FFE05C:左键：短距纯元火舌，使用 PristineFire 同款双侧火花与消散烟柱。]"
-					Left_EvilT2: "[c/FFE05C:左键：快速打出六发亮黄色炮弹，短暂减速后重新加速并弱追踪。]"
-					Left_SlimeGod: "[c/FFE05C:左键：沉重亮黄色史莱姆球不再追踪，最多弹射五次。]"
+					Left_Idle: "[c/FFE05C:左键：以 400RPM 发射火花散布器风格的低速重力火星。]"
+					Left_EvilT2: "[c/FFE05C:左键：发射魔法绘制的亮黄色小虫，反复冲向附近目标。]"
+					Left_SlimeGod: "[c/FFE05C:左键：过载黄色史莱姆球偏重弹射；没弹射过的球在减速耗尽后才缓慢曲线追踪。]"
 					Left_HardMode: "[c/FFE05C:左键：缓慢发射重型火球，落地炸出终焉火碎片与持续地火。]"
 					Left_Prime: "[c/FFE05C:左键：机械齿轮式金焰喷流，火花按齿距跳步咬合。]"
-					Left_BrimstoneElemental: "[c/FFE05C:左键：蓄能后释放粗重亮黄射线，并分裂出追踪硫火弹幕。]"
-					Left_FakeCalamity: "[c/FFE05C:左键：在鼠标附近产生痛苦魂火，贯穿敌人后柔和地返回玩家。]"
+					Left_BrimstoneElemental: "[c/FFE05C:左键：发射硫火射线同款主激光，并沿路径生成强化追踪硫火弹。]"
+					Left_FakeCalamity: "[c/FFE05C:左键：单段蓄力发射漫散弧星风格的黄色光球，命中后造成高额爆炸。]"
 					Left_Plantera: "[c/5EF26C:左键：八次视觉伪激光后释放一次递归分裂的绿色重型闪电。]"
 					Left_Aurora: "[c/FFE05C:左键：蓄力工业焊枪射线，路径伤害较低，末端伤害极高。]"
 					Left_Goliath: "[c/FFE05C:左键：短暂蓄力后向前方持续散射收割者无人机群。]"
 					Left_Moonlord: "[c/FFE05C:左键：月曜射线逐步暖机，短暂停火后释放瞬时巨型激光。]"
 					Left_Providence: "[c/FFE05C:左键：亵渎迫击弹爆炸后生成地火，并按昼夜召唤圣光球或熔岩球雨。]"
+					Left_Ravager: "[c/FFE05C:左键：引导单体血石激光，命中时通过直接治疗与治疗球提供续航。]"
 					Left_Polterghast: "[c/FFE05C:左键：不断加速的亮黄色哈雷幽魂星火贯穿敌人。]"
 					Left_Dog: "[c/FFE05C:左键：光切虚空流撕开延迟裂隙与黑色吸积盘。]"
 					Left_ExoTwins: "[c/4AFFB4:左键：阿尔忒弥斯预警激光快速贯穿，随后三连发阿波罗导弹。]"
 					Left_ExoThanatos: "[c/FFE05C:左键：三道塔纳托斯预警线缓慢收束，最终释放灭绝激光并撕出侧向激光。]"
 					Left_ExoAres: "[c/FF4C40:左键：阿瑞斯式普通激光从枪口高速全自动连射。]"
-					Left_Dragon: "[c/FFE05C:左键：250RPM 的 S12K 龙息齐射，每轮五发速度与角度不同的龙息弹，十穿透且每次命中爆炸。]"
+					Left_Dragon: "[c/FFE05C:左键：龙息齐射会从慢速预热逐渐加快，进入短暂疯狂扫射，休息后循环。]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
 					LegendaryText:
@@ -101,6 +102,9 @@ Mods: {
 				PFFakeCalamity_Pellet.DisplayName: 纯净怒火伪灾厄弹丸
 				PFFakeCalamity_GroundFlame.DisplayName: 纯净怒火伪灾厄地面火焰
 				PFFakeCalamity_SoulFlame.DisplayName: 纯净怒火痛苦魂火
+				PFFakeCalamity_ChargeOrb.DisplayName: 纯净怒火灾厄克隆蓄力球
+				PFFakeCalamity_NovaOrb.DisplayName: 纯净怒火灾厄克隆新星球
+				PFFakeCalamity_NovaExplosion.DisplayName: 纯净怒火灾厄克隆新星爆炸
 				PFMoonlord_SolarExplosion.DisplayName: 纯净怒火月亮领主日耀爆炸
 				PFMoonlord_SolarLaser.DisplayName: 纯净怒火月亮领主日耀激光
 				PFMoonlord_VortexScorpioRocket.DisplayName: 纯净怒火月亮领主星旋天蝎火箭
@@ -122,6 +126,7 @@ Mods: {
 				PristineFuryRightNovaChargeOrb.DisplayName: 纯净怒火右键新星蓄力球
 				PristineFuryRightNovaFireball.DisplayName: 纯净怒火右键新星火球
 				PristineFuryRightNovaPseudoLaser.DisplayName: 纯净怒火右键新星伪激光
+				PFRavager_Laser.DisplayName: 纯净怒火毁灭魔像血石激光
 			}
 
 			TacticalComputerReticle.DisplayName: 战术计算机准星
@@ -144,6 +149,7 @@ Mods: {
 				Goliath: 瘟疫使者歌莉娅
 				Moonlord: 月亮领主
 				Providence: 亵渎天神
+				Ravager: 毁灭魔像
 				Polterghast: 恶鬼
 				Dog: 神明吞噬者
 				ExoTwins: 阿波罗与阿尔忒弥斯

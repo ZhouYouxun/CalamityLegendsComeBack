@@ -16,6 +16,9 @@ Mods: {
 					Mode_HelixLaser_Desc: "[c/F8E28A:Helix Prism] [c/DCD6C8:weaves helix beams, refraction needles, and short golden lances; hold right click while firing to smoothly focus them into one point.]"
 					SwitchInfo: "[c/B5E7FF:Switch] [c/DCD6C8:right click the left side of the player to cycle backward, or the right side to cycle forward.]"
 					FocusInfo: "[c/F8E28A:Focus] [c/DCD6C8:only works while the Helix Prism is firing, and converges with acceleration instead of snapping.]"
+					PrismReworkInfo: "[c/F8E28A:Left Click] [c/DCD6C8:hold to deploy six inertial prisms; their helper beams converge into a continuous destruction ray fired from the crystal.]"
+					RightCommandInfo: "[c/73DFFF:Right Click while firing] [c/DCD6C8:after the prisms enter formation, command every prism to fire a heavy laser, then cool down before normal six-shot bursts resume.]"
+					ResetInfo: "[c/FF7A45:Reset] [c/DCD6C8:releasing left click, dying, or running out of mana clears the entire sequence.]"
 					EXInfo: "[c/F6D06B:Legendary Skill] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
 				}
 			}
@@ -84,6 +87,12 @@ Mods: {
 				YC_WarshipSuperLaser.DisplayName: Auric Fleet Super Laser
 				YC_PrismNeedleLaser.DisplayName: Prism Needle Laser
 				SODLazer.DisplayName: Auric Refraction Lance
+				YC_TyrantPrismHoldout.DisplayName: Tyrant Crystal Destruction Prism
+				YC_TyrantPrismDrone.DisplayName: Tyrant Crystal Prism
+				YC_TyrantPrismBolt.DisplayName: Tyrant Crystal Prism Bolt
+				YC_TyrantPrismMainBeam.DisplayName: Tyrant Crystal Destruction Ray
+				YC_TyrantPrismConvergeBeam.DisplayName: Tyrant Crystal Convergence Beam
+				YC_TyrantPrismHeavyLaser.DisplayName: Tyrant Crystal Synchronized Laser
 			}
 		}
 

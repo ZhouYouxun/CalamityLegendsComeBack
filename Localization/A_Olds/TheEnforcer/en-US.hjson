@@ -7,9 +7,10 @@ Mods: {
 					Tooltip:
 						'''
 						[c/9C6DFF:Swings through a 240-degree arc, alternating direction with every strike]
-						[c/59E8FF:Every swing releases several heavily improved homing essence flames]
+						[c/59E8FF:Every swing releases homing essence flames and a rift seed]
+						[c/FF30D2:Rift seeds bloom into gravity portals, reality cracks, and short laser walls]
 						[c/D8C7FF:True melee hits carve multiple execution slashes through the target]
-						[c/8A8A8A:The improved flames spawn three old essence flames on impact]
+						[c/8A8A8A:Flame impacts split into old essence flames and reality cracks]
 						'''
 				}
 			}
@@ -21,6 +22,10 @@ Mods: {
 				NewEssenceFlame2.DisplayName: New Essence Flame
 				TheNewEnforcerSlash.DisplayName: Enforcement Slash
 				OldEssenceFlame2.DisplayName: Old Essence Flame
+				TheNewEnforcerRiftSeed.DisplayName: Enforcement Rift Seed
+				TheNewEnforcerRiftField.DisplayName: Enforcement Rift
+				TheNewEnforcerLaserWall.DisplayName: Enforcement Laser Wall
+				TheNewEnforcerRiftCrack.DisplayName: Enforcement Rift Crack
 			}
 		}
 	}

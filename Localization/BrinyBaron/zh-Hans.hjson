@@ -76,7 +76,9 @@ Mods: {
 			}
 		}
 
-		Cooldowns.BrinyBaron_Tide: 海爵潮汐
-		Cooldowns.BrinyBaron_SuperDash: 海爵终潮处刑
+		Cooldowns: {
+			BrinyBaron_Tide: 海爵潮汐
+			BrinyBaron_SuperDash: 海爵终潮处刑
+		}
 	}
 }

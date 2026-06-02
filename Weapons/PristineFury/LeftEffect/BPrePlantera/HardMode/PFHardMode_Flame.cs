@@ -112,11 +112,53 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, theme, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0f, 0.34f * scale, 18, true));
+            Color warm = Color.Lerp(theme, Color.White, 0.24f);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, warm * 0.82f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.08f, 1.08f * scale, 22));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, theme * 0.55f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.18f, 1.85f * scale, 28));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, warm, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.03f, 0.42f * scale, 18, true));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.White * 0.55f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.05f, 0.24f * scale, 12, false));
+
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 5f + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 offset = angle.ToRotationVector2() * Main.rand.NextFloat(16f, 44f) * scale;
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center + offset, Vector2.Zero, theme * 0.42f, Vector2.One, angle, 0.06f, Main.rand.NextFloat(0.22f, 0.42f) * scale, 14));
+            }
+
+            for (int i = 0; i < 34; i++)
+            {
+                Vector2 velocity = (MathHelper.TwoPi * i / 34f).ToRotationVector2().RotatedByRandom(0.13f) * Main.rand.NextFloat(3.2f, 11.8f) * scale;
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(center, velocity, false, Main.rand.Next(12, 24), Main.rand.NextFloat(0.62f, 1.35f) * scale, Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f))));
+            }
+
             for (int i = 0; i < 18; i++)
             {
-                Vector2 velocity = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * Main.rand.NextFloat(2.8f, 8.2f) * scale;
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(center, velocity, false, Main.rand.Next(12, 20), Main.rand.NextFloat(0.65f, 1.2f) * scale, Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f))));
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.1f, 4.8f) * scale;
+                GeneralParticleHandler.SpawnParticle(new PointParticle(center + Main.rand.NextVector2Circular(30f, 30f) * scale, velocity, false, Main.rand.Next(12, 22), Main.rand.NextFloat(0.72f, 1.18f) * scale, Color.Lerp(warm, Color.White, Main.rand.NextFloat(0.08f, 0.36f))));
+            }
+
+            for (int i = 0; i < 42; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(40f, 40f) * scale,
+                    Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.6f, 8f) * scale,
+                    70,
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.04f, 0.28f)),
+                    Main.rand.NextFloat(0.8f, 1.75f) * scale);
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    center + Main.rand.NextVector2Circular(34f, 34f) * scale,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.6f, 2.4f) * scale,
+                    Color.Lerp(theme, Color.Goldenrod, Main.rand.NextFloat(0.12f, 0.36f)),
+                    Color.Transparent,
+                    Main.rand.NextFloat(0.45f, 0.92f) * scale,
+                    Main.rand.Next(24, 42),
+                    Main.rand.NextFloat(-0.06f, 0.06f)));
             }
         }
     }
