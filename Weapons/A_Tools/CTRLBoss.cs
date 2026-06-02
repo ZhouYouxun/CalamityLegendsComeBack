@@ -92,9 +92,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         private const int PanelPadding = 14;
         private const int BorderThickness = 2;
         private const float MaxIconDrawSize = 40f;
+        private const int BulkButtonSize = 58;
+        private const int BulkButtonGap = 8;
+        private const int BulkPanelGap = 12;
+
+        private static readonly BulkProgressAction[] BulkActions =
+        {
+            new(BulkProgressActionKind.TogglePhase, BossProgressPhase.PreHardmode, ItemID.SuspiciousLookingEye, "CTRLBossBulkPreHardmode"),
+            new(BulkProgressActionKind.TogglePhase, BossProgressPhase.Hardmode, ItemID.MechanicalEye, "CTRLBossBulkHardmode"),
+            new(BulkProgressActionKind.TogglePhase, BossProgressPhase.PostMoonLord, ItemID.CelestialSigil, "CTRLBossBulkPostMoonLord"),
+            new(BulkProgressActionKind.ToggleAll, null, ItemID.Zenith, "CTRLBossBulkAll"),
+            new(BulkProgressActionKind.InvertAll, null, ItemID.Lever, "CTRLBossBulkInvert")
+        };
 
         private readonly int[] clickFeedbackTimers = new int[CTRLBossRegistry.Entries.Length];
         private readonly bool[] hoveredLastFrame = new bool[CTRLBossRegistry.Entries.Length];
+        private readonly int[] bulkClickFeedbackTimers = new int[BulkActions.Length];
+        private readonly bool[] bulkHoveredLastFrame = new bool[BulkActions.Length];
 
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
@@ -109,8 +123,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         }
 
         private static int RowCount => (CTRLBossRegistry.Entries.Length + Columns - 1) / Columns;
-        private static int PanelWidth => PanelPadding * 2 + Columns * SlotSize + (Columns - 1) * SlotGap;
-        private static int PanelHeight => PanelPadding * 2 + RowCount * SlotSize + (RowCount - 1) * SlotGap;
+        private static int BossGridWidth => PanelPadding * 2 + Columns * SlotSize + (Columns - 1) * SlotGap;
+        private static int BossGridHeight => PanelPadding * 2 + RowCount * SlotSize + (RowCount - 1) * SlotGap;
+        private static int BulkButtonsHeight => BulkActions.Length * BulkButtonSize + (BulkActions.Length - 1) * BulkButtonGap;
+        private static int PanelWidth => BossGridWidth + BulkPanelGap + BulkButtonSize + PanelPadding;
+        private static int PanelHeight => Math.Max(BossGridHeight, PanelPadding * 2 + BulkButtonsHeight);
         private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
 
         public override void SetStaticDefaults()
@@ -172,6 +189,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
             BossProgressEntry clickedEntry = null;
             int clickedIndex = -1;
+            BulkProgressAction clickedBulkAction = null;
+            int clickedBulkIndex = -1;
 
             DrawPanel(panelArea, Projectile.Opacity);
 
@@ -204,6 +223,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                     clickFeedbackTimers[i]--;
             }
 
+            for (int i = 0; i < BulkActions.Length; i++)
+            {
+                BulkProgressAction action = BulkActions[i];
+                Rectangle buttonArea = GetBulkButtonArea(i);
+                bool hovered = buttonArea.Intersects(MouseRectangle);
+                bool fullyDowned = IsBulkActionFullyDowned(action);
+
+                if (hovered)
+                {
+                    mouseOverPanel = true;
+                    Main.hoverItemName = GetBulkHoverText(action);
+
+                    if (!bulkHoveredLastFrame[i] && Projectile.Opacity >= 0.95f)
+                        SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
+
+                    if (leftClickPressed && Projectile.Opacity >= 0.95f)
+                    {
+                        clickedBulkAction = action;
+                        clickedBulkIndex = i;
+                    }
+                }
+
+                DrawBulkButton(action, buttonArea, fullyDowned, hovered, bulkClickFeedbackTimers[i], Projectile.Opacity);
+
+                bulkHoveredLastFrame[i] = hovered;
+                if (bulkClickFeedbackTimers[i] > 0)
+                    bulkClickFeedbackTimers[i]--;
+            }
+
             if (clickedEntry != null)
             {
                 bool newState = !clickedEntry.Downed;
@@ -212,6 +260,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 CTRLBossRegistry.SyncWorldState();
                 AnnounceChange(clickedEntry, newState);
                 SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.62f, Pitch = newState ? 0.08f : -0.12f }, owner.Center);
+            }
+            else if (clickedBulkAction != null)
+            {
+                int changedCount = ApplyBulkAction(clickedBulkAction);
+                bulkClickFeedbackTimers[clickedBulkIndex] = 10;
+                CTRLBossRegistry.SyncWorldState();
+                AnnounceBulkChange(clickedBulkAction, changedCount);
+                SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.72f, Pitch = clickedBulkAction.Kind == BulkProgressActionKind.InvertAll ? -0.03f : 0.14f }, owner.Center);
             }
             else if (!FadeOut && Projectile.Opacity >= 0.95f && (rightClickPressed || leftClickPressed))
             {
@@ -255,6 +311,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             int y = (int)panelTopLeft.Y + PanelPadding + row * (SlotSize + SlotGap);
 
             return new Rectangle(x, y, SlotSize, SlotSize);
+        }
+
+        private Rectangle GetBulkButtonArea(int index)
+        {
+            int x = (int)panelTopLeft.X + BossGridWidth + BulkPanelGap;
+            int y = (int)panelTopLeft.Y + PanelPadding + index * (BulkButtonSize + BulkButtonGap);
+
+            return new Rectangle(x, y, BulkButtonSize, BulkButtonSize);
         }
 
         private static void DrawPanel(Rectangle panelArea, float opacity)
@@ -326,11 +390,88 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 DrawRectangle(new Rectangle(slotArea.X + 5, slotArea.Bottom - 9, slotArea.Width - 10, 3), phaseColor * (opacity * 0.94f));
         }
 
+        private static void DrawBulkButton(BulkProgressAction action, Rectangle buttonArea, bool fullyDowned, bool hovered, int clickTimer, float opacity)
+        {
+            Color actionColor = action.Phase.HasValue
+                ? CTRLBossRegistry.PhaseColor(action.Phase.Value)
+                : action.Kind == BulkProgressActionKind.InvertAll
+                    ? new Color(238, 164, 96)
+                    : new Color(244, 208, 108);
+            Color buttonBack = fullyDowned
+                ? Color.Lerp(new Color(30, 38, 42), actionColor, 0.28f)
+                : new Color(46, 48, 56);
+            Color buttonBorder = fullyDowned
+                ? Color.Lerp(actionColor, Color.White, hovered ? 0.42f : 0.18f)
+                : new Color(124, 128, 142);
+
+            if (hovered)
+                buttonBack = Color.Lerp(buttonBack, new Color(84, 92, 108), 0.54f);
+
+            if (clickTimer > 0)
+            {
+                buttonBack = Color.Lerp(buttonBack, new Color(130, 116, 70), 0.38f);
+                buttonBorder = Color.Lerp(buttonBorder, new Color(255, 228, 150), 0.56f);
+            }
+
+            DrawRectangle(buttonArea, buttonBack * (opacity * 0.94f));
+            DrawBorder(buttonArea, buttonBorder * opacity, 2);
+
+            Texture2D iconTexture = TryGetVanillaItemTexture(action.VanillaItemType);
+            if (iconTexture != null)
+            {
+                Vector2 iconSize = iconTexture.Size();
+                float fitScale = Math.Min(44f / Math.Max(1f, iconSize.X), 44f / Math.Max(1f, iconSize.Y));
+                float drawScale = fitScale * (hovered ? 1.08f : 1f) * (clickTimer > 0 ? 1.08f : 1f);
+                Color iconColor = fullyDowned ? Color.White : new Color(202, 206, 216);
+
+                Main.EntitySpriteDraw(
+                    iconTexture,
+                    buttonArea.Center.ToVector2(),
+                    null,
+                    iconColor * opacity,
+                    0f,
+                    iconSize * 0.5f,
+                    drawScale,
+                    SpriteEffects.None,
+                    0f);
+            }
+            else
+            {
+                DrawMissingIcon(buttonArea, actionColor, opacity, fullyDowned);
+            }
+
+            Rectangle statusBar = new(buttonArea.X + 5, buttonArea.Bottom - 9, buttonArea.Width - 10, 3);
+            if (action.Kind == BulkProgressActionKind.InvertAll)
+            {
+                int halfWidth = statusBar.Width / 2;
+                DrawRectangle(new Rectangle(statusBar.X, statusBar.Y, halfWidth, statusBar.Height), new Color(112, 224, 142) * (opacity * 0.92f));
+                DrawRectangle(new Rectangle(statusBar.X + halfWidth, statusBar.Y, statusBar.Width - halfWidth, statusBar.Height), new Color(224, 112, 112) * (opacity * 0.92f));
+            }
+            else
+            {
+                Color statusColor = fullyDowned ? actionColor : new Color(190, 90, 90);
+                DrawRectangle(statusBar, statusColor * (opacity * 0.92f));
+            }
+        }
+
         private static Texture2D TryGetIconTexture(BossProgressEntry entry)
         {
             try
             {
                 return ModContent.Request<Texture2D>(entry.TexturePath).Value;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static Texture2D TryGetVanillaItemTexture(int itemType)
+        {
+            try
+            {
+                Main.instance.LoadItem(itemType);
+                return TextureAssets.Item[itemType].Value;
             }
             catch
             {
@@ -362,6 +503,85 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             Color messageColor = downed ? new Color(112, 240, 148) : new Color(255, 132, 118);
 
             Main.NewText(message, messageColor);
+        }
+
+        private static void AnnounceBulkChange(BulkProgressAction action, int changedCount)
+        {
+            string message = Language.GetTextValue(
+                "Mods.CalamityLegendsComeBack.TheSpecialText.CTRLBossBulkChanged",
+                GetBulkHoverText(action),
+                changedCount);
+
+            Main.NewText(message, new Color(255, 214, 126));
+        }
+
+        private static int ApplyBulkAction(BulkProgressAction action)
+        {
+            int changedCount = 0;
+            if (action.Kind == BulkProgressActionKind.InvertAll)
+            {
+                HashSet<string> invertedProgressKeys = new();
+                foreach (BossProgressEntry entry in CTRLBossRegistry.Entries)
+                {
+                    if (!invertedProgressKeys.Add(entry.ProgressKey))
+                        continue;
+
+                    entry.SetDowned(!entry.Downed);
+                    changedCount++;
+                }
+
+                return changedCount;
+            }
+
+            bool setDowned = false;
+            foreach (BossProgressEntry entry in CTRLBossRegistry.Entries)
+            {
+                if (AppliesTo(action, entry) && !entry.Downed)
+                {
+                    setDowned = true;
+                    break;
+                }
+            }
+
+            foreach (BossProgressEntry entry in CTRLBossRegistry.Entries)
+            {
+                if (!AppliesTo(action, entry) || entry.Downed == setDowned)
+                    continue;
+
+                entry.SetDowned(setDowned);
+                changedCount++;
+            }
+
+            return changedCount;
+        }
+
+        private static bool IsBulkActionFullyDowned(BulkProgressAction action)
+        {
+            if (action.Kind == BulkProgressActionKind.InvertAll)
+                return false;
+
+            bool containsEntry = false;
+            foreach (BossProgressEntry entry in CTRLBossRegistry.Entries)
+            {
+                if (!AppliesTo(action, entry))
+                    continue;
+
+                containsEntry = true;
+                if (!entry.Downed)
+                    return false;
+            }
+
+            return containsEntry;
+        }
+
+        private static bool AppliesTo(BulkProgressAction action, BossProgressEntry entry)
+        {
+            return action.Kind != BulkProgressActionKind.TogglePhase || entry.Phase == action.Phase;
+        }
+
+        private static string GetBulkHoverText(BulkProgressAction action)
+        {
+            return Language.GetTextValue($"Mods.CalamityLegendsComeBack.TheSpecialText.{action.HoverTextKey}");
         }
 
         private static string GetHoverText(BossProgressEntry entry, bool downed)
@@ -398,12 +618,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
         PostMoonLord
     }
 
+    internal enum BulkProgressActionKind
+    {
+        TogglePhase,
+        ToggleAll,
+        InvertAll
+    }
+
+    internal sealed class BulkProgressAction
+    {
+        public BulkProgressAction(BulkProgressActionKind kind, BossProgressPhase? phase, int vanillaItemType, string hoverTextKey)
+        {
+            Kind = kind;
+            Phase = phase;
+            VanillaItemType = vanillaItemType;
+            HoverTextKey = hoverTextKey;
+        }
+
+        public BulkProgressActionKind Kind { get; }
+        public BossProgressPhase? Phase { get; }
+        public int VanillaItemType { get; }
+        public string HoverTextKey { get; }
+    }
+
     internal sealed class BossProgressEntry
     {
         private readonly Func<bool> getDowned;
         private readonly Action<bool> setDowned;
 
-        public BossProgressEntry(BossProgressPhase phase, string englishName, string chineseName, string texturePath, Func<bool> getDowned, Action<bool> setDowned)
+        public BossProgressEntry(BossProgressPhase phase, string englishName, string chineseName, string texturePath, Func<bool> getDowned, Action<bool> setDowned, string progressKey)
         {
             Phase = phase;
             EnglishName = englishName;
@@ -411,12 +654,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             TexturePath = texturePath;
             this.getDowned = getDowned;
             this.setDowned = setDowned;
+            ProgressKey = progressKey;
         }
 
         public BossProgressPhase Phase { get; }
         public string EnglishName { get; }
         public string ChineseName { get; }
         public string TexturePath { get; }
+        public string ProgressKey { get; }
         public bool Downed => getDowned();
 
         public void SetDowned(bool downed) => setDowned(downed);
@@ -430,8 +675,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             Pre("Desert Scourge", "荒漠灾虫", "荒漠灾虫-图标", () => DownedBossSystem.downedDesertScourge, value => DownedBossSystem.downedDesertScourge = value),
             Pre("Eye of Cthulhu", "克苏鲁之眼", "克苏鲁之眼第一阶段-图标", () => NPC.downedBoss1, value => NPC.downedBoss1 = value),
             Pre("Crabulon", "菌生蟹", "菌生蟹-图标", () => DownedBossSystem.downedCrabulon, value => DownedBossSystem.downedCrabulon = value),
-            Pre("Eater of Worlds", "世界吞噬怪", "世界吞噬怪-图标", () => NPC.downedBoss2, value => NPC.downedBoss2 = value),
-            Pre("Brain of Cthulhu", "克苏鲁之脑", "克苏鲁之脑-图标", () => NPC.downedBoss2, value => NPC.downedBoss2 = value),
+            Pre("Eater of Worlds", "世界吞噬怪", "世界吞噬怪-图标", () => NPC.downedBoss2, value => NPC.downedBoss2 = value, "NPC.downedBoss2"),
+            Pre("Brain of Cthulhu", "克苏鲁之脑", "克苏鲁之脑-图标", () => NPC.downedBoss2, value => NPC.downedBoss2 = value, "NPC.downedBoss2"),
             Pre("The Hive Mind", "腐巢意志", "腐巢意志第二阶段-图标", () => DownedBossSystem.downedHiveMind, value => DownedBossSystem.downedHiveMind = value),
             Pre("The Perforators", "血肉宿主", "血肉宿主本体-图标", () => DownedBossSystem.downedPerforator, value => DownedBossSystem.downedPerforator = value),
             Pre("Queen Bee", "蜂王", "蜂王-图标", () => NPC.downedQueenBee, value => NPC.downedQueenBee = value),
@@ -491,9 +736,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 NetMessage.SendData(MessageID.WorldData);
         }
 
-        private static BossProgressEntry Pre(string englishName, string chineseName, string textureName, Func<bool> getDowned, Action<bool> setDowned)
+        private static BossProgressEntry Pre(string englishName, string chineseName, string textureName, Func<bool> getDowned, Action<bool> setDowned, string progressKey = null)
         {
-            return Create(BossProgressPhase.PreHardmode, "PreHardmode", englishName, chineseName, textureName, getDowned, setDowned);
+            return Create(BossProgressPhase.PreHardmode, "PreHardmode", englishName, chineseName, textureName, getDowned, setDowned, progressKey);
         }
 
         private static BossProgressEntry Hard(string englishName, string chineseName, string textureName, Func<bool> getDowned, Action<bool> setDowned)
@@ -506,7 +751,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
             return Create(BossProgressPhase.PostMoonLord, "PostMoon", englishName, chineseName, textureName, getDowned, setDowned);
         }
 
-        private static BossProgressEntry Create(BossProgressPhase phase, string folder, string englishName, string chineseName, string textureName, Func<bool> getDowned, Action<bool> setDowned)
+        private static BossProgressEntry Create(BossProgressPhase phase, string folder, string englishName, string chineseName, string textureName, Func<bool> getDowned, Action<bool> setDowned, string progressKey = null)
         {
             return new BossProgressEntry(
                 phase,
@@ -514,7 +759,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 chineseName,
                 $"CalamityLegendsComeBack/Weapons/A_Tools/Icon/{folder}/{textureName}",
                 getDowned,
-                setDowned);
+                setDowned,
+                progressKey ?? englishName);
         }
     }
 }

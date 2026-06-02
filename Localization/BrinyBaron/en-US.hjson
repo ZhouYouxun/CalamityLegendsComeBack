@@ -7,29 +7,35 @@ Mods: {
 					Tooltip: "[GFB]"
 					BB_Left:
 						'''
-						[c/66CCFF:Left Click: Unleash a flowing combo of slashes that steadily accelerates.]
-						[c/7F8FA6:The first three swings are stable cuts for pressure and spacing.]
-						[c/99CCFF:The fourth swing releases a tidal blade that extends your reach.]
-						[c/DDA0FF:The finisher calls forth a giant cleave that sweeps the area ahead.]
-						[c/FFB347:Every heavy strike pulls more tidal force into the blade.]
+						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
+						[c/7F8FA6:Each stroke releases the next tide attack in order: a cutting wave, four spinning blades, then a waterspout.]
+						[c/99CCFF:Close-range blade hits strike harder than the released tide.]
+						[c/DDA0FF:Landing the sword itself tears open a fresh water slash and plants a storming vortex at the wound.]
+						[c/FFB347:Holding the attack keeps the rhythm cycling without changing swing size or tempo.]
 						'''
 					BB_Tide: "[c/4FAEFF:Current tide value: ]"
 					BB_Right:
 						'''
-						[c/66CCFF:Right Click: Tear across the battlefield with high-speed dashes.]
-						[c/7F8FA6:Before the tide fills, it is a straight thrust for entry or escape.]
-						[c/DDA0FF:With full tide, it becomes a spinning rush that shreds everything in its path.]
-						[c/FFB347:Each dash is both an attack and a survival tool.]
+						[c/66CCFF:Right Click: Dash forward when the sword is not already being swung.]
+						[c/7F8FA6:Hold Left Click, then hold Right Click to whirl the blade around you.]
+						[c/DDA0FF:The wheel gains speed while held; only at full speed does it scatter tidal blades around you.]
+						[c/FFB347:Low-speed whirling builds pressure, while the completed wheel controls nearby space.]
 						'''
 					Dash1_Unlock: "[c/66FFAA:Unlocked: Basic Dash]"
 					Dash1_Lock: "[c/7F8FA6:Locked: Defeat the Eye of Cthulhu to unlock it.]"
 					Dash2_Unlock: "[c/66FFAA:Unlocked: Spiral Cleave]"
 					Dash2_Lock: "[c/DDA0FF:Locked: Defeat the Wall of Flesh to unlock it.]"
-					Dash3_Unlock: "[c/66FFAA:Unlocked: Rebound Slash]"
+					Dash3_Unlock: "[c/66FFAA:Unlocked: Quick Slash]"
 					Dash3_Lock: "[c/99CCFF:Locked: Defeat the Wall of Flesh to unlock it.]"
-					BB_Passive: "[c/9AEF9E:Quick Slash passive: {0}. Inventory right click toggles it.]"
+					BB_Passive: "[c/9AEF9E:Quick Slash passive: {0}. {1} Inventory right click toggles it.]"
 					PassiveStateOn: "[c/7BFFB7:On]"
 					PassiveStateOff: "[c/F0D070:Off]"
+					PassiveDevice_None: "[c/7F8FA6:No shield dash device is being read.]"
+					PassiveDevice_OrnateShield: "[c/99CCFF:Ornate Shield is fitted; its shield rush releases side blades and a double tidal cut.]"
+					PassiveDevice_DeepDiver: "[c/99CCFF:Deep Diver is fitted; its surge releases side blades and a double tidal cut.]"
+					PassiveDevice_AsgardsValor: "[c/99CCFF:Asgard's Valor is fitted; its shield rush releases side blades and a double tidal cut.]"
+					PassiveDevice_ElysianAegis: "[c/99CCFF:Elysian Aegis is fitted; its shield rush releases side blades and a double tidal cut.]"
+					PassiveDevice_AsgardianAegis: "[c/99CCFF:Asgardian Aegis is fitted; its shield rush releases side blades and a double tidal cut.]"
 					Dash4_Unlock: "[c/66FFAA:Unlocked: Tidal Execution]"
 					Dash4_Lock: "[c/FFB347:Locked: Defeat Duke Fishron to unlock it.]"
 					BB_Final: "[c/9FD8A2:At full tide, mark the prey and pass judgment until the surf finishes the execution.]"
@@ -63,13 +69,14 @@ Mods: {
 				BrinyBaron_RightClick_Shuriken.DisplayName: Baron Shuriken
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
-				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Rebound Slash
+				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Shield-Surge Cleave
 				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Final Tide Execution
 				BBSD_Star.DisplayName: Final Tide Star
 				BBSD_Final_INV.DisplayName: Final Tide Brand
 			}
 		}
 
+		Cooldowns.BrinyBaron_Tide: Briny Baron Tide
 		Cooldowns.BrinyBaron_SuperDash: Briny Baron Finisher
 	}
 }

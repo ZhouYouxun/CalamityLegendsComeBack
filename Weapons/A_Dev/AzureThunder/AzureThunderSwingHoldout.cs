@@ -584,6 +584,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 big: true,
                 spawnHeightMultiplier: 0.82f,
                 fixedTiltRadians: GetFixedLightningTilt(),
+                oneThirdVisualIntensity: true,
                 lightningScale: LeftSweepLightningScale);
         }
 

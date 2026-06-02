@@ -85,7 +85,7 @@ Mods: {
 
 					UniversalSuppressor: {
 						Name: 通用消音器
-						Effect: 提供消音效果；降低玩家仇恨值。
+						Effect: 提供消音效果；降低玩家仇恨值；持续射击 100 发内实时将子弹伤害从 x1.0 线性提高至 x1.15。
 					}
 
 					UniversalBrake: {

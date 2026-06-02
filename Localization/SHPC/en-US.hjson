@@ -211,6 +211,10 @@ Mods: {
 			}
 		}
 
-		Cooldowns.SHPC_EX: SHPC Cooldown
+		Cooldowns: {
+			SHPC_EX: SHPC Cooldown
+			SHPC_BarrierDurability: SHPC Barrier Durability
+			SHPC_BarrierRecharge: SHPC Barrier Recharge
+		}
 	}
 }

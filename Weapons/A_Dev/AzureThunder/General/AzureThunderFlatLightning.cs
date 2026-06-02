@@ -41,6 +41,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         // 保持旧版粒子强度，只让碰撞/覆盖读取 ai[1] 放大。
         public const int NormalVisualIntensityFlag = 256;
 
+        // 天理真和期间只压低粒子强度，不影响雷击碰撞和覆盖范围。
+        public const int OneThirdVisualIntensityFlag = 512;
+
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -55,8 +58,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool WeakLightning => (Flags & WeakLightningFlag) != 0;
         private bool SpeedLines => (Flags & SpeedLineFlag) != 0;
         private bool NormalVisualIntensity => (Flags & NormalVisualIntensityFlag) != 0;
+        private bool OneThirdVisualIntensity => (Flags & OneThirdVisualIntensityFlag) != 0;
         private float RequestedScale => MathHelper.Clamp(Projectile.ai[1] <= 0f ? 1f : Math.Abs(Projectile.ai[1]), 0.1f, 3f);
-        private float VisualScale => NormalVisualIntensity ? 1f : RequestedScale;
+        private float VisualIntensityMultiplier => OneThirdVisualIntensity ? 0.33f : 1f;
+        private float VisualScale => NormalVisualIntensity ? 1f : RequestedScale * VisualIntensityMultiplier;
         public int time;
         public float colorValue;
         public float sizeMult = 1f;
@@ -233,7 +238,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            float lineScale = Main.rand.NextFloat(0.16f, 0.24f) * Math.Max(1f, RequestedScale);
+            float lineScale = Main.rand.NextFloat(0.16f, 0.24f) * Math.Max(1f, RequestedScale) * VisualIntensityMultiplier;
 
             Particle speedLine = new CustomSpark(
                 position - direction * Main.rand.NextFloat(14f, 32f) + normal * Main.rand.NextFloat(-14f, 14f),

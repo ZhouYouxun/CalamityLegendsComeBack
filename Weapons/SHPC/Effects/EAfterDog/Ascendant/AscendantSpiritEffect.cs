@@ -80,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             {
                 Dust dust = Dust.NewDustPerfect(spawnPosition, ModContent.DustType<SquashDust>());
                 dust.scale = Main.rand.NextFloat(0.95f, 1.55f);
-                dust.velocity = launchDirection.RotatedByRandom(0.36f) * Main.rand.NextFloat(4.4f, 7.4f);
+                dust.velocity = -launchDirection.RotatedByRandom(0.36f) * Main.rand.NextFloat(2.2f, 4.4f);
                 dust.noGravity = true;
                 dust.color = Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.3f));
                 dust.fadeIn = Main.rand.NextFloat(1.1f, 2.2f);
@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
             Particle releaseBloom = new CustomSpark(
                 spawnPosition,
-                launchDirection * 0.5f,
+                Vector2.Zero,
                 "CalamityMod/Particles/BloomCircle",
                 false,
                 widerArc ? 20 : 16,
@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             {
                 Particle star = new CustomSpark(
                     spawnPosition + normal * Main.rand.NextFloat(-5f, 5f),
-                    launchDirection.RotatedByRandom(0.28f) * Main.rand.NextFloat(2.5f, 5.2f),
+                    -launchDirection.RotatedByRandom(0.28f) * Main.rand.NextFloat(1.6f, 3.4f),
                     "CalamityMod/Particles/PulseStar",
                     false,
                     Main.rand.Next(13, 21),
@@ -118,27 +118,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 GeneralParticleHandler.SpawnParticle(star);
             }
 
-            for (int i = 0; i < 3; i++)
-            {
-                Particle forwardSmear = new CustomSpark(
-                    spawnPosition + Main.rand.NextVector2CircularEdge(3f, 3f),
-                    launchDirection * Main.rand.NextFloat(4f, 8f) + normal * Main.rand.NextFloat(-1.2f, 1.2f),
-                    "CalamityMod/Particles/ForwardSmear",
-                    false,
-                    Main.rand.Next(9, 15),
-                    Main.rand.NextFloat(0.11f, 0.19f),
-                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.1f, 0.35f)),
-                    Vector2.One,
-                    shrinkSpeed: 0.34f);
-                GeneralParticleHandler.SpawnParticle(forwardSmear);
-            }
         }
 
         internal static void SpawnCentralReleaseParticles(Vector2 center, Vector2 forward)
         {
             float rotation = Main.rand.NextFloat(MathHelper.TwoPi);
 
-            for (int ring = 1; ring <= 4; ring++)
+            for (int ring = 1; ring <= 2; ring++)
             {
                 for (int i = 0; i < 5; i++)
                 {
@@ -152,12 +138,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 }
             }
 
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 6; i++)
             {
                 Color color = AscendantSpirit_PROJ.RandomThemeColor();
                 Particle sparkle = new CustomSpark(
                     center,
-                    forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(2.2f, 6f),
+                    -forward.RotatedByRandom(0.55f) * Main.rand.NextFloat(1.4f, 3.6f),
                     "CalamityMod/Particles/PulseStar",
                     false,
                     Main.rand.Next(14, 23),
@@ -176,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 "CalamityMod/Particles/BloomCircle",
                 false,
                 24,
-                0.74f,
+                0.48f,
                 Color.Lerp(new Color(120, 160, 255), Color.White, 0.22f),
                 Vector2.One,
                 true,
@@ -296,7 +282,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             int projectileIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
-                direction * 0.01f,
+                direction * AscendantSpirit_PROJ.DefaultLaunchSpeed,
                 ModContent.ProjectileType<AscendantSpirit_PROJ>(),
                 Projectile.damage,
                 Projectile.knockBack,

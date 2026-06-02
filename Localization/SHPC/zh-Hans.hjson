@@ -211,6 +211,10 @@ Mods: {
 			}
 		}
 
-		Cooldowns.SHPC_EX: SHPC冷却
+		Cooldowns: {
+			SHPC_EX: SHPC冷却
+			SHPC_BarrierDurability: SHPC屏障耐久
+			SHPC_BarrierRecharge: SHPC屏障充能
+		}
 	}
 }

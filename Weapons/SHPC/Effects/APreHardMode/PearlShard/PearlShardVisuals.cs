@@ -61,40 +61,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
             Color color = PearlGodColor(projectile.identity);
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            float helix = (float)System.Math.Sin(Main.GameUpdateCount * 0.34f + projectile.identity * 0.41f);
 
             GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                projectile.Center + projectile.velocity * 1.5f,
-                -projectile.velocity * 0.05f,
+                projectile.Center - forward * 4f,
+                projectile.velocity * 0.025f,
                 false,
                 3,
-                0.0093f * MathHelper.Lerp(1f, 1.75f, sizeFactor),
+                0.00465f * MathHelper.Lerp(1f, 1.75f, sizeFactor),
                 color,
-                new Vector2(0.6f, 1.8f) * MathHelper.Lerp(0.95f, 1.25f, sizeFactor),
+                new Vector2(0.3f, 0.9f) * MathHelper.Lerp(0.95f, 1.25f, sizeFactor),
                 false,
                 false));
 
             if ((Main.GameUpdateCount + projectile.identity) % 2 == 0)
             {
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    Vector2 position = projectile.Center + normal * helix * side * (5f + 5f * sizeFactor) - forward * 4f;
-                    Vector2 velocity = -projectile.velocity * Main.rand.NextFloat(0.035f, 0.12f) + normal * side * Main.rand.NextFloat(0.08f, 0.26f);
-                    GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                        position,
-                        velocity,
-                        false,
-                        Main.rand.Next(5, 9),
-                        Main.rand.NextFloat(0.011f, 0.024f) * MathHelper.Lerp(0.9f, 1.45f, sizeFactor),
-                        Color.Lerp(color, Color.White, 0.24f),
-                        new Vector2(0.45f, 1.55f),
-                        false,
-                        false));
-                }
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    projectile.Center - forward * (8f + 4f * sizeFactor),
+                    projectile.velocity * 0.018f,
+                    false,
+                    Main.rand.Next(4, 7),
+                    Main.rand.NextFloat(0.0045f, 0.0075f) * MathHelper.Lerp(0.9f, 1.25f, sizeFactor),
+                    Color.Lerp(color, Color.White, 0.24f),
+                    new Vector2(0.24f, 0.72f),
+                    false,
+                    false));
             }
 
-            if (Main.rand.NextBool(5))
+            if (Main.rand.NextBool(2))
             {
                 GeneralParticleHandler.SpawnParticle(new PearlParticle(
                     projectile.Center + Main.rand.NextVector2Circular(6f, 6f) * MathHelper.Lerp(0.8f, 1.5f, sizeFactor),

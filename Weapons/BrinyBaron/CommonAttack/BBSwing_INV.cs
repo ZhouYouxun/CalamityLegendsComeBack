@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using System;

@@ -37,6 +37,7 @@
 	  <AdditionalFiles Remove="Weapons\A_Olds\**" />
 	  <AdditionalFiles Remove="Weapons\BlossomFlux\BFUI\**" />
 	  <AdditionalFiles Remove="Weapons\BlossomFlux\特效总和参考\**" />
+	  <AdditionalFiles Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <Compile Remove="Weapons\A_Dev\Miao\**" />
 	  <Compile Remove="Weapons\A_Olds\**" />
 	  <Compile Remove="Weapons\BlossomFlux\BFUI\**" />
@@ -53,15 +54,18 @@
 	  <EmbeddedResource Remove="Weapons\A_Olds\**" />
 	  <EmbeddedResource Remove="Weapons\BlossomFlux\BFUI\**" />
 	  <EmbeddedResource Remove="Weapons\BlossomFlux\特效总和参考\**" />
+	  <EmbeddedResource Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <None Remove="Weapons\A_Dev\Miao\**" />
 	  <None Remove="Weapons\A_Olds\**" />
 	  <None Remove="Weapons\BlossomFlux\BFUI\**" />
 	  <None Remove="Weapons\BlossomFlux\特效总和参考\**" />
+	  <None Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <Compile Remove="Weapons\BlossomFlux\SpecialArrow\SHPCKPROJ.cs" />
 	  <Compile Remove="Weapons\BrinyBaron\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\LeonidProgenitor\他重做前长这样\**\*.cs" />
 	  <Compile Remove="Weapons\LeonidProgenitor\参考文献包括\**\*.cs" />
 	  <Compile Remove="Weapons\SHPC\Effects\DPreDog\SZPC\TwistingNether的参考文献\**\*.cs" />
+	  <Compile Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\参考文献\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\维修战舰参考\**\*.cs" />
@@ -72,6 +76,7 @@
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
 	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
 	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
+	  <Content Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <AdditionalFiles Remove="Shader\**\*.zip" />
 	  <AdditionalFiles Remove="Shader\XNBcoder\*.dll" />
 	  <AdditionalFiles Remove="Shader\XNBcoder\*.exe" />

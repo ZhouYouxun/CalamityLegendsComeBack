@@ -1,10 +1,10 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
 {
     internal class BBTideAuraPlayer : ModPlayer
     {

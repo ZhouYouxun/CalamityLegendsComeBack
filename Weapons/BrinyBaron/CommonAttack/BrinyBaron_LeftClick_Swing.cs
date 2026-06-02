@@ -23,11 +23,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override Vector2 HitboxSize => new Vector2(182f, 182f);
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
 
-        private const int ComboLength = 8;
+        private const int ComboLength = 3;
+        private const int StandardStageDuration = 34;
+        private const int StandardGapFrames = 4;
         private const int RightSpinTransitionFrames = 14;
-        private const int RightSpinHitboxInterval = 14;
-        private const float RightSpinMaxAngularVelocity = 6.5f * MathHelper.Pi / 180f;
-        private const float RightSpinAngularAcceleration = 0.09f;
+        private const int RightSpinShurikenInterval = 12;
+        private const float RightSpinMaxEmpowerment = 180f;
 
         private int comboIndex;
         private int currentStage;
@@ -41,23 +42,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private bool swingSoundPlayed;
         private bool postSwing;
         private float fadeIn;
-        private float currentRangeScale = 1f;
-        private float currentDrawScale = 1f;
-        private float lengthScale = 1f;
         private float thicknessScale = 1f;
-        private float currentTiltDegrees;
         private Vector2 lockedMouseWorld;
         private Vector2 lockedAimDirection = Vector2.UnitX;
 
         private bool rightSpinActive;
         private int rightSpinTimer;
-        private int rightSpinDirection = 1;
+        private int rightSpinOrbitDirection = 1;
         private bool rightSpinSound = true;
-        private float rightSpinAngularVelocity;
+        private float rightSpinEmpowerment;
+        private float rightSpinOverEmpowerment;
         private int rightSpinTransitionTimer;
         private float rightSpinTransitionStartOffset;
+        private Vector2 rightSpinDirectionVector = Vector2.UnitX;
+        private Particle rightSpinSmear;
 
         private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
+        private float RightSpinChargeRatio => MathHelper.Clamp(rightSpinEmpowerment / RightSpinMaxEmpowerment, 0f, 1f);
 
         public override void SetDefaults()
         {
@@ -75,10 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             DrawUnconditionally = true;
             Projectile.timeLeft = 2;
             Projectile.knockBack = 0f;
-            Projectile.ai[1] = -1f;
-            currentDrawScale = 1f;
-            currentRangeScale = 1f;
-            lengthScale = 1f;
+            Projectile.ai[1] = 1f;
             thicknessScale = 1f;
             UpdateLockedAimFromMouse();
         }
@@ -130,8 +128,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 OnBeginUse();
             }
 
-            Projectile.Center = Owner.MountedCenter;
-            Projectile.scale = 1f;
+            if (!rightSpinActive)
+            {
+                Projectile.Center = Owner.MountedCenter;
+                Projectile.scale = 1f;
+            }
+
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
         }
 
@@ -208,18 +210,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             swingSoundPlayed = false;
             postSwing = false;
             CanHit = false;
-            currentDrawScale = 1f;
-            currentRangeScale = 1f;
-            lengthScale = 1f;
             thicknessScale = 1f;
-            currentTiltDegrees = profile.Tilted ? (currentStage % 2 == 0 ? -32f : 32f) + Main.rand.NextFloat(-10f, 10f) : 0f;
 
             for (int i = 0; i < Main.maxNPCs; i++)
                 Projectile.localNPCImmunity[i] = 0;
 
             Projectile.numHits = 0;
             UpdateLockedAimFromMouse();
-            swingDirection = comboIndex % 2 == 0 ? -1 : 1;
+            swingDirection = 1;
             Projectile.ai[1] = swingDirection;
             Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
             FlipAsSword = Owner.direction == -1;
@@ -237,14 +235,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 CanHit = false;
                 postSwing = false;
                 fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.32f);
-                lengthScale = 1f;
                 thicknessScale = 1f;
-                currentRangeScale = 1f;
                 Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.24f);
-                RotationOffset = MathHelper.Lerp(
-                    RotationOffset,
-                    MathHelper.ToRadians((118f * swingDirection * Owner.direction) + currentTiltDegrees),
-                    0.18f);
+                RotationOffset = RotationOffset.AngleLerp(MathHelper.ToRadians(45f * Owner.direction), 0.2f);
 
                 if (stageTimer >= stageDuration)
                     EndStage(profile);
@@ -262,10 +255,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             float swingTimeMax = Math.Max(1f, stageDuration - impactFrame);
             float swingProgress = MathHelper.Clamp(swingTime / swingTimeMax, 0f, 1f);
             float easedProgress = CalamityUtils.ExpInOutEasing(swingProgress, 1);
-            lengthScale = 1f;
             thicknessScale = 1f;
-            currentRangeScale = 1f;
-            currentDrawScale = 1f;
 
             bool hitWindow = swingProgress > 0.12f && swingProgress < 0.74f;
             CanHit = hitWindow;
@@ -273,7 +263,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             if (swingProgress >= 0.1f && !swingSoundPlayed)
             {
-                SoundEngine.PlaySound(SoundID.Item71 with { Volume = profile.Kind == ComboKind.FinalWave ? 0.92f : 0.78f, Pitch = Main.rand.NextFloat(0.08f, 0.22f) }, Owner.Center);
+                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.8f, Pitch = Main.rand.NextFloat(0.08f, 0.22f) }, Owner.Center);
                 SoundEngine.PlaySound(SoundID.Splash with { Volume = 0.45f, Pitch = Main.rand.NextFloat(0.08f, 0.22f) }, Owner.Center);
                 swingSoundPlayed = true;
             }
@@ -284,10 +274,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 stageEventFired = true;
             }
 
-            float swingFacing = swingDirection * Owner.direction;
             RotationOffset = MathHelper.Lerp(
                 RotationOffset,
-                MathHelper.ToRadians(MathHelper.Lerp(145f * swingFacing + currentTiltDegrees, 112f * -swingFacing + currentTiltDegrees, easedProgress)),
+                MathHelper.ToRadians(MathHelper.Lerp(45f * Owner.direction, 405f * Owner.direction, easedProgress)),
                 0.28f);
 
             if (CanHit)
@@ -317,30 +306,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             switch (kind)
             {
-                case ComboKind.OpeningShuriken:
-                    SpawnOpeningShurikenVolley();
-                    ApplyScreenShake(4.5f);
+                case ComboKind.Wave:
+                    SpawnWave();
+                    ApplyScreenShake(3.5f);
                     break;
-                case ComboKind.MediumTornado:
+                case ComboKind.ShurikenVolley:
+                    SpawnShurikenVolley();
+                    ApplyScreenShake(3f);
+                    break;
+                case ComboKind.Tornado:
                     SpawnTornadoBolt();
-                    break;
-                case ComboKind.SmallWater:
-                    SpawnWaterStreams();
-                    break;
-                case ComboKind.FinalWave:
-                    SpawnFinalWave();
-                    ApplyScreenShake(6f);
                     break;
             }
         }
 
-        private void SpawnOpeningShurikenVolley()
+        private void SpawnShurikenVolley()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
             {
-                float progress = i / 4f;
-                float spread = MathHelper.Lerp(-0.34f, 0.34f, progress);
+                float progress = i / 3f;
+                float spread = MathHelper.Lerp(-0.28f, 0.28f, progress);
                 Vector2 velocity = shootDirection.RotatedBy(spread).RotatedByRandom(0.035f) * Main.rand.NextFloat(12.5f, 15.5f);
 
                 Projectile.NewProjectile(
@@ -348,7 +334,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Owner.MountedCenter + shootDirection * 28f,
                     velocity,
                     ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.44f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.4f)),
                     Projectile.knockBack * 0.45f,
                     Projectile.owner,
                     1f);
@@ -368,38 +354,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.owner);
         }
 
-        private void SpawnWaterStreams()
-        {
-            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            int count = Main.rand.Next(2, 4);
-
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 velocity = shootDirection.RotatedBy(Main.rand.NextFloat(-0.34f, 0.34f)) * Main.rand.NextFloat(12f, 15f);
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Owner.MountedCenter + shootDirection * 30f + shootDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-16f, 16f),
-                    velocity,
-                    ModContent.ProjectileType<BrinyBaron_WaterStream>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.34f)),
-                    Projectile.knockBack * 0.35f,
-                    Projectile.owner);
-            }
-        }
-
-        private void SpawnFinalWave()
+        private void SpawnWave()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 Owner.MountedCenter + shootDirection * 44f,
-                shootDirection * 12.4f,
+                shootDirection * 13.2f,
                 ModContent.ProjectileType<BBSwing_Wave>(),
-                Math.Max(1, (int)(Projectile.damage * 0.86f)),
+                Math.Max(1, (int)(Projectile.damage * 0.68f)),
                 Projectile.knockBack,
                 Projectile.owner,
-                2.42f,
-                3f);
+                1.42f,
+                1f);
         }
 
         private void DoRightSpin()
@@ -419,15 +386,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Owner.itemTime = Math.Max(Owner.itemTime, 2);
             Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
             DrawUnconditionally = true;
-            currentDrawScale = 1f;
-            currentRangeScale = 1f;
-            lengthScale = 1f;
             thicknessScale = MathHelper.Lerp(thicknessScale, 1f, 0.18f);
-            UpdateLockedAimFromMouse();
-
-            Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
-            FlipAsSword = Owner.direction == -1;
-            Projectile.rotation = Projectile.rotation.AngleLerp(lockedAimDirection.ToRotation() + MathHelper.PiOver4, 0.42f);
+            Projectile.scale = 1f + RightSpinChargeRatio * 0.7f;
 
             if (rightSpinTransitionTimer < RightSpinTransitionFrames)
             {
@@ -435,29 +395,44 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 float transitionProgress = rightSpinTransitionTimer / (float)RightSpinTransitionFrames;
                 float easedTransition = 1f - (float)Math.Pow(1f - transitionProgress, 3f);
                 RotationOffset = Utils.AngleLerp(rightSpinTransitionStartOffset, 0f, easedTransition);
-                rightSpinAngularVelocity = 0f;
+                Projectile.rotation = Projectile.rotation.AngleLerp(rightSpinDirectionVector.ToRotation() + MathHelper.PiOver4, 0.36f);
                 postSwing = true;
                 CanHit = false;
                 return;
             }
 
-            float targetAngularVelocity = RightSpinMaxAngularVelocity * rightSpinDirection;
-            rightSpinAngularVelocity = MathHelper.Lerp(rightSpinAngularVelocity, targetAngularVelocity, RightSpinAngularAcceleration);
-            RotationOffset += rightSpinAngularVelocity;
+            float spinRate = MathHelper.Clamp(RightSpinChargeRatio, 0.4f, 1f) * MathHelper.PiOver4 * 0.2f * rightSpinOrbitDirection;
+            rightSpinDirectionVector = rightSpinDirectionVector.RotatedBy(spinRate);
+            rightSpinDirectionVector.Normalize();
+            Projectile.rotation = rightSpinDirectionVector.ToRotation() + MathHelper.PiOver4;
+            Projectile.Center = Owner.Center + rightSpinDirectionVector * Projectile.scale * 10f;
+            RotationOffset = 0f;
             postSwing = true;
-            CanHit = false;
+            CanHit = RightSpinChargeRatio >= 0.45f;
+            fadeIn = MathHelper.Lerp(fadeIn, MathHelper.Clamp(RightSpinChargeRatio, 0f, 1f), 0.16f);
 
-            float spinSpeedRatio = MathHelper.Clamp(Math.Abs(rightSpinAngularVelocity) / RightSpinMaxAngularVelocity, 0f, 1f);
-            if (rightSpinTimer % 34 == 1 || (rightSpinSound && spinSpeedRatio > 0.72f))
+            if (rightSpinDirectionVector.X != 0f)
+                Owner.ChangeDir(Math.Sign(rightSpinDirectionVector.X));
+            FlipAsSword = rightSpinDirectionVector.X < 0f;
+
+            if (rightSpinTimer % 34 == 1 || (rightSpinSound && RightSpinChargeRatio > 0.72f))
             {
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.66f, Pitch = Main.rand.NextFloat(-0.08f, 0.08f) }, Projectile.Center);
                 rightSpinSound = false;
             }
 
             SpawnRightSpinParticles();
+            UpdateRightSpinSmear();
 
-            if (spinSpeedRatio > 0.42f && rightSpinTimer % RightSpinHitboxInterval == 1)
-                SpawnRightSpinHitbox();
+            if (RightSpinChargeRatio >= 1f && (rightSpinTimer + (int)rightSpinOverEmpowerment) % RightSpinShurikenInterval == 1)
+                SpawnRightSpinShuriken();
+
+            rightSpinEmpowerment++;
+            if (rightSpinEmpowerment > RightSpinMaxEmpowerment)
+            {
+                rightSpinEmpowerment = RightSpinMaxEmpowerment;
+                rightSpinOverEmpowerment++;
+            }
         }
 
         private void StartRightSpin()
@@ -467,14 +442,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             postSwing = true;
             rightSpinActive = true;
             rightSpinTimer = 0;
-            rightSpinDirection = comboIndex % 2 == 0 ? 1 : -1;
+            UpdateLockedAimFromMouse();
+            rightSpinDirectionVector = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            rightSpinOrbitDirection = rightSpinDirectionVector.X >= 0f ? 1 : -1;
             rightSpinSound = true;
-            rightSpinAngularVelocity = 0f;
+            rightSpinEmpowerment = 0f;
+            rightSpinOverEmpowerment = 0f;
             rightSpinTransitionTimer = 0;
             rightSpinTransitionStartOffset = RotationOffset;
-            currentDrawScale = 1f;
-            currentRangeScale = 1f;
-            lengthScale = 1f;
             thicknessScale = 1f;
 
             for (int i = 0; i < Main.maxNPCs; i++)
@@ -489,9 +464,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinActive = false;
             rightSpinTimer = 0;
             rightSpinSound = true;
-            rightSpinAngularVelocity = 0f;
+            rightSpinEmpowerment = 0f;
+            rightSpinOverEmpowerment = 0f;
             rightSpinTransitionTimer = 0;
             rightSpinTransitionStartOffset = 0f;
+            rightSpinSmear?.Kill();
+            rightSpinSmear = null;
             CanHit = false;
             postSwing = false;
             gapTimer = 0;
@@ -500,41 +478,60 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.Kill();
         }
 
-        private void SpawnRightSpinHitbox()
+        private void SpawnRightSpinShuriken()
         {
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            int squareSize = 260;
+            Vector2 radialDirection = Main.rand.NextVector2CircularEdge(1f, 1f).SafeNormalize(Vector2.UnitX);
+            Vector2 tangentDirection = radialDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Owner.MountedCenter,
-                Vector2.Zero,
-                ModContent.ProjectileType<BBSwing_INV>(),
-                Math.Max(1, (int)(Projectile.damage * 0.48f)),
-                Projectile.knockBack * 0.5f,
+                Owner.Center + radialDirection * Main.rand.NextFloat(36f, 86f),
+                radialDirection * Main.rand.NextFloat(10.5f, 13.5f) + tangentDirection * Main.rand.NextFloat(1f, 3f),
+                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                Math.Max(1, (int)(Projectile.damage * 0.34f)),
+                Projectile.knockBack * 0.4f,
                 Projectile.owner,
-                squareSize,
-                1f,
-                SlashAngle);
+                1f);
         }
 
         private void SpawnRightSpinParticles()
         {
-            Vector2 slashDirection = SlashAngle.ToRotationVector2();
-            Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinDirection);
-            float ringPhase = rightSpinTimer * 0.18f * rightSpinDirection;
+            Vector2 slashDirection = rightSpinDirectionVector.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
+            float ringPhase = rightSpinTimer * 0.18f * rightSpinOrbitDirection;
 
             for (int i = 0; i < 3; i++)
             {
                 float angle = ringPhase + MathHelper.TwoPi * i / 3f + Main.rand.NextFloat(-0.16f, 0.16f);
                 Vector2 orbitDirection = angle.ToRotationVector2();
-                Vector2 spawnPosition = Owner.Center + orbitDirection * Main.rand.NextFloat(72f, 142f);
-                Vector2 velocity = tangentDirection * Main.rand.NextFloat(0.6f, 1.6f) + orbitDirection * Main.rand.NextFloat(0.2f, 0.9f);
+                Vector2 spawnPosition = Owner.Center + orbitDirection * Main.rand.NextFloat(72f, 142f) * MathHelper.Lerp(0.75f, 1.15f, RightSpinChargeRatio);
+                Vector2 velocity = tangentDirection * Main.rand.NextFloat(0.6f, 1.6f + RightSpinChargeRatio) + orbitDirection * Main.rand.NextFloat(0.2f, 0.9f);
 
                 Dust dust = Dust.NewDustPerfect(spawnPosition, Main.rand.NextBool() ? DustID.Water : DustID.Frost, velocity, 100, new Color(90, 205, 255), Main.rand.NextFloat(0.75f, 1.1f));
                 dust.noGravity = true;
             }
+        }
+
+        private void UpdateRightSpinSmear()
+        {
+            if (RightSpinChargeRatio < 0.72f || Main.dedServ)
+                return;
+
+            Color smearColor = Color.Lerp(Color.DeepSkyBlue, Color.Cyan, RightSpinChargeRatio) * ((RightSpinChargeRatio - 0.72f) / 0.28f * 0.72f);
+            if (rightSpinSmear == null)
+            {
+                rightSpinSmear = new CircularSmearSmokeyVFX(Owner.Center, smearColor, rightSpinDirectionVector.ToRotation(), Projectile.scale * 1.45f);
+                GeneralParticleHandler.SpawnParticle(rightSpinSmear);
+                return;
+            }
+
+            rightSpinSmear.Position = Owner.Center;
+            rightSpinSmear.Rotation = rightSpinDirectionVector.ToRotation() + MathHelper.PiOver2;
+            rightSpinSmear.Scale = Projectile.scale * 1.75f;
+            rightSpinSmear.Color = smearColor;
+            rightSpinSmear.Time = 0;
         }
 
         private void SpawnSwingParticles(StageProfile profile)
@@ -623,15 +620,54 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            rightSpinSmear?.Kill();
+            rightSpinSmear = null;
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Frostburn, 180);
+
+            if (!rightSpinActive)
+                SpawnTrueMeleeFollowups(target);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             float damageMult = Utils.Remap(Projectile.numHits, 0, 10, 1f, 0.62f, true);
-            modifiers.SourceDamage *= damageMult;
+            if (rightSpinActive)
+                modifiers.SourceDamage *= MathHelper.Lerp(0.72f, 1.05f, RightSpinChargeRatio) * damageMult;
+            else
+                modifiers.SourceDamage *= 1.35f * damageMult;
+        }
+
+        private void SpawnTrueMeleeFollowups(NPC target)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 slashDirection = SlashAngle.ToRotationVector2().SafeNormalize(lockedAimDirection);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center + Main.rand.NextVector2Circular(8f, 8f),
+                slashDirection * 6f,
+                ModContent.ProjectileType<BBSwing_Slash>(),
+                Math.Max(1, (int)(Projectile.damage * 0.36f)),
+                Projectile.knockBack * 0.35f,
+                Projectile.owner,
+                1.08f,
+                Main.rand.NextFloat(-0.18f, 0.18f));
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedByRandom(0.12f) * 10f,
+                ModContent.ProjectileType<BrinyBaron_TornadoBolt>(),
+                Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                Projectile.knockBack * 0.45f,
+                Projectile.owner);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -693,19 +729,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             return stage switch
             {
-                0 => new StageProfile(ComboKind.OpeningShuriken, 46, 5, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                1 or 2 => new StageProfile(ComboKind.MediumTornado, 28, 3, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                >= 3 and <= 6 => new StageProfile(ComboKind.SmallWater, 18, 2, 1f, 1f, 1f, 1f, 1f, 1f, true),
-                _ => new StageProfile(ComboKind.FinalWave, 50, 6, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                0 => new StageProfile(ComboKind.Wave, StandardStageDuration, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                1 => new StageProfile(ComboKind.ShurikenVolley, StandardStageDuration, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                _ => new StageProfile(ComboKind.Tornado, StandardStageDuration, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
             };
         }
 
         private enum ComboKind
         {
-            OpeningShuriken,
-            MediumTornado,
-            SmallWater,
-            FinalWave
+            Wave,
+            ShurikenVolley,
+            Tornado
         }
 
         private readonly struct StageProfile

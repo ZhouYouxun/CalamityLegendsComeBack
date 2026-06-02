@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Particles;

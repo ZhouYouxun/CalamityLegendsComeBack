@@ -104,6 +104,12 @@ Mods: {
 			CTRLBossDefeated: defeated
 			CTRLBossUndefeated: undefeated
 			CTRLBossStatusSet: "{0} has been set to {1}."
+			CTRLBossBulkPreHardmode: Toggle all pre-Hardmode bosses
+			CTRLBossBulkHardmode: Toggle all Hardmode bosses
+			CTRLBossBulkPostMoonLord: Toggle all post-Moon Lord bosses
+			CTRLBossBulkAll: Toggle all bosses
+			CTRLBossBulkInvert: Invert every boss flag
+			CTRLBossBulkChanged: "{0}: changed {1} boss flags."
 		}
 
 		Keybinds: {

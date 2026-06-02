@@ -12,10 +12,12 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
         private const float ReticleMinEaseSpeed = 2.5f;
         private const float ReticleMaxEaseSpeed = 72f;
         private const float ReticleFullSpeedDistance = 900f;
+        private const int ReticleMouseCatchupFrames = 10;
 
         public bool TacticalComputerEquipped;
         public Vector2 ReticleWorld;
         public int ReticleTargetIndex = -1;
+        private int reticleMouseCatchupTimer;
 
         public NPC ReticleTarget =>
             Main.npc.IndexInRange(ReticleTargetIndex) && Main.npc[ReticleTargetIndex].CanBeChasedBy()
@@ -34,6 +36,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
             TacticalComputerEquipped = false;
             ReticleWorld = Vector2.Zero;
             ReticleTargetIndex = -1;
+            reticleMouseCatchupTimer = 0;
         }
 
         public override void PostUpdate()
@@ -45,6 +48,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
             {
                 ReticleWorld = Vector2.Zero;
                 ReticleTargetIndex = -1;
+                reticleMouseCatchupTimer = 0;
                 return;
             }
 
@@ -68,10 +72,23 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
                 ReticleWorld = Player.Center;
 
             NPC target = PlayerIsHoldingSHPC() ? FindTargetNearMouse(mouseWorld) : null;
-            ReticleTargetIndex = target?.whoAmI ?? -1;
+            if (target != null)
+            {
+                ReticleTargetIndex = target.whoAmI;
+                reticleMouseCatchupTimer = ReticleMouseCatchupFrames;
+                ReticleWorld = EaseTowards(ReticleWorld, target.Center);
+                return;
+            }
 
-            Vector2 destination = target?.Center ?? mouseWorld;
-            ReticleWorld = EaseTowards(ReticleWorld, destination);
+            ReticleTargetIndex = -1;
+            if (reticleMouseCatchupTimer > 0)
+            {
+                reticleMouseCatchupTimer--;
+                ReticleWorld = EaseTowards(ReticleWorld, mouseWorld);
+                return;
+            }
+
+            ReticleWorld = mouseWorld;
         }
 
         private NPC FindTargetNearMouse(Vector2 mouseWorld)

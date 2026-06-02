@@ -615,6 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             bool weak = false,
             bool speedLines = false,
             bool normalVisualIntensity = false,
+            bool oneThirdVisualIntensity = false,
             float lightningScale = 1f)
         {
             // 竖直雷通过目标点向上偏移生成，再朝落点移动。
@@ -646,6 +647,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 flags |= AzureThunderFlatLightning.SpeedLineFlag;
             if (normalVisualIntensity)
                 flags |= AzureThunderFlatLightning.NormalVisualIntensityFlag;
+            if (oneThirdVisualIntensity)
+                flags |= AzureThunderFlatLightning.OneThirdVisualIntensityFlag;
 
             SpawnDirectionalLightning(
                 source,

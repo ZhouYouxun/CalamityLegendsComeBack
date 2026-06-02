@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod.Cooldowns;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,7 +9,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using static CalamityMod.CalamityUtils;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
 {
     internal class BBEXCoolDown : CooldownHandler
     {
@@ -27,9 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.BrinyBaron_Tide");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/POWER/BBEXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/POWER/BBEXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/POWER/BBEXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOverlay";
 
         public override Color OutlineColor => Color.DarkSlateGray;
 

@@ -1,10 +1,12 @@
+﻿#if false
+// Deprecated: Focus mode was removed from Briny Baron passive behavior.
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 {
     internal class BrinyBaronFocusEyesLayer : PlayerDrawLayer
     {
@@ -102,3 +104,5 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash
         }
     }
 }
+
+#endif

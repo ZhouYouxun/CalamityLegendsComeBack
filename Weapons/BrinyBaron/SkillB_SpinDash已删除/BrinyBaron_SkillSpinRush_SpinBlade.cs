@@ -1,7 +1,7 @@
-/*
+﻿/*
 using System;
 using CalamityLegendsComeBack.Accssory.BB;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;

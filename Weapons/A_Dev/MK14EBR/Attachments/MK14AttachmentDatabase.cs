@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             if (!stats.SustainedFireDamageRamp)
                 return 1f;
 
-            float ramp = Utils.GetLerpValue(0f, 100f, consecutiveShots, true);
+            float ramp = Utils.GetLerpValue(1f, 100f, consecutiveShots, true);
             return MathHelper.Lerp(1f, 1.15f, ramp);
         }
 

@@ -168,6 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 applyBaseElectricDebuff: true,
                 weak: !HarmonyMode,
                 speedLines: HarmonyMode,
+                oneThirdVisualIntensity: HarmonyMode,
                 lightningScale: HarmonyMode ? 1.5f : 0.72f);
 
             // 终极右键每发落雷额外补透明 AOE，最后一发范围更大。

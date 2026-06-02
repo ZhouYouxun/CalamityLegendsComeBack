@@ -1,7 +1,7 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -139,8 +139,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
             BBSuperDashCooldownPlayer superDashCooldown = player.GetModPlayer<BBSuperDashCooldownPlayer>();
-            BrinyBaronFocusModePlayer focusPlayer = player.GetModPlayer<BrinyBaronFocusModePlayer>();
-            focusPlayer.SetHoldingBrinyBaron();
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
@@ -251,7 +249,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 ? this.GetLocalizedValue("Dash4_Unlock")
                 : this.GetLocalizedValue("Dash4_Lock");
             string passiveState = this.GetLocalizedValue(dashPlayer.DashEnabled ? "PassiveStateOn" : "PassiveStateOff");
-            string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState);
+            string passiveDevice = this.GetLocalizedValue(dashPlayer.EquippedDashDeviceLocalizationKey);
+            string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState, passiveDevice);
             string final = this.GetLocalizedValue("BB_Final");
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");

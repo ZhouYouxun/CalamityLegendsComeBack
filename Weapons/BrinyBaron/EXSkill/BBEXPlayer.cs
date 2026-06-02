@@ -1,10 +1,10 @@
-using CalamityLegendsComeBack.Accssory.BB;
+﻿using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.POWER
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
 {
     internal class BBEXPlayer : ModPlayer
     {

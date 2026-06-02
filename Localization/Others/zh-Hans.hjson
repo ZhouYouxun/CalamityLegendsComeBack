@@ -109,6 +109,12 @@ Mods: {
 			CTRLBossDefeated: 已击杀
 			CTRLBossUndefeated: 未击杀
 			CTRLBossStatusSet: "{0} 已被调整为{1}。"
+			CTRLBossBulkPreHardmode: 一键开关困难模式前的所有 Boss
+			CTRLBossBulkHardmode: 一键开关困难模式的所有 Boss
+			CTRLBossBulkPostMoonLord: 一键开关月球领主后的所有 Boss
+			CTRLBossBulkAll: 一键开关所有 Boss
+			CTRLBossBulkInvert: 一键反向调整所有 Boss
+			CTRLBossBulkChanged: "{0}：已调整 {1} 个 Boss 进度。"
 		}
 
 		Keybinds: {

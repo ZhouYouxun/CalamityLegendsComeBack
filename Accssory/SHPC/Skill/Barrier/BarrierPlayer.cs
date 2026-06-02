@@ -1,6 +1,9 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityMod;
+using CalamityMod.Items.Accessories;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
@@ -32,6 +35,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         public float ShieldChargeRatio =>
             ShieldMaxHitPoints <= 0 ? 0f : MathHelper.Clamp(shieldHitPoints / ShieldMaxHitPoints, 0f, 1f);
+
+        public int RechargeDelayRemainingFrames =>
+            shieldHitPoints >= ShieldMaxHitPoints
+                ? 0
+                : System.Math.Max(0, ChargeDelayFrames - chargeDelayTimer);
 
         public bool ShieldActive =>
             BarrierEquipped &&
@@ -68,6 +76,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             if (shieldHitPoints > shieldMax)
                 shieldHitPoints = shieldMax;
 
+            float previousHitPoints = shieldHitPoints;
             if (shieldHitPoints < shieldMax)
             {
                 if (chargeDelayTimer < ChargeDelayFrames)
@@ -75,6 +84,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
                 else
                     shieldHitPoints = System.Math.Min(shieldMax, shieldHitPoints + shieldMax / (float)FullChargeFrames);
             }
+
+            if (previousHitPoints < shieldMax && shieldHitPoints >= shieldMax && Main.myPlayer == Player.whoAmI)
+                SoundEngine.PlaySound(RoverDrive.ActivationSound, Player.Center);
+
+            SyncCooldownDisplays();
 
             if (Main.myPlayer != Player.whoAmI || !ShieldActive)
                 return;
@@ -111,9 +125,38 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
                 shieldHitPoints = System.Math.Max(0f, shieldHitPoints - absorbedDamage);
                 info.Damage -= absorbedDamage;
                 ShieldHitFlashTimer = 18;
+
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    SoundEngine.PlaySound(
+                        shieldHitPoints <= 0f ? RoverDrive.BreakSound : RoverDrive.ShieldHurtSound,
+                        Player.Center);
+                }
             }
 
             chargeDelayTimer = 0;
+        }
+
+        private void SyncCooldownDisplays()
+        {
+            if (shieldHitPoints > 0f)
+                SyncCooldown(BarrierDurabilityCooldown.ID, ShieldMaxHitPoints, ShieldCurrentHitPoints);
+
+            int rechargeFrames = RechargeDelayRemainingFrames;
+            if (rechargeFrames > 0)
+                SyncCooldown(BarrierRechargeCooldown.ID, ChargeDelayFrames, rechargeFrames);
+        }
+
+        private void SyncCooldown(string id, int duration, int timeLeft)
+        {
+            if (Player.Calamity().cooldowns.TryGetValue(id, out var cooldown))
+            {
+                cooldown.duration = duration;
+                cooldown.timeLeft = timeLeft;
+                return;
+            }
+
+            Player.AddCooldown(id, duration).timeLeft = timeLeft;
         }
     }
 }

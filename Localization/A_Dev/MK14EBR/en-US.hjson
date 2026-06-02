@@ -90,7 +90,7 @@ Mods: {
 
 					UniversalSuppressor: {
 						Name: Universal Suppressor
-						Effect: Replaces the firing sound with M14 suppressed fire; aggro -1000.
+						Effect: Replaces the firing sound with M14 suppressed fire; aggro -1000; sustained fire linearly increases projectile damage from x1.0 to x1.15 across 100 shots.
 					}
 
 					UniversalBrake: {

@@ -22,13 +22,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         private const string GlowBladeTexture = "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade";
 
         public new string LocalizationCategory => "Projectiles.SHPC";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/StarmageddonStar2";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private int starFrame;
 
         public override void SetStaticDefaults()
         {
+            Main.projFrames[Type] = 4;
             ProjectileID.Sets.TrailCacheLength[Type] = 18;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
@@ -50,7 +50,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnSpawn(IEntitySource source)
         {
-            starFrame = Utils.Clamp((int)Projectile.ai[1], 0, 4);
             Projectile.scale = Main.rand.NextFloat(0.72f, 1.05f) * 1.5f;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.24f, Pitch = 0.2f, PitchVariance = 0.12f, MaxInstances = 6 }, Projectile.Center);
@@ -62,11 +61,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.velocity *= 0.99f;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + Timer * 0.03f;
             Lighting.AddLight(Projectile.Center, new Color(255, 120, 76).ToVector3() * 0.38f);
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter >= 5)
+            {
+                Projectile.frameCounter = 0;
+                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+            }
 
             if (Main.dedServ)
                 return;
 
             SpawnOrbitSparks();
+            SpawnFlightParticles();
 
             if (Main.rand.NextBool(2))
             {
@@ -85,6 +91,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<AstralInfectionDebuff>(), 240);
+
+            if (!Main.dedServ)
+                SpawnImpactParticles(target.Center, false);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -143,6 +152,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 0.05f,
                 0.52f,
                 16));
+
+            SpawnImpactParticles(Projectile.Center, true);
         }
 
         private void SpawnOrbitSparks()
@@ -176,18 +187,126 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             }
         }
 
+        private void SpawnFlightParticles()
+        {
+            Color trailColor = Main.rand.NextBool()
+                ? new Color(255, 148, 82)
+                : new Color(102, 214, 255);
+
+            for (int i = 0; i < 2; i++)
+            {
+                int dustType = Utils.SelectRandom(
+                    Main.rand,
+                    DustID.OrangeTorch,
+                    DustID.BlueTorch,
+                    DustID.WhiteTorch,
+                    DustID.CrimsonTorch);
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                    dustType,
+                    -Projectile.velocity * Main.rand.NextFloat(0.015f, 0.06f),
+                    100,
+                    trailColor,
+                    Main.rand.NextFloat(0.72f, 1.18f));
+                dust.noGravity = true;
+                dust.fadeIn = 0.3f;
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.02f, 0.08f),
+                    false,
+                    Main.rand.Next(18, 30),
+                    Main.rand.NextFloat(0.42f, 0.78f),
+                    trailColor));
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    Vector2.Zero,
+                    trailColor,
+                    Vector2.One,
+                    0f,
+                    0.08f,
+                    0f,
+                    16));
+            }
+        }
+
+        private static void SpawnImpactParticles(Vector2 center, bool stronger)
+        {
+            int dustCount = stronger ? 28 : 18;
+            int sparkCount = stronger ? 18 : 11;
+            int rayCount = stronger ? 4 : 3;
+
+            for (int i = 0; i < dustCount; i++)
+            {
+                int dustType = Utils.SelectRandom(
+                    Main.rand,
+                    DustID.OrangeTorch,
+                    DustID.BlueTorch,
+                    DustID.WhiteTorch,
+                    DustID.CrimsonTorch);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, stronger ? 9f : 6.5f);
+                Dust dust = Dust.NewDustPerfect(center, dustType, velocity, 80, default, Main.rand.NextFloat(1.05f, stronger ? 1.85f : 1.55f));
+                dust.noGravity = true;
+                dust.fadeIn = 0.7f;
+            }
+
+            for (int i = 0; i < sparkCount; i++)
+            {
+                Vector2 direction = (MathHelper.TwoPi * i / sparkCount).ToRotationVector2();
+                Vector2 velocity = direction.RotatedBy(0.44f) * Main.rand.NextFloat(1.6f, stronger ? 5.2f : 3.8f);
+                Color color = Main.rand.NextBool() ? Color.Orange : Color.LightBlue;
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center + direction * Main.rand.NextFloat(2f, 10f),
+                    velocity,
+                    false,
+                    Main.rand.Next(28, 44),
+                    Main.rand.NextFloat(0.72f, 1.25f),
+                    color));
+            }
+
+            for (int side = 0; side < rayCount; side++)
+            {
+                Vector2 direction = (MathHelper.TwoPi * side / rayCount).ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    center,
+                    direction * Main.rand.NextFloat(10f, 16f),
+                    false,
+                    Main.rand.Next(20, 32),
+                    Main.rand.NextFloat(0.62f, 0.92f),
+                    side % 2 == 0 ? Color.Orange : Color.LightBlue));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                stronger ? new Color(255, 148, 82) : new Color(102, 214, 255),
+                Vector2.One,
+                0f,
+                stronger ? 0.3f : 0.22f,
+                0f,
+                stronger ? 28 : 22));
+
+            CLCBLightingBoltsSystem.Spawn_AstralSoulLightsA(center);
+            CLCBLightingBoltsSystem.Spawn_CelestialBurst(center);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Particles/FancyStars").Value;
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Rectangle frame = texture.Frame(horizontalFrames: 5, verticalFrames: 1, frameX: starFrame);
+            Rectangle frame = texture.Frame(verticalFrames: Main.projFrames[Type], frameY: Projectile.frame);
             Vector2 origin = frame.Size() * 0.5f;
             Color mainColor = new(255, 136, 72, 0);
             Color blueColor = new(92, 210, 255, 0);
             Vector2 center = Projectile.Center - Main.screenPosition;
 
-            // FancyStars 与 BloomCircle 都是供加法混合使用的贴图。
-            // 普通 AlphaBlend 会把贴图内的黑色底也绘制出来。
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
@@ -198,21 +317,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = oldPosition + Projectile.Size * 0.5f - Main.screenPosition;
                 Color trailColor = Color.Lerp(mainColor, blueColor, 0.35f + completion * 0.35f) * (completion * 0.42f);
-                Main.EntitySpriteDraw(texture, drawPosition, frame, trailColor, Projectile.rotation, origin, Projectile.scale * completion * 0.74f, SpriteEffects.None);
+                Main.EntitySpriteDraw(texture, drawPosition, frame, trailColor, Projectile.rotation, origin, Projectile.scale * completion * 0.58f, SpriteEffects.None);
             }
 
             float pulse = 1f + (float)Math.Sin(Timer * 0.22f) * 0.08f;
             Main.EntitySpriteDraw(bloom, center, null, mainColor * 0.36f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.22f * pulse, SpriteEffects.None);
-
-            // 飞行期间持续重绘三枚旋转星芒，让碎片本体带有独立的星辉包裹效果。
-            for (int i = 0; i < 3; i++)
-            {
-                float angle = Timer * (0.12f + i * 0.035f) + MathHelper.TwoPi / 3f * i;
-                Vector2 orbitOffset = angle.ToRotationVector2() * Projectile.scale * (4.2f + i * 1.15f);
-                float orbitScale = Projectile.scale * (0.3f - i * 0.045f) * pulse;
-                Color orbitColor = Color.Lerp(mainColor, blueColor, i * 0.34f) * (0.38f - i * 0.06f);
-                Main.EntitySpriteDraw(texture, center + orbitOffset, frame, orbitColor, -angle, origin, orbitScale, SpriteEffects.None);
-            }
 
             Main.EntitySpriteDraw(texture, center, frame, mainColor * 0.86f, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, center, frame, Color.White * 0.28f, -Projectile.rotation * 0.7f, origin, Projectile.scale * 0.58f, SpriteEffects.None);

@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillC_QuickDash;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
 using CalamityMod;
 using CalamityMod.Cooldowns;
 using Microsoft.Xna.Framework;

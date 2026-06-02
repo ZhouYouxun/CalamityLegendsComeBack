@@ -7,29 +7,35 @@ Mods: {
 					Tooltip: "[GFB]"
 					BB_Left:
 						'''
-						[c/66CCFF:左键：展开连续斩击，节奏逐步加速。]
-						[c/7F8FA6:前三段为稳定挥砍，用于压制与试探敌人。]
-						[c/99CCFF:第四段释放水刃飞潮，延伸攻击范围。]
-						[c/DDA0FF:最终段引发巨刃显现，对前方区域进行强力回斩。]
-						[c/FFB347:每一次重斩，都会引导潮汐之力汇聚于剑刃。]
+						[c/66CCFF:左键：以稳定的单向节奏连续挥斩。]
+						[c/7F8FA6:每一斩依次释放潮锋波、四枚旋水刃、海卷风。]
+						[c/99CCFF:剑身近距离命中时，伤害高于飞出的潮汐攻势。]
+						[c/DDA0FF:若剑刃亲自撕开敌人，命中处会再裂出水痕，并卷起一枚风暴种子。]
+						[c/FFB347:持续按住左键时，挥砍大小与节奏保持一致并循环推进。]
 						'''
 					BB_Tide: "[c/4FAEFF:当前潮汐值：]"
 					BB_Right:
 						'''
-						[c/66CCFF:右键：以高速突进撕裂战场。]
-						[c/7F8FA6:未充盈时，进行直线突刺，用于切入或脱离。]
-						[c/DDA0FF:潮汐充盈时，转化为回旋冲刺，持续撕裂路径上的一切。]
-						[c/FFB347:冲刺即是进攻，也是唯一的生存手段。]
+						[c/66CCFF:右键：未挥剑时向前突进，切入或脱离战场。]
+						[c/7F8FA6:按住左键时再按住右键，会将剑势转为环身旋舞。]
+						[c/DDA0FF:转盘会随持续时间加速；只有达到满速后，才会向周围撒出潮刃。]
+						[c/FFB347:低速旋舞用于蓄势，完成转速后才真正压制近身区域。]
 						'''
 					Dash1_Unlock: "[c/66FFAA:已解锁：基础突进]"
 					Dash1_Lock: "[c/7F8FA6:暂未解锁，需击败克苏鲁之眼]"
 					Dash2_Unlock: "[c/66FFAA:已解锁：回旋切割]"
 					Dash2_Lock: "[c/DDA0FF:暂未解锁，需击败血肉之墙]"
-					Dash3_Unlock: "[c/66FFAA:已解锁：连续斩返]"
+					Dash3_Unlock: "[c/66FFAA:已解锁：快刀斩]"
 					Dash3_Lock: "[c/99CCFF:暂未解锁，需击败血肉之墙]"
-					BB_Passive: "[c/9AEF9E:快刀斩被动：{0}。背包右键可切换。]"
+					BB_Passive: "[c/9AEF9E:快刀斩被动：{0}。{1}背包右键可切换。]"
 					PassiveStateOn: "[c/7BFFB7:开启]"
 					PassiveStateOff: "[c/F0D070:关闭]"
+					PassiveDevice_None: "[c/7F8FA6:当前未读取到盾冲设备。]"
+					PassiveDevice_OrnateShield: "[c/99CCFF:当前佩戴华丽护盾；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
+					PassiveDevice_DeepDiver: "[c/99CCFF:当前佩戴深渊潜游者；冲刺期间会侧放潮刃，并附加两段海爵斩击。]"
+					PassiveDevice_AsgardsValor: "[c/99CCFF:当前佩戴阿斯加德英勇；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
+					PassiveDevice_ElysianAegis: "[c/99CCFF:当前佩戴极乐之庇护；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
+					PassiveDevice_AsgardianAegis: "[c/99CCFF:当前佩戴阿斯加德之庇护；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
 					Dash4_Unlock: "[c/66FFAA:已解锁：潮狱处刑]"
 					Dash4_Lock: "[c/FFB347:暂未解锁，需击败猪鲨公爵]"
 					BB_Final: "[c/9FD8A2:满潮锁魂，左键宣判，直至目标被潮锋反复处刑。]"
@@ -63,13 +69,14 @@ Mods: {
 				BrinyBaron_RightClick_Shuriken.DisplayName: 海爵手里剑
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 刃岚突进
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 回旋裂斩
-				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 连返斩突
+				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 盾潮连斩
 				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 终潮处刑
 				BBSD_Star.DisplayName: 终潮星刃
 				BBSD_Final_INV.DisplayName: 终潮刻印
 			}
 		}
 
+		Cooldowns.BrinyBaron_Tide: 海爵潮汐
 		Cooldowns.BrinyBaron_SuperDash: 海爵终潮处刑
 	}
 }

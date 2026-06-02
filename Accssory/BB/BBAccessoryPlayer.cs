@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron.POWER;
+﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;

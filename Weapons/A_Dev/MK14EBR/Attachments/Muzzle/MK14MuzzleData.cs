@@ -15,7 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 (int)MK14Muzzle.UniversalSuppressor,
                 "Muzzle.UniversalSuppressor",
                 BalanceMK14EBR.StageGolem,
-                aggroReduction: 1000),
+                aggroReduction: 1000,
+                sustainedFireDamageRamp: true),
 
             new(
                 MK14AttachmentSlot.Muzzle,
