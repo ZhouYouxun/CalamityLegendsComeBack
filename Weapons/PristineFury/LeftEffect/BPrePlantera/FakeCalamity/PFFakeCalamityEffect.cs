@@ -267,48 +267,128 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Color theme = (Color.Lerp(ThemeColor, Color.White, charge * 0.22f) with { A = 0 }) * charge;
-            float pulse = 0.88f + (float)Math.Sin(Timer * 0.16f) * 0.14f;
-            float chargeScale = charge * 2f;
+
+            // 不要 A = 0，否则核心可能直接透明
+            Color theme = Color.Lerp(ThemeColor, Color.White, charge * 0.28f) * charge;
+            Color white = Color.White * charge;
+
+            float pulse = 0.92f + (float)Math.Sin(Timer * 0.18f) * 0.12f;
+            float chargeScale = MathHelper.Lerp(0.35f, 1.45f, charge);
 
             PFLeftEffectRules.BeginAdditive();
-            for (int i = 0; i < 4; i++)
+
+            // 向枪口汇聚的拉丝能量
+            for (int i = 0; i < 6; i++)
             {
-                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 5.5f) * charge;
-                Vector2 smearPosition = drawPosition + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(15f, 35f) + direction * -8f * (6f - chargeScale * 2f);
-                Vector2 smearScale = new(0.25f * chargeScale, (1.7f + (Main.rand.NextBool(4) ? 1.8f : 0f)) * 0.05f * chargeScale);
-                Main.EntitySpriteDraw(smear, smearPosition, null, theme * 0.8f, direction.RotatedByRandom(0.3f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
+                float angle = MathHelper.TwoPi * i / 6f + Timer * 0.045f;
+                Vector2 orbit = angle.ToRotationVector2();
+                Vector2 startOffset = new Vector2(orbit.X * 28f, orbit.Y * 12f).RotatedBy(Projectile.rotation) * chargeScale;
+
+                Vector2 smearPosition = drawPosition + startOffset - direction * (18f + charge * 18f);
+
+                Main.EntitySpriteDraw(
+                    smear,
+                    smearPosition,
+                    null,
+                    theme * 0.72f,
+                    direction.ToRotation() - MathHelper.PiOver2,
+                    new Vector2(smear.Width * 0.5f, smear.Height),
+                    new Vector2(0.45f + charge * 0.35f, 0.12f + charge * 0.08f),
+                    SpriteEffects.None,
+                    0f);
             }
 
-            for (int i = 0; i < 3; i++)
-            {
-                Color layerColor = (Color.Lerp(ThemeColor, Color.White, i * 0.25f) with { A = 0 }) * 0.8f;
-                Vector2 layerScale = new Vector2(1.35f, 1f) * chargeScale * (1f - 0.27f * i) * 0.23f * pulse;
-                Main.EntitySpriteDraw(bloom, drawPosition, null, layerColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
-            }
+            // 外层大辉光
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                theme * 0.95f,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                chargeScale * 0.52f * pulse,
+                SpriteEffects.None,
+                0f);
 
-            Main.EntitySpriteDraw(ring, drawPosition, null, theme * 0.36f, Projectile.rotation + Timer * 0.035f, ring.Size() * 0.5f, (0.14f + charge * 0.42f) * pulse, SpriteEffects.None, 0f);
+            // 内层白热核心
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                white * 0.62f,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                chargeScale * 0.22f * pulse,
+                SpriteEffects.None,
+                0f);
 
+            // 横向压缩核心，让它像枪口前的能量团
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition + direction * 2f,
+                null,
+                Color.Lerp(theme, white, 0.35f) * 0.78f,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                new Vector2(chargeScale * 0.62f, chargeScale * 0.34f) * pulse,
+                SpriteEffects.None,
+                0f);
+
+            // 外层旋转环
+            Main.EntitySpriteDraw(
+                ring,
+                drawPosition,
+                null,
+                theme * 0.58f,
+                Projectile.rotation + Timer * 0.04f,
+                ring.Size() * 0.5f,
+                chargeScale * 0.42f * pulse,
+                SpriteEffects.None,
+                0f);
+
+            // 满蓄力后出现三颗卫星核心
             if (charge >= 1f)
             {
                 for (int satellite = 0; satellite < 3; satellite++)
                 {
-                    Vector2 orbit = (MathHelper.TwoPi * satellite / 3f + Timer * 0.18f).ToRotationVector2();
-                    Vector2 offset = new Vector2(orbit.X * 0.7f, orbit.Y * 1.2f).RotatedBy(Projectile.rotation) * chargeScale * 12f;
-                    for (int layer = 0; layer < 2; layer++)
-                    {
-                        Color satelliteColor = (Color.Lerp(ThemeColor, Color.White, layer) with { A = 0 }) * 0.82f;
-                        float satelliteScale = chargeScale * (1f - 0.25f * layer) * 0.085f;
-                        Main.EntitySpriteDraw(bloom, drawPosition + offset, null, satelliteColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, satelliteScale, SpriteEffects.None, 0f);
-                    }
+                    float angle = MathHelper.TwoPi * satellite / 3f + Timer * 0.16f;
+                    Vector2 orbit = angle.ToRotationVector2();
+                    Vector2 offset = new Vector2(orbit.X * 22f, orbit.Y * 12f).RotatedBy(Projectile.rotation);
+
+                    Main.EntitySpriteDraw(
+                        bloom,
+                        drawPosition + offset,
+                        null,
+                        theme * 0.72f,
+                        0f,
+                        bloom.Size() * 0.5f,
+                        0.14f * pulse,
+                        SpriteEffects.None,
+                        0f);
+
+                    Main.EntitySpriteDraw(
+                        bloom,
+                        drawPosition + offset,
+                        null,
+                        white * 0.42f,
+                        0f,
+                        bloom.Size() * 0.5f,
+                        0.065f * pulse,
+                        SpriteEffects.None,
+                        0f);
                 }
             }
 
             PFLeftEffectRules.EndAdditive();
             return false;
         }
+
+
+
+
     }
 
     internal sealed class PFFakeCalamity_NovaOrb : ModProjectile, ILocalizedModType

@@ -1,4 +1,6 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod;
 using System;
@@ -147,3 +149,4 @@ namespace CalamityThrowingSpear.Weapons.ChangedWeapons.CPreMoodLord.AstralPikeC
         }
     }
 }
+#endif // REFERENCE_CODE_DISABLED

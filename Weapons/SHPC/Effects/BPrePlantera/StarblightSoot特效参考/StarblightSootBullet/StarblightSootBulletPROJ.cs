@@ -1,4 +1,6 @@
-﻿namespace CalamityRangerExpansion.Content.Ammunition.BPrePlantera.StarblightSootBullet
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+namespace CalamityRangerExpansion.Content.Ammunition.BPrePlantera.StarblightSootBullet
 {
     internal class StarblightSootBulletPROJ : ModProjectile, ILocalizedModType
     {
@@ -115,3 +117,4 @@
         }
     }
 }
+#endif // REFERENCE_CODE_DISABLED

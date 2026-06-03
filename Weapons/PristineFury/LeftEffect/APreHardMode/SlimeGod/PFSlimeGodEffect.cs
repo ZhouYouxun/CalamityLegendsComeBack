@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             for (int i = 0; i < count; i++)
             {
                 Vector2 direction = baseDirection.RotatedBy(Main.rand.NextFloat(-Fan, Fan));
-                float speed = FireSpeed * Main.rand.NextFloat(0.75f, 1.5f);
+                float speed = FireSpeed * Main.rand.NextFloat(0.25f, 0.65f);
                 Vector2 spawnOffset = baseDirection * Main.rand.NextFloat(0f, 8f);
 
                 int projectileIndex = Projectile.NewProjectile(

@@ -112,55 +112,179 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            Color warm = Color.Lerp(theme, Color.White, 0.24f);
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, warm * 0.82f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.08f, 1.08f * scale, 22));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, theme * 0.55f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.18f, 1.85f * scale, 28));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, warm, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.03f, 0.42f * scale, 18, true));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.White * 0.55f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.05f, 0.24f * scale, 12, true));
+            Color warm = Color.Lerp(theme, Color.White, 0.32f);
 
-            for (int i = 0; i < 5; i++)
+            // =========================
+            // 第一层：超大型主冲击环
+            // =========================
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                warm * 0.95f,
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.04f,
+                2.8f * scale,
+                34));
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                theme * 0.75f,
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.08f,
+                4.2f * scale,
+                42));
+
+            // =========================
+            // 第二层：核心高亮爆闪
+            // =========================
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.White * 0.95f,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.025f,
+                0.95f * scale,
+                18,
+                true));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                warm,
+                "CalamityMod/Particles/SoftRoundExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.04f,
+                1.75f * scale,
+                24,
+                true));
+
+            // =========================
+            // 第三层：重型放射能量束
+            // =========================
+
+            for (int i = 0; i < 14; i++)
             {
-                float angle = MathHelper.TwoPi * i / 5f + Main.rand.NextFloat(-0.18f, 0.18f);
-                Vector2 offset = angle.ToRotationVector2() * Main.rand.NextFloat(16f, 44f) * scale;
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center + offset, Vector2.Zero, theme * 0.42f, Vector2.One, angle, 0.06f, Main.rand.NextFloat(0.22f, 0.42f) * scale, 14));
+                float angle = MathHelper.TwoPi * i / 14f;
+
+                Vector2 velocity =
+                    angle.ToRotationVector2() *
+                    Main.rand.NextFloat(9f, 24f) *
+                    scale;
+
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(20, 34),
+                    Main.rand.NextFloat(1.2f, 2.4f) * scale,
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.2f, 0.55f))));
             }
 
-            for (int i = 0; i < 34; i++)
+            // =========================
+            // 第四层：大型外扩星爆
+            // =========================
+
+            for (int i = 0; i < 54; i++)
             {
-                Vector2 velocity = (MathHelper.TwoPi * i / 34f).ToRotationVector2().RotatedByRandom(0.13f) * Main.rand.NextFloat(3.2f, 11.8f) * scale;
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(center, velocity, false, Main.rand.Next(12, 24), Main.rand.NextFloat(0.62f, 1.35f) * scale, Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f))));
+                Vector2 velocity =
+                    Main.rand.NextVector2CircularEdge(1f, 1f) *
+                    Main.rand.NextFloat(4f, 18f) *
+                    scale;
+
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    center + Main.rand.NextVector2Circular(42f, 42f) * scale,
+                    velocity,
+                    false,
+                    Main.rand.Next(16, 28),
+                    Main.rand.NextFloat(0.8f, 1.6f) * scale,
+                    Color.Lerp(warm, Color.White, Main.rand.NextFloat(0.1f, 0.4f))));
             }
 
-            for (int i = 0; i < 18; i++)
+            // =========================
+            // 第五层：真正的“陪衬型”烟雾
+            // 烟雾只能当辅助
+            // =========================
+
+            for (int i = 0; i < 8; i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.1f, 4.8f) * scale;
-                GeneralParticleHandler.SpawnParticle(new PointParticle(center + Main.rand.NextVector2Circular(30f, 30f) * scale, velocity, false, Main.rand.Next(12, 22), Main.rand.NextFloat(0.72f, 1.18f) * scale, Color.Lerp(warm, Color.White, Main.rand.NextFloat(0.08f, 0.36f))));
+                Vector2 velocity =
+                    Main.rand.NextVector2CircularEdge(1f, 1f) *
+                    Main.rand.NextFloat(1.2f, 3.5f) *
+                    scale;
+
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    center + Main.rand.NextVector2Circular(46f, 46f) * scale,
+                    velocity,
+                    Color.Lerp(theme, Color.Goldenrod, Main.rand.NextFloat(0.12f, 0.4f)),
+                    Color.Transparent,
+                    Main.rand.NextFloat(0.65f, 1.25f) * scale,
+                    Main.rand.Next(28, 48),
+                    Main.rand.NextFloat(-0.05f, 0.05f)));
             }
 
-            for (int i = 0; i < 42; i++)
+            // =========================
+            // 第六层：大型高温火焰 Dust
+            // =========================
+
+            for (int i = 0; i < 68; i++)
             {
+                Vector2 velocity =
+                    Main.rand.NextVector2CircularEdge(1f, 1f) *
+                    Main.rand.NextFloat(3f, 15f) *
+                    scale;
+
                 Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(40f, 40f) * scale,
+                    center + Main.rand.NextVector2Circular(56f, 56f) * scale,
                     Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.6f, 8f) * scale,
+                    velocity,
                     70,
-                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.04f, 0.28f)),
-                    Main.rand.NextFloat(0.8f, 1.75f) * scale);
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.08f, 0.38f)),
+                    Main.rand.NextFloat(1.2f, 2.3f) * scale);
+
                 dust.noGravity = true;
             }
 
-            for (int i = 0; i < 9; i++)
+            // =========================
+            // 第七层：额外外围震荡环
+            // =========================
+
+            for (int i = 0; i < 5; i++)
             {
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    center + Main.rand.NextVector2Circular(34f, 34f) * scale,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.6f, 2.4f) * scale,
-                    Color.Lerp(theme, Color.Goldenrod, Main.rand.NextFloat(0.12f, 0.36f)),
-                    Color.Transparent,
-                    Main.rand.NextFloat(0.45f, 0.92f) * scale,
-                    Main.rand.Next(24, 42),
-                    Main.rand.NextFloat(-0.06f, 0.06f)));
+                float angle =
+                    MathHelper.TwoPi * i / 5f +
+                    Main.rand.NextFloat(-0.16f, 0.16f);
+
+                Vector2 offset =
+                    angle.ToRotationVector2() *
+                    Main.rand.NextFloat(50f, 92f) *
+                    scale;
+
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    center + offset,
+                    Vector2.Zero,
+                    theme * 0.55f,
+                    Vector2.One,
+                    angle,
+                    0.03f,
+                    Main.rand.NextFloat(0.42f, 0.8f) * scale,
+                    18));
             }
         }
+
+
+
+
+
+
+
     }
 
     internal sealed class PFHardMode_GroundFire : ModProjectile, ILocalizedModType

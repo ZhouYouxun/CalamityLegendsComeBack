@@ -231,55 +231,107 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Texture2D magicRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
             Texture2D reticle = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_04").Value;
-            Color theme = (Color.Lerp(ThemeColor, Color.White, 0.12f) with { A = 0 }) * Projectile.Opacity;
-            Color inner = (Color.White with { A = 0 }) * Projectile.Opacity;
+
+            // 不要把 A 设成 0，避免 SpriteBatch 状态没切成功时直接透明
+            Color theme = Color.Lerp(ThemeColor, Color.White, 0.12f) * Projectile.Opacity;
+            Color inner = Color.White * Projectile.Opacity;
 
             PFLeftEffectRules.BeginAdditive();
 
             Vector2 previous = Projectile.Center;
+
             for (int i = 0; i < segments.Length; i++)
             {
                 Vector2 current = segments[i].Position;
                 Vector2 between = previous - current;
                 float length = between.Length();
+
                 if (length > 0.1f)
                 {
                     Vector2 mid = (previous + current) * 0.5f - Main.screenPosition;
+
                     Main.EntitySpriteDraw(
                         line,
                         mid,
                         null,
-                        theme * MathHelper.Lerp(0.48f, 0.18f, i / (float)segments.Length),
+                        theme * MathHelper.Lerp(0.55f, 0.22f, i / (float)segments.Length),
                         between.ToRotation() + MathHelper.PiOver2,
                         line.Size() * 0.5f,
-                        new Vector2(0.16f, length / line.Height),
+                        new Vector2(0.18f, length / line.Height),
                         SpriteEffects.None,
                         0f);
                 }
 
                 float completion = i / (float)(segments.Length - 1);
-                float scale = MathHelper.Lerp(0.16f, 0.08f, completion);
+                float segmentScale = MathHelper.Lerp(0.22f, 0.13f, completion);
+
                 Main.EntitySpriteDraw(
                     bloom,
                     current - Main.screenPosition,
                     null,
-                    Color.Lerp(theme, inner, 0.28f) * (0.76f - completion * 0.26f),
+                    Color.Lerp(theme, inner, 0.28f) * (0.82f - completion * 0.28f),
                     segments[i].Rotation,
                     bloom.Size() * 0.5f,
-                    scale,
+                    segmentScale,
                     SpriteEffects.None,
                     0f);
 
-                DrawSegmentMagic(magicRing, reticle, current - Main.screenPosition, segments[i].Rotation, scale, theme, completion);
+                DrawSegmentMagic(
+                    magicRing,
+                    reticle,
+                    current - Main.screenPosition,
+                    segments[i].Rotation,
+                    segmentScale,
+                    theme,
+                    completion);
+
                 previous = current;
             }
 
             Vector2 head = Projectile.Center - Main.screenPosition;
-            float pulse = 0.9f + (float)Math.Sin(Timer * 0.2f) * 0.1f;
-            Main.EntitySpriteDraw(bloom, head, null, theme * 0.92f, Projectile.rotation, bloom.Size() * 0.5f, 0.2f * pulse, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(bloom, head, null, inner * 0.34f, Projectile.rotation, bloom.Size() * 0.5f, 0.095f * pulse, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(star, head, null, theme * 0.58f, Projectile.rotation, star.Size() * 0.5f, new Vector2(0.1f, 0.65f) * pulse, SpriteEffects.None, 0f);
-            DrawSegmentMagic(magicRing, reticle, head, Projectile.rotation, 0.2f * pulse, theme, 0f);
+            float pulse = 0.95f + (float)Math.Sin(Timer * 0.2f) * 0.12f;
+
+            Main.EntitySpriteDraw(
+                bloom,
+                head,
+                null,
+                theme * 0.95f,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                0.28f * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                bloom,
+                head,
+                null,
+                inner * 0.38f,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                0.13f * pulse,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                star,
+                head,
+                null,
+                theme * 0.65f,
+                Projectile.rotation,
+                star.Size() * 0.5f,
+                new Vector2(0.13f, 0.82f) * pulse,
+                SpriteEffects.None,
+                0f);
+
+            DrawSegmentMagic(
+                magicRing,
+                reticle,
+                head,
+                Projectile.rotation,
+                0.32f * pulse,
+                theme,
+                0f);
 
             PFLeftEffectRules.EndAdditive();
             return false;
@@ -287,17 +339,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private void DrawSegmentMagic(Texture2D magicRing, Texture2D reticle, Vector2 drawPosition, float rotation, float scale, Color color, float completion)
         {
-            float fade = 0.58f - completion * 0.24f;
-            float spin = Main.GlobalTimeWrappedHourly * (1.8f - completion * 0.5f) + Projectile.identity * 0.12f;
+            // 原本 scale * 0.34f / 0.28f 太小，基本会看不清
+            float fade = MathHelper.Lerp(0.72f, 0.36f, completion);
+            float spin = Main.GlobalTimeWrappedHourly * MathHelper.Lerp(2.4f, 1.35f, completion) + Projectile.identity * 0.12f;
+            float pulse = 0.92f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f + completion * MathHelper.TwoPi) * 0.08f;
+
+            Color magicColor = Color.Lerp(color, Color.White, 0.18f) * fade;
+            Color reticleColor = Color.Lerp(color, Color.White, 0.42f) * (fade * 0.78f);
 
             Main.EntitySpriteDraw(
                 magicRing,
                 drawPosition,
                 null,
-                color * fade,
-                rotation * 0.18f + spin,
+                magicColor,
+                rotation * 0.2f + spin,
                 magicRing.Size() * 0.5f,
-                scale * 0.34f,
+                scale * 0.75f * pulse,
                 SpriteEffects.None,
                 0f);
 
@@ -305,12 +362,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 reticle,
                 drawPosition,
                 null,
-                Color.Lerp(color, Color.White with { A = 0 }, 0.18f) * (fade * 0.72f),
-                -rotation * 0.14f - spin * 0.74f,
+                reticleColor,
+                -rotation * 0.16f - spin * 0.72f,
                 reticle.Size() * 0.5f,
-                scale * 0.28f,
+                scale * 0.55f * pulse,
                 SpriteEffects.FlipHorizontally,
                 0f);
         }
+
     }
 }

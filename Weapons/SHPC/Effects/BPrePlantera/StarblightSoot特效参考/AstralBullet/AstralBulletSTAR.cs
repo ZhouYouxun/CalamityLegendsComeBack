@@ -1,4 +1,6 @@
-﻿namespace CalamityRangerExpansion.Content.Ammunition.CPreMoodLord.AstralBullet
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+namespace CalamityRangerExpansion.Content.Ammunition.CPreMoodLord.AstralBullet
 {
     public class AstralBulletSTAR : ModProjectile, ILocalizedModType
     {
@@ -133,3 +135,4 @@
         }
     }
 }
+#endif // REFERENCE_CODE_DISABLED

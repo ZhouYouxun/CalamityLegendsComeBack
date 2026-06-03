@@ -236,23 +236,75 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Color theme = (Color.Lerp(ThemeColor, Color.White, CanHome ? 0.22f : 0.04f) with { A = 0 }) * Projectile.Opacity;
+
+            // 不要 A = 0
+            Color theme = Color.Lerp(ThemeColor, Color.White, CanHome ? 0.22f : 0.04f) * Projectile.Opacity;
 
             PFLeftEffectRules.BeginAdditive();
+
+            // 拖尾
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 float completion = i / (float)Projectile.oldPos.Length;
+
                 Vector2 trailPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+
                 Color trailColor = Color.Lerp(theme, Color.Transparent, completion) * (1f - completion);
-                Main.EntitySpriteDraw(texture, trailPos, null, trailColor, 0f, texture.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.16f, 1f, 1f - completion), SpriteEffects.None, 0);
+
+                float trailScale = Projectile.scale * MathHelper.Lerp(0.45f, 1.2f, 1f - completion);
+
+                Main.EntitySpriteDraw(
+                    texture,
+                    trailPos,
+                    null,
+                    trailColor,
+                    Projectile.rotation,
+                    texture.Size() * 0.5f,
+                    trailScale,
+                    SpriteEffects.None,
+                    0);
             }
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, theme, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, theme * (CanHome ? 0.58f : 0.34f), Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.24f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, Color.Lerp(theme, Color.White with { A = 0 }, 0.32f) * 0.38f, Projectile.rotation, bloom.Size() * 0.5f, BloomPower * Projectile.scale * 0.11f, SpriteEffects.None, 0);
+            // 主体
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                null,
+                theme,
+                Projectile.rotation,
+                texture.Size() * 0.5f,
+                Projectile.scale * 1.15f,
+                SpriteEffects.None,
+                0);
+
+            // 外层发光
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                theme * (CanHome ? 0.82f : 0.48f),
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                BloomPower * Projectile.scale * 0.65f,
+                SpriteEffects.None,
+                0);
+
+            // 内层核心
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                Color.Lerp(theme, Color.White, 0.4f) * 0.55f,
+                -Projectile.rotation * 0.5f,
+                bloom.Size() * 0.5f,
+                BloomPower * Projectile.scale * 0.32f,
+                SpriteEffects.None,
+                0);
 
             PFLeftEffectRules.EndAdditive();
+
             return false;
         }
     }

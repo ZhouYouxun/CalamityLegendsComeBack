@@ -1,4 +1,6 @@
-﻿namespace CalamityRangerExpansion.Content.Arrows.CPreMoodLord.AstralArrow
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+namespace CalamityRangerExpansion.Content.Arrows.CPreMoodLord.AstralArrow
 {
     public class AstralArrow : ModItem, ILocalizedModType
     {
@@ -29,3 +31,4 @@
         }
     }
 }
+#endif // REFERENCE_CODE_DISABLED

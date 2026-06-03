@@ -1,4 +1,6 @@
-﻿namespace CalamityRangerExpansion.Content.Arrows.BPrePlantera.StarblightSootArrow
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+namespace CalamityRangerExpansion.Content.Arrows.BPrePlantera.StarblightSootArrow
 {
     public class StarblightSootArrowPROJ : ModProjectile, ILocalizedModType
     {
@@ -157,3 +159,4 @@
         }
     }
 }
+#endif // REFERENCE_CODE_DISABLED

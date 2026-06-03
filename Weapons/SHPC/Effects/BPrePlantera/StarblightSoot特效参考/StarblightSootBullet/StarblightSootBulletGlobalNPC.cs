@@ -1,4 +1,6 @@
-﻿namespace CalamityRangerExpansion.Content.Ammunition.BPrePlantera.StarblightSootBullet
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+namespace CalamityRangerExpansion.Content.Ammunition.BPrePlantera.StarblightSootBullet
 {
     public class StarblightSootBulletGlobalNPC : GlobalNPC
     {
@@ -79,3 +81,4 @@
         }
     }
 }
+#endif // REFERENCE_CODE_DISABLED

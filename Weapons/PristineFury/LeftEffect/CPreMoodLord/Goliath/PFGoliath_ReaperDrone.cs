@@ -257,94 +257,140 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
         }
 
+
+
+
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D body = TextureAssets.Projectile[Type].Value;
             Texture2D frontWing = ModContent.Request<Texture2D>("CalamityMod/Particles/XykWingOrange1").Value;
             Texture2D backWing = ModContent.Request<Texture2D>("CalamityMod/Particles/XykWingOrange2").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 origin = body.Size() * 0.5f;
-            Color theme = ThemeColor;
-            Color additiveTheme = (Color.Lerp(theme, new Color(180, 255, 80), 0.16f) with { A = 0 }) * Projectile.Opacity;
-            Color bodyColor = Color.Lerp(theme, new Color(180, 255, 80), 0.08f) * Projectile.Opacity;
+
+            // 不要 A = 0，避免翅膀直接变成皇帝的新翅膀
+            Color theme = Color.Lerp(ThemeColor, new Color(180, 255, 80), 0.16f) * Projectile.Opacity;
+            Color bodyColor = Color.Lerp(ThemeColor, new Color(180, 255, 80), 0.08f) * Projectile.Opacity;
 
             PFLeftEffectRules.BeginAdditive();
 
+            // 身体外发光
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
                 null,
-                additiveTheme * 0.18f,
+                theme * 0.32f,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                new Vector2(0.18f, 0.13f) * Projectile.scale,
+                new Vector2(0.42f, 0.28f) * Projectile.scale,
                 SpriteEffects.None,
                 0f);
 
+            // 残影
             for (int i = 1; i < Projectile.oldPos.Length; i += 3)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
                     continue;
 
-                float opacity = (1f - i / (float)Projectile.oldPos.Length) * 0.22f * Projectile.Opacity;
+                float opacity = (1f - i / (float)Projectile.oldPos.Length) * 0.28f * Projectile.Opacity;
                 Vector2 afterimagePosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(body, afterimagePosition, null, additiveTheme * opacity, Projectile.rotation, origin, Projectile.scale * 0.96f, SpriteEffects.None, 0f);
+
+                Main.EntitySpriteDraw(
+                    body,
+                    afterimagePosition,
+                    null,
+                    theme * opacity,
+                    Projectile.rotation,
+                    origin,
+                    Projectile.scale * 0.96f,
+                    SpriteEffects.None,
+                    0f);
             }
 
-            DrawWingPair(frontWing, drawPosition + forward * 6.5f, forward, side, 0f, 1.78f, additiveTheme);
-            DrawWingPair(backWing, drawPosition - forward * 9.5f, forward, side, MathHelper.Pi, 1.48f, additiveTheme * 0.96f);
-
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 2.1f;
-                Main.EntitySpriteDraw(body, drawPosition + offset, null, additiveTheme * 0.36f, Projectile.rotation, origin, Projectile.scale * 1.02f, SpriteEffects.None, 0f);
-            }
+            // 四片振动翅膀：前一对 + 后一对
+            DrawWingPair(frontWing, drawPosition + forward * 7f, forward, side, 0f, 1.15f, theme);
+            DrawWingPair(backWing, drawPosition - forward * 10f, forward, side, MathHelper.Pi, 0.95f, theme * 0.82f);
 
             PFLeftEffectRules.EndAdditive();
 
-            Main.EntitySpriteDraw(body, drawPosition, null, bodyColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            // 本体最后画，避免被翅膀盖乱
+            Main.EntitySpriteDraw(
+                body,
+                drawPosition,
+                null,
+                bodyColor,
+                Projectile.rotation,
+                origin,
+                Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
             return false;
         }
 
         private void DrawWingPair(Texture2D wing, Vector2 root, Vector2 forward, Vector2 side, float phaseOffset, float size, Color color)
         {
-            float time = Main.GlobalTimeWrappedHourly * 74f + Projectile.identity * 0.41f + phaseOffset;
+            float time = Main.GlobalTimeWrappedHourly * 88f + Projectile.identity * 0.41f + phaseOffset;
             float flap = (float)Math.Sin(time);
-            float snap = (float)Math.Sin(time * 1.73f) * 0.5f + 0.5f;
+            float snap = Math.Abs(flap);
 
             for (int sideSign = -1; sideSign <= 1; sideSign += 2)
             {
-                float sampleFlap = flap + 0.28f * sideSign;
-                Vector2 wingDirection = (side * sideSign * (1.2f + Math.Abs(sampleFlap) * 0.3f) - forward * (0.42f - sampleFlap * 0.2f)).SafeNormalize(side * sideSign);
-                Vector2 drawPosition = root + side * sideSign * (7.5f + snap * 3.6f) - forward * (2.4f + Math.Abs(sampleFlap) * 1.6f);
-                float rotation = wingDirection.ToRotation() - MathHelper.PiOver2;
-                Vector2 wingScale = new(0.16f * size * Projectile.scale, (0.13f + snap * 0.028f) * size * Projectile.scale);
+                // 翅膀根部位置
+                Vector2 drawPosition =
+                    root +
+                    side * sideSign * (12f + snap * 5f) -
+                    forward * (2f + snap * 2f);
 
+                // 翅膀朝外展开，并随时间轻微震动
+                Vector2 wingDirection =
+                    (side * sideSign * (1.6f + snap * 0.45f) -
+                    forward * (0.35f - flap * 0.18f)).SafeNormalize(side * sideSign);
+
+                float rotation = wingDirection.ToRotation() - MathHelper.PiOver2;
+
+                // 原版太小，这里明显放大
+                Vector2 wingScale = new Vector2(
+                    0.42f * size * Projectile.scale,
+                    0.26f * size * Projectile.scale * (0.85f + snap * 0.25f));
+
+                SpriteEffects effects = sideSign < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+
+                // 主翅膀
                 Main.EntitySpriteDraw(
                     wing,
                     drawPosition,
                     null,
-                    color * 1.75f,
+                    color * 0.95f,
                     rotation,
                     new Vector2(wing.Width * 0.5f, 0f),
                     wingScale,
-                    sideSign < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                    effects,
                     0f);
 
+                // 高频振动残影
                 Main.EntitySpriteDraw(
                     wing,
-                    drawPosition - forward * 2f,
+                    drawPosition - forward * 3f + side * sideSign * flap * 3f,
                     null,
-                    (Color.White with { A = 0 }) * 0.24f * Projectile.Opacity,
-                    rotation,
+                    Color.White * 0.22f * Projectile.Opacity,
+                    rotation + flap * 0.08f,
                     new Vector2(wing.Width * 0.5f, 0f),
-                    wingScale * new Vector2(0.72f, 0.9f),
-                    sideSign < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                    wingScale * new Vector2(0.75f, 0.82f),
+                    effects,
                     0f);
             }
         }
+
+
+
+
+
+
     }
 }

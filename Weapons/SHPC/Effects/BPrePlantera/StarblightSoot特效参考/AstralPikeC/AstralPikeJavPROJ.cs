@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if false
+// REFERENCE_CODE_DISABLED: Legacy reference source kept for reading only. Do not compile in debug builds.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -335,3 +337,4 @@ namespace CalamityThrowingSpear.Weapons.ChangedWeapons.CPreMoodLord.AstralPikeC
 
     }
 }
+#endif // REFERENCE_CODE_DISABLED

@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.width = Projectile.height = 10;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 7;
             Projectile.MaxUpdates = 4;

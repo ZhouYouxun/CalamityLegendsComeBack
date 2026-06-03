@@ -204,22 +204,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Main.rand.Next(10, 17),
                     Main.rand.NextFloat(0.26f, 0.46f),
                     Color.Lerp(MidGray, BrightGray, Main.rand.NextFloat()),
-                    new Vector2(0.2f, 1.7f),
+                    new Vector2(1.7f, 0.2f),
                     true,
                     true,
                     extraRotation: -MathHelper.PiOver2,
                     shrinkSpeed: 0.16f,
                     glowOpacity: 0.78f));
             }
-
-            Dust dust = Dust.NewDustPerfect(
-                Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
-                DustID.TintableDustLighted,
-                backward.RotatedByRandom(0.34f) * Main.rand.NextFloat(0.8f, 3.2f),
-                80,
-                Main.rand.NextBool(3) ? BrightGray : MidGray,
-                Main.rand.NextFloat(0.82f, 1.35f));
-            dust.noGravity = true;
 
             if (Main.rand.NextBool(2))
             {
@@ -231,7 +222,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Main.rand.Next(11, 18),
                     Main.rand.NextFloat(0.18f, 0.36f),
                     Color.Lerp(BrightGray, Color.White, Main.rand.NextFloat(0.08f, 0.36f)),
-                    new Vector2(0.34f, 1.65f),
+                    new Vector2(1.65f, 0.34f),
                     true,
                     true,
                     extraRotation: -MathHelper.PiOver2,
@@ -239,7 +230,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     glowOpacity: 0.76f));
             }
 
-            if (Main.rand.NextBool(5))
+            Dust dust = Dust.NewDustPerfect(
+                Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                DustID.TintableDustLighted,
+                backward.RotatedByRandom(0.34f) * Main.rand.NextFloat(0.8f, 3.2f),
+                80,
+                Main.rand.NextBool(3) ? BrightGray : MidGray,
+                Main.rand.NextFloat(0.82f, 1.35f));
+            dust.noGravity = true;
+
+
+
+            if (Main.rand.NextBool(1))
             {
                 GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
@@ -343,15 +345,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 }
             }
 
-            Main.EntitySpriteDraw(
-                smear,
-                screenCenter - forward * 8f,
-                null,
-                MidGray with { A = 0 } * opacity * 0.72f,
-                forward.ToRotation() + MathHelper.PiOver2,
-                new Vector2(smear.Width * 0.5f, smear.Height),
-                new Vector2(0.3f, 0.52f) * scale,
-                SpriteEffects.None);
+            //Main.EntitySpriteDraw(
+            //    smear,
+            //    screenCenter - forward * 8f,
+            //    null,
+            //    MidGray with { A = 0 } * opacity * 0.72f,
+            //    forward.ToRotation() + MathHelper.PiOver2,
+            //    new Vector2(smear.Width * 0.5f, smear.Height),
+            //    new Vector2(0.3f, 0.52f) * scale,
+            //    SpriteEffects.None);
 
             for (int i = 0; i < 3; i++)
             {
