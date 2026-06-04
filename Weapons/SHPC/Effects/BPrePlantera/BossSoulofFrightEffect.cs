@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     internal class BossSoulofFrightEffect : DefaultEffect
     {
-        private const float MaxTravelDistance = 75f * 16f;
+        private const float MaxTravelDistance = 10f * 16f;
         private const int SplitCount = 16;
         private const int MaxDamagingHits = 3;
 

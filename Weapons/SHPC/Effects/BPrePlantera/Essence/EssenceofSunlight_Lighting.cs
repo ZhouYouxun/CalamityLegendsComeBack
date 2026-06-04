@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             }
         }
 
-        public override bool? CanDamage() => timer > 10;
+        //public override bool? CanDamage() => timer > 1;
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {

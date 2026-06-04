@@ -49,10 +49,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             21, // 8Eye of Cthulhu / 克苏鲁之眼
             27, // 9Evil Boss / 腐化或猩红 Boss T2
             33, // 11Skeletron / 骷髅王
-            52, // 17Hardmode / 困难模式
-            62, // 24Any Mechanical Boss / 任意机械 Boss
-            72, // 32Plantera / 世纪之花
-            88, // 40Golem / 石巨人
+            45, // 17Hardmode / 困难模式
+            54, // 24Any Mechanical Boss / 任意机械 Boss
+            64, // 32Plantera / 世纪之花
+            80, // 40Golem / 石巨人
             105, // 54Moon Lord / 月亮领主
             130, // 66Providence / 亵渎天神
             160, // 77Polterghast / 噬魂幽花
@@ -69,16 +69,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.46f, // EffectID 2: Stormlion Mandible / 风暴之颚
             0.58f, // EffectID 3: Sulphuric Scale / 硫磺鳞片
             0.80f, // EffectID 4: Purified Gel / 纯净凝胶
-            1.00f, // EffectID 5: Essence of Havoc / 混沌精华
+            1.02f, // EffectID 5: Essence of Havoc / 混沌精华
             0.84f, // EffectID 6: Essence of Eleum / 冰精华
-            1.07f, // EffectID 7: Essence of Sunlight / 日光精华
+            1.03f, // EffectID 7: Essence of Sunlight / 日光精华
             1.33f, // EffectID 8: Titan Heart / 泰坦之心
-            0.90f, // EffectID 9: Soul of Light / 光明之魂
-            0.84f, // EffectID 10: Soul of Night / 暗影之魂
+            0.84f, // EffectID 9: Soul of Light / 光明之魂
+            0.78f, // EffectID 10: Soul of Night / 暗影之魂
             0.90f, // EffectID 11: Soul of Flight / 飞翔之魂
-            0.93f, // EffectID 12: Soul of Fright / 恐惧之魂
+            0.95f, // EffectID 12: Soul of Fright / 恐惧之魂
             1.08f, // EffectID 13: Soul of Might / 力量之魂
-            0.81f, // EffectID 14: Soul of Sight / 视域之魂
+            0.80f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
             1.10f, // EffectID 17: Depth Cells / 深渊细胞
