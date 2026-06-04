@@ -1,5 +1,4 @@
-using CalamityMod.Graphics.Metaballs;
-using CalamityMod.Particles;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -56,24 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             }
 
             if (!Main.dedServ)
-            {
-                RancorLavaMetaball.SpawnParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    Main.rand.NextFloat(20f, 36f));
-
-                if (Main.rand.NextBool(2))
-                {
-                    Particle smoke = new MediumMistParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(14f, 14f),
-                        -Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1f, 2.2f) + Main.rand.NextVector2Circular(1.2f, 1.2f),
-                        Color.OrangeRed,
-                        Color.Transparent,
-                        Main.rand.NextFloat(0.8f, 1.35f),
-                        0.72f,
-                        Main.rand.NextFloat(-0.04f, 0.04f));
-                    GeneralParticleHandler.SpawnParticle(smoke);
-                }
-            }
+                VesuviusProjectileVisuals.SpawnPillarTrail(Projectile, 1f + Projectile.ai[1] * 0.08f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -84,8 +66,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
 
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
@@ -94,19 +78,52 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                     continue;
 
                 float opacity = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-                float width = MathHelper.Lerp(42f, 16f, i / (float)Projectile.oldPos.Length);
+                float progress = i / (float)Projectile.oldPos.Length;
+                float width = MathHelper.Lerp(54f, 16f, progress);
                 Vector2 drawPos = oldCenter - Main.screenPosition - normal * width * 0.5f;
+
+                Main.EntitySpriteDraw(
+                    bloom,
+                    oldCenter - Main.screenPosition,
+                    null,
+                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * opacity,
+                    Projectile.rotation,
+                    bloom.Size() * 0.5f,
+                    new Vector2(width / bloom.Width * 1.2f, 0.28f),
+                    SpriteEffects.None);
+
                 Main.EntitySpriteDraw(
                     pixel,
                     drawPos,
                     new Rectangle(0, 0, 1, 1),
-                    new Color(255, 80, 20, 0) * 0.45f * opacity,
+                    VesuviusProjectileVisuals.RavagerSmoke with { A = 0 } * 0.2f * opacity,
+                    Projectile.rotation,
+                    new Vector2(0f, 0.5f),
+                    new Vector2(84f, width * 1.45f),
+                    SpriteEffects.None);
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    drawPos,
+                    new Rectangle(0, 0, 1, 1),
+                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.54f * opacity,
                     Projectile.rotation,
                     new Vector2(0f, 0.5f),
                     new Vector2(72f, width),
                     SpriteEffects.None);
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    oldCenter - Main.screenPosition - normal * width * 0.16f,
+                    new Rectangle(0, 0, 1, 1),
+                    Color.White with { A = 0 } * 0.46f * opacity,
+                    Projectile.rotation,
+                    new Vector2(0f, 0.5f),
+                    new Vector2(58f, width * 0.32f),
+                    SpriteEffects.None);
             }
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }
@@ -136,12 +153,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         public override void AI()
         {
             Projectile.rotation = Projectile.ai[0];
-            if (!Main.dedServ && Main.rand.NextBool(3))
-            {
-                RancorLavaMetaball.SpawnParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(24f, 18f),
-                    Main.rand.NextFloat(12f, 24f));
-            }
+            if (!Main.dedServ)
+                VesuviusProjectileVisuals.SpawnPillarResidual(Projectile.Center, Projectile.rotation, 0.82f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -152,12 +165,23 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D smoke = ModContent.Request<Texture2D>("CalamityMod/Particles/HighResFoggyCircleHardEdge").Value;
             float fade = Projectile.timeLeft / 18f;
+            Main.EntitySpriteDraw(
+                smoke,
+                Projectile.Center - Main.screenPosition - Vector2.UnitY * 5f,
+                null,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.5f) * 0.18f * fade,
+                Projectile.rotation,
+                smoke.Size() * 0.5f,
+                new Vector2(0.55f, 0.24f) * (1f + (1f - fade) * 0.55f),
+                SpriteEffects.None);
+
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(255, 90, 20, 0) * 0.12f * fade,
+                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * fade,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
                 new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f),

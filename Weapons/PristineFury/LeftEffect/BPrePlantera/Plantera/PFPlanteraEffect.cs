@@ -9,7 +9,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal static class PFPlanteraEffect
     {
         private const int FireInterval = 8;
-        private const int LightShotsPerHeavyShot = 8;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -24,29 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             holdout.LeftTimer = 0;
-            if (holdout.LeftBurstIndex < LightShotsPerHeavyShot)
-            {
-                FirePseudoLaser(holdout);
-                holdout.LeftBurstIndex++;
-                return;
-            }
-
             FireRecursiveLightning(holdout);
-            holdout.LeftBurstIndex = 0;
-        }
-
-        private static void FirePseudoLaser(NewLegendPristineFuryHoldOut holdout)
-        {
-            Vector2 direction = holdout.AimDirection;
-            Projectile.NewProjectile(
-                holdout.Projectile.GetSource_FromThis(),
-                holdout.GunTipPosition + direction * 14f,
-                direction,
-                ModContent.ProjectileType<PFPlantera_PseudoLaser>(),
-                0,
-                0f,
-                holdout.Projectile.owner);
-            holdout.TriggerMuzzleFlash(7);
         }
 
         private static void FireRecursiveLightning(NewLegendPristineFuryHoldOut holdout)

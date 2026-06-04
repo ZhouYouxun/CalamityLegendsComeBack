@@ -20,10 +20,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (spawnHolyOrbs)
             {
-                for (int i = 0; i < 11; i++)
+                for (int i = 0; i < 22; i++)
                 {
                     Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-430f, 430f), Main.rand.NextFloat(-620f, -470f));
-                    Vector2 velocity = new(Main.rand.NextFloat(-1.8f, 1.8f), Main.rand.NextFloat(8.6f, 12.8f));
+                    Vector2 velocity = new Vector2(Main.rand.NextFloat(-1.8f, 1.8f), Main.rand.NextFloat(8.6f, 12.8f)) * 2f;
                     int orb = Projectile.NewProjectile(source.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<PFProvidence_HolyRainOrb>(), Math.Max(1, (int)(damage * 0.38f)), source.knockBack * 0.2f, source.owner);
                     PFLeftEffectRules.ApplyTheme(orb, (PristineFuryMark)(int)source.ai[2]);
                 }
@@ -31,10 +31,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (spawnMoltenBlobs)
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-360f, 360f), Main.rand.NextFloat(-700f, -520f));
-                    Vector2 velocity = new(Main.rand.NextFloat(-2.2f, 2.2f), Main.rand.NextFloat(10.4f, 15.2f));
+                    Vector2 velocity = new Vector2(Main.rand.NextFloat(-2.2f, 2.2f), Main.rand.NextFloat(10.4f, 15.2f)) * 2f;
                     int blob = Projectile.NewProjectile(source.GetSource_FromThis(), spawnPosition, velocity, ModContent.ProjectileType<PFProvidence_MoltenRainBlob>(), Math.Max(1, (int)(damage * 0.72f)), source.knockBack * 0.45f, source.owner);
                     PFLeftEffectRules.ApplyTheme(blob, (PristineFuryMark)(int)source.ai[2]);
                 }
@@ -58,19 +58,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.timeLeft = 210;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
+            Projectile.extraUpdates = 1;
         }
 
         public override void AI()
         {
             NPC target = FindTarget(900f);
-            float speed = Math.Min(22f, Projectile.velocity.Length() * 1.018f + 0.08f);
+            float speed = Math.Min(36f, Projectile.velocity.Length() * 1.01f + 0.04f);
             if (target != null)
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, Projectile.SafeDirectionTo(target.Center) * speed, 0.065f);
+            {
+                Vector2 curvedTarget = target.Center + target.velocity * 10f +
+                    Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedBy(MathHelper.PiOver2) *
+                    (float)Math.Sin(Projectile.timeLeft * 0.08f + Projectile.identity) * 70f;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, Projectile.SafeDirectionTo(curvedTarget) * speed, 0.042f);
+            }
 
-            Projectile.rotation += 0.06f;
+            Projectile.rotation += 0.14f;
             Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.66f);
             if (!Main.dedServ)
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(Projectile.Center, -Projectile.velocity * 0.08f, false, 6, 0.58f, ThemeColor, true, false, true));
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(Projectile.Center, -Projectile.velocity * 0.08f, false, 7, 0.68f, ThemeColor, true, false, true));
+                if (Main.rand.NextBool(2))
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center + Main.rand.NextVector2Circular(6f, 6f), -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.1f), false, Main.rand.Next(8, 14), Main.rand.NextFloat(0.45f, 0.8f), Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.12f, 0.45f))));
+            }
         }
 
         private NPC FindTarget(float range)
@@ -95,6 +105,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
             target.AddBuff(ModContent.BuffType<HolyFlames>(), 240);
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
+            Vector2 origin = texture.Size() * 0.5f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Color glow = ThemeColor with { A = 0 };
+
+            for (int i = 0; i < 4; i++)
+            {
+                float rotation = Projectile.rotation + MathHelper.PiOver2 * i + Main.GlobalTimeWrappedHourly * 1.6f;
+                Main.EntitySpriteDraw(texture, drawPosition, null, glow * 0.34f, rotation, origin, Projectile.scale * (1.1f + i * 0.08f), SpriteEffects.None, 0f);
+            }
+
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, ThemeColor, 0.45f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            return false;
+        }
     }
 
     internal sealed class PFProvidence_MoltenRainBlob : ModProjectile, ILocalizedModType

@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const float HomingSpeed = 16.8f;
         private const float TargetRange = 680f;
         private const float ExplosionVisualScale = 0.67f;
+        private const float WingVisualScale = 0.2f;
         private bool hasHit;
 
         private ref float CurveDirection => ref Projectile.ai[0];
@@ -60,16 +61,19 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             {
                 float curveStrength = Utils.GetLerpValue(0f, CurveFrames, Timer, true);
                 float wobble = (float)Math.Sin(Timer * 0.38f + Phase) * 0.012f;
-                Projectile.velocity = Projectile.velocity.RotatedBy(CurveDirection * 0.032f * curveStrength + wobble) * 1.002f;
+                Projectile.velocity = Projectile.velocity.RotatedBy(CurveDirection * 0.022f * curveStrength + wobble) * 0.94f;
             }
             else
             {
                 NPC target = FindTarget();
                 if (target != null)
                 {
-                    Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center, currentDirection);
+                    Vector2 sideBias = currentDirection.RotatedBy(MathHelper.PiOver2) *
+                        (float)Math.Sin(Timer * 0.08f + Phase) *
+                        MathHelper.Lerp(46f, 12f, Utils.GetLerpValue(CurveFrames, CurveFrames + 76f, Timer, true));
+                    Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center + sideBias, currentDirection);
                     Vector2 desiredVelocity = desiredDirection * MathHelper.Lerp(currentSpeed, HomingSpeed, 0.08f);
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.075f);
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.064f + 0.018f * Math.Abs((float)Math.Sin(Phase)));
                 }
                 else
                     Projectile.velocity *= 0.996f;
@@ -357,7 +361,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 // 原版太小，这里明显放大
                 Vector2 wingScale = new Vector2(
                     0.42f * size * Projectile.scale,
-                    0.26f * size * Projectile.scale * (0.85f + snap * 0.25f));
+                    0.26f * size * Projectile.scale * (0.85f + snap * 0.25f)) * WingVisualScale;
 
                 SpriteEffects effects = sideSign < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 

@@ -276,6 +276,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     stageTimer += bonusHeat;
                     bonusHeatProgress -= bonusHeat;
                 }
+
+                if (stage >= MaxHeatStage && heatPlayer.CanSustainMaximumHeat())
+                {
+                    stageTimer = Math.Min(stageTimer, GetStageUpTime());
+                    bonusHeatProgress = 0f;
+                }
             }
 
             #endregion

@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using YCRight = CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 {
@@ -63,18 +62,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         public static bool IsOwnedExWarshipType(int projectileType)
         {
-            return projectileType == ModContent.ProjectileType<YC_EX_LaserDrone>() ||
-                   projectileType == ModContent.ProjectileType<YC_EX_Drone>() ||
-                   projectileType == ModContent.ProjectileType<YC_EX_LaserCruiser>() ||
-                   projectileType == ModContent.ProjectileType<YC_EX_Battleship>();
+            return false;
         }
 
         public static bool IsOwnedExSupportProjectile(Projectile projectile)
         {
-            return (projectile.type == ModContent.ProjectileType<YCRight.YC_Right_HeavyBolt>() && projectile.ai[1] == 1f) ||
-                   (projectile.type == ModContent.ProjectileType<YC_WarshipMissile>() && projectile.ai[1] == 1f) ||
-                   (projectile.type == ModContent.ProjectileType<YC_WarshipArtilleryShell>() && projectile.ai[1] == 1f) ||
-                   (projectile.type == ModContent.ProjectileType<YC_WarshipPulse>() && projectile.ai[1] == 1f);
+            return false;
         }
     }
 }

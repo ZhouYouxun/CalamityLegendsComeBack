@@ -59,20 +59,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 EXValue += System.Math.Max(1, GetFramesPerDisplayUnit(Player) / PassiveChargeTime);
                 EXValue = Utils.Clamp(EXValue, 0, maxEX);
             }
-            else
-            {
-                // 不手持：以两倍速度下降
-                EXValue -= 2;
-
-                if (EXValue < 0)
-                    EXValue = 0;
-            }
-
-            if (EXValue > maxEX)
+if (EXValue > maxEX)
                 EXValue = maxEX;
 
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXValue >= maxEX);
-}
+        }
 
         // 供外部调用：清空 EX 条
         public void ResetEX()

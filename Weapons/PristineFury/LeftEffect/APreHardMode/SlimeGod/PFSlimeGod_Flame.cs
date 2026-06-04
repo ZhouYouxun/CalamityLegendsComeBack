@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BounceCount => ref Projectile.localAI[1];
+        private const float VisualScale = 0.5f;
         private bool HasBounced => BounceCount > 0f;
         private bool CanHome => Timer >= 78f && !HasBounced;
         private float BloomPower => Utils.Remap(Timer, 0f, 130f, 0.82f, CanHome ? 1.9f : 1.22f, true) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true);
@@ -111,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     -Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.25f, 0.9f),
                     false,
                     Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.24f, 0.42f) * (0.9f + BloomPower * 0.26f),
+                    Main.rand.NextFloat(0.24f, 0.42f) * (0.9f + BloomPower * 0.26f) * VisualScale,
                     Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.4f)),
                     true,
                     false,
@@ -121,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (CanHome)
             {
                 if (Timer % 6f == 0f)
-                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme * 0.75f, Vector2.One, Projectile.rotation, 0.02f, 0.18f + BloomPower * 0.1f, 18));
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme * 0.75f, Vector2.One, Projectile.rotation, 0.02f, (0.18f + BloomPower * 0.1f) * VisualScale, 18));
 
                 if (Timer % 5f == 0f)
                 {
@@ -130,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                         Main.rand.NextVector2Circular(0.35f, 0.35f),
                         false,
                         Main.rand.Next(10, 16),
-                        Main.rand.NextFloat(0.22f, 0.4f) * (0.8f + BloomPower * 0.35f),
+                        Main.rand.NextFloat(0.22f, 0.4f) * (0.8f + BloomPower * 0.35f) * VisualScale,
                         Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.42f)),
                         true,
                         false,
@@ -143,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.rand.NextBool(BounceCount > 0f ? 2 : 7))
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(10f, 10f), Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch);
-                dust.scale = Main.rand.NextFloat(0.35f, 0.75f);
+                dust.scale = Main.rand.NextFloat(0.35f, 0.75f) * VisualScale;
                 dust.velocity = -Projectile.velocity * 0.7f;
                 dust.noGravity = true;
                 dust.color = Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.04f, 0.22f));
@@ -156,13 +157,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             Color theme = Color.Lerp(ThemeColor, Color.White, 0.24f);
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, Projectile.rotation, 0.02f, 0.38f, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, Projectile.rotation, 0.02f, 0.38f * VisualScale, 20));
 
             for (int i = 0; i < count; i++)
             {
                 float rot = MathHelper.TwoPi * i / count;
                 Vector2 velocity = rot.ToRotationVector2() * speed;
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + velocity, Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch, velocity, 0, theme, Main.rand.NextFloat(1.1f, 1.65f));
+                Dust dust = Dust.NewDustPerfect(Projectile.Center + velocity, Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch, velocity, 0, theme, Main.rand.NextFloat(1.1f, 1.65f) * VisualScale);
                 dust.noGravity = true;
 
                 if (i % 2 == 0)
@@ -172,7 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                         velocity * 0.25f,
                         false,
                         Main.rand.Next(14, 22),
-                        Main.rand.NextFloat(0.28f, 0.48f),
+                        Main.rand.NextFloat(0.28f, 0.48f) * VisualScale,
                         Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.12f, 0.38f)),
                         true,
                         false,
@@ -204,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             Color theme = Color.Lerp(ThemeColor, Color.White, CanHome ? 0.24f : 0.08f);
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, 0f, 0.01f, 0.42f, 24));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, theme, Vector2.One, 0f, 0.01f, 0.42f * VisualScale, 24));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
                 Vector2.Zero,
@@ -213,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Vector2.One,
                 Projectile.rotation,
                 0.04f,
-                CanHome ? 0.38f : 0.24f,
+                (CanHome ? 0.38f : 0.24f) * VisualScale,
                 14,
                 true));
         }
@@ -253,7 +254,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 Color trailColor = Color.Lerp(theme, Color.Transparent, completion) * (1f - completion);
 
-                float trailScale = Projectile.scale * MathHelper.Lerp(0.45f, 1.2f, 1f - completion);
+                float trailScale = Projectile.scale * MathHelper.Lerp(0.45f, 1.2f, 1f - completion) * VisualScale;
 
                 Main.EntitySpriteDraw(
                     texture,
@@ -275,7 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 theme,
                 Projectile.rotation,
                 texture.Size() * 0.5f,
-                Projectile.scale * 1.15f,
+                Projectile.scale * 1.15f * VisualScale,
                 SpriteEffects.None,
                 0);
 
@@ -287,7 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 theme * (CanHome ? 0.82f : 0.48f),
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                BloomPower * Projectile.scale * 0.65f,
+                BloomPower * Projectile.scale * 0.65f * VisualScale,
                 SpriteEffects.None,
                 0);
 
@@ -299,7 +300,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Color.Lerp(theme, Color.White, 0.4f) * 0.55f,
                 -Projectile.rotation * 0.5f,
                 bloom.Size() * 0.5f,
-                BloomPower * Projectile.scale * 0.32f,
+                BloomPower * Projectile.scale * 0.32f * VisualScale,
                 SpriteEffects.None,
                 0);
 

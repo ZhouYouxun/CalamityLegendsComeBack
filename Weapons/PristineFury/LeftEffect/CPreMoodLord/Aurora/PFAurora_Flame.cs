@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 16;
+            Projectile.width = Projectile.height = 64;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = -1;
@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Projectile.timeLeft = System.Math.Min(Projectile.timeLeft, 2);
             Projectile.rotation = Direction.ToRotation();
             DelegateMethods.v3_1 = ThemeColor.ToVector3() * 0.82f;
-            Utils.PlotTileLine(Projectile.Center, BeamEnd, 20f, DelegateMethods.CastLight);
+            Utils.PlotTileLine(Projectile.Center, BeamEnd, 64f, DelegateMethods.CastLight);
             EmitWeldingEffects();
         }
 
@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center, BeamEnd, 22f, ref collisionPoint);
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center, BeamEnd, 64f, ref collisionPoint);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -90,11 +90,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Color theme = ThemeColor with { A = 0 };
             PFLeftEffectRules.BeginAdditive();
-            DrawLine(pixel, Projectile.Center, BeamEnd, theme * 0.28f, 30f);
-            DrawLine(pixel, Projectile.Center, BeamEnd, theme * 0.62f, 13f);
-            DrawLine(pixel, Projectile.Center, BeamEnd, Color.White with { A = 0 } * 0.78f, 4f);
-            Main.EntitySpriteDraw(bloom, BeamEnd - Main.screenPosition, null, theme * 0.88f, Projectile.rotation, bloom.Size() * 0.5f, 0.68f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(bloom, BeamEnd - Main.screenPosition, null, Color.White with { A = 0 } * 0.68f, Projectile.rotation, bloom.Size() * 0.5f, 0.34f, SpriteEffects.None, 0);
+            DrawLine(pixel, Projectile.Center, BeamEnd, theme * 0.28f, 64f);
+            DrawLine(pixel, Projectile.Center, BeamEnd, theme * 0.62f, 30f);
+            DrawLine(pixel, Projectile.Center, BeamEnd, Color.White with { A = 0 } * 0.78f, 10f);
+            Main.EntitySpriteDraw(bloom, BeamEnd - Main.screenPosition, null, theme * 0.88f, Projectile.rotation, bloom.Size() * 0.5f, 1.98f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, BeamEnd - Main.screenPosition, null, Color.White with { A = 0 } * 0.68f, Projectile.rotation, bloom.Size() * 0.5f, 0.99f, SpriteEffects.None, 0);
             PFLeftEffectRules.EndAdditive();
             return false;
         }

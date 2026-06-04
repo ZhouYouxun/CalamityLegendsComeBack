@@ -47,7 +47,7 @@ Mods: {
 					MetalName10: 猩红矿锭
 					MetalDesc10: 释放 VampireKnife 吸血飞刀弹幕
 					MetalName11: 天蓝锭
-					MetalDesc11: 不受重力影响并提升速度
+					MetalDesc11: 无重力高速滑翔，沿途甩出天蓝羽刃，命中卷起牵引气旋
 					MetalName12: 陨石锭
 					MetalDesc12: 夜晚概率追加一颗陨星
 					MetalName13: 狱石锭
@@ -65,33 +65,33 @@ Mods: {
 					MetalName19: 钛金锭
 					MetalDesc19: 短时间获得类似引力靴的跳跃、下落与加速度加成
 					MetalName20: 寒元锭
-					MetalDesc20: 产生冰冻区域
+					MetalDesc20: 轻追踪并穿甲，命中生成寒元冰场与延迟收束冰晶
 					MetalName21: 神圣锭
 					MetalDesc21: 随机位置射出短圣光激光
 					MetalName22: 叶绿锭
 					MetalDesc22: 主流星和小流星都会自动追踪敌人
 					MetalName23: 永恒锭
-					MetalDesc23: 生成可叠加的回血追踪体
+					MetalDesc23: 沿途播种藤核，命中放出回生光并绽开追踪花瓣
 					MetalName24: 蘑菇矿锭
 					MetalDesc24: 路径留下旋转消散的小蘑菇
 					MetalName25: 幽灵锭
 					MetalDesc25: 在初始位置留下幽灵分身
 					MetalName26: 熔渣锭
-					MetalDesc26: 向上喷出纯 Dust 熔岩
+					MetalDesc26: 飞行时甩出熔渣团，命中喷发深渊火柱并灼烧
 					MetalName27: 夜明锭
 					MetalDesc27: 命中后混合召来 MoonlordArrowTrail 与 LunarFlare
 					MetalName28: 炫星锭
-					MetalDesc28: 周围随机三处产生盗贼伤害的 SummonAstralExplosion
+					MetalDesc28: 撒下星座节点，命中引爆炫星感染爆点与环形星阵
 					MetalName29: 龙蒿
-					MetalDesc29: 绽出会追敌的龙蒿尖刺
+					MetalDesc29: 沿途长出龙蒿藤刺，命中形成会内刺的花冠
 					MetalName30: 宇宙锭
-					MetalDesc30: 释放追踪宇宙碎屑
+					MetalDesc30: 撕开寰宇裂隙并释放会二段追踪的空间碎片
 					MetalName31: 圣金锭
-					MetalDesc31: 从上方降下圣金穿刺
+					MetalDesc31: 召来金蓝金源天枪，穿甲并留下 Auric Rebuke 脉冲
 					MetalName32: 暗影
-					MetalDesc32: 释放缓慢扩散的暗影余震
+					MetalDesc32: 留下魔影回响，命中开启吸附裂隙并施加弑神余焰
 					MetalName33: 生命合金
-					MetalDesc33: 释放三色小光芒，停顿、折返后追踪敌人
+					MetalDesc33: 追踪强化，周期三色重构脉冲，命中爆发并放出生命合金光芒
 				}
 			}
 		}
@@ -105,9 +105,26 @@ Mods: {
 				Shared_Shockwave.DisplayName: 流星震荡波
 				Shared_LingeringField.DisplayName: 流星元素区域
 				Shared_SplitMeteor.DisplayName: 流星幽灵分身
+				Aerialite_Feather.DisplayName: 天蓝羽刃
+				Aerialite_Gale.DisplayName: 天蓝牵引气旋
+				Cryonic_PrismShard.DisplayName: 寒元棱晶
 				Perennial_HealingOrb.DisplayName: 永恒回生光
+				Perennial_BloomSeed.DisplayName: 永恒藤核
+				Perennial_Petal.DisplayName: 永恒花瓣
+				Scoria_LavaGlob.DisplayName: 熔渣熔滴
+				Scoria_Geyser.DisplayName: 熔渣深渊火柱
 				LifeAlloy_Gleam.DisplayName: 生命合金光芒
+				LifeAlloy_ReconstructionPulse.DisplayName: 生命合金重构环
 				Hallowed_Laser.DisplayName: 神圣短激光
+				Astral_Blast.DisplayName: 炫星感染爆点
+				Astral_ConstellationNode.DisplayName: 炫星星座节点
+				Uelibloom_Thorn.DisplayName: 龙蒿藤刺
+				Cosmilite_Rift.DisplayName: 寰宇裂隙
+				Cosmilite_Fragment.DisplayName: 寰宇碎片
+				Auric_SkyLance.DisplayName: 金源天枪
+				Auric_Pulse.DisplayName: 金源脉冲
+				Shadowspec_Echo.DisplayName: 魔影回响
+				Shadowspec_Rift.DisplayName: 魔影裂隙
 			}
 		}
 	}

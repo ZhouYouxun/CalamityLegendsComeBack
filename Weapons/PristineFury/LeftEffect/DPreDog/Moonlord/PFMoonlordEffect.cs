@@ -55,22 +55,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private static void FireLunarFlare(NewLegendPristineFuryHoldOut holdout)
         {
             Vector2 direction = holdout.AimDirection;
-            int projectileIndex = Projectile.NewProjectile(
-                holdout.Projectile.GetSource_FromThis(),
-                holdout.GunTipPosition + direction * 15f,
-                direction * 18f,
-                ProjectileID.LunarFlare,
-                holdout.GetScaledDamage(0.68f),
-                holdout.Projectile.knockBack * 0.6f,
-                holdout.Projectile.owner);
-            if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
+            const int flareCount = 4;
+            for (int i = 0; i < flareCount; i++)
             {
-                Projectile projectile = Main.projectile[projectileIndex];
-                projectile.friendly = true;
-                projectile.hostile = false;
-                projectile.DamageType = DamageClass.Ranged;
-                projectile.tileCollide = false;
-                projectile.penetrate = 2;
+                float spread = MathHelper.Lerp(-0.055f, 0.055f, flareCount == 1 ? 0.5f : i / (float)(flareCount - 1));
+                int projectileIndex = Projectile.NewProjectile(
+                    holdout.Projectile.GetSource_FromThis(),
+                    holdout.GunTipPosition + direction * 15f,
+                    direction.RotatedBy(spread) * 18f,
+                    ProjectileID.LunarFlare,
+                    holdout.GetScaledDamage(0.68f),
+                    holdout.Projectile.knockBack * 0.6f,
+                    holdout.Projectile.owner);
+                if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
+                {
+                    Projectile projectile = Main.projectile[projectileIndex];
+                    projectile.friendly = true;
+                    projectile.hostile = false;
+                    projectile.DamageType = DamageClass.Ranged;
+                    projectile.tileCollide = false;
+                    projectile.penetrate = 2;
+                }
             }
 
             holdout.ApplyRecoil(3.2f);

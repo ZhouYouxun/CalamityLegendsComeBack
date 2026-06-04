@@ -16,6 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
         public override void SetStaticDefaults()
         {
             Main.projFrames[Type] = 3;
+            ProjectileID.Sets.TrailCacheLength[Type] = 7;
+            ProjectileID.Sets.TrailingMode[Type] = 0;
         }
 
         public override void SetDefaults()
@@ -47,16 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             Projectile.velocity.Y += 0.04f;
             Projectile.rotation += Projectile.velocity.X * 0.03f + 0.04f;
             Projectile.alpha = (int)MathHelper.Lerp(0f, 210f, Utils.GetLerpValue(24f, 0f, Projectile.timeLeft, true));
+            Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity);
 
-            if (!Main.dedServ && Main.rand.NextBool(4))
-            {
-                GeneralParticleHandler.SpawnParticle(new SquareAshParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    Projectile.velocity * -0.2f + Main.rand.NextVector2Circular(0.4f, 0.4f),
-                    Main.rand.Next(22, 36),
-                    Main.rand.NextFloat(0.42f, 0.9f),
-                    Color.Lerp(Color.DarkGray, new Color(255, 96, 36), 0.25f)));
-            }
+            VesuviusProjectileVisuals.SpawnVolcanicAshCloud(Projectile, 0.9f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -64,18 +59,51 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             target.AddBuff(BuffID.OnFire3, 120);
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            VesuviusProjectileVisuals.SpawnAshBurst(Projectile.Center, Projectile.scale);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            float fade = Projectile.Opacity;
+
+            Main.EntitySpriteDraw(
+                bloom,
+                Projectile.Center - Main.screenPosition,
+                null,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.AshGray, 0.55f) * 0.28f * fade,
+                Projectile.rotation,
+                bloom.Size() * 0.5f,
+                Projectile.scale * 0.38f,
+                SpriteEffects.None);
+
+            for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
+            {
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                float trailFade = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+                Main.EntitySpriteDraw(
+                    texture,
+                    oldCenter - Main.screenPosition,
+                    frame,
+                    Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.18f) * fade * 0.42f * trailFade,
+                    Projectile.rotation,
+                    frame.Size() * 0.5f,
+                    Projectile.scale * (0.85f + trailFade * 0.2f),
+                    SpriteEffects.None);
+            }
+
             Main.EntitySpriteDraw(
                 texture,
                 Projectile.Center - Main.screenPosition,
                 frame,
-                Color.Lerp(Color.DarkGray, Color.OrangeRed, 0.28f) * Projectile.Opacity,
+                Color.Lerp(Color.DimGray, VesuviusProjectileVisuals.LavaOrange, 0.2f) * fade,
                 Projectile.rotation,
                 frame.Size() * 0.5f,
-                Projectile.scale,
+                Projectile.scale * 1.08f,
                 SpriteEffects.None);
 
             return false;

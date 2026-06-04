@@ -14,6 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal sealed class PFHardMode_HeavyFireball : ModProjectile, ILocalizedModType
     {
         private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+        private const float HeavyVisualScale = 0.5f;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/FireProj";
@@ -26,8 +27,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 54;
-            Projectile.scale = 1.35f;
+            Projectile.width = Projectile.height = 27;
+            Projectile.scale = 1.35f * HeavyVisualScale;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 1;
@@ -64,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                     false,
                     Main.rand.Next(14, 24),
-                    Main.rand.NextFloat(0.35f, 0.72f),
+                    Main.rand.NextFloat(0.35f, 0.72f) * HeavyVisualScale,
 
                     Color.Lerp(
                         ThemeColor,
@@ -95,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                     Color.Transparent,
 
-                    Main.rand.NextFloat(0.42f, 0.95f),
+                    Main.rand.NextFloat(0.42f, 0.95f) * HeavyVisualScale,
 
                     Main.rand.Next(18, 34),
 
@@ -117,7 +118,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     sparkVelocity,
                     false,
                     Main.rand.Next(14, 24),
-                    Main.rand.NextFloat(0.9f, 1.8f),
+                    Main.rand.NextFloat(0.9f, 1.8f) * HeavyVisualScale,
 
                     Color.Lerp(
                         ThemeColor,
@@ -149,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                         Color.White,
                         Main.rand.NextFloat(0.06f, 0.3f)),
 
-                    Main.rand.NextFloat(1f, 1.8f));
+                    Main.rand.NextFloat(1f, 1.8f) * HeavyVisualScale);
 
                 dust.noGravity = true;
             }
@@ -175,7 +176,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                     Main.rand.Next(18, 28),
 
-                    Main.rand.NextFloat(0.65f, 1.05f),
+                    Main.rand.NextFloat(0.65f, 1.05f) * HeavyVisualScale,
 
                     0.55f,
 
@@ -204,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     Projectile.rotation,
 
                     0.02f,
-                    0.24f,
+                    0.24f * HeavyVisualScale,
                     14));
             }
         }
@@ -215,7 +216,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 int oldWidth = Projectile.width;
                 int oldHeight = Projectile.height;
                 Vector2 center = Projectile.Center;
-                Projectile.width = Projectile.height = 170;
+                Projectile.width = Projectile.height = 85;
                 Projectile.Center = center;
                 Projectile.penetrate = -1;
                 Projectile.Damage();
@@ -243,7 +244,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (!Main.dedServ)
             {
-                PFHardMode_TotalityFire.SpawnBurstEffects(Projectile.Center, ThemeColor, 1.6f);
+                PFHardMode_TotalityFire.SpawnBurstEffects(Projectile.Center, ThemeColor, 0.8f);
                 SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.78f, Pitch = -0.18f }, Projectile.Center);
             }
         }

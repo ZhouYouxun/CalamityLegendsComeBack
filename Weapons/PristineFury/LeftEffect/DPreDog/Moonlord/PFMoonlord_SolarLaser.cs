@@ -138,6 +138,25 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 GeneralParticleHandler.SpawnParticle(cut);
             }
+
+            if (Main.GameUpdateCount % 2 == 0)
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    float completion = Main.rand.NextFloat();
+                    Vector2 basePosition = Projectile.Center + beamVector * BeamLength * completion;
+                    float profile = (float)Math.Sin(completion * MathHelper.Pi);
+                    Vector2 flareVelocity = beamVector.RotatedByRandom(0.24f) * Main.rand.NextFloat(1.2f, 3.2f) +
+                        normal * Main.rand.NextFloatDirection() * profile * 2.2f;
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        basePosition + normal * Main.rand.NextFloat(-18f, 18f) * profile,
+                        flareVelocity,
+                        false,
+                        Main.rand.Next(9, 15),
+                        Main.rand.NextFloat(0.45f, 0.82f) * Projectile.scale,
+                        Main.rand.NextBool(3) ? white : Color.Lerp(gold, orange, Main.rand.NextFloat())));
+                }
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)

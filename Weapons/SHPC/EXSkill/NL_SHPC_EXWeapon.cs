@@ -677,6 +677,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
                     activeSoulCount++;
                 }
+
+                SpawnChargeSpiralInvs(center, progress, spawnAttempts, spawnCycle);
             }
 
             if (Main.dedServ)
@@ -800,6 +802,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     Main.rand.Next(16, 24));
 
                 GeneralParticleHandler.SpawnParticle(corePulse);
+            }
+        }
+
+        private void SpawnChargeSpiralInvs(Vector2 center, float progress, int spawnAttempts, float spawnCycle)
+        {
+            int spiralType = ModContent.ProjectileType<SHPC_ChargeSpiralInv>();
+            int activeSpirals = 0;
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (other.active && other.owner == Projectile.owner && other.type == spiralType && (int)other.ai[0] == Projectile.whoAmI)
+                    activeSpirals++;
+            }
+
+            int maxSpirals = 14 + (int)MathHelper.Lerp(8f, 22f, progress);
+            for (int i = 0; i < spawnAttempts && activeSpirals < maxSpirals; i++)
+            {
+                float spawnChance = 0.2f + progress * 0.48f + spawnCycle * 0.12f - i * 0.1f;
+                if (Main.rand.NextFloat() > spawnChance)
+                    continue;
+
+                float angle = timer * 0.24f + i * MathHelper.TwoPi / Math.Max(1, spawnAttempts) + Main.rand.NextFloat(-0.35f, 0.35f);
+                float radius = 16f * 16f + Main.rand.NextFloat(-28f, 28f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center + angle.ToRotationVector2() * radius,
+                    Vector2.Zero,
+                    spiralType,
+                    0,
+                    0f,
+                    Projectile.owner,
+                    Projectile.whoAmI,
+                    angle,
+                    radius);
+
+                activeSpirals++;
             }
         }
 

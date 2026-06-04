@@ -76,7 +76,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override void AI()
         {
             Timer++;
-            Projectile.velocity = Projectile.velocity.RotatedByRandom(0.012f);
+            Projectile.velocity = Projectile.velocity.RotatedByRandom(0.003f);
+            ApplySubtleTracking();
             Lighting.AddLight(Projectile.Center, LightningGreen.ToVector3() * 0.42f);
 
             if (!Main.dedServ && Timer % 2f == 0f)
@@ -97,7 +98,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             {
                 for (int i = -1; i <= 1; i += 2)
                 {
-                    Vector2 velocity = Projectile.velocity.RotatedBy(i * Main.rand.NextFloat(0.36f, 0.72f)) * 0.82f;
+                    float branchAngle = MathHelper.Lerp(0.26f, 0.1f, Projectile.ai[0] / 4f);
+                    float spiralBias = (Projectile.identity % 2 == 0 ? 1f : -1f) * 0.025f;
+                    Vector2 velocity = Projectile.velocity.RotatedBy(i * branchAngle + spiralBias) * 0.92f;
                     Projectile.NewProjectile(
                         Projectile.GetSource_FromThis(),
                         Projectile.Center,
@@ -109,6 +112,43 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                         Projectile.ai[0] + 1f);
                 }
             }
+        }
+
+        private void ApplySubtleTracking()
+        {
+            if (Timer < 5f)
+                return;
+
+            NPC target = FindNearestTarget(780f);
+            if (target is null)
+                return;
+
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
+            float turn = MathHelper.Lerp(MathHelper.ToRadians(1.5f), MathHelper.ToRadians(5f), Utils.GetLerpValue(5f, 28f, Timer, true));
+            Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), turn).ToRotationVector2();
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * Projectile.velocity.Length(), 0.085f);
+        }
+
+        private NPC FindNearestTarget(float range)
+        {
+            NPC closest = null;
+            float bestDistance = range;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                closest = npc;
+            }
+
+            return closest;
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>

@@ -298,10 +298,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 float chargeCompletion = rightChargeTimer / (float)RightChargeMaxFrames;
                 EnsureRightChargeOrb(chargeCompletion);
 
+                if (rightChargeTimer == RightChargeMaxFrames / 2)
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV1") { Volume = 0.62f, Pitch = -0.08f }, GunTipPosition);
+
                 if (!rightChargeReady && rightChargeTimer >= RightChargeMaxFrames)
                 {
                     rightChargeReady = true;
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV1") { Volume = 0.65f, Pitch = -0.12f }, GunTipPosition);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV2") { Volume = 0.72f, Pitch = -0.1f }, GunTipPosition);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserCompleteCharge") { Volume = 0.5f, Pitch = 0.08f }, GunTipPosition);
                 }
                 else if (rightChargeTimer > 10 && rightChargeTimer < RightChargeMaxFrames && rightChargeTimer % 40 == 0)
                     SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLoop") { Volume = 0.36f, Pitch = 0.18f }, GunTipPosition);
@@ -634,6 +638,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             DrawDragonEyeGlow(leftVisualPower);
             DrawDragonMouthSmoke(leftVisualPower);
             DrawFakeCalamityArcNovaCharge();
+            DrawRightArcNovaCharge();
             DrawMuzzleGlow(flash);
             DrawHookChargeBar();
             return false;
@@ -737,6 +742,63 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Vector2 orbit = (MathHelper.TwoPi * satellite / 3f + Main.GlobalTimeWrappedHourly * 7.2f).ToRotationVector2();
                     Vector2 offset = new Vector2(orbit.X * 0.72f, orbit.Y * 1.18f).RotatedBy(Projectile.rotation) * chargeScale * 13f;
                     Main.EntitySpriteDraw(bloom, tip + offset, null, Color.Lerp(theme, white, 0.45f) * 0.82f, Projectile.rotation, bloom.Size() * 0.5f, chargeScale * 0.082f, SpriteEffects.None, 0f);
+                }
+            }
+
+            PFLeftEffectRules.EndAdditive();
+        }
+
+        private void DrawRightArcNovaCharge()
+        {
+            if (rightChargeTimer <= 0 || Main.dedServ)
+                return;
+
+            float charge = MathHelper.Clamp(rightChargeTimer / (float)RightChargeMaxFrames, 0f, 1f);
+            if (charge <= 0.02f)
+                return;
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Vector2 direction = AimDirection;
+            Vector2 tip = GunTipPosition + direction * (8f + charge * 5f) - Main.screenPosition;
+            Color fire = (Color.Lerp(new Color(255, 54, 42), new Color(255, 126, 42), 0.42f) with { A = 0 }) * charge;
+            Color white = (Color.White with { A = 0 }) * charge;
+            float chargeScale = Math.Min(charge * 2f, 2f);
+            float pulse = 0.9f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity);
+
+            PFLeftEffectRules.BeginAdditive();
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 6.5f) * charge;
+                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(16f, 40f) + direction * -8f * (6f - chargeScale * 2f);
+                Vector2 smearScale = new(0.25f * chargeScale, (1.7f + (Main.rand.NextBool(4) ? 1.8f : 0f)) * 0.05f * chargeScale);
+                Color smearColor = Main.rand.NextBool(4) ? white : fire;
+                Main.EntitySpriteDraw(smear, drawPosition, null, smearColor * 0.82f, direction.RotatedByRandom(0.3f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Color layerColor = Color.Lerp(fire, white, i * 0.25f);
+                Vector2 layerScale = new Vector2(1.35f, 1f) * chargeScale * (1f - 0.27f * i) * 0.23f * pulse;
+                Main.EntitySpriteDraw(bloom, tip, null, layerColor * 0.8f, Projectile.rotation + Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
+            }
+
+            Main.EntitySpriteDraw(ring, tip, null, fire * (0.26f + charge * 0.38f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.95f, ring.Size() * 0.5f, (0.13f + charge * 0.42f) * pulse, SpriteEffects.None, 0f);
+
+            if (rightChargeReady)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector2 angle = (MathHelper.TwoPi * i / 3f).ToRotationVector2().RotatedBy(Main.GlobalTimeWrappedHourly * 7.2f);
+                    Vector2 offset = new Vector2(angle.X * 0.7f, angle.Y * 1.2f).RotatedBy(Projectile.rotation) * chargeScale * 12f;
+                    for (int layer = 0; layer < 2; layer++)
+                    {
+                        Color layerColor = Color.Lerp(fire, white, layer) * 0.8f;
+                        float layerScale = chargeScale * (1f - 0.25f * layer) * 0.085f;
+                        Main.EntitySpriteDraw(bloom, tip + offset, null, layerColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
+                    }
                 }
             }
 

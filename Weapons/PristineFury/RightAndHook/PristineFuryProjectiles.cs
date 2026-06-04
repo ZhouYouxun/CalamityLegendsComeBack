@@ -1,15 +1,117 @@
 using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
+using Terraria.Enums;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury
 {
+    internal static class PristineFuryRightNovaVisuals
+    {
+        public static void DrawArcNovaOrb(Vector2 center, Vector2 direction, float rotation, float timer, float intensity, float size, Color mainColor, Color accentColor)
+        {
+            if (Main.dedServ || intensity <= 0.01f)
+                return;
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/FullStar").Value;
+            direction = direction.SafeNormalize(Vector2.UnitX);
+
+            Vector2 drawPosition = center - Main.screenPosition;
+            Color main = mainColor with { A = 0 };
+            Color accent = accentColor with { A = 0 };
+            Color white = Color.White with { A = 0 };
+            float pulse = 0.92f + 0.08f * (float)Math.Sin(timer * 0.19f);
+            float drawSize = size * intensity;
+
+            PFLeftEffectRules.BeginAdditive();
+
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 sparkOffset = Main.rand.NextVector2Circular(1f, 5.5f) * Math.Min(intensity, 1f);
+                Vector2 smearPosition = drawPosition + sparkOffset - Vector2.Lerp(sparkOffset, -direction, 0.9f) * Main.rand.NextFloat(15f, 35f) - direction * MathHelper.Lerp(16f, 34f, intensity);
+                Color smearColor = Main.rand.NextBool(3) ? accent : main;
+                Main.EntitySpriteDraw(
+                    smear,
+                    smearPosition,
+                    null,
+                    smearColor * 0.72f * intensity,
+                    direction.RotatedByRandom(0.3f).ToRotation() - MathHelper.PiOver2,
+                    new Vector2(smear.Width * 0.5f, smear.Height),
+                    new Vector2(0.012f + 0.038f * drawSize, 0.07f + 0.15f * intensity),
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Color bloomColor = Color.Lerp(main, white, i * 0.25f);
+                Main.EntitySpriteDraw(
+                    bloom,
+                    drawPosition,
+                    null,
+                    bloomColor * (0.86f - i * 0.16f) * intensity,
+                    Main.rand.NextFloat(-5f, 5f),
+                    bloom.Size() * 0.5f,
+                    new Vector2(1.35f, 1f) * drawSize * pulse * (0.21f - i * 0.045f),
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            Main.EntitySpriteDraw(
+                ring,
+                drawPosition,
+                null,
+                accent * 0.58f * intensity,
+                rotation + timer * 0.045f,
+                ring.Size() * 0.5f,
+                new Vector2(0.56f, 1.35f) * drawSize * 0.22f * pulse,
+                SpriteEffects.None,
+                0f);
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 orbit = (MathHelper.TwoPi * i / 3f + timer * 0.18f).ToRotationVector2();
+                Vector2 offset = new Vector2(orbit.X * 0.7f, orbit.Y * 1.2f).RotatedBy(rotation) * drawSize * 12f;
+                Main.EntitySpriteDraw(
+                    bloom,
+                    drawPosition + offset,
+                    null,
+                    Color.Lerp(accent, white, 0.55f) * 0.74f * intensity,
+                    rotation,
+                    bloom.Size() * 0.5f,
+                    new Vector2(1f) * drawSize * 0.085f * pulse,
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                float starRotation = rotation + MathHelper.PiOver2 * i + timer * 0.08f;
+                Main.EntitySpriteDraw(
+                    star,
+                    drawPosition,
+                    null,
+                    Color.Lerp(main, white, 0.35f) * 0.38f * intensity,
+                    starRotation,
+                    star.Size() * 0.5f,
+                    new Vector2(0.18f, 0.78f) * drawSize * pulse,
+                    SpriteEffects.None,
+                    0f);
+            }
+
+            PFLeftEffectRules.EndAdditive();
+        }
+    }
+
     internal sealed class PristineFuryRightPellet : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.PristineFury";
@@ -118,16 +220,36 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
     internal sealed class PristineFuryImpactExplosion : ModProjectile, ILocalizedModType
     {
+        private const int HorizontalFrames = 5;
+        private const int VerticalFrames = 4;
+        private const int FrameLength = 2;
+        private const int LaserCount = 16;
+        private static readonly Color[] SupernovaColors =
+        {
+            new(255, 52, 42),
+            new(255, 138, 42),
+            new(255, 224, 92),
+            new(255, 255, 255)
+        };
+
         public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Rogue/SupernovaBoom";
+
+        private ref float Timer => ref Projectile.localAI[0];
+        private int frameX;
+        private int frameY;
+        private int currentFrame = 1;
+        private bool damageDone;
+        private Color variedColor = SupernovaColors[0];
+        private Color mainColor = SupernovaColors[2];
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 10;
+            Projectile.width = Projectile.height = 300;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 3;
+            Projectile.timeLeft = 48;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
@@ -136,48 +258,153 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void AI()
         {
-            if (Projectile.localAI[0] != 0f)
-                return;
-            Projectile.localAI[0] = 1f;
-            int radius = (int)MathHelper.Clamp(Projectile.ai[0] <= 0f ? 55f : Projectile.ai[0], 30f, 240f);
-            Projectile.Resize(radius, radius);
-            Projectile.Damage();
+            Timer++;
+            if (Projectile.ai[0] > 0f && Timer == 1f)
+            {
+                int size = (int)MathHelper.Clamp(Projectile.ai[0] * 2f, 160f, 520f);
+                Projectile.Resize(size, size);
+            }
+
+            if ((int)Timer % 20 == 1)
+                variedColor = SupernovaColors[Main.rand.Next(SupernovaColors.Length)];
+            mainColor = Color.Lerp(mainColor, variedColor, 0.07f);
+            Lighting.AddLight(Projectile.Center, mainColor.ToVector3() * 2.4f);
+
+            if ((int)Timer % FrameLength == 1)
+            {
+                currentFrame++;
+                frameY++;
+                if (frameY >= VerticalFrames)
+                {
+                    frameX++;
+                    frameY = 0;
+                }
+
+                if (frameX >= HorizontalFrames)
+                    Projectile.Kill();
+            }
+
+            if (!damageDone && currentFrame >= 4)
+            {
+                damageDone = true;
+                Projectile.Damage();
+                SpawnSupernovaLasers();
+            }
+
             if (Main.dedServ)
                 return;
+
+            if (Timer == 1f)
+                SpawnExplosionEffects();
+
+            if ((int)Timer % 3 == 0)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 10f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center,
+                    velocity,
+                    false,
+                    Main.rand.Next(12, 24),
+                    Main.rand.NextFloat(0.85f, 1.65f),
+                    Main.rand.NextBool(4) ? Color.White : mainColor));
+            }
+        }
+
+        public override bool? CanDamage() => damageDone && currentFrame <= 13;
+
+        private void SpawnSupernovaLasers()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.46f));
+            float rotationOffset = Projectile.ai[1];
+            for (int i = 0; i < LaserCount; i++)
+            {
+                float rotation = rotationOffset + MathHelper.TwoPi * i / LaserCount + Main.rand.NextFloat(-0.045f, 0.045f);
+                Vector2 velocity = rotation.ToRotationVector2();
+                int laser = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<PristineFuryRightNovaPseudoLaser>(),
+                    laserDamage,
+                    Projectile.knockBack * 0.35f,
+                    Projectile.owner,
+                    i,
+                    LaserCount);
+
+                PFLeftEffectRules.ApplyTheme(laser, (PristineFuryMark)(int)Projectile.ai[2]);
+            }
+
+            Main.player[Projectile.owner].SetScreenshake(7f);
+        }
+
+        private void SpawnExplosionEffects()
+        {
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SupernovaBoom") { Volume = 0.55f, PitchVariance = 0.16f }, Projectile.Center);
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Projectile.Center,
                 Vector2.Zero,
-                Color.OrangeRed * 0.75f,
+                mainColor * 0.9f,
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
-                0.08f,
-                radius / 120f,
-                18));
+                0.18f,
+                2.6f,
+                24));
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
                 Vector2.Zero,
-                Color.Gold,
+                Color.White * 0.55f,
                 "CalamityMod/Particles/SoftRoundExplosion",
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 0.05f,
-                radius / 95f,
-                16,
+                2.2f,
+                22,
                 true));
 
-            for (int i = 0; i < 18; i++)
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                mainColor * 0.8f,
+                "CalamityMod/Particles/FlameExplosion",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.06f,
+                0.9f,
+                22,
+                true));
+
+            for (int i = 0; i < 36; i++)
             {
                 Particle spark = new SparkParticle(
                     Projectile.Center,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 13f),
                     false,
-                    Main.rand.Next(12, 22),
-                    Main.rand.NextFloat(0.55f, 1.15f),
-                    Color.Lerp(Color.Orange, Color.White, Main.rand.NextFloat(0.1f, 0.35f)));
+                    Main.rand.Next(16, 32),
+                    Main.rand.NextFloat(0.85f, 1.8f),
+                    Main.rand.NextBool(4) ? Color.White : Color.Lerp(new Color(255, 52, 42), mainColor, Main.rand.NextFloat()));
                 GeneralParticleHandler.SpawnParticle(spark);
             }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Rectangle frame = texture.Frame(HorizontalFrames, VerticalFrames, frameX, frameY);
+            Vector2 origin = frame.Size() * 0.5f;
+            float opacity = Utils.GetLerpValue(0f, 6f, Timer, true) * Utils.GetLerpValue(48f, 34f, Projectile.timeLeft, true);
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            Color color = mainColor with { A = 0 };
+            PFLeftEffectRules.BeginAdditive();
+            Main.EntitySpriteDraw(texture, drawPosition, frame, color * 0.82f * opacity, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(texture, drawPosition, frame, (Color.White with { A = 0 }) * 0.28f * opacity, -Projectile.rotation * 0.4f, origin, Projectile.scale * 0.7f, SpriteEffects.None, 0f);
+            PFLeftEffectRules.EndAdditive();
+            return false;
         }
     }
 
@@ -317,52 +544,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (charge <= 0.02f || Main.dedServ)
                 return false;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
-            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Color red = (NovaRed with { A = 0 }) * charge;
-            Color white = (Color.White with { A = 0 }) * charge;
+            Color red = NovaRed with { A = 0 };
+            Color white = Color.White with { A = 0 };
             float pulse = 0.88f + 0.16f * (float)Math.Sin(Timer * 0.16f);
             float chargeScale = 0.35f + charge * 1.45f;
 
-            PFLeftEffectRules.BeginAdditive();
-
-            for (int i = 0; i < 5; i++)
-            {
-                Vector2 randomOffset = Main.rand.NextVector2Circular(5f, 5f) * charge;
-                Vector2 smearPosition = drawPosition + randomOffset - direction * Main.rand.NextFloat(16f, 48f + charge * 42f);
-                Color smearColor = Color.Lerp(NovaRed, Color.White, Main.rand.NextFloat(0.04f, 0.22f)) with { A = 0 };
-                Main.EntitySpriteDraw(
-                    smear,
-                    smearPosition,
-                    null,
-                    smearColor * (0.36f + charge * 0.34f),
-                    direction.ToRotation() - MathHelper.PiOver2,
-                    new Vector2(smear.Width * 0.5f, smear.Height),
-                    new Vector2(0.08f + charge * 0.18f, 0.12f + charge * 0.12f),
-                    SpriteEffects.None,
-                    0);
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                Color bloomColor = Color.Lerp(red, white, i * 0.22f);
-                float scale = (0.18f + chargeScale * (0.18f - i * 0.035f)) * pulse;
-                Main.EntitySpriteDraw(bloom, drawPosition, null, bloomColor * (0.72f - i * 0.12f), Projectile.rotation + Main.rand.NextFloat(-0.3f, 0.3f), bloom.Size() * 0.5f, scale, SpriteEffects.None, 0);
-            }
-
-            Main.EntitySpriteDraw(ring, drawPosition, null, red * (0.28f + charge * 0.42f), Projectile.rotation + Timer * 0.035f, ring.Size() * 0.5f, (0.16f + charge * 0.46f) * pulse, SpriteEffects.None, 0);
-
-            for (int i = 0; i < 6; i++)
-            {
-                float rotation = Projectile.rotation + MathHelper.TwoPi * i / 6f + Timer * (0.018f + i * 0.002f);
-                Main.EntitySpriteDraw(star, drawPosition, null, Color.Lerp(red, white, 0.28f) * 0.46f, rotation, star.Size() * 0.5f, new Vector2(0.12f + charge * 0.08f, 0.85f + charge * 2.35f) * pulse, SpriteEffects.None, 0);
-            }
-
-            PFLeftEffectRules.EndAdditive();
+            PristineFuryRightNovaVisuals.DrawArcNovaOrb(Projectile.Center, direction, Projectile.rotation, Timer, charge, chargeScale * pulse, red, white);
             return false;
         }
     }
@@ -373,7 +561,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private static readonly Color NovaOrange = new(255, 126, 42);
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/NovaChargedShot";
 
         private ref float Timer => ref Projectile.localAI[0];
 
@@ -450,35 +638,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Projectile.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<PristineFuryImpactExplosion>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.62f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.76f)),
                     Projectile.knockBack,
                     Projectile.owner,
-                    150f);
+                    165f,
+                    Main.rand.NextFloat(MathHelper.TwoPi),
+                    Projectile.ai[2]);
                 PFLeftEffectRules.ApplyTheme(explosion, (PristineFuryMark)(int)Projectile.ai[2]);
-
-                Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                float baseRotation = forward.ToRotation();
-                int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.42f));
-                for (int group = 0; group < 4; group++)
-                {
-                    float groupRotation = baseRotation + group * MathHelper.PiOver2;
-                    for (int beam = 0; beam < 3; beam++)
-                    {
-                        float spread = MathHelper.ToRadians((beam - 1) * 10f);
-                        Vector2 velocity = (groupRotation + spread).ToRotationVector2() * 5.9f;
-                        int laser = Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            Projectile.Center,
-                            velocity,
-                            ModContent.ProjectileType<PristineFuryRightNovaPseudoLaser>(),
-                            laserDamage,
-                            Projectile.knockBack * 0.35f,
-                            Projectile.owner,
-                            group,
-                            beam);
-                        PFLeftEffectRules.ApplyTheme(laser, (PristineFuryMark)(int)Projectile.ai[2]);
-                    }
-                }
             }
 
             if (Main.dedServ)
@@ -522,12 +688,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override bool PreDraw(ref Color lightColor)
         {
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true);
             Color red = (NovaRed with { A = 0 }) * fade;
+            Color orange = (NovaOrange with { A = 0 }) * fade;
             Color white = (Color.White with { A = 0 }) * fade;
+            Color coreOrange = NovaOrange with { A = 0 };
+            Color coreWhite = Color.White with { A = 0 };
 
             PFLeftEffectRules.BeginAdditive();
             for (int i = 0; i < Projectile.oldPos.Length; i++)
@@ -540,17 +710,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 Main.EntitySpriteDraw(bloom, oldDrawPosition, null, red * (0.22f * (1f - completion)), Projectile.rotation, bloom.Size() * 0.5f, 0.2f * (1f - completion), SpriteEffects.None, 0);
             }
 
-            float pulse = 0.9f + 0.12f * (float)Math.Sin(Timer * 0.2f);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, red * 0.88f, Projectile.rotation, bloom.Size() * 0.5f, 0.45f * pulse, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, white * 0.42f, Projectile.rotation, bloom.Size() * 0.5f, 0.22f * pulse, SpriteEffects.None, 0);
-
-            for (int i = 0; i < 4; i++)
-            {
-                float rotation = Projectile.rotation + MathHelper.PiOver2 * i + Timer * 0.05f;
-                Main.EntitySpriteDraw(star, drawPosition, null, Color.Lerp(red, white, 0.18f) * 0.52f, rotation, star.Size() * 0.5f, new Vector2(0.16f, 1.45f) * pulse, SpriteEffects.None, 0);
-            }
-
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(red, white, 0.25f) * 0.8f, Projectile.rotation + MathHelper.PiOver2, texture.Size() * 0.5f, Projectile.scale * 1.08f, SpriteEffects.None, 0);
             PFLeftEffectRules.EndAdditive();
+
+            PristineFuryRightNovaVisuals.DrawArcNovaOrb(Projectile.Center, direction, Projectile.rotation, Timer, fade, 1.8f, coreOrange, coreWhite);
             return false;
         }
     }
@@ -559,8 +722,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
     {
         private static readonly Color NovaRed = new(255, 54, 42);
         private static readonly Color NovaOrange = new(255, 126, 42);
-        private const float MaxBeamLength = 520f;
-        private const float CollisionWidth = 18f;
+        private const int Lifetime = 26;
+        private const float MaxBeamLength = 920f;
+        private const float CollisionWidth = 24f;
+        private const float MaxBeamScale = 1.6f;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -574,11 +739,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 30;
+            Projectile.timeLeft = Lifetime;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 8;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -589,11 +754,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Projectile.velocity = direction;
             Projectile.rotation = direction.ToRotation();
-            BeamLength = MathHelper.Lerp(BeamLength, MaxBeamLength, 0.38f);
+            if (Timer == 1f)
+                SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.34f, Pitch = -0.28f, MaxInstances = 8 }, Projectile.Center);
+
+            BeamLength = MathHelper.Lerp(BeamLength, MaxBeamLength, 0.62f);
+            float completion = Timer / Lifetime;
+            float fade = Utils.GetLerpValue(0f, 0.18f, completion, true) * Utils.GetLerpValue(1f, 0.68f, completion, true);
+            Projectile.scale = MaxBeamScale * fade;
             Vector2 beamEnd = Projectile.Center + direction * BeamLength;
             Lighting.AddLight(Projectile.Center, NovaRed.ToVector3() * 0.72f);
-            DelegateMethods.v3_1 = NovaRed.ToVector3() * 0.46f;
-            Utils.PlotTileLine(Projectile.Center, beamEnd, CollisionWidth, DelegateMethods.CastLight);
+            DelegateMethods.v3_1 = NovaRed.ToVector3() * 0.62f * fade;
+            Utils.PlotTileLine(Projectile.Center, beamEnd, CollisionWidth * Math.Max(Projectile.scale, 0.1f), DelegateMethods.CastLight);
 
             if (Main.dedServ)
                 return;
@@ -635,7 +806,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            if (Projectile.scale <= 0.03f)
+                return false;
+
+            Texture2D laser = ModContent.Request<Texture2D>("CalamityMod/Projectiles/LaserProj").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Color red = NovaRed with { A = 0 };
@@ -643,17 +817,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             float fade = Utils.GetLerpValue(0f, 9f, Projectile.timeLeft, true) * Utils.GetLerpValue(30f, 25f, Projectile.timeLeft, true);
             Vector2 start = Projectile.Center - Main.screenPosition;
             Vector2 end = Projectile.Center + direction * BeamLength - Main.screenPosition;
-            Vector2 midpoint = (start + end) * 0.5f;
 
             PFLeftEffectRules.BeginAdditive();
-            Main.EntitySpriteDraw(line, midpoint, null, red * (0.92f * fade), direction.ToRotation() + MathHelper.PiOver2, line.Size() * 0.5f, new Vector2(0.34f, BeamLength / line.Height), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(line, midpoint, null, (Color.White with { A = 0 }) * (0.64f * fade), direction.ToRotation() + MathHelper.PiOver2, line.Size() * 0.5f, new Vector2(0.13f, BeamLength / line.Height), SpriteEffects.None, 0);
+            Utils.LaserLineFraming framing = new(DelegateMethods.RainbowLaserDraw);
+            DelegateMethods.f_1 = 1f;
+            DelegateMethods.c_1 = Color.Lerp(red, orange, 0.35f) * (0.86f * fade);
+            Utils.DrawLaser(Main.spriteBatch, laser, start, end, new Vector2(Projectile.scale), framing);
+            DelegateMethods.c_1 = (Color.White with { A = 0 }) * (0.46f * fade);
+            Utils.DrawLaser(Main.spriteBatch, laser, start, end, new Vector2(Projectile.scale * 0.5f), framing);
+
             Main.EntitySpriteDraw(bloom, start, null, red * (0.86f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(bloom, end, null, orange * (0.9f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.34f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(bloom, end, null, (Color.White with { A = 0 }) * (0.52f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.14f, SpriteEffects.None, 0);
 
             PFLeftEffectRules.EndAdditive();
             return false;
+        }
+
+        public override void CutTiles()
+        {
+            DelegateMethods.tilecut_0 = TileCuttingContext.AttackProjectile;
+            Utils.PlotTileLine(Projectile.Center, Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitX) * BeamLength, Projectile.width * Projectile.scale, DelegateMethods.CutTiles);
         }
     }
 

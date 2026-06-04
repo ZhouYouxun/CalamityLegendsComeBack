@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
             }
 
-            Projectile.rotation += 0.28f * Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
+            Projectile.rotation = 0f;
             Lighting.AddLight(Projectile.Center, 0.04f, 0.18f, 0.24f);
             HomeTowardTarget();
 

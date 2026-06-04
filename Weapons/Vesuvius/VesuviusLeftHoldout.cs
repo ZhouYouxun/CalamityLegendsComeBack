@@ -678,7 +678,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             float distanceFactor = Utils.GetLerpValue(1400f, 220f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
             float pulse = FullyCharged ? 0.65f + 0.35f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 15f) : 0f;
-            float shakePower = (0.18f + chargePower * 0.95f + currentStage * 0.16f + pulse) * distanceFactor;
+            float shakePower = (0.18f + chargePower * 0.95f + currentStage * 0.16f + pulse) * distanceFactor * 0.7f;
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower);
         }
 
@@ -688,7 +688,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             float distanceFactor = Utils.GetLerpValue(1800f, 240f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor * 0.7f);
         }
 
         public override void OnKill(int timeLeft)

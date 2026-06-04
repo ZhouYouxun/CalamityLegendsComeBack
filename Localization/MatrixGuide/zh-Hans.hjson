@@ -1,0 +1,21 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			IUMWMatrixTablet: {
+				DisplayName: 传奇矩阵终端
+				Tooltip: 打开“灾厄传说归来”的矩阵说明界面。
+			}
+		}
+
+		Projectiles.IUMWMatrixPanel.DisplayName: 传奇矩阵界面
+
+		UI: {
+			GuideTitle: 灾厄传说矩阵
+			GuideSubtitle: 传奇归来信息终端
+			GuideBody: “灾厄传说归来”主要用于重做和扩展灾厄传奇武器体验。当前项目中包含传奇武器重制、EX 技能、配饰联动、视觉特效、调试工具、复古游戏面板，以及可以直接从源码学习的本地实验内容。
+			BossListTitle: 当前可学习内容
+			BossList: SHPC 材料与热量系统、海爵潮汐招式、纯元怒焰特效、亚利姆水晶攻击、维苏威、繁花流明、孔雀翎、MK14 EBR，以及 Z_TeachingProjectile 中的教学示例。
+			CloseHint: 再次使用终端，或点击面板外关闭。
+		}
+	}
+}

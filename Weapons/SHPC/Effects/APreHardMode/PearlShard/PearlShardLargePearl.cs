@@ -19,8 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void SetDefaults()
         {
-            Projectile.width = 34;
-            Projectile.height = 34;
+            Projectile.width = 45;
+            Projectile.height = 45;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.38f, 0.24f, 0.32f));
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextFloat() < 0.58f)
                 PearlShardVisuals.SpawnPearlParticle(Projectile.Center, -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.18f), 0.34f, 18);
 
             PearlShardVisuals.SpawnPearlGodTrail(Projectile, 1f);
@@ -54,10 +54,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            Vector2 forward = Projectile.velocity.SafeNormalize(Main.rand.NextVector2Unit());
+            float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
             for (int i = 0; i < 3; i++)
             {
-                Vector2 velocity = forward.RotatedBy(MathHelper.ToRadians(-18f + 18f * i)) * Main.rand.NextFloat(7.5f, 9.5f);
+                Vector2 velocity = (baseRotation + MathHelper.TwoPi * i / 3f).ToRotationVector2() * Main.rand.NextFloat(7.5f, 9.5f);
                 int small = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center,
@@ -75,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override bool PreDraw(ref Color lightColor)
         {
-            PearlShardVisuals.DrawPearl(Projectile, 1f);
+            PearlShardVisuals.DrawPearl(Projectile, 1.33f);
             return false;
         }
     }

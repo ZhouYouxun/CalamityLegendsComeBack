@@ -3,30 +3,35 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
+namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCLeft
 {
-    public abstract class YC_RightWarshipBase : ModProjectile, ILocalizedModType
+    public abstract class YC_LeftWarshipBase : ModProjectile, ILocalizedModType
     {
         private bool positionInitialized;
 
-        protected virtual float PositionLerp => 0.3f;
+        protected virtual float PositionLerp => 0.22f;
         protected virtual float ScaleBase => 0.9f;
-        protected virtual float ScaleAmplitude => 0.04f;
-        protected virtual float LightStrength => 0.4f;
-        protected virtual int IdleDustInterval => 10;
+        protected virtual float ScaleAmplitude => 0.05f;
+        protected virtual float LightStrength => 0.35f;
+        protected virtual float IdleDustScale => 0.95f;
+        protected virtual int IdleDustInterval => 9;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
 
         protected Player Owner => Main.player[Projectile.owner];
+        protected Vector2 CurrentLocalOffset { get; private set; }
+        protected bool ManualAimActive { get; private set; }
 
         public int SlotIndex => (int)Projectile.ai[0];
         public int ParentHoldoutIndex => (int)Projectile.ai[1];
-        public Vector2 CurrentForwardDirection { get; protected set; }
+        public Vector2 ForwardDirection { get; protected set; }
+        public Vector2 DesiredAimDirection { get; protected set; }
 
         protected abstract Color AccentColor { get; }
-        protected virtual Color OverlayColor => AccentColor * 0.75f;
+        protected virtual Color OverlayColor => AccentColor * 0.72f;
 
         public override void SetDefaults()
         {
@@ -53,23 +58,23 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
                 return;
             }
 
-            if (!YC_RightHelper.TryGetHoldout(Projectile.owner, ParentHoldoutIndex, out Projectile holdoutProjectile, out YC_RightHoldOut holdout))
+            if (!YC_LeftSquadronHelper.TryGetHoldout(Projectile.owner, ParentHoldoutIndex, out Projectile holdoutProjectile, out YC_LeftHoldOut holdout))
             {
                 Projectile.Kill();
                 return;
             }
 
             Projectile.timeLeft = 2;
-            UpdateStaticPosition(holdoutProjectile, holdout);
+            ForwardDirection = holdout.ForwardDirection;
+            ManualAimActive = holdout.ManualAimMode;
+
+            UpdateFormation(holdoutProjectile);
+            DesiredAimDirection = CalculateDesiredAimDirection(holdout, holdoutProjectile).SafeNormalize(ForwardDirection);
+            Projectile.rotation = DesiredAimDirection.ToRotation() + MathHelper.PiOver2;
+
             UpdateAttack(holdout, holdoutProjectile);
             EmitIdleFX();
-
             Lighting.AddLight(Projectile.Center, AccentColor.ToVector3() * LightStrength);
-        }
-
-        public override void OnKill(int timeLeft)
-        {
-            KillPersistentBeam();
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -96,22 +101,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
                 OverlayColor,
                 Projectile.rotation,
                 origin,
-                Projectile.scale * 1.08f,
+                Projectile.scale * 1.06f,
                 SpriteEffects.None,
                 0);
 
             return false;
         }
 
-        protected abstract Vector2 GetLocalOffset();
-
-        protected abstract float GetAngleOffsetDegrees();
-
-        protected abstract void UpdateAttack(YC_RightHoldOut holdout, Projectile holdoutProjectile);
-
-        protected NPC FindTargetAhead(float range, float coneDegrees, bool requireLineOfSight = true)
+        public override void OnKill(int timeLeft)
         {
-            return YC_RightHelper.FindTargetAhead(Projectile, Projectile.Center, CurrentForwardDirection, range, coneDegrees, requireLineOfSight);
+            KillPersistentBeam();
+        }
+
+        protected abstract Vector2 CalculateLocalOffset(float globalTime);
+
+        protected abstract Vector2 CalculateDesiredAimDirection(YC_LeftHoldOut holdout, Projectile holdoutProjectile);
+
+        protected abstract void UpdateAttack(YC_LeftHoldOut holdout, Projectile holdoutProjectile);
+
+        protected Vector2 GetManualAimOrDefault(YC_LeftHoldOut holdout, Vector2 fallbackDirection)
+        {
+            if (holdout.ManualAimMode && Projectile.owner == Main.myPlayer)
+                return (Main.MouseWorld - Projectile.Center).SafeNormalize(fallbackDirection);
+
+            return fallbackDirection;
         }
 
         protected void EnsurePersistentBeam(
@@ -121,21 +134,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             Color outerColor,
             Color innerColor,
             float forwardOffset,
+            float turnRateRadians,
             int hitCooldown,
-            int damageDelayFrames = 0)
+            int damageDelayFrames)
         {
-            if (Projectile.owner != Main.myPlayer || HasActiveBeam())
+            if (Projectile.owner != Main.myPlayer || HasPersistentBeam())
                 return;
 
             YC_CBeam.SpawnBeam(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center + CurrentForwardDirection * forwardOffset,
-                CurrentForwardDirection,
+                Projectile.Center,
+                DesiredAimDirection,
                 beamDamage,
                 Projectile.knockBack,
                 Projectile.owner,
                 Projectile.whoAmI,
-                YC_CBeam.BeamAnchorKind.RightDrone,
+                YC_CBeam.BeamAnchorKind.LeftDrone,
                 beamLength,
                 beamWidth,
                 0,
@@ -144,28 +158,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
                 outerColor,
                 innerColor,
                 forwardOffset,
-                0f,
+                turnRateRadians,
                 -1,
                 hitCooldown,
                 damageDelayFrames);
-        }
-
-        protected bool HasActiveBeam()
-        {
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile other = Main.projectile[i];
-                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_CBeam>())
-                    continue;
-
-                if ((int)other.ai[0] == Projectile.whoAmI &&
-                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.RightDrone)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         protected void KillPersistentBeam()
@@ -177,11 +173,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
                     continue;
 
                 if ((int)other.ai[0] == Projectile.whoAmI &&
-                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.RightDrone)
+                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.LeftDrone)
                 {
                     other.Kill();
                 }
             }
+        }
+
+        protected bool HasPersistentBeam()
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (!other.active || other.owner != Projectile.owner || other.type != ModContent.ProjectileType<YC_CBeam>())
+                    continue;
+
+                if ((int)other.ai[0] == Projectile.whoAmI &&
+                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.LeftDrone)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         protected void EmitMuzzleBurst(Vector2 direction, Color color, float speed, int dustCount)
@@ -192,18 +206,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             for (int i = 0; i < dustCount; i++)
             {
                 Vector2 velocity = direction.RotatedByRandom(0.22f) * Main.rand.NextFloat(speed * 0.55f, speed);
-                YC_RightHelper.EmitRightDust(Projectile.Center + direction * 10f, velocity, color, Main.rand.NextFloat(0.8f, 1.1f));
+                YC_LeftSquadronHelper.EmitTechDust(Projectile.Center + direction * 10f, velocity, color, Main.rand.NextFloat(0.85f, 1.2f));
             }
         }
 
-        private void UpdateStaticPosition(Projectile holdoutProjectile, YC_RightHoldOut holdout)
+        protected float GetManualAimBeamLength(float defaultLength, float forwardOffset)
         {
-            Vector2 forward = holdout.ForwardDirection;
-            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 local = GetLocalOffset();
+            if (!ManualAimActive || Projectile.owner != Main.myPlayer)
+                return defaultLength;
 
-            Vector2 desiredCenter = holdoutProjectile.Center + right * local.X + forward * local.Y;
-            CurrentForwardDirection = forward.RotatedBy(MathHelper.ToRadians(GetAngleOffsetDegrees()));
+            Vector2 beamStart = Projectile.Center + DesiredAimDirection * forwardOffset;
+            float beamLength = Vector2.Dot(Main.MouseWorld - beamStart, DesiredAimDirection);
+            return MathHelper.Clamp(beamLength, 6f, defaultLength);
+        }
+
+        private void UpdateFormation(Projectile holdoutProjectile)
+        {
+            CurrentLocalOffset = CalculateLocalOffset(Main.GlobalTimeWrappedHourly);
+
+            Vector2 rightDirection = ForwardDirection.RotatedBy(MathHelper.PiOver2);
+            Vector2 desiredCenter = holdoutProjectile.Center + rightDirection * CurrentLocalOffset.X + ForwardDirection * CurrentLocalOffset.Y;
+            float ownerSpeed = Owner.velocity.Length();
+            float catchup = Utils.GetLerpValue(8f, 42f, ownerSpeed, true);
+            float positionLerp = MathHelper.Clamp(PositionLerp + catchup * 0.34f, PositionLerp, 0.82f);
 
             if (!positionInitialized)
             {
@@ -212,11 +237,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             }
             else
             {
-                Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, PositionLerp);
+                Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, positionLerp);
             }
 
-            Projectile.rotation = CurrentForwardDirection.ToRotation() + MathHelper.PiOver2;
-            Projectile.scale = ScaleBase + ScaleAmplitude * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.5f + SlotIndex * 0.7f);
+            Projectile.velocity = (desiredCenter - holdoutProjectile.Center).SafeNormalize(ForwardDirection);
+            Projectile.scale = ScaleBase + ScaleAmplitude * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f + SlotIndex * 0.7f);
         }
 
         private void EmitIdleFX()
@@ -224,11 +249,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             if (Main.dedServ || Main.GameUpdateCount % IdleDustInterval != 0)
                 return;
 
-            YC_RightHelper.EmitRightDust(
-                Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                CurrentForwardDirection.RotatedByRandom(0.2f) * Main.rand.NextFloat(0.45f, 1.15f),
+            YC_LeftSquadronHelper.EmitTechDust(
+                Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                DesiredAimDirection.RotatedByRandom(0.28f) * Main.rand.NextFloat(0.45f, 1.1f),
                 AccentColor,
-                Main.rand.NextFloat(0.8f, 1.05f));
+                Main.rand.NextFloat(0.75f, IdleDustScale));
         }
     }
 }

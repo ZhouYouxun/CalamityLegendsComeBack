@@ -113,13 +113,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             };
         }
 
-        public static void SpawnBurst(Vector2 center, Vector2 forward, float scale)
+        public static void SpawnBurst(Vector2 center, Vector2 forward, float scale, float countMultiplier = 1f, float particleScaleMultiplier = 1f)
         {
-            for (int i = 0; i < 14; i++)
+            int particleCount = (int)System.MathF.Round(14f * countMultiplier);
+            for (int i = 0; i < particleCount; i++)
             {
                 Color color = RandomPearlColor();
                 Vector2 velocity = (forward.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(1.2f, 5.2f)) + Main.rand.NextVector2Circular(0.8f, 0.8f);
-                SpawnPearlParticle(center + Main.rand.NextVector2Circular(8f, 8f) * scale, velocity, Main.rand.NextFloat(0.28f, 0.58f) * scale, Main.rand.Next(22, 42));
+                SpawnPearlParticle(center + Main.rand.NextVector2Circular(8f, 8f) * scale, velocity, Main.rand.NextFloat(0.28f, 0.58f) * scale * particleScaleMultiplier, Main.rand.Next(22, 42));
 
                 if (i % 2 == 0)
                 {
@@ -128,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                         velocity * Main.rand.NextFloat(0.65f, 1.25f),
                         false,
                         Main.rand.Next(10, 18),
-                        Main.rand.NextFloat(0.012f, 0.026f) * scale,
+                        Main.rand.NextFloat(0.012f, 0.026f) * scale * particleScaleMultiplier,
                         color,
                         new Vector2(0.55f, 1.65f),
                         false,

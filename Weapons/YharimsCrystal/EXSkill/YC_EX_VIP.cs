@@ -7,6 +7,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPrism;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 {
@@ -21,13 +22,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             Cleanup
         }
 
-        public const int DroneTotal = 12;
+        public const int DroneTotal = 6;
         public const int LaserCruiserTotal = 0;
         public const int BattleshipTotal = 0;
         public const int TotalWarshipCount = DroneTotal;
         public const int DroneChargeTime = 120;
         public const int LaserFireTime = 15 * 60;
-        private const int SpawnInterval = 12;
+        private const int SpawnInterval = 2;
         private const int CleanupInterval = 18;
 
         private readonly int[] rainbowSpawnOrder = new int[DroneTotal];
@@ -123,11 +124,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                     continue;
                 }
 
-                if (other.type == ModContent.ProjectileType<YC_CBeam>() &&
-                    (YC_CBeam.BeamAnchorKind)(int)other.ai[1] == YC_CBeam.BeamAnchorKind.ExDrone)
-                {
+                if (other.type == ModContent.ProjectileType<YC_YharimsCrystalBeam>() &&
+                    (YC_YharimsCrystalBeam.BeamHostKind)(int)other.ai[2] == YC_YharimsCrystalBeam.BeamHostKind.TyrantDrone)
                     other.Kill();
-                }
             }
         }
 
@@ -139,8 +138,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            if (CurrentStateTimer % SpawnInterval == 0 && CountOwnedWarships() < TotalWarshipCount)
-                SpawnWarship(owner, CountOwnedWarships());
+            if (CurrentStateTimer % SpawnInterval == 0)
+                YC_TyrantPrismDroneCoordinator.EnsureIdleDrones(owner, Projectile.GetSource_FromThis(), Projectile.damage, Projectile.knockBack);
 
             if (CountOwnedWarships() >= TotalWarshipCount)
                 SetState(EXVipState.DroneCharge);
@@ -214,55 +213,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         private void SpawnWarship(Player owner, int slotIndex)
         {
-            if (slotIndex < DroneTotal)
-            {
-                int colorIndex = rainbowSpawnOrder[slotIndex % DroneTotal];
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    owner.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<YC_EX_LaserDrone>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    slotIndex,
-                    colorIndex);
-
-                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.2f, Pitch = 0.12f + slotIndex * 0.015f }, owner.Center);
-                return;
-            }
-
-            if (slotIndex < DroneTotal + LaserCruiserTotal)
-            {
-                int cruiserSlot = slotIndex - DroneTotal;
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    owner.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<YC_EX_LaserCruiser>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    cruiserSlot,
-                    0f);
-
-                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.22f, Pitch = 0.02f + cruiserSlot * 0.03f }, owner.Center);
-                return;
-            }
-
-            int battleshipSlot = slotIndex - DroneTotal - LaserCruiserTotal;
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                owner.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<YC_EX_Battleship>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner,
-                battleshipSlot,
-                0f);
-
-            SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.24f, Pitch = -0.08f + battleshipSlot * 0.05f }, owner.Center);
+            YC_TyrantPrismDroneCoordinator.EnsureIdleDrones(owner, Projectile.GetSource_FromThis(), Projectile.damage, Projectile.knockBack);
+            SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.2f, Pitch = 0.12f + slotIndex * 0.015f }, owner.Center);
         }
 
         private int CountOwnedWarships()
@@ -273,7 +225,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 Projectile other = Main.projectile[i];
                 if (other.active &&
                     other.owner == Projectile.owner &&
-                    YC_EXHelper.IsOwnedExWarshipType(other.type))
+                    other.type == ModContent.ProjectileType<YC_TyrantPrismDrone>())
                 {
                     count++;
                 }
@@ -311,16 +263,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
         private static int GetCleanupPriority(Projectile projectile)
         {
-            if (projectile.type == ModContent.ProjectileType<YC_EX_LaserDrone>())
-                return 0;
-
-            if (projectile.type == ModContent.ProjectileType<YC_EX_Battleship>())
-                return 0;
-
-            if (projectile.type == ModContent.ProjectileType<YC_EX_LaserCruiser>())
-                return 1;
-
-            return 2;
+            return 0;
         }
 
         private void SetState(EXVipState newState)

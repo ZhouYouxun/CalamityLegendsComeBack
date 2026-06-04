@@ -281,7 +281,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             PFLeftEffectRules.BeginAdditive();
 
             // 向枪口汇聚的拉丝能量
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 0; i++)
             {
                 float angle = MathHelper.TwoPi * i / 6f + Timer * 0.045f;
                 Vector2 orbit = angle.ToRotationVector2();
@@ -518,7 +518,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true);
 
             PFLeftEffectRules.BeginAdditive();
-            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            for (int i = 0; i < 0; i++)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
                     continue;
@@ -531,7 +531,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             float pulse = 0.9f + (float)Math.Sin(Timer * 0.22f) * 0.12f;
             Main.EntitySpriteDraw(bloom, drawPosition, null, theme * 0.94f * fade, Projectile.rotation, bloom.Size() * 0.5f, 0.5f * pulse, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(bloom, drawPosition, null, white * 0.38f * fade, Projectile.rotation, bloom.Size() * 0.5f, 0.2f * pulse, SpriteEffects.None, 0f);
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 0; i++)
             {
                 float rotation = Projectile.rotation + MathHelper.PiOver2 * i + Timer * 0.045f;
                 Main.EntitySpriteDraw(star, drawPosition, null, Color.Lerp(theme, white, 0.18f) * 0.48f * fade, rotation, star.Size() * 0.5f, new Vector2(0.14f, 1.45f) * pulse, SpriteEffects.None, 0f);

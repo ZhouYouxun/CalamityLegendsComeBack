@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -104,7 +105,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public bool HasActiveRightClickHoldout()
         {
-            return Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0;
+            return Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0 ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] > 0;
         }
 
         public bool HasAnyHeat()
@@ -180,6 +182,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private float GetTotalHeatUnits()
         {
+            if (HeatStage >= HeatMaxStage)
+                return HeatMaxStage;
+
             int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4));
             float progress = fillTime > 0 ? HeatProgressTimer / (float)fillTime : 0f;
             return System.Math.Max(0f, HeatStage + Utils.Clamp(progress, 0f, 1f));

@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private bool lifetimeInitialized;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Magic/YharimsCrystalBeam";
 
         public int SourceIndex => (int)Projectile.ai[0];
         public BeamAnchorKind AnchorKind => (BeamAnchorKind)(int)Projectile.ai[1];
@@ -218,7 +218,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             Projectile.Center = sourceProjectile.Center + Projectile.velocity * ForwardOffset;
 
             UpdateBeamLength();
-            EmitBeamDust();
+            float visualScale = GetVisualBeamScale();
+            if (CalculateOpacity() > 0.1f)
+                YC_YharimBeamVisuals.EmitYharimBeamDust(Projectile, BeamLength, visualScale, OuterColor);
             Lighting.AddLight(Projectile.Center, OuterColor.ToVector3() * 0.28f);
             elapsedTime++;
         }
@@ -263,55 +265,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             if (Projectile.velocity == Vector2.Zero || BeamLength <= 0f)
                 return false;
 
-            Texture2D outer = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineFade").Value;
-            Texture2D inner = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineThick").Value;
-            Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 start = Projectile.Center - Main.screenPosition;
-            Vector2 unit = Projectile.rotation.ToRotationVector2();
-            float fx = MathHelper.Max(0.2f, CalculateOpacity());
-            float beamLengthScale = BeamLength / 1000f;
-            Vector2 beamCenter = start + unit * BeamLength * 0.5f;
-            Color outerColor = OuterColor with { A = 0 };
-            Color innerColor = InnerColor with { A = 0 };
-            float randomSize = 1f;
-            float widthFactor = MathHelper.Clamp(BeamWidth / 10f, 0.9f, 2.6f);
-
-            Main.EntitySpriteDraw(
-                outer,
-                beamCenter,
-                null,
-                outerColor * fx,
-                Projectile.rotation + MathHelper.PiOver2,
-                outer.Size() * 0.5f,
-                new Vector2(2.5f * randomSize * fx * widthFactor, 55f * beamLengthScale) * Projectile.scale * 0.01f,
-                SpriteEffects.FlipVertically,
-                0f);
-
-            Main.EntitySpriteDraw(
-                inner,
-                beamCenter,
-                null,
-                Color.Lerp(innerColor, Color.White with { A = 0 }, 0.3f) * MathHelper.Min(fx, 1f),
-                Projectile.rotation + MathHelper.PiOver2,
-                inner.Size() * 0.5f,
-                new Vector2(0.4f * MathHelper.Min(fx, 1f) * MathHelper.Lerp(0.95f, 1.35f, (widthFactor - 0.9f) / 1.7f), 55f * beamLengthScale) * Projectile.scale * 0.01f,
-                SpriteEffects.FlipVertically,
-                0f);
-
-            for (int i = 0; i < 2; i++)
-            {
-                Main.EntitySpriteDraw(
-                    glow,
-                    start + unit * 7f * Projectile.scale,
-                    null,
-                    Color.Lerp(outerColor, Color.White with { A = 0 }, i) * MathHelper.Max(fx - 0.15f, 0f),
-                    Projectile.rotation + MathHelper.PiOver2,
-                    glow.Size() * 0.5f,
-                    new Vector2((2f + 0.05f * (fx + 25f)) * MathHelper.Lerp(0.9f, 1.45f, (widthFactor - 0.9f) / 1.7f), 1f) * Projectile.scale * MathHelper.Lerp(fx, 1f, 0.7f) * (0.03f - 0.01f * i),
-                    SpriteEffects.FlipVertically,
-                    0f);
-            }
-
+            YC_YharimBeamVisuals.DrawYharimBeam(Projectile, BeamLength, GetVisualBeamScale(), CalculateOpacity(), OuterColor);
             return false;
         }
 
@@ -404,6 +358,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             float fadeOut = Utils.GetLerpValue(0f, fadeOutFrames, Projectile.timeLeft, true);
             return fadeIn * fadeOut;
         }
+
+        private float GetVisualBeamScale() => MathHelper.Clamp(BeamWidth / 18f, 0.5f, 1.8f);
 
         private void EmitBeamDust()
         {

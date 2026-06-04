@@ -47,7 +47,7 @@ Mods: {
 					MetalName10: Crimtane Bar
 					MetalDesc10: Releases VampireKnife projectiles
 					MetalName11: Aerialite Bar
-					MetalDesc11: Ignores gravity and gains speed
+					MetalDesc11: Glides without gravity, sheds Aerialite feather blades, and raises a pulling gale on hit
 					MetalName12: Meteorite Bar
 					MetalDesc12: Can call down an extra meteor at night
 					MetalName13: Hellstone Bar
@@ -65,33 +65,33 @@ Mods: {
 					MetalName19: Titanium Bar
 					MetalDesc19: Grants a short Interstellar Stompers-style mobility surge
 					MetalName20: Cryonic Bar
-					MetalDesc20: Creates a freezing area
+					MetalDesc20: Gains light homing and armor piercing, then creates a cryonic field and delayed inward ice prisms
 					MetalName21: Hallowed Bar
 					MetalDesc21: Fires a short holy laser from a random angle
 					MetalName22: Chlorophyte Bar
 					MetalDesc22: Primary and small meteors gain homing
 					MetalName23: Perennial Bar
-					MetalDesc23: Creates stackable healing seekers
+					MetalDesc23: Sows vine seeds while flying, then releases healing light and homing petals on hit
 					MetalName24: Shroomite Bar
 					MetalDesc24: Leaves spinning fading mushrooms along the path
 					MetalName25: Spectre Bar
 					MetalDesc25: Leaves a ghost clone at the initial position
 					MetalName26: Scoria Bar
-					MetalDesc26: Erupts pure molten dust upward
+					MetalDesc26: Sheds molten globs while flying, then erupts an Abyssal fire geyser on hit
 					MetalName27: Lunar Bar
 					MetalDesc27: Calls down mixed MoonlordArrowTrail and LunarFlare strikes
 					MetalName28: Astral Bar
-					MetalDesc28: Creates three SummonAstralExplosion blasts as rogue damage
+					MetalDesc28: Drops constellation nodes, then detonates Astral Infection blasts and a star ring on hit
 					MetalName29: Uelibloom Bar
-					MetalDesc29: Blossoms into homing thorn shards
+					MetalDesc29: Grows Tarragon thorns in flight, then forms an inward-stabbing blossom crown on hit
 					MetalName30: Cosmilite Bar
-					MetalDesc30: Releases homing cosmic fragments
+					MetalDesc30: Tears open Cosmilite rifts and releases two-stage homing space fragments
 					MetalName31: Auric Bar
-					MetalDesc31: Calls down auric piercing strikes
+					MetalDesc31: Calls down gold-blue Auric sky lances that pierce armor and leave rebuking pulses
 					MetalName32: Shadowspec Bar
-					MetalDesc32: Spreads a slow shadow aftershock
+					MetalDesc32: Leaves Shadowspec echoes, then opens a pulling rift with God Slayer afterflame on hit
 					MetalName33: Life Alloy
-					MetalDesc33: Releases tri-color gleams that pause, bend, and then home in
+					MetalDesc33: Strengthens homing, emits tri-color reconstruction pulses, and bursts into Life Alloy gleams on hit
 				}
 			}
 		}
@@ -105,9 +105,26 @@ Mods: {
 				Shared_Shockwave.DisplayName: Leonid Shockwave
 				Shared_LingeringField.DisplayName: Leonid Elemental Field
 				Shared_SplitMeteor.DisplayName: Leonid Ghost Meteor
+				Aerialite_Feather.DisplayName: Aerialite Feather Blade
+				Aerialite_Gale.DisplayName: Aerialite Pulling Gale
+				Cryonic_PrismShard.DisplayName: Cryonic Prism
 				Perennial_HealingOrb.DisplayName: Perennial Healing Light
+				Perennial_BloomSeed.DisplayName: Perennial Bloom Seed
+				Perennial_Petal.DisplayName: Perennial Petal
+				Scoria_LavaGlob.DisplayName: Scoria Lava Glob
+				Scoria_Geyser.DisplayName: Scoria Abyssal Geyser
 				LifeAlloy_Gleam.DisplayName: Life Alloy Gleam
+				LifeAlloy_ReconstructionPulse.DisplayName: Life Alloy Reconstruction Ring
 				Hallowed_Laser.DisplayName: Hallowed Short Laser
+				Astral_Blast.DisplayName: Astral Infection Blast
+				Astral_ConstellationNode.DisplayName: Astral Constellation Node
+				Uelibloom_Thorn.DisplayName: Tarragon Thorn
+				Cosmilite_Rift.DisplayName: Cosmilite Rift
+				Cosmilite_Fragment.DisplayName: Cosmilite Fragment
+				Auric_SkyLance.DisplayName: Auric Sky Lance
+				Auric_Pulse.DisplayName: Auric Pulse
+				Shadowspec_Echo.DisplayName: Shadowspec Echo
+				Shadowspec_Rift.DisplayName: Shadowspec Rift
 			}
 		}
 	}

@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
@@ -28,17 +29,31 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             holdout.LeftTimer = 0;
 
-            PFLeftEffectRules.FireSingle(
-                holdout,
-                ModContent.ProjectileType<PFPolterghast_Flame>(),
-                FireSpeed,
-                0.03f,
-                DamageMultiplier,
-                Recoil,
-                10,
-                PristineFuryMarkHelper.GetColor(holdout.CurrentMark),
-                0.75f,
-                4f);
+            FireConvergingPair(holdout);
+        }
+
+        private static void FireConvergingPair(NewLegendPristineFuryHoldOut holdout)
+        {
+            Vector2 direction = holdout.AimDirection;
+            float progress = holdout.LeftChargeTimer / (float)AccelerationFrames;
+            float spread = MathHelper.Lerp(MathHelper.ToRadians(10f), MathHelper.ToRadians(1f), progress);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                int projectileIndex = Projectile.NewProjectile(
+                    holdout.Projectile.GetSource_FromThis(),
+                    holdout.GunTipPosition + direction * 14f + direction.RotatedBy(MathHelper.PiOver2) * side * 3f,
+                    direction.RotatedBy(spread * side) * FireSpeed,
+                    ModContent.ProjectileType<PFPolterghast_Flame>(),
+                    holdout.GetScaledDamage(DamageMultiplier),
+                    holdout.Projectile.knockBack,
+                    holdout.Projectile.owner);
+                PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
+            }
+
+            holdout.ApplyRecoil(Recoil);
+            holdout.TriggerMuzzleFlash(10);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.75f);
         }
     }
 }

@@ -166,6 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         private void DrawGunPreview(Rectangle panelArea, NewLegendMK14EBR weapon)
         {
             Vector2 gunCenter = new(panelArea.X + panelArea.Width * 0.36f, panelArea.Y + panelArea.Height * 0.36f);
+            gunCenter = gunCenter.Floor();
             float fitScale = Math.Min(panelArea.Width * 0.52f / 186f, panelArea.Height * 0.22f / 48f);
             fitScale = MathHelper.Clamp(fitScale, 1.65f, 2.85f);
 
@@ -176,6 +177,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 2);
             DrawRectangle(rail, new Color(80, 112, 140) * (Projectile.Opacity * 0.42f));
 
+            DrawPixelatedGunPreview(weapon, gunCenter, fitScale);
+        }
+
+        private void DrawPixelatedGunPreview(NewLegendMK14EBR weapon, Vector2 gunCenter, float fitScale)
+        {
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             MK14TextureComposer.DrawComposite(
                 Main.spriteBatch,
                 weapon,
@@ -184,6 +200,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 0f,
                 fitScale,
                 SpriteEffects.None);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
         }
 
         private void DrawEffectsList(Rectangle panelArea, NewLegendMK14EBR weapon)

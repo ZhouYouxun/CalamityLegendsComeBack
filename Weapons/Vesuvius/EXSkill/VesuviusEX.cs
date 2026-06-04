@@ -205,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
         private void UpdateHeldPosition()
         {
             Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true) - Vector2.UnitY * (58f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f) * 3f);
-            Projectile.rotation = -MathHelper.PiOver2 + Owner.direction * 0.12f;
+            Projectile.rotation = -MathHelper.PiOver2 + MathHelper.ToRadians(45f * Owner.direction);
             Projectile.direction = Owner.direction;
             Projectile.spriteDirection = Owner.direction;
         }
@@ -216,9 +216,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
             Owner.heldProj = Projectile.whoAmI;
             Owner.itemTime = 2;
             Owner.itemAnimation = 2;
-            Owner.itemRotation = -MathHelper.PiOver2 * Owner.direction;
-            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, -MathHelper.Pi);
-            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, -MathHelper.Pi);
+            Owner.itemRotation = Projectile.rotation * Owner.direction;
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation - MathHelper.PiOver2);
+            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation - MathHelper.PiOver2);
         }
 
         private void ChargePhase()
@@ -440,8 +440,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
             Color color = new Color(255, 220, 80);
             RancorLavaMetaball.SpawnParticle(GunTip + Main.rand.NextVector2Circular(16f, 16f), Main.rand.NextFloat(36f, 70f));
 
-            if (timer % 4 == 0)
-                GeneralParticleHandler.SpawnParticle(new PulseRing(GunTip, Vector2.Zero, color * 0.86f, 0.18f, 3.2f, 20));
+            // Fully charged idle intentionally avoids shockwave rings.
         }
 
         private void SpawnEruptionEffects(float progress)

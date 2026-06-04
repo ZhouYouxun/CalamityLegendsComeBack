@@ -296,6 +296,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 heatPlayer.GetDisplayedHeatLevel() >= MaxHeatStage;
             if (!displayedTopHeat && stage < MaxHeatStage)
                 return;
+            if ((Main.GameUpdateCount & 1) != 0)
+                return;
 
             Color gold = new(255, 226, 54);
             Color paleGold = new(255, 255, 190);

@@ -354,6 +354,7 @@ Mods: {
 				// SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
 				// PlagueCell_Fog.DisplayName: Plague Cell_ Fog
 				// PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
+				// SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
 			}
 
 			ChangedWeapons: {

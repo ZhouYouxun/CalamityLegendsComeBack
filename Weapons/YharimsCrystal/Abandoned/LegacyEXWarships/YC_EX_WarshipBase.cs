@@ -237,6 +237,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             Vector2 desiredDirection = vip.CurrentState == YC_EX_VIP.EXVipState.Firing
                 ? GetFiringAimDirection(defaultDirection)
                 : defaultDirection;
+            float ownerSpeed = Owner.velocity.Length();
+            float catchup = Utils.GetLerpValue(8f, 42f, ownerSpeed, true);
+            float positionLerp = MathHelper.Clamp(PositionLerp + catchup * 0.32f, PositionLerp, 0.84f);
 
             if (!positionInitialized)
             {
@@ -245,7 +248,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             }
             else
             {
-                Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, PositionLerp);
+                Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, positionLerp);
             }
 
             CurrentForwardDirection = desiredDirection.SafeNormalize(defaultDirection);

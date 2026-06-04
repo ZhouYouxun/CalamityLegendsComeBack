@@ -94,6 +94,11 @@ Mods: {
 				YC_TyrantPrismConvergeBeam.DisplayName: 暴君水晶汇聚光束
 				// YC_TyrantPrismLaserLance.DisplayName: Y C_ Tyrant Prism Laser Lance
 				// YC_TyrantPrismMissile.DisplayName: Y C_ Tyrant Prism Missile
+				// YC_TyrantSlaughterFlame.DisplayName: Y C_ Tyrant Slaughter Flame
+				// YC_TyrantSlaughterHoldout.DisplayName: Y C_ Tyrant Slaughter Holdout
+				// YC_TyrantSlaughterSlash.DisplayName: Y C_ Tyrant Slaughter Slash
+				// YC_TyrantSlaughterTail.DisplayName: Y C_ Tyrant Slaughter Tail
+				// YC_YharimsCrystalBeam.DisplayName: Y C_ Yharims Crystal Beam
 			}
 		}
 

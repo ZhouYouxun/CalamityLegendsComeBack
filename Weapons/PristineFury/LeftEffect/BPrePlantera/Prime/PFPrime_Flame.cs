@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 10;
+            Projectile.width = Projectile.height = 32;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;

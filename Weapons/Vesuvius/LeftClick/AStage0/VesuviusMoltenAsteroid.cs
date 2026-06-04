@@ -1,5 +1,4 @@
 using CalamityMod;
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -58,19 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             Color glow = Color.Lerp(new Color(255, 80, 20), new Color(255, 220, 80), Main.rand.NextFloat(0.25f, 0.65f));
             Lighting.AddLight(Projectile.Center, glow.ToVector3() * 0.28f * Projectile.scale);
 
-            if (!Main.dedServ)
-            {
-                Vector2 trailPosition = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * Projectile.width * 0.2f;
-                Dust dust = Dust.NewDustPerfect(trailPosition + Main.rand.NextVector2Circular(8f, 8f), DustID.Torch, -Projectile.velocity * Main.rand.NextFloat(0.06f, 0.16f), 80, glow, Main.rand.NextFloat(0.75f, 1.25f) * Projectile.scale);
-                dust.noGravity = true;
-
-                if (Projectile.timeLeft % (NoLargeExplosion ? 5 : 3) == 0)
-                {
-                    RancorLavaMetaball.SpawnParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
-                        Projectile.scale * Main.rand.NextFloat(13f, 24f));
-                }
-            }
+            VesuviusProjectileVisuals.SpawnMoltenMeteorTrail(Projectile, NoLargeExplosion ? 0.82f : 1.08f, !NoLargeExplosion);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -102,9 +89,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             SoundEngine.PlaySound(SoundID.Item89 with { Volume = 0.45f * strength, Pitch = -0.05f }, Projectile.Center);
 
             Color color = new Color(255, 96, 32);
+            VesuviusProjectileVisuals.SpawnMoltenImpact(Projectile.Center, strength * Projectile.scale, !NoLargeExplosion);
             for (int i = 0; i < (int)(12 * strength); i++)
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f) * strength, 90, color, Main.rand.NextFloat(0.8f, 1.5f));
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.InfernoFork : DustID.Smoke, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f) * strength, 90, color, Main.rand.NextFloat(0.8f, 1.5f));
                 dust.noGravity = Main.rand.NextBool();
             }
 
@@ -123,7 +111,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = GetAsteroidTexture(false);
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], lightColor, 1, texture);
+            Color trailColor = Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaOrange, 0.42f);
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], trailColor, 1, texture);
             return false;
         }
 

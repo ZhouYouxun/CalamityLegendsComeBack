@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private const int BaseSize = 200;
         private const float DefaultFinalWaveScale = 2.35f;
+        private const float WaveSizeFactor = 0.7f;
 
         private int lifeTimer;
         private float initialSpeed;
@@ -156,10 +157,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private void ApplyStageStats()
         {
             Vector2 center = Projectile.Center;
-            int size = (int)(BaseSize * StageScale);
+            int size = (int)(BaseSize * StageScale * WaveSizeFactor);
             Projectile.width = size;
             Projectile.height = size;
-            Projectile.scale = 0.96f + SpawnStage * 0.08f;
+            Projectile.scale = (0.96f + SpawnStage * 0.08f) * WaveSizeFactor;
             Projectile.Center = center;
         }
 

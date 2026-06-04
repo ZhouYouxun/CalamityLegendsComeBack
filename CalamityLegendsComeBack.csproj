@@ -70,6 +70,7 @@
 	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\维修战舰参考\**\*.cs" />
 	  <Compile Remove="Weapons\YharimsCrystal\重做前的效果\**\*.cs" />
+	  <Compile Remove="Weapons\YharimsCrystal\Abandoned\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\别人重做前的版本，先看\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />

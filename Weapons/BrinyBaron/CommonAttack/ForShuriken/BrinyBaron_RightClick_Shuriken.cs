@@ -39,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const float StickySlashDamageFactor = 0.42f;
         private const float StickySlashBaseScale = 0.9f;
         private const float StickySlashScalePerTier = 0.08f;
+        private static readonly bool StickySlashProjectilesEnabled = false;
 
         private float SizeScale => Projectile.width / (float)BaseSize;
         private float Radius => Projectile.width * 0.5f;
@@ -377,6 +378,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private void TrySpawnStickySlash(NPC target)
         {
+            if (!StickySlashProjectilesEnabled)
+                return;
+
             if (!shurikenProfile.UnlocksStickySlash || Main.myPlayer != Projectile.owner)
                 return;
 

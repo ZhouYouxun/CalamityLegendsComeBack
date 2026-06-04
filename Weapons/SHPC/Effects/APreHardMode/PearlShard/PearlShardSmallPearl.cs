@@ -22,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void SetDefaults()
         {
-            Projectile.width = 17;
-            Projectile.height = 17;
+            Projectile.width = 23;
+            Projectile.height = 23;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.28f, 0.18f, 0.26f));
 
-            if (Main.rand.NextBool(5))
+            if (Main.rand.NextFloat() < 0.35f)
                 PearlShardVisuals.SpawnPearlParticle(Projectile.Center, -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.12f), 0.18f, 14);
 
             PearlShardVisuals.SpawnPearlGodTrail(Projectile, 0.5f);
@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             float loosen = Utils.GetLerpValue(0f, 62f, homingTimer, true);
             float closeLoosen = Utils.GetLerpValue(220f, 42f, Projectile.Distance(target.Center), true);
             float power = MathHelper.Clamp(loosen + closeLoosen * 0.55f, 0f, 1f);
-            float speed = MathHelper.Lerp(7.2f, 19.5f, power);
+            float speed = MathHelper.Lerp(6.48f, 17.55f, power);
             float turnLimit = MathHelper.ToRadians(MathHelper.Lerp(3f, 31f, power));
             Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * speed;
 
@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
         private NPC FindTarget()
         {
             NPC bestTarget = null;
-            float bestDistance = 640f;
+            float bestDistance = 1280f;
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
@@ -104,12 +104,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void OnKill(int timeLeft)
         {
-            PearlShardVisuals.SpawnBurst(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitY), 0.5f);
+            PearlShardVisuals.SpawnBurst(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitY), 0.75f, 1.5f, 1.5f);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            PearlShardVisuals.DrawPearl(Projectile, 0.5f);
+            PearlShardVisuals.DrawPearl(Projectile, 0.665f);
             return false;
         }
     }

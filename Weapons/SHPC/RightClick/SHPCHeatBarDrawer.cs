@@ -35,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatLevel <= 0 || opacity <= 0f)
                 return;
 
+            const float StarVisualScale = 0.67f;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D sparkle = GetNoBlackTexture(ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value, spriteBatch.GraphicsDevice);
             Vector2 starCenter = drawPosition + new Vector2(32f - 1.5f * 16f + 6f, backTexture.Height * scale * 0.5f + 3f);
@@ -57,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     layerColor * (opacity * 0.6f),
                     Main.rand.NextFloat(-5f, 5f),
                     bloom.Size() * 0.5f,
-                    new Vector2(1f, 0.35f) * 0.75f * heatPower * topHeatPulse * Main.rand.NextFloat(0.7f, 1.3f) * iMult,
+                    new Vector2(1f, 0.35f) * 0.75f * heatPower * topHeatPulse * Main.rand.NextFloat(0.7f, 1.3f) * iMult * StarVisualScale,
                     SpriteEffects.None,
                     0f);
 
@@ -66,7 +67,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     float sine = MathHelper.Lerp((float)System.Math.Sin(time * 20f / MathHelper.Pi), reverseHeatPower * b, 0.75f);
                     Vector2 starScale = new Vector2(0.3f, sine * b) *
                         (Main.rand.NextFloat(3f, 4.5f) * iMult + heatPower * 1.2f) *
-                        topHeatPulse;
+                        topHeatPulse *
+                        StarVisualScale;
                     float rotation = time * heatPower * System.Math.Max(i - 2, 0) * 0.2f + MathHelper.PiOver4 * b;
 
                     spriteBatch.Draw(
