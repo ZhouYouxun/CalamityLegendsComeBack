@@ -1,11 +1,13 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
 using CalamityMod;
 using CalamityMod.Items;
@@ -523,7 +525,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (IsUsingEX(player))
                 return false;
 
-            if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
+            bool militaryCallerRightClick = player.altFunctionUse == 2 &&
+                player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped;
+
+            if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0 && !militaryCallerRightClick)
                 return false;
 
             if (Main.myPlayer == player.whoAmI && KeybindSystem.LegendaryWeaponFormSwitch?.Current == true)
@@ -616,12 +621,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 float[] spreadAngles =
                 {
+                    MathHelper.ToRadians(-10f),
                     MathHelper.ToRadians(-5f),
                     0f,
-                    MathHelper.ToRadians(5f)
+                    MathHelper.ToRadians(5f),
+                    MathHelper.ToRadians(10f)
                 };
 
-                int scatterDamage = Math.Max(1, (int)(damage * 0.33f));
+                int scatterDamage = Math.Max(1, (int)(damage * 0.3f));
 
                 foreach (float angle in spreadAngles)
                 {
@@ -912,7 +919,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             // ===== 右键长按逻辑 =====
             if (CanStartRightClickHoldout(player))
             {
-                if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0)
+                bool useTurretRightClick = player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped;
+                if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0 && !useTurretRightClick)
                     return;
 
                 // 🔥 强制打断左键动画
@@ -922,8 +930,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                 int defaultRightClickType = ModContent.ProjectileType<SHPCRight_HoulOut>();
                 int mortarRightClickType = ModContent.ProjectileType<RightClickMortar_HoldOut>();
+                int turretRightClickType = ModContent.ProjectileType<MilitaryCaller_HoldOut>();
                 bool useMortarRightClick = player.GetModPlayer<CommandAscendPlayer>().CommandAscendEquipped;
-                int rightClickHoldoutType = useMortarRightClick ? mortarRightClickType : defaultRightClickType;
+                int rightClickHoldoutType = useTurretRightClick ? turretRightClickType : useMortarRightClick ? mortarRightClickType : defaultRightClickType;
 
                 // ===== 防止重复生成；配件切换时清掉另一套右键手持 =====
                 foreach (Projectile proj in Main.projectile)
@@ -936,7 +945,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         return;
                     }
 
-                    if (proj.type == defaultRightClickType || proj.type == mortarRightClickType)
+                    if (proj.type == defaultRightClickType || proj.type == mortarRightClickType || proj.type == turretRightClickType)
                     {
                         proj.Kill();
                         proj.netUpdate = true;
@@ -991,6 +1000,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             int rightHoldoutType = ModContent.ProjectileType<SHPCRight_HoulOut>();
             int mortarHoldoutType = ModContent.ProjectileType<RightClickMortar_HoldOut>();
+            int turretHoldoutType = ModContent.ProjectileType<MilitaryCaller_HoldOut>();
             int wheelType = ModContent.ProjectileType<SHPCAmmoSelectionPanel>();
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
@@ -1000,6 +1010,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                 if (projectile.type == rightHoldoutType ||
                     projectile.type == mortarHoldoutType ||
+                    projectile.type == turretHoldoutType ||
                     projectile.type == wheelType)
                 {
                     projectile.Kill();
@@ -1092,6 +1103,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                 if (proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>() ||
                     proj.type == ModContent.ProjectileType<RightClickMortar_HoldOut>() ||
+                    proj.type == ModContent.ProjectileType<MilitaryCaller_HoldOut>() ||
                     proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>())
                 {
                     shouldHide = true;

@@ -12,6 +12,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     public class RuinousSoulEffect : DefaultEffect
     {
+        private const int BaseLifetime = 2010;
+        private const int MaxPenetrations = 4;
+        private const int HomingSoulsPerHit = 2;
+        private const int DeathHomingSoulCount = 4;
+        private const int ColossusDeathHomingSoulCount = 8;
+        private const int ColossusLifeThreshold = 1_000_000;
+
         public override int EffectID => 30;
 
         public override int AmmoType => ModContent.ItemType<RuinousSoul>();
@@ -24,84 +31,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public override float SquishyLightParticleFactor => 1.85f;
         public override float ExplosionPulseFactor => 1.85f;
 
-        // ===== 粘附状态表（原封不动搬入核心逻辑）=====
-        private readonly Dictionary<int, bool> stuckState = new();
-        private readonly Dictionary<int, int> stuckTargetIndex = new();
-        private readonly Dictionary<int, int> hitCountOnCurrentTarget = new();
-        private readonly Dictionary<int, int> stickVisualTimer = new();
-        private readonly Dictionary<int, float> orbitAngle = new();
         private static readonly Dictionary<int, int> nextOrbitOrderByOwner = new();
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            int id = projectile.whoAmI;
-
             // 初始速度三倍
             projectile.velocity *= 1.1f;
             projectile.extraUpdates = 3;
-            projectile.timeLeft = 3000;
+            projectile.timeLeft = BaseLifetime;
 
-            // ===== 粘附系统需要的配置 =====
-            projectile.penetrate = -1;
+            projectile.penetrate = MaxPenetrations;
             projectile.tileCollide = false;
             projectile.usesLocalNPCImmunity = true;
             projectile.localNPCHitCooldown = 50;
-
-            stuckState[id] = false;
-            stuckTargetIndex[id] = -1;
-            hitCountOnCurrentTarget[id] = 0;
-            stickVisualTimer[id] = 0;
-            orbitAngle[id] = Main.rand.NextFloat(MathHelper.TwoPi);
-
         }
 
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
-            int id = projectile.whoAmI;
-            EnsureStateExists(id);
-
             // ===== 常规飞行：保留本体速度风格 =====
-            if (!stuckState[id])
-            {
-                projectile.velocity *= 1.02f;
-                Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.28f);
-                return;
-            }
-
-            // ===== 粘附状态：锁在敌人身上 =====
-            int targetIndex = stuckTargetIndex[id];
-            if (targetIndex < 0 || targetIndex >= Main.maxNPCs)
-            {
-                stuckState[id] = false;
-                stuckTargetIndex[id] = -1;
-                hitCountOnCurrentTarget[id] = 0;
-                projectile.friendly = true;
-                return;
-            }
-
-            NPC target = Main.npc[targetIndex];
-            if (!target.active || !target.CanBeChasedBy(projectile))
-            {
-                stuckState[id] = false;
-                stuckTargetIndex[id] = -1;
-                hitCountOnCurrentTarget[id] = 0;
-                projectile.friendly = true;
-                return;
-            }
-
-            stickVisualTimer[id]++;
-            //orbitAngle[id] += 0.18f;
-
-            Vector2 stickDir = (projectile.Center - target.Center).SafeNormalize(Vector2.UnitY);
-            Vector2 orbitOffset = stickDir * 18f;
-
-            projectile.Center = target.Center + orbitOffset;
-            projectile.velocity = Vector2.Zero;
-            projectile.rotation += 0.22f;
-
-            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.18f);
+            projectile.velocity *= 1.02f;
+            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.28f);
         }
 
         // ================= ModifyHitNPC =================
@@ -122,9 +73,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             projectile.netUpdate = true;
 
-            int id = projectile.whoAmI;
-            EnsureStateExists(id);
-
             // ===== 命中音效 =====
             SoundEngine.PlaySound(SoundID.Item103 with
             {
@@ -138,8 +86,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             if (projectile.owner == Main.myPlayer)
             {
-                SpawnGhastlyVisageShards(projectile, target);
+                SpawnGhastlyVisageShards(projectile, target, HomingSoulsPerHit);
                 SpawnOrReleaseOrbitGhosts(projectile);
+
+                if (target.lifeMax > ColossusLifeThreshold)
+                {
+                    projectile.localAI[2] = 1f;
+                    projectile.Kill();
+                    return;
+                }
             }
 
             // ===== 命中时：扇形 SquishyLightParticle（鬼白）=====
@@ -249,75 +204,85 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 }
             }
 
-            // ================= 粘附原逻辑（原封不动核心搬入） =================
-            if (!stuckState[id] || stuckTargetIndex[id] != target.whoAmI)
-            {
-                stuckState[id] = true;
-                stuckTargetIndex[id] = target.whoAmI;
-                hitCountOnCurrentTarget[id] = 1;
-                stickVisualTimer[id] = 0;
-                orbitAngle[id] = Main.rand.NextFloat(MathHelper.TwoPi);
-                projectile.velocity = Vector2.Zero;
-                projectile.friendly = false;
-                projectile.netUpdate = true;
-                return;
-            }
-
-            hitCountOnCurrentTarget[id]++;
-
-       
         }
 
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            ClearState(projectile.whoAmI);
+            if (projectile.owner == Main.myPlayer)
+            {
+                int soulCount = projectile.localAI[2] > 0f ? ColossusDeathHomingSoulCount : DeathHomingSoulCount;
+                SpawnDeathHomingSouls(projectile, soulCount);
+            }
         }
 
         // ========================= 工具区 =========================
 
-        private void EnsureStateExists(int id)
-        {
-            if (!stuckState.ContainsKey(id))
-                stuckState[id] = false;
-            if (!stuckTargetIndex.ContainsKey(id))
-                stuckTargetIndex[id] = -1;
-            if (!hitCountOnCurrentTarget.ContainsKey(id))
-                hitCountOnCurrentTarget[id] = 0;
-            if (!stickVisualTimer.ContainsKey(id))
-                stickVisualTimer[id] = 0;
-            if (!orbitAngle.ContainsKey(id))
-                orbitAngle[id] = 0f;
-        }
-
-        private void ClearState(int id)
-        {
-            stuckState.Remove(id);
-            stuckTargetIndex.Remove(id);
-            hitCountOnCurrentTarget.Remove(id);
-            stickVisualTimer.Remove(id);
-            orbitAngle.Remove(id);
-        }
-
-        private static void SpawnGhastlyVisageShards(Projectile projectile, NPC target)
+        private static void SpawnGhastlyVisageShards(Projectile projectile, NPC target, int count)
         {
             Vector2 forward = projectile.velocity.SafeNormalize((target.Center - projectile.Center).SafeNormalize(Vector2.UnitX));
-            for (int i = 0; i < 9; i++)
+            SpawnHomingSoulBurst(projectile, target.Center, forward, count, target.whoAmI, 0.88f, 0.72f);
+        }
+
+        private static void SpawnDeathHomingSouls(Projectile projectile, int count)
+        {
+            int targetIndex = FindClosestHomingTarget(projectile);
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            SpawnHomingSoulBurst(projectile, projectile.Center, forward, count, targetIndex, 0.77f, MathHelper.TwoPi);
+        }
+
+        private static void SpawnHomingSoulBurst(Projectile projectile, Vector2 center, Vector2 forward, int count, int targetIndex, float damageMultiplier, float totalSpread)
+        {
+            count = System.Math.Max(1, count);
+            float startAngle = forward.ToRotation();
+            float randomOffset = totalSpread >= MathHelper.TwoPi
+                ? Main.rand.NextFloat(MathHelper.TwoPi / count)
+                : 0f;
+
+            for (int i = 0; i < count; i++)
             {
-                float spread = MathHelper.Lerp(-0.68f, 0.68f, i / 6f);
-                Vector2 velocity = forward.RotatedBy(spread) * Main.rand.NextFloat(8f, 13.5f);
+                float angle = totalSpread >= MathHelper.TwoPi
+                    ? startAngle + randomOffset + MathHelper.TwoPi * i / count
+                    : startAngle + MathHelper.Lerp(-totalSpread, totalSpread, count == 1 ? 0.5f : i / (count - 1f));
+
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 velocity = direction * Main.rand.NextFloat(8f, 13.5f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    target.Center + velocity.SafeNormalize(Vector2.UnitX) * 8f,
+                    center + direction * 8f,
                     velocity,
                     ModContent.ProjectileType<RuinousSoul_GhastlyES>(),
-                    (int)(projectile.damage * 0.88f),
+                    (int)(projectile.damage * damageMultiplier),
                     projectile.knockBack * 0.5f,
                     projectile.owner,
-                    target.whoAmI,
+                    targetIndex,
                     i);
             }
+        }
+
+        private static int FindClosestHomingTarget(Projectile projectile)
+        {
+            int targetIndex = -1;
+            float bestDistance = 1450f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(projectile))
+                    continue;
+
+                float distance = projectile.Distance(npc.Center);
+                if (npc.boss)
+                    distance *= 0.74f;
+
+                if (distance >= bestDistance)
+                    continue;
+
+                targetIndex = npc.whoAmI;
+                bestDistance = distance;
+            }
+
+            return targetIndex;
         }
 
         private static void SpawnRuinousGhostExplosionVisuals(Vector2 center)

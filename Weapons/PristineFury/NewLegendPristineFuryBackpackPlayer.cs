@@ -26,7 +26,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
             }
 
-            Texture2D backpackTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/PristineFury/Backpack_NewLegendPF").Value;
+            if (!ModContent.RequestIfExists("CalamityLegendsComeBack/Weapons/PristineFury/Backpack_NewLegendPF", out ReLogic.Content.Asset<Texture2D> backpackAsset))
+                return;
+
+            Texture2D backpackTexture = backpackAsset.Value;
             SpriteEffects spriteEffects = drawPlayer.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             int xOffset = 9;
 

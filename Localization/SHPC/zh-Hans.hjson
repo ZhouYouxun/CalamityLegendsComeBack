@@ -190,6 +190,10 @@ Mods: {
 				RightClickMortar_HoldOut.DisplayName: 右键迫击炮持握体
 				RightClickMortar_Proj.DisplayName: 右键迫击炮弹幕
 				RightClickMortar_Lazer.DisplayName: 右键迫击炮激光
+				MilitaryCaller_HoldOut.DisplayName: SHPC军用呼叫器
+				MilitaryCallerBeacon.DisplayName: 军用呼叫信标
+				MilitaryTurretDropPod.DisplayName: 军用炮台空投舱
+				MilitaryFriendlyTurret.DisplayName: 友军科技炮台
 				DarksunFragmentBlackSun.DisplayName: 黑蚀之日
 				DarksunFragmentEclipseBolt.DisplayName: 日蚀小弹幕
 				DarksunFragmentBlackSunExplosion.DisplayName: 黑日爆炸

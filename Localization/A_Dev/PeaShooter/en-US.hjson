@@ -1,0 +1,43 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendPeaShooter: {
+					DisplayName: Pea Shooter
+					Tooltip: "[GFB]"
+					ModeAuto: Full Auto 30 RPS
+					ModeSemi: Semi Auto up to 60 RPS
+					PeaShooter_Intro: "[c/9FEA78:Current stage: {0}]"
+					PeaShooter_Mode: "[c/F7D87C:Current fire mode: {0}]"
+					PeaShooter_Left: "[c/9FEA78:Left click fires a random pea. Every pea splashes when it hits an enemy or tile.]"
+					PeaShooter_Right: "[c/F7D87C:Right click switches between full auto and semi auto. Full auto is fixed at 30 RPS; semi auto fires as fast as you click, up to 60 RPS.]"
+					PeaShooter_Passive: "[c/B8FF9E:Holding it improves jump power and grants +10% ranged critical strike chance.]"
+					PeaShooter_Beans:
+						'''
+						[c/FF8E55:Fire Pea: inflicts On Fire and Hellfire.]
+						[c/8FE8FF:Ice Pea: inflicts Frostburn and Frostbite.]
+						[c/8DFF6A:Poison Pea: inflicts Poisoned and Acid Venom.]
+						[c/80E6FF:Electric Pea: leaves a brief electric mist.]
+						[c/C9B28A:Rock Pea: has a larger splash radius and stronger knockback.]
+						'''
+					LegendaryHint: "[c/BABABA:Hold Shift to read the full record]"
+					LegendaryText: "[c/9FEA78:The first pop in the garden is not always a joke. Sometimes it plants the whole battlefield with craters.]"
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				PeaShooterHoldout.DisplayName: Pea Shooter Holdout
+				PeaShooterPea.DisplayName: Pea
+				PeaShooterSplash.DisplayName: Pea Splash
+				PeaShooterElectricCloud.DisplayName: Pea Electric Mist
+			}
+		}
+
+		PeaShooter: {
+			ModeAuto: Full Auto 30 RPS
+			ModeSemi: Semi Auto up to 60 RPS
+		}
+	}
+}

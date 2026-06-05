@@ -1773,3 +1773,157 @@ Message at 7/2/2025 4:37:55 PM: Compiling TrailWarpDistortion.xnb
 Message at 7/2/2025 4:37:55 PM: Importing WormShader.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
 Message at 7/2/2025 4:37:55 PM: Processing WormShader.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
 Message at 7/2/2025 4:37:55 PM: Compiling WormShader.xnb
+Message at 2026/6/4 18:58:57: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 18:58:57: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 18:58:57: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(64,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 18:59:22: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 18:59:22: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 18:59:22: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(64,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 18:59:38: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 18:59:38: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 18:59:38: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(64,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:01:27: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:01:27: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:01:27: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(58,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:02:19: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:02:19: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:02:19: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(49,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:03:42: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:03:42: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:03:42: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(42,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:04:32: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:04:32: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:04:32: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(42,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:04:47: Importing BlackHoleDistortion.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:04:47: Processing BlackHoleDistortion.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:04:47: Compiling BlackHoleDistortion.xnb
+Message at 2026/6/4 19:05:10: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:05:10: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:05:10: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(42,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:05:31: Importing ScreenSimplyDistorted.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:05:31: Processing ScreenSimplyDistorted.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:05:31: Compiling ScreenSimplyDistorted.xnb
+Message at 2026/6/4 19:05:49: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:05:49: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:05:49: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(45,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:07:23: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:07:23: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:07:23: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(40,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:07:46: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:07:46: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:07:46: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(40,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:08:13: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:08:13: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:08:13: Compiling DarkPlasmaKamuiVortex.xnb
+Message at 2026/6/4 19:08:31: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:08:31: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:08:31: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(31,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:08:49: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:08:50: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:08:50: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(40,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:09:07: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:09:07: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:09:08: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(31,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:09:21: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:09:21: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:09:21: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(29,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:09:34: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:09:34: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:09:34: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(28,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:10:31: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:10:31: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:10:31: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(47,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:11:08: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:11:09: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:11:09: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarkPlasmaKamuiVortex.fx:
+(41,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:11:32: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:11:32: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:11:32: Compiling DarkPlasmaKamuiVortex.xnb
+Message at 2026/6/4 19:12:57: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:12:57: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:12:57: Compiling DarkPlasmaKamuiVortex.xnb
+Message at 2026/6/4 19:12:57: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:12:57: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:12:57: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarksunFragmentGravitationalLensing.fx:
+(35,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:13:29: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:13:29: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:13:29: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarksunFragmentGravitationalLensing.fx:
+(35,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:13:43: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:13:43: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:13:43: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarksunFragmentGravitationalLensing.fx:
+(27,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:16:25: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:16:25: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:16:25: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarksunFragmentGravitationalLensing.fx:
+(29,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:16:50: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:16:50: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:16:50: Compiling DarksunFragmentGravitationalLensing.xnb
+Message at 2026/6/4 19:17:07: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:17:07: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Error at 2026/6/4 19:17:07: Errors compiling D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityLegendsComeBack\Shader\XNBcoder\Effects\DarksunFragmentGravitationalLensing.fx:
+(24,23): ID3DXEffectCompiler::CompileEffect: There was an error compiling expression
+ID3DXEffectCompiler: Compilation failed
+Message at 2026/6/4 19:17:25: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:17:25: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:17:25: Compiling DarksunFragmentGravitationalLensing.xnb
+Message at 2026/6/4 19:17:35: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:17:35: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:17:35: Compiling DarksunFragmentGravitationalLensing.xnb
+Message at 2026/6/4 19:17:55: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:17:55: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:17:55: Compiling DarksunFragmentGravitationalLensing.xnb
+Message at 2026/6/4 19:18:06: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:18:06: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:18:06: Compiling DarkPlasmaKamuiVortex.xnb
+Message at 2026/6/4 19:18:06: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:18:06: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:18:06: Compiling DarksunFragmentGravitationalLensing.xnb
+Message at 2026/6/4 19:18:33: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:18:33: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:18:33: Compiling DarkPlasmaKamuiVortex.xnb
+Message at 2026/6/4 19:18:33: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/4 19:18:33: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/4 19:18:33: Compiling DarksunFragmentGravitationalLensing.xnb

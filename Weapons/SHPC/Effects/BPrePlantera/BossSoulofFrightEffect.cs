@@ -48,7 +48,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (projectile.owner != Main.myPlayer || projectile.localAI[0] < MaxTravelDistance)
                 return;
 
-            SpawnEvenSplit(projectile);
             projectile.Kill();
         }
 
@@ -91,6 +90,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.owner == Main.myPlayer)
+                SpawnEvenSplit(projectile);
+
             // ===== 光粒子核心：中心炸亮，制造“灵魂爆裂”感 =====
             for (int i = 0; i < 16; i++)
             {

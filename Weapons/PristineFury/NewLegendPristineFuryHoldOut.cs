@@ -599,7 +599,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
+            bool hasGlow = ModContent.RequestIfExists(Texture + "_Glow", out ReLogic.Content.Asset<Texture2D> glowAsset);
             int frameHeight = texture.Height / 4;
             Rectangle frame = new(0, frameHeight * Projectile.frame, texture.Width, frameHeight);
             Vector2 origin = new(texture.Width * 0.5f, frameHeight * 0.5f);
@@ -634,7 +634,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             }
 
             Main.EntitySpriteDraw(texture, drawPosition, frame, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, effects, 0);
-            Main.EntitySpriteDraw(glow, drawPosition, frame, (Color.White with { A = 0 }) * (0.45f + flash), Projectile.rotation, origin, Projectile.scale, effects, 0);
+            if (hasGlow)
+                Main.EntitySpriteDraw(glowAsset.Value, drawPosition, frame, (Color.White with { A = 0 }) * (0.45f + flash), Projectile.rotation, origin, Projectile.scale, effects, 0);
             DrawDragonEyeGlow(leftVisualPower);
             DrawDragonMouthSmoke(leftVisualPower);
             DrawFakeCalamityArcNovaCharge();

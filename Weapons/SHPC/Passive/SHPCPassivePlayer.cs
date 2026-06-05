@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
@@ -149,7 +150,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         {
             bool noHeldProjectile =
                 Player.ownedProjectileCounts[ModContent.ProjectileType<RightClick.SHPCRight_HoulOut>()] <= 0 &&
-                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] <= 0;
+                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] <= 0 &&
+                Player.ownedProjectileCounts[ModContent.ProjectileType<MilitaryCaller_HoldOut>()] <= 0;
 
             return Player.itemAnimation <= 0 &&
                    Player.itemTime <= 0 &&

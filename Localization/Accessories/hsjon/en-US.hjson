@@ -18,12 +18,23 @@ Mods: {
 
 			ChargedDiffusionChip: {
 				DisplayName: Charged Diffusion Chip
-				Tooltip: Left click scatters three energy orbs at once, but each deals only 33% damage
+				Tooltip: Left click scatters five energy orbs at once, but each deals only 30% damage
 			}
 
 			CommandAscend: {
 				DisplayName: Command: Ascend
 				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
+			}
+
+			MilitaryCaller: {
+				DisplayName: Military Caller
+				Tooltip:
+					'''
+					While holding SHPC, right click switches to Military Caller mode and does not use the right-click heat system
+					Fires a tech beacon forward, then air-drops one friendly Calamity tech turret; base cost is 40 mana
+					Up to 3 turrets can exist at once. Turrets last 45 seconds, and deployment fails within 18 tiles of another turret
+					Biome mapping: Jungle = Plague, Snow = Ice, Underworld/Brimstone Crags = Fire, Ocean/Sulphurous Sea/Abyss/Sunken Sea = Water, Astral/Hallow/Sky = Laser, Desert/Evil = Onyx, other biomes = Lab
+					'''
 			}
 
 			Barrier: {

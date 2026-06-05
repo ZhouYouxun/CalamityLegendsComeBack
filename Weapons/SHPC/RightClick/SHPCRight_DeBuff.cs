@@ -13,6 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         // 1 = 普通过热，2 = 高烈度过热
         public static int FireMode = 1;
         private const float BurnVisualScale = 0.67f;
+        private const float BurnVisualSpeed = 0.67f;
 
         public override void SetStaticDefaults()
         {
@@ -93,6 +94,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (stage < 4)
                 return;
 
+            if (Main.rand.NextBool(3))
+                return;
+
             // ===== 基础燃烧（始终存在）=====
             ApplyStage5Burn(player);
 
@@ -103,6 +107,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 ApplyStage7Meltdown(player);
             }
         }
+
+        private static Vector2 SlowBurnVelocity(Vector2 velocity) => velocity * BurnVisualSpeed;
 
         private void ApplyStage5Burn(Player player)
         {
@@ -125,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 SquishyLightParticle flame = new(
                     randPos,
-                    upward.RotatedByRandom(0.4f),
+                    SlowBurnVelocity(upward.RotatedByRandom(0.4f)),
                     Main.rand.NextFloat(0.35f, 0.6f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.3f, 0.8f)),
                     Main.rand.Next(12, 20),
@@ -142,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Dust d = Dust.NewDustPerfect(
                     randPos,
                     DustID.Torch,
-                    upward.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.8f, 2.2f),
+                    SlowBurnVelocity(upward.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.8f, 2.2f)),
                     0,
                     Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat()),
                     Main.rand.NextFloat(1.0f, 1.6f) * BurnVisualScale
@@ -155,7 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 PointParticle spark = new PointParticle(
                     randPos,
-                    upward * 0.5f,
+                    SlowBurnVelocity(upward * 0.5f),
                     false,
                     10,
                     1.1f * BurnVisualScale,
@@ -181,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 SquishyLightParticle panicFlame = new(
                     panicSource,
-                    upwardBurst.RotatedByRandom(0.65f),
+                    SlowBurnVelocity(upwardBurst.RotatedByRandom(0.65f)),
                     Main.rand.NextFloat(0.52f, 0.88f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.35f, 0.95f)),
                     Main.rand.Next(14, 24),
@@ -196,7 +202,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Dust flash = Dust.NewDustPerfect(
                     panicSource,
                     Main.rand.NextBool() ? DustID.Torch : DustID.InfernoFork,
-                    upwardBurst.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.6f, 3.4f),
+                    SlowBurnVelocity(upwardBurst.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.6f, 3.4f)),
                     0,
                     Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat(0.25f, 0.9f)),
                     Main.rand.NextFloat(1.25f, 2.1f) * BurnVisualScale);
@@ -208,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Vector2 sideKick = new Vector2(Main.rand.NextBool() ? -1f : 1f, 0f) * Main.rand.NextFloat(0.9f, 2.2f);
                 PointParticle panicSpark = new PointParticle(
                     panicSource,
-                    upwardBurst * 0.42f + sideKick,
+                    SlowBurnVelocity(upwardBurst * 0.42f + sideKick),
                     false,
                     Main.rand.Next(10, 16),
                     Main.rand.NextFloat(1.15f, 1.55f) * BurnVisualScale,
@@ -220,7 +226,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 GlowOrbParticle heatCore = new GlowOrbParticle(
                     center + Main.rand.NextVector2Circular(player.width * 0.18f, player.height * 0.22f),
-                    upwardBurst * 0.08f,
+                    SlowBurnVelocity(upwardBurst * 0.08f),
                     false,
                     Main.rand.Next(7, 10),
                     Main.rand.NextFloat(0.36f, 0.54f) * BurnVisualScale,
@@ -248,7 +254,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 SquishyLightParticle meltdownFlame = new(
                     bodyCore + new Vector2(fanT * player.width * 0.18f, Main.rand.NextFloat(-player.height * 0.18f, player.height * 0.12f)),
-                    eruptionVelocity.RotatedByRandom(0.8f),
+                    SlowBurnVelocity(eruptionVelocity.RotatedByRandom(0.8f)),
                     Main.rand.NextFloat(0.72f, 1.18f) * BurnVisualScale,
                     Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.45f, 0.98f)),
                     Main.rand.Next(18, 30),
@@ -263,7 +269,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Dust infernoDust = Dust.NewDustPerfect(
                     bodyCore + Main.rand.NextVector2Circular(player.width * 0.24f, player.height * 0.3f),
                     Main.rand.NextBool() ? DustID.Torch : DustID.InfernoFork,
-                    new Vector2(Main.rand.NextFloat(-2.8f, 2.8f), Main.rand.NextFloat(-6.2f, -2.6f)).RotatedByRandom(0.7f),
+                    SlowBurnVelocity(new Vector2(Main.rand.NextFloat(-2.8f, 2.8f), Main.rand.NextFloat(-6.2f, -2.6f)).RotatedByRandom(0.7f)),
                     0,
                     Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.08f, 0.22f)),
                     Main.rand.NextFloat(1.65f, 2.75f) * BurnVisualScale);
@@ -274,7 +280,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 PointParticle panicFlash = new PointParticle(
                     bodyCore + Main.rand.NextVector2Circular(player.width * 0.12f, player.height * 0.16f),
-                    new Vector2(Main.rand.NextFloat(-2.6f, 2.6f), Main.rand.NextFloat(-3.8f, -1.6f)),
+                    SlowBurnVelocity(new Vector2(Main.rand.NextFloat(-2.6f, 2.6f), Main.rand.NextFloat(-3.8f, -1.6f))),
                     false,
                     Main.rand.Next(8, 14),
                     Main.rand.NextFloat(1.5f, 2f) * BurnVisualScale,
@@ -286,7 +292,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 GlowOrbParticle overloadPulse = new GlowOrbParticle(
                     center + Main.rand.NextVector2Circular(player.width * 0.22f, player.height * 0.28f),
-                    new Vector2(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-0.9f, -0.15f)),
+                    SlowBurnVelocity(new Vector2(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-0.9f, -0.15f))),
                     false,
                     Main.rand.Next(8, 12),
                     Main.rand.NextFloat(0.48f, 0.7f) * BurnVisualScale,

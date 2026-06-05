@@ -190,6 +190,10 @@ Mods: {
 				RightClickMortar_HoldOut.DisplayName: Right Click Mortar_ Hold Out
 				RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
 				RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
+				MilitaryCaller_HoldOut.DisplayName: SHPC Military Caller
+				MilitaryCallerBeacon.DisplayName: Military Call Beacon
+				MilitaryTurretDropPod.DisplayName: Military Turret Drop Pod
+				MilitaryFriendlyTurret.DisplayName: Friendly Tech Turret
 				DarksunFragmentBlackSun.DisplayName: Eclipsed Black Sun
 				DarksunFragmentEclipseBolt.DisplayName: Eclipsed Solar Bolt
 				DarksunFragmentBlackSunExplosion.DisplayName: Eclipsed Black Sun Burst

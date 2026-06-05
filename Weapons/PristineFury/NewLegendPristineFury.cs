@@ -61,8 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
 
-            if (Main.myPlayer == player.whoAmI &&
-                player.ownedProjectileCounts[ModContent.ProjectileType<NewLegendPristineFuryHoldOut>()] <= 0)
+            if (Main.myPlayer == player.whoAmI && !HasActiveHoldout(player))
             {
                 Vector2 direction = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(
@@ -74,6 +73,19 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Item.knockBack,
                     player.whoAmI);
             }
+        }
+
+        private static bool HasActiveHoldout(Player player)
+        {
+            int holdoutType = ModContent.ProjectileType<NewLegendPristineFuryHoldOut>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == holdoutType)
+                    return true;
+            }
+
+            return false;
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -116,7 +128,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frameI, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            if (!ModContent.RequestIfExists(Texture, out ReLogic.Content.Asset<Texture2D> asset))
+                return true;
+
+            Texture2D texture = asset.Value;
             int frameHeight = texture.Height / 4;
             int frame = (int)(Main.GameUpdateCount / 5 % 4);
             Rectangle source = new(0, frameHeight * frame, texture.Width, frameHeight);
