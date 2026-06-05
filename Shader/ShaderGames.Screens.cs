@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Shader
@@ -15,6 +16,9 @@ namespace CalamityLegendsComeBack.Shader
         private const string DarkPlasmaKamuiVortexRegistrationName = "DarkPlasmaKamuiVortex";
         private const string DarksunFragmentGravitationalLensingRegistrationName = "DarksunFragmentGravitationalLensing";
         private const int DarkPlasmaEffectID = 32;
+        private const float DarkPlasmaVortexRadius = 16f * 16f;
+        private const float DarksunOuterVortexTextureRadius = 256f;
+        private const float DarksunOuterVortexScaleDivisor = 96f;
 
         public static Effect BlackHoleDistortionShader => GetEffect("BlackHoleDistortion");
         public static Effect ScreenSimplyDistortedShader => GetEffect("ScreenSimplyDistorted");
@@ -82,21 +86,18 @@ namespace CalamityLegendsComeBack.Shader
 
             if (!filter.IsActive())
             {
-                Filters.Scene.Activate(key);
+                Filters.Scene.Activate(key, target.Center);
                 filter = Filters.Scene[key];
             }
 
-            Effect effect = filter.GetShader().Shader;
-            Vector2 screenCenter = target.Center - Main.screenPosition;
-            Vector2 screenSize = GetScreenSize();
+            ScreenShaderData shaderData = filter.GetShader();
+            shaderData.UseTargetPosition(target.Center);
+            Effect effect = shaderData.Shader;
             float lifeProgress = Utils.GetLerpValue(420f, 0f, target.timeLeft, true);
-            float radius = MathHelper.Lerp(270f, 405f, MathF.Pow(lifeProgress, 0.7f));
             float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.2f + target.identity * 0.17f);
-            float screenUnit = Math.Max(screenSize.Y, 1f);
 
-            effect.Parameters["uCenter"]?.SetValue(new Vector2(screenCenter.X / screenSize.X, screenCenter.Y / screenSize.Y));
-            effect.Parameters["uRadius"]?.SetValue(radius * MathHelper.Lerp(0.92f, 1.06f, pulse) / screenUnit);
-            effect.Parameters["uStrength"]?.SetValue((MathHelper.Lerp(0.12f, 0.24f, lifeProgress) + 0.03f * pulse) * opacity);
+            effect.Parameters["uRadius"]?.SetValue(DarkPlasmaVortexRadius);
+            effect.Parameters["uStrength"]?.SetValue((MathHelper.Lerp(0.12f, 0.24f, lifeProgress) + 0.03f * pulse) * opacity * 4f);
             effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
         }
 
@@ -117,22 +118,20 @@ namespace CalamityLegendsComeBack.Shader
 
             if (!filter.IsActive())
             {
-                Filters.Scene.Activate(key);
+                Filters.Scene.Activate(key, target.Center);
                 filter = Filters.Scene[key];
             }
 
             int level = Utils.Clamp((int)target.ai[0], 1, DarksunFragmentBlackSun.MaxLevel);
             float blackSunRadius = DarksunFragmentBlackSun.GetRadiusForLevel(level);
             float levelProgress = Utils.GetLerpValue(1f, DarksunFragmentBlackSun.MaxLevel, level, true);
-            Vector2 screenCenter = target.Center - Main.screenPosition;
-            Vector2 screenSize = GetScreenSize();
-            float screenUnit = Math.Max(screenSize.Y, 1f);
 
-            Effect effect = filter.GetShader().Shader;
-            effect.Parameters["uCenter"]?.SetValue(new Vector2(screenCenter.X / screenSize.X, screenCenter.Y / screenSize.Y));
-            effect.Parameters["uRadius"]?.SetValue(MathHelper.Lerp(245f, 460f, levelProgress) / screenUnit);
-            effect.Parameters["uHorizonRadius"]?.SetValue(blackSunRadius * MathHelper.Lerp(0.5f, 0.94f, opacity) / screenUnit);
-            effect.Parameters["uStrength"]?.SetValue(MathHelper.Lerp(0.22f, 0.46f, levelProgress) * opacity);
+            ScreenShaderData shaderData = filter.GetShader();
+            shaderData.UseTargetPosition(target.Center);
+            Effect effect = shaderData.Shader;
+            effect.Parameters["uRadius"]?.SetValue(GetDarksunOuterVortexRadius(level));
+            effect.Parameters["uHorizonRadius"]?.SetValue(blackSunRadius * MathHelper.Lerp(0.5f, 0.94f, opacity));
+            effect.Parameters["uStrength"]?.SetValue(MathHelper.Lerp(0.32f, 0.58f, levelProgress) * opacity);
         }
 
         private static bool TryFindDarkPlasmaTarget(out Projectile target, out float opacity)
@@ -154,8 +153,8 @@ namespace CalamityLegendsComeBack.Shader
                 if (projectileOpacity <= 0.02f)
                     continue;
 
-                Vector2 screenCenter = projectile.Center - Main.screenPosition;
-                if (!IsWithinScreenInfluence(screenCenter, 430f))
+                Vector2 screenCenter = GetZoomedScreenPosition(projectile.Center);
+                if (!IsWithinScreenInfluence(screenCenter, DarkPlasmaVortexRadius * GetMaximumZoom()))
                     continue;
 
                 float score = Vector2.DistanceSquared(screenCenter, new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f);
@@ -187,10 +186,9 @@ namespace CalamityLegendsComeBack.Shader
                     continue;
 
                 int level = Utils.Clamp((int)projectile.ai[0], 1, DarksunFragmentBlackSun.MaxLevel);
-                float levelProgress = Utils.GetLerpValue(1f, DarksunFragmentBlackSun.MaxLevel, level, true);
-                float radius = MathHelper.Lerp(245f, 460f, levelProgress);
-                Vector2 screenCenter = projectile.Center - Main.screenPosition;
-                if (!IsWithinScreenInfluence(screenCenter, radius + 24f))
+                float radius = GetDarksunOuterVortexRadius(level);
+                Vector2 screenCenter = GetZoomedScreenPosition(projectile.Center);
+                if (!IsWithinScreenInfluence(screenCenter, (radius + 24f) * GetMaximumZoom()))
                     continue;
 
                 float score = Vector2.DistanceSquared(screenCenter, new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f);
@@ -235,6 +233,31 @@ namespace CalamityLegendsComeBack.Shader
         private static Vector2 GetScreenSize()
         {
             return new Vector2(Math.Max(Main.screenWidth, 1), Math.Max(Main.screenHeight, 1));
+        }
+
+        private static float GetDarksunOuterVortexRadius(int level)
+        {
+            float blackSunRadius = DarksunFragmentBlackSun.GetRadiusForLevel(level);
+            float pulse = 1f + MathF.Sin(Main.GlobalTimeWrappedHourly * 4.2f) * 0.05f;
+            float textureScale = blackSunRadius / DarksunOuterVortexScaleDivisor * pulse * (1.38f + level * 0.035f);
+            return DarksunOuterVortexTextureRadius * textureScale + 5f + level * 0.7f;
+        }
+
+        private static Vector2 GetZoomedScreenPosition(Vector2 worldPosition)
+        {
+            Vector2 screenSize = GetScreenSize();
+            Vector2 screenCenter = screenSize * 0.5f;
+            Vector2 unzoomedPosition = worldPosition - Main.screenPosition;
+            Vector2 offset = unzoomedPosition - screenCenter;
+            Vector2 zoom = Main.GameViewMatrix.Zoom;
+
+            return screenCenter + new Vector2(offset.X * zoom.X, offset.Y * zoom.Y);
+        }
+
+        private static float GetMaximumZoom()
+        {
+            Vector2 zoom = Main.GameViewMatrix.Zoom;
+            return Math.Max(zoom.X, zoom.Y);
         }
     }
 }

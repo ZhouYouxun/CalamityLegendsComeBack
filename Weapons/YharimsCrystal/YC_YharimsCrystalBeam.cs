@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
     internal static class YC_BeamWorldSafety
     {
         private const float WorldClampPadding = 64f;
+        private const float MinimumLaserScanWidth = 1f;
 
         public static void SafePlotTileLine(Vector2 start, Vector2 end, float width, Utils.TileActionAttempt plot)
         {
@@ -31,6 +32,26 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 return;
 
             Utils.PlotTileLine(start, end, width, plot);
+        }
+
+        public static bool TryLaserScan(Vector2 start, Vector2 direction, float width, float maxLength, float[] samples)
+        {
+            if (samples == null ||
+                samples.Length == 0 ||
+                !float.IsFinite(width) ||
+                !float.IsFinite(maxLength) ||
+                maxLength <= 0f ||
+                start.HasNaNs() ||
+                direction.HasNaNs() ||
+                direction == Vector2.Zero)
+            {
+                return false;
+            }
+
+            start = ClampToWorld(start);
+            direction = direction.SafeNormalize(Vector2.UnitX);
+            Collision.LaserScan(start, direction, Math.Max(width, MinimumLaserScanWidth), maxLength, samples);
+            return true;
         }
 
         public static Vector2 ClampToWorld(Vector2 point)
@@ -169,8 +190,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             if (!Collision.CanHitLine(Main.player[Projectile.owner].Center, 0, 0, hostCenter, 0, 0))
                 samplingPoint = Main.player[Projectile.owner].Center;
 
+            if (Projectile.scale <= 0f)
+            {
+                BeamLength = 0f;
+                return;
+            }
+
             float[] laserScanResults = new float[NumSamplePoints];
-            Collision.LaserScan(samplingPoint, Projectile.velocity, BeamTileCollisionWidth * Projectile.scale, MaxBeamLength, laserScanResults);
+            if (!YC_BeamWorldSafety.TryLaserScan(samplingPoint, Projectile.velocity, BeamTileCollisionWidth * Projectile.scale, MaxBeamLength, laserScanResults))
+            {
+                BeamLength = 0f;
+                return;
+            }
+
             float avg = 0f;
             for (int i = 0; i < laserScanResults.Length; ++i)
                 avg += laserScanResults[i];

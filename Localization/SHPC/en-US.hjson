@@ -194,6 +194,7 @@ Mods: {
 				MilitaryCallerBeacon.DisplayName: Military Call Beacon
 				MilitaryTurretDropPod.DisplayName: Military Turret Drop Pod
 				MilitaryFriendlyTurret.DisplayName: Friendly Tech Turret
+				MilitaryTurretSelfDestruct.DisplayName: Military Turret Self-Destruct
 				DarksunFragmentBlackSun.DisplayName: Eclipsed Black Sun
 				DarksunFragmentEclipseBolt.DisplayName: Eclipsed Solar Bolt
 				DarksunFragmentBlackSunExplosion.DisplayName: Eclipsed Black Sun Burst

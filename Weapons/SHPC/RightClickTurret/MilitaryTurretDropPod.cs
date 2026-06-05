@@ -74,6 +74,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
+                MilitaryTurretUtility.ReplaceOldestTurretIfAtCapacity(owner);
+
                 int turretIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     restingPoint - new Vector2(0f, 18f),

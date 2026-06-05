@@ -76,10 +76,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
     internal static class MilitaryTurretUtility
     {
-        public const int MaxTurrets = 3;
+        public const int MaxTurrets = 8;
         public const int MinSpacingTiles = 18;
         public const float MinSpacing = MinSpacingTiles * 16f;
-        public const int TurretLifetime = 45 * 60;
+        public const int TurretLifetime = 5 * 60 * 60;
         public const int ManaPerCall = 40;
 
         public static MilitaryTurretKind SelectBiomeTurret(Player player)
@@ -260,12 +260,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
         public static bool CanIssueCall(Player player, Vector2 targetWorld, out string reason)
         {
-            if (CountOwnedCalls(player) >= MaxTurrets)
-            {
-                reason = "炮台数量已达上限";
-                return false;
-            }
-
             Vector2 restingPoint = FindRestingPoint(targetWorld);
             if (IsTooCloseToActiveTurret(player, restingPoint))
             {
@@ -279,12 +273,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
         public static bool CanDeployTurret(Player player, Vector2 restingPoint, out string reason)
         {
-            if (CountActiveTurrets(player) >= MaxTurrets)
-            {
-                reason = "炮台数量已达上限";
-                return false;
-            }
-
             if (IsTooCloseToActiveTurret(player, restingPoint))
             {
                 reason = "部署位点过近";
@@ -293,6 +281,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
             reason = string.Empty;
             return true;
+        }
+
+        public static void ReplaceOldestTurretIfAtCapacity(Player player)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            while (CountActiveTurrets(player) >= MaxTurrets)
+            {
+                Projectile oldestTurret = FindOldestTurret(player);
+                if (oldestTurret == null)
+                    return;
+
+                oldestTurret.ai[2] = 1f;
+                oldestTurret.netUpdate = true;
+                oldestTurret.Kill();
+            }
         }
 
         public static Vector2 FindRestingPoint(Vector2 targetWorld)
@@ -351,6 +356,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
             }
 
             return count;
+        }
+
+        private static Projectile FindOldestTurret(Player player)
+        {
+            int turretType = ModContent.ProjectileType<MilitaryFriendlyTurret>();
+            Projectile oldest = null;
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != player.whoAmI || projectile.type != turretType)
+                    continue;
+
+                if (oldest == null ||
+                    projectile.timeLeft < oldest.timeLeft ||
+                    projectile.timeLeft == oldest.timeLeft && projectile.identity < oldest.identity)
+                {
+                    oldest = projectile;
+                }
+            }
+
+            return oldest;
         }
 
         private static bool IsTooCloseToActiveTurret(Player player, Vector2 restingPoint)

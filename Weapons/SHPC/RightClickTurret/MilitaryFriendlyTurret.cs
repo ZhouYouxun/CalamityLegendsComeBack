@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
         private MilitaryTurretKind Kind => (MilitaryTurretKind)Utils.Clamp((int)Projectile.ai[0], 0, 6);
         private int SourceDamage => Math.Max(1, (int)Projectile.ai[1]);
+        private bool ReplacedByNewTurret => Projectile.ai[2] == 1f;
         private MilitaryTurretStats Stats => MilitaryTurretUtility.GetStats(Kind);
         private int Direction => Math.Cos(angle) > 0D ? 1 : -1;
         private Vector2 BodyTopLeft => Projectile.Bottom - new Vector2(27f, 36f);
@@ -87,18 +88,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.dedServ)
+            Color color = Stats.ThemeColor;
+            if (!Main.dedServ)
+            {
+                for (int i = 0; i < (ReplacedByNewTurret ? 36 : 18); i++)
+                {
+                    Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(26f, 18f), ReplacedByNewTurret ? DustID.Torch : DustID.Electric);
+                    dust.velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, ReplacedByNewTurret ? 9f : 5f);
+                    dust.color = Color.Lerp(color, Color.White, Main.rand.NextFloat(0.2f, 0.82f));
+                    dust.noGravity = true;
+                    dust.scale = Main.rand.NextFloat(0.75f, ReplacedByNewTurret ? 1.65f : 1.2f);
+                }
+            }
+
+            if (!ReplacedByNewTurret || Main.netMode == NetmodeID.MultiplayerClient)
                 return;
 
-            Color color = Stats.ThemeColor;
-            for (int i = 0; i < 18; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(26f, 18f), DustID.Electric);
-                dust.velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5f);
-                dust.color = Color.Lerp(color, Color.White, Main.rand.NextFloat(0.2f, 0.82f));
-                dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(0.75f, 1.2f);
-            }
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<MilitaryTurretSelfDestruct>(),
+                Math.Max(1, GetScaledDamage() * 3),
+                8f,
+                Projectile.owner,
+                (float)Kind);
         }
 
         public override void SendExtraAI(BinaryWriter writer)

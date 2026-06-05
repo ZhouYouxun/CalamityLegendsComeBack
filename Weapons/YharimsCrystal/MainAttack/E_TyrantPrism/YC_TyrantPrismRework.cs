@@ -1553,7 +1553,11 @@ public class YC_TyrantPrismMainBeam : ModProjectile, ILocalizedModType
         private void UpdateBeamLength()
         {
             float[] samples = new float[SampleCount];
-            Collision.LaserScan(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX), 3f * Projectile.scale, MaxBeamLength, samples);
+            if (!YC_BeamWorldSafety.TryLaserScan(Projectile.Center, Projectile.velocity, 3f * Projectile.scale, MaxBeamLength, samples))
+            {
+                BeamLength = 0f;
+                return;
+            }
 
             float average = 0f;
             for (int i = 0; i < samples.Length; i++)
@@ -1703,7 +1707,11 @@ public class YC_TyrantPrismMainBeam : ModProjectile, ILocalizedModType
         private void UpdateBeamLength()
         {
             float[] samples = new float[3];
-            Collision.LaserScan(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX), 2f * Projectile.scale, MaxBeamLength, samples);
+            if (!YC_BeamWorldSafety.TryLaserScan(Projectile.Center, Projectile.velocity, 2f * Projectile.scale, MaxBeamLength, samples))
+            {
+                BeamLength = 0f;
+                return;
+            }
 
             float average = 0f;
             for (int i = 0; i < samples.Length; i++)

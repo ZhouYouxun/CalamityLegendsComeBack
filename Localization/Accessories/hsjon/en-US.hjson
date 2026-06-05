@@ -30,10 +30,19 @@ Mods: {
 				DisplayName: Military Caller
 				Tooltip:
 					'''
-					While holding SHPC, right click switches to Military Caller mode and does not use the right-click heat system
-					Fires a tech beacon forward, then air-drops one friendly Calamity tech turret; base cost is 40 mana
-					Up to 3 turrets can exist at once. Turrets last 45 seconds, and deployment fails within 18 tiles of another turret
-					Biome mapping: Jungle = Plague, Snow = Ice, Underworld/Brimstone Crags = Fire, Ocean/Sulphurous Sea/Abyss/Sunken Sea = Water, Astral/Hallow/Sky = Laser, Desert/Evil = Onyx, other biomes = Lab
+					While holding SHPC, right click switches to Military Caller mode
+					This mode does not use the right-click heat system
+					Fires a tech beacon that air-drops one friendly Calamity tech turret
+					Each call has a base cost of 40 mana
+					Up to 8 turrets can exist at once
+					Deploying a ninth turret makes the oldest turret explode in place
+					Each turret lasts up to 5 minutes
+					Deployment fails within 18 tiles of another turret
+					Biome turret mapping:
+					Jungle = Plague; Snow = Ice; Underworld or Brimstone Crags = Fire
+					Ocean, Sulphurous Sea, Abyss, or Sunken Sea = Water
+					Astral, Hallow, or Sky = Laser
+					Desert or Evil biome = Onyx; other biomes = Lab
 					'''
 			}
 

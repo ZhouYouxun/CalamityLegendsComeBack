@@ -194,6 +194,7 @@ Mods: {
 				MilitaryCallerBeacon.DisplayName: 军用呼叫信标
 				MilitaryTurretDropPod.DisplayName: 军用炮台空投舱
 				MilitaryFriendlyTurret.DisplayName: 友军科技炮台
+				MilitaryTurretSelfDestruct.DisplayName: 军用炮台自毁爆炸
 				DarksunFragmentBlackSun.DisplayName: 黑蚀之日
 				DarksunFragmentEclipseBolt.DisplayName: 日蚀小弹幕
 				DarksunFragmentBlackSunExplosion.DisplayName: 黑日爆炸
