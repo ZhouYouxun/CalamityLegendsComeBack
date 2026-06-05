@@ -117,30 +117,30 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 smoke,
                 Projectile.Center - Main.screenPosition - Vector2.UnitY * 8f,
                 null,
-                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.55f) * 0.22f * fade,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.55f) * 0.22f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation + pulse * 0.12f,
                 smoke.Size() * 0.5f,
-                poolScale * new Vector2(1.9f, 0.95f),
+                poolScale * new Vector2(1.9f, 0.95f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(255, 70, 20, 0) * (0.2f + pulse * 0.05f) * fade,
+                new Color(255, 70, 20, 0) * (0.2f + pulse * 0.05f) * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
-                poolScale * 1.55f,
+                poolScale * 1.55f * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaGold with { A = 0 } * 0.16f * fade,
+                VesuviusProjectileVisuals.LavaGold with { A = 0 } * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
-                poolScale * new Vector2(0.82f, 0.42f),
+                poolScale * new Vector2(0.82f, 0.42f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             return false;

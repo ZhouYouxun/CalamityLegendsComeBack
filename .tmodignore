@@ -3,3 +3,6 @@ obj/
 .vs/
 .codex-tools/
 *.zip
+
+# Archived source and assets retained only as reference.
+Weapons/YharimsCrystal/Abandoned/*

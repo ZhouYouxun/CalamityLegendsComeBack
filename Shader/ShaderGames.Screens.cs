@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Shader
         private const float DarkPlasmaVortexRadius = 16f * 16f;
         private const float DarksunOuterVortexTextureRadius = 256f;
         private const float DarksunOuterVortexScaleDivisor = 96f;
+        private const float DarksunLensingRadiusPadding = 5f * 16f;
 
         public static Effect BlackHoleDistortionShader => GetEffect("BlackHoleDistortion");
         public static Effect ScreenSimplyDistortedShader => GetEffect("ScreenSimplyDistorted");
@@ -97,7 +98,7 @@ namespace CalamityLegendsComeBack.Shader
             float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.2f + target.identity * 0.17f);
 
             effect.Parameters["uRadius"]?.SetValue(DarkPlasmaVortexRadius);
-            effect.Parameters["uStrength"]?.SetValue((MathHelper.Lerp(0.12f, 0.24f, lifeProgress) + 0.03f * pulse) * opacity * 4f);
+            effect.Parameters["uStrength"]?.SetValue((MathHelper.Lerp(1.65f, 1.95f, lifeProgress) + 0.05f * pulse) * opacity);
             effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
         }
 
@@ -131,7 +132,7 @@ namespace CalamityLegendsComeBack.Shader
             Effect effect = shaderData.Shader;
             effect.Parameters["uRadius"]?.SetValue(GetDarksunOuterVortexRadius(level));
             effect.Parameters["uHorizonRadius"]?.SetValue(blackSunRadius * MathHelper.Lerp(0.5f, 0.94f, opacity));
-            effect.Parameters["uStrength"]?.SetValue(MathHelper.Lerp(0.32f, 0.58f, levelProgress) * opacity);
+            effect.Parameters["uStrength"]?.SetValue(MathHelper.Lerp(0.42f, 0.76f, levelProgress) * opacity);
         }
 
         private static bool TryFindDarkPlasmaTarget(out Projectile target, out float opacity)
@@ -240,7 +241,7 @@ namespace CalamityLegendsComeBack.Shader
             float blackSunRadius = DarksunFragmentBlackSun.GetRadiusForLevel(level);
             float pulse = 1f + MathF.Sin(Main.GlobalTimeWrappedHourly * 4.2f) * 0.05f;
             float textureScale = blackSunRadius / DarksunOuterVortexScaleDivisor * pulse * (1.38f + level * 0.035f);
-            return DarksunOuterVortexTextureRadius * textureScale + 5f + level * 0.7f;
+            return DarksunOuterVortexTextureRadius * textureScale + 5f + level * 0.7f + DarksunLensingRadiusPadding;
         }
 
         private static Vector2 GetZoomedScreenPosition(Vector2 worldPosition)

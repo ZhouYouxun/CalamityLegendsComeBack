@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Lighting.AddLight(Projectile.Center, 0.95f, 0.24f, 0.06f);
+            Lighting.AddLight(Projectile.Center, 0.95f * VesuviusProjectileVisuals.VisualIntensity, 0.24f * VesuviusProjectileVisuals.VisualIntensity, 0.06f * VesuviusProjectileVisuals.VisualIntensity);
 
             if (Projectile.owner == Main.myPlayer && Projectile.timeLeft % 2 == 0)
             {
@@ -79,47 +79,47 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
 
                 float opacity = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 float progress = i / (float)Projectile.oldPos.Length;
-                float width = MathHelper.Lerp(54f, 16f, progress);
+                float width = MathHelper.Lerp(54f, 16f, progress) * VesuviusProjectileVisuals.VisualScale;
                 Vector2 drawPos = oldCenter - Main.screenPosition - normal * width * 0.5f;
 
                 Main.EntitySpriteDraw(
                     bloom,
                     oldCenter - Main.screenPosition,
                     null,
-                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * opacity,
+                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * opacity * VesuviusProjectileVisuals.VisualIntensity,
                     Projectile.rotation,
                     bloom.Size() * 0.5f,
-                    new Vector2(width / bloom.Width * 1.2f, 0.28f),
+                    new Vector2(width / bloom.Width * 1.2f, 0.28f) * VesuviusProjectileVisuals.VisualScale,
                     SpriteEffects.None);
 
                 Main.EntitySpriteDraw(
                     pixel,
                     drawPos,
                     new Rectangle(0, 0, 1, 1),
-                    VesuviusProjectileVisuals.RavagerSmoke with { A = 0 } * 0.2f * opacity,
+                    VesuviusProjectileVisuals.RavagerSmoke with { A = 0 } * 0.2f * opacity * VesuviusProjectileVisuals.VisualIntensity,
                     Projectile.rotation,
                     new Vector2(0f, 0.5f),
-                    new Vector2(84f, width * 1.45f),
+                    new Vector2(84f, width * 1.45f) * VesuviusProjectileVisuals.VisualScale,
                     SpriteEffects.None);
 
                 Main.EntitySpriteDraw(
                     pixel,
                     drawPos,
                     new Rectangle(0, 0, 1, 1),
-                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.54f * opacity,
+                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.54f * opacity * VesuviusProjectileVisuals.VisualIntensity,
                     Projectile.rotation,
                     new Vector2(0f, 0.5f),
-                    new Vector2(72f, width),
+                    new Vector2(72f, width) * VesuviusProjectileVisuals.VisualScale,
                     SpriteEffects.None);
 
                 Main.EntitySpriteDraw(
                     pixel,
                     oldCenter - Main.screenPosition - normal * width * 0.16f,
                     new Rectangle(0, 0, 1, 1),
-                    Color.White with { A = 0 } * 0.46f * opacity,
+                    Color.White with { A = 0 } * 0.46f * opacity * VesuviusProjectileVisuals.VisualIntensity,
                     Projectile.rotation,
                     new Vector2(0f, 0.5f),
-                    new Vector2(58f, width * 0.32f),
+                    new Vector2(58f, width * 0.32f) * VesuviusProjectileVisuals.VisualScale,
                     SpriteEffects.None);
             }
 
@@ -171,20 +171,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 smoke,
                 Projectile.Center - Main.screenPosition - Vector2.UnitY * 5f,
                 null,
-                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.5f) * 0.18f * fade,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.5f) * 0.18f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 smoke.Size() * 0.5f,
-                new Vector2(0.55f, 0.24f) * (1f + (1f - fade) * 0.55f),
+                new Vector2(0.55f, 0.24f) * (1f + (1f - fade) * 0.55f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * fade,
+                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f),
+                new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
             return false;
         }

@@ -8,6 +8,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 {
     internal static class VesuviusProjectileVisuals
     {
+        internal const float VisualIntensity = 0.3f;
+        internal const float VisualScale = 0.72f;
+
         internal static readonly Color LavaOrange = new(255, 88, 24);
         internal static readonly Color LavaGold = new(255, 192, 72);
         internal static readonly Color HotWhite = new(255, 242, 190);
@@ -22,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.35f, 2.1f);
+            intensity = ReducedIntensity(intensity);
             Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             Vector2 basePosition = projectile.Center - direction * projectile.width * 0.28f;
@@ -32,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             for (int side = -1; side <= 1; side += 2)
             {
-                if (Main.rand.NextBool(2))
+                if (Main.rand.NextFloat() < 0.5f * intensity)
                 {
                     Vector2 offset = normal * side * Main.rand.NextFloat(5f, 11f) * projectile.scale;
                     Dust flame = Dust.NewDustPerfect(
@@ -41,7 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                         -direction.RotatedBy(side * 0.55f) * Main.rand.NextFloat(0.8f, 2.6f) * intensity,
                         90,
                         Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat(0.15f, 0.75f)),
-                        Main.rand.NextFloat(0.9f, 1.45f) * projectile.scale);
+                        Main.rand.NextFloat(0.9f, 1.45f) * projectile.scale * VisualScale);
                     flame.noGravity = true;
                     flame.fadeIn = 0.5f;
                 }
@@ -54,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     -direction.RotatedByRandom(0.28f) * Main.rand.NextFloat(2f, 5.2f) * intensity,
                     false,
                     Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.2f, 0.42f) * projectile.scale,
+                    Main.rand.NextFloat(0.2f, 0.42f) * projectile.scale * VisualScale,
                     Main.rand.NextBool(5) ? HotWhite : Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat()),
                     new Vector2(1.65f, 0.42f),
                     true,
@@ -71,47 +74,47 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            strength = MathHelper.Clamp(strength, 0.35f, 2.6f);
+            strength = ReducedIntensity(strength);
             RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(32f, 58f) * strength);
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,
                 Vector2.Zero,
-                LavaOrange * 0.78f,
+                LavaOrange * 0.78f * VisualIntensity,
                 "CalamityMod/Particles/FlameExplosion",
                 Vector2.One,
                 Main.rand.NextFloat(-8f, 8f),
                 0.02f,
-                0.2f * strength,
+                0.2f * strength * VisualScale,
                 17,
                 true));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,
                 Vector2.Zero,
-                HotWhite * 0.5f,
+                HotWhite * 0.5f * VisualIntensity,
                 "CalamityMod/Particles/SoftRoundExplosion",
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 0.02f,
-                0.13f * strength,
+                0.13f * strength * VisualScale,
                 15));
 
-            int sparkCount = (int)(18f * strength);
+            int sparkCount = ReducedCount(18f * strength);
             for (int i = 0; i < sparkCount; i++)
             {
                 Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3.5f, ravagerWeight ? 12f : 8f) * strength;
-                Dust flame = Dust.NewDustPerfect(center, Main.rand.NextBool(4) ? DustID.InfernoFork : DustID.CopperCoin, burstVelocity, 80, Main.rand.NextBool(3) ? LavaGold : LavaOrange, Main.rand.NextFloat(0.8f, 1.7f));
+                Dust flame = Dust.NewDustPerfect(center, Main.rand.NextBool(4) ? DustID.InfernoFork : DustID.CopperCoin, burstVelocity, 80, Main.rand.NextBool(3) ? LavaGold : LavaOrange, Main.rand.NextFloat(0.8f, 1.7f) * VisualScale);
                 flame.noGravity = true;
 
                 if (i % 3 == 0)
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(center, burstVelocity * 0.72f, false, Main.rand.Next(16, 27), Main.rand.NextFloat(0.45f, 0.95f), Main.rand.NextBool(4) ? HotWhite : LavaGold));
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(center, burstVelocity * 0.72f, false, Main.rand.Next(16, 27), Main.rand.NextFloat(0.45f, 0.95f) * VisualScale, Main.rand.NextBool(4) ? HotWhite : LavaGold));
             }
 
-            int smokeCount = (int)((ravagerWeight ? 10f : 5f) * strength);
+            int smokeCount = ReducedCount((ravagerWeight ? 10f : 5f) * strength);
             for (int i = 0; i < smokeCount; i++)
                 SpawnScoriaSmoke(center + Main.rand.NextVector2Circular(22f, 18f) * strength, Main.rand.NextVector2Circular(3.2f, 2.2f) - Vector2.UnitY * Main.rand.NextFloat(1.2f, 4.6f), Main.rand.NextFloat(0.65f, 1.35f) * strength, ravagerWeight);
 
-            int ashCount = (int)(7f * strength);
+            int ashCount = ReducedCount(7f * strength);
             for (int i = 0; i < ashCount; i++)
                 SpawnAshSquare(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(2.6f, 2.6f) - Vector2.UnitY * Main.rand.NextFloat(0.5f, 2.8f), Main.rand.NextFloat(0.7f, 1.35f), Color.Lerp(AshGray, LavaOrange, 0.18f));
         }
@@ -121,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.4f, 1.8f);
+            intensity = ReducedIntensity(intensity);
             Vector2 center = projectile.Center + Main.rand.NextVector2Circular(7f, 7f);
 
             if (Main.rand.NextFloat() < 0.84f * intensity)
@@ -134,8 +137,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     projectile.velocity * Main.rand.NextFloat(-0.08f, 0.04f) + Main.rand.NextVector2Circular(0.6f, 0.6f) - Vector2.UnitY * Main.rand.NextFloat(0.08f, 0.35f),
                     Color.Lerp(Color.DimGray, AshGray, 0.4f),
                     Color.Transparent,
-                    Main.rand.NextFloat(0.55f, 1.05f) * projectile.scale,
-                    0.62f,
+                    Main.rand.NextFloat(0.55f, 1.05f) * projectile.scale * VisualScale,
+                    0.62f * VisualIntensity,
                     Main.rand.Next(34, 58),
                     Main.rand.NextFloat(-0.05f, 0.05f));
                 GeneralParticleHandler.SpawnParticle(smoke);
@@ -143,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (Main.rand.NextFloat() < 0.2f * intensity)
             {
-                Dust coal = Dust.NewDustPerfect(center, Main.rand.NextBool(2) ? DustID.Smoke : DustID.Torch, Main.rand.NextVector2Circular(0.7f, 0.7f), 130, Color.Lerp(AshGray, LavaOrange, 0.25f), Main.rand.NextFloat(0.55f, 1.05f) * projectile.scale);
+                Dust coal = Dust.NewDustPerfect(center, Main.rand.NextBool(2) ? DustID.Smoke : DustID.Torch, Main.rand.NextVector2Circular(0.7f, 0.7f), 130, Color.Lerp(AshGray, LavaOrange, 0.25f), Main.rand.NextFloat(0.55f, 1.05f) * projectile.scale * VisualScale);
                 coal.noGravity = Main.rand.NextBool();
             }
         }
@@ -153,14 +156,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            strength = MathHelper.Clamp(strength, 0.4f, 2f);
-            for (int i = 0; i < (int)(16f * strength); i++)
+            strength = ReducedIntensity(strength);
+            for (int i = 0; i < ReducedCount(16f * strength); i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 5.5f) * strength;
                 SpawnAshSquare(center + Main.rand.NextVector2Circular(8f, 8f), velocity, Main.rand.NextFloat(0.5f, 1.1f), Color.Lerp(AshGray, LavaOrange, Main.rand.NextFloat(0.08f, 0.22f)));
             }
 
-            for (int i = 0; i < (int)(5f * strength); i++)
+            for (int i = 0; i < ReducedCount(5f * strength); i++)
                 SpawnScoriaSmoke(center + Main.rand.NextVector2Circular(14f, 14f), Main.rand.NextVector2Circular(2f, 2f) - Vector2.UnitY * Main.rand.NextFloat(1f, 3f), Main.rand.NextFloat(0.55f, 1.05f) * strength, false);
         }
 
@@ -168,7 +171,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         {
             SpawnMoltenMeteorTrail(projectile, intensity * 1.15f, true);
 
-            if (Main.dedServ || !Main.rand.NextBool(3))
+            if (Main.dedServ || Main.rand.NextFloat() >= 0.33f * VisualIntensity)
                 return;
 
             Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
@@ -182,13 +185,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             SpawnMoltenImpact(center, strength * 1.35f, true);
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, LavaGold * 0.72f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.2f, 2.9f * strength, 21));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, RavagerSmoke * 0.55f, new Vector2(1f, 0.62f), Main.rand.NextFloat(MathHelper.TwoPi), 0.35f, 3.6f * strength, 28));
+            strength = ReducedIntensity(strength);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, LavaGold * 0.72f * VisualIntensity, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.2f, 2.9f * strength * VisualScale, 21));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, RavagerSmoke * 0.55f * VisualIntensity, new Vector2(1f, 0.62f), Main.rand.NextFloat(MathHelper.TwoPi), 0.35f, 3.6f * strength * VisualScale, 28));
 
-            for (int i = 0; i < (int)(12f * strength); i++)
+            for (int i = 0; i < ReducedCount(12f * strength); i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 12f) * strength;
-                Dust stone = Dust.NewDustPerfect(center, Main.rand.NextBool(2) ? DustID.Stone : DustID.Iron, velocity, 110, Color.Lerp(Color.DarkGray, LavaOrange, 0.18f), Main.rand.NextFloat(1f, 2.2f));
+                Dust stone = Dust.NewDustPerfect(center, Main.rand.NextBool(2) ? DustID.Stone : DustID.Iron, velocity, 110, Color.Lerp(Color.DarkGray, LavaOrange, 0.18f), Main.rand.NextFloat(1f, 2.2f) * VisualScale);
                 stone.noGravity = i % 2 == 0;
             }
         }
@@ -198,14 +202,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.3f, 2f);
+            intensity = ReducedIntensity(intensity);
             if (Main.rand.NextFloat() < 0.72f * intensity)
                 RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(spread.X, spread.Y), Main.rand.NextFloat(16f, 38f) * intensity);
 
             if (Main.rand.NextFloat() < 0.45f * intensity)
             {
                 Vector2 pos = center + Main.rand.NextVector2Circular(spread.X, spread.Y * 0.65f);
-                Dust flame = Dust.NewDustPerfect(pos, DustID.InfernoFork, -Vector2.UnitY.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.7f, 2.4f), 100, Main.rand.NextBool(3) ? LavaGold : LavaOrange, Main.rand.NextFloat(0.7f, 1.35f));
+                Dust flame = Dust.NewDustPerfect(pos, DustID.InfernoFork, -Vector2.UnitY.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.7f, 2.4f), 100, Main.rand.NextBool(3) ? LavaGold : LavaOrange, Main.rand.NextFloat(0.7f, 1.35f) * VisualScale);
                 flame.noGravity = true;
             }
 
@@ -218,14 +222,15 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.45f, 2.2f);
+            intensity = ReducedIntensity(intensity);
             Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             Vector2 center = projectile.Center + Main.rand.NextVector2Circular(7f, 7f);
 
-            RancorLavaMetaball.SpawnParticle(center, Main.rand.NextFloat(20f, 38f) * intensity);
+            if (Main.rand.NextFloat() < 0.8f * intensity)
+                RancorLavaMetaball.SpawnParticle(center, Main.rand.NextFloat(20f, 38f) * intensity);
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextFloat() < 0.5f * intensity)
             {
                 Particle core = new GlowSparkParticle(
                     center,
@@ -240,14 +245,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 GeneralParticleHandler.SpawnParticle(core);
             }
 
-            for (int i = 0; i < 2; i++)
+            if (Main.rand.NextFloat() < 0.65f * intensity)
             {
                 Vector2 edge = center + normal * Main.rand.NextFloat(-20f, 20f) * intensity;
-                Dust flame = Dust.NewDustPerfect(edge, DustID.InfernoFork, -direction.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.8f, 2.8f), 90, Main.rand.NextBool(3) ? LavaGold : LavaOrange, Main.rand.NextFloat(0.9f, 1.55f));
+                Dust flame = Dust.NewDustPerfect(edge, DustID.InfernoFork, -direction.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.8f, 2.8f), 90, Main.rand.NextBool(3) ? LavaGold : LavaOrange, Main.rand.NextFloat(0.9f, 1.55f) * VisualScale);
                 flame.noGravity = true;
             }
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextFloat() < 0.33f * intensity)
                 SpawnScoriaSmoke(center - direction * 12f + Main.rand.NextVector2Circular(16f, 10f), -direction * Main.rand.NextFloat(0.8f, 2f) + Main.rand.NextVector2Circular(1.1f, 1.1f), Main.rand.NextFloat(0.5f, 0.95f) * intensity, false);
         }
 
@@ -256,13 +261,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.35f, 1.8f);
+            float reducedIntensity = ReducedIntensity(intensity);
             Vector2 axis = rotation.ToRotationVector2();
             Vector2 normal = axis.RotatedBy(MathHelper.PiOver2);
             Vector2 offset = axis * Main.rand.NextFloat(-20f, 20f) + normal * Main.rand.NextFloat(-15f, 15f);
             SpawnLavaPoolBubble(center + offset, new Vector2(10f, 8f), intensity);
 
-            if (Main.rand.NextBool(5))
+            if (Main.rand.NextFloat() < 0.2f * reducedIntensity)
                 SpawnAshSquare(center + offset, Main.rand.NextVector2Circular(1.2f, 1.2f) - Vector2.UnitY * Main.rand.NextFloat(0.4f, 1.8f), Main.rand.NextFloat(0.45f, 0.9f), Color.Lerp(AshGray, LavaOrange, 0.16f));
         }
 
@@ -271,17 +276,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.45f, 2f);
+            intensity = ReducedIntensity(intensity);
             Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             float sine = (float)System.Math.Sin((projectile.localAI[0] + projectile.identity) * 0.42f);
 
             for (int side = -1; side <= 1; side += 2)
             {
-                if (Main.rand.NextBool(2))
+                if (Main.rand.NextFloat() < 0.5f * intensity)
                 {
                     Vector2 offset = normal * side * sine * Main.rand.NextFloat(8f, 15f) * intensity;
-                    Dust ember = Dust.NewDustPerfect(projectile.Center + offset, DustID.Flare, -direction * Main.rand.NextFloat(1.8f, 4.8f) + Main.rand.NextVector2Circular(0.5f, 0.5f), 90, Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat(0.15f, 0.9f)), Main.rand.NextFloat(1.1f, 2.1f) * intensity);
+                    Dust ember = Dust.NewDustPerfect(projectile.Center + offset, DustID.Flare, -direction * Main.rand.NextFloat(1.8f, 4.8f) + Main.rand.NextVector2Circular(0.5f, 0.5f), 90, Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat(0.15f, 0.9f)), Main.rand.NextFloat(1.1f, 2.1f) * VisualScale);
                     ember.noGravity = true;
                 }
             }
@@ -293,7 +298,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     -direction * Main.rand.NextFloat(1.2f, 4.2f) + Main.rand.NextVector2Circular(0.8f, 0.8f),
                     false,
                     Main.rand.Next(12, 22),
-                    Main.rand.NextFloat(0.3f, 0.72f) * intensity,
+                    Main.rand.NextFloat(0.3f, 0.72f) * VisualScale,
                     Main.rand.NextBool(5) ? HotWhite : Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat()));
                 GeneralParticleHandler.SpawnParticle(orb);
             }
@@ -308,8 +313,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             SpawnMoltenImpact(center, strength * 0.7f, false);
-            for (int i = 0; i < (int)(10f * strength); i++)
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(center, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 6.4f) * strength, false, Main.rand.Next(12, 20), Main.rand.NextFloat(0.24f, 0.58f), Main.rand.NextBool(4) ? HotWhite : LavaGold));
+            strength = ReducedIntensity(strength);
+            for (int i = 0; i < ReducedCount(10f * strength); i++)
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(center, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 6.4f) * strength, false, Main.rand.Next(12, 20), Main.rand.NextFloat(0.24f, 0.58f) * VisualScale, Main.rand.NextBool(4) ? HotWhite : LavaGold));
         }
 
         internal static void SpawnObsidianTrail(Projectile projectile, float intensity)
@@ -317,14 +323,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            intensity = MathHelper.Clamp(intensity, 0.35f, 1.8f);
+            intensity = ReducedIntensity(intensity);
             Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitY);
             Vector2 center = projectile.Center - direction * projectile.width * 0.2f + Main.rand.NextVector2Circular(7f, 7f);
 
-            Dust shard = Dust.NewDustPerfect(center, DustID.Obsidian, -direction.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.4f, 2.4f) * intensity, 130, Color.Lerp(ObsidianBlack, ObsidianEdge, Main.rand.NextFloat(0.15f, 0.45f)), Main.rand.NextFloat(0.75f, 1.35f) * intensity);
-            shard.noGravity = Main.rand.NextBool(3);
+            if (Main.rand.NextFloat() < 0.85f * intensity)
+            {
+                Dust shard = Dust.NewDustPerfect(center, DustID.Obsidian, -direction.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.4f, 2.4f) * intensity, 130, Color.Lerp(ObsidianBlack, ObsidianEdge, Main.rand.NextFloat(0.15f, 0.45f)), Main.rand.NextFloat(0.75f, 1.35f) * VisualScale);
+                shard.noGravity = Main.rand.NextBool(3);
+            }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextFloat() < 0.5f * intensity)
             {
                 Particle voidShard = new VoidSparkParticle(
                     center,
@@ -357,31 +366,31 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            strength = MathHelper.Clamp(strength, 0.35f, 2.2f);
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, ObsidianEdge * 0.78f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.15f, 2.2f * strength, 18));
+            strength = ReducedIntensity(strength);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, ObsidianEdge * 0.78f * VisualIntensity, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.15f, 2.2f * strength * VisualScale, 18));
 
-            for (int i = 0; i < (int)(20f * strength); i++)
+            for (int i = 0; i < ReducedCount(20f * strength); i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 8.5f) * strength;
-                Dust dust = Dust.NewDustPerfect(center, DustID.Obsidian, velocity, 140, Main.rand.NextBool(3) ? ObsidianBlack : ObsidianEdge, Main.rand.NextFloat(0.8f, 1.8f));
+                Dust dust = Dust.NewDustPerfect(center, DustID.Obsidian, velocity, 140, Main.rand.NextBool(3) ? ObsidianBlack : ObsidianEdge, Main.rand.NextFloat(0.8f, 1.8f) * VisualScale);
                 dust.noGravity = Main.rand.NextBool();
 
                 if (i % 3 == 0)
                 {
-                    Particle shard = new VoidSparkParticle(center, velocity * 0.55f, false, Main.rand.Next(14, 26), Main.rand.NextFloat(0.52f, 1f) * strength, Main.rand.NextBool(2) ? ObsidianBlack : ObsidianEdge, 0.88f);
+                    Particle shard = new VoidSparkParticle(center, velocity * 0.55f, false, Main.rand.Next(14, 26), Main.rand.NextFloat(0.52f, 1f) * VisualScale, Main.rand.NextBool(2) ? ObsidianBlack : ObsidianEdge, 0.88f);
                     GeneralParticleHandler.SpawnParticle(shard);
                 }
             }
 
-            for (int i = 0; i < (int)(7f * strength); i++)
+            for (int i = 0; i < ReducedCount(7f * strength); i++)
             {
                 Particle smoke = new HeavySmokeParticle(
                     center + Main.rand.NextVector2Circular(22f, 22f) * strength,
                     Main.rand.NextVector2Circular(3f, 3f) * strength,
                     Main.rand.NextBool(2) ? ObsidianBlack : ObsidianEdge,
                     Main.rand.Next(26, 46),
-                    Main.rand.NextFloat(0.6f, 1.2f) * strength,
-                    0.72f,
+                    Main.rand.NextFloat(0.6f, 1.2f) * strength * VisualScale,
+                    0.72f * VisualIntensity,
                     Main.rand.NextFloat(-0.09f, 0.09f),
                     true,
                     required: true);
@@ -397,8 +406,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 velocity,
                 smokeColor,
                 Main.rand.Next(heavy ? 30 : 22, heavy ? 58 : 42),
-                scale,
-                heavy ? 0.9f : 0.62f,
+                scale * VisualScale,
+                (heavy ? 0.9f : 0.62f) * VisualIntensity,
                 Main.rand.NextFloat(-0.07f, 0.07f),
                 Main.rand.NextBool(),
                 required: heavy);
@@ -411,9 +420,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 position,
                 velocity,
                 Main.rand.Next(24, 48),
-                scale,
-                color);
+                scale * VisualScale,
+                color * VisualScale);
             GeneralParticleHandler.SpawnParticle(ash);
         }
+
+        private static float ReducedIntensity(float intensity) => MathHelper.Clamp(intensity * VisualIntensity, 0f, 0.8f);
+
+        private static int ReducedCount(float count) => System.Math.Max(1, (int)System.Math.Ceiling(count));
     }
 }

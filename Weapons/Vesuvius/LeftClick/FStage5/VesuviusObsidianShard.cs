@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         {
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.velocity.Y += 0.015f;
-            Lighting.AddLight(Projectile.Center, 0.03f, 0.03f, 0.035f);
+            Lighting.AddLight(Projectile.Center, 0.03f * VesuviusProjectileVisuals.VisualIntensity, 0.03f * VesuviusProjectileVisuals.VisualIntensity, 0.035f * VesuviusProjectileVisuals.VisualIntensity);
 
             VesuviusProjectileVisuals.SpawnObsidianTrail(Projectile, 1f);
         }
@@ -85,18 +85,19 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.55f, Pitch = -0.4f }, Projectile.Center);
             VesuviusProjectileVisuals.SpawnObsidianImpact(Projectile.Center, 0.95f);
-            for (int i = 0; i < 16; i++)
+            int dustCount = Math.Max(1, (int)Math.Ceiling(16f * VesuviusProjectileVisuals.VisualIntensity));
+            for (int i = 0; i < dustCount; i++)
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Obsidian, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 8f), 140, Main.rand.NextBool(3) ? VesuviusProjectileVisuals.ObsidianBlack : VesuviusProjectileVisuals.ObsidianEdge, Main.rand.NextFloat(0.9f, 1.6f));
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Obsidian, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 8f) * VesuviusProjectileVisuals.VisualScale, 140, Main.rand.NextBool(3) ? VesuviusProjectileVisuals.ObsidianBlack : VesuviusProjectileVisuals.ObsidianEdge, Main.rand.NextFloat(0.9f, 1.6f) * VesuviusProjectileVisuals.VisualScale);
                 dust.noGravity = true;
             }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], VesuviusProjectileVisuals.ObsidianEdge * 0.68f);
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], VesuviusProjectileVisuals.ObsidianEdge * 0.68f * VesuviusProjectileVisuals.VisualIntensity);
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.ObsidianEdge * 0.92f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.18f, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.ObsidianEdge * 0.92f * VesuviusProjectileVisuals.VisualIntensity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.18f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.Black, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.02f, SpriteEffects.None);
             return false;
         }
@@ -129,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Lighting.AddLight(Projectile.Center, 0.025f, 0.025f, 0.03f);
+            Lighting.AddLight(Projectile.Center, 0.025f * VesuviusProjectileVisuals.VisualIntensity, 0.025f * VesuviusProjectileVisuals.VisualIntensity, 0.03f * VesuviusProjectileVisuals.VisualIntensity);
 
             if (Projectile.localAI[0] == 0f)
             {
@@ -156,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 texture,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.ObsidianEdge * 0.8f * fade,
+                VesuviusProjectileVisuals.ObsidianEdge * 0.8f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 texture.Size() * 0.5f,
                 new Vector2(1.56f, 0.82f) * Projectile.scale,
@@ -207,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = -0.45f }, Projectile.Center);
             }
 
-            if (!Main.dedServ && Projectile.timeLeft % 3 == 0)
+            if (!Main.dedServ && Projectile.timeLeft % 9 == 0)
                 VesuviusProjectileVisuals.SpawnObsidianImpact(Projectile.Center + Main.rand.NextVector2Circular(34f, 34f), 0.42f);
         }
 
@@ -221,19 +222,19 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 smoke,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.Black * 0.38f * fade,
+                Color.Black * 0.38f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Main.GlobalTimeWrappedHourly * 0.7f,
                 smoke.Size() * 0.5f,
-                0.28f + expand * 0.96f,
+                (0.28f + expand * 0.96f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.ObsidianEdge * 0.24f * fade,
+                VesuviusProjectileVisuals.ObsidianEdge * 0.24f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
-                0.55f + expand * 1.25f,
+                (0.55f + expand * 1.25f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
             return false;
         }

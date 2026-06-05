@@ -18,7 +18,8 @@ float4 PixelShaderFunction(float2 uv : TEXCOORD0) : COLOR0
         return originalColor;
 
     float factor = saturate(1 - dist / uRadius);
-    float angle = factor * (uTime * 0.8 + factor * uStrength * 6.28);
+    float angle = factor * factor * uStrength * 6.2831853;
+    angle += factor * sin(uTime * 1.6) * 0.12;
     float cs = cos(angle);
     float sn = sin(angle);
     float2 rotated = float2(
@@ -26,7 +27,7 @@ float4 PixelShaderFunction(float2 uv : TEXCOORD0) : COLOR0
         worldDelta.x * sn + worldDelta.y * cs
     );
 
-    float scale = 1 - factor * uStrength * 0.32;
+    float scale = 1 - factor * uStrength * 0.04;
     rotated *= scale;
 
     float2 newUV = targetUV + rotated / uScreenResolution;

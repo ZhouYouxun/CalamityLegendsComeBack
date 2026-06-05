@@ -52,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, 0.78f, 0.24f, 0.06f);
+            Lighting.AddLight(Projectile.Center, 0.78f * VesuviusProjectileVisuals.VisualIntensity, 0.24f * VesuviusProjectileVisuals.VisualIntensity, 0.06f * VesuviusProjectileVisuals.VisualIntensity);
 
             VesuviusProjectileVisuals.SpawnCinderTrail(Projectile, 1f);
         }
@@ -89,7 +89,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
 
         public override bool PreDraw(ref Color lightColor)
         {
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], VesuviusProjectileVisuals.LavaOrange * 0.78f);
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], VesuviusProjectileVisuals.LavaOrange * 0.78f * VesuviusProjectileVisuals.VisualIntensity);
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
@@ -99,20 +99,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * (0.34f + pulse * 0.12f),
+                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * (0.34f + pulse * 0.12f) * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                Projectile.scale * (0.3f + pulse * 0.06f),
+                Projectile.scale * (0.3f + pulse * 0.06f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.White with { A = 0 } * 0.36f,
+                Color.White with { A = 0 } * 0.36f * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                Projectile.scale * 0.17f,
+                Projectile.scale * 0.17f * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.Lerp(Color.White, VesuviusProjectileVisuals.LavaGold, 0.25f), Projectile.rotation, frame.Size() * 0.5f, Projectile.scale * 1.08f, SpriteEffects.None);

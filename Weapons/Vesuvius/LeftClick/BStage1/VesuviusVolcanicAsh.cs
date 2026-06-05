@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             Projectile.velocity.Y += 0.04f;
             Projectile.rotation += Projectile.velocity.X * 0.03f + 0.04f;
             Projectile.alpha = (int)MathHelper.Lerp(0f, 210f, Utils.GetLerpValue(24f, 0f, Projectile.timeLeft, true));
-            Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity);
+            Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity * VesuviusProjectileVisuals.VisualIntensity);
 
             VesuviusProjectileVisuals.SpawnVolcanicAshCloud(Projectile, 0.9f);
         }
@@ -75,10 +75,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.Lerp(Color.Black, VesuviusProjectileVisuals.AshGray, 0.55f) * 0.28f * fade,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.AshGray, 0.55f) * 0.28f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                Projectile.scale * 0.38f,
+                Projectile.scale * 0.38f * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
@@ -89,7 +89,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                     texture,
                     oldCenter - Main.screenPosition,
                     frame,
-                    Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.18f) * fade * 0.42f * trailFade,
+                    Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.18f) * fade * 0.42f * trailFade * VesuviusProjectileVisuals.VisualIntensity,
                     Projectile.rotation,
                     frame.Size() * 0.5f,
                     Projectile.scale * (0.85f + trailFade * 0.2f),
