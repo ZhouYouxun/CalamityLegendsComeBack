@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
     {
         private const int BurstShotCount = 3;
         private const int BurstShotSpacing = 5;
-        private const int BurstLockoutFrames = 24;
+        private const int BurstLockoutFrames = 36;
         private const int RightChargeFrames = 34;
         private const int RightCooldownFrames = 52;
         private const float HoldoutDistance = 44f;
@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int rightCooldownTimer;
         private int muzzleFlashTimer;
         private int emptyClickCooldown;
-        private bool leftHeldLastFrame;
+        private int useAnimationTimer;
         private bool rightHeldLastFrame;
         private float recoilOffset;
         private float resonanceGlow;
@@ -84,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             bool leftHeld = validMouse && Main.mouseLeft;
             bool rightHeld = validMouse && (Main.mouseRight || Owner.Calamity().mouseRight);
 
-            if (leftHeld && !leftHeldLastFrame && burstLockoutTimer <= 0 && rightChargeTimer <= 0)
+            if (leftHeld && !rightHeld && burstShotsRemaining <= 0 && burstLockoutTimer <= 0 && rightChargeTimer <= 0)
                 StartBurst();
 
             if (burstShotsRemaining > 0)
@@ -93,7 +93,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             HandleRightClick(rightHeld);
             HandleUltimateInput(validMouse);
 
-            leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;
         }
 
@@ -102,6 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             burstShotsRemaining = BurstShotCount;
             burstShotTimer = 0;
             burstLockoutTimer = BurstLockoutFrames;
+            useAnimationTimer = Math.Max(useAnimationTimer, BurstShotSpacing * (BurstShotCount - 1) + 8);
         }
 
         private void HandleBurstShots()
@@ -177,6 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Main.projectile[beamIndex].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
 
             ssPlayer.StartUltimateCooldown();
+            useAnimationTimer = Math.Max(useAnimationTimer, 16);
             ApplyRecoil(18f);
             TriggerMuzzleFlash(26);
             Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.2f);
@@ -239,6 +240,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             int detonated = SeasSearingPollutionNPC.DetonateAll(Owner, Projectile.damage, GunTipPosition);
             float shake = detonated <= 0 ? 1.8f : MathHelper.Clamp(2f + detonated * 0.7f, 2.8f, 13f);
             Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
+            useAnimationTimer = Math.Max(useAnimationTimer, 14);
             ApplyRecoil(12f + Math.Min(detonated, 8) * 1.4f);
             TriggerMuzzleFlash(24);
             resonanceGlow = 1.4f;
@@ -269,7 +271,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Owner.heldProj = Projectile.whoAmI;
             Owner.itemRotation = (aim * direction).ToRotation();
             Owner.HeldItem.noUseGraphic = true;
-            Owner.itemTime = Owner.itemAnimation = 2;
+            if (useAnimationTimer > 0 || rightChargeTimer > 0)
+            {
+                Owner.itemTime = Math.Max(Owner.itemTime, 2);
+                Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
+            }
 
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir;
             if (Owner.gravDir == -1f)
@@ -292,6 +298,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (emptyClickCooldown > 0)
                 emptyClickCooldown--;
+
+            if (useAnimationTimer > 0)
+                useAnimationTimer--;
 
             recoilOffset = MathHelper.Lerp(recoilOffset, 0f, 0.26f);
             resonanceGlow = MathHelper.Clamp(resonanceGlow - 0.035f, 0f, 1.5f);

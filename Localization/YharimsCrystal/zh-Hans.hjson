@@ -26,42 +26,42 @@ Mods: {
 			Accessories: {
 				YharimsCrystalAlpha: {
 					DisplayName: 亚利姆水晶-阿尔法
-					Tooltip: "使用亚利姆水晶时，武器伤害提高10%。"
+					Tooltip: 使用亚利姆水晶时，武器伤害提高10%。
 				}
 
 				YharimsCrystalBeta: {
 					DisplayName: 亚利姆水晶-贝塔
-					Tooltip: "强化亚利姆水晶的杀戮形态，并缩短杀戮模式冷却。"
+					Tooltip: 强化亚利姆水晶的杀戮形态，并缩短杀戮模式冷却。
 				}
 
 				YharimsCrystalSigma: {
 					DisplayName: 亚利姆水晶-西格玛
-					Tooltip: "暴君棱镜僚机在攻击形态下额外发射一枚机枪光弹。"
+					Tooltip: 暴君棱镜僚机在攻击形态下额外发射一枚机枪光弹。
 				}
 
 				YharimsCrystalGamma: {
 					DisplayName: 亚利姆水晶-伽马
-					Tooltip: "暴君棱镜僚机光弹飞行速度提高12%。"
+					Tooltip: 暴君棱镜僚机光弹飞行速度提高12%。
 				}
 
 				YharimsCrystalLambda: {
 					DisplayName: 亚利姆水晶-拉姆达
-					Tooltip: "亚利姆水晶传奇技能充能更快，冷却更短。"
+					Tooltip: 亚利姆水晶传奇技能充能更快，冷却更短。
 				}
 
 				YharimsCrystalPi: {
 					DisplayName: 亚利姆水晶-派
-					Tooltip: "强化暴君棱镜重火力齐射，并更频繁发射以太通量光线。"
+					Tooltip: 强化暴君棱镜重火力齐射，并更频繁发射以太通量光线。
 				}
 
 				YharimsCrystalEpsilon: {
 					DisplayName: 亚利姆水晶-伊普西隆
-					Tooltip: "亚利姆水晶魔力消耗降低18%。"
+					Tooltip: 亚利姆水晶魔力消耗降低18%。
 				}
 
 				YharimsCrystalTau: {
 					DisplayName: 亚利姆水晶-陶
-					Tooltip: "小幅提高亚利姆水晶伤害，并改善传奇技能充能。"
+					Tooltip: 小幅提高亚利姆水晶伤害，并改善传奇技能充能。
 				}
 			}
 		}

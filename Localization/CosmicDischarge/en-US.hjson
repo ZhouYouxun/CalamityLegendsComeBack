@@ -69,7 +69,6 @@ Mods: {
 
 		Projectiles: {
 			Melee: {
-				CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Blade-Chain
 				CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Frost Wave
 				CosmicDischargeIceBomb.DisplayName: Cosmic Discharge Ice Bomb
 				CosmicDischargeUltimateField.DisplayName: Cosmic Discharge Frost Field

@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				SeasSearing: {
-					DisplayName: "Sea's Searing - Return of Legends"
+					DisplayName: Sea's Searing - Return of Legends
 					Tooltip: "[GFB]"
 					Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
 					LeftClick: "[c/9AEAFF:Left Click: precision three-round burst. Each hit adds Abyssal Radiation Pollution.]"
@@ -23,7 +23,7 @@ Mods: {
 
 		Projectiles: {
 			SeasSearing: {
-				SeasSearingHoldout.DisplayName: "Sea's Searing Holdout"
+				SeasSearingHoldout.DisplayName: Sea's Searing Holdout
 				SeasSearingPollutionRound.DisplayName: Abyssal Pollution Round
 				SeasSearingResonancePulse.DisplayName: Abyssal Resonance Pulse
 				SeasSearingDetonationBlast.DisplayName: Pollution Collapse

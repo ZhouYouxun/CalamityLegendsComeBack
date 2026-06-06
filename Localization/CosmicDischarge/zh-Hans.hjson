@@ -69,7 +69,6 @@ Mods: {
 
 		Projectiles: {
 			Melee: {
-				CosmicDischargeComboHoldout.DisplayName: 寒宙弹刃
 				CosmicDischargeSwordWave.DisplayName: 寒宙剑气
 				CosmicDischargeIceBomb.DisplayName: 寒宙冰炸弹
 				CosmicDischargeUltimateField.DisplayName: 寒宙力场

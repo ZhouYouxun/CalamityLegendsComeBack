@@ -321,6 +321,46 @@ Mods: {
 				// DisplayName: Test Weapon
 				// Tooltip: ""
 			}
+
+			YharimsCrystalAlpha: {
+				// DisplayName: Yharims Crystal Alpha
+				// Tooltip: ""
+			}
+
+			YharimsCrystalBeta: {
+				// DisplayName: Yharims Crystal Beta
+				// Tooltip: ""
+			}
+
+			YharimsCrystalEpsilon: {
+				// DisplayName: Yharims Crystal Epsilon
+				// Tooltip: ""
+			}
+
+			YharimsCrystalGamma: {
+				// DisplayName: Yharims Crystal Gamma
+				// Tooltip: ""
+			}
+
+			YharimsCrystalLambda: {
+				// DisplayName: Yharims Crystal Lambda
+				// Tooltip: ""
+			}
+
+			YharimsCrystalPi: {
+				// DisplayName: Yharims Crystal Pi
+				// Tooltip: ""
+			}
+
+			YharimsCrystalSigma: {
+				// DisplayName: Yharims Crystal Sigma
+				// Tooltip: ""
+			}
+
+			YharimsCrystalTau: {
+				// DisplayName: Yharims Crystal Tau
+				// Tooltip: ""
+			}
 		}
 
 		Buffs: {
