@@ -280,7 +280,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                         {
                             Dust dust = Dust.NewDustPerfect(
                                 sparkPos + Main.rand.NextVector2Circular(10f, 10f),
-                                57,
+                                DustID.Enchanted_Gold,
                                 startVel * Main.rand.NextFloat(0.35f, 0.6f),
                                 0,
                                 color,

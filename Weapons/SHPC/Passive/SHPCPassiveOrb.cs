@@ -22,8 +22,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         public ref float time => ref Projectile.ai[0];
         public bool onSpawn = true;
         private Player targeted;
-        private Player lastHitTarget;
-        private int timesItCanHit = 1;
         public bool startAttackEffects = true;
         public int attackTime = 160;
         private float previousFlightState = -1f;

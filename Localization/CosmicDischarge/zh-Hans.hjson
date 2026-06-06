@@ -4,28 +4,81 @@ Mods: {
 			Weapons: {
 				Melee: {
 					CosmicDischarge: {
-						DisplayName: 宇宙放电
+						DisplayName: 寒宙弹刃
 						Tooltip: ""
 					}
 				}
 
 				NewLegendCosmicDischarge: {
-					DisplayName: 宇宙放电-传奇归来
-					Tooltip: ""
+					DisplayName: 寒宙弹刃-传奇归来
+					Tooltip: "[GFB]"
+					CosmicDischargeLeft:
+						'''
+						[c/8DEBFF:左键：] [c/DCD6C8:根据当前形态释放三连击。]
+						[c/8DEBFF:鞭形态：] [c/DCD6C8:第一段自上方甩出弹刃，第二段自下方甩出弹刃，第三段向鼠标方向刺出；抽回时伤害和无敌帧明显降低。]
+						[c/8DEBFF:剑形态：] [c/DCD6C8:挥舞两次弹刃，第三段先旋转两圈剑刃，再从上方劈下并打出一道短程寒霜剑气。]
+						'''
+					CosmicDischargeRight:
+						'''
+						[c/6FDFFF:右键：] [c/DCD6C8:切换左键的鞭/剑形态。]
+						[c/6FDFFF:第三段前摇期间右键：] [c/DCD6C8:触发寒芒出鞘，直接刺出并快速抽回弹刃。只有寒芒出鞘会提供10点终结技能量。]
+						'''
+					CosmicDischargeUltimate:
+						'''
+						[c/FFE85A:终结技：] [c/DCD6C8:能量达到120后按 [{0}] ，给予25格内敌怪10秒冰河时代，并在玩家身上生成10秒力场。]
+						[c/FFE85A:力场：] [c/DCD6C8:8格内敌怪被高额减速；玩家受到伤害-35%，防御+20。力场存在期间无法获得终结技能量。]
+						'''
+					CosmicDischargePassive:
+						'''
+						[c/B8F4FF:寒宇冰封：] [c/DCD6C8:手持时受到致死伤害会免疫本次伤害、恢复60生命并获得3秒冰固免死，冷却300秒。]
+						[c/B8F4FF:零度武装：] [c/DCD6C8:手持时，在雪地，或自身带有冷系减益且没有保暖增益时，伤害+10%，防御+10。]
+						[c/B8F4FF:寒风再起：] [c/DCD6C8:冰固免死期间大幅提高恢复效率并增加25点再生；解除后获得3秒寒风再起，最终伤害x1.5。]
+						'''
 				}
 
 				Ranged: {
 					Riftburst: {
-						// DisplayName: Riftburst
-						// Tooltip: ""
+						DisplayName: Riftburst
+						Tooltip: ""
 					}
 
 					BlossomFlux: {
-						// DisplayName: Blossom Flux
-						// Tooltip: ""
+						DisplayName: Blossom Flux
+						Tooltip: ""
 					}
 				}
 			}
+		}
+
+		Buffs: {
+			CosmicDischargeIceboundBuff: {
+				DisplayName: 冰固免死
+				Description: 致死伤害被压制，生命再生大幅提高。
+			}
+
+			CosmicDischargeColdWindBuff: {
+				DisplayName: 寒风再起
+				Description: 最终伤害x1.5。
+			}
+
+			CosmicDischargeUltimateGuardBuff: {
+				DisplayName: 寒宙力场
+				Description: 受到伤害降低，防御提高。
+			}
+		}
+
+		Projectiles: {
+			Melee: {
+				CosmicDischargeComboHoldout.DisplayName: 寒宙弹刃
+				CosmicDischargeSwordWave.DisplayName: 寒宙剑气
+				CosmicDischargeIceBomb.DisplayName: 寒宙冰炸弹
+				CosmicDischargeUltimateField.DisplayName: 寒宙力场
+			}
+		}
+
+		Cooldowns: {
+			CosmicDischarge_Ultimate: 寒芒能量
+			CosmicDischarge_Icebound: 寒宇冰封
 		}
 	}
 }

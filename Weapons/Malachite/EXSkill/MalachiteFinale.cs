@@ -203,6 +203,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             float rotation = (playerScreen - start).ToRotation() + MathHelper.PiOver2;
             Vector2 scale = new(width / bloom.Width, height / bloom.Height);
 
+            DrawSoftCone(start, playerScreen, charge, flash);
+
             for (int i = 0; i < 5; i++)
             {
                 float wave = MathF.Sin(Main.GlobalTimeWrappedHourly * 2.8f + i) * 18f;
@@ -240,6 +242,35 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             Main.EntitySpriteDraw(star, playerScreen, null, starColor, MathHelper.PiOver4, starOrigin, starScale * starPulse, SpriteEffects.None);
             Main.EntitySpriteDraw(star, playerScreen, null, starColor * 0.65f, -MathHelper.PiOver4, starOrigin, starScale * starPulse * 0.68f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, playerScreen, null, new Color(150, 255, 160, 0) * flash * 0.32f, Main.GlobalTimeWrappedHourly * 0.5f, origin, 1.8f + charge * 2.1f, SpriteEffects.None);
+        }
+
+        private static void DrawSoftCone(Vector2 top, Vector2 bottom, float charge, float flash)
+        {
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            int bands = 34;
+            float topWidth = MathHelper.Lerp(64f, 116f, charge);
+            float bottomWidth = MathHelper.Lerp(260f, 610f, charge);
+
+            for (int i = 0; i < bands; i++)
+            {
+                float progress = i / (float)(bands - 1);
+                Vector2 position = Vector2.Lerp(top, bottom, progress);
+                float softness = MathF.Sin(progress * MathHelper.Pi);
+                float width = MathHelper.Lerp(topWidth, bottomWidth, progress) * (0.82f + softness * 0.18f);
+                float thickness = MathHelper.Lerp(18f, 34f, progress);
+                Color color = Color.Lerp(new Color(40, 125, 65, 0), new Color(150, 255, 165, 0), charge);
+                color *= (0.035f + softness * 0.07f + flash * 0.055f);
+
+                Main.EntitySpriteDraw(
+                    pixel,
+                    position,
+                    new Rectangle(0, 0, 1, 1),
+                    color,
+                    0f,
+                    new Vector2(0.5f),
+                    new Vector2(width, thickness),
+                    SpriteEffects.None);
+            }
         }
 
         private static void DrawPetals(Texture2D texture, Vector2 origin, float charge, bool winded, int direction)

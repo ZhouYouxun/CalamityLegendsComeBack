@@ -355,7 +355,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         {
             Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Melee/StarofJudgement").Value;
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D ringTexture = TextureAssets.Extra[89].Value;
+            Texture2D ringTexture = TextureAssets.Extra[ExtrasID.ThePerfectGlow].Value;
             Vector2 starOrigin = starTexture.Size() * 0.5f;
             Vector2 bloomOrigin = bloomTexture.Size() * 0.5f;
             Vector2 ringOrigin = ringTexture.Size() * 0.5f;

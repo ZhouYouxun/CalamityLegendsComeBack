@@ -80,7 +80,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 // 一条从右往左滑过去
                 // 都朝前喷，因此会在前方中央交叉穿过彼此
                 int arcCount = 11;
-                float forwardStep = 8f;   // 每段往前推进多少
                 float sideStrength = 22f; // 左右展开强度
 
                 for (int i = 0; i < arcCount; i++)

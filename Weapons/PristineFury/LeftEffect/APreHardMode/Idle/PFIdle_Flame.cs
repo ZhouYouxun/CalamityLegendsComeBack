@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const int Lifetime = 84;
+        private const int Lifetime = 168;
         private ref float Timer => ref Projectile.localAI[0];
 
         public override void SetDefaults()

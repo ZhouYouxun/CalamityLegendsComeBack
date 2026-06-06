@@ -16,10 +16,17 @@ namespace CalamityLegendsComeBack.Shader
         private const string DarkPlasmaKamuiVortexRegistrationName = "DarkPlasmaKamuiVortex";
         private const string DarksunFragmentGravitationalLensingRegistrationName = "DarksunFragmentGravitationalLensing";
         private const int DarkPlasmaEffectID = 32;
-        private const float DarkPlasmaVortexRadius = 16f * 16f;
+        private const float DarkPlasmaVortexRadius = 8f * 16f;
+        private const float DarkPlasmaDistortionStrengthMultiplier = 0.335f;
+        private const float DarkPlasmaFadeOutDuration = 30f;
         private const float DarksunOuterVortexTextureRadius = 256f;
         private const float DarksunOuterVortexScaleDivisor = 96f;
         private const float DarksunLensingRadiusPadding = 5f * 16f;
+
+        private static Vector2 darkPlasmaLastCenter;
+        private static float darkPlasmaLastStrength;
+        private static float darkPlasmaLastOpacity;
+        private static float darkPlasmaFadeOutTime;
 
         public static Effect BlackHoleDistortionShader => GetEffect("BlackHoleDistortion");
         public static Effect ScreenSimplyDistortedShader => GetEffect("ScreenSimplyDistorted");
@@ -79,27 +86,68 @@ namespace CalamityLegendsComeBack.Shader
 
             if (!TryFindDarkPlasmaTarget(out Projectile target, out float opacity))
             {
-                if (filter.IsActive())
-                    Filters.Scene.Deactivate(key);
+                UpdateDarkPlasmaKamuiVortexFadeOut(filter, key);
 
                 return;
             }
 
+            float lifeProgress = Utils.GetLerpValue(420f, 0f, target.timeLeft, true);
+            float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.2f + target.identity * 0.17f);
+            float strength = (MathHelper.Lerp(1.65f, 1.95f, lifeProgress) + 0.05f * pulse) *
+                opacity * DarkPlasmaDistortionStrengthMultiplier;
+
+            darkPlasmaLastCenter = target.Center;
+            darkPlasmaLastStrength = strength;
+            darkPlasmaLastOpacity = opacity;
+            darkPlasmaFadeOutTime = DarkPlasmaFadeOutDuration;
+            ApplyDarkPlasmaKamuiVortex(filter, key, target.Center, strength, opacity);
+        }
+
+        private static void UpdateDarkPlasmaKamuiVortexFadeOut(Filter filter, string key)
+        {
+            if (!filter.IsActive() || darkPlasmaFadeOutTime <= 0f || darkPlasmaLastStrength <= 0.001f)
+            {
+                if (filter.IsActive())
+                    Filters.Scene.Deactivate(key);
+
+                ResetDarkPlasmaKamuiVortexFadeOut();
+                return;
+            }
+
+            darkPlasmaFadeOutTime = Math.Max(0f, darkPlasmaFadeOutTime - 1f);
+            float remaining = darkPlasmaFadeOutTime / DarkPlasmaFadeOutDuration;
+            float nonlinearFade = remaining * remaining * (3f - 2f * remaining);
+            ApplyDarkPlasmaKamuiVortex(
+                filter,
+                key,
+                darkPlasmaLastCenter,
+                darkPlasmaLastStrength * nonlinearFade,
+                darkPlasmaLastOpacity * nonlinearFade);
+        }
+
+        private static void ApplyDarkPlasmaKamuiVortex(Filter filter, string key, Vector2 center, float strength, float opacity)
+        {
             if (!filter.IsActive())
             {
-                Filters.Scene.Activate(key, target.Center);
+                Filters.Scene.Activate(key, center);
                 filter = Filters.Scene[key];
             }
 
             ScreenShaderData shaderData = filter.GetShader();
-            shaderData.UseTargetPosition(target.Center);
+            shaderData.UseTargetPosition(center);
             Effect effect = shaderData.Shader;
-            float lifeProgress = Utils.GetLerpValue(420f, 0f, target.timeLeft, true);
-            float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.2f + target.identity * 0.17f);
-
             effect.Parameters["uRadius"]?.SetValue(DarkPlasmaVortexRadius);
-            effect.Parameters["uStrength"]?.SetValue((MathHelper.Lerp(1.65f, 1.95f, lifeProgress) + 0.05f * pulse) * opacity);
+            effect.Parameters["uStrength"]?.SetValue(strength);
+            effect.Parameters["uOpacity"]?.SetValue(opacity);
             effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
+        }
+
+        private static void ResetDarkPlasmaKamuiVortexFadeOut()
+        {
+            darkPlasmaLastCenter = Vector2.Zero;
+            darkPlasmaLastStrength = 0f;
+            darkPlasmaLastOpacity = 0f;
+            darkPlasmaFadeOutTime = 0f;
         }
 
         private static void UpdateDarksunFragmentGravitationalLensing()

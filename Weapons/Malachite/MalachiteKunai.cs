@@ -20,7 +20,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         FiredFrenzy = 3,
         FiredPeacock = 4,
         ActivatedPeacock = 5,
-        ActivatedAce = 6
+        ActivatedAce = 6,
+        StagedNormal = 7,
+        StuckToNPC = 8
     }
 
     internal enum MalachiteKunaiVariant
@@ -35,7 +37,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
     {
         private const int PeacockCount = 23;
         private const int FrenzyCount = 3;
+        private const int StagedNormalLaunchDelay = 10;
         private const float StoredLifeRefresh = 2f;
+        private const float StagedNormalLaunchSpeed = 44f;
+        private const float PeacockHomingTurnRate = MathHelper.Pi / 60f;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
 
@@ -89,6 +94,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (IsStored)
                 return false;
 
+            if (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] <= StagedNormalLaunchDelay)
+                return false;
+
+            if (Mode == MalachiteKunaiMode.StuckToNPC)
+                return false;
+
             if (Mode == MalachiteKunaiMode.ActivatedAce && Projectile.localAI[1] <= 0f)
                 return false;
 
@@ -97,7 +108,13 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public override bool? CanDamage()
         {
-            return IsStored ? false : null;
+            if (IsStored || Mode == MalachiteKunaiMode.StuckToNPC)
+                return false;
+
+            if (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] <= StagedNormalLaunchDelay)
+                return false;
+
+            return null;
         }
 
         public override void AI()
@@ -135,12 +152,20 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     AIActivatedAce(owner);
                     break;
 
+                case MalachiteKunaiMode.StagedNormal:
+                    AIStagedNormal(owner);
+                    break;
+
+                case MalachiteKunaiMode.StuckToNPC:
+                    AIStuckToNPC();
+                    break;
+
                 default:
                     AINormalThrown();
                     break;
             }
 
-            if (Projectile.velocity.LengthSquared() > 0.01f && !IsStored)
+            if (Projectile.velocity.LengthSquared() > 0.01f && !IsStored && Mode != MalachiteKunaiMode.StuckToNPC)
                 Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
             SpawnMotionDust();
@@ -244,6 +269,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 : MalachiteKunaiMode.FiredPeacock;
 
             FireKunai(selected, direction, modeToFire, leftThrow: true);
+            if (CountStoredKunai(player) <= 0)
+                player.GetModPlayer<MalachitePlayer>().StartDepletionBurst();
+
             return true;
         }
 
@@ -284,6 +312,48 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return selected ?? aceFallback;
         }
 
+        public static void SpawnNormalLeftClickVolley(
+            Player player,
+            IEntitySource source,
+            int damage,
+            float knockback,
+            Vector2 mouseWorld,
+            int count,
+            bool depletionBurst)
+        {
+            count = Utils.Clamp(count, 1, MalachiteProgression.DepletionBurstKunaiCount);
+            Vector2 aimDirection = (mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            float speedMultiplier = player.GetModPlayer<MalachiteAccessoryPlayer>().MalachiteProjectileVelocityMultiplier;
+            float curve = Main.rand.NextFloat(-1f, 1f);
+            if (MathF.Abs(curve) < 0.25f)
+                curve += 0.35f * MathF.Sign(curve == 0f ? player.direction : curve);
+
+            float damageFactor = depletionBurst ? 0.78f : 1f;
+            for (int i = 0; i < count; i++)
+            {
+                Projectile projectile = Projectile.NewProjectileDirect(
+                    source,
+                    player.MountedCenter,
+                    aimDirection * StagedNormalLaunchSpeed * speedMultiplier,
+                    ModContent.ProjectileType<MalachiteKunai>(),
+                    Math.Max(1, (int)(damage * damageFactor)),
+                    knockback,
+                    player.whoAmI,
+                    (float)MalachiteKunaiMode.StagedNormal,
+                    count * 10 + i,
+                    curve);
+
+                projectile.Calamity().stealthStrike = false;
+                projectile.alpha = 150;
+                projectile.friendly = false;
+                projectile.tileCollide = false;
+                projectile.extraUpdates = 0;
+                projectile.penetrate = 1;
+                projectile.localAI[1] = depletionBurst ? 2f : 0f;
+                projectile.netUpdate = true;
+            }
+        }
+
         public static void SpawnFrenzyFan(Player player, IEntitySource source, int damage, float knockback)
         {
             for (int i = 0; i < FrenzyCount; i++)
@@ -301,6 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     (float)MalachiteKunaiVariant.Frenzy);
 
                 projectile.Calamity().stealthStrike = false;
+                projectile.alpha = 120;
                 projectile.netUpdate = true;
             }
         }
@@ -320,6 +391,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 (float)MalachiteKunaiVariant.Frenzy);
 
             projectile.Calamity().stealthStrike = false;
+            projectile.alpha = 120;
             projectile.netUpdate = true;
         }
 
@@ -341,6 +413,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     (float)(ace ? MalachiteKunaiVariant.Ace : MalachiteKunaiVariant.Peacock));
 
                 projectile.Calamity().stealthStrike = true;
+                projectile.alpha = 135;
                 projectile.netUpdate = true;
             }
         }
@@ -428,16 +501,16 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             projectile.friendly = true;
             projectile.hostile = false;
             projectile.timeLeft = mode == MalachiteKunaiMode.FiredFrenzy ? 180 : 240;
-            projectile.extraUpdates = mode == MalachiteKunaiMode.FiredFrenzy ? 2 : 1;
+            projectile.extraUpdates = mode == MalachiteKunaiMode.FiredFrenzy && !leftThrow ? 2 : 1;
             projectile.tileCollide = true;
-            projectile.penetrate = mode == MalachiteKunaiMode.FiredFrenzy ? (leftThrow ? 5 : -1) : 1;
-            projectile.localNPCHitCooldown = mode == MalachiteKunaiMode.FiredFrenzy ? 6 : 12;
+            projectile.penetrate = leftThrow ? 1 : (mode == MalachiteKunaiMode.FiredFrenzy ? -1 : 1);
+            projectile.localNPCHitCooldown = leftThrow ? 12 : (mode == MalachiteKunaiMode.FiredFrenzy ? 4 : 8);
             projectile.Calamity().stealthStrike = false;
             Player owner = Main.player[projectile.owner];
             float speedMultiplier = owner.active
                 ? owner.GetModPlayer<MalachiteAccessoryPlayer>().MalachiteProjectileVelocityMultiplier
                 : 1f;
-            projectile.velocity = direction * (mode == MalachiteKunaiMode.FiredFrenzy ? 25f : 19f) * speedMultiplier;
+            projectile.velocity = direction * (mode == MalachiteKunaiMode.FiredFrenzy ? 27f : 23f) * speedMultiplier;
             projectile.rotation = projectile.velocity.ToRotation() + MathHelper.PiOver2;
             projectile.netUpdate = true;
         }
@@ -451,13 +524,15 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.friendly = false;
             Projectile.tileCollide = false;
             Projectile.extraUpdates = 0;
-            Projectile.localAI[0] = 0f;
 
-            float fanAngle = MathHelper.Lerp(-0.55f, 0.55f, SlotIndex / 2f);
+            float open = GetStoredOpenInterpolant();
+            float fanAngle = MathHelper.Lerp(-0.55f, 0.55f, SlotIndex / 2f) * open;
             Vector2 behind = new Vector2(-owner.direction, -0.18f).SafeNormalize(Vector2.UnitX * -owner.direction);
-            Vector2 offset = behind.RotatedBy(fanAngle * owner.direction) * 58f + Vector2.UnitY * -8f;
+            Vector2 offset = behind.RotatedBy(fanAngle * owner.direction) * MathHelper.Lerp(10f, 58f, open) + Vector2.UnitY * MathHelper.Lerp(2f, -8f, open);
             Projectile.Center = Vector2.Lerp(Projectile.Center, owner.MountedCenter + offset, 0.35f);
             Projectile.rotation = offset.ToRotation() + MathHelper.PiOver2;
+            Projectile.scale = MathHelper.Lerp(0.62f, 1f, open);
+            SpawnStoredRevealDust(owner, open);
         }
 
         private void AIStoredPeacock(Player owner)
@@ -469,18 +544,41 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.friendly = false;
             Projectile.tileCollide = false;
             Projectile.extraUpdates = 0;
-            Projectile.localAI[0] = 0f;
 
             float progress = PeacockCount <= 1 ? 0.5f : SlotIndex / (float)(PeacockCount - 1);
-            float spread = MathHelper.Lerp(-1.92f, 1.92f, progress);
+            float open = GetStoredOpenInterpolant();
+            float spread = MathHelper.Lerp(-1.92f, 1.92f, progress) * open;
             float crown = MathF.Sin(progress * MathHelper.Pi);
             Vector2 behind = new Vector2(-owner.direction, -0.2f).SafeNormalize(Vector2.UnitX * -owner.direction);
-            Vector2 offset = behind.RotatedBy(spread * owner.direction) * (76f + crown * 36f);
-            offset.Y -= 18f + crown * 18f;
+            Vector2 offset = behind.RotatedBy(spread * owner.direction) * MathHelper.Lerp(12f, 76f + crown * 36f, open);
+            offset.Y -= MathHelper.Lerp(0f, 18f + crown * 18f, open);
 
             Projectile.Center = Vector2.Lerp(Projectile.Center, owner.MountedCenter + offset, 0.32f);
             Projectile.rotation = offset.ToRotation() + MathHelper.PiOver2;
-            Projectile.scale = Variant == MalachiteKunaiVariant.Ace ? 1.18f : 0.86f + crown * 0.18f;
+            Projectile.scale = MathHelper.Lerp(0.58f, Variant == MalachiteKunaiVariant.Ace ? 1.18f : 0.86f + crown * 0.18f, open);
+            SpawnStoredRevealDust(owner, open);
+        }
+
+        private float GetStoredOpenInterpolant()
+        {
+            float open = Utils.GetLerpValue(0f, 18f, Projectile.localAI[0], true);
+            return open * open * (3f - 2f * open);
+        }
+
+        private void SpawnStoredRevealDust(Player owner, float open)
+        {
+            if (open >= 1f || Projectile.localAI[0] > 18f || !Main.rand.NextBool(3))
+                return;
+
+            Vector2 velocity = (Projectile.Center - owner.MountedCenter).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.8f, 2.2f);
+            Dust dust = Dust.NewDustPerfect(
+                owner.MountedCenter + Main.rand.NextVector2Circular(10f, 12f),
+                DustID.Terra,
+                velocity,
+                100,
+                GetKunaiColor(),
+                Main.rand.NextFloat(0.55f, 0.95f));
+            dust.noGravity = true;
         }
 
         private bool OwnerCanKeepStoredKunai(Player owner)
@@ -497,9 +595,99 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private void AINormalThrown()
         {
             Projectile.extraUpdates = 1;
-            float gravityFade = Utils.GetLerpValue(110f, 20f, Projectile.localAI[0], true);
-            Projectile.velocity.Y += 0.15f * gravityFade;
-            Projectile.velocity *= 0.995f;
+            if (!MalachiteProgression.NormalKunaiIgnoresGravity)
+            {
+                float gravityFade = Utils.GetLerpValue(110f, 20f, Projectile.localAI[0], true);
+                Projectile.velocity.Y += 0.15f * gravityFade;
+                Projectile.velocity *= 0.995f;
+                return;
+            }
+
+            Projectile.velocity *= 1.001f;
+            Lighting.AddLight(Projectile.Center, 0.04f, 0.28f, 0.08f);
+        }
+
+        private void AIStagedNormal(Player owner)
+        {
+            Vector2 launchDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
+            int encoded = Math.Max(10, (int)Projectile.ai[1]);
+            int count = Utils.Clamp(encoded / 10, 1, MalachiteProgression.DepletionBurstKunaiCount);
+            int slot = Utils.Clamp(encoded % 10, 0, count - 1);
+
+            if (Projectile.localAI[0] <= StagedNormalLaunchDelay)
+            {
+                Projectile.friendly = false;
+                Projectile.tileCollide = false;
+                Projectile.extraUpdates = 0;
+                Projectile.timeLeft = Math.Max(Projectile.timeLeft, 90);
+
+                float progress = count <= 1 ? 0.5f : slot / (float)(count - 1);
+                float centered = slot - (count - 1) * 0.5f;
+                float open = Utils.GetLerpValue(0f, StagedNormalLaunchDelay, Projectile.localAI[0], true);
+                open = open * open * (3f - 2f * open);
+                float curve = Projectile.ai[2];
+                Vector2 side = launchDirection.RotatedBy(MathHelper.PiOver2);
+                float spacing = Projectile.localAI[1] >= 2f ? 19f : 26f;
+                float arcHeight = (Projectile.localAI[1] >= 2f ? 44f : 34f) * MathF.Sin(progress * MathHelper.Pi);
+                Vector2 targetOffset =
+                    launchDirection * MathHelper.Lerp(-10f, 38f + MathF.Abs(curve) * 14f, open) +
+                    side * centered * spacing * open -
+                    launchDirection * arcHeight * curve * open -
+                    Vector2.UnitY * MathHelper.Lerp(0f, 18f + arcHeight * 0.22f, open);
+
+                Projectile.Center = Vector2.Lerp(Projectile.Center, owner.MountedCenter + targetOffset, 0.48f);
+                Projectile.rotation = launchDirection.ToRotation() + MathHelper.PiOver2;
+                Projectile.scale = MathHelper.Lerp(0.62f, Projectile.localAI[1] >= 2f ? 1.08f : 0.98f, open);
+                SpawnStagedNormalDust();
+                return;
+            }
+
+            if (Projectile.localAI[0] == StagedNormalLaunchDelay + 1f)
+            {
+                Projectile.friendly = true;
+                Projectile.tileCollide = true;
+                Projectile.extraUpdates = 1;
+                Projectile.penetrate = 1;
+                Projectile.velocity = launchDirection * Math.Max(StagedNormalLaunchSpeed, Projectile.velocity.Length());
+                Projectile.netUpdate = true;
+            }
+
+            Projectile.velocity *= 1.002f;
+            Lighting.AddLight(Projectile.Center, 0.06f, 0.36f, 0.1f);
+        }
+
+        private void AIStuckToNPC()
+        {
+            int targetIndex = (int)Projectile.ai[1];
+            if (!Main.npc.IndexInRange(targetIndex) || !Main.npc[targetIndex].active)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            NPC target = Main.npc[targetIndex];
+            Projectile.friendly = false;
+            Projectile.tileCollide = false;
+            Projectile.extraUpdates = 0;
+            Projectile.Center = target.Center + Projectile.velocity;
+            Projectile.rotation = Projectile.ai[2];
+            Projectile.alpha = (int)MathHelper.Lerp(35f, 215f, Utils.GetLerpValue(28f, 50f, Projectile.localAI[0], true));
+            Projectile.scale *= 0.996f;
+        }
+
+        private void SpawnStagedNormalDust()
+        {
+            if (!Main.rand.NextBool(2))
+                return;
+
+            Dust dust = Dust.NewDustPerfect(
+                Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                DustID.Terra,
+                Main.rand.NextVector2Circular(0.8f, 0.8f),
+                100,
+                Projectile.localAI[1] >= 2f ? new Color(210, 255, 150) : new Color(105, 245, 125),
+                Main.rand.NextFloat(0.58f, 0.9f));
+            dust.noGravity = true;
         }
 
         private void AIFiredFrenzy()
@@ -520,7 +708,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (target == null)
                 return;
 
-            HomeTowards(target.Center, 18f, 0.085f);
+            HomeTowardsWithTurnLimit(target.Center, 34f, PeacockHomingTurnRate);
         }
 
         private void AIActivatedPeacock(Player owner)
@@ -536,7 +724,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             NPC target = FindTarget(1500f, requireLineOfSight: false);
             if (target != null)
             {
-                HomeTowards(target.Center, 28f, 0.22f);
+                HomeTowardsWithTurnLimit(target.Center, 38f, PeacockHomingTurnRate);
                 return;
             }
 
@@ -601,23 +789,37 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return bestTarget;
         }
 
-        private void HomeTowards(Vector2 target, float speed, float turn)
+        private void HomeTowardsWithTurnLimit(Vector2 target, float speed, float maxTurn)
         {
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 desiredVelocity = (target - Projectile.Center).SafeNormalize(currentDirection) * speed;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, turn);
+            Vector2 desiredDirection = (target - Projectile.Center).SafeNormalize(currentDirection);
+            float newRotation = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn);
+            Projectile.velocity = newRotation.ToRotationVector2() * MathHelper.Lerp(Projectile.velocity.Length(), speed, 0.18f);
 
             if (Projectile.velocity.Length() > speed)
-                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredVelocity) * speed;
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * speed;
         }
 
         private void SpawnMotionDust()
         {
-            if (IsStored)
+            if (IsStored || Mode == MalachiteKunaiMode.StuckToNPC)
                 return;
 
             if (UsesOriginalMalachiteTrail)
                 SpawnOriginalMalachiteGlowDust();
+
+            if ((Mode == MalachiteKunaiMode.FiredPeacock || Mode == MalachiteKunaiMode.ActivatedPeacock) && Main.rand.NextBool(2))
+            {
+                Vector2 side = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
+                Dust arcDust = Dust.NewDustPerfect(
+                    Projectile.Center - Projectile.velocity * 0.36f + side * Main.rand.NextFloat(-12f, 12f),
+                    DustID.Terra,
+                    -Projectile.velocity * 0.025f + side * Main.rand.NextFloat(-1.4f, 1.4f),
+                    80,
+                    new Color(72, 255, 145),
+                    Main.rand.NextFloat(0.72f, 1.05f));
+                arcDust.noGravity = true;
+            }
 
             if (Main.rand.NextBool(3))
                 return;
@@ -660,9 +862,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Poisoned, 6 * 60);
+            if (ShouldUseLeftKunaiHitVisual)
+                SpawnLeftKunaiHitVisual(target);
 
-            if (Mode == MalachiteKunaiMode.ActivatedAce || Variant == MalachiteKunaiVariant.Ace)
+            if (Mode == MalachiteKunaiMode.ActivatedAce || HasAceVariant)
                 SpawnMiniExplosion();
+
+            if (ShouldStickOnHit)
+                StickToTarget(target);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -680,6 +887,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public override void OnKill(int timeLeft)
         {
+            if (Mode == MalachiteKunaiMode.StuckToNPC)
+                return;
+
             for (int i = 0; i < 12; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -691,6 +901,61 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     Main.rand.NextFloat(0.75f, 1.35f));
                 dust.noGravity = Main.rand.NextBool();
             }
+        }
+
+        private bool ShouldUseLeftKunaiHitVisual =>
+            !WasActivated &&
+            (Mode == MalachiteKunaiMode.NormalThrown ||
+            Mode == MalachiteKunaiMode.StagedNormal ||
+            Mode == MalachiteKunaiMode.FiredFrenzy ||
+            Mode == MalachiteKunaiMode.FiredPeacock);
+
+        private bool ShouldStickOnHit =>
+            !WasActivated &&
+            (Mode == MalachiteKunaiMode.NormalThrown ||
+            Mode == MalachiteKunaiMode.StagedNormal ||
+            Mode == MalachiteKunaiMode.FiredFrenzy ||
+            Mode == MalachiteKunaiMode.FiredPeacock);
+
+        private void SpawnLeftKunaiHitVisual(NPC target)
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize((target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX));
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                direction,
+                ModContent.ProjectileType<MalachiteHitCutVisual>(),
+                0,
+                0f,
+                Projectile.owner,
+                direction.ToRotation(),
+                Projectile.localAI[1] >= 2f ? 1f : 0f);
+        }
+
+        private void StickToTarget(NPC target)
+        {
+            MalachiteKunaiVariant storedVariant = Variant;
+            Vector2 offset = Projectile.Center - target.Center;
+            float maxOffset = Math.Max(target.width, target.height) * 0.46f + 12f;
+            if (offset.Length() > maxOffset)
+                offset = offset.SafeNormalize(Vector2.Zero) * maxOffset;
+
+            Projectile.ai[0] = (float)MalachiteKunaiMode.StuckToNPC;
+            Projectile.ai[1] = target.whoAmI;
+            Projectile.ai[2] = Projectile.rotation;
+            Projectile.localAI[0] = 0f;
+            Projectile.localAI[1] = (float)storedVariant;
+            Projectile.localAI[2] = 0f;
+            Projectile.velocity = offset;
+            Projectile.damage = 0;
+            Projectile.friendly = false;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 50;
+            Projectile.netUpdate = true;
         }
 
         private void SpawnMiniExplosion()
@@ -716,13 +981,16 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Vector2 origin = frame.Size() * 0.5f;
             SpriteEffects effects = Projectile.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-            if (!IsStored)
+            if (!IsStored && Mode != MalachiteKunaiMode.StuckToNPC)
             {
                 if (UsesOriginalMalachiteTrail)
                     DrawAfterimageTrail(texture, frame, origin, effects, GetOriginalMalachiteGlowColor(130) * 0.62f, glowTrail: true);
 
                 Color trailColor = GetKunaiColor() * 0.45f;
                 DrawAfterimageTrail(texture, frame, origin, effects, trailColor, glowTrail: false);
+
+                if (UsesPeacockArcTrail)
+                    DrawPeacockArcTrail();
             }
 
             Color drawColor = Color.Lerp(lightColor, GetKunaiColor(), 0.75f);
@@ -816,6 +1084,42 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
         }
 
+        private void DrawPeacockArcTrail()
+        {
+            Color color = new Color(70, 255, 140, 0);
+            for (int i = Projectile.oldPos.Length - 2; i >= 0; i--)
+            {
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                Vector2 nextCenter = Projectile.oldPos[i + 1] + Projectile.Size * 0.5f;
+                if (oldCenter == Projectile.Size * 0.5f || nextCenter == Projectile.Size * 0.5f)
+                    continue;
+
+                float completion = 1f - i / (float)Projectile.oldPos.Length;
+                DrawPixelLine(
+                    oldCenter,
+                    nextCenter,
+                    color * completion * 0.48f,
+                    MathHelper.Lerp(7f, 2.2f, i / (float)Projectile.oldPos.Length));
+            }
+        }
+
+        private static void DrawPixelLine(Vector2 start, Vector2 end, Color color, float thickness)
+        {
+            Vector2 edge = end - start;
+            if (edge.LengthSquared() <= 0.001f)
+                return;
+
+            Main.EntitySpriteDraw(
+                TextureAssets.MagicPixel.Value,
+                start - Main.screenPosition,
+                new Rectangle(0, 0, 1, 1),
+                color,
+                edge.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(edge.Length(), thickness),
+                SpriteEffects.None);
+        }
+
         public override Color? GetAlpha(Color lightColor) => GetKunaiColor();
 
         private Color GetKunaiColor()
@@ -823,7 +1127,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (IsAceVisual)
                 return new Color(220, 255, 130);
 
-            return Variant switch
+            MalachiteKunaiVariant variant = Mode == MalachiteKunaiMode.StuckToNPC
+                ? (MalachiteKunaiVariant)(int)Projectile.localAI[1]
+                : Variant;
+
+            return variant switch
             {
                 MalachiteKunaiVariant.Frenzy => new Color(90, 255, 145),
                 MalachiteKunaiVariant.Peacock => new Color(70, 230, 125),
@@ -842,11 +1150,25 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         private static Color GetOriginalMalachiteGlowColor(int alpha) => new(Main.DiscoR, 203, 103, alpha);
 
-        private bool IsAceVisual => Mode == MalachiteKunaiMode.ActivatedAce || Variant == MalachiteKunaiVariant.Ace;
+        private bool IsAceVisual =>
+            Mode == MalachiteKunaiMode.ActivatedAce ||
+            (Mode == MalachiteKunaiMode.StuckToNPC && (MalachiteKunaiVariant)(int)Projectile.localAI[1] == MalachiteKunaiVariant.Ace) ||
+            HasAceVariant;
+
+        private bool HasAceVariant =>
+            Mode != MalachiteKunaiMode.StagedNormal &&
+            Mode != MalachiteKunaiMode.StuckToNPC &&
+            Variant == MalachiteKunaiVariant.Ace;
 
         private bool UsesOriginalMalachiteTrail =>
             Mode == MalachiteKunaiMode.NormalThrown ||
+            (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] > StagedNormalLaunchDelay) ||
             (!WasActivated && (Mode == MalachiteKunaiMode.FiredFrenzy || Mode == MalachiteKunaiMode.FiredPeacock));
+
+        private bool UsesPeacockArcTrail =>
+            Mode == MalachiteKunaiMode.FiredPeacock ||
+            Mode == MalachiteKunaiMode.ActivatedPeacock ||
+            Mode == MalachiteKunaiMode.ActivatedAce;
 
         private bool IsPeacockOrAceKunai =>
             Mode == MalachiteKunaiMode.FiredPeacock ||
@@ -859,6 +1181,85 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+        }
+    }
+
+    public sealed class MalachiteHitCutVisual : ModProjectile, ILocalizedModType
+    {
+        public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
+
+        public override string LocalizationCategory => "Projectiles.Malachite";
+
+        private bool Enhanced => Projectile.ai[1] >= 1f;
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 2;
+            Projectile.height = 2;
+            Projectile.friendly = false;
+            Projectile.hostile = false;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 18;
+        }
+
+        public override bool? CanDamage() => false;
+
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            Projectile.localAI[0]++;
+            Lighting.AddLight(Projectile.Center, 0.08f, 0.32f, 0.08f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Vector2 forward = Projectile.ai[0].ToRotationVector2();
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 center = Projectile.Center;
+            float fade = Utils.GetLerpValue(18f, 4f, Projectile.localAI[0], true);
+            float bloom = MathF.Sin(MathHelper.Clamp(Projectile.localAI[0] / 18f, 0f, 1f) * MathHelper.Pi);
+            int lineCount = Enhanced ? 13 : 8;
+            float lineLength = Enhanced ? 360f : 230f;
+            float spread = Enhanced ? 58f : 34f;
+            Color lineColor = Enhanced ? new Color(205, 255, 125, 0) : new Color(105, 255, 135, 0);
+
+            for (int i = 0; i < lineCount; i++)
+            {
+                float centered = i - (lineCount - 1) * 0.5f;
+                float stagger = i % 2 == 0 ? 18f : -12f;
+                Vector2 start = center - forward * (38f + stagger) + normal * centered * spread / Math.Max(1f, lineCount - 1f);
+                Vector2 end = start + forward * (lineLength * (0.76f + 0.05f * (i % 4)));
+                DrawLine(start, end, lineColor * fade * (0.34f + bloom * 0.24f), Enhanced ? 3.2f : 2.4f);
+            }
+
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
+            Vector2 starOrigin = star.Size() * 0.5f;
+            Color starColor = Color.Lerp(new Color(135, 255, 145, 0), Color.White, Enhanced ? 0.32f : 0.18f) * fade;
+            float starScale = (Enhanced ? 1.25f : 0.92f) * (0.8f + bloom * 0.55f);
+            Main.EntitySpriteDraw(star, center - Main.screenPosition, null, starColor * 0.85f, Projectile.ai[0] + MathHelper.PiOver4, starOrigin, new Vector2(0.72f, 1.35f) * starScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(star, center - Main.screenPosition, null, starColor * 0.62f, Projectile.ai[0] - MathHelper.PiOver4, starOrigin, new Vector2(0.54f, 1.05f) * starScale, SpriteEffects.None);
+
+            return false;
+        }
+
+        private static void DrawLine(Vector2 start, Vector2 end, Color color, float thickness)
+        {
+            Vector2 edge = end - start;
+            if (edge.LengthSquared() <= 0.001f)
+                return;
+
+            Main.EntitySpriteDraw(
+                TextureAssets.MagicPixel.Value,
+                start - Main.screenPosition,
+                new Rectangle(0, 0, 1, 1),
+                color,
+                edge.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(edge.Length(), thickness),
+                SpriteEffects.None);
         }
     }
 }

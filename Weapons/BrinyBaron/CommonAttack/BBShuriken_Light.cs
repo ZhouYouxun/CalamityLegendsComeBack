@@ -51,7 +51,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (Projectile.velocity.LengthSquared() < 0.01f)
                 Projectile.velocity = Vector2.UnitY * -BaseSpeed;
         }
-        float maxTurnAngle;
         public override void AI()
         {
             float t = Utils.GetLerpValue(0f, 60f, Projectile.timeLeft, true);
@@ -187,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D ringTex = TextureAssets.Extra[89].Value;
+            Texture2D ringTex = TextureAssets.Extra[ExtrasID.ThePerfectGlow].Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY;
             Vector2 origin = ringTex.Size() * 0.5f;
             float pulse = 1f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7f);

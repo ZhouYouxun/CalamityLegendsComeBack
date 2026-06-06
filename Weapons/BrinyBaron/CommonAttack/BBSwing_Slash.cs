@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = TextureAssets.Extra[98].Value;
+            Texture2D texture = TextureAssets.Extra[ExtrasID.SharpTears].Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
             Color slashColor = Color.Lerp(new Color(60, 170, 255, 0), new Color(220, 250, 255, 0), 0.35f) * Projectile.Opacity;

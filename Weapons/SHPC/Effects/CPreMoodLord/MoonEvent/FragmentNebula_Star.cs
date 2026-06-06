@@ -711,7 +711,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
             Texture2D fadeStreak = ModContent.Request<Texture2D>("CalamityMod/Particles/FadeStreak").Value;
-            Texture2D magicPoint = TextureAssets.Extra[89].Value;
+            Texture2D magicPoint = TextureAssets.Extra[ExtrasID.ThePerfectGlow].Value;
             Texture2D runeStar = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_05").Value;
             Texture2D magicRune = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_02").Value;
             Texture2D twirlRune = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/twirl_02").Value;

@@ -23,10 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ===== 状态 =====
         private int splitDepth;
         private bool initialized;
-        private bool hitEnemy;
         private float damageScale = 0.5f;
-
-        private int splitTimer; // 递归计时器
 
         private const int MaxDepth = 6;
 
@@ -79,12 +76,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.SourceDamage *= damageScale;
-        }
-
-        // ================= OnHitNPC =================
-        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            hitEnemy = true; // 命中后停止递归
         }
 
         // ================= OnKill =================

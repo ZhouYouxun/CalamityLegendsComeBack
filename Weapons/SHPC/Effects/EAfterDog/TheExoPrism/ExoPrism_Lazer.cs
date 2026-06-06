@@ -22,10 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         private int Lifetime;
         private float MaxBeamScale;
         private float MaxBeamLength;
-        private float BeamTileCollisionWidth;
         private float BeamHitboxCollisionWidth;
-        private int NumSamplePoints;
-        private float BeamLengthChangeFactor;
 
         private Vector2 beamVector = Vector2.Zero;
 
@@ -35,10 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             Lifetime = 14;
             MaxBeamScale = 1.2f;
             MaxBeamLength = 1200f;
-            BeamTileCollisionWidth = 1f;
             BeamHitboxCollisionWidth = 16f;
-            NumSamplePoints = 3;
-            BeamLengthChangeFactor = 0.75f;
 
             Projectile.timeLeft = Lifetime;
         }

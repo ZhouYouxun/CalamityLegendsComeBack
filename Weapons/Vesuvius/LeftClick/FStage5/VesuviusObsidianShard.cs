@@ -23,8 +23,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
 
         public override void SetDefaults()
         {
-            Projectile.width = 34;
-            Projectile.height = 34;
+            Projectile.width = 12;
+            Projectile.height = 12;
+            Projectile.scale = 0.33f;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.tileCollide = true;

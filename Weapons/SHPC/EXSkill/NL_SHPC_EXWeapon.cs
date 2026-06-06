@@ -98,7 +98,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         // 播音
         private SlotId ChargeSoundSlot;
-        private int chargeSoundTimer;
         private void ChargePhase()
         {
 

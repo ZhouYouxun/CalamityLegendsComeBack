@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
     // ================= 独立实例数据 =================
     public class ExoPrism_GP : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.SHPC";
+        public string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;

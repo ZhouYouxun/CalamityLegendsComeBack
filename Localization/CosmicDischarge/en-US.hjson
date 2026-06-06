@@ -10,8 +10,30 @@ Mods: {
 				}
 
 				NewLegendCosmicDischarge: {
-					DisplayName: New Legend Cosmic Discharge
-					Tooltip: ""
+					DisplayName: Cosmic Discharge - Legend Reborn
+					Tooltip: "[GFB]"
+					CosmicDischargeLeft:
+						'''
+						[c/8DEBFF:Left click:] [c/DCD6C8:performs a three-hit combo in the current form.]
+						[c/8DEBFF:Whip form:] [c/DCD6C8:slashes the blade-chain from above, then below, then thrusts toward the cursor. The returning blade deals reduced damage.]
+						[c/8DEBFF:Sword form:] [c/DCD6C8:swings twice, then spins the blade twice before cleaving downward and releasing a short frost wave.]
+						'''
+					CosmicDischargeRight:
+						'''
+						[c/6FDFFF:Right click:] [c/DCD6C8:switches between whip and sword form.]
+						[c/6FDFFF:During the third hit windup:] [c/DCD6C8:triggers Frostflash Draw instead, instantly thrusting the blade-chain and rapidly retracting it. Only this attack grants 10 ultimate energy.]
+						'''
+					CosmicDischargeUltimate:
+						'''
+						[c/FFE85A:Ultimate:] [c/DCD6C8:at 120 energy, press [{0}] to inflict Glacial State on enemies within 25 tiles and create a 10 second frost field.]
+						[c/FFE85A:Frost field:] [c/DCD6C8:enemies within 8 tiles are heavily slowed; you take 35% less damage and gain 20 defense. Ultimate energy cannot be gained while it exists.]
+						'''
+					CosmicDischargePassive:
+						'''
+						[c/B8F4FF:Voidfrost Seal:] [c/DCD6C8:while held, fatal damage is negated, 60 life is restored, and Icebound Undying is gained for 3 seconds. Cooldown: 300 seconds.]
+						[c/B8F4FF:Zero-Degree Armament:] [c/DCD6C8:while held, being in the snow biome or suffering a cold debuff without Warmth grants +10% damage and +10 defense.]
+						[c/B8F4FF:Cold Wind Rising:] [c/DCD6C8:Icebound Undying greatly improves recovery and adds 25 life regeneration. When it ends, gain 3 seconds of x1.5 final damage.]
+						'''
 				}
 
 				Ranged: {
@@ -26,6 +48,37 @@ Mods: {
 					}
 				}
 			}
+		}
+
+		Buffs: {
+			CosmicDischargeIceboundBuff: {
+				DisplayName: Icebound Undying
+				Description: Fatal damage is being suppressed and life regeneration is greatly increased.
+			}
+
+			CosmicDischargeColdWindBuff: {
+				DisplayName: Cold Wind Rising
+				Description: Final damage is multiplied by 1.5.
+			}
+
+			CosmicDischargeUltimateGuardBuff: {
+				DisplayName: Frost Field Guard
+				Description: Damage taken is reduced and defense is increased.
+			}
+		}
+
+		Projectiles: {
+			Melee: {
+				CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Blade-Chain
+				CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Frost Wave
+				CosmicDischargeIceBomb.DisplayName: Cosmic Discharge Ice Bomb
+				CosmicDischargeUltimateField.DisplayName: Cosmic Discharge Frost Field
+			}
+		}
+
+		Cooldowns: {
+			CosmicDischarge_Ultimate: Frostflash Energy
+			CosmicDischarge_Icebound: Voidfrost Seal
 		}
 	}
 }

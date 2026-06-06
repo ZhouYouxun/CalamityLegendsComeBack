@@ -5,10 +5,10 @@ Mods: {
 				Malachite: {
 					DisplayName: Peacock Plume
 					Tooltip: "[GFB]"
-					LeftClick: "[c/7DFF9A:Left click:] Throw a fast poisonous kunai. Normal kunai start with slight gravity, then gradually ignore it. Stored peacock kunai are thrown one by one first; if none exist, stored frenzied kunai are thrown instead."
-					RightClick: "[c/80FFC8:Right click:] Generate 3 frenzied kunai behind you. They deal higher damage, pierce, and ignore gravity. 3 second cooldown. They can coexist with the 23 peacock kunai; only an existing full frenzied fan is awakened before the new one appears."
-					StealthStrike: "[c/B5FF74:Stealth strike:] Left and right stealth strikes are identical: any stored peacock kunai are fired as left-click shots, then 23 new peacock kunai open behind you. Peacock kunai cannot pierce but home in on enemies; the ace causes a miniature blast on hit."
-					Finale: "[c/D6FF9A:Finale:] At full stealth and when off cooldown, press [{0}] to call a green spotlight and falling petals. After 2 seconds, slash with Peacock Plume and erupt multi-hit green explosions around nearby enemies."
+					LeftClick: "[c/7DFF9A:Left click:] Throw a fast poisonous kunai that briefly pins to enemies on hit. Stored special kunai are thrown one by one first. After Wall of Flesh, normal kunai ignore gravity instead of gaining a use-speed cut; after Plaguebringer Goliath they spawn 2 at a time, and after Moon Lord they spawn 3 at a time, pausing 10 frames before a high-speed launch."
+					RightClick: "[c/80FFC8:Right click:] Generate 3 frenzied kunai behind you. If a full frenzied fan already exists, the old fan is awakened in one burst before 3 new kunai are stored. 3 second cooldown."
+					StealthStrike: "[c/B5FF74:Stealth strike:] Left and right stealth strikes are identical: any stored peacock kunai are fired as left-click shots, then 23 new peacock kunai open behind you. Peacock kunai cannot pierce and rapidly home with a 3 degree per-frame turn limit; the ace causes a miniature blast on hit."
+					Finale: "[c/D6FF9A:Finale:] At full stealth and when off cooldown, press [{0}] to call a softened green cone spotlight and falling petals. After 2 seconds, slash with Peacock Plume and erupt multi-hit green black-hole blasts around nearby enemies."
 					Passive:
 						'''
 						[c/9AFFC8:Passives while held:]
@@ -31,6 +31,7 @@ Mods: {
 		Projectiles: {
 			Malachite: {
 				MalachiteKunai.DisplayName: Peacock Kunai
+				MalachiteHitCutVisual.DisplayName: Peacock Hit Lines
 				MalachiteGreenExplosion.DisplayName: Peacock Blast
 				MalachiteFinaleController.DisplayName: Peacock Finale
 				MalachiteFinaleSlash.DisplayName: Peacock Slash

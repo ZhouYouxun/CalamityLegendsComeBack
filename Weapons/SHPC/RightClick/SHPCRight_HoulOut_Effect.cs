@@ -177,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 Dust dust = Dust.NewDustPerfect(
                     GunTipPosition + Main.rand.NextVector2Circular(6f, 6f),
-                    267
+                    DustID.RainbowMk2
                 );
 
                 dust.velocity = upward * Main.rand.NextFloat(3f, 7f);
@@ -529,7 +529,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                         -MathHelper.Lerp(0.6f, 1.4f, heatInterpolant),
                          MathHelper.Lerp(0.6f, 1.4f, heatInterpolant));
 
-                Dust dust = Dust.NewDustPerfect(dustSpawnPos, 267);
+                Dust dust = Dust.NewDustPerfect(dustSpawnPos, DustID.RainbowMk2);
                 dust.velocity = dustVelocity;
                 dust.color = Color.Lerp(techBlue, hotWhite, Main.rand.NextFloat(0.2f, 0.75f));
                 dust.scale = Main.rand.NextFloat(
@@ -712,7 +712,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                 Dust dust = Dust.NewDustPerfect(
                     muzzlePos + baseDirection * Main.rand.NextFloat(0f, 3f),
-                    267
+                    DustID.RainbowMk2
                 );
 
                 dust.velocity = dustVelocity;
@@ -773,7 +773,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
                     Dust dust = Dust.NewDustPerfect(
                         lanePos,
-                        267
+                        DustID.RainbowMk2
                     );
 
                     dust.velocity = dustVelocity;

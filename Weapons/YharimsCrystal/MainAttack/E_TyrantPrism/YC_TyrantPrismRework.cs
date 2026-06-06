@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.YC;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
 using CalamityMod;
@@ -22,6 +23,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPris
 
         public static bool ShouldKeepDrones(Player player)
         {
+            if (YC_EXHelper.TryGetActiveVip(player.whoAmI, out _, out _))
+                return player.active && !player.dead;
+
             return player.active &&
                 !player.dead &&
                 player.HeldItem != null &&
@@ -94,7 +98,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPris
     {
         public enum TyrantPrismState
         {
+            // 蓄力阶段：僚机围绕水晶螺旋旋转，每个僚机各自发射一道汇聚激光。
             Converging,
+            // 攻击形态：蓄力完成后持续发射机枪弹幕与僚机激光，方向跟随鼠标附近。
             Combat,
             HeavyRest
         }
@@ -427,9 +433,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
         };
 
         private bool positionInitialized;
-        private bool combatAttackInitialized;
         private int attackTimer;
-        private int burstShotsRemaining;
         private int lastCommandSerial = -1;
         private int lastRhythmStep = -1;
 
@@ -683,10 +687,13 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             }
             else
             {
-                NPC target = FindTarget(owner, 1750f);
-                CurrentForwardDirection = target != null
-                    ? (target.Center - Projectile.Center).SafeNormalize(defaultDirection)
-                    : defaultDirection;
+                Vector2 mouseWorld = owner.Calamity().mouseWorld;
+                if (mouseWorld == Vector2.Zero && owner.whoAmI == Main.myPlayer)
+                    mouseWorld = Main.MouseWorld;
+
+                CurrentForwardDirection = mouseWorld == Vector2.Zero
+                    ? defaultDirection
+                    : (mouseWorld - Projectile.Center).SafeNormalize(defaultDirection);
             }
 
             Projectile.rotation = CurrentForwardDirection.ToRotation() + MathHelper.PiOver2;
@@ -705,7 +712,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
 
         private void UpdateUltimateFacing(Player owner)
         {
-            NPC target = FindTarget(owner, 1800f);
+            NPC target = FindTarget(owner, 3600f, false);
             Vector2 fallback = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
             CurrentForwardDirection = target != null
                 ? (target.Center - Projectile.Center).SafeNormalize(fallback)
@@ -806,7 +813,6 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             if (holdout.CommandSerial != lastCommandSerial)
             {
                 lastCommandSerial = holdout.CommandSerial;
-                burstShotsRemaining = 0;
                 attackTimer = 48 + SlotIndex * 4;
                 lastRhythmStep = -1;
 
@@ -827,6 +833,9 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
 
             if (Projectile.owner == Main.myPlayer)
                 FireRhythmVolley(rhythmStep);
+
+            if (Projectile.owner == Main.myPlayer)
+                TryFireAetherfluxRay(holdout.StateTimer);
         }
 
         private bool IsRhythmPair(int pair) => pair switch
@@ -838,18 +847,20 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
 
         private void FireRhythmVolley(int rhythmStep)
         {
+            YCAccessoryPlayer accessoryPlayer = Main.player[Projectile.owner].GetModPlayer<YCAccessoryPlayer>();
             Vector2 direction = CurrentForwardDirection.SafeNormalize(Vector2.UnitX);
             Vector2 muzzle = Projectile.Center + direction * 18f;
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
 
-            int bulletCount = 5 + (rhythmStep + SlotIndex) % 2;
+            int bulletCount = 5 + (rhythmStep + SlotIndex) % 2 + accessoryPlayer.PrismVolleyBulletBonus;
+            float speedMultiplier = accessoryPlayer.PrismProjectileSpeedMultiplier;
             for (int i = 0; i < bulletCount; i++)
             {
                 float spread = MathHelper.Lerp(-0.055f, 0.055f, bulletCount == 1 ? 0.5f : i / (float)(bulletCount - 1));
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     muzzle + side * MathHelper.Lerp(-5f, 5f, bulletCount == 1 ? 0.5f : i / (float)(bulletCount - 1)),
-                    direction.RotatedBy(spread + Main.rand.NextFloat(-0.01f, 0.01f)) * Main.rand.NextFloat(25f, 29f),
+                    direction.RotatedBy(spread + Main.rand.NextFloat(-0.01f, 0.01f)) * Main.rand.NextFloat(25f, 29f) * speedMultiplier,
                     ModContent.ProjectileType<YC_TyrantPrismBolt>(),
                     (int)(Projectile.damage * 0.26f),
                     Projectile.knockBack * 0.18f,
@@ -859,13 +870,41 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             }
 
             EmitMuzzleBurst(direction, 3, 4.2f);
-            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.16f, Pitch = 0.18f + SlotIndex * 0.02f, PitchVariance = 0.04f, MaxInstances = 8 }, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.12f, Pitch = -0.18f + SlotIndex * 0.025f, PitchVariance = 0.08f, MaxInstances = 8 }, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item91 with { Volume = 0.08f, Pitch = 0.24f + SlotIndex * 0.02f, MaxInstances = 8 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.055f, Pitch = 0.18f + SlotIndex * 0.02f, PitchVariance = 0.04f, MaxInstances = 8 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.04f, Pitch = -0.18f + SlotIndex * 0.025f, PitchVariance = 0.08f, MaxInstances = 8 }, Projectile.Center);
+        }
+
+        private void TryFireAetherfluxRay(int stateTimer)
+        {
+            int interval = Main.player[Projectile.owner].GetModPlayer<YCAccessoryPlayer>().AetherfluxInterval;
+            if ((stateTimer + SlotIndex * 19) % interval != 0)
+                return;
+
+            Vector2 direction = CurrentForwardDirection.SafeNormalize(Vector2.UnitX);
+            NPC target = FindTargetNearMouse(1500f, 620f);
+            if (target != null)
+                direction = (target.Center - Projectile.Center).SafeNormalize(direction);
+
+            Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + direction * 18f + side * (i * 20f),
+                    direction * 24f,
+                    ModContent.ProjectileType<PhasedGodRay>(),
+                    (int)(Projectile.damage * 0.72f),
+                    Projectile.knockBack * 0.18f,
+                    Projectile.owner,
+                    i * 0.5f);
+            }
+
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MagnaCannonShot") { Volume = 0.16f, Pitch = 0.18f + SlotIndex * 0.025f, PitchVariance = 0.08f, MaxInstances = 6 }, Projectile.Center);
         }
 
         private void FireHeavySalvo()
         {
+            YCAccessoryPlayer accessoryPlayer = Main.player[Projectile.owner].GetModPlayer<YCAccessoryPlayer>();
             Vector2 direction = CurrentForwardDirection.SafeNormalize(Vector2.UnitX);
             Vector2 muzzle = Projectile.Center + direction * 18f;
             Vector2 missileVelocity = direction.RotatedBy(Main.rand.NextFloat(-0.06f, 0.06f)) * 37.5f;
@@ -875,7 +914,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
                 muzzle,
                 missileVelocity,
                 ModContent.ProjectileType<YC_TyrantPrismMissile>(),
-                (int)(Projectile.damage * 2.65f),
+                (int)(Projectile.damage * 2.65f * accessoryPlayer.HeavySalvoDamageMultiplier),
                 Projectile.knockBack * 2.2f,
                 Projectile.owner,
                 SlotIndex);
@@ -895,34 +934,8 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             }
 
             attackTimer++;
-            if ((attackTimer + SlotIndex) % 5 != 0)
-                return;
-
-            Vector2 direction = CurrentForwardDirection.SafeNormalize(Vector2.UnitX * owner.direction);
-            Vector2 muzzle = Projectile.Center + direction * 18f;
-
-            int bulletCount = 5 + (SlotIndex + attackTimer) % 2;
-            Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            for (int i = 0; i < bulletCount; i++)
-            {
-                float spread = MathHelper.Lerp(-0.07f, 0.07f, bulletCount == 1 ? 0.5f : i / (float)(bulletCount - 1));
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    muzzle + side * MathHelper.Lerp(-6f, 6f, bulletCount == 1 ? 0.5f : i / (float)(bulletCount - 1)),
-                    direction.RotatedBy(spread) * Main.rand.NextFloat(27f, 32f),
-                    ModContent.ProjectileType<YC_TyrantPrismBolt>(),
-                    (int)(Projectile.damage * 0.24f),
-                    Projectile.knockBack * 0.18f,
-                    Projectile.owner,
-                    SlotIndex + Main.rand.NextFloat(),
-                    0.75f);
-            }
-
-            if (attackTimer % 10 == 0)
-            {
-                SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.16f, Pitch = 0.34f + SlotIndex * 0.015f, PitchVariance = 0.05f, MaxInstances = 10 }, Projectile.Center);
-                SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.1f, Pitch = -0.08f + SlotIndex * 0.02f, PitchVariance = 0.08f, MaxInstances = 10 }, Projectile.Center);
-            }
+            if ((attackTimer + SlotIndex * 5) % 28 == 0)
+                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.08f, Pitch = -0.18f + SlotIndex * 0.02f, PitchVariance = 0.06f, MaxInstances = 8 }, Projectile.Center);
         }
 
         private static void EmitHeavyMuzzleFX(Vector2 muzzle, Vector2 direction)
@@ -952,7 +965,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
             GeneralParticleHandler.SpawnParticle(pulse);
         }
 
-        private NPC FindTarget(Player owner, float range)
+        private NPC FindTarget(Player owner, float range, bool requireLineOfSight = true)
         {
             NPC nearest = null;
             float maxDistanceSquared = range * range;
@@ -967,10 +980,43 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
                 if (distanceSquared > maxDistanceSquared)
                     continue;
 
-                if (!Collision.CanHitLine(Projectile.Center, 1, 1, npc.Center, 1, 1))
+                if (requireLineOfSight && !Collision.CanHitLine(Projectile.Center, 1, 1, npc.Center, 1, 1))
                     continue;
 
                 maxDistanceSquared = distanceSquared;
+                nearest = npc;
+            }
+
+            return nearest;
+        }
+
+        private NPC FindTargetNearMouse(float rangeFromDrone, float rangeFromMouse)
+        {
+            Vector2 mouseWorld = Main.MouseWorld;
+            if (Main.player.IndexInRange(Projectile.owner))
+            {
+                Vector2 syncedMouse = Main.player[Projectile.owner].Calamity().mouseWorld;
+                if (syncedMouse != Vector2.Zero)
+                    mouseWorld = syncedMouse;
+            }
+
+            NPC nearest = null;
+            float bestScore = rangeFromMouse * rangeFromMouse;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                if (Vector2.DistanceSquared(Projectile.Center, npc.Center) > rangeFromDrone * rangeFromDrone)
+                    continue;
+
+                float score = Vector2.DistanceSquared(mouseWorld, npc.Center);
+                if (score >= bestScore)
+                    continue;
+
+                bestScore = score;
                 nearest = npc;
             }
 
@@ -1154,7 +1200,7 @@ public class YC_TyrantPrismBolt : ModProjectile, ILocalizedModType
         {
             for (int i = 0; i <= 6; i++)
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, 226, new Vector2(2, 2).RotatedByRandom(100f) * Main.rand.NextFloat(0.1f, 2.9f));
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric, new Vector2(2, 2).RotatedByRandom(100f) * Main.rand.NextFloat(0.1f, 2.9f));
                 dust.noGravity = false;
                 dust.scale = Main.rand.NextFloat(0.3f, 0.9f);
             }
@@ -1193,7 +1239,7 @@ public class YC_TyrantPrismLaserLance : ModProjectile, ILocalizedModType
     {
         Timer++;
         Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-        Projectile.rotation = Projectile.velocity.ToRotation();
+        Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
         if (BeamLength <= 0f)
             BeamLength = 620f;
 

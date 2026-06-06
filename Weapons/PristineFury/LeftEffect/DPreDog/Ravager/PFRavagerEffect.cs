@@ -98,26 +98,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Timer == 1f)
                 storedLaunchVelocity = Projectile.velocity;
 
-            if (Timer < 42f)
+            if (Timer < 18f)
             {
-                Projectile.velocity *= 0.985f;
+                Projectile.velocity *= 0.995f;
             }
             else
             {
                 if (!turned)
                 {
                     float side = Variant % 2f == 0f ? 1f : -1f;
-                    Projectile.velocity = storedLaunchVelocity.SafeNormalize(Vector2.UnitX).RotatedBy(side * 0.58f) * 12.5f;
+                    Projectile.velocity = storedLaunchVelocity.SafeNormalize(Vector2.UnitX).RotatedBy(side * 0.24f) * 15.5f;
                     turned = true;
                 }
 
-                NPC target = Projectile.Center.ClosestNPCAt(1150f);
+                NPC target = Projectile.Center.ClosestNPCAt(1320f);
                 if (target != null)
                 {
-                    Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center + target.velocity * 8f, Projectile.velocity.SafeNormalize(Vector2.UnitX));
-                    float homing = Utils.GetLerpValue(42f, 96f, Timer, true);
-                    float speed = MathHelper.Lerp(Projectile.velocity.Length(), MathHelper.Lerp(13f, 21f, homing), 0.08f);
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.08f + homing * 0.11f);
+                    Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center + target.velocity * 6f, Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                    float homing = Utils.GetLerpValue(18f, 62f, Timer, true);
+                    float speed = MathHelper.Lerp(Projectile.velocity.Length(), MathHelper.Lerp(17f, 26f, homing), 0.18f);
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.18f + homing * 0.2f);
                 }
             }
 

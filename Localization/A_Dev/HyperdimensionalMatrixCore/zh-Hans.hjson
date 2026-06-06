@@ -1,0 +1,38 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				HyperdimensionalMatrixCore: {
+					DisplayName: 高维矩阵核心
+					Tooltip:
+						'''
+						召唤一个永久悬浮于玩家头顶、持续重写现实的数据核心
+						占用当前全部召唤栏位；每额外占用一个栏位，伤害提高50%
+						核心会自动轮转针刺矩阵、轨道矩阵、裂变矩阵与超维矩阵
+						核心存在时右键可立即切换至下一形态
+						防护矩阵提供15防御与15%伤害减免
+						“它并未发射武器，而是计算出了另一种现实。”
+						'''
+				}
+			}
+		}
+
+		Buffs: {
+			HyperdimensionalMatrixCoreBuff: {
+				DisplayName: 超维防护矩阵
+				Description: 提供15防御与15%伤害减免；核心正在持续重构战场
+			}
+		}
+
+		Projectiles: {
+			HyperdimensionalMatrixCore: {
+				HyperdimensionalMatrixCoreProjectile.DisplayName: 高维矩阵核心
+				MatrixDataNeedle.DisplayName: 针刺数据针
+				MatrixOrbitalProjection.DisplayName: 轨道投影体
+				MatrixOrbitalExplosion.DisplayName: 投影坍缩
+				MatrixFractureField.DisplayName: 裂变矩阵
+				HyperdimensionalMatrixBeam.DisplayName: 超维激光
+			}
+		}
+	}
+}

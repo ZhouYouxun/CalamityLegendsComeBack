@@ -3,6 +3,7 @@ using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
@@ -80,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center,
-                    263,
+                    DustID.PortalBolt,
                     new Vector2(0f, -5f).RotatedByRandom(0.05f) * Main.rand.NextFloat(0.3f, 1.6f));
 
                 dust.noGravity = true;

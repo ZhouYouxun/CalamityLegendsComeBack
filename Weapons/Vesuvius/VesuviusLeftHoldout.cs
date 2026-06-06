@@ -677,8 +677,15 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             float distanceFactor = Utils.GetLerpValue(1400f, 220f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
-            float pulse = FullyCharged ? 0.65f + 0.35f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 15f) : 0f;
+            float chargeCalm = Utils.GetLerpValue(FullChargeFrameTarget - 24f, FullChargeFrameTarget + 18f, chargeFrames, true);
+            chargeCalm = chargeCalm * chargeCalm * (3f - 2f * chargeCalm);
+            float pulse = (0.65f + 0.35f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 15f)) * (1f - chargeCalm);
             float shakePower = (0.18f + chargePower * 0.95f + currentStage * 0.16f + pulse) * distanceFactor * 0.7f;
+            shakePower *= MathHelper.Lerp(0.67f, 0f, chargeCalm);
+
+            if (shakePower <= 0.01f)
+                return;
+
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower);
         }
 

@@ -240,7 +240,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter
 
                 RotationOffset = MathHelper.Lerp(
                     RotationOffset,
-                    MathHelper.ToRadians(-120f * Projectile.ai[1] * Owner.direction * (1f + Utils.GetLerpValue(useAnim * 0.7f, useAnim, Animation, true) * 0.35f)),
+                    MathHelper.ToRadians(120f * Projectile.ai[1] * Owner.direction * (1f + Utils.GetLerpValue(useAnim * 0.7f, useAnim, Animation, true) * 0.35f)),
                     0.2f);
             }
             else if (!willDie)
@@ -267,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter
 
                 RotationOffset = MathHelper.Lerp(
                     RotationOffset,
-                    MathHelper.ToRadians(MathHelper.Lerp(-150f * Projectile.ai[1] * Owner.direction, -120f * -Projectile.ai[1] * Owner.direction, CalamityUtils.ExpInOutEasing(swingProgress * 0.9f, 1))),
+                    MathHelper.ToRadians(MathHelper.Lerp(150f * Projectile.ai[1] * Owner.direction, 120f * -Projectile.ai[1] * Owner.direction, CalamityUtils.ExpInOutEasing(swingProgress * 0.9f, 1))),
                     0.2f);
 
                 if (CanHit)
@@ -367,8 +367,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter
             for (int i = 0; i < 4; i++)
             {
                 float randRot = Main.rand.NextFloat(-20f, -100f);
-                Vector2 dustVel = new Vector2(0f, 11f * Projectile.ai[1] * Owner.direction).RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
-                Vector2 placement = Owner.Center + new Vector2(430f, 0f).RotatedBy(FinalRotation + MathHelper.ToRadians(45f)).RotatedByRandom(0.3f);
+                Vector2 dustVel = new Vector2(0f, 11f * -Projectile.ai[1] * Owner.direction).RotatedBy(FinalRotation + MathHelper.ToRadians(randRot));
+                Vector2 placement = Owner.Center + new Vector2(430f, 0f).RotatedBy(FinalRotation + MathHelper.ToRadians(-45f)).RotatedByRandom(0.3f);
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     placement,
                     dustVel,
@@ -478,7 +478,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter
                     Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY),
                     null,
                     TyrantOrange with { A = 0 } * fadeIn * 0.62f,
-                    FinalRotation + MathHelper.ToRadians(45f) + MathHelper.ToRadians(swingCount % 2 == 0 ? -65f : 65f) * Owner.direction,
+                    FinalRotation + MathHelper.ToRadians(45f) + MathHelper.ToRadians(swingCount % 2 == 0 ? -65f : 65f) * -Owner.direction,
                     swoosh.Value.Size() * 0.5f,
                     Projectile.scale * 0.95f * hitboxMult,
                     SpriteEffects.None);
@@ -488,7 +488,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter
                     Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY),
                     null,
                     TyrantGold with { A = 0 } * fadeIn * 0.8f,
-                    FinalRotation + MathHelper.ToRadians(45f) + MathHelper.ToRadians(swingCount % 2 == 0 ? -65f : 65f) * Owner.direction,
+                    FinalRotation + MathHelper.ToRadians(45f) + MathHelper.ToRadians(swingCount % 2 == 0 ? -65f : 65f) * -Owner.direction,
                     swoosh.Value.Size() * 0.5f,
                     Projectile.scale * 1.25f * hitboxMult,
                     SpriteEffects.None);

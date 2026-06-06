@@ -47,6 +47,7 @@ namespace CalamityLegendsComeBack.Shader
 
         public override void Unload()
         {
+            ResetDarkPlasmaKamuiVortexFadeOut();
             LoadedShaders.Clear();
         }
 

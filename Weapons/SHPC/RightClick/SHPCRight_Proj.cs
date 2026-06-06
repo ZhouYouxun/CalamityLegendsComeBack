@@ -28,7 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public int BeamIndex;
         public bool IsMainBeam = true;
 
-        private bool penetratedSet;
 
         private int helixTimer;
         private bool heatExplosionRolled;
@@ -256,7 +255,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     >= 2 => 3,
                     _ => 1
                 };
-                penetratedSet = true;
             }
 
             // 飞行特效：Stage3+ 才启用，且每真实帧只释放一次，避免过重
@@ -491,7 +489,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 float angle = baseAngle + MathHelper.Lerp(-fanHalfAngle, fanHalfAngle, t);
                 float speed = MathHelper.Lerp(2.5f, 6.8f, 1f - Math.Abs(t - 0.5f) * 2f);
 
-                Dust light = Dust.NewDustPerfect(target.Center, 267);
+                Dust light = Dust.NewDustPerfect(target.Center, DustID.RainbowMk2);
                 light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.4f, 0.95f));
                 light.velocity = angle.ToRotationVector2() * speed;
                 light.scale = Main.rand.NextFloat(0.9f, 1.25f);
@@ -551,7 +549,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             for (int i = 0; i < lightDustCount; i++)
             {
                 Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * Main.rand.NextFloat(0f, 10f);
-                Dust light = Dust.NewDustPerfect(dustSpawnPosition, 267);
+                Dust light = Dust.NewDustPerfect(dustSpawnPosition, DustID.RainbowMk2);
                 light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.5f, 1f));
                 light.velocity = Main.rand.NextVector2Circular(6f, 6f);
                 light.scale = Main.rand.NextFloat(0.9f, 1.35f);

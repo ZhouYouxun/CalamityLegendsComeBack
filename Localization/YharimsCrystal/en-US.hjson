@@ -22,6 +22,48 @@ Mods: {
 					EXInfo: "[c/F6D06B:Legendary Skill] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
 				}
 			}
+
+			Accessories: {
+				YharimsCrystalAlpha: {
+					DisplayName: Tyrant Crystal - Alpha
+					Tooltip: "While using Tyrant Crystal, increases weapon damage by 10%."
+				}
+
+				YharimsCrystalBeta: {
+					DisplayName: Tyrant Crystal - Beta
+					Tooltip: "Strengthens Tyrant Crystal's Slaughter form and shortens its kill-mode cooldown."
+				}
+
+				YharimsCrystalSigma: {
+					DisplayName: Tyrant Crystal - Sigma
+					Tooltip: "Tyrant Prism drones fire one additional machine-gun bolt during attack form."
+				}
+
+				YharimsCrystalGamma: {
+					DisplayName: Tyrant Crystal - Gamma
+					Tooltip: "Tyrant Prism drone bolts fly 12% faster."
+				}
+
+				YharimsCrystalLambda: {
+					DisplayName: Tyrant Crystal - Lambda
+					Tooltip: "Tyrant Crystal's legendary skill charges faster and has a shorter cooldown."
+				}
+
+				YharimsCrystalPi: {
+					DisplayName: Tyrant Crystal - Pi
+					Tooltip: "Improves Tyrant Prism heavy salvos and fires Aetherflux rays more often."
+				}
+
+				YharimsCrystalEpsilon: {
+					DisplayName: Tyrant Crystal - Epsilon
+					Tooltip: "Reduces Tyrant Crystal's mana cost by 18%."
+				}
+
+				YharimsCrystalTau: {
+					DisplayName: Tyrant Crystal - Tau
+					Tooltip: "Adds a small Tyrant Crystal damage bonus and improves legendary skill charge gain."
+				}
+			}
 		}
 
 		Projectiles: {

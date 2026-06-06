@@ -1,0 +1,46 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				SeasSearing: {
+					DisplayName: "Sea's Searing - Return of Legends"
+					Tooltip: "[GFB]"
+					Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
+					LeftClick: "[c/9AEAFF:Left Click: precision three-round burst. Each hit adds Abyssal Radiation Pollution.]"
+					RightClick: "[c/58FFDA:Right Click: charge a deep-sea resonance pulse that detonates every polluted enemy on the battlefield.]"
+					Passive: "[c/4CD268:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
+					Ultimate: "[c/FF8A30:{0}: designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
+					LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"
+					LegendaryText:
+						'''
+						[c/58FFDA:The rifle does not fire bullets so much as it files coordinates for a spreading disaster.]
+						[c/4CD268:Every crack of cyan light is a pressure fracture. Every green leak is a warning that the ocean has learned to burn.]
+						[c/FF8A30:When the sky opens, the correct follow-up is not another shot. It is the protocol that makes everything already infected collapse.]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			SeasSearing: {
+				SeasSearingHoldout.DisplayName: "Sea's Searing Holdout"
+				SeasSearingPollutionRound.DisplayName: Abyssal Pollution Round
+				SeasSearingResonancePulse.DisplayName: Abyssal Resonance Pulse
+				SeasSearingDetonationBlast.DisplayName: Pollution Collapse
+				SeasSearingFalloutCloud.DisplayName: Abyssal Fallout Cloud
+				SeasSearingDesignatorBeam.DisplayName: Thermonuclear Designator
+				SeasSearingNukeMarker.DisplayName: Thermonuclear Strike Marker
+				SeasSearingThermonuclearWarhead.DisplayName: Abyssal Thermonuclear Warhead
+				SeasSearingNuclearDetonation.DisplayName: Deep-Sea Nuclear Disaster
+				SeasSearingFalloutRain.DisplayName: Radioactive Abyssal Rain
+			}
+		}
+
+		Buffs: {
+			SeasSearingRadiationBuff: {
+				DisplayName: Abyssal Radiation Pollution
+				Description: Pressure, poison, and unstable deep-sea radiation are accumulating
+			}
+		}
+	}
+}

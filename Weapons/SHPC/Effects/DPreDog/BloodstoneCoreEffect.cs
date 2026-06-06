@@ -409,7 +409,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
     public class BloodstoneCoreEffectData : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.SHPC";
+        public string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool empowered;

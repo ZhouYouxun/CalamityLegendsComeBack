@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float BounceCount => ref Projectile.localAI[1];
         private const float VisualScale = 0.5f;
         private bool HasBounced => BounceCount > 0f;
-        private bool CanHome => Timer >= 78f && !HasBounced;
+        private bool CanHome => Timer >= 24f && !HasBounced;
         private float BloomPower => Utils.Remap(Timer, 0f, 130f, 0.82f, CanHome ? 1.9f : 1.22f, true) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true);
 
         public override void SetStaticDefaults()
@@ -47,11 +47,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Timer++;
 
-            if (Timer == 120f && !HasBounced)
+            if (Timer == 24f && !HasBounced)
             {
                 Projectile.penetrate = 1;
                 Projectile.damage = (int)(Projectile.originalDamage * 1.55f);
-                Projectile.velocity *= 0.16f;
                 Projectile.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
                 ReleaseSlimeRing(10, 3.1f);
             }
@@ -73,13 +72,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private void HomeToCursorBiasedTarget()
         {
             NPC best = null;
-            float bestScore = 620f;
+            float bestScore = 920f;
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile))
                     continue;
 
-                float score = Projectile.Distance(npc.Center) + Vector2.Distance(Main.MouseWorld, npc.Center) * 0.08f;
+                float score = Projectile.Distance(npc.Center);
                 if (score < bestScore)
                 {
                     bestScore = score;
@@ -89,13 +88,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (best != null)
             {
-                float trackingPower = Utils.GetLerpValue(78f, 156f, Timer, true);
+                float trackingPower = Utils.GetLerpValue(24f, 54f, Timer, true);
                 Vector2 currentDirection = Projectile.velocity.SafeNormalize(Projectile.SafeDirectionTo(best.Center));
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(best.Center, currentDirection);
-                float speed = MathHelper.Lerp(3.8f, 14.5f, trackingPower);
-                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(4.5f), MathHelper.ToRadians(26f), trackingPower);
+                float speed = MathHelper.Lerp(12f, 24f, trackingPower);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(24f), MathHelper.ToRadians(75f), trackingPower);
                 Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.12f + trackingPower * 0.16f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.34f + trackingPower * 0.28f);
             }
         }
 

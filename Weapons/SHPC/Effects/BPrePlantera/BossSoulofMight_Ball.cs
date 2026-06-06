@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 for (int i = 0; i < lightDustCount; i++)
                 {
                     Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 45f;
-                    Dust light = Dust.NewDustPerfect(dustSpawnPosition, 267);
+                    Dust light = Dust.NewDustPerfect(dustSpawnPosition, DustID.RainbowMk2);
                     light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.5f, 1f));
                     light.velocity = Main.rand.NextVector2Circular(10f, 10f);
                     light.scale = MathHelper.Lerp(1.3f, 0.8f, Projectile.Opacity) * Main.rand.NextFloat(0.8f, 1.2f);

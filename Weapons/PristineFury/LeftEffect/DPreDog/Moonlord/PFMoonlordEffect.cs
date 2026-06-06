@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFMoonlordEffect
     {
-        private const int WarmupFrames = 210;
+        private const int WarmupFrames = 180;
         private const int SuperLaserPauseFrames = 46;
         private const int SlowInterval = 24;
         private const int FastInterval = 4;
@@ -55,27 +55,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private static void FireLunarFlare(NewLegendPristineFuryHoldOut holdout)
         {
             Vector2 direction = holdout.AimDirection;
-            const int flareCount = 4;
+            const int flareCount = 3;
             for (int i = 0; i < flareCount; i++)
             {
-                float spread = MathHelper.Lerp(-0.055f, 0.055f, flareCount == 1 ? 0.5f : i / (float)(flareCount - 1));
+                float spread = MathHelper.Lerp(-0.12f, 0.12f, flareCount == 1 ? 0.5f : i / (float)(flareCount - 1));
                 int projectileIndex = Projectile.NewProjectile(
                     holdout.Projectile.GetSource_FromThis(),
                     holdout.GunTipPosition + direction * 15f,
-                    direction.RotatedBy(spread) * 18f,
-                    ProjectileID.LunarFlare,
-                    holdout.GetScaledDamage(0.68f),
+                    direction.RotatedBy(spread) * 21f,
+                    ModContent.ProjectileType<PFMoonlord_Flame>(),
+                    holdout.GetScaledDamage(0.86f),
                     holdout.Projectile.knockBack * 0.6f,
-                    holdout.Projectile.owner);
-                if (projectileIndex >= 0 && projectileIndex < Main.maxProjectiles)
-                {
-                    Projectile projectile = Main.projectile[projectileIndex];
-                    projectile.friendly = true;
-                    projectile.hostile = false;
-                    projectile.DamageType = DamageClass.Ranged;
-                    projectile.tileCollide = false;
-                    projectile.penetrate = 2;
-                }
+                    holdout.Projectile.owner,
+                    i,
+                    holdout.LeftBurstIndex + Main.rand.NextFloat(1000f));
+
+                PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
             }
 
             holdout.ApplyRecoil(3.2f);

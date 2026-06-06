@@ -22,6 +22,7 @@
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
 	  <Folder Include="Weapons\A_Dev\MK14EBR\M14\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
+	  <Folder Include="Weapons\A_Olds\MarniteBayonet\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />
@@ -110,6 +111,14 @@
 	  <None Remove="Shader\XNBcoder\*.txt" />
 	  <None Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <None Remove="Shader\XNBcoder\logfile.txt" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="Weapons\A_Olds\AstralBlade\幻星刀.png" />
+	  <Content Include="Weapons\A_Olds\ChargedDartBlaster\蓄能飞镖发射器.png" />
+	  <Content Include="Weapons\A_Olds\DesertEagle\猎象者.png" />
+	  <Content Include="Weapons\A_Olds\DesertEagle\闪电鹰.png" />
+	  <Content Include="Weapons\A_Olds\DesertEagle\马格南.png" />
+	  <Content Include="Weapons\A_Olds\PhoenixBlade\凤凰之刃.png" />
 	</ItemGroup>
 
 	<!-- References -->

@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             {
                 Vector2 dustOffset = direction.RotatedBy(MathHelper.PiOver2) * (Main.rand.NextFloat() - 0.5f) * projectile.width;
                 Vector2 dustPosition = laserEnd + dustOffset - Vector2.One * 4f;
-                int dustIndex = Dust.NewDust(dustPosition, 8, 8, 244, 0f, 0f, 100, beamColor, 5f);
+                int dustIndex = Dust.NewDust(dustPosition, 8, 8, DustID.CopperCoin, 0f, 0f, 100, beamColor, 5f);
                 Main.dust[dustIndex].velocity *= 0.5f;
                 Main.dust[dustIndex].velocity.Y = -System.Math.Abs(Main.dust[dustIndex].velocity.Y);
             }

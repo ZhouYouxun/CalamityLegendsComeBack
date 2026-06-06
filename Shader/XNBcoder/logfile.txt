@@ -1946,3 +1946,9 @@ Message at 2026/6/4 21:05:49: Compiling DarkPlasmaKamuiVortex.xnb
 Message at 2026/6/4 21:05:49: Importing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
 Message at 2026/6/4 21:05:49: Processing DarksunFragmentGravitationalLensing.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
 Message at 2026/6/4 21:05:49: Compiling DarksunFragmentGravitationalLensing.xnb
+Message at 2026/6/5 6:50:46: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/5 6:50:46: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/5 6:50:46: Compiling DarkPlasmaKamuiVortex.xnb
+Message at 2026/6/5 17:56:24: Importing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.EffectImporter
+Message at 2026/6/5 17:56:24: Processing DarkPlasmaKamuiVortex.fx with Microsoft.Xna.Framework.Content.Pipeline.Processors.EffectProcessor
+Message at 2026/6/5 17:56:24: Compiling DarkPlasmaKamuiVortex.xnb

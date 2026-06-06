@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Accssory.YC;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPrism;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter;
@@ -140,6 +141,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             damage.Base = damageBalance.GetLeftClickBaseDamage();
+            damage *= player.GetModPlayer<YCAccessoryPlayer>().WeaponDamageMultiplier;
+        }
+
+        public override void ModifyManaCost(Player player, ref float reduce, ref float mult)
+        {
+            mult *= player.GetModPlayer<YCAccessoryPlayer>().ManaCostMultiplier;
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
@@ -188,13 +195,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             }
 
             Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            float slaughterDamageMultiplier = player.GetModPlayer<YCAccessoryPlayer>().SlaughterDamageMultiplier;
             slaughterCastCount++;
             Projectile.NewProjectile(
                 Item.GetSource_FromThis(),
                 player.MountedCenter,
                 aimDirection,
                 SlaughterHoldoutType,
-                player.GetWeaponDamage(Item) * 15,
+                (int)(player.GetWeaponDamage(Item) * 15 * slaughterDamageMultiplier),
                 Item.knockBack,
                 player.whoAmI,
                 slaughterCastCount);
@@ -241,7 +249,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             }
 
             player.Calamity().demonSwordKillMode = true;
-            int cooldown = KillMode.cooldownMax + KillMode.buffMax;
+            int cooldown = (int)((KillMode.cooldownMax + KillMode.buffMax) * player.GetModPlayer<YCAccessoryPlayer>().SlaughterCooldownMultiplier);
             player.Calamity().killModeCooldown = cooldown;
             player.AddCooldown(KillMode.ID, cooldown);
         }

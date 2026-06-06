@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             switch (mark)
             {
                 case PristineFuryMark.EvilT2:
-                    PFEvilT2Effect.Update(holdout, held, justPressed, justReleased);
+                    PFGoliathEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.SlimeGod:
                     PFSlimeGodEffect.Update(holdout, held, justPressed, justReleased);
@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     PFAuroraEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Goliath:
-                    PFGoliathEffect.Update(holdout, held, justPressed, justReleased);
+                    PristineFuryLeftEffectRegistry.Reset(holdout);
                     break;
                 case PristineFuryMark.Moonlord:
                     PFMoonlordEffect.Update(holdout, held, justPressed, justReleased);

@@ -32,12 +32,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             Projectile.height = 30;
             Projectile.friendly = true;
             Projectile.hostile = false;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 132;
-            Projectile.extraUpdates = 1;
+            Projectile.timeLeft = 180;
+            Projectile.extraUpdates = 2;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -50,14 +50,45 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
                 Projectile.localAI[0] = 1f;
             }
 
-            Projectile.rotation += Projectile.velocity.X * 0.08f;
+            if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
+            {
+                Player owner = Main.player[Projectile.owner];
+                if (Projectile.position.Y > owner.position.Y - 300f || Projectile.position.Y < Main.worldSurface * 16.0)
+                    Projectile.tileCollide = true;
+            }
+
+            Projectile.rotation += Projectile.velocity.X * 2f;
             if (NoLargeExplosion)
                 Projectile.velocity *= 0.985f;
 
             Color glow = Color.Lerp(new Color(255, 80, 20), new Color(255, 220, 80), Main.rand.NextFloat(0.25f, 0.65f));
             Lighting.AddLight(Projectile.Center, glow.ToVector3() * 0.28f * Projectile.scale * VesuviusProjectileVisuals.VisualIntensity);
 
+            SpawnAsteroidMoltenDust();
             VesuviusProjectileVisuals.SpawnMoltenMeteorTrail(Projectile, NoLargeExplosion ? 0.82f : 1.08f, !NoLargeExplosion);
+        }
+
+        private void SpawnAsteroidMoltenDust()
+        {
+            if (Main.dedServ || Projectile.velocity.LengthSquared() <= 0.01f)
+                return;
+
+            Vector2 position = Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitY) * 10f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Dust flaming = Main.dust[Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.CopperCoin, 0f, 0f, 0, new Color(255, Main.DiscoG, 0), 1f)];
+                flaming.position = position;
+                flaming.velocity = Projectile.velocity.RotatedBy(side * MathHelper.PiOver2) * 0.33f + Projectile.velocity / 4f;
+                flaming.position += Projectile.velocity.RotatedBy(side * MathHelper.PiOver2);
+                flaming.fadeIn = 0.5f;
+                flaming.noGravity = true;
+            }
+
+            int fiery = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.CopperCoin, 0f, 0f, 0, new Color(255, Main.DiscoG, 0), 1f);
+            Main.dust[fiery].velocity *= 0.5f;
+            Main.dust[fiery].scale *= 1.3f;
+            Main.dust[fiery].fadeIn = 1f;
+            Main.dust[fiery].noGravity = true;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

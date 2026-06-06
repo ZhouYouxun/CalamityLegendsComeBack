@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
 
     public class NightmareFuel_GP : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.SHPC";
+        public string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;

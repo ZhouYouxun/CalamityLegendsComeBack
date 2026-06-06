@@ -313,7 +313,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
     // ================= 每个弹幕独立记录第一帧状态 =================
     public class ArmoredShell_GP : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.SHPC";
+        public string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool firstFrame;

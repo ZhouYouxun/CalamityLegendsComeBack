@@ -12,16 +12,20 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
     internal sealed class MalachitePlayer : ModPlayer
     {
         public const int RightClickCooldownFrames = 3 * 60;
+        public const int DepletionBurstFrames = 90;
 
         private readonly HashSet<int> grazedProjectileIds = new();
         private bool holdingMalachite;
         private int grazeVisualCooldown;
+        private int depletionBurstTimer;
 
         public int RightClickCooldown { get; private set; }
 
         public bool CanUseRightClick => RightClickCooldown <= 0;
 
         public float RightClickCooldownCompletion => 1f - RightClickCooldown / (float)RightClickCooldownFrames;
+
+        public bool DepletionBurstActive => depletionBurstTimer > 0;
 
         public override void ResetEffects()
         {
@@ -32,6 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             holdingMalachite = false;
             RightClickCooldown = 0;
+            depletionBurstTimer = 0;
             grazedProjectileIds.Clear();
             grazeVisualCooldown = 0;
         }
@@ -48,6 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             if (RightClickCooldown > 0)
                 RightClickCooldown--;
+
+            if (depletionBurstTimer > 0)
+                depletionBurstTimer--;
 
             if (grazeVisualCooldown > 0)
                 grazeVisualCooldown--;
@@ -80,6 +88,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public void RestoreStealthPoints(float points)
         {
             AddStealthPoints(points);
+        }
+
+        public void StartDepletionBurst()
+        {
+            depletionBurstTimer = DepletionBurstFrames;
         }
 
         private void ApplyShadowStepBonuses()

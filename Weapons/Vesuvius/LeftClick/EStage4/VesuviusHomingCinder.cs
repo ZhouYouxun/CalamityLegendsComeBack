@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -54,7 +55,35 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, 0.78f * VesuviusProjectileVisuals.VisualIntensity, 0.24f * VesuviusProjectileVisuals.VisualIntensity, 0.06f * VesuviusProjectileVisuals.VisualIntensity);
 
-            VesuviusProjectileVisuals.SpawnCinderTrail(Projectile, 1f);
+            SpawnSmokeAndDustTrail();
+        }
+
+        private void SpawnSmokeAndDustTrail()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 backward = -Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    backward.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.3f, 1.6f),
+                    Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, VesuviusProjectileVisuals.LavaOrange, 0.16f),
+                    Color.Black,
+                    Main.rand.NextFloat(0.34f, 0.76f),
+                    0.52f,
+                    Main.rand.NextFloat(-0.06f, 0.06f)));
+            }
+
+            Dust dust = Dust.NewDustPerfect(
+                Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                Main.rand.NextBool(3) ? DustID.Smoke : DustID.Torch,
+                backward.RotatedByRandom(0.34f) * Main.rand.NextFloat(0.5f, 2.8f),
+                110,
+                Main.rand.NextBool(4) ? VesuviusProjectileVisuals.LavaGold : VesuviusProjectileVisuals.AshGray,
+                Main.rand.NextFloat(0.55f, 1.05f));
+            dust.noGravity = Main.rand.NextBool(3);
         }
 
         private NPC FindTarget(float range)
@@ -84,38 +113,37 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
 
         public override void OnKill(int timeLeft)
         {
-            VesuviusProjectileVisuals.SpawnCinderImpact(Projectile.Center, 0.85f);
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 5.2f);
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    Main.rand.NextBool(2) ? DustID.Smoke : DustID.Torch,
+                    velocity,
+                    120,
+                    Main.rand.NextBool(3) ? VesuviusProjectileVisuals.LavaGold : VesuviusProjectileVisuals.AshGray,
+                    Main.rand.NextFloat(0.65f, 1.2f));
+                dust.noGravity = Main.rand.NextBool(3);
+
+                if (i % 2 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                        velocity * 0.28f,
+                        Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, VesuviusProjectileVisuals.LavaOrange, 0.12f),
+                        Color.Black,
+                        Main.rand.NextFloat(0.42f, 0.88f),
+                        0.58f,
+                        Main.rand.NextFloat(-0.06f, 0.06f)));
+                }
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], VesuviusProjectileVisuals.LavaOrange * 0.78f * VesuviusProjectileVisuals.VisualIntensity);
-            Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
-            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity);
-
-            Main.EntitySpriteDraw(
-                bloom,
-                Projectile.Center - Main.screenPosition,
-                null,
-                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * (0.34f + pulse * 0.12f) * VesuviusProjectileVisuals.VisualIntensity,
-                Projectile.rotation,
-                bloom.Size() * 0.5f,
-                Projectile.scale * (0.3f + pulse * 0.06f) * VesuviusProjectileVisuals.VisualScale,
-                SpriteEffects.None);
-
-            Main.EntitySpriteDraw(
-                bloom,
-                Projectile.Center - Main.screenPosition,
-                null,
-                Color.White with { A = 0 } * 0.36f * VesuviusProjectileVisuals.VisualIntensity,
-                Projectile.rotation,
-                bloom.Size() * 0.5f,
-                Projectile.scale * 0.17f * VesuviusProjectileVisuals.VisualScale,
-                SpriteEffects.None);
-
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.Lerp(Color.White, VesuviusProjectileVisuals.LavaGold, 0.25f), Projectile.rotation, frame.Size() * 0.5f, Projectile.scale * 1.08f, SpriteEffects.None);
             return false;
         }
     }

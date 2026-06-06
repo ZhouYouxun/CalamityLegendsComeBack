@@ -154,17 +154,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 18,
                 true));
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                center,
-                Vector2.Zero,
-                warm,
-                "CalamityMod/Particles/SoftRoundExplosion",
-                Vector2.One,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.04f,
-                1.75f * scale,
-                24,
-                true));
+            //GeneralParticleHandler.SpawnParticle(new CustomPulse(
+            //    center,
+            //    Vector2.Zero,
+            //    warm,
+            //    "CalamityMod/Particles/SoftRoundExplosion",
+            //    Vector2.One,
+            //    Main.rand.NextFloat(MathHelper.TwoPi),
+            //    0.04f,
+            //    1.75f * scale,
+            //    24,
+            //    true));
 
             // =========================
             // 第三层：重型放射能量束

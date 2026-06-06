@@ -63,15 +63,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void AI()
         {
-            NPC target = FindTarget(900f);
-            float speed = Math.Min(36f, Projectile.velocity.Length() * 1.01f + 0.04f);
+            NPC target = FindTarget(1100f);
+            float speed = MathHelper.Clamp(Projectile.velocity.Length() * 1.012f + 0.16f, 18f, 40f);
             if (target != null)
             {
-                Vector2 curvedTarget = target.Center + target.velocity * 10f +
-                    Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedBy(MathHelper.PiOver2) *
-                    (float)Math.Sin(Projectile.timeLeft * 0.08f + Projectile.identity) * 70f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, Projectile.SafeDirectionTo(curvedTarget) * speed, 0.042f);
+                Vector2 predictedTarget = target.Center + target.velocity * MathHelper.Clamp(Projectile.Distance(target.Center) / Math.Max(speed, 1f), 4f, 14f);
+                float lockStrength = Utils.GetLerpValue(210f, 150f, Projectile.timeLeft, true);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, Projectile.SafeDirectionTo(predictedTarget) * speed, 0.12f + lockStrength * 0.16f);
             }
+            else
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * speed;
 
             Projectile.rotation += 0.14f;
             Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.66f);

@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float Charge => ref Projectile.ai[1];
         private ref float Timer => ref Projectile.localAI[0];
         private ref float FullChargePulseCreated => ref Projectile.localAI[1];
-        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+        private Color ThemeColor => new(128, 64, 255);
 
         public override void SetDefaults()
         {

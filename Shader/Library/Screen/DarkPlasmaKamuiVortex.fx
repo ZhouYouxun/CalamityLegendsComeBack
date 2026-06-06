@@ -5,6 +5,7 @@ float2 uScreenPosition;
 float2 uTargetPosition;
 float uRadius;
 float uStrength;
+float uOpacity;
 float uTime;
 
 float4 PixelShaderFunction(float2 uv : TEXCOORD0) : COLOR0
@@ -19,7 +20,7 @@ float4 PixelShaderFunction(float2 uv : TEXCOORD0) : COLOR0
 
     float factor = saturate(1 - dist / uRadius);
     float angle = factor * factor * uStrength * 6.2831853;
-    angle += factor * sin(uTime * 1.6) * 0.12;
+    angle += factor * sin(uTime * 1.6) * 0.04 * uOpacity;
     float cs = cos(angle);
     float sn = sin(angle);
     float2 rotated = float2(
@@ -34,7 +35,7 @@ float4 PixelShaderFunction(float2 uv : TEXCOORD0) : COLOR0
     newUV = clamp(newUV, 0.001, 0.999);
 
     float4 newColor = tex2D(Sampler, newUV);
-    float darkness = pow(factor, 3);
+    float darkness = pow(factor, 3) * uOpacity;
     newColor.rgb *= 1 - darkness;
     return newColor;
 }

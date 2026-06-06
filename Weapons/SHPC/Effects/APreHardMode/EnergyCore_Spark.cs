@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
@@ -62,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             }
 
             base.Projectile.rotation += base.Projectile.velocity.X * 0.1f;
-            int num = Dust.NewDust(base.Projectile.position, base.Projectile.width, base.Projectile.height, 206, 0f, 0f, 100);
+            int num = Dust.NewDust(base.Projectile.position, base.Projectile.width, base.Projectile.height, DustID.UnusedWhiteBluePurple, 0f, 0f, 100);
             Main.dust[num].position.X -= 2f;
             Main.dust[num].position.Y += 2f;
             Main.dust[num].scale += (float)Main.rand.Next(50) * 0.01f;
@@ -70,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Main.dust[num].velocity.Y -= 2f;
             if (Main.rand.NextBool())
             {
-                int num2 = Dust.NewDust(base.Projectile.position, base.Projectile.width, base.Projectile.height, 206, 0f, 0f, 100);
+                int num2 = Dust.NewDust(base.Projectile.position, base.Projectile.width, base.Projectile.height, DustID.UnusedWhiteBluePurple, 0f, 0f, 100);
                 Main.dust[num2].position.X -= 2f;
                 Main.dust[num2].position.Y += 2f;
                 Main.dust[num2].scale += 0.3f + (float)Main.rand.Next(50) * 0.01f;

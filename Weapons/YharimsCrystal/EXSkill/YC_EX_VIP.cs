@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
         public const int BattleshipTotal = 0;
         public const int TotalWarshipCount = DroneTotal;
         public const int DroneChargeTime = 120;
-        public const int LaserFireTime = 15 * 60;
+        public const int LaserFireTime = 10 * 60;
         private const int SpawnInterval = 2;
         private const int CleanupInterval = 18;
 

@@ -770,23 +770,34 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             PFLeftEffectRules.BeginAdditive();
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 10; i++)
             {
-                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 6.5f) * charge;
-                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(16f, 40f) + direction * -8f * (6f - chargeScale * 2f);
-                Vector2 smearScale = new(0.25f * chargeScale, (1.7f + (Main.rand.NextBool(4) ? 1.8f : 0f)) * 0.05f * chargeScale);
+                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 10f) * charge;
+                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(24f, 62f) + direction * -8f * (6f - chargeScale * 2f);
+                Vector2 smearScale = new(0.32f * chargeScale, (2.2f + (Main.rand.NextBool(3) ? 2.4f : 0f)) * 0.055f * chargeScale);
                 Color smearColor = Main.rand.NextBool(4) ? white : fire;
-                Main.EntitySpriteDraw(smear, drawPosition, null, smearColor * 0.82f, direction.RotatedByRandom(0.3f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(smear, drawPosition, null, smearColor * 0.94f, direction.RotatedByRandom(0.24f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 Color layerColor = Color.Lerp(fire, white, i * 0.25f);
-                Vector2 layerScale = new Vector2(1.35f, 1f) * chargeScale * (1f - 0.27f * i) * 0.23f * pulse;
-                Main.EntitySpriteDraw(bloom, tip, null, layerColor * 0.8f, Projectile.rotation + Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
+                Vector2 layerScale = new Vector2(1.58f, 1.08f) * chargeScale * (1f - 0.21f * i) * 0.25f * pulse;
+                Main.EntitySpriteDraw(bloom, tip, null, layerColor * 0.9f, Projectile.rotation + Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
             }
 
-            Main.EntitySpriteDraw(ring, tip, null, fire * (0.26f + charge * 0.38f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.95f, ring.Size() * 0.5f, (0.13f + charge * 0.42f) * pulse, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, tip, null, fire * (0.4f + charge * 0.48f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.25f, ring.Size() * 0.5f, (0.18f + charge * 0.62f) * pulse, SpriteEffects.None, 0f);
+
+            Main.EntitySpriteDraw(
+                smear,
+                tip + direction * (12f + charge * 10f),
+                null,
+                Color.Lerp(fire, white, 0.36f) * (0.52f + charge * 0.36f),
+                direction.ToRotation() - MathHelper.PiOver2,
+                new Vector2(smear.Width * 0.5f, smear.Height),
+                new Vector2(0.5f + charge * 0.42f, 0.18f + charge * 0.12f),
+                SpriteEffects.None,
+                0f);
 
             if (rightChargeReady)
             {

@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -12,118 +13,93 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
     public class VesuviusMagmaPillar : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Vesuvius";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Rogue/SubductionFlameburst";
+
+        private int frameX;
+        private int frameY;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 8;
-            ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = 46;
-            Projectile.height = 46;
+            Projectile.width = 81;
+            Projectile.height = 322;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 22;
-            Projectile.extraUpdates = 5;
+            Projectile.timeLeft = 180;
+            Projectile.alpha = 255;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 5;
+            Projectile.localNPCHitCooldown = 15;
         }
+
+        public override bool ShouldUpdatePosition() => false;
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            if (Projectile.localAI[0] == 0f)
+            {
+                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Projectile.Center += direction * (100f + Projectile.ai[0] * 64f);
+                Projectile.velocity = Vector2.Zero;
+                Projectile.position.Y -= Projectile.height / 2;
+                Projectile.localAI[0] = 1f;
+            }
+
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter % 7 == 6)
+            {
+                frameY++;
+                if (frameY >= 4)
+                {
+                    frameX++;
+                    frameY = 0;
+                }
+
+                if (frameX >= 3)
+                    Projectile.Kill();
+            }
+
+            Projectile.rotation = 0f;
             Lighting.AddLight(Projectile.Center, 0.95f * VesuviusProjectileVisuals.VisualIntensity, 0.24f * VesuviusProjectileVisuals.VisualIntensity, 0.06f * VesuviusProjectileVisuals.VisualIntensity);
 
-            if (Projectile.owner == Main.myPlayer && Projectile.timeLeft % 2 == 0)
+            if (!Main.dedServ)
+            {
+                Vector2 vent = Projectile.Bottom + new Vector2(Main.rand.NextFloat(-26f, 26f), Main.rand.NextFloat(-18f, 46f));
+                VesuviusProjectileVisuals.SpawnPillarTrail(Projectile, 1f + Projectile.ai[1] * 0.08f);
+                VesuviusVolcanicVisuals.SpawnSubductionMix(vent, -Vector2.UnitY, true);
+            }
+
+            if (Projectile.owner == Main.myPlayer && Projectile.timeLeft % 18 == 0)
             {
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center,
+                    Projectile.Bottom - Vector2.UnitY * 22f,
                     Vector2.Zero,
                     ModContent.ProjectileType<VesuviusMagmaResidual>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.34f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.28f)),
                     0f,
                     Projectile.owner,
-                    Projectile.rotation);
+                    0f);
             }
-
-            if (!Main.dedServ)
-                VesuviusProjectileVisuals.SpawnPillarTrail(Projectile, 1f + Projectile.ai[1] * 0.08f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire3, 240);
+            target.AddBuff(BuffID.Daybreak, 240);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
-
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
-            {
-                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
-                if (oldCenter == Vector2.Zero)
-                    continue;
-
-                float opacity = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-                float progress = i / (float)Projectile.oldPos.Length;
-                float width = MathHelper.Lerp(54f, 16f, progress) * VesuviusProjectileVisuals.VisualScale;
-                Vector2 drawPos = oldCenter - Main.screenPosition - normal * width * 0.5f;
-
-                Main.EntitySpriteDraw(
-                    bloom,
-                    oldCenter - Main.screenPosition,
-                    null,
-                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * opacity * VesuviusProjectileVisuals.VisualIntensity,
-                    Projectile.rotation,
-                    bloom.Size() * 0.5f,
-                    new Vector2(width / bloom.Width * 1.2f, 0.28f) * VesuviusProjectileVisuals.VisualScale,
-                    SpriteEffects.None);
-
-                Main.EntitySpriteDraw(
-                    pixel,
-                    drawPos,
-                    new Rectangle(0, 0, 1, 1),
-                    VesuviusProjectileVisuals.RavagerSmoke with { A = 0 } * 0.2f * opacity * VesuviusProjectileVisuals.VisualIntensity,
-                    Projectile.rotation,
-                    new Vector2(0f, 0.5f),
-                    new Vector2(84f, width * 1.45f) * VesuviusProjectileVisuals.VisualScale,
-                    SpriteEffects.None);
-
-                Main.EntitySpriteDraw(
-                    pixel,
-                    drawPos,
-                    new Rectangle(0, 0, 1, 1),
-                    VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.54f * opacity * VesuviusProjectileVisuals.VisualIntensity,
-                    Projectile.rotation,
-                    new Vector2(0f, 0.5f),
-                    new Vector2(72f, width) * VesuviusProjectileVisuals.VisualScale,
-                    SpriteEffects.None);
-
-                Main.EntitySpriteDraw(
-                    pixel,
-                    oldCenter - Main.screenPosition - normal * width * 0.16f,
-                    new Rectangle(0, 0, 1, 1),
-                    Color.White with { A = 0 } * 0.46f * opacity * VesuviusProjectileVisuals.VisualIntensity,
-                    Projectile.rotation,
-                    new Vector2(0f, 0.5f),
-                    new Vector2(58f, width * 0.32f) * VesuviusProjectileVisuals.VisualScale,
-                    SpriteEffects.None);
-            }
-
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Rectangle frame = new(frameX * Projectile.width, frameY * Projectile.height, Projectile.width, Projectile.height);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White, Projectile.rotation, Projectile.Size / 2f, 1f, SpriteEffects.None);
             return false;
         }
     }

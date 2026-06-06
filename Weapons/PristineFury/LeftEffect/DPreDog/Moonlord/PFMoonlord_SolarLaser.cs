@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private Vector2 beamVector = Vector2.UnitX;
         private ref float BeamLength => ref Projectile.ai[0];
-        private Color SolarColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+        private Color SolarColor => new(126, 255, 156);
 
         public override void SetDefaults()
         {
@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             Vector2 normal = beamVector.RotatedBy(MathHelper.PiOver2);
             Color gold = SolarColor;
-            Color orange = new(255, 92, 32);
+            Color orange = new(34, 12, 46);
             Color white = Color.White;
             int points = Math.Clamp((int)(BeamLength / 34f), 18, 56);
             float time = Main.GlobalTimeWrappedHourly;
@@ -121,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 if ((i & 1) == 0)
                 {
-                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(basePosition, beamVector * 0.55f + normal * wave * 0.2f, false, 7, 0.34f, Color.Lerp(color, white, 0.32f), true, false, true));
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(basePosition, beamVector * 0.55f + normal * wave * 0.2f, false, 7, 0.26f, Color.Lerp(color, white, 0.26f), true, false, true));
                 }
 
                 Particle cut = new GlowSparkParticle(
@@ -130,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     false,
                     6,
                     0.03f,
-                    color,
+                    Main.rand.NextBool(3) ? Color.Black : color,
                     new Vector2(2.6f, 1f),
                     true,
                     false,
@@ -154,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                         false,
                         Main.rand.Next(9, 15),
                         Main.rand.NextFloat(0.45f, 0.82f) * Projectile.scale,
-                        Main.rand.NextBool(3) ? white : Color.Lerp(gold, orange, Main.rand.NextFloat())));
+                        Main.rand.NextBool(3) ? white : Color.Lerp(gold, Color.Black, Main.rand.NextFloat(0.1f, 0.75f))));
                 }
             }
         }
@@ -169,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 end = start + beamVector * BeamLength;
             Vector2 scale = new(Projectile.scale);
             Utils.LaserLineFraming framing = new(DelegateMethods.RainbowLaserDraw);
-            Color beamColor = Color.Lerp(SolarColor, Color.White, 0.32f);
+            Color beamColor = Color.Lerp(SolarColor, Color.Black, 0.42f);
 
             DelegateMethods.f_1 = 1f;
             DelegateMethods.c_1 = beamColor * 0.86f * Projectile.Opacity;
@@ -177,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             for (int i = 0; i < 3; i++)
             {
-                beamColor = Color.Lerp(beamColor, Color.White, 0.5f);
+                beamColor = Color.Lerp(beamColor, Color.White, 0.42f);
                 scale *= 0.78f;
                 DelegateMethods.c_1 = beamColor * 0.52f * Projectile.Opacity;
                 Utils.DrawLaser(Main.spriteBatch, texture, start, end, scale, framing);
@@ -228,10 +228,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            Color gold = new(255, 194, 60);
-            Color orange = new(255, 94, 36);
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, gold, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.38f, 16, true));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, orange, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.2f, 2.1f, 18));
+            Color gold = new(126, 255, 156);
+            Color orange = new(32, 10, 48);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Black, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.38f, 16, true));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, gold, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.2f, 2.1f, 18));
 
             for (int i = 0; i < 18; i++)
             {

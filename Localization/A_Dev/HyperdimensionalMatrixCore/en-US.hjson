@@ -1,0 +1,38 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				HyperdimensionalMatrixCore: {
+					DisplayName: Hyperdimensional Matrix Core
+					Tooltip:
+						'''
+						Summons a single reality-rewriting data core that permanently hovers above you
+						Occupies every available minion slot; each additional occupied slot grants +50% damage
+						The core automatically cycles through Piercing, Orbital, Fracture, and Hyperdimensional matrices
+						Right-click while the core exists to immediately switch to the next matrix
+						Its defensive matrix grants 15 defense and 15% damage reduction
+						"It does not fire a weapon. It computes a different reality."
+						'''
+				}
+			}
+		}
+
+		Buffs: {
+			HyperdimensionalMatrixCoreBuff: {
+				DisplayName: Hyperdimensional Protection Matrix
+				Description: 15 defense and 15% damage reduction; the core is continuously reconstructing the battlefield
+			}
+		}
+
+		Projectiles: {
+			HyperdimensionalMatrixCore: {
+				HyperdimensionalMatrixCoreProjectile.DisplayName: Hyperdimensional Matrix Core
+				MatrixDataNeedle.DisplayName: Piercing Data Needle
+				MatrixOrbitalProjection.DisplayName: Orbital Projection
+				MatrixOrbitalExplosion.DisplayName: Projection Collapse
+				MatrixFractureField.DisplayName: Fracture Matrix
+				HyperdimensionalMatrixBeam.DisplayName: Hyperdimensional Laser
+			}
+		}
+	}
+}

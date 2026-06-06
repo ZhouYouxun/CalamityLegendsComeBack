@@ -52,22 +52,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (!wantsToRelease)
                 return;
 
-            if (ShouldBlockReleaseWhileTopHeat())
+            if (ShouldBlockReleaseDuringForcedShutdown())
                 return;
 
             KillAndPreserveHeat();
         }
 
-        private bool ShouldBlockReleaseWhileTopHeat()
+        private bool ShouldBlockReleaseDuringForcedShutdown()
         {
-            if (MaxHeatStage <= 1)
-                return false;
-
             SHPCRight_Player heatPlayer = Owner.GetModPlayer<SHPCRight_Player>();
-            bool displayedTopHeat = heatPlayer.HasAnyHeat() &&
-                heatPlayer.GetDisplayedHeatLevel() >= MaxHeatStage;
-
-            return heatPlayer.IsForcedShutdownCooling() && displayedTopHeat;
+            return heatPlayer.IsForcedShutdownCooling();
         }
 
         #region ===== Energy Core Position =====
@@ -260,12 +254,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             // Sync after stage changes so detached heat UI and cooling use the final value.
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
+            bool forcedShutdownCooling = heatPlayer.IsForcedShutdownCooling();
+            if (forcedShutdownCooling)
+            {
+                stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+                frameCounter = 0;
+            }
+
             int manaCost = player.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickManaCost(2);
             bool hasEnoughManaToFire = manaCost <= 0 || player.CheckMana(player.HeldItem, manaCost, false, false);
             if (hasEnoughManaToFire)
                 manaStarvedSoundPlayed = false;
 
-            if (fireStopTimer <= 0 && hasEnoughManaToFire)
+            if (!forcedShutdownCooling && fireStopTimer <= 0 && hasEnoughManaToFire)
             {
                 stageTimer++;
                 HeatRedirectModulePlayer heatRedirect = player.GetModPlayer<HeatRedirectModulePlayer>();
@@ -288,7 +290,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #region ===== 开火控�?=====
 
-            if (fireStopTimer > 0)
+            if (forcedShutdownCooling)
+            {
+                if (fireStopTimer > 0)
+                    fireStopTimer--;
+                if (manaStarvedStopTimer > 0)
+                    manaStarvedStopTimer--;
+                else
+                    SpawnCoolingVentMist();
+            }
+            else if (fireStopTimer > 0)
             {
                 fireStopTimer--;
                 if (manaStarvedStopTimer > 0)
@@ -313,7 +324,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #region ===== 升级系统 =====
 
             bool stageFilledThisFrame = false;
-            if (fireStopTimer <= 0)
+            if (!forcedShutdownCooling && fireStopTimer <= 0)
             {
                 int stageUpTime = GetStageUpTime();
 
@@ -374,13 +385,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             float targetProgress;
 
             // ===== 正常充能 =====
-            if (fireStopTimer <= 0)
+            if (heatPlayer.IsForcedShutdownCooling())
             {
-                if (heatPlayer.IsForcedShutdownCooling())
-                {
-                    targetProgress = heatPlayer.GetDetachedHeatProgress();
-                }
-                else if (stageFilledThisFrame)
+                targetProgress = heatPlayer.GetDetachedHeatProgress();
+            }
+            else if (fireStopTimer <= 0)
+            {
+                if (stageFilledThisFrame)
                 {
                     targetProgress = 1f;
                 }
@@ -554,6 +565,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public void TryReduceHeat()
         {
+            if (Owner.GetModPlayer<SHPCRight_Player>().IsForcedShutdownCooling())
+                return;
+
             if (reduceCooldown > 0 || stage <= 0)
                 return;
 

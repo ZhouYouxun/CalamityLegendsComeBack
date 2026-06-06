@@ -918,7 +918,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                         Vector2 tangent = outward.RotatedBy(MathHelper.PiOver2);
                         Vector2 spawnPos = center + outward * radius;
 
-                        Dust coreDust = Dust.NewDustPerfect(spawnPos, 264);
+                        Dust coreDust = Dust.NewDustPerfect(spawnPos, DustID.PortalBoltTrail);
                         coreDust.noGravity = true;
                         coreDust.scale = Main.rand.NextFloat(1.6f, 3.2f) * AshEffectIntensity;
 
@@ -1187,7 +1187,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 int shardCount = Main.rand.Next(ScaledCount(4), ScaledCount(8) + 1);
                 for (int j = 0; j < shardCount; j++)
                 {
-                    Dust shardDust = Dust.NewDustPerfect(glyphCenter + Main.rand.NextVector2Circular(ScaledPower(12f), ScaledPower(12f)), 267);
+                    Dust shardDust = Dust.NewDustPerfect(glyphCenter + Main.rand.NextVector2Circular(ScaledPower(12f), ScaledPower(12f)), DustID.RainbowMk2);
                     shardDust.noGravity = true;
                     shardDust.scale = Main.rand.NextFloat(1.0f, 1.45f) * AshEffectIntensity;
                     shardDust.color = Color.Lerp(innerColor, outerColor, Main.rand.NextFloat());
@@ -1351,7 +1351,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 // 外层起始半径很大，确保整体视觉接近直径 2700
                 Vector2 spawnPos = center + outward * Main.rand.NextFloat(ScaledPower(980f), ScaledPower(1280f));
 
-                Dust spark = Dust.NewDustPerfect(spawnPos, 264);
+                Dust spark = Dust.NewDustPerfect(spawnPos, DustID.PortalBoltTrail);
                 spark.noGravity = true;
                 spark.scale = Main.rand.NextFloat(0.85f, 1.45f) * AshEffectIntensity;
                 spark.color = Color.Lerp(new Color(255, 70, 30), new Color(255, 180, 80), Main.rand.NextFloat());

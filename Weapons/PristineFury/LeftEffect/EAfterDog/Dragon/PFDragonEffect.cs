@@ -1,3 +1,4 @@
+using CalamityMod.Projectiles.Ranged;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -9,7 +10,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     {
         private static readonly SoundStyle DragonFireSound = new("CalamityMod/Sounds/Custom/Yharon/YharonFireball", 3)
         {
-            Volume = 0.72f,
+            Volume = 1.44f,
             PitchVariance = 0.22f,
             MaxInstances = 6
         };
@@ -24,10 +25,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const int RampFrames = 120;
         private const int FrenzyFrames = 120;
         private const int RestFrames = 70;
-        private const int PelletCount = 5;
-        private const float Fan = 0.26f;
-        private const float FireSpeed = 12.8f;
-        private const float DamageMultiplier = 0.48f;
+        private const int PelletCount = 7;
+        private const float Fan = 0.32f;
+        private const float FireSpeed = 15.5f;
+        private const float DamageMultiplier = 0.55f;
         private const float Recoil = 15f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
@@ -110,6 +111,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     holdout.LeftBurstIndex + Main.rand.NextFloat(1000f));
 
                 PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
+            }
+
+            for (int i = -1; i <= 1; i += 2)
+            {
+                int breathIndex = Projectile.NewProjectile(
+                    holdout.Projectile.GetSource_FromThis(),
+                    muzzle + direction * 8f,
+                    direction.RotatedBy(i * 0.09f) * 9f,
+                    ModContent.ProjectileType<DragonsBreathFlames>(),
+                    System.Math.Max(1, (int)(damage * 0.68f)),
+                    holdout.Projectile.knockBack * 0.45f,
+                    holdout.Projectile.owner,
+                    0f,
+                    Main.rand.NextFloat(0.8f, 1.2f));
+
+                PFLeftEffectRules.ApplyTheme(breathIndex, holdout.CurrentMark);
             }
 
             holdout.LeftBurstIndex += PelletCount;

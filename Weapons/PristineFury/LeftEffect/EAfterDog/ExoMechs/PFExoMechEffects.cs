@@ -605,7 +605,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal static class PFExoThanatosEffect
     {
         private const int ChargeFrames = 150;
-        private const int CooldownFrames = 78;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -615,9 +614,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
             }
 
-            if (holdout.LeftTimer > 0)
+            if (holdout.LeftAuxTimer == 1)
             {
-                holdout.LeftTimer--;
+                holdout.LeftChargeTimer = ChargeFrames;
+                EnsureExtinctionBeam(holdout);
+                SpawnChargeEffects(holdout, 1f);
                 return;
             }
 
@@ -631,8 +632,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             FireExtinctionBeam(holdout);
-            holdout.LeftChargeTimer = 0;
-            holdout.LeftTimer = CooldownFrames;
+            holdout.LeftAuxTimer = 1;
         }
 
         private static void StartTelegraphs(NewLegendPristineFuryHoldOut holdout)
@@ -681,6 +681,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.TriggerMuzzleFlash(28);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.5f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, Pitch = 0.08f, MaxInstances = 2 }, muzzle);
+        }
+
+        private static void EnsureExtinctionBeam(NewLegendPristineFuryHoldOut holdout)
+        {
+            int beamType = ModContent.ProjectileType<PFExoThanatosBeamStart>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (!projectile.active || projectile.owner != holdout.Projectile.owner || projectile.type != beamType || (int)projectile.ai[0] != holdout.Projectile.whoAmI)
+                    continue;
+
+                projectile.timeLeft = 2;
+                return;
+            }
+
+            FireExtinctionBeam(holdout);
         }
 
         private static void SpawnChargeEffects(NewLegendPristineFuryHoldOut holdout, float charge)
@@ -850,6 +866,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Projectile.Kill();
                 return;
             }
+            bool sustainedBeam = holdout.LeftAuxTimer == 1;
+            if (sustainedBeam)
+                Projectile.timeLeft = 2;
 
             Projectile.velocity = holdout.AimDirection.SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
             Projectile.Center = holdout.GunTipPosition + Projectile.velocity * 16f;
@@ -858,7 +877,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             float fadeIn = Utils.GetLerpValue(0f, 12f, Projectile.localAI[0], true);
             float fadeOutProgress = Utils.GetLerpValue(Lifetime - 20f, Lifetime, Projectile.localAI[0], true);
-            float fadeOut = 1f - fadeOutProgress * fadeOutProgress;
+            float fadeOut = sustainedBeam ? 1f : 1f - fadeOutProgress * fadeOutProgress;
             Projectile.scale = 1.28f * fadeIn * fadeOut;
 
             float[] samples = new float[3];
@@ -907,7 +926,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private void SpawnSideLasers()
         {
-            if (Main.myPlayer != Projectile.owner || Projectile.localAI[0] < 18f || Projectile.localAI[0] > Lifetime - 22f || Projectile.localAI[0] % 24f != 1f)
+            if (Main.myPlayer != Projectile.owner || Projectile.localAI[0] < 18f || Projectile.localAI[0] % 8f != 1f)
                 return;
 
             float usableLength = Math.Min(Projectile.localAI[1] - 320f, 2600f);
@@ -918,8 +937,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             {
                 float progress = 0.28f + i * 0.34f + Main.rand.NextFloat(-0.04f, 0.04f);
                 Vector2 spawnPosition = Projectile.Center + Projectile.velocity * (usableLength * progress + 260f);
-                float sideSign = ((Projectile.identity + i + (int)(Projectile.localAI[0] / 24f)) & 1) == 0 ? 1f : -1f;
-                Vector2 sideVelocity = Projectile.velocity.RotatedBy(MathHelper.PiOver2 * sideSign) * 15f;
+                float sideSign = ((Projectile.identity + i + (int)(Projectile.localAI[0] / 8f)) & 1) == 0 ? 1f : -1f;
+                Vector2 sideVelocity = Projectile.velocity.RotatedBy(MathHelper.PiOver2 * sideSign) * 45f;
                 int projectileIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,

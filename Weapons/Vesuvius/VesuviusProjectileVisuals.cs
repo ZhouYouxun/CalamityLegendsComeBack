@@ -30,9 +30,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             Vector2 basePosition = projectile.Center - direction * projectile.width * 0.28f;
 
-            if (Main.rand.NextFloat() < 0.58f * intensity)
-                RancorLavaMetaball.SpawnParticle(basePosition + Main.rand.NextVector2Circular(6f, 6f), Main.rand.NextFloat(12f, 24f) * projectile.scale * intensity);
-
             for (int side = -1; side <= 1; side += 2)
             {
                 if (Main.rand.NextFloat() < 0.5f * intensity)
@@ -52,16 +49,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (Main.rand.NextFloat() < 0.32f * intensity)
             {
-                Particle ember = new GlowSparkParticle(
+                Particle ember = new SparkParticle(
                     basePosition + Main.rand.NextVector2Circular(7f, 7f),
                     -direction.RotatedByRandom(0.28f) * Main.rand.NextFloat(2f, 5.2f) * intensity,
                     false,
                     Main.rand.Next(12, 20),
                     Main.rand.NextFloat(0.2f, 0.42f) * projectile.scale * VisualScale,
-                    Main.rand.NextBool(5) ? HotWhite : Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat()),
-                    new Vector2(1.65f, 0.42f),
-                    true,
-                    false);
+                    Main.rand.NextBool(5) ? HotWhite : Color.Lerp(LavaOrange, LavaGold, Main.rand.NextFloat()));
                 GeneralParticleHandler.SpawnParticle(ember);
             }
 
@@ -132,14 +126,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (Main.rand.NextFloat() < 0.34f * intensity)
             {
-                Particle smoke = new TimedSmokeParticle(
+                Particle smoke = new SmallSmokeParticle(
                     center,
                     projectile.velocity * Main.rand.NextFloat(-0.08f, 0.04f) + Main.rand.NextVector2Circular(0.6f, 0.6f) - Vector2.UnitY * Main.rand.NextFloat(0.08f, 0.35f),
                     Color.Lerp(Color.DimGray, AshGray, 0.4f),
-                    Color.Transparent,
+                    Color.Lerp(Color.Black, AshGray, 0.35f),
                     Main.rand.NextFloat(0.55f, 1.05f) * projectile.scale * VisualScale,
                     0.62f * VisualIntensity,
-                    Main.rand.Next(34, 58),
                     Main.rand.NextFloat(-0.05f, 0.05f));
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
@@ -227,21 +220,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             Vector2 center = projectile.Center + Main.rand.NextVector2Circular(7f, 7f);
 
-            if (Main.rand.NextFloat() < 0.8f * intensity)
-                RancorLavaMetaball.SpawnParticle(center, Main.rand.NextFloat(20f, 38f) * intensity);
-
             if (Main.rand.NextFloat() < 0.5f * intensity)
             {
-                Particle core = new GlowSparkParticle(
+                Particle core = new PointParticle(
                     center,
                     direction.RotatedByRandom(0.08f) * Main.rand.NextFloat(4f, 9f) * intensity,
                     false,
                     Main.rand.Next(8, 14),
                     Main.rand.NextFloat(0.28f, 0.5f) * intensity,
                     Main.rand.NextBool(5) ? HotWhite : LavaGold,
-                    new Vector2(2.2f, 0.38f),
-                    true,
-                    false);
+                    true);
                 GeneralParticleHandler.SpawnParticle(core);
             }
 
@@ -348,14 +336,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (Main.rand.NextFloat() < 0.25f * intensity)
             {
-                Particle smoke = new TimedSmokeParticle(
+                Particle smoke = new SmallSmokeParticle(
                     center,
                     -direction * Main.rand.NextFloat(0.2f, 1.2f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
                     Color.Lerp(ObsidianBlack, ObsidianEdge, 0.38f),
-                    Color.Transparent,
+                    Color.Black,
                     Main.rand.NextFloat(0.48f, 0.95f) * intensity,
                     0.74f,
-                    Main.rand.Next(30, 52),
                     Main.rand.NextFloat(-0.05f, 0.05f));
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
@@ -416,12 +403,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
         private static void SpawnAshSquare(Vector2 position, Vector2 velocity, float scale, Color color)
         {
-            Particle ash = new SquareAshParticle(
+            Particle ash = new SmallSmokeParticle(
                 position,
                 velocity,
-                Main.rand.Next(24, 48),
+                color,
+                Color.Lerp(Color.Black, color, 0.25f),
                 scale * VisualScale,
-                color * VisualScale);
+                0.72f * VisualIntensity,
+                Main.rand.NextFloat(-0.06f, 0.06f));
             GeneralParticleHandler.SpawnParticle(ash);
         }
 

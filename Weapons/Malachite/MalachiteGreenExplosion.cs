@@ -80,6 +80,22 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     Main.rand.NextFloat(0.8f, IsFinaleExplosion ? 1.75f : 1.2f));
                 dust.noGravity = true;
             }
+
+            if (!IsFinaleExplosion || Projectile.localAI[0] % 3f != 1f)
+                return;
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 radial = Main.rand.NextVector2Unit();
+                Dust spark = Dust.NewDustPerfect(
+                    Projectile.Center + radial * Main.rand.NextFloat(24f, 126f),
+                    DustID.Terra,
+                    radial.RotatedBy(MathHelper.PiOver2 * Main.rand.NextFloatDirection()) * Main.rand.NextFloat(2.2f, 6.6f),
+                    60,
+                    Main.rand.NextBool() ? new Color(170, 255, 110) : new Color(45, 255, 135),
+                    Main.rand.NextFloat(1f, 1.85f));
+                spark.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -91,6 +107,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             float pulse = MathF.Sin(MathHelper.Clamp(completion, 0f, 1f) * MathHelper.Pi);
             float baseScale = IsFinaleExplosion ? 3.1f : 1.75f;
             Color color = IsFinaleExplosion ? new Color(70, 255, 95, 0) : new Color(190, 255, 95, 0);
+
+            if (IsFinaleExplosion)
+                DrawFinaleBlackHole(drawPosition, pulse, completion);
 
             for (int i = 0; i < 6; i++)
             {
@@ -107,6 +126,82 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
 
             return false;
+        }
+
+        private void DrawFinaleBlackHole(Vector2 drawPosition, float pulse, float completion)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Vector2 bloomOrigin = bloom.Size() * 0.5f;
+            float fade = Utils.GetLerpValue(1f, 0.72f, completion, true);
+            float inhale = 1f - MathF.Pow(MathHelper.Clamp(completion, 0f, 1f), 1.7f);
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                Color.Black * (0.74f * fade),
+                0f,
+                bloomOrigin,
+                1.25f + pulse * 0.82f,
+                SpriteEffects.None);
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                new Color(30, 255, 115, 0) * (0.36f * fade),
+                0f,
+                bloomOrigin,
+                2.2f + pulse * 1.15f,
+                SpriteEffects.None);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float ringRotation = Main.GlobalTimeWrappedHourly * (1.8f + i * 0.55f) + Projectile.identity * 0.17f;
+                float ringScale = 1.05f + i * 0.62f + pulse * 0.35f;
+                Main.EntitySpriteDraw(
+                    bloom,
+                    drawPosition,
+                    null,
+                    new Color(95, 255, 120, 0) * (0.18f * fade),
+                    ringRotation,
+                    bloomOrigin,
+                    new Vector2(ringScale * 1.5f, ringScale * 0.34f),
+                    SpriteEffects.None);
+            }
+
+            int rayCount = 18;
+            for (int i = 0; i < rayCount; i++)
+            {
+                float rotation = MathHelper.TwoPi * i / rayCount + Projectile.identity * 0.31f + Main.GlobalTimeWrappedHourly * 0.45f;
+                Vector2 direction = rotation.ToRotationVector2();
+                float length = MathHelper.Lerp(40f, 190f, (i % 5) / 4f) * (0.72f + pulse * 0.42f);
+                float innerGap = 20f + inhale * 32f;
+                DrawLine(
+                    pixel,
+                    drawPosition + direction * innerGap,
+                    drawPosition + direction * length,
+                    new Color(120, 255, 120, 0) * (0.25f * fade),
+                    i % 3 == 0 ? 4.5f : 2.4f);
+            }
+        }
+
+        private static void DrawLine(Texture2D pixel, Vector2 start, Vector2 end, Color color, float thickness)
+        {
+            Vector2 edge = end - start;
+            if (edge.LengthSquared() <= 0.001f)
+                return;
+
+            Main.EntitySpriteDraw(
+                pixel,
+                start,
+                new Rectangle(0, 0, 1, 1),
+                color,
+                edge.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(edge.Length(), thickness),
+                SpriteEffects.None);
         }
     }
 }

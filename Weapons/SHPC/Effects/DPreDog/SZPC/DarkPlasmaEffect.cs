@@ -639,7 +639,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
         {
             Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleVortex").Value;
-            Texture2D bloom = TextureAssets.Extra[98].Value;
+            Texture2D bloom = TextureAssets.Extra[ExtrasID.SharpTears].Value;
             Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmear").Value;
 
             Vector2 drawPos = projectile.Center - Main.screenPosition;
@@ -824,7 +824,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
     public class DarkPlasma_GP : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.SHPC";
+        public string LocalizationCategory => "Projectiles.SHPC";
         public override bool InstancePerEntity => true;
 
         public bool releaseOnly;

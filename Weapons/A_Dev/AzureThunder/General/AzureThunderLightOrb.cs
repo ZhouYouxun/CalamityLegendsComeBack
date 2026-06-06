@@ -412,7 +412,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
                     Dust.NewDustPerfect(
                         impactCenter,
 
-                        226,
+                        DustID.Electric,
 
                         (new Vector2(5f, 5f) * fxScale)
                         .RotatedByRandom(100f)

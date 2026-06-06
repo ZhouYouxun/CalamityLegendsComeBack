@@ -9,6 +9,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.LoreItems;
@@ -527,8 +528,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             bool militaryCallerRightClick = player.altFunctionUse == 2 &&
                 player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped;
+            SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
 
-            if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0 && !militaryCallerRightClick)
+            if (heatPlayer.IsForcedShutdownCooling() ||
+                (heatPlayer.AttackLockoutTimer > 0 && !militaryCallerRightClick))
                 return false;
 
             if (Main.myPlayer == player.whoAmI && KeybindSystem.LegendaryWeaponFormSwitch?.Current == true)
@@ -598,7 +601,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ❌ 新增：左键冷却锁
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
-            if (leftClickCooldown > 0 || heatPlayer.AttackLockoutTimer > 0)
+            if (leftClickCooldown > 0 || heatPlayer.AttackLockoutTimer > 0 || heatPlayer.IsForcedShutdownCooling())
                 return false;
 
             // 右键 → 不发射左键弹幕
@@ -824,6 +827,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== EX条UI同步 =====
             var exPlayer = player.GetModPlayer<NewLegend_EXPlayer>();
+            SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
+            bool shpcAttackLocked = heatPlayer.IsForcedShutdownCooling() || heatPlayer.AttackLockoutTimer > 0;
             bool exUnlocked = exPlayer.EXUnlocked;
 
             if (exUnlocked)
@@ -840,6 +845,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== EX技能释放 =====
             if (exUnlocked &&
+                !shpcAttackLocked &&
                 KeybindSystem.LegendarySkill.JustPressed &&
                 player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
                 exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
@@ -920,7 +926,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (CanStartRightClickHoldout(player))
             {
                 bool useTurretRightClick = player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped;
-                if (player.GetModPlayer<SHPCRight_Player>().AttackLockoutTimer > 0 && !useTurretRightClick)
+                if (heatPlayer.IsForcedShutdownCooling() ||
+                    (heatPlayer.AttackLockoutTimer > 0 && !useTurretRightClick))
                     return;
 
                 // 🔥 强制打断左键动画
@@ -1218,11 +1225,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
                 ammoWheelHint + "\n\n" +
-                finalLine + "\n\n" +
-                legendarySection + "\n";
+                finalLine + "\n\n";
 
             // ===== 替换 Tooltip =====
             tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName, legendarySection));
         }
 
         private string BuildMagazineTooltipText(Player player)

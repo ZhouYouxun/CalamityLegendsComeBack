@@ -7,4 +7,4 @@ includeSource = true
 modReferences = CalamityMod, VeluriyamLib
 sortAfter = CalamityMod
 homepage = https://github.com/ZhouYouxun/CalamityLegendsComeBack
-buildIgnore = *.zip, Weapons/YharimsCrystal/Abandoned/*
+buildIgnore = *.zip, icon_small.png, Weapons/YharimsCrystal/Abandoned/*

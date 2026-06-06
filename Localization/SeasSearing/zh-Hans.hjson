@@ -1,0 +1,46 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				SeasSearing: {
+					DisplayName: 海之烧灼：传奇归来
+					Tooltip: "[GFB]"
+					Intro: "[c/58FFDA:深海辐射步枪。污染会累积、扩散，并在指令下崩坏。]"
+					LeftClick: "[c/9AEAFF:左键：精准三连点射。每次命中叠加深渊辐射污染。]"
+					RightClick: "[c/58FFDA:右键：蓄积深海共振脉冲，引爆战场中所有被污染的敌人。]"
+					Passive: "[c/4CD268:手持：释放深渊水压领域，迟滞附近敌人并缓慢播撒污染。]"
+					Ultimate: "[c/FF8A30:{0}：标定目标，引导深海热核打击。核爆会让幸存者获得巨量污染。]"
+					LegendaryHint: "[c/BABABA:按住 Shift 读取灾害记录]"
+					LegendaryText:
+						'''
+						[c/58FFDA:这把枪发射的并不只是子弹，而是一场逐渐扩散的灾难坐标。]
+						[c/4CD268:青色裂光是水压断层，绿色泄漏是深海开始燃烧的征兆。]
+						[c/FF8A30:当天空被撕开，正确的后续不是再开一枪，而是让所有已经感染的东西一并崩坏。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			SeasSearing: {
+				SeasSearingHoldout.DisplayName: 海之烧灼手持弹幕
+				SeasSearingPollutionRound.DisplayName: 深渊污染弹
+				SeasSearingResonancePulse.DisplayName: 深海共振脉冲
+				SeasSearingDetonationBlast.DisplayName: 污染崩坏
+				SeasSearingFalloutCloud.DisplayName: 深渊污染云
+				SeasSearingDesignatorBeam.DisplayName: 热核制导光束
+				SeasSearingNukeMarker.DisplayName: 热核打击标记
+				SeasSearingThermonuclearWarhead.DisplayName: 深海热核弹
+				SeasSearingNuclearDetonation.DisplayName: 深海核灾变
+				SeasSearingFalloutRain.DisplayName: 放射性深渊雨
+			}
+		}
+
+		Buffs: {
+			SeasSearingRadiationBuff: {
+				DisplayName: 深渊辐射污染
+				Description: 水压、毒素与不稳定深海辐射正在累积
+			}
+		}
+	}
+}

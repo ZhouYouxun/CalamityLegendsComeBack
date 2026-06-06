@@ -90,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (player.altFunctionUse == 2 || player.Calamity().StealthStrikeAvailable())
                 return 1f;
 
-            return 1.35f;
+            return MalachiteProgression.LeftClickUseSpeedMultiplier;
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
@@ -98,6 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Vector2 mouseWorld = GetMouseWorld(player);
             CalamityPlayer calamity = player.Calamity();
             MalachiteAccessoryPlayer accessoryPlayer = player.GetModPlayer<MalachiteAccessoryPlayer>();
+            MalachitePlayer malachitePlayer = player.GetModPlayer<MalachitePlayer>();
 
             if (calamity.StealthStrikeAvailable())
             {
@@ -126,6 +127,24 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
 
             TryRegenerateFrenzyFanFromScroll(player, source, damage, knockback, mouseWorld, accessoryPlayer);
+            int normalKunaiCount = malachitePlayer.DepletionBurstActive
+                ? MalachiteProgression.DepletionBurstKunaiCount
+                : MalachiteProgression.NormalLeftClickKunaiCount;
+
+            if (normalKunaiCount > 1)
+            {
+                MalachiteKunai.SpawnNormalLeftClickVolley(
+                    player,
+                    source,
+                    damage,
+                    knockback,
+                    mouseWorld,
+                    normalKunaiCount,
+                    malachitePlayer.DepletionBurstActive);
+                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.86f, Pitch = normalKunaiCount >= 5 ? 0.38f : 0.18f }, player.Center);
+                return false;
+            }
+
             return true;
         }
 

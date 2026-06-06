@@ -11,25 +11,61 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
 {
-    public class VesuviusVolcanicBomb : VesuviusMoltenAsteroid
+    public class VesuviusVolcanicBomb : ModProjectile, ILocalizedModType
     {
+        public new string LocalizationCategory => "Projectiles.Vesuvius";
+        public override string Texture => "CalamityMod/Projectiles/Melee/VolcanicFireball";
+
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Type] = 4;
+            ProjectileID.Sets.TrailCacheLength[Type] = 9;
+            ProjectileID.Sets.TrailingMode[Type] = 0;
+        }
+
         public override void SetDefaults()
         {
-            base.SetDefaults();
-            Projectile.width = 42;
-            Projectile.height = 42;
+            Projectile.width = 26;
+            Projectile.height = 26;
+            Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.tileCollide = true;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = 1;
             Projectile.timeLeft = 150;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.extraUpdates = 0;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void AI()
         {
-            if (Projectile.localAI[0] == 0f && Projectile.ai[1] <= 0f)
-                Projectile.ai[1] = 1.2f;
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.scale = Projectile.ai[1] <= 0f ? 1.18f : Projectile.ai[1];
+                SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.45f, Pitch = -0.15f }, Projectile.Center);
+                Projectile.localAI[0] = 1f;
+            }
 
-            base.AI();
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.frameCounter++;
+            Projectile.frame = Projectile.frameCounter / 4 % Main.projFrames[Type];
+            Lighting.AddLight(Projectile.Center, 0.25f, 0.2f, 0.01f);
+
             VesuviusProjectileVisuals.SpawnBombTrail(Projectile, 1.05f);
-            Projectile.velocity.Y += 0.08f;
+
+            if (Projectile.wet && !Projectile.lavaWet)
+                Projectile.Kill();
+
+            if (Main.rand.NextBool(4))
+            {
+                Dust fire = Dust.NewDustDirect(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke);
+                fire.noGravity = true;
+                fire.velocity *= 0f;
+            }
+
+            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + 0.13f, -16f, 18f);
             Projectile.velocity *= 0.992f;
         }
 
@@ -50,13 +86,38 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                     82f * Projectile.scale);
             }
 
-            base.OnKill(timeLeft);
-
             if (!Main.dedServ)
             {
-                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.78f, Pitch = -0.18f }, oldCenter);
+                SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.72f, Pitch = -0.18f }, oldCenter);
                 VesuviusProjectileVisuals.SpawnBombDetonation(oldCenter, Projectile.scale);
+
+                for (int i = 0; i < 32; i++)
+                {
+                    Dust fire = Dust.NewDustPerfect(
+                        oldCenter,
+                        Main.rand.NextBool(3) ? DustID.InfernoFork : DustID.CopperCoin,
+                        Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 9f),
+                        90,
+                        Main.rand.NextBool(3) ? VesuviusProjectileVisuals.LavaGold : VesuviusProjectileVisuals.LavaOrange,
+                        Main.rand.NextFloat(0.8f, 1.7f));
+                    fire.noGravity = true;
+                }
             }
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Vector2 center = Projectile.Center;
+                Projectile.Resize((int)(112f * Projectile.scale), (int)(112f * Projectile.scale));
+                Projectile.Center = center;
+                Projectile.penetrate = -1;
+                Projectile.maxPenetrate = -1;
+                Projectile.Damage();
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(BuffID.OnFire3, 300);
         }
     }
 

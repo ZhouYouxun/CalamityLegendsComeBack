@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
     public class VesuviusFaultJavelin : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Vesuvius";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuvius";
+        public override string Texture => "CalamityMod/Projectiles/DraedonsArsenal/VulcanSpear";
 
         private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 1f, 5f);
 
@@ -28,8 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         public override void SetDefaults()
         {
-            Projectile.width = 62;
-            Projectile.height = 62;
+            Projectile.width = 30;
+            Projectile.height = 30;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.tileCollide = true;
@@ -43,7 +43,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.spriteDirection = Projectile.direction;
             Lighting.AddLight(Projectile.Center, 0.65f, 0.18f, 0.04f);
 
             if (Projectile.localAI[0]++ < 5f)
@@ -138,12 +139,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         {
             CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], Color.OrangeRed * 0.52f);
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/DraedonsArsenal/VulcanSpearGlow").Value;
             Vector2 origin = texture.Size() * 0.5f;
-            SpriteEffects effects = Projectile.spriteDirection < 0 ? SpriteEffects.FlipVertically : SpriteEffects.None;
+            SpriteEffects effects = Projectile.direction < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            float drawRotation = Projectile.velocity.ToRotation() + (Projectile.direction < 0 ? MathHelper.Pi : 0f);
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale, effects);
-            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale, effects);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor, drawRotation, origin, Projectile.scale * 1.05f, effects);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.LavaGold, drawRotation, origin, Projectile.scale * 1.05f, effects);
             return false;
         }
     }
@@ -151,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
     public class VesuviusFaultCore : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Vesuvius";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuvius";
+        public override string Texture => "CalamityMod/Projectiles/DraedonsArsenal/VulcanSpear";
 
         private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 1f, 5f);
 
@@ -175,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         public override void AI()
         {
             Projectile.localAI[0]++;
-            Projectile.rotation = Projectile.ai[1] + MathHelper.PiOver4;
+            Projectile.rotation = Projectile.ai[1];
             Lighting.AddLight(Projectile.Center, 0.75f, 0.24f, 0.05f);
 
             if (!Main.dedServ)
@@ -268,12 +270,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/DraedonsArsenal/VulcanSpearGlow").Value;
             Vector2 origin = texture.Size() * 0.5f;
             float pulse = 0.8f + 0.2f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f);
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White * pulse, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale * 1.08f, SpriteEffects.None);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.LavaGold * pulse, Projectile.rotation, origin, Projectile.scale * 1.08f, SpriteEffects.None);
             return false;
         }
     }
@@ -499,9 +501,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             intensity = MathHelper.Clamp(intensity, 0.3f, 1.6f);
 
-            if (Main.rand.NextFloat() < 0.36f * intensity)
-                RancorLavaMetaball.SpawnParticle(position + Main.rand.NextVector2Circular(5f, 5f), Main.rand.NextFloat(10f, 19f) * intensity);
-
             if (Main.rand.NextFloat() < 0.72f * intensity)
             {
                 Dust flame = Dust.NewDustPerfect(
@@ -516,7 +515,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             if (Main.rand.NextFloat() < 0.42f * intensity)
             {
-                Particle ember = new GlowOrbParticle(
+                Particle ember = new SparkParticle(
                     position + Main.rand.NextVector2Circular(8f, 8f),
                     velocity.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.45f, 0.9f),
                     false,
@@ -528,13 +527,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             if (Main.rand.NextFloat() < 0.13f * intensity)
             {
-                Particle heatMist = new MediumMistParticle(
+                Particle heatMist = new SmallSmokeParticle(
                     position,
                     velocity * Main.rand.NextFloat(0.25f, 0.55f),
                     Color.Lerp(LavaColor, HotColor, 0.28f),
-                    Color.DarkSlateGray,
+                    SmokeColor,
                     Main.rand.NextFloat(0.32f, 0.62f) * intensity,
-                    Main.rand.Next(74, 126),
+                    0.58f,
                     Main.rand.NextFloat(-0.08f, 0.08f));
                 GeneralParticleHandler.SpawnParticle(heatMist);
             }

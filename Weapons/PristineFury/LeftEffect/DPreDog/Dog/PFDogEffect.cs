@@ -11,11 +11,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal static class PFDogEffect
     {
-        private const int ChargeFrames = 180;
-        private const int ScatterCount = 12;
-        private const float ScatterSpeed = 23.5f;
-        private const float ScatterFan = 0.76f;
-        private const float DamageMultiplier = 1.36f;
+        private const int ChargeFrames = 120;
+        private const int ScatterCount = 18;
+        private const float ScatterSpeed = 29f;
+        private const float ScatterFan = 0.56f;
+        private const float DamageMultiplier = 1.18f;
         private const float Recoil = 58f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 direction = holdout.AimDirection.SafeNormalize(Vector2.UnitX * holdout.Owner.direction);
             Vector2 muzzle = holdout.GunTipPosition + direction * 10f;
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            Color theme = Color.Lerp(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), Color.White, charge * 0.38f);
+            Color theme = Color.Lerp(new Color(128, 64, 255), new Color(80, 220, 255), charge * 0.38f);
             Lighting.AddLight(muzzle, theme.ToVector3() * (0.35f + charge * 0.95f));
 
             if (Main.rand.NextFloat() < 0.46f + charge * 0.38f)

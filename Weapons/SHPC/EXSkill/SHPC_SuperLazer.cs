@@ -8,7 +8,6 @@ using CalamityMod.Projectiles.Ranged;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using ReLogic.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +15,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -116,15 +114,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Projectile.velocity = Projectile.rotation.ToRotationVector2();
         }
 
-
-        // 命中VFX节流（避免每帧命中都刷爆）
-        private int impactVfxCooldown;
-
-
-        public override void OnSpawn(IEntitySource source)
-        {
-            impactVfxCooldown = 0; // 初始化节流计时器
-        }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -229,8 +218,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             SoundEngine.PlaySound(SoundID.Item122, hitPos);
         }
 
-        private SlotId LaserSoundSlot;
-        private int soundTimer;
         public override void ExtraBehavior()
         {
             if (Main.dedServ)

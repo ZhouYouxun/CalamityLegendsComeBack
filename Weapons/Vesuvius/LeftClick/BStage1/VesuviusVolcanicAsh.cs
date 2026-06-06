@@ -52,6 +52,54 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity * VesuviusProjectileVisuals.VisualIntensity);
 
             VesuviusProjectileVisuals.SpawnVolcanicAshCloud(Projectile, 0.9f);
+            SpawnMagicAshParticles();
+        }
+
+        private void SpawnMagicAshParticles()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 backward = -forward;
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    backward * Main.rand.NextFloat(0.4f, 1.8f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    false,
+                    Main.rand.Next(12, 22),
+                    Main.rand.NextFloat(0.18f, 0.42f) * Projectile.scale,
+                    Main.rand.NextBool(4) ? VesuviusProjectileVisuals.HotWhite : Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, Main.rand.NextFloat()),
+                    true,
+                    false,
+                    true));
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(
+                    Projectile.Center - forward * Main.rand.NextFloat(4f, 16f) + Main.rand.NextVector2Circular(8f, 8f),
+                    backward * Main.rand.NextFloat(0.2f, 1.2f),
+                    Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, VesuviusProjectileVisuals.LavaOrange, 0.18f),
+                    Color.Black,
+                    Main.rand.NextFloat(0.42f, 0.78f) * Projectile.scale,
+                    0.45f,
+                    Main.rand.NextFloat(-0.05f, 0.05f)));
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    Main.rand.NextBool(3) ? DustID.Smoke : DustID.Torch,
+                    backward.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.5f, 2.8f),
+                    100,
+                    Color.Lerp(VesuviusProjectileVisuals.AshGray, VesuviusProjectileVisuals.LavaGold, 0.22f),
+                    Main.rand.NextFloat(0.55f, 1.05f));
+                dust.noGravity = Main.rand.NextBool(3);
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -68,6 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D fire = ModContent.Request<Texture2D>("CalamityMod/Projectiles/FireProj").Value;
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
             float fade = Projectile.Opacity;
 
@@ -95,6 +144,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                     Projectile.scale * (0.85f + trailFade * 0.2f),
                     SpriteEffects.None);
             }
+
+            Main.EntitySpriteDraw(
+                fire,
+                Projectile.Center - Main.screenPosition,
+                null,
+                Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, 0.22f) * 0.34f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                -Projectile.rotation * 0.6f,
+                fire.Size() * 0.5f,
+                Projectile.scale * 0.52f * VesuviusProjectileVisuals.VisualScale,
+                SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 texture,

@@ -6,7 +6,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 {
     internal class BFArrow_CDetecEffect : GlobalProjectile
     {
-        public new string LocalizationCategory => "Projectiles.BlossomFlux";
+        public string LocalizationCategory => "Projectiles.BlossomFlux";
         public override bool InstancePerEntity => true;
 
         public bool BlossomFluxLeftArrow;

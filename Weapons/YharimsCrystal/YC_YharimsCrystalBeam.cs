@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPrism;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.NPCs;
+using CalamityMod.Particles;
 using CalamityMod.Utilities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -78,6 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private const float MaxDamageMultiplier = 3f;
         private const float BeamPosOffset = 16f;
         private const float MaxBeamScale = 1.8f;
+        private const float DroneAttackBeamScaleFactor = 0.5f;
         private const float MaxBeamLength = 2400f;
         private const float BeamTileCollisionWidth = 1f;
         private const float BeamHitboxCollisionWidth = 22f;
@@ -166,6 +168,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 beamStartSidewaysOffset = 6f;
                 beamStartForwardsOffset = -13f;
             }
+
+            if (HostKind == BeamHostKind.TyrantDrone && chargeRatio >= 0.98f)
+                Projectile.scale *= DroneAttackBeamScaleFactor;
 
             float deviationAngle = (charge + beamIdOffset * spinRate) / (spinRate * NumBeams) * MathHelper.TwoPi;
             Vector2 unitRot = Vector2.UnitY.RotatedBy(deviationAngle);
@@ -292,7 +297,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 else
                     charge = 0f;
 
-                canDealDamage = vip.CurrentState is YC_EX_VIP.EXVipState.AwaitingFireCommand or YC_EX_VIP.EXVipState.Firing;
+                if (vip.CurrentState == YC_EX_VIP.EXVipState.Firing)
+                    damage = (int)(host.damage * 5.5f);
+
+                canDealDamage = vip.CurrentState == YC_EX_VIP.EXVipState.Firing;
                 return true;
             }
 
@@ -402,9 +410,24 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             {
                 Vector2 dustOffset = Projectile.velocity.RotatedBy(MathHelper.PiOver2) * (Main.rand.NextFloat() - 0.5f) * Projectile.width;
                 Vector2 dustPos = laserEndPos + dustOffset - Vector2.One * SidewaysDustBeamEndOffset;
-                int d = Dust.NewDust(dustPos, 8, 8, 244, 0f, 0f, 100, beamColor, 5f);
+                int d = Dust.NewDust(dustPos, 8, 8, DustID.CopperCoin, 0f, 0f, 100, beamColor, 5f);
                 Main.dust[d].velocity *= 0.5f;
                 Main.dust[d].velocity.Y = -Math.Abs(Main.dust[d].velocity.Y);
+            }
+
+            if (HostKind == BeamHostKind.TyrantDrone && Main.rand.NextBool(6))
+            {
+                Vector2 glowPosition = Projectile.Center + Projectile.velocity * Main.rand.NextFloat(24f, Math.Max(25f, BeamLength - 18f));
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    glowPosition + Projectile.velocity.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-4f, 4f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.15f, 0.65f),
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.14f, 0.26f),
+                    Color.Lerp(beamColor, Color.White, Main.rand.NextFloat(0.2f, 0.55f)),
+                    true,
+                    false,
+                    true));
             }
         }
 
