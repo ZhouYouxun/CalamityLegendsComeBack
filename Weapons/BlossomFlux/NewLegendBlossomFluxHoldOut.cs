@@ -39,8 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int BreakthroughChargeReductionPerUnlock = 7;
         private const int BreakthroughLoadFlashFrames = 14;
         private const int BreakthroughQueuedShotGap = 4;
-        private const int LeftOutlinePulseFrames = 10;
-        private const int RightOutlinePulseFrames = 22;
+        private const int LeftStarFlashFrames = 8;
         private const float RecoveryDnaMaxOffset = 18f;
         private const float RecoveryDnaPhaseStep = MathHelper.Pi / 8f;
         private const float BreakthroughSpeed = 19f;
@@ -52,7 +51,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int ReloadFrames = 18;
         private const int MaxChargeFrames = 60;
         private const int MinBreakthroughChargeFrames = 24;
-        private const float ReadyPulseScale = 0.45f;
         private const float RightClickBaseDamageMultiplier = 3f;
         private BalanceBlossomFlux damageBalance = new();
         private const float RailgunSightSize = 9f;
@@ -66,7 +64,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int reloadTimer;
         private int chargeTimer;
-        private int chargeFxTimer;
         private int breakthroughLoadedArrows;
         private int breakthroughLoadFlashTimer;
         private int breakthroughQueuedShotCount;
@@ -74,8 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private int breakthroughQueuedShotTimer;
         private int breakthroughQueuedDamage;
         private int breakthroughQueuedPenetrate;
-        private int leftOutlinePulseTimer;
-        private int rightOutlinePulseTimer;
+        private int leftStarFlashTimer;
         private float breakthroughQueuedSpeed;
         private float breakthroughQueuedKnockback;
         private float breakthroughQueuedNoFalloff;
@@ -109,7 +105,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private bool ChargeReady => BreakthroughChargeActive ? breakthroughLoadedArrows > 0 : chargeTimer >= GetCurrentReadyChargeFrames() && readyBurstPlayed;
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         private Vector2 GunTipPosition => Projectile.Center + AimDirection * 42f;
-        private Vector2 ChargeFxAnchor => Projectile.Center - AimDirection * MathHelper.Lerp(11f, 6f, ChargeCompletion) + new Vector2(0f, MathHelper.Lerp(-7f, -4f, ChargeCompletion));
         private Color PresetColor => BFArrowCommon.GetPresetColor(CurrentPreset);
         private Color AccentColor => BFArrowCommon.GetPresetAccentColor(CurrentPreset);
         private bool BombardChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
@@ -258,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
-            UpdateOutlinePulseTimers();
+            UpdateStarFlashTimers();
 
             BFRightUIPlayer rightUIPlayer = Owner.GetModPlayer<BFRightUIPlayer>();
 
@@ -278,9 +273,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             bool selectionPanelOpen = HasActiveSelectionPanel(Owner);
             rightUIPlayer.ProcessRightClickState(selectionPanelOpen);
             HandleFormSwitchKeyInput();
-
-            if (rightUIPlayer.ShortDoubleTapReleasedThisFrame && !rightChargeActive)
-                ToggleSelectionPanel();
 
             if (rightUIPlayer.LongHoldReachedThisFrame && !rightChargeActive)
                 BeginRightCharge();
@@ -383,7 +375,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FireCurrentPresetLeftAttack(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            TriggerTacticalOutlinePulse(rightClick: false);
+            TriggerLeftStarFlash();
 
             switch (CurrentPreset)
             {
@@ -468,7 +460,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             rightChargeActive = true;
             reloadTimer = ReloadFrames;
             chargeTimer = 0;
-            chargeFxTimer = 0;
             breakthroughLoadedArrows = 0;
             breakthroughLoadFlashTimer = 0;
             readyBurstPlayed = false;
@@ -499,20 +490,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
             }
 
-            chargeFxTimer++;
-            Lighting.AddLight(GunTipPosition, PresetColor.ToVector3() * (0.16f + ChargeCompletion * 0.25f));
             UpdateBombardReticle();
             UpdateRecoveryChargeBuff();
 
             if (reloadTimer > 0)
             {
                 UpdateReloadAnimation();
+                rightUIPlayer.SetRightChargeBar(ChargeCompletion);
                 return;
             }
 
             if (BreakthroughChargeActive)
             {
                 UpdateBreakthroughChargeState();
+                rightUIPlayer.SetRightChargeBar(ChargeCompletion);
                 return;
             }
 
@@ -525,6 +516,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             {
                 UpdateChargedAnimation();
             }
+
+            rightUIPlayer.SetRightChargeBar(ChargeCompletion);
         }
 
         private bool HasActiveBombardStrike()
@@ -598,7 +591,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             rightChargeActive = false;
             reloadTimer = 0;
             chargeTimer = 0;
-            chargeFxTimer = 0;
             breakthroughLoadedArrows = 0;
             breakthroughLoadFlashTimer = 0;
             readyBurstPlayed = false;
@@ -651,57 +643,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, armRotation + extraBackArmRotation);
         }
 
-        private void UpdateOutlinePulseTimers()
+        private void UpdateStarFlashTimers()
         {
-            if (leftOutlinePulseTimer > 0)
-                leftOutlinePulseTimer--;
-
-            if (rightOutlinePulseTimer > 0)
-                rightOutlinePulseTimer--;
+            if (leftStarFlashTimer > 0)
+                leftStarFlashTimer--;
         }
 
-        private void TriggerTacticalOutlinePulse(bool rightClick)
+        private void TriggerLeftStarFlash()
         {
-            if (rightClick)
-                rightOutlinePulseTimer = RightOutlinePulseFrames;
-            else
-                leftOutlinePulseTimer = 0;
-        }
-
-        private float GetLeftAttackBuildGlow()
-        {
-            if (!leftHeldLastFrame || rightChargeActive || HasActiveSelectionPanel(Owner))
-                return 0f;
-
-            int interval = GetCurrentLeftGlowInterval();
-            if (interval <= 0)
-                return 0.12f + 0.06f * (0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity * 0.31f));
-
-            float build = 1f - leftBurstTimer / (float)interval;
-            float intervalWeight = MathHelper.Clamp(interval / (float)ReconFireInterval, 0.16f, 1f);
-            intervalWeight = MathHelper.Lerp(0.16f, 1f, (float)Math.Pow(intervalWeight, 1.35f));
-            return MathHelper.Clamp(build, 0f, 1f) * intervalWeight;
-        }
-
-        private int GetCurrentLeftGlowInterval()
-        {
-            return CurrentPreset switch
-            {
-                BlossomFluxChloroplastPresetType.Chlo_ABreak => GetDisplayedBreakthroughFireInterval(),
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => burstGroupsStarted == 0 && leftBurstTimer > RecoveryBurstInterval ? BFRecoveryLeftBalance.GetStats().VolleyPauseFrames : RecoveryBurstInterval,
-                BlossomFluxChloroplastPresetType.Chlo_CDetec => leftBurstTimer > ReconFireInterval ? ReconCyclePause : ReconFireInterval,
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => BFBombardLeftBalance.GetStats().FireInterval,
-                BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueFireInterval,
-                _ => BreakthroughFireInterval
-            };
-        }
-
-        private int GetDisplayedBreakthroughFireInterval()
-        {
-            if (PastLingeringAssaultActive)
-                return GetPastLingeringFireInterval();
-
-            return Math.Max(1, BFBreakthroughLeftBalance.GetStats().UseInterval);
+            leftStarFlashTimer = LeftStarFlashFrames;
         }
 
         private int GetNextBreakthroughFireInterval()
@@ -755,9 +705,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 offsetLengthFromArm = MathHelper.Lerp(IdleOffsetLength - 10f, IdleOffsetLength, reloadProgress);
             }
 
-            if (chargeFxTimer % 4 == 0)
-                SpawnReloadDust();
-
             if (reloadTimer == 1)
                 SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.45f, Pitch = 0.1f }, GunTipPosition);
 
@@ -784,11 +731,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 extraFrontArmRotation = -0.08f * ChargeCompletion;
                 extraBackArmRotation = 0.05f * ChargeCompletion;
             }
-
-            SpawnChargingDust();
-
-            if (chargeTimer % 10 == 0)
-                SpawnChargeCircle();
 
             if (!BreakthroughChargeActive && chargeTimer >= GetCurrentReadyChargeFrames() && !readyBurstPlayed)
                 PlayChargeReadyBurst();
@@ -818,8 +760,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (!readyBurstPlayed)
                 PlayChargeReadyBurst();
 
-            if (chargeFxTimer % 3 == 0)
-                SpawnReadyIdleDust();
         }
 
         private void HandleRelease()
@@ -831,8 +771,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             extraFrontArmRotation = 0f;
             extraBackArmRotation = 0f;
 
-            SpawnReleasePulse();
-            TriggerTacticalOutlinePulse(rightClick: true);
+            PlayRightReleaseSound();
             ReleaseChargedShot(CurrentPreset, ChargeCompletion);
             Owner.GetModPlayer<BFEXPlayer>().GainEX(3);
         }
@@ -1039,197 +978,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Main.projectile[projectileIndex].netUpdate = true;
         }
 
-        private void SpawnReloadDust()
-        {
-            Vector2 backward = -AimDirection;
-            Vector2 side = backward.RotatedBy(MathHelper.PiOver2);
-
-            for (int i = 0; i < 2; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + side * Main.rand.NextFloat(-7f, 7f),
-                    DustID.GemEmerald,
-                    backward.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.8f, 1.6f),
-                    120,
-                    Color.Lerp(PresetColor, Color.White, 0.25f),
-                    Main.rand.NextFloat(0.85f, 1.15f));
-                dust.noGravity = true;
-            }
-        }
-
-        private void SpawnChargingDust()
-        {
-            if (chargeFxTimer % 2 != 0)
-                return;
-
-            Vector2 inwardPosition = ChargeFxAnchor + Main.rand.NextVector2Circular(16f, 16f);
-            Vector2 inwardVelocity = (ChargeFxAnchor - inwardPosition).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(0.9f, 2.1f);
-            bool bombard = CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
-            int primaryDustType = bombard ? DustID.Torch : DustID.GemEmerald;
-            Color primaryColor = bombard
-                ? Color.Lerp(Color.Goldenrod, Color.Khaki, 0.45f + 0.2f * ChargeCompletion)
-                : Color.Lerp(PresetColor, Color.White, 0.2f + 0.3f * ChargeCompletion);
-
-            Dust dust = Dust.NewDustPerfect(
-                inwardPosition,
-                primaryDustType,
-                inwardVelocity,
-                100,
-                primaryColor,
-                Main.rand.NextFloat(0.8f, 1.25f));
-            dust.noGravity = true;
-
-            if (Main.rand.NextBool(3))
-            {
-                Dust glowDust = Dust.NewDustPerfect(
-                    ChargeFxAnchor + Main.rand.NextVector2Circular(5f, 5f),
-                    bombard ? DustID.FireworksRGB : DustID.TerraBlade,
-                    Main.rand.NextVector2Circular(0.6f, 0.6f),
-                    100,
-                    bombard ? Color.Lerp(Color.Khaki, PresetColor, 0.35f) : PresetColor,
-                    Main.rand.NextFloat(0.9f, 1.35f));
-                glowDust.noGravity = true;
-            }
-        }
-
-        private void SpawnChargeCircle()
-        {
-            int points = 10;
-            float radius = MathHelper.Lerp(14f, 26f, ChargeCompletion);
-            bool bombard = CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
-
-            for (int i = 0; i < points; i++)
-            {
-                float angle = MathHelper.TwoPi * i / points + Main.GlobalTimeWrappedHourly * 2.4f;
-                Vector2 offset = angle.ToRotationVector2() * radius;
-
-                Dust dust = Dust.NewDustPerfect(
-                    ChargeFxAnchor + offset,
-                    bombard ? DustID.Torch : DustID.GemEmerald,
-                    -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.1f, 2.4f),
-                    100,
-                    bombard ? Color.Lerp(Color.Goldenrod, Color.Khaki, 0.35f) : Color.Lerp(PresetColor, Color.White, 0.35f),
-                    Main.rand.NextFloat(0.85f, 1.2f));
-                dust.noGravity = true;
-            }
-        }
-
         private void PlayChargeReadyBurst()
         {
             if (readyBurstPlayed)
                 return;
 
             readyBurstPlayed = true;
-            rightOutlinePulseTimer = Math.Max(rightOutlinePulseTimer, RightOutlinePulseFrames / 2);
-            bool bombard = CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
 
             SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.6f, Pitch = 0.25f }, GunTipPosition);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.4f, Pitch = -0.15f }, GunTipPosition);
-
-            for (int i = 0; i < 20; i++)
-            {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(4f, 4f) * Main.rand.NextFloat(1.5f, 4.2f);
-                Dust dust = Dust.NewDustPerfect(
-                    GunTipPosition,
-                    bombard ? DustID.Torch : DustID.TerraBlade,
-                    velocity,
-                    100,
-                    bombard ? Color.Lerp(Color.Goldenrod, Color.Khaki, 0.5f) : Color.Lerp(PresetColor, Color.White, 0.5f),
-                    Main.rand.NextFloat(1f, 1.5f));
-                dust.noGravity = true;
-            }
         }
 
         private void PlayBreakthroughArrowLoadedBurst()
         {
-            rightOutlinePulseTimer = Math.Max(rightOutlinePulseTimer, BreakthroughLoadFlashFrames);
             SoundEngine.PlaySound(SoundID.Item108 with { Volume = 0.22f, Pitch = 0.35f }, GunTipPosition);
-
-            Color flashColor = new(124, 255, 136);
-            for (int i = 0; i < 10; i++)
-            {
-                Vector2 velocity =
-                    AimDirection.RotatedByRandom(0.22f) * Main.rand.NextFloat(1.4f, 3.6f) +
-                    Main.rand.NextVector2Circular(0.8f, 0.8f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    GunTipPosition,
-                    DustID.TerraBlade,
-                    velocity,
-                    100,
-                    Color.Lerp(flashColor, Color.White, Main.rand.NextFloat(0.12f, 0.35f)),
-                    Main.rand.NextFloat(0.82f, 1.18f));
-                dust.noGravity = true;
-            }
         }
 
-        private void SpawnReadyIdleDust()
-        {
-            Vector2 driftVelocity = -Vector2.UnitY.RotatedByRandom(0.28f) * Main.rand.NextFloat(0.8f, 1.7f);
-
-            Dust dust = Dust.NewDustPerfect(
-                GunTipPosition + Main.rand.NextVector2Circular(4f, 4f),
-                DustID.GemEmerald,
-                driftVelocity,
-                100,
-                Color.Lerp(PresetColor, Color.White, ReadyPulseScale),
-                Main.rand.NextFloat(0.95f, 1.35f));
-            dust.noGravity = true;
-
-            if (Main.rand.NextBool(4))
-            {
-                Dust highlight = Dust.NewDustPerfect(
-                    GunTipPosition + Main.rand.NextVector2Circular(2f, 2f),
-                    DustID.TerraBlade,
-                    driftVelocity * 0.65f,
-                    100,
-                    Color.White,
-                    Main.rand.NextFloat(0.75f, 1.05f));
-                highlight.noGravity = true;
-            }
-        }
-
-        private void SpawnReleasePulse()
+        private void PlayRightReleaseSound()
         {
             if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
             {
                 SoundStyle bombardFire = new("CalamityMod/Sounds/Item/LauncherHeavyShot");
                 SoundEngine.PlaySound(bombardFire with { Volume = 0.82f, Pitch = -0.08f, PitchVariance = 0.08f }, GunTipPosition);
-
-                for (int i = 0; i < 5; i++)
-                {
-                    float pulseScale = Main.rand.NextFloat(0.22f, 0.42f);
-                    DirectionalPulseRing pulse = new(
-                        GunTipPosition,
-                        (AimDirection * 18f).RotatedByRandom(0.25f) * Main.rand.NextFloat(0.55f, 1.15f),
-                        Color.Lerp(Color.Goldenrod, Color.Khaki, Main.rand.NextFloat(0.25f, 0.7f)) * 0.82f,
-                        Vector2.One,
-                        pulseScale - 0.25f,
-                        pulseScale,
-                        0f,
-                        20);
-                    GeneralParticleHandler.SpawnParticle(pulse);
-                }
             }
             else
             {
                 SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.72f, Pitch = -0.05f }, GunTipPosition);
-            }
-
-            for (int i = 0; i < 18; i++)
-            {
-                Vector2 velocity =
-                    AimDirection.RotatedByRandom(0.22f) * Main.rand.NextFloat(2.5f, 6f) +
-                    Main.rand.NextVector2Circular(1f, 1f);
-
-                Dust dust = Dust.NewDustPerfect(
-                    GunTipPosition,
-                    CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb ? DustID.Torch : DustID.GemEmerald,
-                    velocity,
-                    100,
-                    CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb ? Color.Lerp(Color.Goldenrod, Color.Khaki, 0.4f) : Color.Lerp(PresetColor, Color.White, 0.4f),
-                    Main.rand.NextFloat(0.95f, 1.4f));
-                dust.noGravity = true;
             }
         }
 
@@ -1958,19 +1732,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D weaponTexture = BlossomFluxTacticalTextures.GetWeaponTexture(CurrentPreset);
-            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = weaponTexture.Size() * 0.5f;
             float rotation = Projectile.rotation;
             SpriteEffects effects = SpriteEffects.None;
-            float time = Main.GlobalTimeWrappedHourly;
-            float outlinePulse = 0.72f + 0.28f * (float)Math.Sin(time * 5.2f + Projectile.identity * 0.43f);
-            float chargeGlow = rightChargeActive && reloadTimer <= 0 ? MathHelper.SmoothStep(0f, 1f, ChargeCompletion) : 0f;
-            float leftOutlinePulse = leftOutlinePulseTimer / (float)LeftOutlinePulseFrames;
-            float rightOutlinePulse = rightOutlinePulseTimer / (float)RightOutlinePulseFrames;
-            float leftBuildGlow = GetLeftAttackBuildGlow();
-            float tacticalOutlinePulse = Math.Max(Math.Max(leftOutlinePulse * 0.28f, rightOutlinePulse * 0.78f), leftBuildGlow);
+            float chargeGlow = rightChargeActive ? MathHelper.SmoothStep(0f, 1f, ChargeCompletion) : 0f;
+            float leftStarFlash = leftStarFlashTimer / (float)LeftStarFlashFrames;
 
             if (Owner.gravDir == 1f)
             {
@@ -1994,8 +1761,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
 
-            BFChargeArrowVisuals.DrawHoldoutChargeBloom(Projectile, CurrentPreset, GunTipPosition, AimDirection, chargeGlow);
-            DrawTacticalWeaponStarbursts(starTexture, lineTexture, drawPosition, rotation, tacticalOutlinePulse, leftBuildGlow, chargeGlow);
+            DrawBowCoreStarburst(drawPosition, rotation, leftStarFlash, chargeGlow);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -2007,96 +1773,95 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
 
+            DrawThinWeaponOutline(weaponTexture, drawPosition, rotation, origin, effects);
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
-
-            if (!rightChargeActive || reloadTimer > 0)
-                return false;
-
-            //DrawRailgunTelegraph();
-
-            BFChargeVisuals.DrawAirFlow(GunTipPosition, AimDirection, Projectile.scale, CurrentPreset, ChargeCompletion, ChargeReady, Projectile.identity);
-
-            Texture2D arrowTexture = ModContent.Request<Texture2D>(BFArrowCommon.GetTexturePathForPreset(CurrentPreset)).Value;
-            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
-            {
-                BFChargeArrowVisuals.DrawBreakthroughChargedArrows(
-                    arrowTexture,
-                    Projectile.Center,
-                    AimDirection,
-                    BreakthroughMaxLoadedArrows,
-                    breakthroughLoadedArrows,
-                    BreakthroughCurrentArrowCompletion,
-                    breakthroughLoadFlashTimer,
-                    BreakthroughLoadFlashFrames);
-                return false;
-            }
-
-            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
-            {
-                BFChargeArrowVisuals.DrawRecoveryChargeCore(Projectile, GunTipPosition, ChargeCompletion);
-                return false;
-            }
-
-            BFChargeArrowVisuals.DrawSpecialChargeArrow(Projectile, arrowTexture, CurrentPreset, AimDirection, ChargeCompletion, readyBurstPlayed);
             return false;
         }
 
-        private void DrawTacticalWeaponStarbursts(Texture2D starTexture, Texture2D lineTexture, Vector2 drawPosition, float rotation, float tacticalPulse, float leftBuildGlow, float chargeGlow)
+        private void DrawThinWeaponOutline(Texture2D weaponTexture, Vector2 drawPosition, float rotation, Vector2 origin, SpriteEffects effects)
         {
-            float activity = MathHelper.Clamp(leftBuildGlow * 0.88f + tacticalPulse * 0.72f + chargeGlow * 0.95f, 0f, 1f);
-            if (activity <= 0.04f)
+            Color outlineColor = (Color.Lerp(PresetColor, AccentColor, 0.35f) with { A = 0 }) * 0.28f;
+            const int drawCount = 8;
+            const float outlineRadius = 1.35f;
+
+            for (int i = 0; i < drawCount; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / drawCount).ToRotationVector2() * outlineRadius;
+                Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, outlineColor, rotation, origin, Projectile.scale, effects, 0);
+            }
+        }
+
+        private void DrawBowCoreStarburst(Vector2 drawPosition, float rotation, float leftFlash, float chargeGlow)
+        {
+            float leftPower = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(leftFlash, 0f, 1f));
+            float chargePower = rightChargeActive ? MathHelper.Lerp(0.12f, 1f, chargeGlow) : 0f;
+            float power = MathHelper.Clamp(Math.Max(leftPower, chargePower), 0f, 1f);
+            if (power <= 0.025f)
                 return;
 
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D pulseStarTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/PulseStar").Value;
+            Texture2D halfStarTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLine").Value;
+            Color mainColor = (Color.Lerp(PresetColor, Color.White, 0.28f) with { A = 0 }) * power;
+            Color accentColor = (Color.Lerp(AccentColor, Color.White, 0.48f) with { A = 0 }) * power;
             Vector2 forward = rotation.ToRotationVector2();
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
-            Color mainColor = Color.Lerp(PresetColor, Color.White, 0.22f);
-            Color accentColor = Color.Lerp(AccentColor, Color.White, 0.42f);
             float time = Main.GlobalTimeWrappedHourly;
-            float flowSpeed = rightChargeActive ? 0.82f : 1.35f;
-            int sparkCount = 3 + (int)(activity * 5f);
+            float pulse = 0.82f + 0.18f * (float)Math.Sin(time * 8.4f + Projectile.identity * 0.41f);
+            float releaseTighten = rightChargeActive ? 1f : MathHelper.Lerp(0.72f, 1f, leftPower);
 
-            for (int i = 0; i < sparkCount; i++)
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                drawPosition,
+                null,
+                mainColor * (0.16f + 0.28f * power),
+                rotation,
+                bloomTexture.Size() * 0.5f,
+                new Vector2(0.12f + power * 0.18f, 0.052f + power * 0.075f) * pulse,
+                SpriteEffects.None,
+                0);
+
+            for (int i = 0; i < 6; i++)
             {
-                float phase = (time * flowSpeed + Projectile.identity * 0.071f + i * 0.217f) % 1f;
-                float centerFade = (float)Math.Sin(phase * MathHelper.Pi);
-                float flicker = 0.72f + 0.28f * (float)Math.Sin(time * 15f + i * 1.93f + Projectile.identity * 0.31f);
-                float longitudinal = MathHelper.Lerp(-30f, 36f, phase);
-                float sideOffset = (float)Math.Sin(time * 5.4f + i * 2.17f) * MathHelper.Lerp(2.5f, 7.5f, activity);
-                Vector2 starCenter = drawPosition + forward * longitudinal + normal * sideOffset;
-                Color sparkColor = Color.Lerp(mainColor, accentColor, phase) * (activity * centerFade * flicker);
-                float starRotation = rotation + phase * MathHelper.PiOver2 + i * MathHelper.PiOver4;
-                float starScale = MathHelper.Lerp(0.64f, 1.12f, activity) * (0.82f + 0.18f * centerFade);
+                float spokeCompletion = i / 6f;
+                float spokeRotation = rotation + MathHelper.TwoPi * spokeCompletion + time * MathHelper.Lerp(0.18f, 0.46f, power);
+                float spokePulse = 0.88f + 0.12f * (float)Math.Sin(time * 10.5f + i * 1.27f);
+                Color spokeColor = Color.Lerp(mainColor, accentColor, i % 2 == 0 ? 0.2f : 0.72f) * (0.48f * spokePulse);
 
                 Main.EntitySpriteDraw(
                     lineTexture,
-                    starCenter - forward * MathHelper.Lerp(4f, 10f, activity),
+                    drawPosition,
                     null,
-                    sparkColor * 0.42f,
-                    rotation,
+                    spokeColor,
+                    spokeRotation,
                     lineTexture.Size() * 0.5f,
-                    new Vector2(0.16f + activity * 0.09f, 0.024f + centerFade * 0.012f),
+                    new Vector2((0.14f + power * 0.24f) * releaseTighten, 1.2f + power * 1.1f),
                     SpriteEffects.None,
                     0);
+            }
 
+            Main.EntitySpriteDraw(
+                pulseStarTexture,
+                drawPosition,
+                null,
+                Color.Lerp(mainColor, Color.White with { A = 0 }, 0.24f) * 0.58f,
+                -rotation + time * 0.3f,
+                pulseStarTexture.Size() * 0.5f,
+                (0.035f + power * 0.075f) * pulse,
+                SpriteEffects.None,
+                0);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float starRotation = rotation + MathHelper.TwoPi * i / 3f + MathHelper.Pi / 6f + time * (0.35f + i * 0.08f);
                 Main.EntitySpriteDraw(
-                    starTexture,
-                    starCenter,
+                    halfStarTexture,
+                    drawPosition + forward * (i - 1) * 1.2f,
                     null,
-                    Color.Lerp(sparkColor, Color.White, 0.22f),
+                    accentColor * (0.36f + 0.24f * power),
                     starRotation,
-                    starTexture.Size() * 0.5f,
-                    new Vector2(0.12f, 0.34f) * starScale,
-                    SpriteEffects.None,
-                    0);
-
-                Main.EntitySpriteDraw(
-                    starTexture,
-                    starCenter,
-                    null,
-                    sparkColor * 0.64f,
-                    starRotation + MathHelper.PiOver2,
-                    starTexture.Size() * 0.5f,
-                    new Vector2(0.08f, 0.22f) * starScale,
+                    halfStarTexture.Size() * 0.5f,
+                    new Vector2(0.08f + power * 0.055f, 0.34f + power * 0.48f) * pulse,
                     SpriteEffects.None,
                     0);
             }

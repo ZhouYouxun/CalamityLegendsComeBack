@@ -137,10 +137,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 leftPresetText + "\n" +
                 rightPresetText + "\n\n" +
                 exHint + "\n\n" +
-                formWheelHint + "\n\n" +
-                legendarySection + "\n";
+                formWheelHint + "\n\n";
 
             tooltips.FindAndReplace("[GFB]", merged);
+            tooltips.Add(new TooltipLine(Mod, "BlossomFluxForestLegendaryText", legendarySection));
         }
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)

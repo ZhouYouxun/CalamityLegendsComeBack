@@ -57,6 +57,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             cooldownActive = false;
         }
 
+        public void FastForwardCooldown(int frames)
+        {
+            if (!IsCoolingDown || frames <= 0)
+                return;
+
+            CooldownTimer += frames;
+            if (CooldownTimer < CooldownDuration)
+                return;
+
+            CooldownTimer = CooldownDuration;
+            cooldownActive = false;
+            PlayCooldownReadyFeedback();
+        }
+
         private void RestartCooldown(int duration)
         {
             CooldownDuration = duration;

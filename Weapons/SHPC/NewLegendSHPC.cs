@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
@@ -938,8 +939,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 int defaultRightClickType = ModContent.ProjectileType<SHPCRight_HoulOut>();
                 int mortarRightClickType = ModContent.ProjectileType<RightClickMortar_HoldOut>();
                 int turretRightClickType = ModContent.ProjectileType<MilitaryCaller_HoldOut>();
+                int possessionRightClickType = ModContent.ProjectileType<ProjectilePossessionHoldout>();
                 bool useMortarRightClick = player.GetModPlayer<CommandAscendPlayer>().CommandAscendEquipped;
-                int rightClickHoldoutType = useTurretRightClick ? turretRightClickType : useMortarRightClick ? mortarRightClickType : defaultRightClickType;
+                bool usePossessionRightClick = player.GetModPlayer<ProjectilePossessionModulePlayer>().ProjectilePossessionModuleEquipped;
+                int rightClickHoldoutType = useTurretRightClick ? turretRightClickType : useMortarRightClick ? mortarRightClickType : usePossessionRightClick ? possessionRightClickType : defaultRightClickType;
 
                 // ===== 防止重复生成；配件切换时清掉另一套右键手持 =====
                 foreach (Projectile proj in Main.projectile)
@@ -952,7 +955,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         return;
                     }
 
-                    if (proj.type == defaultRightClickType || proj.type == mortarRightClickType || proj.type == turretRightClickType)
+                    if (proj.type == defaultRightClickType || proj.type == mortarRightClickType || proj.type == turretRightClickType || proj.type == possessionRightClickType)
                     {
                         proj.Kill();
                         proj.netUpdate = true;
@@ -1008,6 +1011,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int rightHoldoutType = ModContent.ProjectileType<SHPCRight_HoulOut>();
             int mortarHoldoutType = ModContent.ProjectileType<RightClickMortar_HoldOut>();
             int turretHoldoutType = ModContent.ProjectileType<MilitaryCaller_HoldOut>();
+            int possessionHoldoutType = ModContent.ProjectileType<ProjectilePossessionHoldout>();
             int wheelType = ModContent.ProjectileType<SHPCAmmoSelectionPanel>();
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
@@ -1018,6 +1022,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 if (projectile.type == rightHoldoutType ||
                     projectile.type == mortarHoldoutType ||
                     projectile.type == turretHoldoutType ||
+                    projectile.type == possessionHoldoutType ||
                     projectile.type == wheelType)
                 {
                     projectile.Kill();
@@ -1111,6 +1116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 if (proj.type == ModContent.ProjectileType<SHPCRight_HoulOut>() ||
                     proj.type == ModContent.ProjectileType<RightClickMortar_HoldOut>() ||
                     proj.type == ModContent.ProjectileType<MilitaryCaller_HoldOut>() ||
+                    proj.type == ModContent.ProjectileType<ProjectilePossessionHoldout>() ||
                     proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>())
                 {
                     shouldHide = true;

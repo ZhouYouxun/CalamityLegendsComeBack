@@ -8,7 +8,6 @@ Mods: {
 					BF_Intro:
 						'''
 						[c/7BE495:Current doctrine: {0}]
-						[c/F7D87C:Double-tap right click to open the tactical panel and switch doctrine.]
 						[c/F7D87C:Hold right click to enter the current doctrine's charge stance, then release to fire its special arrow.]
 						'''
 					PresetName0: Breakthrough
@@ -226,6 +225,7 @@ Mods: {
 			Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
 			NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
 			LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

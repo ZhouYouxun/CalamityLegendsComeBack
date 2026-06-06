@@ -6,6 +6,11 @@ Mods: {
 				Tooltip: Must be equipped to activate legendary weapon ultimates
 			}
 
+			LegendaryUltimateTester: {
+				DisplayName: Legendary Ultimate Tester
+				Tooltip: Test accessory: legendary weapon ultimates fully recharge in 1 second
+			}
+
 			TestItem: {
 				DisplayName: PF Test Item
 				Tooltip: While equipped, Pristine Fury single right clicks cycle imprints for testing
@@ -64,6 +69,18 @@ Mods: {
 					Each heat level grants an additional 33% SHPC right-click damage
 					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
 					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
+					'''
+			}
+
+			ProjectilePossessionModule: {
+				DisplayName: Projectile Possession Module
+				Tooltip:
+					'''
+					While holding SHPC, right click switches to projectile possession mode
+					Hold right click to absorb nearby hostile projectiles in a vacuum cone
+					Stores up to 15 projectiles; release right click to convert them into friendly projectiles and fire them forward
+					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
+					Some persistent beams and blacklisted projectiles are ignored
 					'''
 			}
 
@@ -377,8 +394,10 @@ Mods: {
 			}
 
 			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+			ProjectilePossessionUI.DisplayName: SHPC Possession Meter
 
 			SHPC: {
+				ProjectilePossessionHoldout.DisplayName: SHPC Projectile Possession
 				BloodstoneCore_BloodOrb.DisplayName: Bloodstone Core_ Blood Orb
 				RuinousSoul_GhostExplosion.DisplayName: Ruinous Soul_ Ghost Explosion
 				RuinousSoul_OrbitGhost.DisplayName: Ruinous Soul_ Orbit Ghost

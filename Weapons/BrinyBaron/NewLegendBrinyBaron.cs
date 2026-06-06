@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
@@ -250,10 +250,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                dash3 + "\n" +
                passive + "\n" +
                dash4 + "\n\n" +
-               final + "\n\n" +
-               legendarySection + "\n";
+               final + "\n\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, "BrinyBaronOceanLegendaryText", legendarySection));
         }
 
         public override bool CanRightClick()

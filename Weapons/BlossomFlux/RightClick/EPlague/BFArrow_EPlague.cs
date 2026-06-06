@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             target.AddBuff(BuffID.Venom, 120);
             Main.player[Projectile.owner].SetScreenshake(6.5f);
             SpawnPlagueCollapseBurst(target.Center, 1.25f);
-            SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(3, 6), 1.2f);
+            SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(2, 4), 1.2f);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 0.9f, 3f, 0.85f, 1.15f);
             SpawnPlagueAnchorFX(target.Center, 1.1f);
             SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.38f, Pitch = 0.1f }, target.Center);
@@ -307,7 +307,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (gasTimer % 8 != 0 || Projectile.owner != Main.myPlayer)
                 return;
 
-            int burstCount = 4;
+            int burstCount = 2;
             float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
             for (int i = 0; i < burstCount; i++)
             {

@@ -157,6 +157,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             string exInfo = this.GetLocalizedValue("EXInfo");
 
             tooltips.FindAndReplace("[GFB]", modeInfo + "\n" + commandInfo + "\n" + resetInfo + "\n\n" + exInfo);
+            string legendarySection = Main.keyState.PressingShift() ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
+            tooltips.Add(new TooltipLine(Mod, "YharimsCrystalGoldenTechLegendaryText", legendarySection));
         }
 
         private static bool HasAnyActiveMainHoldout(Player player)

@@ -8,20 +8,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 {
     internal class BFRightUIPlayer : ModPlayer
     {
-        public const int TapThresholdFrames = 9;
-        public const int DoubleTapWindowFrames = 18;
-
         private int rightPressFrames;
-        private int rightDoubleTapTimer;
         private bool trackingRightPress;
+        private bool showRightChargeBar;
+        private float rightChargeProgress;
         private ulong lastProcessedFrame;
 
         public BlossomFluxChloroplastPresetType CurrentPreset { get; private set; } = BlossomFluxChloroplastPresetType.Chlo_BRecov;
         public int ReconPriorityTargetIndex { get; private set; } = -1;
         public int ReconPriorityTimeLeft { get; private set; }
         public bool PassiveRainEnabled { get; private set; } = true;
-        public bool ShortTapReleasedThisFrame { get; private set; }
-        public bool ShortDoubleTapReleasedThisFrame { get; private set; }
         public bool LongHoldReleasedThisFrame { get; private set; }
         public bool LongHoldReachedThisFrame { get; private set; }
 
@@ -29,9 +25,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         public bool TrackingRightPress => trackingRightPress;
         public bool RightMouseHeld => Player.Calamity().mouseRight || Main.mouseRight;
         public bool FormSwitchKeyHeld => KeybindSystem.LegendaryWeaponFormSwitch?.Current == true;
-        public float RightHoldProgress => MathHelper.Clamp(rightPressFrames / (float)TapThresholdFrames, 0f, 1f);
-        public bool ShowRightHoldBar => trackingRightPress && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
-        public bool LongHoldActive => trackingRightPress && rightPressFrames > TapThresholdFrames;
+        public float RightHoldProgress => rightChargeProgress;
+        public bool ShowRightHoldBar => showRightChargeBar && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
+        public bool LongHoldActive => trackingRightPress && rightPressFrames > 0;
         public bool PassiveRainUnlocked => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh);
         public bool UltimateUnlocked => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee);
         public int UnlockedPresetCount
@@ -54,6 +50,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             CurrentPreset = BlossomFluxChloroplastPresetType.Chlo_BRecov;
             ClearReconPriorityTarget();
             ResetRightClickState();
+        }
+
+        public override void ResetEffects()
+        {
+            showRightChargeBar = false;
+            rightChargeProgress = 0f;
         }
 
         public override void PostUpdate()
@@ -89,12 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 return;
 
             lastProcessedFrame = Main.GameUpdateCount;
-            ShortTapReleasedThisFrame = false;
-            ShortDoubleTapReleasedThisFrame = false;
             LongHoldReleasedThisFrame = false;
             LongHoldReachedThisFrame = false;
-            if (rightDoubleTapTimer > 0)
-                rightDoubleTapTimer--;
 
             bool validRightInput =
                 Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
@@ -116,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 }
 
                 rightPressFrames++;
-                if (rightPressFrames == TapThresholdFrames + 1)
+                if (rightPressFrames == 1)
                     LongHoldReachedThisFrame = true;
 
                 return;
@@ -125,27 +123,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             if (!trackingRightPress)
                 return;
 
-            if (rightPressFrames <= TapThresholdFrames)
-            {
-                ShortTapReleasedThisFrame = true;
-                if (rightDoubleTapTimer > 0)
-                {
-                    ShortDoubleTapReleasedThisFrame = true;
-                    rightDoubleTapTimer = 0;
-                }
-                else
-                {
-                    rightDoubleTapTimer = DoubleTapWindowFrames;
-                }
-            }
-            else
-            {
-                LongHoldReleasedThisFrame = true;
-                rightDoubleTapTimer = 0;
-            }
-
+            LongHoldReleasedThisFrame = true;
             trackingRightPress = false;
             rightPressFrames = 0;
+        }
+
+        public void SetRightChargeBar(float progress)
+        {
+            showRightChargeBar = true;
+            rightChargeProgress = MathHelper.Clamp(progress, 0f, 1f);
         }
 
         public bool TrySetPreset(BlossomFluxChloroplastPresetType preset)
@@ -194,11 +180,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         {
             trackingRightPress = false;
             rightPressFrames = 0;
-            rightDoubleTapTimer = 0;
-            ShortTapReleasedThisFrame = false;
-            ShortDoubleTapReleasedThisFrame = false;
             LongHoldReleasedThisFrame = false;
             LongHoldReachedThisFrame = false;
+            showRightChargeBar = false;
+            rightChargeProgress = 0f;
         }
 
         private void EnsureUnlockedPresetSelected()

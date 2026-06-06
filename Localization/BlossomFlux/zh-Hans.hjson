@@ -8,7 +8,6 @@ Mods: {
 					BF_Intro:
 						'''
 						[c/7BE495:当前战术：{0}]
-						[c/F7D87C:右键双击：打开战术面板并切换战术。]
 						[c/F7D87C:右键长按：进入当前战术的蓄力姿态，松开后释放特殊箭。]
 						'''
 					PresetName0: 突击
@@ -224,6 +223,7 @@ Mods: {
 			Shared_SplitMeteor.DisplayName: 通用分裂流星
 			NewWeapons.DPreDog.SODLazer.DisplayName: SOD激光
 			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: 吸热能量分裂体
