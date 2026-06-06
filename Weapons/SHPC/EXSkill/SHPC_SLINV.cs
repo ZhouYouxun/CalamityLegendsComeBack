@@ -168,6 +168,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (!initialized)
                 return false;
 
+            if (SHPCEXShaderUtilities.TryGetMiniTrailShader(trailColorA, trailColorB, 1f, out MiscShaderData shpcTrailShader))
+            {
+                Vector2 shaderOffset = Projectile.Size * 0.5f + Projectile.velocity * 0.85f;
+                PrimitiveRenderer.RenderTrail(
+                    Projectile.oldPos,
+                    new PrimitiveSettings(PrimitiveWidthFunction, PrimitiveColorFunction, (_, _) => shaderOffset, shader: shpcTrailShader),
+                    46);
+
+                return false;
+            }
+
             GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
 
             Vector2 overallOffset = Projectile.Size * 0.5f + Projectile.velocity * 0.85f;
@@ -298,6 +309,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             if (!initialized)
                 return false;
+
+            if (SHPCEXShaderUtilities.TryGetMiniTrailShader(trailColorA, trailColorB, 1f, out MiscShaderData shpcTrailShader))
+            {
+                Vector2 shaderOffset = Projectile.Size * 0.5f + Projectile.velocity * 0.85f;
+                PrimitiveRenderer.RenderTrail(
+                    Projectile.oldPos,
+                    new PrimitiveSettings(PrimitiveWidthFunction, PrimitiveColorFunction, (_, _) => shaderOffset, shader: shpcTrailShader),
+                    42);
+
+                return false;
+            }
 
             GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
 

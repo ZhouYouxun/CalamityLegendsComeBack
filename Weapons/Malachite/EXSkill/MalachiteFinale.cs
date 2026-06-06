@@ -205,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
             DrawSoftCone(start, playerScreen, charge, flash);
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 float wave = MathF.Sin(Main.GlobalTimeWrappedHourly * 2.8f + i) * 18f;
                 Color color = Color.Lerp(new Color(20, 95, 45, 0), new Color(145, 255, 155, 0), charge);
@@ -213,10 +213,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                     bloom,
                     center + Vector2.UnitX * wave,
                     null,
-                    color * (0.12f + flash * 0.16f),
+                    color * (0.065f + flash * 0.09f),
                     rotation,
                     bloomOrigin,
-                    scale * (0.76f + i * 0.11f),
+                    scale * (0.68f + i * 0.12f),
                     SpriteEffects.None);
             }
 
@@ -224,7 +224,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             for (int i = 0; i < 3; i++)
             {
                 float pulse = charge * 4.4f + MathF.Cos(Main.GlobalTimeWrappedHourly * 2f + i) * charge * 0.22f;
-                Color ringColor = new Color(75, 255, 135, 0) * (0.18f + flash * 0.18f);
+                Color ringColor = new Color(75, 255, 135, 0) * (0.10f + flash * 0.12f);
                 Main.EntitySpriteDraw(
                     bloom,
                     playerScreen + (Main.GlobalTimeWrappedHourly * (0.8f + i * 0.17f)).ToRotationVector2() * (i * 5f + aura * 8f),
@@ -236,7 +236,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                     SpriteEffects.None);
             }
 
-            Color starColor = new Color(105, 255, 150, 0) * (0.28f + flash * 0.28f);
+            Color starColor = new Color(105, 255, 150, 0) * (0.18f + flash * 0.18f);
             float starPulse = MathHelper.Lerp(0.2f, 1.25f, charge) * (1f + MathF.Sin(Main.GlobalTimeWrappedHourly * MathHelper.TwoPi) * 0.08f);
             Vector2 starScale = new(1.5f + charge * 1.3f, 2.5f + charge * 1.7f);
             Main.EntitySpriteDraw(star, playerScreen, null, starColor, MathHelper.PiOver4, starOrigin, starScale * starPulse, SpriteEffects.None);
@@ -246,36 +246,37 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
         private static void DrawSoftCone(Vector2 top, Vector2 bottom, float charge, float flash)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            int bands = 34;
-            float topWidth = MathHelper.Lerp(64f, 116f, charge);
-            float bottomWidth = MathHelper.Lerp(260f, 610f, charge);
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 bloomOrigin = bloom.Size() * 0.5f;
+            int layers = 5;
+            float topWidth = MathHelper.Lerp(76f, 128f, charge);
+            float bottomWidth = MathHelper.Lerp(260f, 520f, charge);
 
-            for (int i = 0; i < bands; i++)
+            for (int i = 0; i < layers; i++)
             {
-                float progress = i / (float)(bands - 1);
+                float progress = i / (float)(layers - 1);
                 Vector2 position = Vector2.Lerp(top, bottom, progress);
                 float softness = MathF.Sin(progress * MathHelper.Pi);
-                float width = MathHelper.Lerp(topWidth, bottomWidth, progress) * (0.82f + softness * 0.18f);
-                float thickness = MathHelper.Lerp(18f, 34f, progress);
+                float width = MathHelper.Lerp(topWidth, bottomWidth, progress) * (0.88f + softness * 0.12f);
+                float height = MathHelper.Lerp(180f, 310f, progress);
                 Color color = Color.Lerp(new Color(40, 125, 65, 0), new Color(150, 255, 165, 0), charge);
-                color *= (0.035f + softness * 0.07f + flash * 0.055f);
+                color *= (0.035f + softness * 0.055f + flash * 0.04f);
 
                 Main.EntitySpriteDraw(
-                    pixel,
+                    bloom,
                     position,
-                    new Rectangle(0, 0, 1, 1),
+                    null,
                     color,
                     0f,
-                    new Vector2(0.5f),
-                    new Vector2(width, thickness),
+                    bloomOrigin,
+                    new Vector2(width / bloom.Width, height / bloom.Height),
                     SpriteEffects.None);
             }
         }
 
         private static void DrawPetals(Texture2D texture, Vector2 origin, float charge, bool winded, int direction)
         {
-            int petalCount = 52;
+            int petalCount = 38;
             for (int i = 0; i < petalCount; i++)
             {
                 float seed = i * 37.719f;

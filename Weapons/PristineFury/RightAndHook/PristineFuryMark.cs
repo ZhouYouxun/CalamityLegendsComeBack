@@ -72,10 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             }
 
             if (target.type == ModContent.NPCType<PlaguebringerGoliath>())
-            {
-                mark = PristineFuryMark.Goliath;
-                return true;
-            }
+                return false;
 
             if (target.type == ModContent.NPCType<Providence>())
             {

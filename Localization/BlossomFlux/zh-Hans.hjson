@@ -81,7 +81,7 @@ Mods: {
 						'''
 					PassiveStateReady: "[c/7BFFB7:已就绪]"
 					PassiveStateActive: "[c/FF9B8B:终末防线中]"
-					PassiveStateCooldown: "[c/F0D070:冷却 {0} 秒]"
+					PassiveStateCooldown: "[c/F0D070:充能 {0}/{1} 秒]"
 					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
 					BF_EXHint:
 						'''
@@ -223,6 +223,7 @@ Mods: {
 			Shared_Shockwave.DisplayName: 通用冲击波
 			Shared_SplitMeteor.DisplayName: 通用分裂流星
 			NewWeapons.DPreDog.SODLazer.DisplayName: SOD激光
+			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: 吸热能量分裂体

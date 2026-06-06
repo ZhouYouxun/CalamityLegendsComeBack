@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.World;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
@@ -115,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     ? this.GetLocalizedValue("PassiveStateActive")
                     : passivePlayer.PassiveReady
                         ? this.GetLocalizedValue("PassiveStateReady")
-                        : string.Format(this.GetLocalizedValue("PassiveStateCooldown"), passivePlayer.RemainingSeconds);
+                        : string.Format(this.GetLocalizedValue("PassiveStateCooldown"), passivePlayer.ChargeSeconds, passivePlayer.RequiredChargeSeconds);
             string passiveText = string.Format(this.GetLocalizedValue("BF_Passive"), passiveStatus);
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
@@ -142,12 +143,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             tooltips.FindAndReplace("[GFB]", merged);
         }
 
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            Texture2D texture = BlossomFluxTacticalTextures.GetWeaponTexture(GetDisplayedPreset());
+            spriteBatch.Draw(texture, position, null, drawColor, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            return false;
+        }
+
+        public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+        {
+            Texture2D texture = BlossomFluxTacticalTextures.GetWeaponTexture(GetDisplayedPreset());
+            spriteBatch.Draw(texture, Item.Center - Main.screenPosition, null, lightColor, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            return false;
+        }
+
         private static BlossomFluxChloroplastPresetType GetDisplayedPreset()
         {
             if (Main.LocalPlayer?.active != true)
-                return BlossomFluxChloroplastPresetType.Chlo_ABreak;
+                return BlossomFluxChloroplastPresetType.Chlo_BRecov;
 
-            return Main.LocalPlayer.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
+            return BlossomFluxTacticalTextures.GetLocalDisplayedPreset();
         }
 
         public override bool CanRightClick() => false;

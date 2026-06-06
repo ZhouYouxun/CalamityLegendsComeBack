@@ -457,6 +457,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             for (int i = 0; i < baseDrawPoints.Length; i++)
                 baseDrawPoints[i] = Vector2.Lerp(Projectile.Center, laserEnd, i / (float)(baseDrawPoints.Length - 1f));
 
+            if (SHPCEXShaderUtilities.TryGetLaserTrailShader(out MiscShaderData shpcLaserShader))
+            {
+                PrimitiveRenderer.RenderTrail(baseDrawPoints, new(LaserWidthFunction, LaserColorFunction, shader: shpcLaserShader), 64);
+                return false;
+            }
+
             GameShaders.Misc["CalamityMod:ArtemisLaser"].UseColor(new Color(90, 200, 255));
             GameShaders.Misc["CalamityMod:ArtemisLaser"].UseImage1("Images/Extra_191"); // 横向的黑色背景纹理
             GameShaders.Misc["CalamityMod:ArtemisLaser"].UseImage2("Images/Misc/Perlin");

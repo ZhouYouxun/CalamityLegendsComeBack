@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Accssory.MC;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -988,9 +989,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
                 Color trailColor = GetKunaiColor() * 0.45f;
                 DrawAfterimageTrail(texture, frame, origin, effects, trailColor, glowTrail: false);
-
-                if (UsesPeacockArcTrail)
-                    DrawPeacockArcTrail();
             }
 
             Color drawColor = Color.Lerp(lightColor, GetKunaiColor(), 0.75f);
@@ -1084,42 +1082,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
         }
 
-        private void DrawPeacockArcTrail()
-        {
-            Color color = new Color(70, 255, 140, 0);
-            for (int i = Projectile.oldPos.Length - 2; i >= 0; i--)
-            {
-                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
-                Vector2 nextCenter = Projectile.oldPos[i + 1] + Projectile.Size * 0.5f;
-                if (oldCenter == Projectile.Size * 0.5f || nextCenter == Projectile.Size * 0.5f)
-                    continue;
-
-                float completion = 1f - i / (float)Projectile.oldPos.Length;
-                DrawPixelLine(
-                    oldCenter,
-                    nextCenter,
-                    color * completion * 0.48f,
-                    MathHelper.Lerp(7f, 2.2f, i / (float)Projectile.oldPos.Length));
-            }
-        }
-
-        private static void DrawPixelLine(Vector2 start, Vector2 end, Color color, float thickness)
-        {
-            Vector2 edge = end - start;
-            if (edge.LengthSquared() <= 0.001f)
-                return;
-
-            Main.EntitySpriteDraw(
-                TextureAssets.MagicPixel.Value,
-                start - Main.screenPosition,
-                new Rectangle(0, 0, 1, 1),
-                color,
-                edge.ToRotation(),
-                new Vector2(0f, 0.5f),
-                new Vector2(edge.Length(), thickness),
-                SpriteEffects.None);
-        }
-
         public override Color? GetAlpha(Color lightColor) => GetKunaiColor();
 
         private Color GetKunaiColor()
@@ -1165,11 +1127,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] > StagedNormalLaunchDelay) ||
             (!WasActivated && (Mode == MalachiteKunaiMode.FiredFrenzy || Mode == MalachiteKunaiMode.FiredPeacock));
 
-        private bool UsesPeacockArcTrail =>
-            Mode == MalachiteKunaiMode.FiredPeacock ||
-            Mode == MalachiteKunaiMode.ActivatedPeacock ||
-            Mode == MalachiteKunaiMode.ActivatedAce;
-
         private bool IsPeacockOrAceKunai =>
             Mode == MalachiteKunaiMode.FiredPeacock ||
             Mode == MalachiteKunaiMode.ActivatedPeacock ||
@@ -1211,55 +1168,77 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void AI()
         {
             Projectile.localAI[0]++;
-            Lighting.AddLight(Projectile.Center, 0.08f, 0.32f, 0.08f);
+            if (Projectile.localAI[0] == 1f)
+                SpawnParallelCutParticles();
+
+            Lighting.AddLight(Projectile.Center, 0.04f, 0.18f, 0.04f);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Vector2 forward = Projectile.ai[0].ToRotationVector2();
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 center = Projectile.Center;
-            float fade = Utils.GetLerpValue(18f, 4f, Projectile.localAI[0], true);
-            float bloom = MathF.Sin(MathHelper.Clamp(Projectile.localAI[0] / 18f, 0f, 1f) * MathHelper.Pi);
-            int lineCount = Enhanced ? 13 : 8;
-            float lineLength = Enhanced ? 360f : 230f;
-            float spread = Enhanced ? 58f : 34f;
-            Color lineColor = Enhanced ? new Color(205, 255, 125, 0) : new Color(105, 255, 135, 0);
-
-            for (int i = 0; i < lineCount; i++)
-            {
-                float centered = i - (lineCount - 1) * 0.5f;
-                float stagger = i % 2 == 0 ? 18f : -12f;
-                Vector2 start = center - forward * (38f + stagger) + normal * centered * spread / Math.Max(1f, lineCount - 1f);
-                Vector2 end = start + forward * (lineLength * (0.76f + 0.05f * (i % 4)));
-                DrawLine(start, end, lineColor * fade * (0.34f + bloom * 0.24f), Enhanced ? 3.2f : 2.4f);
-            }
-
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
-            Vector2 starOrigin = star.Size() * 0.5f;
-            Color starColor = Color.Lerp(new Color(135, 255, 145, 0), Color.White, Enhanced ? 0.32f : 0.18f) * fade;
-            float starScale = (Enhanced ? 1.25f : 0.92f) * (0.8f + bloom * 0.55f);
-            Main.EntitySpriteDraw(star, center - Main.screenPosition, null, starColor * 0.85f, Projectile.ai[0] + MathHelper.PiOver4, starOrigin, new Vector2(0.72f, 1.35f) * starScale, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, center - Main.screenPosition, null, starColor * 0.62f, Projectile.ai[0] - MathHelper.PiOver4, starOrigin, new Vector2(0.54f, 1.05f) * starScale, SpriteEffects.None);
-
             return false;
         }
 
-        private static void DrawLine(Vector2 start, Vector2 end, Color color, float thickness)
+        private void SpawnParallelCutParticles()
         {
-            Vector2 edge = end - start;
-            if (edge.LengthSquared() <= 0.001f)
-                return;
+            Vector2 forward = Projectile.ai[0].ToRotationVector2();
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            int count = Enhanced ? 24 : 15;
+            float spread = Enhanced ? 72f : 46f;
+            Color baseColor = Enhanced ? new Color(198, 255, 112) : new Color(96, 255, 135);
 
-            Main.EntitySpriteDraw(
-                TextureAssets.MagicPixel.Value,
-                start - Main.screenPosition,
-                new Rectangle(0, 0, 1, 1),
-                color,
-                edge.ToRotation(),
-                new Vector2(0f, 0.5f),
-                new Vector2(edge.Length(), thickness),
-                SpriteEffects.None);
+            Particle sparkle = new GenericSparkle(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.White,
+                baseColor,
+                Enhanced ? 1.15f : 0.82f,
+                12,
+                0.025f,
+                1.05f,
+                false);
+            GeneralParticleHandler.SpawnParticle(sparkle);
+
+            for (int i = 0; i < count; i++)
+            {
+                float centered = i - (count - 1) * 0.5f;
+                Vector2 position =
+                    Projectile.Center -
+                    forward * Main.rand.NextFloat(56f, 104f) +
+                    normal * (centered / Math.Max(1f, count - 1f) * spread + Main.rand.NextFloat(-2.5f, 2.5f));
+                Vector2 velocity = forward * Main.rand.NextFloat(7.5f, Enhanced ? 13.5f : 10.5f);
+                Color color = Color.Lerp(baseColor, Color.White, Main.rand.NextFloat(0.08f, 0.22f)) * Main.rand.NextFloat(0.68f, 0.9f);
+
+                Particle line = Main.rand.NextBool()
+                    ? new AltSparkParticle(position, velocity, false, Main.rand.Next(10, 15), Main.rand.NextFloat(0.46f, 0.72f), color)
+                    : new LineParticle(position, velocity * 0.38f, false, Main.rand.Next(11, 16), Main.rand.NextFloat(0.55f, 0.86f), color);
+                GeneralParticleHandler.SpawnParticle(line);
+
+                if (i % 4 != 0)
+                    continue;
+
+                Particle softLine = new CustomSpark(
+                    position,
+                    velocity * 0.14f,
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    2,
+                    Main.rand.NextFloat(0.36f, 0.52f),
+                    color * 0.62f,
+                    new Vector2(1.75f, 0.34f),
+                    true,
+                    true,
+                    0f,
+                    false,
+                    false,
+                    0.54f,
+                    0.82f,
+                    0.82f,
+                    false,
+                    false,
+                    0f);
+                GeneralParticleHandler.SpawnParticle(softLine);
+            }
         }
     }
 }

@@ -18,7 +18,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private const int BaseSize = 200;
         private const float DefaultFinalWaveScale = 2.35f;
-        private const float WaveSizeFactor = 0.7f;
+        private const float WaveSizeFactor = 0.58f;
+        private const float BaseVelocityLoss = 0.012f;
+        private const float HitVelocityLossMultiplier = 1.5f;
+        private const int BubbleSpawnFrameInterval = 5;
 
         private int lifeTimer;
         private float initialSpeed;
@@ -26,6 +29,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int SpawnStage => Utils.Clamp((int)Projectile.ai[1], 0, 3);
         private float StageScale => Projectile.ai[0] > 0f ? Projectile.ai[0] : DefaultFinalWaveScale;
         private float StageIntensity => 1f + SpawnStage * 0.26f;
+        private bool SlowdownBoostApplied
+        {
+            get => Projectile.ai[2] == 1f;
+            set => Projectile.ai[2] = value ? 1f : 0f;
+        }
 
         public override void SetStaticDefaults()
         {
@@ -40,7 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Melee;
-            Projectile.penetrate = -1;
+            Projectile.penetrate = 20;
             Projectile.light = 0.45f;
             Projectile.scale = 0.9f;
             Projectile.ignoreWater = true;
@@ -60,6 +68,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void AI()
         {
             lifeTimer++;
+            float velocityLoss = BaseVelocityLoss * (SlowdownBoostApplied ? HitVelocityLossMultiplier : 1f);
+            Projectile.velocity *= 1f - velocityLoss;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.34f, 0.52f) * (1f + SpawnStage * 0.12f));
 
@@ -69,15 +79,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            SpawnHitEffects(Projectile, SpawnStage, StageIntensity);
+            if (!SlowdownBoostApplied)
+            {
+                SlowdownBoostApplied = true;
+                Projectile.netUpdate = true;
+            }
+
+            SpawnHitEffects(Projectile, target.Center, SpawnStage, StageIntensity);
         }
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().AddTide();
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -98,7 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             };
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             int trailLength = Projectile.oldPos.Length;
@@ -109,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 shiftedOldPos[i] = Projectile.Center - forward * segmentLength * i;
 
             GameShaders.Misc["CalamityMod:SideStreakTrail"].UseImage1("Images/Misc/Perlin");
-            float baseWidth = Projectile.width;
+            float baseWidth = Projectile.width * 0.72f;
 
             float WidthFunc(float t, Vector2 v)
             {
@@ -138,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 60);
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             Main.spriteBatch.Draw(
                 texture,
@@ -166,32 +178,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void TrySpawnTrackingBubbles()
         {
-            if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner || lifeTimer % 8 != 0)
+            int spawnInterval = BubbleSpawnFrameInterval * (Projectile.extraUpdates + 1);
+            if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner || lifeTimer % spawnInterval != 0)
                 return;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            int count = SpawnStage >= 3 && Main.rand.NextBool(2) ? 2 : 1;
 
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 spawnPosition =
-                    Projectile.Center -
-                    forward * Main.rand.NextFloat(Projectile.width * 0.04f, Projectile.width * 0.22f) +
-                    right * Main.rand.NextFloat(-Projectile.width * 0.35f, Projectile.width * 0.35f);
+            Vector2 spawnPosition =
+                Projectile.Center -
+                forward * Main.rand.NextFloat(Projectile.width * 0.12f, Projectile.width * 0.32f) +
+                right * Main.rand.NextFloat(-Projectile.width * 0.28f, Projectile.width * 0.28f);
 
-                Vector2 velocity = (-forward * Main.rand.NextFloat(0.6f, 1.8f) + right * Main.rand.NextFloatDirection() * 1.2f)
-                    .SafeNormalize(-forward) * Main.rand.NextFloat(4.5f, 7f);
+            Vector2 velocity = (-forward * Main.rand.NextFloat(0.8f, 1.8f) + right * Main.rand.NextFloatDirection() * 0.9f)
+                .SafeNormalize(-forward) * Main.rand.NextFloat(4.5f, 6.5f);
 
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    velocity,
-                    ModContent.ProjectileType<BrinyBaron_HomingBubble>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.22f)),
-                    Projectile.knockBack * 0.35f,
-                    Projectile.owner);
-            }
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                ModContent.ProjectileType<BrinyBaron_HomingLightOrb>(),
+                Math.Max(1, (int)(Projectile.damage * 0.22f)),
+                Projectile.knockBack * 0.35f,
+                Projectile.owner);
         }
 
         private static void SpawnFlightEffects(Projectile projectile, int lifeTimer, int spawnStage, float stageIntensity, float initialSpeed)
@@ -293,32 +302,50 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             if (spawnStage >= 1 && lifeTimer % 3 == 0)
             {
-                Vector2 sparkPos =
-                    projectile.Center -
-                    forward * visualRadius * 0.18f +
-                    right * Main.rand.NextFloatDirection() * visualRadius * Main.rand.NextFloat(0.35f, 0.7f);
+                const float goldenAngle = 2.3999631f;
+                int streamCount = spawnStage >= 2 ? 2 : 1;
 
-                Vector2 sparkVelocity =
-                    -forward * Main.rand.NextFloat(2.0f, 3.6f) * stageIntensity +
-                    right * Main.rand.NextFloatDirection() * Main.rand.NextFloat(0.2f, 0.7f);
+                for (int stream = 0; stream < streamCount; stream++)
+                {
+                    float side = stream == 0 ? -1f : 1f;
+                    float phase = lifeTimer * 0.145f + projectile.identity * 0.37f + goldenAngle * (stream + 1);
+                    float curve = (float)Math.Sin(phase);
+                    float counterCurve = (float)Math.Cos(phase * 0.61803398875f);
+                    float lateralDistance = visualRadius * side * MathHelper.Lerp(0.28f, 0.68f, Math.Abs(curve));
+                    float axialDistance = visualRadius * MathHelper.Lerp(0.12f, 0.36f, 0.5f + counterCurve * 0.5f);
 
-                GeneralParticleHandler.SpawnParticle(
-                    new GlowSparkParticle(
+                    Vector2 sparkPos =
+                        wakeAnchor -
+                        forward * axialDistance +
+                        right * lateralDistance +
+                        right * sway * 0.15f;
+
+                    Vector2 sparkVelocity =
+                        -forward * MathHelper.Lerp(1.25f, 2.65f + spawnStage * 0.35f, speedRatio) +
+                        right * side * MathHelper.Lerp(0.18f, 0.8f, Math.Abs(counterCurve));
+
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(
                         sparkPos,
-                        sparkVelocity,
+                        sparkVelocity * stageIntensity,
                         false,
-                        Main.rand.Next(6, 9),
-                        0.055f * stageIntensity,
-                        Color.Lerp(new Color(120, 220, 255), Color.White, 0.22f),
-                        new Vector2(3.6f, 0.28f),
-                        true));
+                        Main.rand.Next(9, 14),
+                        Main.rand.NextFloat(0.22f, 0.42f) * (1f + spawnStage * 0.08f),
+                        Color.Lerp(new Color(95, 205, 255), Color.White, 0.2f + Math.Abs(curve) * 0.25f)));
+                }
             }
         }
 
-        private static void SpawnHitEffects(Projectile projectile, int spawnStage, float stageIntensity)
+        private static void SpawnHitEffects(Projectile projectile, Vector2 hitCenter, int spawnStage, float stageIntensity)
         {
-            Vector2 pos = projectile.Center;
+            Vector2 pos = hitCenter;
             float radius = projectile.width * 0.4f;
+
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(
+                pos,
+                0.08f + spawnStage * 0.012f,
+                18 + spawnStage * 2,
+                0.9f + spawnStage * 0.08f,
+                Color.Lerp(new Color(115, 220, 255), Color.White, 0.32f)));
 
             for (int i = 0; i < 4 + spawnStage * 2; i++)
             {

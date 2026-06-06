@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
 using CalamityMod;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -7,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.Enums;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -872,29 +874,47 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center, Projectile.Center + direction * BeamLength, CollisionWidth, ref collisionPoint);
         }
 
+        private float PrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
+        {
+            float edgeFade = Utils.GetLerpValue(1f, 0.94f, completionRatio, true) * Utils.GetLerpValue(0f, 0.04f, completionRatio, true);
+            float pulse = 0.86f + 0.14f * (float)Math.Sin(Timer * 0.42f + completionRatio * MathHelper.TwoPi);
+            return edgeFade * Projectile.scale * 23f * pulse;
+        }
+
+        private Color PrimitiveColorFunction(float completionRatio, Vector2 vertexPos)
+        {
+            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, NovaRed);
+            Color accent = Color.Lerp(theme, NovaOrange, 0.32f);
+            Color color = Color.Lerp(Color.Lerp(theme, accent, completionRatio), Color.White, 0.18f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5.1f + completionRatio * 4.8f) * 0.08f);
+            color.A = 0;
+            return color * 1.18f;
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             if (Projectile.scale <= 0.03f)
                 return false;
 
-            Texture2D laser = ModContent.Request<Texture2D>("CalamityMod/Projectiles/LaserProj").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Color red = NovaRed with { A = 0 };
-            Color orange = NovaOrange with { A = 0 };
+            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, NovaRed) with { A = 0 };
+            Color orange = Color.Lerp(theme, NovaOrange, 0.38f) with { A = 0 };
             float fade = Utils.GetLerpValue(0f, 9f, Projectile.timeLeft, true) * Utils.GetLerpValue(30f, 25f, Projectile.timeLeft, true);
             Vector2 start = Projectile.Center - Main.screenPosition;
             Vector2 end = Projectile.Center + direction * BeamLength - Main.screenPosition;
 
             PFLeftEffectRules.BeginAdditive();
-            Utils.LaserLineFraming framing = new(DelegateMethods.RainbowLaserDraw);
-            DelegateMethods.f_1 = 1f;
-            DelegateMethods.c_1 = Color.Lerp(red, orange, 0.35f) * (0.86f * fade);
-            Utils.DrawLaser(Main.spriteBatch, laser, start, end, new Vector2(Projectile.scale), framing);
-            DelegateMethods.c_1 = (Color.White with { A = 0 }) * (0.46f * fade);
-            Utils.DrawLaser(Main.spriteBatch, laser, start, end, new Vector2(Projectile.scale * 0.5f), framing);
+            GameShaders.Misc["CalamityMod:Flame"].UseImage1("Images/Misc/Perlin");
+            Vector2[] beamPoints = new Vector2[9];
+            for (int i = 0; i < beamPoints.Length; i++)
+                beamPoints[i] = Projectile.Center + direction * BeamLength * i / (beamPoints.Length - 1f);
 
-            Main.EntitySpriteDraw(bloom, start, null, red * (0.86f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None, 0);
+            PrimitiveRenderer.RenderTrail(
+                beamPoints,
+                new PrimitiveSettings(PrimitiveWidthFunction, PrimitiveColorFunction, (_, _) => Vector2.Zero, shader: GameShaders.Misc["CalamityMod:Flame"]),
+                72);
+
+            Main.EntitySpriteDraw(bloom, start, null, theme * (0.86f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(bloom, end, null, orange * (0.9f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.34f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(bloom, end, null, (Color.White with { A = 0 }) * (0.52f * fade), Projectile.rotation, bloom.Size() * 0.5f, 0.14f, SpriteEffects.None, 0);
 

@@ -14,6 +14,8 @@ namespace CalamityLegendsComeBack.Shader
         public static Effect TrailBlazingFlame => GetEffect("TrailBlazingFlame");
         public static Effect TrailWarpDistortion => GetEffect("TrailWarpDistortion");
         public static Effect ArtAttackTrail => GetEffect("ArtAttackTrail");
+        public static Effect SHPCLaserDyeTrail => GetEffect("SHPCLaserDyeTrail");
+        public static Effect SHPCMiniLaserDyeTrail => GetEffect("SHPCMiniLaserDyeTrail");
 
         private static readonly ShaderDefinition[] TrailShaders =
         [
@@ -27,7 +29,9 @@ namespace CalamityLegendsComeBack.Shader
             new("TrailGhostlyPhantom", ShaderCategory.Trail, "TrailPass", "TrailGhostlyPhantomEffect"),
             new("TrailBlazingFlame", ShaderCategory.Trail, "TrailPass", "TrailBlazingFlameEffect"),
             new("TrailWarpDistortion", ShaderCategory.Trail, "TrailPass", "TrailWarpDistortionEffect"),
-            new("ArtAttackTrail", ShaderCategory.Trail, "TrailPass", "ArtAttackTrail")
+            new("ArtAttackTrail", ShaderCategory.Trail, "TrailPass", "ArtAttackTrail"),
+            new("SHPCLaserDyeTrail", ShaderCategory.Trail, "TrailPass", "SHPCLaserDyeTrail"),
+            new("SHPCMiniLaserDyeTrail", ShaderCategory.Trail, "TrailPass", "SHPCMiniLaserDyeTrail")
         ];
 
         private static void RegisterTrailShaders()

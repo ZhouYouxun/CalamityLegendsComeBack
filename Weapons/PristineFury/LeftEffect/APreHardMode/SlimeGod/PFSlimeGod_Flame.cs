@@ -91,10 +91,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 float trackingPower = Utils.GetLerpValue(24f, 54f, Timer, true);
                 Vector2 currentDirection = Projectile.velocity.SafeNormalize(Projectile.SafeDirectionTo(best.Center));
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(best.Center, currentDirection);
-                float speed = MathHelper.Lerp(12f, 24f, trackingPower);
-                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(24f), MathHelper.ToRadians(75f), trackingPower);
+                float speed = MathHelper.Lerp(6f, 12f, trackingPower);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(12f), MathHelper.ToRadians(37.5f), trackingPower);
                 Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.34f + trackingPower * 0.28f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.17f + trackingPower * 0.14f);
             }
         }
 

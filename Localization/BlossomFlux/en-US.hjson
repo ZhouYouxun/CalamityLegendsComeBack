@@ -83,7 +83,7 @@ Mods: {
 						'''
 					PassiveStateReady: "[c/7BFFB7:Ready]"
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
-					PassiveStateCooldown: "[c/F0D070:Cooldown {0}s]"
+					PassiveStateCooldown: "[c/F0D070:Charging {0}/{1}s]"
 					PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
 					BF_EXHint:
 						'''
@@ -225,6 +225,7 @@ Mods: {
 			Shared_Shockwave.DisplayName: Shared_ Shockwave
 			Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
 			NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
+			LegendaryCodexPanel.DisplayName: Legendary Codex Panel
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

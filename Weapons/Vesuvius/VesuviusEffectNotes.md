@@ -1,12 +1,16 @@
 # Vesuvius effect notes
 
-## 主力素材
+## Main references
 
-- `AsteroidMolten` / `AsteroidMolten2` / `AsteroidMolten3`
-- `AsteroidMoltenGlow` / `AsteroidMoltenGlow2` / `AsteroidMoltenGlow3`
-- `DustID.CopperCoin` style molten asteroid dust
+- `AsteroidMolten`
+- `AsteroidMolten2`
+- `AsteroidMolten3`
+- `AsteroidMoltenGlow`
+- `AsteroidMoltenGlow2`
+- `AsteroidMoltenGlow3`
+- Asteroid-style molten `DustID.CopperCoin` dust
 
-## 允许的粒子
+## Allowed particles
 
 - `SparkParticle`
 - `PointParticle`
@@ -15,13 +19,14 @@
 - `ImpactParticle`
 - `SquishyLightParticle`
 
-## 允许的烟雾
+## Allowed smoke
 
 - `HeavySmokeParticle`
 - `SmallSmokeParticle`
 
-## 使用约束
+## Hard rules
 
-- `RancorLavaMetaball` 只能用于命中、落点、残留岩浆、喷发核心等位置反馈。
-- `RancorLavaMetaball` 不作为飞行尾迹或普通飞行过程特效。
-- `SmallSmokeParticle + Dust` 是 `Cinder` 追踪灰烬的全部视觉构成。
+- `RancorLavaMetaball` is only for hit impact, landing, lingering lava, eruption cores, or other location feedback.
+- `RancorLavaMetaball` must not be used as normal projectile flight trail.
+- `Cinder` visuals are limited to `SmallSmokeParticle` plus dust.
+- `ObsidianShard` keeps the void/obsidian read, but its projectile body scale is locked to roughly 33 percent.

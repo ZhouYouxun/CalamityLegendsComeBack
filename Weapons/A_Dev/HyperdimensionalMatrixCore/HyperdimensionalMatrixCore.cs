@@ -140,7 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 .AddIngredient(ItemID.SoulofFlight, 5)
                 .AddIngredient(ItemID.SoulofLight)
                 .AddIngredient(ItemID.SoulofNight)
-                .AddTile<DraedonsForge>()
+                .AddTile(TileID.Anvils)
                 .Register();
         }
 

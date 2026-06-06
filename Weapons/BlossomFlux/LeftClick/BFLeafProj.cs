@@ -220,8 +220,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         {
             Texture2D projectileTexture = TextureAssets.Projectile[Type].Value;
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Color mainColor = BFArrowCommon.GetPresetColor(Preset) * Projectile.Opacity;
             Color accentColor = BFArrowCommon.GetPresetAccentColor(Preset) * Projectile.Opacity;
             float pulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f + Projectile.identity * 0.23f);
@@ -233,15 +235,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             for (int i = 0; i < 7; i++)
             {
                 float angle = MathHelper.TwoPi * i / 7f;
-                Vector2 offset = angle.ToRotationVector2() * (0.95f + 0.42f * pulse);
+                float side = (float)Math.Sin(angle + Main.GlobalTimeWrappedHourly * 2.6f);
+                float along = (float)Math.Cos(angle) * (2.6f + 1.2f * pulse);
+                Vector2 offset = right * side * (3.2f + 1.4f * pulse) + forward * along;
                 Main.EntitySpriteDraw(
-                    projectileTexture,
+                    sparkTexture,
                     drawPosition + offset,
                     null,
                     Color.Lerp(mainColor, accentColor, 0.35f) * 0.24f,
-                    Projectile.rotation,
-                    projectileTexture.Size() * 0.5f,
-                    Projectile.scale * (1.02f + 0.02f * pulse),
+                    Projectile.rotation + MathHelper.PiOver2,
+                    sparkTexture.Size() * 0.5f,
+                    new Vector2(0.02f, 0.095f + 0.035f * pulse) * Projectile.scale,
                     SpriteEffects.None,
                     0);
             }
@@ -254,17 +258,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                 0f,
                 bloomTexture.Size() * 0.5f,
                 0.26f * pulse,
-                SpriteEffects.None,
-                0);
-
-            Main.EntitySpriteDraw(
-                projectileTexture,
-                drawPosition,
-                null,
-                Color.Lerp(mainColor, accentColor, 0.42f) * 0.78f,
-                Projectile.rotation,
-                projectileTexture.Size() * 0.5f,
-                Projectile.scale * (1.04f + 0.02f * pulse),
                 SpriteEffects.None,
                 0);
 

@@ -8,17 +8,18 @@ Mods: {
 					BB_Left:
 						'''
 						[c/66CCFF:左键：以稳定的单向节奏连续挥斩。]
-						[c/7F8FA6:每一斩依次释放潮锋波、四枚旋水刃、海卷风。]
-						[c/4FAEFF:每一道潮锋波消散时，都会为剑身回灌一点潮汐。]
-						[c/99CCFF:剑身近距离命中时，伤害高于飞出的潮汐攻势。]
-						[c/DDA0FF:若剑刃亲自撕开敌人，命中处会再裂出水痕，并卷起一枚风暴种子。]
+						[c/7F8FA6:连段按 A-B-A-B-C 循环：潮锋波、三枚旋水刃、潮锋波、三枚旋水刃、龙卷召唤器。]
+						[c/99CCFF:龙卷召唤器命中后会释放风暴泡，并在周围随机散布数个 50×50 的水爆炸。]
+						[c/4FAEFF:每层潮汐提高 3% 武器伤害；潮汐每 5 秒自动回复 1 层，剑刃命中敌人也会回复 1 层。]
+						[c/99CCFF:剑身近距离命中时，只会在伤口处卷起灾厄海爵同源的风暴泡。]
+						[c/DDA0FF:潮锋波会减速并释放蓝色追踪光球；潮汐满层时手里剑才会进入追踪模式。]
 						[c/FFB347:持续按住左键时，挥砍大小与节奏保持一致并循环推进。]
 						'''
 					BB_Tide: "[c/4FAEFF:当前潮汐值：]"
 					BB_Right:
 						'''
-						[c/66CCFF:右键：未挥剑时向前突进，切入或脱离战场。]
-						[c/4FAEFF:撞击敌人时会撕出分裂闪电，并回灌一点潮汐。]
+						[c/66CCFF:右键：消耗 1 层潮汐向前突进；没有潮汐时无法发动。]
+						[c/4FAEFF:冲刺命中敌人或撞到方块时回复 1 层潮汐，并从下方向上喷出多条水柱。]
 						[c/7F8FA6:按住左键时再按住右键，会将剑势转为环身旋舞。]
 						[c/DDA0FF:转盘会随持续时间加速；只有达到满速后，才会向周围撒出潮刃。]
 						[c/FFB347:低速旋舞用于蓄势，完成转速后才真正压制近身区域。]
@@ -33,11 +34,11 @@ Mods: {
 					PassiveStateOn: "[c/7BFFB7:开启]"
 					PassiveStateOff: "[c/F0D070:关闭]"
 					PassiveDevice_None: "[c/7F8FA6:当前未读取到盾冲设备。]"
-					PassiveDevice_OrnateShield: "[c/99CCFF:当前佩戴华丽护盾；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
-					PassiveDevice_DeepDiver: "[c/99CCFF:当前佩戴深渊潜游者；冲刺期间会侧放潮刃，并附加两段海爵斩击。]"
-					PassiveDevice_AsgardsValor: "[c/99CCFF:当前佩戴阿斯加德英勇；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
-					PassiveDevice_ElysianAegis: "[c/99CCFF:当前佩戴极乐之庇护；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
-					PassiveDevice_AsgardianAegis: "[c/99CCFF:当前佩戴阿斯加德之庇护；盾冲期间会侧放潮刃，并附加两段海爵斩击。]"
+					PassiveDevice_OrnateShield: "[c/99CCFF:当前佩戴华丽护盾；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
+					PassiveDevice_DeepDiver: "[c/99CCFF:当前佩戴深渊潜游者；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
+					PassiveDevice_AsgardsValor: "[c/99CCFF:当前佩戴阿斯加德英勇；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
+					PassiveDevice_ElysianAegis: "[c/99CCFF:当前佩戴极乐之庇护；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
+					PassiveDevice_AsgardianAegis: "[c/99CCFF:当前佩戴阿斯加德之庇护；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
 					Dash4_Unlock: "[c/66FFAA:已解锁：潮狱处刑]"
 					Dash4_Lock: "[c/FFB347:暂未解锁，需击败猪鲨公爵]"
 					BB_Final: "[c/9FD8A2:潮汐满溢时，按传奇技能键锁定猎物，再以左键宣判，直至目标被潮锋反复处刑。]"
@@ -63,12 +64,14 @@ Mods: {
 		Projectiles: {
 			BrinyBaron: {
 				BBSwing_Wave.DisplayName: 潮锋波斩
-				BBShuriken_Light.DisplayName: 潮汐手里剑闪光
+				BrinyBaron_HomingLightOrb.DisplayName: 潮汐追踪光球
 				BBSwing_INV.DisplayName: 巨刃判定
 				BBSwing_Slash.DisplayName: 潮锋斩痕
-				BBShuriken_Lazer.DisplayName: 水刃激光
 				BrinyBaron_LeftClick_Swing.DisplayName: 海爵连斩
 				BrinyBaron_RightClick_Shuriken.DisplayName: 海爵手里剑
+				BrinyBaron_TornadoBolt.DisplayName: 海爵龙卷弹
+				BrinyBaron_TornadoWaterExplosion.DisplayName: 海爵水爆炸
+				BrinyBaron_DashWaterPillar.DisplayName: 海爵突进水柱
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 刃岚突进
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 回旋裂斩
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 盾潮连斩

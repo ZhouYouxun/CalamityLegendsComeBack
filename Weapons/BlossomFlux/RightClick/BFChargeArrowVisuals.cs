@@ -133,7 +133,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 SpriteEffects.None,
                 0);
 
-            DrawSpecialChargeArrowOverlay(projectile, arrowTexture, preset, aimDirection, chargeCompletion, arrowDrawPosition, arrowRotation, arrowScale);
+            DrawSpecialChargeArrowOverlay(projectile, preset, aimDirection, chargeCompletion, arrowDrawPosition, arrowRotation, arrowScale);
         }
 
         internal static void DrawBreakthroughChargedArrows(
@@ -155,7 +155,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             Color loadedColor = Color.Lerp(Color.White, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak), 0.62f);
             Color loadingColor = Color.Lerp(Color.White, loadedColor, currentArrowCompletion);
-            Color outlineColor = new(116, 255, 134, 0);
             Vector2 origin = arrowTexture.Size() * 0.5f;
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
@@ -180,20 +179,38 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 if (flashArrow)
                 {
                     float flash = loadFlashTimer / (float)loadFlashFrames;
-                    for (int j = 0; j < 10; j++)
+                    Vector2 drawPosition = drawWorld - Main.screenPosition;
+                    Color flashColor = new Color(116, 255, 134, 0) * flash;
+
+                    Main.spriteBatch.SetBlendState(BlendState.Additive);
+                    Main.EntitySpriteDraw(
+                        bloomTexture,
+                        drawPosition,
+                        null,
+                        flashColor * 0.28f,
+                        rotation,
+                        bloomTexture.Size() * 0.5f,
+                        new Vector2(0.12f + flash * 0.06f, 0.035f + flash * 0.018f),
+                        SpriteEffects.None,
+                        0);
+
+                    for (int j = 0; j < 6; j++)
                     {
-                        Vector2 offset = (MathHelper.TwoPi * j / 10f).ToRotationVector2() * MathHelper.Lerp(1.4f, 3.2f, flash);
+                        float angle = aimDirection.ToRotation() + MathHelper.TwoPi * j / 6f + flash * 0.65f;
+                        Vector2 offset = angle.ToRotationVector2() * MathHelper.Lerp(3f, 8f, flash);
                         Main.EntitySpriteDraw(
-                            arrowTexture,
-                            drawWorld - Main.screenPosition + offset,
+                            sparkTexture,
+                            drawPosition + offset,
                             null,
-                            outlineColor * (0.55f * flash),
-                            rotation,
-                            origin,
-                            arrowScale,
+                            flashColor * (0.46f - j * 0.025f),
+                            angle + MathHelper.PiOver2,
+                            sparkTexture.Size() * 0.5f,
+                            new Vector2(0.025f, 0.11f + flash * 0.08f),
                             SpriteEffects.None,
                             0);
                     }
+
+                    Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
                 }
 
                 Main.EntitySpriteDraw(
@@ -211,7 +228,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         private static void DrawSpecialChargeArrowOverlay(
             Projectile projectile,
-            Texture2D arrowTexture,
             BlossomFluxChloroplastPresetType preset,
             Vector2 aimDirection,
             float chargeCompletion,
@@ -226,11 +242,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    DrawBombardChargeOverlay(arrowTexture, aimDirection, chargeCompletion, arrowDrawPosition, arrowRotation, arrowScale);
+                    DrawBombardChargeOverlay(aimDirection, chargeCompletion, arrowDrawPosition, arrowRotation, arrowScale);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                    DrawPlagueChargeOverlay(projectile, arrowTexture, aimDirection, chargeCompletion, arrowDrawPosition, arrowRotation, arrowScale);
+                    DrawPlagueChargeOverlay(projectile, aimDirection, chargeCompletion, arrowDrawPosition, arrowRotation, arrowScale);
                     break;
             }
         }
@@ -275,9 +291,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
-        private static void DrawBombardChargeOverlay(Texture2D arrowTexture, Vector2 aimDirection, float chargeCompletion, Vector2 arrowDrawPosition, float arrowRotation, float arrowScale)
+        private static void DrawBombardChargeOverlay(Vector2 aimDirection, float chargeCompletion, Vector2 arrowDrawPosition, float arrowRotation, float arrowScale)
         {
             Texture2D streak = TextureAssets.Extra[ExtrasID.SharpTears].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             Vector2 normal = aimDirection.RotatedBy(MathHelper.PiOver2);
             float charge = MathHelper.SmoothStep(0f, 1f, chargeCompletion);
             Color red = new(255, 54, 42, 0);
@@ -288,13 +306,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 Vector2 offset = normal * i * (5f + 5f * charge);
                 Main.EntitySpriteDraw(
-                    arrowTexture,
-                    arrowDrawPosition + offset,
+                    bloom,
+                    arrowDrawPosition + offset * 0.45f + aimDirection * 3f,
                     null,
-                    Color.Lerp(red, gold, i == 0 ? 0.4f : 0.18f) * (0.18f + charge * 0.18f),
+                    Color.Lerp(red, gold, i == 0 ? 0.48f : 0.18f) * (0.16f + charge * 0.18f),
                     arrowRotation,
-                    arrowTexture.Size() * 0.5f,
-                    arrowScale * (1.04f + charge * 0.08f),
+                    bloom.Size() * 0.5f,
+                    new Vector2(0.12f + charge * 0.055f, 0.036f + charge * 0.016f) * arrowScale,
                     SpriteEffects.None,
                     0f);
 
@@ -308,15 +326,28 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     new Vector2(0.18f, 0.42f + charge * 0.18f),
                     SpriteEffects.None,
                     0f);
+
+                Main.EntitySpriteDraw(
+                    spark,
+                    arrowDrawPosition + offset * 0.7f - aimDirection * 1.5f,
+                    null,
+                    Color.Lerp(gold, red, 0.25f) * (0.2f + charge * 0.24f),
+                    arrowRotation,
+                    spark.Size() * 0.5f,
+                    new Vector2(0.028f, 0.18f + charge * 0.12f) * arrowScale,
+                    SpriteEffects.None,
+                    0f);
             }
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
-        private static void DrawPlagueChargeOverlay(Projectile projectile, Texture2D arrowTexture, Vector2 aimDirection, float chargeCompletion, Vector2 arrowDrawPosition, float arrowRotation, float arrowScale)
+        private static void DrawPlagueChargeOverlay(Projectile projectile, Vector2 aimDirection, float chargeCompletion, Vector2 arrowDrawPosition, float arrowRotation, float arrowScale)
         {
             Texture2D fog = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Ranged/BlightFlames").Value;
             Texture2D noise = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/BlobbyNoise").Value;
+            Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Vector2 normal = aimDirection.RotatedBy(MathHelper.PiOver2);
             float charge = MathHelper.SmoothStep(0f, 1f, chargeCompletion);
             float pulse = 0.78f + 0.22f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6.4f + projectile.identity * 0.2f);
             Color acid = new(188, 255, 62, 0);
@@ -336,17 +367,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 0f);
 
             Main.EntitySpriteDraw(
-                arrowTexture,
-                arrowDrawPosition,
-                null,
-                acid * (0.22f + charge * 0.2f),
-                arrowRotation,
-                arrowTexture.Size() * 0.5f,
-                arrowScale * (1.08f + charge * 0.08f),
-                SpriteEffects.None,
-                0f);
-
-            Main.EntitySpriteDraw(
                 noise,
                 arrowDrawPosition + aimDirection * 1.5f,
                 null,
@@ -356,6 +376,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 new Vector2(0.22f, 0.08f) * (1f + charge * 0.5f),
                 SpriteEffects.None,
                 0f);
+
+            for (int i = -1; i <= 1; i++)
+            {
+                float offsetLength = (6f + charge * 8f) * i;
+                Main.EntitySpriteDraw(
+                    spark,
+                    arrowDrawPosition + normal * offsetLength - aimDirection * (2f + i * 0.5f),
+                    null,
+                    Color.Lerp(plague, acid, i == 0 ? 0.62f : 0.34f) * (0.22f + charge * 0.22f),
+                    arrowRotation + i * 0.14f,
+                    spark.Size() * 0.5f,
+                    new Vector2(0.026f, 0.15f + charge * 0.1f) * arrowScale,
+                    SpriteEffects.None,
+                    0f);
+            }
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }

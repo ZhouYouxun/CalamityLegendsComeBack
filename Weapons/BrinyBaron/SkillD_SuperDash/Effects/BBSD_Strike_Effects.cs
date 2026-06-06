@@ -23,43 +23,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 forward = dashDirection.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            if (Main.myPlayer == projectile.owner)
-            {
-                float[] slashOffsets = { -0.28f, 0f, 0.28f };
-                foreach (float rotationOffset in slashOffsets)
-                {
-                    Vector2 slashVelocity = forward.RotatedBy(rotationOffset) * 7f;
-                    Projectile.NewProjectile(
-                        projectile.GetSource_FromThis(),
-                        impactCenter + slashVelocity * 0.65f,
-                        slashVelocity,
-                        ModContent.ProjectileType<BBSwing_Slash>(),
-                        Math.Max(1, projectile.damage),
-                        projectile.knockBack,
-                        projectile.owner,
-                        1f,
-                        Main.rand.NextFloat(-0.12f, 0.12f));
-                }
-
-                Vector2 starSpawnCenter = impactCenter - forward * 84f;
-                for (int i = 0; i < 4; i++)
-                {
-                    float t = i / 3f;
-                    float spread = MathHelper.Lerp(-0.26f, 0.26f, t);
-                    Vector2 spawnPos = starSpawnCenter + right * MathHelper.Lerp(-42f, 42f, t);
-                    Vector2 starVelocity = forward.RotatedBy(spread) * Main.rand.NextFloat(7.4f, 10.6f);
-
-                    Projectile.NewProjectile(
-                        projectile.GetSource_FromThis(),
-                        spawnPos,
-                        starVelocity,
-                        ModContent.ProjectileType<BBSD_Star>(),
-                        Math.Max(1, projectile.damage),
-                        projectile.knockBack,
-                        projectile.owner);
-                }
-            }
-
             if (Main.dedServ)
                 return;
 
@@ -67,9 +30,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             for (int side = -1; side <= 1; side += 2)
             {
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    float speedRatio = i / 5f;
+                    float speedRatio = i / 2f;
                     Vector2 edgePos =
                         impactCenter -
                         forward * MathHelper.Lerp(10f, 58f, speedRatio) +
@@ -92,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 }
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 1; i++)
             {
                 Color pulseColor = i switch
                 {
@@ -114,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 GeneralParticleHandler.SpawnParticle(bolt);
             }
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < 8; i++)
             {
                 Dust burstDust = Dust.NewDustPerfect(
                     impactCenter,

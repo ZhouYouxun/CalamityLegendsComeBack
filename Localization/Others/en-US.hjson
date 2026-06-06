@@ -57,6 +57,11 @@ Mods: {
 						'''
 				}
 
+				LegendaryCodex: {
+					DisplayName: Legendary Codex
+					Tooltip: Left click to open the legendary weapon codex.
+				}
+
 				CTRLBoss: {
 					DisplayName: Boss Progress Controller
 					Tooltip: Left click to open or close the boss progress debug panel.

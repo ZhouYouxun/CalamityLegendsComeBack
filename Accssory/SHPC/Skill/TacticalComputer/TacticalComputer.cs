@@ -18,7 +18,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<TacticalComputerPlayer>().TacticalComputerEquipped = true;
+            TacticalComputerPlayer tacticalPlayer = player.GetModPlayer<TacticalComputerPlayer>();
+            tacticalPlayer.TacticalComputerEquipped = true;
+            tacticalPlayer.TacticalComputerVisualsHidden = hideVisual;
         }
 
         public override void AddRecipes()

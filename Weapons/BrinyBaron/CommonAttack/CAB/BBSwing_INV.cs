@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (AddsTide)
+            if (false && AddsTide)
             {
                 Player owner = Main.player[Projectile.owner];
                 owner.GetModPlayer<BBEXPlayer>().AddTide();

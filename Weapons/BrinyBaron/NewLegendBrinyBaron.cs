@@ -5,7 +5,6 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityMod;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -22,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public new string LocalizationCategory => "Items.Weapons";
 
         private const float RightClickDamageMultiplier = 1.08f;
-        private static bool CanUseQuickDash => Main.hardMode;
+        private static bool CanUseQuickDash => true;
         private static bool HasDesignedSuperDashUnlock => NPC.downedFishron;
 
         public override void SetDefaults()
@@ -54,6 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (player.altFunctionUse == 2)
             {
                 if (HasActiveRightClickDash(player))
+                    return false;
+
+                if (player.GetModPlayer<BBEXPlayer>().TideValue <= 0)
                     return false;
 
                 Projectile activeLeftSwing = FindOwnedProjectile(player, ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>());
@@ -105,6 +107,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
                 Vector2 shootVelocity = (Main.MouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
                 int rightClickDamage = GetCurrentRightClickDamage(player);
+                if (!player.GetModPlayer<BBEXPlayer>().TryConsumeTide())
+                    return false;
 
                 Projectile.NewProjectile(
                     source,
@@ -128,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (player.altFunctionUse != 2)
                 return player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] <= 0 && !HasActiveRightClickDash(player);
 
-            return !HasActiveRightClickDash(player);
+            return player.GetModPlayer<BBEXPlayer>().TideValue > 0 && !HasActiveRightClickDash(player);
         }
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
@@ -195,27 +199,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             tidePlayer.TideValue = 0;
         }
 
-        public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
-        {
-            BrinyBaronRightClickDashCooldownPlayer dashCooldown = Main.LocalPlayer.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
-
-            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
-            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
-            Vector2 barOrigin = barBackground.Size() * 0.5f;
-            Vector2 totalScale = Vector2.One * scale * 3.34f;
-
-            if (dashCooldown.IsCoolingDown)
-            {
-                float progress = dashCooldown.CooldownCompletion;
-                Rectangle frameCrop = new Rectangle(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
-                Vector2 drawPos = position + Vector2.UnitY * scale * (frame.Height - 20f);
-                Color barColor = new Color(92, 210, 255);
-
-                spriteBatch.Draw(barBackground, drawPos, null, barColor * 0.55f, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
-                spriteBatch.Draw(barForeground, drawPos, frameCrop, barColor, 0f, barOrigin, totalScale, SpriteEffects.None, 0f);
-            }
-        }
-
         public override void AddRecipes()
         {
         }
@@ -223,12 +206,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             damage.Base = BB_Balance.GetLeftClickBaseDamage();
+            damage *= player.GetModPlayer<BBEXPlayer>().TideDamageMultiplier;
         }
 
         private int GetCurrentRightClickDamage(Player player)
         {
             int baseDamage = BB_Balance.GetLeftClickBaseDamage();
-            return (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * RightClickDamageMultiplier);
+            float scaledDamage = player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * RightClickDamageMultiplier);
+            return Math.Max(1, (int)(scaledDamage * player.GetModPlayer<BBEXPlayer>().TideDamageMultiplier));
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)

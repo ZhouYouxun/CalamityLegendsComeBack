@@ -32,7 +32,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.FakeCalamity,
             PristineFuryMark.Plantera,
             PristineFuryMark.Aurora,
-            PristineFuryMark.Goliath,
             PristineFuryMark.Moonlord,
             PristineFuryMark.Providence,
             PristineFuryMark.Ravager,

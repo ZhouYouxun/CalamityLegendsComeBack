@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool HoldingBlossomFlux => Player.HeldItem?.type == ModContent.ItemType<NewLegendBlossomFlux>();
 
         public BlossomFluxChloroplastPresetType CurrentPreset =>
-            HoldingBlossomFlux ? Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset : BlossomFluxChloroplastPresetType.Chlo_ABreak;
+            HoldingBlossomFlux ? Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset : BlossomFluxChloroplastPresetType.Chlo_BRecov;
 
         public override void ResetEffects()
         {

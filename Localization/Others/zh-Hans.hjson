@@ -58,6 +58,11 @@ Mods: {
 						'''
 				}
 
+				LegendaryCodex: {
+					DisplayName: 传奇图鉴
+					Tooltip: 左键打开传奇武器图鉴。
+				}
+
 				CTRLBoss: {
 					DisplayName: Boss进度修改器
 					Tooltip: 左键打开或关闭 Boss 进度调试面板。

@@ -228,9 +228,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Texture2D magicRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
-            Texture2D reticle = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_04").Value;
 
             // 不要把 A 设成 0，避免 SpriteBatch 状态没切成功时直接透明
             Color theme = Color.Lerp(ThemeColor, Color.White, 0.12f) * Projectile.Opacity;
@@ -263,7 +260,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 }
 
                 float completion = i / (float)(segments.Length - 1);
-                float segmentScale = MathHelper.Lerp(0.22f, 0.13f, completion);
+                float segmentScale = MathHelper.Lerp(0.25f, 0.12f, completion);
 
                 Main.EntitySpriteDraw(
                     bloom,
@@ -275,15 +272,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     segmentScale,
                     SpriteEffects.None,
                     0f);
-
-                DrawSegmentMagic(
-                    magicRing,
-                    reticle,
-                    current - Main.screenPosition,
-                    segments[i].Rotation,
-                    segmentScale,
-                    theme,
-                    completion);
 
                 previous = current;
             }
@@ -314,23 +302,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 0f);
 
             Main.EntitySpriteDraw(
-                star,
+                bloom,
                 head,
                 null,
-                theme * 0.65f,
+                Color.Lerp(theme, inner, 0.18f) * 0.55f,
                 Projectile.rotation,
-                star.Size() * 0.5f,
-                new Vector2(0.13f, 0.82f) * pulse,
+                bloom.Size() * 0.5f,
+                0.06f * pulse,
                 SpriteEffects.None,
-                0f);
-
-            DrawSegmentMagic(
-                magicRing,
-                reticle,
-                head,
-                Projectile.rotation,
-                0.32f * pulse,
-                theme,
                 0f);
 
             PFLeftEffectRules.EndAdditive();

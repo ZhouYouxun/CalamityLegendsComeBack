@@ -677,11 +677,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             float distanceFactor = Utils.GetLerpValue(1400f, 220f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
-            float chargeCalm = Utils.GetLerpValue(FullChargeFrameTarget - 24f, FullChargeFrameTarget + 18f, chargeFrames, true);
-            chargeCalm = chargeCalm * chargeCalm * (3f - 2f * chargeCalm);
-            float pulse = (0.65f + 0.35f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 15f)) * (1f - chargeCalm);
-            float shakePower = (0.18f + chargePower * 0.95f + currentStage * 0.16f + pulse) * distanceFactor * 0.7f;
-            shakePower *= MathHelper.Lerp(0.67f, 0f, chargeCalm);
+            float preFullProgress = Utils.GetLerpValue(HeliumChargeStartFrames, FullChargeFrameTarget - 36f, chargeFrames, true);
+            float rise = (float)Math.Pow(preFullProgress, 1.35f);
+            float calm = Utils.GetLerpValue(FullChargeFrameTarget - 42f, FullChargeFrameTarget + 36f, chargeFrames, true);
+            calm = calm * calm * (3f - 2f * calm);
+            float calmMultiplier = (1f - calm) * (1f - calm);
+            float maxStage = Math.Max(1f, VesuviusProgression.GetMaxStage());
+            float stageRatio = MathHelper.Clamp(currentStage / maxStage, 0f, 1f);
+            float pulse = 0.45f + 0.55f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * MathHelper.Lerp(10f, 16f, stageRatio));
+            float basePower = 0.12f + chargePower * 0.54f + MathHelper.Lerp(0.08f, 0.82f, stageRatio) * rise;
+            float shakePower = (basePower + pulse * 0.42f * rise) * distanceFactor * 0.67f * calmMultiplier;
 
             if (shakePower <= 0.01f)
                 return;

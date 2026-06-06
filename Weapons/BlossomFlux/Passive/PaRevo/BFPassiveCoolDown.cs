@@ -14,9 +14,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
     internal class BFPassiveCoolDown : CooldownHandler
     {
         private BFPassivePlayer PassivePlayer => instance.player.GetModPlayer<BFPassivePlayer>();
-        private int CurrentMaxFrames => PassivePlayer.FinalStandActive ? BFPassivePlayer.FinalStandDurationFrames : BFPassivePlayer.PassiveCooldownFrames;
-        private float AdjustedCompletion => CurrentMaxFrames <= 0 ? 0f : instance.timeLeft / (float)CurrentMaxFrames;
-        private int DisplayValue => instance.timeLeft <= 0 ? 0 : (int)Math.Ceiling(instance.timeLeft / 60f);
+        private int CurrentMaxFrames => PassivePlayer.FinalStandActive ? BFPassivePlayer.FinalStandDurationFrames : PassivePlayer.PassiveChargeFramesRequired;
+        private float FillCompletion => PassivePlayer.FinalStandActive
+            ? 1f - MathHelper.Clamp(instance.timeLeft / (float)CurrentMaxFrames, 0f, 1f)
+            : PassivePlayer.PassiveChargeCompletion;
+        private float MissingCompletion => 1f - FillCompletion;
+        private int DisplayValue => PassivePlayer.FinalStandActive
+            ? (instance.timeLeft <= 0 ? 0 : (int)Math.Ceiling(instance.timeLeft / 60f))
+            : PassivePlayer.ChargeSeconds;
 
         public static new string ID => "BlossomFlux_Passive";
         public override bool CanTickDown => false;
@@ -45,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         public override void ApplyBarShaders(float opacity)
         {
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseOpacity(opacity);
-            GameShaders.Misc["CalamityMod:CircularBarShader"].UseSaturation(AdjustedCompletion);
+            GameShaders.Misc["CalamityMod:CircularBarShader"].UseSaturation(FillCompletion);
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseColor(CooldownStartColor);
             GameShaders.Misc["CalamityMod:CircularBarShader"].UseSecondaryColor(CooldownEndColor);
             GameShaders.Misc["CalamityMod:CircularBarShader"].Apply();
@@ -73,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             spriteBatch.Draw(outline, position, null, OutlineColor * opacity, 0f, outline.Size() * 0.5f, scale, SpriteEffects.None, 0f);
             spriteBatch.Draw(sprite, position, null, Color.White * opacity, 0f, sprite.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
-            int lostHeight = (int)Math.Ceiling(overlay.Height * AdjustedCompletion);
+            int lostHeight = (int)Math.Ceiling(overlay.Height * MissingCompletion);
             Rectangle crop = new Rectangle(0, lostHeight, overlay.Width, overlay.Height - lostHeight);
 
             spriteBatch.Draw(

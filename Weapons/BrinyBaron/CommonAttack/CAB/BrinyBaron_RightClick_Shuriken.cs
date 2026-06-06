@@ -2,10 +2,8 @@
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
-using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Particles;
-using CalamityMod.Projectiles.Melee;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -24,10 +22,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private const int BaseSize = 50;
         private const int StickyLifetime = 72;
-        private static readonly int[] ShurikenPenetrates = { 1, -1, -1, -1 };
-        private static readonly int[] ShurikenStickySliceCounts = { 0, 3, 4, 5 };
-        private static readonly bool[] ShurikenDeathSpawnsShpcExplosion = { false, false, true, true };
-        private static readonly bool[] ShurikenDeathSpawnsCrossLights = { false, false, false, true };
+        private static readonly int[] ShurikenPenetrates = { -1, -1, -1, -1 };
+        private static readonly int[] ShurikenStickySliceCounts = { 3, 4, 5, 6 };
+        private static readonly bool[] ShurikenDeathSpawnsShpcExplosion = { false, false, false, false };
+        private static readonly bool[] ShurikenDeathSpawnsCrossLights = { false, false, false, false };
         private static readonly float[] ShurikenTideHomingRanges = { 900f, 1040f, 1180f, 1320f };
         private static readonly float[] ShurikenRotationSpeeds = { 0.55f, 0.59f, 0.63f, 0.67f };
         private static readonly bool[] ShurikenStickySlashUnlocks = { false, false, true, true };
@@ -35,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const float TideHomingBlendTotalWeight = 18f;
         private const float TideHomingFinalSpeed = 14f;
         private const float TideHomingFinalSpeedLerp = 0.08f;
-        private const float NonEmpoweredShurikenAcceleration = 1.01f;
+        private const float NonEmpoweredShurikenAcceleration = 1.013f;
         private const float StickySlashDamageFactor = 0.42f;
         private const float StickySlashBaseScale = 0.9f;
         private const float StickySlashScalePerTier = 0.08f;
@@ -55,7 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private int sliceEffectTimer;
         private int slicesPerformed;
         private int soundTimer;
+        private int homingTimer;
         private Vector2 stickOffsetFromTarget;
+        private bool killedByTile;
 
         public override void SetDefaults()
         {
@@ -81,10 +81,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             sliceEffectTimer = 0;
             slicesPerformed = 0;
             soundTimer = 0;
+            homingTimer = 0;
             stickOffsetFromTarget = Vector2.Zero;
+            killedByTile = false;
             shurikenProfile = CreateShurikenProfile();
-            Projectile.penetrate = ForceHoming ? 1 : shurikenProfile.Penetrate;
-            Projectile.tileCollide = !ForceHoming;
+            Projectile.penetrate = shurikenProfile.Penetrate;
+            Projectile.tileCollide = true;
         }
 
         public override void AI()
@@ -121,6 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
             Vector2 hitForward = Projectile.velocity.SafeNormalize((target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX));
 
+            BBShuriken_Initial_Effects.SpawnWaterFoamHit(target.Center, hitForward, SizeScale, shurikenProfile.GrowthTier);
             BBShuriken_Initial_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale, shurikenProfile.GrowthTier);
 
             if (shurikenProfile.GrowthTier >= 2)
@@ -161,80 +164,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             }
         }
 
-        public override bool OnTileCollide(Vector2 oldVelocity) => true;
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            killedByTile = true;
+            BBShuriken_Initial_Effects.SpawnTileDisappear(Projectile, oldVelocity, SizeScale);
+            return true;
+        }
 
         public override void OnKill(int timeLeft)
         {
-            BBShuriken_Initial_Effects.SpawnDeathBurst(Projectile, SizeScale);
-
-            if (shurikenProfile.SpawnsShpcExplosionOnDeath && Main.myPlayer == Projectile.owner)
-            {
-                int projIndex = Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<NewLegendSHPE>(),
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner);
-
-                if (Main.projectile.IndexInRange(projIndex))
-                {
-                    Projectile proj = Main.projectile[projIndex];
-                    proj.width = 50;
-                    proj.height = 50;
-                    proj.DamageType = DamageClass.Melee;
-                    proj.Center = Projectile.Center;
-                    proj.netUpdate = true;
-                }
-            }
-
-            if (shurikenProfile.SpawnsCrossLightsOnDeath && Main.myPlayer == Projectile.owner)
-            {
-                Vector2 baseVelocity = Projectile.oldVelocity.LengthSquared() > 1f ? Projectile.oldVelocity : Projectile.velocity;
-                float launchSpeed = Math.Max(baseVelocity.Length(), 8f);
-
-                Vector2[] directions =
-                {
-                    Vector2.UnitX,
-                    -Vector2.UnitX,
-                    Vector2.UnitY,
-                    -Vector2.UnitY
-                };
-
-                foreach (Vector2 direction in directions)
-                {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        direction * launchSpeed,
-                        ModContent.ProjectileType<BBShuriken_Light>(),
-                        Projectile.damage,
-                        Projectile.knockBack,
-                        Projectile.owner);
-                }
-            }
-
-            if (TideEmpowered && Main.myPlayer == Projectile.owner && Main.rand.NextBool(3))
-            {
-                Player player = Main.player[Projectile.owner];
-                if (player.ownedProjectileCounts[ModContent.ProjectileType<BrinySpout>()] == 0)
-                {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<BrinyTyphoonBubble>(),
-                        Projectile.damage,
-                        Projectile.knockBack,
-                        player.whoAmI);
-                }
-            }
-
             SoundEngine.PlaySound(SoundID.Item107 with
             {
-                Volume = 0.55f,
-                Pitch = 0.15f
+                Volume = killedByTile ? 0.22f : 0.28f,
+                Pitch = killedByTile ? 0.32f : 0.15f
             }, Projectile.Center);
         }
 
@@ -275,25 +217,33 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private void HandleFlightMovement()
         {
-            bool homing = TideEmpowered || ForceHoming;
-            float homingRange = ForceHoming ? 1250f : shurikenProfile.TideHomingRange;
+            bool homing = TideEmpowered;
+            float homingRange = shurikenProfile.TideHomingRange;
             NPC target = homing ? FindNearestTarget(homingRange) : null;
 
             if (homing && target != null && target.active)
             {
+                homingTimer++;
                 Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                float loosen = Utils.GetLerpValue(0f, 90f, homingTimer, true);
+                float closeTargetBoost = Utils.GetLerpValue(180f, 34f, Projectile.Distance(target.Center), true);
+                float targetSpeed = MathHelper.Lerp(18f, 26f, loosen);
+                float inertia = MathHelper.Lerp(15f, 3f, MathHelper.Max(loosen, closeTargetBoost));
 
                 Projectile.velocity = (
-                    Projectile.velocity * 17f +
-                    desiredDir * shurikenProfile.TideHomingTargetWeight
-                ) / shurikenProfile.TideHomingTotalWeight;
+                    Projectile.velocity * inertia +
+                    desiredDir * targetSpeed
+                ) / (inertia + 1f);
 
                 float speed = Projectile.velocity.Length();
-                speed = MathHelper.Lerp(speed, shurikenProfile.TideHomingFinalSpeed, shurikenProfile.TideHomingFinalSpeedLerp);
+                float targetFinalSpeed = MathHelper.Lerp(14f, shurikenProfile.TideHomingFinalSpeed, loosen);
+                float speedCorrection = MathHelper.Lerp(0.08f, 0.28f, MathHelper.Max(loosen, closeTargetBoost));
+                speed = MathHelper.Lerp(speed, targetFinalSpeed, speedCorrection);
                 Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
             }
             else
             {
+                homingTimer = 0;
                 if (Projectile.velocity.LengthSquared() <= 0.01f)
                     Projectile.velocity = Vector2.UnitX * (Projectile.direction == 0 ? 8f : 8f * Projectile.direction);
 
@@ -559,6 +509,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             }
         }
 
+        public static void SpawnWaterFoamHit(Vector2 center, Vector2 hitForward, float sizeScale, int highestUnlockedStage)
+        {
+            if (Main.dedServ)
+                return;
+
+            int foamCount = 6 + highestUnlockedStage * 2;
+            Vector2 hitRight = hitForward.RotatedBy(MathHelper.PiOver2);
+            Color foamColor = Color.Lerp(new Color(150, 230, 255), Color.White, 0.46f);
+
+            for (int i = 0; i < foamCount; i++)
+            {
+                float spread = Main.rand.NextFloat(-0.74f, 0.74f);
+                Vector2 velocity =
+                    hitForward.RotatedBy(spread) * Main.rand.NextFloat(1.2f, 4.8f + highestUnlockedStage * 0.55f) +
+                    hitRight * Main.rand.NextFloatDirection() * 1.35f;
+
+                GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
+                    center + Main.rand.NextVector2Circular(10f, 10f) * sizeScale,
+                    velocity,
+                    Main.rand.Next(24, 38),
+                    Main.rand.NextFloat(0.72f, 1.15f) * sizeScale,
+                    foamColor));
+            }
+        }
+
         public static void SpawnStickyAmbient(Projectile projectile, NPC target, float sizeScale, int highestUnlockedStage)
         {
             int ambientCount = 1 + Math.Min(highestUnlockedStage, 1);
@@ -609,6 +584,47 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 Dust frost = Dust.NewDustPerfect(projectile.Center, DustID.Frost, burstVelocity * 0.85f);
                 frost.noGravity = true;
                 frost.scale = Main.rand.NextFloat(0.9f, 1.2f) * sizeScale;
+            }
+        }
+
+        public static void SpawnTileDisappear(Projectile projectile, Vector2 oldVelocity, float sizeScale)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = oldVelocity.SafeNormalize(projectile.rotation.ToRotationVector2());
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < 10; i++)
+            {
+                float side = Main.rand.NextFloatDirection();
+                Vector2 velocity =
+                    -forward * Main.rand.NextFloat(1.2f, 4.4f) +
+                    right * side * Main.rand.NextFloat(0.4f, 2.2f);
+
+                Dust water = Dust.NewDustPerfect(
+                    projectile.Center + right * side * Main.rand.NextFloat(2f, 10f),
+                    Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
+                    velocity,
+                    0,
+                    Color.Lerp(new Color(90, 205, 255), Color.White, Main.rand.NextFloat(0.1f, 0.45f)),
+                    Main.rand.NextFloat(0.72f, 1.08f) * sizeScale);
+                water.noGravity = true;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 sparkVelocity =
+                    -forward.RotatedByRandom(0.22f) * Main.rand.NextFloat(2.4f, 4.8f) +
+                    right * Main.rand.NextFloatDirection() * 0.8f;
+
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    sparkVelocity,
+                    false,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.22f, 0.42f) * sizeScale,
+                    Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan));
             }
         }
 
@@ -757,7 +773,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Vector2 drawPos = projectile.Center - Main.screenPosition;
             Vector2 origin = projectileTexture.Size() * 0.5f;
             float baseDrawScale = projectile.width / (float)projectileTexture.Width;
-            float discScale = baseDrawScale * 1.5f;
+            float discScale = baseDrawScale * 1.05f;
             float flash = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f + projectile.identity * 0.9f);
 
             Main.EntitySpriteDraw(smearHalf, drawPos, null, Color.Lerp(Color.DeepSkyBlue, Color.Cyan, flash) with { A = 0 } * 0.42f, projectile.rotation * 1.35f, smearHalf.Size() * 0.5f, discScale, SpriteEffects.None, 0);

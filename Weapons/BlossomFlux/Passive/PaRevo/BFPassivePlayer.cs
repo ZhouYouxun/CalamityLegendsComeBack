@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 {
     internal sealed class BFPassivePlayer : ModPlayer
     {
-        public const int PassiveCooldownFrames = 150 * 60;
+        public const int PassiveCooldownFrames = 120 * 60;
         public const int FinalStandDurationFrames = 15 * 60;
 
         private bool holdingBlossomFlux;
@@ -20,16 +20,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         public int PassiveCooldownTimer;
         public int FinalStandTimer;
 
+        private bool HoldingBlossomFluxNow => holdingBlossomFlux && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool PassiveUnlocked => Main.hardMode;
         public bool FinalStandActive => FinalStandTimer > 0;
-        public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer <= 0 && !FinalStandActive;
+        public int PassiveChargeFramesRequired => Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped
+            ? BFAccessoryPlayer.SilvaHarpPassiveCooldownFrames
+            : PassiveCooldownFrames;
+        public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer >= PassiveChargeFramesRequired && !FinalStandActive;
         public bool ShouldShowCooldownDisplay =>
-            (holdingBlossomFlux && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() && PassiveUnlocked) ||
-            FinalStandActive ||
-            PassiveCooldownTimer > 0;
+            (HoldingBlossomFluxNow && PassiveUnlocked) ||
+            FinalStandActive;
 
         public int DisplayFrames => FinalStandActive ? FinalStandTimer : PassiveCooldownTimer;
-        public int RemainingSeconds => DisplayFrames <= 0 ? 0 : (int)System.Math.Ceiling(DisplayFrames / 60f);
+        public int ChargeSeconds => System.Math.Min(PassiveChargeFramesRequired / 60, PassiveCooldownTimer / 60);
+        public int RequiredChargeSeconds => PassiveChargeFramesRequired / 60;
+        public float PassiveChargeCompletion => PassiveChargeFramesRequired <= 0
+            ? 1f
+            : MathHelper.Clamp(PassiveCooldownTimer / (float)PassiveChargeFramesRequired, 0f, 1f);
 
         public override void ResetEffects()
         {
@@ -45,11 +52,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         public override void PostUpdate()
         {
-            if (PassiveCooldownTimer > 0)
+            if (!PassiveUnlocked)
             {
-                int cooldownDecay = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped ? 2 : 1;
-                PassiveCooldownTimer = System.Math.Max(0, PassiveCooldownTimer - cooldownDecay);
-                if (PassiveCooldownTimer == 0 && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
+                PassiveCooldownTimer = 0;
+            }
+            else if (!FinalStandActive && HoldingBlossomFluxNow)
+            {
+                int chargeRate = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped ? 2 : 1;
+                int requiredFrames = PassiveChargeFramesRequired;
+                int previousTimer = PassiveCooldownTimer;
+                PassiveCooldownTimer = System.Math.Min(requiredFrames, PassiveCooldownTimer + chargeRate);
+                if (previousTimer < requiredFrames && PassiveCooldownTimer >= requiredFrames && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
                     SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
             }
 
@@ -104,7 +117,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 return;
             }
 
-            int displayFrames = DisplayFrames;
+            int displayFrames = ShouldShowCooldownDisplay ? System.Math.Max(1, DisplayFrames) : 0;
             if (Player.Calamity().cooldowns.TryGetValue(BFPassiveCoolDown.ID, out var cooldown))
             {
                 cooldown.timeLeft = displayFrames;
@@ -117,10 +130,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private bool CanTriggerFinalStand()
         {
-            return holdingBlossomFlux &&
-                   Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
+            return HoldingBlossomFluxNow &&
                    PassiveUnlocked &&
-                   PassiveCooldownTimer <= 0 &&
+                   PassiveReady &&
                    FinalStandTimer <= 0;
         }
 
@@ -131,9 +143,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             if (healAmount > 0)
                 Player.HealEffect(healAmount, true);
 
-            bool silvaHarp = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
             FinalStandTimer = FinalStandDurationFrames;
-            PassiveCooldownTimer = silvaHarp ? BFAccessoryPlayer.SilvaHarpPassiveCooldownFrames : PassiveCooldownFrames;
+            PassiveCooldownTimer = 0;
+            bool silvaHarp = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
             Player.immune = true;
             Player.immuneNoBlink = true;
             Player.immuneTime = System.Math.Max(Player.immuneTime, silvaHarp ? BFAccessoryPlayer.SilvaHarpFinalStandImmuneFrames : 45);

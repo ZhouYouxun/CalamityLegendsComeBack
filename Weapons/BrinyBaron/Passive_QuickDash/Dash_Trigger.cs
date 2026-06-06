@@ -59,7 +59,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         {
             return DashEnabled &&
                 activeDevice != BrinyBaronQuickDashDevice.None &&
-                Main.hardMode &&
                 Player.active &&
                 !Player.dead &&
                 Player.HeldItem != null &&
@@ -70,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         private bool IsDashingWithTrackedAccessory(BrinyBaronQuickDashDevice activeDevice)
         {
             return Player.dashDelay < 0 &&
-                Math.Abs(Player.velocity.X) > 4f &&
+                Player.velocity.Length() > 4f &&
                 activeDevice != BrinyBaronQuickDashDevice.None;
         }
 

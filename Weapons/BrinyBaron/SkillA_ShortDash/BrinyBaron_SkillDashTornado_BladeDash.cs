@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
 
-        private const int PrepareTime = 0;
+        private const int PrepareTime = 8;
         private const int DashTimeMax = 45;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
@@ -38,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool initialized;
         private bool hasBounced;
         private bool canceledCharge;
+        private bool tileContactTideGranted;
         private float oceanPhase;
         private float dashSpeedMultiplier;
         private float contactDamageMultiplier;
@@ -116,10 +117,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.Center = owner.MountedCenter + lockedDirection * 18f;
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
-            dashState = 1;
+            dashState = 0;
             stateTimer = 0;
             hasBounced = false;
             canceledCharge = false;
+            tileContactTideGranted = false;
             oceanPhase = 0f;
             dashShotTimer = 0;
             ShortDashProfile growthProfile = ResolveDashGrowthProfile();
@@ -138,19 +140,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             SpawnStartBurst();
             SpawnChargeReadyBurst();
-            StartDash(owner);
         }
 
         private void DoPreparePhase(Player owner)
         {
-            if (!IsChargeHeld(owner))
-            {
-                canceledCharge = true;
-                SpawnCanceledChargeBurst();
-                Projectile.Kill();
-                return;
-            }
-
             stateTimer++;
             Projectile.velocity = Vector2.Zero;
 
@@ -158,7 +151,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             lockedDirection = Vector2.Lerp(lockedDirection, aimDirection, 0.18f).SafeNormalize(aimDirection);
 
             float chargeProgress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
-            Projectile.Center = owner.MountedCenter + lockedDirection * MathHelper.Lerp(18f, ReadyBladeDistance, chargeProgress);
+            float eased = MathHelper.SmoothStep(0f, 1f, chargeProgress);
+            Projectile.Center = owner.MountedCenter + lockedDirection * MathHelper.Lerp(-16f, ReadyBladeDistance, eased);
+            Projectile.scale = MathHelper.Lerp(0.88f, 1.04f, eased);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             if (stateTimer % 2 == 0)
@@ -271,9 +266,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 return;
 
             target.AddBuff(BuffID.Frostburn, 180);
-            SpawnLightningBurst(target.Center, GetReliableDashDirection());
+            SpawnWaterPillarBurst(target.Center, GetReliableDashDirection());
 
             Player owner = Main.player[Projectile.owner];
+            if (Main.myPlayer == Projectile.owner)
+                owner.GetModPlayer<BBEXPlayer>().AddTide();
+
             if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
                 owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ClearCooldown();
 
@@ -378,6 +376,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             if (adjustedVelocity.X != desiredVelocity.X || adjustedVelocity.Y != desiredVelocity.Y)
             {
+                GrantTideFromTileContact(owner);
+
                 if (adjustedVelocity.LengthSquared() > 0.01f)
                     return adjustedVelocity;
 
@@ -394,6 +394,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }
 
             return adjustedVelocity;
+        }
+
+        private void GrantTideFromTileContact(Player owner)
+        {
+            if (tileContactTideGranted || Main.myPlayer != Projectile.owner)
+                return;
+
+            tileContactTideGranted = true;
+            owner.GetModPlayer<BBEXPlayer>().AddTide();
+            Projectile.netUpdate = true;
         }
 
         private void StartRebound(Vector2 impactCenter)
@@ -421,32 +431,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }, impactCenter);
         }
 
-        private void SpawnLightningBurst(Vector2 impactCenter, Vector2 dashDirection)
+        private void SpawnWaterPillarBurst(Vector2 impactCenter, Vector2 dashDirection)
         {
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().AddTide();
-
             Vector2 baseDirection = dashDirection.SafeNormalize(lockedDirection);
-            float boltSpeed = 6.5f;
-            int boltDamage = Math.Max(1, (int)(Projectile.damage * 0.45f));
+            Vector2 sideDirection = baseDirection.RotatedBy(MathHelper.PiOver2);
+            int pillarDamage = 0;
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 5; i++)
             {
-                float laneOffset = MathHelper.Lerp(-0.22f, 0.22f, i / 2f);
-                float randomOffset = Main.rand.NextFloat(-0.055f, 0.055f);
-                Vector2 boltVelocity = baseDirection.RotatedBy(laneOffset + randomOffset) * boltSpeed;
+                float laneOffset = i == 2 ? 0f : MathHelper.Lerp(-76f, 76f, i / 4f) + Main.rand.NextFloat(-12f, 12f);
+                Vector2 spawnPosition = impactCenter + sideDirection * laneOffset + baseDirection * Main.rand.NextFloat(-18f, 22f);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    impactCenter + baseDirection * 14f + baseDirection.RotatedBy(MathHelper.PiOver2) * laneOffset * 28f,
-                    boltVelocity,
-                    ModContent.ProjectileType<BBASD_Lighting>(),
-                    boltDamage,
+                    spawnPosition,
+                    -Vector2.UnitY * Main.rand.NextFloat(3.2f, 5.4f),
+                    ModContent.ProjectileType<BrinyBaron_DashWaterPillar>(),
+                    pillarDamage,
                     0f,
                     Projectile.owner,
-                    0.75f,
-                    1f);
+                    Main.rand.NextFloat(0.86f, 1.22f),
+                    i == 2 ? 1f : 0f);
             }
         }
 

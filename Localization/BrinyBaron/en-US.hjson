@@ -8,17 +8,18 @@ Mods: {
 					BB_Left:
 						'''
 						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Each stroke releases the next tide attack in order: a cutting wave, four spinning blades, then a waterspout.]
-						[c/4FAEFF:Each cutting wave feeds one tide charge back into the blade when it fades.]
-						[c/99CCFF:Close-range blade hits strike harder than the released tide.]
-						[c/DDA0FF:Landing the sword itself tears open a fresh water slash and plants a storming vortex at the wound.]
+						[c/7F8FA6:The combo loops A-B-A-B-C: a cutting wave, three spinning blades, another wave, three more blades, then a vortex caller.]
+						[c/99CCFF:The vortex caller releases a storm bubble on hit and scatters several random 50×50 water explosions around it.]
+						[c/4FAEFF:Each tide point grants 3% weapon damage; tide restores 1 point every 5 seconds, and direct blade hits restore 1 point.]
+						[c/99CCFF:Close-range blade hits only raise a Briny Baron-style storm bubble at the wound.]
+						[c/DDA0FF:Cutting waves slow down and release blue homing light orbs; shuriken enter homing mode only at full tide.]
 						[c/FFB347:Holding the attack keeps the rhythm cycling without changing swing size or tempo.]
 						'''
 					BB_Tide: "[c/4FAEFF:Current tide value: ]"
 					BB_Right:
 						'''
-						[c/66CCFF:Right Click: Dash forward when the sword is not already being swung.]
-						[c/4FAEFF:Crashing through an enemy tears open branching lightning and restores one tide charge.]
+						[c/66CCFF:Right Click: Spend 1 tide point to dash forward; the dash cannot start without tide.]
+						[c/4FAEFF:Dash hits and tile impacts restore 1 tide point and raise several upward water pillars.]
 						[c/7F8FA6:Hold Left Click, then hold Right Click to whirl the blade around you.]
 						[c/DDA0FF:The wheel gains speed while held; only at full speed does it scatter tidal blades around you.]
 						[c/FFB347:Low-speed whirling builds pressure, while the completed wheel controls nearby space.]
@@ -33,11 +34,11 @@ Mods: {
 					PassiveStateOn: "[c/7BFFB7:On]"
 					PassiveStateOff: "[c/F0D070:Off]"
 					PassiveDevice_None: "[c/7F8FA6:No shield dash device is being read.]"
-					PassiveDevice_OrnateShield: "[c/99CCFF:Ornate Shield is fitted; its shield rush releases side blades and a double tidal cut.]"
-					PassiveDevice_DeepDiver: "[c/99CCFF:Deep Diver is fitted; its surge releases side blades and a double tidal cut.]"
-					PassiveDevice_AsgardsValor: "[c/99CCFF:Asgard's Valor is fitted; its shield rush releases side blades and a double tidal cut.]"
-					PassiveDevice_ElysianAegis: "[c/99CCFF:Elysian Aegis is fitted; its shield rush releases side blades and a double tidal cut.]"
-					PassiveDevice_AsgardianAegis: "[c/99CCFF:Asgardian Aegis is fitted; its shield rush releases side blades and a double tidal cut.]"
+					PassiveDevice_OrnateShield: "[c/99CCFF:Ornate Shield is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
+					PassiveDevice_DeepDiver: "[c/99CCFF:Deep Diver is fitted; while surging, it releases one tidal blade to each velocity-side every 7 frames.]"
+					PassiveDevice_AsgardsValor: "[c/99CCFF:Asgard's Valor is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
+					PassiveDevice_ElysianAegis: "[c/99CCFF:Elysian Aegis is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
+					PassiveDevice_AsgardianAegis: "[c/99CCFF:Asgardian Aegis is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
 					Dash4_Unlock: "[c/66FFAA:Unlocked: Tidal Execution]"
 					Dash4_Lock: "[c/FFB347:Locked: Defeat Duke Fishron to unlock it.]"
 					BB_Final: "[c/9FD8A2:At full tide, press the Legendary Skill key to mark the prey, then confirm with Left Click and pass judgment until the surf finishes the execution.]"
@@ -63,12 +64,14 @@ Mods: {
 		Projectiles: {
 			BrinyBaron: {
 				BBSwing_Wave.DisplayName: Tidal Wave Slash
-				BBShuriken_Light.DisplayName: Tidal Shuriken Flash
+				BrinyBaron_HomingLightOrb.DisplayName: Tidal Homing Light Orb
 				BBSwing_INV.DisplayName: Giant Slash Hitbox
 				BBSwing_Slash.DisplayName: Tidal Slash
-				BBShuriken_Lazer.DisplayName: Waterblade Laser
 				BrinyBaron_LeftClick_Swing.DisplayName: Baron Combo Slash
 				BrinyBaron_RightClick_Shuriken.DisplayName: Baron Shuriken
+				BrinyBaron_TornadoBolt.DisplayName: Baron Vortex Caller
+				BrinyBaron_TornadoWaterExplosion.DisplayName: Baron Water Burst
+				BrinyBaron_DashWaterPillar.DisplayName: Baron Dash Water Pillar
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Shield-Surge Cleave

@@ -29,8 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const int ChargeFrames = 120;
         private const int ChargeSearchInterval = 6;
         private const int LockSearchInterval = 10;
-        private const int TeleportWindupFrames = 5;
-        private const int StrikeFrames = 8;
+        private const int TeleportWindupFrames = 1;
+        private const int StrikeFrames = 4;
         private const int FocusDashFrames = 18;
         private const int ImpactDriftFrames = 10;
         private const float ChargeHoldDistance = 22f;
@@ -236,7 +236,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             phase = SuperDashPhase.Charging;
             phaseTimer = 0;
             strikeIndex = 0;
-            totalStrikes = 5 + Math.Max(1, (int)Projectile.ai[0]) * 2;
+            totalStrikes = 20;
             targetNpcIndex = -1;
             targetSearchCooldown = 0;
             hadLockedTarget = false;
@@ -480,6 +480,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 currentCenter = Vector2.Lerp(strikeStart, strikeEnd, easedProgress);
             Vector2 dashVelocity = currentCenter - previousCenter;
 
+            if (phaseTimer == 1)
+                SpawnStrikeLightOrb(previousCenter, dashVelocity.SafeNormalize(lockedDirection));
+
             owner.Center = currentCenter;
             owner.velocity = dashVelocity;
             owner.immune = true;
@@ -636,10 +639,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             }, target.Center);
 
             impactDriftVelocity = Projectile.velocity * ImpactDriftSlowdownFactor;
-            phase = SuperDashPhase.ImpactDrifting;
-            phaseTimer = 0;
+            phaseTimer = Math.Min(phaseTimer, StrikeFrames - 1);
             Projectile.friendly = true;
             Projectile.netUpdate = true;
+        }
+
+        private void SpawnStrikeLightOrb(Vector2 startCenter, Vector2 strikeDirection)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            strikeDirection = strikeDirection.SafeNormalize(DefaultDirection);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                startCenter + strikeDirection * 40f,
+                strikeDirection.RotatedByRandom(0.12f) * Main.rand.NextFloat(8.5f, 12f),
+                ModContent.ProjectileType<BrinyBaron_HomingLightOrb>(),
+                Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                Projectile.knockBack * 0.35f,
+                Projectile.owner);
         }
 
         private void ApplyChargeShake(Player owner, float chargeCompletion)

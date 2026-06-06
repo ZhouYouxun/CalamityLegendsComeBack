@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityMod.CalPlayer.Dashes;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -18,77 +19,65 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
         AsgardianAegis
     }
 
-    internal abstract class BrinyBaronDashPassiveEffect
+    internal interface IBrinyBaronDashPassiveEffect
+    {
+        BrinyBaronQuickDashDevice Device { get; }
+        void OnDashStarted(Player player);
+        void UpdateWhileDashing(Player player, int dashTimer);
+    }
+
+    internal abstract class BrinyBaronDashPassiveEffect : IBrinyBaronDashPassiveEffect
     {
         private const int SideShurikenInterval = 7;
 
         public abstract BrinyBaronQuickDashDevice Device { get; }
 
-        public virtual void OnDashStarted(Player player)
+        public void OnDashStarted(Player player)
         {
-            SpawnSlashDash(player);
+            OnSpecialDashStarted(player);
         }
 
-        public virtual void UpdateWhileDashing(Player player, int dashTimer)
+        public void UpdateWhileDashing(Player player, int dashTimer)
         {
             SpawnDashSpray(player);
 
-            if (dashTimer % SideShurikenInterval == 1)
-                SpawnSideShuriken(player, dashTimer);
+            if (dashTimer % SideShurikenInterval == 0)
+                SpawnSideShurikenPair(player);
+
+            OnSpecialDashUpdate(player, dashTimer);
         }
 
-        private static void SpawnSlashDash(Player player)
+        protected virtual void OnSpecialDashStarted(Player player)
         {
-            if (Main.myPlayer != player.whoAmI || HasActiveSlashDash(player))
-                return;
-
-            int direction = Math.Sign(player.velocity.X);
-            if (direction == 0)
-                direction = player.direction == 0 ? 1 : player.direction;
-
-            int damage = Math.Max(1, (int)(player.GetWeaponDamage(player.HeldItem) * 0.95f));
-            Projectile.NewProjectile(
-                player.GetSource_FromThis(),
-                player.Center,
-                Vector2.UnitX * direction,
-                ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
-                damage,
-                player.GetWeaponKnockback(player.HeldItem),
-                player.whoAmI,
-                0f,
-                direction);
         }
 
-        private static bool HasActiveSlashDash(Player player)
+        protected virtual void OnSpecialDashUpdate(Player player, int dashTimer)
         {
-            int slashDashType = ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>();
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile projectile = Main.projectile[i];
-                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == slashDashType)
-                    return true;
-            }
-
-            return false;
         }
 
-        private static void SpawnSideShuriken(Player player, int dashTimer)
+        private static void SpawnSideShurikenPair(Player player)
         {
             if (Main.myPlayer != player.whoAmI)
                 return;
 
             Vector2 forward = player.velocity.SafeNormalize(Vector2.UnitX * player.direction);
-            int sideSign = dashTimer % (SideShurikenInterval * 2) < SideShurikenInterval ? 1 : -1;
-            Vector2 side = forward.RotatedBy(MathHelper.PiOver2 * sideSign);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             int damage = Math.Max(1, (int)(player.GetWeaponDamage(player.HeldItem) * 0.36f));
+            float knockback = player.GetWeaponKnockback(player.HeldItem) * 0.35f;
 
+            SpawnOneSideShuriken(player, side, damage, knockback);
+            SpawnOneSideShuriken(player, -side, damage, knockback);
+        }
+
+        private static void SpawnOneSideShuriken(Player player, Vector2 side, int damage, float knockback)
+        {
             Projectile.NewProjectile(
                 player.GetSource_FromThis(),
-                player.Center + side * 30f - forward * 10f,
-                side * Main.rand.NextFloat(9f, 12f) + forward * Main.rand.NextFloat(2f, 4f),
+                player.Center + side * 32f,
+                side * 12.5f,
                 ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
                 damage,
-                player.GetWeaponKnockback(player.HeldItem) * 0.35f,
+                knockback,
                 player.whoAmI);
         }
 
@@ -107,6 +96,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
                 Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan,
                 Main.rand.NextFloat(0.9f, 1.35f));
             dust.noGravity = true;
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new GenericBubbleParticle(
+                    player.Center - forward * Main.rand.NextFloat(18f, 48f) + Main.rand.NextVector2Circular(12f, 14f),
+                    -forward * Main.rand.NextFloat(0.5f, 1.4f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
+                    Main.rand.NextFloat(0.72f, 1.15f),
+                    Main.rand.NextFloat(MathHelper.TwoPi),
+                    Main.rand.Next(28, 48)));
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
+                    player.Center - forward * Main.rand.NextFloat(14f, 38f) + Main.rand.NextVector2Circular(10f, 12f),
+                    velocity * Main.rand.NextFloat(0.35f, 0.72f),
+                    Main.rand.Next(20, 34),
+                    Main.rand.NextFloat(0.62f, 0.98f),
+                    Color.Lerp(new Color(145, 225, 255), Color.White, Main.rand.NextFloat(0.18f, 0.48f))));
+            }
         }
     }
 

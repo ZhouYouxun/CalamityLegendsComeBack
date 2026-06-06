@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         private bool trackingRightPress;
         private ulong lastProcessedFrame;
 
-        public BlossomFluxChloroplastPresetType CurrentPreset { get; private set; } = BlossomFluxChloroplastPresetType.Chlo_ABreak;
+        public BlossomFluxChloroplastPresetType CurrentPreset { get; private set; } = BlossomFluxChloroplastPresetType.Chlo_BRecov;
         public int ReconPriorityTargetIndex { get; private set; } = -1;
         public int ReconPriorityTimeLeft { get; private set; }
         public bool PassiveRainEnabled { get; private set; } = true;
@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
         public override void UpdateDead()
         {
-            CurrentPreset = BlossomFluxChloroplastPresetType.Chlo_ABreak;
+            CurrentPreset = BlossomFluxChloroplastPresetType.Chlo_BRecov;
             ClearReconPriorityTarget();
             ResetRightClickState();
         }
@@ -162,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             return preset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => true,
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee),
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => true,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh),
                 BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss),
                 BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath),
@@ -223,7 +223,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             if (IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_BRecov))
                 return BlossomFluxChloroplastPresetType.Chlo_BRecov;
 
-            return BlossomFluxChloroplastPresetType.Chlo_ABreak;
+            return BlossomFluxChloroplastPresetType.Chlo_BRecov;
         }
     }
 }

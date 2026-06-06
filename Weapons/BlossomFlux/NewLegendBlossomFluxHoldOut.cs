@@ -1957,7 +1957,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D weaponTexture = TextureAssets.Projectile[Type].Value;
+            Texture2D weaponTexture = BlossomFluxTacticalTextures.GetWeaponTexture(CurrentPreset);
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = weaponTexture.Size() * 0.5f;
             float rotation = Projectile.rotation;
@@ -1969,16 +1971,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float rightOutlinePulse = rightOutlinePulseTimer / (float)RightOutlinePulseFrames;
             float leftBuildGlow = GetLeftAttackBuildGlow();
             float tacticalOutlinePulse = Math.Max(Math.Max(leftOutlinePulse * 0.28f, rightOutlinePulse * 0.78f), leftBuildGlow);
-            bool rightPulseDominates = rightOutlinePulse * 0.78f > leftBuildGlow;
-            float glowStrength = 0.32f + outlinePulse * 0.1f + chargeGlow * 0.62f + leftBuildGlow * 0.42f;
-            float glowRadius = MathHelper.Lerp(1.75f, 5.7f, chargeGlow) + outlinePulse * 0.24f + leftBuildGlow * 2.6f;
-            int glowDraws = 12 + (int)(chargeGlow * 8f);
-            glowStrength += tacticalOutlinePulse * (rightPulseDominates ? 0.54f : 0.24f);
-            glowRadius += tacticalOutlinePulse * (rightPulseDominates ? 4.4f : 1.8f);
-            glowDraws += (int)(tacticalOutlinePulse * (rightPulseDominates ? 10f : 5f));
-            Color outerGlowColor = (Color.Lerp(PresetColor, Color.White, 0.48f) with { A = 0 }) * glowStrength;
-            Color innerGlowColor = (Color.Lerp(AccentColor, Color.White, 0.68f) with { A = 0 }) * (0.72f + chargeGlow * 0.64f);
-            Color coreGlowColor = (Color.Lerp(Color.White, PresetColor, 0.28f) with { A = 0 }) * (0.46f + chargeGlow * 0.54f);
 
             if (Owner.gravDir == 1f)
             {
@@ -1995,79 +1987,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
+                BlendState.Additive,
                 SamplerState.PointClamp,
                 DepthStencilState.None,
                 Main.Rasterizer,
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
 
-            if (tacticalOutlinePulse > 0f)
-            {
-                Color tacticalColor = Color.Lerp(PresetColor, AccentColor, rightPulseDominates ? 0.45f : 0.22f);
-                HoldoutOutlineHelper.DrawSolidOutline(
-                    weaponTexture,
-                    drawPosition,
-                    rotation,
-                    origin,
-                    Vector2.One * Projectile.scale * (1f + tacticalOutlinePulse * (rightPulseDominates ? 0.04f : 0.015f)),
-                    effects,
-                    tacticalColor,
-                    glowRadius + tacticalOutlinePulse * (rightPulseDominates ? 2.4f : 0.8f),
-                    MathHelper.Clamp(0.1f + tacticalOutlinePulse * (rightPulseDominates ? 0.58f : 0.24f), 0f, 0.82f),
-                    time + Projectile.identity * 0.2f,
-                    14 + (int)(tacticalOutlinePulse * (rightPulseDominates ? 8f : 4f)),
-                    manageBlendState: false);
-            }
-
-            for (int i = 0; i < glowDraws; i++)
-            {
-                float completion = i / (float)glowDraws;
-                float angle = MathHelper.TwoPi * completion + time * (1.7f + chargeGlow * 1.4f);
-                float wave = 0.85f + 0.15f * (float)Math.Sin(time * 8f + i * 0.71f);
-                Vector2 offset = angle.ToRotationVector2() * glowRadius * wave;
-                Color ringColor = Color.Lerp(outerGlowColor, innerGlowColor, completion) * (0.72f - completion * 0.18f);
-                Main.EntitySpriteDraw(
-                    weaponTexture,
-                    drawPosition + offset,
-                    null,
-                    ringColor,
-                    rotation,
-                    origin,
-                    Projectile.scale * (1.02f + chargeGlow * 0.08f),
-                    effects,
-                    0);
-            }
-
-            int innerDraws = 10;
-            for (int i = 0; i < innerDraws; i++)
-            {
-                float angle = MathHelper.TwoPi * i / innerDraws - time * 2.3f;
-                Vector2 offset = angle.ToRotationVector2() * (1.15f + outlinePulse * 0.55f + chargeGlow * 1.2f);
-                Main.EntitySpriteDraw(
-                    weaponTexture,
-                    drawPosition + offset,
-                    null,
-                    innerGlowColor * (0.58f + chargeGlow * 0.28f),
-                    rotation,
-                    origin,
-                    Projectile.scale * (1.01f + chargeGlow * 0.05f),
-                    effects,
-                    0);
-            }
-
-            Main.EntitySpriteDraw(
-                weaponTexture,
-                drawPosition,
-                null,
-                coreGlowColor,
-                rotation,
-                origin,
-                Projectile.scale * (1.07f + 0.08f * outlinePulse + chargeGlow * 0.12f),
-                effects,
-                0);
-
             BFChargeArrowVisuals.DrawHoldoutChargeBloom(Projectile, CurrentPreset, GunTipPosition, AimDirection, chargeGlow);
+            DrawTacticalWeaponStarbursts(starTexture, lineTexture, drawPosition, rotation, tacticalOutlinePulse, leftBuildGlow, chargeGlow);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -2111,6 +2039,67 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             BFChargeArrowVisuals.DrawSpecialChargeArrow(Projectile, arrowTexture, CurrentPreset, AimDirection, ChargeCompletion, readyBurstPlayed);
             return false;
+        }
+
+        private void DrawTacticalWeaponStarbursts(Texture2D starTexture, Texture2D lineTexture, Vector2 drawPosition, float rotation, float tacticalPulse, float leftBuildGlow, float chargeGlow)
+        {
+            float activity = MathHelper.Clamp(leftBuildGlow * 0.88f + tacticalPulse * 0.72f + chargeGlow * 0.95f, 0f, 1f);
+            if (activity <= 0.04f)
+                return;
+
+            Vector2 forward = rotation.ToRotationVector2();
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
+            Color mainColor = Color.Lerp(PresetColor, Color.White, 0.22f);
+            Color accentColor = Color.Lerp(AccentColor, Color.White, 0.42f);
+            float time = Main.GlobalTimeWrappedHourly;
+            float flowSpeed = rightChargeActive ? 0.82f : 1.35f;
+            int sparkCount = 3 + (int)(activity * 5f);
+
+            for (int i = 0; i < sparkCount; i++)
+            {
+                float phase = (time * flowSpeed + Projectile.identity * 0.071f + i * 0.217f) % 1f;
+                float centerFade = (float)Math.Sin(phase * MathHelper.Pi);
+                float flicker = 0.72f + 0.28f * (float)Math.Sin(time * 15f + i * 1.93f + Projectile.identity * 0.31f);
+                float longitudinal = MathHelper.Lerp(-30f, 36f, phase);
+                float sideOffset = (float)Math.Sin(time * 5.4f + i * 2.17f) * MathHelper.Lerp(2.5f, 7.5f, activity);
+                Vector2 starCenter = drawPosition + forward * longitudinal + normal * sideOffset;
+                Color sparkColor = Color.Lerp(mainColor, accentColor, phase) * (activity * centerFade * flicker);
+                float starRotation = rotation + phase * MathHelper.PiOver2 + i * MathHelper.PiOver4;
+                float starScale = MathHelper.Lerp(0.64f, 1.12f, activity) * (0.82f + 0.18f * centerFade);
+
+                Main.EntitySpriteDraw(
+                    lineTexture,
+                    starCenter - forward * MathHelper.Lerp(4f, 10f, activity),
+                    null,
+                    sparkColor * 0.42f,
+                    rotation,
+                    lineTexture.Size() * 0.5f,
+                    new Vector2(0.16f + activity * 0.09f, 0.024f + centerFade * 0.012f),
+                    SpriteEffects.None,
+                    0);
+
+                Main.EntitySpriteDraw(
+                    starTexture,
+                    starCenter,
+                    null,
+                    Color.Lerp(sparkColor, Color.White, 0.22f),
+                    starRotation,
+                    starTexture.Size() * 0.5f,
+                    new Vector2(0.12f, 0.34f) * starScale,
+                    SpriteEffects.None,
+                    0);
+
+                Main.EntitySpriteDraw(
+                    starTexture,
+                    starCenter,
+                    null,
+                    sparkColor * 0.64f,
+                    starRotation + MathHelper.PiOver2,
+                    starTexture.Size() * 0.5f,
+                    new Vector2(0.08f, 0.22f) * starScale,
+                    SpriteEffects.None,
+                    0);
+            }
         }
 
     }

@@ -267,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void TryTrackTacticalReticle()
         {
-            if (Projectile.numUpdates != 0 || (int)Main.GameUpdateCount % 2 != 0)
+            if (Projectile.numUpdates != 0)
                 return;
 
             Player owner = Main.player[Projectile.owner];
@@ -281,10 +281,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             float speed = Projectile.velocity.Length();
+            float maxTurn = MathHelper.ToRadians(tacticalPlayer.ReticleHasTarget ? 1.35f : 1.05f);
             Projectile.velocity = currentDirection.ToRotation()
-                .AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(1f))
+                .AngleTowards(desiredDirection.ToRotation(), maxTurn)
                 .ToRotationVector2() * speed;
-            Projectile.netUpdate = true;
+
+            if ((int)Main.GameUpdateCount % 4 == 0)
+                Projectile.netUpdate = true;
         }
 
         private void SpawnHelixFlightEffects()

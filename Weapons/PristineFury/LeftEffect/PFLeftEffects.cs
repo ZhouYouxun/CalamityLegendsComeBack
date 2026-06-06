@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             switch (mark)
             {
                 case PristineFuryMark.EvilT2:
-                    PFGoliathEffect.Update(holdout, held, justPressed, justReleased);
+                    PFEvilT2Effect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.SlimeGod:
                     PFSlimeGodEffect.Update(holdout, held, justPressed, justReleased);
