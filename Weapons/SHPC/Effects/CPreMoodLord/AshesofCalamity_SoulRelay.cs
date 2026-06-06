@@ -39,8 +39,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void SetDefaults()
         {
-            Projectile.width = 20;
-            Projectile.height = 20;
+            Projectile.width = 32;
+            Projectile.height = 32;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.timeLeft = WarmupFrames + ShotCount * FireInterval + 18;
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             }
 
             Vector2 spawnPosition = Projectile.Center + forward * 18f + normal * (float)Math.Sin(shotIndex * 2.41f) * 18f;
-            int damage = Math.Max(1, (int)(Projectile.damage * 0.72f));
+            int damage = Math.Max(1, (int)(Projectile.damage * 0.86f));
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -208,8 +208,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void SetDefaults()
         {
-            Projectile.width = 22;
-            Projectile.height = 22;
+            Projectile.width = 32;
+            Projectile.height = 32;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;

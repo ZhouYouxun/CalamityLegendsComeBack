@@ -32,8 +32,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             36, // 42Skeletron / 骷髅王
             40, // 54Hardmode / 困难模式
             45, // 72Any Mechanical Boss / 任意机械 Boss
-            48, // 90Plantera / 世纪之花
-            52, // 120Golem / 石巨人
+            50, // 90Plantera / 世纪之花
+            54, // 120Golem / 石巨人
             56, // 180Moon Lord / 月亮领主
             60, // 240Providence / 亵渎天神
             77, // 300Polterghast / 噬魂幽花
@@ -73,10 +73,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.84f, // EffectID 6: Essence of Eleum / 冰精华
             1.03f, // EffectID 7: Essence of Sunlight / 日光精华
             1.33f, // EffectID 8: Titan Heart / 泰坦之心
-            0.84f, // EffectID 9: Soul of Light / 光明之魂
+            0.80f, // EffectID 9: Soul of Light / 光明之魂
             0.78f, // EffectID 10: Soul of Night / 暗影之魂
             0.90f, // EffectID 11: Soul of Flight / 飞翔之魂
-            0.95f, // EffectID 12: Soul of Fright / 恐惧之魂
+            0.97f, // EffectID 12: Soul of Fright / 恐惧之魂
             1.08f, // EffectID 13: Soul of Might / 力量之魂
             0.80f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片

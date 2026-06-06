@@ -46,12 +46,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.friendly = true;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.timeLeft = 480;
+            Projectile.timeLeft = 360;
             Projectile.penetrate = 3;
             Projectile.extraUpdates = 2;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 30;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -127,6 +127,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.penetrate = -1;
             Projectile.extraUpdates = 0;
             Projectile.netUpdate = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 20;
         }
 
         private void UpdateStuckState()

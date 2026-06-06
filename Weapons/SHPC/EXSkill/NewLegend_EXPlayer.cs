@@ -11,9 +11,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private bool wasEXReady;
 
 // 两分钟攒满：2 × 60 × 60 = 7200帧
-        public const int BaseEXMax = 7200;
-        public const int EXDisplayMax = 60;
-        private const int PassiveChargeTime = 60;
+        public const int BaseEXMax = 9600;
+        public const int EXDisplayMax = 80;
+        private const int PassiveChargeTime = 80;
 
         // 是否已满
         public bool EXFull => EXValue >= GetCurrentEXMax(Player);

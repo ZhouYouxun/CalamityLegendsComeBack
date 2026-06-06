@@ -50,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.height = 38;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
             Projectile.extraUpdates = 4;
@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                Math.Max(1, (int)(Projectile.damage * 0.88f)),
+                Math.Max(1, (int)(Projectile.damage * 1.23f)),
                 Projectile.knockBack,
                 Projectile.owner);
             if (Main.projectile.IndexInRange(explosion))
@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Projectile.Center + direction * 20f,
                     direction * 11.5f,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.62f)),
+                    Math.Max(1, (int)(Projectile.damage * 1.00f)),
                     Projectile.knockBack * 0.72f,
                     Projectile.owner,
                     i);
@@ -467,7 +467,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 Projectile.localAI[1] = Main.rand.NextFloat(30f, 900f);
 
             // 固定左转始终存在；开始追踪后，再在此基础上向最近敌人转向。
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), 14.5f, 0.045f);
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), 17.5f, 0.045f);
             float updateScale = 1f / (Projectile.extraUpdates + 1f);
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(LeftTurnPerUpdate * updateScale);
             if (Timer >= HomingDelay)

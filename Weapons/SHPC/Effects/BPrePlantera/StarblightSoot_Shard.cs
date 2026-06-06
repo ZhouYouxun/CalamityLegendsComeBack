@@ -40,12 +40,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 5;
+            Projectile.penetrate = 3;
             Projectile.timeLeft = 140;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 12;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnSpawn(IEntitySource source)

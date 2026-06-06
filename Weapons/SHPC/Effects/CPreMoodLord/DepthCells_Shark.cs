@@ -90,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<DepthCells_SharkExplosion>(),
-                Math.Max(1, (int)(Projectile.damage * 0.78f)),
+                Math.Max(1, (int)(Projectile.damage * 1f)),
                 Projectile.knockBack,
                 Projectile.owner);
 
@@ -106,7 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     Projectile.Center + Main.rand.NextVector2Circular(12f, 7f),
                     dropVelocity,
                     ModContent.ProjectileType<DepthCells_Drop>(),
-                    Projectile.damage,
+                    (int)(Projectile.damage * 0.8f),
                     Projectile.knockBack,
                     Projectile.owner);
             }
