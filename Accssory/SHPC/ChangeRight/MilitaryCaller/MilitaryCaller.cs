@@ -1,4 +1,5 @@
-﻿using CalamityMod.Items.Materials;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight;
+using CalamityMod.Items.Materials;
 using CalamityMod.Items.Weapons.DraedonsArsenal;
 using Terraria;
 using Terraria.ID;
@@ -22,6 +23,12 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped = true;
+        }
+
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+        {
+            return SHPCChangeRightAccessoryRules.CanEquipWith(equippedItem, incomingItem) &&
+                   base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
         }
 
         public override void AddRecipes()
