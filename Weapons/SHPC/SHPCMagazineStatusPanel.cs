@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using CalamityLegendsComeBack.Systems;
-using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -13,14 +12,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 {
     internal sealed class SHPCMagazineStatusPanel : ModProjectile, IScreenOverlayProjectile
     {
-        private const int SlotWidth = 44;
-        private const int SlotHeight = 38;
-        private const int SlotGap = 4;
-        private const int PanelPadding = 5;
-        private const int FeedLipHeight = 7;
-        private const int PanelRightOffset = 76;
+        // 和青霆剑地剑矩阵保持相近占地：整体约 24x55~70 像素，只做轻量弹夹状态提示。
+        private const int MagazineWidth = 24;
+        private const int MagazinePadding = 5;
+        private const int FeedLipHeight = 5;
+        private const int BulletWidth = 12;
+        private const int BulletHeight = 5;
+        private const int BulletGap = 3;
+        private const int CenterLeftOffset = 92;
         private const int ScreenMargin = 12;
-        private const float MaxIconDrawSize = 24f;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -76,34 +76,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (owner.HeldItem?.ModItem is not NewLegendSHPC weapon)
                 return false;
 
-            int slotCount = weapon.GetActiveMagazineCount(owner);
-            if (slotCount <= 0)
+            int bulletCount = weapon.GetActiveMagazineCount(owner);
+            if (bulletCount <= 0)
                 return false;
 
-            int columns = slotCount > 4 ? 2 : 1;
-            int rows = (slotCount + columns - 1) / columns;
-            int panelWidth = PanelPadding * 2 + columns * SlotWidth + (columns - 1) * SlotGap;
-            int panelHeight = PanelPadding * 2 + FeedLipHeight + rows * SlotHeight + (rows - 1) * SlotGap;
-            Rectangle panelArea = GetPanelArea(owner, panelWidth, panelHeight);
+            int panelHeight = MagazinePadding * 2 + FeedLipHeight + bulletCount * BulletHeight + Math.Max(0, bulletCount - 1) * BulletGap;
+            Rectangle panelArea = GetPanelArea(owner, MagazineWidth, panelHeight);
             float opacity = Projectile.Opacity;
 
             NewLegendSHPC.SHPCMagazineSlot selectedSlot = weapon.GetMagazineSlot(weapon.CurrentMagazineIndex, owner);
-            Color themeColor = selectedSlot.HasAmmo ? SHPCAmmoSelectionPanel.GetEffectColor(selectedSlot.EffectID) : new Color(112, 154, 190);
+            Color themeColor = GetSlotThemeColor(selectedSlot);
 
             DrawMagazineBody(panelArea, themeColor, opacity);
 
-            for (int i = 0; i < slotCount; i++)
+            int firstBulletY = panelArea.Y + MagazinePadding + FeedLipHeight;
+            for (int i = 0; i < bulletCount; i++)
             {
                 NewLegendSHPC.SHPCMagazineSlot slot = weapon.GetMagazineSlot(i, owner);
-                int row = i / columns;
-                int column = i % columns;
-                Rectangle slotArea = new(
-                    panelArea.X + PanelPadding + column * (SlotWidth + SlotGap),
-                    panelArea.Y + PanelPadding + FeedLipHeight + row * (SlotHeight + SlotGap),
-                    SlotWidth,
-                    SlotHeight);
+                Rectangle bulletArea = new(
+                    panelArea.X + (panelArea.Width - BulletWidth) / 2,
+                    firstBulletY + i * (BulletHeight + BulletGap),
+                    BulletWidth,
+                    BulletHeight);
 
-                DrawMagazineSlot(slot, owner, slotArea, opacity);
+                DrawBullet(slot, bulletArea, opacity);
             }
 
             return false;
@@ -111,9 +107,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static Rectangle GetPanelArea(Player owner, int panelWidth, int panelHeight)
         {
-            Vector2 ownerScreen = owner.Center - Main.screenPosition + new Vector2(0f, owner.gfxOffY - 8f);
-            int x = (int)(ownerScreen.X - PanelRightOffset - panelWidth);
-            int y = (int)(ownerScreen.Y - panelHeight * 0.5f);
+            Vector2 panelCenter = owner.Center - Main.screenPosition + new Vector2(-CenterLeftOffset, owner.gfxOffY - 8f);
+            int x = (int)(panelCenter.X - panelWidth * 0.5f);
+            int y = (int)(panelCenter.Y - panelHeight * 0.5f);
 
             x = Utils.Clamp(x, ScreenMargin, Main.screenWidth - panelWidth - ScreenMargin);
             y = Utils.Clamp(y, ScreenMargin, Main.screenHeight - panelHeight - ScreenMargin);
@@ -122,112 +118,50 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static void DrawMagazineBody(Rectangle area, Color themeColor, float opacity)
         {
-            Color body = Color.Lerp(new Color(9, 11, 16), themeColor, 0.08f);
-            Color edge = Color.Lerp(new Color(74, 86, 104), themeColor, 0.36f);
-            Color lip = Color.Lerp(new Color(38, 45, 56), themeColor, 0.24f);
+            Color body = Color.Lerp(new Color(8, 12, 18), themeColor, 0.08f);
+            Color edge = Color.Lerp(new Color(68, 84, 104), themeColor, 0.35f);
+            Color lip = Color.Lerp(new Color(36, 45, 56), themeColor, 0.22f);
 
-            DrawRectangle(area, body * (0.82f * opacity));
+            DrawRectangle(area, body * (0.78f * opacity));
             DrawBorder(area, edge * (0.82f * opacity), 1);
-            DrawBorder(new Rectangle(area.X + 2, area.Y + 2, area.Width - 4, area.Height - 4), Color.Black * (0.32f * opacity), 1);
+            DrawBorder(new Rectangle(area.X + 2, area.Y + 2, area.Width - 4, area.Height - 4), Color.Black * (0.28f * opacity), 1);
 
-            Rectangle feedLip = new(area.X + 8, area.Y + 3, area.Width - 16, 3);
-            DrawRectangle(feedLip, lip * (0.8f * opacity));
-            DrawRectangle(new Rectangle(area.X + 5, area.Bottom - 3, area.Width - 10, 2), edge * (0.48f * opacity));
+            DrawRectangle(new Rectangle(area.X + 7, area.Y + 3, area.Width - 14, 2), lip * (0.84f * opacity));
+            DrawRectangle(new Rectangle(area.X + 5, area.Bottom - 3, area.Width - 10, 2), edge * (0.45f * opacity));
         }
 
-        private static void DrawMagazineSlot(NewLegendSHPC.SHPCMagazineSlot slot, Player owner, Rectangle slotArea, float opacity)
+        private static void DrawBullet(NewLegendSHPC.SHPCMagazineSlot slot, Rectangle area, float opacity)
         {
-            Color effectColor = slot.HasAmmo ? SHPCAmmoSelectionPanel.GetEffectColor(slot.EffectID) : new Color(82, 88, 102);
-            Color back = Color.Lerp(new Color(18, 21, 28), effectColor, slot.HasAmmo ? 0.16f : 0.04f);
-            Color border = Color.Lerp(new Color(88, 102, 124), effectColor, slot.HasAmmo ? 0.44f : 0.12f);
-            float selectedPulse = slot.Selected ? 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.5f) : 0f;
+            Color themeColor = GetSlotThemeColor(slot);
+            Color emptyFill = new(30, 36, 46, 210);
+            Color emptyEdge = new(74, 88, 108, 170);
+            Color fill = slot.HasAmmo ? Color.Lerp(themeColor, Color.White, 0.08f) : emptyFill;
+            Color edge = slot.HasAmmo ? Color.Lerp(themeColor, Color.White, 0.24f) : emptyEdge;
 
+            float selectedPulse = slot.Selected ? 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f) : 0f;
             if (slot.Selected)
             {
-                back = Color.Lerp(back, effectColor, 0.16f + selectedPulse * 0.06f);
-                border = Color.Lerp(border, Color.White, 0.28f + selectedPulse * 0.18f);
-                DrawRectangle(new Rectangle(slotArea.X - 3, slotArea.Y + 5, 2, slotArea.Height - 10), effectColor * (0.88f * opacity));
+                Rectangle glowArea = new(area.X - 3, area.Y - 2, area.Width + 6, area.Height + 4);
+                DrawBorder(glowArea, Color.Lerp(themeColor, Color.White, 0.35f + selectedPulse * 0.25f) * (0.66f * opacity), 1);
+                DrawRectangle(new Rectangle(area.X - 5, area.Y + 1, 2, area.Height - 2), themeColor * (0.85f * opacity));
             }
 
-            DrawRectangle(slotArea, back * (0.9f * opacity));
-            DrawBorder(slotArea, border * opacity, slot.Selected ? 2 : 1);
+            Rectangle casing = new(area.X, area.Y, area.Width - 3, area.Height);
+            Rectangle nose = new(area.Right - 3, area.Y + 1, 2, area.Height - 2);
+            Rectangle tip = new(area.Right - 1, area.Y + 2, 1, Math.Max(1, area.Height - 4));
 
-            Rectangle innerArea = new(slotArea.X + 5, slotArea.Y + 5, slotArea.Width - 10, slotArea.Height - 12);
-            DrawRectangle(innerArea, Color.Lerp(new Color(6, 8, 12), effectColor, 0.08f) * (0.82f * opacity));
-            DrawBorder(innerArea, border * (0.42f * opacity), 1);
+            DrawRectangle(casing, fill * (0.86f * opacity));
+            DrawRectangle(nose, Color.Lerp(fill, Color.White, slot.HasAmmo ? 0.18f : 0.05f) * (0.82f * opacity));
+            DrawRectangle(tip, edge * (0.8f * opacity));
+            DrawBorder(area, edge * (0.42f * opacity), 1);
+        }
 
+        private static Color GetSlotThemeColor(NewLegendSHPC.SHPCMagazineSlot slot)
+        {
             if (!slot.HasAmmo)
-            {
-                DrawCenteredText((slot.Index + 1).ToString(), innerArea, Color.Gray * opacity, 0.58f);
-                return;
-            }
+                return new Color(82, 92, 108);
 
-            Texture2D texture = SHPCAmmoSelectionPanel.TryGetAmmoTexture(slot.EffectID, slot.AmmoType);
-            if (texture != null)
-            {
-                Rectangle source = SHPCAmmoSelectionPanel.GetCurrentFrame(texture, SHPCAmmoSelectionPanel.GetFrameCount(slot.EffectID));
-                Vector2 sourceSize = source.Size();
-                float fitScale = Math.Min(MaxIconDrawSize / Math.Max(1f, sourceSize.X), MaxIconDrawSize / Math.Max(1f, sourceSize.Y));
-                float selectedScale = slot.Selected ? 1.07f + selectedPulse * 0.03f : 1f;
-                Vector2 iconCenter = innerArea.Center.ToVector2() - new Vector2(0f, 1f);
-
-                Main.EntitySpriteDraw(
-                    texture,
-                    iconCenter,
-                    source,
-                    Color.Lerp(Color.White, effectColor, 0.1f) * opacity,
-                    slot.Selected ? 0.02f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 9f) : 0f,
-                    sourceSize * 0.5f,
-                    fitScale * selectedScale,
-                    SpriteEffects.None,
-                    0f);
-            }
-
-            DrawAmmoBar(slot, owner, slotArea, effectColor, opacity);
-            DrawPowerText(slot.Power.ToString(), slotArea, opacity);
-        }
-
-        private static void DrawAmmoBar(NewLegendSHPC.SHPCMagazineSlot slot, Player owner, Rectangle slotArea, Color effectColor, float opacity)
-        {
-            int capacity = NewLegendSHPC.GetAdjustedAmmoCapacity(owner, slot.EffectID);
-            float fillRatio = capacity <= 0 ? 0f : MathHelper.Clamp(slot.Power / (float)capacity, 0f, 1f);
-            Rectangle barBack = new(slotArea.X + 5, slotArea.Bottom - 6, slotArea.Width - 10, 3);
-            Rectangle barFill = new(barBack.X, barBack.Y, (int)(barBack.Width * fillRatio), barBack.Height);
-
-            DrawRectangle(barBack, Color.Black * (0.5f * opacity));
-            if (barFill.Width > 0)
-                DrawRectangle(barFill, effectColor * (0.86f * opacity));
-        }
-
-        private static void DrawPowerText(string text, Rectangle slotArea, float opacity)
-        {
-            float scale = text.Length >= 3 ? 0.38f : 0.44f;
-            Vector2 textSize = FontAssets.MouseText.Value.MeasureString(text) * scale;
-            Vector2 position = new(slotArea.Right - textSize.X - 4f, slotArea.Bottom - textSize.Y - 5f);
-
-            CalamityUtils.DrawBorderStringEightWay(
-                Main.spriteBatch,
-                FontAssets.MouseText.Value,
-                text,
-                position,
-                Color.White * opacity,
-                Color.Black * opacity,
-                scale);
-        }
-
-        private static void DrawCenteredText(string text, Rectangle area, Color color, float scale)
-        {
-            Vector2 size = FontAssets.MouseText.Value.MeasureString(text) * scale;
-            Vector2 position = area.Center.ToVector2() - size * 0.5f;
-
-            CalamityUtils.DrawBorderStringEightWay(
-                Main.spriteBatch,
-                FontAssets.MouseText.Value,
-                text,
-                position,
-                color,
-                Color.Black * (color.A / 255f),
-                scale);
+            return SHPCAmmoSelectionPanel.GetEffectColor(slot.EffectID);
         }
 
         private static void DrawRectangle(Rectangle rectangle, Color color)
