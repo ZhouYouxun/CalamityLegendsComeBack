@@ -52,8 +52,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             45, // 17Hardmode / 困难模式
             54, // 24Any Mechanical Boss / 任意机械 Boss
             64, // 32Plantera / 世纪之花
-            80, // 40Golem / 石巨人
-            105, // 54Moon Lord / 月亮领主
+            75, // 40Golem / 石巨人
+            100, // 54Moon Lord / 月亮领主
             130, // 66Providence / 亵渎天神
             160, // 77Polterghast / 噬魂幽花
             210, // 90Devourer of Gods / 神明吞噬者
@@ -76,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.80f, // EffectID 9: Soul of Light / 光明之魂
             0.78f, // EffectID 10: Soul of Night / 暗影之魂
             0.90f, // EffectID 11: Soul of Flight / 飞翔之魂
-            0.97f, // EffectID 12: Soul of Fright / 恐惧之魂
+            0.91f, // EffectID 12: Soul of Fright / 恐惧之魂
             1.08f, // EffectID 13: Soul of Might / 力量之魂
             0.80f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片
@@ -85,11 +85,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.44f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
             1.13f, // EffectID 19: Ashes of Calamity / 灾厄尘
             0f, // EffectID 20: Beetle Husk / 甲虫外壳，未实现
-            1.66f, // EffectID 21: Solar Fragment / 日曜碎片
+            1.72f, // EffectID 21: Solar Fragment / 日曜碎片
             1.77f, // EffectID 22: Vortex Fragment / 星旋碎片
             1.50f, // EffectID 23: Nebula Fragment / 星云碎片
             1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
-            1.9f, // EffectID 25: Meld Blob / 冥思溶剂
+            1.94f, // EffectID 25: Meld Blob / 冥思溶剂
             2.25f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
             2.29f, // EffectID 28: Divine Geode / 神圣晶石
@@ -108,7 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.52f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
             0f, // EffectID 43: Cynosure / 保持使用阶段默认倍率
-            1.44f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
+            1.53f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };
 
         public const int OverheatGraceTime = 60;

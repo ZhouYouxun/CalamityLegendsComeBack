@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         private int stateTimer = 0;
 
         public const int MaxActiveCells = 18;
-        private const int GrowTime = 105;
+        private const int GrowTime = 90;
         private const int MaxSplitDepth = 5;
 
         private int frame;

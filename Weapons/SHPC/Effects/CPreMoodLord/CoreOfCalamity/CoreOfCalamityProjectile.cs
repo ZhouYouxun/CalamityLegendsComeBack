@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                Math.Max(1, (int)(Projectile.damage * 1.23f)),
+                Math.Max(1, (int)(Projectile.damage * 1.33f)),
                 Projectile.knockBack,
                 Projectile.owner);
             if (Main.projectile.IndexInRange(explosion))
@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Projectile.Center + direction * 20f,
                     direction * 11.5f,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
-                    Math.Max(1, (int)(Projectile.damage * 1.00f)),
+                    Math.Max(1, (int)(Projectile.damage * 1.10f)),
                     Projectile.knockBack * 0.72f,
                     Projectile.owner,
                     i);
@@ -423,8 +423,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         private const int ActivationDelay = 12;
         private const int HomingDelay = 21;
         private const float LeftTurnPerUpdate = -MathHelper.Pi / 180f;
-        private const float MaxSpeed = 22.75f;
-        private const float HomingTurnSpeed = 0.108f;
+        private const float MaxSpeed = 25f;
+        private const float HomingTurnSpeed = 0.110f;
         private static readonly Color[] Palette =
         {
             new(24, 62, 188),
@@ -456,7 +456,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
             Projectile.extraUpdates = 1;
-            Projectile.timeLeft = 420;
+            Projectile.timeLeft = 450;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
