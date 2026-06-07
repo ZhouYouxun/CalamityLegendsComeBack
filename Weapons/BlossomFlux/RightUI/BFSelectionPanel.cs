@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         private Vector2 screenCenter;
         private bool offsetInitialized;
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/RightUI/BF_Panel";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
 
         private bool FadeOut

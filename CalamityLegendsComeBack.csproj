@@ -79,6 +79,7 @@
 	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
+	  <Compile Include="Weapons\A_Olds\DesertEagle\**\*.cs" />
 	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
 	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
 	  <Content Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />

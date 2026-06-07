@@ -77,6 +77,140 @@ Mods: {
 					Tooltip: 左键打开 SHPC 材料索引，右键打开右键热量系统索引。
 				}
 			}
+
+			FastChargeModule: {
+				DisplayName: 快充模块
+				Tooltip:
+					'''
+					大招超级激光的最大充能减半
+					但是玩家的生命回复也减半
+					'''
+			}
+
+			ChargedDiffusionChip: {
+				DisplayName: 带电扩散芯片
+				Tooltip:
+					'''
+					左键能一下子散射出五个能量光球
+					但每个的伤害降为30%
+					'''
+			}
+
+			CommandAscend: {
+				DisplayName: 迫击改装套件
+				Tooltip:
+					'''
+					手持SHPC时右键改为迫击炮模式
+					自动蓄力发射弱追踪炮弹并在爆炸后呼叫多种从天而降的分裂炮弹
+					'''
+			}
+
+			MilitaryCaller: {
+				DisplayName: 军用呼叫器
+				Tooltip:
+					'''
+					手持SHPC时右键改为军用呼叫器模式
+					射出一个信标，空中投送一座友军炮台
+					最多同时维持8座炮台，每座持续5分钟
+					距离已有炮台18格内会部署失败
+					不同生物群系，对应不同的炮台
+					'''
+			}
+
+			Barrier: {
+				DisplayName: 充能屏障
+				Tooltip:
+					'''
+					手持SHPC时充能一层护盾
+					护盾血量为最大生命值的25%，向下取5的倍数
+					受伤后延迟10秒开始充能，5秒充满
+					护盾存在时受到的防前伤害降低10%
+					'''
+			}
+
+			TacticalComputer: {
+				DisplayName: 战术电脑
+				Tooltip:
+					'''
+					手持SHPC时会出现一枚准星
+					准星会尝试吸附到敌人身上
+					提供追踪和自瞄能力
+					关闭可见性会让准心隐藏，但效果保留
+					'''
+			}
+
+			HeatRedirectModule: {
+				DisplayName: 热量重导模块
+				Tooltip:
+					'''
+					SHPC右键射击产生的热量增加20%，自然散热速度降低33%
+					每一级热量额外增加33% SHPC右键伤害
+					武器过热停机时释放范围扩大的烟雾场，持续伤害周围敌人
+					达到五级满热后继续射击，会持续在玩家周围释放伤害烟雾场
+					'''
+			}
+
+			ProjectilePossessionModule: {
+				DisplayName: 弹幕吸收模块
+				Tooltip:
+					'''
+					手持SHPC时右键改为吸收模式
+					最多吸收15发敌对弹幕
+					将他们复制一份并吸收在玩家周围
+					被捕获过的敌方弹幕本体会继续存在，但速度和伤害永久降低20%
+					分身会被吸到玩家身边，变为友方阵营，伤害永久乘以20倍
+					松开右键会将储存的友方分身向前弹射出去
+					'''
+			}
+
+			WastelandEnergyCore: {
+				DisplayName: 废土级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+7%
+					SHPC左键魔力消耗-8%，右键魔力消耗-12%
+					SHPC左键增加1个储罐，装药量增加25%并向上取5的倍数
+					手持SHPC站立不动且停火时，快速恢复魔力
+					需要时自动饮用魔力药水
+					'''
+			}
+
+			EverfrostEnergyCore: {
+				DisplayName: 永霜级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+15%
+					SHPC左键魔力消耗-10%，右键魔力消耗-20%，左键攻击20%不消耗弹药
+					SHPC左键增加2个储罐，装药量增加50%并向上取5的倍数
+					手持SHPC不左右移动并停火时，快速恢复魔力
+					需要时自动饮用魔力药水
+					缩短右键攻击的前摇
+					'''
+			}
+
+			EvolutionEnergyCore: {
+				DisplayName: 进化级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+15%，暴击率+5%，允许右键暴击
+					SHPC左键魔力消耗-15%，右键魔力消耗-30%，左键攻击20%不消耗弹药
+					SHPC左键增加3个储罐，装药量增加75%并向上取5的倍数
+					手持SHPC且停火时，快速恢复魔力
+					需要时自动饮用魔力药水
+					缩短右键攻击的前摇
+					'''
+			}
+
+			StarstreamEnergyCore: {
+				DisplayName: 星流级能源核心
+				Tooltip:
+					'''
+					SHPC伤害+20%，暴击率+10%，允许右键暴击
+					手持SHPC时获得无限魔力，左键攻击50%不消耗弹药
+					SHPC左键增加4个储罐，装药量增加100%并向上取5的倍数
+					缩短右键攻击的前摇
+					'''
+			}
 		}
 
 		TheSpecialText: {
@@ -208,7 +342,34 @@ Mods: {
 				CoreOfCalamityEnergyOrb.DisplayName: 灾劫能量弹
 				CoreOfCalamityExplosion.DisplayName: 灾劫能量爆裂
 				CoreOfCalamitySplitOrb.DisplayName: 灾劫能量分裂弹
+				ProjectilePossessionHoldout.DisplayName: SHPC弹幕夺舍
+				BloodstoneCore_BloodOrb.DisplayName: 血石核心血球
+				RuinousSoul_GhostExplosion.DisplayName: 毁灭之魂幽灵爆炸
+				RuinousSoul_OrbitGhost.DisplayName: 毁灭之魂环绕幽灵
+				Necroplasm_Orb.DisplayName: 死灵质球
+				FragmentNebula_Star.DisplayName: 星云碎片星辰
+				EndlessDevourJavOrbSmall.DisplayName: 无尽吞噬标枪小球
+				EndothermicEnergy_LN2.DisplayName: 吸热能量液氮
+				FragmentEntropy_CosmicFire.DisplayName: 熵碎片宇宙火焰
+				FragmentNebula_BurstRelay.DisplayName: 星云碎片爆发中继
+				ArmoredShell_Lightning.DisplayName: 装甲壳闪电
+				UnholyEssence_HolyNova.DisplayName: 污痕精华神圣新星
+				RuinousSoul_GhastlyES.DisplayName: 毁灭之魂幽魂ES
+				FragmentVortex_Pixel.DisplayName: 星旋碎片像素
+				PlagueCell_Lazer.DisplayName: 瘟疫细胞激光
+				AshesofCalamity_SoulRelay.DisplayName: 灾厄尘灵魂中继
+				AshesofCalamity_Soul.DisplayName: 灾厄尘灵魂
+				StarblightSootShard.DisplayName: 凋星微尘星魂
+				EndothermicEnergy_ARROW.DisplayName: 吸热能量箭矢
+				SHPCAmmoSelectionPanel.DisplayName: SHPC弹药选择面板
+				// SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
+				// PlagueCell_Fog.DisplayName: Plague Cell_ Fog
+				// PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
+				// SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
 			}
+
+			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面
+			ProjectilePossessionUI.DisplayName: SHPC夺舍计量条
 
 			A_Dev: {
 				SHPCBookPanel.DisplayName: SHPC材料手册面板

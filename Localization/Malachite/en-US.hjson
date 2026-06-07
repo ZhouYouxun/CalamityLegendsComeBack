@@ -26,6 +26,48 @@ Mods: {
 						'''
 				}
 			}
+
+			Accessories: {
+				PeacockScroll: {
+					DisplayName: Peacock Scroll
+					Tooltip:
+						'''
+						+10% rogue damage
+						While Peacock Plume's right-click is on cooldown, +15% rogue attack speed
+						After Plantera is defeated, triggering Peacock Plume's left-click acceleration regenerates 3 frenzied kunai
+						'''
+				}
+
+				PrecisionEmblem: {
+					DisplayName: Precision Emblem
+					Tooltip:
+						'''
+						+5% rogue damage and +10% rogue critical strike chance
+						Awakened Peacock Plume kunai gain 10 armor penetration
+						Peacock kunai and ace kunai deal 5% extra multiplicative damage
+						'''
+				}
+
+				MalachiteFeather: {
+					DisplayName: Malachite Feather
+					Tooltip:
+						'''
+						While holding Peacock Plume, +15% rogue damage, +5% rogue critical strike chance, and +10% Peacock Plume projectile speed
+						If no hanging kunai are present, generates one frenzied kunai every 30 frames
+						'''
+				}
+
+				GaleAce: {
+					DisplayName: Gale Ace
+					Tooltip:
+						'''
+						While holding Peacock Plume, +15% rogue damage and +5% rogue critical strike chance
+						Poison damage is doubled
+						Peacock Plume's finale petals are blown toward your facing direction and deal damage
+						Hanging kunai awakened by the finale become ace kunai
+						'''
+				}
+			}
 		}
 
 		Projectiles: {
@@ -35,6 +77,7 @@ Mods: {
 				MalachiteGreenExplosion.DisplayName: Peacock Blast
 				MalachiteFinaleController.DisplayName: Peacock Finale
 				MalachiteFinaleSlash.DisplayName: Peacock Slash
+				MalachiteFinalePetal.DisplayName: Peacock Petal
 			}
 		}
 

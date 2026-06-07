@@ -61,10 +61,59 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         internal static void SpawnTeleportHoldEffects(Projectile projectile, Vector2 targetCenter, int phaseTimer, int windupFrames)
         {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = (projectile.rotation - MathHelper.PiOver4).ToRotationVector2().SafeNormalize(Vector2.UnitX);
+            Vector2 tip = projectile.Center + forward * (50f * projectile.scale);
+            float completion = Utils.GetLerpValue(0f, Math.Max(1, windupFrames), phaseTimer, true);
+
+            if (phaseTimer == 1)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    DirectionalPulseRing ring = new(
+                        tip - forward * (4f + i * 6f),
+                        forward * 1.2f,
+                        Color.Lerp(new Color(55, 175, 255, 0), Color.White, 0.18f + i * 0.18f) * 0.78f,
+                        new Vector2(0.7f, 2.2f),
+                        forward.ToRotation(),
+                        0.18f + i * 0.04f,
+                        0.025f,
+                        12 + i * 2);
+                    GeneralParticleHandler.SpawnParticle(ring);
+                }
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 velocity = -forward.RotatedByRandom(0.22f) * Main.rand.NextFloat(1.4f, 3.2f);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    tip + Main.rand.NextVector2Circular(5f, 5f),
+                    velocity,
+                    false,
+                    Main.rand.Next(7, 11),
+                    Main.rand.NextFloat(0.2f, 0.34f),
+                    Color.Lerp(new Color(140, 235, 255), Color.White, completion * 0.45f)));
+            }
         }
 
         internal static void SpawnAbortEffects(Vector2 center, Vector2 direction)
         {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = direction.SafeNormalize(Vector2.UnitX);
+            DirectionalPulseRing ring = new(
+                center,
+                -forward * 0.6f,
+                new Color(70, 170, 255, 0) * 0.55f,
+                new Vector2(0.5f, 1.25f),
+                forward.ToRotation(),
+                0.12f,
+                0.02f,
+                12);
+            GeneralParticleHandler.SpawnParticle(ring);
         }
     }
 }

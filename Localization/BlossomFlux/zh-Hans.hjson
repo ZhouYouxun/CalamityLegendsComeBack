@@ -72,6 +72,31 @@ Mods: {
 						[c/F4D57A:右键 - 侵染蓄力：积攒大型孢子弹，命中后产生感染主题爆发并持续喷出孢子云。]
 						[c/F4D57A:蓄力命中会永久降低该 NPC 的能力。该削弱绑定在敌人身上，不要求玩家继续手持叶流。]
 						'''
+					PresetPassive0:
+						'''
+						[c/B7FFB0:战术被动 - 突击：获得无无敌帧的高速冲刺；已有冲刺的冷却减半。]
+						[c/B7FFB0:冲刺后 0.75 秒内，叶流伤害提高 20%。]
+						'''
+					PresetPassive1:
+						'''
+						[c/B7FFB0:战术被动 - 复苏：免疫防御损伤，大幅扩大红心拾取范围。]
+						[c/B7FFB0:减益造成的生命流失减半；单次伤害超过最大生命值 30% 时，超出部分减半。]
+						'''
+					PresetPassive2:
+						'''
+						[c/B7FFB0:战术被动 - 侦察：免疫移速降低，移动速度 +25%，加速度 +100%，飞行时间 +50%。]
+						[c/B7FFB0:钩爪发射、回收和牵引速度 +30%；钩中平台或斜坡后，抵达钩点会自动松钩。]
+						'''
+					PresetPassive3:
+						'''
+						[c/B7FFB0:战术被动 - 歼灭：根据屏幕内敌人数量提升射速。]
+						[c/B7FFB0:屏幕内有 5/10/20 个敌人时，叶流使用时间和左键循环延迟 -1/-2/-3。]
+						'''
+					PresetPassive4:
+						'''
+						[c/B7FFB0:战术被动 - 侵染：叶流攻击会延长目标身上已有的任何减益。]
+						[c/B7FFB0:任意敌人身上的减益以一半速度流逝。]
+						'''
 					BF_Passive:
 						'''
 						[c/9AEF9E:被动复活：手持叶流时，可抵消一次致命伤害。]
@@ -103,6 +128,156 @@ Mods: {
 						[c/66E6FF:等待、松弦，然后让战术回应。]
 						'''
 				}
+			}
+
+			ATunedQuiver: {
+				// DisplayName: Tuned Quiver
+				/* Tooltip:
+					'''
+					+15% ranged damage
+					+4 defense
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					Recipe: Magic Quiver + 10 Jungle Spores + 5 Vines @ Anvil
+					''' */
+			}
+
+			BResonatingQuiver: {
+				// DisplayName: Resonating Quiver
+				/* Tooltip:
+					'''
+					+15% ranged damage
+					+5% ranged critical strike chance
+					+15 ranged projectile armor penetration
+					+6 defense
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					Recipe: Tuned Quiver + Ranger Emblem + 5 Life Alloys + 5 Galactica Singularities @ Ancient Manipulator
+					''' */
+			}
+
+			CDominationQuiver: {
+				// DisplayName: Domination Quiver
+				/* Tooltip:
+					'''
+					+15% ranged damage
+					+5% ranged critical strike chance
+					+15 ranged projectile armor penetration
+					+16 defense
+					+15% maximum life
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					All attacks pass through walls and ignore defense.
+					Recipe: Resonating Quiver + 10 Reaper Teeth + 10 Ruinous Souls @ Ancient Manipulator
+					''' */
+			}
+
+			PastLingering: {
+				// DisplayName: Lingering Remnant
+				/* Tooltip:
+					'''
+					Changes Breakthrough into a Phantasm-like mode: arrows are no longer converted and release strongly homing shards after hitting enemies.
+					Continuous fire gradually increases attack speed. Reaching the maximum tier plays an extra sound.
+					Recipe: Phantasm + 12 Luminite Bars + 5 Vortex Fragments @ Ancient Manipulator
+					''' */
+			}
+
+			SeedOfSilva: {
+				// DisplayName: Seed of Silva
+				/* Tooltip:
+					'''
+					Generates five seeds that slowly orbit the player and emit a faint green glow.
+					While holding BlossomFlux, the seeds bloom into different flowers based on the current doctrine.
+					Breakthrough: Sunflower
+					Sunflowers create a small field. Breakthrough arrows passing through it gain 30% damage and 15% critical strike chance.
+					Recovery: Daisy
+					Daisies have 15 maximum life, regenerate 1.2 life per second, and inherit the player's defense and damage reduction.
+					If a daisy takes 20 or more damage, it heals the player for its stored regenerated life, rounded down.
+					Reconnaissance: Delphinium
+					Delphiniums attack nearby enemies once every 1.5 seconds with a curving arc that deals light damage and stuns for 1 second.
+					Stunned enemies are heavily slowed and take double damage from reconnaissance arrows.
+					Enemies immune to knockback only receive the damage bonus, reduced to 1.15x.
+					Each successful delphinium stun restores 0.5 seconds of flight time.
+					Bombardment: Torchflower
+					Torchflowers spray flames when enemies approach.
+					Arrows passing through a torchflower also trigger an explosion with an independent cooldown.
+					Plague: Mandrake
+					Mandrakes slow nearby enemies and reduce their contact damage by 15%.
+					Mandrakes constantly create spores, like a Spore Sac, applying debuffs for 3 seconds each. Their cap follows the current weapon.
+					Mandrakes also occasionally fire homing withering-flower projectiles that paralyze and slow enemies.
+					Recipe: Bloom Stone + 50 Planty Mush + 10 Auric Bars @ Mythril Anvil
+					''' */
+			}
+
+			SilvaHarp: {
+				// DisplayName: Silva Harp
+				/* Tooltip:
+					'''
+					+5 life per second. This regeneration cannot be reduced by any factor.
+					+60 frames of invincibility after taking damage.
+					Modern Silva's revival invincibility is increased to 10 seconds.
+					During that invincibility, incoming life loss is reduced to 10%.
+					After the revival ends, life is restored to at least 50% of maximum life, and the cooldown can tick during boss fights.
+					Massively reduces the revival effect cooldown.
+					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
+					''' */
+			}
+
+			GaleAce: {
+				// DisplayName: Gale Ace
+				// Tooltip: ""
+			}
+
+			MalachiteFeather: {
+				// DisplayName: Malachite Feather
+				// Tooltip: ""
+			}
+
+			PeacockScroll: {
+				// DisplayName: Peacock Scroll
+				// Tooltip: ""
+			}
+
+			PrecisionEmblem: {
+				// DisplayName: Precision Emblem
+				// Tooltip: ""
+			}
+
+			YharimsCrystalAlpha: {
+				// DisplayName: Yharims Crystal Alpha
+				// Tooltip: ""
+			}
+
+			YharimsCrystalBeta: {
+				// DisplayName: Yharims Crystal Beta
+				// Tooltip: ""
+			}
+
+			YharimsCrystalEpsilon: {
+				// DisplayName: Yharims Crystal Epsilon
+				// Tooltip: ""
+			}
+
+			YharimsCrystalGamma: {
+				// DisplayName: Yharims Crystal Gamma
+				// Tooltip: ""
+			}
+
+			YharimsCrystalLambda: {
+				// DisplayName: Yharims Crystal Lambda
+				// Tooltip: ""
+			}
+
+			YharimsCrystalPi: {
+				// DisplayName: Yharims Crystal Pi
+				// Tooltip: ""
+			}
+
+			YharimsCrystalSigma: {
+				// DisplayName: Yharims Crystal Sigma
+				// Tooltip: ""
+			}
+
+			YharimsCrystalTau: {
+				// DisplayName: Yharims Crystal Tau
+				// Tooltip: ""
 			}
 		}
 
@@ -224,6 +399,21 @@ Mods: {
 			NewWeapons.DPreDog.SODLazer.DisplayName: SOD激光
 			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
 			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
+			PastLingeringShard.DisplayName: 旧日残影碎片
+			SeedOfSilvaDelphiniumArc.DisplayName: 席尔瓦飞燕草弧光
+			SeedOfSilvaMandrakeDart.DisplayName: 席尔瓦曼陀罗飞刺
+			SeedOfSilvaMandrakeSpore.DisplayName: 席尔瓦曼陀罗孢子
+			SeedOfSilvaSeed.DisplayName: 席尔瓦之种
+			SeedOfSilvaTorchFlame.DisplayName: 席尔瓦火炬花火焰
+			BFBreakthroughChargeConvergeFX.DisplayName: 叶流突破充能汇聚特效
+			BFBombardStrafeFX.DisplayName: 叶流轰炸扫射特效
+			BFPlagueNanomachineCloudFX.DisplayName: 叶流瘟疫纳米机械云特效
+			BFReconContractingWaveFX.DisplayName: 叶流侦察收缩波特效
+			BFRecoveryHeartConvergeFX.DisplayName: 叶流恢复之心汇聚特效
+			BFChargeGlowSparkFX.DisplayName: 叶流充能辉光火花特效
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: 吸热能量分裂体

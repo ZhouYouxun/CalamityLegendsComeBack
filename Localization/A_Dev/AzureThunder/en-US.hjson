@@ -42,12 +42,86 @@ Mods: {
 					AzureThunderFinal: '''[c/FFE85A:"Let solemn thunder cleanse evil, call sweet rain, and spare the living."]'''
 				}
 			}
+
+			GuZhou: {
+				DisplayName: Long Barge
+				Tooltip:
+					'''
+					+10% generic magic damage
+					While holding SunderBlade, gain an additional +5% magic damage
+					When SunderBlade consumes Breath of Transformation, each consumed stack grants +5% magic damage for 20 seconds; repeated triggers reset the duration
+					Consuming Breath of Transformation during Empyrean of Truth slows the locked non-worm enemy by 15%
+					'''
+			}
+
+			YiGanYiYing: {
+				DisplayName: Sense and Response
+				Tooltip:
+					'''
+					+50 maximum mana
+					-15% mana cost
+					When SunderBlade's right click consumes Breath of Transformation, each active SunderBlade sword grants +2% magic damage for 5 seconds
+					During Empyrean of Truth, each sword instead grants +3% magic damage for 15 seconds
+					This damage bonus is recalculated and its duration reset the next time Breath of Transformation is consumed
+					'''
+			}
+
+			QianDingWanDing: {
+				DisplayName: Absolute Composure
+				Tooltip:
+					'''
+					+100 maximum mana
+					-15% mana cost
+					Increases SunderBlade sword effect radius from 50 tiles to 75 tiles
+					Up to 3 SunderBlade swords orbit the player on an elliptical path and act as mobile turrets
+					SunderBlade right-click lightning grants 7 ultimate energy on hit instead of 6
+					Four Symbols of Harmony creates swords every 6 seconds instead of every 10 seconds
+					'''
+			}
+
+			FengYunZhiBian: {
+				DisplayName: Storm of Transform
+				Tooltip:
+					'''
+					SunderBlade damage +15%
+					SunderBlade attacks inflict Static Discharge for 1.5 seconds
+					Empyrean of Truth duration increases from 25 seconds to 30 seconds
+					During Empyrean of Truth, gain an additional +9% magic damage and 36 magic armor penetration
+					'''
+			}
+
+			JiDianFa: {
+				DisplayName: Jolting Arts
+				Tooltip:
+					'''
+					Double-tap a horizontal direction to become lightning and dash; dash direction follows your current velocity vector
+					Briefly grants invincibility during the dash and leaves modest momentum in the same direction
+					If the Calamity dash hotkey is bound, the bound single-sword dash takes priority
+					While holding SunderBlade, dash distance +30% and dash cooldown -30%
+					While holding SunderBlade, dashing releases up to 3 lightning bolts based on nearby SunderBlade swords, with a 15-second cooldown
+					'''
+			}
 		}
 
 		Buffs: {
 			AzureThunderHarmonyBuff: {
 				DisplayName: Empyrean of Truth
 				Description: Final damage, defense, damage reduction, and life regeneration are increased; SunderBlade attacks are empowered.
+			}
+
+			AzureThunderGuZhouDamageBuff: {
+				DisplayName: Long Barge
+				Description: Magic damage is increased
+			}
+
+			AzureThunderYiGanDamageBuff: {
+				DisplayName: Sense and Response
+				Description: Magic damage is increased
+			}
+
+			AzureThunderGuZhouSlowDebuff: {
+				DisplayName: Long Barge Lock
+				Description: Movement speed reduced by 15%
 			}
 		}
 
@@ -60,12 +134,15 @@ Mods: {
 				AzureThunderGroundSword.DisplayName: SunderBlade Ground Sword
 				AzureThunderGrandSword.DisplayName: SunderBlade Grand Sword
 				AzureThunderStrikeSequencer.DisplayName: SunderBlade Strike Sequencer
+				AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
+				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
 		}
 
 		Cooldowns: {
 			AzureThunder_ThunderCharge: Breath of Transformation
 			AzureThunder_Ultimate: Empyrean of Truth
+			JoltingArts_Lightning: Jolting Arts Lightning
 		}
 	}
 }

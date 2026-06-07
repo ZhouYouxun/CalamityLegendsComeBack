@@ -68,8 +68,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            if (Player.HeldItem.type != ModContent.ItemType<DesertEagle>() &&
-                Player.ownedProjectileCounts[ModContent.ProjectileType<DesertEagleHoldout>()] <= 0)
+            if (!DesertEagle.ItemHasDesertEagleSpin(Player.HeldItem) &&
+                Player.ownedProjectileCounts[DesertEagle.SharedHoldoutType] <= 0)
             {
                 ResetRightClickState();
             }
@@ -142,7 +142,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             bool rightMouseHeld = Player.Calamity().mouseRight || Main.mouseRight;
 
             bool validRightInput =
-                Player.HeldItem.type == ModContent.ItemType<DesertEagle>() &&
+                DesertEagle.ItemHasDesertEagleSpin(Player.HeldItem) &&
                 !Player.noItems &&
                 !Player.CCed &&
                 rightMouseHeld &&

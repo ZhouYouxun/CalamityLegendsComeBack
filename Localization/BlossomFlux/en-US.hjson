@@ -72,6 +72,31 @@ Mods: {
 						[c/F4D57A:On hit, it creates a plague-themed burst and continuously releases spore clouds.]
 						[c/F4D57A:A charged hit permanently weakens that enemy.]
 						'''
+					PresetPassive0:
+						'''
+						[c/B7FFB0:Doctrine Passive - Breakthrough: grants a high-speed dash with no invincibility frames; existing dash cooldowns are halved.]
+						[c/B7FFB0:After dashing, BlossomFlux damage is increased by 20% for 0.75 seconds.]
+						'''
+					PresetPassive1:
+						'''
+						[c/B7FFB0:Doctrine Passive - Recovery: immune to defense damage and greatly expands heart pickup range.]
+						[c/B7FFB0:Debuff life drain is halved; when a hit exceeds 30% max life, half of the excess damage is removed.]
+						'''
+					PresetPassive2:
+						'''
+						[c/B7FFB0:Doctrine Passive - Reconnaissance: immune to movement slowdowns, +25% movement speed, +100% acceleration, and +50% flight time.]
+						[c/B7FFB0:Grapple launch, retreat, and pull speed +30%; platform or slope grapples release automatically when reached.]
+						'''
+					PresetPassive3:
+						'''
+						[c/B7FFB0:Doctrine Passive - Bombardment: gains fire rate from enemies on screen.]
+						[c/B7FFB0:At 5/10/20 enemies on screen, BlossomFlux use time and left-fire delay are reduced by 1/2/3 frames.]
+						'''
+					PresetPassive4:
+						'''
+						[c/B7FFB0:Doctrine Passive - Plague: BlossomFlux attacks extend any debuff already on the target.]
+						[c/B7FFB0:Debuffs on all enemies tick down at half speed.]
+						'''
 					BF_Passive:
 						'''
 						[c/9AEF9E:Passive: While held, one lethal hit is blocked.]
@@ -105,6 +130,156 @@ Mods: {
 						[c/66E6FF:Wait, loose, and let the doctrine answer.]
 						'''
 				}
+			}
+
+			ATunedQuiver: {
+				DisplayName: Tuned Quiver
+				Tooltip:
+					'''
+					+15% ranged damage
+					+4 defense
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					Recipe: Magic Quiver + 10 Jungle Spores + 5 Vines @ Anvil
+					'''
+			}
+
+			BResonatingQuiver: {
+				DisplayName: Resonating Quiver
+				Tooltip:
+					'''
+					+15% ranged damage
+					+5% ranged critical strike chance
+					+15 ranged projectile armor penetration
+					+6 defense
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					Recipe: Tuned Quiver + Ranger Emblem + 5 Life Alloys + 5 Galactica Singularities @ Ancient Manipulator
+					'''
+			}
+
+			CDominationQuiver: {
+				DisplayName: Domination Quiver
+				Tooltip:
+					'''
+					+15% ranged damage
+					+5% ranged critical strike chance
+					+15 ranged projectile armor penetration
+					+16 defense
+					+15% maximum life
+					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
+					All attacks pass through walls and ignore defense.
+					Recipe: Resonating Quiver + 10 Reaper Teeth + 10 Ruinous Souls @ Ancient Manipulator
+					'''
+			}
+
+			PastLingering: {
+				DisplayName: Lingering Remnant
+				Tooltip:
+					'''
+					Changes Breakthrough into a Phantasm-like mode: arrows are no longer converted and release strongly homing shards after hitting enemies.
+					Continuous fire gradually increases attack speed. Reaching the maximum tier plays an extra sound.
+					Recipe: Phantasm + 12 Luminite Bars + 5 Vortex Fragments @ Ancient Manipulator
+					'''
+			}
+
+			SeedOfSilva: {
+				DisplayName: Seed of Silva
+				Tooltip:
+					'''
+					Generates five seeds that slowly orbit the player and emit a faint green glow.
+					While holding BlossomFlux, the seeds bloom into different flowers based on the current doctrine.
+					Breakthrough: Sunflower
+					Sunflowers create a small field. Breakthrough arrows passing through it gain 30% damage and 15% critical strike chance.
+					Recovery: Daisy
+					Daisies have 15 maximum life, regenerate 1.2 life per second, and inherit the player's defense and damage reduction.
+					If a daisy takes 20 or more damage, it heals the player for its stored regenerated life, rounded down.
+					Reconnaissance: Delphinium
+					Delphiniums attack nearby enemies once every 1.5 seconds with a curving arc that deals light damage and stuns for 1 second.
+					Stunned enemies are heavily slowed and take double damage from reconnaissance arrows.
+					Enemies immune to knockback only receive the damage bonus, reduced to 1.15x.
+					Each successful delphinium stun restores 0.5 seconds of flight time.
+					Bombardment: Torchflower
+					Torchflowers spray flames when enemies approach.
+					Arrows passing through a torchflower also trigger an explosion with an independent cooldown.
+					Plague: Mandrake
+					Mandrakes slow nearby enemies and reduce their contact damage by 15%.
+					Mandrakes constantly create spores, like a Spore Sac, applying debuffs for 3 seconds each. Their cap follows the current weapon.
+					Mandrakes also occasionally fire homing withering-flower projectiles that paralyze and slow enemies.
+					Recipe: Bloom Stone + 50 Planty Mush + 10 Auric Bars @ Mythril Anvil
+					'''
+			}
+
+			SilvaHarp: {
+				DisplayName: Silva Harp
+				Tooltip:
+					'''
+					+5 life per second. This regeneration cannot be reduced by any factor.
+					+60 frames of invincibility after taking damage.
+					Modern Silva's revival invincibility is increased to 10 seconds.
+					During that invincibility, incoming life loss is reduced to 10%.
+					After the revival ends, life is restored to at least 50% of maximum life, and the cooldown can tick during boss fights.
+					Massively reduces the revival effect cooldown.
+					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
+					'''
+			}
+
+			GaleAce: {
+				DisplayName: Gale Ace
+				Tooltip: ""
+			}
+
+			MalachiteFeather: {
+				DisplayName: Malachite Feather
+				Tooltip: ""
+			}
+
+			PeacockScroll: {
+				DisplayName: Peacock Scroll
+				Tooltip: ""
+			}
+
+			PrecisionEmblem: {
+				DisplayName: Precision Emblem
+				Tooltip: ""
+			}
+
+			YharimsCrystalAlpha: {
+				DisplayName: Yharims Crystal Alpha
+				Tooltip: ""
+			}
+
+			YharimsCrystalBeta: {
+				DisplayName: Yharims Crystal Beta
+				Tooltip: ""
+			}
+
+			YharimsCrystalEpsilon: {
+				DisplayName: Yharims Crystal Epsilon
+				Tooltip: ""
+			}
+
+			YharimsCrystalGamma: {
+				DisplayName: Yharims Crystal Gamma
+				Tooltip: ""
+			}
+
+			YharimsCrystalLambda: {
+				DisplayName: Yharims Crystal Lambda
+				Tooltip: ""
+			}
+
+			YharimsCrystalPi: {
+				DisplayName: Yharims Crystal Pi
+				Tooltip: ""
+			}
+
+			YharimsCrystalSigma: {
+				DisplayName: Yharims Crystal Sigma
+				Tooltip: ""
+			}
+
+			YharimsCrystalTau: {
+				DisplayName: Yharims Crystal Tau
+				Tooltip: ""
 			}
 		}
 
@@ -226,6 +401,21 @@ Mods: {
 			NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
 			LegendaryCodexPanel.DisplayName: Legendary Codex Panel
 			TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
+			PastLingeringShard.DisplayName: Lingering Remnant Shard
+			SeedOfSilvaDelphiniumArc.DisplayName: Silva Delphinium Arc
+			SeedOfSilvaMandrakeDart.DisplayName: Silva Mandrake Dart
+			SeedOfSilvaMandrakeSpore.DisplayName: Silva Mandrake Spore
+			SeedOfSilvaSeed.DisplayName: Seed of Silva
+			SeedOfSilvaTorchFlame.DisplayName: Silva Torchflower Flame
+			BFBreakthroughChargeConvergeFX.DisplayName: B F Breakthrough Charge Converge F X
+			BFBombardStrafeFX.DisplayName: B F Bombard Strafe F X
+			BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
+			BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
+			BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
+			BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
+			AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

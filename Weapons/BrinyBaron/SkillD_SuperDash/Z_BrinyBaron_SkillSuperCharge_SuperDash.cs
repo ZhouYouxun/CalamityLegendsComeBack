@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +10,6 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.Graphics.Shaders;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
@@ -31,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const int ChargeSearchInterval = 6;
         private const int LockSearchInterval = 10;
         private const int TeleportWindupFrames = 1;
-        private const int StrikeFrames = 4;
+        private const int StrikeFrames = 8;
         private const int FocusDashFrames = 18;
         private const int ImpactDriftFrames = 10;
         private const float ChargeHoldDistance = 22f;
@@ -47,7 +46,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const float DashOvershootDistance = 220f;
         private const float StrikeSlashDamageFactor = 0.75f;
         private const float StrikeSlashScale = 1.45f;
-        private const float FinalMarkDamageFactor = 0.9f;
         private const float GoldenAngle = 2.39996323f;
 
         private Player Owner => Main.player[Projectile.owner];
@@ -176,7 +174,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (!initialized)
                 Initialize(owner);
 
-            owner.GetModPlayer<BBSuperDashLeviathanFilterPlayer>().EnableFilter();
             UpdateFocusPoint(owner);
             MaintainCameraLock(owner);
 
@@ -500,7 +497,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 dashVelocity = currentCenter - previousCenter;
 
             if (phaseTimer == 1)
-                SpawnStrikeLightOrb(previousCenter, dashVelocity.SafeNormalize(lockedDirection));
+                FireForwardShuriken(owner, dashVelocity.SafeNormalize(lockedDirection));
 
             owner.Center = currentCenter;
             owner.velocity = dashVelocity;
@@ -515,7 +512,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (dashVelocity.LengthSquared() > 1f)
                 lockedDirection = dashVelocity.SafeNormalize(lockedDirection);
 
-            ApplyHeldBlade(owner, lockedDirection, StrikeHoldDistance, 1.24f, 0f);
+            float swingProgress = Utils.GetLerpValue(0f, dashFrames, phaseTimer, true);
+            float swingDir = (strikeIndex % 2 == 0 ? 1f : -1f);
+            float easedSwing = CalamityUtils.ExpInOutEasing(swingProgress, 1);
+            float swingAngleOffset = MathHelper.Lerp(-MathHelper.Pi, MathHelper.Pi, easedSwing) * swingDir;
+            Vector2 swingDirection = lockedDirection.RotatedBy(swingAngleOffset);
+
+            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance, 1.24f, 0f);
             BBSD_Strike_Effects.SpawnStrikeTravelEffects(Projectile, previousCenter, currentCenter, lockedDirection, phaseTimer, strikeIndex);
             Lighting.AddLight(WeaponTip, new Vector3(0.2f, 0.62f, 0.82f));
 
@@ -550,7 +553,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (impactDriftVelocity.LengthSquared() > 1f)
                 lockedDirection = impactDriftVelocity.SafeNormalize(lockedDirection);
 
-            ApplyHeldBlade(owner, lockedDirection, StrikeHoldDistance, 1.24f, 0f);
+            float swingDir = (strikeIndex % 2 == 0 ? 1f : -1f);
+            float swingAngleOffset = MathHelper.Pi * swingDir;
+            Vector2 swingDirection = lockedDirection.RotatedBy(swingAngleOffset);
+
+            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance, 1.24f, 0f);
             BBSD_Strike_Effects.SpawnStrikeTravelEffects(Projectile, previousCenter, owner.Center, lockedDirection, StrikeFrames + phaseTimer, strikeIndex);
             Lighting.AddLight(WeaponTip, new Vector3(0.18f, 0.54f, 0.74f));
 
@@ -617,24 +624,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         private void HandleStrikeImpact(NPC target)
         {
-            // ===== 闂佸憡绋掗崹婵嬫嚈閹达箑绫嶉柟顖氬彄婢跺鈻旈柍褜鍓熷畷姘跺焵?Slash闂佹寧绋戦張顒€銆掗崼鏇炶Е閹煎瓨绻勯閬嶆煕閹达綆鍤欓柛鐔插亾闂佸湱顭堥崐鑽ゅ垝閹惧墎纾奸柟鎯у暱閻撴繈鏌?=====
             impactTriggeredThisStrike = true;
             Projectile.netUpdate = true;
 
             Vector2 strikeDirection = lockedDirection.SafeNormalize(DefaultDirection);
-            if (Main.myPlayer == Projectile.owner && strikeIndex == totalStrikes - 1)
-            {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    target.Center,
-                    strikeDirection,
-                    ModContent.ProjectileType<BBSD_Final_INV>(),
-                    Math.Max(1, (int)(Projectile.damage * FinalMarkDamageFactor)),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    target.whoAmI,
-                    strikeDirection.ToRotation());
-            }
+            SpawnImpactShurikenBurst(target, strikeDirection);
 
             BBSD_Strike_Effects.SpawnStrikeImpactEffects(Projectile, target.Center, strikeDirection, strikeIndex, totalStrikes);
             float shakePower = 15f;
@@ -663,20 +657,43 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Projectile.netUpdate = true;
         }
 
-        private void SpawnStrikeLightOrb(Vector2 startCenter, Vector2 strikeDirection)
+        private void FireForwardShuriken(Player owner, Vector2 dashDir)
         {
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            strikeDirection = strikeDirection.SafeNormalize(DefaultDirection);
+            Vector2 shootDirection = dashDir.SafeNormalize(lockedDirection);
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                startCenter + strikeDirection * 40f,
-                strikeDirection.RotatedByRandom(0.12f) * Main.rand.NextFloat(8.5f, 12f),
-                ModContent.ProjectileType<BrinyBaron_HomingLightOrb>(),
-                Math.Max(1, (int)(Projectile.damage * 0.28f)),
-                Projectile.knockBack * 0.35f,
-                Projectile.owner);
+                owner.MountedCenter + shootDirection * 34f,
+                shootDirection * 15.5f,
+                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                Math.Max(1, (int)(Projectile.damage * 0.35f)),
+                Projectile.knockBack * 0.4f,
+                Projectile.owner,
+                0f);
+        }
+
+        private void SpawnImpactShurikenBurst(NPC target, Vector2 strikeDirection)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 forward = strikeDirection.SafeNormalize(DefaultDirection);
+            for (int i = 0; i < 3; i++)
+            {
+                float angle = forward.ToRotation() + MathHelper.TwoPi * i / 3f + Main.rand.NextFloat(-0.08f, 0.08f);
+                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(12.5f, 15.5f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    target.Center + velocity.SafeNormalize(forward) * 18f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                    Projectile.knockBack * 0.35f,
+                    Projectile.owner,
+                    0f);
+            }
         }
 
         private void ApplyChargeShake(Player owner, float chargeCompletion)
@@ -813,6 +830,45 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             if (phase == SuperDashPhase.Striking || phase == SuperDashPhase.ImpactDrifting)
             {
+                // Draw the trailing water swoosh aligned with the sword's swing
+                Texture2D swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
+                float swingSign = (strikeIndex % 2 == 0 ? 1f : -1f);
+                float swooshRotation = Projectile.rotation - MathHelper.PiOver4 + MathHelper.PiOver2 * swingSign;
+
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+                Main.EntitySpriteDraw(
+                    swoosh,
+                    drawPosition,
+                    null,
+                    Color.DeepSkyBlue with { A = 0 } * 0.48f,
+                    swooshRotation,
+                    swoosh.Size() * 0.5f,
+                    Projectile.scale * 0.65f,
+                    SpriteEffects.None,
+                    0f);
+
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+                // Draw ghost outlines for trailing aura effect
+                Texture2D ghost = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaronGoest").Value;
+                for (int i = 0; i < 18; i++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * 4.2f;
+                    Main.EntitySpriteDraw(
+                        ghost,
+                        drawPosition + offset,
+                        frame,
+                        Color.Aqua with { A = 0 } * 0.12f,
+                        drawRotation,
+                        origin,
+                        Projectile.scale * Vector2.One,
+                        effects,
+                        0f);
+                }
+
                 for (int i = 0; i < 4; i++)
                 {
                     float angle = MathHelper.TwoPi * i / 4f + Main.GlobalTimeWrappedHourly * 4f;
@@ -830,13 +886,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 }
             }
 
-            bool applyShader = phase == SuperDashPhase.Locked;
-            if (applyShader)
-            {
-                int shaderId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.LivingOceanDye);
-                GameShaders.Armor.Apply(shaderId, Projectile, null);
-            }
-
             Main.EntitySpriteDraw(
                 weaponTexture,
                 drawPosition,
@@ -847,11 +896,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Projectile.scale,
                 effects,
                 0f);
-
-            if (applyShader)
-            {
-                Main.pixelShader.CurrentTechnique.Passes[0].Apply();
-            }
 
             return false;
         }

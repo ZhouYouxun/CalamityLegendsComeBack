@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const int AccelerationFrames = 180;
         private const int SlowInterval = 5;
         private const int FastInterval = 2;
-        private const float FireSpeed = 29f;
+        private const float FireSpeed = 20.3f;
         private const float DamageMultiplier = 0.36f;
         private const float Recoil = 1.8f;
 

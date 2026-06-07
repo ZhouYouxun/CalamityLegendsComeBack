@@ -43,12 +43,86 @@ Mods: {
 					AzureThunderFinal: "[c/32FF82:“愿殷雷阵阵，驱邪秽，引甘霖，济苍生”]"
 				}
 			}
+
+			GuZhou: {
+				DisplayName: 孤舟
+				Tooltip:
+					'''
+					+10% 通用魔法伤害
+					手持青霆剑时额外 +5% 魔法伤害
+					青霆剑消耗一息万变时，每消耗1层，在20秒内增加5%魔法伤害；重复触发时重置时长
+					天理真和期间消耗一息万变时，使锁定的非蠕虫敌人减速15%
+					'''
+			}
+
+			YiGanYiYing: {
+				DisplayName: 一感一应
+				Tooltip:
+					'''
+					+50 魔力上限
+					-15% 魔力消耗
+					青霆剑右键消耗一息万变时，场上每有一把青霆剑，在5秒内增加2%魔法伤害
+					天理真和期间改为每把青霆剑在15秒内增加3%魔法伤害
+					伤害加成会在下一次消耗一息万变时重新计算并重置时长
+					'''
+			}
+
+			QianDingWanDing: {
+				DisplayName: 千定万定
+				Tooltip:
+					'''
+					+100 魔力上限
+					-15% 魔力消耗
+					青霆剑生效半径从50格提高至75格
+					最多3把青霆剑会跟随玩家移动，成为移动炮台
+					青霆剑右键雷击命中提供的终结技能量从6提高至7
+					和合四象生成剑的间隔由10秒降低至6秒
+					'''
+			}
+
+			FengYunZhiBian: {
+				DisplayName: 风云之变
+				Tooltip:
+					'''
+					青霆剑伤害 +15%
+					青霆剑攻击会施加1.5秒静电逸散
+					天理真和持续时间由25秒提高至30秒
+					天理真和期间额外获得9%魔法伤害与36点魔法护甲穿透
+					'''
+			}
+
+			JiDianFa: {
+				DisplayName: 疾电法
+				Tooltip:
+					'''
+					允许双击方向键化作雷电冲刺，冲刺方向会参考当前速度向量
+					冲刺期间短暂无敌，并在结束后保留少量同方向动能
+					绑定灾厄冲刺键时，优先使用已绑定的单剑冲刺
+					手持青霆剑时，冲刺距离 +30%，冲刺冷却 -30%
+					手持青霆剑冲刺后，根据附近青霆剑数量最多释放3道雷击，冷却15秒
+					'''
+			}
 		}
 
 		Buffs: {
 			AzureThunderHarmonyBuff: {
 				DisplayName: 天理真和
 				Description: 最终伤害、防御、伤害减免与生命再生提升，并强化青霆剑攻击。
+			}
+
+			AzureThunderGuZhouDamageBuff: {
+				DisplayName: 孤舟
+				Description: 魔法伤害提高
+			}
+
+			AzureThunderYiGanDamageBuff: {
+				DisplayName: 一感一应
+				Description: 魔法伤害提高
+			}
+
+			AzureThunderGuZhouSlowDebuff: {
+				DisplayName: 孤舟锁定
+				Description: 移动速度降低15%
 			}
 		}
 
@@ -61,12 +135,15 @@ Mods: {
 				AzureThunderGroundSword.DisplayName: 释放青霆剑
 				AzureThunderGrandSword.DisplayName: 青霆巨剑
 				AzureThunderStrikeSequencer.DisplayName: 青霆序列
+				AzureThunderHarmonyBar.DisplayName: 破天刃苍穹条
+				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
 		}
 
 		Cooldowns: {
 			AzureThunder_ThunderCharge: 一息万变
 			AzureThunder_Ultimate: 万钧风雷
+			JoltingArts_Lightning: 疾电法雷击
 		}
 	}
 }

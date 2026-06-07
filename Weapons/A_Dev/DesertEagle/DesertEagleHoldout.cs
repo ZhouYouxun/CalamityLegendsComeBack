@@ -50,11 +50,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             get
             {
                 if (Main.myPlayer != Projectile.owner)
-                    return true;
+                    return DesertEagle.ItemHasDesertEagleSpin(Owner.HeldItem);
 
                 DesertEaglePlayer playerState = Owner.GetModPlayer<DesertEaglePlayer>();
-                return playerState.TrackingRightPress ||
-                    ((Owner.Calamity().mouseRight || Main.mouseRight) && !Main.mapFullscreen && !Main.blockMouse);
+                return DesertEagle.ItemHasDesertEagleSpin(Owner.HeldItem) &&
+                    (playerState.TrackingRightPress ||
+                    ((Owner.Calamity().mouseRight || Main.mouseRight) && !Main.mapFullscreen && !Main.blockMouse));
             }
         }
 
@@ -81,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void HoldoutAI()
         {
-            if (!Owner.active || Owner.dead || Owner.CCed || Owner.noItems || Owner.HeldItem.type != AssociatedItemID)
+            if (!Owner.active || Owner.dead || Owner.CCed || Owner.noItems || !DesertEagle.ItemHasDesertEagleSpin(Owner.HeldItem))
             {
                 Projectile.Kill();
                 return;
@@ -575,7 +576,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             if (Time < 2f)
                 return false;
 
-            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D texture = ModContent.Request<Texture2D>(WeaponSettings?.DesertEagleTextureAssetPath ?? Texture).Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float drawRotation = Projectile.rotation + (Projectile.spriteDirection == -1 ? MathHelper.Pi : 0f) - (Owner.gravDir == -1 ? MathHelper.Pi * Owner.direction : 0f);
             Vector2 origin = texture.Size() * 0.5f;

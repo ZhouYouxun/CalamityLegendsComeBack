@@ -60,7 +60,7 @@ Mods: {
 
 				LegendaryCodex: {
 					DisplayName: 传奇图鉴
-					Tooltip: 左键打开传奇武器图鉴。
+					Tooltip: Left click to open the legendary weapon codex.
 				}
 
 				CTRLBoss: {
@@ -84,6 +84,21 @@ Mods: {
 					Tooltip: 右键打开，领取目前已经准备好的复古游戏机。
 				}
 			}
+
+			LegendaryEmblem: {
+				DisplayName: 黄金饰章
+				Tooltip: 佩戴后才可以开启传奇武器的大招
+			}
+
+			LegendaryUltimateTester: {
+				DisplayName: 传奇大招测试器
+				Tooltip: 仅限测试用：所有传奇武器的大招会在1秒内充能完成
+			}
+
+			TestWeapon: {
+				// DisplayName: Test Weapon
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -96,6 +111,26 @@ Mods: {
 			}
 
 			SacredThunder.SacredThunderPROJ.DisplayName: 神圣雷霆
+			TestWeaponProj.DisplayName: 测试武器弹幕
+			TeachingProjectileA_LineTrailLaser.DisplayName: 教学弹幕A线状拖尾激光
+			TeachingProjectileB_FlashSparklePoint.DisplayName: 教学弹幕B闪光星点
+			TeachingProjectileC_BloomGlowCore.DisplayName: 教学弹幕C绽放辉光核心
+			TeachingProjectileD_PulseRingField.DisplayName: 教学弹幕D脉冲环场
+			TeachingProjectileE_ExplosionImpact.DisplayName: 教学弹幕E爆炸冲击
+			TeachingProjectileF_SmokeMistDust.DisplayName: 教学弹幕F烟雾粉尘
+			TeachingProjectileG_FireAshBurn.DisplayName: 教学弹幕G火灰燃烧
+			TeachingProjectileH_WaterFoamOcean.DisplayName: 教学弹幕H水沫海洋
+			TeachingProjectileI_BloodFleshBiology.DisplayName: 教学弹幕I血肉生物
+			TeachingProjectileJ_DebrisMechanicalParts.DisplayName: 教学弹幕J机械碎片
+			TeachingProjectileK_MagicStatusUI.DisplayName: 教学弹幕K魔法状态界面
+			TeachingProjectileL_SlashSmearAfterimage.DisplayName: 教学弹幕L斩击残影拖痕
+			TeachingProjectileM_TechHoloSquare.DisplayName: 教学弹幕M科技全息方块
+			TeachingProjectileN_ParticleSetsControllers.DisplayName: 教学弹幕N粒子组控制器
+
+			GhostSniperRifle: {
+				GhostSniperRound.DisplayName: 幽灵狙击弹
+				GhostSniperSpectreOrb.DisplayName: 幽灵狙击幽魂球
+			}
 		}
 
 		TheSpecialText: {

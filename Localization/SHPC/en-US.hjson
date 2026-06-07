@@ -77,6 +77,126 @@ Mods: {
 					Tooltip: Left click opens the SHPC material index. Right click opens the right-click heat system index.
 				}
 			}
+
+			FastChargeModule: {
+				DisplayName: Fast Charge Module
+				Tooltip: Halves the maximum charge time of the EX super laser, but also halves the player's life regeneration
+			}
+
+			ChargedDiffusionChip: {
+				DisplayName: Charged Diffusion Chip
+				Tooltip: Left click scatters five energy orbs at once, but each deals only 30% damage
+			}
+
+			CommandAscend: {
+				DisplayName: Mortar Transceiver
+				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
+			}
+
+			MilitaryCaller: {
+				DisplayName: Military Caller
+				Tooltip:
+					'''
+					While holding SHPC, right click switches to Military Caller mode
+					This mode does not use the right-click heat system
+					Fires a tech beacon that air-drops one friendly Calamity tech turret
+					Each call has a base cost of 40 mana
+					Up to 8 turrets can exist at once
+					Deploying a ninth turret makes the oldest turret explode in place
+					Each turret lasts up to 5 minutes
+					Deployment fails within 18 tiles of another turret
+					Biome turret mapping:
+					Jungle = Plague; Snow = Ice; Underworld or Brimstone Crags = Fire
+					Ocean, Sulphurous Sea, Abyss, or Sunken Sea = Water
+					Astral, Hallow, or Sky = Laser
+					Desert or Evil biome = Onyx; other biomes = Lab
+					'''
+			}
+
+			Barrier: {
+				DisplayName: Barrier
+				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life rounded down to a multiple of 5. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
+			}
+
+			TacticalComputer: {
+				DisplayName: Tactical Computer
+				Tooltip: Gives SHPC right click automatic lock-on
+			}
+
+			HeatRedirectModule: {
+				DisplayName: Heat Redirect Module
+				Tooltip:
+					'''
+					SHPC right-click shots generate 20% more heat and natural heat dissipation is reduced by 33%
+					Each heat level grants an additional 33% SHPC right-click damage
+					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
+					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
+					'''
+			}
+
+			ProjectilePossessionModule: {
+				DisplayName: Vacuum Cleaner
+				Tooltip:
+					'''
+					While holding SHPC, right click switches to projectile possession mode
+					Hold right click to capture clones of nearby hostile projectiles in a vacuum cone, up to 15 stored
+					The original hostile projectile keeps existing, but its velocity and damage are permanently reduced by 20%
+					The clone is pulled to the player, becomes friendly, and permanently deals 20x damage
+					Release right click to launch the stored friendly clones forward
+					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
+					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
+					Some persistent beams and blacklisted projectiles are ignored
+					'''
+			}
+
+			WastelandEnergyCore: {
+				DisplayName: Wasteland Energy Core
+				Tooltip:
+					'''
+					+7% SHPC damage
+					SHPC left-click mana cost -8%; right-click mana cost -12%
+					SHPC left click gains 1 extra soul canister and loads 25% more ammo rounded up to a multiple of 5
+					While holding SHPC, stand still and cease fire to rapidly restore mana
+					Automatically drinks mana potions when needed
+					'''
+			}
+
+			EverfrostEnergyCore: {
+				DisplayName: Everfrost Energy Core
+				Tooltip:
+					'''
+					+15% SHPC damage
+					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
+					SHPC left click gains 2 extra soul canisters and loads 50% more ammo rounded up to a multiple of 5
+					While holding SHPC, stop moving horizontally and cease fire to rapidly restore mana
+					Automatically drinks mana potions when needed
+					Shortens right-click startup
+					'''
+			}
+
+			EvolutionEnergyCore: {
+				DisplayName: Evolution Energy Core
+				Tooltip:
+					'''
+					+15% SHPC damage, +5% critical strike chance, allows right-click critical hits
+					SHPC left-click mana cost -15%; right-click mana cost -30%; left click has a 20% chance not to consume ammo
+					SHPC left click gains 3 extra soul canisters and loads 75% more ammo rounded up to a multiple of 5
+					While holding SHPC, cease fire to rapidly restore mana
+					Automatically drinks mana potions when needed
+					Shortens right-click startup
+					'''
+			}
+
+			StarstreamEnergyCore: {
+				DisplayName: Starstream Energy Core
+				Tooltip:
+					'''
+					+20% SHPC damage, +10% critical strike chance, allows right-click critical hits
+					While holding SHPC, gain infinite mana; left click has a 50% chance not to consume ammo
+					SHPC left click gains 4 extra soul canisters and loads 100% more ammo rounded up to a multiple of 5
+					Shortens right-click startup
+					'''
+			}
 		}
 
 		TheSpecialText: {
@@ -208,7 +328,34 @@ Mods: {
 				CoreOfCalamityEnergyOrb.DisplayName: Calamitous Energy Orb
 				CoreOfCalamityExplosion.DisplayName: Calamitous Energy Rupture
 				CoreOfCalamitySplitOrb.DisplayName: Calamitous Energy Fragment
+				ProjectilePossessionHoldout.DisplayName: SHPC Vacuum Cleaner
+				BloodstoneCore_BloodOrb.DisplayName: Bloodstone Core_ Blood Orb
+				RuinousSoul_GhostExplosion.DisplayName: Ruinous Soul_ Ghost Explosion
+				RuinousSoul_OrbitGhost.DisplayName: Ruinous Soul_ Orbit Ghost
+				Necroplasm_Orb.DisplayName: Necroplasm_ Orb
+				FragmentNebula_Star.DisplayName: Fragment Nebula_ Star
+				EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
+				EndothermicEnergy_LN2.DisplayName: Endothermic Energy_ L N2
+				FragmentEntropy_CosmicFire.DisplayName: Fragment Entropy_ Cosmic Fire
+				FragmentNebula_BurstRelay.DisplayName: Fragment Nebula_ Burst Relay
+				ArmoredShell_Lightning.DisplayName: Armored Shell_ Lightning
+				UnholyEssence_HolyNova.DisplayName: Unholy Essence_ Holy Nova
+				RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
+				FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
+				PlagueCell_Lazer.DisplayName: Plague Cell_ Lazer
+				AshesofCalamity_SoulRelay.DisplayName: Ashes of Calamity Soul Relay
+				AshesofCalamity_Soul.DisplayName: Ashes of Calamity Soul
+				StarblightSootShard.DisplayName: Starblight Soot Soul
+				EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
+				SHPCAmmoSelectionPanel.DisplayName: S H P C Ammo Selection Panel
+				SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
+				PlagueCell_Fog.DisplayName: Plague Cell_ Fog
+				PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
+				SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
 			}
+
+			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+			ProjectilePossessionUI.DisplayName: SHPC Vacuum Meter
 
 			A_Dev: {
 				SHPCBookPanel.DisplayName: SHPC Material Manual Panel

@@ -59,6 +59,26 @@ Mods: {
 				DisplayName: BB Test
 				Tooltip: ""
 			}
+
+			OffshoreWindTurbine: {
+				DisplayName: Offshore Wind Turbine
+				Tooltip: Increases Briny Baron's maximum tide by 2
+			}
+
+			ImpactRestarter: {
+				DisplayName: Impact Restarter
+				Tooltip: Briny Baron's short right-click dash fully refreshes its cooldown on enemy impact\nThe full-tide spin dash reduces that cooldown to 1 second instead
+			}
+
+			HighTideOverloadBarrier: {
+				DisplayName: High-Tide Overload Barrier
+				Tooltip: While Briny Baron's tide is full, grants 20 defense and 20% damage reduction
+			}
+
+			SurgeChainReactor: {
+				DisplayName: Surge Chain Reactor
+				Tooltip: Briny Baron's quick slash releases an extra 75x75 water burst on enemy impact
+			}
 		}
 
 		Projectiles: {
@@ -78,6 +98,10 @@ Mods: {
 				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Final Tide Execution
 				BBSD_Star.DisplayName: Final Tide Star
 				BBSD_Final_INV.DisplayName: Final Tide Brand
+				SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
+				BrinyBaron_HomingBubble.DisplayName: Briny Baron_ Homing Bubble
+				BrinyBaron_Tornado.DisplayName: Briny Baron_ Tornado
+				BrinyBaron_WaterStream.DisplayName: Briny Baron_ Water Stream
 			}
 		}
 

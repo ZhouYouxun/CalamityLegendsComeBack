@@ -1,0 +1,36 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Magnum: {
+					DisplayName: 马格南
+					Tooltip:
+						'''
+						左键轮流散射动能灌注弹，以及强力吸血弹
+						沙漠之鹰拆解出的最低级枪体
+						'''
+				}
+
+				LightningEagle: {
+					DisplayName: 闪电鹰
+					Tooltip:
+						'''
+						按住右键高速旋转枪体，切碎撞到它的敌人
+						充能满时点击左键释放强力闪光爆弹
+						沙漠之鹰拆解出的终极转盘结构
+						'''
+				}
+
+				ElephantHunter: {
+					DisplayName: 猎象者
+					Tooltip:
+						'''
+						左键轮流散射动能灌注弹，以及强力吸血弹
+						按住右键高速旋转枪体，充能满时点击左键释放强力闪光爆弹
+						由马格南与闪电鹰合成，拥有沙漠之鹰的完整逻辑
+						'''
+				}
+			}
+		}
+	}
+}

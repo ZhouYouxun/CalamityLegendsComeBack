@@ -880,6 +880,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 exPlayer.EXValue = 0;
             }
 
+            if (Main.myPlayer == player.whoAmI)
+                EnsureMagazineStatusPanel(player);
+
             if (IsUsingEX(player))
                 return;
 
@@ -1091,6 +1094,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 player.whoAmI);
 
             SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f }, player.Center);
+        }
+
+        private void EnsureMagazineStatusPanel(Player player)
+        {
+            int panelType = ModContent.ProjectileType<SHPCMagazineStatusPanel>();
+            if (player.ownedProjectileCounts[panelType] > 0)
+                return;
+
+            Projectile.NewProjectile(
+                Item.GetSource_FromThis(),
+                player.Center,
+                Vector2.Zero,
+                panelType,
+                0,
+                0f,
+                player.whoAmI);
         }
         #endregion
 

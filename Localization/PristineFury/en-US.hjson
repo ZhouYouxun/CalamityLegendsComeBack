@@ -1,6 +1,11 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
+			TestItem: {
+				DisplayName: PF Test Item
+				Tooltip: While equipped, Pristine Fury single right clicks cycle imprints for testing
+			}
+
 			Weapons: {
 				NewLegendPristineFury: {
 					DisplayName: Pristine Fury - Return of Legends

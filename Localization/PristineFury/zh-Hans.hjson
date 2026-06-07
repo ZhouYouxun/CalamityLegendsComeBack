@@ -1,6 +1,11 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
+			TestItem: {
+				DisplayName: PF 测试配饰
+				Tooltip: 佩戴时，纯元单击右键改为按顺序切换印记
+			}
+
 			Weapons: {
 				NewLegendPristineFury: {
 					DisplayName: 纯元：传奇归来

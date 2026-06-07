@@ -110,6 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             string introText = string.Format(this.GetLocalizedValue("BF_Intro"), presetName);
             string leftPresetText = this.GetLocalizedValue($"PresetLeft{(int)currentPreset}");
             string rightPresetText = this.GetLocalizedValue($"PresetRight{(int)currentPreset}");
+            string presetPassiveText = this.GetLocalizedValue($"PresetPassive{(int)currentPreset}");
             string passiveStatus = !passivePlayer.PassiveUnlocked
                 ? this.GetLocalizedValue("PassiveStateLocked")
                 : passivePlayer.FinalStandActive
@@ -134,6 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             string merged =
                 introText + "\n\n" +
                 passiveText + "\n" +
+                presetPassiveText + "\n" +
                 leftPresetText + "\n" +
                 rightPresetText + "\n\n" +
                 exHint + "\n\n" +

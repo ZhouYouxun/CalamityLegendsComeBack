@@ -18,18 +18,28 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public const string TextureAssetPath = "CalamityLegendsComeBack/Weapons/A_Dev/DesertEagle/沙漠之鹰";
 
         // Balance knobs kept out of SetDefaults so they are easy to tune while testing.
-        public int SilverVolleyDamage => 200;
-        public int LifeRoundDamage => 1981;
-        public float HoldoutSpinContactDamageMultiplier => 0.31f;
-        public float HoldoutFullChargeRoundDamageMultiplier => 22.0f;
+        public virtual int SilverVolleyDamage => 200;
+        public virtual int LifeRoundDamage => 1981;
+        public virtual float HoldoutSpinContactDamageMultiplier => 0.31f;
+        public virtual float HoldoutFullChargeRoundDamageMultiplier => 22.0f;
+        public virtual string DesertEagleTextureAssetPath => TextureAssetPath;
+        public virtual bool HasDesertEaglePrimaryFire => true;
+        public virtual bool HasDesertEagleSpin => true;
 
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => TextureAssetPath;
+        public override string Texture => DesertEagleTextureAssetPath;
 
-        private static int HoldoutType => ModContent.ProjectileType<DesertEagleHoldout>();
+        internal static int SharedHoldoutType => ModContent.ProjectileType<DesertEagleHoldout>();
+        protected virtual int HoldoutType => SharedHoldoutType;
         internal static readonly SoundStyle DeltaForceDesertEagleUnsuppressedSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰无消音");
         internal static readonly SoundStyle DeltaForceDesertEagleSuppressedSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰有消音");
         internal static readonly SoundStyle DeltaForceSvdMarksmanRifleSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/Svd射手步枪");
+
+        public override void SetStaticDefaults()
+        {
+            if (HasDesertEagleSpin)
+                ItemID.Sets.ItemsThatAllowRepeatedRightClick[Type] = true;
+        }
 
         public override void SetDefaults()
         {
@@ -52,13 +62,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             Item.Calamity().devItem = true;
         }
 
-        public override bool AltFunctionUse(Player player) => true;
+        public override bool AltFunctionUse(Player player) => HasDesertEagleSpin;
 
         public override bool CanUseItem(Player player)
         {
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
 
             if (player.altFunctionUse == 2)
+                return false;
+
+            if (!HasDesertEaglePrimaryFire)
                 return false;
 
             Item.damage = eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage;
@@ -90,8 +103,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public override void HoldItem(Player player)
         {
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
-            eaglePlayer.SetHoldingDesertEagle();
-            Item.damage = eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage;
+            Item.damage = HasDesertEaglePrimaryFire
+                ? eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage
+                : LifeRoundDamage;
+
+            if (!HasDesertEagleSpin)
+            {
+                Item.noUseGraphic = false;
+                return;
+            }
 
             player.Calamity().mouseWorldListener = true;
             if (Main.myPlayer == player.whoAmI)
@@ -141,9 +161,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         }
         private static bool ShouldHideHeldItem(Player player)
         {
+            if (!ItemHasDesertEagleSpin(player.HeldItem))
+                return false;
+
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
 
-            return player.ownedProjectileCounts[HoldoutType] > 0 ||
+            return player.ownedProjectileCounts[SharedHoldoutType] > 0 ||
                 (Main.myPlayer == player.whoAmI && eaglePlayer.TrackingRightPress);
         }
 
@@ -152,12 +175,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
             bool trackingRightClick = Main.myPlayer == player.whoAmI && eaglePlayer.TrackingRightPress;
 
-            if (player.ownedProjectileCounts[HoldoutType] <= 0 && !trackingRightClick)
+            if (!HasDesertEagleSpin || player.ownedProjectileCounts[HoldoutType] <= 0 && !trackingRightClick)
                 Item.noUseGraphic = false;
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
+            if (!HasDesertEaglePrimaryFire)
+                return false;
+
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
             Vector2 muzzleDirection = velocity.SafeNormalize(Vector2.UnitX * player.direction);
             Vector2 muzzlePosition = player.MountedCenter + muzzleDirection * 24f;
@@ -209,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             return false;
         }
 
-        public int GetConfiguredWeaponDamage(Player player, int baseDamage)
+        public virtual int GetConfiguredWeaponDamage(Player player, int baseDamage)
         {
             int originalDamage = Item.damage;
             Item.damage = baseDamage;
@@ -218,6 +244,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
             return Math.Max(1, adjustedDamage);
         }
+
+        internal static bool ItemHasDesertEagleSpin(Item item) =>
+            item?.ModItem is DesertEagle weapon && weapon.HasDesertEagleSpin;
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
         {

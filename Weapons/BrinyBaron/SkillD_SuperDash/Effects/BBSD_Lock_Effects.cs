@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,12 +13,61 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     {
         internal static void SpawnTargetAcquireEffects(Vector2 targetCenter, Vector2 ownerCenter)
         {
-            // Empty to prevent any particle effects during lock-on ready phase
+            if (Main.dedServ)
+                return;
+
+            // Targeting system lock-on lines contracting on the target
+            for (int i = 0; i < 12; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 12f;
+                Vector2 spawnPos = targetCenter + angle.ToRotationVector2() * 60f;
+                Vector2 velocity = (targetCenter - spawnPos).SafeNormalize(Vector2.UnitX) * 4.2f;
+
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    spawnPos,
+                    velocity,
+                    false,
+                    12,
+                    0.34f,
+                    Color.Cyan));
+            }
+
+            // Expanding aqua ring indicating target lock-on success
+            DirectionalPulseRing ring = new DirectionalPulseRing(
+                targetCenter,
+                Vector2.Zero,
+                new Color(95, 210, 255, 0),
+                new Vector2(0.7f, 0.7f),
+                0f,
+                0.14f,
+                0.02f,
+                14);
+            GeneralParticleHandler.SpawnParticle(ring);
         }
 
         internal static void SpawnLockingEffects(Projectile projectile, Player owner, Vector2 focusPoint, NPC target, int timer, bool targetLocked)
         {
-            // Empty to prevent any particle effects shooting from weapon during lock-on ready phase
+            if (Main.dedServ)
+                return;
+
+            // If a target is locked, spawn flowing water/energy streams traveling along the targeting beam
+            if (targetLocked && target != null)
+            {
+                Vector2 tip = projectile.Center + (projectile.rotation - MathHelper.PiOver4).ToRotationVector2() * (50f * projectile.scale);
+                if (timer % 4 == 0)
+                {
+                    Vector2 flowDir = (target.Center - tip).SafeNormalize(Vector2.UnitX);
+                    float flowSpeed = Main.rand.NextFloat(9f, 16f);
+
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(
+                        tip,
+                        flowDir * flowSpeed,
+                        false,
+                        24,
+                        0.25f,
+                        Color.Lerp(Color.DeepSkyBlue, Color.Cyan, Main.rand.NextFloat())));
+                }
+            }
         }
 
         internal static void DrawLockBeam(Vector2 startWorld, Vector2 endWorld, float opacity)

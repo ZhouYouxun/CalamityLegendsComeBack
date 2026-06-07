@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
+        private ref float FrameTimer => ref Projectile.localAI[1];
         private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(115, 232, 255));
 
         public override void SetStaticDefaults()
@@ -41,6 +42,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
             Timer++;
+            if (Projectile.numUpdates == 0)
+                FrameTimer++;
 
             bool drawingUpdate = Projectile.numUpdates == 0;
             if (Timer > 3f && drawingUpdate)
@@ -53,6 +56,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     7,
                     Main.rand.NextFloat(0.24f, 0.38f),
                     Color.Lerp(ThemeColor, Color.White, 0.32f)));
+
+                if (FrameTimer > 5f && Main.rand.NextBool(2))
+                    SpawnThreadedTrail(back);
             }
             else if (Timer == 3f)
             {
@@ -79,6 +85,38 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
         }
 
+        private void SpawnThreadedTrail(Vector2 back)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 side = back.RotatedBy(MathHelper.PiOver2);
+            Vector2 offset = side * Main.rand.NextFloat(-4.5f, 4.5f);
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center + offset,
+                back * Main.rand.NextFloat(0.9f, 2.1f) + side * Main.rand.NextFloat(-0.45f, 0.45f),
+                "CalamityMod/Particles/ThinEndedLine",
+                false,
+                Main.rand.Next(8, 13),
+                Main.rand.NextFloat(0.1f, 0.16f),
+                Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.24f, 0.56f)),
+                new Vector2(0.34f, 1.45f),
+                true,
+                false,
+                glowOpacity: 0.48f));
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + offset * 0.55f,
+                    back.RotatedByRandom(0.36f) * Main.rand.NextFloat(0.8f, 1.8f),
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.2f, 0.34f),
+                    Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.32f, 0.68f))));
+            }
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<Nightwither>(), 300);
@@ -88,6 +126,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (FrameTimer <= 5f)
+                return false;
+
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
