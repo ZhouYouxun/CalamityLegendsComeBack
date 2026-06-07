@@ -139,24 +139,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 GeneralParticleHandler.SpawnParticle(cut);
             }
 
-            if (Main.GameUpdateCount % 2 == 0)
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    float completion = Main.rand.NextFloat();
-                    Vector2 basePosition = Projectile.Center + beamVector * BeamLength * completion;
-                    float profile = (float)Math.Sin(completion * MathHelper.Pi);
-                    Vector2 flareVelocity = beamVector.RotatedByRandom(0.24f) * Main.rand.NextFloat(1.2f, 3.2f) +
-                        normal * Main.rand.NextFloatDirection() * profile * 2.2f;
-                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                        basePosition + normal * Main.rand.NextFloat(-18f, 18f) * profile,
-                        flareVelocity,
-                        false,
-                        Main.rand.Next(9, 15),
-                        Main.rand.NextFloat(0.45f, 0.82f) * Projectile.scale,
-                        Main.rand.NextBool(3) ? white : Color.Lerp(gold, Color.Black, Main.rand.NextFloat(0.1f, 0.75f))));
-                }
-            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -164,25 +146,70 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (beamVector == Vector2.Zero || BeamLength <= 0f || Projectile.scale <= 0.03f)
                 return false;
 
-            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
-            Vector2 start = Projectile.Center.Floor() + beamVector * Projectile.scale * 10f - Main.screenPosition;
-            Vector2 end = start + beamVector * BeamLength;
-            Vector2 scale = new(Projectile.scale);
-            Utils.LaserLineFraming framing = new(DelegateMethods.RainbowLaserDraw);
-            Color beamColor = Color.Lerp(SolarColor, Color.Black, 0.42f);
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, SolarColor);
+            float opacity = Projectile.Opacity;
+            Vector2 start = Projectile.Center - Main.screenPosition;
+            Vector2 end = Projectile.Center + beamVector * BeamLength - Main.screenPosition;
 
-            DelegateMethods.f_1 = 1f;
-            DelegateMethods.c_1 = beamColor * 0.86f * Projectile.Opacity;
-            Utils.DrawLaser(Main.spriteBatch, texture, start, end, scale, framing);
+            PFLeftEffectRules.BeginAdditive();
 
-            for (int i = 0; i < 3; i++)
+            Texture2D startTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Boss/ProvidenceHolyRay", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+            Texture2D midTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayMid", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+            Texture2D endTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayEnd", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+
+            float drawScale = 1.3f * (Projectile.scale / MaxBeamScale);
+            float rotation = beamVector.ToRotation() - MathHelper.PiOver2;
+            Vector2 scaleVec = new Vector2(drawScale, drawScale);
+
+            // Draw start piece
+            Main.spriteBatch.Draw(startTex, start, null, theme * opacity, rotation, startTex.Size() / 2f, scaleVec, SpriteEffects.None, 0f);
+
+            float currentLength = BeamLength;
+            currentLength -= (startTex.Height / 2 + endTex.Height) * drawScale;
+            Vector2 center = Projectile.Center + beamVector * drawScale * startTex.Height / 2f;
+
+            if (currentLength > 0f)
             {
-                beamColor = Color.Lerp(beamColor, Color.White, 0.42f);
-                scale *= 0.78f;
-                DelegateMethods.c_1 = beamColor * 0.52f * Projectile.Opacity;
-                Utils.DrawLaser(Main.spriteBatch, texture, start, end, scale, framing);
+                float lengthDrawn = 0f;
+                int frameHeight = 36;
+                int frameY = frameHeight * (Projectile.timeLeft / 3 % 4);
+                Rectangle sourceRect = new Rectangle(0, frameY, midTex.Width, frameHeight);
+
+                while (lengthDrawn + 1f < currentLength)
+                {
+                    if (currentLength - lengthDrawn < frameHeight * drawScale)
+                    {
+                        sourceRect.Height = (int)((currentLength - lengthDrawn) / drawScale);
+                    }
+                    if (sourceRect.Height <= 0)
+                        break;
+
+                    Main.spriteBatch.Draw(midTex, center - Main.screenPosition, sourceRect, theme * opacity, rotation, new Vector2(sourceRect.Width / 2f, 0f), scaleVec, SpriteEffects.None, 0f);
+                    lengthDrawn += sourceRect.Height * drawScale;
+                    center += beamVector * sourceRect.Height * drawScale;
+
+                    sourceRect.Y += frameHeight;
+                    if (sourceRect.Y + sourceRect.Height > midTex.Height)
+                    {
+                        sourceRect.Y = 0;
+                    }
+                }
             }
 
+            Vector2 endPos = center - Main.screenPosition;
+            Main.spriteBatch.Draw(endTex, endPos, null, theme * opacity, rotation, new Vector2(endTex.Width / 2f, 0f), scaleVec, SpriteEffects.None, 0f);
+
+            // Origin glow
+            Main.EntitySpriteDraw(bloom, start, null, theme * (0.86f * opacity), 0f, bloom.Size() * 0.5f, 0.6f * drawScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloomRing, start, null, theme * (0.65f * opacity), 0f, bloomRing.Size() * 0.5f, 0.9f * drawScale, SpriteEffects.None, 0);
+
+            // End glow
+            Main.EntitySpriteDraw(bloom, end, null, theme * (0.9f * opacity), 0f, bloom.Size() * 0.5f, 0.7f * drawScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, end, null, (Color.White with { A = 0 }) * (0.52f * opacity), 0f, bloom.Size() * 0.5f, 0.3f * drawScale, SpriteEffects.None, 0);
+
+            PFLeftEffectRules.EndAdditive();
             return false;
         }
     }

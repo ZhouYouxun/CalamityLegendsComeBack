@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 {
     internal class BFRecoveryLeafBuff : ModBuff
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/LeftClick/复苏之叶贴图";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/贴图/复苏之叶";
 
         public override void SetStaticDefaults()
         {

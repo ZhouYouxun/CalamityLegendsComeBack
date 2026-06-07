@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float Timer => ref Projectile.localAI[0];
         private float squash = 0.42f;
 
-        private Color ThemeColor => new(128, 64, 255);
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(128, 64, 255));
         private Color VisualColor
         {
             get

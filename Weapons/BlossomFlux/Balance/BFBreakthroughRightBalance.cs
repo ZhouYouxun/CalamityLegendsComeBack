@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             int framesPerArrow = 45;
             int maxArrows = 3;
             int penetrate = 5;
-            bool noFalloff = false;
+            bool noFalloff = true;
             float speedMult = 1f;
             float damagePerChargeStack = 0f;
 

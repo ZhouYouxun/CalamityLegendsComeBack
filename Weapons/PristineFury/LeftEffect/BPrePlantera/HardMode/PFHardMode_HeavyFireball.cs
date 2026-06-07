@@ -267,10 +267,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 ModContent.Request<Texture2D>(
                     "CalamityMod/Particles/BloomRing").Value;
 
-            Texture2D line =
-                ModContent.Request<Texture2D>(
-                    "CalamityMod/Particles/BloomLineSoftEdge").Value;
-
             Texture2D magic =
                 ModContent.Request<Texture2D>(
                     "CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
@@ -322,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     continue;
 
                 Main.EntitySpriteDraw(
-                    line,
+                    bloom,
 
                     (current + previous) * 0.5f -
                     Main.screenPosition,
@@ -339,11 +335,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     between.ToRotation() +
                     MathHelper.PiOver2,
 
-                    line.Size() * 0.5f,
+                    bloom.Size() * 0.5f,
 
                     new Vector2(
-                        0.28f * (1f - completion),
-                        length / line.Height),
+                        0.1f * (1f - completion),
+                        MathHelper.Clamp(length / bloom.Height, 0.06f, 0.28f)),
 
                     SpriteEffects.None,
                     0f);

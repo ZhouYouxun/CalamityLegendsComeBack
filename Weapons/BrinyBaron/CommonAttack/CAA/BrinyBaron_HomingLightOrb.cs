@@ -16,6 +16,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private const float HomingRange = 920f;
         private const float MaxSpeed = 16.5f;
+
+        // 出生后的短暂自由飞行时间。因为 extraUpdates = 1，这里约等于 9 个正常帧。
+        private const int HomingDelay = 18;
+
+        // 惯性越大，转向越慢，越不会变成“贴脸导弹”。
+        private const float HomingInertia = 27f;
+
+        // 没开始追踪 / 找不到目标时的轻微减速，让泡泡有一点漂浮感。
+        private const float FreeFlightDamping = 0.996f;
+        private const float NoTargetDamping = 0.992f;
+
+        // 很小的游移角度，负责制造“好像在追，但又不是特别主动”的神秘弧线。
+        private const float WanderingTurnStrength = 0.006f;
+
         private int timer;
 
         public override void SetStaticDefaults()
@@ -90,23 +104,59 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void HomeTowardTarget()
         {
-            NPC target = FindNearestTarget(HomingRange);
-            if (target == null)
+            // 前几帧完全不追踪，让泡泡先按照出生速度飘出去。
+            // 这一步非常关键：否则它会像导弹一样立刻贴向敌人，神秘感就没了。
+            if (timer <= HomingDelay)
             {
-                Projectile.velocity *= 0.992f;
+                FreeDrift();
                 return;
             }
 
-            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-            Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
-            float loosen = Utils.GetLerpValue(0f, 22f, timer, true);
-            float closeLoosen = Utils.GetLerpValue(280f, 52f, Projectile.Distance(target.Center), true);
-            float turnRate = MathHelper.Lerp(0.18f, 0.62f, MathHelper.Max(loosen, closeLoosen));
-            float targetSpeed = MathHelper.Lerp(9.5f, MaxSpeed, loosen);
+            NPC target = FindNearestTarget(HomingRange);
+            if (target == null)
+            {
+                FreeDrift(NoTargetDamping);
+                return;
+            }
 
-            Vector2 steeredDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), turnRate).ToRotationVector2();
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), targetSpeed, 0.22f + MathHelper.Max(loosen, closeLoosen) * 0.28f);
-            Projectile.velocity = steeredDirection * speed;
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+
+            // 防止极端情况下速度太小，导致方向计算不稳定。
+            if (currentSpeed < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 4f;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+
+            // 刚过启动延迟时只轻轻拉一下，随后才逐渐变得更愿意追踪。
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 36f, timer, true);
+
+            // 离敌人很近时稍微积极一点，避免泡泡在敌人旁边绕半天不命中。
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+
+            float targetSpeed = MathHelper.Lerp(10.5f, MaxSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            // StarofJudgement 那种“半追踪感”的核心：
+            // 不直接把速度改成 desiredVelocity，而是用较高惯性慢慢拽过去。
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+
+            // 额外保留一点点游移，不让轨迹变得过于机械。
+            float sideSway = (float)Math.Sin((timer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            // 限速，避免多次惯性叠加后速度过高。
+            if (Projectile.velocity.Length() > MaxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxSpeed;
+        }
+
+        private void FreeDrift(float damping = FreeFlightDamping)
+        {
+            // 自由飞行期也不是绝对直线，而是有一点非常轻的偏航。
+            float wander = (float)Math.Sin((timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
         private void SpawnLightTrail()

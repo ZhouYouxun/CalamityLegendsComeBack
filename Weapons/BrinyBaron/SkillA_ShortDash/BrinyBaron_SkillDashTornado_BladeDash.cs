@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private const int DashTimeMax = 45;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
-        private const float DashSpeed = 18f;
+        private const float DashSpeed = 18f * 0.67f;
         private const float ReboundSpeed = 9f;
         private const float DashTurnRate = 0.01f; // 转向最大角度限
         private const float ReadyBladeDistance = 28f;

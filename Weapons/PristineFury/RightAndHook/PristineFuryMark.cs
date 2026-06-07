@@ -114,8 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 target.type == ModContent.NPCType<ThanatosBody2>() ||
                 target.type == ModContent.NPCType<ThanatosTail>())
             {
-                mark = PristineFuryMark.ExoThanatos;
-                return true;
+                return false;
             }
 
             if (target.type == NPCID.WallofFlesh || target.type == NPCID.WallofFleshEye)
@@ -173,7 +172,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         internal static Color GetColor(PristineFuryMark mark)
         {
-            return new Color(255, 224, 92);
+            return mark switch
+            {
+                PristineFuryMark.EvilT2 => WorldGen.crimson ? new Color(240, 40, 70) : new Color(160, 60, 240),
+                PristineFuryMark.Plantera => new Color(0, 255, 180),
+                PristineFuryMark.Aurora => new Color(60, 220, 240),
+                PristineFuryMark.Goliath => new Color(130, 255, 60),
+                PristineFuryMark.Moonlord => new Color(100, 240, 220),
+                PristineFuryMark.Providence => !Main.dayTime ? new Color(230, 80, 240) : new Color(255, 175, 50),
+                PristineFuryMark.Polterghast => new Color(115, 232, 255),
+                PristineFuryMark.Dog => new Color(170, 70, 255),
+                PristineFuryMark.FakeCalamity => new Color(255, 40, 40),
+                PristineFuryMark.ExoTwins => new Color(255, 80, 80),
+                PristineFuryMark.ExoThanatos => new Color(50, 255, 100),
+                PristineFuryMark.ExoAres => new Color(255, 140, 50),
+                _ => new Color(255, 224, 92)
+            };
         }
 
         internal static int GetDisplayedBaseDamage(PristineFuryMark mark)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
@@ -174,7 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
             Texture2D magicTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
             Texture2D circleTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_04").Value;
             Color mainColor = new Color(110, 255, 150, 180) * Projectile.Opacity;
@@ -499,3 +499,4 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         }
     }
 }
+

@@ -44,13 +44,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Color voidGreen = new(136, 255, 162);
             Lighting.AddLight(Projectile.Center, voidGreen.ToVector3() * 0.38f);
 
-            NPC target = FindTarget(860f);
-            if (target != null && Timer > 10f)
-            {
-                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * MathHelper.Clamp(Projectile.velocity.Length() + 0.12f, 18f, 28f);
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.08f);
-            }
-
             if (Main.dedServ)
                 return;
 
@@ -108,7 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 float completion = i / (float)Projectile.oldPos.Length;
                 Vector2 trailPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(line, trailPosition, null, voidGreen * (1f - completion) * 0.34f, Projectile.rotation, line.Size() * 0.5f, new Vector2(0.12f, 0.58f), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(line, trailPosition, null, voidGreen * (1f - completion) * 0.34f, Projectile.rotation, line.Size() * 0.5f, new Vector2(0.018f, 0.087f), SpriteEffects.None, 0);
             }
 
             for (int i = 0; i < 6; i++)

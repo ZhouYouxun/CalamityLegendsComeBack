@@ -17,7 +17,7 @@
 - **BloomLineCap.png**：64x32 的半圆端帽光晕，适合给线段补端点，评价是功能明确但单独表现不完整。
 - **BloomLineFade.png**：1960x1960 的渐隐锥形光束，适合蓄力射线或向上冲光，评价是纵深感好但需要合理裁剪。
 - **BloomLineSkinny.png**：1960x1960 的细腰竖向柔光线，适合能量束中心高亮，评价是线形优雅但用途相对窄。
-- **BloomLineSoftEdge.png**：1960x1960 的圆角软边粗光条，适合持续激光，评价是平滑耐缩放但视觉上较普通。
+- **ThinEndedLine.png**：1960x1960 的圆角软边粗光条，适合持续激光，评价是平滑耐缩放但视觉上较普通。
 - **BloomLineThick.png**：1960x1960 的厚实竖向辉光柱，适合强光射线，评价是亮度饱满但大尺寸可能显得笨重。
 - **BloomRing.png**：190x190 的柔边白色圆环，适合脉冲扩散，评价是过渡自然但缺少破碎或噪声变化。
 - **BloomRingThinLarge.png**：2048x2048 的高分辨率细圆环，适合高清冲击圈，评价是边线锐利但对小粒子来说偏奢侈。
@@ -276,3 +276,4 @@
 - **WulfrumDroidEmote.cs**：定义 WulfrumDroidEmotes 机器人表情粒子，评价是角色反馈生动。
 - **WulfrumDroidSweatEmote.cs**：定义 WulfrumDroidSweatEmote 汗滴表情粒子，评价是小而明确。
 - **WulfrumHatParticle.cs**：定义 WulfrumHat 帽子粒子，评价是趣味物件掉落感好。
+

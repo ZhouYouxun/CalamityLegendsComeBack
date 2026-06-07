@@ -24,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const int BubbleSpawnFrameInterval = 5;
 
         private int lifeTimer;
+        private int bubbleTimer;
         private float initialSpeed;
 
         private int SpawnStage => Utils.Clamp((int)Projectile.ai[1], 0, 3);
@@ -178,20 +179,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void TrySpawnTrackingBubbles()
         {
-            int spawnInterval = BubbleSpawnFrameInterval * (Projectile.extraUpdates + 1);
-            if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner || lifeTimer % spawnInterval != 0)
+            if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner)
                 return;
+
+            bubbleTimer++;
+            if (bubbleTimer < BubbleSpawnFrameInterval)
+                return;
+
+            bubbleTimer = 0;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
+            // 出生位置不要太规整：从浪潮后方和侧边随机散出，像被主弹幕甩出来的泡泡。
             Vector2 spawnPosition =
                 Projectile.Center -
-                forward * Main.rand.NextFloat(Projectile.width * 0.12f, Projectile.width * 0.32f) +
-                right * Main.rand.NextFloat(-Projectile.width * 0.28f, Projectile.width * 0.28f);
+                forward * Main.rand.NextFloat(Projectile.width * 0.16f, Projectile.width * 0.38f) +
+                right * Main.rand.NextFloat(-Projectile.width * 0.34f, Projectile.width * 0.34f) +
+                Main.rand.NextVector2Circular(Projectile.width * 0.08f, Projectile.width * 0.08f);
 
-            Vector2 velocity = (-forward * Main.rand.NextFloat(0.8f, 1.8f) + right * Main.rand.NextFloatDirection() * 0.9f)
-                .SafeNormalize(-forward) * Main.rand.NextFloat(4.5f, 6.5f);
+            // 不直接朝敌人生成，而是先朝浪潮反方向偏出去。
+            // 后续由泡泡自己的延迟惯性追踪慢慢把轨迹拽回目标，制造“有点追，但不完全追”的感觉。
+            Vector2 baseDirection = (-forward).RotatedByRandom(Main.rand.NextFloat(0.35f, 0.95f));
+            Vector2 velocity = (baseDirection + right * Main.rand.NextFloatDirection() * 0.18f)
+                .SafeNormalize(-forward) * Main.rand.NextFloat(4.8f, 7.2f);
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

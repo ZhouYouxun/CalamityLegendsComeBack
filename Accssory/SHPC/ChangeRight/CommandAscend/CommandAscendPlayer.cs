@@ -1,6 +1,6 @@
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend
 {
     public sealed class CommandAscendPlayer : ModPlayer
     {

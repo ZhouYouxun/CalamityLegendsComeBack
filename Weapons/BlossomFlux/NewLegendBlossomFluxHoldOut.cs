@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int BreakthroughChargeReductionPerUnlock = 7;
         private const int BreakthroughLoadFlashFrames = 14;
         private const int BreakthroughQueuedShotGap = 4;
-        private const int LeftStarFlashFrames = 8;
+        private const int LeftStarFlashFrames = 14;
         private const float RecoveryDnaMaxOffset = 18f;
         private const float RecoveryDnaPhaseStep = MathHelper.Pi / 8f;
         private const float BreakthroughSpeed = 19f;
@@ -110,13 +110,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private bool BombardChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
         private bool RecoveryChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov;
         private bool SpecialAimScopeAnchorActive => BombardChargePoseActive || RecoveryChargePoseActive;
-        private bool ShouldUseAimScope => CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak;
+        private bool ShouldUseAimScope => rightChargeActive && CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_BRecov && CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_DBomb;
 
         internal Color GetAimScopeMainColor() => Color.Lerp(PresetColor, AccentColor, 0.18f);
 
         internal Color GetAimScopeAccentColor() => Color.Lerp(AccentColor, Color.White, 0.25f);
 
-        internal bool ShouldDrawBombardMouseReticle => BombardChargePoseActive;
+        internal bool ShouldDrawBombardMouseReticle => false;
 
         internal float GetChargeCompletion() => ChargeCompletion;
 
@@ -124,10 +124,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             ? Math.Max(BFAimScope.MinimumCharge, BreakthroughFramesPerArrow)
             : Math.Max(BFAimScope.MinimumCharge, GetCurrentMaxChargeFrames());
 
-        internal bool ShouldKeepAimScopeSlot(int slotIndex) =>
-            BreakthroughChargeActive &&
-            slotIndex >= 0 &&
-            slotIndex < GetBreakthroughAimScopeCount();
+        internal bool ShouldKeepAimScopeSlot(int slotIndex)
+        {
+            if (!ShouldUseAimScope || slotIndex < 0)
+                return false;
+
+            return BreakthroughChargeActive
+                ? slotIndex < GetBreakthroughAimScopeCount()
+                : slotIndex == 0;
+        }
 
         internal float GetAimScopeChargeForSlot(int slotIndex)
         {
@@ -145,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int GetBreakthroughAimScopeCount()
         {
-            if (!BreakthroughChargeActive || reloadTimer > 0)
+            if (!BreakthroughChargeActive)
                 return 0;
 
             int drawCount = breakthroughLoadedArrows;
@@ -153,6 +158,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 drawCount++;
 
             return Utils.Clamp(drawCount, 0, BreakthroughMaxLoadedArrows);
+        }
+
+        private int GetDesiredAimScopeCount()
+        {
+            if (!ShouldUseAimScope)
+                return 0;
+
+            return BreakthroughChargeActive ? GetBreakthroughAimScopeCount() : 1;
         }
 
         private int GetCurrentReadyChargeFrames()
@@ -272,9 +285,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             bool selectionPanelOpen = HasActiveSelectionPanel(Owner);
             rightUIPlayer.ProcessRightClickState(selectionPanelOpen);
-            HandleFormSwitchKeyInput();
+            bool formSwitchInputHandled = HandleFormSwitchInput();
 
-            if (rightUIPlayer.LongHoldReachedThisFrame && !rightChargeActive)
+            if (!formSwitchInputHandled && !HasActiveSelectionPanel(Owner) && rightUIPlayer.LongHoldReachedThisFrame && !rightChargeActive)
                 BeginRightCharge();
 
             UpdateRightChargeState(rightUIPlayer);
@@ -330,10 +343,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             ScheduleNextLeftFire();
         }
 
-        private void HandleFormSwitchKeyInput()
+        private bool HandleFormSwitchInput()
         {
             if (KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed != true)
-                return;
+                return false;
 
             if (rightChargeActive ||
                 Owner.HeldItem.type != AssociatedItemID ||
@@ -344,10 +357,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Owner.mouseInterface ||
                 (Main.playerInventory && Main.HoverItem.type == Owner.HeldItem.type))
             {
-                return;
+                return false;
             }
 
             OpenFormSwitchSelectionPanel();
+            return true;
         }
 
         private int GetInitialLeftFireDelay() => CurrentPreset switch
@@ -492,6 +506,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             UpdateBombardReticle();
             UpdateRecoveryChargeBuff();
+            EnsureAimScopeExists();
 
             if (reloadTimer > 0)
             {
@@ -898,7 +913,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             breakthroughQueuedPenetrate = stats.Penetrate;
             breakthroughQueuedSpeed = speed;
             breakthroughQueuedKnockback = knockback;
-            breakthroughQueuedNoFalloff = stats.IgnorePenetrationDamageFalloff ? 1f : 0f;
+            breakthroughQueuedNoFalloff = 1f;
         }
 
         private void UpdateBreakthroughQueuedShots()
@@ -1548,46 +1563,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return null;
         }
 
-        private void ToggleSelectionPanel()
-        {
-            int selectionPanelType = ModContent.ProjectileType<BFSelectionPanel>();
-            Projectile openPanel = null;
-
-            foreach (Projectile projectile in Main.ActiveProjectiles)
-            {
-                if (!projectile.active || projectile.owner != Owner.whoAmI || projectile.type != selectionPanelType)
-                    continue;
-
-                if (projectile.ai[0] != 1f && projectile.Opacity > 0.02f)
-                {
-                    openPanel = projectile;
-                    continue;
-                }
-
-                projectile.Kill();
-                projectile.netUpdate = true;
-            }
-
-            if (openPanel != null)
-            {
-                openPanel.ai[0] = 1f;
-                openPanel.netUpdate = true;
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.5f }, Owner.Center);
-                return;
-            }
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Owner.Center,
-                Vector2.Zero,
-                selectionPanelType,
-                0,
-                0f,
-                Owner.whoAmI);
-
-            SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.1f, Volume = 0.55f }, Owner.Center);
-        }
-
         private void OpenFormSwitchSelectionPanel()
         {
             int selectionPanelType = ModContent.ProjectileType<BFSelectionPanel>();
@@ -1627,14 +1602,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
             }
 
-            int desiredScopes = GetBreakthroughAimScopeCount();
+            int desiredScopes = GetDesiredAimScopeCount();
             if (desiredScopes <= 0)
             {
                 KillAimScopeProjectiles();
                 return;
             }
 
-            bool[] existingSlots = new bool[BreakthroughMaxLoadedArrows];
+            bool[] existingSlots = new bool[desiredScopes];
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
                 if (!projectile.active || projectile.owner != Owner.whoAmI || projectile.type != AimScopeProjectileType)
@@ -1665,7 +1640,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     0f,
                     Owner.whoAmI,
                     0f,
-                    BFAimScope.BaseMaxCharge,
+                    GetAimScopeMaxChargeFrames(),
                     slotIndex);
             }
         }
@@ -1754,12 +1729,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
                 SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            DrawThinWeaponOutline(weaponTexture, drawPosition, rotation, origin, effects);
+            Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
                 BlendState.Additive,
                 SamplerState.PointClamp,
                 DepthStencilState.None,
                 Main.Rasterizer,
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
+
+            DrawRestoredHoldoutCoreGlow(drawPosition, rotation, leftStarFlash, chargeGlow);
+            if (rightChargeActive && reloadTimer <= 0)
+            {
+                DrawRestoredChargeAirFlow();
+                DrawRestoredChargeArrowVisuals();
+            }
 
             DrawBowCoreStarburst(drawPosition, rotation, leftStarFlash, chargeGlow);
 
@@ -1773,8 +1768,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
 
-            DrawThinWeaponOutline(weaponTexture, drawPosition, rotation, origin, effects);
-            Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
             return false;
         }
 
@@ -1793,8 +1786,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void DrawBowCoreStarburst(Vector2 drawPosition, float rotation, float leftFlash, float chargeGlow)
         {
-            float leftPower = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(leftFlash, 0f, 1f));
-            float chargePower = rightChargeActive ? MathHelper.Lerp(0.12f, 1f, chargeGlow) : 0f;
+            float leftSustain = leftHeldLastFrame && !rightChargeActive ? 0.42f : 0f;
+            float leftPower = Math.Max(MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(leftFlash, 0f, 1f)), leftSustain);
+            float chargePower = rightChargeActive ? MathHelper.Lerp(0.24f, 1f, chargeGlow) : 0f;
             float power = MathHelper.Clamp(Math.Max(leftPower, chargePower), 0f, 1f);
             if (power <= 0.025f)
                 return;
@@ -1803,30 +1797,52 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Texture2D pulseStarTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/PulseStar").Value;
             Texture2D halfStarTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLine").Value;
-            Color mainColor = (Color.Lerp(PresetColor, Color.White, 0.28f) with { A = 0 }) * power;
-            Color accentColor = (Color.Lerp(AccentColor, Color.White, 0.48f) with { A = 0 }) * power;
-            Vector2 forward = rotation.ToRotationVector2();
+            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            float presetScale = GetBowCorePresetScale();
+            float presetBrightness = GetBowCorePresetBrightness();
+            float presetSpin = GetBowCorePresetSpinMultiplier();
             float time = Main.GlobalTimeWrappedHourly;
-            float pulse = 0.82f + 0.18f * (float)Math.Sin(time * 8.4f + Projectile.identity * 0.41f);
-            float releaseTighten = rightChargeActive ? 1f : MathHelper.Lerp(0.72f, 1f, leftPower);
+            float modeSpin = rightChargeActive
+                ? MathHelper.Lerp(0.55f, 1.25f, chargeGlow)
+                : MathHelper.Lerp(0.92f, 1.72f, leftPower);
+            float spin = time * presetSpin * modeSpin;
+            Color mainColor = (Color.Lerp(PresetColor, Color.White, 0.34f) with { A = 0 }) * power * presetBrightness;
+            Color accentColor = (Color.Lerp(AccentColor, Color.White, 0.58f) with { A = 0 }) * power * presetBrightness;
+            Color coreColor = (Color.Lerp(Color.White, AccentColor, 0.14f) with { A = 0 }) * power * presetBrightness;
+            Vector2 forward = rotation.ToRotationVector2();
+            float pulse = 0.9f + 0.1f * (float)Math.Sin(time * 9.2f + Projectile.identity * 0.41f);
+            float visualScale = Projectile.scale * presetScale * MathHelper.Lerp(0.96f, 1.42f, power);
+            float releaseTighten = rightChargeActive ? 1f : MathHelper.Lerp(0.82f, 1.08f, leftPower);
 
             Main.EntitySpriteDraw(
                 bloomTexture,
                 drawPosition,
                 null,
-                mainColor * (0.16f + 0.28f * power),
+                mainColor * (0.34f + 0.28f * power),
                 rotation,
                 bloomTexture.Size() * 0.5f,
-                new Vector2(0.12f + power * 0.18f, 0.052f + power * 0.075f) * pulse,
+                new Vector2(0.34f + power * 0.34f, 0.12f + power * 0.15f) * pulse * visualScale,
                 SpriteEffects.None,
                 0);
 
-            for (int i = 0; i < 6; i++)
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                drawPosition,
+                null,
+                coreColor * (0.22f + 0.22f * power),
+                -rotation,
+                bloomTexture.Size() * 0.5f,
+                new Vector2(0.12f + power * 0.11f, 0.12f + power * 0.09f) * visualScale,
+                SpriteEffects.None,
+                0);
+
+            int spokeCount = rightChargeActive ? 12 : 10;
+            for (int i = 0; i < spokeCount; i++)
             {
-                float spokeCompletion = i / 6f;
-                float spokeRotation = rotation + MathHelper.TwoPi * spokeCompletion + time * MathHelper.Lerp(0.18f, 0.46f, power);
-                float spokePulse = 0.88f + 0.12f * (float)Math.Sin(time * 10.5f + i * 1.27f);
-                Color spokeColor = Color.Lerp(mainColor, accentColor, i % 2 == 0 ? 0.2f : 0.72f) * (0.48f * spokePulse);
+                float spokeCompletion = i / (float)spokeCount;
+                float spokeRotation = rotation + MathHelper.TwoPi * spokeCompletion + spin * MathHelper.Lerp(0.22f, 0.48f, power);
+                float spokePulse = 0.86f + 0.14f * (float)Math.Sin(time * 11.5f + i * 1.27f);
+                Color spokeColor = Color.Lerp(mainColor, accentColor, i % 2 == 0 ? 0.18f : 0.76f) * (0.62f * spokePulse);
 
                 Main.EntitySpriteDraw(
                     lineTexture,
@@ -1835,7 +1851,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     spokeColor,
                     spokeRotation,
                     lineTexture.Size() * 0.5f,
-                    new Vector2((0.14f + power * 0.24f) * releaseTighten, 1.2f + power * 1.1f),
+                    new Vector2((0.16f + power * 0.28f) * releaseTighten, 2.25f + power * 2.05f) * visualScale,
                     SpriteEffects.None,
                     0);
             }
@@ -1844,26 +1860,390 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 pulseStarTexture,
                 drawPosition,
                 null,
-                Color.Lerp(mainColor, Color.White with { A = 0 }, 0.24f) * 0.58f,
-                -rotation + time * 0.3f,
+                Color.Lerp(mainColor, Color.White with { A = 0 }, 0.3f) * 0.82f,
+                -rotation + spin * 0.58f,
                 pulseStarTexture.Size() * 0.5f,
-                (0.035f + power * 0.075f) * pulse,
+                (0.095f + power * 0.13f) * pulse * visualScale,
                 SpriteEffects.None,
                 0);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 5; i++)
             {
-                float starRotation = rotation + MathHelper.TwoPi * i / 3f + MathHelper.Pi / 6f + time * (0.35f + i * 0.08f);
+                float layerFade = 1f - i * 0.11f;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    float sine = MathHelper.Lerp((float)Math.Sin(time * 7.6f + i * 0.65f), side, 0.72f);
+                    float starRotation = rotation + MathHelper.PiOver4 * side + spin * power * (0.24f + i * 0.06f);
+                    Vector2 starScale = new Vector2(0.22f + power * 0.075f, (0.92f + power * 1.08f) * sine * side) * layerFade * visualScale;
+                    Color starColor = Color.Lerp(accentColor, coreColor, i * 0.12f) * (0.58f + 0.2f * power);
+
+                    Main.EntitySpriteDraw(
+                        halfStarTexture,
+                        drawPosition + forward * (i - 2) * 0.65f,
+                        null,
+                        starColor,
+                        starRotation,
+                        halfStarTexture.Size() * 0.5f,
+                        starScale,
+                        SpriteEffects.None,
+                        0);
+                }
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                float sparkRotation = rotation + MathHelper.PiOver2 * i + spin * 0.72f;
                 Main.EntitySpriteDraw(
-                    halfStarTexture,
-                    drawPosition + forward * (i - 1) * 1.2f,
+                    sparkTexture,
+                    drawPosition + sparkRotation.ToRotationVector2() * (4f + power * 6f),
                     null,
-                    accentColor * (0.36f + 0.24f * power),
-                    starRotation,
-                    halfStarTexture.Size() * 0.5f,
-                    new Vector2(0.08f + power * 0.055f, 0.34f + power * 0.48f) * pulse,
+                    coreColor * 0.78f,
+                    sparkRotation,
+                    sparkTexture.Size() * 0.5f,
+                    (0.085f + power * 0.09f) * visualScale,
                     SpriteEffects.None,
                     0);
+            }
+        }
+
+        private float GetBowCorePresetScale() => CurrentPreset switch
+        {
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.08f,
+            BlossomFluxChloroplastPresetType.Chlo_BRecov => 0.92f,
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.02f,
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.28f,
+            BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.13f,
+            _ => 1f
+        };
+
+        private float GetBowCorePresetBrightness() => CurrentPreset switch
+        {
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.12f,
+            BlossomFluxChloroplastPresetType.Chlo_BRecov => 0.9f,
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.02f,
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.26f,
+            BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.08f,
+            _ => 1f
+        };
+
+        private float GetBowCorePresetSpinMultiplier() => CurrentPreset switch
+        {
+            BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.12f,
+            BlossomFluxChloroplastPresetType.Chlo_BRecov => 0.76f,
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.34f,
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => 0.92f,
+            BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.18f,
+            _ => 1f
+        };
+
+        private void DrawRestoredHoldoutCoreGlow(Vector2 drawPosition, float rotation, float leftFlash, float chargeGlow)
+        {
+            float leftPower = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(leftFlash, 0f, 1f));
+            float chargePower = rightChargeActive ? MathHelper.Lerp(0.18f, 1f, chargeGlow) : 0f;
+            float activity = MathHelper.Clamp(Math.Max(leftPower * 0.82f, chargePower), 0f, 1f);
+            if (activity <= 0.025f)
+                return;
+
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Vector2 muzzlePosition = GunTipPosition - Main.screenPosition;
+            Vector2 bodyPosition = Vector2.Lerp(Projectile.Center, GunTipPosition, 0.42f) - Main.screenPosition;
+            Vector2 forward = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
+            Color mainColor = (Color.Lerp(PresetColor, Color.White, 0.4f) with { A = 0 }) * activity;
+            Color accentColor = (Color.Lerp(AccentColor, Color.White, 0.62f) with { A = 0 }) * activity;
+            float time = Main.GlobalTimeWrappedHourly;
+            float pulse = 0.86f + 0.14f * (float)Math.Sin(time * 7.8f + Projectile.identity * 0.33f);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                bodyPosition,
+                null,
+                mainColor * (0.3f + activity * 0.34f),
+                rotation,
+                bloomTexture.Size() * 0.5f,
+                new Vector2(0.36f + activity * 0.34f, 0.13f + activity * 0.12f) * pulse * Projectile.scale,
+                SpriteEffects.None,
+                0);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                muzzlePosition + forward * 3f,
+                null,
+                accentColor * (0.25f + activity * 0.42f),
+                rotation,
+                bloomTexture.Size() * 0.5f,
+                new Vector2(0.24f + activity * 0.28f, 0.08f + activity * 0.12f) * pulse * Projectile.scale,
+                SpriteEffects.None,
+                0);
+
+            int sparkCount = 3 + (int)(activity * 4f);
+            for (int i = 0; i < sparkCount; i++)
+            {
+                float phase = time * (rightChargeActive ? 0.92f : 1.45f) + i / (float)sparkCount;
+                float travel = phase - MathF.Floor(phase);
+                Vector2 sparkPosition =
+                    drawPosition +
+                    forward * MathHelper.Lerp(-20f, 22f, travel) +
+                    normal * MathF.Sin(travel * MathHelper.TwoPi + i * 0.7f) * MathHelper.Lerp(4f, 9f, activity);
+
+                Main.EntitySpriteDraw(
+                    sparkTexture,
+                    sparkPosition,
+                    null,
+                    Color.Lerp(mainColor, accentColor, i / Math.Max(1f, sparkCount - 1f)) * (0.32f + 0.24f * activity),
+                    rotation + MathHelper.PiOver2,
+                    sparkTexture.Size() * 0.5f,
+                    new Vector2(0.024f, 0.13f + activity * 0.08f) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+            }
+        }
+
+        private void DrawRestoredChargeAirFlow()
+        {
+            float charge = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
+            if (charge <= 0.025f)
+                return;
+
+            Texture2D smearTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Vector2 forward = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
+            Vector2 muzzle = GunTipPosition - Main.screenPosition;
+            Color mainColor = (BFArrowCommon.GetPresetColor(CurrentPreset) with { A = 0 }) * (0.25f + charge * 0.42f);
+            Color accentColor = (BFArrowCommon.GetPresetAccentColor(CurrentPreset) with { A = 0 }) * (0.18f + charge * 0.46f);
+            float time = Main.GlobalTimeWrappedHourly;
+            int streamCount = 3 + (int)MathF.Round(charge * 4f);
+
+            for (int i = 0; i < streamCount; i++)
+            {
+                float lane = i - (streamCount - 1) * 0.5f;
+                float phase = time * MathHelper.Lerp(1.1f, 2.6f, charge) + i * 0.173f + Projectile.identity * 0.013f;
+                float travel = phase - MathF.Floor(phase);
+                Vector2 position =
+                    muzzle +
+                    forward * MathHelper.Lerp(44f, -12f, travel) +
+                    normal * lane * MathHelper.Lerp(3.5f, 6.5f, charge) +
+                    normal * MathF.Sin(time * 4.3f + i) * MathHelper.Lerp(0.6f, 2.2f, charge);
+
+                Main.EntitySpriteDraw(
+                    smearTexture,
+                    position,
+                    null,
+                    Color.Lerp(mainColor, accentColor, i / Math.Max(1f, streamCount - 1f)) * (0.46f + 0.24f * charge),
+                    (-forward).ToRotation() - MathHelper.PiOver2,
+                    new Vector2(smearTexture.Width * 0.5f, smearTexture.Height),
+                    new Vector2(0.012f + charge * 0.014f, 0.22f + charge * 0.48f) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+
+                if (i % 2 != 0)
+                    continue;
+
+                Main.EntitySpriteDraw(
+                    starTexture,
+                    position + normal * MathF.Sign(lane == 0f ? 1f : lane) * (4f + charge * 5f),
+                    null,
+                    accentColor * 0.62f,
+                    forward.ToRotation() + MathHelper.PiOver4,
+                    starTexture.Size() * 0.5f,
+                    new Vector2(0.05f + charge * 0.035f, 0.28f + charge * 0.32f) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+            }
+        }
+
+        private void DrawRestoredChargeArrowVisuals()
+        {
+            Texture2D arrowTexture = ModContent.Request<Texture2D>(BFArrowCommon.GetTexturePathForPreset(CurrentPreset)).Value;
+            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
+            {
+                DrawRestoredBreakthroughChargedArrows(arrowTexture);
+                return;
+            }
+
+            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
+            {
+                DrawRestoredRecoveryChargeCore();
+                return;
+            }
+
+            DrawRestoredSpecialChargeArrow(arrowTexture);
+        }
+
+        private void DrawRestoredBreakthroughChargedArrows(Texture2D arrowTexture)
+        {
+            int maxArrows = Math.Max(1, BreakthroughMaxLoadedArrows);
+            int loadedArrows = Utils.Clamp(breakthroughLoadedArrows, 0, maxArrows);
+            bool fullyLoaded = loadedArrows >= maxArrows;
+            int drawCount = fullyLoaded ? loadedArrows : Math.Min(loadedArrows + 1, maxArrows);
+            if (drawCount <= 0)
+                return;
+
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Vector2 forward = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
+            Vector2 origin = arrowTexture.Size() * 0.5f;
+            float rotation = forward.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
+            Color loadedColor = Color.Lerp(Color.White, PresetColor, 0.58f);
+            Color loadingColor = Color.Lerp(Color.White, loadedColor, BreakthroughCurrentArrowCompletion);
+
+            for (int i = 0; i < drawCount; i++)
+            {
+                bool loadingArrow = !fullyLoaded && i == loadedArrows;
+                float visibility = loadingArrow ? BreakthroughCurrentArrowCompletion : 1f;
+                if (visibility <= 0.025f)
+                    continue;
+
+                float stackOffset = i - (drawCount - 1) * 0.5f;
+                Vector2 drawWorld =
+                    Projectile.Center +
+                    forward * MathHelper.Lerp(23f, 33f, visibility) -
+                    forward * i * 2.2f +
+                    normal * stackOffset * 3.4f;
+                Vector2 drawPosition = drawWorld - Main.screenPosition;
+                float flash = !loadingArrow && breakthroughLoadFlashTimer > 0 && i == loadedArrows - 1
+                    ? breakthroughLoadFlashTimer / (float)BreakthroughLoadFlashFrames
+                    : 0f;
+                float pulse = 1f + flash * 0.12f + (fullyLoaded ? MathF.Sin(Main.GlobalTimeWrappedHourly * 8f + i) * 0.035f : 0f);
+                Color arrowColor = (loadingArrow ? loadingColor : loadedColor) * visibility;
+
+                Main.EntitySpriteDraw(
+                    bloomTexture,
+                    drawPosition + forward * 8f,
+                    null,
+                    (AccentColor with { A = 0 }) * (0.16f + flash * 0.22f) * visibility,
+                    rotation,
+                    bloomTexture.Size() * 0.5f,
+                    new Vector2(0.13f + flash * 0.05f, 0.045f + flash * 0.02f) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+
+                for (int strand = 0; strand < 2; strand++)
+                {
+                    float strandPhase = strand * MathHelper.Pi;
+                    for (int segment = 0; segment < 5; segment++)
+                    {
+                        float completion = segment / 4f;
+                        float phase = Main.GlobalTimeWrappedHourly * 8f + strandPhase + completion * MathHelper.TwoPi + i * 0.7f;
+                        Vector2 helixPosition = drawPosition + forward * MathHelper.Lerp(-18f, 15f, completion) + normal * MathF.Sin(phase) * MathHelper.Lerp(7f, 2f, completion);
+
+                        Main.EntitySpriteDraw(
+                            sparkTexture,
+                            helixPosition,
+                            null,
+                            (Color.Lerp(AccentColor, Color.White, 0.2f) with { A = 0 }) * (0.34f * visibility),
+                            rotation,
+                            sparkTexture.Size() * 0.5f,
+                            new Vector2(0.025f, 0.12f + (1f - completion) * 0.08f) * Projectile.scale,
+                            SpriteEffects.None,
+                            0);
+                    }
+                }
+
+                Main.EntitySpriteDraw(
+                    arrowTexture,
+                    drawPosition,
+                    null,
+                    arrowColor,
+                    rotation,
+                    origin,
+                    MathHelper.Lerp(0.82f, 1.05f, visibility) * pulse * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+            }
+        }
+
+        private void DrawRestoredRecoveryChargeCore()
+        {
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 center = Vector2.Lerp(Projectile.Center, GunTipPosition, 0.36f) - Main.screenPosition;
+            float charge = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
+            float pulse = 0.84f + 0.16f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8.5f + Projectile.identity * 0.3f);
+            Color green = new(98, 255, 142, 0);
+            Color pale = new(222, 255, 232, 0);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                center,
+                null,
+                green * (0.28f + charge * 0.44f),
+                0f,
+                bloomTexture.Size() * 0.5f,
+                (0.1f + charge * 0.12f) * pulse * Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                bloomTexture,
+                center,
+                null,
+                pale * (0.16f + charge * 0.24f),
+                0f,
+                bloomTexture.Size() * 0.5f,
+                (0.045f + charge * 0.065f) * pulse * Projectile.scale,
+                SpriteEffects.None,
+                0f);
+        }
+
+        private void DrawRestoredSpecialChargeArrow(Texture2D arrowTexture)
+        {
+            Vector2 forward = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
+            Vector2 arrowDrawPosition = Projectile.Center + forward * MathHelper.Lerp(20f, 27f, ChargeCompletion) + normal * MathHelper.Lerp(-4f, -1f, ChargeCompletion) - Main.screenPosition;
+            float pulse = readyBurstPlayed ? (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f) * 0.05f : 0f;
+            float arrowScale = (0.88f + ChargeCompletion * 0.22f + pulse) * Projectile.scale;
+            Color arrowColor = Color.Lerp(Color.White, PresetColor, 0.42f + 0.25f * ChargeCompletion);
+            float arrowRotation = forward.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
+
+            DrawRestoredSpecialChargeOverlay(arrowDrawPosition, arrowRotation, arrowScale, forward, normal);
+
+            Main.EntitySpriteDraw(
+                arrowTexture,
+                arrowDrawPosition,
+                null,
+                arrowColor,
+                arrowRotation,
+                arrowTexture.Size() * 0.5f,
+                arrowScale,
+                SpriteEffects.None,
+                0);
+        }
+
+        private void DrawRestoredSpecialChargeOverlay(Vector2 arrowDrawPosition, float arrowRotation, float arrowScale, Vector2 forward, Vector2 normal)
+        {
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D sparkTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            float charge = MathHelper.SmoothStep(0f, 1f, ChargeCompletion);
+            Color mainColor = BFArrowCommon.GetPresetColor(CurrentPreset) with { A = 0 };
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(CurrentPreset) with { A = 0 };
+
+            for (int i = -1; i <= 1; i++)
+            {
+                Vector2 offset = normal * i * (4f + 5f * charge);
+                Main.EntitySpriteDraw(
+                    bloomTexture,
+                    arrowDrawPosition + offset * 0.5f + forward * 3f,
+                    null,
+                    Color.Lerp(mainColor, accentColor, i == 0 ? 0.55f : 0.25f) * (0.16f + charge * 0.2f),
+                    arrowRotation,
+                    bloomTexture.Size() * 0.5f,
+                    new Vector2(0.12f + charge * 0.055f, 0.036f + charge * 0.016f) * arrowScale,
+                    SpriteEffects.None,
+                    0f);
+
+                Main.EntitySpriteDraw(
+                    sparkTexture,
+                    arrowDrawPosition + offset - forward * (2f + charge * 4f),
+                    null,
+                    Color.Lerp(accentColor, Color.White with { A = 0 }, 0.18f) * (0.22f + charge * 0.28f),
+                    arrowRotation + i * 0.14f,
+                    sparkTexture.Size() * 0.5f,
+                    new Vector2(0.026f, 0.16f + charge * 0.12f) * arrowScale,
+                    SpriteEffects.None,
+                    0f);
             }
         }
 

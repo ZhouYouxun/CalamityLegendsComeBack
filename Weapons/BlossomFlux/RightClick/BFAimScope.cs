@@ -230,7 +230,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             return false;
         }
 
-        private static void DrawBombardMouseReticle(Vector2 centerWorld, float chargeCompletion)
+        internal static void DrawBombardMouseReticle(Vector2 centerWorld, float chargeCompletion)
         {
             Texture2D glowTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D magic03 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;

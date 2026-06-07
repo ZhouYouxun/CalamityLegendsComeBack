@@ -148,16 +148,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 player.Calamity().rightClickListener = true;
 
             if (player.Calamity().cooldowns.TryGetValue(BBEXCoolDown.ID, out var cooldown))
-                cooldown.timeLeft = tidePlayer.TideValue;
+                cooldown.timeLeft = tidePlayer.EXValue;
             else
-                player.AddCooldown(BBEXCoolDown.ID, tidePlayer.TideValue);
+                player.AddCooldown(BBEXCoolDown.ID, 0);
 
             if (player.Calamity().cooldowns.TryGetValue(BBSuperDashCooldownHandler.ID, out var superDashVisualCooldown))
                 superDashVisualCooldown.timeLeft = superDashCooldown.IsCoolingDown ? superDashCooldown.RemainingFrames : 0;
             else if (superDashCooldown.IsCoolingDown)
                 player.AddCooldown(BBSuperDashCooldownHandler.ID, superDashCooldown.RemainingFrames);
 
-            if (!superDashCooldown.CanUseSuperDash || !HasDesignedSuperDashUnlock || !tidePlayer.TideFull)
+            if (!superDashCooldown.CanUseSuperDash || !HasDesignedSuperDashUnlock || !tidePlayer.TideFull || !tidePlayer.EXFull)
                 return;
 
             if (!KeybindSystem.LegendarySkill.JustPressed)
@@ -196,6 +196,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 consumedTide);
 
             superDashCooldown.StartCooldown();
+            tidePlayer.ResetEX();
             tidePlayer.TideValue = 0;
         }
 

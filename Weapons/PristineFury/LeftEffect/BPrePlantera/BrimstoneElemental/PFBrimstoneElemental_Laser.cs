@@ -127,7 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             Color color = GetBeamColor();
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center + beamVector * Projectile.ai[0], Vector2.Zero, color, Vector2.One, 0f, 0.18f, 0.64f, 18));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center + beamVector * Projectile.ai[0], Vector2.Zero, color, Vector2.One, 0f, 0.18f, 0.88f, 18));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -191,6 +191,33 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             {
                 Vector2 pos = Projectile.Center + beamVector * Main.rand.NextFloat(Projectile.ai[0]) + beamVector.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-10f, 10f);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(pos, Main.rand.NextVector2Circular(0.4f, 0.4f), false, 12, Main.rand.NextFloat(0.28f, 0.56f), Color.Lerp(PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92)), Color.White, Main.rand.NextFloat(0.08f, 0.36f)), true, true));
+            }
+
+            Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 70, 70));
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 pos = Projectile.Center + beamVector * Main.rand.NextFloat(Projectile.ai[0]);
+                Vector2 normalOffset = beamVector.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-16f, 16f);
+                Vector2 vel = beamVector * Main.rand.NextFloat(0.35f, 0.95f) + Main.rand.NextVector2Circular(0.18f, 0.18f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    pos + normalOffset,
+                    vel,
+                    false,
+                    Main.rand.Next(9, 15),
+                    Main.rand.NextFloat(0.34f, 0.72f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.28f, 0.62f)),
+                    true,
+                    false,
+                    true));
+
+                if (Main.rand.NextBool(2))
+                {
+                    Dust squash = Dust.NewDustPerfect(pos + normalOffset * 0.6f, ModContent.DustType<SquashDust>(), beamVector * Main.rand.NextFloat(1.2f, 2.6f));
+                    squash.noGravity = true;
+                    squash.scale = Main.rand.NextFloat(1.1f, 1.5f);
+                    squash.color = theme;
+                    squash.fadeIn = 1.5f;
+                }
             }
         }
 

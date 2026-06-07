@@ -9,7 +9,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.EverfrostEnergyCore
 {
     public class EverfrostEnergyCore : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/General/EnergyCore";
 
         public override void SetDefaults()
         {

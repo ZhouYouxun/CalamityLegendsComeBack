@@ -1,13 +1,14 @@
 using CalamityMod.Items.Materials;
+using CalamityMod.Items.Weapons.Melee;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule
 {
     public sealed class ProjectilePossessionModule : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/Skill/HeatRedirectModule/HeatRedirectModule";
+        //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/Skill/HeatRedirectModule/HeatRedirectModule";
 
         public override void SetDefaults()
         {
@@ -30,7 +31,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
                 .AddIngredient<DubiousPlating>(10)
                 .AddIngredient(ItemID.SoulofNight, 5)
                 .AddIngredient(ItemID.SoulofSight, 5)
-                .AddTile(TileID.MythrilAnvil)
+                .AddIngredient<MirrorBlade>()
+                .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }
     }

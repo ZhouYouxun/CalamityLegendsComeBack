@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float Charge => ref Projectile.ai[1];
         private ref float Timer => ref Projectile.localAI[0];
         private ref float FullChargePulseCreated => ref Projectile.localAI[1];
-        private Color ThemeColor => new(128, 64, 255);
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(128, 64, 255));
 
         public override void SetDefaults()
         {
@@ -201,30 +201,30 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Color color = (theme with { A = 0 }) * charge;
             Color white = (Color.White with { A = 0 }) * charge;
             float pulse = 0.86f + 0.14f * (float)System.Math.Sin(Timer * 0.18f);
-            float chargeScale = 0.35f + charge * 1.35f;
+            float chargeScale = 0.25f + charge * 0.9f;
 
             PFLeftEffectRules.BeginAdditive();
 
             for (int i = 0; i < 3; i++)
             {
                 Color bloomColor = Color.Lerp(color, white, i * 0.2f);
-                float scale = (0.17f + chargeScale * (0.19f - i * 0.035f)) * pulse;
+                float scale = (0.11f + chargeScale * (0.12f - i * 0.025f)) * pulse;
                 Main.EntitySpriteDraw(bloom, drawPosition, null, bloomColor * (0.72f - i * 0.12f), Projectile.rotation + Main.rand.NextFloat(-0.3f, 0.3f), bloom.Size() * 0.5f, scale, SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(ring, drawPosition, null, color * (0.28f + charge * 0.42f), Projectile.rotation + Timer * 0.035f, ring.Size() * 0.5f, (0.16f + charge * 0.44f) * pulse, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(circularSmear, drawPosition, null, color * 0.3f, -Projectile.rotation + Timer * 0.04f, circularSmear.Size() * 0.5f, 0.16f + charge * 0.42f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, drawPosition, null, color * (0.28f + charge * 0.42f), Projectile.rotation + Timer * 0.035f, ring.Size() * 0.5f, (0.1f + charge * 0.28f) * pulse, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(circularSmear, drawPosition, null, color * 0.3f, -Projectile.rotation + Timer * 0.04f, circularSmear.Size() * 0.5f, 0.1f + charge * 0.26f, SpriteEffects.None, 0);
 
             if (charge > 0.42f)
             {
-                float orbitRadius = (12f + charge * 22f) * (0.55f + charge * 0.45f);
+                float orbitRadius = (8f + charge * 15f) * (0.55f + charge * 0.45f);
                 for (int i = 0; i < 3; i++)
                 {
                     float angle = Timer * (0.035f + i * 0.006f) + MathHelper.TwoPi * i / 3f;
                     Vector2 orbitPosition = drawPosition + angle.ToRotationVector2() * orbitRadius;
                     float orbitPulse = 0.8f + 0.2f * (float)System.Math.Sin(Timer * 0.21f + i);
                     Color orbitColor = Color.Lerp(color, white, 0.22f + i * 0.12f);
-                    Main.EntitySpriteDraw(bloom, orbitPosition, null, orbitColor * 0.45f, angle, bloom.Size() * 0.5f, (0.09f + charge * 0.12f) * orbitPulse, SpriteEffects.None, 0);
+                    Main.EntitySpriteDraw(bloom, orbitPosition, null, orbitColor * 0.45f, angle, bloom.Size() * 0.5f, (0.06f + charge * 0.08f) * orbitPulse, SpriteEffects.None, 0);
                 }
             }
 

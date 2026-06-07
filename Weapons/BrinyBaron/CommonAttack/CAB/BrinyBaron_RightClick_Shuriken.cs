@@ -33,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const float TideHomingBlendTotalWeight = 30f;
         private const float TideHomingFinalSpeed = 34f;
         private const float TideHomingFinalSpeedLerp = 0.2f;
+        private const int TideHomingDelayFrames = 144;
         private const float TideHomingIdleAcceleration = 1.006f;
         private const float NonEmpoweredShurikenAcceleration = 1.0195f;
         private const float NonEmpoweredShurikenMaxSpeed = 48f;
@@ -226,8 +227,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             if (homing && target != null && target.active)
             {
                 homingTimer++;
+                if (homingTimer <= TideHomingDelayFrames)
+                {
+                    EnsureFallbackFlightVelocity();
+                    Projectile.velocity *= TideHomingIdleAcceleration;
+                    ClampFlightSpeed(shurikenProfile.TideHomingFinalSpeed);
+                }
+                else
+                {
                 Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
-                float loosen = Utils.GetLerpValue(0f, 36f, homingTimer, true);
+                float loosen = Utils.GetLerpValue(TideHomingDelayFrames, TideHomingDelayFrames + 36f, homingTimer, true);
                 float closeTargetBoost = Utils.GetLerpValue(240f, 42f, Projectile.Distance(target.Center), true);
                 float pullStrength = MathHelper.Max(loosen, closeTargetBoost);
                 float targetSpeed = MathHelper.Lerp(shurikenProfile.TideHomingTotalWeight, shurikenProfile.TideHomingTargetWeight, pullStrength);
@@ -243,6 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 float speedCorrection = MathHelper.Lerp(shurikenProfile.TideHomingFinalSpeedLerp, 0.55f, pullStrength);
                 speed = MathHelper.Lerp(speed, targetFinalSpeed, speedCorrection);
                 Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
+                }
             }
             else
             {

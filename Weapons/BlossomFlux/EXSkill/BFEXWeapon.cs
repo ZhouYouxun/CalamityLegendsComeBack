@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill.SpecialEffects;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
@@ -432,7 +432,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     center + Main.rand.NextVector2Circular(10f, 10f),
                     sparkVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     Main.rand.Next(10, 17),
                     Main.rand.NextFloat(0.04f, 0.07f),
@@ -625,25 +625,25 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
         public override bool PreDraw(ref Color lightColor)
         {
-            // 基础贴图
+            // 鍩虹璐村浘
             Texture2D weaponTexture = TextureAssets.Projectile[Type].Value;
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
 
-            // 基础绘制参数
+            // 鍩虹缁樺埗鍙傛暟
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = weaponTexture.Size() * 0.5f;
             float rotation = Projectile.rotation;
             SpriteEffects effects = SpriteEffects.None;
 
-            // 外描边与本体发光脉冲
+            // 澶栨弿杈逛笌鏈綋鍙戝厜鑴夊啿
             float outlinePulse = 0.78f + 0.22f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.8f + Projectile.identity * 0.43f);
             float outlineDistance = 1.6f + 1f * outlinePulse;
             Color outlineColor = Color.Lerp(MainColor, AccentColor, 0.34f) * (0.24f + 0.16f * outlinePulse);
             Color glowColor = Color.Lerp(MainColor, Color.White, 0.24f) * (0.1f + 0.08f * outlinePulse);
 
-            // 重力翻转时修正原点与翻转方向
+            // 閲嶅姏缈昏浆鏃朵慨姝ｅ師鐐逛笌缈昏浆鏂瑰悜
             if (Owner.gravDir == 1f)
             {
                 if (Projectile.spriteDirection == -1)
@@ -656,7 +656,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                     effects = SpriteEffects.FlipVertically;
             }
 
-            // 绘制外描边
+            // 缁樺埗澶栨弿杈?
             for (int i = 0; i < 8; i++)
             {
                 float angle = MathHelper.TwoPi * i / 8f;
@@ -664,11 +664,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, outlineColor, rotation, origin, Projectile.scale, effects, 0);
             }
 
-            // 绘制本体发光层与本体
+            // 缁樺埗鏈綋鍙戝厜灞備笌鏈綋
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, glowColor, rotation, origin, Projectile.scale * (1.015f + 0.025f * outlinePulse), effects, 0);
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
 
-            // 枪口 BloomCircle：这里必须使用 Additive，否则透明边缘容易出现黑块/色块
+            // 鏋彛 BloomCircle锛氳繖閲屽繀椤讳娇鐢?Additive锛屽惁鍒欓€忔槑杈圭紭瀹规槗鍑虹幇榛戝潡/鑹插潡
             Vector2 gunTipDrawPosition = GunTip - Main.screenPosition;
             float bloomScale = State == 0 ? 0.42f + Utils.GetLerpValue(0f, ChargeFrames, timer, true) * 0.34f : (State == 1 ? 0.78f : 0.96f);
 
@@ -704,7 +704,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
-            // 进入后续状态后，绘制前方双线指示
+            // 杩涘叆鍚庣画鐘舵€佸悗锛岀粯鍒跺墠鏂瑰弻绾挎寚绀?
             if (State >= 1)
             {
                 Vector2 forward = AimDirection;
@@ -748,3 +748,4 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
     }
 }
+

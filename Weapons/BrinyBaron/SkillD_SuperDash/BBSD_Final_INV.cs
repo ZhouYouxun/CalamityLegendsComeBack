@@ -84,6 +84,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Volume = 1f,
                 Pitch = -0.22f + Main.rand.NextFloat(-0.06f, 0.06f)
             }, target.Center);
+
+            SoundEngine.PlaySound(SoundID.Item105 with
+            {
+                Volume = 0.85f,
+                Pitch = 0.1f + Main.rand.NextFloat(-0.05f, 0.05f)
+            }, target.Center);
+
         }
 
         private void SpawnOrbitEffects(NPC target)
@@ -92,56 +99,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
 
             float progress = 1f - Projectile.timeLeft / (float)Lifetime;
-            float pulse = 0.7f + 0.3f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f);
 
-            for (int i = 0; i < 4; i++)
+            if (Projectile.timeLeft % 4 == 0)
             {
-                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                float radius = OrbitRadius * Main.rand.NextFloat(0.6f, 1.2f) * (0.85f + pulse * 0.18f);
-                Vector2 offset = angle.ToRotationVector2() * radius;
-                Vector2 randomDrift = Main.rand.NextVector2Circular(0.45f, 0.45f);
-
-                Particle marker = new CustomSpark(
-                    target.Center + offset,
-                    target.velocity * 0.04f + randomDrift,
-                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
+                Vector2 orbit = (Projectile.rotation + progress * MathHelper.TwoPi * 2f).ToRotationVector2() * OrbitRadius;
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    target.Center + orbit,
+                    orbit.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * 1.2f,
                     false,
-                    6,
-                    0.16f,
-                    new Color(180, 244, 255) * 1.05f,
-                    new Vector2(0.56f, 2.6f),
-                    extraRotation: angle + Main.rand.NextFloat(-0.55f, 0.55f),
-                    glowCenter: true,
-                    shrinkSpeed: 0.95f,
-                    glowCenterScale: 0.92f,
-                    glowOpacity: 0.74f);
-                GeneralParticleHandler.SpawnParticle(marker);
-            }
-
-            if (Projectile.timeLeft % 2 == 0)
-            {
-                DirectionalPulseRing ring = new DirectionalPulseRing(
-                    target.Center,
-                    target.velocity * 0.04f,
-                    Color.Lerp(new Color(110, 220, 255), new Color(255, 236, 170), progress * 0.5f),
-                    new Vector2(0.52f, 1.28f),
-                    Projectile.rotation,
-                    0.11f,
-                    0.018f,
-                    12);
-                GeneralParticleHandler.SpawnParticle(ring);
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    target.Center + Main.rand.NextVector2Circular(32f, 32f),
-                    Main.rand.NextBool() ? DustID.Water : DustID.YellowTorch,
-                    target.velocity * 0.06f + Main.rand.NextVector2Circular(1.1f, 1.1f),
-                    100,
-                    new Color(210, 246, 255),
-                    Main.rand.NextFloat(0.95f, 1.25f));
-                dust.noGravity = true;
+                    10,
+                    0.28f,
+                    Color.Lerp(new Color(130, 225, 255), Color.White, 0.34f)));
             }
         }
 

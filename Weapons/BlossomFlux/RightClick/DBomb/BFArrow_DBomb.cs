@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private const float FlightState = 0f;
         private const float AttachedNpcState = 1f;
         private const float GroundAnchorState = 2f;
-        private const int BombardDuration = 96;
+        private const int BombardDuration = 108;
         private const float MortarGravity = 0.28f;
         private const float MortarFallGravityMultiplier = 2.5f;
         private const float MinMortarApexHeight = 620f;
@@ -64,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void SetDefaults()
         {
-            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 240, penetrate: -1, extraUpdates: 1, tileCollide: true);
+            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 240, penetrate: -1, extraUpdates: 1, tileCollide: false);
             Projectile.localNPCHitCooldown = -1;
         }
 
@@ -104,7 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Vector2 fallDirection = (bombardTarget - fallStart).SafeNormalize(Vector2.UnitY * gravDir);
             Projectile.Center = fallStart;
             delayedReturnVelocity = fallDirection * Math.Max(32f, desiredSpeed * 1.7f) * ReturnSpeedMultiplier;
-            Projectile.velocity = Vector2.Zero;
+            Projectile.velocity = delayedReturnVelocity * 0.32f;
             ReturnDelayTimer = ReturnDelayFrames * (Projectile.extraUpdates + 1);
             FlightTimer = 0f;
             Projectile.tileCollide = false;
@@ -267,9 +267,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 ReturnDelayTimer--;
                 UpdateOffscreenBombardTarget();
-                Projectile.velocity = Vector2.Zero;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, delayedReturnVelocity * 0.32f, 0.16f);
                 Projectile.tileCollide = false;
                 Projectile.friendly = false;
+                if (ReturnDelayTimer % 6f == 0f)
+                    BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 0.55f);
 
                 if (ReturnDelayTimer <= 0f)
                 {
@@ -285,7 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.velocity.Y += Projectile.velocity.Y > 0f ? MortarGravity * MortarFallGravityMultiplier : MortarGravity;
             AccelerateThroughBombardTarget();
             TryDetonateAtTargetPoint();
-            Projectile.tileCollide = FlightTimer >= MortarCollisionDelay && Projectile.velocity.Y >= 0f && passedBombardTarget;
+            Projectile.tileCollide = false;
 
             BFArrowCommon.FaceForward(Projectile);
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 1.08f);
@@ -351,20 +353,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             Projectile.netUpdate = true;
 
-            if (Projectile.owner == Main.myPlayer)
-            {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<BFLeafBombExplosion>(),
-                    Math.Max(1, storedRainDamage),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    explosionSize,
-                    1f);
-            }
-
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 18, 1.35f, 5.4f, 1f, 1.55f);
             SpawnBombardImpactFX(center, MathHelper.Clamp(explosionSize / 180f, 1.35f, 2.8f));
             SpawnBombardAuraFX(center, 1.35f);
@@ -403,9 +391,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             rainCounter++;
 
-            // Temporarily disabled: charged bombard should end at the explosion without follow-up arrow rain.
-            // if (rainCounter % 8 == 0)
-            //     SpawnArrowRain(bombardCenter);
+            if (rainCounter % 5 == 0)
+                SpawnArrowRain(bombardCenter);
 
             if (rainCounter % 20 == 0)
                 SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.2f, Pitch = 0.42f }, bombardCenter);
@@ -502,21 +489,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            int rainCount = Math.Max(1, (int)Math.Round(2f * skyRainMultiplier));
+            int rainCount = Math.Max(4, (int)Math.Round(5f * skyRainMultiplier));
             for (int i = 0; i < rainCount; i++)
             {
-                Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-180f, 180f), -920f - Main.rand.NextFloat(0f, 220f));
-                Vector2 targetPosition = center + Main.rand.NextVector2Circular(46f, 28f);
-                Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * (storedAmmoSpeed * Main.rand.NextFloat(1.15f, 1.45f));
+                Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-260f, 260f), -940f - Main.rand.NextFloat(0f, 260f));
+                Vector2 targetPosition = center + Main.rand.NextVector2Circular(82f, 42f);
+                Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * (storedAmmoSpeed * Main.rand.NextFloat(1.25f, 1.62f));
 
                 int projectileIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
                     velocity,
-                    storedAmmoType,
-                    Math.Max(1, (int)(storedRainDamage * 0.55f)),
+                    ModContent.ProjectileType<BFLeafProj>(),
+                    Math.Max(1, (int)(storedRainDamage * 0.42f)),
                     storedAmmoKnockback,
-                    Projectile.owner);
+                    Projectile.owner,
+                    (float)BlossomFluxChloroplastPresetType.Chlo_DBomb,
+                    1f);
 
                 if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
                     continue;
@@ -524,10 +513,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Projectile rainArrow = Main.projectile[projectileIndex];
                 rainArrow.friendly = true;
                 rainArrow.hostile = false;
-                rainArrow.arrow = true;
+                rainArrow.tileCollide = false;
                 rainArrow.noDropItem = true;
-                BFArrowCommon.ForceLocalNPCImmunity(rainArrow, 12);
-                BFArrowCommon.TagBlossomFluxLeftArrow(rainArrow);
             }
 
             SpawnBombardAuraFX(center, 0.92f);

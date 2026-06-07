@@ -438,7 +438,7 @@ public class YC_TyrantPrismDrone : ModProjectile, ILocalizedModType
         private int lastRhythmStep = -1;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/\u56FE\u7247/\u9ED8\u8BA4\u6218\u673A";
 
         public int SlotIndex => (int)Projectile.ai[0];
         public int ParentHoldoutIndex => (int)Projectile.ai[1];

@@ -1,5 +1,5 @@
 using System;
-using CalamityMod.Particles;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -9,8 +9,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
 {
     internal sealed class TacticalComputerNEWReticle : ModProjectile
     {
-        private const int TelegraphSpawnRate = 4;
-        private int telegraphTimer;
+        // 沿用旧准心的整体缩放，让新贴图不会过大。
+        private const float VisualScale = 1f / 3f;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
 
         public override void AI()
         {
+            // 准心只给本地玩家显示，服务器和其他玩家不需要维护这个视觉弹幕。
             if (Main.dedServ || Projectile.owner != Main.myPlayer)
             {
                 Projectile.Kill();
@@ -44,115 +45,84 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
                 return;
             }
 
+            // 关键逻辑不改：准心位置完全跟随 TacticalComputerPlayer 算出来的 ReticleWorld。
+            // 鼠标跟随、敌人吸附、锁定判定都仍然由 TacticalComputerPlayer 负责。
             Projectile.Center = tacticalPlayer.ReticleWorld;
             Projectile.timeLeft = 2;
-
-            if (telegraphTimer++ % TelegraphSpawnRate == 0)
-                EmitReticleTelegraph(tacticalPlayer);
         }
 
-        public override bool PreDraw(ref Color lightColor) => false;
-
-        private void EmitReticleTelegraph(TacticalComputerPlayer tacticalPlayer)
+        public override bool PreDraw(ref Color lightColor)
         {
+            Player owner = Main.player[Projectile.owner];
+            if (owner.whoAmI != Main.myPlayer)
+                return false;
+
+            TacticalComputerPlayer tacticalPlayer = owner.GetModPlayer<TacticalComputerPlayer>();
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             bool locked = tacticalPlayer.ReticleHasTarget;
-            float pulse = 0.95f + 0.05f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (locked ? 9f : 6f) + Projectile.identity * 0.17f);
-            Color reticleColor = locked ? new Color(70, 220, 255) : new Color(72, 190, 255);
-            float originalScale = (locked ? 0.42f : 0.34f) * pulse;
-            float finalScale = (locked ? 0.16f : 0.14f) * pulse;
+            float time = Main.GlobalTimeWrappedHourly;
 
-            GeneralParticleHandler.SpawnParticle(new StaticReticleTelegraphParticle(Projectile.Center, reticleColor, originalScale, finalScale, 18));
+            // 沿用旧准心的呼吸节奏：未锁定较慢，锁定后更急促。
+            float pulse = 0.78f + 0.22f * (float)Math.Sin(time * (locked ? 10f : 7f));
+            float lockInterpolant = locked ? 1f : 0f;
 
-            if (!locked)
-                return;
+            Texture2D reticle = ModContent.Request<Texture2D>("CalamityMod/Particles/DestroyerReticleTelegraph").Value;
+            Vector2 origin = reticle.Size() * 0.5f;
 
-            Color sparkColor = new(210, 255, 255);
-            Color bloomColor = new(30, 170, 255);
-            GeneralParticleHandler.SpawnParticle(new StaticSparkTelegraphParticle(Projectile.Center, sparkColor, bloomColor, 0.58f * pulse, 18, 0.055f, 1.08f));
-        }
+            Color techBlue = new(70, 190, 255, 0);
+            Color cyan = new(150, 245, 255, 0);
+            Color white = new(235, 255, 255, 0);
+            Color outerColor = Color.Lerp(techBlue, cyan, locked ? 0.7f : 0.35f);
+            Color innerColor = Color.Lerp(cyan, white, locked ? 0.65f : 0.35f);
 
-        private sealed class StaticReticleTelegraphParticle : Particle
-        {
-            private readonly float originalScale;
-            private readonly float finalScale;
-            private readonly int rotationDirection;
-            private float opacity;
+            // 两层同贴图叠加：一层顺时针，一层逆时针，形成旧准心那种扫描旋转感。
+            float outerScale = MathHelper.Lerp(0.46f, 0.58f, lockInterpolant) * pulse * VisualScale;
+            float innerScale = MathHelper.Lerp(0.38f, 0.50f, lockInterpolant) * pulse * VisualScale;
 
-            public override string Texture => "CalamityMod/Particles/DestroyerReticleTelegraph";
-            public override bool UseAdditiveBlend => true;
-            public override bool SetLifetime => true;
-            public override bool UseCustomDraw => true;
-            public override bool Important => true;
+            // 开启加法混合，使准心能够正常显示，并且呈现出科技全息的半透明发光感
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
 
-            public StaticReticleTelegraphParticle(Vector2 position, Color color, float originalScale, float finalScale, int lifetime)
+            Main.EntitySpriteDraw(
+                reticle,
+                drawPosition,
+                null,
+                outerColor * 0.88f,
+                time * 0.95f,
+                origin,
+                outerScale,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                reticle,
+                drawPosition,
+                null,
+                innerColor * 0.76f,
+                -time * 0.72f,
+                origin,
+                innerScale,
+                SpriteEffects.FlipHorizontally,
+                0f);
+
+            // 锁定时补一层很淡的中心亮光，让“吸附到敌人”的状态更容易被看出来。
+            if (locked)
             {
-                Position = position;
-                Color = color;
-                this.originalScale = originalScale;
-                this.finalScale = finalScale;
-                Scale = originalScale;
-                Lifetime = lifetime;
-                rotationDirection = Main.rand.NextBool().ToDirectionInt();
+                Main.EntitySpriteDraw(
+                    reticle,
+                    drawPosition,
+                    null,
+                    white * 0.28f,
+                    time * 1.35f,
+                    origin,
+                    0.24f * pulse * VisualScale,
+                    SpriteEffects.None,
+                    0f);
             }
 
-            public override void Update()
-            {
-                float progress = 1f - MathF.Pow(1f - LifetimeCompletion, 4f);
-                Scale = MathHelper.Lerp(originalScale, finalScale, progress);
-                opacity = progress;
-                Rotation += MathHelper.ToRadians(8f) * (1f - progress) * rotationDirection;
-            }
+            // 还原为默认的 AlphaBlend 混合状态，避免污染其他图层的绘制
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
-            public override void CustomDraw(SpriteBatch spriteBatch)
-            {
-                Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
-                spriteBatch.Draw(texture, Position - Main.screenPosition, null, Color * opacity, Rotation, texture.Size() * 0.5f, Scale, SpriteEffects.None, 0f);
-            }
-        }
-
-        private sealed class StaticSparkTelegraphParticle : Particle
-        {
-            private readonly Color bloom;
-            private readonly float bloomScale;
-            private readonly float spin;
-            private readonly int spinDirection;
-            private float opacity;
-
-            public override string Texture => "CalamityMod/Particles/Sparkle2";
-            public override bool UseAdditiveBlend => true;
-            public override bool UseCustomDraw => true;
-            public override bool SetLifetime => true;
-            public override bool Important => true;
-
-            public StaticSparkTelegraphParticle(Vector2 position, Color color, Color bloom, float scale, int lifetime, float rotationSpeed = 0f, float bloomScale = 1f)
-            {
-                Position = position;
-                Color = color;
-                this.bloom = bloom;
-                Scale = scale;
-                Lifetime = lifetime;
-                spin = rotationSpeed;
-                this.bloomScale = bloomScale;
-                spinDirection = Main.rand.NextBool().ToDirectionInt();
-                Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
-            }
-
-            public override void Update()
-            {
-                opacity = MathF.Sin(LifetimeCompletion * MathHelper.Pi);
-                Rotation += spin * spinDirection;
-            }
-
-            public override void CustomDraw(SpriteBatch spriteBatch)
-            {
-                Texture2D starTexture = ModContent.Request<Texture2D>(Texture).Value;
-                Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-                float properBloomSize = starTexture.Height / (float)bloomTexture.Height;
-
-                spriteBatch.Draw(bloomTexture, Position - Main.screenPosition, null, bloom * opacity * 0.5f, 0f, bloomTexture.Size() * 0.5f, Scale * bloomScale * properBloomSize, SpriteEffects.None, 0f);
-                spriteBatch.Draw(starTexture, Position - Main.screenPosition, null, Color * opacity * 0.5f, Rotation + MathHelper.PiOver4, starTexture.Size() * 0.5f, Scale * 0.75f, SpriteEffects.None, 0f);
-                spriteBatch.Draw(starTexture, Position - Main.screenPosition, null, Color * opacity, Rotation, starTexture.Size() * 0.5f, Scale, SpriteEffects.None, 0f);
-            }
+            return false;
         }
     }
 }

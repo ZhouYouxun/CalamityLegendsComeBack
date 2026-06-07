@@ -1,4 +1,4 @@
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -227,9 +227,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
 
-            // 不要把 A 设成 0，避免 SpriteBatch 状态没切成功时直接透明
+            // 涓嶈鎶?A 璁炬垚 0锛岄伩鍏?SpriteBatch 鐘舵€佹病鍒囨垚鍔熸椂鐩存帴閫忔槑
             Color theme = Color.Lerp(ThemeColor, Color.White, 0.12f) * Projectile.Opacity;
             Color inner = Color.White * Projectile.Opacity;
 
@@ -247,16 +247,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 {
                     Vector2 mid = (previous + current) * 0.5f - Main.screenPosition;
 
-                    Main.EntitySpriteDraw(
-                        line,
-                        mid,
-                        null,
-                        theme * MathHelper.Lerp(0.55f, 0.22f, i / (float)segments.Length),
-                        between.ToRotation() + MathHelper.PiOver2,
-                        line.Size() * 0.5f,
-                        new Vector2(0.18f, length / line.Height),
-                        SpriteEffects.None,
-                        0f);
+                    //Main.EntitySpriteDraw(
+                    //    line,
+                    //    mid,
+                    //    null,
+                    //    theme * MathHelper.Lerp(0.55f, 0.22f, i / (float)segments.Length),
+                    //    between.ToRotation() + MathHelper.PiOver2,
+                    //    line.Size() * 0.5f,
+                    //    new Vector2(0.18f, length / line.Height),
+                    //    SpriteEffects.None,
+                    //    0f);
                 }
 
                 float completion = i / (float)(segments.Length - 1);
@@ -318,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private void DrawSegmentMagic(Texture2D magicRing, Texture2D reticle, Vector2 drawPosition, float rotation, float scale, Color color, float completion)
         {
-            // 原本 scale * 0.34f / 0.28f 太小，基本会看不清
+            // 鍘熸湰 scale * 0.34f / 0.28f 澶皬锛屽熀鏈細鐪嬩笉娓?
             float fade = MathHelper.Lerp(0.72f, 0.36f, completion);
             float spin = Main.GlobalTimeWrappedHourly * MathHelper.Lerp(2.4f, 1.35f, completion) + Projectile.identity * 0.12f;
             float pulse = 0.92f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f + completion * MathHelper.TwoPi) * 0.08f;
@@ -351,3 +351,4 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
     }
 }
+

@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend
 {
     public sealed class CommandAscend : ModItem
     {

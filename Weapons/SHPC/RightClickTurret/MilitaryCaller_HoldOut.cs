@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.General;
+﻿using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.Visuals;
@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
             int manaCost = Owner.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickManaCost(MilitaryTurretUtility.ManaPerCall);
             if (manaCost > 0 && !Owner.CheckMana(Owner.HeldItem, manaCost, true, false))
             {
-                RejectCall("魔力不足", GunTipPosition);
+                RejectCall("榄斿姏涓嶈冻", GunTipPosition);
                 fireTimer = FireInterval - 10;
                 return;
             }
@@ -164,7 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
                 Particle spark = new CustomSpark(
                     core + right * Main.rand.NextFloat(-7f, 7f),
                     direction.RotatedByRandom(0.18f) * Main.rand.NextFloat(3.5f, 7f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     10,
                     Main.rand.NextFloat(0.026f, 0.044f),
@@ -315,3 +315,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
         }
     }
 }
+

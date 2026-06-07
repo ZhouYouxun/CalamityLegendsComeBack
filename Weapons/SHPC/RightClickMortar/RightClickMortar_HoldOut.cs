@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+﻿using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.Visuals;
@@ -194,7 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                 Particle spark = new CustomSpark(
                     core + right * Main.rand.NextFloat(-8f, 8f),
                     direction.RotatedByRandom(0.22f) * Main.rand.NextFloat(3f, 6f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     12,
                     Main.rand.NextFloat(0.026f, 0.04f),
@@ -417,3 +417,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
         }
     }
 }
+

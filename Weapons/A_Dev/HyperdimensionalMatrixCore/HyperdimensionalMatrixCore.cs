@@ -65,6 +65,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             return false;
         }
 
+        public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+        {
+            HyperdimensionalMatrixVisuals.DrawWorldIcon(Item.Center - Main.screenPosition, scale);
+            return false;
+        }
+
         public override bool AltFunctionUse(Player player) => true;
 
         public override bool CanUseItem(Player player)

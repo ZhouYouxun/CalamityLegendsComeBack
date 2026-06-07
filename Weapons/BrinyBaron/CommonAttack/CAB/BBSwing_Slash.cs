@@ -100,17 +100,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     frost.noGravity = true;
                 }
             }
-
-            GlowSparkParticle spark = new GlowSparkParticle(
-                Projectile.Center,
-                forward * 0.25f,
-                false,
-                10,
-                0.12f * SlashScale,
-                Color.White,
-                new Vector2(3f, 0.6f),
-                true);
-            GeneralParticleHandler.SpawnParticle(spark);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)

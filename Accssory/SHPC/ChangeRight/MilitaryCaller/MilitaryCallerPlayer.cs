@@ -1,6 +1,6 @@
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.MilitaryCaller
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller
 {
     public sealed class MilitaryCallerPlayer : ModPlayer
     {

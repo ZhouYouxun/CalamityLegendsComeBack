@@ -65,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
             Projectile.velocity = direction * speed;
 
-            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.68f);
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.34f);
             EmitHellbornFlightEffects(direction);
         }
 
@@ -101,9 +101,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             Dust diamond = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(22f, 22f), ModContent.DustType<DiamondDust>(), -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.24f));
             diamond.noGravity = true;
-            diamond.scale = Main.rand.NextFloat(0.62f, 0.82f);
-            diamond.color = ThemeColor;
-            diamond.fadeIn = 1f;
+            diamond.scale = Main.rand.NextFloat(0.31f, 0.41f);
+            diamond.color = ThemeColor * 0.5f;
+            diamond.fadeIn = 0.5f;
             diamond.noLight = true;
         }
 
@@ -114,9 +114,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             Dust dust = Dust.NewDustPerfect(position, ModContent.DustType<SquashDust>(), -direction * Main.rand.NextFloat(3f, 5f));
             dust.noGravity = true;
-            dust.scale = Main.rand.NextFloat(2.3f, 2.7f);
-            dust.color = ThemeColor;
-            dust.fadeIn = 2.5f;
+            dust.scale = Main.rand.NextFloat(1.15f, 1.35f);
+            dust.color = ThemeColor * 0.5f;
+            dust.fadeIn = 1.25f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
@@ -127,7 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, ThemeColor * 0.72f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.8f, 1.35f, 16));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, ThemeColor * 0.36f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.8f, 0.675f, 16));
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
@@ -140,8 +140,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 origin = frame.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], ThemeColor * 0.62f, 1);
-            Main.EntitySpriteDraw(texture, drawPosition, frame, Color.Lerp(ThemeColor, Color.White, 0.24f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], ThemeColor * 0.31f, 1);
+            Main.EntitySpriteDraw(texture, drawPosition, frame, Color.Lerp(ThemeColor, Color.White, 0.24f) * 0.55f, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
     }

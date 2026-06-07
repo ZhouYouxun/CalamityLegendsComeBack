@@ -27,7 +27,7 @@ Mods: {
 			}
 
 			CommandAscend: {
-				DisplayName: Command: Ascend
+				DisplayName: Mortar Transceiver
 				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
 			}
 
@@ -73,12 +73,15 @@ Mods: {
 			}
 
 			ProjectilePossessionModule: {
-				DisplayName: Projectile Possession Module
+				DisplayName: Vacuum Cleaner
 				Tooltip:
 					'''
 					While holding SHPC, right click switches to projectile possession mode
-					Hold right click to absorb nearby hostile projectiles in a vacuum cone
-					Stores up to 15 projectiles; release right click to convert them into friendly projectiles and fire them forward
+					Hold right click to capture clones of nearby hostile projectiles in a vacuum cone, up to 15 stored
+					The original hostile projectile keeps existing, but its velocity and damage are permanently reduced by 20%
+					The clone is pulled to the player, becomes friendly, and permanently deals 20x damage
+					Release right click to launch the stored friendly clones forward
+					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
 					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
 					Some persistent beams and blacklisted projectiles are ignored
 					'''
@@ -394,10 +397,10 @@ Mods: {
 			}
 
 			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
-			ProjectilePossessionUI.DisplayName: SHPC Possession Meter
+			ProjectilePossessionUI.DisplayName: SHPC Vacuum Meter
 
 			SHPC: {
-				ProjectilePossessionHoldout.DisplayName: SHPC Projectile Possession
+				ProjectilePossessionHoldout.DisplayName: SHPC Vacuum Cleaner
 				BloodstoneCore_BloodOrb.DisplayName: Bloodstone Core_ Blood Orb
 				RuinousSoul_GhostExplosion.DisplayName: Ruinous Soul_ Ghost Explosion
 				RuinousSoul_OrbitGhost.DisplayName: Ruinous Soul_ Orbit Ghost

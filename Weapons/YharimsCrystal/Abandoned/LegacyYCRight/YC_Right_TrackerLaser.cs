@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
@@ -74,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
             if (LaserEnd == Vector2.Zero)
                 return false;
 
-            Texture2D lineTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D lineTex = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
             Texture2D glowTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float distance = Vector2.Distance(LaserStart, LaserEnd);
             Vector2 direction = Vector2.Normalize(LaserEnd - LaserStart);
@@ -107,3 +107,4 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRight
         }
     }
 }
+

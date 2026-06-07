@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
+﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Skies;
@@ -25,10 +25,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private float HoldoutRecoilOffset => MathHelper.Clamp(24f - timer * 1.2f, 0f, 47f);
 
         private int state;
-        // 0 = 蓄力
-        // 1 = 蓄满待机
-        // 2 = 激光
-        // 3 = 过热
+        // 0 = 钃勫姏
+        // 1 = 钃勬弧寰呮満
+        // 2 = 婵€鍏?
+        // 3 = 杩囩儹
         private int timer;
         private int exSkyLightningTimer;
         private int superLaserIndex = -1;
@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Vector2 armPosition = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
             UpdateProjectileHeldVariables(armPosition);
             ManipulatePlayerVariables();
-            // TODO: 待办，大招的黑天和雷暴雨特效
+            // TODO: 寰呭姙锛屽ぇ鎷涚殑榛戝ぉ鍜岄浄鏆撮洦鐗规晥
             // MaintainExoSkyEffects();
 
             switch (state)
@@ -96,22 +96,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         #region Phase 1 Charge
 
-        // 播音
+        // 鎾煶
         private SlotId ChargeSoundSlot;
         private void ChargePhase()
         {
 
 
-            // ================= 蓄力循环音 =================
-            timer++; // ← 提前！！！
+            // ================= 钃勫姏寰幆闊?=================
+            timer++; // 鈫?鎻愬墠锛侊紒锛?
 
             float chargeFactor = Utils.GetLerpValue(0f, ChargeTime, timer, true);
 
-            // 只在第一次创建
+            // 鍙湪绗竴娆″垱寤?
             if (ChargeSoundSlot == default)
             {
                 ChargeSoundSlot = SoundEngine.PlaySound(
-                    new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/蜃景大招正在蓄力")
+                    new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/铚冩櫙澶ф嫑姝ｅ湪钃勫姏")
                     {
                         Volume = 1.0f,
                         IsLooped = true
@@ -120,15 +120,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 );
             }
 
-            // 每2帧更新一次（关键）
+            // 姣?甯ф洿鏂颁竴娆★紙鍏抽敭锛?
             if (timer % 2 == 0 && SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var sound))
             {
                 sound.Position = Projectile.Center;
 
-                // 音量：1 → 5
+                // 闊抽噺锛? 鈫?5
                 sound.Volume = 1.0f + chargeFactor * 4.0f;
 
-                // 音调：稍微收一点，不要太抖
+                // 闊宠皟锛氱◢寰敹涓€鐐癸紝涓嶈澶姈
                 sound.Pitch = -0.2f + chargeFactor * 0.6f;
             }
 
@@ -141,13 +141,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             state = 1;
             timer = 0;
 
-            // 停止蓄力循环音
+            // 鍋滄钃勫姏寰幆闊?
             if (SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var s))
                 s?.Stop();
 
-            // 播放蓄力完成音
+            // 鎾斁钃勫姏瀹屾垚闊?
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/蜃景大招准备就绪")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/铚冩櫙澶ф嫑鍑嗗灏辩华")
                 {
                     Volume = 1.2f,
                     Pitch = 0f
@@ -192,16 +192,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             timer++;
 
-            // ================= 激光循环音效（武器级） =================
+            // ================= 婵€鍏夊惊鐜煶鏁堬紙姝﹀櫒绾э級 =================
             laserSoundTimer++;
 
             float lifeFactor = Utils.GetLerpValue(0f, LaserTime, laserSoundTimer, true);
 
-            // 初始化（只播一次）
+            // 鍒濆鍖栵紙鍙挱涓€娆★級
             if (LaserSoundSlot == default)
             {
                 LaserSoundSlot = SoundEngine.PlaySound(
-                    new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/蜃景大招发射")
+                    new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/铚冩櫙澶ф嫑鍙戝皠")
                     {
                         Volume = 9.0f,
                         IsLooped = true
@@ -210,15 +210,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 );
             }
 
-            // 每2帧更新（防抖）
+            // 姣?甯ф洿鏂帮紙闃叉姈锛?
             if (laserSoundTimer % 2 == 0 && SoundEngine.TryGetActiveSound(LaserSoundSlot, out var sound))
             {
                 sound.Position = Projectile.Center;
 
-                // 音量：1 → 4
+                // 闊抽噺锛? 鈫?4
                 sound.Volume = 1.0f + lifeFactor * 3.0f;
 
-                // 音调
+                // 闊宠皟
                 sound.Pitch = -0.4f * lifeFactor;
             }
 
@@ -235,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (timer < LaserTime)
                 return;
 
-            // 停止激光音
+            // 鍋滄婵€鍏夐煶
             if (SoundEngine.TryGetActiveSound(LaserSoundSlot, out var s))
                 s?.Stop();
 
@@ -414,7 +414,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            // TODO: 待办，大招的黑天和雷暴雨特效
+            // TODO: 寰呭姙锛屽ぇ鎷涚殑榛戝ぉ鍜岄浄鏆撮洦鐗规晥
             // Owner.Calamity().monolithExoShader = 30;
 
             if (Main.dedServ)
@@ -422,7 +422,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             if (exSkyLightningTimer <= 0)
             {
-                // TODO: 待办，大招的黑天和雷暴雨特效
+                // TODO: 寰呭姙锛屽ぇ鎷涚殑榛戝ぉ鍜岄浄鏆撮洦鐗规晥
                 // ExoMechsSky.CreateLightningBolt(10, true);
                 exSkyLightningTimer = 45;
             }
@@ -434,7 +434,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             KillSuperLaser();
 
-            // TODO: 待办，大招的黑天和雷暴雨特效
+            // TODO: 寰呭姙锛屽ぇ鎷涚殑榛戝ぉ鍜岄浄鏆撮洦鐗规晥
             // if (Projectile.owner == Main.myPlayer && Owner.active && !Owner.dead)
             //     Owner.Calamity().monolithExoShader = 0;
 
@@ -461,18 +461,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             float rotation = Projectile.rotation;
 
 
-            // ===== 白色叠加（蓄力阶段）=====
+            // ===== 鐧借壊鍙犲姞锛堣搫鍔涢樁娈碉級=====
             if (state == 0)
             {
                 float chargeFactor = Utils.GetLerpValue(0f, ChargeTime, timer, true);
 
-                // 强度：越蓄越猛
+                // 寮哄害锛氳秺钃勮秺鐚?
                 float intensity = chargeFactor;
 
-                // 偏移范围：越蓄越大
+                // 鍋忕Щ鑼冨洿锛氳秺钃勮秺澶?
                 float offset = 4f + chargeFactor * 10f;
 
-                int drawCount = 1 + (int)(chargeFactor * 3f); // 最多叠4层
+                int drawCount = 1 + (int)(chargeFactor * 3f); // 鏈€澶氬彔4灞?
 
                 for (int i = 0; i < drawCount; i++)
                 {
@@ -546,7 +546,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 Particle line = new CustomSpark(
                     lanePos,
                     lineVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     Main.rand.Next(7, 11),
                     Main.rand.NextFloat(0.032f, 0.048f),
@@ -824,7 +824,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     continue;
 
                 float angle = timer * 0.24f + i * MathHelper.TwoPi / Math.Max(1, spawnAttempts) + Main.rand.NextFloat(-0.35f, 0.35f);
-                float radius = 16f * 16f + Main.rand.NextFloat(-28f, 28f);
+                float radius = SHPC_ChargeSpiralInv.MaxOrbitRadius * Main.rand.NextFloat(0.88f, 1f);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     center + angle.ToRotationVector2() * radius,
@@ -956,3 +956,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         #endregion
     }
 }
+

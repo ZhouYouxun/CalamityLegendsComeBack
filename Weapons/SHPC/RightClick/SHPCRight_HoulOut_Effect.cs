@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC;
+﻿using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal partial class SHPCRight_HoulOut
     {
-        #region ===== 特效状态 =====
+        #region ===== 鐗规晥鐘舵€?=====
 
         private int stageOutlineTimer;
         private const int StageOutlineDuration = 24;
@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 音效 =====
+        #region ===== 闊虫晥 =====
 
         private void PlayStartupSound()
         {
@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void PlayManualCooldownSound()
         {
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/解放者机甲左手火箭弹")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/瑙ｆ斁鑰呮満鐢插乏鎵嬬伀绠脊")
                 {
                     Volume = 2.7f,
                     Pitch = 0.2f
@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 特效：阶段与状态 =====
+        #region ===== 鐗规晥锛氶樁娈典笌鐘舵€?=====
 
         private void TriggerStageOutlinePulse()
         {
@@ -366,7 +366,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 特效：普通开火 =====
+        #region ===== 鐗规晥锛氭櫘閫氬紑鐏?=====
 
         public override void PostDraw(Color lightColor)
         {
@@ -620,7 +620,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 特效：火箭齐射 =====
+        #region ===== 鐗规晥锛氱伀绠綈灏?=====
 
         private void FireCooldownRocketSalvo()
         {
@@ -694,7 +694,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Particle line = new CustomSpark(
                     muzzlePos,
                     lineVelocity,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     12,
                     Main.rand.NextFloat(0.04f, 0.055f),
@@ -755,7 +755,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     Particle laneLine = new CustomSpark(
                         lanePos,
                         lineVelocity,
-                        "CalamityMod/Particles/BloomLineSoftEdge",
+                        "CalamityMod/Particles/ThinEndedLine",
                         false,
                         10,
                         Main.rand.NextFloat(0.03f, 0.045f),
@@ -805,3 +805,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
     }
 }
+

@@ -101,6 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
                     Projectile.penetrate = -1;
+                    Projectile.tileCollide = false;
                     Projectile.timeLeft = 140;
                     Projectile.extraUpdates = 1;
                     if (BombardExplosionsLeft <= 0f)
@@ -166,13 +167,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             BlossomFluxChloroplastPresetType preset = Preset;
-            SpawnLeafImpactFX(target.Center, preset, 1.05f);
+            Vector2 impactPosition = GetImpactPosition(target);
+            SpawnLeafImpactFX(impactPosition, preset, 1.05f);
 
             switch (preset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
                     if (BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers))
-                        Main.player[Projectile.owner].GetModPlayer<BFRecoveryEcologyPlayer>().TrySpawnRecoveryTransfer(target.Center, IsReconPriorityTarget(target));
+                        Main.player[Projectile.owner].GetModPlayer<BFRecoveryEcologyPlayer>().TrySpawnRecoveryTransfer(impactPosition, IsReconPriorityTarget(target));
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
@@ -192,13 +194,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                     Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.78f));
 
                     Projectile.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.28f, Pitch = 0.36f }, target.Center);
+                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.28f, Pitch = 0.36f }, impactPosition);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
-                    SpawnBombardExplosion(Projectile.Center, target);
+                    SpawnBombardExplosion(impactPosition, target);
                     break;
             }
+        }
+
+        private Vector2 GetImpactPosition(NPC target)
+        {
+            Rectangle hitbox = target.Hitbox;
+            return new Vector2(
+                MathHelper.Clamp(Projectile.Center.X, hitbox.Left, hitbox.Right),
+                MathHelper.Clamp(Projectile.Center.Y, hitbox.Top, hitbox.Bottom));
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -533,7 +543,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                 center,
                 Vector2.Zero,
-                Color.Lerp(mainColor, Color.White, 0.18f),
+                Color.Lerp(mainColor, Color.White, 0.18f) * 0.5f,
                 0.42f * intensity,
                 10));
 
@@ -588,7 +598,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                 center,
                 Vector2.Zero,
-                Color.Lerp(mainColor, Color.White, 0.24f),
+                Color.Lerp(mainColor, Color.White, 0.24f) * 0.5f,
                 0.72f * intensity,
                 14));
 

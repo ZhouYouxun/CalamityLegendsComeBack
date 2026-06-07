@@ -35,7 +35,7 @@ Mods: {
 			}
 
 			CommandAscend: {
-				DisplayName: 《指令：升天》
+				DisplayName: 迫击收发装置
 				Tooltip:
 					'''
 					手持SHPC时右键改为迫击炮模式
@@ -91,12 +91,15 @@ Mods: {
 			}
 
 			ProjectilePossessionModule: {
-				DisplayName: 弹幕夺舍模块
+				DisplayName: 吸尘器
 				Tooltip:
 					'''
 					手持SHPC时，右键改为弹幕夺舍模式
-					按住右键用锥形真空吸收附近敌对弹幕
-					最多储存15枚弹幕；松开右键会将它们转化为友方弹幕并向前射出
+					按住右键用锥形真空捕获附近敌对弹幕的分身，最多储存15枚
+					被捕获过的敌方弹幕本体会继续存在，但移动速度和伤害永久降低20%
+					分身会被吸到玩家身边，变为友方阵营，伤害永久乘以20倍
+					松开右键会将储存的友方分身向前弹射出去
+					分身产生的衍生弹幕会继续属于友方；没有指定伤害类型时按魔法伤害处理
 					伤害大于3600或剩余时间大于3600的弹幕不会被吸收
 					部分持续光束和黑名单弹幕也不会被吸收
 					'''
@@ -406,10 +409,10 @@ Mods: {
 			}
 
 			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面
-			ProjectilePossessionUI.DisplayName: SHPC夺舍计量条
+			ProjectilePossessionUI.DisplayName: SHPC吸尘器计量条
 
 			SHPC: {
-				ProjectilePossessionHoldout.DisplayName: SHPC弹幕夺舍
+				ProjectilePossessionHoldout.DisplayName: SHPC吸尘器
 				BloodstoneCore_BloodOrb.DisplayName: 血石核心血球
 				RuinousSoul_GhostExplosion.DisplayName: 毁灭之魂幽灵爆炸
 				RuinousSoul_OrbitGhost.DisplayName: 毁灭之魂环绕幽灵

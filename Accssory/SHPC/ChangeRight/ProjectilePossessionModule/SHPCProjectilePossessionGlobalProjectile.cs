@@ -8,12 +8,14 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule
 {
     internal sealed class SHPCProjectilePossessionGlobalProjectile : GlobalProjectile
     {
         private const int MaxAllowedTimeLeft = 3600;
         private const int MaxAllowedDamage = 3600;
+        private const float AbsorbedSourceMultiplier = 0.8f;
+        private const int PossessedCloneDamageMultiplier = 20;
         private static readonly HashSet<int> BlacklistedProjectileTypes = new()
         {
             ProjectileID.SaucerDeathray,
@@ -27,11 +29,15 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
         private int originalPenetrate;
         private int originalMaxPenetrate;
         private float orbitOffset;
+        private int empoweredDamage;
+        private int weakenedDamage;
+        private float weakenedMaxSpeed;
 
         public override bool InstancePerEntity => true;
 
         public bool PossessedBySHPC { get; private set; }
         public bool ReleasedBySHPC { get; private set; }
+        public bool WeakenedBySHPC { get; private set; }
         public int PossessionOwner { get; private set; } = -1;
         public int PossessionSlot { get; private set; }
         public int OriginalDamage { get; private set; }
@@ -41,6 +47,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
         public override void OnSpawn(Projectile projectile, IEntitySource source)
         {
             ResetPossessionState();
+
+            if (TryGetReleasedParent(source, out Projectile parentProjectile))
+                InheritFriendlyRelease(projectile, parentProjectile);
         }
 
         public static bool CanBePossessed(Projectile projectile)
@@ -60,8 +69,10 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
                 return false;
             }
 
-            if (projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>().PossessedBySHPC ||
-                projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>().ReleasedBySHPC)
+            SHPCProjectilePossessionGlobalProjectile possession = projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
+            if (possession.PossessedBySHPC ||
+                possession.ReleasedBySHPC ||
+                possession.WeakenedBySHPC)
                 return false;
 
             if (BlacklistedProjectileTypes.Contains(projectile.type))
@@ -71,6 +82,56 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
                 CalamityProjectileSets.ShouldNotBeReflected[projectile.type])
                 return false;
 
+            return true;
+        }
+
+        public static bool TryCreatePossessedClone(Projectile sourceProjectile, Player owner, int slot, out Projectile possessedClone)
+        {
+            possessedClone = null;
+            if (!CanBePossessed(sourceProjectile))
+                return false;
+
+            int originalDamage = Utils.Clamp(sourceProjectile.damage, 1, MaxAllowedDamage);
+            float originalKnockBack = sourceProjectile.knockBack;
+            float originalSpeed = sourceProjectile.velocity.Length();
+            bool sourceTileCollide = sourceProjectile.tileCollide;
+            bool sourceIgnoreWater = sourceProjectile.ignoreWater;
+            int sourcePenetrate = sourceProjectile.penetrate;
+            int sourceMaxPenetrate = sourceProjectile.maxPenetrate;
+            int cloneDamage = GetEmpoweredDamage(originalDamage);
+
+            Projectile clone = Projectile.NewProjectileDirect(
+                sourceProjectile.GetSource_FromThis(),
+                sourceProjectile.Center,
+                Vector2.Zero,
+                sourceProjectile.type,
+                cloneDamage,
+                originalKnockBack,
+                owner.whoAmI,
+                sourceProjectile.ai[0],
+                sourceProjectile.ai[1],
+                sourceProjectile.ai[2]);
+
+            if (clone is null || !clone.active)
+                return false;
+
+            CopyCloneState(sourceProjectile, clone, cloneDamage);
+
+            SHPCProjectilePossessionGlobalProjectile clonePossession = clone.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
+            clonePossession.CaptureClone(
+                clone,
+                owner,
+                slot,
+                originalDamage,
+                originalKnockBack,
+                originalSpeed,
+                sourceTileCollide,
+                sourceIgnoreWater,
+                sourcePenetrate,
+                sourceMaxPenetrate);
+
+            sourceProjectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>().WeakenSourceProjectile(sourceProjectile);
+            possessedClone = clone;
             return true;
         }
 
@@ -122,33 +183,46 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
             }
         }
 
-        public void Capture(Projectile projectile, Player owner, int slot, Vector2 anchor)
+        private void CaptureClone(
+            Projectile projectile,
+            Player owner,
+            int slot,
+            int sourceDamage,
+            float sourceKnockBack,
+            float sourceSpeed,
+            bool sourceTileCollide,
+            bool sourceIgnoreWater,
+            int sourcePenetrate,
+            int sourceMaxPenetrate)
         {
             PossessedBySHPC = true;
             ReleasedBySHPC = false;
+            WeakenedBySHPC = false;
             PossessionOwner = owner.whoAmI;
             PossessionSlot = slot;
-            OriginalDamage = Utils.Clamp(projectile.damage, 1, MaxAllowedDamage);
-            OriginalKnockBack = projectile.knockBack;
-            OriginalSpeed = projectile.velocity.Length();
+            OriginalDamage = sourceDamage;
+            OriginalKnockBack = sourceKnockBack;
+            OriginalSpeed = sourceSpeed;
             if (OriginalSpeed < 4f)
                 OriginalSpeed = 12f;
+            empoweredDamage = GetEmpoweredDamage(OriginalDamage);
 
             originalHostile = projectile.hostile;
             originalFriendly = projectile.friendly;
-            originalTileCollide = projectile.tileCollide;
-            originalIgnoreWater = projectile.ignoreWater;
-            originalPenetrate = projectile.penetrate;
-            originalMaxPenetrate = projectile.maxPenetrate;
+            originalTileCollide = sourceTileCollide;
+            originalIgnoreWater = sourceIgnoreWater;
+            originalPenetrate = sourcePenetrate;
+            originalMaxPenetrate = sourceMaxPenetrate;
             orbitOffset = Main.rand.NextFloat(MathHelper.TwoPi);
 
             projectile.hostile = false;
             projectile.friendly = false;
             projectile.owner = owner.whoAmI;
+            projectile.damage = empoweredDamage;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
-            projectile.Center = anchor;
             projectile.velocity = Vector2.Zero;
+            EnsureMagicDamageTypeIfDefault(projectile);
             projectile.netUpdate = true;
         }
 
@@ -165,11 +239,14 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
             projectile.friendly = true;
             projectile.owner = owner.whoAmI;
             projectile.velocity = velocity;
-            projectile.damage = Utils.Clamp(System.Math.Max(OriginalDamage, fallbackDamage), 1, MaxAllowedDamage);
+            projectile.damage = empoweredDamage > 0
+                ? empoweredDamage
+                : GetEmpoweredDamage(System.Math.Max(OriginalDamage, fallbackDamage));
             projectile.knockBack = OriginalKnockBack;
             projectile.tileCollide = originalTileCollide;
             projectile.ignoreWater = originalIgnoreWater;
             projectile.timeLeft = Utils.Clamp(projectile.timeLeft, 90, 600);
+            EnsureMagicDamageTypeIfDefault(projectile);
 
             if (projectile.penetrate == 0)
                 projectile.penetrate = originalPenetrate != 0 ? originalPenetrate : 1;
@@ -183,6 +260,18 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
 
         public override void PostAI(Projectile projectile)
         {
+            if (ReleasedBySHPC)
+            {
+                EnforceReleasedProjectile(projectile);
+                return;
+            }
+
+            if (WeakenedBySHPC)
+            {
+                EnforceWeakenedProjectile(projectile);
+                return;
+            }
+
             if (!PossessedBySHPC)
                 return;
 
@@ -210,6 +299,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
             projectile.velocity = owner.velocity;
             projectile.hostile = false;
             projectile.friendly = false;
+            if (empoweredDamage > 0)
+                projectile.damage = empoweredDamage;
             projectile.tileCollide = false;
             projectile.ignoreWater = true;
             projectile.timeLeft = System.Math.Max(projectile.timeLeft, 4);
@@ -236,37 +327,43 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
             if (!ReleasedBySHPC)
                 return;
 
-            if (!projectile.friendly)
-                projectile.friendly = true;
-            projectile.hostile = false;
+            EnforceReleasedProjectile(projectile);
         }
 
         public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
             bitWriter.WriteBit(PossessedBySHPC);
             bitWriter.WriteBit(ReleasedBySHPC);
-            if (!PossessedBySHPC && !ReleasedBySHPC)
+            bitWriter.WriteBit(WeakenedBySHPC);
+            if (!PossessedBySHPC && !ReleasedBySHPC && !WeakenedBySHPC)
                 return;
 
             binaryWriter.Write(PossessionOwner);
             binaryWriter.Write(PossessionSlot);
             binaryWriter.Write(OriginalDamage);
+            binaryWriter.Write(empoweredDamage);
             binaryWriter.Write(OriginalKnockBack);
             binaryWriter.Write(OriginalSpeed);
+            binaryWriter.Write(weakenedDamage);
+            binaryWriter.Write(weakenedMaxSpeed);
         }
 
         public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
         {
             PossessedBySHPC = bitReader.ReadBit();
             ReleasedBySHPC = bitReader.ReadBit();
-            if (!PossessedBySHPC && !ReleasedBySHPC)
+            WeakenedBySHPC = bitReader.ReadBit();
+            if (!PossessedBySHPC && !ReleasedBySHPC && !WeakenedBySHPC)
                 return;
 
             PossessionOwner = binaryReader.ReadInt32();
             PossessionSlot = binaryReader.ReadInt32();
             OriginalDamage = binaryReader.ReadInt32();
+            empoweredDamage = binaryReader.ReadInt32();
             OriginalKnockBack = binaryReader.ReadSingle();
             OriginalSpeed = binaryReader.ReadSingle();
+            weakenedDamage = binaryReader.ReadInt32();
+            weakenedMaxSpeed = binaryReader.ReadSingle();
         }
 
         private bool IsPossessedBy(int owner)
@@ -278,11 +375,15 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
         {
             PossessedBySHPC = false;
             ReleasedBySHPC = false;
+            WeakenedBySHPC = false;
             PossessionOwner = -1;
             PossessionSlot = 0;
             OriginalDamage = 0;
             OriginalKnockBack = 0f;
             OriginalSpeed = 0f;
+            empoweredDamage = 0;
+            weakenedDamage = 0;
+            weakenedMaxSpeed = 0f;
             originalHostile = false;
             originalFriendly = false;
             originalTileCollide = false;
@@ -290,6 +391,116 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
             originalPenetrate = 0;
             originalMaxPenetrate = 0;
             orbitOffset = 0f;
+        }
+
+        private static void CopyCloneState(Projectile source, Projectile clone, int cloneDamage)
+        {
+            clone.Center = source.Center;
+            clone.rotation = source.rotation;
+            clone.scale = source.scale;
+            clone.alpha = source.alpha;
+            clone.spriteDirection = source.spriteDirection;
+            clone.direction = source.direction;
+            clone.frame = source.frame;
+            clone.frameCounter = source.frameCounter;
+            clone.timeLeft = source.timeLeft;
+            clone.penetrate = source.penetrate;
+            clone.maxPenetrate = source.maxPenetrate;
+            clone.DamageType = source.DamageType;
+            clone.damage = cloneDamage;
+
+            for (int i = 0; i < clone.ai.Length && i < source.ai.Length; i++)
+                clone.ai[i] = source.ai[i];
+            for (int i = 0; i < clone.localAI.Length && i < source.localAI.Length; i++)
+                clone.localAI[i] = source.localAI[i];
+        }
+
+        private void WeakenSourceProjectile(Projectile projectile)
+        {
+            if (WeakenedBySHPC)
+                return;
+
+            WeakenedBySHPC = true;
+            weakenedDamage = System.Math.Max(1, (int)System.MathF.Round(projectile.damage * AbsorbedSourceMultiplier));
+            weakenedMaxSpeed = projectile.velocity.Length() * AbsorbedSourceMultiplier;
+            projectile.velocity *= AbsorbedSourceMultiplier;
+            projectile.damage = weakenedDamage;
+            projectile.netUpdate = true;
+        }
+
+        private static int GetEmpoweredDamage(int baseDamage)
+        {
+            return System.Math.Max(1, baseDamage) > int.MaxValue / PossessedCloneDamageMultiplier
+                ? int.MaxValue
+                : System.Math.Max(1, baseDamage * PossessedCloneDamageMultiplier);
+        }
+
+        private static void EnsureMagicDamageTypeIfDefault(Projectile projectile)
+        {
+            if (projectile.DamageType == null || projectile.DamageType == DamageClass.Default)
+                projectile.DamageType = DamageClass.Magic;
+        }
+
+        private static bool TryGetReleasedParent(IEntitySource source, out Projectile parentProjectile)
+        {
+            if (source is EntitySource_Parent { Entity: Projectile projectile })
+            {
+                SHPCProjectilePossessionGlobalProjectile parentPossession = projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
+                if (parentPossession.ReleasedBySHPC)
+                {
+                    parentProjectile = projectile;
+                    return true;
+                }
+            }
+
+            parentProjectile = null;
+            return false;
+        }
+
+        private void InheritFriendlyRelease(Projectile projectile, Projectile parentProjectile)
+        {
+            SHPCProjectilePossessionGlobalProjectile parentPossession = parentProjectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
+            PossessedBySHPC = false;
+            ReleasedBySHPC = true;
+            WeakenedBySHPC = false;
+            PossessionOwner = parentPossession.PossessionOwner >= 0 ? parentPossession.PossessionOwner : parentProjectile.owner;
+            PossessionSlot = parentPossession.PossessionSlot;
+            OriginalDamage = projectile.damage;
+            OriginalKnockBack = projectile.knockBack;
+            OriginalSpeed = projectile.velocity.Length();
+            empoweredDamage = projectile.damage;
+
+            projectile.owner = PossessionOwner;
+            projectile.hostile = false;
+            projectile.friendly = true;
+            EnsureMagicDamageTypeIfDefault(projectile);
+            projectile.netUpdate = true;
+        }
+
+        private void EnforceReleasedProjectile(Projectile projectile)
+        {
+            if (!projectile.friendly)
+                projectile.friendly = true;
+
+            projectile.hostile = false;
+            if (empoweredDamage > 0)
+                projectile.damage = empoweredDamage;
+
+            EnsureMagicDamageTypeIfDefault(projectile);
+        }
+
+        private void EnforceWeakenedProjectile(Projectile projectile)
+        {
+            if (weakenedDamage > 0 && projectile.damage > weakenedDamage)
+                projectile.damage = weakenedDamage;
+
+            if (weakenedMaxSpeed <= 0f)
+                return;
+
+            float speedSquared = projectile.velocity.LengthSquared();
+            float maxSpeedSquared = weakenedMaxSpeed * weakenedMaxSpeed;
+            if (speedSquared > maxSpeedSquared)
+                projectile.velocity = projectile.velocity.SafeNormalize(Vector2.Zero) * weakenedMaxSpeed;
         }
     }
 }

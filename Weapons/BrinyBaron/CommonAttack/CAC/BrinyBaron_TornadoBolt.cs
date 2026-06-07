@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int timer;
         private const float VisualScale = 0.2f;
         private const float HomingRange = 720f;
-        private const float HomingTurnRate = 0.052f;
+        private const float HomingTurnRate = 0.15f;
         private const float HomingSpeedLerp = 0.045f;
         private const int HomingDelay = 8;
         private const int WaterExplosionCount = 5;
@@ -196,7 +196,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
             float loosen = Utils.GetLerpValue(HomingDelay, HomingDelay + 34f, timer, true);
             float closeBoost = Utils.GetLerpValue(260f, 72f, Projectile.Distance(target.Center), true);
-            float turnRate = HomingTurnRate * MathHelper.Lerp(0.45f, 1.35f, MathHelper.Max(loosen, closeBoost));
+            float turnRate = HomingTurnRate * MathHelper.Lerp(0.5f, 2.2f, MathHelper.Max(loosen, closeBoost));
             float targetSpeed = MathHelper.Lerp(Projectile.velocity.Length(), 17.5f, HomingSpeedLerp + loosen * 0.035f);
 
             float steeredRotation = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), turnRate);

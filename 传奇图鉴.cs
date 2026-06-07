@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
@@ -7,8 +8,10 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
+using CalamityLegendsComeBack.Systems;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
 using CalamityLegendsComeBack.Weapons.PristineFury;
@@ -53,7 +56,7 @@ namespace CalamityLegendsComeBack
         }
     }
 
-    public class LegendaryCodexPanel : ModProjectile, ILocalizedModType
+    internal sealed class LegendaryCodexPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int PreferredPanelWidth = 900;
         private const int PreferredPanelHeight = 560;
@@ -63,11 +66,11 @@ namespace CalamityLegendsComeBack
 
         private static readonly LegendaryEntry[] Entries =
         {
-            new("SHPC", () => ModContent.ItemType<NewLegendSHPC>(), true, "SYSTEM // SHPC", "Legendary weapon record online.\nEnergy lattice, material feed, heat sweep and tactical computer are readable."),
-            new("BlossomFlux", () => ModContent.ItemType<NewLegendBlossomFlux>(), false, "???", "???\n???\n???"),
-            new("BrinyBaron", () => ModContent.ItemType<NewLegendBrinyBaron>(), false, "???", "???\n???\n???"),
-            new("PristineFury", () => ModContent.ItemType<NewLegendPristineFury>(), false, "???", "???\n???\n???"),
-            new("Vesuvius", () => ModContent.ItemType<NewVesuvius>(), false, "???", "???\n???\n???"),
+            new("SHPC", () => ModContent.ItemType<NewLegendSHPC>(), true),
+            new("BlossomFlux", () => ModContent.ItemType<NewLegendBlossomFlux>(), false),
+            new("BrinyBaron", () => ModContent.ItemType<NewLegendBrinyBaron>(), false),
+            new("PristineFury", () => ModContent.ItemType<NewLegendPristineFury>(), false),
+            new("Vesuvius", () => ModContent.ItemType<NewVesuvius>(), false),
         };
 
         private Vector2 panelTopLeft;
@@ -103,6 +106,7 @@ namespace CalamityLegendsComeBack
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
+            Projectile.hide = true;
             Projectile.Opacity = 0f;
         }
 
@@ -287,10 +291,10 @@ namespace CalamityLegendsComeBack
             DrawCenteredText(name, nameArea, text, 0.9f, 0.48f, opacity);
 
             Rectangle tagArea = new(area.X + 42, area.Y + 260, area.Width - 84, 28);
-            DrawCenteredText(entry.Unlocked ? entry.Tag : "???", tagArea, theme, 0.58f, 0.42f, opacity);
+            DrawCenteredText(entry.Unlocked ? entry.GetLocalizedTag() : "???", tagArea, theme, 0.58f, 0.42f, opacity);
 
             Rectangle bodyArea = new(area.X + 48, area.Y + 304, area.Width - 96, 90);
-            DrawWrappedText(entry.Unlocked ? entry.Body : "???\n???\n???", bodyArea, text, 0.58f, opacity);
+            DrawWrappedText(entry.Unlocked ? entry.GetLocalizedBody() : "???\n???\n???", bodyArea, text, 0.58f, opacity);
         }
 
         private static void DrawHeader(Rectangle panelArea, float opacity)
@@ -415,22 +419,26 @@ namespace CalamityLegendsComeBack
             DrawRectangle(new Rectangle(rectangle.Right - thickness, rectangle.Y, thickness, rectangle.Height), color);
         }
 
+        public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+        {
+        }
+
         private readonly struct LegendaryEntry
         {
             public readonly string Key;
             public readonly Func<int> ItemType;
             public readonly bool Unlocked;
-            public readonly string Tag;
-            public readonly string Body;
 
-            public LegendaryEntry(string key, Func<int> itemType, bool unlocked, string tag, string body)
+            public LegendaryEntry(string key, Func<int> itemType, bool unlocked)
             {
                 Key = key;
                 ItemType = itemType;
                 Unlocked = unlocked;
-                Tag = tag;
-                Body = body;
             }
+
+            public string GetLocalizedTag() => Language.GetTextValue($"Mods.CalamityLegendsComeBack.LegendaryCodex.{Key}.Tag");
+
+            public string GetLocalizedBody() => Language.GetTextValue($"Mods.CalamityLegendsComeBack.LegendaryCodex.{Key}.Body");
         }
     }
 }

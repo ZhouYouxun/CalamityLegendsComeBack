@@ -38,7 +38,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.Polterghast,
             PristineFuryMark.Dog,
             PristineFuryMark.Dragon,
-            PristineFuryMark.ExoThanatos,
         };
 
         private int hookChargeTimer;
@@ -66,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         internal Player Owner => Main.player[Projectile.owner];
         internal Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
-        internal Vector2 GunTipPosition => Projectile.Center + AimDirection * 54f;
+        internal Vector2 GunTipPosition => Projectile.Center + AimDirection * 22f;
         internal Vector2 DragonMouthPosition => GunTipPosition + AimDirection * 8f;
         internal Vector2 DragonEyePosition
         {
@@ -579,20 +578,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Color color = Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, charge * 0.55f);
             Lighting.AddLight(center, color.ToVector3() * (0.25f + charge * 0.55f));
 
-            if (Main.rand.NextFloat() < 0.35f + charge * 0.45f)
-            {
-                Vector2 offset = Main.rand.NextVector2CircularEdge(18f + 34f * charge, 18f + 34f * charge);
-                Vector2 velocity = -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.5f, 4.4f);
-                Particle mote = new PointParticle(
-                    center + offset,
-                    velocity,
-                    false,
-                    Main.rand.Next(16, 26),
-                    Main.rand.NextFloat(0.72f, 1.15f),
-                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.12f, 0.35f)));
-                GeneralParticleHandler.SpawnParticle(mote);
-
-            }
+            if (charge >= 0.98f && Main.rand.NextBool(18))
+                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.24f, Pitch = 0.55f, MaxInstances = 2 }, center);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -714,7 +701,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Vector2 tip = GunTipPosition + direction * (8f + charge * 6f) - Main.screenPosition;
             Color theme = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, charge * 0.32f) with { A = 0 }) * charge;
             Color white = (Color.White with { A = 0 }) * charge;
-            float chargeScale = charge * 2f;
+            float chargeScale = charge * 1.3f;
             float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
 
             PFLeftEffectRules.BeginAdditive();
@@ -722,26 +709,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             {
                 Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 7f) * charge;
                 Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(18f, 42f) + direction * -8f * (6f - chargeScale * 2f);
-                Vector2 smearScale = new(0.28f * chargeScale, (1.8f + (Main.rand.NextBool(4) ? 1.9f : 0f)) * 0.055f * chargeScale);
+                Vector2 smearScale = new(0.18f * chargeScale, (1.2f + (Main.rand.NextBool(4) ? 1.3f : 0f)) * 0.055f * chargeScale);
                 Main.EntitySpriteDraw(smear, drawPosition, null, theme * 0.86f, direction.RotatedByRandom(0.26f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
             }
 
             for (int i = 0; i < 3; i++)
             {
                 Color layerColor = Color.Lerp(theme, white, i * 0.22f);
-                Vector2 layerScale = new Vector2(1.42f, 1.02f) * chargeScale * (1f - i * 0.24f) * 0.25f * pulse;
+                Vector2 layerScale = new Vector2(1.42f, 1.02f) * chargeScale * (1f - i * 0.24f) * 0.16f * pulse;
                 Main.EntitySpriteDraw(bloom, tip, null, layerColor * (0.88f - i * 0.13f), Projectile.rotation, bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
             }
 
-            Main.EntitySpriteDraw(ring, tip, null, theme * (0.36f + charge * 0.22f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.85f, ring.Size() * 0.5f, (0.16f + charge * 0.5f) * pulse, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, tip, null, theme * (0.24f + charge * 0.15f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.85f, ring.Size() * 0.5f, (0.1f + charge * 0.32f) * pulse, SpriteEffects.None, 0f);
 
             if (charge >= 0.98f)
             {
                 for (int satellite = 0; satellite < 3; satellite++)
                 {
                     Vector2 orbit = (MathHelper.TwoPi * satellite / 3f + Main.GlobalTimeWrappedHourly * 7.2f).ToRotationVector2();
-                    Vector2 offset = new Vector2(orbit.X * 0.72f, orbit.Y * 1.18f).RotatedBy(Projectile.rotation) * chargeScale * 13f;
-                    Main.EntitySpriteDraw(bloom, tip + offset, null, Color.Lerp(theme, white, 0.45f) * 0.82f, Projectile.rotation, bloom.Size() * 0.5f, chargeScale * 0.082f, SpriteEffects.None, 0f);
+                    Vector2 offset = new Vector2(orbit.X * 0.72f, orbit.Y * 1.18f).RotatedBy(Projectile.rotation) * chargeScale * 9f;
+                    Main.EntitySpriteDraw(bloom, tip + offset, null, Color.Lerp(theme, white, 0.45f) * 0.82f, Projectile.rotation, bloom.Size() * 0.5f, chargeScale * 0.055f, SpriteEffects.None, 0f);
                 }
             }
 
@@ -762,30 +749,31 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Vector2 direction = AimDirection;
             Vector2 tip = GunTipPosition + direction * (8f + charge * 5f) - Main.screenPosition;
-            Color fire = (Color.Lerp(new Color(255, 54, 42), new Color(255, 126, 42), 0.42f) with { A = 0 }) * charge;
+            Color themeColor = PristineFuryMarkHelper.GetColor(CurrentMark);
+            Color fire = (Color.Lerp(themeColor, Color.White, 0.15f) with { A = 0 }) * charge;
             Color white = (Color.White with { A = 0 }) * charge;
-            float chargeScale = Math.Min(charge * 2f, 2f);
+            float chargeScale = Math.Min(charge * 1.35f, 1.35f);
             float pulse = 0.9f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity);
 
             PFLeftEffectRules.BeginAdditive();
 
             for (int i = 0; i < 10; i++)
             {
-                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 10f) * charge;
-                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(24f, 62f) + direction * -8f * (6f - chargeScale * 2f);
-                Vector2 smearScale = new(0.32f * chargeScale, (2.2f + (Main.rand.NextBool(3) ? 2.4f : 0f)) * 0.055f * chargeScale);
+                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.5f, 5f) * charge;
+                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(12f, 31f) + direction * -4f * (6f - chargeScale * 2f);
+                Vector2 smearScale = new(0.11f * chargeScale, (1.5f + (Main.rand.NextBool(3) ? 1.6f : 0f)) * 0.0275f * chargeScale);
                 Color smearColor = Main.rand.NextBool(4) ? white : fire;
-                Main.EntitySpriteDraw(smear, drawPosition, null, smearColor * 0.94f, direction.RotatedByRandom(0.24f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(smear, drawPosition, null, smearColor * 0.94f, direction.RotatedByRandom(0.168f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
             }
 
             for (int i = 0; i < 4; i++)
             {
                 Color layerColor = Color.Lerp(fire, white, i * 0.25f);
-                Vector2 layerScale = new Vector2(1.58f, 1.08f) * chargeScale * (1f - 0.21f * i) * 0.25f * pulse;
+                Vector2 layerScale = new Vector2(1.58f, 1.08f) * chargeScale * (1f - 0.21f * i) * 0.08f * pulse;
                 Main.EntitySpriteDraw(bloom, tip, null, layerColor * 0.9f, Projectile.rotation + Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
             }
 
-            Main.EntitySpriteDraw(ring, tip, null, fire * (0.4f + charge * 0.48f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.25f, ring.Size() * 0.5f, (0.18f + charge * 0.62f) * pulse, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, tip, null, fire * (0.26f + charge * 0.32f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.25f, ring.Size() * 0.5f, (0.06f + charge * 0.2f) * pulse, SpriteEffects.None, 0f);
 
             Main.EntitySpriteDraw(
                 smear,
@@ -794,7 +782,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 Color.Lerp(fire, white, 0.36f) * (0.52f + charge * 0.36f),
                 direction.ToRotation() - MathHelper.PiOver2,
                 new Vector2(smear.Width * 0.5f, smear.Height),
-                new Vector2(0.5f + charge * 0.42f, 0.18f + charge * 0.12f),
+                new Vector2(0.175f + charge * 0.14f, 0.06f + charge * 0.04f),
                 SpriteEffects.None,
                 0f);
 
@@ -803,11 +791,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 for (int i = 0; i < 3; i++)
                 {
                     Vector2 angle = (MathHelper.TwoPi * i / 3f).ToRotationVector2().RotatedBy(Main.GlobalTimeWrappedHourly * 7.2f);
-                    Vector2 offset = new Vector2(angle.X * 0.7f, angle.Y * 1.2f).RotatedBy(Projectile.rotation) * chargeScale * 12f;
+                    Vector2 offset = new Vector2(angle.X * 0.7f, angle.Y * 1.2f).RotatedBy(Projectile.rotation) * chargeScale * 4f;
                     for (int layer = 0; layer < 2; layer++)
                     {
                         Color layerColor = Color.Lerp(fire, white, layer) * 0.8f;
-                        float layerScale = chargeScale * (1f - 0.25f * layer) * 0.085f;
+                        float layerScale = chargeScale * (1f - 0.25f * layer) * 0.0275f;
                         Main.EntitySpriteDraw(bloom, tip + offset, null, layerColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
                     }
                 }
@@ -825,16 +813,19 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
             Vector2 muzzle = GunTipPosition - AimDirection * 21f - Main.screenPosition;
             Color color = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, 0.48f) with { A = 0 }) * power;
+            float flameScale = 1.5f;
 
             PFLeftEffectRules.BeginAdditive();
-            Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.55f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.34f + power * 0.24f, 0.18f + power * 0.12f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.55f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.34f + power * 0.24f, 0.18f + power * 0.12f) * flameScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(magic, muzzle + AimDirection * 4f, null, color * 0.34f, -Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.1f, magic.Size() * 0.5f, (0.05f + power * 0.05f) * flameScale, SpriteEffects.None, 0);
 
             for (int i = 0; i < 4; i++)
             {
                 float rotation = Projectile.rotation + MathHelper.PiOver4 * i + Main.GlobalTimeWrappedHourly * (1.1f + i * 0.15f);
-                Main.EntitySpriteDraw(star, muzzle, null, color * 0.62f, rotation, star.Size() * 0.5f, new Vector2(0.24f + power * 0.18f, 1.1f + power * 1.4f), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(star, muzzle, null, color * 0.62f, rotation, star.Size() * 0.5f, new Vector2(0.24f + power * 0.18f, 1.1f + power * 1.4f) * flameScale, SpriteEffects.None, 0);
             }
             PFLeftEffectRules.EndAdditive();
         }

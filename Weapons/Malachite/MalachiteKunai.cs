@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.MC;
+﻿using CalamityLegendsComeBack.Accssory.MC;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -1220,7 +1220,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 Particle softLine = new CustomSpark(
                     position,
                     velocity * 0.14f,
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     2,
                     Main.rand.NextFloat(0.36f, 0.52f),
@@ -1242,3 +1242,4 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         }
     }
 }
+

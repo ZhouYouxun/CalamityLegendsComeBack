@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
@@ -10,6 +10,7 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Graphics.Shaders;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
@@ -315,6 +316,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             BBSD_Charge_Effects.SpawnChargingEffects(Projectile, owner, focusPoint, target, chargeCompletion, phaseTimer);
             ApplyChargeShake(owner, chargeCompletion);
             Lighting.AddLight(WeaponTip, new Vector3(0.12f, 0.38f, 0.52f) * (0.55f + chargeCompletion * 0.65f));
+
+            if (phaseTimer % 12 == 0)
+            {
+                float pitch = MathHelper.Lerp(-0.4f, 0.4f, chargeCompletion);
+                SoundEngine.PlaySound(SoundID.Item13 with
+                {
+                    Volume = 0.45f + chargeCompletion * 0.45f,
+                    Pitch = pitch
+                }, owner.Center);
+            }
+            if (phaseTimer % 20 == 0)
+            {
+                SoundEngine.PlaySound(SoundID.Splash with
+                {
+                    Volume = 0.3f + chargeCompletion * 0.4f,
+                    Pitch = MathHelper.Lerp(-0.2f, 0.3f, chargeCompletion)
+                }, owner.Center);
+            }
 
             if (phaseTimer < ChargeFrames)
                 return;
@@ -753,12 +772,44 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             Texture2D weaponTexture = ModContent.Request<Texture2D>(Texture).Value;
             Rectangle frame = weaponTexture.Frame();
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+            
+            float chargeCompletion = Utils.GetLerpValue(0f, ChargeFrames, phaseTimer, true);
+            Vector2 jitter = Vector2.Zero;
+            if (phase == SuperDashPhase.Charging)
+            {
+                float jitterMax = chargeCompletion * 8f;
+                jitter = Main.rand.NextVector2Circular(jitterMax, jitterMax);
+            }
+            else if (phase == SuperDashPhase.Locked)
+            {
+                jitter = Main.rand.NextVector2Circular(1.2f, 1.2f);
+            }
+
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY) + jitter;
             Vector2 origin = frame.Size() * 0.5f;
             Color bladeColor = Projectile.GetAlpha(lightColor);
             bool facingLeft = BladeDirection.X < 0f;
             SpriteEffects effects = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             float drawRotation = Projectile.rotation + (facingLeft ? MathHelper.PiOver2 : 0f);
+
+            if (phase == SuperDashPhase.Charging && chargeCompletion > 0f)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 4f + Main.GlobalTimeWrappedHourly * 4f;
+                    Vector2 outlineOffset = angle.ToRotationVector2() * (chargeCompletion * 5f);
+                    Main.EntitySpriteDraw(
+                        weaponTexture,
+                        drawPosition + outlineOffset,
+                        frame,
+                        new Color(95, 206, 255, 0) * (chargeCompletion * 0.75f),
+                        drawRotation,
+                        origin,
+                        Projectile.scale * (1f + chargeCompletion * 0.06f),
+                        effects,
+                        0f);
+                }
+            }
 
             if (phase == SuperDashPhase.Striking || phase == SuperDashPhase.ImpactDrifting)
             {
@@ -779,6 +830,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 }
             }
 
+            bool applyShader = phase == SuperDashPhase.Locked;
+            if (applyShader)
+            {
+                int shaderId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.LivingOceanDye);
+                GameShaders.Armor.Apply(shaderId, Projectile, null);
+            }
+
             Main.EntitySpriteDraw(
                 weaponTexture,
                 drawPosition,
@@ -789,6 +847,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Projectile.scale,
                 effects,
                 0f);
+
+            if (applyShader)
+            {
+                Main.pixelShader.CurrentTechnique.Passes[0].Apply();
+            }
 
             return false;
         }

@@ -4,11 +4,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.MilitaryCaller
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller
 {
     public sealed class MilitaryCaller : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/备用贴图/定位模块";
+        //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/备用贴图/定位模块";
 
         public override void SetDefaults()
         {

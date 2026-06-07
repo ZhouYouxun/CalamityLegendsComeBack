@@ -1,7 +1,7 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.MilitaryCaller;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using Terraria;

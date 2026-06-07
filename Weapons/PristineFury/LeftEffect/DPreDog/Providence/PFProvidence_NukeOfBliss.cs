@@ -288,7 +288,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (Main.myPlayer == Projectile.owner)
             {
-                SpawnFlameFields(center, blastDamage);
                 PFProvidence_RainSpawner.Spawn(center, Projectile, blastDamage);
             }
 
@@ -467,19 +466,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void OnKill(int timeLeft)
         {
-            int fieldDamage = Math.Max(1, (int)(Projectile.damage * 0.62f));
-            int projectileIndex = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<PFProvidence_HolyFireField>(),
-                fieldDamage,
-                Projectile.knockBack * 0.2f,
-                Projectile.owner,
-                MathHelper.Clamp(FlameScale, 0.7f, 1.3f),
-                Main.rand.NextFloat(MathHelper.TwoPi));
-
-            PFLeftEffectRules.ApplyTheme(projectileIndex, (PristineFuryMark)(int)Projectile.ai[2]);
             PFProvidence_NukeOfBliss.SpawnExplosionEffects(Projectile.Center, 0.52f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastImpact") { Volume = 0.34f, PitchVariance = 0.24f, MaxInstances = 10 }, Projectile.Center);
         }

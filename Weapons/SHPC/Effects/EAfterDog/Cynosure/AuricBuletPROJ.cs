@@ -1,4 +1,4 @@
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -14,8 +14,7 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 {
     /// <summary>
-    /// Cynosure 的主穿甲弹。它不使用普通 SHPC 光球的表现，而是直接承担命中和展开整套火力的职责。
-    /// </summary>
+    /// Cynosure 鐨勪富绌跨敳寮广€傚畠涓嶄娇鐢ㄦ櫘閫?SHPC 鍏夌悆鐨勮〃鐜帮紝鑰屾槸鐩存帴鎵挎媴鍛戒腑鍜屽睍寮€鏁村鐏姏鐨勮亴璐ｃ€?    /// </summary>
     public class CynosureArmorPiercingRound : ModProjectile, ILocalizedModType
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricCell";
@@ -54,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.18f, 0.65f, 1f) * 0.72f);
 
-            // 飞行中的双轨示波器尾迹。这里刻意使用金蓝双色，方便之后单独调色。
+            // Flight trail axes.
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             for (int i = 0; i < 2; i++)
@@ -66,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 gold.noGravity = true;
             }
 
-            // 这些小型火花模拟 SHPS 的高速椭圆护航弹幕。它们是纯视觉，不会额外占用大量实体。
+            // Small visual sparks orbit the projectile without adding hitboxes.
             for (int i = 0; i < 3; i++)
             {
                 float angle = Main.GlobalTimeWrappedHourly * (17f + i * 2f) + i * MathHelper.TwoPi / 3f;
@@ -89,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     Projectile.Center + smearOffset,
                     -forward * Main.rand.NextFloat(2.2f, 4.6f),
-                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    "CalamityMod/Particles/ThinEndedLine",
                     false,
                     Main.rand.Next(8, 14),
                     Main.rand.NextFloat(0.07f, 0.13f),
@@ -126,7 +125,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            // 命中音效沿用金源弹 / 金源地雷的爆裂声，音色和用户要求的重型攻击更接近。
+            // Heavy auric impact tone.
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/AuricBulletHit") { Volume = 0.9f, Pitch = -0.12f }, Projectile.Center);
 
             SpawnImpactSparks();
@@ -135,11 +134,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                 ModContent.ProjectileType<CynosureLightningExplosion>(), burstDamage, Projectile.knockBack, Projectile.owner);
 
-            // 两层椭圆：小椭圆更密集，大椭圆更宽。金源珠先从命中点展开，再暂停，最后强追踪。
+            // Two auric ellipse payload rings.
             SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 12);
             SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 18);
 
-            // 外层充能环：停留后向目标释放细电弧，再原地爆炸。
+            // Charged outer cells.
             const int chargedCount = 12;
             for (int i = 0; i < chargedCount; i++)
             {
@@ -184,8 +183,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 0.28f,
                 16));
 
-            // 绯红恶魔式火花：数量固定，但每条火花的飞行距离在 0.5 到 2 倍之间变化。
-            for (int i = 0; i < 28; i++)
+            // 缁孩鎭堕瓟寮忕伀鑺憋細鏁伴噺鍥哄畾锛屼絾姣忔潯鐏姳鐨勯琛岃窛绂诲湪 0.5 鍒?2 鍊嶄箣闂村彉鍖栥€?            for (int i = 0; i < 28; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f, 20f);
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
@@ -247,3 +245,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         }
     }
 }
+

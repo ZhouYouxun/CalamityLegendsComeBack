@@ -1,0 +1,37 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		LegendaryCodex: {
+			SHPC: {
+				Tag: "SYSTEM // SHPC"
+				Body:
+					'''
+					Heat queues inside the matrix.
+					A magazine cools like a city after rain.
+					It does not pray for impact;
+					it folds orbit, matter, and muzzle light
+					into one answer.
+					'''
+			}
+
+			BlossomFlux: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+
+			BrinyBaron: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+
+			PristineFury: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+
+			Vesuvius: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+		}
+	}
+}

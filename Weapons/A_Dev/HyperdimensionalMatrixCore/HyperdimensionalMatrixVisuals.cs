@@ -316,6 +316,56 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
         }
 
+        public static void DrawWorldIcon(Vector2 screenCenter, float scale)
+        {
+            float time = Main.GlobalTimeWrappedHourly;
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D localStar = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_01").Value;
+            float iconScale = MathHelper.Clamp(scale * 0.92f, 0.65f, 1.22f);
+            float coreRadius = 25f * iconScale;
+            Vector2 center = screenCenter + Vector2.UnitY * (float)Math.Sin(time * 2.1f) * 2.4f * iconScale;
+
+            Color primary = GetDataColor(0.02f, 0.82f);
+            Color secondary = GetDataColor(0.42f, 0.58f);
+            Color tertiary = GetDataColor(0.72f, 0.42f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Main.spriteBatch.Draw(bloom, center, null, primary * 0.58f, time * 0.4f, bloom.Size() * 0.5f, 0.34f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(bloom, center, null, secondary * 0.32f, -time * 0.6f, bloom.Size() * 0.5f, 0.62f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(ring, center, null, primary * 0.76f, -time * 1.15f, ring.Size() * 0.5f, 0.42f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(ring, center, null, secondary * 0.48f, time * 1.45f, ring.Size() * 0.5f, 0.62f * iconScale, SpriteEffects.None, 0f);
+
+            DrawInventoryScanRing(center, coreRadius * 1.34f, time * 1.5f, primary * 0.76f, 28, 1.15f * iconScale);
+            DrawInventoryScanRing(center, coreRadius * 0.92f, -time * 2f, secondary * 0.58f, 22, 0.9f * iconScale);
+            DrawInventoryHypercube(center, coreRadius, time, iconScale * 0.92f);
+            DrawInventoryDataStreams(center, coreRadius, time, iconScale * 0.86f);
+            DrawInventoryCodeFragments(center, coreRadius, time, iconScale * 0.72f);
+            DrawInventorySparkStorm(center, coreRadius, time, iconScale * 0.84f, star, localStar);
+
+            for (int i = 0; i < 12; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 12f + time * (0.62f + i % 3 * 0.08f);
+                float radius = coreRadius * (1.03f + 0.22f * (float)Math.Sin(time * 3.2f + i));
+                Vector2 node = center + angle.ToRotationVector2() * radius;
+                DrawScreenNode(node, GetDataColor(i * 0.09f, 0.82f), (2.2f + i % 3) * iconScale);
+            }
+
+            Rectangle core = new(
+                (int)(center.X - 2.1f * iconScale),
+                (int)(center.Y - 2.1f * iconScale),
+                Math.Max(3, (int)(4.2f * iconScale)),
+                Math.Max(3, (int)(4.2f * iconScale)));
+            Main.spriteBatch.Draw(pixel, core, Color.White with { A = 0 } * 0.78f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
         public static void DrawScanRing(Vector2 center, float radius, float rotation, Color color, int segments, float width)
         {
             for (int i = 0; i < segments; i++)

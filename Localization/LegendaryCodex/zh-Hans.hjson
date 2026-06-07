@@ -1,0 +1,37 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		LegendaryCodex: {
+			SHPC: {
+				Tag: "SYSTEM // SHPC"
+				Body:
+					'''
+					热量在矩阵里排队。
+					弹匣像一座冷却的城市。
+					它不祈祷命中；
+					它把轨道、材料和枪口的白光
+					压成同一个答案。
+					'''
+			}
+
+			BlossomFlux: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+
+			BrinyBaron: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+
+			PristineFury: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+
+			Vesuvius: {
+				Tag: "???"
+				Body: "???\n???\n???"
+			}
+		}
+	}
+}

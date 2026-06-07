@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Healing;
@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 {
     internal sealed class DesertEagleLifeRound : ModProjectile, ILocalizedModType
     {
-        private const string SparkTexturePath = "CalamityMod/Particles/BloomLineSoftEdge";
+        private const string SparkTexturePath = "CalamityMod/Particles/ThinEndedLine";
 
         private static readonly Color SilverMain = new(214, 224, 236);
         private static readonly Color SilverAccent = new(255, 255, 255);
@@ -250,3 +250,4 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         }
     }
 }
+

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
@@ -14,7 +15,14 @@ using Terraria.UI.Chat;
 
 namespace CalamityLegendsComeBack
 {
-    public class IUMWMatrixPanel : ModProjectile
+    public static class IUMWMatrixInterface
+    {
+        public static bool OpenOrClose(Player player, IEntitySource source) => IUMWMatrixPanel.OpenOrClose(player, source);
+
+        public static bool Close(Player player) => IUMWMatrixPanel.TryCloseExistingPanel(player);
+    }
+
+    internal sealed class IUMWMatrixPanel : ModProjectile, IScreenOverlayProjectile
     {
         private const int PanelWidth = 640;
         private const int PanelHeight = 390;
@@ -45,6 +53,7 @@ namespace CalamityLegendsComeBack
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
+            Projectile.hide = true;
             Projectile.Opacity = 0f;
         }
 
@@ -60,9 +69,6 @@ namespace CalamityLegendsComeBack
                 Projectile.Kill();
                 return;
             }
-
-            if (owner.HeldItem.type != ModContent.ItemType<IUMWMatrixTablet>())
-                FadeOut = true;
 
             if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
             {
@@ -130,7 +136,7 @@ namespace CalamityLegendsComeBack
             return false;
         }
 
-        private static bool TryCloseExistingPanel(Player player)
+        internal static bool TryCloseExistingPanel(Player player)
         {
             int panelType = ModContent.ProjectileType<IUMWMatrixPanel>();
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -182,7 +188,7 @@ namespace CalamityLegendsComeBack
         {
             DynamicSpriteFont font = FontAssets.MouseText.Value;
             Color rainColor = new Color(56, 255, 168) * (opacity * 0.24f);
-            int columns = 18;
+            const int columns = 18;
             float time = Main.GlobalTimeWrappedHourly * 22f;
 
             for (int i = 0; i < columns; i++)
@@ -301,6 +307,10 @@ namespace CalamityLegendsComeBack
             DrawRectangle(new Rectangle(rectangle.X, rectangle.Bottom - thickness, rectangle.Width, thickness), color);
             DrawRectangle(new Rectangle(rectangle.X, rectangle.Y, thickness, rectangle.Height), color);
             DrawRectangle(new Rectangle(rectangle.Right - thickness, rectangle.Y, thickness, rectangle.Height), color);
+        }
+
+        public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+        {
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
+using System;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -12,13 +13,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
 
         public const int MaxDesignedTideCap = 8;
         public const float TideDamageBonusPerStack = 0.03f;
+        public const int EXMax = 90 * 60;
+        public const int EXDisplayMax = 90;
         private const int PassiveTideRegenInterval = 300;
         public int TideValue;
+        public int EXValue;
         private bool wasTideReady;
+        private bool wasEXReady;
         private int passiveTideRegenTimer;
 
         public int CurrentTideMax => GetCurrentTideMax() + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
         public bool TideFull => TideValue >= CurrentTideMax;
+        public bool EXFull => EXValue >= EXMax;
+        public int EXDisplayValue => Utils.Clamp(EXValue / GetFramesPerDisplayUnit(), 0, EXDisplayMax);
         public float TideDamageMultiplier => 1f + TideValue * TideDamageBonusPerStack;
 
         public override void PostUpdateEquips()
@@ -27,7 +34,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
                 TideValue = CurrentTideMax;
 
             UpdatePassiveTideRegen();
+            UpdateEXCharge();
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasTideReady, TideFull);
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXFull);
         }
 
         public void AddTide(int amount = 1)
@@ -59,6 +68,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
         {
             TideValue = 0;
             passiveTideRegenTimer = 0;
+        }
+
+        public void ResetEX()
+        {
+            EXValue = 0;
+        }
+
+        public static int GetFramesPerDisplayUnit()
+        {
+            return Math.Max(1, EXMax / EXDisplayMax);
+        }
+
+        private void UpdateEXCharge()
+        {
+            bool holdingBrinyBaron = Player.HeldItem != null &&
+                                     !Player.HeldItem.IsAir &&
+                                     Player.HeldItem.ModItem is NewLegendBrinyBaron;
+
+            if (holdingBrinyBaron)
+                EXValue++;
+
+            EXValue = Utils.Clamp(EXValue, 0, EXMax);
         }
 
         private void UpdatePassiveTideRegen()

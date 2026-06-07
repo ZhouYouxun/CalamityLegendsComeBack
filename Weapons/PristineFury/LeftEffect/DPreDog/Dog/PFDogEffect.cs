@@ -113,7 +113,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 direction = holdout.AimDirection.SafeNormalize(Vector2.UnitX * holdout.Owner.direction);
             Vector2 muzzle = holdout.GunTipPosition + direction * 10f;
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            Color theme = Color.Lerp(new Color(128, 64, 255), new Color(80, 220, 255), charge * 0.38f);
+            Color themeColor = PristineFuryMarkHelper.GetColor(holdout.CurrentMark);
+            Color theme = Color.Lerp(themeColor, Color.Lerp(themeColor, Color.White, 0.5f), charge * 0.38f);
             Lighting.AddLight(muzzle, theme.ToVector3() * (0.35f + charge * 0.95f));
 
             if (Main.rand.NextFloat() < 0.46f + charge * 0.38f)

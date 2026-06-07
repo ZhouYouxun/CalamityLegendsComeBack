@@ -1,10 +1,10 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.CommandAscend;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.MilitaryCaller;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;

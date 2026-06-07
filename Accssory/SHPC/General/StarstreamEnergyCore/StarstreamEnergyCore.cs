@@ -10,7 +10,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.StarstreamEnergyCore
 {
     public class StarstreamEnergyCore : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/General/EnergyCore";
 
         public override void SetDefaults()
         {

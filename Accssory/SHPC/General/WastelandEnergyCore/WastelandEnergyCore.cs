@@ -8,7 +8,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.WastelandEnergyCore
 {
     public class WastelandEnergyCore : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/General/EnergyCore";
 
         public override void SetDefaults()
         {

@@ -1,4 +1,4 @@
-using CalamityMod.Particles;
+﻿using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 {
     internal sealed class DesertEagleSilverGlobalProjectile : GlobalProjectile
     {
-        private const string SparkTexturePath = "CalamityMod/Particles/BloomLineSoftEdge";
+        private const string SparkTexturePath = "CalamityMod/Particles/ThinEndedLine";
 
         public static readonly Color SilverMain = new(214, 224, 236);
         public static readonly Color SilverAccent = new(255, 255, 255);
@@ -227,3 +227,4 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         }
     }
 }
+

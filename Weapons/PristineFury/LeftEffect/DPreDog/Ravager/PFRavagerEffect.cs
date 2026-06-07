@@ -1,4 +1,4 @@
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Healing;
@@ -442,7 +442,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (BeamLength <= 4f || Main.dedServ)
                 return false;
 
-            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 start = Projectile.Center - Main.screenPosition;
@@ -462,3 +462,4 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         }
     }
 }
+

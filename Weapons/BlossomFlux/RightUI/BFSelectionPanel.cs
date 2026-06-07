@@ -125,8 +125,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
         private bool IsFormSwitchMode => Projectile.ai[1] == FormSwitchMode;
 
-        public static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
-
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.DrawScreenCheckFluff[Type] = 9999999;
@@ -155,11 +153,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 return;
             }
 
+            if (!IsFormSwitchMode)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             if (owner.HeldItem.type != ModContent.ItemType<NewLegendBlossomFlux>())
                 FadeOut = true;
 
-            if (IsFormSwitchMode &&
-                Main.myPlayer == Projectile.owner &&
+            if (Main.myPlayer == Projectile.owner &&
                 KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
                 KeybindSystem.LegendaryWeaponFormSwitch?.JustReleased != true)
             {
@@ -216,16 +219,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 0f);
 
             Vector2 frameSize = icons[0].IconTexture.Size();
-            int formSwitchHoveredIndex = IsFormSwitchMode ? GetFormSwitchHoveredIndex(drawPosition) : -1;
-            bool formSwitchReleased = IsFormSwitchMode && KeybindSystem.LegendaryWeaponFormSwitch?.JustReleased == true;
-            bool hoveringOverAnySlot = false;
-            bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
-            bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
-            bool clickedLockedPreset = false;
-            BlossomFluxChloroplastPresetType? clickedPreset = null;
+            int formSwitchHoveredIndex = GetFormSwitchHoveredIndex(drawPosition);
+            bool formSwitchReleased = KeybindSystem.LegendaryWeaponFormSwitch?.JustReleased == true;
 
-            if (IsFormSwitchMode)
-                DrawFormSwitchSectorLines(drawPosition, formSwitchHoveredIndex);
+            DrawFormSwitchSectorLines(drawPosition, formSwitchHoveredIndex);
 
             for (int i = 0; i < icons.Length; i++)
             {
@@ -235,31 +232,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 icon.SelectedAsCurrent = icon.Preset == rightUIPlayer.CurrentPreset;
 
                 Vector2 iconCenter = drawPosition + IconOffsets[i] * Projectile.scale;
-                Rectangle iconArea = Utils.CenteredRectangle(iconCenter, frameSize * IconScale * Projectile.scale);
-                bool hovered = IsFormSwitchMode
-                    ? i == formSwitchHoveredIndex
-                    : iconArea.Intersects(MouseRectangle);
+                bool hovered = i == formSwitchHoveredIndex;
 
                 if (hovered)
                 {
-                    hoveringOverAnySlot = true;
                     icon.BeingHoveredOver = true;
 
                     if (!icon.WasHoveredOverLastFrame && Projectile.Opacity >= 1f)
                         SoundEngine.PlaySound(SoundID.Item55 with { Volume = 0.42f, Pitch = 0.1f }, owner.Center);
-
-                    if (!IsFormSwitchMode && leftClickPressed && Projectile.Opacity >= 1f)
-                    {
-                        if (icon.Unlocked)
-                        {
-                            clickedPreset = icon.Preset;
-                            icon.ClickFeedbackTimer = 10;
-                        }
-                        else
-                        {
-                            clickedLockedPreset = true;
-                        }
-                    }
                 }
 
                 Rectangle slotFrameArea = Utils.CenteredRectangle(iconCenter, new Vector2(SlotFrameSize) * Projectile.scale);
@@ -280,57 +260,27 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
                 icon.Update();
             }
 
-            if (IsFormSwitchMode)
+            if (formSwitchReleased && Projectile.Opacity > 0.08f)
             {
-                if (formSwitchReleased && Projectile.Opacity > 0.08f)
+                if (formSwitchHoveredIndex >= 0 && icons[formSwitchHoveredIndex].Unlocked)
                 {
-                    if (formSwitchHoveredIndex >= 0 && icons[formSwitchHoveredIndex].Unlocked)
-                    {
-                        BlossomFluxChloroplastPresetType preset = icons[formSwitchHoveredIndex].Preset;
-                        rightUIPlayer.TrySetPreset(preset);
-                        string presetName = Language.GetTextValue($"Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendBlossomFlux.PresetName{(int)preset}");
-                        string selectionText = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.BlossomFluxPresetSelected", presetName);
-                        CombatText.NewText(owner.Hitbox, ChloroplastCommon.PresetColor(preset), selectionText, dramatic: false, dot: false);
-                        icons[formSwitchHoveredIndex].ClickFeedbackTimer = 10;
-                        SoundEngine.PlaySound(SoundID.Item23 with { Pitch = 0.06f, Volume = 0.72f }, owner.Center);
-                    }
-                    else
-                    {
-                        SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.42f, Pitch = 0.2f }, owner.Center);
-                    }
-
-                    FadeOut = true;
+                    BlossomFluxChloroplastPresetType preset = icons[formSwitchHoveredIndex].Preset;
+                    rightUIPlayer.TrySetPreset(preset);
+                    string presetName = Language.GetTextValue($"Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendBlossomFlux.PresetName{(int)preset}");
+                    string selectionText = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.BlossomFluxPresetSelected", presetName);
+                    CombatText.NewText(owner.Hitbox, ChloroplastCommon.PresetColor(preset), selectionText, dramatic: false, dot: false);
+                    icons[formSwitchHoveredIndex].ClickFeedbackTimer = 10;
+                    SoundEngine.PlaySound(SoundID.Item23 with { Pitch = 0.06f, Volume = 0.72f }, owner.Center);
+                }
+                else
+                {
+                    SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.42f, Pitch = 0.2f }, owner.Center);
                 }
 
-                if (Projectile.Opacity > 0.08f)
-                {
-                    Main.blockMouse = true;
-                    owner.mouseInterface = true;
-                }
-
-                return false;
-            }
-
-            if (clickedPreset.HasValue)
-            {
-                rightUIPlayer.TrySetPreset(clickedPreset.Value);
-                string presetName = Language.GetTextValue($"Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendBlossomFlux.PresetName{(int)clickedPreset.Value}");
-                string selectionText = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.BlossomFluxPresetSelected", presetName);
-                CombatText.NewText(owner.Hitbox, ChloroplastCommon.PresetColor(clickedPreset.Value), selectionText, dramatic: false, dot: false);
                 FadeOut = true;
-                SoundEngine.PlaySound(SoundID.Item23 with { Pitch = 0.06f, Volume = 0.72f }, owner.Center);
-            }
-            else if (clickedLockedPreset)
-            {
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.42f, Pitch = 0.2f }, owner.Center);
-            }
-            else if (Projectile.Opacity >= 1f && (rightClickPressed || (leftClickPressed && !clickedLockedPreset)))
-            {
-                FadeOut = true;
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.5f }, owner.Center);
             }
 
-            if (hoveringOverAnySlot)
+            if (Projectile.Opacity > 0.08f)
             {
                 Main.blockMouse = true;
                 owner.mouseInterface = true;

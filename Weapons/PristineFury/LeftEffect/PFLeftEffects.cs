@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     PFAuroraEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Goliath:
-                    PristineFuryLeftEffectRegistry.Reset(holdout);
+                    PFGoliathEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Moonlord:
                     PFMoonlordEffect.Update(holdout, held, justPressed, justReleased);
@@ -53,9 +53,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     break;
                 case PristineFuryMark.Dog:
                     PFDogEffect.Update(holdout, held, justPressed, justReleased);
-                    break;
-                case PristineFuryMark.ExoThanatos:
-                    PFExoThanatosEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Dragon:
                     PFDragonEffect.Update(holdout, held, justPressed, justReleased);
@@ -153,10 +150,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.SpawnMuzzleBurst(muzzleColor, muzzleScale);
         }
 
+        private static BlendState customAdditive;
         internal static void BeginAdditive()
         {
+            if (customAdditive == null)
+            {
+                customAdditive = new BlendState
+                {
+                    ColorSourceBlend = Blend.One,
+                    ColorDestinationBlend = Blend.One,
+                    ColorBlendFunction = BlendFunction.Add,
+                    AlphaSourceBlend = Blend.One,
+                    AlphaDestinationBlend = Blend.One,
+                    AlphaBlendFunction = BlendFunction.Add
+                };
+            }
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, customAdditive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
         internal static void EndAdditive()

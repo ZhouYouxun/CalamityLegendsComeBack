@@ -12,7 +12,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
+namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule
 {
     internal sealed class ProjectilePossessionHoldout : ModProjectile, ILocalizedModType
     {
@@ -151,15 +151,15 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ProjectilePossessionModule
                 if (!IsInsideVacuum(projectile))
                     continue;
 
-                SHPCProjectilePossessionGlobalProjectile possession = projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
-                possession.Capture(projectile, Owner, count, TipPosition);
+                if (!SHPCProjectilePossessionGlobalProjectile.TryCreatePossessedClone(projectile, Owner, count, out Projectile possessedClone))
+                    continue;
 
                 absorbedThisFrame++;
                 count++;
                 possessionPlayer.AbsorbedProjectileCount = count;
                 possessionPlayer.TriggerPossessionBarPulse(18);
                 SpawnAbsorbBurst(projectile.Center);
-                SoundEngine.PlaySound(SoundID.Item72 with { Volume = 0.45f, Pitch = 0.25f }, projectile.Center);
+                SoundEngine.PlaySound(SoundID.Item72 with { Volume = 0.45f, Pitch = 0.25f }, possessedClone.Center);
             }
         }
 

@@ -1,4 +1,4 @@
-//using System;
+﻿//using System;
 //using CalamityMod.Particles;
 //using Microsoft.Xna.Framework;
 //using Terraria;
@@ -89,7 +89,7 @@
 //                Particle line = new CustomSpark(
 //                    Projectile.Center + right * Main.rand.NextFloat(-4f, 4f),
 //                    sparkVelocity,
-//                    "CalamityMod/Particles/BloomLineSoftEdge",
+//                    "CalamityMod/Particles/ThinEndedLine",
 //                    false,
 //                    Main.rand.Next(12, 18),
 //                    Main.rand.NextFloat(0.32f, 0.46f) * speedFactor,
@@ -152,3 +152,4 @@
 //        }
 //    }
 //}
+

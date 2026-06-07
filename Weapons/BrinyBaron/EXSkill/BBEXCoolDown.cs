@@ -14,7 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
     internal class BBEXCoolDown : CooldownHandler
     {
         private float AdjustedCompletion =>
-            instance.player.GetModPlayer<BBEXPlayer>().TideValue / (float)instance.player.GetModPlayer<BBEXPlayer>().CurrentTideMax;
+            instance.player.GetModPlayer<BBEXPlayer>().EXValue / (float)BBEXPlayer.EXMax;
+        private int DisplayValue => instance.player.GetModPlayer<BBEXPlayer>().EXDisplayValue;
         private Color TextColor => Color.AliceBlue;
         private Color TextBorderColor => Color.Black;
 
@@ -55,8 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
             DrawBorderStringEightWay(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                instance.timeLeft.ToString(),
-                position + new Vector2(-6f, 10f) * scale,
+                DisplayValue.ToString(),
+                position + new Vector2(DisplayValue > 9 ? -11f : -6f, 10f) * scale,
                 TextColor,
                 TextBorderColor,
                 scale);
@@ -88,8 +89,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
             DrawBorderStringEightWay(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                instance.player.GetModPlayer<BBEXPlayer>().TideValue.ToString(),
-                position + new Vector2(-6f, 10f) * scale,
+                DisplayValue.ToString(),
+                position + new Vector2(DisplayValue > 9 ? -11f : -6f, 10f) * scale,
                 TextColor,
                 TextBorderColor,
                 scale);

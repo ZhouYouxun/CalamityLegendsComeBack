@@ -87,13 +87,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 16;
-            if (IgnorePenetrationDamageFalloff != 1f)
-                Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.9f));
-
             Projectile.netUpdate = true;
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 12, 0.9f, 3.4f, 0.8f, 1.2f);
-            SpawnBreakthroughImpactFX(target.Center, 1.1f);
-            SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = 0.25f }, target.Center);
+            SpawnBreakthroughImpactFX(Projectile.Center, 1.1f);
+            SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = 0.25f }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
