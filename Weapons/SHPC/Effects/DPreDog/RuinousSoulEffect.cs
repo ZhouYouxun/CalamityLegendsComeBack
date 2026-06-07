@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             // 初始速度三倍
             projectile.velocity *= 1.1f;
             projectile.extraUpdates = 3;
-            projectile.timeLeft = BaseLifetime;
+            projectile.timeLeft = 200;
 
             projectile.penetrate = MaxPenetrations;
             projectile.tileCollide = false;
