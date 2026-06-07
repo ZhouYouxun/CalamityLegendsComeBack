@@ -61,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             Projectile.extraUpdates = 1;
             Projectile.timeLeft = 700;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnSpawn(IEntitySource source)

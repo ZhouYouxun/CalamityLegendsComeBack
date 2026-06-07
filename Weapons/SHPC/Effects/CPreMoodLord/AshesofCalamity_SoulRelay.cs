@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             }
 
             Vector2 spawnPosition = Projectile.Center + forward * 18f + normal * (float)Math.Sin(shotIndex * 2.41f) * 18f;
-            int damage = Math.Max(1, (int)(Projectile.damage * 0.86f));
+            int damage = Math.Max(1, (int)(Projectile.damage * 0.77f));
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

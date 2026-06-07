@@ -22,18 +22,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         public override void SetDefaults()
         {
-            Projectile.width = 18;
-            Projectile.height = 18;
+            Projectile.width = 32;
+            Projectile.height = 64;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 280;
+            Projectile.timeLeft = 320;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
-            Projectile.extraUpdates = 2;
+            Projectile.extraUpdates = 5;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -177,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 center,
                 Vector2.Zero,
                 DaybreakExplosionProjectileID,
-                Math.Max(1, (int)(Projectile.damage * 0.55f)),
+                Math.Max(1, (int)(Projectile.damage * 0.75f)),
                 Projectile.knockBack * 0.35f,
                 Projectile.owner);
 

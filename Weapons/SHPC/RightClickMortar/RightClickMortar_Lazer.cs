@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             Projectile.penetrate = 1;
             Projectile.extraUpdates = 2;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 14;
+            Projectile.localNPCHitCooldown = -1;
             Projectile.alpha = 255;
         }
 

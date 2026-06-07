@@ -33,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             // 只存活很短时间
             projectile.timeLeft = 15;
+            projectile.penetrate = 2;
         }
 
         private int fireTimer;

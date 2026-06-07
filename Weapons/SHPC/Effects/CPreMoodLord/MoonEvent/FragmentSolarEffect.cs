@@ -28,8 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             shootTimer = 0;
-            projectile.timeLeft = 120;
-            projectile.velocity *= 1.8f;
+            projectile.timeLeft = 90;
+            projectile.velocity *= 2.4f;
             projectile.penetrate = 1;
             projectile.localAI[0] = 0f;
             projectile.localAI[1] = -1f;
@@ -71,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     center,
                     Vector2.Zero,
                     ModContent.ProjectileType<NewLegendSHPE>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 1.33),
                     projectile.knockBack,
                     projectile.owner);
 

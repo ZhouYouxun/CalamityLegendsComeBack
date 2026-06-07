@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 projectile.Center + forward * 10f,
                 forward * 37.2f,
                 ModContent.ProjectileType<FragmentEntropy_CosmicFire>(),
-                (int)(projectile.damage * 1.75),
+                (int)(projectile.damage * 1.8f),
                 projectile.knockBack,
                 projectile.owner);
         }
