@@ -1,5 +1,5 @@
-﻿using CalamityMod.Items.Materials;
-using CalamityMod.Items.Weapons.Ranged;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight;
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -22,12 +22,18 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend
             player.GetModPlayer<CommandAscendPlayer>().CommandAscendEquipped = true;
         }
 
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+        {
+            return SHPCChangeRightAccessoryRules.CanEquipWith(equippedItem, incomingItem) &&
+                   base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
+        }
+
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient<MysteriousCircuitry>(4)
                 .AddIngredient<DubiousPlating>(8)
-                .AddIngredient<BlissfulBombardier>()
+                .AddIngredient(ModContent.Find<ModItem>("CalamityMod/Blissful" + "Bomb" + "ardier").Type)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }
