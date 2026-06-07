@@ -227,6 +227,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                 lightColor,
                 1);
 
+            BFArrowCommon.DrawCentredRotatingStar(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, isLeftClick: true, manageBlendState: true);
+
             return false;
         }
     }

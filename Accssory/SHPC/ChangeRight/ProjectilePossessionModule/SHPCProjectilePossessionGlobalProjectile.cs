@@ -1,4 +1,4 @@
-using CalamityMod.Systems.Collections;
+﻿using CalamityMod.Systems.Collections;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;

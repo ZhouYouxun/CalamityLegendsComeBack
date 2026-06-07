@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     startPos + Main.rand.NextVector2Circular(14f, 14f),
                     sparkVel,
-                    false,
+                false,
                     Main.rand.Next(8, 14),
                     Main.rand.NextFloat(0.22f, 0.42f),
                     Color.Lerp(new Color(145, 225, 255), Color.White, Main.rand.NextFloat(0.1f, 0.45f))));
@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     Color.Lerp(Color.DeepSkyBlue, Color.Cyan, Main.rand.NextFloat()),
                     Main.rand.NextFloat(0.78f, 1.08f));
                 dust.noGravity = true;
-            }
+                }
         }
 
         internal static void SpawnTeleportHoldEffects(Projectile projectile, Vector2 targetCenter, int phaseTimer, int windupFrames)

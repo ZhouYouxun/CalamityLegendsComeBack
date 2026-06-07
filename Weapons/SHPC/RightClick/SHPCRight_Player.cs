@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC;
+﻿using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;

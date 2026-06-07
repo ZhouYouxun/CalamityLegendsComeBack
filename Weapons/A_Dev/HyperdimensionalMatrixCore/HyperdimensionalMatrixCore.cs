@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;

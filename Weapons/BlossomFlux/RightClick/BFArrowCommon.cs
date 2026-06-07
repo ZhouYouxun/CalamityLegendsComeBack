@@ -434,6 +434,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 SpriteEffects.None,
                 0);
 
+            DrawCentredRotatingStar(projectile, preset, isLeftClick: false, manageBlendState: false);
+
             BeginAlphaBatch();
 
             Main.EntitySpriteDraw(
@@ -519,6 +521,111 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public static Color GetPresetColor(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetColor(preset);
         public static Color GetPresetAccentColor(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetAccentColor(preset);
         public static int GetPresetDustType(BlossomFluxChloroplastPresetType preset) => ChloroplastCommon.PresetDustType(preset);
+
+        public static void DrawCentredRotatingStar(Projectile projectile, BlossomFluxChloroplastPresetType preset, bool isLeftClick, bool manageBlendState = true)
+        {
+            Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D starTex = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            
+            Color mainColor = GetPresetColor(preset) * projectile.Opacity;
+            Color accentColor = GetPresetAccentColor(preset) * projectile.Opacity;
+            Color coreColor = Color.Lerp(accentColor, Color.White, 0.45f) * projectile.Opacity;
+            
+            float baseScale = isLeftClick ? 0.26f : 0.52f;
+            float baseSpeed = isLeftClick ? 8.5f : 4.2f;
+            float brightness = isLeftClick ? 0.72f : 1.15f;
+            
+            float presetScaleMult = preset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.05f,
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => 0.88f,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.0f,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.25f,
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.12f,
+                _ => 1f
+            };
+            
+            float presetSpeedMult = preset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.15f,
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => 0.82f,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.35f,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => 0.9f,
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.1f,
+                _ => 1f
+            };
+
+            float presetBrightnessMult = preset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_ABreak => 1.1f,
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => 0.85f,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => 1.0f,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => 1.2f,
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => 1.05f,
+                _ => 1f
+            };
+
+            float finalScale = baseScale * presetScaleMult * projectile.scale;
+            float finalSpeed = baseSpeed * presetSpeedMult;
+            float finalBrightness = brightness * presetBrightnessMult;
+            
+            float time = Main.GlobalTimeWrappedHourly;
+            Vector2 center = projectile.Center - Main.screenPosition;
+            
+            if (manageBlendState)
+                BeginAdditiveBatch();
+            
+            Main.EntitySpriteDraw(
+                bloomTex,
+                center,
+                null,
+                (mainColor with { A = 0 }) * (0.34f * finalBrightness),
+                0f,
+                bloomTex.Size() * 0.5f,
+                finalScale * 1.5f,
+                SpriteEffects.None,
+                0);
+                
+            Main.EntitySpriteDraw(
+                bloomTex,
+                center,
+                null,
+                (coreColor with { A = 0 }) * (0.24f * finalBrightness),
+                0f,
+                bloomTex.Size() * 0.5f,
+                finalScale * 0.75f,
+                SpriteEffects.None,
+                0);
+
+            int starLayers = 3;
+            for (int i = 0; i < starLayers; i++)
+            {
+                float layerCompletion = i / (float)starLayers;
+                float rotationDirection = (i % 2 == 0) ? 1f : -1f;
+                float angle = time * finalSpeed * rotationDirection + layerCompletion * MathHelper.TwoPi;
+                float pulse = 0.9f + 0.1f * (float)System.Math.Sin(time * 12f + i * 1.57f);
+                
+                for (int b = -1; b <= 1; b += 2)
+                {
+                    float starRot = angle + MathHelper.PiOver4 * b;
+                    Vector2 scaleVec = new Vector2(0.24f, 1.2f) * finalScale * pulse * (1f - i * 0.18f);
+                    
+                    Main.EntitySpriteDraw(
+                        starTex,
+                        center,
+                        null,
+                        (Color.Lerp(mainColor, coreColor, layerCompletion) with { A = 0 }) * (0.64f * finalBrightness * (1f - i * 0.15f)),
+                        starRot,
+                        starTex.Size() * 0.5f,
+                        scaleVec,
+                        SpriteEffects.None,
+                        0);
+                }
+            }
+            
+            if (manageBlendState)
+                BeginAlphaBatch();
+        }
 
         private static void BeginAdditiveBatch()
         {

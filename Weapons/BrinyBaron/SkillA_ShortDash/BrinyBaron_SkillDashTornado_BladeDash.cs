@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;

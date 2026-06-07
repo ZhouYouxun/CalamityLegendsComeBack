@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.BlossomFlux;
+﻿using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using CalamityMod.Buffs.DamageOverTime;

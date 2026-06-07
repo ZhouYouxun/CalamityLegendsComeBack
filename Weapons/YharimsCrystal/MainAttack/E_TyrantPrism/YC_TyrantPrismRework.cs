@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.YC;
+﻿using CalamityLegendsComeBack.Accssory.YC;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
 using CalamityMod;

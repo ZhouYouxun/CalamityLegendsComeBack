@@ -191,5 +191,5 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         }
     }
 
-    
-}
+
+        }

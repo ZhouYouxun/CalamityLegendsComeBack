@@ -1,4 +1,4 @@
-namespace CalamityLegendsComeBack.Weapons.BlossomFlux
+﻿namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
     internal readonly struct BFBreakthroughRightStats
     {

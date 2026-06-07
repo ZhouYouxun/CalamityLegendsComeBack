@@ -229,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
 
-            // 涓嶈鎶?A 璁炬垚 0锛岄伩鍏?SpriteBatch 鐘舵€佹病鍒囨垚鍔熸椂鐩存帴閫忔槑
+            // 不要把 A 设成 0，避免 SpriteBatch 状态没切成功时直接透明
             Color theme = Color.Lerp(ThemeColor, Color.White, 0.12f) * Projectile.Opacity;
             Color inner = Color.White * Projectile.Opacity;
 
@@ -318,7 +318,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         private void DrawSegmentMagic(Texture2D magicRing, Texture2D reticle, Vector2 drawPosition, float rotation, float scale, Color color, float completion)
         {
-            // 鍘熸湰 scale * 0.34f / 0.28f 澶皬锛屽熀鏈細鐪嬩笉娓?
+            // 原本 scale * 0.34f / 0.28f 太小，基本会看不清
             float fade = MathHelper.Lerp(0.72f, 0.36f, completion);
             float spin = Main.GlobalTimeWrappedHourly * MathHelper.Lerp(2.4f, 1.35f, completion) + Projectile.identity * 0.12f;
             float pulse = 0.92f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f + completion * MathHelper.TwoPi) * 0.08f;

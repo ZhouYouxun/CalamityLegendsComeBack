@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
             int manaCost = Owner.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickManaCost(MilitaryTurretUtility.ManaPerCall);
             if (manaCost > 0 && !Owner.CheckMana(Owner.HeldItem, manaCost, true, false))
             {
-                RejectCall("榄斿姏涓嶈冻", GunTipPosition);
+                RejectCall("魔力不足", GunTipPosition);
                 fireTimer = FireInterval - 10;
                 return;
             }

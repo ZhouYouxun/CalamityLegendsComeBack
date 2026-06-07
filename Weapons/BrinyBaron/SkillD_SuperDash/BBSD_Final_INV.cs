@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;

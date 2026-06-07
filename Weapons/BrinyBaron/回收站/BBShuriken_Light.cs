@@ -1,4 +1,4 @@
-//using System;
+﻿//using System;
 //using CalamityMod.Particles;
 //using Microsoft.Xna.Framework;
 //using Microsoft.Xna.Framework.Graphics;
@@ -63,7 +63,7 @@
 //                Vector2 currentDir = Projectile.velocity.SafeNormalize(Vector2.UnitY);
 //                Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
 //
-//                // 当前方向 �?目标方向的角度差
+//                // 当前方向 �?目标方向的角度差
 //                float angle = currentDir.AngleTo(desiredDir);
 //
 //                // 限制最大转向角

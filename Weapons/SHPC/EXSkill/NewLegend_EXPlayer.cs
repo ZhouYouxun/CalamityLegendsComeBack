@@ -6,19 +6,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
     internal class NewLegend_EXPlayer : ModPlayer
     {
-        // EXÌõµ±Ç°Öµ
+        // EXæ¡å½“å‰å€¼
         public int EXValue;
         private bool wasEXReady;
 
-// Á½·ÖÖÓÔÜÂú£º2 ¡Á 60 ¡Á 60 = 7200Ö¡
+// ä¸¤åˆ†é’Ÿæ”’æ»¡ï¼š2 Ã— 60 Ã— 60 = 7200å¸§
         public const int BaseEXMax = 9600;
         public const int EXDisplayMax = 80;
         private const int PassiveChargeTime = 80;
 
-        // ÊÇ·ñÒÑÂú
+        // æ˜¯å¦å·²æ»¡
         public bool EXFull => EXValue >= GetCurrentEXMax(Player);
         public int EXDisplayValue => Utils.Clamp(EXValue / GetFramesPerDisplayUnit(Player), 0, EXDisplayMax);
-        public bool EXUnlocked => NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3;
+        public bool EXUnlocked => NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3 || Player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryUltimateTesterPlayer>().Equipped;
 
         public static int GetCurrentEXMax(Player player)
         {
@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public override void ResetEffects()
         {
-            // ÕâÀïÏÈ²»·Å±ğµÄĞ§¹û£¬±£³Ö¸É¾»
+            // è¿™é‡Œå…ˆä¸æ”¾åˆ«çš„æ•ˆæœï¼Œä¿æŒå¹²å‡€
         }
 
         public override void PostUpdate()
@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 return;
             }
 
-            // ¼ì²âµ±Ç°ÊÇ·ñÊÖ³Ö SHPC
+            // æ£€æµ‹å½“å‰æ˜¯å¦æ‰‹æŒ SHPC
             bool holdingSHPC = Player.HeldItem != null &&
                                !Player.HeldItem.IsAir &&
                                Player.HeldItem.ModItem is NewLegendSHPC;
@@ -65,7 +65,7 @@ if (EXValue > maxEX)
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXValue >= maxEX);
         }
 
-        // ¹©Íâ²¿µ÷ÓÃ£ºÇå¿Õ EX Ìõ
+        // ä¾›å¤–éƒ¨è°ƒç”¨ï¼šæ¸…ç©º EX æ¡
         public void ResetEX()
         {
             EXValue = 0;

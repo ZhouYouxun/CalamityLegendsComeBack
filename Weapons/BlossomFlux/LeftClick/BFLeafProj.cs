@@ -271,6 +271,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                 SpriteEffects.None,
                 0);
 
+            BFArrowCommon.DrawCentredRotatingStar(Projectile, Preset, isLeftClick: true, manageBlendState: false);
+
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             Main.EntitySpriteDraw(

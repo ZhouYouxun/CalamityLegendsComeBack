@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;

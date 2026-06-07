@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             // Spawn circular shockwave
             for (int i = 0; i < 2; i++)
-            {
+                {
                 DirectionalPulseRing ring = new DirectionalPulseRing(
                     impactCenter,
                     forward * 0.5f,

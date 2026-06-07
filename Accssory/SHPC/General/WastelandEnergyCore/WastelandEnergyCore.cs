@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.General;
+﻿using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;

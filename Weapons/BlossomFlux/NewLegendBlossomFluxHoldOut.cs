@@ -40,6 +40,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int BreakthroughLoadFlashFrames = 14;
         private const int BreakthroughQueuedShotGap = 4;
         private const int LeftStarFlashFrames = 14;
+        private const int LeftOutlinePulseFrames = 10;
+        private const int RightOutlinePulseFrames = 22;
         private const float RecoveryDnaMaxOffset = 18f;
         private const float RecoveryDnaPhaseStep = MathHelper.Pi / 8f;
         private const float BreakthroughSpeed = 19f;
@@ -72,6 +74,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private int breakthroughQueuedDamage;
         private int breakthroughQueuedPenetrate;
         private int leftStarFlashTimer;
+        private int leftOutlinePulseTimer;
+        private int rightOutlinePulseTimer;
         private float breakthroughQueuedSpeed;
         private float breakthroughQueuedKnockback;
         private float breakthroughQueuedNoFalloff;
@@ -266,7 +270,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
-            UpdateStarFlashTimers();
+            UpdateOutlinePulseTimers();
 
             BFRightUIPlayer rightUIPlayer = Owner.GetModPlayer<BFRightUIPlayer>();
 
@@ -658,15 +662,58 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, armRotation + extraBackArmRotation);
         }
 
-        private void UpdateStarFlashTimers()
+        private void UpdateOutlinePulseTimers()
         {
             if (leftStarFlashTimer > 0)
                 leftStarFlashTimer--;
+ 
+            if (leftOutlinePulseTimer > 0)
+                leftOutlinePulseTimer--;
+ 
+            if (rightOutlinePulseTimer > 0)
+                rightOutlinePulseTimer--;
         }
-
+ 
         private void TriggerLeftStarFlash()
         {
             leftStarFlashTimer = LeftStarFlashFrames;
+            leftOutlinePulseTimer = LeftOutlinePulseFrames;
+        }
+ 
+        private void TriggerTacticalOutlinePulse(bool rightClick)
+        {
+            if (rightClick)
+                rightOutlinePulseTimer = RightOutlinePulseFrames;
+            else
+                leftOutlinePulseTimer = LeftOutlinePulseFrames;
+        }
+ 
+        private float GetLeftAttackBuildGlow()
+        {
+            if (!leftHeldLastFrame || rightChargeActive || HasActiveSelectionPanel(Owner))
+                return 0f;
+ 
+            int interval = GetCurrentLeftGlowInterval();
+            if (interval <= 0)
+                return 0.12f + 0.06f * (0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity * 0.31f));
+ 
+            float build = 1f - leftBurstTimer / (float)interval;
+            float intervalWeight = MathHelper.Clamp(interval / (float)ReconFireInterval, 0.16f, 1f);
+            intervalWeight = MathHelper.Lerp(0.16f, 1f, (float)Math.Pow(intervalWeight, 1.35f));
+            return MathHelper.Clamp(build, 0f, 1f) * intervalWeight;
+        }
+ 
+        private int GetCurrentLeftGlowInterval()
+        {
+            return CurrentPreset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_ABreak => Math.Max(1, BFBreakthroughLeftBalance.GetStats().UseInterval),
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => burstGroupsStarted == 0 && leftBurstTimer > RecoveryBurstInterval ? BFRecoveryLeftBalance.GetStats().VolleyPauseFrames : RecoveryBurstInterval,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => leftBurstTimer > ReconFireInterval ? ReconCyclePause : ReconFireInterval,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => Math.Max(1, BFBombardLeftBalance.GetStats().FireInterval / 2),
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueFireInterval,
+                _ => BreakthroughFireInterval
+            };
         }
 
         private int GetNextBreakthroughFireInterval()
@@ -781,11 +828,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             if (releasedShot || !ChargeReady)
                 return;
-
+ 
             releasedShot = true;
             extraFrontArmRotation = 0f;
             extraBackArmRotation = 0f;
-
+ 
+            TriggerTacticalOutlinePulse(rightClick: true);
             PlayRightReleaseSound();
             ReleaseChargedShot(CurrentPreset, ChargeCompletion);
             Owner.GetModPlayer<BFEXPlayer>().GainEX(3);
@@ -997,9 +1045,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             if (readyBurstPlayed)
                 return;
-
+ 
             readyBurstPlayed = true;
-
+            rightOutlinePulseTimer = Math.Max(rightOutlinePulseTimer, RightOutlinePulseFrames / 2);
+ 
             SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.6f, Pitch = 0.25f }, GunTipPosition);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.4f, Pitch = -0.15f }, GunTipPosition);
         }
@@ -1737,6 +1786,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Main.GameViewMatrix.TransformationMatrix);
 
             DrawThinWeaponOutline(weaponTexture, drawPosition, rotation, origin, effects);
+            DrawTacticalWeaponOutlineGlow(weaponTexture, drawPosition, rotation, origin, effects);
             Main.EntitySpriteDraw(weaponTexture, drawPosition, null, Projectile.GetAlpha(lightColor), rotation, origin, Projectile.scale, effects, 0);
 
             Main.spriteBatch.End();
@@ -1782,6 +1832,92 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Vector2 offset = (MathHelper.TwoPi * i / drawCount).ToRotationVector2() * outlineRadius;
                 Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, outlineColor, rotation, origin, Projectile.scale, effects, 0);
             }
+        }
+
+        private void DrawTacticalWeaponOutlineGlow(Texture2D weaponTexture, Vector2 drawPosition, float rotation, Vector2 origin, SpriteEffects effects)
+        {
+            float time = Main.GlobalTimeWrappedHourly;
+            float outlinePulse = 0.72f + 0.28f * (float)Math.Sin(time * 5.2f + Projectile.identity * 0.43f);
+            float chargeGlow = rightChargeActive && reloadTimer <= 0 ? MathHelper.SmoothStep(0f, 1f, ChargeCompletion) : 0f;
+            float leftOutlinePulse = leftOutlinePulseTimer / (float)LeftOutlinePulseFrames;
+            float rightOutlinePulse = rightOutlinePulseTimer / (float)RightOutlinePulseFrames;
+            float leftBuildGlow = GetLeftAttackBuildGlow();
+            float tacticalOutlinePulse = Math.Max(Math.Max(leftOutlinePulse * 0.28f, rightOutlinePulse * 0.78f), leftBuildGlow);
+            bool rightPulseDominates = rightOutlinePulse * 0.78f > leftBuildGlow;
+            float glowStrength = 0.32f + outlinePulse * 0.1f + chargeGlow * 0.62f + leftBuildGlow * 0.42f;
+            float glowRadius = MathHelper.Lerp(1.75f, 5.7f, chargeGlow) + outlinePulse * 0.24f + leftBuildGlow * 2.6f;
+            int glowDraws = 12 + (int)(chargeGlow * 8f);
+            glowStrength += tacticalOutlinePulse * (rightPulseDominates ? 0.54f : 0.24f);
+            glowRadius += tacticalOutlinePulse * (rightPulseDominates ? 4.4f : 1.8f);
+            glowDraws += (int)(tacticalOutlinePulse * (rightPulseDominates ? 10f : 5f));
+            Color outerGlowColor = (Color.Lerp(PresetColor, Color.White, 0.48f) with { A = 0 }) * glowStrength;
+            Color innerGlowColor = (Color.Lerp(AccentColor, Color.White, 0.68f) with { A = 0 }) * (0.72f + chargeGlow * 0.64f);
+            Color coreGlowColor = (Color.Lerp(Color.White, PresetColor, 0.28f) with { A = 0 }) * (0.46f + chargeGlow * 0.54f);
+ 
+            if (tacticalOutlinePulse > 0f)
+            {
+                Color tacticalColor = Color.Lerp(PresetColor, AccentColor, rightPulseDominates ? 0.45f : 0.22f);
+                HoldoutOutlineHelper.DrawSolidOutline(
+                    weaponTexture,
+                    drawPosition,
+                    rotation,
+                    origin,
+                    Vector2.One * Projectile.scale * (1f + tacticalOutlinePulse * (rightPulseDominates ? 0.04f : 0.015f)),
+                    effects,
+                    tacticalColor,
+                    glowRadius + tacticalOutlinePulse * (rightPulseDominates ? 2.4f : 0.8f),
+                    MathHelper.Clamp(0.1f + tacticalOutlinePulse * (rightPulseDominates ? 0.58f : 0.24f), 0f, 0.82f),
+                    time + Projectile.identity * 0.2f,
+                    14 + (int)(tacticalOutlinePulse * (rightPulseDominates ? 8f : 4f)),
+                    manageBlendState: false);
+            }
+ 
+            for (int i = 0; i < glowDraws; i++)
+            {
+                float completion = i / (float)glowDraws;
+                float angle = MathHelper.TwoPi * completion + time * (1.7f + chargeGlow * 1.4f);
+                float wave = 0.85f + 0.15f * (float)Math.Sin(time * 8f + i * 0.71f);
+                Vector2 offset = angle.ToRotationVector2() * glowRadius * wave;
+                Color ringColor = Color.Lerp(outerGlowColor, innerGlowColor, completion) * (0.72f - completion * 0.18f);
+                Main.EntitySpriteDraw(
+                    weaponTexture,
+                    drawPosition + offset,
+                    null,
+                    ringColor,
+                    rotation,
+                    origin,
+                    Projectile.scale * (1.02f + chargeGlow * 0.08f),
+                    effects,
+                    0);
+            }
+ 
+            int innerDraws = 10;
+            for (int i = 0; i < innerDraws; i++)
+            {
+                float angle = MathHelper.TwoPi * i / innerDraws - time * 2.3f;
+                Vector2 offset = angle.ToRotationVector2() * (1.15f + outlinePulse * 0.55f + chargeGlow * 1.2f);
+                Main.EntitySpriteDraw(
+                    weaponTexture,
+                    drawPosition + offset,
+                    null,
+                    innerGlowColor * (0.58f + chargeGlow * 0.28f),
+                    rotation,
+                    origin,
+                    Projectile.scale * (1.01f + chargeGlow * 0.05f),
+                    effects,
+                    0);
+            }
+ 
+            Main.EntitySpriteDraw(
+                weaponTexture,
+                drawPosition,
+                null,
+                coreGlowColor,
+                rotation,
+                origin,
+                Projectile.scale * (1.07f + 0.08f * outlinePulse + chargeGlow * 0.12f),
+                effects,
+                0);
         }
 
         private void DrawBowCoreStarburst(Vector2 drawPosition, float rotation, float leftFlash, float chargeGlow)
@@ -1877,18 +2013,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     Vector2 starScale = new Vector2(0.22f + power * 0.075f, (0.92f + power * 1.08f) * sine * side) * layerFade * visualScale;
                     Color starColor = Color.Lerp(accentColor, coreColor, i * 0.12f) * (0.58f + 0.2f * power);
 
-                    Main.EntitySpriteDraw(
-                        halfStarTexture,
+                Main.EntitySpriteDraw(
+                    halfStarTexture,
                         drawPosition + forward * (i - 2) * 0.65f,
                         null,
                         starColor,
-                        starRotation,
-                        halfStarTexture.Size() * 0.5f,
+                    starRotation,
+                    halfStarTexture.Size() * 0.5f,
                         starScale,
-                        SpriteEffects.None,
-                        0);
-                }
+                    SpriteEffects.None,
+                    0);
             }
+        }
 
             for (int i = 0; i < 4; i++)
             {

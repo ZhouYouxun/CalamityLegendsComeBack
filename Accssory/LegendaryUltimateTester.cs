@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
@@ -63,6 +64,7 @@ namespace CalamityLegendsComeBack.Accssory
             ChargeYharimsCrystal();
             ChargeCosmicDischarge();
             ChargeMalachite();
+            ChargeAzureThunder();
         }
 
         private void ChargeSHPC()
@@ -83,11 +85,16 @@ namespace CalamityLegendsComeBack.Accssory
         private void ChargeBrinyBaron()
         {
             BBEXPlayer tidePlayer = Player.GetModPlayer<BBEXPlayer>();
+            
+            // Charge EXValue
+            tidePlayer.EXValue = Math.Min(BBEXPlayer.EXMax, tidePlayer.EXValue + FramesPerTick(BBEXPlayer.EXMax));
+
+            // Charge TideValue
             int max = Math.Max(1, tidePlayer.CurrentTideMax);
             if (tidePlayer.TideValue >= max)
             {
                 brinyTideAccumulator = 0f;
-                SetCooldownProgress(BBEXCoolDown.ID, max, tidePlayer.TideValue);
+                SetCooldownProgress(BBEXCoolDown.ID, BBEXPlayer.EXMax, tidePlayer.EXValue);
                 return;
             }
 
@@ -99,7 +106,7 @@ namespace CalamityLegendsComeBack.Accssory
                 tidePlayer.AddTide(tideToAdd);
             }
 
-            SetCooldownProgress(BBEXCoolDown.ID, max, tidePlayer.TideValue);
+            SetCooldownProgress(BBEXCoolDown.ID, BBEXPlayer.EXMax, tidePlayer.EXValue);
         }
 
         private void ChargeBrinyBaronSuperDashCooldown()
@@ -145,6 +152,13 @@ namespace CalamityLegendsComeBack.Accssory
 
             if (Player.Calamity().cooldowns.TryGetValue(MalachiteEXCooldown.ID, out var cooldown))
                 cooldown.timeLeft = Math.Max(0, cooldown.timeLeft - FramesPerTick(MalachiteEXCooldown.CooldownFrames));
+        }
+
+        private void ChargeAzureThunder()
+        {
+            AzureThunderPlayer thunderPlayer = Player.GetModPlayer<AzureThunderPlayer>();
+            thunderPlayer.UltimateEnergy = Math.Min(AzureThunderPlayer.UltimateEnergyMax, thunderPlayer.UltimateEnergy + FramesPerTick(AzureThunderPlayer.UltimateEnergyMax));
+            SetCooldownProgress(AzureThunderUltimateCooldown.ID, AzureThunderPlayer.UltimateEnergyMax, thunderPlayer.UltimateEnergy);
         }
 
         private static int FramesPerTick(int maxValue)

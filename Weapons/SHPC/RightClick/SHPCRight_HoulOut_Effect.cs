@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal partial class SHPCRight_HoulOut
     {
-        #region ===== 鐗规晥鐘舵€?=====
+        #region ===== 特效状态 =====
 
         private int stageOutlineTimer;
         private const int StageOutlineDuration = 24;
@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 闊虫晥 =====
+        #region ===== 音效 =====
 
         private void PlayStartupSound()
         {
@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private void PlayManualCooldownSound()
         {
             SoundEngine.PlaySound(
-                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/瑙ｆ斁鑰呮満鐢插乏鎵嬬伀绠脊")
+                new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/解放者机甲左手火箭弹")
                 {
                     Volume = 2.7f,
                     Pitch = 0.2f
@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 鐗规晥锛氶樁娈典笌鐘舵€?=====
+        #region ===== 特效：阶段与状态 =====
 
         private void TriggerStageOutlinePulse()
         {
@@ -366,7 +366,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 鐗规晥锛氭櫘閫氬紑鐏?=====
+        #region ===== 特效：普通开火 =====
 
         public override void PostDraw(Color lightColor)
         {
@@ -620,7 +620,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 鐗规晥锛氱伀绠綈灏?=====
+        #region ===== 特效：火箭齐射 =====
 
         private void FireCooldownRocketSalvo()
         {

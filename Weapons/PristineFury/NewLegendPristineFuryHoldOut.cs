@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
+﻿using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;

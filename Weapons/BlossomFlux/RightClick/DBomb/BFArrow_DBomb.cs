@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;

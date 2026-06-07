@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
@@ -720,7 +720,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             if (phase == SuperDashPhase.Teleporting || phase == SuperDashPhase.Striking || phase == SuperDashPhase.ImpactDrifting)
             {
-                // ===== 闂佸憡鐟禍婵嗭耿娓氣偓閹洭鎮㈤崜鎻掑Η闁哄鏅滅粙鎴﹀矗閸℃ê绶為柛鏇ㄥ亜閻忓姊婚崘顓炵厫妞ゆ柨鐭傞獮宥咁吋婢跺鏆侀梻鍌楀亾婵犲﹤鍟ㄦ禒?=====
+                // ===== 闁告瑯浜濆﹢渚€鎯囬悢鍓插妧閺夆晜绋戦崣鍡樺緞閸曨偄鐏夐梻鍐煐椤斿矂骞嶅澶嬫暁闂傗偓濠婂啨浠?=====
                 if (CurrentTarget is not null)
                     cameraPlayer.LockToTarget(targetNpcIndex);
                 else

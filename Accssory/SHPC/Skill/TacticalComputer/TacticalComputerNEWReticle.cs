@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -106,7 +106,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
 
             // 锁定时补一层很淡的中心亮光，让“吸附到敌人”的状态更容易被看出来。
             if (locked)
-            {
+        {
                 Main.EntitySpriteDraw(
                     reticle,
                     drawPosition,
@@ -117,12 +117,12 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
                     0.24f * pulse * VisualScale,
                     SpriteEffects.None,
                     0f);
-            }
+        }
 
             // 还原为默认的 AlphaBlend 混合状态，避免污染其他图层的绘制
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;
+            }
         }
     }
-}

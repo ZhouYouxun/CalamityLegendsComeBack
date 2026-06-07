@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
+﻿using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

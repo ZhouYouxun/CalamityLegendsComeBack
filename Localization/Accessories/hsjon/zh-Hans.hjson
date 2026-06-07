@@ -1,4 +1,4 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			LegendaryEmblem: {
@@ -35,7 +35,7 @@ Mods: {
 			}
 
 			CommandAscend: {
-				DisplayName: 迫击收发装置
+				DisplayName: 迫击改装套件
 				Tooltip:
 					'''
 					手持SHPC时右键改为迫击炮模式
@@ -47,24 +47,16 @@ Mods: {
 				DisplayName: 军用呼叫器
 				Tooltip:
 					'''
-					手持SHPC时，右键改为军用呼叫器模式
-					该模式不参与右键热量系统
-					平射科技信标，从空中投送一座友军灾厄科技炮台
-					每次呼叫基础消耗40魔力
-					最多同时维持8座炮台
-					部署第9座时，最早部署的炮台会原地爆炸
-					每座炮台最多持续5分钟
+					手持SHPC时右键改为军用呼叫器模式
+					射出一个信标，空中投送一座友军炮台
+					最多同时维持8座炮台，每座持续5分钟
 					距离已有炮台18格内会部署失败
-					生物群系对应炮台：
-					丛林=瘟疫；雪原=冰；地狱、硫火之崖=火
-					海洋、硫磺海、深渊、沉沦之海=水
-					星辉、神圣、天空=激光
-					沙漠、腐化、猩红=玛瑙；其它=实验室
+					不同生物群系，对应不同的炮台
 					'''
 			}
 
 			Barrier: {
-				DisplayName: 屏障
+				DisplayName: 充能屏障
 				Tooltip:
 					'''
 					手持SHPC时充能一层护盾
@@ -76,7 +68,12 @@ Mods: {
 
 			TacticalComputer: {
 				DisplayName: 战术电脑
-				Tooltip: 使SHPC右键具备自动锁定能力
+				Tooltip: 
+					'''
+					手持SHPC时会出现一枚准星
+					准星会尝试吸附到敌人身上
+					提供追踪和自瞄能力
+					'''
 			}
 
 			HeatRedirectModule: {
@@ -91,11 +88,11 @@ Mods: {
 			}
 
 			ProjectilePossessionModule: {
-				DisplayName: 吸尘器
+				DisplayName: 弹幕夺舍模块
 				Tooltip:
 					'''
 					手持SHPC时，右键改为弹幕夺舍模式
-					按住右键用锥形真空捕获附近敌对弹幕的分身，最多储存15枚
+					最多储存15枚弹幕；松开右键会将它们转化为友方弹幕并向前射出
 					被捕获过的敌方弹幕本体会继续存在，但移动速度和伤害永久降低20%
 					分身会被吸到玩家身边，变为友方阵营，伤害永久乘以20倍
 					松开右键会将储存的友方分身向前弹射出去
@@ -409,10 +406,10 @@ Mods: {
 			}
 
 			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面
-			ProjectilePossessionUI.DisplayName: SHPC吸尘器计量条
+			ProjectilePossessionUI.DisplayName: SHPC夺舍计量条
 
 			SHPC: {
-				ProjectilePossessionHoldout.DisplayName: SHPC吸尘器
+				ProjectilePossessionHoldout.DisplayName: SHPC弹幕夺舍
 				BloodstoneCore_BloodOrb.DisplayName: 血石核心血球
 				RuinousSoul_GhostExplosion.DisplayName: 毁灭之魂幽灵爆炸
 				RuinousSoul_OrbitGhost.DisplayName: 毁灭之魂环绕幽灵

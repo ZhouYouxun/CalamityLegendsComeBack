@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // 自定义计时器
         private float portalTimer;
         private int lifeTimer;
-
+        public override bool EnableDefaultSlowdown => false;
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {

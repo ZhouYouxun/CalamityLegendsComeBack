@@ -1,4 +1,4 @@
-using CalamityMod.NPCs.AstrumAureus;
+﻿using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.CalClone;
 using CalamityMod.NPCs.DevourerofGods;

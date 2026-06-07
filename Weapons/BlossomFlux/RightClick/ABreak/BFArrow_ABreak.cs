@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityMod;
 using CalamityMod.Particles;

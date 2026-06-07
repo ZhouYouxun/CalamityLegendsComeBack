@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -41,15 +41,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
             float laneOffset = ((holdout.LeftBurstIndex & 1) == 0 ? -1f : 1f) * MathHelper.Lerp(2.6f, 1f, progress);
 
-            int projectileIndex = Projectile.NewProjectile(
-                holdout.Projectile.GetSource_FromThis(),
+                int projectileIndex = Projectile.NewProjectile(
+                    holdout.Projectile.GetSource_FromThis(),
                 muzzle + side * laneOffset,
                 direction.RotatedBy(Main.rand.NextFloat(-spread, spread)) * FireSpeed,
-                ModContent.ProjectileType<PFPolterghast_Flame>(),
-                holdout.GetScaledDamage(DamageMultiplier),
-                holdout.Projectile.knockBack,
-                holdout.Projectile.owner);
-            PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
+                    ModContent.ProjectileType<PFPolterghast_Flame>(),
+                    holdout.GetScaledDamage(DamageMultiplier),
+                    holdout.Projectile.knockBack,
+                    holdout.Projectile.owner);
+                PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
             holdout.LeftBurstIndex++;
 
             holdout.ApplyRecoil(Recoil);

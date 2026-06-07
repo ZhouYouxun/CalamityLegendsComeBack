@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;

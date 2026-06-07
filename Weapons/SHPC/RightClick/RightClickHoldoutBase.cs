@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.SHPC;
+ï»¿using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     internal abstract class RightClickHoldoutBase : ModProjectile
     {
-        // ===== ±ØĞëÌá¹© =====
+        // ===== å¿…é¡»æä¾› =====
         public abstract int AssociatedItemID { get; }
 
         public virtual Vector2 GunTipPosition =>
@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public virtual float OffsetYUpwards { get; }
         public virtual float OffsetYDownwards { get; }
 
-        // ===== ÔËĞĞÊ±Êı¾İ =====
+        // ===== è¿è¡Œæ—¶æ•°æ® =====
         public Player Owner { get; private set; }
         public Item HeldItem { get; private set; }
 
@@ -75,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             HoldoutAI();
         }
 
-        // ===== ¸Ä³ÉÓÒ¼ü¿ØÖÆ =====
+        // ===== æ”¹æˆå³é”®æ§åˆ¶ =====
         public virtual void KillHoldoutLogic()
         {
             if (Owner is null)
@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             return Owner is not null;
         }
 
-        // ===== ×ÓÀàĞ´ÕâÀï =====
+        // ===== å­ç±»å†™è¿™é‡Œ =====
         public abstract void HoldoutAI();
 
 

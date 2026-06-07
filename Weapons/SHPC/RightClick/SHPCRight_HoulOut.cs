@@ -83,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 基础状�?=====
+        #region ===== 基础状�?=====
 
         private int frameCounter;
         private int spawnDelay = 15;
@@ -99,9 +99,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private float bonusHeatProgress;
         private int manualCoolingVisualTimer;
 
-        private float visualProgress; // 用于UI的真实进度（可升可降�?        private int manualCoolingVisualTimer;
+        private float visualProgress; // 用于UI的真实进度（可升可降）
 
-        // ===== 世界进度状态（来自武器�?====
+        // ===== 世界进度状态（来自武器）====
         public int ProgressState; // 0~4
 
         private int MaxHeatStage;
@@ -116,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 冷却 / 技能控�?=====
+        #region ===== 冷却 / 技能控�?=====
 
         private int reduceCooldown;
         private int fireStopTimer;
@@ -128,9 +128,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #region ===== 枪托位置 =====
 
-        // ===== 枪托位置（可手动调节�?====
+        // ===== 枪托位置（可手动调节�?====
         private const float GunBackOffset = 26f;     // 往后距离（核心调这里）
-        private const float GunBackUpOffset = 4f;    // 往上微调（类似Tau�?
+        private const float GunBackUpOffset = 4f;    // 往上微调（类似Tau�?
 
         private Vector2 GunBackPosition =>
             Projectile.Center
@@ -145,7 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 初始�?=====
+        #region ===== 初始�?=====
         public override void OnSpawn(IEntitySource source)
         {
             ProgressState = (int)Projectile.ai[0];
@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
             heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
         }
-        // ===== 根据进度初始化规�?=====
+        // ===== 根据进度初始化规�?=====
         private void InitializeProgressRules()
         {
             switch (ProgressState)
@@ -288,7 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #endregion
 
-            #region ===== 开火控�?=====
+            #region ===== 开火控�?=====
 
             if (forcedShutdownCooling)
             {
@@ -363,7 +363,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #endregion
 
-            #region ===== 后坐�?& 充能 =====
+            #region ===== 后坐�?& 充能 =====
 
             if (heatPlayer.IsForcedShutdownCooling())
             {
@@ -460,7 +460,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #endregion
 
 
-            // 普通开火特效的额外模块，必须得放在这【可能有点难找，但是你懂的，有些�?
+            // 普通开火特效的额外模块，必须得放在这【可能有点难找，但是你懂的，有些�?
             if (normalShotFXLastCenter == Vector2.Zero)
                 normalShotFXLastCenter = GunTipPosition;
 
@@ -484,7 +484,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
 
         #region ===== 核心技能：降温 =====
-        // ===== 后坐�?=====TryReduceHeat
+        // ===== 后坐�?=====TryReduceHeat
         private int recoilFrame;
         private bool recoilActive;
         private int recoilDirection = 1;
@@ -553,7 +553,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Projectile.spriteDirection = recoilDirection;
             Owner.ChangeDir(recoilDirection);
 
-            // ===== 手臂也同步到这个新角度，否则会有一帧不�?=====
+            // ===== 手臂也同步到这个新角度，否则会有一帧不�?=====
             Owner.itemRotation = (Projectile.velocity * recoilDirection).ToRotation();
 
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir +
@@ -592,7 +592,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             OffsetLengthFromArm -= 18f;
 
-            // ===== 抬枪后坐力：启动三段式动�?=====
+            // ===== 抬枪后坐力：启动三段式动�?=====
             Vector2 aimWorld = TacticalComputerPlayer.GetAimWorld(Owner, Main.MouseWorld);
             Vector2 aimDir = (aimWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
             recoilDirection = Math.Sign(aimDir.X);
@@ -620,7 +620,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             int manaCost = player.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickManaCost(2);
             if (manaCost > 0 && !player.CheckMana(player.HeldItem, manaCost, true, false))
             {
-                // 蓝不�?�?停火
+                // 蓝不�?�?停火
                 if (!manaStarvedSoundPlayed)
                 {
                     manaStarvedSoundPlayed = true;
@@ -678,7 +678,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== Heat4+：施加过热Debuff =====
             if (stage >= 4)
             {
-                player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3�?
+                player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3�?
             }
 
             spiralCounter++;
@@ -691,7 +691,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 开火辅�?=====
+        #region ===== 开火辅�?=====
 
         private void SpawnHeatRedirectField(Player player, int size, int duration)
         {
@@ -710,7 +710,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (Collision.SolidCollision(gunTip, 1, 1))
                 return Projectile.Center;
 
-            // ===== 2. 获取最近敌�?=====
+            // ===== 2. 获取最近敌�?=====
             NPC target = null;
             float maxDetect = 300f;
             float closestDist = maxDetect;
@@ -732,7 +732,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // ===== 3. 距离判定（贴脸）=====
-            float dangerRange = 56f; // 和你的枪口长度一�?
+            float dangerRange = 56f; // 和你的枪口长度一�?
 
             if (target != null && closestDist < dangerRange)
                 return Projectile.Center;
@@ -834,7 +834,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 Texture2D tex = TextureAssets.Projectile[Projectile.type].Value;
 
-                // 0 �?1 �?0 的线性曲�?
+                // 0 �?1 �?0 的线性曲�?
                 float half = StageOutlineDuration / 2f;
                 float t = stageOutlineTimer > half
                     ? (StageOutlineDuration - stageOutlineTimer) / half
@@ -852,7 +852,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                         ? SpriteEffects.FlipHorizontally
                         : SpriteEffects.None;
 
-                // �?4 个方向的描边（十字）
+                // �?4 个方向的描边（十字）
                 Vector2[] offsets =
                 {
                     new Vector2( outlineStrength, 0),

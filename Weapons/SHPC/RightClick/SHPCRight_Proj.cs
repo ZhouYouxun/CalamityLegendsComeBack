@@ -31,6 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private int helixTimer;
         private bool heatExplosionRolled;
+        private bool penetratedSet;
         public override Color? GetAlpha(Color lightColor)
             => new Color(255, 235, 120, 0);
 
@@ -246,7 +247,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
             Lighting.AddLight(Projectile.Center, new Color(255, 220, 120).ToVector3() * 0.6f);
 
-            // 穿透设�?            if (!penetratedSet)
+            // 穿透设置
+            if (!penetratedSet)
             {
                 int heat = Math.Max(WeaponStage, HeatLevel);
                 Projectile.penetrate = heat switch
@@ -255,6 +257,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     >= 2 => 3,
                     _ => 1
                 };
+                penetratedSet = true;
             }
 
             // 飞行特效：Stage3+ 才启用，且每真实帧只释放一次，避免过重
@@ -439,7 +442,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         //    }
         //    else if (roll == 1)
         //    {
-        //        // 辉光�?
+        //        // 辉光�?
         //        Vector2 dir = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
         //        Vector2 position = Projectile.Center + dir * Main.rand.NextFloat(4f, 10f);
         //        Vector2 velocity = dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.5f, 2.2f);
@@ -499,7 +502,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 light.noGravity = true;
             }
 
-            // 扇形辉光�?
+            // 扇形辉光�?
             int orbCount = 4;
             for (int i = 0; i < orbCount; i++)
             {
@@ -522,7 +525,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(glow);
             }
 
-            // 命中光粒�?
+            // 命中光粒�?
             int lightCount = 3;
             for (int i = 0; i < lightCount; i++)
             {
@@ -579,7 +582,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(particle);
             }
 
-            // 扩散辉光�?
+            // 扩散辉光�?
             int orbCount = 3;
             for (int i = 0; i < orbCount; i++)
             {

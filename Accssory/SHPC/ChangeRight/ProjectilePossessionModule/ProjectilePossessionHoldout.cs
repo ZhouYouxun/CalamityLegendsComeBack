@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+﻿using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using Microsoft.Xna.Framework;

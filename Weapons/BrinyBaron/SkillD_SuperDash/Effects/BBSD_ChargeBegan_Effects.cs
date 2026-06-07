@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -34,6 +34,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             }
 
             Lighting.AddLight(tip, new Vector3(0.12f, 0.38f, 0.55f));
+            }
         }
     }
-}

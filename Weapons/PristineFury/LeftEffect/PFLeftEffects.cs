@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.PristineFury;
+﻿using CalamityLegendsComeBack.Weapons.PristineFury;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;

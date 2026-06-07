@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+ï»¿using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -191,15 +191,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            // ³öÉúÎ»ÖÃ²»ÒªÌ«¹æÕû£º´ÓÀË³±ºó·½ºÍ²à±ßËæ»úÉ¢³ö£¬Ïñ±»Ö÷µ¯Ä»Ë¦³öÀ´µÄÅÝÅÝ¡£
+            // ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã²ï¿½ÒªÌ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ó·½ºÍ²ï¿½ï¿½ï¿½ï¿½ï¿½É¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»Ë¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¡ï¿½
             Vector2 spawnPosition =
                 Projectile.Center -
                 forward * Main.rand.NextFloat(Projectile.width * 0.16f, Projectile.width * 0.38f) +
                 right * Main.rand.NextFloat(-Projectile.width * 0.34f, Projectile.width * 0.34f) +
                 Main.rand.NextVector2Circular(Projectile.width * 0.08f, Projectile.width * 0.08f);
 
-            // ²»Ö±½Ó³¯µÐÈËÉú³É£¬¶øÊÇÏÈ³¯ÀË³±·´·½ÏòÆ«³öÈ¥¡£
-            // ºóÐøÓÉÅÝÅÝ×Ô¼ºµÄÑÓ³Ù¹ßÐÔ×·×ÙÂýÂý°Ñ¹ì¼£×§»ØÄ¿±ê£¬ÖÆÔì¡°ÓÐµã×·£¬µ«²»ÍêÈ«×·¡±µÄ¸Ð¾õ¡£
+            // ï¿½ï¿½Ö±ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È³ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½È¥ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ó³Ù¹ï¿½ï¿½ï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ì¼£×§ï¿½ï¿½Ä¿ï¿½ê£¬ï¿½ï¿½ï¿½ì¡°ï¿½Ðµï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«×·ï¿½ï¿½ï¿½Ä¸Ð¾ï¿½ï¿½ï¿½
             Vector2 baseDirection = (-forward).RotatedByRandom(Main.rand.NextFloat(0.35f, 0.95f));
             Vector2 velocity = (baseDirection + right * Main.rand.NextFloatDirection() * 0.18f)
                 .SafeNormalize(-forward) * Main.rand.NextFloat(4.8f, 7.2f);

@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack
     public class LegendaryCodex : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/LegendarySupplyBox";
+        public override string Texture => "CalamityLegendsComeBack/LegendaryCodex";
 
         public override void SetDefaults()
         {

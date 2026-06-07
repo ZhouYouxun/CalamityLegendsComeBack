@@ -170,6 +170,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             PFLeftEffectRules.EndAdditive();
             return false;
         }
+        }
     }
-}
 

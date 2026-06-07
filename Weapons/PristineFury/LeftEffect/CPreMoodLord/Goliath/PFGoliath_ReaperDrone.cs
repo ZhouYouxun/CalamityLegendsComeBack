@@ -1,4 +1,4 @@
-using CalamityMod;
+ï»¿using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Typeless;
@@ -277,13 +277,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 origin = body.Size() * 0.5f;
 
-            // ²»Òª A = 0£¬±ÜÃâ³á°òÖ±½Ó±ä³É»ÊµÛµÄĞÂ³á°ò
+            // ä¸è¦ A = 0ï¼Œé¿å…ç¿…è†€ç›´æ¥å˜æˆçš‡å¸çš„æ–°ç¿…è†€
             Color theme = Color.Lerp(ThemeColor, new Color(180, 255, 80), 0.16f) * Projectile.Opacity;
             Color bodyColor = Color.Lerp(ThemeColor, new Color(180, 255, 80), 0.08f) * Projectile.Opacity;
 
             PFLeftEffectRules.BeginAdditive();
 
-            // ÉíÌåÍâ·¢¹â
+            // èº«ä½“å¤–å‘å…‰
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
@@ -295,7 +295,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 SpriteEffects.None,
                 0f);
 
-            // ²ĞÓ°
+            // æ®‹å½±
             for (int i = 1; i < Projectile.oldPos.Length; i += 3)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
@@ -316,13 +316,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     0f);
             }
 
-            // ËÄÆ¬Õñ¶¯³á°ò£ºÇ°Ò»¶Ô + ºóÒ»¶Ô
+            // å››ç‰‡æŒ¯åŠ¨ç¿…è†€ï¼šå‰ä¸€å¯¹ + åä¸€å¯¹
             DrawWingPair(frontWing, drawPosition + forward * 7f, forward, side, 0f, 1.15f, theme);
             DrawWingPair(backWing, drawPosition - forward * 10f, forward, side, MathHelper.Pi, 0.95f, theme * 0.82f);
 
             PFLeftEffectRules.EndAdditive();
 
-            // ±¾Ìå×îºó»­£¬±ÜÃâ±»³á°ò¸ÇÂÒ
+            // æœ¬ä½“æœ€åç”»ï¼Œé¿å…è¢«ç¿…è†€ç›–ä¹±
             Main.EntitySpriteDraw(
                 body,
                 drawPosition,
@@ -345,27 +345,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             for (int sideSign = -1; sideSign <= 1; sideSign += 2)
             {
-                // ³á°ò¸ù²¿Î»ÖÃ
+                // ç¿…è†€æ ¹éƒ¨ä½ç½®
                 Vector2 drawPosition =
                     root +
                     side * sideSign * (12f + snap * 5f) -
                     forward * (2f + snap * 2f);
 
-                // ³á°ò³¯ÍâÕ¹¿ª£¬²¢ËæÊ±¼äÇáÎ¢Õğ¶¯
+                // ç¿…è†€æœå¤–å±•å¼€ï¼Œå¹¶éšæ—¶é—´è½»å¾®éœ‡åŠ¨
                 Vector2 wingDirection =
                     (side * sideSign * (1.6f + snap * 0.45f) -
                     forward * (0.35f - flap * 0.18f)).SafeNormalize(side * sideSign);
 
                 float rotation = wingDirection.ToRotation() - MathHelper.PiOver2;
 
-                // Ô­°æÌ«Ğ¡£¬ÕâÀïÃ÷ÏÔ·Å´ó
+                // åŸç‰ˆå¤ªå°ï¼Œè¿™é‡Œæ˜æ˜¾æ”¾å¤§
                 Vector2 wingScale = new Vector2(
                     0.42f * size * Projectile.scale,
                     0.26f * size * Projectile.scale * (0.85f + snap * 0.25f)) * WingVisualScale;
 
                 SpriteEffects effects = sideSign < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-                // Ö÷³á°ò
+                // ä¸»ç¿…è†€
                 Main.EntitySpriteDraw(
                     wing,
                     drawPosition,
@@ -377,7 +377,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     effects,
                     0f);
 
-                // ¸ßÆµÕñ¶¯²ĞÓ°
+                // é«˜é¢‘æŒ¯åŠ¨æ®‹å½±
                 Main.EntitySpriteDraw(
                     wing,
                     drawPosition - forward * 3f + side * sideSign * flap * 3f,
