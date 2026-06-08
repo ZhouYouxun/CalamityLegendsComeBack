@@ -131,153 +131,88 @@ Mods: {
 			}
 
 			ATunedQuiver: {
-				// DisplayName: Tuned Quiver
-				/* Tooltip:
+				DisplayName: 同调箭袋
+				Tooltip:
 					'''
-					+15% ranged damage
-					+4 defense
-					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
-					Recipe: Magic Quiver + 10 Jungle Spores + 5 Vines @ Anvil
-					''' */
+					+15% 远程伤害
+					+4 防御力
+					提升箭矢速度。叶流的每种战术会获得不同的加成。
+					'''
 			}
 
 			BResonatingQuiver: {
-				// DisplayName: Resonating Quiver
-				/* Tooltip:
+				DisplayName: 共鸣箭袋
+				Tooltip:
 					'''
-					+15% ranged damage
-					+5% ranged critical strike chance
-					+15 ranged projectile armor penetration
-					+6 defense
-					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
-					Recipe: Tuned Quiver + Ranger Emblem + 5 Life Alloys + 5 Galactica Singularities @ Ancient Manipulator
-					''' */
+					+15% 远程伤害
+					+5% 远程暴击率
+					+15 远程弹幕护甲穿透
+					+6 防御力
+					提升箭矢速度。叶流的每种战术会获得不同的加成。
+					'''
 			}
 
 			CDominationQuiver: {
-				// DisplayName: Domination Quiver
-				/* Tooltip:
+				DisplayName: 主宰箭袋
+				Tooltip:
 					'''
-					+15% ranged damage
-					+5% ranged critical strike chance
-					+15 ranged projectile armor penetration
-					+16 defense
-					+15% maximum life
-					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
-					All attacks pass through walls and ignore defense.
-					Recipe: Resonating Quiver + 10 Reaper Teeth + 10 Ruinous Souls @ Ancient Manipulator
-					''' */
+					+15% 远程伤害
+					+5% 远程暴击率
+					+15 远程弹幕护甲穿透
+					+16 防御力
+					+15% 最大生命值
+					提升箭矢速度。叶流的每种战术会获得不同的加成。
+					所有攻击都能穿墙且无视防御。
+					'''
 			}
 
 			PastLingering: {
-				// DisplayName: Lingering Remnant
-				/* Tooltip:
+				DisplayName: 旧日残影
+				Tooltip:
 					'''
-					Changes Breakthrough into a Phantasm-like mode: arrows are no longer converted and release strongly homing shards after hitting enemies.
-					Continuous fire gradually increases attack speed. Reaching the maximum tier plays an extra sound.
-					Recipe: Phantasm + 12 Luminite Bars + 5 Vortex Fragments @ Ancient Manipulator
-					''' */
+					将“突击”战术改变为类似于幻影弓的模式
+					箭矢不再被转化，并在命中敌人时释放出强追踪幻影。
+					持续射击会逐渐提升攻击速度。
+					'''
 			}
 
 			SeedOfSilva: {
-				// DisplayName: Seed of Silva
-				/* Tooltip:
+				DisplayName: 席尔瓦之种
+				Tooltip:
 					'''
-					Generates five seeds that slowly orbit the player and emit a faint green glow.
-					While holding BlossomFlux, the seeds bloom into different flowers based on the current doctrine.
-					Breakthrough: Sunflower
-					Sunflowers create a small field. Breakthrough arrows passing through it gain 30% damage and 15% critical strike chance.
-					Recovery: Daisy
-					Daisies have 15 maximum life, regenerate 1.2 life per second, and inherit the player's defense and damage reduction.
-					If a daisy takes 20 or more damage, it heals the player for its stored regenerated life, rounded down.
-					Reconnaissance: Delphinium
-					Delphiniums attack nearby enemies once every 1.5 seconds with a curving arc that deals light damage and stuns for 1 second.
-					Stunned enemies are heavily slowed and take double damage from reconnaissance arrows.
-					Enemies immune to knockback only receive the damage bonus, reduced to 1.15x.
-					Each successful delphinium stun restores 0.5 seconds of flight time.
-					Bombardment: Torchflower
-					Torchflowers spray flames when enemies approach.
-					Arrows passing through a torchflower also trigger an explosion with an independent cooldown.
-					Plague: Mandrake
-					Mandrakes slow nearby enemies and reduce their contact damage by 15%.
-					Mandrakes constantly create spores, like a Spore Sac, applying debuffs for 3 seconds each. Their cap follows the current weapon.
-					Mandrakes also occasionally fire homing withering-flower projectiles that paralyze and slow enemies.
-					Recipe: Bloom Stone + 50 Planty Mush + 10 Auric Bars @ Mythril Anvil
-					''' */
+					生成五枚缓慢围绕玩家旋转并发出微弱绿光的种子。
+					手持叶流时，种子会根据当前战术绽放成不同的花朵。
+					突击：向日葵
+					向日葵会创造一个小区域。穿过该区域的突击箭获得 30% 伤害加成和 15% 暴击率加成。
+					复苏：雏菊
+					雏菊拥有 15 点最大生命值，每秒恢复 1.2 生命值，并继承玩家的防御和伤害减免。
+					如果雏菊承受 20 点或更多伤害，它会为玩家治疗其存储的生命恢复量（向下取整）。
+					侦察：飞燕草
+					飞燕草每 1.5 秒用弧光攻击附近的敌人一次，造成轻微伤害并眩晕 1秒。
+					被眩晕的敌人会大幅减速，且受到来自侦察箭的双倍伤害。
+					免疫击退的敌人只获得伤害加成，且降至 1.15 倍。
+					每次飞燕草成功造成眩晕，都会恢复 0.5 秒的飞行时间。
+					歼灭：火炬花
+					当敌人接近时，火炬花会喷射火焰。
+					穿过火炬花的箭矢也会触发一次有独立冷却时间的爆炸。
+					侵染：曼陀罗
+					曼陀罗会减速附近的敌人，并使其接触伤害降低 15%。
+					曼陀罗会像孢子囊一样持续产生孢子，每个孢子施加 3 秒的减益。其上限跟随当前武器。
+					曼陀罗还会偶尔发射追踪的毁灭性花朵弹幕，使敌人瘫痪并减速。
+					'''
 			}
 
 			SilvaHarp: {
-				// DisplayName: Silva Harp
-				/* Tooltip:
+				DisplayName: 席尔瓦竖琴
+				Tooltip:
 					'''
-					+5 life per second. This regeneration cannot be reduced by any factor.
-					+60 frames of invincibility after taking damage.
-					Modern Silva's revival invincibility is increased to 10 seconds.
-					During that invincibility, incoming life loss is reduced to 10%.
-					After the revival ends, life is restored to at least 50% of maximum life, and the cooldown can tick during boss fights.
-					Massively reduces the revival effect cooldown.
-					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
-					''' */
-			}
-
-			GaleAce: {
-				// DisplayName: Gale Ace
-				// Tooltip: ""
-			}
-
-			MalachiteFeather: {
-				// DisplayName: Malachite Feather
-				// Tooltip: ""
-			}
-
-			PeacockScroll: {
-				// DisplayName: Peacock Scroll
-				// Tooltip: ""
-			}
-
-			PrecisionEmblem: {
-				// DisplayName: Precision Emblem
-				// Tooltip: ""
-			}
-
-			YharimsCrystalAlpha: {
-				// DisplayName: Yharims Crystal Alpha
-				// Tooltip: ""
-			}
-
-			YharimsCrystalBeta: {
-				// DisplayName: Yharims Crystal Beta
-				// Tooltip: ""
-			}
-
-			YharimsCrystalEpsilon: {
-				// DisplayName: Yharims Crystal Epsilon
-				// Tooltip: ""
-			}
-
-			YharimsCrystalGamma: {
-				// DisplayName: Yharims Crystal Gamma
-				// Tooltip: ""
-			}
-
-			YharimsCrystalLambda: {
-				// DisplayName: Yharims Crystal Lambda
-				// Tooltip: ""
-			}
-
-			YharimsCrystalPi: {
-				// DisplayName: Yharims Crystal Pi
-				// Tooltip: ""
-			}
-
-			YharimsCrystalSigma: {
-				// DisplayName: Yharims Crystal Sigma
-				// Tooltip: ""
-			}
-
-			YharimsCrystalTau: {
-				// DisplayName: Yharims Crystal Tau
-				// Tooltip: ""
+					每秒生命恢复 +5。此生命恢复不受任何因素削弱。
+					受击后的无敌时间增加 60 帧。
+					席尔瓦的复活无敌时间延长至 10 秒。
+					在无敌期间，受到的生命流失降至 10%。
+					复活结束后，生命值至少恢复至 50% 最大生命值，且复活冷却时间可以在 Boss 战期间减少。
+					大幅缩短复活效果的冷却时间。
+					'''
 			}
 		}
 

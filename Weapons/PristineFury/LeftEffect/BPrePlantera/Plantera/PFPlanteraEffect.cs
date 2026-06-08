@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(10f);
             holdout.TriggerMuzzleFlash(18);
             holdout.SpawnMuzzleBurst(new Color(74, 255, 92), 1.15f);
-            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.62f, Pitch = 0.18f }, holdout.GunTipPosition);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/LunicShot1") { Volume = 0.62f, Pitch = 0.18f, PitchVariance = 0.1f }, holdout.GunTipPosition);
         }
     }
 }

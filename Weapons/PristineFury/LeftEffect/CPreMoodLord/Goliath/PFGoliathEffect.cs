@@ -83,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(8);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.58f);
-            SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.22f, Pitch = 0.46f, PitchVariance = 0.16f }, origin);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PBGBarrageLaunch") { Volume = 0.45f, PitchVariance = 0.12f }, origin);
         }
 
         private static void SpawnChargeEffects(NewLegendPristineFuryHoldOut holdout, float charge)

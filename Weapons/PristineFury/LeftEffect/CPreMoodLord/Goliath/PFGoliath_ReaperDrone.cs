@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Typeless;
@@ -138,6 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             hasHit = true;
             target.AddBuff(ModContent.BuffType<Plague>(), 210);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PBGAttackSwitchShort") { Volume = 0.38f, Pitch = 0.08f }, target.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -157,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             int sourceDamage = Projectile.damage;
             Color theme = Color.Lerp(ThemeColor, new Color(180, 255, 80), 0.12f);
 
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.24f, Pitch = 0.42f, PitchVariance = 0.16f }, center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PlagueBoom" + Main.rand.Next(1, 5)) { Volume = 0.46f, Pitch = 0.15f }, center);
 
             if (Projectile.owner == Main.myPlayer)
             {

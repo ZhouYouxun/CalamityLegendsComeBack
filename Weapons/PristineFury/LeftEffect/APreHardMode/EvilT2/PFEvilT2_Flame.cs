@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -190,6 +190,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             target.AddBuff(ModContent.BuffType<BrainRot>(), 360);
             SpawnImpactEffects(target.Center);
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle($"CalamityMod/Sounds/Custom/BrainOfCthulhu/BoC_Rev_Stun_Hit{Main.rand.Next(1, 4)}") { Volume = 0.5f, PitchVariance = 0.12f }, target.Center);
 
             if (Projectile.numHits >= 5)
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
@@ -201,7 +202,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.88f));
         }
 
-        public override void OnKill(int timeLeft) => SpawnImpactEffects(Projectile.Center);
+        public override void OnKill(int timeLeft)
+        {
+            SpawnImpactEffects(Projectile.Center);
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Custom/BrainOfCthulhu/BoC_Rev_BloodBomb") { Volume = 0.62f, PitchVariance = 0.14f }, Projectile.Center);
+        }
 
         private void SpawnImpactEffects(Vector2 center)
         {

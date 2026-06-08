@@ -121,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.TriggerMuzzleFlash(26);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.45f);
             holdout.Owner.SetScreenshake(6f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { PitchVariance = 0.22f, Volume = 0.84f }, muzzle);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/CalamitasClone/CalClone_BigFireballBit" + Main.rand.Next(1, 5)) { Volume = 0.85f, PitchVariance = 0.12f }, muzzle);
         }
 
         private static void SpawnArcNovaDischarge(Vector2 muzzle, Vector2 direction, Color theme)
@@ -487,6 +487,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             target.AddBuff(ModContent.BuffType<BrimstoneFlames>(), 300);
             target.AddBuff(BuffID.OnFire3, 240);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/SCalSounds/BrimstoneFireblastImpact") { Volume = 0.65f, PitchVariance = 0.15f }, target.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -504,7 +505,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 PFLeftEffectRules.ApplyTheme(explosion, (PristineFuryMark)(int)Projectile.ai[2]);
             }
 
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeImpact") { Volume = 0.82f, PitchVariance = 0.18f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/CalamitasClone/CalClone_Explosion" + Main.rand.Next(1, 4)) { Volume = 0.82f, PitchVariance = 0.15f }, Projectile.Center);
             PFFakeCalamity_NovaExplosion.SpawnExplosionEffects(Projectile.Center, ThemeColor, 1f);
         }
 

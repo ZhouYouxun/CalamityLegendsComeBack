@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -120,8 +120,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<Nightwither>(), 300);
-            SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.72f, Pitch = 0.35f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/PhantomSpirit") { Volume = 0.28f, Pitch = 0.16f, MaxInstances = 8 }, target.Center);
             ReleaseCometDust(7, 0.22f);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SubsumingVortexExplosion") { Volume = 0.22f, Pitch = 0.1f }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)

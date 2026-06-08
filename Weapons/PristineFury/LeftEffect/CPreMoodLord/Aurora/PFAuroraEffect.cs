@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.62f);
 
             if (justStarted)
-                SoundEngine.PlaySound(SoundID.Item68 with { Volume = 0.72f, Pitch = 0.2f }, muzzle);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/AstrumAureus/AureusShootCrystal") { Volume = 0.72f, Pitch = 0.1f }, muzzle);
         }
 
         private static void KillExistingLaser(NewLegendPristineFuryHoldOut holdout)

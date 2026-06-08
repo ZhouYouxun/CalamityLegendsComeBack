@@ -81,6 +81,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             target.AddBuff(BuffID.Poisoned, 180);
             target.AddBuff(BuffID.Venom, 120);
+            if (Main.rand.NextBool(8))
+            {
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.22f, Pitch = 0.42f }, target.Center);
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)

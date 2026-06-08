@@ -1,3 +1,4 @@
+using Terraria.Audio;
 using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
 
@@ -31,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 PristineFuryMarkHelper.GetColor(holdout.CurrentMark),
                 0.9f,
                 16f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/BrainOfCthulhu/BoC_Rev_BloodShot") { Volume = 0.65f, PitchVariance = 0.1f }, holdout.GunTipPosition);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -241,7 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             {
                 Projectile.Damage();
                 SpawnExplosionEffects();
-                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.45f, Pitch = 0.35f, MaxInstances = 8 }, Projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.58f, Pitch = 0.15f, MaxInstances = 8 }, Projectile.Center);
             }
         }
 

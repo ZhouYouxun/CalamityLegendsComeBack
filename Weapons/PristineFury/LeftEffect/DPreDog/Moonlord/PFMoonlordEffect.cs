@@ -38,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             {
                 holdout.LeftAuxTimer = SuperLaserPauseFrames;
                 holdout.LeftTimer = 0;
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/MoonLordLaserCharge") { Volume = 0.82f }, holdout.GunTipPosition);
                 return;
             }
 
@@ -96,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.TriggerMuzzleFlash(30);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 2.8f);
             holdout.Owner.Calamity().GeneralScreenShakePower = Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 12f);
-            SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.92f, Pitch = -0.42f }, holdout.GunTipPosition);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SubsumingVortexExplosion") { Volume = 0.82f, Pitch = -0.15f }, holdout.GunTipPosition);
         }
     }
 }

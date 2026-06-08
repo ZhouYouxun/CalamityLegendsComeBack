@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
+using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -365,7 +365,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         private void SpawnExplosionEffects()
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SupernovaBoom") { Volume = 0.55f, PitchVariance = 0.16f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.72f, PitchVariance = 0.12f }, Projectile.Center);
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Projectile.Center,
@@ -796,7 +796,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeImpact") { Volume = 0.75f, PitchVariance = 0.18f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.78f, PitchVariance = 0.16f }, Projectile.Center);
 
             if (Main.myPlayer == Projectile.owner)
             {
@@ -906,7 +906,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.velocity = direction;
             Projectile.rotation = direction.ToRotation();
             if (Timer == 1f)
-                SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.24f, Pitch = -0.38f, MaxInstances = 10 }, Projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = 0.45f, Pitch = -0.15f, MaxInstances = 8 }, Projectile.Center);
 
             BeamLength = MathHelper.Lerp(BeamLength, MaxBeamLength, 0.72f);
             float completion = Timer / Lifetime;
@@ -975,7 +975,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             }
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(BuffID.OnFire3, 180);
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(BuffID.OnFire3, 180);
+            if (Main.rand.NextBool(5))
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.25f, Pitch = 0.12f }, target.Center);
+            }
+        }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {

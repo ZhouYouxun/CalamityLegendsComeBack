@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
@@ -13,6 +13,7 @@ using Terraria;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Audio;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
@@ -165,6 +166,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 300);
             SpawnImpactEffects(target.Center);
+            if (Main.rand.NextBool(5))
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallLightAttack") { Volume = 0.28f, Pitch = 0.15f }, target.Center);
+            }
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -175,6 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void OnKill(int timeLeft)
         {
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.38f, Pitch = 0.1f }, Projectile.Center);
             if (Main.dedServ)
                 return;
 

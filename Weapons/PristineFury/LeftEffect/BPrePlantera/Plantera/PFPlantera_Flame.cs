@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -150,6 +150,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             PFLeftEffectRules.EndAdditive();
             return false;
         }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Item/LunicImpact") { Volume = 0.18f, Pitch = 0.12f }, target.Center);
+        }
     }
 
     internal sealed class PFPlantera_Flame : ModProjectile, ILocalizedModType
@@ -271,6 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             LaserFiredTimer = 1f;
             SpawnLaserReleaseEffects(direction);
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Item/LunicShot2") { Volume = 0.35f, Pitch = 0.1f }, Projectile.Center);
         }
 
         private NPC FindNearestTarget(float range)
@@ -300,6 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override void OnKill(int timeLeft)
         {
             SpawnImpactEffects(Projectile.Center);
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Item/SubsumingVortexExplosion") { Volume = 0.25f, Pitch = 0.2f }, Projectile.Center);
         }
 
         private void SpawnLaserReleaseEffects(Vector2 direction)

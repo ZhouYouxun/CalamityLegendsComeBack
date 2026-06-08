@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Accssory.MC
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/MC/Test";
 
-        public new string LocalizationCategory => "Items.Accessories";
+        public override string LocalizationCategory => "Items.Accessories";
 
         public override void SetDefaults()
         {
@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Accssory.MC
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/MC/Test";
 
-        public new string LocalizationCategory => "Items.Accessories";
+        public override string LocalizationCategory => "Items.Accessories";
 
         public override void SetDefaults()
         {
@@ -74,7 +74,7 @@ namespace CalamityLegendsComeBack.Accssory.MC
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/MC/Test";
 
-        public new string LocalizationCategory => "Items.Accessories";
+        public override string LocalizationCategory => "Items.Accessories";
 
         public override void SetDefaults()
         {
@@ -95,7 +95,7 @@ namespace CalamityLegendsComeBack.Accssory.MC
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/MC/Test";
 
-        public new string LocalizationCategory => "Items.Accessories";
+        public override string LocalizationCategory => "Items.Accessories";
 
         public override void SetDefaults()
         {

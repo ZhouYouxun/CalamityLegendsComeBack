@@ -1,5 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
@@ -41,16 +42,21 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
             float laneOffset = ((holdout.LeftBurstIndex & 1) == 0 ? -1f : 1f) * MathHelper.Lerp(2.6f, 1f, progress);
 
-                int projectileIndex = Projectile.NewProjectile(
-                    holdout.Projectile.GetSource_FromThis(),
+            int projectileIndex = Projectile.NewProjectile(
+                holdout.Projectile.GetSource_FromThis(),
                 muzzle + side * laneOffset,
                 direction.RotatedBy(Main.rand.NextFloat(-spread, spread)) * FireSpeed,
-                    ModContent.ProjectileType<PFPolterghast_Flame>(),
-                    holdout.GetScaledDamage(DamageMultiplier),
-                    holdout.Projectile.knockBack,
-                    holdout.Projectile.owner);
-                PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
+                ModContent.ProjectileType<PFPolterghast_Flame>(),
+                holdout.GetScaledDamage(DamageMultiplier),
+                holdout.Projectile.knockBack,
+                holdout.Projectile.owner);
+            PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
             holdout.LeftBurstIndex++;
+
+            if (holdout.LeftBurstIndex % 3 == 0)
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Polterghast/PolterghastPhantomSpawn") { Volume = 0.38f, Pitch = 0.2f, PitchVariance = 0.1f }, holdout.GunTipPosition);
+            }
 
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(7);

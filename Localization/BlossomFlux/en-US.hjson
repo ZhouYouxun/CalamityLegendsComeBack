@@ -221,66 +221,6 @@ Mods: {
 					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
 					'''
 			}
-
-			GaleAce: {
-				DisplayName: Gale Ace
-				Tooltip: ""
-			}
-
-			MalachiteFeather: {
-				DisplayName: Malachite Feather
-				Tooltip: ""
-			}
-
-			PeacockScroll: {
-				DisplayName: Peacock Scroll
-				Tooltip: ""
-			}
-
-			PrecisionEmblem: {
-				DisplayName: Precision Emblem
-				Tooltip: ""
-			}
-
-			YharimsCrystalAlpha: {
-				DisplayName: Yharims Crystal Alpha
-				Tooltip: ""
-			}
-
-			YharimsCrystalBeta: {
-				DisplayName: Yharims Crystal Beta
-				Tooltip: ""
-			}
-
-			YharimsCrystalEpsilon: {
-				DisplayName: Yharims Crystal Epsilon
-				Tooltip: ""
-			}
-
-			YharimsCrystalGamma: {
-				DisplayName: Yharims Crystal Gamma
-				Tooltip: ""
-			}
-
-			YharimsCrystalLambda: {
-				DisplayName: Yharims Crystal Lambda
-				Tooltip: ""
-			}
-
-			YharimsCrystalPi: {
-				DisplayName: Yharims Crystal Pi
-				Tooltip: ""
-			}
-
-			YharimsCrystalSigma: {
-				DisplayName: Yharims Crystal Sigma
-				Tooltip: ""
-			}
-
-			YharimsCrystalTau: {
-				DisplayName: Yharims Crystal Tau
-				Tooltip: ""
-			}
 		}
 
 		Projectiles: {

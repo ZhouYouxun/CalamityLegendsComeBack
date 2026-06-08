@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -81,8 +81,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             return bestTarget;
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
             target.AddBuff(ModContent.BuffType<HolyFlames>(), 180);
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.22f, Pitch = 0.28f, MaxInstances = 12 }, target.Center);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.34f, Pitch = 0.08f }, Projectile.Center);
+        }
 
         public override bool PreDraw(ref Color lightColor)
         {

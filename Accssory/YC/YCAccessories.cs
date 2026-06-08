@@ -84,7 +84,7 @@ namespace CalamityLegendsComeBack.Accssory.YC
 
     internal abstract class YCAccessoryBase : ModItem
     {
-        public new string LocalizationCategory => "Items.Accessories";
+        public override string LocalizationCategory => "Items.Accessories";
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/NewLegendYharimsCrystal";
 
         protected abstract YCAccessoryKind Kind { get; }

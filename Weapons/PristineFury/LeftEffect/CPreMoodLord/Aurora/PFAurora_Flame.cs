@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -99,8 +99,19 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             modifiers.SourceDamage *= atWeldingPoint ? 6.8f : 0.16f;
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) =>
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
             target.AddBuff(ModContent.BuffType<HolyFlames>(), 240);
+            if (Main.rand.NextBool(4))
+            {
+                Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Custom/AstralBeaconOrbPulse") { Volume = 0.22f, Pitch = 0.12f }, target.Center);
+            }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Custom/AstrumDeus/DeusMineExplode") { Volume = 0.45f, Pitch = -0.1f }, Projectile.Center);
+        }
 
         public override bool PreDraw(ref Color lightColor)
         {
@@ -170,6 +181,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             PFLeftEffectRules.EndAdditive();
             return false;
         }
-        }
     }
+}
 
