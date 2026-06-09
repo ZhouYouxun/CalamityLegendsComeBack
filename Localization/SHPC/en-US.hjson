@@ -128,7 +128,7 @@ Mods: {
 				Tooltip:
 					'''
 					SHPC right-click shots generate 20% more heat and natural heat dissipation is reduced by 33%
-					Each heat level grants an additional 33% SHPC right-click damage
+					Each heat level grants an additional 25% SHPC right-click damage
 					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
 					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
 					'''

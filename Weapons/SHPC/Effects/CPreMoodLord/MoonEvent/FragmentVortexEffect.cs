@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             projectile.velocity *= 2f;
 
             // 只存活很短时间
-            projectile.timeLeft = 15;
+            projectile.timeLeft = 12;
             projectile.penetrate = 2;
         }
 

@@ -187,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Projectile.penetrate = 2;
             Projectile.extraUpdates = 2;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 14;
+            Projectile.localNPCHitCooldown = -1;
             Projectile.alpha = 255;
         }
         private float baseSpeed;
