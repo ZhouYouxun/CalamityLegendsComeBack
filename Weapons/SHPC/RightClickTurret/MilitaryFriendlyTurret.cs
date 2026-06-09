@@ -226,7 +226,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
                 Projectile.owner);
 
             shot.DamageType = DamageClass.Magic;
-            shot.CritChance = Main.player[Projectile.owner].GetWeaponCrit(Main.player[Projectile.owner].HeldItem);
+            shot.CritChance = Projectile.CritChance;
         }
 
         private int GetScaledDamage()

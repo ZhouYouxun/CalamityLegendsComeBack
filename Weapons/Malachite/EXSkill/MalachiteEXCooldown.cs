@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 {
     internal sealed class MalachiteEXCooldown : CooldownHandler
     {
-        public const int CooldownFrames = 60 * 60;
+        public const int CooldownFrames = 15 * 60;
 
         public static new string ID => "Malachite_EX";
 

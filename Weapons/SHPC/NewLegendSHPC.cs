@@ -632,7 +632,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     MathHelper.ToRadians(10f)
                 };
 
-                int scatterDamage = Math.Max(1, (int)(damage * 0.3f));
+                int scatterDamage = Math.Max(1, (int)(damage * 0.22f));
 
                 foreach (float angle in spreadAngles)
                 {
@@ -866,7 +866,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Vector2 dir = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
                 int exLaserDamage = GetCurrentLeftClickDamage(player, GetProjectileEffectIDForShot());
 
-                Projectile.NewProjectile(
+                int exIndex = Projectile.NewProjectile(
                     Item.GetSource_FromThis(),
                     player.Center,
                     dir,
@@ -875,6 +875,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     Item.knockBack,
                     player.whoAmI
                 );
+
+                if (Main.projectile.IndexInRange(exIndex))
+                    Main.projectile[exIndex].CritChance = player.GetWeaponCrit(Item);
 
                 // 清空EX条（如果你之后想改，可以删这句）
                 exPlayer.EXValue = 0;

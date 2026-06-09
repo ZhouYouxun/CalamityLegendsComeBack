@@ -1,12 +1,12 @@
+using System;
 using System.Collections.Generic;
 using CalamityLegendsComeBack.Accssory.YC;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.MainAttack.E_TyrantPrism;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal.YCRightSlaughter;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral;
 using CalamityMod;
 using CalamityMod.Cooldowns;
-using CalamityMod.Dusts;
-using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -18,14 +18,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 {
     public class NewLegendYharimsCrystal : ModItem, ILocalizedModType
     {
-        //public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YharimsCrystal";
         public new string LocalizationCategory => "Items.Weapons";
-        private BalanceYharimsCrystal damageBalance = new();
 
+        private readonly BalanceYharimsCrystal balance = new();
+
+        private static int LeftHoldoutType => ModContent.ProjectileType<YC_LeftBladeSwing>();
+        private static int RightHoldoutType => ModContent.ProjectileType<YC_RightCrystalHoldout>();
         private static int VipType => ModContent.ProjectileType<YC_EX_VIP>();
-        private static int MainHoldoutType => ModContent.ProjectileType<YC_TyrantPrismHoldout>();
-        private static int SlaughterHoldoutType => ModContent.ProjectileType<YC_TyrantSlaughterHoldout>();
-        private int slaughterCastCount;
 
         public override void SetDefaults()
         {
@@ -34,113 +33,128 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             Item.damage = 30;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 6;
-            Item.useTime = 20;
-            Item.useAnimation = 20;
+            Item.useTime = 25;
+            Item.useAnimation = 25;
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
             Item.noUseGraphic = true;
-            Item.knockBack = 2f;
+            Item.knockBack = 6f;
             Item.channel = true;
             Item.autoReuse = true;
-            Item.shoot = MainHoldoutType;
-            Item.shootSpeed = 30f;
+            Item.shoot = LeftHoldoutType;
+            Item.shootSpeed = 0f;
             Item.UseSound = null;
             Item.value = Item.sellPrice(0, 20);
             Item.rare = ItemRarityID.Red;
         }
 
+        public override bool AltFunctionUse(Player player) => true;
+
         public override bool CanUseItem(Player player)
         {
-            if (HasActiveVIP(player))
-                return false;
+            bool rightClick = player.altFunctionUse == 2;
+            if (rightClick)
+            {
+                if (player.ownedProjectileCounts[RightHoldoutType] > 0)
+                    return false;
 
-            if (Main.myPlayer == player.whoAmI && (Main.mouseRight || player.Calamity().mouseRight))
-                return false;
+                Item.useTime = 20;
+                Item.useAnimation = 20;
+                Item.channel = true;
+                Item.shoot = RightHoldoutType;
+                Item.UseSound = null;
+            }
+            else
+            {
+                if (player.ownedProjectileCounts[LeftHoldoutType] > 0)
+                    return false;
 
-            if (player.altFunctionUse == 2)
-                return false;
+                Item.useTime = 25;
+                Item.useAnimation = 25;
+                Item.channel = true;
+                Item.shoot = LeftHoldoutType;
+                Item.UseSound = null;
+            }
 
-            Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
             Item.noUseGraphic = true;
-            Item.channel = true;
-            Item.autoReuse = true;
-            Item.shootSpeed = 30f;
-            Item.shoot = MainHoldoutType;
-            Item.UseSound = null;
-
-            return player.ownedProjectileCounts[SlaughterHoldoutType] <= 0 && !HasAnyActiveMainHoldout(player) && base.CanUseItem(player);
+            Item.useStyle = ItemUseStyleID.Shoot;
+            Item.shootSpeed = 0f;
+            return base.CanUseItem(player);
         }
 
         public override bool CanShoot(Player player)
         {
-            if (player.altFunctionUse == 2 || HasActiveVIP(player))
-                return false;
-
-            return !HasAnyActiveMainHoldout(player);
+            return player.altFunctionUse == 2
+                ? player.ownedProjectileCounts[RightHoldoutType] <= 0
+                : player.ownedProjectileCounts[LeftHoldoutType] <= 0;
         }
 
         public override void HoldItem(Player player)
         {
             player.Calamity().mouseWorldListener = true;
-            YC_TyrantPrismDroneCoordinator.EnsureIdleDrones(player, Item.GetSource_FromThis(), player.GetWeaponDamage(Item), Item.knockBack);
+            player.Calamity().rightClickListener = true;
 
             YCEXPlayer exPlayer = player.GetModPlayer<YCEXPlayer>();
             SyncCooldownDisplay(player, exPlayer);
 
-            if (Main.myPlayer == player.whoAmI &&
-                KeybindSystem.LegendarySkill.JustPressed &&
-                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
-                exPlayer.CanActivateUltimate &&
-                !HasActiveVIP(player))
+            if (Main.myPlayer != player.whoAmI ||
+                !KeybindSystem.LegendarySkill.JustPressed ||
+                !player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped ||
+                !exPlayer.CanActivateUltimate ||
+                player.ownedProjectileCounts[VipType] > 0)
             {
-                KillOwnedCrystalHoldouts(player);
-
-                Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-                Projectile.NewProjectile(
-                    Item.GetSource_FromThis(),
-                    player.Center,
-                    aimDirection,
-                    VipType,
-                    player.GetWeaponDamage(Item),
-                    Item.knockBack,
-                    player.whoAmI);
-
-                SoundEngine.PlaySound(SoundID.Item119 with { Volume = 0.85f, Pitch = -0.1f }, player.Center);
-            }
-
-            if (HasActiveVIP(player))
                 return;
-
-            if (Main.myPlayer == player.whoAmI)
-            {
-                player.Calamity().rightClickListener = true;
-                TrySpawnSlaughterHoldout(player);
             }
+
+            YharimsCrystalStatePlayer state = player.GetModPlayer<YharimsCrystalStatePlayer>();
+            Vector2 aimDirection = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            int damage = state.LastWeapon == YCWeaponForm.Blade
+                ? GetScaledDamage(player, balance.GetLeftClickBaseDamage() * 5)
+                : GetScaledDamage(player, balance.GetRightClickBaseDamage() * 4);
+
+            int ultimate = Projectile.NewProjectile(
+                Item.GetSource_FromThis(),
+                player.Center,
+                aimDirection,
+                VipType,
+                damage,
+                Item.knockBack,
+                player.whoAmI,
+                (float)state.LastWeapon);
+
+            if (Main.projectile.IndexInRange(ultimate))
+                Main.projectile[ultimate].CritChance = player.GetWeaponCrit(Item);
+
+            SoundEngine.PlaySound(SoundID.Item119 with { Volume = 0.85f, Pitch = -0.1f }, player.Center);
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            if (player.altFunctionUse == 2 || HasActiveVIP(player) || HasAnyActiveMainHoldout(player))
-                return false;
+            Vector2 aimDirection = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            bool rightClick = player.altFunctionUse == 2;
+            int projectileType = rightClick ? RightHoldoutType : LeftHoldoutType;
+            int projectileDamage = rightClick ? GetScaledDamage(player, balance.GetRightClickBaseDamage()) : damage;
 
-            Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-
-            Projectile.NewProjectile(
+            int projectileIndex = Projectile.NewProjectile(
                 source,
                 player.MountedCenter,
                 aimDirection,
-                MainHoldoutType,
-                damage,
+                projectileType,
+                projectileDamage,
                 knockback,
                 player.whoAmI);
+
+            if (Main.projectile.IndexInRange(projectileIndex))
+                Main.projectile[projectileIndex].CritChance = player.GetWeaponCrit(Item);
 
             return false;
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base = damageBalance.GetLeftClickBaseDamage();
+            damage.Base = balance.GetLeftClickBaseDamage();
+            damage *= GetConvertedMeleeBonus(player);
             damage *= player.GetModPlayer<YCAccessoryPlayer>().WeaponDamageMultiplier;
         }
 
@@ -152,133 +166,41 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string modeInfo = this.GetLocalizedValue("PrismReworkInfo");
-            string commandInfo = this.GetLocalizedValue("RightCommandInfo");
-            string resetInfo = this.GetLocalizedValue("ResetInfo");
             string exInfo = this.GetLocalizedValue("EXInfo");
+            string growth = balance.BuildProgressionSummary();
+            tooltips.FindAndReplace("[GFB]", modeInfo + "\n\n" + growth + "\n\n" + exInfo);
 
-            tooltips.FindAndReplace("[GFB]", modeInfo + "\n" + commandInfo + "\n" + resetInfo + "\n\n" + exInfo);
             string legendarySection = Main.keyState.PressingShift() ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
             tooltips.Add(new TooltipLine(Mod, "YharimsCrystalGoldenTechLegendaryText", legendarySection));
         }
 
-        private static bool HasAnyActiveMainHoldout(Player player)
+        internal int GetScaledDamage(Player player, int baseDamage)
         {
-            return player.ownedProjectileCounts[MainHoldoutType] > 0;
+            float magicScaled = player.GetTotalDamage(DamageClass.Magic).ApplyTo(Math.Max(1, baseDamage));
+            magicScaled *= GetConvertedMeleeBonus(player);
+            magicScaled *= player.GetModPlayer<YCAccessoryPlayer>().WeaponDamageMultiplier;
+            return Math.Max(1, (int)magicScaled);
         }
 
-        private static bool IsMainHoldoutType(int projectileType)
+        private static float GetConvertedMeleeBonus(Player player)
         {
-            return projectileType == MainHoldoutType;
+            float meleeMultiplier = player.GetTotalDamage(DamageClass.Melee).ApplyTo(1f);
+            float convertedBonus = Math.Max(0f, meleeMultiplier - 1f) * 0.33f;
+            return 1f + convertedBonus;
         }
 
-        private static bool HasActiveVIP(Player player) => player.ownedProjectileCounts[VipType] > 0;
-
-        private void TrySpawnSlaughterHoldout(Player player)
+        internal static Vector2 GetMouseWorld(Player player)
         {
-            bool rightHeld = Main.mouseRight || player.Calamity().mouseRight;
-            if (!rightHeld ||
-                Main.mouseLeft ||
-                Main.mapFullscreen ||
-                Main.blockMouse ||
-                player.mouseInterface ||
-                HasAnyActiveMainHoldout(player) ||
-                player.ownedProjectileCounts[SlaughterHoldoutType] > 0)
-            {
-                return;
-            }
-
-            if (player.Calamity().killModeCooldown == 0)
-                ActivateSlaughterKillMode(player);
-
-            if (!player.Calamity().demonSwordKillMode ||
-                player.Calamity().killModeCooldown != KillMode.cooldownMax + KillMode.buffMax)
-            {
-                return;
-            }
-
-            Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-            float slaughterDamageMultiplier = player.GetModPlayer<YCAccessoryPlayer>().SlaughterDamageMultiplier;
-            slaughterCastCount++;
-            Projectile.NewProjectile(
-                Item.GetSource_FromThis(),
-                player.MountedCenter,
-                aimDirection,
-                SlaughterHoldoutType,
-                (int)(player.GetWeaponDamage(Item) * 15 * slaughterDamageMultiplier),
-                Item.knockBack,
-                player.whoAmI,
-                slaughterCastCount);
-        }
-
-        private static void ActivateSlaughterKillMode(Player player)
-        {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DemonSwordKillMode") { Volume = 0.95f }, player.Center);
-
-            if (!Main.dedServ)
-            {
-                Color[] colors =
-                {
-                    Color.MediumOrchid,
-                    Color.BlueViolet,
-                    new Color(255, 214, 92),
-                    new Color(255, 104, 34)
-                };
-
-                for (int i = 0; i < 10; i++)
-                {
-                    Vector2 ringVelocity = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * 6.5f;
-                    Color sigilColor = colors[i % colors.Length] * 0.7f;
-
-                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                        player.Center + ringVelocity * 14f,
-                        -ringVelocity * 0.1f,
-                        "CalamityMod/Particles/DemonSigilParticle",
-                        false,
-                        22,
-                        0.6f,
-                        sigilColor,
-                        Vector2.One,
-                        useAddativeBlend: true,
-                        shrinkSpeed: -0.23f));
-
-                    Dust dust = Dust.NewDustPerfect(player.Center, ModContent.DustType<LightDust>());
-                    dust.velocity = ringVelocity;
-                    dust.scale = 1.7f;
-                    dust.noGravity = true;
-                    dust.color = colors[(i + 1) % colors.Length];
-                    dust.noLightEmittence = true;
-                }
-            }
-
-            player.Calamity().demonSwordKillMode = true;
-            int cooldown = (int)((KillMode.cooldownMax + KillMode.buffMax) * player.GetModPlayer<YCAccessoryPlayer>().SlaughterCooldownMultiplier);
-            player.Calamity().killModeCooldown = cooldown;
-            player.AddCooldown(KillMode.ID, cooldown);
-        }
-
-        private static void KillOwnedCrystalHoldouts(Player player)
-        {
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile projectile = Main.projectile[i];
-                if (!projectile.active || projectile.owner != player.whoAmI)
-                    continue;
-
-                if (IsMainHoldoutType(projectile.type))
-                    projectile.Kill();
-            }
+            Vector2 mouseWorld = player.Calamity().mouseWorld;
+            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
         }
 
         private static void SyncCooldownDisplay(Player player, YCEXPlayer exPlayer)
         {
             if (player.Calamity().cooldowns.TryGetValue(YCEXCoolDown.ID, out var cooldown))
-            {
                 cooldown.timeLeft = exPlayer.DisplayRawValue;
-            }
             else
-            {
                 player.AddCooldown(YCEXCoolDown.ID, 0);
-            }
         }
     }
 }

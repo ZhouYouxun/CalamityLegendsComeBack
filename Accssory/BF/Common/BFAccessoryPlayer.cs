@@ -95,15 +95,17 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
         private void EnsureSilvaSeeds()
         {
-            int seedType = ModContent.ProjectileType<SeedOfSilvaSeed>();
-            bool[] existingSlots = new bool[SeedOfSilvaSeed.SeedCount];
+            bool[] existingSlots = new bool[SeedOfSilvaFlowerProjectile.FlowerCount];
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
-                if (projectile.owner != Player.whoAmI || projectile.type != seedType)
+                if (projectile.owner != Player.whoAmI)
                     continue;
 
-                int slot = (int)projectile.ai[0];
+                if (projectile.ModProjectile is not SeedOfSilvaFlowerProjectile flower)
+                    continue;
+
+                int slot = (int)flower.CurrentPreset;
                 if (slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
                 {
                     projectile.Kill();
@@ -122,11 +124,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     Player.GetSource_FromThis(),
                     Player.Center,
                     Vector2.Zero,
-                    seedType,
+                    SeedOfSilvaFlowerProjectile.GetFlowerType(i),
                     0,
                     0f,
-                    Player.whoAmI,
-                    i);
+                    Player.whoAmI);
             }
         }
     }

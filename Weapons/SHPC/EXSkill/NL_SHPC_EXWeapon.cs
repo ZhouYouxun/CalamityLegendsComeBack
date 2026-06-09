@@ -275,6 +275,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (laser >= 0 && laser < Main.maxProjectiles)
             {
                 superLaserIndex = laser;
+                Main.projectile[laser].CritChance = Projectile.CritChance;
                 Main.projectile[laser].netUpdate = true;
             }
         }

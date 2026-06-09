@@ -107,10 +107,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
             foreach (Projectile seedProjectile in Main.ActiveProjectiles)
             {
-                if (!seedProjectile.active || seedProjectile.owner != owner.whoAmI || seedProjectile.type != ModContent.ProjectileType<SeedOfSilvaSeed>())
+                if (!seedProjectile.active || seedProjectile.owner != owner.whoAmI)
                     continue;
 
-                if (seedProjectile.ModProjectile is not SeedOfSilvaSeed seed)
+                if (seedProjectile.ModProjectile is not SeedOfSilvaFlowerProjectile seed)
                     continue;
 
                 float distanceSquared = Vector2.DistanceSquared(projectile.Center, seedProjectile.Center);

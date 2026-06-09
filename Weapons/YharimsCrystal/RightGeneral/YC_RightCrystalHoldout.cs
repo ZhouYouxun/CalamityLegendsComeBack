@@ -1,0 +1,208 @@
+using System;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
+using CalamityMod;
+using CalamityMod.Particles;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
+{
+    internal sealed class YC_RightCrystalHoldout : YC_BaseHoldout
+    {
+        private readonly BalanceYharimsCrystal balance = new();
+        private int manaDrainTimer;
+        private int laserIndex = -1;
+        private int shardIndex = -1;
+        private bool chargedSoundPlayed;
+
+        public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
+        public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
+        public Vector2 Muzzle => Projectile.Center + ForwardDirection * 32f;
+
+        protected override float HoldoutDistance => 12f;
+        protected override float SoundPitch => 0.14f;
+
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            Owner.GetModPlayer<YharimsCrystalStatePlayer>().SetLastWeapon(YCWeaponForm.Crystal);
+            Projectile.scale = 1.06f;
+            SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.5f, Pitch = -0.25f }, Owner.Center);
+        }
+
+        protected override void OnHoldoutAI()
+        {
+            Projectile.damage = Owner.HeldItem.ModItem is NewLegendYharimsCrystal item
+                ? item.GetScaledDamage(Owner, balance.GetRightClickBaseDamage())
+                : Projectile.damage;
+
+            DrainManaOrKill();
+            EmitChargeFX();
+            MaintainEmpoweredShard();
+
+            if (!Charged)
+                return;
+
+            if (!chargedSoundPlayed)
+            {
+                chargedSoundPlayed = true;
+                SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.62f, Pitch = -0.18f }, Projectile.Center);
+                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.8f);
+            }
+
+            EnsureLaser();
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            KillProjectile(laserIndex);
+            KillProjectile(shardIndex);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.42f, Pitch = -0.15f }, Projectile.Center);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            base.PreDraw(ref lightColor);
+
+            if (Main.dedServ)
+                return false;
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Vector2 drawPosition = Muzzle - Main.screenPosition;
+            Color orange = new Color(255, 112, 34, 0);
+            Color gold = new Color(255, 218, 94, 0);
+            float charge = ChargeRatio;
+            float pulse = 1f + (float)Math.Sin(HoldFrameCounter * 0.22f) * 0.08f;
+
+            Main.EntitySpriteDraw(bloom, drawPosition, null, orange * (0.28f + charge * 0.56f), Projectile.rotation, bloom.Size() * 0.5f, (0.12f + charge * 0.24f) * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White with { A = 0 } * (0.08f + charge * 0.28f), Projectile.rotation, bloom.Size() * 0.5f, (0.04f + charge * 0.08f) * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(ring, drawPosition, null, gold * charge * 0.58f, Main.GlobalTimeWrappedHourly * 1.7f, ring.Size() * 0.5f, (0.12f + charge * 0.22f) * pulse, SpriteEffects.None);
+            return false;
+        }
+
+        private void EnsureLaser()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            if (IsProjectileActive(laserIndex, ModContent.ProjectileType<YC_RightScorchingLaser>()))
+                return;
+
+            laserIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Muzzle,
+                ForwardDirection,
+                ModContent.ProjectileType<YC_RightScorchingLaser>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner,
+                Projectile.whoAmI);
+
+            if (Main.projectile.IndexInRange(laserIndex))
+            {
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
+                Main.projectile[laserIndex].CritChance = Projectile.CritChance;
+            }
+        }
+
+        private void MaintainEmpoweredShard()
+        {
+            bool empowered = Owner.GetModPlayer<YharimsCrystalStatePlayer>().CrystalEmpowered;
+            int shardType = ModContent.ProjectileType<YC_BurningShard>();
+
+            if (!empowered)
+            {
+                KillProjectile(shardIndex);
+                shardIndex = -1;
+                return;
+            }
+
+            if (Projectile.owner != Main.myPlayer || IsProjectileActive(shardIndex, shardType))
+                return;
+
+            shardIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Muzzle + ForwardDirection * 22f,
+                Vector2.Zero,
+                shardType,
+                Math.Max(1, (int)(Projectile.damage * 0.38f)),
+                Projectile.knockBack * 0.2f,
+                Projectile.owner,
+                1f,
+                Projectile.whoAmI);
+
+            if (Main.projectile.IndexInRange(shardIndex))
+            {
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shardIndex], YCWeaponForm.Crystal);
+                Main.projectile[shardIndex].CritChance = Projectile.CritChance;
+            }
+        }
+
+        private void DrainManaOrKill()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            manaDrainTimer++;
+            if (manaDrainTimer < 12)
+                return;
+
+            manaDrainTimer = 0;
+            if (Owner.CheckMana(Owner.HeldItem, -1, true))
+                return;
+
+            SoundEngine.PlaySound(SoundID.MaxMana with { Pitch = -0.45f }, Owner.Center);
+            Projectile.Kill();
+        }
+
+        private void EmitChargeFX()
+        {
+            if (Main.dedServ)
+                return;
+
+            float charge = ChargeRatio;
+            int interval = Math.Max(2, (int)MathHelper.Lerp(8f, 2f, charge));
+            if (Main.GameUpdateCount % interval == 0)
+            {
+                Vector2 direction = ForwardDirection;
+                Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+                Vector2 spawn = Muzzle + normal * Main.rand.NextFloat(-36f, 36f) - direction * Main.rand.NextFloat(18f, 74f);
+                Vector2 velocity = direction * Main.rand.NextFloat(2f, 6f + charge * 6f) + normal * Main.rand.NextFloat(-1.1f, 1.1f);
+                Color color = Main.rand.NextBool(4) ? Color.White : Color.Lerp(new Color(255, 72, 34), new Color(255, 222, 94), Main.rand.NextFloat(0.1f, 0.9f));
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    spawn,
+                    velocity,
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.22f, 0.46f) * (0.55f + charge),
+                    color,
+                    new Vector2(0.72f, 1.15f),
+                    shrinkSpeed: 0.85f));
+            }
+
+            if ((int)HoldFrameCounter % 24 == 0)
+                SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.16f + charge * 0.14f, Pitch = -0.28f, PitchVariance = 0.18f, MaxInstances = 5 }, Muzzle);
+        }
+
+        private static bool IsProjectileActive(int index, int type)
+        {
+            return index >= 0 &&
+                index < Main.maxProjectiles &&
+                Main.projectile[index].active &&
+                Main.projectile[index].type == type;
+        }
+
+        private static void KillProjectile(int index)
+        {
+            if (index >= 0 && index < Main.maxProjectiles && Main.projectile[index].active)
+                Main.projectile[index].Kill();
+        }
+    }
+}

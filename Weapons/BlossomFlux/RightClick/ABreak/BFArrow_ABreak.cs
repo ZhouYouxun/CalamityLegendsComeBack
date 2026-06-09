@@ -53,6 +53,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
+            modifiers.DefenseEffectiveness *= 0f;
+            float calamityDamageReduction = MathHelper.Clamp(target.Calamity().DR, 0f, 0.95f);
+            if (calamityDamageReduction > 0f)
+                modifiers.FinalDamage /= 1f - calamityDamageReduction;
+
             if (target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner))
                 modifiers.FinalDamage *= 1.4f;
         }

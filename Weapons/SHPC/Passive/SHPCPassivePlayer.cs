@@ -76,8 +76,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 return;
             }
 
-            TryAutoUseManaPotion(energyCore);
-
             if (!energyCore.HasEnergyCore)
             {
                 passiveOrbTimer = 0;
@@ -158,14 +156,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                    noHeldProjectile &&
                    !Player.controlUseItem &&
                    !Player.controlUseTile;
-        }
-
-        private void TryAutoUseManaPotion(SHPCEnergyCorePlayer energyCore)
-        {
-            if (!energyCore.AutoManaPotion || Player.statMana > Player.statManaMax2 - 60)
-                return;
-
-            Player.QuickMana();
         }
 
         private void ApplyScaledManaSicknessTime()

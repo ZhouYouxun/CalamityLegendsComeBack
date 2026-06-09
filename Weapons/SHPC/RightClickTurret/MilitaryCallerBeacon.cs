@@ -94,7 +94,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
                 SourceDamage);
 
             if (Main.projectile.IndexInRange(dropIndex))
+            {
+                Main.projectile[dropIndex].CritChance = Projectile.CritChance;
                 Main.projectile[dropIndex].netUpdate = true;
+            }
 
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MissileNearing") { Volume = 0.5f, Pitch = 0.28f }, dropPosition);
         }

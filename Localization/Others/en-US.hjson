@@ -7,9 +7,20 @@ Mods: {
 					Tooltip:
 						'''
 						Hold this item to unfold a pixel Tetris board.
+						Right click in multiplayer to invite the nearest player who is also holding Tetris.
 						A/D or Left/Right moves the falling piece. S or Down soft drops. Space hard drops.
 						W, Up, or X rotates clockwise. Z rotates counterclockwise. C stores the current piece.
 						Clear full rows to score and survive. If the stack reaches the top, game over. Press R after game over to restart.
+						'''
+				}
+
+				Game2048: {
+					DisplayName: "2048"
+					Tooltip:
+						'''
+						Hold this item to unfold a 4x4 pixel 2048 board.
+						Use W/A/S/D or the arrow keys to slide all tiles. Equal tiles merge once per slide.
+						Every successful slide creates a new 2 or 4 tile. Press R after game over to restart.
 						'''
 				}
 
@@ -99,6 +110,7 @@ Mods: {
 		Projectiles: {
 			A_Dev: {
 				TetrisPanel.DisplayName: Tetris Board
+				Game2048Panel.DisplayName: 2048 Board
 				SnakePanel.DisplayName: Snake Board
 				MinesweeperPanel.DisplayName: Minesweeper Board
 				Strikers1945Panel.DisplayName: 1945 Striker Board
@@ -130,8 +142,21 @@ Mods: {
 
 		TheSpecialText: {
 			TetrisLevel: LEVEL {0}
+			TetrisMultiplayerLevel: CO-OP LEVEL {0}
 			TetrisGameOver: GAME OVER
 			TetrisRestart: Press R to restart
+			TetrisNoInviteTarget: No nearby Tetris player found.
+			TetrisInviteSent: Tetris invite sent to {0}.
+			TetrisInviteIncoming: "{0} invited you to co-op Tetris. Press Y or Enter to accept. Press N or Esc to decline."
+			TetrisInviteRejected: Tetris invite was rejected.
+			TetrisInviteAccepted: Co-op Tetris linked.
+			TetrisMultiplayerGuest: Waiting for host board sync
+			Game2048Score: "SCORE {0}"
+			Game2048Best: "BEST {0}"
+			Game2048Slide: Slide tiles to merge matching numbers
+			Game2048Won: 2048 reached
+			Game2048GameOver: NO MOVES
+			Game2048Restart: Press R to restart
 			SnakeSpeed: SPEED {0}
 			SnakeGameOver: GAME OVER
 			SnakeRestart: Press R to restart

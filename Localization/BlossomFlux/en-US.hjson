@@ -31,7 +31,7 @@ Mods: {
 						'''
 						[c/8BE89A:Left Click - Reconnaissance: converts arrows into single-target tracking scout arrows.]
 						[c/8BE89A:Each volley fires five shots; scout arrows can damage multiple times.]
-						[c/8BE89A:After piercing, they wander briefly before reacquiring a target.]
+						[c/8BE89A:After a short free flight, they predict moving targets, accelerate, and re-home.]
 						'''
 					PresetLeft3:
 						'''
@@ -47,7 +47,7 @@ Mods: {
 					PresetRight0:
 						'''
 						[c/F4D57A:Right Click - Breakthrough Charge: loads breakthrough arrows one by one, then releases them in sequence from the aim line.]
-						[c/F4D57A:Loaded arrows fire in parallel, accelerate during flight, and pierce repeatedly.]
+						[c/F4D57A:Loaded arrows deal greatly increased damage, fire in parallel, accelerate during flight, and ignore defense and damage reduction.]
 						'''
 					PresetRight1:
 						'''
@@ -99,11 +99,9 @@ Mods: {
 						'''
 					BF_Passive:
 						'''
-						[c/9AEF9E:Passive: While held, one lethal hit is blocked.]
-						[c/9AEF9E:It fully restores life and creates a resurgence field.]
-						[c/9AEF9E:For the next 15 seconds, another hit kills you instantly.]
-						[c/9AEF9E:If you survive the timer, life returns to at least half.]
-						[c/9AEF9E:Current passive state: {0}; watch the cooldown.]
+						[c/9AEF9E:Final Stand: while holding BlossomFlux, one lethal hit is blocked; charges for 180 seconds and does not charge while a boss is alive.]
+						[c/9AEF9E:On trigger, stay at 1 life and open a 5-second recovery field. During it, you are nearly invincible and immune to debuffs and environmental damage.]
+						[c/9AEF9E:When it ends, revive up to full life; each blocked hit during the field reduces revival life by 20%, down to 1. Current state: {0}.]
 						'''
 					PassiveStateReady: "[c/7BFFB7:Ready]"
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
@@ -214,10 +212,7 @@ Mods: {
 					'''
 					+5 life per second. This regeneration cannot be reduced by any factor.
 					+60 frames of invincibility after taking damage.
-					Modern Silva's revival invincibility is increased to 10 seconds.
-					During that invincibility, incoming life loss is reduced to 10%.
-					After the revival ends, life is restored to at least 50% of maximum life, and the cooldown can tick during boss fights.
-					Massively reduces the revival effect cooldown.
+					Coexists with BlossomFlux Final Stand, but no longer changes its duration or cooldown rules.
 					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
 					'''
 			}
@@ -343,9 +338,13 @@ Mods: {
 			TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
 			PastLingeringShard.DisplayName: Lingering Remnant Shard
 			SeedOfSilvaDelphiniumArc.DisplayName: Silva Delphinium Arc
+			SeedOfSilvaDelphinium.DisplayName: Silva Delphinium
+			SeedOfSilvaDaisy.DisplayName: Silva Daisy
+			SeedOfSilvaMandrake.DisplayName: Silva Mandrake
 			SeedOfSilvaMandrakeDart.DisplayName: Silva Mandrake Dart
 			SeedOfSilvaMandrakeSpore.DisplayName: Silva Mandrake Spore
-			SeedOfSilvaSeed.DisplayName: Seed of Silva
+			SeedOfSilvaSunflower.DisplayName: Silva Sunflower
+			SeedOfSilvaTorchflower.DisplayName: Silva Torchflower
 			SeedOfSilvaTorchFlame.DisplayName: Silva Torchflower Flame
 			BFBreakthroughChargeConvergeFX.DisplayName: B F Breakthrough Charge Converge F X
 			BFBombardStrafeFX.DisplayName: B F Bombard Strafe F X

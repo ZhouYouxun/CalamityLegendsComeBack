@@ -1,123 +1,231 @@
-﻿# PristineFury 寮瑰箷鐗规晥绗旇
+# PristineFury 弹幕特效笔记
 
-鑼冨洿锛氬綋鍓?`Weapons/PristineFury` 涓嬬殑寮瑰箷绫伙紱涓嶇粺璁?`Player`銆丮ark/瑙勫垯 helper銆佺函瑙﹀彂绫汇€備笅闈㈡妸鐗规晥鍒嗘垚鈥滅粯鍒跺嚱鏁扮壒鏁堚€濆拰鈥淎I/鍛戒腑绮掑瓙鐗规晥鈥濄€?
-## 鏈綋銆佸彸閿€侀挬鐖笌琚姩
+范围：当前 `Weapons/PristineFury` 下的弹幕类；不统计 `Player`、Mark/规则 helper、纯触发类。下面把特效分成“绘制函数特效”和“AI/命中粒子特效”。
+
+## 本体、右键、钩爪与被动
 
 ### NewLegendPristineFuryHoldOut
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鎵嬪姩鐢绘鍣ㄦ湰浣撳拰 glow 璐村浘锛涢緳鐪?榫欏彛鐑熼浘銆丗akeCalamity 鍏呰兘銆佸彸閿?Arc Nova 鍏呰兘銆佹灙鍙ｅ厜鍜岄挬鐖搫鍔涙潯鍒嗗埆鐢?`BloomCircle`銆乣HalfStar`銆乣magic_03`銆乣smoke_04`銆乣ForwardSmear`銆乣BloomRing`銆乣GenericBarBack/Front`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氭寔鏈夊拰宸?鍙抽敭鍑嗗闃舵鐢熸垚 `GlowOrbParticle`銆乣PointParticle` 绛夊皬鍏夌偣锛涘叿浣撴敾鍑荤矑瀛愪富瑕佺敱鍚勯樁娈?effect projectile 鎵挎媴銆?
+- 绘制函数特效：`PreDraw` 手动画武器本体和 glow 贴图；龙眼、龙口烟雾、FakeCalamity 充能、右键 Arc Nova 充能、枪口光和钩爪蓄力条分别用 `BloomCircle`、`HalfStar`、`magic_03`、`smoke_04`、`ForwardSmear`、`BloomRing`、`GenericBarBack/Front`。
+- AI/命中粒子特效：持有和左、右键准备阶段生成 `GlowOrbParticle`、`PointParticle` 等小光点；具体攻击粒子主要由各阶段 effect projectile 承担。
+
 ### PristineFuryPassiveTentacle
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氳鍔ㄨЕ鎵嬬殑鍙閮ㄥ垎闈犵矑瀛愶紝涓昏鏄?`CustomSpark("CalamityMod/Particles/BloomCircle")`銆乣DustID.Shadowflame` 鍜?`DustID.Torch`銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：被动触手的可见部分靠粒子，主要用 `CustomSpark("CalamityMod/Particles/BloomCircle")`、`DustID.Shadowflame` 和 `DustID.Torch`。
+
 ### PristineFuryHook
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `CalamityMod/Particles/ThinEndedLine` 閫愭鐢婚摼绾匡紝鍐嶇敾閽╃埅鏈綋銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氬懡涓?閲婃斁鏃剁敓鎴?`SparkParticle` 鍜?`DirectionalPulseRing`銆?
+- 绘制函数特效：`PreDraw` 使用 `CalamityMod/Particles/ThinEndedLine` 逐段画链线，再画钩爪本体。
+- AI/命中粒子特效：命中/释放时生成 `SparkParticle` 和 `DirectionalPulseRing`。
+
 ### PristineFuryRightPellet
-- 缁樺埗鍑芥暟鐗规晥锛氭病鏈夎嚜瀹氫箟缁樺埗锛屼娇鐢ㄩ粯璁ゅ脊骞曠粯鍒跺拰 trail cache銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氶琛屾椂鐢熸垚 `DustID.Torch`锛岃惤鍦扮敓鎴?`PristineFuryGroundFlame`銆?
+- 绘制函数特效：没有自定义绘制，使用默认弹幕绘制和 trail cache。
+- AI/命中粒子特效：飞行时生成 `DustID.Torch`，落地生成 `PristineFuryGroundFlame`。
+
 ### PristineFuryGroundFlame
-- 缁樺埗鍑芥暟鐗规晥锛氭病鏈夎嚜瀹氫箟缁樺埗銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敤 `MediumMistParticle` 鍋氬湴闈㈢伀闆撅紝骞剁敤 `SparkParticle` 鐐圭紑鐏槦銆?
+- 绘制函数特效：没有自定义绘制。
+- AI/命中粒子特效：用 `MediumMistParticle` 做地面火雾，并用 `SparkParticle` 点缀火星。
+
 ### PristineFuryImpactExplosion
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鐢荤垎鐐歌创鍥句袱灞傦紝涓€灞備富棰樿壊锛屼竴灞傜櫧鑹叉牳蹇冦€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱垎鐐稿惎鍔ㄦ椂鐢熸垚 `SparkParticle`銆乣DirectionalPulseRing`銆乣CustomPulse("SoftRoundExplosion")`銆乣CustomPulse("FlameExplosion")`銆?
+- 绘制函数特效：`PreDraw` 画爆炸贴图两层，一层主题色，一层白色核心。
+- AI/命中粒子特效：爆炸启动时生成 `SparkParticle`、`DirectionalPulseRing`、`CustomPulse("SoftRoundExplosion")`、`CustomPulse("FlameExplosion")`。
+
 ### PristineFuryRightNovaChargeOrb
-- 缁樺埗鍑芥暟鐗规晥锛氳皟鐢?`PristineFuryRightNovaVisuals.DrawArcNovaOrb`锛屼娇鐢?`BloomCircle`銆乣ForwardSmear`銆乣BloomRing`銆乣FullStar` 鐢诲彸閿搫鍔涚悆銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氬厖鑳芥椂鐢熸垚 `SparkParticle` 鎴?`PointParticle`锛屾弧钃勫姏/鑴夊啿鏃剁敓鎴?`DirectionalPulseRing`銆乣CustomPulse("BloomCircle")` 鍜?`DustID.Torch`銆?
+- 绘制函数特效：调用 `PristineFuryRightNovaVisuals.DrawArcNovaOrb`，使用 `BloomCircle`、`ForwardSmear`、`BloomRing`、`FullStar` 画右键蓄力球。
+- AI/命中粒子特效：充能时生成 `SparkParticle` 或 `PointParticle`，满蓄力/脉冲时生成 `DirectionalPulseRing`、`CustomPulse("BloomCircle")` 和 `DustID.Torch`。
+
 ### PristineFuryRightNovaFireball
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鐢绘棫浣嶇疆 `BloomCircle` 娈嬪奖銆佺伀鐞冩湰浣擄紝骞惰皟鐢?`DrawArcNovaOrb` 鍙?Arc Nova 鏍稿績銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氶琛屾椂鐢熸垚 `MediumMistParticle`銆乣CustomSpark("SmallBloom")`锛涚垎鐐告椂鐢熸垚 `PristineFuryImpactExplosion`锛屽苟鐢熸垚 `DirectionalPulseRing`銆乣CustomPulse("SoftRoundExplosion")`銆乣SparkParticle`銆?
+- 绘制函数特效：`PreDraw` 画旧位置 `BloomCircle` 残影、火球本体，并调用 `DrawArcNovaOrb` 画 Arc Nova 核心。
+- AI/命中粒子特效：飞行时生成 `MediumMistParticle`、`CustomSpark("SmallBloom")`；爆炸时生成 `PristineFuryImpactExplosion`，并生成 `DirectionalPulseRing`、`CustomPulse("SoftRoundExplosion")`、`SparkParticle`。
+
 ### PristineFuryRightNovaPseudoLaser
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鐢?`Utils.DrawLaser` 缁樺埗 `CalamityMod/Projectiles/LaserProj` 涓ゅ眰婵€鍏夛紝骞跺湪璧风偣/缁堢偣鍙?`BloomCircle`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氭部婵€鍏夌敓鎴?`PointParticle` 鍜?`DustID.Torch`銆?
+- 绘制函数特效：`PreDraw` 用 `Utils.DrawLaser` 绘制 `CalamityMod/Projectiles/LaserProj` 两层激光，并在起点/终点画 `BloomCircle`。
+- AI/命中粒子特效：沿激光生成 `PointParticle` 和 `DustID.Torch`。
+
 ## APreHardMode
 
 ### PFIdle_Flame
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氫娇鐢?`SparkParticle` 鍜?`ModContent.DustType<FinalFlame>()`銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：使用 `SparkParticle` 和 `ModContent.DustType<FinalFlame>()`。
+
 ### PFEvilT2_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle`銆乣ThinEndedLine`銆乣HalfStar`銆乣magic_03`銆乣magic_04` 鐢绘硶闃?鍑嗘槦寮忕伀鐒般€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GoldFlame`/`DustID.YellowTorch` 鍜?`GlowOrbParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle`、`ThinEndedLine`、`HalfStar`、`magic_03`、`magic_04` 画法阵/准星式火焰。
+- AI/命中粒子特效：生成 `DustID.GoldFlame`/`DustID.YellowTorch` 和 `GlowOrbParticle`。
+
 ### PFSlimeGod_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle` 鐢婚粡娑茬涓婚鐏洟銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GoldFlame`/`DustID.YellowTorch` 鍜?`GlowOrbParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle` 画黏液神主题火团。
+- AI/命中粒子特效：生成 `DustID.GoldFlame`/`DustID.YellowTorch` 和 `GlowOrbParticle`。
+
 ## BPrePlantera
 
 ### PFBrimstoneElemental_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `CalamityMod/Particles/MediumMist` 鐢荤～鐏浘銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`ModContent.DustType<BrimstoneFlame>()` 鍜?`MediumMistParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `CalamityMod/Particles/MediumMist` 画硫火雾。
+- AI/命中粒子特效：生成 `ModContent.DustType<BrimstoneFlame>()` 和 `MediumMistParticle`。
+
 ### PFBrimstoneElemental_Barrage
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `CalamityUtils.DrawAfterimagesCentered` 鍜?`BloomCircle` 鐢?Hellborn 寮逛綋/鍏夋檿銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DiamondDust`銆乣SquashDust`锛岀垎鍙戞椂鐢熸垚 `CustomPulse("BloomCircle")`銆?
+- 绘制函数特效：`PreDraw` 使用 `CalamityUtils.DrawAfterimagesCentered` 和 `BloomCircle` 画 Hellborn 弹体/光晕。
+- AI/命中粒子特效：生成 `DiamondDust`、`SquashDust`，爆发时生成 `CustomPulse("BloomCircle")`。
+
 ### PFBrimstoneElemental_Laser
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鍒嗘缁樺埗 `BrimstoneRayMid` 鍜?`BrimstoneRayEnd`锛屼笉鏄?`Utils.DrawLaser`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氬厜鏉熸湯绔敓鎴?`CalamityDusts.Brimstone`銆乣GlowOrbParticle` 鍜?`DirectionalPulseRing`銆?
+- 绘制函数特效：`PreDraw` 分段绘制 `BrimstoneRayMid` 和 `BrimstoneRayEnd`，不使用 `Utils.DrawLaser`。
+- AI/命中粒子特效：光束末端生成 `CalamityDusts.Brimstone`、`GlowOrbParticle` 和 `DirectionalPulseRing`。
+
 ### PFFakeCalamity_ChargeOrb
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle`銆乣ForwardSmear`銆乣BloomRing` 鐢昏搫鍔涚悆銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氳搫鍔涘畬鎴愭椂鐢熸垚 `DirectionalPulseRing`锛屽苟鐢熸垚 `DustID.GoldFlame`/`DustID.YellowTorch`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle`、`ForwardSmear`、`BloomRing` 画蓄力球。
+- AI/命中粒子特效：蓄力完成时生成 `DirectionalPulseRing`，并生成 `DustID.GoldFlame`/`DustID.YellowTorch`。
+
 ### PFFakeCalamity_NovaOrb
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤鏃т綅缃?`BloomCircle` 娈嬪奖鍜?`HalfStar` 鏄熻姃銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`SquashDust`銆乣GlowOrbParticle`銆乣CustomSpark("BloomCircle")`銆乣CustomSpark("SmallBloom")`銆?
+- 绘制函数特效：`PreDraw` 使用旧位置 `BloomCircle` 残影和 `HalfStar` 星芒。
+- AI/命中粒子特效：生成 `SquashDust`、`GlowOrbParticle`、`CustomSpark("BloomCircle")`、`CustomSpark("SmallBloom")`。
+
 ### PFFakeCalamity_NovaExplosion
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DirectionalPulseRing`銆乣CustomPulse("SoftRoundExplosion")`銆乣CustomPulse("BloomCircle")`銆乣SparkParticle`銆乣PointParticle` 鍜岄噾鐏?Dust銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：生成 `DirectionalPulseRing`、`CustomPulse("SoftRoundExplosion")`、`CustomPulse("BloomCircle")`、`SparkParticle`、`PointParticle` 和金色 Dust。
+
 ### PFHardMode_TotalityFire
-- 缁樺埗鍑芥暟鐗规晥锛氫娇鐢?`CalamityUtils.DrawAfterimagesCentered`锛屾暣浣?`PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GoldFlame`/`DustID.YellowTorch`銆乣DirectionalPulseRing`銆乣CustomPulse`銆乣SparkParticle`銆乣PointParticle`銆乣MediumMistParticle`銆?
+- 绘制函数特效：使用 `CalamityUtils.DrawAfterimagesCentered`，整个 `PreDraw` 返回 `false`。
+- AI/命中粒子特效：生成 `DustID.GoldFlame`/`DustID.YellowTorch`、`DirectionalPulseRing`、`CustomPulse`、`SparkParticle`、`PointParticle`、`MediumMistParticle`。
+
 ### PFHardMode_GroundFire
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氫娇鐢?`MediumMistParticle` 鍋氬湴闈㈢伀銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：使用 `MediumMistParticle` 做地面火。
+
 ### PFHardMode_HeavyFireball
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鐢荤伀鐞冩湰浣撳拰鍏夋檿銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GoldFlame`/`DustID.YellowTorch`銆乣GlowOrbParticle`銆乣HeavySmokeParticle`銆乣MediumMistParticle`銆乣SparkParticle`銆?
+- 绘制函数特效：`PreDraw` 画火球本体和光晕。
+- AI/命中粒子特效：生成 `DustID.GoldFlame`/`DustID.YellowTorch`、`GlowOrbParticle`、`HeavySmokeParticle`、`MediumMistParticle`、`SparkParticle`。
+
 ### PFPlantera_PseudoLaser
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鎵嬪姩鐢讳吉婵€鍏夌嚎娈点€?- AI/鍛戒腑绮掑瓙鐗规晥锛氭病鏈夐澶栫矑瀛愶紝涓昏鏄吉婵€鍏?hitbox銆?
+- 绘制函数特效：`PreDraw` 手动画伪激光线段。
+- AI/命中粒子特效：没有额外粒子，主要是伪激光 hitbox。
+
 ### PFPlantera_Flame
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氫富瑕佹槸閫昏緫/浼ゅ寮瑰箷锛屾簮鐮佷腑娌℃湁棰濆绮掑瓙璋冪敤銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：主要是逻辑/伤害弹幕，源码中没有额外粒子调用。
+
 ### PFPrime_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `MediumMist` 鐢荤伀闆俱€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.Torch`/`DustID.SolarFlare`銆乣CustomSpark`銆乣SparkParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `MediumMist` 画火雾。
+- AI/命中粒子特效：生成 `DustID.Torch`/`DustID.SolarFlare`、`CustomSpark`、`SparkParticle`。
+
 ### PFPrime_BounceExplosion
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴愭墿鏁ｇ垎鍙戠矑瀛愶紝涓昏鏈嶅姟 `PFPrime_Flame` 鐨勫脊璺崇垎鐐搞€?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：生成扩散爆发粒子，主要服务 `PFPrime_Flame` 的弹跳爆炸。
+
 ## CPreMoodLord
 
 ### PFAurora_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle` 鍜?`ThinEndedLine` 鐢绘瀬鍏夊紡鍏夋潫銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`SparkParticle` 鍜?`CustomSpark("ThinEndedLine")`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle` 和 `ThinEndedLine` 画极光式光束。
+- AI/命中粒子特效：生成 `SparkParticle` 和 `CustomSpark("ThinEndedLine")`。
+
 ### PFAurora_MuzzleOrb
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle` 涓?`HalfStar` 鐢绘灙鍙ｇ悆銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`GlowOrbParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle` 和 `HalfStar` 画枪口球。
+- AI/命中粒子特效：生成 `GlowOrbParticle`。
+
 ### PFGoliath_ReaperDrone
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 drone 鏈綋銆乣BloomCircle`銆乣XykWingOrange1`銆乣XykWingOrange2` 鐢荤繀鑶€鍜屽彂鍏夊眰銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GoldFlame`/`DustID.GreenTorch`銆乣GlowOrbParticle`銆乣HeavySmokeParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 drone 本体、`BloomCircle`、`XykWingOrange1`、`XykWingOrange2` 画翅膀和发光层。
+- AI/命中粒子特效：生成 `DustID.GoldFlame`/`DustID.GreenTorch`、`GlowOrbParticle`、`HeavySmokeParticle`。
+
 ### PFGoliath_MouseCrosshair
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氭病鏈夌矑瀛愶紝涓昏鏄紶鏍囧噯鏄?瀹氫綅鎺у埗寮瑰箷銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：没有粒子，主要是鼠标准星定位控制弹幕。
+
 ### PFGoliath_HiveNukeMissile
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `CalamityUtils.DrawAfterimagesCentered`锛屽苟鍙?`StarProj` 鍜?`FlameExplosion` 鍏夋晥銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GreenTorch`銆乣GlowOrbParticle`銆乣HeavySmokeParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `CalamityUtils.DrawAfterimagesCentered`，并结合 `StarProj` 和 `FlameExplosion` 光效。
+- AI/命中粒子特效：生成 `DustID.GreenTorch`、`GlowOrbParticle`、`HeavySmokeParticle`。
+
 ### PFGoliath_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鎵嬪姩鐢荤伀鐒版湰浣撱€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GemDiamond` 鍜?`MediumMistParticle`銆?
+- 绘制函数特效：`PreDraw` 手动画火焰本体。
+- AI/命中粒子特效：生成 `DustID.GemDiamond` 和 `MediumMistParticle`。
+
 ## DPreDog
 
 ### PFDog_ChargeOrb
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle`銆乣BloomRing`銆乣CircularSmear` 鐢诲悶鍣€呰搫鍔涚悆銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`SparkParticle`銆乣GlowOrbParticle`銆乣SquishyLightParticle`銆乣HeavySmokeParticle`銆乣DirectionalPulseRing`銆乣CustomPulse`銆乣DustID.GoldFlame`/`SquashDust`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle` 、`BloomRing`、`CircularSmear` 画吞噬者蓄力球。
+- AI/命中粒子特效：生成 `SparkParticle`、`GlowOrbParticle`、`SquishyLightParticle`、`HeavySmokeParticle`、`DirectionalPulseRing`、`CustomPulse`、`DustID.GoldFlame`/`SquashDust`。
+
 ### PFDog_Flame
-- 缁樺埗鍑芥暟鐗规晥锛氬疄鐜?`IPixelatedPrimitiveRenderer`锛涗娇鐢?`PrimitiveRenderer.RenderTrail` + `GameShaders.Misc["CalamityMod:TrailStreak"]`锛屽垎鍒粦瀹?`ScarletDevilStreak` 鍜?`SylvestaffStreak`锛涘父瑙?`PreDraw` 杩樼敤 `BloomCircle`銆乣BloomRing`銆乣CircularSmear` 鐢绘牳蹇冦€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`GlowOrbParticle`銆乣SquishyLightParticle`銆乣HeavySmokeParticle`銆乣SparkParticle`銆乣DirectionalPulseRing`銆乣CustomPulse` 鍜?`SquashDust`銆?
+- 绘制函数特效：实现 `IPixelatedPrimitiveRenderer`；使用 `PrimitiveRenderer.RenderTrail` + `GameShaders.Misc["CalamityMod:TrailStreak"]`，分别绑定 `ScarletDevilStreak` 和 `SylvestaffStreak`；常规 `PreDraw` 还用 `BloomCircle`、`BloomRing`、`CircularSmear` 画核心。
+- AI/命中粒子特效：生成 `GlowOrbParticle`、`SquishyLightParticle`、`HeavySmokeParticle`、`SparkParticle`、`DirectionalPulseRing`、`CustomPulse` 和 SquashDust。
+
 ### PFMoonlord_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `ThinEndedLine` 鐢绘湀鎬讳富棰樼伀绾裤€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`GlowOrbParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `ThinEndedLine` 画月总主题火线。
+- AI/命中粒子特效：生成 `GlowOrbParticle`。
+
 ### PFMoonlord_VortexScorpioRocket
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鐢?`ScorpioRocket_Glow`锛屽苟閫氳繃 `IPixelatedPrimitiveRenderer` 浣跨敤 `PrimitiveRenderer.RenderTrail` + `GameShaders.Misc["CalamityMod:TrailStreak"]` + `SylvestaffStreak`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.Vortex`銆乣NanoParticle` 鍜?`DirectionalPulseRing`銆?
+- 绘制函数特效：`PreDraw` 画 `ScorpioRocket_Glow`，并通过 `IPixelatedPrimitiveRenderer` 使用 `PrimitiveRenderer.RenderTrail` + `GameShaders.Misc["CalamityMod:TrailStreak"]` + `SylvestaffStreak`。
+- AI/命中粒子特效：生成 `DustID.Vortex`、`NanoParticle` 和 `DirectionalPulseRing`。
+
 ### PFMoonlord_SolarLaser
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `Utils.DrawLaser` 缁樺埗澶槼婵€鍏夈€?- AI/鍛戒腑绮掑瓙鐗规晥锛氭部鏉熺敓鎴?`BloomLineVFX`銆乣GlowOrbParticle`銆乣GlowSparkParticle`銆乣SparkParticle`锛屾湯绔敓鎴?`PFMoonlord_SolarExplosion`銆?
+- 绘制函数特效：`PreDraw` 使用 `Utils.DrawLaser` 绘制太阳激光。
+- AI/命中粒子特效：沿光束生成 `BloomLineVFX`、`GlowOrbParticle`、`GlowSparkParticle`、`SparkParticle`，末端生成 `PFMoonlord_SolarExplosion`。
+
 ### PFMoonlord_SolarExplosion
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`CustomPulse("SoftRoundExplosion")`銆乣DirectionalPulseRing` 鍜?`CustomSpark("SmallBloom")`銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：生成 `CustomPulse("SoftRoundExplosion")`、`DirectionalPulseRing` 和 `CustomSpark("SmallBloom")`。
+
 ### PFPolterghast_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle` 鐢婚濡栨潙姝ｄ富棰樼伀鍥€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`SparkParticle`銆乣DirectionalPulseRing`銆乣DustID.GoldFlame`/`DustID.YellowTorch`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle` 画鬼妖村正主题火团。
+- AI/命中粒子特效：生成 `SparkParticle`、`DirectionalPulseRing`、`DustID.GoldFlame`/`DustID.YellowTorch`。
+
 ### PFProvidence_Flame
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `ProvidenceMarkParticle` 鍜?`SmallBloom`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`CustomPulse("ProvidenceMarkParticle")`銆乣CustomSpark("ProvidenceMarkParticle")`銆乣CustomSpark("SmallBloom")`銆?
+- 绘制函数特效：`PreDraw` 使用 `ProvidenceMarkParticle` 和 `SmallBloom`。
+- AI/命中粒子特效：生成 `CustomPulse("ProvidenceMarkParticle")`、`CustomSpark("ProvidenceMarkParticle")`、`CustomSpark("SmallBloom")`。
+
 ### PFProvidence_NukeOfBliss
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `SoftRoundExplosion` 鐢诲ぇ鑼冨洿鏍哥垎瑙嗚銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`LightDust`銆乣GlowOrbParticle`銆乣HeavySmokeParticle`銆乣SquishyLightParticle`銆?
+- 绘制函数特效：`PreDraw` 使用 `SoftRoundExplosion` 画大范围核爆视觉。
+- AI/命中粒子特效：生成 `LightDust`、`GlowOrbParticle`、`HeavySmokeParticle`、`SquishyLightParticle`。
+
 ### PFProvidence_HolyShrapnel
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle` 鍜?`HalfStar` 鐢诲湥鐏鐗囥€?- AI/鍛戒腑绮掑瓙鐗规晥锛氫富瑕佹槸杩愬姩閫昏緫锛屾簮鐮佷腑娌℃湁棰濆绮掑瓙璋冪敤銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle` 和 `HalfStar` 画圣火碎片。
+- AI/命中粒子特效：主要是运动逻辑，源码中没有额外粒子调用。
+
 ### PFProvidence_HolyFireField
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `ProvidenceMarkParticle` 鍜?`SoftRoundExplosion` 鐢诲湥鐏満銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氫富瑕佹槸鍖哄煙鎸佺画浼ゅ锛屾簮鐮佷腑娌℃湁棰濆绮掑瓙璋冪敤銆?
+- 绘制函数特效：`PreDraw` 使用 `ProvidenceMarkParticle` 和 `SoftRoundExplosion` 画圣火场地。
+- AI/命中粒子特效：主要是区域持续伤害，源码中没有额外粒子调用。
+
 ### PFProvidence_HolyRainOrb
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鎵嬪姩鐢婚洦浜?鍏夌悆銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`GlowOrbParticle` 鍜?`SparkParticle`銆?
+- 绘制函数特效：`PreDraw` 手动画雨弹/光球。
+- AI/命中粒子特效：生成 `GlowOrbParticle` 和 `SparkParticle`。
+
 ### PFProvidence_MoltenRainBlob
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 鎵嬪姩鐢荤啍闆ㄥ脊浣撱€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`GlowOrbParticle`銆乣HeavySmokeParticle`銆乣MediumMistParticle`銆?
+- 绘制函数特效：`PreDraw` 手动画熔雨弹体。
+- AI/命中粒子特效：生成 `GlowOrbParticle`、`HeavySmokeParticle`、`MediumMistParticle`。
+
 ### PFRavager_BloodBoilerOrb
-- 缁樺埗鍑芥暟鐗规晥锛氭病鏈夎嚜瀹氫箟缁樺埗锛屼富瑕侀潬绮掑瓙琛ㄧ幇銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`MediumMistParticle`銆乣SparkParticle`锛屽苟浣跨敤 `DetailedExplosion`銆乣DustyCircleHardEdge` 璐村浘鐩稿叧鐖嗗彂銆?
+- 绘制函数特效：没有自定义绘制，主要靠粒子表现。
+- AI/命中粒子特效：生成 `MediumMistParticle`、`SparkParticle`，并使用 `DetailedExplosion`、`DustyCircleHardEdge` 贴图相关爆发。
+
 ### PFRavager_Laser
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `BloomCircle`銆乣ThinEndedLine`銆乣PearlParticleGlow`銆乣WaterFoam` 鐢昏娌告縺鍏夈€?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.GoldFlame`銆乣DustID.LifeDrain`銆?
+- 绘制函数特效：`PreDraw` 使用 `BloomCircle`、`ThinEndedLine`、`PearlParticleGlow`、`WaterFoam` 画血沸激光。
+- AI/命中粒子特效：生成 `DustID.GoldFlame`、`DustID.LifeDrain`。
+
 ## EAfterDog
 
 ### PFDragon_Flame
-- 缁樺埗鍑芥暟鐗规晥锛氭棤浼犵粺 projectile 缁樺埗锛宍PreDraw` 杩斿洖 `false`锛岃瑙変富瑕侀潬绮掑瓙銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`DustID.Torch`/`DustID.GoldFlame`銆乣SmallSmokeParticle`銆乣CustomSpark("SmallBloom")`銆乣CustomPulse("BloomRing")`銆乣SparkParticle`銆?
+- 绘制函数特效：无传统 projectile 绘制，`PreDraw` 返回 `false`，视觉主要靠粒子。
+- AI/命中粒子特效：生成 `DustID.Torch`/`DustID.GoldFlame`、`SmallSmokeParticle`、`CustomSpark("SmallBloom")`、`CustomPulse("BloomRing")`、`SparkParticle`。
+
 ### PFDragon_Burst
-- 缁樺埗鍑芥暟鐗规晥锛氭棤缁樺埗锛宍PreDraw` 杩斿洖 `false`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?`SparkParticle`銆乣SmallSmokeParticle`銆乣CustomPulse("BloomRing")`銆?
+- 绘制函数特效：无绘制，`PreDraw` 返回 `false`。
+- AI/命中粒子特效：生成 `SparkParticle`、`SmallSmokeParticle`、`CustomPulse("BloomRing")`。
+
 ### PFExoTwins_ArtemisLaser
-- 缁樺埗鍑芥暟鐗规晥锛氫娇鐢?`CalamityUtils.DrawAfterimagesCentered` 鍜?`LaserWallTelegraphBeam` 缁樺埗 Artemis 婵€鍏?棰勮绾裤€?- AI/鍛戒腑绮掑瓙鐗规晥锛氫富瑕佹槸婵€鍏夐€昏緫锛屾簮鐮佷腑娌℃湁棰濆绮掑瓙璋冪敤銆?
+- 绘制函数特效：使用 `CalamityUtils.DrawAfterimagesCentered` 和 `LaserWallTelegraphBeam` 绘制 Artemis 激光与预警线。
+- AI/命中粒子特效：主要是激光逻辑，源码中没有额外粒子调用。
+
 ### PFExoTwins_ApolloRocket
-- 缁樺埗鍑芥暟鐗规晥锛氫娇鐢?`CalamityUtils.DrawAfterimagesCentered`锛屽苟鍙?`ApolloRocketGlow`銆?- AI/鍛戒腑绮掑瓙鐗规晥锛氱敓鎴?Exo 涓婚灏樺焹锛屼娇鐢?ExoMechEffects 鍐呴儴闅忔満 dust type銆?
+- 绘制函数特效：使用 `CalamityUtils.DrawAfterimagesCentered`，并绘制 `ApolloRocketGlow`。
+- AI/命中粒子特效：生成 Exo 主题尘埃，使用 `ExoMechEffects` 内部随机 dust type。
+
 ### PFExoAresLaserBeamStart
-- 缁樺埗鍑芥暟鐗规晥锛氭棤甯歌 `PreDraw`锛涘唴閮ㄧ粯鍒朵娇鐢?`AresLaserBeamMiddle` 涓?`AresLaserBeamEnd` 鍒嗘婵€鍏夎创鍥俱€?- AI/鍛戒腑绮掑瓙鐗规晥锛氭部鍏夋潫鐢熸垚 Exo 涓婚 dust銆?
+- 绘制函数特效：无常规 `PreDraw`；内部绘制使用 `AresLaserBeamMiddle` 和 `AresLaserBeamEnd` 分段激光贴图。
+- AI/命中粒子特效：沿光束生成 Exo 主题 dust。
+
 ### PFExoThanatosBeamTelegraph
-- 缁樺埗鍑芥暟鐗规晥锛歚PreDraw` 浣跨敤 `LaserWallTelegraphBeam` 鐢?Thanatos 棰勮绾裤€?- AI/鍛戒腑绮掑瓙鐗规晥锛氫富瑕佹槸棰勮鎺у埗锛屾簮鐮佷腑娌℃湁棰濆绮掑瓙璋冪敤銆?
+- 绘制函数特效：`PreDraw` 使用 `LaserWallTelegraphBeam` 画 Thanatos 预警线。
+- AI/命中粒子特效：主要是预警控制，源码中没有额外粒子调用。
+
 ### PFExoThanatosBeamStart
-- 缁樺埗鍑芥暟鐗规晥锛氭棤甯歌 `PreDraw`锛涘唴閮ㄧ粯鍒朵娇鐢?`ThanatosBeamMiddle` 涓?`ThanatosBeamEnd` 鍒嗘婵€鍏夎创鍥俱€?- AI/鍛戒腑绮掑瓙鐗规晥锛氬厜鏉熸湯绔敓鎴?`BrimstoneFlame` Dust銆?
+- 绘制函数特效：无常规 `PreDraw`；内部绘制使用 `ThanatosBeamMiddle` 和 `ThanatosBeamEnd` 分段激光贴图。
+- AI/命中粒子特效：光束末端生成 `BrimstoneFlame` Dust。
+
 ### PFExoThanatosSideLaser
-- 缁樺埗鍑芥暟鐗规晥锛氫娇鐢?`CalamityUtils.DrawAfterimagesCentered` 鍜?`LaserWallTelegraphBeam` 缁樺埗渚у悜婵€鍏夈€?- AI/鍛戒腑绮掑瓙鐗规晥锛氫富瑕佹槸婵€鍏夐€昏緫锛屾簮鐮佷腑娌℃湁棰濆绮掑瓙璋冪敤銆?
+- 绘制函数特效：使用 `CalamityUtils.DrawAfterimagesCentered` 和 `LaserWallTelegraphBeam` 绘制侧向激光。
+- AI/命中粒子特效：主要是激光逻辑，源码中没有额外粒子调用。

@@ -2,6 +2,8 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityMod;
+using CalamityMod.CalPlayer.Dashes;
+using CalamityMod.Cooldowns;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -12,10 +14,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 {
     internal sealed class BFPassivePlayer : ModPlayer
     {
-        public const int PassiveCooldownFrames = 120 * 60;
-        public const int FinalStandDurationFrames = 15 * 60;
+        public const int PassiveCooldownFrames = 180 * 60;
+        public const int FinalStandDurationFrames = 5 * 60;
 
         private bool holdingBlossomFlux;
+        private int finalStandBlockedHits;
 
         public int PassiveCooldownTimer;
         public int FinalStandTimer;
@@ -23,9 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         private bool HoldingBlossomFluxNow => holdingBlossomFlux && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool PassiveUnlocked => Main.hardMode;
         public bool FinalStandActive => FinalStandTimer > 0;
-        public int PassiveChargeFramesRequired => Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped
-            ? BFAccessoryPlayer.SilvaHarpPassiveCooldownFrames
-            : PassiveCooldownFrames;
+        public int PassiveChargeFramesRequired => PassiveCooldownFrames;
         public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer >= PassiveChargeFramesRequired && !FinalStandActive;
         public bool ShouldShowCooldownDisplay =>
             (HoldingBlossomFluxNow && PassiveUnlocked) ||
@@ -47,6 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         {
             holdingBlossomFlux = false;
             FinalStandTimer = 0;
+            finalStandBlockedHits = 0;
             SyncPassiveDisplay();
         }
 
@@ -56,18 +58,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             {
                 PassiveCooldownTimer = 0;
             }
-            else if (!FinalStandActive && HoldingBlossomFluxNow)
+            else if (!FinalStandActive && HoldingBlossomFluxNow && !AnyBossAlive())
             {
-                int chargeRate = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped ? 2 : 1;
                 int requiredFrames = PassiveChargeFramesRequired;
                 int previousTimer = PassiveCooldownTimer;
-                PassiveCooldownTimer = System.Math.Min(requiredFrames, PassiveCooldownTimer + chargeRate);
+                PassiveCooldownTimer = System.Math.Min(requiredFrames, PassiveCooldownTimer + 1);
                 if (previousTimer < requiredFrames && PassiveCooldownTimer >= requiredFrames && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
                     SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
             }
 
             if (FinalStandTimer > 0)
             {
+                ApplyFinalStandProtection();
                 FinalStandTimer--;
                 EmitFinalStandVisuals();
                 if (FinalStandTimer == 0 && Player.active && !Player.dead)
@@ -82,18 +84,37 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             if (!FinalStandActive)
                 return;
 
-            if (Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped)
-            {
-                modifiers.FinalDamage *= 0.1f;
-                return;
-            }
+            finalStandBlockedHits++;
+            modifiers.FinalDamage *= 0f;
+            modifiers.ModifyHurtInfo += NullifyFinalStandHit;
+        }
 
-            modifiers.ModifyHurtInfo += ForceFinalStandDeath;
+        public override void UpdateBadLifeRegen()
+        {
+            if (!FinalStandActive)
+                return;
+
+            if (Player.lifeRegen < 0)
+                Player.lifeRegen = 0;
+
+            Player.lifeRegenTime = 0;
         }
 
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
+            if (FinalStandActive)
+            {
+                finalStandBlockedHits++;
+                Player.statLife = 1;
+                playSound = false;
+                genGore = false;
+                return false;
+            }
+
             if (!CanTriggerFinalStand())
+                return true;
+
+            if (CalamityReviveShouldGoFirst())
                 return true;
 
             TriggerFinalStand();
@@ -138,17 +159,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private void TriggerFinalStand()
         {
-            int healAmount = Player.statLifeMax2 - Player.statLife;
-            Player.statLife = Player.statLifeMax2;
-            if (healAmount > 0)
-                Player.HealEffect(healAmount, true);
-
+            Player.statLife = 1;
             FinalStandTimer = FinalStandDurationFrames;
             PassiveCooldownTimer = 0;
-            bool silvaHarp = Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
-            Player.immune = true;
-            Player.immuneNoBlink = true;
-            Player.immuneTime = System.Math.Max(Player.immuneTime, silvaHarp ? BFAccessoryPlayer.SilvaHarpFinalStandImmuneFrames : 45);
+            finalStandBlockedHits = 0;
+            ApplyFinalStandProtection();
 
             SpawnRecoveryField();
 
@@ -161,21 +176,72 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private void ResolveFinalStandSurvival()
         {
-            int targetLife = Player.statLifeMax2 / 2;
+            int lifePenalty = (int)System.Math.Ceiling(Player.statLifeMax2 * 0.2f * finalStandBlockedHits);
+            int targetLife = System.Math.Max(1, Player.statLifeMax2 - lifePenalty);
             if (Player.statLife < targetLife)
             {
                 int healAmount = targetLife - Player.statLife;
                 Player.statLife = targetLife;
                 Player.HealEffect(healAmount, true);
             }
+            else
+            {
+                Player.statLife = targetLife;
+            }
+
+            finalStandBlockedHits = 0;
 
             if (Player.whoAmI == Main.myPlayer)
                 SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.58f, Pitch = 0.22f }, Player.Center);
         }
 
-        private void ForceFinalStandDeath(ref Player.HurtInfo info)
+        private void NullifyFinalStandHit(ref Player.HurtInfo info)
         {
-            info.Damage = System.Math.Max(info.Damage, Player.statLife + Player.statLifeMax2 + 1);
+            info.Damage = 0;
+        }
+
+        private void ApplyFinalStandProtection()
+        {
+            Player.statLife = System.Math.Max(1, Player.statLife);
+            Player.immuneNoBlink = true;
+            Player.noFallDmg = true;
+            Player.fireWalk = true;
+            Player.lavaImmune = true;
+            Player.lavaTime = Player.lavaMax;
+            Player.breath = Player.breathMax;
+
+            for (int i = Player.buffType.Length - 1; i >= 0; i--)
+            {
+                int buffType = Player.buffType[i];
+                if (buffType <= 0 || buffType >= Main.debuff.Length || !Main.debuff[buffType])
+                    continue;
+
+                Player.DelBuff(i);
+            }
+        }
+
+        private bool CalamityReviveShouldGoFirst()
+        {
+            var calamity = Player.Calamity();
+            return calamity.nebulousCore && !Player.HasCooldown(NebulousCore.ID) ||
+                calamity.DashID == GodslayerArmorDash.ID && Player.dashDelay < 0 ||
+                calamity.silvaSet && calamity.silvaCountdown > 0 ||
+                calamity.necroSet && calamity.necroReviveCounter == -1 ||
+                calamity.permafrostsConcoction && !Player.HasCooldown(PermafrostConcoction.ID);
+        }
+
+        private static bool AnyBossAlive()
+        {
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.active || npc.friendly)
+                    continue;
+
+                if (npc.boss || NPCID.Sets.ShouldBeCountedAsBoss[npc.type])
+                    return true;
+            }
+
+            return false;
         }
 
         private void SpawnRecoveryField()

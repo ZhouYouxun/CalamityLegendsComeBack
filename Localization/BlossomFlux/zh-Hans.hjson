@@ -31,7 +31,7 @@ Mods: {
 						'''
 						[c/8BE89A:左键 - 侦察：将箭矢转化为适合锁定单体的侦察箭。]
 						[c/8BE89A:每轮连射五发；侦察箭可多次造成伤害。]
-						[c/8BE89A:穿透后会短暂游荡并重新追踪目标。]
+						[c/8BE89A:侦察箭短暂飞行后会预测移动目标，逐渐加速并重新追踪。]
 						'''
 					PresetLeft3:
 						'''
@@ -48,7 +48,7 @@ Mods: {
 						'''
 						[c/F4D57A:右键 - 突击蓄力：逐根装填突击箭，松手后从中轴线排队依次射出。]
 						[c/F4D57A:每两根射出间隔 4 帧；箭矢完全平行，不再按水平偏移同时齐射，也不再追踪。]
-						[c/F4D57A:突击蓄力箭初速较慢，飞行中每帧速度 x1.01；具备多次穿透与穿透特效。]
+						[c/F4D57A:突击蓄力箭伤害大幅提升，飞行中每帧速度 x1.01，并无视防御与伤害减免。]
 						'''
 					PresetRight1:
 						'''
@@ -99,9 +99,9 @@ Mods: {
 						'''
 					BF_Passive:
 						'''
-						[c/9AEF9E:被动复活：手持叶流时，可抵消一次致命伤害。]
-						[c/9AEF9E:触发后立即回满生命并生成复苏立场；之后 15 秒内再次受到致命伤害会直接死亡。]
-						[c/9AEF9E:若撑过倒计时，生命至少恢复到一半。当前状态：{0}。]
+						[c/9AEF9E:终末防线：手持叶流时，可抵消一次致命伤害；180 秒充能，Boss 存活时不会计时。]
+						[c/9AEF9E:触发时保持 1 生命并展开 5 秒复苏立场，期间几乎无敌，免疫负面效果和环境伤害。]
+						[c/9AEF9E:结束后恢复至最大生命；期间每拦下一次伤害，复苏生命 -20%，最低为 1。当前状态：{0}。]
 						'''
 					PassiveStateReady: "[c/7BFFB7:已就绪]"
 					PassiveStateActive: "[c/FF9B8B:终末防线中]"
@@ -208,10 +208,7 @@ Mods: {
 					'''
 					每秒生命恢复 +5。此生命恢复不受任何因素削弱。
 					受击后的无敌时间增加 60 帧。
-					席尔瓦的复活无敌时间延长至 10 秒。
-					在无敌期间，受到的生命流失降至 10%。
-					复活结束后，生命值至少恢复至 50% 最大生命值，且复活冷却时间可以在 Boss 战期间减少。
-					大幅缩短复活效果的冷却时间。
+					与叶流的终末防线共存，但不再改变复活持续时间或冷却规则。
 					'''
 			}
 		}
@@ -336,9 +333,13 @@ Mods: {
 			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
 			PastLingeringShard.DisplayName: 旧日残影碎片
 			SeedOfSilvaDelphiniumArc.DisplayName: 席尔瓦飞燕草弧光
+			SeedOfSilvaDelphinium.DisplayName: 席尔瓦飞燕草
+			SeedOfSilvaDaisy.DisplayName: 席尔瓦雏菊
+			SeedOfSilvaMandrake.DisplayName: 席尔瓦曼陀罗
 			SeedOfSilvaMandrakeDart.DisplayName: 席尔瓦曼陀罗飞刺
 			SeedOfSilvaMandrakeSpore.DisplayName: 席尔瓦曼陀罗孢子
-			SeedOfSilvaSeed.DisplayName: 席尔瓦之种
+			SeedOfSilvaSunflower.DisplayName: 席尔瓦向日葵
+			SeedOfSilvaTorchflower.DisplayName: 席尔瓦火炬花
 			SeedOfSilvaTorchFlame.DisplayName: 席尔瓦火炬花火焰
 			BFBreakthroughChargeConvergeFX.DisplayName: 叶流突破充能汇聚特效
 			BFBombardStrafeFX.DisplayName: 叶流轰炸扫射特效

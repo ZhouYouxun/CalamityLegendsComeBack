@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
             if (Main.myPlayer == Projectile.owner)
             {
-                Projectile.NewProjectile(
+                int beaconIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
                     direction.RotatedByRandom(MathHelper.ToRadians(1.5f)) * BeaconSpeed,
@@ -115,6 +115,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
                     Projectile.owner,
                     (float)kind,
                     Projectile.damage);
+
+                if (Main.projectile.IndexInRange(beaconIndex))
+                    Main.projectile[beaconIndex].CritChance = Projectile.CritChance;
             }
 
             MilitaryTurretStats stats = MilitaryTurretUtility.GetStats(kind);

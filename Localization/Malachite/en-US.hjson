@@ -5,16 +5,16 @@ Mods: {
 				Malachite: {
 					DisplayName: Peacock Plume
 					Tooltip: "[GFB]"
-					LeftClick: "[c/7DFF9A:Left click:] Throw a fast poisonous kunai that briefly pins to enemies on hit. Stored special kunai are thrown one by one first. After Wall of Flesh, normal kunai ignore gravity instead of gaining a use-speed cut; after Plaguebringer Goliath they spawn 2 at a time, and after Moon Lord they spawn 3 at a time, pausing 10 frames before a high-speed launch."
-					RightClick: "[c/80FFC8:Right click:] Generate 3 frenzied kunai behind you. If a full frenzied fan already exists, the old fan is awakened in one burst before 3 new kunai are stored. 3 second cooldown."
-					StealthStrike: "[c/B5FF74:Stealth strike:] Left and right stealth strikes are identical: any stored peacock kunai are fired as left-click shots, then 23 new peacock kunai open behind you. Peacock kunai cannot pierce and rapidly home with a 3 degree per-frame turn limit; the ace causes a miniature blast on hit."
-					Finale: "[c/D6FF9A:Finale:] At full stealth and when off cooldown, press [{0}] to call a softened green cone spotlight and falling petals. After 2 seconds, slash with Peacock Plume and erupt multi-hit green black-hole blasts around nearby enemies."
+					LeftClick: "[c/7DFF9A:Left click:] Quickly throw a small kunai. Stored stealth peacock kunai are thrown one by one first. After Wall of Flesh, normal kunai ignore gravity; after Plaguebringer Goliath they spawn 2 at a time, and after Moon Lord they spawn 3 at a time, pausing 10 frames before a high-speed launch."
+					RightClick: "[c/80FFC8:Right click:] While held, stores 1 bright-outlined malachite feather behind you every 0.6 seconds, up to 18. Right click does not attack directly; it pours every stored right feather out at 1 feather per 2 frames. These feathers are faster and never affected by gravity."
+					StealthStrike: "[c/B5FF74:Stealth strike:] Stealth left click fires existing peacock kunai and stores 23 empowered peacock kunai again. Only left click can call those feathers. Stealth left or stealth right also pours out every right feather; stealth-released right feathers create medium green blasts and extra green shots on hit."
+					Finale: "[c/D6FF9A:Finale:] With the Golden Emblem equipped, at full stealth and after the 15 second cooldown, press [{0}] to call a green spotlight and falling petals. After 2 seconds, Peacock Plume slashes across the screen and erupts multi-hit green black-hole blasts around nearby enemies."
 					Passive:
 						'''
 						[c/9AFFC8:Passives while held:]
-						Nimble Step: enables grazing; each graze grants 1 stealth point.
-						Phantom Blade: stealth strikes restore 15 stealth points.
-						Into Shadow: above 50% stealth, gain 15% damage reduction and movement speed.
+						Phantom Blade: left and right stealth attacks only consume half stealth and restore 15 stealth points afterward.
+						Into Shadow: above 50% stealth, gain 15% movement speed.
+						Nimble Step: enables grazing; each graze grants 5 stealth points with a 10 frame cooldown.
 						'''
 					LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
 					LegendaryText:
@@ -33,8 +33,8 @@ Mods: {
 					Tooltip:
 						'''
 						+10% rogue damage
-						While Peacock Plume's right-click is on cooldown, +15% rogue attack speed
-						After Plantera is defeated, triggering Peacock Plume's left-click acceleration regenerates 3 frenzied kunai
+						While Peacock Plume has stored right feathers, +15% rogue attack speed
+						After Plantera is defeated, helps Peacock Plume refill right feathers faster
 						'''
 				}
 
@@ -53,7 +53,7 @@ Mods: {
 					Tooltip:
 						'''
 						While holding Peacock Plume, +15% rogue damage, +5% rogue critical strike chance, and +10% Peacock Plume projectile speed
-						If no hanging kunai are present, generates one frenzied kunai every 30 frames
+						If no stealth peacock kunai are present, helps generate one right feather every 30 frames
 						'''
 				}
 
@@ -63,7 +63,7 @@ Mods: {
 						'''
 						While holding Peacock Plume, +15% rogue damage and +5% rogue critical strike chance
 						Poison damage is doubled
-						Peacock Plume's finale petals are blown toward your facing direction and deal damage
+						Peacock Plume's finale petals are blown toward your facing direction
 						Hanging kunai awakened by the finale become ace kunai
 						'''
 				}
@@ -75,8 +75,13 @@ Mods: {
 				MalachiteKunai.DisplayName: Peacock Kunai
 				MalachiteHitCutVisual.DisplayName: Peacock Hit Lines
 				MalachiteGreenExplosion.DisplayName: Peacock Blast
+				MalachiteRightFeather.DisplayName: Malachite Right Feather
+				MalachiteRightFeatherExplosion.DisplayName: Malachite Feather Blast
+				MalachiteRightNovaShard.DisplayName: Malachite Nova
+				MalachiteGrazeSlashVisual.DisplayName: Nimble Graze Slash
 				MalachiteFinaleController.DisplayName: Peacock Finale
 				MalachiteFinaleSlash.DisplayName: Peacock Slash
+				MalachiteFinaleHitSlash.DisplayName: Peacock Execution Slash
 				MalachiteFinalePetal.DisplayName: Peacock Petal
 			}
 		}

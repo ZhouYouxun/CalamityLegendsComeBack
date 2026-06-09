@@ -88,7 +88,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
                     SourceDamage);
 
                 if (Main.projectile.IndexInRange(turretIndex))
+                {
+                    Main.projectile[turretIndex].CritChance = Projectile.CritChance;
                     Main.projectile[turretIndex].netUpdate = true;
+                }
             }
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.82f, Pitch = -0.12f }, restingPoint);

@@ -133,6 +133,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 DownedBossSystem.downedDoG,
                 DownedBossSystem.downedYharon,
                 DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas
+
+
+               
             };
 
             int stageIndex = 0;

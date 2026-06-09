@@ -23,11 +23,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float BaseLineForwardLength = 96f;
         private const float BaseLineBackLength = 210f;
         private const float BaseLineWidth = 46f;
+        private const float HomingRange = 960f;
+        private const float HomingRearTolerance = -0.18f;
+        private const float HomingMaxTurnPerUpdate = 0.034f;
+        private const float HomingLeadFramesMax = 14f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
+        private int targetIndex = -1;
 
         private Vector2 FixedDirection
         {
@@ -108,6 +113,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             if (direction.LengthSquared() <= 0.0001f)
                 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
+            if (Projectile.owner == Main.myPlayer)
+                direction = UpdateHomingDirection(direction);
+
             float speed = MathHelper.Clamp(Projectile.velocity.Length() * 1.004f + 0.03f, 20f, 36f);
             Projectile.velocity = direction * speed;
             Projectile.rotation = direction.ToRotation();
@@ -126,6 +134,81 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 if (Projectile.numUpdates == 0)
                     SpawnCalamitousFireballMetaballs();
             }
+        }
+
+        private Vector2 UpdateHomingDirection(Vector2 currentDirection)
+        {
+            if (Timer < 4f)
+                return currentDirection;
+
+            NPC target = FindHomingTarget(currentDirection);
+            if (target == null)
+                return currentDirection;
+
+            float speed = MathHelper.Clamp(Projectile.velocity.Length(), 20f, 36f);
+            float distance = Projectile.Distance(target.Center);
+            float leadFrames = MathHelper.Clamp(distance / Math.Max(1f, speed), 0f, HomingLeadFramesMax);
+            Vector2 aimPoint = target.Center + target.velocity * leadFrames;
+            Vector2 desiredDirection = (aimPoint - Projectile.Center).SafeNormalize(currentDirection);
+            float closeTurnBoost = Utils.GetLerpValue(HomingRange, 120f, distance, true);
+            float maxTurn = MathHelper.Lerp(HomingMaxTurnPerUpdate * 0.45f, HomingMaxTurnPerUpdate, closeTurnBoost);
+            Vector2 adjustedDirection = currentDirection
+                .ToRotation()
+                .AngleTowards(desiredDirection.ToRotation(), maxTurn)
+                .ToRotationVector2();
+
+            FixedDirection = adjustedDirection;
+            if (Timer % 12f == 0f)
+                Projectile.netUpdate = true;
+
+            return adjustedDirection;
+        }
+
+        private NPC FindHomingTarget(Vector2 currentDirection)
+        {
+            if (Main.npc.IndexInRange(targetIndex) && IsValidHomingTarget(Main.npc[targetIndex], currentDirection))
+                return Main.npc[targetIndex];
+
+            NPC bestTarget = null;
+            float bestScore = float.MaxValue;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!IsValidHomingTarget(npc, currentDirection))
+                    continue;
+
+                Vector2 toTarget = npc.Center - Projectile.Center;
+                float distance = toTarget.Length();
+                Vector2 targetDirection = toTarget.SafeNormalize(currentDirection);
+                float forwardDot = Vector2.Dot(currentDirection, targetDirection);
+                float lateralOffset = Math.Abs(currentDirection.X * toTarget.Y - currentDirection.Y * toTarget.X);
+                float score = distance + lateralOffset * 0.72f - forwardDot * 180f;
+
+                if (npc.boss || NPCID.Sets.ShouldBeCountedAsBoss[npc.type])
+                    score -= 120f;
+
+                if (score >= bestScore)
+                    continue;
+
+                bestScore = score;
+                bestTarget = npc;
+            }
+
+            targetIndex = bestTarget?.whoAmI ?? -1;
+            return bestTarget;
+        }
+
+        private bool IsValidHomingTarget(NPC npc, Vector2 currentDirection)
+        {
+            if (npc == null || !npc.CanBeChasedBy(Projectile, false))
+                return false;
+
+            Vector2 toTarget = npc.Center - Projectile.Center;
+            float distanceSquared = toTarget.LengthSquared();
+            if (distanceSquared > HomingRange * HomingRange)
+                return false;
+
+            Vector2 targetDirection = toTarget.SafeNormalize(currentDirection);
+            return Vector2.Dot(currentDirection, targetDirection) >= HomingRearTolerance;
         }
 
         public override bool? CanDamage() => Timer > 2f && Projectile.Opacity > 0.12f ? null : false;

@@ -1,8 +1,11 @@
+using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
+using CalamityLegendsComeBack.Weapons.A_Tools.GAMES;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,11 +37,70 @@ namespace CalamityLegendsComeBack
         public override void Unload()
         {
         }
+
+        public override void HandlePacket(BinaryReader reader, int whoAmI)
+        {
+            if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                return;
+
+            GamePacketType packetType = (GamePacketType)reader.ReadByte();
+            TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
+        }
     }
 
     // 03-29-2026：重新编写教学文档
     public class TeachingProjectile : ModProjectile
     {
+        bool[] clearedStages =
+        {
+            // ================= 困难模式前 (Pre-Hardmode) =================
+            NPC.downedSlimeKing,                                                           // 史莱姆王
+            DownedBossSystem.downedDesertScourge,                                          // 荒漠灾虫
+            NPC.downedBoss1,                                                               // 克苏鲁之眼
+            DownedBossSystem.downedCrabulon,                                               // 菌生蟹
+            NPC.downedBoss2,                                                               // 世界吞噬怪 / 克苏鲁之脑
+            DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator,          // 腐巢意志 / 血肉宿主
+            NPC.downedQueenBee,                                                            // 蜂王
+            NPC.downedBoss3,                                                               // 骷髅王
+            NPC.downedDeerclops,                                                           // 独眼巨鹿
+            DownedBossSystem.downedSlimeGod,                                               // 史莱姆之神
+            Main.hardMode,                                                                 // 血肉墙 (进入困难模式)
+
+            // ================= 困难模式 (Hardmode) =================
+            NPC.downedQueenSlime,                                                          // 史莱姆皇后
+            DownedBossSystem.downedAquaticScourge,                                         // 渊海灾虫
+            DownedBossSystem.downedBrimstoneElemental,                                     // 硫磺火元素
+            DownedBossSystem.downedCryogen,                                                // 极地之灵
+            NPC.downedMechBoss1,                                                           // 毁灭者
+            NPC.downedMechBoss2,                                                           // 双子魔眼
+            NPC.downedMechBoss3,                                                           // 机械骷髅王
+            DownedBossSystem.downedCalamitasClone,                                         // 灾厄之影
+            NPC.downedPlantBoss,                                                           // 世纪之花
+            DownedBossSystem.downedLeviathan,                                              // 利维坦和阿娜希塔
+            DownedBossSystem.downedAstrumAureus,                                           // 白金星舰
+            NPC.downedGolemBoss,                                                           // 石巨人
+            DownedBossSystem.downedPlaguebringer,                                          // 瘟疫使者歌莉娅
+            NPC.downedFishron,                                                             // 猪龙鱼公爵
+            NPC.downedEmpressOfLight,                                                      // 光之女皇
+            DownedBossSystem.downedRavager,                                                // 毁灭魔像
+            NPC.downedAncientCultist,                                                      // 拜月教邪教徒
+            DownedBossSystem.downedAstrumDeus,                                             // 星神游龙
+            NPC.downedMoonlord,                                                            // 月亮领主
+
+            // ================= 月亮领主后 (Post-Moon Lord) =================
+            DownedBossSystem.downedGuardians,                                              // 亵渎守卫
+            DownedBossSystem.downedDragonfolly,                                            // 痴愚金龙
+            DownedBossSystem.downedProvidence,                                             // 亵渎天神，普罗维登斯
+            DownedBossSystem.downedStormWeaver,                                            // 风暴编织者
+            DownedBossSystem.downedCeaselessVoid,                                          // 无尽虚空
+            DownedBossSystem.downedSignus,                                                 // 神之使徒西格纳斯
+            DownedBossSystem.downedPolterghast,                                            // 噬魂幽花
+            DownedBossSystem.downedBoomerDuke,                                             // 硫海遗爵 (代码中为 downedBoomerDuke)
+            DownedBossSystem.downedDoG,                                                    // 神明吞噬者
+            DownedBossSystem.downedYharon,                                                 // 重生之龙，犽戎
+            DownedBossSystem.downedExoMechs,                                               // 星流巨械
+            DownedBossSystem.downedCalamitas                                               // 至尊女巫，灾厄
+        };
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public override void SetDefaults()
         {

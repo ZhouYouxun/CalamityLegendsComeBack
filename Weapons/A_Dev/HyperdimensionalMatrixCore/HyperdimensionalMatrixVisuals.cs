@@ -319,6 +319,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public static void DrawWorldIcon(Vector2 screenCenter, float scale)
         {
             float time = Main.GlobalTimeWrappedHourly;
+            EnsureProceduralTextures(Main.spriteBatch.GraphicsDevice);
+            UpdateProceduralNoise(Main.spriteBatch.GraphicsDevice);
+
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
@@ -328,17 +331,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             float coreRadius = 25f * iconScale;
             Vector2 center = screenCenter + Vector2.UnitY * (float)Math.Sin(time * 2.1f) * 2.4f * iconScale;
 
-            Color primary = GetDataColor(0.02f, 0.82f);
-            Color secondary = GetDataColor(0.42f, 0.58f);
-            Color tertiary = GetDataColor(0.72f, 0.42f);
-
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+            Color primary = VisibleDataColor(0.02f, 0.82f);
+            Color secondary = VisibleDataColor(0.42f, 0.58f);
+            Color tertiary = VisibleDataColor(0.72f, 0.42f);
 
             Main.spriteBatch.Draw(bloom, center, null, primary * 0.58f, time * 0.4f, bloom.Size() * 0.5f, 0.34f * iconScale, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(bloom, center, null, secondary * 0.32f, -time * 0.6f, bloom.Size() * 0.5f, 0.62f * iconScale, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(ring, center, null, primary * 0.76f, -time * 1.15f, ring.Size() * 0.5f, 0.42f * iconScale, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(ring, center, null, secondary * 0.48f, time * 1.45f, ring.Size() * 0.5f, 0.62f * iconScale, SpriteEffects.None, 0f);
+            DrawProceduralTextureLayer(proceduralCoreTexture, center, primary * 0.7f, time * 0.32f, 0.42f * iconScale);
+            DrawProceduralTextureLayer(proceduralGlyphTexture, center, tertiary * 0.78f, -time * 0.75f, 0.54f * iconScale);
+            DrawProceduralTextureLayer(proceduralNoiseTexture, center, Color.White * 0.24f, 0f, 0.48f * iconScale);
 
             DrawInventoryScanRing(center, coreRadius * 1.34f, time * 1.5f, primary * 0.76f, 28, 1.15f * iconScale);
             DrawInventoryScanRing(center, coreRadius * 0.92f, -time * 2f, secondary * 0.58f, 22, 0.9f * iconScale);
@@ -360,10 +363,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 (int)(center.Y - 2.1f * iconScale),
                 Math.Max(3, (int)(4.2f * iconScale)),
                 Math.Max(3, (int)(4.2f * iconScale)));
-            Main.spriteBatch.Draw(pixel, core, Color.White with { A = 0 } * 0.78f);
-
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.Draw(pixel, core, Color.White * 0.78f);
         }
 
         public static void DrawScanRing(Vector2 center, float radius, float rotation, Color color, int segments, float width)
@@ -491,7 +491,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (texture == null)
                 return;
 
-            Main.spriteBatch.Draw(texture, center, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture, center, null, EnsureVisibleAlpha(color), rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
         }
 
         private static void DrawInventoryScanRing(Vector2 center, float radius, float rotation, Color color, int segments, float width)
@@ -511,6 +511,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private static void DrawScreenNode(Vector2 screenPosition, Color color, float size)
         {
+            color = EnsureVisibleAlpha(color);
             int width = Math.Max(1, (int)size);
             Rectangle horizontal = new(
                 (int)(screenPosition.X - width * 0.5f),
@@ -532,10 +533,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (start == end)
                 return;
 
+            color = EnsureVisibleAlpha(color);
             Texture2D line = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Line").Value;
             float rotation = (end - start).ToRotation();
             Vector2 lineScale = new(Vector2.Distance(start, end) / line.Width, width);
             Main.spriteBatch.Draw(line, start, null, color, rotation, line.Size() * Vector2.UnitY * 0.5f, lineScale, SpriteEffects.None, 0f);
+        }
+
+        private static Color VisibleDataColor(float offset, float opacity)
+        {
+            Color color = GetDataColor(offset, opacity);
+            color.A = (byte)(MathHelper.Clamp(opacity, 0f, 1f) * 255f);
+            return color;
+        }
+
+        private static Color EnsureVisibleAlpha(Color color)
+        {
+            if (color.A == 0 && (color.R != 0 || color.G != 0 || color.B != 0))
+                color.A = 255;
+
+            return color;
         }
 
         private static void EnsureProceduralTextures(GraphicsDevice graphicsDevice)

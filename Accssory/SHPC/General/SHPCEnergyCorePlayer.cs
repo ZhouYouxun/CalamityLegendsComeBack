@@ -8,7 +8,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General
         public int EnergyCoreTier { get; private set; }
 
         public bool HasEnergyCore => EnergyCoreTier > 0;
-        public bool AutoManaPotion => EnergyCoreTier >= 1;
         public bool AllowRightClickCrit => EnergyCoreTier >= 3;
         public bool HasInfiniteSHPCMana => EnergyCoreTier >= 4;
         public int BonusMagazineCount => Utils.Clamp(EnergyCoreTier, 0, 4);
@@ -71,6 +70,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General
         {
             if (tier > EnergyCoreTier)
                 EnergyCoreTier = tier;
+
+            if (tier > 0)
+                Player.manaFlower = true;
         }
 
         public bool ShouldSaveLeftClickAmmo()

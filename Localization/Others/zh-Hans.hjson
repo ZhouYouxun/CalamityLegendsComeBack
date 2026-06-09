@@ -7,9 +7,20 @@ Mods: {
 					Tooltip:
 						'''
 						手持该物品即可展开像素俄罗斯方块面板。
+						多人模式下右键邀请最近的、同样手持俄罗斯方块的玩家联机。
 						A/D 或左右方向键控制方块左右移动。S 或下方向键快速下落。空格键硬降到底。
 						W、上方向键或 X 顺时针旋转。Z 逆时针旋转。C 暂存当前方块。
 						游戏结束后按 R 重新开始。
+						'''
+				}
+
+				Game2048: {
+					DisplayName: "2048"
+					Tooltip:
+						'''
+						手持该物品即可展开 4×4 像素 2048 面板。
+						使用 W/A/S/D 或方向键滑动全部方块，相同数字每次滑动只会合并一次。
+						每次有效滑动都会生成新的 2 或 4。游戏结束后按 R 重新开始。
 						'''
 				}
 
@@ -104,6 +115,7 @@ Mods: {
 		Projectiles: {
 			A_Dev: {
 				TetrisPanel.DisplayName: 俄罗斯方块面板
+				Game2048Panel.DisplayName: 2048 面板
 				SnakePanel.DisplayName: 贪吃蛇面板
 				MinesweeperPanel.DisplayName: 扫雷面板
 				Strikers1945Panel.DisplayName: 1945 战机面板
@@ -135,8 +147,21 @@ Mods: {
 
 		TheSpecialText: {
 			TetrisLevel: 等级 {0}
+			TetrisMultiplayerLevel: 联机等级 {0}
 			TetrisGameOver: 游戏结束
 			TetrisRestart: 按 R 重新开始
+			TetrisNoInviteTarget: 附近没有手持俄罗斯方块的玩家。
+			TetrisInviteSent: 已向 {0} 发起俄罗斯方块联机邀请。
+			TetrisInviteIncoming: "{0} 邀请你联机俄罗斯方块。按 Y 或 Enter 接受，按 N 或 Esc 拒绝。"
+			TetrisInviteRejected: 俄罗斯方块联机邀请被拒绝。
+			TetrisInviteAccepted: 俄罗斯方块联机已连接。
+			TetrisMultiplayerGuest: 等待主机同步棋盘
+			Game2048Score: "分数 {0}"
+			Game2048Best: "最大 {0}"
+			Game2048Slide: 滑动方块，合并相同数字
+			Game2048Won: 已合成 2048
+			Game2048GameOver: 无路可走
+			Game2048Restart: 按 R 重新开始
 			SnakeSpeed: 速度 {0}
 			SnakeGameOver: 游戏结束
 			SnakeRestart: 按 R 重新开始

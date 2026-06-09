@@ -25,6 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Tetris>()));
+            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Game2048>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Snake>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Minesweeper>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Strikers1945>()));

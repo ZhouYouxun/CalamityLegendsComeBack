@@ -306,6 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float speed = 21.6f * 1.22f * stats.ProjectileSpeedMultiplier * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_ABreak);
             int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * 1.35f * 1.12f);
             damage = (int)(damage * (1f + arrowCount * stats.DamagePerChargeStack));
+            damage *= 7;
             float knockback = Projectile.knockBack * 1.15f;
 
             breakthroughQueuedShotCount = arrowCount;

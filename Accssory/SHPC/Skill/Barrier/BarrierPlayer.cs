@@ -65,7 +65,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             if (ShieldHitFlashTimer > 0)
                 ShieldHitFlashTimer--;
 
-            if (!BarrierEquipped || !HoldingSHPC || Player.dead)
+            if (Player.dead || !BarrierEquipped)
             {
                 chargeDelayTimer = 0;
                 shieldHitPoints = 0f;
@@ -121,10 +121,17 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         {
             if (ShieldActive && info.Damage > 0)
             {
-                int absorbedDamage = System.Math.Min(info.Damage, ShieldCurrentHitPoints);
+                int incomingDamage = info.Damage;
+                int absorbedDamage = System.Math.Min(incomingDamage, ShieldCurrentHitPoints);
+                bool fullyAbsorbedByShield = absorbedDamage >= incomingDamage;
+
                 shieldHitPoints = System.Math.Max(0f, shieldHitPoints - absorbedDamage);
-                info.Damage -= absorbedDamage;
+                info.Damage = System.Math.Max(0, incomingDamage - absorbedDamage);
                 ShieldHitFlashTimer = 18;
+
+                Player.GiveIFrames(info.CooldownCounter, Player.ComputeHitIFrames(info), true);
+                if (fullyAbsorbedByShield)
+                    Player.Calamity().freeDodgeFromShieldAbsorption = true;
 
                 if (Main.myPlayer == Player.whoAmI)
                 {
