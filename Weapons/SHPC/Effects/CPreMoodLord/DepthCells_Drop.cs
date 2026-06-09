@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float GravityStrength = 0.055f;
         private const int StickTime = 150;
         private const int StuckDamageInterval = 24;
-        private const float StuckDamageMultiplier = 1.65f;
+        private const float StuckDamageMultiplier = 0.65f;
         private static readonly int[] AbyssDustTypes = { 191, 29, 104 };
 
         private bool IsStuck => Projectile.ai[0] == 1f;
@@ -128,7 +128,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.extraUpdates = 0;
             Projectile.netUpdate = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 20;
+            Projectile.localNPCHitCooldown = 30;
         }
 
         private void UpdateStuckState()

@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             45, // 72Any Mechanical Boss / 任意机械 Boss
             50, // 90Plantera / 世纪之花
             54, // 120Golem / 石巨人
-            56, // 180Moon Lord / 月亮领主
+            55, // 180Moon Lord / 月亮领主
             60, // 240Providence / 亵渎天神
             77, // 300Polterghast / 噬魂幽花
             81, // 360Devourer of Gods / 神明吞噬者
@@ -51,9 +51,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             33, // 11Skeletron / 骷髅王
             45, // 17Hardmode / 困难模式
             54, // 24Any Mechanical Boss / 任意机械 Boss
-            64, // 32Plantera / 世纪之花
+            66, // 32Plantera / 世纪之花
             75, // 40Golem / 石巨人
-            100, // 54Moon Lord / 月亮领主
+            95, // 54Moon Lord / 月亮领主
             130, // 66Providence / 亵渎天神
             160, // 77Polterghast / 噬魂幽花
             210, // 90Devourer of Gods / 神明吞噬者
@@ -81,12 +81,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.80f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
-            1.10f, // EffectID 17: Depth Cells / 深渊细胞
+            1.05f, // EffectID 17: Depth Cells / 深渊细胞
             1.44f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
             1.13f, // EffectID 19: Ashes of Calamity / 灾厄尘
             0f, // EffectID 20: Beetle Husk / 甲虫外壳，未实现
             1.72f, // EffectID 21: Solar Fragment / 日曜碎片
-            1.77f, // EffectID 22: Vortex Fragment / 星旋碎片
+            1.72f, // EffectID 22: Vortex Fragment / 星旋碎片
             1.50f, // EffectID 23: Nebula Fragment / 星云碎片
             1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
             1.94f, // EffectID 25: Meld Blob / 冥思溶剂
@@ -95,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.29f, // EffectID 28: Divine Geode / 神圣晶石
             1.28f, // EffectID 29: Bloodstone Core / 血神核心
             2.63f, // EffectID 30: Ruinous Soul / 毁灭之灵
-            2.16f, // EffectID 31: Necroplasm / 灵质
+            2.24f, // EffectID 31: Necroplasm / 灵质
             1.97f, // EffectID 32: Dark Plasma / 暗离子体
             2.35f, // EffectID 33: Twisting Nether / 扭曲虚空
             2.85f, // EffectID 34: Endothermic Energy / 恒温能量

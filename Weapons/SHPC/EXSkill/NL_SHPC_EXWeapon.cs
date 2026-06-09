@@ -267,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 GunTip,
                 Projectile.velocity,
                 laserType,
-                (int)(Projectile.damage * 1.3),
+                (int)(Projectile.damage * 2),
                 Projectile.knockBack,
                 Projectile.owner,
                 Projectile.whoAmI);

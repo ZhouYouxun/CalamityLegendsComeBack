@@ -272,7 +272,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPE>(),
-                (int)(Projectile.damage * 0.65f),
+                (int)(Projectile.damage * 0.5f),
                 Projectile.knockBack,
                 Projectile.owner);
 
