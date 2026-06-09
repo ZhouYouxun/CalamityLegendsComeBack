@@ -156,8 +156,8 @@ Mods: {
 			TetrisInviteRejected: 俄罗斯方块联机邀请被拒绝。
 			TetrisInviteAccepted: 俄罗斯方块联机已连接。
 			TetrisMultiplayerGuest: 等待主机同步棋盘
-			Game2048Score: "分数 {0}"
-			Game2048Best: "最大 {0}"
+			Game2048Score: 分数 {0}
+			Game2048Best: 最大 {0}
 			Game2048Slide: 滑动方块，合并相同数字
 			Game2048Won: 已合成 2048
 			Game2048GameOver: 无路可走

@@ -151,8 +151,8 @@ Mods: {
 			TetrisInviteRejected: Tetris invite was rejected.
 			TetrisInviteAccepted: Co-op Tetris linked.
 			TetrisMultiplayerGuest: Waiting for host board sync
-			Game2048Score: "SCORE {0}"
-			Game2048Best: "BEST {0}"
+			Game2048Score: SCORE {0}
+			Game2048Best: BEST {0}
 			Game2048Slide: Slide tiles to merge matching numbers
 			Game2048Won: 2048 reached
 			Game2048GameOver: NO MOVES

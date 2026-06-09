@@ -149,6 +149,17 @@ Mods: {
 				// YC_TyrantSlaughterSlash.DisplayName: Y C_ Tyrant Slaughter Slash
 				// YC_TyrantSlaughterTail.DisplayName: Y C_ Tyrant Slaughter Tail
 				// YC_YharimsCrystalBeam.DisplayName: Y C_ Yharims Crystal Beam
+				// YC_EXBladeGrandSlash.DisplayName: Y C_ E X Blade Grand Slash
+				// YC_EXFirePillar.DisplayName: Y C_ E X Fire Pillar
+				// YC_EXStormLaser.DisplayName: Y C_ E X Storm Laser
+				// YC_AuricJudgementWave.DisplayName: Y C_ Auric Judgement Wave
+				// YC_BrimstoneWheelMissile.DisplayName: Y C_ Brimstone Wheel Missile
+				// YC_BurningShard.DisplayName: Y C_ Burning Shard
+				// YC_BurningShardSplinter.DisplayName: Y C_ Burning Shard Splinter
+				// YC_LeftBladeSwing.DisplayName: Y C_ Left Blade Swing
+				// YC_RainbowUltimaBolt.DisplayName: Y C_ Rainbow Ultima Bolt
+				// YC_RightCrystalHoldout.DisplayName: Y C_ Right Crystal Holdout
+				// YC_RightScorchingLaser.DisplayName: Y C_ Right Scorching Laser
 			}
 		}
 
