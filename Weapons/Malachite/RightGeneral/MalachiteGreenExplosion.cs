@@ -138,16 +138,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 bloom,
                 drawPosition,
                 null,
-                Color.Black * (0.54f * fade),
-                0f,
-                bloomOrigin,
-                0.92f + pulse * 0.48f,
-                SpriteEffects.None);
-
-            Main.EntitySpriteDraw(
-                bloom,
-                drawPosition,
-                null,
                 new Color(30, 255, 115, 0) * (0.22f * fade),
                 0f,
                 bloomOrigin,
@@ -158,6 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             {
                 float ringRotation = Main.GlobalTimeWrappedHourly * (1.8f + i * 0.55f) + Projectile.identity * 0.17f;
                 float ringScale = 0.86f + i * 0.54f + pulse * 0.24f;
+
                 Main.EntitySpriteDraw(
                     bloom,
                     drawPosition,
@@ -169,5 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     SpriteEffects.None);
             }
         }
+
+
     }
 }

@@ -126,7 +126,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SubsumingVortexExplosion") { Volume = 0.22f, Pitch = 0.1f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/SubsumingVortexExplosion") { Volume = 0.22f, Pitch = 0.1f }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)

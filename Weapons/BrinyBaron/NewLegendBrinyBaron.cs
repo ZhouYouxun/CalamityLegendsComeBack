@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
@@ -148,9 +148,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 player.Calamity().rightClickListener = true;
 
             if (player.Calamity().cooldowns.TryGetValue(BBEXCoolDown.ID, out var cooldown))
-                cooldown.timeLeft = tidePlayer.EXValue;
+            {
+                cooldown.duration = BBEXPlayer.EXMax;
+                cooldown.timeLeft = Math.Max(1, tidePlayer.EXValue);
+            }
             else
-                player.AddCooldown(BBEXCoolDown.ID, 0);
+            {
+                player.AddCooldown(BBEXCoolDown.ID, BBEXPlayer.EXMax).timeLeft = Math.Max(1, tidePlayer.EXValue);
+            }
 
             if (player.Calamity().cooldowns.TryGetValue(BBSuperDashCooldownHandler.ID, out var superDashVisualCooldown))
                 superDashVisualCooldown.timeLeft = superDashCooldown.IsCoolingDown ? superDashCooldown.RemainingFrames : 0;

@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         private readonly HashSet<int> grazedProjectileIds = new();
         private bool holdingMalachite;
+        private bool wasHoldingMalachite;
         private int grazeVisualCooldown;
         private int depletionBurstTimer;
         private int rightFeatherGenerationTimer;
@@ -32,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void UpdateDead()
         {
             holdingMalachite = false;
+            wasHoldingMalachite = false;
             depletionBurstTimer = 0;
             rightFeatherGenerationTimer = 0;
             grazedProjectileIds.Clear();
@@ -54,11 +56,25 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (grazeVisualCooldown > 0)
                 grazeVisualCooldown--;
 
+            TryGenerateRightFeather();
+
+            bool currentlyHolding = Player.HeldItem != null && Player.HeldItem.type == ModContent.ItemType<Malachite>();
+
+            if (currentlyHolding && !wasHoldingMalachite)
+            {
+                OnSwitchToMalachite();
+            }
+            else if (!currentlyHolding && wasHoldingMalachite)
+            {
+                OnSwitchAwayFromMalachite();
+            }
+
+            wasHoldingMalachite = currentlyHolding;
+
             if (!holdingMalachite || Player.HeldItem.type != ModContent.ItemType<Malachite>())
                 return;
 
             ApplyShadowStepBonuses();
-            TryGenerateRightFeather();
 
             if (Player.whoAmI == Main.myPlayer)
                 UpdateGrazeDetection();
@@ -109,23 +125,54 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (Player.whoAmI != Main.myPlayer || Player.dead)
                 return;
 
-            if (MalachiteRightFeather.CountStoredRightFeathers(Player) >= MalachiteBalance.RightFeatherMaxCount)
+            Item malachiteItem = null;
+            bool isHeld = false;
+
+            if (Player.HeldItem != null && Player.HeldItem.type == ModContent.ItemType<Malachite>())
+            {
+                malachiteItem = Player.HeldItem;
+                isHeld = true;
+            }
+            else
+            {
+                for (int i = 0; i < 50; i++)
+                {
+                    Item item = Player.inventory[i];
+                    if (item != null && item.type == ModContent.ItemType<Malachite>())
+                    {
+                        malachiteItem = item;
+                        break;
+                    }
+                }
+            }
+
+            if (malachiteItem == null)
             {
                 rightFeatherGenerationTimer = 0;
                 return;
             }
 
+            int currentFeathers = MalachiteRightFeather.CountStoredRightFeathers(Player);
+            if (currentFeathers >= MalachiteBalance.RightFeatherMaxCount)
+            {
+                rightFeatherGenerationTimer = 0;
+                return;
+            }
+
+            int targetDelay = isHeld ? 45 : 180;
+
             rightFeatherGenerationTimer++;
-            if (rightFeatherGenerationTimer < MalachiteBalance.RightFeatherGenerationFrames)
+            if (rightFeatherGenerationTimer < targetDelay)
                 return;
 
             rightFeatherGenerationTimer = 0;
-            Item heldItem = Player.HeldItem;
+
+            int damage = Player.GetWeaponDamage(malachiteItem);
             MalachiteRightFeather.TrySpawnStoredRightFeather(
                 Player,
-                Player.GetSource_ItemUse(heldItem),
-                Player.GetWeaponDamage(heldItem),
-                heldItem.knockBack);
+                Player.GetSource_FromThis(),
+                damage,
+                malachiteItem.knockBack);
         }
 
         private void UpdateGrazeDetection()
@@ -208,6 +255,46 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     new Color(120, 255, 150),
                     Main.rand.NextFloat(0.75f, 1.15f));
                 dust.noGravity = true;
+            }
+        }
+
+        private void OnSwitchToMalachite()
+        {
+            if (Player.whoAmI != Main.myPlayer)
+                return;
+
+            int rightFeathersCount = MalachiteRightFeather.CountStoredRightFeathers(Player);
+            if (rightFeathersCount >= 1)
+            {
+                CalamityPlayer calamity = Player.Calamity();
+                bool stealthStrike = calamity.StealthStrikeAvailable();
+                var source = Player.GetSource_FromThis();
+                int damage = Player.GetWeaponDamage(Player.HeldItem);
+                float knockback = Player.HeldItem.knockBack;
+                Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
+
+                if (MalachiteRightFeather.ReleaseStoredRightFeathers(Player, source, mouseWorld, damage, knockback, stealthStrike))
+                {
+                    if (stealthStrike)
+                    {
+                        ConsumeHalfStealthAndRestore(calamity);
+                    }
+                    SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, Player.Center);
+                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, Player.Center);
+                }
+            }
+        }
+
+        private void OnSwitchAwayFromMalachite()
+        {
+            if (Player.whoAmI != Main.myPlayer)
+                return;
+
+            if (MalachiteKunai.CountStoredPeacockKunai(Player) > 0)
+            {
+                CalamityPlayer calamity = Player.Calamity();
+                Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
+                MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(Player, mouseWorld);
             }
         }
     }

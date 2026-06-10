@@ -1,6 +1,4 @@
 using System;
-using CalamityLegendsComeBack.Accssory;
-using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityMod.Cooldowns;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,13 +9,13 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using static CalamityMod.CalamityUtils;
 
-namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
+namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral
 {
-    internal sealed class MalachiteEXCooldown : CooldownHandler
+    internal sealed class MalachiteRightClickCooldown : CooldownHandler
     {
-        public const int CooldownFrames = 15 * 60;
+        public const int CooldownFrames = 3 * 60; // 3 seconds
 
-        public static new string ID => "Malachite_EX";
+        public static new string ID => "Malachite_RightClick";
 
         private float ReadyCompletion => MathHelper.Clamp(1f - instance.timeLeft / (float)CooldownFrames, 0f, 1f);
         private int DisplayValue => Math.Max(0, (instance.timeLeft + 59) / 60);
@@ -25,11 +23,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
         public override bool CanTickDown => true;
 
         public override bool ShouldDisplay =>
-            instance.player.HeldItem.type == ModContent.ItemType<Malachite>() &&
-            instance.player.GetModPlayer<LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            instance.player.HeldItem.type == ModContent.ItemType<Malachite>();
 
         public override LocalizedText DisplayName =>
-            Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.Malachite_EX");
+            Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.Malachite_RightClick");
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/EXSkill/EXCoolDown";
         public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/Malachite/EXSkill/EXCoolDownOutline";

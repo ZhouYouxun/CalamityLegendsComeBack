@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -331,9 +331,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             float coreRadius = 25f * iconScale;
             Vector2 center = screenCenter + Vector2.UnitY * (float)Math.Sin(time * 2.1f) * 2.4f * iconScale;
 
-            Color primary = VisibleDataColor(0.02f, 0.82f);
-            Color secondary = VisibleDataColor(0.42f, 0.58f);
-            Color tertiary = VisibleDataColor(0.72f, 0.42f);
+            Color primary = GetDataColor(0.02f, 0.82f);
+            Color secondary = GetDataColor(0.42f, 0.58f);
+            Color tertiary = GetDataColor(0.72f, 0.42f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
             Main.spriteBatch.Draw(bloom, center, null, primary * 0.58f, time * 0.4f, bloom.Size() * 0.5f, 0.34f * iconScale, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(bloom, center, null, secondary * 0.32f, -time * 0.6f, bloom.Size() * 0.5f, 0.62f * iconScale, SpriteEffects.None, 0f);
@@ -341,7 +344,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Main.spriteBatch.Draw(ring, center, null, secondary * 0.48f, time * 1.45f, ring.Size() * 0.5f, 0.62f * iconScale, SpriteEffects.None, 0f);
             DrawProceduralTextureLayer(proceduralCoreTexture, center, primary * 0.7f, time * 0.32f, 0.42f * iconScale);
             DrawProceduralTextureLayer(proceduralGlyphTexture, center, tertiary * 0.78f, -time * 0.75f, 0.54f * iconScale);
-            DrawProceduralTextureLayer(proceduralNoiseTexture, center, Color.White * 0.24f, 0f, 0.48f * iconScale);
+            DrawProceduralTextureLayer(proceduralNoiseTexture, center, Color.White with { A = 0 } * 0.24f, 0f, 0.48f * iconScale);
 
             DrawInventoryScanRing(center, coreRadius * 1.34f, time * 1.5f, primary * 0.76f, 28, 1.15f * iconScale);
             DrawInventoryScanRing(center, coreRadius * 0.92f, -time * 2f, secondary * 0.58f, 22, 0.9f * iconScale);
@@ -363,7 +366,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 (int)(center.Y - 2.1f * iconScale),
                 Math.Max(3, (int)(4.2f * iconScale)),
                 Math.Max(3, (int)(4.2f * iconScale)));
-            Main.spriteBatch.Draw(pixel, core, Color.White * 0.78f);
+            Main.spriteBatch.Draw(pixel, core, Color.White with { A = 0 } * 0.78f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
         public static void DrawScanRing(Vector2 center, float radius, float rotation, Color color, int segments, float width)

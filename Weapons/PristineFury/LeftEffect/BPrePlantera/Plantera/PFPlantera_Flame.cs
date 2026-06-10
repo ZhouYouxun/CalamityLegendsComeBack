@@ -306,7 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override void OnKill(int timeLeft)
         {
             SpawnImpactEffects(Projectile.Center);
-            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Item/SubsumingVortexExplosion") { Volume = 0.25f, Pitch = 0.2f }, Projectile.Center);
+            Terraria.Audio.SoundEngine.PlaySound(new Terraria.Audio.SoundStyle("CalamityMod/Sounds/Custom/SubsumingVortexExplosion") { Volume = 0.25f, Pitch = 0.2f }, Projectile.Center);
         }
 
         private void SpawnLaserReleaseEffects(Vector2 direction)

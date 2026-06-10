@@ -38,7 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            Projectile.scale = 0.22f + Projectile.ai[0] * 0.05f;
+            Projectile.scale = 0.44f + Projectile.ai[0] * 0.10f;
             YharimsCrystalHellBladeGlobalProjectile.Mark(Projectile, YCWeaponForm.Blade);
         }
 
@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Timer++;
             Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.PiOver2;
             Projectile.velocity *= 0.986f;
-            Projectile.scale += 0.0028f;
+            Projectile.scale += 0.0056f;
             hitboxSize += 0.9f;
 
             if (Projectile.timeLeft < 42)

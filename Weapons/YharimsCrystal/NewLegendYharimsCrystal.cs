@@ -198,9 +198,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private static void SyncCooldownDisplay(Player player, YCEXPlayer exPlayer)
         {
             if (player.Calamity().cooldowns.TryGetValue(YCEXCoolDown.ID, out var cooldown))
-                cooldown.timeLeft = exPlayer.DisplayRawValue;
+                cooldown.timeLeft = Math.Max(1, exPlayer.DisplayRawValue);
             else
-                player.AddCooldown(YCEXCoolDown.ID, 0);
+                player.AddCooldown(YCEXCoolDown.ID, Math.Max(1, exPlayer.DisplayRawValue));
         }
     }
 }

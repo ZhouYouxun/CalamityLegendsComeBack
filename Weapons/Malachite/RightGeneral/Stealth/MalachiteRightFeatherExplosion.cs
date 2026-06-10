@@ -12,7 +12,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral
+namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral.Stealth
 {
     public sealed class MalachiteRightFeatherExplosion : ModProjectile, ILocalizedModType
     {
@@ -83,14 +83,46 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = bloom.Size() * 0.5f;
+
             float progress = Timer / 24f;
             float pulse = MathF.Sin(MathHelper.Clamp(progress, 0f, 1f) * MathHelper.Pi);
-            Color color = new Color(80, 255, 120, 0) * (0.44f * pulse);
 
-            Main.EntitySpriteDraw(bloom, drawPosition, null, Color.Black * 0.28f * pulse, 0f, origin, 0.72f + pulse * 0.24f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, color, 0f, origin, 1.15f + pulse * 0.8f, SpriteEffects.None);
+            Color color = new Color(80, 255, 120, 0) * (0.55f * pulse);
+
+            // BloomCircle 必须用 Additive 绘制，否则黑色底会被错误画出来
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.LinearClamp,
+                DepthStencilState.None,
+                RasterizerState.CullNone,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                color,
+                0f,
+                origin,
+                1.15f + pulse * 0.8f,
+                SpriteEffects.None);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.LinearClamp,
+                DepthStencilState.None,
+                RasterizerState.CullNone,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             return false;
         }
 

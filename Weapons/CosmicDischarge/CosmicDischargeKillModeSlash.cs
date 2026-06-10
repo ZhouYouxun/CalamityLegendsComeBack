@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Owner.SetImmuneTimeForAllTypes(10);
             Owner.velocity *= 0.4f;
-            SoundStyle activateSound = new("CalamityMod/Sounds/Item/DemonSwordSwing");
+            SoundStyle activateSound = new("CalamityMod/Sounds/Item/DemonSwordSwing", 2);
             SoundEngine.PlaySound(activateSound with { Volume = 0.9f, Pitch = -0.35f }, Owner.Center);
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(

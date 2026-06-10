@@ -6,7 +6,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
     internal static class MalachiteBalance
     {
         public const int DepletionBurstKunaiCount = 5;
-        public const int RightFeatherMaxCount = 18;
+        public const int RightFeatherMaxCount = 3;
         public const int RightFeatherGenerationFrames = 36;
         public const int RightFeatherReleaseSpacingFrames = 2;
 
@@ -18,18 +18,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static float LeftClickUseSpeedMultiplier => DownedWallOfFlesh ? 1f : 1.35f;
 
-        public static int NormalLeftClickKunaiCount
-        {
-            get
-            {
-                if (DownedMoonLord)
-                    return 3;
-
-                if (DownedPlaguebringerGoliath)
-                    return 2;
-
-                return 1;
-            }
-        }
+        public static int NormalLeftClickKunaiCount => 1;
     }
 }

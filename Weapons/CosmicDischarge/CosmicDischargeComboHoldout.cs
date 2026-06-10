@@ -46,6 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private int impactFlashTimer;
         private float currentCollisionWidth = 30f;
         private bool currentlyRetracting;
+        private float currentArmRotationOffset;
 
         private CosmicDischargeAttackKind Kind
         {
@@ -60,8 +61,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private Vector2 AimDirection => AimAngle.ToRotationVector2();
 
         public bool CanBecomeQuickDraw =>
-            (Kind == CosmicDischargeAttackKind.WhipThrust && Time <= WhipThrustWindup) ||
-            (Kind == CosmicDischargeAttackKind.SwordFinisher && Time <= SwordFinisherWindup);
+            Owner.GetModPlayer<CosmicDischargePlayer>().QuickDrawCooldownTimer <= 0 &&
+            ((Kind == CosmicDischargeAttackKind.WhipThrust && Time <= WhipThrustWindup) ||
+             (Kind == CosmicDischargeAttackKind.SwordFinisher && Time <= SwordFinisherWindup));
 
         public override Color SpecialDrawColor => CosmicDischargeCommon.FrostCoreColor;
         public override int ExudeDustType => DustID.SnowflakeIce;
@@ -193,6 +195,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.localNPCHitCooldown = 3;
             Projectile.netUpdate = true;
 
+            Owner.GetModPlayer<CosmicDischargePlayer>().QuickDrawCooldownTimer = 1800; // 30 seconds
             Owner.GetModPlayer<CosmicDischargePlayer>().AddUltimateEnergy(CosmicDischargePlayer.RightThrustEnergyGain);
             Owner.velocity += direction * 1.8f;
             Owner.SetImmuneTimeForAllTypes(8);
@@ -248,7 +251,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 float t = Utils.GetLerpValue(holdEnd, WhipArcDuration, Time, true);
                 currentlyRetracting = true;
-                Projectile.localNPCHitCooldown = 16;
+                Projectile.localNPCHitCooldown = 4;
                 float retract = EaseInCubic(t);
                 SetBlade(baseDirection.RotatedBy(sign * MathHelper.Lerp(0.08f, 0.28f, retract)), MathHelper.Lerp(WhipReach, 64f, retract), 0.12f * sign, MathHelper.Lerp(30f, 18f, retract));
             }
@@ -423,6 +426,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.spriteDirection = Owner.direction;
             currentCollisionWidth = collisionWidth;
+            currentArmRotationOffset = armRotationOffset;
 
             CosmicDischargeCommon.HoldPlayer(Owner, Projectile, direction, armRotationOffset);
             Owner.itemRotation = (Projectile.velocity * Owner.direction).ToRotation();
@@ -597,8 +601,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center, TipPosition, currentCollisionWidth, ref collisionPoint);
+            Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
+            float reach = Projectile.velocity.Length();
+            GetBendAndCurl(out float sideBend, out float curl);
+            var points = CosmicDischargeCommon.BuildCurvedBlade(Owner, direction, reach, sideBend, curl, 18);
+            return CosmicDischargeCommon.CheckCurveCollision(points, targetHitbox, currentCollisionWidth);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -671,8 +678,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         private bool TargetNearTip(NPC target, float radius)
         {
-            Vector2 closest = Vector2.Clamp(target.Hitbox.Center.ToVector2(), target.Hitbox.TopLeft(), target.Hitbox.BottomRight());
-            return Vector2.DistanceSquared(closest, TipPosition) <= radius * radius;
+            Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
+            float reach = Projectile.velocity.Length();
+            GetBendAndCurl(out float sideBend, out float curl);
+            var points = CosmicDischargeCommon.BuildCurvedBlade(Owner, direction, reach, sideBend, curl, 18);
+            return CosmicDischargeCommon.TargetIntersectsTip(points, target.Hitbox, radius);
         }
 
         private void ApplyHitStop(int frames)
@@ -725,8 +735,46 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Projectile.velocity == Vector2.Zero)
                 return false;
 
-            DrawStraightBladeGlow();
-            base.PreDraw(ref lightColor);
+            Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
+            float reach = Projectile.velocity.Length();
+            GetBendAndCurl(out float sideBend, out float curl);
+            var points = CosmicDischargeCommon.BuildCurvedBlade(Owner, direction, reach, sideBend, curl, 18);
+
+            DrawCurvedBladeGlow(points);
+
+            // Draw the curved chain segments
+            CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, points, lightColor, Projectile.scale, Owner.gfxOffY);
+
+            // Draw the actual weapon hilt texture in player hand
+            Texture2D itemTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge").Value;
+            SpriteEffects spriteEffects = SpriteEffects.None;
+            float drawRotation;
+            Vector2 origin;
+            if (Owner.direction == -1)
+            {
+                spriteEffects = SpriteEffects.FlipHorizontally;
+                origin = new Vector2(itemTexture.Width, itemTexture.Height);
+                drawRotation = direction.ToRotation() + 3f * MathHelper.PiOver4;
+            }
+            else
+            {
+                spriteEffects = SpriteEffects.None;
+                origin = new Vector2(0f, itemTexture.Height);
+                drawRotation = direction.ToRotation() + MathHelper.PiOver4;
+            }
+
+            Vector2 handPosition = Owner.MountedCenter + direction.RotatedBy(currentArmRotationOffset) * 12f;
+
+            Main.EntitySpriteDraw(
+                itemTexture,
+                handPosition - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY,
+                null,
+                lightColor,
+                drawRotation,
+                origin,
+                Projectile.scale,
+                spriteEffects,
+                0);
 
             if (CanBecomeQuickDraw)
                 CosmicDischargeCommon.DrawRightHoldIndicator(Main.spriteBatch, Owner, 1f + 0.18f * MathF.Sin(Time * 0.45f));
@@ -734,33 +782,40 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             return false;
         }
 
-        private void DrawStraightBladeGlow()
+        private void DrawCurvedBladeGlow(System.Collections.Generic.List<Vector2> points)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 start = Projectile.Center - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
-            Vector2 segment = Projectile.velocity;
-            float length = segment.Length();
-            if (length < 2f)
-                return;
-
             float flash = impactFlashTimer > 0 ? impactFlashTimer / 8f : 0f;
             Color outer = CosmicDischargeCommon.FrostDarkColor * (0.18f + flash * 0.12f);
             Color glow = CosmicDischargeCommon.FrostGlowColor * (0.26f + flash * 0.25f);
             Color core = CosmicDischargeCommon.FrostWhiteColor * (0.28f + flash * 0.4f);
-            DrawLine(pixel, start, segment, outer, currentCollisionWidth * 1.4f);
-            DrawLine(pixel, start, segment, glow, currentCollisionWidth * 0.72f);
-            DrawLine(pixel, start, segment, core, MathHelper.Clamp(currentCollisionWidth * 0.16f, 2f, 5f));
 
-            Main.EntitySpriteDraw(
-                bloom,
-                TipPosition - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY,
-                null,
-                CosmicDischargeCommon.FrostCoreColor * (0.22f + flash * 0.24f),
-                0f,
-                bloom.Size() * 0.5f,
-                0.22f + flash * 0.08f,
-                SpriteEffects.None);
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 start = points[i] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
+                Vector2 end = points[i + 1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
+                Vector2 segment = end - start;
+                if (segment.LengthSquared() < 0.1f)
+                    continue;
+
+                DrawLine(pixel, start, segment, outer, currentCollisionWidth * 1.4f);
+                DrawLine(pixel, start, segment, glow, currentCollisionWidth * 0.72f);
+                DrawLine(pixel, start, segment, core, MathHelper.Clamp(currentCollisionWidth * 0.16f, 2f, 5f));
+            }
+
+            if (points.Count > 0)
+            {
+                Main.EntitySpriteDraw(
+                    bloom,
+                    points[^1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY,
+                    null,
+                    CosmicDischargeCommon.FrostCoreColor * (0.22f + flash * 0.24f),
+                    0f,
+                    bloom.Size() * 0.5f,
+                    (0.22f + flash * 0.08f) * Projectile.scale,
+                    SpriteEffects.None);
+            }
         }
 
         private static void DrawLine(Texture2D pixel, Vector2 start, Vector2 segment, Color color, float width)
@@ -774,6 +829,147 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 new Vector2(0f, 0.5f),
                 new Vector2(segment.Length(), width),
                 SpriteEffects.None);
+        }
+
+        private void GetBendAndCurl(out float sideBend, out float curl)
+        {
+            sideBend = 0f;
+            curl = 0f;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
+            float reach = Projectile.velocity.Length();
+
+            switch (Kind)
+            {
+                case CosmicDischargeAttackKind.WhipOver:
+                    {
+                        float sign = -1f * Math.Sign(Owner.direction == 0 ? 1 : Owner.direction);
+                        int snapEnd = WhipArcWindup + WhipArcSnap;
+                        int holdEnd = snapEnd + WhipArcHold;
+                        if (Time <= WhipArcWindup)
+                        {
+                            float t = Time / WhipArcWindup;
+                            sideBend = -120f * (1f - t) * sign;
+                            curl = -60f * (1f - t);
+                        }
+                        else if (Time <= snapEnd)
+                        {
+                            float t = (Time - WhipArcWindup) / WhipArcSnap;
+                            sideBend = MathHelper.Lerp(-40f, 60f, t) * sign;
+                            curl = MathHelper.Lerp(-30f, 20f, t);
+                        }
+                        else if (Time <= holdEnd)
+                        {
+                            sideBend = 0f;
+                            curl = 0f;
+                        }
+                        else
+                        {
+                            float t = Utils.GetLerpValue(holdEnd, WhipArcDuration, Time, true);
+                            sideBend = MathHelper.Lerp(0f, -140f, t) * sign;
+                            curl = MathHelper.Lerp(0f, -80f, t);
+                        }
+                    }
+                    break;
+
+                case CosmicDischargeAttackKind.WhipUnder:
+                    {
+                        float sign = 1f * Math.Sign(Owner.direction == 0 ? 1 : Owner.direction);
+                        int snapEnd = WhipArcWindup + WhipArcSnap;
+                        int holdEnd = snapEnd + WhipArcHold;
+                        if (Time <= WhipArcWindup)
+                        {
+                            float t = Time / WhipArcWindup;
+                            sideBend = 120f * (1f - t) * sign;
+                            curl = 60f * (1f - t);
+                        }
+                        else if (Time <= snapEnd)
+                        {
+                            float t = (Time - WhipArcWindup) / WhipArcSnap;
+                            sideBend = MathHelper.Lerp(40f, -60f, t) * sign;
+                            curl = MathHelper.Lerp(30f, -20f, t);
+                        }
+                        else if (Time <= holdEnd)
+                        {
+                            sideBend = 0f;
+                            curl = 0f;
+                        }
+                        else
+                        {
+                            float t = Utils.GetLerpValue(holdEnd, WhipArcDuration, Time, true);
+                            sideBend = MathHelper.Lerp(0f, 140f, t) * sign;
+                            curl = MathHelper.Lerp(0f, 80f, t);
+                        }
+                    }
+                    break;
+
+                case CosmicDischargeAttackKind.WhipThrust:
+                case CosmicDischargeAttackKind.QuickDraw:
+                    {
+                        sideBend = 15f * MathF.Sin(Time * 0.8f) * Owner.direction;
+                        curl = 10f * MathF.Cos(Time * 0.8f);
+                    }
+                    break;
+
+                case CosmicDischargeAttackKind.SwordSwingOne:
+                case CosmicDischargeAttackKind.SwordSwingTwo:
+                    {
+                        bool second = Kind == CosmicDischargeAttackKind.SwordSwingTwo;
+                        float swingSign = (second ? -1f : 1f) * Math.Sign(Owner.direction == 0 ? 1 : Owner.direction);
+                        int strikeEnd = SwordSwingWindup + 8;
+                        int holdEnd = strikeEnd + 3;
+                        if (Time <= SwordSwingWindup)
+                        {
+                            float t = Time / SwordSwingWindup;
+                            sideBend = -15f * swingSign * t;
+                        }
+                        else if (Time <= strikeEnd)
+                        {
+                            float t = (Time - SwordSwingWindup) / 8f;
+                            sideBend = MathHelper.Lerp(-15f, 25f, t) * swingSign;
+                        }
+                        else if (Time <= holdEnd)
+                        {
+                            sideBend = 0f;
+                        }
+                        else
+                        {
+                            float t = Utils.GetLerpValue(holdEnd, SwordSwingDuration, Time, true);
+                            sideBend = MathHelper.Lerp(0f, -10f, t) * swingSign;
+                        }
+                    }
+                    break;
+
+                case CosmicDischargeAttackKind.SwordFinisher:
+                    {
+                        if (Time <= SwordFinisherWindup)
+                        {
+                            float t = Time / SwordFinisherWindup;
+                            sideBend = 35f * MathF.Sin(t * MathHelper.Pi) * Owner.direction;
+                        }
+                        else
+                        {
+                            int strikeFrames = 10;
+                            int strikeEnd = SwordFinisherSlamFrame + strikeFrames;
+                            if (Time <= SwordFinisherSlamFrame)
+                            {
+                                float t = Utils.GetLerpValue(SwordFinisherWindup, SwordFinisherSlamFrame, Time, true);
+                                sideBend = -20f * Owner.direction * t;
+                            }
+                            else if (Time <= strikeEnd)
+                            {
+                                float t = (Time - SwordFinisherSlamFrame) / strikeFrames;
+                                sideBend = MathHelper.Lerp(-20f, 40f, t) * Owner.direction;
+                            }
+                            else
+                            {
+                                float t = Utils.GetLerpValue(strikeEnd, SwordFinisherDuration, Time, true);
+                                sideBend = MathHelper.Lerp(40f, -15f, t) * Owner.direction;
+                            }
+                        }
+                    }
+                    break;
+            }
         }
 
         private static float EaseOutCubic(float value)

@@ -65,7 +65,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (player.altFunctionUse == 2)
             {
-                if (!MalachiteRightFeather.HasStoredRightFeathers(player))
+                bool onCooldown = player.Calamity().cooldowns.TryGetValue(RightGeneral.MalachiteRightClickCooldown.ID, out var cooldown) && cooldown.timeLeft > 0;
+                if (MalachiteRightFeather.CountStoredRightFeathers(player) >= 3 && onCooldown)
                     return false;
 
                 Item.useAnimation = stealthStrike ? 28 : 16;
@@ -93,7 +94,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (player.altFunctionUse == 2 || player.Calamity().StealthStrikeAvailable())
                 return 1f;
 
-            return MalachiteBalance.LeftClickUseSpeedMultiplier;
+            float speed = MalachiteBalance.LeftClickUseSpeedMultiplier;
+            if (MalachiteKunai.CountStoredPeacockKunai(player) > 0)
+                speed *= 2f;
+
+            return speed;
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
@@ -105,13 +110,34 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (player.altFunctionUse == 2)
             {
-                if (MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthStrike))
+                int currentFeathers = MalachiteRightFeather.CountStoredRightFeathers(player);
+                if (currentFeathers < 3)
                 {
-                    if (stealthStrike)
-                        malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
+                    ClearStoredRightFeathers(player);
 
-                    SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, player.Center);
-                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, player.Center);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        MalachiteRightFeather.TrySpawnStoredRightFeather(player, source, damage, knockback);
+                    }
+                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.65f, Pitch = 0.2f }, player.Center);
+                }
+                else
+                {
+                    if (MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthStrike))
+                    {
+                        if (stealthStrike)
+                            malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
+
+                        SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, player.Center);
+                        SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, player.Center);
+
+                        player.AddCooldown(RightGeneral.MalachiteRightClickCooldown.ID, RightGeneral.MalachiteRightClickCooldown.CooldownFrames);
+
+                        for (int i = 0; i < 3; i++)
+                        {
+                            MalachiteRightFeather.TrySpawnStoredRightFeather(player, source, damage, knockback);
+                        }
+                    }
                 }
 
                 return false;
@@ -133,24 +159,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return false;
             }
 
-            int normalKunaiCount = malachitePlayer.DepletionBurstActive
-                ? MalachiteBalance.DepletionBurstKunaiCount
-                : MalachiteBalance.NormalLeftClickKunaiCount;
-
-            if (normalKunaiCount > 1)
-            {
-                MalachiteKunai.SpawnNormalLeftClickVolley(
-                    player,
-                    source,
-                    damage,
-                    knockback,
-                    mouseWorld,
-                    normalKunaiCount,
-                    malachitePlayer.DepletionBurstActive);
-                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.86f, Pitch = normalKunaiCount >= 5 ? 0.38f : 0.18f }, player.Center);
-                return false;
-            }
-
             return true;
         }
 
@@ -168,9 +176,15 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 player.Calamity().rightClickListener = true;
 
             CalamityPlayer calamity = player.Calamity();
-            bool finaleReady = calamity.rogueStealthMax > 0f &&
-                calamity.rogueStealth >= calamity.rogueStealthMax * 0.999f &&
-                !IsFinaleCoolingDown(player) &&
+            if (player.GetModPlayer<LegendaryEmblemPlayer>().EXAccessoryEquipped)
+            {
+                if (!calamity.cooldowns.ContainsKey(MalachiteEXCooldown.ID))
+                {
+                    player.AddCooldown(MalachiteEXCooldown.ID, 0);
+                }
+            }
+
+            bool finaleReady = !IsFinaleCoolingDown(player) &&
                 player.GetModPlayer<LegendaryEmblemPlayer>().EXAccessoryEquipped;
             LegendaryUltimateReadySound.PlayIfReadyTransition(player, ref wasFinaleReady, finaleReady);
 
@@ -267,6 +281,21 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+        }
+
+        private static void ClearStoredRightFeathers(Player player)
+        {
+            int type = ModContent.ProjectileType<MalachiteRightFeather>();
+            foreach (Projectile proj in Main.projectile)
+            {
+                if (proj.active &&
+                    proj.owner == player.whoAmI &&
+                    proj.type == type &&
+                    (int)proj.ai[0] == 0) // MalachiteRightFeatherState.Stored
+                {
+                    proj.Kill();
+                }
+            }
         }
     }
 }

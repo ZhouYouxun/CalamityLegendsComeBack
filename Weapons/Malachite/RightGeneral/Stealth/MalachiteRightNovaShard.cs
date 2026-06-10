@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,7 +11,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral
+namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral.Stealth
 {
     public sealed class MalachiteRightNovaShard : ModProjectile, ILocalizedModType
     {
@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 10;
+            ProjectileID.Sets.TrailCacheLength[Type] = 8;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -62,22 +62,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.RightGeneral
 
         public override bool PreDraw(ref Color lightColor)
         {
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Projectile.type], lightColor, 1);
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 origin = texture.Size() * 0.5f;
             Color trail = new Color(70, 255, 130, 0);
-
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
-            {
-                if (Projectile.oldPos[i] == Vector2.Zero)
-                    continue;
-
-                float fade = 1f - i / (float)Projectile.oldPos.Length;
-                Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(texture, drawPosition, null, trail * fade * 0.42f, Projectile.oldRot[i], origin, Projectile.scale * MathHelper.Lerp(0.45f, 0.95f, fade), SpriteEffects.None);
-                Main.EntitySpriteDraw(bloom, drawPosition, null, trail * fade * 0.18f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.38f, SpriteEffects.None);
-            }
-
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(trail, Color.White, 0.24f) * Projectile.Opacity, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }

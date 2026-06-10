@@ -81,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 !Owner.mouseInterface;
         }
 
-        protected void UpdateHoldout()
+        protected virtual void UpdateHoldout()
         {
             Vector2 holdoutCenter = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
 

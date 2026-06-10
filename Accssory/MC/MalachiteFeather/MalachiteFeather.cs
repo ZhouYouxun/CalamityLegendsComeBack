@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Accssory.MC.MalachiteFeather
             int damage = Player.GetWeaponDamage(heldItem);
             MalachiteKunai.SpawnSingleFrenzyKunai(
                 Player,
-                Player.GetSource_ItemUse(heldItem),
+                Player.GetSource_FromThis(),
                 damage,
                 heldItem.knockBack);
         }

@@ -45,7 +45,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.hide = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 6;
@@ -331,8 +330,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Vector2[] points =
             {
                 Projectile.Center,
-                Projectile.Center + direction * BeamLength * 0.25f + direction.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(Timer * 0.08f) * 18f,
-                Projectile.Center + direction * BeamLength * 0.55f - direction.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(Timer * 0.1f) * 20f,
+                Projectile.Center + direction * BeamLength * 0.25f,
+                Projectile.Center + direction * BeamLength * 0.55f,
                 Projectile.Center + direction * BeamLength
             };
 
@@ -368,7 +367,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private float YharonWidthFunction(float completionRatio, Vector2 vertexPosition)
         {
             float endFade = Utils.GetLerpValue(1f, 0.82f, completionRatio, true);
-            return MathHelper.Lerp(34f, 48f, (float)Math.Sin(Timer * 0.12f + completionRatio * MathHelper.TwoPi) * 0.5f + 0.5f) * Projectile.scale * endFade;
+            return 41f * Projectile.scale * endFade;
         }
 
         private Color YharonColorFunction(float completionRatio, Vector2 vertexPosition)

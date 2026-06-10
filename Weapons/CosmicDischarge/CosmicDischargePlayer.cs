@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -20,9 +21,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public int UltimateEnergy;
         public int PassiveCooldownTimer;
+        public int QuickDrawCooldownTimer;
         public CosmicDischargeAttackMode AttackMode;
 
         private bool holdingCosmicDischarge;
+        private bool wasHoldingCosmicDischarge;
         private bool wasUltimateReady;
         private bool hadIcebound;
         private int comboIndex;
@@ -55,6 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             comboIndex = 0;
             comboResetTimer = 0;
             hadIcebound = false;
+            QuickDrawCooldownTimer = 0;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
         }
 
@@ -62,6 +66,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             if (PassiveCooldownTimer > 0)
                 PassiveCooldownTimer--;
+
+            if (QuickDrawCooldownTimer > 0)
+                QuickDrawCooldownTimer--;
 
             if (comboResetTimer > 0)
                 comboResetTimer--;
@@ -79,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 HandleUltimateInput();
                 SyncCooldownDisplays();
             }
-            else if (UltimateEnergy > 0 || PassiveCooldownTimer > 0)
+            else if (UltimateEnergy > 0 || PassiveCooldownTimer > 0 || QuickDrawCooldownTimer > 0)
             {
                 SyncCooldownDisplays();
             }
@@ -123,16 +130,30 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             comboIndex = 0;
             comboResetTimer = 0;
 
-            for (int i = 0; i < 12; i++)
+            SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.85f, Pitch = AttackMode == CosmicDischargeAttackMode.Whip ? 0.35f : -0.15f }, Player.Center);
+            SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.55f, Pitch = AttackMode == CosmicDischargeAttackMode.Whip ? 0.2f : -0.2f }, Player.Center);
+
+            if (!Main.dedServ)
             {
-                Dust dust = Dust.NewDustPerfect(
-                    Player.MountedCenter + Main.rand.NextVector2Circular(20f, 20f),
-                    AttackMode == CosmicDischargeAttackMode.Whip ? DustID.SnowflakeIce : DustID.Frost,
-                    Main.rand.NextVector2Circular(1.2f, 1.2f),
-                    120,
-                    AttackMode == CosmicDischargeAttackMode.Whip ? CosmicDischargeCommon.FrostCoreColor : CosmicDischargeCommon.FrostGlowColor,
-                    Main.rand.NextFloat(0.8f, 1.2f));
-                dust.noGravity = true;
+                GeneralParticleHandler.SpawnParticle(new PulseRing(
+                    Player.MountedCenter,
+                    Vector2.Zero,
+                    AttackMode == CosmicDischargeAttackMode.Whip ? CosmicDischargeCommon.FrostCoreColor * 0.8f : CosmicDischargeCommon.FrostGlowColor * 0.8f,
+                    0.05f,
+                    0.85f,
+                    15));
+
+                for (int i = 0; i < 20; i++)
+                {
+                    Vector2 velocity = Main.rand.NextVector2Circular(4f, 4f);
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        Player.MountedCenter,
+                        velocity,
+                        false,
+                        Main.rand.Next(15, 25),
+                        Main.rand.NextFloat(0.5f, 0.9f),
+                        AttackMode == CosmicDischargeAttackMode.Whip ? CosmicDischargeCommon.FrostWhiteColor : CosmicDischargeCommon.FrostCoreColor));
+                }
             }
         }
 
@@ -244,6 +265,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             SyncCooldown(CosmicDischargeUltimateCooldown.ID, UltimateEnergyMax, UltimateEnergy);
             SyncCooldown(CosmicDischargePassiveCooldown.ID, PassiveCooldownFrames, PassiveCooldownTimer);
+            SyncCooldown(CosmicDischargeQuickDrawCooldown.ID, 1800, QuickDrawCooldownTimer);
         }
 
         private void SyncCooldown(string id, int duration, int timeLeft)

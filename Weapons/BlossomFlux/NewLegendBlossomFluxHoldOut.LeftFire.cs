@@ -210,7 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             SpawnLeftProjectile(source, spawnPosition, shootVelocity, projectileType, damage, knockback, CurrentPreset);
             SpawnSHPCLeftMuzzleParticles(spawnPosition, shootVelocity, CurrentPreset, 1.05f);
             if (leftShotsFired % 3 == 0)
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffFire") { Volume = 0.52f, PitchVariance = 0.12f }, Owner.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffFire", 3) { Volume = 0.52f, PitchVariance = 0.12f }, Owner.Center);
         }
 
         private void FirePastLingeringVolley(IEntitySource source, int projectileType, float speed, int damage, float knockback)
@@ -247,7 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             SpawnSHPCLeftMuzzleParticles(GunTipPosition, direction * projectileSpeed, CurrentPreset, 0.94f + fireSpeedTier * 0.08f);
             if (leftShotsFired % 4 == 0)
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffFire") { PitchVariance = 0.12f, Volume = 0.48f }, Owner.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffFire", 3) { PitchVariance = 0.12f, Volume = 0.48f }, Owner.Center);
         }
 
         private void FireRecoveryVolley(IEntitySource source, int projectileType, float speed, int damage, float knockback)

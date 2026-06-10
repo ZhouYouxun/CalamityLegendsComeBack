@@ -1,5 +1,5 @@
 using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
-using CalamityLegendsComeBack.Weapons.Malachite.RightGeneral;
+using CalamityLegendsComeBack.Weapons.Malachite.RightGeneral.Stealth;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -36,12 +36,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private bool StealthEnhanced => Projectile.ai[2] >= 100f;
         private int ReleasedTotal => StealthEnhanced ? (int)Projectile.ai[2] - 100 : (int)Projectile.ai[2];
         private ref float Timer => ref Projectile.localAI[0];
+
+        private float hoverAngle;
         private Vector2 QueuedTarget => new(Projectile.localAI[1], Projectile.localAI[2]);
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 18;
-            ProjectileID.Sets.TrailingMode[Type] = 0;
+            ProjectileID.Sets.TrailCacheLength[Type] = 8;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
@@ -53,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 2;
+            Projectile.timeLeft = 360;
             Projectile.extraUpdates = 0;
             Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.usesLocalNPCImmunity = true;
@@ -63,7 +65,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override bool ShouldUpdatePosition() => State == MalachiteRightFeatherState.Released && Timer > 0f;
 
         public override bool? CanDamage() => State == MalachiteRightFeatherState.Released && Timer > 0f;
-
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
@@ -119,23 +120,28 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static bool TrySpawnStoredRightFeather(Player player, IEntitySource source, int damage, float knockback)
         {
-            if (CountStoredRightFeathers(player) >= MalachiteBalance.RightFeatherMaxCount)
+            int currentCount = CountStoredRightFeathers(player);
+            if (currentCount >= MalachiteBalance.RightFeatherMaxCount)
                 return false;
 
-            Projectile projectile = Projectile.NewProjectileDirect(
+            int projType = ModContent.ProjectileType<MalachiteRightFeather>();
+            int index = Projectile.NewProjectile(
                 source,
                 player.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<MalachiteRightFeather>(),
+                projType,
                 Math.Max(1, (int)(damage * 0.92f)),
                 knockback,
-                player.whoAmI);
+                player.whoAmI,
+                (float)MalachiteRightFeatherState.Stored,
+                (float)currentCount);
 
-            projectile.ai[0] = (float)MalachiteRightFeatherState.Stored;
-            projectile.ai[1] = CountStoredRightFeathers(player);
-            projectile.ai[2] = 0f;
-            projectile.alpha = 95;
-            projectile.netUpdate = true;
+            if (index >= 0 && index < 1000)
+            {
+                Projectile projectile = Main.projectile[index];
+                projectile.alpha = 95;
+                projectile.netUpdate = true;
+            }
 
             SoundEngine.PlaySound(SoundID.Item7 with { Volume = 0.28f, Pitch = 0.65f, MaxInstances = 4 }, player.Center);
             return true;
@@ -158,7 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (feathers.Count <= 0)
                 return false;
 
-            feathers.Sort((left, right) => left.identity.CompareTo(right.identity));
+            feathers.Sort((left, right) => left.whoAmI.CompareTo(right.whoAmI));
             for (int i = 0; i < feathers.Count; i++)
             {
                 Projectile projectile = feathers[i];
@@ -168,11 +174,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 projectile.localAI[0] = -i * MalachiteBalance.RightFeatherReleaseSpacingFrames;
                 projectile.localAI[1] = mouseWorld.X;
                 projectile.localAI[2] = mouseWorld.Y;
-                projectile.damage = Math.Max(1, (int)(damage * (stealthEnhanced ? 1.24f : 0.98f)));
+                projectile.damage = Math.Max(1, (int)(damage * 1.85f * (stealthEnhanced ? 1.24f : 0.98f)));
                 projectile.knockBack = knockback;
                 projectile.friendly = false;
                 projectile.tileCollide = false;
-                projectile.penetrate = 1;
+                projectile.penetrate = -1;
+                projectile.localNPCHitCooldown = 4;
                 projectile.timeLeft = 180 + i * MalachiteBalance.RightFeatherReleaseSpacingFrames;
                 projectile.Calamity().stealthStrike = stealthEnhanced;
                 projectile.netUpdate = true;
@@ -188,6 +195,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.tileCollide = false;
             Projectile.extraUpdates = 0;
             Projectile.velocity = Vector2.Zero;
+
+            Projectile.penetrate = -1;
+            Projectile.localNPCHitCooldown = 15;
 
             int total = State == MalachiteRightFeatherState.Released
                 ? Math.Max(1, ReleasedTotal)
@@ -208,8 +218,31 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 Vector2.UnitX * owner.direction * centered * -10f;
             Vector2 target = owner.MountedCenter + targetOffset * open;
 
-            Projectile.Center = Vector2.Lerp(Projectile.Center, target, 0.18f).MoveTowards(target, 16f);
-            Projectile.rotation = targetOffset.SafeNormalize(-Vector2.UnitX * owner.direction).ToRotation() + MathHelper.PiOver2;
+            Projectile.Center =
+            Vector2.Lerp(
+                Projectile.Center,
+                target,
+                0.10f)
+            .MoveTowards(
+                target,
+                10f);
+
+            float targetAngle =
+            targetOffset.SafeNormalize(
+                -Vector2.UnitX * owner.direction
+            ).ToRotation();
+
+            if (hoverAngle == 0f)
+                hoverAngle = targetAngle;
+
+            hoverAngle = Utils.AngleLerp(
+                hoverAngle,
+                targetAngle,
+                0.12f);
+
+            Projectile.rotation =
+            hoverAngle + MathHelper.PiOver2;
+
             Projectile.scale = MathHelper.Lerp(0.35f, 0.65f, open);
             Projectile.alpha = (int)MathHelper.Lerp(140f, 20f, open);
             Lighting.AddLight(Projectile.Center, 0.06f, 0.34f, 0.12f);
@@ -228,7 +261,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     continue;
                 }
 
-                if (projectile.identity < Projectile.identity)
+                if (projectile.whoAmI < Projectile.whoAmI)
                     order++;
             }
 
@@ -250,6 +283,13 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.scale = StealthEnhanced ? 0.78f : 0.65f;
             Projectile.alpha = 0;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            for (int i = 0; i < Projectile.oldRot.Length; i++)
+            {
+                Projectile.oldRot[i] = Projectile.rotation;
+                Projectile.oldPos[i] = Projectile.position;
+            }
+
             Projectile.netUpdate = true;
 
             if ((int)Projectile.ai[1] % 4 == 0)
@@ -314,15 +354,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (State == MalachiteRightFeatherState.Released && Timer > 0f)
             {
-                for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
-                {
-                    if (Projectile.oldPos[i] == Vector2.Zero)
-                        continue;
-
-                    float fade = 1f - i / (float)Projectile.oldPos.Length;
-                    Vector2 oldDrawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                    Main.EntitySpriteDraw(texture, oldDrawPosition, frame, new Color(85, 255, 135, 0) * fade * 0.45f, Projectile.oldRot[i], origin, Projectile.scale * MathHelper.Lerp(0.4f, 0.95f, fade), effects);
-                }
+                CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Projectile.type], lightColor, 1);
             }
 
             if (State == MalachiteRightFeatherState.Stored || Timer <= 0f)

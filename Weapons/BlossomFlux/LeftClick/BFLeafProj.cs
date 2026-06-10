@@ -205,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
                     SpawnBombardExplosion(impactPosition, target);
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlantyMushMine") { Volume = 0.45f, PitchVariance = 0.18f }, impactPosition);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlantyMushMine", 3) { Volume = 0.45f, PitchVariance = 0.18f }, impactPosition);
                     break;
             }
         }
@@ -233,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             SpawnLeafVanishFX(Projectile.Center, Preset, Preset == BlossomFluxChloroplastPresetType.Chlo_BRecov ? 1.28f : 0.9f);
             if (Preset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
             {
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffProjectileBounce") { Volume = 0.32f, PitchVariance = 0.12f }, Projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffProjectileBounce", 3) { Volume = 0.32f, PitchVariance = 0.12f }, Projectile.Center);
             }
             else if (Preset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
             {
@@ -780,7 +780,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             Projectile.height = blastSize;
             Projectile.Center = center;
 
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SubsumingVortexExplosion") { Volume = 0.35f, Pitch = 0.15f }, center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/SubsumingVortexExplosion") { Volume = 0.35f, Pitch = 0.15f }, center);
             SpawnExplosionFX(center);
 
             if (Projectile.owner == Main.myPlayer)

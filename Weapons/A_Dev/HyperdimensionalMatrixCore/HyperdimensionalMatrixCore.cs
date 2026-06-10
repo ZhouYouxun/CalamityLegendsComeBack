@@ -143,7 +143,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             CreateRecipe()
                 .AddIngredient<EyeOfNight>()
                 .AddIngredient<DubiousPlating>(8)
-                .AddIngredient(ItemID.SoulofFlight, 5)
                 .AddIngredient(ItemID.SoulofLight)
                 .AddIngredient(ItemID.SoulofNight)
                 .AddTile(TileID.Anvils)

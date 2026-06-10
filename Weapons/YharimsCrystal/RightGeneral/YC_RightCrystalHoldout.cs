@@ -204,5 +204,58 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (index >= 0 && index < Main.maxProjectiles && Main.projectile[index].active)
                 Main.projectile[index].Kill();
         }
+
+        protected override void UpdateHoldout()
+        {
+            Vector2 holdoutCenter = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Vector2 targetAim = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - holdoutCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+
+                if (Projectile.velocity == Vector2.Zero)
+                {
+                    Projectile.velocity = targetAim;
+                }
+                else
+                {
+                    // 2 degrees per frame turn rate limit
+                    float maxTurn = MathHelper.ToRadians(2f);
+                    float currentAngle = Projectile.velocity.ToRotation();
+                    float targetAngle = targetAim.ToRotation();
+                    float newAngle = currentAngle.AngleTowards(targetAngle, maxTurn);
+                    Vector2 newAim = newAngle.ToRotationVector2();
+
+                    if (newAim != Projectile.velocity)
+                        Projectile.netUpdate = true;
+
+                    Projectile.velocity = newAim;
+                }
+            }
+
+            Projectile.Center = holdoutCenter + ForwardDirection * HoldoutDistance;
+            Projectile.rotation = ForwardDirection.ToRotation() + MathHelper.PiOver2;
+            Projectile.direction = Projectile.velocity.X >= 0f ? 1 : -1;
+            Projectile.spriteDirection = Projectile.direction;
+
+            Owner.ChangeDir(Projectile.direction);
+            Owner.heldProj = Projectile.whoAmI;
+            Owner.itemTime = 2;
+            Owner.itemAnimation = 2;
+            Owner.itemRotation = (Projectile.velocity * Projectile.direction).ToRotation();
+
+            float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir;
+            if (Owner.gravDir == -1f)
+                armRotation += MathHelper.Pi;
+
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
+            Projectile.timeLeft = 2;
+
+            if (Projectile.soundDelay <= 0 && HoldFrameCounter > 1f)
+            {
+                Projectile.soundDelay = 22; // SoundInterval
+                SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.13f, Pitch = SoundPitch, MaxInstances = 4 }, Projectile.Center);
+            }
+        }
     }
 }

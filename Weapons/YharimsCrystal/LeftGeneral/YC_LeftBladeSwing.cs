@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private static readonly Color BladeWhite = new(255, 246, 196);
 
         private int comboIndex;
+        private int postComboTimer;
         private int currentStage;
         private int stageTimer;
         private int stageDuration;
@@ -111,10 +112,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 postSwing = false;
                 fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.22f);
                 ApplyIdleRotation();
+
                 if (releaseRequested)
                 {
                     ReleaseBurningShard();
                     Projectile.Kill();
+                    return;
+                }
+
+                postComboTimer++;
+                if (postComboTimer >= 48)
+                {
+                    ReleaseBurningShard();
+                    comboIndex = 0;
+                    postComboTimer = 0;
+                    shardReleased = false;
+                    waveFired = false;
                 }
                 return;
             }

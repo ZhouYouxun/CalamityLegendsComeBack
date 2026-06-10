@@ -27,6 +27,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private bool AttachedToHoldout => Projectile.ai[0] == 1f;
         private int HoldoutIndex => (int)Projectile.ai[1];
 
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Type] = 4;
+        }
+
         public override void SetDefaults()
         {
             Projectile.width = 62;
@@ -70,7 +75,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             else
                 Projectile.velocity *= 0.88f;
 
-            Projectile.rotation += 0.06f;
+            Projectile.rotation = 0f;
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter > 6)
+            {
+                Projectile.frame++;
+                Projectile.frameCounter = 0;
+            }
+            if (Projectile.frame > 3)
+                Projectile.frame = 0;
+
             Projectile.scale = MathHelper.Lerp(Projectile.scale, AttachedToHoldout ? 0.7f : 0.95f, 0.04f);
             Lighting.AddLight(Projectile.Center, Color.Lerp(CoreRed, CoreGold, 0.45f).ToVector3() * 0.85f);
 
@@ -106,13 +120,17 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Color main = Color.Lerp(CoreRed, CoreGold, 0.52f) with { A = 0 };
             float pulse = 1f + (float)Math.Sin(Timer * 0.18f) * 0.08f;
 
+            int frameHeight = texture.Height / Main.projFrames[Type];
+            Rectangle frame = new(0, frameHeight * Projectile.frame, texture.Width, frameHeight);
+            Vector2 origin = new(texture.Width * 0.5f, frameHeight * 0.5f + 22f);
+
             for (int i = 0; i < 8; i++)
             {
                 Vector2 offset = (MathHelper.TwoPi * i / 8f + Timer * 0.035f).ToRotationVector2() * 4f;
                 Main.EntitySpriteDraw(bloom, drawPosition + offset, null, main * 0.28f, -Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.36f * pulse, SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, Color.White, 0.35f), Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, frame, Color.Lerp(lightColor, Color.White, 0.35f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White with { A = 0 } * 0.22f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.18f, SpriteEffects.None);
             return false;
         }
@@ -373,7 +391,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             Main.projFrames[Type] = 4;
             ProjectileID.Sets.TrailCacheLength[Type] = 8;
-            ProjectileID.Sets.TrailingMode[Type] = 0;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
@@ -450,7 +468,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 12;
+            ProjectileID.Sets.TrailCacheLength[Type] = 8;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -503,21 +521,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         public override bool PreDraw(ref Color lightColor)
         {
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Projectile.type], lightColor, 1);
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 origin = texture.Size() * 0.5f;
-
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
-            {
-                if (Projectile.oldPos[i] == Vector2.Zero)
-                    continue;
-
-                float completion = i / (float)Projectile.oldPos.Length;
-                Color color = Main.hslToRgb((completion + Main.GlobalTimeWrappedHourly * 0.55f) % 1f, 0.95f, 0.6f) with { A = 0 };
-                Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(texture, drawPosition, null, color * (1f - completion) * 0.55f, Projectile.rotation, origin, Projectile.scale * (1f - completion * 0.04f), SpriteEffects.None);
-                Main.EntitySpriteDraw(bloom, drawPosition, null, color * (1f - completion) * 0.26f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.22f, SpriteEffects.None);
-            }
 
             Color main = Main.hslToRgb((Main.GlobalTimeWrappedHourly * 0.9f + Projectile.identity * 0.01f) % 1f, 1f, 0.64f);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, main with { A = 0 } * 0.58f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.28f, SpriteEffects.None);

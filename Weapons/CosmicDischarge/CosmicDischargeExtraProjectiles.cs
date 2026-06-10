@@ -92,6 +92,19 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             CosmicDischargeCommon.ApplyColdDebuffs(target, 150);
             ApplyScreenShake(4.8f);
 
+            if (!target.boss && target.knockBackResist > 0f)
+            {
+                Player player = Main.player[Projectile.owner];
+                Vector2 pullDir = (player.Center - target.Center).SafeNormalize(Vector2.Zero);
+                float dist = Vector2.Distance(player.Center, target.Center);
+                if (dist > 100f)
+                {
+                    float pullSpeed = MathHelper.Clamp(dist / 15f, 8f, 22f);
+                    target.velocity = pullDir * pullSpeed;
+                    target.netUpdate = true;
+                }
+            }
+
             if (Main.dedServ)
                 return;
 
