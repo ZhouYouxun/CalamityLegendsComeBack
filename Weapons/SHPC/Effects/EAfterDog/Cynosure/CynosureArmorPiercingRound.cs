@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// </summary>
     public class CynosureArmorPiercingRound : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricBuletPROJ";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureArmorPiercingRound";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         // 金源主题色
@@ -57,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.18f, 0.65f, 1f) * 0.72f);
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);

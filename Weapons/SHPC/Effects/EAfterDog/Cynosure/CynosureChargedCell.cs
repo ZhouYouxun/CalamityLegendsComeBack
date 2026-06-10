@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// </summary>
     public class CynosureChargedCell : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricBall";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureChargedCell";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private Vector2 OrbitCenter
