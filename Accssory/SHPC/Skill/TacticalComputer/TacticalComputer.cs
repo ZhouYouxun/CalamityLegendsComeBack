@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer
             TacticalComputerPlayer tacticalPlayer = player.GetModPlayer<TacticalComputerPlayer>();
             tacticalPlayer.TacticalComputerEquipped = true;
             tacticalPlayer.TacticalComputerVisualsHidden = hideVisual;
+            player.GetCritChance(DamageClass.Generic) += 8f;
         }
 
         public override void AddRecipes()

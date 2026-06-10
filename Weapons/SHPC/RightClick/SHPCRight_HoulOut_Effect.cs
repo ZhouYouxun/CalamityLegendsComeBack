@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -655,11 +655,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, dir);
             SpawnRocketSalvoMuzzleEffect(player, dir);
 
-            const int orbCount = 3;
+            bool diffusionChip = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip.ChargedDiffusionChipPlayer>().ChargedDiffusionChipEquipped;
+            int orbCount = diffusionChip ? 6 : 3;
+            float maxAngle = diffusionChip ? MathHelper.ToRadians(2.5f) : 0.22f;
             for (int i = 0; i < orbCount; i++)
             {
-                float t = i / (float)(orbCount - 1);
-                float angle = MathHelper.Lerp(-0.22f, 0.22f, t);
+                float t = orbCount == 1 ? 0.5f : i / (float)(orbCount - 1);
+                float angle = MathHelper.Lerp(-maxAngle, maxAngle, t);
                 float distFromCenter = Math.Abs(t - 0.5f) * 2f;
                 float speedFactor = (float)Math.Pow(1f - distFromCenter, 1.5f);
                 float speed = MathHelper.Lerp(10f, 18f, speedFactor);

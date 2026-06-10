@@ -85,7 +85,11 @@ Mods: {
 
 			ChargedDiffusionChip: {
 				DisplayName: Charged Diffusion Chip
-				Tooltip: Left click scatters five energy orbs at once, but each deals only 22% damage
+				Tooltip:
+					'''
+					Instead of affecting left-click, manual venting during right-click sweep fires 6 energy orbs
+					Each orb deals full damage and the overall spread angle is reduced to 5 degrees
+					'''
 			}
 
 			CommandAscend: {
@@ -120,7 +124,12 @@ Mods: {
 
 			TacticalComputer: {
 				DisplayName: Tactical Computer
-				Tooltip: Gives SHPC right click automatic lock-on
+				Tooltip:
+					'''
+					Gives SHPC right click automatic lock-on
+					Provides 8% increased critical strike chance
+					Right-click laser projectiles will weakly home in on the targeting reticle if it is within 180 degrees in front (turns up to 1 degree per frame)
+					'''
 			}
 
 			HeatRedirectModule: {
@@ -128,7 +137,7 @@ Mods: {
 				Tooltip:
 					'''
 					SHPC right-click shots generate 20% more heat and natural heat dissipation is reduced by 33%
-					Each heat level grants an additional 25% SHPC right-click damage
+					Each of the first two heat levels grants an additional 25% SHPC right-click damage, capped at +50%
 					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
 					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
 					'''

@@ -59,6 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Projectile.timeLeft = 180000;
             Projectile.usesLocalNPCImmunity = true; // 弹幕使用本地无敌帧
             Projectile.localNPCHitCooldown = 2; // 无敌帧冷却时间为1帧
+            Projectile.DamageType = DamageClass.Magic;
         }
 
 

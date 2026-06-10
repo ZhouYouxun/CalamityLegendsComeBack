@@ -284,7 +284,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             float speed = Projectile.velocity.Length();
-            float maxTurn = MathHelper.ToRadians(tacticalPlayer.ReticleHasTarget ? 1.35f : 1.05f);
+            float maxTurn = MathHelper.ToRadians(1f); // 每一帧限制转动一度
             Projectile.velocity = currentDirection.ToRotation()
                 .AngleTowards(desiredDirection.ToRotation(), maxTurn)
                 .ToRotationVector2() * speed;

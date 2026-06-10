@@ -11,18 +11,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule
         
         public float GetHeatDamageMultiplier(int heatStage)
         {
-            /*float  FinalHeatDamage = HeatRedirectModuleEquipped ? 1f + System.Math.Max(0, heatStage) * 0.25f : 1f;
-            if (FinalHeatDamage < 0.5f)
-            {
-                FinalHeatDamage = FinalHeatDamage;
-            }
-            else if (FinalHeatDamage >= 0.5f)
-            {
-                FinalHeatDamage = 0.5f;
-            }
+            if (!HeatRedirectModuleEquipped)
+                return 1f;
 
-            return FinalHeatDamage;*/
-            return HeatRedirectModuleEquipped ? 1f + System.Math.Max(0, heatStage) * 0.25f : 1f;
+            int cappedStage = System.Math.Min(2, System.Math.Max(0, heatStage));
+            return 1f + cappedStage * 0.25f;
         }
 
         public override void ResetEffects()
