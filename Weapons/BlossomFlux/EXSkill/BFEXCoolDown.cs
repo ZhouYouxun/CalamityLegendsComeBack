@@ -23,9 +23,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.BlossomFlux_EX");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/EXSkill/BFEXCoolDown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BlossomFlux/EXSkill/BFEXCoolDownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BlossomFlux/EXSkill/BFEXCoolDownOverlay";
 
         public override Color OutlineColor => new Color(18, 56, 24);
         public override Color CooldownStartColor => new Color(88, 255, 148);
