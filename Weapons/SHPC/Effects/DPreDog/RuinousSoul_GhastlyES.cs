@@ -8,8 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
     internal class RuinousSoul_GhastlyES : ModProjectile, ILocalizedModType
     {
-        private const int PreludeFrames = 34;
-        private const int FullLife = 150;
+        private const int PreludeFrames = 30;
+        private const int FullLife = 240;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -20,8 +20,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void SetDefaults()
         {
-            Projectile.width = 8;
-            Projectile.height = 8;
+            Projectile.width = 24;
+            Projectile.height = 24;
             Projectile.friendly = true;
             Projectile.alpha = 255;
             Projectile.timeLeft = FullLife;
@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             if (target is null)
             {
-                Projectile.velocity *= 0.992f;
+                Projectile.velocity *= 0.993f;
                 return;
             }
 

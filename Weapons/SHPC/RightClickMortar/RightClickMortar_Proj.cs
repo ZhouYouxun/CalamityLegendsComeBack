@@ -271,7 +271,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(sourceDamage * 0.8f),
+                (int)(sourceDamage * 1.5f),
                 Projectile.knockBack,
                 Projectile.owner
             );
@@ -306,7 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             NPC target = FindLaserTarget(explosionCenter);
             Vector2 targetCenter = target?.Center ?? explosionCenter;
             int laserCount = Main.rand.Next(24, 31);
-            int laserDamage = Math.Max(1, (int)(sourceDamage * 0.38f));
+            int laserDamage = Math.Max(1, (int)(sourceDamage * 0.47f));
 
             for (int i = 0; i < laserCount; i++)
             {

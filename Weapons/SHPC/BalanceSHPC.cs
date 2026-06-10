@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             54, // 120Golem / 石巨人
             55, // 180Moon Lord / 月亮领主
             60, // 240Providence / 亵渎天神
-            77, // 300Polterghast / 噬魂幽花
+            72, // 300Polterghast / 噬魂幽花
             81, // 360Devourer of Gods / 神明吞噬者
             90, // 500Yharon / 犽戎
             100 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
@@ -54,9 +54,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             66, // 32Plantera / 世纪之花
             75, // 40Golem / 石巨人
             95, // 54Moon Lord / 月亮领主
-            130, // 66Providence / 亵渎天神
-            160, // 77Polterghast / 噬魂幽花
-            210, // 90Devourer of Gods / 神明吞噬者
+            125, // 66Providence / 亵渎天神
+            155, // 77Polterghast / 噬魂幽花
+            200, // 90Devourer of Gods / 神明吞噬者
             250, // 100Yharon / 犽戎
             333 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
@@ -92,12 +92,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.94f, // EffectID 25: Meld Blob / 冥思溶剂
             2.25f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
-            2.29f, // EffectID 28: Divine Geode / 神圣晶石
-            1.28f, // EffectID 29: Bloodstone Core / 血神核心
-            2.63f, // EffectID 30: Ruinous Soul / 毁灭之灵
+            2.00f, // EffectID 28: Divine Geode / 神圣晶石
+            2.48f, // EffectID 29: Bloodstone Core / 血神核心
+            2.70f, // EffectID 30: Ruinous Soul / 毁灭之灵
             2.24f, // EffectID 31: Necroplasm / 灵质
             1.97f, // EffectID 32: Dark Plasma / 暗离子体
-            2.35f, // EffectID 33: Twisting Nether / 扭曲虚空
+            2.30f, // EffectID 33: Twisting Nether / 扭曲虚空
             2.85f, // EffectID 34: Endothermic Energy / 恒温能量
             2.07f, // EffectID 35: Nightmare Fuel / 梦魇魔能
             2.42f, // EffectID 36: Ascendant Spirit Essence / 化神魂精

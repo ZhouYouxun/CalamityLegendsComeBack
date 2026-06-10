@@ -126,9 +126,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             float startRotation = releaseCount % 2 == 1 ? -MathHelper.PiOver2 : 0f;
 
             // 六方向几何射线：奇数次竖向，偶数次横向，间隔始终为60度。
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 8; i++)
             {
-                float rot = startRotation + MathHelper.TwoPi / 6f * i;
+                float rot = startRotation + MathHelper.TwoPi / 8f * i;
 
                 Vector2 velocity = new Vector2(1f, 0f).RotatedBy(rot) * 12f;
 
@@ -137,7 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.Center,
                     velocity,
                     ModContent.ProjectileType<DivineGeode_Lazer>(),
-                    (int)(projectile.damage * 0.8),
+                    (int)(projectile.damage * 0.5),
                     projectile.knockBack,
                     projectile.owner
                 );

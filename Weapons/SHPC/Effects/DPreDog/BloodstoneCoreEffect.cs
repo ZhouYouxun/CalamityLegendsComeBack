@@ -120,7 +120,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             }
 
             // ================= 爆炸生成 =================
-            int explosionDamage = empowered ? (int)(projectile.damage * 1.6f) : (int)(projectile.damage * 0.95f);
+            int explosionDamage = empowered ? (int)(projectile.damage * 1.6f) : (int)(projectile.damage * 2f);
 
             int projIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
