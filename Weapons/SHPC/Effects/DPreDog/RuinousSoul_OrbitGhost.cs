@@ -181,7 +181,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             if (!OwnerStillHoldingSHPC(owner))
             {
-                Projectile.Kill();
+                NPC target = FindLaunchTarget(owner);
+                int targetIdx = target != null ? target.whoAmI : -1;
+                Release(targetIdx);
                 return;
             }
 

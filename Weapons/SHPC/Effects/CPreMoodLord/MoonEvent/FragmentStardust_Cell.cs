@@ -319,15 +319,49 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Vector2 origin = frameRect.Size() / 2f;
             Vector2 pos = Projectile.Center - Main.screenPosition;
 
-            for (int i = 0; i < 4; i++)
+            // 1. Calculate growth progress
+            float progress = isSmall ? MathHelper.Clamp(stateTimer / (float)GrowTime, 0f, 1f) : 1f;
+
+            // 2. Interpolate backlight properties based on progress
+            // Start: Pale Cyan/Sky Blue
+            Color startColor = new Color(120, 210, 255);
+            // End: Deep Stardust Violet/Pink
+            Color endColor = new Color(240, 100, 255);
+            Color baseColor = Color.Lerp(startColor, endColor, progress);
+
+            // Dynamic color shift using a sine wave
+            Color dynamicColor = Color.Lerp(baseColor, new Color(130, 255, 230), (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6.5f) * 0.25f + 0.25f);
+
+            // Fluctuation/vibration parameters: high frequency when small, majestic pulse when large
+            float waveSpeed = MathHelper.Lerp(28f, 7f, progress);
+            float waveAmp = MathHelper.Lerp(0.6f, 2.2f, progress);
+            float baseOffset = MathHelper.Lerp(2.8f, 7.5f, progress);
+            
+            float currentFluctuation = (float)Math.Sin(Main.GlobalTimeWrappedHourly * waveSpeed) * waveAmp;
+            float chargeOffset = baseOffset + currentFluctuation;
+
+            float baseOpacity = MathHelper.Lerp(0.45f, 0.85f, progress);
+            float pulseOpacity = baseOpacity + (float)Math.Cos(Main.GlobalTimeWrappedHourly * waveSpeed * 0.5f) * 0.12f;
+
+            // 3. Draw Backlight (Additive)
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            
+            int numDraws = 16;
+            for (int i = 0; i < numDraws; i++)
             {
-                Vector2 offset = new Vector2(2f, 0f).RotatedBy(i * (MathHelper.Pi / 2f));
+                float angle = MathHelper.TwoPi * i / (float)numDraws;
+                Vector2 drawOffset = angle.ToRotationVector2() * chargeOffset;
+
+                // Alternate colors around the circle for a rich celestial texture
+                Color backlightColor = (i % 2 == 0) ? dynamicColor : new Color(180, 240, 255);
+                backlightColor = backlightColor * (pulseOpacity * (i % 2 == 0 ? 0.65f : 0.45f));
+                backlightColor.A = 0; // Ensure transparent center/glow effect
 
                 Main.EntitySpriteDraw(
                     tex,
-                    pos + offset,
+                    pos + drawOffset,
                     frameRect,
-                    Color.LightBlue * 0.6f,
+                    backlightColor,
                     0f,
                     origin,
                     Projectile.scale,
@@ -335,6 +369,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 );
             }
 
+            // Draw a soft bloom circle behind the cell for the extra glow factor
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Color bloomColor = dynamicColor * (pulseOpacity * 0.35f);
+            bloomColor.A = 0;
+            Main.EntitySpriteDraw(
+                bloom,
+                pos,
+                null,
+                bloomColor,
+                0f,
+                bloom.Size() * 0.5f,
+                Projectile.scale * MathHelper.Lerp(0.24f, 0.55f, progress),
+                SpriteEffects.None
+            );
+
+            // 4. Draw Main Body (AlphaBlend)
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            
             Main.EntitySpriteDraw(
                 tex,
                 pos,

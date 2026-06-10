@@ -300,6 +300,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 19 => 16.5f,
                 31 => 25.5f,
                 40 => 30.5f,
+                41 => 2.5f,    // 珍珠碎片放在风暴之颚(2)和硫磺鳞片(3)之间
+                44 => 20f,     // calamity核心放在瘟疫细胞罐(18)后面，日耀碎片(21)前面
+                42 => 35.5f,   // 黑日碎片放在恒温能量(34)和梦魇燃料(35)后面，Ascendant灵魂碎片(36)前面
                 _ => effectID
             };
         }

@@ -22,13 +22,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void SetDefaults()
         {
-            Projectile.width = 36;
-            Projectile.height = 36;
+            Projectile.width = 25; // Reduced by 30% (originally 36)
+            Projectile.height = 25; // Reduced by 30% (originally 36)
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = 7;
-            Projectile.timeLeft = 100;
+            Projectile.timeLeft = 30;
             Projectile.extraUpdates = 4;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 15;
@@ -40,48 +40,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             timer++;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-            int targetIndex = (int)Projectile.ai[0];
-            float side = Projectile.ai[1] == 0f ? 1f : System.Math.Sign(Projectile.ai[1]);
             float speed = MathHelper.Lerp(Projectile.velocity.Length(), 40f, 0.055f);
-
-            if (Main.npc.IndexInRange(targetIndex))
-            {
-                NPC target = Main.npc[targetIndex];
-                if (target.active && target.CanBeChasedBy(Projectile))
-                {
-                    float returnPower = Utils.GetLerpValue(16f, 82f, timer, true);
-                    Vector2 predictedCenter = target.Center + target.velocity * MathHelper.Lerp(0f, 3f, returnPower);
-                    Vector2 toTarget = (predictedCenter - Projectile.Center).SafeNormalize(forward);
-                    float fakeMissPower = 1f - returnPower;
-                    Vector2 perpendicularBias = toTarget.RotatedBy(MathHelper.PiOver2 * side) * 0.12f * fakeMissPower;
-                    Vector2 desired = (toTarget + perpendicularBias).SafeNormalize(toTarget);
-                    float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(0.05f), MathHelper.ToRadians(0.62f), (float)System.Math.Pow(returnPower, 1.35f));
-                    float easedDesiredRotation = forward.ToRotation().AngleTowards(desired.ToRotation(), maxTurn);
-                    Vector2 easedDesired = easedDesiredRotation.ToRotationVector2();
-                    float turnStrength = MathHelper.Lerp(0.015f, 0.095f, returnPower);
-
-                    forward = Vector2.Lerp(forward, easedDesired, turnStrength).SafeNormalize(desired);
-                    speed = MathHelper.Lerp(speed, 42f, returnPower * 0.025f);
-                }
-            }
 
             Projectile.velocity = forward * speed;
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Color(255, 220, 100).ToVector3() * 0.45f);
 
             Vector2 futurePos = Projectile.Center + Projectile.velocity * 0.5f;
-            int sparkCount = timer < 12 ? 2 : 3;
+            int sparkCount = timer < 12 ? 1 : 2;
             for (int i = 0; i < sparkCount; i++)
             {
-                Vector2 vel = forward.RotatedByRandom(MathHelper.ToRadians(timer < 12 ? 3f : 7f)) * Main.rand.NextFloat(3.6f, 7.2f);
+                Vector2 vel = forward.RotatedByRandom(MathHelper.ToRadians(timer < 12 ? 1.5f : 3.5f)) * Main.rand.NextFloat(1.5f, 4.0f);
                 Particle spark = new GlowSparkParticle(
                     futurePos,
                     vel,
                     false,
-                    8,
-                    0.12f,
+                    6,
+                    0.09f,
                     new Color(255, 230, 120),
-                    new Vector2(1.45f, 0.22f),
+                    new Vector2(0.9f, 0.2f),
                     true,
                     false,
                     1);
@@ -92,18 +69,63 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             if (Main.rand.NextBool(2))
             {
                 Particle trail = new GlowSparkParticle(
-                    Projectile.Center - forward * 10f,
-                    -forward * Main.rand.NextFloat(1.2f, 3f),
+                    Projectile.Center - forward * 6f,
+                    -forward * Main.rand.NextFloat(0.8f, 2.0f),
                     false,
-                    10,
-                    0.1f,
+                    8,
+                    0.08f,
                     new Color(255, 200, 80),
-                    new Vector2(1.1f, 0.22f),
+                    new Vector2(0.75f, 0.2f),
                     true,
                     false,
                     1);
 
                 GeneralParticleHandler.SpawnParticle(trail);
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 sparkVel = -forward * Main.rand.NextFloat(1f, 3f) + Main.rand.NextVector2Circular(0.4f, 0.4f);
+                CritSpark spark = new CritSpark(
+                    Projectile.Center - forward * 4f,
+                    sparkVel,
+                    Color.White,
+                    new Color(255, 220, 90),
+                    Main.rand.NextFloat(0.3f, 0.6f),
+                    10
+                );
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            if (Main.rand.NextBool(4))
+            {
+                GlowOrbParticle orb = new GlowOrbParticle(
+                    Projectile.Center,
+                    -forward * 0.5f,
+                    false,
+                    8,
+                    0.18f,
+                    new Color(255, 240, 150),
+                    true,
+                    false,
+                    true
+                );
+                GeneralParticleHandler.SpawnParticle(orb);
+            }
+
+            if (timer % 12 == 0)
+            {
+                Particle pulse = new DirectionalPulseRing(
+                    Projectile.Center,
+                    Projectile.velocity * 0.2f,
+                    new Color(255, 210, 80) * 0.5f,
+                    new Vector2(1f, 2f),
+                    Projectile.rotation - MathHelper.PiOver2,
+                    0.05f,
+                    0.005f,
+                    12
+                );
+                GeneralParticleHandler.SpawnParticle(pulse);
             }
         }
 
@@ -113,6 +135,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         {
             Vector2 pos = target.Center;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+
+            Particle hitRing = new DirectionalPulseRing(
+                pos,
+                Vector2.Zero,
+                new Color(255, 230, 100),
+                new Vector2(1f, 1f),
+                0f,
+                0.1f,
+                3.0f,
+                16
+            );
+            GeneralParticleHandler.SpawnParticle(hitRing);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 sparkVel = Main.rand.NextVector2Circular(3f, 3f) + forward * Main.rand.NextFloat(2f, 5f);
+                CritSpark hitSpark = new CritSpark(
+                    pos,
+                    sparkVel,
+                    Color.White,
+                    new Color(255, 200, 80),
+                    Main.rand.NextFloat(0.8f, 1.2f),
+                    18
+                );
+                GeneralParticleHandler.SpawnParticle(hitSpark);
+            }
 
             for (int i = 0; i < 12; i++)
             {

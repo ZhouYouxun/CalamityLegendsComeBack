@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -7,12 +8,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 {
     public class PearlShardSmallPearl : ModProjectile, ILocalizedModType
     {
-        private const float HomingStartFrame = 24f;
+        private const float HomingRange = 1280f;
+        private const float MaxSpeed = 19.5f;
+
+        // 分裂弹幕追踪前飞行距离减半 (originally ~24 frames, halved is 12 frames/AI calls)
+        private const int HomingDelay = 12;
+
+        private const float HomingInertia = 16f; // 惯性越小转向越快 (Briny was 27f, so 16f is faster)
+        private const float FreeFlightDamping = 0.99f; // 有一个0.99的减速
+        private const float NoTargetDamping = 0.99f;
+        private const float WanderingTurnStrength = 0.006f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/APreHardMode/PearlShard/PearlShardParticle";
 
-        private ref float FrameTimer => ref Projectile.ai[1];
+        private int timer;
 
         public override void SetStaticDefaults()
         {
@@ -27,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 120;
+            Projectile.timeLeft = 300; // 持续时间翻2.5倍 (originally 120)
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
@@ -35,9 +45,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void AI()
         {
-            FrameTimer += 1f / (Projectile.extraUpdates + 1f);
+            timer++;
 
-            HomingAI();
+            HomeTowardTarget();
 
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.28f, 0.18f, 0.26f));
@@ -48,38 +58,62 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             PearlShardVisuals.SpawnPearlGodTrail(Projectile, 0.5f);
         }
 
-        private void HomingAI()
+        private void HomeTowardTarget()
         {
-            NPC target = FindTarget();
-            if (FrameTimer < HomingStartFrame)
+            if (timer <= HomingDelay)
             {
-                Projectile.velocity *= 0.99f;
+                FreeDrift();
                 return;
             }
 
-            float homingTimer = FrameTimer - HomingStartFrame;
+            NPC target = FindNearestTarget(HomingRange);
             if (target == null)
             {
-                Projectile.velocity *= 1.006f;
+                FreeDrift(NoTargetDamping);
                 return;
             }
 
-            float loosen = Utils.GetLerpValue(0f, 62f, homingTimer, true);
-            float closeLoosen = Utils.GetLerpValue(220f, 42f, Projectile.Distance(target.Center), true);
-            float power = MathHelper.Clamp(loosen + closeLoosen * 0.55f, 0f, 1f);
-            float speed = MathHelper.Lerp(6.48f, 17.55f, power);
-            float turnLimit = MathHelper.ToRadians(MathHelper.Lerp(3f, 31f, power));
-            Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * speed;
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
 
-            float currentSpeed = MathHelper.Lerp(Projectile.velocity.Length(), speed, MathHelper.Lerp(0.05f, 0.26f, power));
-            float rotation = Projectile.velocity.ToRotation().AngleTowards(desired.ToRotation(), turnLimit);
-            Projectile.velocity = rotation.ToRotationVector2() * currentSpeed;
+            if (currentSpeed < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 4f;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+
+            // 刚过启动延迟时只轻轻拉一下，随后才逐渐变得更愿意追踪。
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 36f, timer, true);
+
+            // 离敌人很近时稍微积极一点，避免它在敌人旁边绕半天不命中。
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+
+            float targetSpeed = MathHelper.Lerp(10.5f, MaxSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            // “半追踪感”的核心：用惯性慢慢拽过去。
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+
+            // 保留一点点游移，不让轨迹变得过于机械。
+            float sideSway = (float)Math.Sin((timer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            // 限速，避免多次惯性叠加后速度过高。
+            if (Projectile.velocity.Length() > MaxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxSpeed;
         }
 
-        private NPC FindTarget()
+        private void FreeDrift(float damping = FreeFlightDamping)
         {
-            NPC bestTarget = null;
-            float bestDistance = 1280f;
+            float wander = (float)Math.Sin((timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
+        }
+
+        private NPC FindNearestTarget(float maxDistance)
+        {
+            NPC closestTarget = null;
+            float closestDistance = maxDistance;
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
@@ -87,14 +121,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                     continue;
 
                 float distance = Projectile.Distance(npc.Center);
-                if (distance >= bestDistance)
+                if (distance >= closestDistance)
                     continue;
 
-                bestDistance = distance;
-                bestTarget = npc;
+                closestDistance = distance;
+                closestTarget = npc;
             }
 
-            return bestTarget;
+            return closestTarget;
         }
 
         public override bool? CanDamage()

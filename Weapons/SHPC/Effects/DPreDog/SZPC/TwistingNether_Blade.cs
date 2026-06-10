@@ -66,16 +66,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void AI()
         {
+            // 在每次更新时（每tick更新5次）平滑累加角度，使得旋转速度和之前完全保持一致
+            helixAngle += 0.28f / 5f;
+            pulseAngle += 0.16f / 5f;
+
             if (Projectile.numUpdates == 0)
             {
                 flightTimer++;
-                helixAngle += 0.28f;
-                pulseAngle += 0.16f;
                 SpawnVisibleFlightEffects();
+            }
+
+            // 以两倍的频率释放 VoidSparkParticle (在 numUpdates == 0 和 2 时分别释放一次)
+            if (Projectile.numUpdates == 0 || Projectile.numUpdates == 2)
+            {
+                SpawnVoidSparkParticles();
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.Opacity = 1f;
+        }
+
+        private void SpawnVoidSparkParticles()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+
+            for (int strand = 0; strand < 2; strand++)
+            {
+                float phase = helixAngle + strand * MathHelper.Pi;
+                float sideOffset = (float)Math.Sin(phase) * 30f;
+                float forwardOffset = MathHelper.Lerp(-28f, 14f, 0.5f + 0.5f * (float)Math.Cos(phase));
+                Vector2 sparkPosition = Projectile.Center + forward * forwardOffset + side * sideOffset;
+                Vector2 sparkVelocity = -forward * (1.05f + strand * 0.22f);
+                Color sparkColor = Color.Lerp(BladePurple, strand == 0 ? GlitchGreen : BladeBlood, 0.32f);
+
+                GeneralParticleHandler.SpawnParticle(new VoidSparkParticle(
+                    sparkPosition,
+                    sparkVelocity,
+                    false,
+                    18,
+                    0.12f,
+                    sparkColor,
+                    0.78f));
+            }
         }
 
         private void SpawnVisibleFlightEffects()
@@ -101,25 +137,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 true,
                 shrinkSpeed: 0.82f,
                 glowOpacity: 0.45f));
-
-            for (int strand = 0; strand < 2; strand++)
-            {
-                float phase = helixAngle + strand * MathHelper.Pi;
-                float sideOffset = (float)Math.Sin(phase) * 30f;
-                float forwardOffset = MathHelper.Lerp(-28f, 14f, 0.5f + 0.5f * (float)Math.Cos(phase));
-                Vector2 sparkPosition = Projectile.Center + forward * forwardOffset + side * sideOffset;
-                Vector2 sparkVelocity = -forward * (1.05f + strand * 0.22f);
-                Color sparkColor = Color.Lerp(BladePurple, strand == 0 ? GlitchGreen : BladeBlood, 0.32f);
-
-                GeneralParticleHandler.SpawnParticle(new VoidSparkParticle(
-                    sparkPosition,
-                    sparkVelocity,
-                    false,
-                    18,
-                    0.12f,
-                    sparkColor,
-                    0.78f));
-            }
 
             if (Main.rand.NextBool(2))
             {

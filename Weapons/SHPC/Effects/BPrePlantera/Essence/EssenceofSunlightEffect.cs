@@ -40,53 +40,69 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void AI(Projectile projectile, Player owner)
         {
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float targetSpeed = MathHelper.Lerp(projectile.velocity.Length(), 21f, 0.03f);
-            NPC target = FindTarget(projectile, 1200f);
-
+            NPC target = FindTarget(projectile, 1800f);
             EssenceofSunlight_GP gp = projectile.GetGlobalProjectile<EssenceofSunlight_GP>();
+
+            Vector2 currentVelocity = projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            Vector2 forward = currentVelocity.SafeNormalize(Vector2.UnitX);
 
             if (target is not null)
             {
                 gp.homingTimer++;
+                Vector2 desiredDirection = (target.Center - projectile.Center).SafeNormalize(forward);
+                float warmup = Utils.GetLerpValue(0f, 30f, gp.homingTimer, true);
+                float targetSpeed = MathHelper.Lerp(18f, 28f, warmup);
+                Vector2 desiredVelocity = desiredDirection * targetSpeed;
 
-                Vector2 predictedCenter = target.Center + target.velocity * 8f;
-                Vector2 desiredDirection = (predictedCenter - projectile.Center).SafeNormalize(forward);
-                float trackingPower = Utils.GetLerpValue(0f, 80f, gp.homingTimer, true);
-                float closeTargetBoost = Utils.GetLerpValue(260f, 70f, projectile.Distance(target.Center), true);
-                float turnPower = MathHelper.Max(trackingPower, closeTargetBoost * 0.65f);
-                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(1.4f), MathHelper.ToRadians(6.2f), turnPower);
-                float easedRotation = forward.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn);
+                const float HomingInertia = 5f; // Very low inertia for extremely tight/fast homing
+                projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
 
-                forward = easedRotation.ToRotationVector2();
-                targetSpeed = MathHelper.Lerp(targetSpeed, 24f, 0.05f + turnPower * 0.05f);
+                if (projectile.velocity.Length() > 28f)
+                    projectile.velocity = projectile.velocity.SafeNormalize(desiredDirection) * 28f;
             }
             else
+            {
                 gp.homingTimer = 0;
+                float targetSpeed = MathHelper.Lerp(currentSpeed, 21f, 0.03f);
+                projectile.velocity = forward * targetSpeed;
+            }
 
-            projectile.velocity = forward * targetSpeed;
-            projectile.rotation = forward.ToRotation();
-
+            projectile.rotation = projectile.velocity.ToRotation();
             Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.42f);
 
             if (projectile.numUpdates == 0)
             {
                 gp.flightTimer++;
 
-                if (Main.rand.NextBool(1))
+                if (Main.rand.NextBool(2))
                 {
-                    Particle streak = new GlowSparkParticle(
+                    Vector2 sparkVelocity = -forward * Main.rand.NextFloat(1f, 3.5f) + Main.rand.NextVector2Circular(0.5f, 0.5f);
+                    CritSpark spark = new CritSpark(
                         projectile.Center - forward * Main.rand.NextFloat(4f, 14f),
-                        -forward * Main.rand.NextFloat(1.0f, 2.8f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
+                        sparkVelocity,
+                        Color.White,
+                        new Color(255, 196, 70),
+                        Main.rand.NextFloat(0.4f, 0.85f),
+                        Main.rand.Next(8, 14)
+                    );
+                    GeneralParticleHandler.SpawnParticle(spark);
+                }
+
+                if (Main.rand.NextBool(3))
+                {
+                    GlowOrbParticle orb = new GlowOrbParticle(
+                        projectile.Center - forward * Main.rand.NextFloat(2f, 8f),
+                        -forward * Main.rand.NextFloat(0.5f, 1.8f),
                         false,
-                        Main.rand.Next(6, 9),
-                        Main.rand.NextFloat(0.07f, 0.11f),
-                        Color.Lerp(new Color(255, 255, 170), new Color(255, 196, 70), Main.rand.NextFloat()),
-                        new Vector2(1.05f, 0.2f),
+                        Main.rand.Next(6, 12),
+                        Main.rand.NextFloat(0.15f, 0.3f),
+                        new Color(255, 220, 90),
                         true,
                         false,
-                        1f);
-                    GeneralParticleHandler.SpawnParticle(streak);
+                        true
+                    );
+                    GeneralParticleHandler.SpawnParticle(orb);
                 }
 
                 if (gp.flightTimer % 9 == 0)
@@ -190,13 +206,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 return;
 
             Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
-            Vector2 relativeOffset = projectile.Center - owner.Center;
+            
+            // 往正上方 30 * 16 = 480 像素，以及周遭区域随机 (80 像素半径)
+            Vector2 randomOffset = Main.rand.NextVector2Circular(80f, 80f);
+            Vector2 spawnPos = projectile.Center + new Vector2(0f, -480f) + randomOffset;
+            
+            Vector2 relativeOffset = spawnPos - owner.Center;
             if (relativeOffset.LengthSquared() < 16f)
                 relativeOffset = forward * 72f;
 
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
-                projectile.Center,
+                spawnPos,
                 forward,
                 ModContent.ProjectileType<EssenceofSunlight_BurstRelay>(),
                 projectile.damage,

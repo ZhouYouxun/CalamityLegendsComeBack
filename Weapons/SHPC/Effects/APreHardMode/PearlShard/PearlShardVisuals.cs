@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Color pearlColor = Color.Lerp(Color.White, new Color(255, 198, 226), 0.22f) * projectile.Opacity;
             Color haloColor = new Color(255, 170, 220, 0) * (0.26f * projectile.Opacity);
             float pulse = 0.94f + 0.06f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 9f + projectile.identity);
-            float textureScale = sizeFactor * pulse;
+            float textureScale = sizeFactor * 1.3f * pulse;
 
             for (int i = 1; i < projectile.oldPos.Length; i++)
             {

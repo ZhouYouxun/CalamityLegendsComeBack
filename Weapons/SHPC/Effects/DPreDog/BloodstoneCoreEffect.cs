@@ -368,7 +368,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.GetSource_OnHit(target),
                     target.Center,
                     velocity,
-                    ModContent.ProjectileType<BloodstoneHealOrb>(),
+                    ModContent.ProjectileType<BloodstoneCore_BloodOrb>(),
                     20,
                     0f,
                     projectile.owner);

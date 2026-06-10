@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -14,11 +14,18 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 {
     /// <summary>
-    /// Cynosure 鐨勪富绌跨敳寮广€傚畠涓嶄娇鐢ㄦ櫘閫?SHPC 鍏夌悆鐨勮〃鐜帮紝鑰屾槸鐩存帴鎵挎媴鍛戒腑鍜屽睍寮€鏁村鐏姏鐨勮亴璐ｃ€?    /// </summary>
+    /// Cynosure 的主穿甲弹。飞行特效以 BloomLineSoftEdge 直绘拖尾为主体，
+    /// 辅以对数螺旋、傅里叶合成波和利萨如轨道三层数学装饰粒子。
+    /// </summary>
     public class CynosureArmorPiercingRound : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricCell";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/AuricBuletPROJ";
         public new string LocalizationCategory => "Projectiles.SHPC";
+
+        // 金源主题色
+        private static readonly Color AuricCyan = new(30, 146, 255);
+        private static readonly Color AuricGold = new(255, 214, 82);
+        private static readonly Color AuricWhite = new(220, 240, 255);
 
         private bool PayloadReleased
         {
@@ -29,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.TrailCacheLength[Type] = 28;
-            ProjectileID.Sets.TrailingMode[Type] = 0;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
@@ -50,52 +57,100 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Vector3(0.18f, 0.65f, 1f) * 0.72f);
 
-            // Flight trail axes.
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            for (int i = 0; i < 2; i++)
+            float age = 300f - Projectile.timeLeft;
+
+            // ═══════════════════════════════════════════════════
+            // 装饰层 1：对数螺旋双臂 (Logarithmic Spiral)
+            // r = a · e^(b·θ)，两条螺旋臂相位差 π
+            // ═══════════════════════════════════════════════════
             {
-                float wave = MathF.Sin((Projectile.timeLeft + i * 6f) * 0.34f) * 6f;
-                Dust blue = Dust.NewDustPerfect(Projectile.Center + normal * wave, DustID.Electric, -forward * 1.4f, 0, Color.Cyan, 0.95f);
-                blue.noGravity = true;
-                Dust gold = Dust.NewDustPerfect(Projectile.Center - normal * wave, DustID.GoldFlame, -forward * 1.1f, 0, Color.Gold, 0.85f);
-                gold.noGravity = true;
+                float spiralA = 2.8f;
+                float spiralB = 0.12f;
+                float theta = age * 0.42f;
+
+                for (int arm = 0; arm < 2; arm++)
+                {
+                    float armPhase = arm * MathHelper.Pi;
+                    float r = spiralA * MathF.Exp(spiralB * (theta + armPhase));
+                    r = MathHelper.Clamp(r, 0f, 18f); // 限制螺旋半径
+
+                    float spiralAngle = theta + armPhase;
+                    Vector2 spiralOffset = forward * MathF.Cos(spiralAngle) * r * 0.35f
+                                         + normal * MathF.Sin(spiralAngle) * r;
+
+                    Color spiralColor = arm == 0 ? AuricCyan : AuricGold;
+                    Dust spiral = Dust.NewDustPerfect(
+                        Projectile.Center + spiralOffset - forward * 6f,
+                        DustID.Electric,
+                        -forward * 0.8f + normal * MathF.Cos(spiralAngle) * 0.3f,
+                        0,
+                        spiralColor,
+                        0.65f);
+                    spiral.noGravity = true;
+                }
             }
 
-            // Small visual sparks orbit the projectile without adding hitboxes.
-            for (int i = 0; i < 3; i++)
+            // ═══════════════════════════════════════════════════
+            // 装饰层 2：傅里叶合成波 (Fourier Composite Wave)
+            // y(t) = A₁sin(ω₁t) + A₂sin(2ω₁t + φ₂) + A₃sin(3ω₁t + φ₃)
+            // 模拟示波器波形信号
+            // ═══════════════════════════════════════════════════
+            if (Projectile.numUpdates == 0 && age % 2f < 1f)
             {
-                float angle = Main.GlobalTimeWrappedHourly * (17f + i * 2f) + i * MathHelper.TwoPi / 3f;
-                Vector2 offset = new(MathF.Cos(angle) * 19f, MathF.Sin(angle) * 7f);
+                float t = age * 0.28f;
+                float w1 = 1f;
+                float y = 5.5f * MathF.Sin(w1 * t)
+                        + 2.8f * MathF.Sin(2f * w1 * t + 0.7f)
+                        + 1.4f * MathF.Sin(3f * w1 * t + 1.3f);
+
+                Vector2 wavePos = Projectile.Center - forward * 14f + normal * y;
+                float wavePhase = (t * 0.5f) % 1f;
+                Color waveColor = Color.Lerp(AuricWhite, AuricCyan, wavePhase);
+
                 GeneralParticleHandler.SpawnParticle(new GenericSparkle(
-                    Projectile.Center + offset.RotatedBy(Projectile.rotation),
-                    -forward * 1.3f,
-                    Color.Cyan,
+                    wavePos,
+                    -forward * 0.6f,
+                    waveColor,
                     Color.White,
-                    0.45f,
-                    5,
+                    0.22f,
+                    4,
                     0f,
-                    0.8f));
+                    0.55f));
             }
 
-            if (Main.rand.NextBool(1))
+            // ═══════════════════════════════════════════════════
+            // 装饰层 3：利萨如图形轨道火花 (Lissajous Orbits)
+            // x = A·sin(a·t + δ), y = B·sin(b·t)
+            // 频率比 a:b = 3:2 → 经典8字交叉图形
+            // ═══════════════════════════════════════════════════
+            if (Projectile.numUpdates == 0 && age % 3f < 1f)
             {
-                Vector2 smearOffset = normal * Main.rand.NextFloat(-7f, 7f);
-                Color smearColor = Main.rand.NextBool() ? new Color(255, 218, 86) : new Color(74, 208, 255);
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + smearOffset,
-                    -forward * Main.rand.NextFloat(2.2f, 4.6f),
-                    "CalamityMod/Particles/ThinEndedLine",
-                    false,
-                    Main.rand.Next(8, 14),
-                    Main.rand.NextFloat(0.07f, 0.13f),
-                    smearColor,
-                    new Vector2(1.4f, 0.55f),
-                    true,
-                    true));
+                float lissT = age * 0.35f;
+                float lissA = 12f;
+                float lissB = 8f;
+
+                for (int k = 0; k < 2; k++)
+                {
+                    float phase = k * MathHelper.Pi * 0.5f;
+                    float lx = lissA * MathF.Sin(3f * (lissT + phase) + MathHelper.PiOver4);
+                    float ly = lissB * MathF.Sin(2f * (lissT + phase));
+
+                    Vector2 lissPos = Projectile.Center + forward * lx * 0.4f + normal * ly;
+                    Color sparkColor = k == 0 ? AuricCyan : AuricGold;
+
+                    GeneralParticleHandler.SpawnParticle(new CritSpark(
+                        lissPos,
+                        -forward * 1.2f + Main.player[Projectile.owner].velocity,
+                        Color.White,
+                        sparkColor,
+                        0.4f,
+                        8));
+                }
             }
         }
 
@@ -125,20 +180,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            // Heavy auric impact tone.
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/AuricBulletHit") { Volume = 0.9f, Pitch = -0.12f }, Projectile.Center);
-
             SpawnImpactSparks();
 
             int burstDamage = Math.Max(1, (int)(Projectile.damage * 0.72f));
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                 ModContent.ProjectileType<CynosureLightningExplosion>(), burstDamage, Projectile.knockBack, Projectile.owner);
 
-            // Two auric ellipse payload rings.
             SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 12);
             SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 18);
 
-            // Charged outer cells.
             const int chargedCount = 12;
             for (int i = 0; i < chargedCount; i++)
             {
@@ -162,75 +213,179 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         private void SpawnImpactSparks()
         {
+            // 蓝白扩散环
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
+                Projectile.Center, Vector2.Zero,
                 Color.Lerp(Color.Cyan, Color.White, 0.35f),
                 "CalamityMod/Particles/BloomRing",
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
-                0.045f,
-                0.42f,
-                18));
+                0.045f, 0.42f, 18));
+
+            // 金色等离子爆
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
-                new Color(255, 214, 84),
+                Projectile.Center, Vector2.Zero,
+                AuricGold,
                 "CalamityMod/Particles/PlasmaExplosion",
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
-                0.035f,
-                0.28f,
-                16));
+                0.035f, 0.28f, 16));
 
-            // 缁孩鎭堕瓟寮忕伀鑺憋細鏁伴噺鍥哄畾锛屼絾姣忔潯鐏姳鐨勯琛岃窛绂诲湪 0.5 鍒?2 鍊嶄箣闂村彉鍖栥€?            for (int i = 0; i < 28; i++)
+            // 辐射状辉光火花
+            for (int i = 0; i < 28; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f, 20f);
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    Projectile.Center,
-                    velocity,
-                    false,
+                    Projectile.Center, velocity, false,
                     Main.rand.Next(12, 22),
                     Main.rand.NextFloat(0.04f, 0.09f),
                     Main.rand.NextBool(4) ? Color.White : Color.Cyan,
-                    new Vector2(2.4f, 0.55f),
-                    true));
+                    new Vector2(2.4f, 0.55f), true));
             }
 
+            // 玫瑰线图案爆炸火花
             for (int i = 0; i < 36; i++)
             {
                 float angle = MathHelper.TwoPi * i / 36f;
                 float rose = 0.78f + 0.32f * (float)Math.Sin(angle * 5f);
                 Vector2 direction = angle.ToRotationVector2();
                 Vector2 velocity = direction * Main.rand.NextFloat(4f, 15f) * rose;
-                Color color = Color.Lerp(new Color(255, 214, 82), Color.Cyan, i % 2 == 0 ? 0.25f : 0.65f);
+                Color color = Color.Lerp(AuricGold, Color.Cyan, i % 2 == 0 ? 0.25f : 0.65f);
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
                     Projectile.Center + direction * Main.rand.NextFloat(4f, 16f),
-                    velocity,
-                    false,
+                    velocity, false,
                     Main.rand.Next(13, 24),
                     Main.rand.NextFloat(0.035f, 0.08f),
                     color,
-                    new Vector2(2.2f, 0.5f),
-                    true));
+                    new Vector2(2.2f, 0.5f), true));
             }
         }
 
-        internal float TrailWidth(float completion, Vector2 _) => MathHelper.Lerp(18f, 0f, completion);
+        // ═══════════════════════════════════════════════════
+        // Primitive Trail 基底层
+        // ═══════════════════════════════════════════════════
+        internal float TrailWidth(float completion, Vector2 _) => MathHelper.Lerp(14f, 0f, completion);
 
         internal Color TrailColor(float completion, Vector2 _)
         {
-            Color color = Color.Lerp(Color.White, new Color(30, 145, 255), completion);
-            return color * (1f - completion);
+            Color color = Color.Lerp(AuricWhite, AuricCyan, completion * 0.7f);
+            color = Color.Lerp(color, AuricGold, completion * completion);
+            return color * (1f - completion * 0.85f);
         }
 
+        // ═══════════════════════════════════════════════════
+        // PreDraw：主体 BloomLineSoftEdge 直绘拖尾 + 弹芯辉光
+        // ═══════════════════════════════════════════════════
         public override bool PreDraw(ref Color lightColor)
         {
+            // --- 底层：Primitive Renderer 半透明彗尾 ---
             GameShaders.Misc["CalamityMod:OverpoweredTouhouSpearShader"]
                 .SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(Projectile.oldPos,
-                new PrimitiveSettings(TrailWidth, TrailColor, (_, _) => Projectile.Size * 0.5f, shader: GameShaders.Misc["CalamityMod:OverpoweredTouhouSpearShader"]),
+                new PrimitiveSettings(TrailWidth, TrailColor, (_, _) => Projectile.Size * 0.5f,
+                    shader: GameShaders.Misc["CalamityMod:OverpoweredTouhouSpearShader"]),
                 42);
+
+            // --- 主体层：BloomLineSoftEdge 直绘纤细发光拖尾 ---
+            Texture2D bloomLine = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
+            Texture2D bloomCircle = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 bloomLineOrigin = bloomLine.Size() * 0.5f;
+            Vector2 bloomCircleOrigin = bloomCircle.Size() * 0.5f;
+
+            float velocityRotation = Projectile.velocity.ToRotation();
+            float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f);
+            int trailLength = Projectile.oldPos.Length;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            // 主拖尾：遍历 oldPos，每个历史点绘制一条纤细的 BloomLineSoftEdge
+            for (int i = trailLength - 1; i >= 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                float completion = i / (float)trailLength;
+                float inverseFade = 1f - completion;
+                Vector2 trailPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+
+                // 颜色渐变：白芯 → 蓝中 → 金尾
+                Color lineColor;
+                if (completion < 0.35f)
+                    lineColor = Color.Lerp(AuricWhite, AuricCyan, completion / 0.35f);
+                else
+                    lineColor = Color.Lerp(AuricCyan, AuricGold, (completion - 0.35f) / 0.65f);
+                lineColor.A = 0;
+
+                float lineOpacity = inverseFade * 0.42f;
+                float xScale = 0.016f + 0.004f * pulse * inverseFade;
+                float yScale = 0.078f * inverseFade;
+
+                // 主线
+                Main.EntitySpriteDraw(
+                    bloomLine, trailPosition, null,
+                    lineColor * lineOpacity,
+                    velocityRotation + MathHelper.PiOver2,
+                    bloomLineOrigin,
+                    new Vector2(xScale, yScale),
+                    SpriteEffects.None, 0);
+
+                // 偏移副线（双螺旋式装饰，正弦偏移产生DNA双链感）
+                if (i % 2 == 0)
+                {
+                    float helixOffset = MathF.Sin(completion * MathHelper.TwoPi * 2.5f + Main.GlobalTimeWrappedHourly * 4f) * 4f * inverseFade;
+                    Vector2 helixNormal = (velocityRotation + MathHelper.PiOver2).ToRotationVector2();
+                    Vector2 offsetPos = trailPosition + helixNormal * helixOffset;
+                    Color helixColor = Color.Lerp(AuricGold, AuricCyan, completion);
+                    helixColor.A = 0;
+
+                    Main.EntitySpriteDraw(
+                        bloomLine, offsetPos, null,
+                        helixColor * (lineOpacity * 0.55f),
+                        velocityRotation + MathHelper.PiOver2,
+                        bloomLineOrigin,
+                        new Vector2(xScale * 0.6f, yScale * 0.7f),
+                        SpriteEffects.None, 0);
+                }
+            }
+
+            // --- 弹芯辉光 ---
+            Vector2 corePos = Projectile.Center - Main.screenPosition;
+
+            // 外层柔辉
+            Main.EntitySpriteDraw(
+                bloomCircle, corePos, null,
+                AuricCyan with { A = 0 } * (0.28f + 0.08f * pulse),
+                0f, bloomCircleOrigin,
+                0.22f + 0.03f * pulse,
+                SpriteEffects.None, 0);
+
+            // 内层白芯
+            Main.EntitySpriteDraw(
+                bloomCircle, corePos, null,
+                (Color.White with { A = 0 }) * 0.38f,
+                0f, bloomCircleOrigin,
+                0.08f,
+                SpriteEffects.None, 0);
+
+            // 十字星芒（4条极细 BloomLineSoftEdge 呈十字排列）
+            for (int i = 0; i < 4; i++)
+            {
+                float starRot = velocityRotation + MathHelper.PiOver4 * i + Main.GlobalTimeWrappedHourly * 2.2f;
+                Color starColor = i % 2 == 0 ? AuricCyan : AuricGold;
+                starColor.A = 0;
+
+                Main.EntitySpriteDraw(
+                    bloomLine, corePos, null,
+                    starColor * (0.25f + 0.08f * pulse),
+                    starRot,
+                    bloomLineOrigin,
+                    new Vector2(0.008f, 0.12f + 0.02f * pulse),
+                    SpriteEffects.None, 0);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // --- 弹丸本体 ---
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Main.EntitySpriteDraw(
                 texture,
@@ -241,8 +396,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 texture.Size() * 0.5f,
                 Projectile.scale,
                 SpriteEffects.None);
+
             return false;
         }
     }
 }
-

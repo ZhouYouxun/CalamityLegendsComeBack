@@ -24,8 +24,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.velocity *= 1.3f;
-            projectile.extraUpdates++;
+            projectile.velocity *= 1.1f;
+            //projectile.extraUpdates++;
             projectile.timeLeft = 300;
         }
 

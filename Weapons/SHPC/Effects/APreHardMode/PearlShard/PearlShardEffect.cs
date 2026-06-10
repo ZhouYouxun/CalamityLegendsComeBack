@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                 return;
 
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
-            float speed = System.Math.Max(projectile.velocity.Length(), 17f);
+            float speed = System.Math.Max(projectile.velocity.Length(), 17f) * 0.5f;
             float[] angles =
             {
                 MathHelper.ToRadians(-20f),

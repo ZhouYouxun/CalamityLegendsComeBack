@@ -32,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void AI()
         {
+            Projectile.velocity *= 0.99f;
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.38f, 0.24f, 0.32f));
 
@@ -43,7 +44,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override bool? CanDamage()
         {
-            return false;
+            return true;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Projectile.Kill();
         }
 
         public override void OnKill(int timeLeft)

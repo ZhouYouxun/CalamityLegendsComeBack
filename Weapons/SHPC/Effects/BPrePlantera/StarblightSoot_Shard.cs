@@ -1,4 +1,4 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod;
 using CalamityMod.Dusts;
 using CalamityMod.Particles;
@@ -158,7 +158,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         private void SpawnOrbitSparks()
         {
-            float spinPhase = Main.GlobalTimeWrappedHourly * 16f + Projectile.identity * 0.37f;
+            // Align the orbit particles with the projectile's rotation so they stay aligned with the star's points
+            float spinPhase = Projectile.rotation;
             float orbitRadius = 9f;
             Color sparkColor = Color.Lerp(new Color(255, 130, 68), new Color(92, 205, 255), 0.35f) * 0.46f;
 
@@ -307,7 +308,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Color blueColor = new(92, 210, 255, 0);
             Vector2 center = Projectile.Center - Main.screenPosition;
 
+            // 1. Draw Bloom background (Additive)
             Main.spriteBatch.SetBlendState(BlendState.Additive);
+            
+            float pulse = 1f + (float)Math.Sin(Timer * 0.22f) * 0.08f;
+            // Enhanced main orange bloom
+            Main.EntitySpriteDraw(bloom, center, null, mainColor * 0.7f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.38f * pulse, SpriteEffects.None);
+            // Dynamic blue bloom for depth
+            Main.EntitySpriteDraw(bloom, center, null, blueColor * 0.45f, -Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.26f * pulse, SpriteEffects.None);
+
+            // 2. Draw Trails (Additive)
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 Vector2 oldPosition = Projectile.oldPos[i];
@@ -316,23 +326,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = oldPosition + Projectile.Size * 0.5f - Main.screenPosition;
-                Color trailColor = Color.Lerp(mainColor, blueColor, 0.35f + completion * 0.35f) * (completion * 0.42f);
+                Color trailColor = Color.Lerp(mainColor, blueColor, 0.35f + completion * 0.35f) * (completion * 0.55f);
                 Main.EntitySpriteDraw(texture, drawPosition, frame, trailColor, Projectile.rotation, origin, Projectile.scale * completion * 0.58f, SpriteEffects.None);
             }
 
-            float pulse = 1f + (float)Math.Sin(Timer * 0.22f) * 0.08f;
-            Main.EntitySpriteDraw(bloom, center, null, mainColor * 0.36f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.22f * pulse, SpriteEffects.None);
-
-            Color outlineColor = Color.Lerp(mainColor, blueColor, 0.42f) * 0.62f;
+            // 3. Draw outline (Additive)
+            Color outlineColor = Color.Lerp(mainColor, blueColor, 0.42f) * 0.75f;
             for (int i = 0; i < 8; i++)
             {
                 Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 2.6f * Projectile.scale;
                 Main.EntitySpriteDraw(texture, center + offset, frame, outlineColor, Projectile.rotation, origin, Projectile.scale * 1.02f, SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(texture, center, frame, mainColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, center, frame, Color.White * 0.4f, -Projectile.rotation * 0.7f, origin, Projectile.scale * 0.62f, SpriteEffects.None);
+            // 4. Draw main body (AlphaBlend for solid crispness and high brightness)
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            
+            // Draw main star (solid)
+            Main.EntitySpriteDraw(texture, center, frame, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            
+            // Draw inner star (aligned rotation now!)
+            Main.EntitySpriteDraw(texture, center, frame, Color.White * 0.65f, Projectile.rotation, origin, Projectile.scale * 0.62f, SpriteEffects.None);
+
             return false;
         }
     }

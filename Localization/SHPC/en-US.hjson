@@ -11,7 +11,7 @@ Mods: {
 						[c/99CCFF:Automatically reloads once the current charge is depleted.]
 						[c/AAAAAA:Can still fire without any loaded material, but only as a default white orb; its multiplier and blast radius improve with progression.]
 						[c/99CCFF:Right-click the item in your inventory to purge the current load, with a chance to recover the material.]
-						[c/DDA0FF:Current loaded effect:]
+						[c/DDA0FF:Current Loadout: ]
 						'''
 					SHPC_RightIntro1:
 						'''
@@ -218,49 +218,49 @@ Mods: {
 			SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
 			SHPCAmmoPanel: Left-click displayed multiplier: {0}x; load capacity: {1} shots
 			SHPCAmmo1: Energy Core makes the orb bounce while scattering dense electric sparks along its path.
-			SHPCAmmo2: Stormlion Mandible releases five chaining lightning arcs that jump through enemy groups.
-			SHPCAmmo3: Sulphuric Scale bursts into corrosive sulphur mist when the orb hits the ground.
-			SHPCAmmo4: Purified Gel splits into two pursuing energy orbs when its charge is spent.
-			SHPCAmmo5: Essence of Havoc is pulled by extreme gravity and deals stronger damage while falling.
-			SHPCAmmo6: Essence of Eleum creates a cryogenic zone that suppresses enemies near the detonation.
-			SHPCAmmo7: Essence of Sunlight opens a burst relay at the blast point and rapidly fires seven faintly homing sunlight lasers.
-			SHPCAmmo8: Starblight Soot directly scatters star souls that create medium explosions and inflict Astral Infection.
-			SHPCAmmo9: Soul of Light summons high-damage light souls to orbit the orb and bombard nearby targets.
-			SHPCAmmo10: Soul of Night releases shadow souls that automatically hunt nearby enemies.
-			SHPCAmmo11: Soul of Flight rises skyward before diving back down in an aerial bombardment.
-			SHPCAmmo12: Soul of Fright leaves lingering terror souls that hover and hunt around the blast point.
-			SHPCAmmo13: Soul of Might releases three delayed explosive energy orbs.
-			SHPCAmmo14: Soul of Sight makes the final explosion grow stronger the longer the orb flies.
-			SHPCAmmo15: Living Shard tracks enemies and attempts to convert its power into healing.
-			SHPCAmmo16: This material slot is not connected to an available item and provides no charge effect.
-			SHPCAmmo17: Depth Cells forms an abyssal orb that falls from above and detonates.
-			SHPCAmmo18: Plague Cell Canister marks a target and triggers a plague-like nuclear burst.
-			SHPCAmmo19: Ashes of Calamity pours out crimson souls and turns the blast zone into a burning hazard.
-			SHPCAmmo20: Beetle Husk is reserved for a future SHPC effect and is not implemented yet.
-			SHPCAmmo21: Solar Fragment fires a volley of piercing solar lances from the blast point.
-			SHPCAmmo22: Vortex Fragment releases escort missiles during flight to intercept nearby enemies.
-			SHPCAmmo23: Nebula Fragment summons a hunting star that charges before exploding.
-			SHPCAmmo24: Stardust Fragment splits into cell projectiles that keep spreading the attack.
-			SHPCAmmo25: Meld Blob creates a dark blast that pulls visible enemies into its center.
-			SHPCAmmo26: Unholy Essence releases a violent directional shockwave after striking tiles.
-			SHPCAmmo27: This material slot is not connected to an available item and provides no charge effect.
-			SHPCAmmo28: Divine Geode refracts several sacred geometric lasers when it detonates.
-			SHPCAmmo29: Bloodstone Core spends player health to empower itself, then restores life after the explosion.
-			SHPCAmmo30: Ruinous Soul awakens deep spirits that steadily close in on enemies.
-			SHPCAmmo31: Necroplasm creates chained soul bursts that jump between enemies.
-			SHPCAmmo32: Dark Plasma generates a miniature dark core that pulls enemies inward before rupturing.
-			SHPCAmmo33: Twisting Nether unfolds void blades that carve repeated crossing paths through a target.
-			SHPCAmmo34: Endothermic Energy ricochets through the air and splits into piercing ice spikes.
-			SHPCAmmo35: Nightmare Fuel divides into nightmare arcs that keep cutting through struck enemies.
-			SHPCAmmo36: Ascendant Spirit Essence summons many small star needles for area suppression.
-			SHPCAmmo37: Yharon Soul Fragment brands enemies with explosive dragonfire.
-			SHPCAmmo38: Exo Prism fires judgment lasers and follows with fractal geometry attacks.
-			SHPCAmmo39: Ashes of Annihilation locks onto visible enemies and unleashes a wide annihilation strike.
-			SHPCAmmo40: Armored Shell fires a large swarm of electromagnetic orbs to form a sustained storm.
-			SHPCAmmo41: Pearl Shard releases three large pearls that split into accelerating homing pearls.
-			SHPCAmmo42: Darksun Fragment creates an eclipsed black sun, uses its eight-frame material guide, and stacks into sustained pressure.
-			SHPCAmmo43: Cynosure fires a heavy armor-piercing round that ruptures into electromagnetic lightning, two auric-orb ellipses, and an outer charged-cell ring.
-			SHPCAmmo44: Core of Calamity fires a wide gray energy stream that ruptures into four curving, homing fragments.
+			SHPCAmmo2: Stormlion Mandible releases five chaining lightning arcs that jump rapidly between enemy groups.
+			SHPCAmmo3: Sulphuric Scale bursts when the orb hits the ground, leaving a corrosive sulphur mist area.
+			SHPCAmmo4: Purified Gel splits directly into multiple pursuing energy orbs.
+			SHPCAmmo5: Essence of Havoc is affected by extreme gravity, dealing stronger damage while falling.
+			SHPCAmmo6: Essence of Eleum spreads a cryogenic liquid nitrogen zone at the blast site, continuously suppressing enemies in the area.
+			SHPCAmmo7: Essence of Sunlight opens a core above the blast point, rapidly firing seven homing sunlight lasers.
+			SHPCAmmo8: Starblight Soot scatters multiple star souls, producing a medium explosion and inflicting Astral Infection upon hitting.
+			SHPCAmmo9: Soul of Light summons high-damage light souls to orbit the orb and continuously damage surrounding targets.
+			SHPCAmmo10: Soul of Night pours out chasing dark souls, letting them automatically search for nearby enemies.
+			SHPCAmmo11: Soul of Flight rises into the air, then dives down from above to bombard the target.
+			SHPCAmmo12: Soul of Fright leaves hovering terror souls that continuously search for prey near the blast point.
+			SHPCAmmo13: Soul of Might releases three delayed-explosion energy orbs.
+			SHPCAmmo14: Soul of Sight causes the orb to unleash a more violent explosion the longer it flies.
+			SHPCAmmo15: Living Shard tracks enemies and converts the power dealt into healing.
+			SHPCAmmo16: !!!
+			SHPCAmmo17: Depth Cells fires a Viperfish that falls from above and bursts.
+			SHPCAmmo18: Plague Cell Canister fires a marking ray and calls plague missiles.
+			SHPCAmmo19: Ashes of Calamity pours out a large number of red souls that track enemies at high speed.
+			SHPCAmmo20: !!!
+			SHPCAmmo21: Solar Fragment summons multiple piercing solar lances from the sky at the blast point.
+			SHPCAmmo22: Vortex Fragment releases homing missiles during flight to escort it.
+			SHPCAmmo23: Nebula Fragment releases three chasing nebular stars; the blue star has a stronger effect.
+			SHPCAmmo24: Stardust Fragment splits into a large number of cells, letting them continuously reproduce recursively.
+			SHPCAmmo25: Meld Blob releases high-speed dark light, causing a violent explosion.
+			SHPCAmmo26: Unholy Essence releases a violent directional shockwave.
+			SHPCAmmo27: !!!
+			SHPCAmmo28: Divine Geode refracts multiple homing geometric lasers upon exploding.
+			SHPCAmmo29: Bloodstone Core absorbs player life to empower itself, releasing healing and damaging orbs after exploding.
+			SHPCAmmo30: Ruinous Soul releases homing souls and orbiting/returning souls.
+			SHPCAmmo31: Ectoplasm releases a large number of homing souls along its path and upon hitting enemies.
+			SHPCAmmo32: Dark Plasma generates a miniature dark core that pulls enemies in before exploding.
+			SHPCAmmo33: Twisting Nether releases multiple void blades that pierce through many enemies.
+			SHPCAmmo34: Endothermic Energy creates a liquid nitrogen zone and releases a large number of ice spikes.
+			SHPCAmmo35: Nightmare Fuel splits into nightmare arcs that continuously strike enemies.
+			SHPCAmmo36: Ascendant Spirit Essence continuously fires a large number of star needles that pierce many enemies.
+			SHPCAmmo37: Yharon Soul Fragment releases violent flames.
+			SHPCAmmo38: Exo Prism fires judgment lasers and unfolds fractal geometry attacks.
+			SHPCAmmo39: Ashes of Annihilation locks onto an enemy and releases a large amount of annihilation strikes.
+			SHPCAmmo40: Armored Shell fires a large amount of gradually slowing electromagnetic orbs, subsequently forming a sustained storm.
+			SHPCAmmo41: Pearl Shard fires three large pearls that split into accelerating homing small pearls upon breaking.
+			SHPCAmmo42: Darksun Fragment creates an eclipsed black sun that can be continuously empowered, eventually releasing a powerful explosion.
+			SHPCAmmo43: Cynosure fires a heavy armor-piercing round that releases electromagnetic lightning, two auric-orb ellipses, and an outer charged-cell ring on hit.
+			SHPCAmmo44: Core of Calamity splits into four strongly homing energy bolts.
 		}
 
 		Projectiles: {

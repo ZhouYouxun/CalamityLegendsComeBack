@@ -1215,7 +1215,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             // ===== 左键固定文案 =====
-            string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro");
+            string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
 
             string ammoText = BuildMagazineTooltipText(Main.LocalPlayer);
 
@@ -1247,8 +1247,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== 拼接 =====
             string finalText =
-                leftIntro + "\n" +
-                ammoText +
+                leftIntro + ammoText +
                 "\n\n" +
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
@@ -1264,25 +1263,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ClampSelectedMagazineToActiveCount(player);
             int activeMagazineCount = GetActiveMagazineCount(player);
-            List<string> lines = new();
+            List<string> slots = new();
+            bool isChinese = Language.ActiveCulture.Name.StartsWith("zh");
+            string emptyText = isChinese ? "空" : "Empty";
+            string prefix = isChinese ? "号" : "";
+
             for (int i = 0; i < activeMagazineCount; i++)
             {
-                string marker = i == CurrentMagazineIndex ? ">>> [CURRENT] " : "    ";
-                string slotName = $"{i + 1}号弹夹";
+                bool isActive = (i == CurrentMagazineIndex);
+                string slotName = $"{i + 1}{prefix}";
+                string contentText;
 
                 if (!IsMagazineLoaded(i))
                 {
-                    lines.Add($"{marker}{slotName}: 空");
-                    continue;
+                    contentText = emptyText;
+                }
+                else
+                {
+                    int ammoType = magazineAmmoTypes[i];
+                    int power = magazineEffectPowers[i];
+                    int maxShots = GetAdjustedAmmoCapacity(player, magazineEffectIDs[i]);
+                    contentText = $"[i:{ammoType}]({power}/{maxShots})";
                 }
 
-                string key = $"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{magazineEffectIDs[i]}";
-                string ammoText = Language.GetTextValue(key);
-                int maxShots = GetAdjustedAmmoCapacity(player, magazineEffectIDs[i]);
-                lines.Add($"{marker}{slotName}: {ammoText} ({magazineEffectPowers[i]}/{maxShots})");
+                if (isActive)
+                {
+                    slots.Add($"[c/FFD700:▶]{slotName}:{contentText}[c/FFD700:◀]");
+                }
+                else
+                {
+                    slots.Add($"{slotName}:{contentText}");
+                }
             }
 
-            return string.Join("\n", lines);
+            return string.Join("   ", slots);
         }
         #endregion
 

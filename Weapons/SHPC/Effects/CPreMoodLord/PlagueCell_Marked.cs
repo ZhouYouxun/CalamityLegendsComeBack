@@ -101,7 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                                + new Vector2(Main.rand.NextFloat(-16f, 16f) * 16f, -36f * 16f);
 
             // ===== 精准指向目标（不是垂直）=====
-            Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 10f;
+            Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 30f;
 
             int projID = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

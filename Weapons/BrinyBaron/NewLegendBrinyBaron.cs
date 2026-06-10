@@ -31,8 +31,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Item.damage = 120;
             Item.DamageType = DamageClass.Melee;
 
-            Item.useAnimation = 60;
-            Item.useTime = 60;
+            Item.useAnimation = 30;
+            Item.useTime = 30;
             Item.useTurn = true;
             Item.knockBack = 6f;
             Item.autoReuse = true;

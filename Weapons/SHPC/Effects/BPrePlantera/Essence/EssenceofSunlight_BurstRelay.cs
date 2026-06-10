@@ -89,16 +89,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         private void FireSolarLaser(Player owner, int shotIndex)
         {
-            Vector2 direction = GetShotDirection(owner, Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction), out NPC target);
-            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            Vector2 spawnPosition = Projectile.Center + direction * 18f + normal * (float)Math.Sin(shotIndex * 1.618034f) * 12f;
+            Vector2 baseDir = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
+            NPC target = FindTarget(TargetRange, baseDir);
+            if (target is not null)
+            {
+                baseDir = (target.Center - Projectile.Center).SafeNormalize(baseDir);
+            }
+
+            Vector2 normal = baseDir.RotatedBy(MathHelper.PiOver2);
+            Vector2 spawnPosition = Projectile.Center + baseDir * 18f + normal * (float)Math.Sin(shotIndex * 1.618034f) * 12f;
             int damage = Math.Max(1, (int)(Projectile.damage * 0.5f));
             float side = Main.rand.NextBool() ? -1f : 1f;
+
+            // Aim exactly at target from spawnPosition, predicting slightly
+            Vector2 laserDir = baseDir;
+            if (target is not null)
+            {
+                Vector2 targetPos = target.Center + target.velocity * 3f;
+                laserDir = (targetPos - spawnPosition).SafeNormalize(baseDir);
+            }
 
             int beamIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
-                direction * Main.rand.NextFloat(35f, 39f),
+                laserDir * Main.rand.NextFloat(35f, 39f),
                 ModContent.ProjectileType<EssenceofSunlight_Lighting>(),
                 damage,
                 Projectile.knockBack,
@@ -111,13 +125,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
             SoundEngine.PlaySound(SoundID.Item94 with
             {
-                Volume = 0.24f,
+                Volume = 0.12f, // Reduced by 50% (originally 0.24f)
                 Pitch = 0.25f + shotIndex * 0.025f,
                 PitchVariance = 0.06f,
                 MaxInstances = 6
             }, spawnPosition);
 
-            SpawnShotFlash(spawnPosition, direction, shotIndex);
+            SpawnShotFlash(spawnPosition, laserDir, shotIndex);
         }
 
         private Vector2 GetShotDirection(Player owner, Vector2 fallback, out NPC target)
@@ -125,10 +139,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             target = FindTarget(TargetRange, fallback);
             if (target is not null)
             {
-                Vector2 predictedCenter = target.Center + target.velocity * 4f;
-                return (predictedCenter - Projectile.Center)
-                    .SafeNormalize(fallback)
-                    .RotatedBy(Main.rand.NextFloat(MathHelper.ToRadians(-1.25f), MathHelper.ToRadians(1.25f)));
+                Vector2 predictedCenter = target.Center + target.velocity * 3f;
+                return (predictedCenter - Projectile.Center).SafeNormalize(fallback);
             }
 
             return GetOwnerAimDirection(owner, fallback);
@@ -138,20 +150,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         {
             NPC bestTarget = null;
             float bestScore = range;
-            Vector2 safeAim = aimDirection.SafeNormalize(Vector2.UnitX);
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile, false))
                     continue;
 
-                Vector2 toTarget = npc.Center - Projectile.Center;
-                float distance = toTarget.Length();
+                float distance = Projectile.Distance(npc.Center);
                 if (distance > range)
                     continue;
 
-                float angularPenalty = (1f - MathHelper.Clamp(Vector2.Dot(safeAim, toTarget.SafeNormalize(safeAim)), -1f, 1f)) * 260f;
-                float score = distance + angularPenalty;
+                float score = distance;
                 if (npc.boss)
                     score *= 0.82f;
 
