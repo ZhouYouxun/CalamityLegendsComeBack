@@ -28,11 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float BaseHitboxOutset = 90f;
         private static readonly Vector2 BaseHitboxSize = new(132f, 132f);
         private const float SwooshRadiusCorrection = 0.575f;
-        private const int ComboLength = 5;
-        private const int StandardStageDuration = 34;
+        private const int ComboLength = 6;
         private const int StandardGapFrames = 0;
-        private const int PreTornadoGapFrames = 8;
-        private const int PostTornadoGapFrames = 10;
         private const int RightSpinTransitionFrames = 14;
         private const int RightSpinShurikenInterval = 12;
         private const float RightSpinMaxEmpowerment = 180f;
@@ -80,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void WhenSpawned()
         {
-            IgnoreActiveAnimation = true;
+            // 不再锁定帧率，让外部攻速修正能正常生效
             DrawUnconditionally = true;
             Projectile.timeLeft = 2;
             Projectile.knockBack = 0f;
@@ -212,7 +209,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             StageProfile profile = GetStageProfile(comboIndex % ComboLength);
             stageActive = true;
             currentStage = comboIndex % ComboLength;
-            stageDuration = profile.Duration;
+            // 使用 Owner.itemAnimationMax 作为挥舞时长，让外部攻速加成生效
+            int useAnim = Math.Max(1, Owner.itemAnimationMax);
+            stageDuration = useAnim;
             stageTimer = 0;
             stageEventFired = false;
             swingSoundPlayed = false;
@@ -234,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             stageTimer++;
             StageProfile profile = GetStageProfile(currentStage);
-            int impactFrame = Math.Max(3, profile.Duration / 3);
+            int impactFrame = Math.Max(3, stageDuration / 3);
 
             if (stageTimer < impactFrame)
             {
@@ -777,15 +776,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             return false;
         }
 
+        // abb abc 连招模板：Wave, Shuriken, Shuriken, Wave, Shuriken, Tornado
+        // 所有攻击间隔平等化，不再有快慢之分
         private static StageProfile GetStageProfile(int stage)
         {
             return stage switch
             {
-                0 => new StageProfile(ComboKind.Wave, StandardStageDuration, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                1 => new StageProfile(ComboKind.ShurikenVolley, StandardStageDuration, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                2 => new StageProfile(ComboKind.Wave, StandardStageDuration, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                3 => new StageProfile(ComboKind.ShurikenVolley, StandardStageDuration, PreTornadoGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                _ => new StageProfile(ComboKind.Tornado, StandardStageDuration, PostTornadoGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                0 => new StageProfile(ComboKind.Wave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                1 => new StageProfile(ComboKind.ShurikenVolley, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                2 => new StageProfile(ComboKind.ShurikenVolley, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                3 => new StageProfile(ComboKind.Wave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                4 => new StageProfile(ComboKind.ShurikenVolley, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
+                _ => new StageProfile(ComboKind.Tornado, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
             };
         }
 
@@ -799,7 +801,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private readonly struct StageProfile
         {
             public readonly ComboKind Kind;
-            public readonly int Duration;
             public readonly int GapFrames;
             public readonly float DrawScale;
             public readonly float RangeScale;
@@ -809,10 +810,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             public readonly float SwooshScale;
             public readonly bool Tilted;
 
-            public StageProfile(ComboKind kind, int duration, int gapFrames, float drawScale, float rangeScale, float minLengthScale, float maxLengthScale, float minThicknessScale, float swooshScale, bool tilted)
+            public StageProfile(ComboKind kind, int gapFrames, float drawScale, float rangeScale, float minLengthScale, float maxLengthScale, float minThicknessScale, float swooshScale, bool tilted)
             {
                 Kind = kind;
-                Duration = duration;
                 GapFrames = gapFrames;
                 DrawScale = drawScale;
                 RangeScale = rangeScale;

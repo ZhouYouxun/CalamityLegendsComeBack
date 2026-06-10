@@ -270,24 +270,82 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void TryTrackTacticalReticle()
         {
+            // 只在真实帧执行，避免 extraUpdates 重复转向
             if (Projectile.numUpdates != 0)
                 return;
 
             Player owner = Main.player[Projectile.owner];
             TacticalComputerPlayer tacticalPlayer = owner.GetModPlayer<TacticalComputerPlayer>();
-            if (!tacticalPlayer.TacticalComputerEquipped || tacticalPlayer.ReticleWorld == Vector2.Zero)
+            if (!tacticalPlayer.TacticalComputerEquipped)
                 return;
 
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 desiredDirection = (tacticalPlayer.ReticleWorld - Projectile.Center).SafeNormalize(currentDirection);
-            if (Vector2.Dot(currentDirection, desiredDirection) <= 0f)
-                return;
-
             float speed = Projectile.velocity.Length();
-            float maxTurn = MathHelper.ToRadians(1f); // 每一帧限制转动一度
-            Projectile.velocity = currentDirection.ToRotation()
-                .AngleTowards(desiredDirection.ToRotation(), maxTurn)
-                .ToRotationVector2() * speed;
+            float currentAngle = currentDirection.ToRotation();
+
+            // ===== 第一优先级：追踪准星弹幕 =====
+            // 直接搜索 TacticalComputerNEWReticle 弹幕实体，而不仅仅使用 ReticleWorld
+            int reticleType = ModContent.ProjectileType<TacticalComputerNEWReticle>();
+            Projectile reticleProj = null;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (p.active && p.owner == Projectile.owner && p.type == reticleType)
+                {
+                    reticleProj = p;
+                    break;
+                }
+            }
+
+            float maxReticleTurn = MathHelper.ToRadians(2f); // 准星追踪：每帧最多转2度
+            float maxEnemyTurn = MathHelper.ToRadians(1f);   // 敌人追踪：每帧最多转1度
+
+            if (reticleProj != null)
+            {
+                // 直接追踪准星弹幕的实际位置
+                Vector2 toReticle = (reticleProj.Center - Projectile.Center).SafeNormalize(currentDirection);
+                // 只追踪正前方180度内的准星
+                if (Vector2.Dot(currentDirection, toReticle) > 0f)
+                {
+                    float desiredAngle = toReticle.ToRotation();
+                    currentAngle = currentAngle.AngleTowards(desiredAngle, maxReticleTurn);
+                }
+            }
+
+            // ===== 第二优先级：搜索正前方180度范围内最近的敌人 =====
+            // 用更新后的方向重新计算正前方
+            Vector2 updatedDirection = currentAngle.ToRotationVector2();
+            NPC closestEnemy = null;
+            float closestDist = float.MaxValue;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                Vector2 toEnemy = (npc.Center - Projectile.Center).SafeNormalize(updatedDirection);
+                // 只搜索正前方180度（点积 > 0）
+                if (Vector2.Dot(updatedDirection, toEnemy) <= 0f)
+                    continue;
+
+                float dist = Vector2.DistanceSquared(Projectile.Center, npc.Center);
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestEnemy = npc;
+                }
+            }
+
+            if (closestEnemy != null)
+            {
+                Vector2 toTarget = (closestEnemy.Center - Projectile.Center).SafeNormalize(updatedDirection);
+                float desiredAngle = toTarget.ToRotation();
+                // 敌人追踪弱一些：每帧最多再转1度
+                float remainingTurn = maxEnemyTurn;
+                currentAngle = currentAngle.AngleTowards(desiredAngle, remainingTurn);
+            }
+
+            Projectile.velocity = currentAngle.ToRotationVector2() * speed;
 
             if ((int)Main.GameUpdateCount % 4 == 0)
                 Projectile.netUpdate = true;

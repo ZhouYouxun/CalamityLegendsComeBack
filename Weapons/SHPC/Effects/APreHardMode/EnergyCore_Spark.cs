@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             base.Projectile.height = 12;
             base.Projectile.friendly = true;
             base.Projectile.penetrate = 5;
-            base.Projectile.timeLeft = 60;
+            base.Projectile.timeLeft = 120;
             base.Projectile.usesLocalNPCImmunity = true;
             base.Projectile.localNPCHitCooldown = 15;
             base.Projectile.DamageType = DamageClass.Magic;

@@ -133,9 +133,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 }
             }
 
-            // ===== 插件AI =====
-            CurrentEffect.AI(Projectile, owner);
-
             // ===== 爆炸逻辑 =====
             if (CanExplodeFromProximity)
             {
@@ -174,6 +171,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // ===== 朝向 =====
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            // ===== 插件AI（在hitbox扩展之后调用，让Effect能修改碰撞箱） =====
+            CurrentEffect.AI(Projectile, owner);
 
             // ===== 粒子 =====
             if (Main.rand.NextBool(3))

@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode;
 using CalamityMod.Items.Materials;
 using CalamityMod.Projectiles.Typeless;
@@ -43,6 +43,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 1.8f);
 
+            // ===== 碰撞箱变长翻倍 =====
+            // 在基类设置24x24碰撞箱之后，将宽度翻倍为48，使碰撞箱沿飞行方向更长
+            Vector2 oldCenter = projectile.Center;
+            projectile.width = projectile.width * 2;
+            projectile.Center = oldCenter;
         }
         public override bool OnTileCollide(Projectile projectile, Player owner, Vector2 oldVelocity)
         {
@@ -110,8 +115,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
         public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
         {
-            // ===== Rover Drive 同款：护盾轻微呼吸 =====
-            float scale = 0.15f + 0.03f * (0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.5f + projectile.whoAmI * 0.2f)) * 1.5f;
+            // ===== 特效圆缩小至外接碰撞箱正方形（以正方形对角线为直径） =====
+            // 碰撞箱的外接正方形边长 = max(width, height)，对角线 = 边长 * sqrt(2)
+            float hitboxSquareSide = Math.Max(projectile.width, projectile.height);
+            float hitboxDiagonal = hitboxSquareSide * MathF.Sqrt(2f);
+            // FrozenCrust 贴图约 256px，护盾直径 = 贴图尺寸 * scale
+            Texture2D frozenCrust = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/FrozenCrust").Value;
+            float texDiameter = Math.Max(frozenCrust.Width, frozenCrust.Height);
+            float baseScale = hitboxDiagonal / texDiameter;
+            // 加上轻微呼吸
+            float breathe = 1f + 0.04f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.5f + projectile.whoAmI * 0.2f);
+            float scale = baseScale * breathe;
 
             // ===== 护盾强度，这里固定视为满强度 =====
             float shieldStrength = 1f;
