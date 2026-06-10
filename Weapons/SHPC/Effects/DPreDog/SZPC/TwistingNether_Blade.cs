@@ -34,14 +34,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 170;
+            Projectile.width = Projectile.height = 150;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 24;
             Projectile.timeLeft = 100;
-            Projectile.extraUpdates = 3;
+            Projectile.extraUpdates = 4;
             Projectile.Opacity = 1f;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 5;

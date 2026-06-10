@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
         private const int ExtraUpdateCount = 7;
-        private const int LifetimePerExtraUpdate = 75;
+        private const int LifetimePerExtraUpdate = 90;
         private const int ForceConvergeFrame = 80;
         private const float LaunchSpeed = 17f;
         private const float PreConvergeLeftTurnRadians = -0.034906586f;
@@ -28,14 +28,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.friendly = true;
             Projectile.hostile = false;
 
-            Projectile.penetrate = 3;
+            Projectile.penetrate = 4;
             Projectile.tileCollide = true;
 
             Projectile.extraUpdates = ExtraUpdateCount; // 高更新频率核心
             Projectile.timeLeft = LifetimePerExtraUpdate * Projectile.extraUpdates;
 
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 43;
             
             Projectile.ignoreWater = true;
         }
