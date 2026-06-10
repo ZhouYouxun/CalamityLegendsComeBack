@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
             else
             {
-                for (int i = 0; i < 50; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     Item item = Player.inventory[i];
                     if (item != null && item.type == ModContent.ItemType<Malachite>())

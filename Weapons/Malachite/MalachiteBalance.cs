@@ -6,7 +6,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
     internal static class MalachiteBalance
     {
         public const int DepletionBurstKunaiCount = 5;
-        public const int RightFeatherMaxCount = 3;
+        public const int RightFeatherMaxCount = 23;
         public const int RightFeatherGenerationFrames = 36;
         public const int RightFeatherReleaseSpacingFrames = 2;
 

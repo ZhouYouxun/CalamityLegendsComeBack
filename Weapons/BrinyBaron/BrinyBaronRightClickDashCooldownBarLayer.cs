@@ -22,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (!dashCooldown.IsCoolingDown)
                 return;
 
-            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
-            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/海爵剑UI下层").Value;
+            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/海爵剑UI上层").Value;
             float progress = dashCooldown.CooldownCompletion;
             Rectangle frameCrop = new(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
             Vector2 drawPos = player.Center - Main.screenPosition + new Vector2(0f, player.gfxOffY - 56f) - barBackground.Size() / 1.5f;

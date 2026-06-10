@@ -65,8 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (player.altFunctionUse == 2)
             {
-                bool onCooldown = player.Calamity().cooldowns.TryGetValue(RightGeneral.MalachiteRightClickCooldown.ID, out var cooldown) && cooldown.timeLeft > 0;
-                if (MalachiteRightFeather.CountStoredRightFeathers(player) >= 3 && onCooldown)
+                if (MalachiteRightFeather.CountStoredRightFeathers(player) <= 0)
                     return false;
 
                 Item.useAnimation = stealthStrike ? 28 : 16;
@@ -111,17 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (player.altFunctionUse == 2)
             {
                 int currentFeathers = MalachiteRightFeather.CountStoredRightFeathers(player);
-                if (currentFeathers < 3)
-                {
-                    ClearStoredRightFeathers(player);
-
-                    for (int i = 0; i < 3; i++)
-                    {
-                        MalachiteRightFeather.TrySpawnStoredRightFeather(player, source, damage, knockback);
-                    }
-                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.65f, Pitch = 0.2f }, player.Center);
-                }
-                else
+                if (currentFeathers > 0)
                 {
                     if (MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthStrike))
                     {
@@ -130,13 +119,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
                         SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, player.Center);
                         SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, player.Center);
-
-                        player.AddCooldown(RightGeneral.MalachiteRightClickCooldown.ID, RightGeneral.MalachiteRightClickCooldown.CooldownFrames);
-
-                        for (int i = 0; i < 3; i++)
-                        {
-                            MalachiteRightFeather.TrySpawnStoredRightFeather(player, source, damage, knockback);
-                        }
                     }
                 }
 
