@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             else if (currentSpeed < minSpeed)
                 projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * minSpeed;
 
-            if (timer % 8 == 0)
+            if (timer % 7 == 0)
             {
                 soulsFired++;
                 Projectile.NewProjectile(
@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<SHPCNecroplasmDamage>(),
-                    (int)(projectile.damage * 0.27f),
+                    (int)(projectile.damage * 0.30f),
                     0f,
                     projectile.owner
                 );
