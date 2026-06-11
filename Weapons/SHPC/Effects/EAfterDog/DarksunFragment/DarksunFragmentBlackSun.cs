@@ -17,6 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public const int MaxLevel = 5;
         public const float BaseRadius = 4f * 16f;
         private const float RadiusPerLevel = 16f;
+        private const float EclipseBoltSpawnDistance = 20f * 16f;
+        private const float EclipseBoltSpawnDistanceJitter = 4f * 16f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -71,7 +73,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
             ShotTimer++;
             float lifeProgress = Utils.GetLerpValue(Lifetime, 0f, Projectile.timeLeft, true);
-            int interval = Math.Max(3, (int)MathHelper.Lerp(16f, 7f, lifeProgress) - Level * 2);
+            int baseInterval = Math.Max(3, (int)MathHelper.Lerp(16f, 7f, lifeProgress) - Level * 2);
+            int interval = Math.Max(2, (int)Math.Ceiling(baseInterval * 0.5f));
             if (Projectile.owner == Main.myPlayer && ShotTimer >= interval)
             {
                 ShotTimer = 0f;
@@ -100,13 +103,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         {
             float levelProgress = Utils.GetLerpValue(1f, MaxLevel, Level, true);
             float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-            Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(
-                radius + MathHelper.Lerp(105f, 255f, levelProgress),
-                radius + MathHelper.Lerp(175f, 440f, levelProgress));
-            Vector2 tangent = (Projectile.Center - spawn).SafeNormalize(Vector2.UnitY).RotatedBy(-MathHelper.PiOver2);
-            Vector2 control = Projectile.Center + tangent * Main.rand.NextFloat(
-                MathHelper.Lerp(82f, 170f, levelProgress),
-                MathHelper.Lerp(160f, 285f, levelProgress)) + Main.rand.NextVector2Circular(26f + Level * 5f, 26f + Level * 5f);
+            float spinDirection = Main.rand.NextBool() ? 1f : -1f;
+            float spawnDistance = Main.rand.NextFloat(EclipseBoltSpawnDistance, EclipseBoltSpawnDistance + EclipseBoltSpawnDistanceJitter) + Level * 10f;
+            Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * spawnDistance;
+            Vector2 pullDirection = (Projectile.Center - spawn).SafeNormalize(Vector2.UnitY);
+            Vector2 tangent = pullDirection.RotatedBy(MathHelper.PiOver2 * spinDirection);
+            Vector2 control = Projectile.Center +
+                tangent * Main.rand.NextFloat(MathHelper.Lerp(150f, 240f, levelProgress), MathHelper.Lerp(260f, 380f, levelProgress)) +
+                pullDirection * Main.rand.NextFloat(-80f, 56f) +
+                Main.rand.NextVector2Circular(46f + Level * 8f, 46f + Level * 8f);
 
             int bolt = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -121,7 +126,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 control.Y);
 
             if (Main.projectile.IndexInRange(bolt))
-                Main.projectile[bolt].localAI[0] = MathHelper.Lerp(78f, 44f, levelProgress);
+            {
+                Projectile eclipseBolt = Main.projectile[bolt];
+                eclipseBolt.localAI[0] = MathHelper.Lerp(54f, 34f, levelProgress);
+                eclipseBolt.localAI[1] = spinDirection;
+                eclipseBolt.localAI[2] = Main.rand.NextFloat(MathHelper.TwoPi);
+            }
         }
 
         private void MaintainOrbitingShps()
@@ -228,25 +238,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float radius = GetRadiusForLevel(Level);
-            float ringScale = radius / (ring.Width * 0.5f);
-            float bloomScale = radius / (bloom.Width * 0.5f);
             float fade = Projectile.timeLeft < 24 ? Projectile.timeLeft / 24f : Utils.GetLerpValue(0f, 18f, Timer, true);
+            float visualRadius = radius * fade;
+            if (visualRadius <= 0.5f)
+                return false;
+
+            float visualRadiusRatio = visualRadius / radius;
+            float ringScale = visualRadius / (ring.Width * 0.5f);
+            float bloomScale = visualRadius / (bloom.Width * 0.5f);
             float pulse = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.2f) * 0.05f;
 
             // 这里直接参考 SunsetASunsetRightEXPMagic2：
             // 10 组沿圆周偏移的旋转纹理，每组叠加 5 张噪声/线纹理。
             // 之前这部分错误地放在一次性飞行光球上，命中后立即消失，所以黑日本体看不到漩涡。
             Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = 0; i < 10; i++)
             {
                 float angle = MathHelper.TwoPi * i / 3f + Main.GlobalTimeWrappedHourly * MathHelper.TwoPi;
                 Color baseColor = i % 2 == 0 ? new Color(255, 205, 56) : new Color(70, 42, 8);
                 Color drawColor = Color.Lerp(baseColor, Color.Black, MathHelper.Clamp(i * 0.09f, 0f, 0.82f)) * fade * 0.56f;
-                Vector2 offset = (angle + Main.GlobalTimeWrappedHourly * i / 16f).ToRotationVector2() * (5f + Level * 0.7f);
+                Vector2 offset = (angle + Main.GlobalTimeWrappedHourly * i / 16f).ToRotationVector2() * (5f + Level * 0.7f) * visualRadiusRatio;
 
                 foreach (Texture2D texture in sunsetVortexTextures)
                 {
-                    float textureScale = Math.Max(0.01f, (radius - offset.Length()) / (texture.Width * 0.5f));
+                    float textureScale = Math.Max(0.01f, (visualRadius - offset.Length()) / (texture.Width * 0.5f));
                     Main.EntitySpriteDraw(
                         texture,
                         drawPos + offset,

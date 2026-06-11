@@ -22,11 +22,17 @@ namespace CalamityLegendsComeBack.Shader
         private const float DarksunOuterVortexTextureRadius = 256f;
         private const float DarksunOuterVortexScaleDivisor = 96f;
         private const float DarksunLensingRadiusPadding = 5f * 16f;
+        private const float DarksunLensingFadeOutDuration = 24f;
 
         private static Vector2 darkPlasmaLastCenter;
         private static float darkPlasmaLastStrength;
         private static float darkPlasmaLastOpacity;
         private static float darkPlasmaFadeOutTime;
+        private static Vector2 darksunLastCenter;
+        private static float darksunLastOuterRadius;
+        private static float darksunLastHorizonRadius;
+        private static float darksunLastStrength;
+        private static float darksunLensingFadeOutTime;
 
         public static Effect BlackHoleDistortionShader => GetEffect("BlackHoleDistortion");
         public static Effect ScreenSimplyDistortedShader => GetEffect("ScreenSimplyDistorted");
@@ -159,28 +165,73 @@ namespace CalamityLegendsComeBack.Shader
 
             if (!TryFindDarksunBlackSunTarget(out Projectile target, out float opacity))
             {
-                if (filter.IsActive())
-                    Filters.Scene.Deactivate(key);
+                UpdateDarksunFragmentGravitationalLensingFadeOut(filter, key);
 
                 return;
-            }
-
-            if (!filter.IsActive())
-            {
-                Filters.Scene.Activate(key, target.Center);
-                filter = Filters.Scene[key];
             }
 
             int level = Utils.Clamp((int)target.ai[0], 1, DarksunFragmentBlackSun.MaxLevel);
             float blackSunRadius = DarksunFragmentBlackSun.GetRadiusForLevel(level);
             float levelProgress = Utils.GetLerpValue(1f, DarksunFragmentBlackSun.MaxLevel, level, true);
+            float radiusFade = MathHelper.Clamp(opacity, 0f, 1f);
+            float outerRadius = GetDarksunOuterVortexRadius(level) * radiusFade;
+            float horizonRadius = blackSunRadius * radiusFade;
+            float strength = MathHelper.Lerp(0.42f, 0.76f, levelProgress) * opacity;
+
+            darksunLastCenter = target.Center;
+            darksunLastOuterRadius = outerRadius;
+            darksunLastHorizonRadius = horizonRadius;
+            darksunLastStrength = strength;
+            darksunLensingFadeOutTime = DarksunLensingFadeOutDuration;
+
+            ApplyDarksunFragmentGravitationalLensing(filter, key, target.Center, outerRadius, horizonRadius, strength);
+        }
+
+        private static void UpdateDarksunFragmentGravitationalLensingFadeOut(Filter filter, string key)
+        {
+            if (!filter.IsActive() || darksunLensingFadeOutTime <= 0f || darksunLastStrength <= 0.001f)
+            {
+                if (filter.IsActive())
+                    Filters.Scene.Deactivate(key);
+
+                ResetDarksunFragmentGravitationalLensingFadeOut();
+                return;
+            }
+
+            darksunLensingFadeOutTime = Math.Max(0f, darksunLensingFadeOutTime - 1f);
+            float remaining = darksunLensingFadeOutTime / DarksunLensingFadeOutDuration;
+            ApplyDarksunFragmentGravitationalLensing(
+                filter,
+                key,
+                darksunLastCenter,
+                darksunLastOuterRadius * remaining,
+                darksunLastHorizonRadius * remaining,
+                darksunLastStrength * remaining);
+        }
+
+        private static void ApplyDarksunFragmentGravitationalLensing(Filter filter, string key, Vector2 center, float outerRadius, float horizonRadius, float strength)
+        {
+            if (!filter.IsActive())
+            {
+                Filters.Scene.Activate(key, center);
+                filter = Filters.Scene[key];
+            }
 
             ScreenShaderData shaderData = filter.GetShader();
-            shaderData.UseTargetPosition(target.Center);
+            shaderData.UseTargetPosition(center);
             Effect effect = shaderData.Shader;
-            effect.Parameters["uRadius"]?.SetValue(GetDarksunOuterVortexRadius(level));
-            effect.Parameters["uHorizonRadius"]?.SetValue(blackSunRadius * MathHelper.Lerp(0.5f, 0.94f, opacity));
-            effect.Parameters["uStrength"]?.SetValue(MathHelper.Lerp(0.42f, 0.76f, levelProgress) * opacity);
+            effect.Parameters["uRadius"]?.SetValue(Math.Max(1f, outerRadius));
+            effect.Parameters["uHorizonRadius"]?.SetValue(Math.Max(1f, horizonRadius));
+            effect.Parameters["uStrength"]?.SetValue(Math.Max(0f, strength));
+        }
+
+        private static void ResetDarksunFragmentGravitationalLensingFadeOut()
+        {
+            darksunLastCenter = Vector2.Zero;
+            darksunLastOuterRadius = 0f;
+            darksunLastHorizonRadius = 0f;
+            darksunLastStrength = 0f;
+            darksunLensingFadeOutTime = 0f;
         }
 
         private static bool TryFindDarkPlasmaTarget(out Projectile target, out float opacity)

@@ -51,6 +51,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             controlPosition = new Vector2(Projectile.ai[1], Projectile.ai[2]);
             targetPosition = GetParentCenter();
             Projectile.rotation = (targetPosition - Projectile.Center).ToRotation();
+            if (Projectile.localAI[1] == 0f)
+                Projectile.localAI[1] = Main.rand.NextBool() ? 1f : -1f;
+            if (Projectile.localAI[2] == 0f)
+                Projectile.localAI[2] = Main.rand.NextFloat(MathHelper.TwoPi);
         }
 
         public override void AI()
@@ -69,17 +73,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             float completion = 1f - Projectile.timeLeft / (float)actualLifetime;
             completion = MathHelper.Clamp(completion, 0f, 1f);
             float curvedCompletion = 1f - (float)Math.Pow(1f - completion, 1.65f);
+            float age = actualLifetime - Projectile.timeLeft;
+            float spinDirection = Projectile.localAI[1] == 0f ? 1f : Math.Sign(Projectile.localAI[1]);
+            float swirlPhase = Projectile.localAI[2] + age * (0.72f + Projectile.identity % 5 * 0.08f) * spinDirection;
             Vector2 previous = Projectile.Center;
             Vector2 point = QuadraticBezier(startPosition, controlPosition, targetPosition, curvedCompletion);
+            Vector2 radialFromTarget = (point - targetPosition).SafeNormalize(Vector2.UnitX);
+            float swirlFade = Utils.GetLerpValue(0f, 0.1f, completion, true) * (1f - curvedCompletion);
+            float swirlRadius = MathHelper.Lerp(110f, 14f, curvedCompletion) * swirlFade;
+            point += radialFromTarget.RotatedBy(MathHelper.PiOver2 * spinDirection) * MathF.Sin(swirlPhase) * swirlRadius;
+            point += radialFromTarget * MathF.Cos(swirlPhase * 1.35f) * swirlRadius * 0.35f;
             Projectile.Center = point;
             Projectile.velocity = point - previous;
             if (Projectile.velocity.LengthSquared() > 0.001f)
-                Projectile.rotation = Projectile.velocity.ToRotation();
+                Projectile.rotation = Projectile.velocity.ToRotation() + spinDirection * 0.35f * MathF.Sin(swirlPhase);
 
             if (Vector2.Distance(Projectile.Center, targetPosition) < 12f || !ParentIsActive())
                 Projectile.Kill();
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, -Projectile.velocity * 0.25f, 0, Main.rand.NextBool() ? new Color(255, 205, 66) : Color.Black, Main.rand.NextFloat(0.65f, 1f));
                 dust.noGravity = true;
