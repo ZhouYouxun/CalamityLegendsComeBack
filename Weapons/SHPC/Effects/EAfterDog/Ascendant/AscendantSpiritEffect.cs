@@ -24,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
+        public override bool PlayDefaultLeftClickFireSound => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {

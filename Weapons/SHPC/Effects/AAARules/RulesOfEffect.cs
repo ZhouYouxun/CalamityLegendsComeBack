@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Audio;
 using CalamityLegendsComeBack.Weapons.SHPC;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
@@ -33,6 +34,55 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         }
         // 是否启用默认减速（默认开启）
         public virtual bool EnableDefaultSlowdown => true;
+
+        // 是否播放 SHPC 左键默认开火音效 AnomalysNanogunMPFBShot。只影响左键开火声音。
+        public virtual bool PlayDefaultLeftClickFireSound => true;
+
+        public virtual string LeftClickReplacementFireSoundPath => EffectID switch
+        {
+            4 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/榴弹发射器-开火",
+            8 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/反器材狙击步枪开火",
+            10 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/轨道烟雾攻击",
+            13 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/机炮开火",
+            17 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/Wasp单次开火",
+            18 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/Wasp连续开火",
+            19 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/电弧发射器-发射",
+            21 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/最后通牒开火",
+            23 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/电弧发射器-发射",
+            25 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/轨道空爆攻击",
+            26 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/焦土-开枪",
+            33 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/磁轨炮-开火",
+            34 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/激光大炮开火",
+            35 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/焦土-开枪",
+            36 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/轨道炮攻击-仅开火",
+            37 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/焦土-开枪",
+            38 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/磁轨炮-开火",
+            39 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/爆裂铳开火",
+            40 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/机炮开火",
+            41 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/反器材狙击步枪开火",
+            43 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/反坦克炮-开火与换弹",
+            44 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/榴弹发射器-开火",
+            _ => "CalamityLegendsComeBack/Sound/Other/Helldiver2/爆裂铳开火"
+        };
+
+        public virtual float LeftClickReplacementFireSoundVolume => EffectID == 43 ? 2.5f : 1f;
+        public virtual float LeftClickReplacementFireSoundPitch => 0f;
+        public virtual int LeftClickReplacementFireSoundMaxInstances => 4;
+
+        public virtual void PlayLeftClickReplacementFireSound(Projectile projectile, Player owner)
+        {
+            if (PlayDefaultLeftClickFireSound || Main.dedServ || projectile.owner != Main.myPlayer)
+                return;
+
+            SoundEngine.PlaySound(new SoundStyle(LeftClickReplacementFireSoundPath)
+            {
+                Volume = LeftClickReplacementFireSoundVolume,
+                Pitch = LeftClickReplacementFireSoundPitch,
+                PitchVariance = 0.04f,
+                MaxInstances = LeftClickReplacementFireSoundMaxInstances
+            }, projectile.Center);
+        }
+
         // 每帧AI附加逻辑
         public virtual void AI(Projectile projectile, Player owner)
         {

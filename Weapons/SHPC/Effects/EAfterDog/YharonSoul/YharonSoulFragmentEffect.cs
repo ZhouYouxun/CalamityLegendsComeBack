@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
 
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
+        public override bool PlayDefaultLeftClickFireSound => false;
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)

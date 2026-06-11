@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
 
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
+        public override bool PlayDefaultLeftClickFireSound => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {

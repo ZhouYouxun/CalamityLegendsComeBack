@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 if (other.type != sunType || other.owner != projectile.owner)
                     continue;
 
-                float absorbRadius = DarksunFragmentBlackSun.GetRadiusForLevel((int)other.ai[0]) + projectile.width * 0.5f;
+                float absorbRadius = DarksunFragmentBlackSun.GetRadiusForLevel((int)other.ai[0]);
                 if (Vector2.Distance(other.Center, projectile.Center) > absorbRadius)
                     continue;
 
@@ -170,15 +170,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         private static void SpawnOrUpgradeBlackSun(Projectile projectile, Player owner)
         {
             int sunType = ModContent.ProjectileType<DarksunFragmentBlackSun>();
-            float overlapDistance = DarksunFragmentBlackSun.BaseRadius * 2.1f;
-
             foreach (Projectile other in Main.ActiveProjectiles)
             {
                 if (other.type != sunType || other.owner != projectile.owner)
                     continue;
 
                 float otherRadius = DarksunFragmentBlackSun.GetRadiusForLevel((int)other.ai[0]);
-                if (Vector2.Distance(other.Center, projectile.Center) > overlapDistance + otherRadius)
+                if (Vector2.Distance(other.Center, projectile.Center) > otherRadius)
                     continue;
 
                 DarksunFragmentBlackSun.UpgradeOrExplode(other);

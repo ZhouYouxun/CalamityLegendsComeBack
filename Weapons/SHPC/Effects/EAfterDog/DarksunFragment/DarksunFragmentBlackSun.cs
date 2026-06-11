@@ -15,7 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
     {
         public const int Lifetime = 360;
         public const int MaxLevel = 5;
-        public const float BaseRadius = 32f;
+        public const float BaseRadius = 4f * 16f;
+        private const float RadiusPerLevel = 16f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -24,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         private ref float ShotTimer => ref Projectile.localAI[1];
         private int Level => Utils.Clamp((int)Projectile.ai[0], 1, MaxLevel);
 
-        public static float GetRadiusForLevel(int level) => BaseRadius + (Utils.Clamp(level, 1, MaxLevel) - 1) * 5f;
+        public static float GetRadiusForLevel(int level) => BaseRadius + (Utils.Clamp(level, 1, MaxLevel - 1) - 1) * RadiusPerLevel;
 
         public override void SetDefaults()
         {
@@ -41,6 +42,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override bool ShouldUpdatePosition() => false;
 
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            float radius = GetRadiusForLevel(Level);
+            Vector2 closestPoint = new(
+                MathHelper.Clamp(Projectile.Center.X, targetHitbox.Left, targetHitbox.Right),
+                MathHelper.Clamp(Projectile.Center.Y, targetHitbox.Top, targetHitbox.Bottom));
+
+            return Vector2.DistanceSquared(Projectile.Center, closestPoint) <= radius * radius;
+        }
+
         public override void AI()
         {
             Timer++;
@@ -53,8 +64,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             }
 
             float radius = GetRadiusForLevel(Level);
+            Vector2 oldCenter = Projectile.Center;
             Projectile.Resize((int)(radius * 2f), (int)(radius * 2f));
-            Projectile.Center = Projectile.Center;
+            Projectile.Center = oldCenter;
             Projectile.rotation -= 0.035f + Level * 0.008f;
 
             ShotTimer++;
@@ -215,7 +227,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             };
 
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            float radiusScale = GetRadiusForLevel(Level) / 96f;
+            float radius = GetRadiusForLevel(Level);
+            float ringScale = radius / (ring.Width * 0.5f);
+            float bloomScale = radius / (bloom.Width * 0.5f);
             float fade = Projectile.timeLeft < 24 ? Projectile.timeLeft / 24f : Utils.GetLerpValue(0f, 18f, Timer, true);
             float pulse = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.2f) * 0.05f;
 
@@ -223,7 +237,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             // 10 组沿圆周偏移的旋转纹理，每组叠加 5 张噪声/线纹理。
             // 之前这部分错误地放在一次性飞行光球上，命中后立即消失，所以黑日本体看不到漩涡。
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            float sunsetVortexScale = radiusScale * pulse * (1.38f + Level * 0.035f);
             for (int i = 0; i < 10; i++)
             {
                 float angle = MathHelper.TwoPi * i / 3f + Main.GlobalTimeWrappedHourly * MathHelper.TwoPi;
@@ -233,14 +246,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
                 foreach (Texture2D texture in sunsetVortexTextures)
                 {
+                    float textureScale = Math.Max(0.01f, (radius - offset.Length()) / (texture.Width * 0.5f));
                     Main.EntitySpriteDraw(
                         texture,
                         drawPos + offset,
                         null,
-                        drawColor,
+                        drawColor * (0.95f + (pulse - 1f) * 0.5f),
                         -angle + MathHelper.PiOver2,
                         texture.Size() * 0.5f,
-                        sunsetVortexScale,
+                        textureScale,
                         SpriteEffects.None);
                 }
             }
@@ -249,10 +263,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             for (int i = 0; i < 3; i++)
             {
                 Color edge = new Color(255, 205, 64, 0) * fade * (0.64f - i * 0.13f);
-                Main.EntitySpriteDraw(ring, drawPos, null, edge, -Projectile.rotation * (1.35f + i * 0.28f), ring.Size() * 0.5f, radiusScale * (0.62f + i * 0.12f), SpriteEffects.None);
+                Main.EntitySpriteDraw(ring, drawPos, null, edge, -Projectile.rotation * (1.35f + i * 0.28f), ring.Size() * 0.5f, ringScale * (0.78f + i * 0.11f), SpriteEffects.None);
             }
-            Main.EntitySpriteDraw(ring, drawPos, null, new Color(255, 205, 64, 0) * 0.55f * fade, -Projectile.rotation * 1.8f, ring.Size() * 0.5f, radiusScale * 0.7f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, drawPos, null, new Color(255, 180, 36, 0) * 0.26f * fade, Projectile.rotation, bloom.Size() * 0.5f, radiusScale * 0.74f, SpriteEffects.None);
+            Main.EntitySpriteDraw(ring, drawPos, null, new Color(255, 205, 64, 0) * 0.55f * fade, -Projectile.rotation * 1.8f, ring.Size() * 0.5f, ringScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPos, null, new Color(255, 180, 36, 0) * 0.26f * fade, Projectile.rotation, bloom.Size() * 0.5f, bloomScale * 0.95f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;

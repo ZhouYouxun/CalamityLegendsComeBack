@@ -223,6 +223,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void OnKill(int timeLeft)
         {
             Player owner = Main.player[Projectile.owner];
+            CurrentEffect.PlayLeftClickReplacementFireSound(Projectile, owner);
+
             if (CurrentEffect.SuppressDefaultOnKillEffects)
             {
                 CurrentEffect.OnKill(Projectile, owner, timeLeft);

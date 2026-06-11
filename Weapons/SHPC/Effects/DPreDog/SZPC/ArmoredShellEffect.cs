@@ -23,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
+        public override bool PlayDefaultLeftClickFireSound => false;
 
         // VolterionOrb 实际只认 5 种类型
         private const int OrbTypeCount = 5;

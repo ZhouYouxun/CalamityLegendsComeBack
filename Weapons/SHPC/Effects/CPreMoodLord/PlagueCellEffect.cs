@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         public override float GlowScaleFactor => 0f;
         public override float GlowIntensityFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
+        public override bool PlayDefaultLeftClickFireSound => false;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {

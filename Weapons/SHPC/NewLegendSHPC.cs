@@ -549,7 +549,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 Item.channel = false;
                 Item.noUseGraphic = false;
-                Item.UseSound = FireSound;
+                if (!IsMagazineLoaded(CurrentMagazineIndex))
+                    TryFillEmptyMagazines(player);
+
+                Item.UseSound = ShouldPlayDefaultLeftClickFireSound(GetProjectileEffectIDForShot()) ? FireSound : null;
             }
 
             // ===== 天顶世界三连发初始化 =====
@@ -558,9 +561,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 zenithBurstCount = 2; // Two follow-up shots, three total
                 zenithBurstTimer = 8;
             }
-
-            if (player.altFunctionUse != 2 && !IsMagazineLoaded(CurrentMagazineIndex))
-                TryFillEmptyMagazines(player);
 
             // 只要当前还有灌注次数，或者玩家包里还能找到可灌注弹药，就允许使用
             //return storedEffectPower > 0 || FindEffectAmmo(player) != -1;
@@ -678,6 +678,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         internal int GetProjectileEffectIDForShot()
         {
             return storedEffectPower > 0 && storedEffectID > 0 ? storedEffectID : -1;
+        }
+
+        private static bool ShouldPlayDefaultLeftClickFireSound(int effectID)
+        {
+            return EffectRegistry.GetEffectByID(effectID).PlayDefaultLeftClickFireSound;
         }
 
         public static void GainEXFromLeftShot(Player player, int multiplier = 1)
@@ -915,8 +920,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     zenithBurstTimer = 8;
 
                     // ❗手动触发音效（否则不会响）
-                    SoundEngine.PlaySound(FireSound, player.Center);
-                    SHPCLeftClickSounds.PlayForEffect(storedEffectID > 0 ? storedEffectID : -1, player.Center);
+                    int burstEffectID = storedEffectID > 0 ? storedEffectID : -1;
+                    if (ShouldPlayDefaultLeftClickFireSound(burstEffectID))
+                        SoundEngine.PlaySound(FireSound, player.Center);
+                    SHPCLeftClickSounds.PlayForEffect(burstEffectID, player.Center);
                 }
             }
 

@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         public override int EffectID => 38;
 
         public override int AmmoType => ModContent.ItemType<ExoPrism>();
+        public override bool PlayDefaultLeftClickFireSound => false;
 
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
