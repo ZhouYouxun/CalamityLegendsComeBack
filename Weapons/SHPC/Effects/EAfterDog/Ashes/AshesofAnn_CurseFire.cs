@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
     internal sealed class AshesofAnn_CurseFire : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         private const float BaseSpeed = 16.2f;
+        private const float HomingRange = 200f * 16f;
         private const int TotalRelayShots = 17;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
@@ -31,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private int PreferredTargetIndex => (int)Projectile.ai[0];
         private int ShotIndex => (int)Projectile.ai[1];
+        private bool IsPiercingShot => Projectile.ai[2] < 0f;
         private float ShotCompletion => MathHelper.Clamp(ShotIndex / (float)(TotalRelayShots - 1), 0f, 1f);
 
         private Color MainColor => Color.Lerp(new Color(192, 0, 12), new Color(255, 118, 42), 0.25f + 0.45f * ShotCompletion);
@@ -68,6 +70,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.scale = MathHelper.Lerp(0.96f, 1.22f, ShotCompletion);
             Projectile.Opacity = 0f;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            if (IsPiercingShot)
+            {
+                Projectile.penetrate = -1;
+                Projectile.localNPCHitCooldown = 6;
+            }
         }
 
         public override void AI()
@@ -76,9 +84,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float homingDelay = MathHelper.Lerp(6f, 3f, ShotCompletion) * (Projectile.extraUpdates + 1f);
-            bool homingActive = Timer >= homingDelay;
+            bool homingActive = !IsPiercingShot && Timer >= homingDelay;
 
-            if (homingActive)
+            if (IsPiercingShot)
+                UpdatePiercingFlight(direction);
+            else if (homingActive)
                 UpdateHoming(direction, homingDelay);
             else
                 UpdateLaunchCurve(direction, homingDelay);
@@ -101,9 +111,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.velocity = direction.RotatedBy(curve) * speed;
         }
 
+        private void UpdatePiercingFlight(Vector2 direction)
+        {
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed * MathHelper.Lerp(1.18f, 1.42f, ShotCompletion), 0.045f);
+            float curve = (float)Math.Sin((Timer + ShotIndex * 17f) * 0.045f) * 0.004f;
+            Projectile.velocity = direction.RotatedBy(curve) * speed;
+        }
+
         private void UpdateHoming(Vector2 currentDirection, float homingDelay)
         {
-            NPC target = FindTarget(MathHelper.Lerp(4400f, 5600f, ShotCompletion), currentDirection);
+            NPC target = FindTarget(HomingRange, currentDirection);
             float idealSpeed = BaseSpeed * MathHelper.Lerp(1.02f, 1.32f, ShotCompletion);
 
             if (target is null)
@@ -181,7 +198,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             target.AddBuff(ModContent.BuffType<VulnerabilityHex>(), 180);
             target.AddBuff(ModContent.BuffType<BrimstoneFlames>(), 240);
             target.AddBuff(BuffID.CursedInferno, 210);
-            Projectile.Kill();
+
+            if (!IsPiercingShot)
+                Projectile.Kill();
         }
 
         public override void OnKill(int timeLeft)

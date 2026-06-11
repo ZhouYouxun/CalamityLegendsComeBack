@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 if (projectile.ModProjectile is not SeedOfSilvaFlowerProjectile flower)
                     continue;
 
-                int slot = (int)flower.CurrentPreset;
+                int slot = flower.CurrentSlot;
                 if (slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
                 {
                     projectile.Kill();

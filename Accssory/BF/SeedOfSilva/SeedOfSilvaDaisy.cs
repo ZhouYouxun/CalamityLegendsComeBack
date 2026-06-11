@@ -1,7 +1,9 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 {
@@ -16,7 +18,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         protected override int FlowerSlot => 1;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_BRecov;
-        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/种子包/雏菊";
+        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/Daisy";
 
         protected override void UpdateBlooming(Player owner, BFAccessoryPlayer accessoryPlayer)
         {
@@ -51,6 +53,31 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 EmitFlowerBurst(new Color(150, 255, 174), 5);
                 break;
             }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            base.PreDraw(ref lightColor);
+            if (IsBlooming)
+                DrawDaisyHealthBar();
+
+            return false;
+        }
+
+        private void DrawDaisyHealthBar()
+        {
+            Texture2D barBackground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
+            Texture2D barForeground = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            float progress = MathHelper.Clamp(daisyLife / DaisyMaxLife, 0f, 1f);
+            float scale = 0.78f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(-barBackground.Width * scale * 0.5f, -44f);
+            Rectangle frameCrop = new(0, 0, (int)(barForeground.Width * progress), barForeground.Height);
+            Color backColor = new Color(20, 72, 32) * 0.82f;
+            Color frontColor = Color.Lerp(new Color(80, 210, 96), new Color(205, 255, 188), progress);
+
+            Main.EntitySpriteDraw(barBackground, drawPosition, null, backColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0);
+            if (frameCrop.Width > 0)
+                Main.EntitySpriteDraw(barForeground, drawPosition, frameCrop, frontColor, 0f, Vector2.Zero, scale, SpriteEffects.None, 0);
         }
     }
 }

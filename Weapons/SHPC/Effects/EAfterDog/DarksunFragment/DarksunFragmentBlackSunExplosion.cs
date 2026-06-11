@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            Projectile.Resize(220 + Level * 36, 220 + Level * 36);
+            Projectile.Resize(260 + Level * 64, 260 + Level * 64);
             Projectile.Center = Projectile.Center;
 
             if (Main.dedServ)

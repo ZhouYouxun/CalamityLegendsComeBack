@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
+        private const int MaxChainCount = 4;
         private ref float BounceUsed => ref Projectile.localAI[0];
 
         private int time;
@@ -34,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 4;
+            Projectile.penetrate = MaxChainCount + 1;
             Projectile.timeLeft = 200;
             Projectile.extraUpdates = 18;
             Projectile.tileCollide = false;
@@ -184,13 +185,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Vector2 launchVel = Utils.DirectionTo(Projectile.Center, target.Center);
             target.MoveNPC(launchVel, 20f, true);
 
-            if (BounceUsed >= 1f)
+            if (BounceUsed >= MaxChainCount)
             {
                 Projectile.Kill();
                 return;
             }
 
-            BounceUsed = 1f;
+            BounceUsed++;
             NPC nextTarget = FindBounceTarget(target);
             if (nextTarget is null)
             {
@@ -236,8 +237,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 dust.color = Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid;
             }
 
-            Particle pulse = new CustomPulse(pos, Vector2.Zero, Color.Cyan, "CalamityMod/Particles/HighResFoggyCircleHardEdge", Vector2.One, 0f, 0f, 0.05705f * fxScale, 10);
-            GeneralParticleHandler.SpawnParticle(pulse);
+            //Particle pulse = new CustomPulse(pos, Vector2.Zero, Color.Cyan, "CalamityMod/Particles/HighResFoggyCircleHardEdge", Vector2.One, 0f, 0f, 0.05705f * fxScale, 10);
+            //GeneralParticleHandler.SpawnParticle(pulse);
 
             for (int i = 0; i < 2; i++)
             {

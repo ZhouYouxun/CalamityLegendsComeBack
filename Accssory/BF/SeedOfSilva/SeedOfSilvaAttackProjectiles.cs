@@ -31,7 +31,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 72;
+            Projectile.timeLeft = 96;
+            Projectile.extraUpdates = 2;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
@@ -44,12 +45,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             NPC target = GetTarget();
             if (target != null)
             {
-                Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY)) * 13.5f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity.RotatedBy((float)System.Math.Sin(Timer * 0.22f) * 0.026f), desired, 0.16f);
+                Vector2 aimPoint = target.Center + target.velocity * 0.18f;
+                Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+                Vector2 desired = (aimPoint - Projectile.Center).SafeNormalize(currentDirection) * 26f;
+                float curve = (float)System.Math.Sin(Timer * 0.18f + Projectile.identity * 0.3f) * 0.045f;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity.RotatedBy(curve), desired, 0.34f);
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, new Vector3(0.06f, 0.16f, 0.38f));
+            Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.42f, 0.14f));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -67,7 +71,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override bool PreDraw(ref Color lightColor)
         {
-            DrawTrail(new Color(106, 166, 255), new Color(226, 246, 255));
+            DrawTrail(new Color(64, 255, 118), new Color(220, 255, 190));
             return false;
         }
 
@@ -205,7 +209,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
     internal sealed class SeedOfSilvaMandrakeDart : ModProjectile
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/种子包/凋零花瓣";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/WitheredPetal";
 
         public override void SetStaticDefaults()
         {

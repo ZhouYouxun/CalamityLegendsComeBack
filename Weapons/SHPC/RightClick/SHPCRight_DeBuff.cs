@@ -10,11 +10,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 {
     public class SHPCRight_DeBuff : ModBuff
     {
-        // 1 = 普通过热，2 = 高烈度过热
         public static int FireMode = 1;
-        private const float BurnVisualScale = 0.45f; // Reduced by 33% (originally 0.67f)
-        private const float BurnVisualSpeed = 0.67f;
-        private const float BurnVisualBrightness = 0.67f; // Reduced by 33% (originally 1.0f)
+
+        private static readonly Color TechBlue = new(54, 190, 255);
+        private static readonly Color TechWhite = new(235, 250, 255);
+        private static readonly Color DeepIonBlue = new(16, 82, 210);
 
         public override void SetStaticDefaults()
         {
@@ -27,7 +27,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public override void Update(Player player, ref int buffIndex)
         {
             int stage = player.GetModPlayer<SHPCRight_Player>().HeatStage;
-
             if (stage <= 0)
                 return;
 
@@ -44,27 +43,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (player.lifeRegen > 0)
                 player.lifeRegen = 0;
 
-            // ===== Heat4 =====
             if (stage == 4)
             {
-                if (player.statLife > 100)
-                {
-                    if (Main.GameUpdateCount % 30 == 0)
-                        ApplyOverheatDamage(player, 1);
-                }
+                if (player.statLife > 100 && Main.GameUpdateCount % 30 == 0)
+                    ApplyOverheatDamage(player, 1);
             }
+            else if (stage >= 5 && Main.GameUpdateCount % 5 == 0)
+                ApplyOverheatDamage(player, Main.rand.Next(1, 3));
 
-            // ===== Heat5 =====
-            else if (stage >= 5)
-            {
-                if (Main.GameUpdateCount % 5 == 0)
-                    ApplyOverheatDamage(player, Main.rand.Next(1, 3));
-
-            }
-
-
-            ApplyBurningVisual(player, stage);
-
+            ApplyIonizedVisual(player, stage);
         }
 
         private static void ApplyOverheatDamage(Player player, int damage)
@@ -90,229 +77,137 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             player.KillMe(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral($"{player.name} was burned out by SHPC overload.")), System.Math.Max(1, damage), 0);
         }
 
-        private void ApplyBurningVisual(Player player, int stage)
+        private void ApplyIonizedVisual(Player player, int stage)
         {
-            if (stage < 4)
+            if (Main.dedServ || stage < 4)
                 return;
 
-            if (Main.rand.NextFloat() >= 0.667f * 0.67f) // Reduced frequency by 33%
+            float spawnChance = stage >= 5 ? 0.42f : 0.24f;
+            if (Main.rand.NextFloat() > spawnChance)
                 return;
 
-            // ===== 基础燃烧（始终存在）=====
-            ApplyStage5Burn(player);
+            ApplyIonLeak(player);
 
-            // ===== Heat5 叠加 =====
             if (stage >= 5)
             {
-                ApplyStage6PanicBurn(player);
-                ApplyStage7Meltdown(player);
+                ApplyPulseHalo(player);
+                ApplyHighHeatIonArcs(player);
             }
         }
 
-        private static Vector2 SlowBurnVelocity(Vector2 velocity) => velocity * BurnVisualSpeed;
-
-        private void ApplyStage5Burn(Player player)
+        private static Vector2 RandomBodyPoint(Player player, float widthScale = 0.5f, float heightScale = 0.58f)
         {
-            Vector2 center = player.Center;
+            return player.Center + new Vector2(
+                Main.rand.NextFloat(-player.width * widthScale, player.width * widthScale),
+                Main.rand.NextFloat(-player.height * heightScale, player.height * heightScale));
+        }
 
-            // ===== 从身体范围随机取点 =====
-            Vector2 randPos = center + new Vector2(
-                Main.rand.NextFloat(-player.width * 0.4f, player.width * 0.4f),
-                Main.rand.NextFloat(-player.height * 0.5f, player.height * 0.5f)
-            );
+        private void ApplyIonLeak(Player player)
+        {
+            Vector2 position = RandomBodyPoint(player, 0.42f, 0.48f);
+            Vector2 drift = new(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-1.6f, -0.35f));
+            Color color = Color.Lerp(TechBlue, TechWhite, Main.rand.NextFloat(0.18f, 0.72f));
 
-            // ===== 向上 + 旋转（火焰感）=====
-            Vector2 upward = new Vector2(
-                Main.rand.NextFloat(-0.6f, 0.6f),
-                Main.rand.NextFloat(-2.5f, -1.2f)
-            );
-
-            // ===== ① 火焰主体（Squishy）=====
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(2))
             {
-                SquishyLightParticle flame = new(
-                    randPos,
-                    SlowBurnVelocity(upward.RotatedByRandom(0.4f)),
-                    Main.rand.NextFloat(0.35f, 0.6f) * BurnVisualScale,
-                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.3f, 0.8f)) * BurnVisualBrightness,
-                    Main.rand.Next(12, 20),
+                SquishyLightParticle mote = new(
+                    position,
+                    drift.RotatedByRandom(0.25f),
+                    Main.rand.NextFloat(0.16f, 0.28f),
+                    color * 0.62f,
+                    Main.rand.Next(9, 15),
                     1f,
-                    Main.rand.NextFloat(1.2f, 1.8f) * BurnVisualScale
-                );
-
-                GeneralParticleHandler.SpawnParticle(flame);
+                    Main.rand.NextFloat(0.36f, 0.58f));
+                GeneralParticleHandler.SpawnParticle(mote);
             }
 
-            // ===== ② 火星（Dust）=====
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(2))
             {
-                Dust d = Dust.NewDustPerfect(
-                    randPos,
-                    DustID.Torch,
-                    SlowBurnVelocity(upward.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.8f, 2.2f)),
+                Dust dust = Dust.NewDustPerfect(
+                    position,
+                    Main.rand.NextBool(3) ? DustID.IceTorch : DustID.Electric,
+                    drift.RotatedByRandom(0.55f) * Main.rand.NextFloat(0.55f, 1.35f),
                     0,
-                    Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat()) * BurnVisualBrightness,
-                    Main.rand.NextFloat(1.0f, 1.6f) * BurnVisualScale
-                );
-                d.noGravity = true;
+                    color,
+                    Main.rand.NextFloat(0.55f, 0.92f));
+                dust.noGravity = true;
             }
 
-            // ===== ③ 慌张感：微爆闪 =====
-            if (Main.rand.NextBool(6))
+            if (Main.rand.NextBool(5))
             {
-                PointParticle spark = new PointParticle(
-                    randPos,
-                    SlowBurnVelocity(upward * 0.5f),
+                PointParticle spark = new(
+                    position,
+                    drift * 0.45f,
                     false,
-                    10,
-                    1.1f * BurnVisualScale,
-                    Color.OrangeRed * BurnVisualBrightness
-                );
-
+                    Main.rand.Next(7, 11),
+                    Main.rand.NextFloat(0.55f, 0.82f),
+                    TechWhite * 0.7f);
                 GeneralParticleHandler.SpawnParticle(spark);
             }
         }
 
-        private void ApplyStage6PanicBurn(Player player)
+        private void ApplyPulseHalo(Player player)
+        {
+            if (Main.GameUpdateCount % 10 != 0 || !Main.rand.NextBool(2))
+                return;
+
+            Vector2 center = player.Center + Main.rand.NextVector2Circular(player.width * 0.14f, player.height * 0.18f);
+            Color ringColor = Color.Lerp(TechBlue, TechWhite, Main.rand.NextFloat(0.25f, 0.58f)) * 0.36f;
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                ringColor,
+                new Vector2(0.5f, 1.65f),
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.04f,
+                0.18f,
+                13));
+        }
+
+        private void ApplyHighHeatIonArcs(Player player)
         {
             Vector2 center = player.Center;
-            Vector2 panicSource = center + new Vector2(
-                Main.rand.NextFloat(-player.width * 0.55f, player.width * 0.55f),
-                Main.rand.NextFloat(-player.height * 0.58f, player.height * 0.18f));
+            Vector2 source = RandomBodyPoint(player, 0.58f, 0.62f);
+            Color arcColor = Main.rand.NextBool(4) ? TechWhite : Color.Lerp(DeepIonBlue, TechBlue, Main.rand.NextFloat(0.35f, 0.9f));
 
-            Vector2 upwardBurst = new Vector2(
-                Main.rand.NextFloat(-1.3f, 1.3f),
-                Main.rand.NextFloat(-4.6f, -2.2f));
-
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(2))
             {
-                SquishyLightParticle panicFlame = new(
-                    panicSource,
-                    SlowBurnVelocity(upwardBurst.RotatedByRandom(0.65f)),
-                    Main.rand.NextFloat(0.52f, 0.88f) * BurnVisualScale,
-                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.35f, 0.95f)) * BurnVisualBrightness,
-                    Main.rand.Next(14, 24),
-                    1f,
-                    Main.rand.NextFloat(1.7f, 2.5f) * BurnVisualScale
-                );
-                GeneralParticleHandler.SpawnParticle(panicFlame);
-            }
-
-            if (Main.rand.NextBool(3))
-            {
-                Dust flash = Dust.NewDustPerfect(
-                    panicSource,
-                    Main.rand.NextBool() ? DustID.Torch : DustID.InfernoFork,
-                    SlowBurnVelocity(upwardBurst.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.6f, 3.4f)),
-                    0,
-                    Color.Lerp(Color.Orange, Color.Red, Main.rand.NextFloat(0.25f, 0.9f)) * BurnVisualBrightness,
-                    Main.rand.NextFloat(1.25f, 2.1f) * BurnVisualScale);
-                flash.noGravity = true;
-            }
-
-            if (Main.rand.NextBool(5))
-            {
-                Vector2 sideKick = new Vector2(Main.rand.NextBool() ? -1f : 1f, 0f) * Main.rand.NextFloat(0.9f, 2.2f);
-                PointParticle panicSpark = new PointParticle(
-                    panicSource,
-                    SlowBurnVelocity(upwardBurst * 0.42f + sideKick),
+                Vector2 tangent = Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.8f, 2.2f);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    source,
+                    tangent + player.velocity * 0.12f,
                     false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(1.15f, 1.55f) * BurnVisualScale,
-                    Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.12f, 0.28f)) * BurnVisualBrightness);
-                GeneralParticleHandler.SpawnParticle(panicSpark);
+                    Main.rand.Next(6, 10),
+                    Main.rand.NextFloat(0.12f, 0.24f),
+                    arcColor));
             }
 
-            if (Main.rand.NextBool(8))
+            if (Main.rand.NextBool(3))
             {
-                GlowOrbParticle heatCore = new GlowOrbParticle(
+                GlowOrbParticle core = new(
                     center + Main.rand.NextVector2Circular(player.width * 0.18f, player.height * 0.22f),
-                    SlowBurnVelocity(upwardBurst * 0.08f),
+                    Main.rand.NextVector2Circular(0.18f, 0.18f) + new Vector2(0f, Main.rand.NextFloat(-0.45f, -0.05f)),
                     false,
-                    Main.rand.Next(7, 10),
-                    Main.rand.NextFloat(0.36f, 0.54f) * BurnVisualScale,
-                    Color.Lerp(Color.OrangeRed, Color.Gold, Main.rand.NextFloat(0.35f, 0.75f)) * BurnVisualBrightness,
+                    Main.rand.Next(7, 11),
+                    Main.rand.NextFloat(0.2f, 0.34f),
+                    Color.Lerp(TechBlue, TechWhite, Main.rand.NextFloat(0.25f, 0.72f)) * 0.55f,
                     true,
                     false,
                     true);
-                GeneralParticleHandler.SpawnParticle(heatCore);
-            }
-        }
-
-        private void ApplyStage7Meltdown(Player player)
-        {
-            Vector2 center = player.Center;
-            Vector2 bodyCore = center + new Vector2(
-                Main.rand.NextFloat(-player.width * 0.62f, player.width * 0.62f),
-                Main.rand.NextFloat(-player.height * 0.68f, player.height * 0.26f));
-
-            for (int i = 0; i < 2; i++)
-            {
-                float fanT = Main.rand.NextFloat(-1f, 1f);
-                Vector2 eruptionVelocity = new Vector2(
-                    fanT * Main.rand.NextFloat(1.8f, 4.2f),
-                    Main.rand.NextFloat(-6.8f, -3.4f));
-
-                SquishyLightParticle meltdownFlame = new(
-                    bodyCore + new Vector2(fanT * player.width * 0.18f, Main.rand.NextFloat(-player.height * 0.18f, player.height * 0.12f)),
-                    SlowBurnVelocity(eruptionVelocity.RotatedByRandom(0.8f)),
-                    Main.rand.NextFloat(0.72f, 1.18f) * BurnVisualScale,
-                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.45f, 0.98f)) * BurnVisualBrightness,
-                    Main.rand.Next(18, 30),
-                    1f,
-                    Main.rand.NextFloat(2.3f, 3.4f) * BurnVisualScale
-                );
-                GeneralParticleHandler.SpawnParticle(meltdownFlame);
-            }
-
-            for (int i = 0; i < 2; i++)
-            {
-                Dust infernoDust = Dust.NewDustPerfect(
-                    bodyCore + Main.rand.NextVector2Circular(player.width * 0.24f, player.height * 0.3f),
-                    Main.rand.NextBool() ? DustID.Torch : DustID.InfernoFork,
-                    SlowBurnVelocity(new Vector2(Main.rand.NextFloat(-2.8f, 2.8f), Main.rand.NextFloat(-6.2f, -2.6f)).RotatedByRandom(0.7f)),
-                    0,
-                    Color.Lerp(Color.OrangeRed, Color.White, Main.rand.NextFloat(0.08f, 0.22f)) * BurnVisualBrightness,
-                    Main.rand.NextFloat(1.65f, 2.75f) * BurnVisualScale);
-                infernoDust.noGravity = true;
+                GeneralParticleHandler.SpawnParticle(core);
             }
 
             if (Main.rand.NextBool(3))
             {
-                PointParticle panicFlash = new PointParticle(
-                    bodyCore + Main.rand.NextVector2Circular(player.width * 0.12f, player.height * 0.16f),
-                    SlowBurnVelocity(new Vector2(Main.rand.NextFloat(-2.6f, 2.6f), Main.rand.NextFloat(-3.8f, -1.6f))),
-                    false,
-                    Main.rand.Next(8, 14),
-                    Main.rand.NextFloat(1.5f, 2f) * BurnVisualScale,
-                    Color.Lerp(Color.OrangeRed, Color.Yellow, Main.rand.NextFloat(0.25f, 0.65f)) * BurnVisualBrightness);
-                GeneralParticleHandler.SpawnParticle(panicFlash);
-            }
-
-            if (Main.rand.NextBool(5))
-            {
-                GlowOrbParticle overloadPulse = new GlowOrbParticle(
-                    center + Main.rand.NextVector2Circular(player.width * 0.22f, player.height * 0.28f),
-                    SlowBurnVelocity(new Vector2(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-0.9f, -0.15f))),
-                    false,
-                    Main.rand.Next(8, 12),
-                    Main.rand.NextFloat(0.48f, 0.7f) * BurnVisualScale,
-                    Color.Lerp(Color.Red, Color.Gold, Main.rand.NextFloat(0.45f, 0.85f)) * BurnVisualBrightness,
-                    true,
-                    false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(overloadPulse);
+                Dust dust = Dust.NewDustPerfect(
+                    source,
+                    Main.rand.NextBool() ? DustID.Electric : DustID.BlueTorch,
+                    (source - center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.7f) * Main.rand.NextFloat(0.8f, 1.9f),
+                    0,
+                    arcColor,
+                    Main.rand.NextFloat(0.78f, 1.15f));
+                dust.noGravity = true;
             }
         }
-
-
-
-
-
-
-
-
-
-
     }
 }

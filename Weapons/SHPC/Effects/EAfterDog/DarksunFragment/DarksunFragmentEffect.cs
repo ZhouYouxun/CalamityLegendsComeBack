@@ -53,6 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * 24f;
             projectile.rotation += 0.38f * Math.Sign(projectile.velocity.X == 0f ? owner.direction : projectile.velocity.X);
 
+            if (projectile.owner == Main.myPlayer && TryAbsorbNearbyBlackSun(projectile))
+                return;
+
             if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -66,6 +69,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             }
 
             Lighting.AddLight(projectile.Center, new Vector3(1f, 0.68f, 0.12f) * 0.45f);
+        }
+
+        private static bool TryAbsorbNearbyBlackSun(Projectile projectile)
+        {
+            int sunType = ModContent.ProjectileType<DarksunFragmentBlackSun>();
+            foreach (Projectile other in Main.ActiveProjectiles)
+            {
+                if (other.type != sunType || other.owner != projectile.owner)
+                    continue;
+
+                float absorbRadius = DarksunFragmentBlackSun.GetRadiusForLevel((int)other.ai[0]) + projectile.width * 0.5f;
+                if (Vector2.Distance(other.Center, projectile.Center) > absorbRadius)
+                    continue;
+
+                projectile.GetGlobalProjectile<DarksunFragmentOrbGlobalProjectile>().hitSomething = true;
+                DarksunFragmentBlackSun.UpgradeOrExplode(other);
+                projectile.Kill();
+                return true;
+            }
+
+            return false;
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
@@ -157,10 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 if (Vector2.Distance(other.Center, projectile.Center) > overlapDistance + otherRadius)
                     continue;
 
-                other.ai[0] = MathHelper.Clamp(other.ai[0] + 1f, 1f, DarksunFragmentBlackSun.MaxLevel);
-                other.timeLeft = DarksunFragmentBlackSun.Lifetime;
-                other.netUpdate = true;
-                DarksunFragmentBlackSun.SpawnUpgradeBurst(other.Center, (int)other.ai[0]);
+                DarksunFragmentBlackSun.UpgradeOrExplode(other);
                 return;
             }
 

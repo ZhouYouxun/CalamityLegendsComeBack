@@ -1,10 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
 {
     internal class BBTideAuraPlayer : ModPlayer
     {
@@ -12,14 +12,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
 
         public override void ResetEffects()
         {
-            int tideValue = Player.GetModPlayer<BBEXPlayer>().TideValue;
+            int tideValue = Player.GetModPlayer<BBTideValuePlayer>().TideValue;
             Player.moveSpeed += tideValue * 0.04f;
         }
 
         public override void PostUpdate()
         {
-            int tideValue = Player.GetModPlayer<BBEXPlayer>().TideValue;
-            float targetStrength = MathHelper.Clamp(tideValue / (float)BBEXPlayer.MaxDesignedTideCap, 0f, 1f);
+            int tideValue = Player.GetModPlayer<BBTideValuePlayer>().TideValue;
+            float targetStrength = MathHelper.Clamp(tideValue / (float)BBTideValuePlayer.MaxDesignedTideCap, 0f, 1f);
             visualStrength = MathHelper.Lerp(visualStrength, targetStrength, 0.12f);
 
             if (visualStrength <= 0.02f || Main.dedServ)

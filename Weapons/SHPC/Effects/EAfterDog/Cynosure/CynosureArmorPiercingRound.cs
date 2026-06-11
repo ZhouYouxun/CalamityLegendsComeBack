@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 28;
+            ProjectileID.Sets.TrailCacheLength[Type] = 44;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -152,6 +152,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                         8));
                 }
             }
+
+            SpawnExtremeFlightEffects(age, forward, normal);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -187,8 +189,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                 ModContent.ProjectileType<CynosureLightningExplosion>(), burstDamage, Projectile.knockBack, Projectile.owner);
 
-            SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 12);
-            SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 18);
+            SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 30);
+            SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 30);
 
             const int chargedCount = 12;
             for (int i = 0; i < chargedCount; i++)
@@ -231,39 +233,123 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 0.035f, 0.28f, 16));
 
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 54, 4.5f, 26f);
+
             // 辐射状辉光火花
             for (int i = 0; i < 28; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f, 20f);
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    Projectile.Center, velocity, false,
+                Color color = Main.rand.NextBool(4) ? Color.White : Color.Cyan;
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center,
+                    velocity,
+                    false,
                     Main.rand.Next(12, 22),
-                    Main.rand.NextFloat(0.04f, 0.09f),
-                    Main.rand.NextBool(4) ? Color.White : Color.Cyan,
-                    new Vector2(2.4f, 0.55f), true));
+                    Main.rand.NextFloat(0.32f, 0.72f),
+                    color));
             }
 
             // 玫瑰线图案爆炸火花
-            for (int i = 0; i < 36; i++)
+            for (int i = 0; i < 72; i++)
             {
-                float angle = MathHelper.TwoPi * i / 36f;
-                float rose = 0.78f + 0.32f * (float)Math.Sin(angle * 5f);
+                float angle = MathHelper.TwoPi * i / 72f;
+                float rose = 0.78f + 0.32f * MathF.Sin(angle * 5f);
                 Vector2 direction = angle.ToRotationVector2();
-                Vector2 velocity = direction * Main.rand.NextFloat(4f, 15f) * rose;
+                Vector2 velocity = direction * Main.rand.NextFloat(4f, 17f) * rose;
                 Color color = Color.Lerp(AuricGold, Color.Cyan, i % 2 == 0 ? 0.25f : 0.65f);
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
                     Projectile.Center + direction * Main.rand.NextFloat(4f, 16f),
-                    velocity, false,
-                    Main.rand.Next(13, 24),
-                    Main.rand.NextFloat(0.035f, 0.08f),
+                    velocity,
+                    Color.White,
                     color,
-                    new Vector2(2.2f, 0.5f), true));
+                    Main.rand.NextFloat(0.32f, 0.64f),
+                    Main.rand.Next(13, 22)));
+
+                if (i % 3 == 0)
+                {
+                    Dust dust = Dust.NewDustPerfect(
+                        Projectile.Center + direction * Main.rand.NextFloat(10f, 34f),
+                        DustID.Electric,
+                        direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(1.4f, 5.6f) + velocity * 0.12f,
+                        0,
+                        color,
+                        Main.rand.NextFloat(0.92f, 1.55f));
+                    dust.noGravity = true;
+                }
             }
         }
 
         // ═══════════════════════════════════════════════════
         // Primitive Trail 基底层
         // ═══════════════════════════════════════════════════
+        private void SpawnExtremeFlightEffects(float age, Vector2 forward, Vector2 normal)
+        {
+            if (Main.dedServ)
+                return;
+
+            float time = age * 0.18f + Projectile.identity * 0.071f;
+            float speedPower = Utils.GetLerpValue(12f, 46f, Projectile.velocity.Length(), true);
+            float pulse = 0.5f + 0.5f * MathF.Sin(time * 3.7f);
+            Color blue = Color.Lerp(AuricCyan, AuricWhite, 0.24f + pulse * 0.32f);
+            Color gold = Color.Lerp(AuricGold, Color.White, 0.12f + pulse * 0.22f);
+
+            if (Projectile.numUpdates == 0)
+            {
+                for (int lane = -1; lane <= 1; lane += 2)
+                {
+                    float corkscrew = MathF.Sin(time * 5.1f + lane * MathHelper.PiOver2);
+                    Vector2 lanePosition = Projectile.Center - forward * Main.rand.NextFloat(8f, 30f) + normal * lane * corkscrew * Main.rand.NextFloat(8f, 24f);
+                    Vector2 laneVelocity = -forward * Main.rand.NextFloat(3.5f, 9f + speedPower * 8f) + normal * lane * Main.rand.NextFloat(0.8f, 3.2f);
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(
+                        lanePosition,
+                        laneVelocity,
+                        false,
+                        Main.rand.Next(10, 18),
+                        Main.rand.NextFloat(0.28f, 0.62f),
+                        lane > 0 ? blue : gold));
+                }
+            }
+
+            if (Projectile.numUpdates <= 1 && Main.rand.NextBool(2))
+            {
+                float petalAngle = time * 2.6f + Main.rand.NextFloat(MathHelper.TwoPi);
+                float petalRadius = Main.rand.NextFloat(5f, 26f) * (0.65f + speedPower * 0.7f);
+                Vector2 petalOffset = forward * MathF.Cos(petalAngle * 2f) * petalRadius * 0.24f + normal * MathF.Sin(petalAngle * 3f) * petalRadius;
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    Projectile.Center + petalOffset,
+                    -forward * Main.rand.NextFloat(1.6f, 5.8f) - petalOffset.SafeNormalize(Vector2.Zero) * 0.4f,
+                    Color.White,
+                    Main.rand.NextBool(3) ? gold : blue,
+                    Main.rand.NextFloat(0.22f, 0.44f),
+                    Main.rand.Next(8, 14)));
+            }
+
+            if (Projectile.numUpdates == 0 && age % 5f < 1f)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center - forward * 10f,
+                    -forward * 1.1f,
+                    Color.Lerp(blue, gold, pulse) * 0.58f,
+                    new Vector2(0.48f, 1.75f + speedPower * 0.65f),
+                    Projectile.rotation,
+                    0.12f + speedPower * 0.035f,
+                    0.018f,
+                    12));
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - forward * Main.rand.NextFloat(2f, 18f) + normal * Main.rand.NextFloat(-9f, 9f),
+                    Main.rand.NextBool(3) ? DustID.GoldCoin : DustID.Electric,
+                    -forward * Main.rand.NextFloat(0.8f, 2.6f) + normal * Main.rand.NextFloat(-0.7f, 0.7f),
+                    0,
+                    Main.rand.NextBool(3) ? gold : blue,
+                    Main.rand.NextFloat(0.56f, 0.96f));
+                dust.noGravity = true;
+            }
+        }
+
         internal float TrailWidth(float completion, Vector2 _) => MathHelper.Lerp(14f, 0f, completion);
 
         internal Color TrailColor(float completion, Vector2 _)
@@ -387,13 +473,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             // --- 弹丸本体 ---
             Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Vector2 textureOrigin = texture.Size() * 0.5f;
+            float outlinePulse = 1f + 0.18f * MathF.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity * 0.37f);
+            Color outlineColor = AuricGold with { A = 0 };
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            for (int i = 0; i < 12; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 12f;
+                Vector2 offset = angle.ToRotationVector2() * (2.2f + outlinePulse);
+                Main.EntitySpriteDraw(
+                    texture,
+                    Projectile.Center + offset - Main.screenPosition,
+                    null,
+                    outlineColor * 0.42f,
+                    Projectile.rotation,
+                    textureOrigin,
+                    Projectile.scale * 1.06f,
+                    SpriteEffects.None);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             Main.EntitySpriteDraw(
                 texture,
                 Projectile.Center - Main.screenPosition,
                 null,
                 Color.White,
                 Projectile.rotation,
-                texture.Size() * 0.5f,
+                textureOrigin,
                 Projectile.scale,
                 SpriteEffects.None);
 

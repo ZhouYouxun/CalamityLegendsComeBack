@@ -127,7 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (stealthStrike)
             {
-                MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(player, mouseWorld);
+                MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(player, mouseWorld, damage, knockback);
                 MalachiteKunai.SpawnPeacockFan(player, source, damage, knockback);
                 MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthEnhanced: true);
                 malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return false;
             }
 
-            if (MalachiteKunai.TryThrowStoredKunai(player, mouseWorld))
+            if (MalachiteKunai.TryThrowStoredKunai(player, mouseWorld, damage, knockback))
             {
                 SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.78f, Pitch = 0.22f }, player.Center);
                 return false;

@@ -46,10 +46,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // 逐渐消失的光效
             float endFade = Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
-            Color mainColor = Color.White * Projectile.Opacity * endFade * 1.5f;
+            Color coreBlue = new Color(118, 176, 255);
+            Color deepBlue = new Color(34, 68, 176);
+            Color mainColor = coreBlue * Projectile.Opacity * endFade * 0.92f;
             mainColor.A = (byte)(255 - Projectile.alpha);
 
-            Color afterimageLightColor = Color.White * endFade;
+            Color afterimageLightColor = Color.Lerp(deepBlue, coreBlue, 0.35f) * endFade * 0.62f;
             afterimageLightColor.A = (byte)(255 - Projectile.alpha);
 
             // 绘制多个逐渐淡出的光影
@@ -97,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // Lighting - 添加深橙色光源，光照强度为 0.55
-            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * 0.55f);
+            Lighting.AddLight(Projectile.Center, new Color(50, 110, 255).ToVector3() * 0.35f);
 
             // 弹幕保持直线运动并逐渐加速
             //Projectile.velocity *= 1.01f;
@@ -113,9 +115,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 {
                     Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 45f;
                     Dust light = Dust.NewDustPerfect(dustSpawnPosition, DustID.RainbowMk2);
-                    light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.5f, 1f));
+                    light.color = Color.Lerp(new Color(32, 64, 180), new Color(110, 170, 255), Main.rand.NextFloat(0.35f, 0.9f));
                     light.velocity = Main.rand.NextVector2Circular(10f, 10f);
-                    light.scale = MathHelper.Lerp(1.3f, 0.8f, Projectile.Opacity) * Main.rand.NextFloat(0.8f, 1.2f);
+                    light.scale = MathHelper.Lerp(0.92f, 0.52f, Projectile.Opacity) * Main.rand.NextFloat(0.7f, 1f);
                     light.noGravity = true;
                 }
 

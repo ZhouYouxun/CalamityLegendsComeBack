@@ -9,6 +9,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
     {
         public override int EffectID => 11;
 
+        protected override int EnergyVariant => 7;
+        protected override float EnergySizeFactor => 0.9f;
+        protected override int EnergyMoteCount => 3;
+        protected override int EnergyDustInterval => 9;
+
         public override void OnSpawn(LeonidCometSmall meteor, Player owner)
         {
             meteor.DisableGravity();

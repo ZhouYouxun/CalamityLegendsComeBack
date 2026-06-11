@@ -3,6 +3,7 @@ using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -94,8 +95,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             {
                 Projectile hitbox = Main.projectile[explosion];
                 Vector2 center = Projectile.Center;
-                hitbox.width = 196;
-                hitbox.height = 196;
+                hitbox.width = 250;
+                hitbox.height = 250;
                 hitbox.Center = center;
                 hitbox.DamageType = DamageClass.Magic;
                 hitbox.netUpdate = true;
@@ -422,7 +423,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
     {
         private const int ActivationDelay = 12;
         private const int HomingDelay = 21;
-        private const float LeftTurnPerUpdate = -MathHelper.Pi / 180f;
+        private const float LeftTurnPerUpdate = -MathHelper.Pi / 108f;
         private const float MaxSpeed = 25f;
         private const float HomingTurnSpeed = 0.110f;
         private static readonly Color[] Palette =
@@ -466,7 +467,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Timer++;
             Projectile.tileCollide = false;
             if (Projectile.localAI[1] == 0f)
-                Projectile.localAI[1] = Main.rand.NextFloat(30f, 900f);
+                Projectile.localAI[1] = 120f + Projectile.ai[0] * 90f;
 
             // 固定左转始终存在；开始追踪后，再在此基础上向最近敌人转向。
             float speed = MathHelper.Lerp(Projectile.velocity.Length(), MaxSpeed, 0.045f);
@@ -493,6 +494,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
 
         public override void OnKill(int timeLeft)
         {
+            if (Projectile.owner == Main.myPlayer)
+                SpawnDamageExplosion();
+
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
                 Vector2.Zero,
@@ -515,6 +519,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Main.rand.NextFloat(0.7f, 1.3f));
                 dust.noGravity = true;
             }
+        }
+
+        private void SpawnDamageExplosion()
+        {
+            int explosionIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner);
+
+            if (!Main.projectile.IndexInRange(explosionIndex))
+                return;
+
+            Projectile explosion = Main.projectile[explosionIndex];
+            int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
+            explosion.Resize(explosionSize, explosionSize);
+            explosion.Center = Projectile.Center;
+            explosion.DamageType = DamageClass.Magic;
+            explosion.netUpdate = true;
         }
 
         public override bool PreDraw(ref Color lightColor)

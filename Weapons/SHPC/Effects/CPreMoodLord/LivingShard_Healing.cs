@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 new Color(90, 255, 130) * 0.36f,
                 0f,
                 origin,
-                0.42f * pulse,
+                0.22f * pulse,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
@@ -124,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Color.White * 0.16f,
                 0f,
                 origin,
-                0.18f * pulse,
+                0.09f * pulse,
                 SpriteEffects.None);
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
@@ -186,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             // 主视觉：数学感 SquishyLightParticle 单链条
             // 用正弦波 + 相位推进，让链条像活体能量一样轻微摆动
-            if (Projectile.numUpdates == 0)
+            if (Projectile.numUpdates == 0 && timer % 2 == 0)
             {
                 int chainCount = 5;
                 float phase = timer * 0.28f;
@@ -199,13 +199,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     Vector2 chainPosition =
                         Projectile.Center
                         - forward * MathHelper.Lerp(6f, 46f, progress)
-                        + side * wave * MathHelper.Lerp(2f, 10f, progress);
+                        + side * wave * MathHelper.Lerp(0.6f, 3f, progress);
 
                     Vector2 chainVelocity =
                         -forward * MathHelper.Lerp(0.35f, 1.25f, progress)
-                        + side * wave * 0.18f;
+                        + side * wave * 0.054f;
 
-                    float scale = MathHelper.Lerp(0.82f, 0.38f, progress);
+                    float scale = MathHelper.Lerp(0.82f, 0.38f, progress) * 0.3f;
                     int lifeTime = (int)MathHelper.Lerp(18f, 10f, progress);
 
                     Color chainColor = Color.Lerp(
@@ -228,32 +228,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 }
 
                 // 陪衬1：极少量绿色 Dust，贴着链条外缘漂散
-                if (timer % 3 == 0)
+                if (timer % 6 == 0)
                 {
                     float dustWave = (float)System.Math.Sin(phase + MathHelper.PiOver2);
                     Dust dust = Dust.NewDustPerfect(
-                        Projectile.Center - forward * 18f + side * dustWave * 9f,
+                        Projectile.Center - forward * 18f + side * dustWave * 2.7f,
                         DustID.GreenTorch,
-                        -forward * 0.75f + side * dustWave * 0.35f,
+                        -forward * 0.75f + side * dustWave * 0.105f,
                         105,
                         new Color(100, 255, 150),
-                        1.05f
+                        0.75f
                     );
                     dust.noGravity = true;
                     dust.fadeIn = 0.45f;
                 }
 
                 // 陪衬2：偶尔给中心补一个小光点，避免主体太空
-                if (timer % 5 == 0)
+                if (timer % 10 == 0)
                 {
                     SquishyLightParticle core = new(
                         Projectile.Center - forward * 4f,
                         -forward * 0.25f,
-                        0.36f,
-                        Color.White,
+                        0.26f,
+                        new Color(180, 255, 200),
                         8,
                         1f,
-                        0.85f
+                        0.7f
                     );
 
                     GeneralParticleHandler.SpawnParticle(core);

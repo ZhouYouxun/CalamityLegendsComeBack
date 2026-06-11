@@ -111,7 +111,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Vector2 direction = forward.RotatedBy(angleOffset).SafeNormalize(forward);
             float speed = isBlueVariant ? 17.8f : 17.2f;
             int damage = isBlueVariant ? Projectile.damage * 3 : Projectile.damage;
-            float homingDelayFrames = isBlueVariant ? 24f : 12f;
+            float homingDelayFrames = 12f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

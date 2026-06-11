@@ -1,7 +1,7 @@
-Ôªø/*
+/*
 using System;
 using CalamityLegendsComeBack.Accssory.BB;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -158,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
             float swayAngle = MathHelper.ToRadians(14f * (float)Math.Sin(oceanPhase * 1.25f));
 
             
-            Offset = Vector2.Zero; // ÊîπÂêéÔºàÈîÅÊ≠ªË¥¥ÊâãÔºâ
+            Offset = Vector2.Zero; // ∏ƒ∫Û£®À¯À¿Ã˘ ÷£©
             Projectile.rotation = Projectile.rotation.AngleLerp(lockedDirection.ToRotation() + MathHelper.ToRadians(45f), 0.22f);
             RotationOffset = MathHelper.Lerp(
                 RotationOffset,
@@ -458,7 +458,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillB_SpinDash
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Frostburn, 180);
-            Owner.GetModPlayer<BBEXPlayer>().AddTide();
+            Owner.GetModPlayer<BBTideValuePlayer>().AddTide();
 
             if (Owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
                 Owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ReduceCooldownTo(BBAccessoryPlayer.ImpactRestarterSpinDashCooldown);

@@ -48,7 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             {
                 Projectile.localAI[0] = 1f;
                 OrbitCenter = Projectile.Center;
-                Projectile.velocity = Projectile.ai[1].ToRotationVector2() * Main.rand.NextFloat(18f, 25f);
+                Projectile.velocity = Projectile.ai[1].ToRotationVector2() * Main.rand.NextFloat(27f, 37.5f);
             }
 
             float age = 74f - Projectile.timeLeft;
@@ -107,43 +107,66 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void SetDefaults()
         {
-            Projectile.width = 208;
-            Projectile.height = 208;
+            Projectile.width = 260;
+            Projectile.height = 260;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 12;
+            Projectile.timeLeft = 18;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
 
         public override void AI()
         {
-            if (Projectile.timeLeft == 12)
+            if (Projectile.timeLeft == 18)
             {
                 BuildLightning();
-                CynosureVisuals.SpawnElectricBurst(Projectile.Center, 34, 4f, 20f);
+                CynosureVisuals.SpawnElectricBurst(Projectile.Center, 70, 4f, 28f);
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    Projectile.Center, Vector2.Zero, Color.Cyan, Vector2.One, 0f, 0.08f, 0.62f, 18));
+                    Projectile.Center, Vector2.Zero, Color.Cyan, Vector2.One * 1.25f, 0f, 0.08f, 0.78f, 20));
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                    Projectile.Center,
+                    Vector2.Zero,
+                    new Color(255, 224, 92),
+                    "CalamityMod/Particles/PlasmaExplosion",
+                    Vector2.One,
+                    Main.rand.NextFloat(MathHelper.TwoPi),
+                    0.04f,
+                    0.34f,
+                    16));
             }
         }
 
         private void BuildLightning()
         {
             // 视觉上只保留若干短电弧，相当于从五帧素材中随机抽取两帧播放的轻量替代实现。
-            for (int i = 0; i < 10; i++)
+            lightningTrails.Clear();
+            for (int i = 0; i < 15; i++)
             {
-                List<Vector2> points = new() { Projectile.Center };
-                Vector2 direction = Main.rand.NextVector2Unit();
-                for (int j = 1; j < 6; j++)
-                    points.Add(Projectile.Center + direction * j * 19f + Main.rand.NextVector2Circular(13f, 13f));
+                List<Vector2> points = new();
+                float baseAngle = MathHelper.TwoPi * i / 15f + Main.rand.NextFloat(-0.12f, 0.12f);
+                Vector2 direction = baseAngle.ToRotationVector2();
+                Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+                Vector2 current = Projectile.Center + Main.rand.NextVector2Circular(10f, 10f);
+                points.Add(current);
+
+                for (int j = 1; j < 10; j++)
+                {
+                    float completion = j / 9f;
+                    float step = MathHelper.Lerp(18f, 42f, completion) + Main.rand.NextFloat(-4f, 6f);
+                    float sine = MathF.Sin(completion * MathHelper.TwoPi * 3f + i * 0.77f) * MathHelper.Lerp(10f, 28f, completion);
+                    current += direction * step + normal * (sine * 0.35f + Main.rand.NextFloat(-14f, 14f));
+                    points.Add(current);
+                }
+
                 lightningTrails.Add(points);
             }
         }
 
-        internal float Width(float completion, Vector2 _) => MathHelper.Lerp(4.5f, 1f, completion);
+        internal float Width(float completion, Vector2 _) => MathHelper.Lerp(5.5f, 1f, completion);
         internal Color ColorFunction(float completion, Vector2 _) => Color.Lerp(Color.White, Color.Cyan, completion) * (1f - completion * 0.45f);
 
         public override bool PreDraw(ref Color lightColor)
@@ -151,7 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             GameShaders.Misc["CalamityMod:TeslaTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ZapTrail"));
             foreach (List<Vector2> points in lightningTrails)
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(Width, ColorFunction, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 30);
+                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(Width, ColorFunction, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 60);
             Main.spriteBatch.ExitShaderRegion();
             return false;
         }

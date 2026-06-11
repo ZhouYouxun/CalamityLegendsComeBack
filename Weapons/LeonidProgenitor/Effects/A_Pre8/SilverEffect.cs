@@ -8,6 +8,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
     {
         public override int EffectID => 5;
 
+        protected override int EnergyVariant => 4;
+        protected override float EnergySizeFactor => 0.86f;
+        protected override int EnergyMoteCount => 3;
+        protected override int EnergyDustInterval => 12;
+        protected override float EnergySpinOffset => 0.5f;
+
         public override void AI(LeonidCometSmall meteor, Player owner)
         {
             if (meteor.HasFlag("silver_split") || meteor.Projectile.timeLeft > 190)

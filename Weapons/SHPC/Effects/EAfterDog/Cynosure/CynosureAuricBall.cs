@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,13 +10,23 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 {
-    /// <summary>
-    /// 命中点展开的普通金源珠。ai[0] 是优先目标，ai[1] 是椭圆层级，ai[2] 是槽位角度。
-    /// </summary>
     public class CynosureAuricBall : ModProjectile, ILocalizedModType
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureChargedCell";
         public new string LocalizationCategory => "Projectiles.SHPC";
+
+        private const int Lifetime = 300;
+        private const int OrbitBloomFrames = 34;
+        private const int OrbitSettleFrames = 58;
+        private const int HomingDelay = 10;
+        private const float HomingRange = 2600f;
+        private const float StartingHomingSpeed = 24f;
+        private const float MaxHomingSpeed = 96f;
+        private const float LongAxis = 40f * 16f;
+        private const float ShortAxis = 10f * 16f;
+        private static readonly Color AuricBlue = new(55, 185, 255);
+        private static readonly Color AuricGold = new(255, 218, 84);
+        private static readonly Color AuricWhite = new(225, 248, 255);
 
         private Vector2 OrbitCenter
         {
@@ -36,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 10;
+            ProjectileID.Sets.TrailCacheLength[Type] = 20;
             ProjectileID.Sets.TrailingMode[Type] = 0;
         }
 
@@ -49,7 +60,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 2;
-            Projectile.timeLeft = 240;
+            Projectile.timeLeft = Lifetime;
+            Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 18;
         }
@@ -57,77 +69,213 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override void AI()
         {
             if (Projectile.localAI[0] == 0f)
+                InitializeOrbit();
+
+            float age = Lifetime - Projectile.timeLeft;
+            NPC orbitTarget = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
+            if (age < OrbitSettleFrames && orbitTarget != null)
+                OrbitCenter = Vector2.Lerp(OrbitCenter, orbitTarget.Center, 0.18f);
+
+            if (age < OrbitBloomFrames)
             {
-                Projectile.localAI[0] = 1f;
-                OrbitCenter = Projectile.Center;
-
-                bool outer = Projectile.ai[1] != 0f;
-                majorAxis = outer ? Main.rand.NextFloat(230f, 336f) : Main.rand.NextFloat(112f, 174f);
-                minorAxis = outer ? Main.rand.NextFloat(150f, 214f) : Main.rand.NextFloat(82f, 132f);
-                orbitDirection = Main.rand.NextBool() ? 1f : -1f;
-                orbitSpeed = Main.rand.NextFloat(0.058f, 0.126f) * orbitDirection;
-                axisPulse = Main.rand.NextFloat(MathHelper.TwoPi);
-                ellipseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
-            }
-
-            float age = 240f - Projectile.timeLeft;
-
-            if (age < 42f)
-            {
-                // 展开阶段：从中心逐渐形成两个尺寸不同的椭圆。
-                float progress = CalamityUtils.SineOutEasing(age / 42f, 1);
+                float progress = CalamityUtils.SineOutEasing(age / OrbitBloomFrames, 1);
                 Projectile.Center = OrbitCenter + GetOrbitOffset(age) * progress;
                 Projectile.velocity = Vector2.Zero;
             }
-            else if (age < 82f)
+            else if (age < OrbitSettleFrames)
             {
-                // 停留阶段：金源珠略微旋转，让两层结构可读，而不是一闪即逝。
                 Projectile.Center = OrbitCenter + GetOrbitOffset(age);
                 Projectile.velocity = Vector2.Zero;
             }
             else
-            {
-                NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
-                if (target != null)
-                {
-                    Vector2 wantedVelocity = Projectile.SafeDirectionTo(target.Center) * 24f;
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, wantedVelocity, 0.16f);
-                }
-            }
+                HomeWithAcceleration(orbitTarget, age);
+
+            if (Projectile.velocity.Length() > 0.1f)
+                Projectile.rotation = Projectile.velocity.ToRotation();
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.12f, 0.5f, 0.92f) * 0.55f);
-            Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric, -Projectile.velocity * 0.05f, 0, Color.Cyan, 0.72f);
+            SpawnAuricTrail(age);
+
+            Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric, -Projectile.velocity * 0.05f, 0, AuricBlue, 0.72f);
             dust.noGravity = true;
+        }
+
+        private void InitializeOrbit()
+        {
+            Projectile.localAI[0] = 1f;
+            NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
+            OrbitCenter = target?.Center ?? Projectile.Center;
+
+            bool secondEllipse = Projectile.ai[1] != 0f;
+            majorAxis = LongAxis;
+            minorAxis = ShortAxis;
+            orbitDirection = secondEllipse ? -1f : 1f;
+            orbitSpeed = 0.095f * orbitDirection;
+            axisPulse = secondEllipse ? MathHelper.PiOver2 : 0f;
+            ellipseRotation = secondEllipse ? MathHelper.Pi * 0.75f : MathHelper.PiOver4;
         }
 
         private Vector2 GetOrbitOffset(float age)
         {
-            float axisWarpA = 1f + 0.13f * (float)Math.Sin(age * 0.055f + axisPulse);
-            float axisWarpB = 1f + 0.16f * (float)Math.Cos(age * 0.061f + axisPulse * 0.7f);
-            float angle = Projectile.ai[2] + age * orbitSpeed + (float)Math.Sin(age * 0.049f + axisPulse) * 0.12f;
-            float rotation = ellipseRotation + (float)Math.Sin(age * 0.025f + axisPulse) * 0.55f + age * 0.006f * orbitDirection;
+            float breathing = 1f + MathF.Sin(age * 0.05f + axisPulse) * 0.018f;
+            float angle = Projectile.ai[2] + age * orbitSpeed;
 
             return new Vector2(
-                MathF.Cos(angle) * majorAxis * axisWarpA,
-                MathF.Sin(angle) * minorAxis * axisWarpB
-            ).RotatedBy(rotation);
+                MathF.Cos(angle) * majorAxis * breathing,
+                MathF.Sin(angle) * minorAxis / breathing
+            ).RotatedBy(ellipseRotation);
         }
 
-        public override bool? CanDamage() => 240f - Projectile.timeLeft >= 82f ? null : false;
+        private void HomeWithAcceleration(NPC target, float age)
+        {
+            float homingAge = age - OrbitSettleFrames;
+            if (homingAge <= HomingDelay)
+            {
+                FreeDrift();
+                return;
+            }
+
+            if (target == null || !target.active || target.friendly || target.dontTakeDamage || Projectile.Distance(target.Center) > HomingRange)
+            {
+                FreeDrift(0.991f);
+                return;
+            }
+
+            Vector2 currentVelocity = Projectile.velocity;
+            if (currentVelocity.Length() < 0.1f)
+                currentVelocity = Projectile.SafeDirectionTo(target.Center) * StartingHomingSpeed;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+            float ramp = Utils.GetLerpValue(HomingDelay, HomingDelay + 54f, homingAge, true);
+            ramp *= ramp;
+            float closePressure = Utils.GetLerpValue(520f, 90f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Clamp(MathHelper.Lerp(0.2f, 0.94f, Math.Max(ramp, closePressure * 0.95f)), 0.2f, 0.94f);
+            float targetSpeed = MathHelper.Lerp(StartingHomingSpeed, MaxHomingSpeed, ramp) + closePressure * 8f;
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+            float inertia = MathHelper.Lerp(18f, 1.45f, pullStrength);
+
+            Projectile.velocity = (currentVelocity * inertia + desiredVelocity) / (inertia + 1f);
+
+            float sway = MathF.Sin((homingAge + Projectile.identity * 9f) * 0.085f) * MathHelper.Lerp(0.016f, 0.002f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sway);
+
+            float speedLimit = MaxHomingSpeed + 14f;
+            if (Projectile.velocity.Length() > speedLimit)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * speedLimit;
+        }
+
+        private void FreeDrift(float damping = 0.996f)
+        {
+            float wander = MathF.Sin((Lifetime - Projectile.timeLeft + Projectile.identity * 5f) * 0.08f) * 0.006f;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
+        }
+
+        private void SpawnAuricTrail(float age)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            float ramp = Utils.GetLerpValue(OrbitSettleFrames, OrbitSettleFrames + 90f, age, true);
+
+            if (Projectile.numUpdates == 0 || Main.rand.NextBool(2))
+            {
+                Color trailColor = Main.rand.NextBool(4) ? AuricGold : Color.Lerp(AuricBlue, AuricWhite, Main.rand.NextFloat(0.1f, 0.7f));
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center - forward * Main.rand.NextFloat(3f, 12f) + side * Main.rand.NextFloat(-5f, 5f),
+                    -forward * Main.rand.NextFloat(0.9f, 2.8f + ramp * 4f) + side * Main.rand.NextFloat(-0.45f, 0.45f),
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.13f, 0.28f + ramp * 0.22f),
+                    trailColor));
+            }
+
+            if (Projectile.numUpdates == 0 && Main.rand.NextBool(3))
+            {
+                float phase = age * 0.21f + Projectile.ai[2];
+                Vector2 curl = side * MathF.Sin(phase * 2f) * Main.rand.NextFloat(3f, 10f);
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - forward * Main.rand.NextFloat(4f, 18f) + curl,
+                    DustID.Electric,
+                    -forward * Main.rand.NextFloat(0.6f, 2.4f) + side * MathF.Cos(phase * 3f) * 0.45f,
+                    0,
+                    Main.rand.NextBool(3) ? AuricGold : AuricWhite,
+                    Main.rand.NextFloat(0.78f, 1.22f));
+                dust.noGravity = true;
+            }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 24, 2.8f, 14f);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(AuricBlue, Color.White, 0.45f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.035f,
+                0.24f,
+                13));
+
+            for (int i = 0; i < 18; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 18f + Projectile.ai[2];
+                Vector2 direction = angle.ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center + direction * Main.rand.NextFloat(2f, 8f),
+                    direction * Main.rand.NextFloat(2f, 9f),
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.18f, 0.42f),
+                    i % 2 == 0 ? AuricGold : AuricBlue));
+            }
+        }
+
+        public override bool? CanDamage() => Lifetime - Projectile.timeLeft >= OrbitSettleFrames ? null : false;
 
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 origin = texture.Size() * 0.5f;
 
-            // 蓝色半透明幻影拖尾。越靠后的残影越淡。
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
-                Color afterimageColor = new Color(32, 154, 255, 0) * ((Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length) * 0.55f;
-                Main.EntitySpriteDraw(texture, Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition, null,
-                    afterimageColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+                Color afterimageColor = Color.Lerp(AuricBlue, AuricGold, i / (float)Projectile.oldPos.Length) with { A = 0 };
+                afterimageColor *= ((Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length) * 0.62f;
+                Main.EntitySpriteDraw(
+                    texture,
+                    Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
+                    null,
+                    afterimageColor,
+                    Projectile.rotation,
+                    origin,
+                    Projectile.scale,
+                    SpriteEffects.None);
             }
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            float outlinePulse = 1f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2.4f * outlinePulse);
+                Main.EntitySpriteDraw(
+                    texture,
+                    Projectile.Center + offset - Main.screenPosition,
+                    null,
+                    (Color.White with { A = 0 }) * 0.42f,
+                    Projectile.rotation,
+                    origin,
+                    Projectile.scale * 1.08f,
+                    SpriteEffects.None);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }

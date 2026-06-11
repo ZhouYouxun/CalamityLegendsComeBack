@@ -7,6 +7,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.D_New6
     {
         public override int EffectID => 14;
 
+        protected override int EnergyVariant => 1;
+        protected override float EnergySizeFactor => 0.9f;
+        protected override int EnergyMoteCount => 3;
+        protected override int EnergyDustInterval => 10;
+        protected override float EnergySpinOffset => 0.25f;
+
         public override void OnSpawn(LeonidCometSmall meteor, Player owner)
         {
             meteor.Projectile.penetrate = System.Math.Max(meteor.Projectile.penetrate, 2);

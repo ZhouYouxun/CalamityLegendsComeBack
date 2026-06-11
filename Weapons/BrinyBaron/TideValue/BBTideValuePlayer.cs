@@ -1,31 +1,31 @@
-﻿using CalamityLegendsComeBack.Accssory.BB;
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using System;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
 {
-    internal class BBEXPlayer : ModPlayer
+    internal class BBTideValuePlayer : ModPlayer
     {
         private static readonly int[] TideMaxValues = { 2, 3, 4, 5, 6, 7, 8 };
 
         public const int MaxDesignedTideCap = 8;
         public const float TideDamageBonusPerStack = 0.03f;
-        public const int EXMax = 90 * 60;
-        public const int EXDisplayMax = 90;
+        public const int TideChargeMax = 90 * 60;
+        public const int TideDisplayMax = 90;
         private const int PassiveTideRegenInterval = 300;
         public int TideValue;
-        public int EXValue;
+        public int TideChargeValue;
         private bool wasTideReady;
-        private bool wasEXReady;
+        private bool wasTideChargeReady;
         private int passiveTideRegenTimer;
 
         public int CurrentTideMax => GetCurrentTideMax() + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
         public bool TideFull => TideValue >= CurrentTideMax;
-        public bool EXFull => EXValue >= EXMax;
-        public int EXDisplayValue => Utils.Clamp(EXValue / GetFramesPerDisplayUnit(), 0, EXDisplayMax);
+        public bool TideChargeFull => TideChargeValue >= TideChargeMax;
+        public int TideDisplayValue => Utils.Clamp(TideChargeValue / GetFramesPerDisplayUnit(), 0, TideDisplayMax);
         public float TideDamageMultiplier => 1f + TideValue * TideDamageBonusPerStack;
 
         public override void PostUpdateEquips()
@@ -34,9 +34,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
                 TideValue = CurrentTideMax;
 
             UpdatePassiveTideRegen();
-            UpdateEXCharge();
+            UpdateTideCharge();
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasTideReady, TideFull);
-            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXFull);
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasTideChargeReady, TideChargeFull);
         }
 
         public void AddTide(int amount = 1)
@@ -70,26 +70,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
             passiveTideRegenTimer = 0;
         }
 
-        public void ResetEX()
+        public void ResetTideCharge()
         {
-            EXValue = 0;
+            TideChargeValue = 0;
         }
 
         public static int GetFramesPerDisplayUnit()
         {
-            return Math.Max(1, EXMax / EXDisplayMax);
+            return Math.Max(1, TideChargeMax / TideDisplayMax);
         }
 
-        private void UpdateEXCharge()
+        private void UpdateTideCharge()
         {
             bool holdingBrinyBaron = Player.HeldItem != null &&
                                      !Player.HeldItem.IsAir &&
                                      Player.HeldItem.ModItem is NewLegendBrinyBaron;
 
             if (holdingBrinyBaron)
-                EXValue++;
+                TideChargeValue++;
 
-            EXValue = Utils.Clamp(EXValue, 0, EXMax);
+            TideChargeValue = Utils.Clamp(TideChargeValue, 0, TideChargeMax);
         }
 
         private void UpdatePassiveTideRegen()

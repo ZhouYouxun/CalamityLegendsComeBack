@@ -5,10 +5,30 @@ Mods: {
 				Malachite: {
 					DisplayName: 孔雀翎
 					Tooltip: "[GFB]"
-					LeftClick: "[c/7DFF9A:左键：]快速掷出小型苦无。若背后已有潜伏生成的孔雀苦无，会优先逐把投出；肉后普通苦无不再受重力影响，歌莉娅后一次生成 2 把，月后一次生成 3 把，都会蓄势 10 帧后高速飞出。"
-					RightClick: "[c/80FFC8:右键：]手持时每 0.6 秒在身后自动挂载 1 根亮绿色描边孔雀石羽毛，最多 18 根。右键不会直接攻击，而是将当前所有右键羽毛按每 2 帧 1 发倾泻出去；它们速度更快且永不受重力影响。"
-					StealthStrike: "[c/B5FF74:潜伏攻击：]潜伏左键会射出已有孔雀苦无并重新挂满 23 根强化孔雀苦无，只有左键能调用这些羽毛。潜伏左键或潜伏右键都会额外倾泻所有右键羽毛；潜伏释放的右键羽毛命中时产生中范围绿色爆炸和额外绿弹。"
-					Finale: "[c/D6FF9A:终结技：]佩戴黄金饰章、满潜伏且 15 秒冷却结束时按 [{0}]，绿色聚光落下，花瓣飘坠；2 秒后孔雀翎高速斩过屏幕，并在周边敌怪身上引发带黑洞核心的多段绿色爆炸。"
+					LeftClick:
+						'''
+						[c/7DFF9A:左键：]掷出孔雀苦无。
+						背后若有潜伏苦无，会优先逐发射出。
+						肉后不受重力；歌莉娅/月后数量提升。
+						'''
+					RightClick:
+						'''
+						[c/80FFC8:右键：]身后积攒右键羽毛。
+						右键会按短间隔全部倾泻。
+						普通右羽不会爆炸，也无潜伏增伤。
+						'''
+					StealthStrike:
+						'''
+						[c/B5FF74:潜伏左键：]召出23根孔雀石飞镖。
+						[c/B5FF74:潜伏右键：]射出所有右键羽毛。
+						潜伏右羽命中会爆炸并获得强化。
+						'''
+					Finale:
+						'''
+						[c/D6FF9A:大招：]满潜伏且冷却结束时按 [{0}]。
+						聚光锁定自身和近敌，花瓣缓落。
+						23片花瓣化刃，按距离分配刺向敌人。
+						'''
 					Passive:
 						'''
 						[c/9AFFC8:被动（手持）：]
@@ -61,6 +81,24 @@ Mods: {
 						通过终结技激发的外挂苦无会替换为王牌苦无
 						'''
 				}
+
+				PeacockBox: {
+					DisplayName: 孔雀盒
+					Tooltip:
+						'''
+						孔雀翎在背包中也会积攒右键羽毛
+						每60帧积攒1根，满23根后自动发射
+						'''
+				}
+
+				PeacockDart: {
+					DisplayName: 孔雀飞镖
+					Tooltip:
+						'''
+						孔雀翎左键和右键弹幕受重力影响
+						这些弹幕造成30%额外伤害
+						'''
+				}
 			}
 		}
 
@@ -76,6 +114,8 @@ Mods: {
 				MalachiteFinaleController.DisplayName: 孔雀翎终结式
 				MalachiteFinaleSlash.DisplayName: 孔雀翎斩击
 				MalachiteFinaleHitSlash.DisplayName: 孔雀翎斩杀
+				MalachiteFinaleDart.DisplayName: 孔雀翎飞刃
+				MalachiteFinaleImpactExplosion.DisplayName: 孔雀翎灯爆
 				MalachiteFinalePetal.DisplayName: 孔雀翎花瓣
 			}
 		}

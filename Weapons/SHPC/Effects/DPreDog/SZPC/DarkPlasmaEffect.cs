@@ -101,16 +101,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             portalTimer += 0.03f;
             lifeTimer++;
 
-            // ===== 缓慢追踪鼠标 =====
-            Vector2 targetPos = Main.MouseWorld;
-            Vector2 toTarget = targetPos - projectile.Center;
-            float dist = toTarget.Length();
-
-            if (dist > 10f)
+            // ===== 缓慢追踪最近敌人 =====
+            NPC blackHoleTarget = FindBlackHoleTarget(projectile.Center, 1800f);
+            if (blackHoleTarget is not null)
             {
-                Vector2 dir = toTarget / dist;
-                projectile.velocity = (projectile.velocity * 25f + dir * 1.8f) / 26f;
+                Vector2 toTarget = blackHoleTarget.Center - projectile.Center;
+                float dist = toTarget.Length();
+
+                if (dist > 10f)
+                {
+                    Vector2 dir = toTarget / dist;
+                    projectile.velocity = (projectile.velocity * 25f + dir * 1.8f) / 26f;
+                }
             }
+            else
+                projectile.velocity *= 0.985f;
 
             projectile.rotation += 0.045f;
 
@@ -339,6 +344,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             return false;
         }
 
+        private static NPC FindBlackHoleTarget(Vector2 center, float range)
+        {
+            NPC bestTarget = null;
+            float bestScore = range;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distance = Vector2.Distance(center, npc.Center);
+                if (distance >= bestScore)
+                    continue;
+
+                bestScore = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
+        }
+
         private static void TryReleaseDevourOrbs(Projectile projectile, Player owner, float lifeFactor)
         {
             if (projectile.owner != Main.myPlayer)
@@ -387,6 +413,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // ================= ModifyHitNPC =================
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
+            modifiers.DefenseEffectiveness *= 0f;
+
+            float dr = target.Calamity().DR;
+            if (dr < 0.95f)
+                modifiers.FinalDamage /= 1f - dr;
         }
 
         // ================= OnHitNPC =================

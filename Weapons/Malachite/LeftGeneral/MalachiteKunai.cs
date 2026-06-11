@@ -1,7 +1,9 @@
 using CalamityLegendsComeBack.Accssory.MC.PrecisionEmblem;
 using CalamityLegendsComeBack.Weapons.Malachite.LeftGeneral;
 using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
+using CalamityLegendsComeBack.Accssory.MC.PeacockDart;
 using CalamityMod;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -168,6 +170,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     break;
             }
 
+            ApplyPeacockDartGravity(owner);
+
             if (Projectile.velocity.LengthSquared() > 0.01f && !IsStored && Mode != MalachiteKunaiMode.StuckToNPC)
                 Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
@@ -239,7 +243,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
         }
 
-        public static bool FireStoredPeacockKunaiAsLeftThrows(Player player, Vector2 mouseWorld)
+        public static bool FireStoredPeacockKunaiAsLeftThrows(Player player, Vector2 mouseWorld, int damage = -1, float knockback = 0f)
         {
             bool firedAny = false;
             int type = ModContent.ProjectileType<MalachiteKunai>();
@@ -252,7 +256,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     if ((MalachiteKunaiMode)(int)projectile.ai[0] == MalachiteKunaiMode.StoredPeacock)
                     {
                         Vector2 direction = (mouseWorld - projectile.Center).SafeNormalize(Vector2.UnitX * player.direction);
-                        FireKunai(projectile, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true);
+                        RefreshStoredKunaiStats(projectile, damage, knockback);
+                        FireKunai(projectile, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true, stealthStrike: projectile.Calamity().stealthStrike);
                         firedAny = true;
                     }
                 }
@@ -264,14 +269,15 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return firedAny;
         }
 
-        public static bool TryThrowStoredKunai(Player player, Vector2 mouseWorld)
+        public static bool TryThrowStoredKunai(Player player, Vector2 mouseWorld, int damage = -1, float knockback = 0f)
         {
             Projectile selected = FindNextStoredKunai(player, MalachiteKunaiMode.StoredPeacock);
             if (selected == null)
                 return false;
 
             Vector2 direction = (mouseWorld - selected.Center).SafeNormalize(Vector2.UnitX * player.direction);
-            FireKunai(selected, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true);
+            RefreshStoredKunaiStats(selected, damage, knockback);
+            FireKunai(selected, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true, stealthStrike: selected.Calamity().stealthStrike);
             if (CountStoredKunai(player) <= 0)
                 player.GetModPlayer<MalachitePlayer>().StartDepletionBurst();
 
@@ -407,7 +413,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     {
                         Vector2 direction = (mouseWorld - projectile.Center).SafeNormalize(Vector2.UnitX * player.direction);
                         projectile.damage = (int)(projectile.damage * 1.85f);
-                        FireKunai(projectile, direction, MalachiteKunaiMode.FiredFrenzy, leftThrow: false);
+                        FireKunai(projectile, direction, MalachiteKunaiMode.FiredFrenzy, leftThrow: false, stealthStrike: projectile.Calamity().stealthStrike);
                         projectile.penetrate = -1;
                         projectile.tileCollide = false;
                         projectile.localNPCHitCooldown = 4;
@@ -472,7 +478,19 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return activatedAny;
         }
 
-        private static void FireKunai(Projectile projectile, Vector2 direction, MalachiteKunaiMode mode, bool leftThrow)
+        private static void RefreshStoredKunaiStats(Projectile projectile, int currentDamage, float currentKnockback)
+        {
+            if (currentDamage > 0)
+            {
+                bool isAce = (MalachiteKunaiVariant)(int)projectile.ai[2] == MalachiteKunaiVariant.Ace;
+                projectile.damage = Math.Max(1, (int)(currentDamage * (isAce ? 2.05f : 1.28f)));
+            }
+
+            if (currentKnockback > 0f)
+                projectile.knockBack = currentKnockback;
+        }
+
+        private static void FireKunai(Projectile projectile, Vector2 direction, MalachiteKunaiMode mode, bool leftThrow, bool stealthStrike)
         {
             projectile.ai[0] = (float)mode;
             projectile.localAI[0] = 0f;
@@ -487,7 +505,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             projectile.tileCollide = isAce ? false : true;
             projectile.penetrate = isAce ? -1 : (leftThrow ? 1 : (mode == MalachiteKunaiMode.FiredFrenzy ? -1 : 1));
             projectile.localNPCHitCooldown = isAce ? 6 : (leftThrow ? 12 : (mode == MalachiteKunaiMode.FiredFrenzy ? 4 : 8));
-            projectile.Calamity().stealthStrike = false;
+            projectile.Calamity().stealthStrike = stealthStrike;
             Player owner = Main.player[projectile.owner];
             float speedMultiplier = owner.active
                 ? owner.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier
@@ -591,6 +609,29 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             Projectile.velocity *= 1.001f;
             Lighting.AddLight(Projectile.Center, 0.04f, 0.28f, 0.08f);
+        }
+
+        private void ApplyPeacockDartGravity(Player owner)
+        {
+            if (!owner.active ||
+                !owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped ||
+                IsStored ||
+                Mode == MalachiteKunaiMode.StuckToNPC)
+            {
+                return;
+            }
+
+            if (Mode == MalachiteKunaiMode.NormalThrown && !MalachiteBalance.NormalKunaiIgnoresGravity)
+                return;
+
+            if (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] <= StagedNormalLaunchDelay)
+                return;
+
+            if (Mode == MalachiteKunaiMode.ActivatedAce && Projectile.localAI[1] <= 0f)
+                return;
+
+            Projectile.velocity.Y += 0.16f;
+            Projectile.velocity.X *= 0.996f;
         }
 
         private void AIStagedNormal(Player owner)
@@ -697,7 +738,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (target == null)
                 return;
 
-            HomeTowardsWithTurnLimit(target.Center, 34f, PeacockHomingTurnRate);
+            float turnRate = Projectile.Calamity().stealthStrike ? PeacockHomingTurnRate * 2f : PeacockHomingTurnRate;
+            HomeTowardsWithTurnLimit(target.Center, 34f, turnRate);
         }
 
         private void AIActivatedPeacock(Player owner)
@@ -716,7 +758,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             NPC target = FindTarget(1500f, requireLineOfSight: false);
             if (target != null)
             {
-                HomeTowardsWithTurnLimit(target.Center, 38f, PeacockHomingTurnRate);
+                HomeTowardsWithTurnLimit(target.Center, 38f, PeacockHomingTurnRate * 2f);
                 return;
             }
 
@@ -804,6 +846,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (UsesOriginalMalachiteTrail)
                 SpawnOriginalMalachiteGlowDust();
 
+            SpawnPlagueFlightVisuals();
+
             if ((Mode == MalachiteKunaiMode.FiredPeacock || Mode == MalachiteKunaiMode.ActivatedPeacock) && Main.rand.NextBool(2))
             {
                 Vector2 side = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
@@ -827,7 +871,38 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 100,
                 IsAceVisual ? new Color(210, 255, 155) : new Color(92, 245, 124),
                 IsAceVisual ? 1.25f : 0.9f);
-            dust.noGravity = true;
+                dust.noGravity = true;
+        }
+
+        private void SpawnPlagueFlightVisuals()
+        {
+            Lighting.AddLight(Projectile.Center, 0.07f, 0.15f, 0.01f);
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust toxicDust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(9f, 9f),
+                    Main.rand.NextBool(30) ? DustID.Terra : DustID.GreenTorch,
+                    -Projectile.velocity * Main.rand.NextFloat(0.015f, 0.045f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
+                    120,
+                    default,
+                    Main.rand.NextBool(30) ? Main.rand.NextFloat(0.9f, 1.05f) : Main.rand.NextFloat(0.3f, 0.42f));
+                toxicDust.noGravity = true;
+            }
+
+            if (Projectile.localAI[0] % 18f != 0f)
+                return;
+
+            Color ringColor = Main.rand.NextBool(3) ? Color.LimeGreen : Color.Green;
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center,
+                Vector2.Zero,
+                ringColor * 0.42f,
+                Vector2.One,
+                Projectile.rotation,
+                Main.rand.NextFloat(0.045f, 0.09f),
+                0f,
+                15));
         }
 
         private void SpawnOriginalMalachiteGlowDust()
@@ -908,6 +983,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Poisoned, 6 * 60);
+            target.AddBuff(ModContent.BuffType<Plague>(), 4 * 60);
             if (ShouldUseLeftKunaiHitVisual)
                 SpawnLeftKunaiHitVisual(target);
 
@@ -921,14 +997,20 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             Player owner = Main.player[Projectile.owner];
-            if (!owner.active || !owner.GetModPlayer<PrecisionEmblemPlayer>().PrecisionEmblemEquipped)
+            if (!owner.active)
                 return;
 
-            if (WasActivated)
-                modifiers.ArmorPenetration += 10f;
+            if (owner.GetModPlayer<PrecisionEmblemPlayer>().PrecisionEmblemEquipped)
+            {
+                if (WasActivated)
+                    modifiers.ArmorPenetration += 10f;
 
-            if (IsPeacockOrAceKunai)
-                modifiers.SourceDamage *= 1.05f;
+                if (IsPeacockOrAceKunai)
+                    modifiers.SourceDamage *= 1.05f;
+            }
+
+            if (owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
+                modifiers.SourceDamage *= 1.3f;
         }
 
         public override void OnKill(int timeLeft)

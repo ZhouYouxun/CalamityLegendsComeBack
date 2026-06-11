@@ -46,6 +46,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Timer++;
             Projectile.velocity = Vector2.Zero;
             Projectile.ai[0] = MathHelper.Clamp(Projectile.ai[0], 1f, MaxLevel);
+            if (Level >= MaxLevel && Projectile.owner == Main.myPlayer)
+            {
+                Projectile.Kill();
+                return;
+            }
 
             float radius = GetRadiusForLevel(Level);
             Projectile.Resize((int)(radius * 2f), (int)(radius * 2f));
@@ -161,6 +166,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 Level);
         }
 
+        public static void UpgradeOrExplode(Projectile sun, int amount = 1)
+        {
+            sun.ai[0] = MathHelper.Clamp(sun.ai[0] + amount, 1f, MaxLevel);
+            sun.timeLeft = Lifetime;
+            sun.netUpdate = true;
+
+            int level = Utils.Clamp((int)sun.ai[0], 1, MaxLevel);
+            SpawnUpgradeBurst(sun.Center, level);
+
+            if (level >= MaxLevel && sun.owner == Main.myPlayer)
+                sun.Kill();
+        }
+
         public static void SpawnUpgradeBurst(Vector2 center, int level)
         {
             if (Main.dedServ)
@@ -185,7 +203,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D vortex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleVortex").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Texture2D[] sunsetVortexTextures =
@@ -226,13 +243,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                         sunsetVortexScale,
                         SpriteEffects.None);
                 }
-            }
-
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-            for (int i = 0; i < 7; i++)
-            {
-                Color color = new Color(4 + i * 4, 3 + i * 3, 1, 205 - i * 18) * fade;
-                Main.EntitySpriteDraw(vortex, drawPos, null, color, Projectile.rotation * (i % 2 == 0 ? 1f : -1.35f) + i, vortex.Size() * 0.5f, radiusScale * pulse * (1f + i * 0.035f), SpriteEffects.None);
             }
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);

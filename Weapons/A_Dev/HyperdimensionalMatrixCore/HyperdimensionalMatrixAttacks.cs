@@ -29,12 +29,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = Balance.PiercingProjectilePenetration;
+            Projectile.penetrate = MatrixCoreNumbers.PiercingProjectilePenetration;
             Projectile.timeLeft = 150;
             Projectile.extraUpdates = 1;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = Balance.PiercingProjectileLocalHitCooldown;
+            Projectile.localNPCHitCooldown = MatrixCoreNumbers.PiercingProjectileLocalHitCooldown;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -54,11 +54,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY));
                     float newRotation = Projectile.velocity.ToRotation().AngleTowards(
                         desiredDirection.ToRotation(),
-                        Balance.PiercingProjectileMaxTurn);
+                        MatrixCoreNumbers.PiercingProjectileMaxTurn);
                     float speed = MathHelper.Lerp(
                         Projectile.velocity.Length(),
-                        Balance.PiercingProjectileHomingSpeed,
-                        Balance.PiercingProjectileAcceleration);
+                        MatrixCoreNumbers.PiercingProjectileHomingSpeed,
+                        MatrixCoreNumbers.PiercingProjectileAcceleration);
                     Projectile.velocity = newRotation.ToRotationVector2() * speed;
                 }
             }
@@ -113,11 +113,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
-            Projectile.penetrate = Balance.OrbitalProjectilePenetration;
-            Projectile.timeLeft = Balance.OrbitalProjectileLifetime;
+            Projectile.penetrate = MatrixCoreNumbers.OrbitalProjectilePenetration;
+            Projectile.timeLeft = MatrixCoreNumbers.OrbitalProjectileLifetime;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = Balance.OrbitalProjectileLocalHitCooldown;
+            Projectile.localNPCHitCooldown = MatrixCoreNumbers.OrbitalProjectileLocalHitCooldown;
         }
 
         public override void AI()
@@ -125,8 +125,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.localAI[0]++;
             Projectile.rotation += 0.18f;
             Projectile.velocity.Y = Math.Min(
-                Balance.OrbitalProjectileMaxFallSpeed,
-                Projectile.velocity.Y + Balance.OrbitalProjectileGravity);
+                MatrixCoreNumbers.OrbitalProjectileMaxFallSpeed,
+                Projectile.velocity.Y + MatrixCoreNumbers.OrbitalProjectileGravity);
 
             int targetIndex = (int)Projectile.ai[0];
             if (Main.npc.IndexInRange(targetIndex))
@@ -135,13 +135,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 if (target.CanBeChasedBy(Projectile, false))
                 {
                     float correction = MathHelper.Clamp(
-                        (target.Center.X - Projectile.Center.X) * Balance.OrbitalProjectileHorizontalCorrectionStrength,
-                        -Balance.OrbitalProjectileMaxHorizontalCorrection,
-                        Balance.OrbitalProjectileMaxHorizontalCorrection);
+                        (target.Center.X - Projectile.Center.X) * MatrixCoreNumbers.OrbitalProjectileHorizontalCorrectionStrength,
+                        -MatrixCoreNumbers.OrbitalProjectileMaxHorizontalCorrection,
+                        MatrixCoreNumbers.OrbitalProjectileMaxHorizontalCorrection);
                     Projectile.velocity.X = MathHelper.Lerp(
                         Projectile.velocity.X,
                         correction,
-                        Balance.OrbitalProjectileHorizontalCorrectionLerp);
+                        MatrixCoreNumbers.OrbitalProjectileHorizontalCorrectionLerp);
                 }
             }
 
@@ -160,7 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<MatrixOrbitalExplosion>(),
-                Math.Max(1, (int)(Projectile.damage * Balance.OrbitalExplosionDamageMultiplier)),
+                Math.Max(1, (int)(Projectile.damage * MatrixCoreNumbers.OrbitalExplosionDamageMultiplier)),
                 Projectile.knockBack,
                 Projectile.owner,
                 Projectile.ai[1]);
@@ -189,7 +189,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
     public sealed class MatrixOrbitalExplosion : ModProjectile, ILocalizedModType
     {
-        private const float MaximumRadius = Balance.OrbitalExplosionSize * 0.5f;
+        private const float MaximumRadius = MatrixCoreNumbers.OrbitalExplosionSize * 0.5f;
 
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -201,16 +201,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override void SetDefaults()
         {
-            Projectile.width = Balance.OrbitalExplosionSize;
-            Projectile.height = Balance.OrbitalExplosionSize;
+            Projectile.width = MatrixCoreNumbers.OrbitalExplosionSize;
+            Projectile.height = MatrixCoreNumbers.OrbitalExplosionSize;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = Balance.OrbitalExplosionPenetration;
+            Projectile.penetrate = MatrixCoreNumbers.OrbitalExplosionPenetration;
             Projectile.timeLeft = 20;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = Balance.OrbitalExplosionLocalHitCooldown;
+            Projectile.localNPCHitCooldown = MatrixCoreNumbers.OrbitalExplosionLocalHitCooldown;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -251,7 +251,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private int Age => Balance.FractureProjectileLifetime - Projectile.timeLeft;
+        private int Age => MatrixCoreNumbers.FractureProjectileLifetime - Projectile.timeLeft;
 
         public override void SetStaticDefaults()
         {
@@ -266,11 +266,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = Balance.FractureProjectilePenetration;
-            Projectile.timeLeft = Balance.FractureProjectileLifetime;
+            Projectile.penetrate = MatrixCoreNumbers.FractureProjectilePenetration;
+            Projectile.timeLeft = MatrixCoreNumbers.FractureProjectileLifetime;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = Balance.FractureProjectileLocalHitCooldown;
+            Projectile.localNPCHitCooldown = MatrixCoreNumbers.FractureProjectileLocalHitCooldown;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -419,11 +419,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = Balance.HyperdimensionalProjectilePenetration;
+            Projectile.penetrate = MatrixCoreNumbers.HyperdimensionalProjectilePenetration;
             Projectile.timeLeft = 2;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = Balance.HyperdimensionalProjectileLocalHitCooldown;
+            Projectile.localNPCHitCooldown = MatrixCoreNumbers.HyperdimensionalProjectileLocalHitCooldown;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -442,7 +442,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             Projectile.timeLeft = 2;
             Projectile.Center = core.Projectile.Center;
-            Projectile.damage = Math.Max(1, (int)(core.Projectile.damage * Balance.HyperdimensionalProjectileDamageMultiplier));
+            Projectile.damage = Math.Max(1, (int)(core.Projectile.damage * MatrixCoreNumbers.HyperdimensionalProjectileDamageMultiplier));
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
             beamDirection = desiredDirection;
@@ -451,7 +451,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             Vector3 lightColor = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.03f).ToVector3() * 0.42f;
             for (int i = 0; i <= 12; i++)
-                Lighting.AddLight(Projectile.Center + beamDirection * (Balance.HyperdimensionalBeamLength * i / 12f), lightColor);
+                Lighting.AddLight(Projectile.Center + beamDirection * (MatrixCoreNumbers.HyperdimensionalBeamLength * i / 12f), lightColor);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -461,7 +461,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 targetHitbox.TopLeft(),
                 targetHitbox.Size(),
                 Projectile.Center,
-                Projectile.Center + beamDirection * Balance.HyperdimensionalBeamLength,
+                Projectile.Center + beamDirection * MatrixCoreNumbers.HyperdimensionalBeamLength,
                 22f,
                 ref collisionPoint);
         }
@@ -472,7 +472,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 return false;
 
             Vector2 normal = beamDirection.RotatedBy(MathHelper.PiOver2);
-            Vector2 end = Projectile.Center + beamDirection * Balance.HyperdimensionalBeamLength;
+            Vector2 end = Projectile.Center + beamDirection * MatrixCoreNumbers.HyperdimensionalBeamLength;
             float time = Main.GlobalTimeWrappedHourly;
             Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.033f);
 
@@ -488,7 +488,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 {
                     float completion = i / (float)segments;
                     float wave = (float)Math.Sin(completion * MathHelper.TwoPi * 6f - time * 8f + lane) * 9f * lane;
-                    Vector2 current = Projectile.Center + beamDirection * Balance.HyperdimensionalBeamLength * completion + normal * wave;
+                    Vector2 current = Projectile.Center + beamDirection * MatrixCoreNumbers.HyperdimensionalBeamLength * completion + normal * wave;
                     Main.spriteBatch.DrawLineBetter(
                         previous,
                         current,

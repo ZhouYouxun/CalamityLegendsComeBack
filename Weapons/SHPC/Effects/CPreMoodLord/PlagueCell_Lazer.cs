@@ -17,8 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float BeamWidth = 24f;
         private const float MinMuzzleDistance = 42f;
         private const float MaxMuzzleDistance = 92f;
-        private const int MaxHits = 3;
-        private const int DamageChannelCloseHits = 2;
+        private const int MaxHits = 4;
+        private const int DamageChannelCloseHits = 4;
         private static readonly Color OuterColor = new(255, 24, 16);
         private static readonly Color InnerColor = Color.White;
 
@@ -129,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             foreach (NPC target in Main.ActiveNPCs)
             {
-                if (!IsValidLaserTarget(target) || !IsBossLikeTarget(target) || markedTargets.Contains(target.whoAmI))
+                if (markedTargets.Count >= MaxHits || !IsValidLaserTarget(target) || !IsBossLikeTarget(target) || markedTargets.Contains(target.whoAmI))
                     continue;
 
                 float collisionPoint = 0f;
@@ -205,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private void TrySpawnMark(NPC target)
         {
-            if (Projectile.owner != Main.myPlayer || !IsValidLaserTarget(target) || !markedTargets.Add(target.whoAmI))
+            if (Projectile.owner != Main.myPlayer || markedTargets.Count >= MaxHits || !IsValidLaserTarget(target) || !markedTargets.Add(target.whoAmI))
                 return;
 
             Projectile.NewProjectile(

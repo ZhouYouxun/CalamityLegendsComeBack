@@ -11,6 +11,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
     {
         public override int EffectID => 31;
 
+        protected override int EnergyVariant => 2;
+        protected override float EnergySizeFactor => 1.12f;
+        protected override int EnergyMoteCount => 4;
+        protected override int EnergyDustInterval => 11;
+        protected override float EnergyOpacity => 0.32f;
+
         public override void OnSpawn(LeonidCometSmall meteor, Player owner)
         {
             meteor.DisableGravity();

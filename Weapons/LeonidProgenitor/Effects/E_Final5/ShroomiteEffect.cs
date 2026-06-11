@@ -9,6 +9,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
     {
         public override int EffectID => 24;
 
+        protected override int EnergyVariant => 7;
+        protected override float EnergySizeFactor => 0.88f;
+        protected override int EnergyMoteCount => 3;
+        protected override int EnergyDustInterval => 9;
+
         public override void AI(LeonidCometSmall meteor, Player owner)
         {
             int timer = (int)meteor.GetState("shroom_timer") + 1;

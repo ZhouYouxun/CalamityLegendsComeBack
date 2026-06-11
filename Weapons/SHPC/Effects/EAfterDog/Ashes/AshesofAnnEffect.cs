@@ -8,7 +8,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
     internal class AshesofAnnEffect : DefaultEffect
     {
-        public override int EffectID => 39;
+        public const int AshesofAnnEffectID = 39;
+
+        public override int EffectID => AshesofAnnEffectID;
 
         public override int AmmoType => ModContent.ItemType<AshesofAnnihilation>();
 

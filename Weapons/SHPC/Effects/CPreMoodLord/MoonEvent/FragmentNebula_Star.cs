@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private Color PrimaryColor => IsBlueVariant ? new Color(72, 196, 255) : new Color(190, 72, 255);
         private Color SecondaryColor => IsBlueVariant ? new Color(32, 88, 255) : new Color(255, 102, 216);
-        private Color CoreColor => IsBlueVariant ? Color.Lerp(Color.White, new Color(100, 220, 255), 0.28f) : Color.Lerp(Color.White, new Color(235, 160, 255), 0.22f);
+        private Color CoreColor => IsBlueVariant ? new Color(126, 230, 255) : new Color(246, 134, 255);
 
         public override void SetStaticDefaults()
         {
@@ -262,10 +262,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             SpawnNebulaBurst(hitTriggered);
 
+            if (hitTriggered)
+                SpawnBlueGrandDeathEffect(IsBlueVariant ? 1f : 0.5f);
+
             if (!IsBlueVariant || !hitTriggered || Projectile.owner != Main.myPlayer)
                 return;
-
-            SpawnBlueGrandDeathEffect();
 
             int explosionIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -286,23 +287,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             }
         }
 
-        private void SpawnBlueGrandDeathEffect()
+        private void SpawnBlueGrandDeathEffect(float visualScale)
         {
             Vector2 center = Projectile.Center;
             Vector2 baseVelocity = Projectile.velocity;
             Vector2 forward = baseVelocity.SafeNormalize(Vector2.UnitY);
 
-            Color mainColor = new(58, 164, 255);
-            Color startColor = new(132, 232, 255);
-            Color endColor = new(32, 76, 255);
-            Color coreColor = Color.White;
+            Color mainColor = PrimaryColor;
+            Color startColor = IsBlueVariant ? new Color(132, 232, 255) : new Color(255, 122, 230);
+            Color endColor = SecondaryColor;
+            Color coreColor = Color.Lerp(startColor, mainColor, 0.35f);
 
             float goldenAngle = MathHelper.TwoPi * 0.38196601125f;
-            float baseRadius = 54f;
-            float outerRadius = 120f;
-            float spiralScale = 8.5f;
+            float baseRadius = 54f * visualScale;
+            float outerRadius = 120f * visualScale;
+            float spiralScale = 8.5f * visualScale;
 
-            for (int i = 0; i < 34; i++)
+            for (int i = 0; i < Math.Max(12, (int)(34 * visualScale)); i++)
             {
                 float t = i + 1f;
                 float angle = goldenAngle * t;
@@ -311,14 +312,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 Vector2 radialDir = offset.SafeNormalize(Vector2.UnitX);
                 Vector2 tangentDir = radialDir.RotatedBy(MathHelper.PiOver2);
                 Vector2 velocity = radialDir * (1.2f + t * 0.06f) + tangentDir * (2.2f + t * 0.035f);
-                float scale = 0.9f + t * 0.018f;
+                float scale = (0.9f + t * 0.018f) * visualScale;
                 int lifetime = 24 + i % 10;
                 Color particleColor = Color.Lerp(startColor, coreColor, 0.32f + 0.68f * (i / 33f));
 
                 GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(center + offset, velocity, scale, particleColor, lifetime));
             }
 
-            int ringCount = 48;
+            int ringCount = Math.Max(18, (int)(48 * visualScale));
             for (int i = 0; i < ringCount; i++)
             {
                 float theta = MathHelper.TwoPi * i / ringCount;
@@ -337,7 +338,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     tangent * 5.8f + dir * 1.8f,
                     Color.Lerp(coreColor, startColor, 0.45f),
                     Color.Lerp(mainColor, endColor, 0.45f),
-                    1.25f,
+                    1.25f * visualScale,
                     24));
 
                 GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
@@ -345,7 +346,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     tangent * 0.42f,
                     false,
                     14,
-                    1.7f,
+                    1.7f * visualScale,
                     Color.Lerp(startColor, mainColor, 0.5f) * 0.28f));
 
                 Dust dust = Dust.NewDustPerfect(
@@ -354,13 +355,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     dir * 1.8f + tangent * 1.2f,
                     0,
                     Color.Lerp(startColor, mainColor, 0.4f),
-                    1.45f);
+                    1.45f * visualScale);
                 dust.noGravity = true;
             }
 
-            int lissajousCount = 54;
-            float amplitudeX = 108f;
-            float amplitudeY = 84f;
+            int lissajousCount = Math.Max(18, (int)(54 * visualScale));
+            float amplitudeX = 108f * visualScale;
+            float amplitudeY = 84f * visualScale;
             for (int i = 0; i < lissajousCount; i++)
             {
                 float t = MathHelper.TwoPi * i / lissajousCount;
@@ -377,7 +378,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     deriv * 4.8f,
                     false,
                     18,
-                    1.18f,
+                    1.18f * visualScale,
                     Color.Lerp(mainColor, startColor, 0.55f)));
 
                 GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
@@ -385,12 +386,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     deriv * 0.38f,
                     false,
                     12,
-                    1.45f,
+                    1.45f * visualScale,
                     Color.Lerp(endColor, startColor, 0.5f) * 0.24f));
             }
 
-            int roseCount = 42;
-            float roseRadius = 132f;
+            int roseCount = Math.Max(16, (int)(42 * visualScale));
+            float roseRadius = 132f * visualScale;
             for (int i = 0; i < roseCount; i++)
             {
                 float theta = MathHelper.TwoPi * i / roseCount;
@@ -406,7 +407,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     velocity,
                     Color.Lerp(coreColor, startColor, 0.5f),
                     Color.Lerp(mainColor, endColor, 0.6f),
-                    1.05f,
+                    1.05f * visualScale,
                     20));
 
                 Dust dust = Dust.NewDustPerfect(
@@ -415,37 +416,37 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     velocity * 0.55f,
                     0,
                     Color.Lerp(mainColor, endColor, 0.45f),
-                    1.35f);
+                    1.35f * visualScale);
                 dust.noGravity = true;
                 dust.fadeIn = 0.45f;
             }
 
-            int vortexCount = 36;
+            int vortexCount = Math.Max(14, (int)(36 * visualScale));
             for (int i = 0; i < vortexCount; i++)
             {
                 float theta = MathHelper.TwoPi * i / vortexCount;
                 Vector2 dir = theta.ToRotationVector2();
-                Vector2 posA = center + dir * (42f + i * 2.2f);
-                Vector2 posB = center - dir * (58f + i * 1.65f);
+                Vector2 posA = center + dir * (42f + i * 2.2f) * visualScale;
+                Vector2 posB = center - dir * (58f + i * 1.65f) * visualScale;
                 Vector2 tangentA = dir.RotatedBy(MathHelper.PiOver2);
                 Vector2 tangentB = dir.RotatedBy(-MathHelper.PiOver2);
 
                 GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
                     posA,
                     tangentA * (3.2f + i * 0.05f),
-                    0.82f + i * 0.01f,
+                    (0.82f + i * 0.01f) * visualScale,
                     Color.Lerp(startColor, coreColor, 0.35f),
                     18 + i % 8));
 
                 GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
                     posB,
                     tangentB * (2.8f + i * 0.05f),
-                    0.78f + i * 0.012f,
+                    (0.78f + i * 0.012f) * visualScale,
                     Color.Lerp(mainColor, endColor, 0.45f),
                     18 + i % 7));
             }
 
-            int forwardBurstCount = 28;
+            int forwardBurstCount = Math.Max(10, (int)(28 * visualScale));
             for (int i = 0; i < forwardBurstCount; i++)
             {
                 float lerp = i / (float)(forwardBurstCount - 1);
@@ -459,7 +460,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     velocity,
                     false,
                     20,
-                    1.25f,
+                    1.25f * visualScale,
                     Color.Lerp(coreColor, startColor, 0.4f + 0.5f * (1f - Math.Abs(lerp - 0.5f) * 2f))));
 
                 GeneralParticleHandler.SpawnParticle(new CritSpark(
@@ -467,11 +468,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     velocity * 0.85f,
                     coreColor,
                     Color.Lerp(startColor, mainColor, 0.55f),
-                    1.15f,
+                    1.15f * visualScale,
                     18));
             }
 
-            int dustCount = 72;
+            int dustCount = Math.Max(20, (int)(72 * visualScale));
             for (int i = 0; i < dustCount; i++)
             {
                 float theta = MathHelper.TwoPi * i / dustCount;
@@ -487,23 +488,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                     velocity,
                     0,
                     Color.Lerp(startColor, endColor, wave * 0.55f),
-                    1.25f + wave * 0.85f);
+                    (1.25f + wave * 0.85f) * visualScale);
                 dust.noGravity = true;
                 dust.fadeIn = 0.35f;
             }
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < Math.Max(6, (int)(20 * visualScale)); i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 13f);
                 GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
                     center,
                     velocity,
-                    Main.rand.NextFloat(1.2f, 1.9f),
+                    Main.rand.NextFloat(1.2f, 1.9f) * visualScale,
                     Color.Lerp(coreColor, startColor, Main.rand.NextFloat(0.2f, 0.55f)),
                     Main.rand.Next(18, 30)));
             }
 
-            Lighting.AddLight(center, mainColor.ToVector3() * 1.85f);
+            Lighting.AddLight(center, mainColor.ToVector3() * 1.85f * visualScale);
         }
 
         private void SpawnNebulaBurst(bool hitTriggered)
@@ -518,7 +519,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Color mainColor = PrimaryColor;
             Color startColor = CoreColor;
             Color endColor = SecondaryColor;
-            Color coreColor = Color.White;
+            Color coreColor = CoreColor;
             float power = hitTriggered ? (IsBlueVariant ? 0.74f : 0.58f) : 0.34f;
             float radiusScale = IsBlueVariant ? 0.82f : 0.66f;
             float goldenAngle = MathHelper.TwoPi * 0.38196601125f;

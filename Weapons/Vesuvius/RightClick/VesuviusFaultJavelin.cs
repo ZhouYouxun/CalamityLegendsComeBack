@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2;
+using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
 using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
@@ -67,6 +68,21 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     Projectile.knockBack * 0.25f,
                     Projectile.owner,
                     Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X));
+            }
+
+            if (Stage >= 5 && Projectile.owner == Main.myPlayer && Projectile.localAI[0] % 18f == 5f)
+            {
+                Vector2 gasVelocity = -Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.55f) * Main.rand.NextFloat(1.2f, 3.2f) - Vector2.UnitY * Main.rand.NextFloat(0.2f, 0.8f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 38f + Main.rand.NextVector2Circular(16f, 16f),
+                    gasVelocity,
+                    ModContent.ProjectileType<VesuviusVolcanicGasCloud>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.12f)),
+                    0f,
+                    Projectile.owner,
+                    96f,
+                    Math.Sign(Projectile.velocity.X == 0f ? Main.player[Projectile.owner].direction : Projectile.velocity.X));
             }
         }
 
@@ -198,6 +214,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             if (Stage >= 2)
                 TryFireTurretShot();
+
+            if (Projectile.owner == Main.myPlayer)
+                TrySpawnHazardField();
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -245,6 +264,65 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.44f, Pitch = Stage >= 3 ? 0.1f : -0.1f }, Projectile.Center);
             if (!Main.dedServ)
                 VesuviusVolcanicVisuals.SpawnImpactMix(Projectile.Center + direction * 42f, 0.44f + Stage * 0.06f);
+        }
+
+        private void TrySpawnHazardField()
+        {
+            if (Stage >= 1 && Projectile.localAI[0] % 44f == 8f)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + new Vector2(Main.rand.NextFloat(-80f, 80f), Main.rand.NextFloat(18f, 48f)),
+                    Vector2.Zero,
+                    ModContent.ProjectileType<VesuviusLingeringLava>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.2f)),
+                    0f,
+                    Projectile.owner,
+                    Main.rand.NextFloat(76f, 124f) + Stage * 6f);
+            }
+
+            if (Stage >= 3 && Projectile.localAI[0] % 34f == 16f)
+            {
+                float direction = Main.rand.NextBool() ? 1f : -1f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + new Vector2(direction * Main.rand.NextFloat(80f, 170f), -Main.rand.NextFloat(260f, 380f)),
+                    new Vector2(-direction * Main.rand.NextFloat(2f, 4.4f), Main.rand.NextFloat(10f, 15f)),
+                    ModContent.ProjectileType<VesuviusPyroclasticFlow>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.24f)),
+                    Projectile.knockBack * 0.24f,
+                    Projectile.owner,
+                    -direction);
+            }
+
+            if (Stage >= 4 && Projectile.localAI[0] % 48f == 22f)
+            {
+                float wind = Main.rand.NextBool() ? 1f : -1f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + Main.rand.NextVector2Circular(38f, 22f),
+                    new Vector2(wind * Main.rand.NextFloat(0.8f, 2.2f), -Main.rand.NextFloat(0.25f, 1.1f)),
+                    ModContent.ProjectileType<VesuviusVolcanicGasCloud>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.16f)),
+                    0f,
+                    Projectile.owner,
+                    132f + Stage * 14f,
+                    wind);
+            }
+
+            if (Stage >= 5 && Projectile.localAI[0] % 14f == 3f)
+            {
+                float wind = Main.rand.NextBool() ? 1f : -1f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + new Vector2(Main.rand.NextFloat(-260f, 260f), Main.rand.NextFloat(-420f, -260f)),
+                    new Vector2(-wind * Main.rand.NextFloat(0.6f, 1.5f), Main.rand.NextFloat(1.2f, 2.6f)),
+                    ModContent.ProjectileType<VesuviusAshFall>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.08f)),
+                    0f,
+                    Projectile.owner,
+                    -wind);
+            }
         }
 
         private NPC FindTarget(float range)

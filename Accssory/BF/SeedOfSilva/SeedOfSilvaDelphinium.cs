@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         protected override int FlowerSlot => 2;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_CDetec;
-        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/种子包/飞燕草";
+        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/Delphinium";
 
         protected override void UpdateBlooming(Player owner, BFAccessoryPlayer accessoryPlayer)
         {
@@ -31,11 +31,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 return;
 
             int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.28f));
-            Vector2 velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 10f;
+            Vector2 velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 24f;
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
-                velocity.RotatedByRandom(0.22f),
+                velocity.RotatedByRandom(0.12f),
                 ModContent.ProjectileType<SeedOfSilvaDelphiniumArc>(),
                 damage,
                 0.5f,

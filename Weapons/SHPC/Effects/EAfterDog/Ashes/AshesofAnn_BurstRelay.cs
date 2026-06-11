@@ -17,7 +17,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
     {
         private const int ShotCount = 17;
         private const int WarmupFrames = 6;
-        private const int FireInterval = 4;
+        private const int FireInterval = 1;
+        private const float HomingAcquireRange = 200f * 16f;
+        private const float PiercingShotChance = 0.4f;
         private const float MinMuzzleDistance = 42f;
         private const float MaxMuzzleDistance = 92f;
 
@@ -128,7 +130,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            NPC target = FindTarget(4200f);
+            bool piercingShot = Main.rand.NextFloat() < PiercingShotChance;
+            NPC target = piercingShot ? null : FindTarget(HomingAcquireRange);
             float shotCompletion = shotIndex / (float)(ShotCount - 1);
             float weave = (float)Math.Sin(shotIndex * 2.399963f) * MathHelper.Lerp(0.48f, 0.1f, shotCompletion);
             Vector2 direction = forward.RotatedBy(weave);
@@ -156,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 Projectile.owner,
                 target?.whoAmI ?? -1f,
                 shotIndex,
-                Main.rand.NextFloat(0.7f, 1.3f));
+                piercingShot ? -1f : Main.rand.NextFloat(0.7f, 1.3f));
 
             if (shotIndex == 0 || shotIndex == ShotCount - 1 || shotIndex % 4 == 3)
             {

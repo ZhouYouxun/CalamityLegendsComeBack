@@ -40,7 +40,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private Vector2 targetPoint;
         private Vector2 groundAnchorPoint;
         private Vector2 delayedReturnVelocity;
+        private Vector2 bombardFallStart;
         private bool passedBombardTarget;
+        private bool pendingBombardTeleport;
         private bool detonated;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -102,9 +104,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             float gravDir = owner.active ? owner.gravDir : 1f;
             Vector2 fallStart = bombardTarget - Vector2.UnitY * 980f * gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
             Vector2 fallDirection = (bombardTarget - fallStart).SafeNormalize(Vector2.UnitY * gravDir);
-            Projectile.Center = fallStart;
-            delayedReturnVelocity = fallDirection * Math.Max(32f, desiredSpeed * 1.7f) * ReturnSpeedMultiplier;
-            Projectile.velocity = delayedReturnVelocity * 0.32f;
+            bombardFallStart = fallStart;
+            delayedReturnVelocity = fallDirection * Math.Max(42f, desiredSpeed * 2.2f);
+            pendingBombardTeleport = true;
+            Projectile.velocity = -Vector2.UnitY * 5.2f;
             ReturnDelayTimer = ReturnDelayFrames * (Projectile.extraUpdates + 1);
             FlightTimer = 0f;
             Projectile.tileCollide = false;
@@ -119,6 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             writer.WriteVector2(groundAnchorPoint);
             writer.WriteVector2(stickOffset);
             writer.WriteVector2(delayedReturnVelocity);
+            writer.WriteVector2(bombardFallStart);
             writer.Write(rainCounter);
             writer.Write(storedRainDamage);
             writer.Write(storedAmmoType);
@@ -128,6 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             writer.Write(skyRainMultiplier);
             writer.Write(ReturnDelayTimer);
             writer.Write(passedBombardTarget);
+            writer.Write(pendingBombardTeleport);
             writer.Write(detonated);
         }
 
@@ -137,6 +142,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             groundAnchorPoint = reader.ReadVector2();
             stickOffset = reader.ReadVector2();
             delayedReturnVelocity = reader.ReadVector2();
+            bombardFallStart = reader.ReadVector2();
             rainCounter = reader.ReadInt32();
             storedRainDamage = reader.ReadInt32();
             storedAmmoType = reader.ReadInt32();
@@ -146,6 +152,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             skyRainMultiplier = reader.ReadSingle();
             ReturnDelayTimer = reader.ReadSingle();
             passedBombardTarget = reader.ReadBoolean();
+            pendingBombardTeleport = reader.ReadBoolean();
             detonated = reader.ReadBoolean();
         }
 
@@ -267,7 +274,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 ReturnDelayTimer--;
                 UpdateOffscreenBombardTarget();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, delayedReturnVelocity * 0.32f, 0.16f);
+                Projectile.velocity = -Vector2.UnitY * 5.2f;
                 Projectile.tileCollide = false;
                 Projectile.friendly = false;
                 if (ReturnDelayTimer % 6f == 0f)
@@ -275,6 +282,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
                 if (ReturnDelayTimer <= 0f)
                 {
+                    if (pendingBombardTeleport)
+                    {
+                        Projectile.Center = bombardFallStart;
+                        pendingBombardTeleport = false;
+                    }
+
                     Projectile.velocity = delayedReturnVelocity;
                     Projectile.friendly = true;
                     Projectile.netUpdate = true;
@@ -304,9 +317,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 return;
 
             targetPoint = owner.Calamity().mouseWorld == Vector2.Zero ? Main.MouseWorld : owner.Calamity().mouseWorld;
-            Vector2 fallDirection = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitY * owner.gravDir);
-            float desiredSpeed = Math.Max(32f, storedAmmoSpeed * 1.7f);
-            delayedReturnVelocity = fallDirection * desiredSpeed * ReturnSpeedMultiplier;
+            bombardFallStart = targetPoint - Vector2.UnitY * 980f * owner.gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
+            Vector2 fallDirection = (targetPoint - bombardFallStart).SafeNormalize(Vector2.UnitY * owner.gravDir);
+            float desiredSpeed = Math.Max(42f, storedAmmoSpeed * 2.2f);
+            delayedReturnVelocity = fallDirection * desiredSpeed;
 
             if (Projectile.owner == Main.myPlayer)
                 Projectile.netUpdate = true;

@@ -76,6 +76,58 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override bool PreDraw(ref Color lightColor)
         {
+            Texture2D reticle = ModContent.Request<Texture2D>("CalamityMod/Particles/DestroyerReticleTelegraph").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = reticle.Size() * 0.5f;
+            float progress = Utils.GetLerpValue(35f, 5f, Projectile.timeLeft, true);
+            float pulse = 0.88f + 0.12f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 11f + Projectile.identity);
+            Color green = new Color(74, 255, 92);
+            Color paleGreen = new Color(210, 255, 218);
+            float outerScale = MathHelper.Lerp(0.22f, 0.34f, progress) * pulse;
+            float innerScale = MathHelper.Lerp(0.18f, 0.27f, progress) * pulse;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(
+                reticle,
+                drawPosition,
+                null,
+                Color.Lerp(green, paleGreen, progress * 0.35f) * 0.92f,
+                Main.GlobalTimeWrappedHourly * 1.5f,
+                origin,
+                outerScale,
+                SpriteEffects.None,
+                0f);
+
+            Main.EntitySpriteDraw(
+                reticle,
+                drawPosition,
+                null,
+                paleGreen * 0.72f,
+                -Main.GlobalTimeWrappedHourly * 1.1f,
+                origin,
+                innerScale,
+                SpriteEffects.FlipHorizontally,
+                0f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             return false;
         }
 
@@ -193,10 +245,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             exploded = true;
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/TheHiveNuke") { Volume = 0.86f }, Projectile.Center);
+            SpawnNukeExplosionEffects();
 
             int oldWidth = Projectile.width;
             int oldHeight = Projectile.height;
-            Projectile.Resize(220, 220);
+            Projectile.Resize(480, 480);
             Projectile.penetrate = -1;
             Projectile.Damage();
             Projectile.Resize(oldWidth, oldHeight);
@@ -212,7 +265,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     0f,
                     Projectile.owner);
 
-                int beeCount = Main.player[Projectile.owner].strongBees ? 12 : 10;
+                int beeCount = (Main.player[Projectile.owner].strongBees ? 12 : 10) + 3;
                 for (int i = 0; i < beeCount; i++)
                 {
                     float delayFactor = Main.rand.NextFloat(0.7f, 1.4f);
@@ -235,6 +288,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                         Projectile plagueBee = Main.projectile[bee];
                         plagueBee.DamageType = DamageClass.Magic;
                         plagueBee.penetrate = 1;
+                        plagueBee.scale *= 1.35f;
+                        plagueBee.light = MathHelper.Max(plagueBee.light, 0.35f);
                     }
                 }
             }
@@ -245,6 +300,86 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.GemEmerald : DustID.SteampunkSteam, velocity, 0, Color.LimeGreen, Main.rand.NextFloat(1f, 1.8f));
                 dust.noGravity = true;
                 dust.alpha = Main.rand.Next(70, 190);
+            }
+        }
+
+        private void SpawnNukeExplosionEffects()
+        {
+            Vector2 center = Projectile.Center;
+            Color plagueGreen = new(74, 255, 92);
+            Color deepGreen = new(12, 92, 24);
+            Color toxicYellow = new(190, 255, 70);
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                plagueGreen,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.18f,
+                2.4f,
+                24));
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                plagueGreen,
+                Vector2.One,
+                0f,
+                0.18f,
+                5.2f,
+                28));
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                toxicYellow,
+                new Vector2(1.15f, 1.15f),
+                0f,
+                0.1f,
+                3.6f,
+                22));
+
+            for (int i = 0; i < 46; i++)
+            {
+                Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+                Vector2 velocity = direction * Main.rand.NextFloat(3.5f, 18f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    center + direction * Main.rand.NextFloat(6f, 28f),
+                    Main.rand.NextBool(3) ? DustID.GemEmerald : DustID.GreenTorch,
+                    velocity,
+                    Main.rand.Next(40, 130),
+                    Main.rand.NextBool(4) ? toxicYellow : plagueGreen,
+                    Main.rand.NextFloat(1.15f, 2.25f));
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 8.4f);
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    center + Main.rand.NextVector2Circular(22f, 22f),
+                    velocity,
+                    Color.Lerp(deepGreen, Color.Black, Main.rand.NextFloat(0.25f, 0.55f)) * 0.82f,
+                    Main.rand.Next(30, 50),
+                    Main.rand.NextFloat(0.72f, 1.45f),
+                    0.42f,
+                    Main.rand.NextFloat(-0.08f, 0.08f),
+                    false));
+            }
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 19f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(16, 26),
+                    Main.rand.NextFloat(1.1f, 1.9f),
+                    Main.rand.NextBool(3) ? toxicYellow : plagueGreen));
             }
         }
 
@@ -266,7 +401,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 230;
+            Projectile.width = Projectile.height = 480;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;

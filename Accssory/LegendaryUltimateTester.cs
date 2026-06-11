@@ -1,7 +1,7 @@
 using System;
 using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityLegendsComeBack.Weapons.CosmicDischarge;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
@@ -84,17 +84,17 @@ namespace CalamityLegendsComeBack.Accssory
 
         private void ChargeBrinyBaron()
         {
-            BBEXPlayer tidePlayer = Player.GetModPlayer<BBEXPlayer>();
+            BBTideValuePlayer tidePlayer = Player.GetModPlayer<BBTideValuePlayer>();
             
-            // Charge EXValue
-            tidePlayer.EXValue = Math.Min(BBEXPlayer.EXMax, tidePlayer.EXValue + FramesPerTick(BBEXPlayer.EXMax));
+            // Charge TideChargeValue
+            tidePlayer.TideChargeValue = Math.Min(BBTideValuePlayer.TideChargeMax, tidePlayer.TideChargeValue + FramesPerTick(BBTideValuePlayer.TideChargeMax));
 
             // Charge TideValue
             int max = Math.Max(1, tidePlayer.CurrentTideMax);
             if (tidePlayer.TideValue >= max)
             {
                 brinyTideAccumulator = 0f;
-                SetCooldownProgress(BBEXCoolDown.ID, BBEXPlayer.EXMax, tidePlayer.EXValue);
+                SetCooldownProgress(BBTideValueCooldown.ID, BBTideValuePlayer.TideChargeMax, tidePlayer.TideChargeValue);
                 return;
             }
 
@@ -106,7 +106,7 @@ namespace CalamityLegendsComeBack.Accssory
                 tidePlayer.AddTide(tideToAdd);
             }
 
-            SetCooldownProgress(BBEXCoolDown.ID, BBEXPlayer.EXMax, tidePlayer.EXValue);
+            SetCooldownProgress(BBTideValueCooldown.ID, BBTideValuePlayer.TideChargeMax, tidePlayer.TideChargeValue);
         }
 
         private void ChargeBrinyBaronSuperDashCooldown()

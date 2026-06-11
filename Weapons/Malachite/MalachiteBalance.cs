@@ -8,6 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public const int DepletionBurstKunaiCount = 5;
         public const int RightFeatherMaxCount = 23;
         public const int RightFeatherGenerationFrames = 36;
+        public const int PeacockBoxFeatherGenerationFrames = 60;
         public const int RightFeatherReleaseSpacingFrames = 2;
 
         public static bool DownedWallOfFlesh => Main.hardMode;

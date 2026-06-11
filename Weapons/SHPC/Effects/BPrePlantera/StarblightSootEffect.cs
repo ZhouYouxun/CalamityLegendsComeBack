@@ -38,15 +38,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
+            Vector2 forward = (Main.MouseWorld - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction));
             float baseSpeed = MathHelper.Clamp(projectile.velocity.Length(), 12f, 28f);
-            int shotCount = Main.rand.Next(5, 8);
-
-            for (int i = 0; i < shotCount; i++)
+            float[] shotAngles =
             {
-                float angle = Main.rand.NextFloat(MathHelper.ToRadians(-20f), MathHelper.ToRadians(20f));
-                float speedScale = Main.rand.NextFloat(0.8f, 1.2f);
-                Vector2 velocity = forward.RotatedBy(angle) * baseSpeed * speedScale * 1.5f;
+                0f,
+                MathHelper.ToRadians(Main.rand.NextFloat(6f, 10f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-10f, -6f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-10f, 10f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-10f, 10f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-10f, 10f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-10f, 10f))
+            };
+
+            for (int i = 0; i < shotAngles.Length; i++)
+            {
+                float speedScale = i == 0 ? 1f : Main.rand.NextFloat(0.9f, 1.12f);
+                Vector2 velocity = forward.RotatedBy(shotAngles[i]) * baseSpeed * speedScale * 1.5f;
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),

@@ -3,9 +3,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.HighTideOverloadBarrier
+namespace CalamityLegendsComeBack.Accssory.BB.General
 {
-    public class HighTideOverloadBarrier : ModItem
+    public class OffshoreWindTurbine : ModItem
     {
         public override void SetDefaults()
         {
@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Accssory.BB.HighTideOverloadBarrier
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<BBAccessoryPlayer>().HighTideOverloadBarrierEquipped = true;
+            player.GetModPlayer<BBAccessoryPlayer>().OffshoreWindTurbineEquipped = true;
         }
 
         public override void AddRecipes()
@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Accssory.BB.HighTideOverloadBarrier
             CreateRecipe()
                 .AddIngredient<MysteriousCircuitry>(4)
                 .AddIngredient<DubiousPlating>(8)
-                .AddIngredient(ItemID.SoulofSight, 3)
+                .AddRecipeGroup("AnyMythrilBar", 10)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

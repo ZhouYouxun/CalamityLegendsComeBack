@@ -9,6 +9,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure;
 using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityMod;
@@ -664,7 +665,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 );
             }
             SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
-            leftClickCooldown = Item.useTime;
+            leftClickCooldown = shotEffectID == AshesofAnnEffect.AshesofAnnEffectID ? Math.Max(1, (int)MathF.Ceiling(Item.useTime * 0.6f)) : Item.useTime;
             if (!heatPlayer.IsForcedShutdownCooling())
                 heatPlayer.PauseHeatDissipation(30);
             GainEXFromLeftShot(player);

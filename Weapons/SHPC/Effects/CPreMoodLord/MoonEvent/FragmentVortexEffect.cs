@@ -28,8 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            // 初速度翻倍
-            projectile.velocity *= 2f;
+            projectile.velocity *= 1.9f;
 
             // 只存活很短时间
             projectile.timeLeft = 12;
@@ -43,49 +42,41 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void AI(Projectile projectile, Player owner)
         {
             // 抵消默认减速，尽量保持高速感
-            projectile.velocity *= 1.235f;
+            projectile.velocity *= 1.1f;
 
 
             {
-                // ===== 单螺旋导弹释放 =====
                 fireTimer++;
 
-                if (fireTimer >= 1)
+                if (fireTimer >= 2)
                 {
                     fireTimer = 0;
 
-                    // ===== 后方方向 =====
                     Vector2 backDir = -projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-                    // ===== 单螺旋角度（正弦摆动）=====
-                    float maxAngle = MathHelper.ToRadians(55f); // 左右摆幅（你可以调）
-                    spiralAngle += 0.28f; // 摆动速度
-
-                    float angleOffset = (float)Math.Sin(spiralAngle) * maxAngle;
-
-                    Vector2 shootDir = backDir.RotatedBy(angleOffset);
-
-                    Vector2 velocity = shootDir * 8.5f;
-
-                    int projID = Projectile.NewProjectile(
-                        projectile.GetSource_FromThis(),
-                        projectile.Center,
-                        velocity,
-                        ProjectileID.VortexBeaterRocket,
-                        (int)(projectile.damage * 0.72f),
-                        1f,
-                        projectile.owner
-                    );
-
-                    if (Main.projectile.IndexInRange(projID))
+                    for (int i = -1; i <= 1; i += 2)
                     {
-                        Projectile missile = Main.projectile[projID];
-                        missile.friendly = true;
-                        missile.hostile = false;
-                        missile.usesIDStaticNPCImmunity = false;
-                        missile.usesLocalNPCImmunity = true;
-                        missile.localNPCHitCooldown = 6;
-                        missile.DamageType = DamageClass.Magic;
+                        Vector2 shootDir = backDir.RotatedBy(MathHelper.ToRadians(30f * i));
+                        int projID = Projectile.NewProjectile(
+                            projectile.GetSource_FromThis(),
+                            projectile.Center,
+                            shootDir * 8.5f,
+                            ProjectileID.VortexBeaterRocket,
+                            (int)(projectile.damage * 0.72f),
+                            1f,
+                            projectile.owner
+                        );
+
+                        if (Main.projectile.IndexInRange(projID))
+                        {
+                            Projectile missile = Main.projectile[projID];
+                            missile.friendly = true;
+                            missile.hostile = false;
+                            missile.usesIDStaticNPCImmunity = false;
+                            missile.usesLocalNPCImmunity = true;
+                            missile.localNPCHitCooldown = 6;
+                            missile.DamageType = DamageClass.Magic;
+                        }
                     }
                 }
             }

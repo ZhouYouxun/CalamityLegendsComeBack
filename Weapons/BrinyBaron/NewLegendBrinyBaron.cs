@@ -1,5 +1,7 @@
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
@@ -21,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public new string LocalizationCategory => "Items.Weapons";
 
         private const float RightClickDamageMultiplier = 1.08f;
+        private const float RightClickShurikenSpeed = 21f;
         private static bool CanUseQuickDash => true;
         private static bool HasDesignedSuperDashUnlock => NPC.downedFishron;
 
@@ -52,10 +55,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             if (player.altFunctionUse == 2)
             {
-                if (HasActiveRightClickDash(player))
-                    return false;
+                BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
+                bool usesDashBody = rightClickMode == BBRightClickMode.LostGarment || rightClickMode == BBRightClickMode.CeruleanShield;
+                bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexPortal;
 
-                if (player.GetModPlayer<BBEXPlayer>().TideValue <= 0)
+                if (usesDashBody && HasActiveRightClickDash(player))
                     return false;
 
                 Projectile activeLeftSwing = FindOwnedProjectile(player, ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>());
@@ -67,26 +71,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                     activeLeftSwing.Kill();
                 }
 
-                BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
-                if (!dashCooldown.CanUseDash)
+                if (usesAccessoryCooldown && !player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash)
                     return false;
 
-                Item.useTime = 20;
-                Item.useAnimation = 20;
-                Item.shoot = ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>();
+                Item.useTime = 18;
+                Item.useAnimation = 18;
+                Item.shoot = rightClickMode switch
+                {
+                    BBRightClickMode.LostGarment or BBRightClickMode.CeruleanShield => ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>(),
+                    BBRightClickMode.VortexPortal => ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
+                    _ => ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                };
                 Item.channel = false;
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
-                Item.shootSpeed = 0f;
-                Item.UseSound = SoundID.Item39;
+                Item.shootSpeed = rightClickMode == BBRightClickMode.DefaultShuriken ? RightClickShurikenSpeed : 0f;
+                Item.UseSound = rightClickMode == BBRightClickMode.DefaultShuriken ? SoundID.Item1 : SoundID.Item39;
             }
             else
             {
                 if (HasActiveRightClickDash(player))
                     return false;
 
-                Item.useTime = Item.useAnimation = 25;
+                Item.useTime = Item.useAnimation = 28;
                 Item.channel = true;
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
@@ -107,19 +115,40 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
                 Vector2 shootVelocity = (Main.MouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
                 int rightClickDamage = GetCurrentRightClickDamage(player);
-                if (!player.GetModPlayer<BBEXPlayer>().TryConsumeTide())
+                BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
+
+                if (rightClickMode == BBRightClickMode.VortexPortal)
+                {
+                    ExecuteVortexPortal(player, source, shootVelocity, rightClickDamage, knockback);
+                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown();
                     return false;
+                }
+
+                if (rightClickMode == BBRightClickMode.LostGarment || rightClickMode == BBRightClickMode.CeruleanShield)
+                {
+                    Projectile.NewProjectile(
+                        source,
+                        player.MountedCenter,
+                        shootVelocity,
+                        ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>(),
+                        rightClickDamage,
+                        knockback,
+                        player.whoAmI,
+                        rightClickMode == BBRightClickMode.CeruleanShield ? 2f : 0f);
+
+                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown();
+                    return false;
+                }
 
                 Projectile.NewProjectile(
                     source,
                     player.MountedCenter,
-                    shootVelocity,
-                    ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>(),
+                    shootVelocity * RightClickShurikenSpeed,
+                    ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
                     rightClickDamage,
                     knockback,
                     player.whoAmI);
 
-                player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown();
                 return false;
             }
 
@@ -132,7 +161,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (player.altFunctionUse != 2)
                 return player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] <= 0 && !HasActiveRightClickDash(player);
 
-            return player.GetModPlayer<BBEXPlayer>().TideValue > 0 && !HasActiveRightClickDash(player);
+            BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
+            bool usesDashBody = rightClickMode == BBRightClickMode.LostGarment || rightClickMode == BBRightClickMode.CeruleanShield;
+            bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexPortal;
+            return (!usesDashBody || !HasActiveRightClickDash(player)) &&
+                   (!usesAccessoryCooldown || player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash);
         }
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
@@ -141,28 +174,34 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public override void HoldItem(Player player)
         {
-            BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
+            BBTideValuePlayer tidePlayer = player.GetModPlayer<BBTideValuePlayer>();
             BBSuperDashCooldownPlayer superDashCooldown = player.GetModPlayer<BBSuperDashCooldownPlayer>();
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
 
-            if (player.Calamity().cooldowns.TryGetValue(BBEXCoolDown.ID, out var cooldown))
+            if (player.Calamity().cooldowns.TryGetValue(BBTideValueCooldown.ID, out var cooldown))
             {
-                cooldown.duration = BBEXPlayer.EXMax;
-                cooldown.timeLeft = Math.Max(1, tidePlayer.EXValue);
+                cooldown.duration = BBTideValuePlayer.TideChargeMax;
+                cooldown.timeLeft = Math.Max(1, tidePlayer.TideChargeValue);
             }
             else
             {
-                player.AddCooldown(BBEXCoolDown.ID, BBEXPlayer.EXMax).timeLeft = Math.Max(1, tidePlayer.EXValue);
+                player.AddCooldown(BBTideValueCooldown.ID, BBTideValuePlayer.TideChargeMax).timeLeft = Math.Max(1, tidePlayer.TideChargeValue);
             }
 
+            int superDashVisualValue = Math.Max(1, (int)(superDashCooldown.CooldownDuration * superDashCooldown.CooldownCompletion));
             if (player.Calamity().cooldowns.TryGetValue(BBSuperDashCooldownHandler.ID, out var superDashVisualCooldown))
-                superDashVisualCooldown.timeLeft = superDashCooldown.IsCoolingDown ? superDashCooldown.RemainingFrames : 0;
-            else if (superDashCooldown.IsCoolingDown)
-                player.AddCooldown(BBSuperDashCooldownHandler.ID, superDashCooldown.RemainingFrames);
+            {
+                superDashVisualCooldown.duration = superDashCooldown.CooldownDuration;
+                superDashVisualCooldown.timeLeft = superDashVisualValue;
+            }
+            else
+            {
+                player.AddCooldown(BBSuperDashCooldownHandler.ID, superDashCooldown.CooldownDuration).timeLeft = superDashVisualValue;
+            }
 
-            if (!superDashCooldown.CanUseSuperDash || !HasDesignedSuperDashUnlock || !tidePlayer.TideFull || !tidePlayer.EXFull)
+            if (!superDashCooldown.CanUseSuperDash || !HasDesignedSuperDashUnlock || !tidePlayer.TideFull || !tidePlayer.TideChargeFull)
                 return;
 
             if (!KeybindSystem.LegendarySkill.JustPressed)
@@ -175,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (target == -1)
             {
                 if (player.whoAmI == Main.myPlayer)
-                    CombatText.NewText(player.Hitbox, new Color(255, 80, 80), "大招被拒绝");
+                    CombatText.NewText(player.Hitbox, new Color(255, 80, 80), "Ultimate blocked");
 
                 return;
             }
@@ -201,7 +240,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 consumedTide);
 
             superDashCooldown.StartCooldown();
-            tidePlayer.ResetEX();
+            tidePlayer.ResetTideCharge();
             tidePlayer.TideValue = 0;
         }
 
@@ -209,23 +248,47 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
         }
 
+        private void ExecuteVortexPortal(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 direction, int damage, float knockback)
+        {
+            Vector2 destination = Main.MouseWorld;
+            Vector2 topLeft = destination - player.Size * 0.5f;
+            if (Collision.SolidCollision(topLeft, player.width, player.height))
+                destination = player.Center + direction * 240f;
+
+            player.Center = destination;
+            player.velocity = Vector2.Zero;
+            player.ChangeDir(direction.X >= 0f ? 1 : -1);
+
+            SoundEngine.PlaySound(SoundID.Item6 with { Volume = 0.75f, Pitch = 0.18f }, player.Center);
+            Projectile.NewProjectile(
+                source,
+                player.MountedCenter,
+                direction,
+                ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
+                damage,
+                knockback,
+                player.whoAmI,
+                0f,
+                player.direction);
+        }
+
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             damage.Base = BB_Balance.GetLeftClickBaseDamage();
-            damage *= player.GetModPlayer<BBEXPlayer>().TideDamageMultiplier;
+            damage *= player.GetModPlayer<BBTideValuePlayer>().TideDamageMultiplier;
         }
 
         private int GetCurrentRightClickDamage(Player player)
         {
             int baseDamage = BB_Balance.GetLeftClickBaseDamage();
             float scaledDamage = player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * RightClickDamageMultiplier);
-            return Math.Max(1, (int)(scaledDamage * player.GetModPlayer<BBEXPlayer>().TideDamageMultiplier));
+            return Math.Max(1, (int)(scaledDamage * player.GetModPlayer<BBTideValuePlayer>().TideDamageMultiplier));
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             Player player = Main.LocalPlayer;
-            BBEXPlayer tidePlayer = player.GetModPlayer<BBEXPlayer>();
+            BBTideValuePlayer tidePlayer = player.GetModPlayer<BBTideValuePlayer>();
             Dash_Trigger dashPlayer = player.GetModPlayer<Dash_Trigger>();
 
             string left = this.GetLocalizedValue("BB_Left");

@@ -67,8 +67,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 150*4;
-            Projectile.extraUpdates = 4;
+            Projectile.timeLeft = 150*3;
+            Projectile.extraUpdates = 3;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 9;
             Projectile.alpha = 0;

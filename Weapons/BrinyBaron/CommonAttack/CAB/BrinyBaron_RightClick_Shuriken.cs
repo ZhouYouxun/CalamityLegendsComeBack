@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private bool ForceHoming => Projectile.ai[0] >= 1f;
         private bool TideEmpowered => Main.player.IndexInRange(Projectile.owner) &&
                                       Main.player[Projectile.owner].active &&
-                                      Main.player[Projectile.owner].GetModPlayer<BBEXPlayer>().TideFull;
+                                      Main.player[Projectile.owner].GetModPlayer<BBTideValuePlayer>().TideFull;
         private ShurikenProfile shurikenProfile;
 
         private bool stuckInTarget;

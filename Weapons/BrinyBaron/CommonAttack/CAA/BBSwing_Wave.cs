@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -20,6 +20,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float DefaultFinalWaveScale = 2.35f;
         private const float WaveSizeFactor = 0.58f;
         private const float BaseVelocityLoss = 0.012f;
+        private const float JudgmentLikeInitialVelocityLoss = 0.052f;
+        private const float JudgmentLikeSettledVelocityLoss = 0.018f;
         private const float HitVelocityLossMultiplier = 1.5f;
         private const int BubbleSpawnFrameInterval = 5;
 
@@ -38,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 12;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
@@ -69,9 +71,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void AI()
         {
             lifeTimer++;
-            float velocityLoss = BaseVelocityLoss * (SlowdownBoostApplied ? HitVelocityLossMultiplier : 1f);
+            float velocityLoss = GetVelocityLoss();
             Projectile.velocity *= 1f - velocityLoss;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+            Projectile.Opacity = Utils.GetLerpValue(0f, 16f, lifeTimer, true) * Utils.GetLerpValue(0f, 34f, Projectile.timeLeft, true);
             Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.34f, 0.52f) * (1f + SpawnStage * 0.12f));
 
             SpawnFlightEffects(Projectile, lifeTimer, SpawnStage, StageIntensity, initialSpeed);
@@ -91,6 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnKill(int timeLeft)
         {
+            SpawnDissolveEffects(Projectile, SpawnStage, StageIntensity);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -157,7 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 texture,
                 Projectile.Center - Main.screenPosition,
                 null,
-                lightColor,
+                lightColor * Projectile.Opacity,
                 Projectile.rotation,
                 origin,
                 Projectile.scale,
@@ -177,6 +181,52 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.Center = center;
         }
 
+        private float GetVelocityLoss()
+        {
+            float baseLoss = BaseVelocityLoss;
+            if (SpawnStage == 0)
+            {
+                float settle = Utils.GetLerpValue(0f, 52f, lifeTimer, true);
+                settle = settle * settle * (3f - 2f * settle);
+                baseLoss = MathHelper.Lerp(JudgmentLikeInitialVelocityLoss, JudgmentLikeSettledVelocityLoss, settle);
+            }
+
+            return baseLoss * (SlowdownBoostApplied ? HitVelocityLossMultiplier : 1f);
+        }
+
+        private static void SpawnDissolveEffects(Projectile projectile, int spawnStage, float stageIntensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Color coreColor = Color.Lerp(new Color(92, 210, 255), Color.White, 0.35f);
+            int sparkCount = 8 + spawnStage * 2;
+            for (int i = 0; i < sparkCount; i++)
+            {
+                Vector2 offset = right * Main.rand.NextFloat(-projectile.width * 0.26f, projectile.width * 0.26f);
+                Vector2 velocity = -forward * Main.rand.NextFloat(0.8f, 2.8f) + right * Main.rand.NextFloat(-1.2f, 1.2f);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    projectile.Center + offset,
+                    velocity,
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.12f, 0.24f) * stageIntensity,
+                    coreColor));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                projectile.Center,
+                Vector2.Zero,
+                coreColor * 0.48f,
+                new Vector2(0.5f, 2.2f),
+                forward.ToRotation(),
+                0.12f,
+                0.18f,
+                14));
+        }
+
         private void TrySpawnTrackingBubbles()
         {
             if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner)
@@ -191,15 +241,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            // ����λ�ò�Ҫ̫���������˳��󷽺Ͳ�����ɢ����������Ļ˦���������ݡ�
+            // ????λ?ò???????????????????????????????????????????????
             Vector2 spawnPosition =
                 Projectile.Center -
                 forward * Main.rand.NextFloat(Projectile.width * 0.16f, Projectile.width * 0.38f) +
                 right * Main.rand.NextFloat(-Projectile.width * 0.34f, Projectile.width * 0.34f) +
                 Main.rand.NextVector2Circular(Projectile.width * 0.08f, Projectile.width * 0.08f);
 
-            // ��ֱ�ӳ��������ɣ������ȳ��˳�������ƫ��ȥ��
-            // �����������Լ����ӳٹ���׷�������ѹ켣ק��Ŀ�꣬���조�е�׷��������ȫ׷���ĸо���
+            // ?????????????????????????????????????
+            // ??????????????????????????????????????????е????????????????о???
             Vector2 baseDirection = (-forward).RotatedByRandom(Main.rand.NextFloat(0.35f, 0.95f));
             Vector2 velocity = (baseDirection + right * Main.rand.NextFloatDirection() * 0.18f)
                 .SafeNormalize(-forward) * Main.rand.NextFloat(4.8f, 7.2f);

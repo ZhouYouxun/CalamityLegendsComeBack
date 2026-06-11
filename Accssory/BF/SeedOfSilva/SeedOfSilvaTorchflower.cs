@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         protected override int FlowerSlot => 3;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_DBomb;
-        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/种子包/火炬花";
+        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/Torchflower";
 
         protected override void UpdateCommon(Player owner, BFAccessoryPlayer accessoryPlayer)
         {
@@ -28,20 +28,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         {
             Lighting.AddLight(Projectile.Center, new Vector3(0.48f, 0.16f, 0.04f));
 
-            NPC target = FindTarget(270f);
-            if (target is null || Projectile.owner != Main.myPlayer || Main.GameUpdateCount % 24 != (uint)(Projectile.identity % 24))
+            if (Projectile.owner != Main.myPlayer || Main.GameUpdateCount % 58 != (uint)(Projectile.identity % 58))
                 return;
 
-            int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.18f));
-            Vector2 velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.22f) * 6f;
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center,
-                velocity,
-                ModContent.ProjectileType<SeedOfSilvaTorchFlame>(),
-                damage,
-                0.2f,
-                Projectile.owner);
+            int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.22f));
+            SpawnTorchflowerBlast(damage, 0.5f);
         }
 
         public override bool TryTriggerTorchflowerExplosion(Projectile triggeringProjectile)
@@ -54,20 +45,39 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             if (Projectile.owner == Main.myPlayer)
             {
                 int damage = System.Math.Max(1, (int)(triggeringProjectile.damage * 0.55f));
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<BFLeafBombExplosion>(),
-                    damage,
-                    triggeringProjectile.knockBack * 0.4f,
-                    Projectile.owner,
-                    116f,
-                    1f);
+                SpawnTorchflowerBlast(damage, triggeringProjectile.knockBack * 0.4f);
             }
 
             EmitFlowerBurst(new Color(255, 138, 72), 8);
             return true;
+        }
+
+        private void SpawnTorchflowerBlast(int damage, float knockBack)
+        {
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BFLeafBombExplosion>(),
+                damage,
+                knockBack,
+                Projectile.owner,
+                150f,
+                1f);
+
+            for (int i = 0; i < 3; i++)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<SeedOfSilvaTorchShockwave>(),
+                    0,
+                    0f,
+                    Projectile.owner,
+                    70f + i * 34f,
+                    i * 6f);
+            }
         }
     }
 }

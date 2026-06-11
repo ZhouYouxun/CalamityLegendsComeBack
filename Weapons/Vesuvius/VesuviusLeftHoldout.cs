@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3;
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4;
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5;
 using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
+using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick;
 using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
@@ -185,14 +186,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 if (releaseStage >= 2)
                     FireVolcanicBombs();
 
+                if (releaseStage >= 2)
+                    FireLavaFlows();
+
                 if (releaseStage >= 3 && releaseTimer == 3)
                     FireMagmaPillars();
+
+                if (releaseStage >= 3)
+                    FirePyroclasticCollapses();
 
                 if (releaseStage >= 4)
                     FireHomingCinders();
 
+                if (releaseStage >= 4)
+                    FireVolcanicGases();
+
                 if (releaseStage >= 5 && releaseTimer == 5)
                     FireObsidianShards();
+
+                if (releaseStage >= 5)
+                    FireAshWinterFalls();
             }
 
             ReleaseMuzzleEffects();
@@ -288,6 +301,25 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Main.rand.NextFloat(1.08f, 1.36f));
         }
 
+        private void FireLavaFlows()
+        {
+            if (releaseTimer > 96 || releaseTimer % 16 != 8)
+                return;
+
+            float flowDistance = 86f + releaseTimer * 6.5f + Main.rand.NextFloat(-24f, 34f);
+            Vector2 flowCenter = GunTip + Direction * flowDistance + Vector2.UnitY * Main.rand.NextFloat(18f, 46f);
+            float poolSize = Main.rand.NextFloat(78f, 124f) + releaseStage * 7f;
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                flowCenter,
+                Vector2.Zero,
+                ModContent.ProjectileType<VesuviusLingeringLava>(),
+                Math.Max(1, (int)(Projectile.damage * 0.22f)),
+                0f,
+                Projectile.owner,
+                poolSize);
+        }
+
         private void FireMagmaPillars()
         {
             const int pillarCount = 6;
@@ -324,6 +356,43 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Projectile.owner);
         }
 
+        private void FirePyroclasticCollapses()
+        {
+            if (releaseTimer < 8 || releaseTimer > 92 || releaseTimer % 12 != 2)
+                return;
+
+            float directionSign = Math.Sign(Direction.X == 0f ? Owner.direction : Direction.X);
+            Vector2 collapseCenter = GunTip + Direction * Main.rand.NextFloat(180f, 520f) - Vector2.UnitY * Main.rand.NextFloat(260f, 390f);
+            Vector2 collapseVelocity = new(directionSign * Main.rand.NextFloat(1.6f, 4.2f), Main.rand.NextFloat(9.5f, 14.5f));
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                collapseCenter,
+                collapseVelocity,
+                ModContent.ProjectileType<VesuviusPyroclasticFlow>(),
+                Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                Projectile.knockBack * 0.32f,
+                Projectile.owner,
+                directionSign);
+        }
+
+        private void FireVolcanicGases()
+        {
+            if (releaseTimer < 10 || releaseTimer > 100 || releaseTimer % 20 != 6)
+                return;
+
+            Vector2 gasVelocity = Direction.RotatedBy(Main.rand.NextFloat(-0.28f, 0.28f)) * Main.rand.NextFloat(3.6f, 6.2f) - Vector2.UnitY * Main.rand.NextFloat(0.6f, 1.8f);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTip + Direction * Main.rand.NextFloat(44f, 92f) + Main.rand.NextVector2Circular(14f, 14f),
+                gasVelocity,
+                ModContent.ProjectileType<VesuviusVolcanicGasCloud>(),
+                Math.Max(1, (int)(Projectile.damage * 0.18f)),
+                0f,
+                Projectile.owner,
+                126f + releaseStage * 18f,
+                Direction.X >= 0f ? 1f : -1f);
+        }
+
         private void FireObsidianShards()
         {
             for (int i = 0; i < 3; i++)
@@ -339,6 +408,25 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     Projectile.owner,
                     i);
             }
+        }
+
+        private void FireAshWinterFalls()
+        {
+            if (releaseTimer > 108 || releaseTimer % 6 != 0)
+                return;
+
+            float wind = Direction.X >= 0f ? 1f : -1f;
+            Vector2 ashPosition = GunTip + Direction * Main.rand.NextFloat(120f, 620f) + new Vector2(Main.rand.NextFloat(-180f, 180f), Main.rand.NextFloat(-420f, -240f));
+            Vector2 ashVelocity = new Vector2(-wind * Main.rand.NextFloat(0.4f, 1.3f), Main.rand.NextFloat(1.1f, 2.4f));
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                ashPosition,
+                ashVelocity,
+                ModContent.ProjectileType<VesuviusAshFall>(),
+                Math.Max(1, (int)(Projectile.damage * 0.1f)),
+                0f,
+                Projectile.owner,
+                -wind);
         }
 
         private void SpawnMoltenAsteroid(Vector2 position, Vector2 velocity, int variant, float scale, bool noLargeExplosion, float damageMultiplier)

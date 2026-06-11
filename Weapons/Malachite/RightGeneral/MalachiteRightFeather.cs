@@ -1,6 +1,8 @@
 using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
+using CalamityLegendsComeBack.Accssory.MC.PeacockDart;
 using CalamityLegendsComeBack.Weapons.Malachite.RightGeneral.Stealth;
 using CalamityMod;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -94,6 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Timer++;
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
             Projectile.velocity *= 1.003f;
+            ApplyPeacockDartGravity(owner);
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, 0.08f, 0.42f, 0.16f);
             SpawnFlightDust();
@@ -298,6 +301,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         private void SpawnFlightDust()
         {
+            SpawnPlagueFlightVisuals();
+
             if (Main.rand.NextBool(2))
                 return;
 
@@ -312,9 +317,49 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             dust.noGravity = true;
         }
 
+        private void ApplyPeacockDartGravity(Player owner)
+        {
+            if (!owner.active || !owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
+                return;
+
+            Projectile.velocity.Y += 0.16f;
+            Projectile.velocity.X *= 0.996f;
+        }
+
+        private void SpawnPlagueFlightVisuals()
+        {
+            Lighting.AddLight(Projectile.Center, 0.07f, 0.15f, 0.01f);
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust toxicDust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextBool(30) ? DustID.Terra : DustID.GreenTorch,
+                    -Projectile.velocity * Main.rand.NextFloat(0.015f, 0.04f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    120,
+                    default,
+                    Main.rand.NextBool(30) ? Main.rand.NextFloat(0.9f, 1.05f) : Main.rand.NextFloat(0.3f, 0.42f));
+                toxicDust.noGravity = true;
+            }
+
+            if (Timer % 18f != 0f)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center,
+                Vector2.Zero,
+                (Main.rand.NextBool(3) ? Color.LimeGreen : Color.Green) * 0.42f,
+                Vector2.One,
+                Projectile.rotation,
+                Main.rand.NextFloat(0.045f, 0.09f),
+                0f,
+                15));
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Poisoned, 8 * 60);
+            target.AddBuff(ModContent.BuffType<Plague>(), 4 * 60);
 
             if (!StealthEnhanced || Projectile.owner != Main.myPlayer)
                 return;
@@ -342,6 +387,13 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     Projectile.knockBack * 0.35f,
                     Projectile.owner);
             }
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            Player owner = Main.player[Projectile.owner];
+            if (owner.active && owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
+                modifiers.SourceDamage *= 1.3f;
         }
 
         public override bool PreDraw(ref Color lightColor)

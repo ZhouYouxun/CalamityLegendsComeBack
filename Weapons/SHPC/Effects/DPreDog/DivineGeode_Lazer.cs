@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         public new string LocalizationCategory => "Projectiles.SHPC";
         private const int ExtraUpdateCount = 7;
         private const int LifetimePerExtraUpdate = 90;
-        private const int ForceConvergeFrame = 80;
+        private const int ForceConvergeFrame = 56;
         private const float LaunchSpeed = 17f;
         private const float PreConvergeLeftTurnRadians = -0.034906586f;
         private int timer;

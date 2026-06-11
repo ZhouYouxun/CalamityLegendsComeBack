@@ -112,6 +112,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             for (int i = 0; i < activeEffects.Length; i++)
                 activeEffects[i].AI(this, Owner);
 
+            for (int i = 0; i < activeEffects.Length; i++)
+                activeEffects[i].UpdateInjectedEnergy(this, Owner);
+
             if (Main.rand.NextBool(2))
             {
                 Dust trailDust = Dust.NewDustPerfect(
@@ -180,6 +183,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             for (int i = 0; i < activeEffects.Length; i++)
                 activeEffects[i].PostDraw(this, Owner, Main.spriteBatch);
+
+            for (int i = 0; i < activeEffects.Length; i++)
+                activeEffects[i].DrawInjectedEnergy(this, Owner, Main.spriteBatch);
 
             return false;
         }

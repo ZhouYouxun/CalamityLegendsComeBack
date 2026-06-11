@@ -52,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             // 普通 SHPC 光球只负责转换成一条受重力影响的深渊鲨鱼，液滴会在鲨鱼死亡时喷出。
             if (projectile.owner == Main.myPlayer)
             {
-                Vector2 sharkVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * 13.5f;
+                Vector2 sharkVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * 22.275f;
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center + sharkVelocity.SafeNormalize(Vector2.UnitX) * 12f,

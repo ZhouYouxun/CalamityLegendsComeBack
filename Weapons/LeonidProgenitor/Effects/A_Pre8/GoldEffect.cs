@@ -10,6 +10,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.A_Pre8
     {
         public override int EffectID => 7;
 
+        protected override int EnergyVariant => 2;
+        protected override float EnergySizeFactor => 0.92f;
+        protected override int EnergyMoteCount => 3;
+        protected override int EnergyDustInterval => 12;
+
         public override void OnHitNPC(LeonidCometSmall meteor, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.myPlayer != meteor.Projectile.owner || !Main.rand.NextBool(10))

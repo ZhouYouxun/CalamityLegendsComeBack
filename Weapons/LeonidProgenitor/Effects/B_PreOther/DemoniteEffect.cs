@@ -7,6 +7,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.B_PreOther
     {
         public override int EffectID => 9;
 
+        protected override int EnergyVariant => 5;
+        protected override float EnergySizeFactor => 0.9f;
+        protected override int EnergyMoteCount => 3;
+        protected override int EnergyDustInterval => 12;
+
         public override void OnHitNPC(LeonidCometSmall meteor, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
             SpawnWisps(meteor, target, false);

@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = 90;
             Projectile.extraUpdates = 12;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;

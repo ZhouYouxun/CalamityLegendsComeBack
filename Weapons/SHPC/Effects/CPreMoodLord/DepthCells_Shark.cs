@@ -72,6 +72,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             target.AddBuff(ModContent.BuffType<CrushDepth>(), 240);
             target.AddBuff(ModContent.BuffType<Eutrophication>(), 240);
+            Projectile.ai[0] = target.whoAmI + 1;
+            Projectile.netUpdate = true;
         }
 
         public override void OnKill(int timeLeft)
@@ -100,6 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Vector2 dropVelocity = new(
                     Main.rand.NextFloat(-5.8f, 5.8f),
                     -Main.rand.NextFloat(6.8f, 13.8f));
+                dropVelocity *= 0.6f;
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -108,7 +111,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     ModContent.ProjectileType<DepthCells_Drop>(),
                     (int)(Projectile.damage * 0.9f),
                     Projectile.knockBack,
-                    Projectile.owner);
+                    Projectile.owner,
+                    0f,
+                    0f,
+                    Projectile.ai[0]);
             }
         }
 

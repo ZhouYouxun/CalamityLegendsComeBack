@@ -101,6 +101,56 @@ Mods: {
 					While holding SunderBlade, dashing releases up to 3 lightning bolts based on nearby SunderBlade swords, with a 15-second cooldown
 					'''
 			}
+
+			AdrenalineInjector: {
+				DisplayName: Adrenaline Injector
+				Tooltip: ""
+			}
+
+			BottledAircraftCarrier: {
+				DisplayName: Bottled Aircraft Carrier
+				Tooltip: ""
+			}
+
+			BottledBlackPearl: {
+				DisplayName: Bottled Black Pearl
+				Tooltip: ""
+			}
+
+			BottledBoat: {
+				DisplayName: Bottled Boat
+				Tooltip: ""
+			}
+
+			BottledRaft: {
+				DisplayName: Bottled Raft
+				Tooltip: ""
+			}
+
+			DrinkingFountain: {
+				DisplayName: Drinking Fountain
+				Tooltip: ""
+			}
+
+			TideRadar: {
+				DisplayName: Tide Radar
+				Tooltip: ""
+			}
+
+			CeruleanShield: {
+				DisplayName: Cerulean Shield
+				Tooltip: ""
+			}
+
+			LostGarment: {
+				DisplayName: Lost Garment
+				Tooltip: ""
+			}
+
+			VortexPortal: {
+				DisplayName: Vortex Portal
+				Tooltip: ""
+			}
 		}
 
 		Buffs: {
@@ -137,6 +187,9 @@ Mods: {
 				AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
+
+			BBDrinkingFountainOrb.DisplayName: B B Drinking Fountain Orb
+			SeedOfSilvaTorchShockwave.DisplayName: Seed Of Silva Torch Shockwave
 		}
 
 		Cooldowns: {

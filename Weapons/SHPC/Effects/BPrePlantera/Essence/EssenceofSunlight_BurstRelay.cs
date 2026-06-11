@@ -125,7 +125,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
             SoundEngine.PlaySound(SoundID.Item94 with
             {
-                Volume = 0.12f, // Reduced by 50% (originally 0.24f)
+                Volume = 0.084f,
                 Pitch = 0.25f + shotIndex * 0.025f,
                 PitchVariance = 0.06f,
                 MaxInstances = 6

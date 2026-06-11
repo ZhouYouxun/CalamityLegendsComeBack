@@ -22,6 +22,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private const float GravityDelay = 10f;
         private const float GravityStrength = 0.055f;
+        private const float HomingStartDistance = 15f * 16f;
+        private const float HomingRange = 920f;
+        private const float MaxHomingSpeed = 9.9f;
+        private const float HomingInertia = 27f;
+        private const float NoTargetDamping = 0.992f;
+        private const float WanderingTurnStrength = 0.006f;
         private const int StickTime = 150;
         private const int StuckDamageInterval = 24;
         private const float StuckDamageMultiplier = 0.65f;
@@ -29,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private bool IsStuck => Projectile.ai[0] == 1f;
         private int spreadDust;
+        private float traveledDistance;
         private Color waterColor = Color.DeepSkyBlue;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -46,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.friendly = true;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.timeLeft = 360;
+            Projectile.timeLeft = 180;
             Projectile.penetrate = 3;
             Projectile.extraUpdates = 2;
             Projectile.DamageType = DamageClass.Magic;
@@ -69,9 +76,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             }
 
             Projectile.localAI[0]++;
+            traveledDistance += Projectile.velocity.Length();
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
-            if (Projectile.localAI[0] > GravityDelay)
+            bool homingActive = traveledDistance >= HomingStartDistance && HomeTowardTarget();
+
+            if (!homingActive && Projectile.localAI[0] > GravityDelay)
             {
                 float sway = (float)System.Math.Sin((Projectile.identity * 0.6f) + Projectile.localAI[0] * 0.17f) * 0.012f;
                 Projectile.velocity = Projectile.velocity.RotatedBy(sway);
@@ -81,6 +91,73 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             Lighting.AddLight(Projectile.Center, Color.Lerp(AbyssToxic, AbyssCyan, 0.35f).ToVector3() * 0.55f);
             SpawnFlightEffects();
+        }
+
+        private bool HomeTowardTarget()
+        {
+            NPC target = FindHomingTarget();
+            if (target is null)
+            {
+                FreeDrift(NoTargetDamping);
+                return false;
+            }
+
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            if (currentSpeed < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 4f;
+
+            Vector2 currentDirection = currentVelocity.SafeNormalize(Vector2.UnitX);
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, closePressure);
+            float targetSpeed = MathHelper.Lerp(6.3f, MaxHomingSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+            float sideSway = (float)System.Math.Sin((Projectile.localAI[0] + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaxHomingSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxHomingSpeed;
+
+            return true;
+        }
+
+        private void FreeDrift(float damping)
+        {
+            float wander = (float)System.Math.Sin((Projectile.localAI[0] + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
+        }
+
+        private NPC FindHomingTarget()
+        {
+            int preferredTargetIndex = (int)Projectile.ai[2] - 1;
+            if (Main.npc.IndexInRange(preferredTargetIndex))
+            {
+                NPC preferredTarget = Main.npc[preferredTargetIndex];
+                if (preferredTarget.CanBeChasedBy(Projectile) && Projectile.Distance(preferredTarget.Center) <= HomingRange)
+                    return preferredTarget;
+            }
+
+            NPC bestTarget = null;
+            float bestDistance = HomingRange;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)

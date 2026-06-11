@@ -89,9 +89,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CosmicDischarge_Icebound");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOverlay";
 
         public override Color OutlineColor => new(22, 48, 70);
         public override Color CooldownStartColor => CosmicDischargeCommon.FrostDarkColor;
@@ -151,9 +151,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CosmicDischarge_QuickDraw");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOverlay";
 
         public override Color OutlineColor => new(22, 48, 70);
         public override Color CooldownStartColor => CosmicDischargeCommon.FrostDarkColor;

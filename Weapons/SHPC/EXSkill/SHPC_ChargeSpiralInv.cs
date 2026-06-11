@@ -21,8 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private const int Lifetime = 96;
-        internal const float MaxOrbitRadius = SHPC_SLINV.SpiralAmplitude * 1.2f;
-        private const float FinalRadius = 18f;
+        internal const float MaxOrbitRadius = SHPC_SLINV.SpiralAmplitude * 0.52f;
+        private const float FinalRadius = 10f;
 
         private bool initialized;
         private float angularVelocity;
@@ -62,9 +62,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public override void OnSpawn(IEntitySource source)
         {
             initialized = false;
-            angularVelocity = Main.rand.NextFloat(0.105f, 0.175f) * (Main.rand.NextBool() ? 1f : -1f);
+            angularVelocity = Main.rand.NextFloat(0.21f, 0.35f) * (Main.rand.NextBool() ? 1f : -1f);
             radialPulseOffset = Main.rand.NextFloat(MathHelper.TwoPi);
-            radialPulseSpeed = Main.rand.NextFloat(1.15f, 1.85f);
+            radialPulseSpeed = Main.rand.NextFloat(1.8f, 2.6f);
             harmonicPhaseOffset = Main.rand.NextFloat(MathHelper.TwoPi);
             trailColorA = Main.rand.NextBool() ? new Color(90, 200, 255) : new Color(120, 235, 255);
             trailColorB = Color.Lerp(trailColorA, Color.White, 0.42f);
@@ -92,18 +92,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             float anchorRadius = MathHelper.Lerp(InitialRadius, FinalRadius, inwardProgress);
             float pulse = (float)System.Math.Sin(progress * MathHelper.TwoPi * radialPulseSpeed + radialPulseOffset);
-            float rose = (float)System.Math.Sin(OrbitAngle * 3f + harmonicPhaseOffset);
+            float rose = (float)System.Math.Sin(OrbitAngle * 2f + harmonicPhaseOffset) * (float)System.Math.Cos(progress * MathHelper.TwoPi);
             float radius = MathHelper.Clamp(
-                anchorRadius * (0.94f + 0.06f * pulse) + rose * MaxOrbitRadius * 0.055f * (1f - inwardProgress),
+                anchorRadius * (0.97f + 0.03f * pulse) + rose * MaxOrbitRadius * 0.026f * (1f - inwardProgress),
                 FinalRadius,
                 MaxOrbitRadius);
             Vector2 axis = ownerProj.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 origin = ownerProj.Center + axis * 56f;
 
-            float angularTempo = 1f + 0.22f * (float)System.Math.Sin(OrbitAngle * 2f - harmonicPhaseOffset);
+            float angularTempo = 1f + 0.12f * (float)System.Math.Sin(OrbitAngle * 2f - harmonicPhaseOffset);
             OrbitAngle += angularVelocity * MathHelper.Lerp(1.1f, 2.4f, progress) * angularTempo;
 
-            float angleRipple = 0.18f * (float)System.Math.Sin(OrbitAngle * 2f + radialPulseOffset) * (1f - inwardProgress * 0.55f);
+            float angleRipple = 0.07f * (float)System.Math.Sin(OrbitAngle * 2f + radialPulseOffset) * (1f - inwardProgress * 0.55f);
             Vector2 nextCenter = origin + (OrbitAngle + angleRipple).ToRotationVector2() * radius;
 
             if (!initialized)
@@ -134,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             float tipFade = Utils.GetLerpValue(1f, 0.62f, completionRatio, true);
             float rootGrow = (float)System.Math.Sin(Utils.GetLerpValue(0f, 0.22f, completionRatio, true) * MathHelper.PiOver2);
-            return MathHelper.Lerp(3f, 22f, rootGrow) * tipFade;
+            return MathHelper.Lerp(1.5f, 11f, rootGrow) * tipFade;
         }
 
         private Color PrimitiveColorFunction(float completionRatio, Vector2 vertexPos)

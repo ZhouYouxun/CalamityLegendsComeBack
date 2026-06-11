@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod.Cooldowns;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,13 +9,13 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using static CalamityMod.CalamityUtils;
 
-namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
+namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
 {
-    internal class BBEXCoolDown : CooldownHandler
+    internal class BBTideValueCooldown : CooldownHandler
     {
         private float AdjustedCompletion =>
-            instance.player.GetModPlayer<BBEXPlayer>().EXValue / (float)BBEXPlayer.EXMax;
-        private int DisplayValue => instance.player.GetModPlayer<BBEXPlayer>().EXDisplayValue;
+            instance.player.GetModPlayer<BBTideValuePlayer>().TideChargeValue / (float)BBTideValuePlayer.TideChargeMax;
+        private int DisplayValue => instance.player.GetModPlayer<BBTideValuePlayer>().TideDisplayValue;
         private Color TextColor => Color.AliceBlue;
         private Color TextBorderColor => Color.Black;
 
@@ -28,9 +28,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.BrinyBaron_Tide");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/EXSkill/BBEXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOverlay";
 
         public override Color OutlineColor => Color.DarkSlateGray;
 

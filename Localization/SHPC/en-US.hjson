@@ -248,7 +248,7 @@ Mods: {
 			SHPCAmmo29: Bloodstone Core absorbs player life to empower itself, releasing healing and damaging orbs after exploding.
 			SHPCAmmo30: Ruinous Soul releases homing souls and orbiting/returning souls.
 			SHPCAmmo31: Ectoplasm releases a large number of homing souls along its path and upon hitting enemies.
-			SHPCAmmo32: Dark Plasma generates a miniature dark core that pulls enemies in before exploding.
+			SHPCAmmo32: Dark Plasma generates a miniature dark core that actively tracks enemies, pulls them in, and ignores defense and damage reduction below 95%.
 			SHPCAmmo33: Twisting Nether releases multiple void blades that pierce through many enemies.
 			SHPCAmmo34: Endothermic Energy creates a liquid nitrogen zone and releases a large number of ice spikes.
 			SHPCAmmo35: Nightmare Fuel splits into nightmare arcs that continuously strike enemies.
@@ -272,6 +272,7 @@ Mods: {
 				StormlionMandible_ARC.DisplayName: Stormlion Arc
 				BossSoulofMight_Ball.DisplayName: Soul of Might Orb
 				BossSoulofMight_EXP.DisplayName: Soul of Might Burst
+				BossSoulofFright_SecondarySoul.DisplayName: Soul of Fright Secondary Soul
 				TitanHeart_BigINV.DisplayName: Titan Heart Phantom Core
 				EssenceofHavoc_INV.DisplayName: Essence of Havoc Shockwave
 				EssenceofSnow_N2.DisplayName: Essence of Snow Nitrogen

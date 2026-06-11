@@ -8,6 +8,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.E_Final5
     {
         public override int EffectID => 25;
 
+        protected override int EnergyVariant => 7;
+        protected override float EnergySizeFactor => 0.92f;
+        protected override int EnergyMoteCount => 4;
+        protected override int EnergyDustInterval => 12;
+        protected override float EnergyOpacity => 0.24f;
+
         public override void OnSpawn(LeonidCometSmall meteor, Player owner)
         {
             if (meteor.HasFlag("spectre_clone") || Main.myPlayer != meteor.Projectile.owner)

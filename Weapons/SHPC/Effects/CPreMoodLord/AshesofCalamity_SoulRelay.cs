@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            NPC target = FindTarget(3200f, forward);
+            NPC target = FindTarget(20f * 16f, forward);
             float wave = (float)Math.Sin(shotIndex * 1.83f) * MathHelper.Lerp(0.26f, 0.06f, shotIndex / (float)(ShotCount - 1));
             Vector2 direction = forward.RotatedBy(wave);
 
@@ -233,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Timer++;
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            NPC target = FindTarget(4200f, currentDirection);
+            NPC target = FindTarget(20f * 16f, currentDirection);
             if (target is not null)
             {
                 Vector2 desiredDirection = (target.Center + target.velocity * 12f - Projectile.Center).SafeNormalize(currentDirection);

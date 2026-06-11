@@ -66,6 +66,7 @@ Mods: {
 				VesuviusAshFall.DisplayName: Volcanic Ash
 				VesuviusLandingQuake.DisplayName: Landing Quake
 				VesuviusEXWeapon.DisplayName: Supervolcanic Eruption
+				VesuviusVolcanicGasCloud.DisplayName: Vesuvius Volcanic Gas Cloud
 			}
 		}
 

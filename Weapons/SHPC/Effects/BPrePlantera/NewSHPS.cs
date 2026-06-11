@@ -92,7 +92,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (Projectile.ai[2] == 2f)
                 themeColor = new Color(96, 255, 156);
             if (Projectile.ai[2] == 3f)
-                themeColor = Main.rand.NextBool() ? new Color(255, 210, 64) : new Color(44, 28, 8);
+                themeColor = presetIndex == 5
+                    ? new Color(96, 255, 156)
+                    : Main.rand.NextBool() ? new Color(255, 210, 64) : new Color(44, 28, 8);
 
             if (presetIndex == 4)
             {

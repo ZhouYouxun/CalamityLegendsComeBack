@@ -255,7 +255,7 @@ Mods: {
 			SHPCAmmo29: 血石核心会吸收玩家生命以此来强化自身，并在爆炸后释放治疗伤害光球
 			SHPCAmmo30: 毁灭之灵会释放追踪灵魂和回旋灵魂
 			SHPCAmmo31: 灵质会在路径上和命中敌人时释放大量追踪灵魂
-			SHPCAmmo32: 暗离子体会制造小型暗核，将敌人吸入后裂爆
+			SHPCAmmo32: 暗离子体会制造主动追踪敌人的小型暗核，将敌人吸入后裂爆，并无视防御与95%以下伤害减免
 			SHPCAmmo33: 扭曲虚空会释放多发虚空刀锋，穿透大量敌人
 			SHPCAmmo34: 恒温能量会制造一片液氮区域，并释放大量冰刺
 			SHPCAmmo35: 梦魇魔能会分裂出梦魇弧光，持续命中敌人
@@ -279,6 +279,7 @@ Mods: {
 				StormlionMandible_ARC.DisplayName: 风暴狮颚电弧
 				BossSoulofMight_Ball.DisplayName: 力量之魂能量球
 				BossSoulofMight_EXP.DisplayName: 力量之魂爆裂
+				BossSoulofFright_SecondarySoul.DisplayName: 恐惧之魂二级魂弹
 				TitanHeart_BigINV.DisplayName: 泰坦之心幻核
 				EssenceofHavoc_INV.DisplayName: 浩劫精华冲击波
 				EssenceofSnow_N2.DisplayName: 冰雪精华氮流

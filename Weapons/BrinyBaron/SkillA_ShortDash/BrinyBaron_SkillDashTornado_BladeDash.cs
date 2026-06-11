@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using CalamityMod.Enums;
 using Microsoft.Xna.Framework;
@@ -48,6 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private static readonly float[] ShortDashSpeedMultipliers = { 1.05f, 1.12f, 1.2f, 1.32f, 1.45f };
         private static readonly float[] ShortDashContactDamageMultipliers = { 1.05f, 1.1f, 1.2f, 1.35f, 1.55f };
         private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
+        private bool CeruleanShieldMode => Projectile.ai[0] == 2f;
 
         public override void SetStaticDefaults()
         {
@@ -270,10 +271,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Player owner = Main.player[Projectile.owner];
             if (Main.myPlayer == Projectile.owner)
-                owner.GetModPlayer<BBEXPlayer>().AddTide();
+                owner.GetModPlayer<BBTideValuePlayer>().AddTide();
 
             if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
                 owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ClearCooldown();
+
+            if (CeruleanShieldMode)
+            {
+                SpawnCeruleanShieldExplosion(target.Center, GetReliableDashDirection());
+                Projectile.netUpdate = true;
+                return;
+            }
 
             if (!enemyReboundUnlocked)
             {
@@ -402,7 +410,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 return;
 
             tileContactTideGranted = true;
-            owner.GetModPlayer<BBEXPlayer>().AddTide();
+            owner.GetModPlayer<BBTideValuePlayer>().AddTide();
             Projectile.netUpdate = true;
         }
 
@@ -451,14 +459,37 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     ModContent.ProjectileType<BrinyBaron_DashWaterPillar>(),
                     pillarDamage,
                     0f,
-                    Projectile.owner,
-                    Main.rand.NextFloat(0.86f, 1.22f),
-                    i == 2 ? 1f : 0f);
+                Projectile.owner,
+                Main.rand.NextFloat(0.86f, 1.22f),
+                i == 2 ? 1f : 0f);
+            }
+        }
+
+        private void SpawnCeruleanShieldExplosion(Vector2 impactCenter, Vector2 dashDirection)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 baseDirection = dashDirection.SafeNormalize(lockedDirection);
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = baseDirection.RotatedByRandom(0.9f) * Main.rand.NextFloat(2.4f, 6.2f);
+                Dust foam = Dust.NewDustPerfect(
+                    impactCenter + Main.rand.NextVector2Circular(18f, 18f),
+                    DustID.Water,
+                    velocity,
+                    100,
+                    new Color(90, 210, 255),
+                    Main.rand.NextFloat(0.85f, 1.3f));
+                foam.noGravity = true;
             }
         }
 
         private void TryFireDashProjectile(Player owner, Vector2 dashDirection)
         {
+            if (CeruleanShieldMode)
+                return;
+
             if (Main.myPlayer != Projectile.owner)
                 return;
 

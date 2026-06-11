@@ -137,6 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             proj.width = radius;
             proj.height = radius;
             SpawnBloodstoneHealOrbs(projectile, target);
+            HealOwner(owner, center, 30);
 
             // ================= 统计范围内敌人数量 =================
             int enemyCount = 0;
@@ -156,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             // 👉 单体 = 负收益，多目标 = 正收益
             int healAmount = 0;
 
-            if (empowered)
+            if (empowered && enemyCount < 0)
             {
                 if (enemyCount <= 1)
                 {
@@ -209,6 +210,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     );
                     d.noGravity = true;
                 }
+            }
+        }
+
+        private static void HealOwner(Player owner, Vector2 center, int healAmount)
+        {
+            if (owner == null || !owner.active || owner.dead || healAmount <= 0)
+                return;
+
+            owner.statLife = System.Math.Min(owner.statLifeMax2, owner.statLife + healAmount);
+            owner.HealEffect(healAmount);
+
+            Vector2 dir = (owner.Center - center).SafeNormalize(Vector2.UnitY);
+            for (int j = 0; j < 12; j++)
+            {
+                float t = j / 12f;
+                Vector2 pos = Vector2.Lerp(center, owner.Center, t);
+                Dust d = Dust.NewDustPerfect(
+                    pos,
+                    Main.rand.NextBool(2) ? DustID.Blood : DustID.LifeDrain,
+                    dir * Main.rand.NextFloat(0.8f, 3f),
+                    0,
+                    Color.Lerp(new Color(255, 120, 120), new Color(200, 20, 20), Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.85f, 1.35f));
+                d.noGravity = true;
             }
         }
 
@@ -369,7 +394,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     target.Center,
                     velocity,
                     ModContent.ProjectileType<BloodstoneCore_BloodOrb>(),
-                    20,
+                    20 * 22,
                     0f,
                     projectile.owner);
             }

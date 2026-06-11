@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         {
             // ===== 1. 光照（保持不变逻辑，但写法更干净）=====
             float lightFactor = Main.rand.NextFloat(0.9f, 1.1f) * Main.essScale;
-            Lighting.AddLight(Projectile.Center, 5f * lightFactor, 1f * lightFactor, 4f * lightFactor);
+            Lighting.AddLight(Projectile.Center, 0.45f * lightFactor, 0.7f * lightFactor, 1.9f * lightFactor);
 
             // ===== 2. 生命周期控制 =====
             float spawnCount = 25f;
@@ -93,6 +93,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 Dust dust = Main.dust[dustIndex];
                 dust.noGravity = true;
+                dust.color = Main.rand.NextBool(3)
+                    ? new Color(36, 78, 190)
+                    : new Color(88, 150, 255);
+                dust.scale *= 0.58f;
 
                 // ===== 中心轻微扩散（保持原感觉，但更干净）=====
                 dust.position += Main.rand.NextVector2Circular(10f, 10f);

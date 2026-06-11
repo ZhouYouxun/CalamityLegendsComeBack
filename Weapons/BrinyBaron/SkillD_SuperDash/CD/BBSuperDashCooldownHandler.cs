@@ -16,6 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         // ===== 这里负责大招冷却图标的圆环显示 =====
         private BBSuperDashCooldownPlayer CooldownPlayer => instance.player.GetModPlayer<BBSuperDashCooldownPlayer>();
         private float AdjustedCompletion => CooldownPlayer.CooldownCompletion;
+        private int DisplayValue => (int)Math.Round(AdjustedCompletion * 100f);
         private Color TextColor => Color.LightGoldenrodYellow;
         private Color TextBorderColor => Color.Black;
 
@@ -23,8 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         public override bool CanTickDown => false;
 
         public override bool ShouldDisplay =>
-            instance.player.HeldItem.type == ModContent.ItemType<NewLegendBrinyBaron>() &&
-            CooldownPlayer.IsCoolingDown;
+            instance.player.HeldItem.type == ModContent.ItemType<NewLegendBrinyBaron>();
 
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.BrinyBaron_SuperDash");
@@ -58,8 +58,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             DrawBorderStringEightWay(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                Math.Max(1, (int)Math.Ceiling(CooldownPlayer.RemainingFrames / 60f)).ToString(),
-                position + new Vector2(-6f, 10f) * scale,
+                DisplayValue.ToString(),
+                position + new Vector2(DisplayValue > 9 ? -11f : -6f, 10f) * scale,
                 TextColor,
                 TextBorderColor,
                 scale);
@@ -91,8 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             DrawBorderStringEightWay(
                 spriteBatch,
                 FontAssets.MouseText.Value,
-                Math.Max(1, (int)Math.Ceiling(CooldownPlayer.RemainingFrames / 60f)).ToString(),
-                position + new Vector2(-6f, 10f) * scale,
+                DisplayValue.ToString(),
+                position + new Vector2(DisplayValue > 9 ? -11f : -6f, 10f) * scale,
                 TextColor,
                 TextBorderColor,
                 scale);

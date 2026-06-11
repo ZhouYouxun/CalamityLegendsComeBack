@@ -9,6 +9,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
     {
         public override int EffectID => 33;
 
+        protected override int EnergyVariant => 6;
+        protected override float EnergySizeFactor => 1.08f;
+        protected override int EnergyMoteCount => 4;
+        protected override int EnergyDustInterval => 10;
+        protected override float EnergyOpacity => 0.3f;
+
         public override void OnSpawn(LeonidCometSmall meteor, Player owner)
         {
             meteor.EnableSimpleHoming(0.04f, 820f);

@@ -102,6 +102,56 @@ Mods: {
 					手持青霆剑冲刺后，根据附近青霆剑数量最多释放3道雷击，冷却15秒
 					'''
 			}
+
+			AdrenalineInjector: {
+				// DisplayName: Adrenaline Injector
+				// Tooltip: ""
+			}
+
+			BottledAircraftCarrier: {
+				// DisplayName: Bottled Aircraft Carrier
+				// Tooltip: ""
+			}
+
+			BottledBlackPearl: {
+				// DisplayName: Bottled Black Pearl
+				// Tooltip: ""
+			}
+
+			BottledBoat: {
+				// DisplayName: Bottled Boat
+				// Tooltip: ""
+			}
+
+			BottledRaft: {
+				// DisplayName: Bottled Raft
+				// Tooltip: ""
+			}
+
+			DrinkingFountain: {
+				// DisplayName: Drinking Fountain
+				// Tooltip: ""
+			}
+
+			TideRadar: {
+				// DisplayName: Tide Radar
+				// Tooltip: ""
+			}
+
+			CeruleanShield: {
+				// DisplayName: Cerulean Shield
+				// Tooltip: ""
+			}
+
+			LostGarment: {
+				// DisplayName: Lost Garment
+				// Tooltip: ""
+			}
+
+			VortexPortal: {
+				// DisplayName: Vortex Portal
+				// Tooltip: ""
+			}
 		}
 
 		Buffs: {
@@ -138,6 +188,9 @@ Mods: {
 				AzureThunderHarmonyBar.DisplayName: 破天刃苍穹条
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
+
+			// BBDrinkingFountainOrb.DisplayName: B B Drinking Fountain Orb
+			// SeedOfSilvaTorchShockwave.DisplayName: Seed Of Silva Torch Shockwave
 		}
 
 		Cooldowns: {

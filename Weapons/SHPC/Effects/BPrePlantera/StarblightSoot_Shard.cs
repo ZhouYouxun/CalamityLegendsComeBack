@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod;
 using CalamityMod.Dusts;
@@ -40,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 3;
+            Projectile.penetrate = 1;
             Projectile.timeLeft = 140;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
@@ -51,6 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnSpawn(IEntitySource source)
         {
             Projectile.scale = Main.rand.NextFloat(0.72f, 1.05f) * 1.5f;
+            Projectile.alpha = 0;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.24f, Pitch = 0.2f, PitchVariance = 0.12f, MaxInstances = 6 }, Projectile.Center);
         }
@@ -118,8 +120,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 if (Main.projectile.IndexInRange(explosionIndex))
                 {
                     Projectile explosion = Main.projectile[explosionIndex];
-                    explosion.width = 50;
-                    explosion.height = 50;
+                    int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
+                    explosion.width = explosionSize;
+                    explosion.height = explosionSize;
                     explosion.Center = Projectile.Center;
                     explosion.netUpdate = true;
                 }
@@ -158,33 +161,53 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         private void SpawnOrbitSparks()
         {
-            // Align the orbit particles with the projectile's rotation so they stay aligned with the star's points
+            // 让环绕粒子与弹幕旋转保持一致
             float spinPhase = Projectile.rotation;
             float orbitRadius = 9f;
-            Color sparkColor = Color.Lerp(new Color(255, 130, 68), new Color(92, 205, 255), 0.35f) * 0.46f;
+
+            Color sparkColor =
+                Color.Lerp(
+                    new Color(255, 130, 68),
+                    new Color(92, 205, 255),
+                    0.35f) * 0.46f;
+
+            // 补偿一帧弹幕位移
+            Vector2 positionCompensation = Projectile.velocity;
 
             for (int i = 0; i < 4; i++)
             {
                 float angle = spinPhase + MathHelper.PiOver2 * i;
-                Vector2 radialDirection = angle.ToRotationVector2();
-                Vector2 sparkCenter = Projectile.Center + radialDirection * orbitRadius;
-                Vector2 finalVelocity = radialDirection.RotatedBy(MathHelper.PiOver2) * 1.05f;
-                float extraRot = radialDirection.ToRotation() - finalVelocity.ToRotation();
 
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    sparkCenter,
-                    finalVelocity,
-                    GlowBladeTexture,
-                    false,
-                    2,
-                    0.08f,
-                    sparkColor,
-                    new Vector2(0.28f, 0.58f),
-                    glowCenter: true,
-                    shrinkSpeed: 1.2f,
-                    glowCenterScale: 0.62f,
-                    glowOpacity: 0.38f,
-                    extraRotation: extraRot));
+                Vector2 radialDirection = angle.ToRotationVector2();
+
+                // 提前生成，避免视觉上落后于核心
+                Vector2 sparkCenter =
+                    Projectile.Center +
+                    radialDirection * orbitRadius +
+                    positionCompensation;
+
+                Vector2 finalVelocity =
+                    radialDirection.RotatedBy(MathHelper.PiOver2) * 1.05f;
+
+                float extraRot =
+                    radialDirection.ToRotation() -
+                    finalVelocity.ToRotation();
+
+                GeneralParticleHandler.SpawnParticle(
+                    new CustomSpark(
+                        sparkCenter,
+                        finalVelocity,
+                        GlowBladeTexture,
+                        false,
+                        2,
+                        0.08f,
+                        sparkColor,
+                        new Vector2(0.28f, 0.58f),
+                        glowCenter: true,
+                        shrinkSpeed: 1.2f,
+                        glowCenterScale: 0.62f,
+                        glowOpacity: 0.38f,
+                        extraRotation: extraRot));
             }
         }
 

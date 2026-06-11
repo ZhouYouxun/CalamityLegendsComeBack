@@ -274,7 +274,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                     Color.Lerp(mainColor, accentColor, 0.35f) * 0.24f,
                     Projectile.rotation + MathHelper.PiOver2,
                     sparkTexture.Size() * 0.5f,
-                    new Vector2(0.02f, 0.095f + 0.035f * pulse) * Projectile.scale,
+                    new Vector2(0.03f, (0.095f + 0.035f * pulse) * 0.5f) * Projectile.scale,
                     SpriteEffects.None,
                     0);
             }

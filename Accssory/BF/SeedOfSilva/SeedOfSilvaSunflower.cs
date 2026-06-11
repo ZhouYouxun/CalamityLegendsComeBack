@@ -6,6 +6,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
     {
         protected override int FlowerSlot => 0;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_ABreak;
-        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/种子包/向日葵";
+        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/Sunflower";
     }
 }

@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = 24;
+            Projectile.penetrate = 17;
             Projectile.timeLeft = 100;
             Projectile.extraUpdates = 4;
             Projectile.Opacity = 1f;

@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.MC.PeacockBox;
 using CalamityLegendsComeBack.Weapons.Malachite.passive;
 using CalamityMod;
 using CalamityMod.CalPlayer;
@@ -125,28 +126,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (Player.whoAmI != Main.myPlayer || Player.dead)
                 return;
 
-            Item malachiteItem = null;
-            bool isHeld = false;
-
-            if (Player.HeldItem != null && Player.HeldItem.type == ModContent.ItemType<Malachite>())
-            {
-                malachiteItem = Player.HeldItem;
-                isHeld = true;
-            }
-            else
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    Item item = Player.inventory[i];
-                    if (item != null && item.type == ModContent.ItemType<Malachite>())
-                    {
-                        malachiteItem = item;
-                        break;
-                    }
-                }
-            }
-
-            if (malachiteItem == null)
+            bool peacockBoxEquipped = Player.GetModPlayer<PeacockBoxPlayer>().PeacockBoxEquipped;
+            Item malachiteItem = FindMalachiteItem(out bool isHeld);
+            if (malachiteItem == null || (!isHeld && !peacockBoxEquipped))
             {
                 rightFeatherGenerationTimer = 0;
                 return;
@@ -156,10 +138,15 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (currentFeathers >= MalachiteBalance.RightFeatherMaxCount)
             {
                 rightFeatherGenerationTimer = 0;
+                if (peacockBoxEquipped)
+                    TryAutoReleaseStoredRightFeathers(malachiteItem);
+
                 return;
             }
 
-            int targetDelay = isHeld ? 45 : 180;
+            int targetDelay = isHeld
+                ? MalachiteBalance.RightFeatherGenerationFrames
+                : MalachiteBalance.PeacockBoxFeatherGenerationFrames;
 
             rightFeatherGenerationTimer++;
             if (rightFeatherGenerationTimer < targetDelay)
@@ -173,6 +160,79 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 Player.GetSource_FromThis(),
                 damage,
                 malachiteItem.knockBack);
+
+            if (peacockBoxEquipped &&
+                MalachiteRightFeather.CountStoredRightFeathers(Player) >= MalachiteBalance.RightFeatherMaxCount)
+            {
+                TryAutoReleaseStoredRightFeathers(malachiteItem);
+            }
+        }
+
+        private Item FindMalachiteItem(out bool isHeld)
+        {
+            isHeld = Player.HeldItem != null && Player.HeldItem.type == ModContent.ItemType<Malachite>();
+            if (isHeld)
+                return Player.HeldItem;
+
+            for (int i = 0; i < Player.inventory.Length; i++)
+            {
+                Item item = Player.inventory[i];
+                if (item != null && item.type == ModContent.ItemType<Malachite>())
+                    return item;
+            }
+
+            return null;
+        }
+
+        private void TryAutoReleaseStoredRightFeathers(Item malachiteItem)
+        {
+            if (MalachiteRightFeather.CountStoredRightFeathers(Player) < MalachiteBalance.RightFeatherMaxCount)
+                return;
+
+            Vector2 target = FindNearestAutoReleaseTarget(1600f) ?? GetMouseWorld();
+            int damage = Player.GetWeaponDamage(malachiteItem);
+            if (!MalachiteRightFeather.ReleaseStoredRightFeathers(
+                Player,
+                Player.GetSource_FromThis(),
+                target,
+                damage,
+                malachiteItem.knockBack,
+                stealthEnhanced: false))
+            {
+                return;
+            }
+
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.74f, Pitch = 0.24f, MaxInstances = 3 }, Player.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PBGAttackSwitchShort") { Volume = 0.34f, Pitch = 0.35f, MaxInstances = 3 }, Player.Center);
+        }
+
+        private Vector2? FindNearestAutoReleaseTarget(float range)
+        {
+            NPC bestTarget = null;
+            float bestDistance = range;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distance = Vector2.Distance(Player.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget?.Center;
+        }
+
+        private Vector2 GetMouseWorld()
+        {
+            Vector2 mouseWorld = Player.Calamity().mouseWorld;
+            return mouseWorld == Vector2.Zero
+                ? Main.MouseWorld
+                : mouseWorld;
         }
 
         private void UpdateGrazeDetection()
@@ -294,7 +354,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             {
                 CalamityPlayer calamity = Player.Calamity();
                 Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
-                MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(Player, mouseWorld);
+                Item malachiteItem = FindMalachiteItem(out _);
+                int damage = malachiteItem != null ? Player.GetWeaponDamage(malachiteItem) : -1;
+                float knockback = malachiteItem?.knockBack ?? 0f;
+
+                MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(Player, mouseWorld, damage, knockback);
             }
         }
     }

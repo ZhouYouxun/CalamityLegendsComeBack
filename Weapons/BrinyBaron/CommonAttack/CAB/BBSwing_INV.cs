@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using System;
@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (false && AddsTide)
             {
                 Player owner = Main.player[Projectile.owner];
-                owner.GetModPlayer<BBEXPlayer>().AddTide();
+                owner.GetModPlayer<BBTideValuePlayer>().AddTide();
                 owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 10f);
             }
 

@@ -5,10 +5,30 @@ Mods: {
 				Malachite: {
 					DisplayName: Peacock Plume
 					Tooltip: "[GFB]"
-					LeftClick: "[c/7DFF9A:Left click:] Quickly throw a small kunai. Stored stealth peacock kunai are thrown one by one first. After Wall of Flesh, normal kunai ignore gravity; after Plaguebringer Goliath they spawn 2 at a time, and after Moon Lord they spawn 3 at a time, pausing 10 frames before a high-speed launch."
-					RightClick: "[c/80FFC8:Right click:] While held, stores 1 bright-outlined malachite feather behind you every 0.6 seconds, up to 18. Right click does not attack directly; it pours every stored right feather out at 1 feather per 2 frames. These feathers are faster and never affected by gravity."
-					StealthStrike: "[c/B5FF74:Stealth strike:] Stealth left click fires existing peacock kunai and stores 23 empowered peacock kunai again. Only left click can call those feathers. Stealth left or stealth right also pours out every right feather; stealth-released right feathers create medium green blasts and extra green shots on hit."
-					Finale: "[c/D6FF9A:Finale:] With the Golden Emblem equipped, at full stealth and after the 15 second cooldown, press [{0}] to call a green spotlight and falling petals. After 2 seconds, Peacock Plume slashes across the screen and erupts multi-hit green black-hole blasts around nearby enemies."
+					LeftClick:
+						'''
+						[c/7DFF9A:Left:] Throw a peacock kunai.
+						Stored stealth kunai fire first, one by one.
+						Post-WoF ignores gravity; later tiers add shots.
+						'''
+					RightClick:
+						'''
+						[c/80FFC8:Right:] Store right feathers behind you.
+						Right click pours all stored feathers out.
+						Normal right feathers do not explode or gain stealth power.
+						'''
+					StealthStrike:
+						'''
+						[c/B5FF74:Stealth left:] Store 23 malachite darts.
+						[c/B5FF74:Stealth right:] Fire every stored right feather.
+						Stealth right feathers explode and gain power.
+						'''
+					Finale:
+						'''
+						[c/D6FF9A:Finale:] At full stealth and off cooldown, press [{0}].
+						Spotlights mark you and nearby enemies.
+						23 petals turn into blades and split by distance.
+						'''
 					Passive:
 						'''
 						[c/9AFFC8:Passives while held:]
@@ -67,6 +87,24 @@ Mods: {
 						Hanging kunai awakened by the finale become ace kunai
 						'''
 				}
+
+				PeacockBox: {
+					DisplayName: Peacock Box
+					Tooltip:
+						'''
+						Peacock Plume stores right feathers while in your inventory
+						Stores 1 feather every 60 frames and auto-fires at 23
+						'''
+				}
+
+				PeacockDart: {
+					DisplayName: Peacock Dart
+					Tooltip:
+						'''
+						Peacock Plume left and right projectiles are affected by gravity
+						Those projectiles deal 30% extra damage
+						'''
+				}
 			}
 		}
 
@@ -82,6 +120,8 @@ Mods: {
 				MalachiteFinaleController.DisplayName: Peacock Finale
 				MalachiteFinaleSlash.DisplayName: Peacock Slash
 				MalachiteFinaleHitSlash.DisplayName: Peacock Execution Slash
+				MalachiteFinaleDart.DisplayName: Peacock Finale Dart
+				MalachiteFinaleImpactExplosion.DisplayName: Peacock Lamp Burst
 				MalachiteFinalePetal.DisplayName: Peacock Petal
 			}
 		}

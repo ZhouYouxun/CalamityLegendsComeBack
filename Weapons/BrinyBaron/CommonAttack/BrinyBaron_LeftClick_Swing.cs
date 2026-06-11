@@ -1,5 +1,5 @@
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.EXSkill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void WhenSpawned()
         {
-            // 不再锁定帧率，让外部攻速修正能正常生效
+            // 涓嶅啀閿佸畾甯х巼锛岃澶栭儴鏀婚€熶慨姝ｈ兘姝ｅ父鐢熸晥
             DrawUnconditionally = true;
             Projectile.timeLeft = 2;
             Projectile.knockBack = 0f;
@@ -209,7 +209,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             StageProfile profile = GetStageProfile(comboIndex % ComboLength);
             stageActive = true;
             currentStage = comboIndex % ComboLength;
-            // 使用 Owner.itemAnimationMax 作为挥舞时长，让外部攻速加成生效
             int useAnim = Math.Max(1, Owner.itemAnimationMax);
             stageDuration = useAnim;
             stageTimer = 0;
@@ -525,8 +524,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             float smearScale = GetRightSpinSmearScale();
             if (rightSpinSmear == null)
             {
-                // 不需要这玩意儿，没那么灵活
-                //rightSpinSmear = new CircularSmearSmokeyVFX(Owner.Center, smearColor, rightSpinDirectionVector.ToRotation(), smearScale);
+                // 涓嶉渶瑕佽繖鐜╂剰鍎匡紝娌￠偅涔堢伒娲?                //rightSpinSmear = new CircularSmearSmokeyVFX(Owner.Center, smearColor, rightSpinDirectionVector.ToRotation(), smearScale);
                 //GeneralParticleHandler.SpawnParticle(rightSpinSmear);
                 return;
             }
@@ -688,7 +686,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             target.AddBuff(BuffID.Frostburn, 180);
             if (Main.myPlayer == Projectile.owner)
-                Owner.GetModPlayer<BBEXPlayer>().AddTide();
+                Owner.GetModPlayer<BBTideValuePlayer>().AddTide();
 
             if (!rightSpinActive)
                 SpawnTrueMeleeTyphoon(target);
@@ -776,8 +774,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             return false;
         }
 
-        // abb abc 连招模板：Wave, Shuriken, Shuriken, Wave, Shuriken, Tornado
-        // 所有攻击间隔平等化，不再有快慢之分
+        // abb abc 杩炴嫑妯℃澘锛歐ave, Shuriken, Shuriken, Wave, Shuriken, Tornado
+        // 鎵€鏈夋敾鍑婚棿闅斿钩绛夊寲锛屼笉鍐嶆湁蹇參涔嬪垎
         private static StageProfile GetStageProfile(int stage)
         {
             return stage switch
