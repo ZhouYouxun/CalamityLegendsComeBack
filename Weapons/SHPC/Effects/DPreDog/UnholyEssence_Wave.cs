@@ -380,7 +380,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     spawnPosition,
                     velocity,
                     ModContent.ProjectileType<UnholyEssence_HolyNova>(),
-                    (int)(Projectile.damage * 0.24f),
+                    (int)(Projectile.damage * 0.2f),
                     Projectile.knockBack * 0.15f,
                     Projectile.owner);
             }

@@ -144,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                     spawnPosition,
                     direction.RotatedByRandom(MathHelper.ToRadians(3f)) * MortarSpeed,
                     ModContent.ProjectileType<RightClickMortar_Proj>(),
-                    (int)(damage * 4f),
+                    (int)(damage * 4.8f),
                     Projectile.knockBack,
                     Projectile.owner,
                     mouseWorld.X,

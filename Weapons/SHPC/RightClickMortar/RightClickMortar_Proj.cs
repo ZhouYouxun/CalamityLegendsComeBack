@@ -306,7 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             NPC target = FindLaserTarget(explosionCenter);
             Vector2 targetCenter = target?.Center ?? explosionCenter;
             int laserCount = Main.rand.Next(24, 31);
-            int laserDamage = Math.Max(1, (int)(sourceDamage * 0.47f));
+            int laserDamage = Math.Max(1, (int)(sourceDamage * 0.5f));
 
             for (int i = 0; i < laserCount; i++)
             {
@@ -440,7 +440,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
         {
             Vector2[] trailPoints = Projectile.oldPos
                 .Where(position => position != Vector2.Zero)
-                .Select(position => position + Projectile.Size * 0.5f)
+                .Select(position => position + Projectile.Size * 0.53f)
                 .ToArray();
 
             if (trailPoints.Length < 2)
