@@ -1,7 +1,6 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatBuffs;
-using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -137,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<Nightwither>(), 240);
-            target.AddBuff(ModContent.BuffType<GlacialState>(), 180);
+            target.AddBuff(BuffID.Frozen, 180);
             Owner.AddBuff(ModContent.BuffType<CosmicFreeze>(), 240);
             Owner.SetScreenshake(8f);
 

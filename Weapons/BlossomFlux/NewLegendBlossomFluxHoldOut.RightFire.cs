@@ -309,7 +309,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             damage *= 7;
             float knockback = Projectile.knockBack * 1.15f;
 
-            breakthroughQueuedShotCount = arrowCount;
+            breakthroughQueuedShotCount = 0;
             breakthroughQueuedShotIndex = 0;
             breakthroughQueuedShotTimer = 0;
             breakthroughQueuedDamage = damage;
@@ -317,6 +317,42 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             breakthroughQueuedSpeed = speed;
             breakthroughQueuedKnockback = knockback;
             breakthroughQueuedNoFalloff = 1f;
+
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            Vector2 baseVelocity = GetAimVelocity(speed);
+            Vector2 baseDirection = baseVelocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 baseOrigin = GetShootOrigin(baseVelocity);
+            Vector2 normal = baseDirection.RotatedBy(MathHelper.PiOver2);
+            float centerIndex = (arrowCount - 1) * 0.5f;
+            float spreadStep = MathHelper.ToRadians(MathHelper.Lerp(4.8f, 2.7f, Utils.GetLerpValue(3f, 7f, arrowCount, true)));
+
+            for (int i = 0; i < arrowCount; i++)
+            {
+                float offsetIndex = i - centerIndex;
+                float angle = offsetIndex * spreadStep;
+                Vector2 shotDirection = baseDirection.RotatedBy(angle).SafeNormalize(baseDirection);
+                Vector2 shotVelocity = shotDirection * speed * MathHelper.Lerp(1.04f, 0.96f, Math.Abs(offsetIndex) / Math.Max(centerIndex, 1f));
+                Vector2 spawnPosition = baseOrigin + normal * offsetIndex * 4.5f - shotDirection * Math.Abs(offsetIndex) * 2.5f;
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    shotVelocity,
+                    ModContent.ProjectileType<BFArrow_ABreak>(),
+                    damage,
+                    knockback,
+                    Projectile.owner,
+                    stats.Penetrate,
+                    stats.IgnorePenetrationDamageFalloff ? 1f : 0f);
+
+                SpawnSHPCLeftMuzzleParticles(spawnPosition, shotVelocity, CurrentPreset, 0.86f + i * 0.03f);
+            }
+
+            Owner.SetDummyItemTime(12);
+            SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.46f, Pitch = 0.08f }, GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item38 with { Volume = 0.34f, Pitch = 0.18f }, GunTipPosition);
         }
 
         private void UpdateBreakthroughQueuedShots()

@@ -21,8 +21,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         private const int Lifetime = 72;
         private Vector2 startPosition;
-        private Vector2 controlPosition;
         private Vector2 targetPosition;
+        private float initialDistance;
+        private float initialAngle;
         private int ActualLifetime => Projectile.localAI[0] > 0f ? (int)Projectile.localAI[0] : Lifetime;
 
         public override void SetStaticDefaults()
@@ -48,13 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             startPosition = Projectile.Center;
-            controlPosition = new Vector2(Projectile.ai[1], Projectile.ai[2]);
             targetPosition = GetParentCenter();
+            InitializeSpiralState();
             Projectile.rotation = (targetPosition - Projectile.Center).ToRotation();
-            if (Projectile.localAI[1] == 0f)
-                Projectile.localAI[1] = Main.rand.NextBool() ? 1f : -1f;
-            if (Projectile.localAI[2] == 0f)
-                Projectile.localAI[2] = Main.rand.NextFloat(MathHelper.TwoPi);
         }
 
         public override void AI()
@@ -66,29 +63,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             if (startPosition == Vector2.Zero)
             {
                 startPosition = Projectile.Center;
-                controlPosition = new Vector2(Projectile.ai[1], Projectile.ai[2]);
+                targetPosition = GetParentCenter();
+                InitializeSpiralState();
             }
 
             targetPosition = GetParentCenter();
             float completion = 1f - Projectile.timeLeft / (float)actualLifetime;
             completion = MathHelper.Clamp(completion, 0f, 1f);
-            float curvedCompletion = 1f - (float)Math.Pow(1f - completion, 1.65f);
-            float age = actualLifetime - Projectile.timeLeft;
-            float spinDirection = Projectile.localAI[1] == 0f ? 1f : Math.Sign(Projectile.localAI[1]);
-            float swirlPhase = Projectile.localAI[2] + age * (0.72f + Projectile.identity % 5 * 0.08f) * spinDirection;
+            float radiusProgress = MathF.Pow(completion, 1.85f);
+            float angleProgress = MathF.Pow(completion, 1.18f);
+            float spinDirection = Projectile.ai[1] == 0f ? (Projectile.identity % 2 == 0 ? 1f : -1f) : Math.Sign(Projectile.ai[1]);
+            float spiralTurns = MathHelper.Lerp(1.45f, 2.2f, Utils.GetLerpValue(240f, 420f, initialDistance, true));
+            float currentRadius = MathHelper.Lerp(initialDistance, 0f, radiusProgress);
+            float currentAngle = initialAngle + spinDirection * MathHelper.TwoPi * spiralTurns * angleProgress;
             Vector2 previous = Projectile.Center;
-            Vector2 point = QuadraticBezier(startPosition, controlPosition, targetPosition, curvedCompletion);
-            Vector2 radialFromTarget = (point - targetPosition).SafeNormalize(Vector2.UnitX);
-            float swirlFade = Utils.GetLerpValue(0f, 0.1f, completion, true) * (1f - curvedCompletion);
-            float swirlRadius = MathHelper.Lerp(110f, 14f, curvedCompletion) * swirlFade;
-            point += radialFromTarget.RotatedBy(MathHelper.PiOver2 * spinDirection) * MathF.Sin(swirlPhase) * swirlRadius;
-            point += radialFromTarget * MathF.Cos(swirlPhase * 1.35f) * swirlRadius * 0.35f;
+            Vector2 point = targetPosition + currentAngle.ToRotationVector2() * currentRadius;
             Projectile.Center = point;
             Projectile.velocity = point - previous;
             if (Projectile.velocity.LengthSquared() > 0.001f)
-                Projectile.rotation = Projectile.velocity.ToRotation() + spinDirection * 0.35f * MathF.Sin(swirlPhase);
+                Projectile.rotation = Projectile.velocity.ToRotation();
 
-            if (Vector2.Distance(Projectile.Center, targetPosition) < 12f || !ParentIsActive())
+            if (currentRadius < 12f || !ParentIsActive())
                 Projectile.Kill();
 
             if (Main.rand.NextBool(2))
@@ -163,9 +158,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             return Projectile.Center;
         }
 
-        private static Vector2 QuadraticBezier(Vector2 a, Vector2 b, Vector2 c, float t)
+        private void InitializeSpiralState()
         {
-            return Vector2.Lerp(Vector2.Lerp(a, b, t), Vector2.Lerp(b, c, t), t);
+            Vector2 offset = startPosition - targetPosition;
+            initialDistance = Math.Max(offset.Length(), 12f);
+            initialAngle = offset.ToRotation();
         }
 
         public override bool PreDraw(ref Color lightColor)

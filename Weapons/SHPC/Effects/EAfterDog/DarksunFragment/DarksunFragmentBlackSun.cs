@@ -106,12 +106,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             float spinDirection = Main.rand.NextBool() ? 1f : -1f;
             float spawnDistance = Main.rand.NextFloat(EclipseBoltSpawnDistance, EclipseBoltSpawnDistance + EclipseBoltSpawnDistanceJitter) + Level * 10f;
             Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * spawnDistance;
-            Vector2 pullDirection = (Projectile.Center - spawn).SafeNormalize(Vector2.UnitY);
-            Vector2 tangent = pullDirection.RotatedBy(MathHelper.PiOver2 * spinDirection);
-            Vector2 control = Projectile.Center +
-                tangent * Main.rand.NextFloat(MathHelper.Lerp(150f, 240f, levelProgress), MathHelper.Lerp(260f, 380f, levelProgress)) +
-                pullDirection * Main.rand.NextFloat(-80f, 56f) +
-                Main.rand.NextVector2Circular(46f + Level * 8f, 46f + Level * 8f);
 
             int bolt = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -122,15 +116,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 Projectile.knockBack * 0.3f,
                 Projectile.owner,
                 Projectile.whoAmI,
-                control.X,
-                control.Y);
+                spinDirection);
 
             if (Main.projectile.IndexInRange(bolt))
             {
                 Projectile eclipseBolt = Main.projectile[bolt];
-                eclipseBolt.localAI[0] = MathHelper.Lerp(54f, 34f, levelProgress);
-                eclipseBolt.localAI[1] = spinDirection;
-                eclipseBolt.localAI[2] = Main.rand.NextFloat(MathHelper.TwoPi);
+                eclipseBolt.localAI[0] = MathHelper.Lerp(36f, 23f, levelProgress);
             }
         }
 

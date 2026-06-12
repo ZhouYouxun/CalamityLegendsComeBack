@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CalamityMod;
 using CalamityMod.DataStructures;
+using CalamityMod.Systems.Collections;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -73,9 +74,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
         {
             return target.buffType.Any(buffID =>
                 buffID > 0 &&
-                buffID < BuffDatasets.DebuffDataset.Length &&
-                BuffDatasets.DebuffDataset[buffID] is not null &&
-                BuffDatasets.DebuffDataset[buffID].HeatDebuffScaling > 0);
+                buffID < CalamityBuffSets.DebuffDataset.Length &&
+                CalamityBuffSets.DebuffDataset[buffID] is not null &&
+                CalamityBuffSets.DebuffDataset[buffID].HeatDebuffScaling > 0);
         }
 
         private static bool IsOwnerHoldingCrystal(Projectile projectile)

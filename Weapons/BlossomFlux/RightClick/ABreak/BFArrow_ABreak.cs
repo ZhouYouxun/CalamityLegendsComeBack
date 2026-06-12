@@ -44,9 +44,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Projectile.width = 32;
                 Projectile.height = 32;
                 Projectile.Center = center;
+                Projectile.velocity *= 1.14f;
             }
-
-            Projectile.velocity *= 0.55f;
         }
 
         public override bool? CanDamage() => null;
@@ -70,13 +69,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 0.74f);
             EmitBreakthroughFlightFX(glowStrength);
 
-            AccelerateStraightFlight(1.01f, 36f);
+            bool chargedShot = ConfiguredPenetrate != 0f;
+            AccelerateStraightFlight(chargedShot ? 1.018f : 1.01f, chargedShot ? 52f : 36f);
             BFArrowCommon.FaceForward(Projectile);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.35f, Pitch = 0.2f }, Projectile.Center);
+            if (ConfiguredPenetrate != 0f)
+            {
+                SpawnBreakthroughImpactFX(Projectile.Center, 1.25f);
+                Projectile.Kill();
+                return false;
+            }
+
             if (BFArrowCommon.Bounce(Projectile, oldVelocity, ref BounceCounter, 3, 0.98f))
                 return true;
 
@@ -87,6 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public override void OnKill(int timeLeft)
         {
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 10, 0.9f, 3.2f, 0.8f, 1.18f);
+            SpawnBreakthroughVanishFX(Projectile.Center, ConfiguredPenetrate != 0f ? 1.15f : 0.82f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

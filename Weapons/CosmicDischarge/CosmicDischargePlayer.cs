@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -233,7 +234,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Player.HasBuff(BuffID.Frozen) ||
                 Player.HasBuff(BuffID.Frostburn) ||
                 Player.HasBuff(BuffID.Frostburn2) ||
-                Player.HasBuff(ModContent.BuffType<CalamityMod.Buffs.StatDebuffs.GlacialState>());
+                Player.HasBuff(ModContent.BuffType<Nightwither>());
         }
 
         private void HandleUltimateInput()

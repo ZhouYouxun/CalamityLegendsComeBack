@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
-using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -112,7 +111,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return;
 
             target.AddBuff(ModContent.BuffType<Nightwither>(), duration);
-            target.AddBuff(ModContent.BuffType<GlacialState>(), duration);
+            target.AddBuff(BuffID.Frozen, duration);
             target.AddBuff(BuffID.Frostburn2, duration);
             target.AddBuff(BuffID.Chilled, duration);
         }
