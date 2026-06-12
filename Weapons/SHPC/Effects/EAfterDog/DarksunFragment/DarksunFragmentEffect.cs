@@ -188,7 +188,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 projectile.Center,
                 Vector2.Zero,
                 sunType,
-                Math.Max(1, (int)(projectile.damage * 0.34f)),
+                Math.Max(1, (int)(projectile.damage * 1f)),
                 projectile.knockBack,
                 owner.whoAmI,
                 1f);

@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 spawn,
                 Vector2.Zero,
                 ModContent.ProjectileType<DarksunFragmentEclipseBolt>(),
-                Math.Max(1, (int)(Projectile.damage * (0.34f + Level * 0.04f))),
+                Math.Max(1, (int)(Projectile.damage * (0.24f + Level * 0.06f))),
                 Projectile.knockBack * 0.3f,
                 Projectile.owner,
                 Projectile.whoAmI,
@@ -173,7 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<DarksunFragmentBlackSunExplosion>(),
-                Math.Max(1, (int)(Projectile.damage * (3.8f + Level * 0.42f))),
+                Math.Max(1, (int)(Projectile.damage * (4.8f + Level * 1.67f))),
                 Projectile.knockBack,
                 Projectile.owner,
                 Level);

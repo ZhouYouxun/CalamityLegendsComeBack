@@ -671,7 +671,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     GunTipPosition,
                     dir.RotatedBy(angle) * speed,
                     ModContent.ProjectileType<NewLegendSHPB>(),
-                    leftClickDamage,
+                    (int)(leftClickDamage * 0.8f),
                     Projectile.knockBack,
                     Projectile.owner,
                     effectID

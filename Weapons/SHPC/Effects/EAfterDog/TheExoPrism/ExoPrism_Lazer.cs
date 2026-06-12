@@ -129,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                 spawnPos,
                 velocity,
                 ModContent.ProjectileType<ExoPrism_Geometry>(),
-                (int)(Projectile.damage * 0.5f), // 我不知道这是什么反正一半伤害
+                (int)(Projectile.damage * 0.3f), // 我不知道这是什么反正一半伤害
                 Projectile.knockBack,
                 Projectile.owner
             );
@@ -162,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
                     lightSpawnPosition,
                     lightVelocity,
                     ModContent.ProjectileType<ExoPrism_Light>(),
-                    (int)(Projectile.damage * 1.6f),
+                    (int)(Projectile.damage * 1.5f),
                     Projectile.knockBack,
                     Projectile.owner
                 );

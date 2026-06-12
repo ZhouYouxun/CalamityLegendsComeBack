@@ -29,8 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.006f;
         private const int StickTime = 150;
-        private const int StuckDamageInterval = 24;
-        private const float StuckDamageMultiplier = 0.65f;
+        private const int StuckDamageInterval = 30;
+        private const float StuckDamageMultiplier = 0.4f;
         private static readonly int[] AbyssDustTypes = { 191, 29, 104 };
 
         private bool IsStuck => Projectile.ai[0] == 1f;

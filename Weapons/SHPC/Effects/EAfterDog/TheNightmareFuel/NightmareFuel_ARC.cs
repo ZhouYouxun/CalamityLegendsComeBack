@@ -28,12 +28,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 90;
+            Projectile.timeLeft = 120;
             Projectile.extraUpdates = 12;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 8;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)

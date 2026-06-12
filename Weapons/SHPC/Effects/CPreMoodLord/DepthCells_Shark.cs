@@ -109,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                     Projectile.Center + Main.rand.NextVector2Circular(12f, 7f),
                     dropVelocity,
                     ModContent.ProjectileType<DepthCells_Drop>(),
-                    (int)(Projectile.damage * 0.9f),
+                    (int)(Projectile.damage * 0.7f),
                     Projectile.knockBack,
                     Projectile.owner,
                     0f,

@@ -145,9 +145,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             Vector2 spawnPosition = Projectile.Center + forward * 20f + normal * (float)Math.Sin(shotIndex * 1.618034f) * 24f;
             float speed = MathHelper.Lerp(13.5f, 18.8f, shotCompletion) + Main.rand.NextFloat(-0.35f, 0.35f);
-            int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.62f, 0.84f, shotCompletion)));
+            int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.75f, 0.9f, shotCompletion)));
             if (shotIndex == ShotCount - 1)
-                damage = Math.Max(1, (int)(Projectile.damage * 1.16f));
+                damage = Math.Max(1, (int)(Projectile.damage * 1.13f));
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

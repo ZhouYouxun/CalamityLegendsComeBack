@@ -56,8 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             84, // 54Moon Lord / 月亮领主
             90, // 66Providence / 亵渎天神
             100, // 77Polterghast / 噬魂幽花
-            120, // 90Devourer of Gods / 神明吞噬者
-            150, // 100Yharon / 犽戎
+            127, // 90Devourer of Gods / 神明吞噬者
+            200, // 100Yharon / 犽戎
             333 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
@@ -76,12 +76,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.80f, // EffectID 9: Soul of Light / 光明之魂
             0.78f, // EffectID 10: Soul of Night / 暗影之魂
             0.90f, // EffectID 11: Soul of Flight / 飞翔之魂
-            0.91f, // EffectID 12: Soul of Fright / 恐惧之魂
+            1.06f, // EffectID 12: Soul of Fright / 恐惧之魂
             1.08f, // EffectID 13: Soul of Might / 力量之魂
             0.80f, // EffectID 14: Soul of Sight / 视域之魂
             1.05f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
-            1.05f, // EffectID 17: Depth Cells / 深渊细胞
+            1.02f, // EffectID 17: Depth Cells / 深渊细胞
             1.44f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
             1.13f, // EffectID 19: Ashes of Calamity / 灾厄尘
             0f, // EffectID 20: Beetle Husk / 甲虫外壳，未实现
@@ -98,15 +98,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.22f, // EffectID 31: Necroplasm / 灵质
             1.97f, // EffectID 32: Dark Plasma / 暗离子体
             2.20f, // EffectID 33: Twisting Nether / 扭曲虚空
-            2.85f, // EffectID 34: Endothermic Energy / 恒温能量
-            2.07f, // EffectID 35: Nightmare Fuel / 梦魇魔能
-            2.42f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
+            2.93f, // EffectID 34: Endothermic Energy / 恒温能量
+            2.77f, // EffectID 35: Nightmare Fuel / 梦魇魔能
+            2.15f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
             3.25f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
-            2.22f, // EffectID 38: Exo Prism / 星流棱晶
+            2.64f, // EffectID 38: Exo Prism / 星流棱晶
             2.69f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
-            2.52f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
+            2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
             0f, // EffectID 43: Cynosure / 保持使用阶段默认倍率
             1.53f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };

@@ -11,8 +11,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     internal class BossSoulofFrightEffect : DefaultEffect
     {
-        private const float MaxTravelDistance = 15f * 16f;
-        private const int SplitCount = 8;
+        private const float MaxTravelDistance = 18f * 16f;
+        private const int SplitCount = 9;
         private const int SecondaryCount = 3;
         private const int MaxDamagingHits = 3;
 
@@ -64,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             projectile.localAI[1]++;
         }
 
-        internal static int GetSplitDamage(Projectile projectile) => System.Math.Max(1, (int)(projectile.damage * 0.77f));
+        internal static int GetSplitDamage(Projectile projectile) => System.Math.Max(1, (int)(projectile.damage * 0.88f));
 
         internal static void SpawnEvenSplit(Projectile projectile, int splitCount)
         {
@@ -138,7 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     projectile.Center + direction * 18f,
                     direction * speed,
                     ModContent.ProjectileType<BossSoulofFright_SecondarySoul>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 1.13),
                     projectile.knockBack,
                     projectile.owner,
                     splitCount,
