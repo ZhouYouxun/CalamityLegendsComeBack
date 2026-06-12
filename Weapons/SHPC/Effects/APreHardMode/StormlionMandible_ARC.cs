@@ -231,6 +231,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             hasHit = true;
             ableToHit = false;
 
+            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.55f, PitchVariance = 0.15f, MaxInstances = 8 }, Projectile.Center);
+
             SpawnNextArc(target);
             Projectile.Kill();
         }

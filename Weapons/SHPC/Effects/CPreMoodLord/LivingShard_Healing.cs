@@ -3,6 +3,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -146,6 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             healTarget.statLife = System.Math.Min(healTarget.statLifeMax2, healTarget.statLife + healAmount);
             healTarget.HealEffect(healAmount);
+            SoundEngine.PlaySound(SoundID.NPCDeath58 with { Volume = 0.65f, PitchVariance = 0.15f, MaxInstances = 4 }, healTarget.Center);
 
             Vector2 center = Projectile.Center;
 
@@ -186,7 +188,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             // 主视觉：数学感 SquishyLightParticle 单链条
             // 用正弦波 + 相位推进，让链条像活体能量一样轻微摆动
-            if (Projectile.numUpdates == 0 && timer % 2 == 0)
+            if (Projectile.numUpdates == 0 && timer % 1 == 0)
             {
                 int chainCount = 5;
                 float phase = timer * 0.28f;

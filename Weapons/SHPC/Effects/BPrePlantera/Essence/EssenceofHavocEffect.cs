@@ -4,6 +4,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -50,6 +51,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸")
+            {
+                Volume = 3f,
+                PitchVariance = 0.08f,
+                MaxInstances = 3
+            }, projectile.Center);
+
             bool movingDownward = projectile.velocity.Y > 0f;
 
             Vector2 dirX = Vector2.UnitX;

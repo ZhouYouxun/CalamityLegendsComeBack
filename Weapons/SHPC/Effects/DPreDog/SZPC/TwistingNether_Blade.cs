@@ -153,6 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(SoundID.NPCDeath7 with { Volume = 0.62f, Pitch = -0.15f, PitchVariance = 0.18f, MaxInstances = 5 }, target.Center);
             if (Projectile.owner == Main.myPlayer)
             {
                 Vector2 slashVelocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * 8f;

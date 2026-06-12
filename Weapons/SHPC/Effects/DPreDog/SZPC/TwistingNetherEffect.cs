@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
@@ -34,6 +35,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            if (projectile.owner == Main.myPlayer)
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HellbornImpact") { Volume = 0.8f, PitchVariance = 0.1f, MaxInstances = 4 }, projectile.Center);
+
             if (projectile.owner != Main.myPlayer)
                 return;
 

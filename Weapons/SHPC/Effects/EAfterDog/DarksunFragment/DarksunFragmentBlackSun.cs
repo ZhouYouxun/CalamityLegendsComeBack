@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -44,6 +45,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override bool ShouldUpdatePosition() => false;
 
+        public override void OnSpawn(IEntitySource source)
+        {
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/CeaselessVoidSpawn")
+            {
+                Volume = 0.74f,
+                Pitch = -0.18f,
+                PitchVariance = 0.04f,
+                MaxInstances = 3
+            }, Projectile.Center);
+        }
+
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             float radius = GetRadiusForLevel(Level);
@@ -64,6 +79,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 Projectile.Kill();
                 return;
             }
+
+            PlayRiftBuildingLoop();
 
             float radius = GetRadiusForLevel(Level);
             Vector2 oldCenter = Projectile.Center;
@@ -97,6 +114,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             }
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.78f, 0.46f, 0.08f) * (0.3f + Level * 0.08f));
+        }
+
+        private void PlayRiftBuildingLoop()
+        {
+            if (Main.dedServ || Timer < 72f || (int)Timer % 88 != 0)
+                return;
+
+            float lifeDanger = Utils.GetLerpValue(Lifetime, 0f, Projectile.timeLeft, true);
+            float levelDanger = Utils.GetLerpValue(1f, MaxLevel, Level, true);
+            float pitch = MathHelper.Lerp(-0.35f, 0.15f, Math.Max(lifeDanger, levelDanger));
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftBuilding")
+            {
+                Volume = 0.42f + Level * 0.035f,
+                Pitch = pitch,
+                PitchVariance = 0.025f,
+                MaxInstances = 2
+            }, Projectile.Center);
         }
 
         private void SpawnEclipseBolt(float radius)

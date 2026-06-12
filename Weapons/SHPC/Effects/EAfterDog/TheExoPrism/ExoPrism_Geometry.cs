@@ -20,6 +20,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
         private float sizeMultiplier;
         private float localTimeOffset;
+        private const int HomingFrames = 54;
+        private const int DriftFrames = 42;
+        private const float HomingRange = 1400f;
+        private const float BaseHomingSpeed = 8.5f;
+        private const float MaxHomingSpeed = 13.5f;
+
+        private ref float Timer => ref Projectile.localAI[0];
 
         // 这里写死当前上限，后面你要加新几何体，直接改这个数字最快
         private const int MaxGeometryType = 2;
@@ -256,56 +263,83 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         // ================= AI =================
         public override void AI()
         {
-            NPC target = null;
-            float maxDist = 1200f;
+            Timer++;
+            RunPulsingHoming();
+        }
 
-            foreach (NPC npc in Main.npc)
+        private void RunPulsingHoming()
+        {
+            int cycleLength = HomingFrames + DriftFrames;
+            int cycleFrame = (int)Timer % cycleLength;
+            bool homingActive = cycleFrame < HomingFrames;
+
+            if (homingActive)
             {
-                if (npc.active && !npc.friendly && npc.CanBeChasedBy())
-                {
-                    float d = Vector2.Distance(npc.Center, Projectile.Center);
-                    if (d < maxDist)
-                    {
-                        maxDist = d;
-                        target = npc;
-                    }
-                }
+                NPC target = FindTarget();
+                if (target != null)
+                    HomeTowardTarget(target, cycleFrame / (float)Math.Max(1, HomingFrames - 1));
+                else
+                    Drift();
             }
-
-            if (target == null)
-                return;
-
-            // ================= 围绕目标旋转 =================
-
-            // 时间推进
-            float t = Projectile.timeLeft * 0.03f;
-
-            // 半径（比Phantasmal更大）
-            float baseRadius = 80f + (float)Math.Sin(Projectile.identity * 1.37f) * 20f;
-
-            // 随机扰动半径（动态变化）
-            float radius = baseRadius + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 2f + Projectile.identity) * 16f;
-
-            // 旋转角度（慢速）
-            float angle = t + Projectile.identity * 0.6f;
-
-            Vector2 circlePos = target.Center + angle.ToRotationVector2() * radius;
-
-            // ================= 向圆轨道移动 =================
-            Vector2 moveDir = (circlePos - Projectile.Center).SafeNormalize(Vector2.UnitX);
-
-            float accel = Main.rand.NextFloat(0.12f, 0.28f); // 比原版更慢
-            float maxSpeed = 6f; // 限速更低
-
-            if (Projectile.velocity.Length() < maxSpeed)
-                Projectile.velocity += moveDir * accel;
             else
-                Projectile.velocity *= 0.88f;
+                Drift();
 
-            // ================= 朝向 =================
             if (Projectile.velocity.Length() > 0.1f)
                 Projectile.rotation = Projectile.velocity.ToRotation();
         }
+
+        private NPC FindTarget()
+        {
+            int preferredTarget = (int)Projectile.ai[0];
+            if (Main.npc.IndexInRange(preferredTarget))
+            {
+                NPC preferred = Main.npc[preferredTarget];
+                if (preferred.CanBeChasedBy(Projectile, false) && Projectile.Distance(preferred.Center) <= HomingRange)
+                    return preferred;
+            }
+
+            NPC target = null;
+            float bestDistance = HomingRange;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile, false))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                target = npc;
+                bestDistance = distance;
+            }
+
+            return target;
+        }
+
+        private void HomeTowardTarget(NPC target, float windowProgress)
+        {
+            float distance = Projectile.Distance(target.Center);
+            float currentSpeed = Projectile.velocity.Length();
+            Vector2 fallbackDirection = currentSpeed > 0.1f ? Projectile.velocity.SafeNormalize(Vector2.UnitX) : Vector2.UnitY;
+            float speed = MathHelper.Lerp(BaseHomingSpeed, MaxHomingSpeed, MathHelper.Clamp(windowProgress, 0f, 1f));
+            float predictionFrames = MathHelper.Clamp(distance / Math.Max(speed, 1f), 8f, 22f);
+            Vector2 aimPoint = target.Center + target.velocity * predictionFrames;
+            Vector2 desiredDirection = (aimPoint - Projectile.Center).SafeNormalize(fallbackDirection);
+            float closePressure = Utils.GetLerpValue(520f, 120f, distance, true);
+            float inertia = MathHelper.Lerp(18f, 5.5f, MathHelper.Max(windowProgress, closePressure));
+
+            Projectile.velocity = (Projectile.velocity * inertia + desiredDirection * speed) / (inertia + 1f);
+
+            float cappedSpeed = MathHelper.Clamp(Projectile.velocity.Length(), BaseHomingSpeed * 0.45f, MaxHomingSpeed);
+            Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * cappedSpeed;
+        }
+
+        private void Drift()
+        {
+            float sway = (float)Math.Sin((Timer + Projectile.identity * 11f) * 0.055f) * 0.01f;
+            Projectile.velocity = Projectile.velocity.RotatedBy(sway) * 0.986f;
+        }
+
         public override void OnKill(int timeLeft)
         {
         }

@@ -420,7 +420,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             int heat = Math.Max(WeaponStage, HeatLevel);
             Player owner = Main.player[Projectile.owner];
+            modifiers.SourceDamage *= GetLateHeatDamageMultiplier(heat);
             modifiers.SourceDamage *= owner.GetModPlayer<HeatRedirectModulePlayer>().GetHeatDamageMultiplier(heat);
+        }
+
+        private static float GetLateHeatDamageMultiplier(int heat)
+        {
+            return heat >= 4 ? 1.05f : 1f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

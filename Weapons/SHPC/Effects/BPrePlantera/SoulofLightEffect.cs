@@ -1,7 +1,9 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -50,6 +52,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void AI(Projectile projectile, Player owner)
         {
             Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.55f);
+
+            // 波浪形变化的播放间隔：在14~52帧之间正弦起伏
+            int interval = (int)(33f + 19f * (float)Math.Sin(Main.GameUpdateCount * 0.055f));
+            if (Main.GameUpdateCount % interval == 0 && owner.whoAmI == Main.myPlayer)
+                SoundEngine.PlaySound(SoundID.DD2_SkyDragonsFurySwing with { Volume = 0.35f, PitchVariance = 0.12f }, projectile.Center);
         }
 
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers) { }
@@ -116,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     float t = j / 7f;
                     Vector2 pos = Vector2.Lerp(start, end, t);
 
-                    // 从中心指向当前点，作为“向外绽放”的主方向
+                    // 从中心指向当前点，作为"向外绽放"的主方向
                     Vector2 outward = (pos - center).SafeNormalize(Vector2.UnitY);
 
                     // 轻微切线扰动，让它不像死板几何线
@@ -139,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 }
             }
 
-            // ===== 3. 五个外尖角额外强化，让“星角”更明显 =====
+            // ===== 3. 五个外尖角额外强化，让"星角"更明显 =====
             for (int i = 0; i < 5; i++)
             {
                 Vector2 tipDir = (outerPoints[i] - center).SafeNormalize(Vector2.UnitY);

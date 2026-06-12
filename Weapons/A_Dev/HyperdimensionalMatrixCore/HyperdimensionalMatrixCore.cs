@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
@@ -50,7 +50,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Item.Calamity().devItem = true;
         }
 
-        public override void Unload() => HyperdimensionalMatrixVisuals.UnloadInventoryIconTextures();
+        public override void Unload()
+        {
+            if (!Main.dedServ)
+                Main.QueueMainThreadAction(HyperdimensionalMatrixVisuals.UnloadInventoryIconTextures);
+        }
 
         public override bool PreDrawInInventory(
             SpriteBatch spriteBatch,

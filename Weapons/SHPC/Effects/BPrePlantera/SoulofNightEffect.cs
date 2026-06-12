@@ -23,8 +23,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override float GlowScaleFactor => 0f;
         public override float GlowIntensityFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
-        public override bool PlayDefaultLeftClickFireSound => false;
-
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);

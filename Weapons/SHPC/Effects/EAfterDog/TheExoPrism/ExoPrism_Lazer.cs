@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
     internal class ExoPrism_Lazer : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
+        private const int MaxGeometrySpawnsPerLaser = 5;
 
         // 这些参数不再用 const，而是字段，便于 OnSpawn 调整
         private int Lifetime;
@@ -25,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         private float BeamHitboxCollisionWidth;
 
         private Vector2 beamVector = Vector2.Zero;
+        private ref float GeometrySpawnCount => ref Projectile.localAI[0];
 
         public override void OnSpawn(IEntitySource source)
         {
@@ -111,28 +113,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
             TryAttachLazerMark(target);
 
-            // ================= 在敌人下方生成几何体 =================
+            if (GeometrySpawnCount < MaxGeometrySpawnsPerLaser)
+            {
+                GeometrySpawnCount++;
 
-            Vector2 baseCenter = target.Center + new Vector2(0f, 16f * 16f); // 下方16
+                // ================= 在敌人下方生成几何体 =================
 
-            float radius = 10f * 16f; // 半径
+                Vector2 baseCenter = target.Center + new Vector2(0f, 16f * 16f); // 下方16
 
-            // 随机一个圆内点
-            Vector2 spawnOffset = Main.rand.NextVector2Circular(radius, radius);
-            Vector2 spawnPos = baseCenter + spawnOffset;
+                float radius = 10f * 16f; // 半径
 
-            // 朝敌人方向
-            Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 10f;
+                // 随机一个圆内点
+                Vector2 spawnOffset = Main.rand.NextVector2Circular(radius, radius);
+                Vector2 spawnPos = baseCenter + spawnOffset;
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawnPos,
-                velocity,
-                ModContent.ProjectileType<ExoPrism_Geometry>(),
-                (int)(Projectile.damage * 0.3f), // 我不知道这是什么反正一半伤害
-                Projectile.knockBack,
-                Projectile.owner
-            );
+                // 朝敌人方向
+                Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 10f;
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPos,
+                    velocity,
+                    ModContent.ProjectileType<ExoPrism_Geometry>(),
+                    (int)(Projectile.damage * 0.3f), // 我不知道这是什么反正一半伤害
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    target.whoAmI
+                );
+            }
 
 
             // ================= 后方扇形激光（ExoPrism_Light） =================

@@ -16,34 +16,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private const int Lifetime = 300;
-        private const int OrbitBloomFrames = 34;
-        private const int OrbitSettleFrames = 58;
-        private const int HomingDelay = 10;
+        private const int ScatterSlowdownFrames = 60;
         private const float HomingRange = 2600f;
         private const float StartingHomingSpeed = 24f;
         private const float MaxHomingSpeed = 96f;
-        private const float LongAxis = 40f * 16f;
-        private const float ShortAxis = 10f * 16f;
+        private const float ScatterLongSpeed = 30f;
+        private const float ScatterShortSpeed = 12f;
+        private const float ScatterDamping = 0.975f;
         private static readonly Color AuricBlue = new(55, 185, 255);
         private static readonly Color AuricGold = new(255, 218, 84);
         private static readonly Color AuricWhite = new(225, 248, 255);
-
-        private Vector2 OrbitCenter
-        {
-            get => new(Projectile.localAI[1], Projectile.localAI[2]);
-            set
-            {
-                Projectile.localAI[1] = value.X;
-                Projectile.localAI[2] = value.Y;
-            }
-        }
-
-        private float majorAxis;
-        private float minorAxis;
-        private float orbitSpeed;
-        private float orbitDirection;
-        private float axisPulse;
-        private float ellipseRotation;
 
         public override void SetStaticDefaults()
         {
@@ -69,26 +51,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override void AI()
         {
             if (Projectile.localAI[0] == 0f)
-                InitializeOrbit();
+                InitializeScatter();
 
             float age = Lifetime - Projectile.timeLeft;
-            NPC orbitTarget = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
-            if (age < OrbitSettleFrames && orbitTarget != null)
-                OrbitCenter = Vector2.Lerp(OrbitCenter, orbitTarget.Center, 0.18f);
-
-            if (age < OrbitBloomFrames)
-            {
-                float progress = CalamityUtils.SineOutEasing(age / OrbitBloomFrames, 1);
-                Projectile.Center = OrbitCenter + GetOrbitOffset(age) * progress;
-                Projectile.velocity = Vector2.Zero;
-            }
-            else if (age < OrbitSettleFrames)
-            {
-                Projectile.Center = OrbitCenter + GetOrbitOffset(age);
-                Projectile.velocity = Vector2.Zero;
-            }
+            NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
+            if (age < ScatterSlowdownFrames)
+                Projectile.velocity *= ScatterDamping;
             else
-                HomeWithAcceleration(orbitTarget, age);
+                HomeWithAcceleration(target, age);
 
             if (Projectile.velocity.Length() > 0.1f)
                 Projectile.rotation = Projectile.velocity.ToRotation();
@@ -100,40 +70,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             dust.noGravity = true;
         }
 
-        private void InitializeOrbit()
+        private void InitializeScatter()
         {
             Projectile.localAI[0] = 1f;
-            NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
-            OrbitCenter = target?.Center ?? Projectile.Center;
-
             bool secondEllipse = Projectile.ai[1] != 0f;
-            majorAxis = LongAxis;
-            minorAxis = ShortAxis;
-            orbitDirection = secondEllipse ? -1f : 1f;
-            orbitSpeed = 0.095f * orbitDirection;
-            axisPulse = secondEllipse ? MathHelper.PiOver2 : 0f;
-            ellipseRotation = secondEllipse ? MathHelper.Pi * 0.75f : MathHelper.PiOver4;
-        }
-
-        private Vector2 GetOrbitOffset(float age)
-        {
-            float breathing = 1f + MathF.Sin(age * 0.05f + axisPulse) * 0.018f;
-            float angle = Projectile.ai[2] + age * orbitSpeed;
-
-            return new Vector2(
-                MathF.Cos(angle) * majorAxis * breathing,
-                MathF.Sin(angle) * minorAxis / breathing
-            ).RotatedBy(ellipseRotation);
+            float ellipseRotation = secondEllipse ? MathHelper.Pi * 0.75f : MathHelper.PiOver4;
+            float angle = Projectile.ai[2];
+            float deterministicJitter = 1f + MathF.Sin(angle * 7f + (secondEllipse ? 1.7f : 0f)) * 0.08f;
+            Projectile.velocity = new Vector2(
+                MathF.Cos(angle) * ScatterLongSpeed,
+                MathF.Sin(angle) * ScatterShortSpeed
+            ).RotatedBy(ellipseRotation) * deterministicJitter;
+            Projectile.Center += Projectile.velocity;
         }
 
         private void HomeWithAcceleration(NPC target, float age)
         {
-            float homingAge = age - OrbitSettleFrames;
-            if (homingAge <= HomingDelay)
-            {
-                FreeDrift();
-                return;
-            }
+            float homingAge = age - ScatterSlowdownFrames;
 
             if (target == null || !target.active || target.friendly || target.dontTakeDamage || Projectile.Distance(target.Center) > HomingRange)
             {
@@ -146,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 currentVelocity = Projectile.SafeDirectionTo(target.Center) * StartingHomingSpeed;
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
-            float ramp = Utils.GetLerpValue(HomingDelay, HomingDelay + 54f, homingAge, true);
+            float ramp = Utils.GetLerpValue(0f, 62f, homingAge, true);
             ramp *= ramp;
             float closePressure = Utils.GetLerpValue(520f, 90f, Projectile.Distance(target.Center), true);
             float pullStrength = MathHelper.Clamp(MathHelper.Lerp(0.2f, 0.94f, Math.Max(ramp, closePressure * 0.95f)), 0.2f, 0.94f);
@@ -177,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
-            float ramp = Utils.GetLerpValue(OrbitSettleFrames, OrbitSettleFrames + 90f, age, true);
+            float ramp = Utils.GetLerpValue(ScatterSlowdownFrames, ScatterSlowdownFrames + 90f, age, true);
 
             if (Projectile.numUpdates == 0 || Main.rand.NextBool(2))
             {
@@ -237,7 +190,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             }
         }
 
-        public override bool? CanDamage() => Lifetime - Projectile.timeLeft >= OrbitSettleFrames ? null : false;
+        public override bool? CanDamage() => Lifetime - Projectile.timeLeft >= ScatterSlowdownFrames ? null : false;
 
         public override bool PreDraw(ref Color lightColor)
         {

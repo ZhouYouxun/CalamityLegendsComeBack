@@ -23,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private const float BaseSpeed = 16.2f;
         private const float HomingRange = 200f * 16f;
         private const int TotalRelayShots = 17;
+        private const float VisualEffectScale = 0.7f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -38,6 +39,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private Color MainColor => Color.Lerp(new Color(192, 0, 12), new Color(255, 118, 42), 0.25f + 0.45f * ShotCompletion);
         private Color SecondaryColor => Color.Lerp(new Color(62, 0, 0), new Color(128, 12, 128), 0.22f + 0.32f * (float)Math.Sin(Projectile.ai[2] * 3.1f));
         private Color CoreColor => Color.Lerp(Color.White, new Color(255, 206, 112), 0.2f + ShotCompletion * 0.22f);
+
+        private static int ScaledVisualCount(int count) => Math.Max(1, (int)MathF.Round(count * VisualEffectScale));
+
+        private bool PassVisualBudget(int cadence, int salt)
+        {
+            int emissionIndex = (int)Timer / Math.Max(1, cadence);
+            return (emissionIndex + ShotIndex * 3 + salt) % 10 < 7;
+        }
+
+        private static bool ScaledChance(int originalDenominator) => Main.rand.NextFloat() < VisualEffectScale / originalDenominator;
 
         public override void SetStaticDefaults()
         {
@@ -226,7 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Vector2 center = Projectile.Center - direction * Main.rand.NextFloat(2f, 12f) + normal * Main.rand.NextFloat(-4.5f, 4.5f);
             Color mainColor = MainColor;
 
-            if ((int)Timer % 2 == 0)
+            if ((int)Timer % 2 == 0 && PassVisualBudget(2, 0))
             {
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     center,
@@ -243,7 +254,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     glowOpacity: 0.45f));
             }
 
-            if ((int)Timer % 3 == 0)
+            if ((int)Timer % 3 == 0 && PassVisualBudget(3, 2))
             {
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     Projectile.Center - direction * 10f + normal * Main.rand.NextFloat(-5f, 5f),
@@ -258,7 +269,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     extraRotation: direction.ToRotation() + MathHelper.PiOver2));
             }
 
-            if (Main.rand.NextBool(homingActive ? 2 : 3))
+            if (ScaledChance(homingActive ? 2 : 3))
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center - direction * Main.rand.NextFloat(4f, 16f) + normal * Main.rand.NextFloat(-7f, 7f),
@@ -276,7 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private void SpawnDenseMetaballs(Vector2 direction, Vector2 normal, bool homingActive)
         {
-            int metaballCount = homingActive ? 4 : 3;
+            int metaballCount = ScaledVisualCount(homingActive ? 4 : 3);
 
             for (int i = 0; i < metaballCount; i++)
             {
@@ -295,7 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     velocity,
                     Main.rand.NextFloat(18f, 34f) * Projectile.scale * MathHelper.Lerp(1.05f, 0.7f, completion));
 
-                if (Main.rand.NextBool(2))
+                if (ScaledChance(2))
                     RancorLavaMetaball.SpawnParticle(position + Main.rand.NextVector2Circular(4f, 4f), Main.rand.NextFloat(14f, 26f) * Projectile.scale);
             }
         }
@@ -315,9 +326,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 direction.ToRotation(),
                 0.06f,
                 1.45f * power,
-                16));
+                ScaledVisualCount(16)));
 
-            int sparkCount = impact ? 18 : 8;
+            int sparkCount = ScaledVisualCount(impact ? 18 : 8);
             for (int i = 0; i < sparkCount; i++)
             {
                 Vector2 velocity = direction.RotatedByRandom(0.82f) * Main.rand.NextFloat(2.2f, 8.6f) + Main.rand.NextVector2Circular(1.4f, 1.4f);
@@ -338,7 +349,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     0.64f));
             }
 
-            for (int i = 0; i < (impact ? 22 : 10); i++)
+            for (int i = 0; i < ScaledVisualCount(impact ? 22 : 10); i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7.5f) * power;
                 Dust dust = Dust.NewDustPerfect(

@@ -2,6 +2,7 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -124,6 +125,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 isBlueVariant ? 1f : 0f,
                 homingDelayFrames,
                 shotIndex);
+
+            SoundEngine.PlaySound(SoundID.Item75 with { Volume = 0.5f, PitchVariance = 0.12f, MaxInstances = 8 }, Projectile.Center);
         }
 
         private void SpawnRelayDust(Vector2 forward)

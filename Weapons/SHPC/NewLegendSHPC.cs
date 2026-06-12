@@ -1,5 +1,4 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
@@ -581,8 +580,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 使用参数覆写 =====
         public override void ModifyManaCost(Player player, ref float reduce, ref float mult)
         {
+            ClampSelectedMagazineToActiveCount(player);
             SHPCEnergyCorePlayer energyCore = player.GetModPlayer<SHPCEnergyCorePlayer>();
             mult *= 1.5f * energyCore.LeftManaCostMultiplier;
+
+            if (player.altFunctionUse != 2 && GetProjectileEffectIDForShot() <= 0)
+                mult *= 0.5f;
         }
 
         public override void ModifyWeaponCrit(Player player, ref float crit)
@@ -621,49 +624,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             int shotEffectID = GetProjectileEffectIDForShot();
-            bool tripleScatter = false;
-            if (tripleScatter)
-            {
-                float[] spreadAngles =
-                {
-                    MathHelper.ToRadians(-10f),
-                    MathHelper.ToRadians(-5f),
-                    0f,
-                    MathHelper.ToRadians(5f),
-                    MathHelper.ToRadians(10f)
-                };
-
-                int scatterDamage = Math.Max(1, (int)(damage * 0.22f));
-
-                foreach (float angle in spreadAngles)
-                {
-                    Vector2 shotVelocity = velocity.RotatedBy(angle);
-
-                    Projectile.NewProjectile(
-                        source,
-                        GetSafeFirePosition(player, shotVelocity) + new Vector2(0f, -10f),
-                        shotVelocity,
-                        ModContent.ProjectileType<NewLegendSHPB>(),
-                        scatterDamage,
-                        knockback,
-                        player.whoAmI,
-                        shotEffectID
-                    );
-                }
-            }
-            else
-            {
-                Projectile.NewProjectile(
-                    source,
-                    GetSafeFirePosition(player, velocity) + new Vector2(0f, -10f),
-                    velocity,
-                    ModContent.ProjectileType<NewLegendSHPB>(),
-                    damage,
-                    knockback,
-                    player.whoAmI,
-                    shotEffectID
-                );
-            }
+            Projectile.NewProjectile(
+                source,
+                GetSafeFirePosition(player, velocity) + new Vector2(0f, -10f),
+                velocity,
+                ModContent.ProjectileType<NewLegendSHPB>(),
+                damage,
+                knockback,
+                player.whoAmI,
+                shotEffectID
+            );
             SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
             leftClickCooldown = shotEffectID == AshesofAnnEffect.AshesofAnnEffectID ? Math.Max(1, (int)MathF.Ceiling(Item.useTime * 0.6f)) : Item.useTime;
             if (!heatPlayer.IsForcedShutdownCooling())
@@ -1226,6 +1196,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
 
             string ammoText = BuildMagazineTooltipText(Main.LocalPlayer);
+            string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
 
             // ===== 右键阶段 =====
             int state = GetRightClickProgressState();
@@ -1257,6 +1228,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             string finalText =
                 leftIntro + ammoText +
                 "\n\n" +
+                passiveText + "\n\n" +
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
                 ammoWheelHint + "\n\n" +

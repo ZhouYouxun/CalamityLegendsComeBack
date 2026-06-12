@@ -3,6 +3,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -167,6 +168,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 dust.color = Main.rand.NextBool(4) ? Color.Khaki : Color.Goldenrod;
                 dust.noLightEmittence = true;
             }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/FeatherBreak") { Volume = 0.7f, PitchVariance = 0.12f, MaxInstances = 5 }, target.Center);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)

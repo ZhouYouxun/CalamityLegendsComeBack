@@ -11,15 +11,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 {
     internal sealed class SHPCPassivePlayer : ModPlayer
     {
+        private const int PassiveManaBonus = 100;
+
         private int passiveOrbTimer;
         private int passiveWarmupTimer;
         private int unscaledManaSicknessTime;
+        private bool currentManaBonusApplied;
 
         public override void UpdateDead()
         {
             passiveOrbTimer = 0;
             passiveWarmupTimer = 0;
             unscaledManaSicknessTime = 0;
+            currentManaBonusApplied = false;
         }
 
         public bool HoldingSHPC => Player.HeldItem.type == ModContent.ItemType<NewLegendSHPC>();
@@ -27,7 +31,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         public override void PostUpdateEquips()
         {
             if (HoldingSHPC)
-                Player.statManaMax2 += 100;
+            {
+                Player.statManaMax2 += PassiveManaBonus;
+                if (!currentManaBonusApplied)
+                {
+                    Player.statMana = Utils.Clamp(Player.statMana + PassiveManaBonus, 0, Player.statManaMax2);
+                    currentManaBonusApplied = true;
+                }
+
+                return;
+            }
+
+            if (currentManaBonusApplied)
+            {
+                Player.statMana = Utils.Clamp(Player.statMana - PassiveManaBonus, 0, Player.statManaMax2);
+                currentManaBonusApplied = false;
+            }
         }
 
         public override void GetHealMana(Item item, bool quickHeal, ref int healValue)

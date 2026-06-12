@@ -3,9 +3,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip
+namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ConcentrationModule
 {
-    public class ChargedDiffusionChip : ModItem
+    public class ConcentrationModule : ModItem
     {
         public override void SetDefaults()
         {
@@ -18,7 +18,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<ChargedDiffusionChipPlayer>().ChargedDiffusionChipEquipped = true;
+            player.GetModPlayer<ConcentrationModulePlayer>().ConcentrationModuleEquipped = true;
+            player.GetDamage(DamageClass.Magic) += 0.07f;
+            player.GetCritChance(DamageClass.Magic) += 7f;
         }
 
         public override void AddRecipes()

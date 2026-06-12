@@ -3,6 +3,7 @@ using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ModLoader;
 using CalamityPearlShard = CalamityMod.Items.Materials.PearlShard;
 
@@ -23,6 +24,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
         public override float GlowIntensityFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
         public override bool PlayDefaultLeftClickFireSound => false;
+
+        public override void PlayLeftClickReplacementFireSound(Projectile projectile, Player owner)
+        {
+            if (Main.dedServ || projectile.owner != Main.myPlayer)
+                return;
+
+            Vector2 position = projectile.Center;
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/GunShotSmall")
+            {
+                Volume = 0.46f,
+                Pitch = 0.08f,
+                PitchVariance = 0.04f,
+                MaxInstances = 5
+            }, position);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/OpalFire")
+            {
+                Volume = 0.56f,
+                Pitch = 0.04f,
+                PitchVariance = 0.04f,
+                MaxInstances = 5
+            }, position);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot")
+            {
+                Volume = 0.24f,
+                Pitch = 0.18f,
+                PitchVariance = 0.05f,
+                MaxInstances = 4
+            }, position);
+        }
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {

@@ -1,6 +1,7 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -49,6 +50,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 Main.projectile[index].timeLeft = 80; // 设置寿命
                 Main.projectile[index].penetrate = 3;
+
+                if (owner.whoAmI == Main.myPlayer)
+                    SoundEngine.PlaySound(new SoundStyle("Terraria/Sounds/Research_3") { Volume = 0.45f, PitchVariance = 0.1f, MaxInstances = 6 }, projectile.Center);
             }
 
             // ===== 重力逻辑（你原本的）=====

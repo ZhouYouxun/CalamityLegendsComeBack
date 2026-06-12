@@ -36,6 +36,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
+            if (projectile.owner == Main.myPlayer)
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/EarthMeteor") { Volume = 0.75f, PitchVariance = 0.1f, MaxInstances = 4 }, projectile.Center);
+
             // 初始速度三倍
             projectile.velocity *= 1.1f;
             projectile.extraUpdates = 3;

@@ -138,6 +138,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     0.34f,
                     16));
             }
+
+            float fade = Projectile.timeLeft / 18f;
+            CynosureVisuals.SpawnScarletStyleBurst(
+                Projectile.Center,
+                Math.Max(3, (int)MathF.Ceiling(fade * 16f)),
+                12f,
+                20f,
+                1.02f + fade * 0.34f);
         }
 
         private void BuildLightning()
@@ -296,6 +304,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(minSpeed, maxSpeed);
                 Color color = Main.rand.NextBool(3) ? new Color(255, 214, 86) : (Main.rand.NextBool(4) ? Color.White : Color.Cyan);
                 Dust dust = Dust.NewDustPerfect(center, DustID.Electric, velocity, 0, color, Main.rand.NextFloat(0.8f, 1.5f));
+                dust.noGravity = true;
+            }
+        }
+
+        internal static void SpawnScarletStyleBurst(Vector2 center, int count, float minSpeed, float maxSpeed, float scale)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(minSpeed, maxSpeed);
+                Color color = Main.rand.NextBool(5)
+                    ? Color.White
+                    : (Main.rand.NextBool() ? new Color(255, 218, 84) : new Color(54, 205, 255));
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    DustID.Electric,
+                    velocity,
+                    100,
+                    color,
+                    scale * Main.rand.NextFloat(0.86f, 1.16f));
                 dust.noGravity = true;
             }
         }

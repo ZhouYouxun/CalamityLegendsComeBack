@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
@@ -645,6 +646,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         // =========================
         private void DoKillEffects()
         {
+            // 暗影之魂小灵魂追踪命中死亡时爆炸音
+            if (presetIndex == 1)
+                SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/反步兵地雷爆炸") { Volume = 3.7f, PitchVariance = 0.12f, MaxInstances = 6 }, Projectile.Center);
             BezierCurve curve = new BezierCurve(Projectile.oldPos);
 
             // 沿拖尾曲线炸开

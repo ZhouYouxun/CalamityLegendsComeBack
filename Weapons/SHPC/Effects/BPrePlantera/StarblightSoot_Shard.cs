@@ -93,6 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<AstralInfectionDebuff>(), 240);
+            SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.3f, PitchVariance = 0.15f, MaxInstances = 6 }, target.Center);
 
             if (!Main.dedServ)
                 SpawnImpactParticles(target.Center, false);
@@ -131,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (Main.dedServ)
                 return;
 
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.28f, Pitch = 0.18f, PitchVariance = 0.1f, MaxInstances = 6 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.28f, Pitch = 0.18f, PitchVariance = 0.1f, MaxInstances = 6 }, Projectile.Center);
 
             for (int i = 0; i < 18; i++)
             {
@@ -161,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         private void SpawnOrbitSparks()
         {
-            // ÈÃ»·ÈÆÁ£×ÓÓëµ¯Ä»Ðý×ª±£³ÖÒ»ÖÂ
+            // ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ëµ¯Ä»ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
             float spinPhase = Projectile.rotation;
             float orbitRadius = 9f;
 
@@ -171,7 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     new Color(92, 205, 255),
                     0.35f) * 0.46f;
 
-            // ²¹³¥Ò»Ö¡µ¯Ä»Î»ÒÆ
+            // ï¿½ï¿½ï¿½ï¿½Ò»Ö¡ï¿½ï¿½Ä»Î»ï¿½ï¿½
             Vector2 positionCompensation = Projectile.velocity;
 
             for (int i = 0; i < 4; i++)
@@ -180,7 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
                 Vector2 radialDirection = angle.ToRotationVector2();
 
-                // ÌáÇ°Éú³É£¬±ÜÃâÊÓ¾õÉÏÂäºóÓÚºËÐÄ
+                // ï¿½ï¿½Ç°ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úºï¿½ï¿½ï¿½
                 Vector2 sparkCenter =
                     Projectile.Center +
                     radialDirection * orbitRadius +

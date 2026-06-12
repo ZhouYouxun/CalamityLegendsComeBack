@@ -234,6 +234,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 0.035f, 0.28f, 16));
 
             CynosureVisuals.SpawnElectricBurst(Projectile.Center, 54, 4.5f, 26f);
+            CynosureVisuals.SpawnScarletStyleBurst(Projectile.Center, 34, 12f, 21f, 1.22f);
 
             // 辐射状辉光火花
             for (int i = 0; i < 28; i++)

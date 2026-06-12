@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 shotIndex);
 
             if (shotIndex == 0 || shotIndex == ShotCount - 1 || shotIndex % 3 == 2)
-                SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.24f, Pitch = -0.22f + shotIndex * 0.025f, PitchVariance = 0.08f, MaxInstances = 6 }, spawnPosition);
+                SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.38f, Pitch = -0.1f + shotIndex * 0.018f, PitchVariance = 0.1f, MaxInstances = 6 }, spawnPosition);
         }
 
         private NPC FindTarget(float range, Vector2 forward)

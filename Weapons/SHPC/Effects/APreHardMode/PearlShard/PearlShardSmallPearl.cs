@@ -138,6 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void OnKill(int timeLeft)
         {
+            PearlShardLargePearl.PlayBreakSound(Projectile.Center, 0.72f);
             PearlShardVisuals.SpawnBurst(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitY), 0.75f, 1.5f, 1.5f);
         }
 

@@ -655,9 +655,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, dir);
             SpawnRocketSalvoMuzzleEffect(player, dir);
 
-            bool diffusionChip = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.ChargedDiffusionChip.ChargedDiffusionChipPlayer>().ChargedDiffusionChipEquipped;
-            int orbCount = diffusionChip ? 6 : 3;
-            float maxAngle = diffusionChip ? MathHelper.ToRadians(2.5f) : 0.22f;
+            var concentrationModule = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.ConcentrationModule.ConcentrationModulePlayer>();
+            int orbCount = 3;
+            float maxAngle = 0.22f * concentrationModule.EmpoweredLeftClickSpreadMultiplier;
             for (int i = 0; i < orbCount; i++)
             {
                 float t = orbCount == 1 ? 0.5f : i / (float)(orbCount - 1);

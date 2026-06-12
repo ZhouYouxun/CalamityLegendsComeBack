@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.55f, Pitch = 0.15f }, Projectile.Center);
+            PlayBreakSound(Projectile.Center);
             PearlShardVisuals.SpawnBurst(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitY), 1f);
 
             if (Projectile.owner != Main.myPlayer)
@@ -83,6 +83,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
         {
             PearlShardVisuals.DrawPearl(Projectile, 1.33f);
             return false;
+        }
+
+        internal static void PlayBreakSound(Vector2 position, float volumeScale = 1f)
+        {
+            SoundEngine.PlaySound(SoundID.Item27 with
+            {
+                Volume = 0.55f * volumeScale,
+                Pitch = 0.15f,
+                MaxInstances = 6
+            }, position);
         }
     }
 }

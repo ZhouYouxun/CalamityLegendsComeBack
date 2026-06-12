@@ -20,6 +20,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (Main.dedServ)
                 return;
 
+            if (UsesDefaultOnlyLeftClickSound(effectID))
+                return;
+
             switch (effectID)
             {
                 case 1:
@@ -147,9 +150,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     Play(SoundID.Item84 with { Volume = 0.2f, Pitch = -0.34f, MaxInstances = 4 }, position);
                     break;
                 default:
-                    Play(SoundID.Item68 with { Volume = 0.18f, Pitch = 0.32f, MaxInstances = 5 }, position);
                     break;
             }
+        }
+
+        private static bool UsesDefaultOnlyLeftClickSound(int effectID)
+        {
+            return effectID >= 9 && effectID <= 14;
         }
 
         private static void Play(SoundStyle sound, Vector2 position)

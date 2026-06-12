@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -171,13 +172,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/CalamitasClone/CalClone_Explosion", 3)
+            {
+                Volume = 0.88f,
+                PitchVariance = 0.1f,
+                MaxInstances = 4
+            }, projectile.Center);
+
             if (projectile.owner == Main.myPlayer)
             {
                 SpawnMainExplosion(projectile);
                 SpawnSecondaryProjectiles(projectile);
             }
 
-            // ===== 光粒子核心：中心炸亮，制造“灵魂爆裂”感 =====
+            // ===== 光粒子核心：中心炸亮，制造"灵魂爆裂"感 =====
             for (int i = 0; i < 16; i++)
             {
                 Vector2 dir = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 6f);

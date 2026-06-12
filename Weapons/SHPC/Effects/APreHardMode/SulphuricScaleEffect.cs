@@ -57,9 +57,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 spawnedExplosion.height = 75;
             }
 
-            // ===== 音效：主体爆破 + 次级化学爆鸣 =====
-            SoundEngine.PlaySound(SoundID.Item107 with { Volume = 0.52f, Pitch = -0.18f }, projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.34f, Pitch = 0.12f }, projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item106 with
+            {
+                Volume = 0.85f,
+                PitchVariance = 0.1f,
+                MaxInstances = 5
+            }, projectile.Center);
 
             // ===== IonizingRadiation：严格原封不动保留 =====
             Particle blastRing = new CustomPulse(
@@ -120,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             );
             GeneralParticleHandler.SpawnParticle(acidHalo);
 
-            // ===== 第二层：有秩序的主爆环，先做出“宏伟感”骨架 =====
+            // ===== 第二层：有秩序的主爆环，先做出"宏伟感"骨架 =====
             int orderedRingCount = 10;
             float orderedBaseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
             for (int i = 0; i < orderedRingCount; i++)
@@ -142,7 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
 
-            // ===== 第三层：中心毒烟团，厚而不死黑，负责“体积感” =====
+            // ===== 第三层：中心毒烟团，厚而不死黑，负责"体积感" =====
             for (int i = 0; i < 24; i++)
             {
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
@@ -188,7 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 GeneralParticleHandler.SpawnParticle(mist);
             }
 
-            // ===== 第五层：黄金角碎屑螺旋，给“优雅美感” =====
+            // ===== 第五层：黄金角碎屑螺旋，给"优雅美感" =====
             float goldenAngle = MathHelper.TwoPi * 0.38196601125f;
             for (int i = 0; i < 34; i++)
             {
@@ -209,7 +212,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 shard.noGravity = true;
             }
 
-            // ===== 第六层：近距离高能溅射，负责“爆破感”和混乱 =====
+            // ===== 第六层：近距离高能溅射，负责"爆破感"和混乱 =====
             for (int i = 0; i < 26; i++)
             {
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
@@ -250,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             {
                 float angle;
 
-                // 一半按有秩序环形放出，另一半随机，兼顾“优雅”和“混乱”
+                // 一半按有秩序环形放出，另一半随机，兼顾"优雅"和"混乱"
                 if (i < count / 2)
                     angle = cloudBaseAngle + MathHelper.TwoPi * i / (count / 2f);
                 else

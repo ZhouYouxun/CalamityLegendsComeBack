@@ -43,8 +43,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
             Player owner = Main.player[Projectile.owner];
             owner.SetScreenshake(10f + Level * 1.5f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸") { Volume = 0.9f, Pitch = -0.28f, MaxInstances = 3 }, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.9f, Pitch = -0.4f, MaxInstances = 3 }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion")
+            {
+                Volume = 1f,
+                Pitch = -0.22f,
+                PitchVariance = 0.04f,
+                MaxInstances = 3
+            }, Projectile.Center);
 
             for (int i = 0; i < 70 + Level * 18; i++)
             {

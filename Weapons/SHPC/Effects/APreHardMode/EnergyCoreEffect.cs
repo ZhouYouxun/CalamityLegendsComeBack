@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Graphics.Effects;
@@ -68,6 +69,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 		// 死亡时炸出6个电火花
 		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
 		{
+            PlayEnergyCoreExplosionSound(projectile.Center);
+
 			int count = 7;
 
 			// 随机整体旋转（避免每次都一样）
@@ -111,6 +114,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             Projectile proj = Main.projectile[projIndex];
             proj.width = 80;
             proj.height = 80;
+        }
+
+        private static void PlayEnergyCoreExplosionSound(Vector2 position)
+        {
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeImpact")
+            {
+                Volume = 0.54f,
+                Pitch = -0.08f,
+                PitchVariance = 0.05f,
+                MaxInstances = 4
+            }, position);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/PlasmaGrenadeExplosion")
+            {
+                Volume = 0.42f,
+                Pitch = -0.18f,
+                PitchVariance = 0.04f,
+                MaxInstances = 4
+            }, position);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HeliumFlashCoreImpact")
+            {
+                Volume = 0.38f,
+                Pitch = 0.06f,
+                PitchVariance = 0.04f,
+                MaxInstances = 4
+            }, position);
         }
 
         public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)

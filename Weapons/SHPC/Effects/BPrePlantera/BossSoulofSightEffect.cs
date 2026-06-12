@@ -3,6 +3,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -41,6 +42,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
+            SoundEngine.PlaySound(SoundID.Item68 with { Volume = 0.75f, PitchVariance = 0.1f }, projectile.Center);
+
             float progress = MathHelper.Clamp(MathHelper.Max(traveledDistance / (30f * 16f), lifeTimer / 60f), 0.2f, 1f);
             int soulCount = (int)MathHelper.Lerp(2f, 10f, progress);
             float damageScale = MathHelper.Lerp(0.55f, 0.7f, progress);
@@ -106,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 GeneralParticleHandler.SpawnParticle(orb);
             }
 
-            // 上下“眼线”
+            // 上下"眼线"
             for (int i = 0; i < 10; i++)
             {
                 float x = MathHelper.Lerp(-60f, 60f, i / 9f);

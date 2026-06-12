@@ -26,11 +26,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         private static readonly Color BrightGray = new(224, 230, 238);
         private static readonly Color MidGray = new(138, 146, 158);
         private static readonly Color DarkGray = new(50, 54, 64);
-        private static readonly SoundStyle ImpactSound = new("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeImpact")
+        private static readonly SoundStyle ImpactSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/ASH12消音")
         {
-            Volume = 0.62f,
-            Pitch = -0.22f,
-            PitchVariance = 0.12f
+            Volume = 0.75f,
+            PitchVariance = 0.1f,
+            MaxInstances = 4
         };
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
