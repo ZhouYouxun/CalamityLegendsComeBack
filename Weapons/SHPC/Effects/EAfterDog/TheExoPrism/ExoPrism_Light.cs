@@ -9,6 +9,7 @@ using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -306,6 +307,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.09f, Pitch = 0.46f, PitchVariance = 0.08f, MaxInstances = 8 }, target.Center);
             target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
 
             // ================= 在敌人下方生成几何体 =================

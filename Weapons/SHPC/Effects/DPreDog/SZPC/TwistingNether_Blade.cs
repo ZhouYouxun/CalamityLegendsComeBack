@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 150;
+            Projectile.width = Projectile.height = 30;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
@@ -153,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            SoundEngine.PlaySound(SoundID.NPCDeath7 with { Volume = 0.62f, Pitch = -0.15f, PitchVariance = 0.18f, MaxInstances = 5 }, target.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ShadowboltReflect"), target.Center);
             if (Projectile.owner == Main.myPlayer)
             {
                 Vector2 slashVelocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * 8f;

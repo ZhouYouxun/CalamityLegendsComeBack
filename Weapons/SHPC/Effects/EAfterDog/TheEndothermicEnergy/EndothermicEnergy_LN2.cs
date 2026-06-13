@@ -1,6 +1,7 @@
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -31,6 +32,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override void AI()
         {
             timer++;
+            if (timer == 1)
+                SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.42f, Pitch = -0.28f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
 
             float progress = Utils.GetLerpValue(0f, 50f, timer, true);
             sizeFactor = MathHelper.Lerp(1f, 2f, progress);

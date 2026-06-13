@@ -1,7 +1,9 @@
+using System;
+using System.Collections.Generic;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,11 +15,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         {
             public bool PendingShadowRelease;
             public int MarkedTargetIndex = -1;
+            public bool BurstSpawned;
+            public int VisualTimer;
+            public int SnowSeed;
         }
 
-        private readonly System.Collections.Generic.Dictionary<int, EndothermicCopyState> projectileStates = new();
+        private readonly Dictionary<int, EndothermicCopyState> projectileStates = new();
         private const int ExtraUpdateCount = 3;
         private const int VisibleLifetimeFrames = 108;
+        private const float GoldenAngle = 2.3999631f;
+        private const float PiOver6 = 0.5235988f;
+        private static readonly Color FrostWhite = new(242, 252, 255);
+        private static readonly Color FrostBlue = new(148, 218, 255);
+        private static readonly Color FrostDeep = new(54, 122, 230);
+        private static readonly Color FrostGlass = new(184, 242, 255);
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -27,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             if (!projectileStates.TryGetValue(Projectile.whoAmI, out EndothermicCopyState state))
             {
                 state = new EndothermicCopyState();
+                state.SnowSeed = Projectile.identity * 37 + Projectile.whoAmI * 53;
                 projectileStates[Projectile.whoAmI] = state;
             }
 
@@ -35,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 28;
+            ProjectileID.Sets.TrailCacheLength[Type] = 4;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -60,184 +72,156 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             EndothermicCopyState state = GetState();
             state.PendingShadowRelease = false;
             state.MarkedTargetIndex = -1;
+            state.BurstSpawned = false;
+            state.VisualTimer = 0;
+            state.SnowSeed = Projectile.identity * 37 + Projectile.whoAmI * 53;
         }
 
         public override void AI()
         {
+            EndothermicCopyState state = GetState();
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Color(170, 220, 255).ToVector3() * 0.36f);
 
-            EmitFlightTrail(forward);
+            if (!Main.dedServ)
+                UpdateFrostParticleField(state, forward);
         }
 
-        private void EmitFlightTrail(Vector2 forward)
+        private void UpdateFrostParticleField(EndothermicCopyState state, Vector2 forward)
         {
-            if (Main.dedServ)
-                return;
+            state.VisualTimer++;
+            EmitFlightMotes(state, forward);
+        }
 
+        private void EmitFlightMotes(EndothermicCopyState state, Vector2 forward)
+        {
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            float t = (float)Main.GameUpdateCount * 0.28f + Projectile.identity * 0.31f + Projectile.numUpdates * 0.19f;
-            float ribbonOffset = (float)System.Math.Sin(t * 1.8f) * Main.rand.NextFloat(1.2f, 3.8f);
-            Vector2 basePosition = Projectile.Center - forward * Main.rand.NextFloat(2f, 7f) + right * ribbonOffset;
+            float seed = state.SnowSeed * 0.011f;
+            float time = state.VisualTimer * 0.25f + seed;
 
-            if (Main.rand.NextBool(2))
+            for (int lane = 0; lane < 3; lane++)
             {
-                SquishyLightParticle particle = new(
-                    basePosition,
-                    -forward * Main.rand.NextFloat(0.35f, 0.9f) + right * Main.rand.NextFloat(-0.12f, 0.12f),
-                    Main.rand.NextFloat(0.28f, 0.42f),
-                    Color.Lerp(new Color(220, 240, 255), Color.White, Main.rand.NextFloat(0.18f, 0.55f)) * 0.5f,
-                    Main.rand.Next(9, 14)
-                );
-                GeneralParticleHandler.SpawnParticle(particle);
+                float side = lane - 1f;
+                float phase = time * 0.72f + lane * MathHelper.TwoPi / 3f;
+                float braidOffset = (float)Math.Sin(phase) * 6.8f + side * 2.4f;
+                Vector2 lanePosition = Projectile.Center - forward * (4f + lane * 4f) + right * braidOffset;
+                Vector2 laneVelocity = -forward * Main.rand.NextFloat(0.08f, 0.24f) + right * ((float)Math.Cos(phase) * (side == 0f ? 0.08f : side * 0.14f));
+
+                SpawnIceNeedleParticle(
+                    lanePosition,
+                    laneVelocity,
+                    Color.Lerp(FrostBlue, FrostWhite, 0.28f + lane * 0.22f) * 0.92f,
+                    Main.rand.NextFloat(0.48f, 0.72f),
+                    Main.rand.Next(20, 32));
             }
 
-            if (Main.rand.NextBool(3))
+            int step = state.VisualTimer;
+            for (int i = 0; i < 2; i++)
             {
-                float side = Main.rand.NextBool() ? -1f : 1f;
-                GlowSparkParticle spark = new GlowSparkParticle(
-                    basePosition + right * side * Main.rand.NextFloat(1f, 3f),
-                    (-forward + right * side * Main.rand.NextFloat(0.12f, 0.28f)).SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(1.2f, 2.4f),
-                    false,
-                    Main.rand.Next(5, 7),
-                    Main.rand.NextFloat(0.008f, 0.013f),
-                    Color.Lerp(new Color(190, 230, 255), Color.White, Main.rand.NextFloat(0.22f, 0.62f)) * 0.62f,
-                    new Vector2(1.45f, 0.72f),
-                    true,
-                    false,
-                    1.04f
-                );
-                GeneralParticleHandler.SpawnParticle(spark);
+                float angle = (step * 2 + i) * GoldenAngle + seed;
+                float radius = 2.5f * (float)Math.Sqrt((step + i * 7) % 23 + 1f);
+                Vector2 fermatOffset = right * ((float)Math.Cos(angle) * radius) + forward * ((float)Math.Sin(angle * 0.73f) * 2.2f);
+                Vector2 position = Projectile.Center - forward * Main.rand.NextFloat(10f, 34f) + fermatOffset;
+                Vector2 velocity = -forward * Main.rand.NextFloat(0.03f, 0.12f) + right * ((float)Math.Sin(angle) * 0.07f);
+
+                SpawnSnowCrystalParticle(position, velocity, Main.rand.NextFloat(0.74f, 1.08f), Main.rand.Next(30, 48));
             }
 
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    basePosition + right * Main.rand.NextFloat(-2.8f, 2.8f),
-                    Main.rand.NextBool(2) ? DustID.IceTorch : DustID.GemDiamond,
-                    -forward * Main.rand.NextFloat(0.55f, 1.55f) + right * Main.rand.NextFloat(-0.18f, 0.18f),
-                    0,
-                    Color.Lerp(new Color(120, 170, 255), Color.White, Main.rand.NextFloat(0.28f, 0.72f)),
-                    Main.rand.NextFloat(0.45f, 0.68f)
-                );
-                dust.noGravity = true;
-            }
+            Vector2 sparkPosition = Projectile.Center - forward * Main.rand.NextFloat(5f, 20f) + right * Main.rand.NextFloat(-7f, 7f);
+            Particle glint = new GlowSparkParticle(
+                sparkPosition,
+                -forward * Main.rand.NextFloat(0.2f, 0.55f) + right * Main.rand.NextFloat(-0.28f, 0.28f),
+                false,
+                Main.rand.Next(11, 18),
+                Main.rand.NextFloat(0.018f, 0.034f),
+                Color.Lerp(FrostGlass, FrostWhite, Main.rand.NextFloat(0.25f, 0.85f)) * 1.08f,
+                new Vector2(Main.rand.NextFloat(1.1f, 1.8f), Main.rand.NextFloat(0.34f, 0.58f)),
+                true,
+                false,
+                1.04f);
+            GeneralParticleHandler.SpawnParticle(glint);
 
-            if (Main.rand.NextBool(4))
-            {
-                Particle mist = new MediumMistParticle(
-                    basePosition + right * Main.rand.NextFloat(-3f, 3f),
-                    -forward * Main.rand.NextFloat(0.12f, 0.45f) + right * Main.rand.NextFloat(-0.08f, 0.08f),
-                    Color.White * 0.42f,
-                    Color.Transparent,
-                    Main.rand.NextFloat(0.18f, 0.3f),
-                    Main.rand.NextFloat(50f, 74f)
-                );
-                GeneralParticleHandler.SpawnParticle(mist);
-            }
+            Particle mist = new MediumMistParticle(
+                Projectile.Center - forward * Main.rand.NextFloat(18f, 44f) + right * Main.rand.NextFloat(-14f, 14f),
+                -forward * Main.rand.NextFloat(0.01f, 0.06f) + right * Main.rand.NextFloat(-0.04f, 0.04f),
+                FrostWhite * 0.44f,
+                Color.Transparent,
+                Main.rand.NextFloat(0.25f, 0.42f),
+                Main.rand.NextFloat(78f, 118f));
+            GeneralParticleHandler.SpawnParticle(mist);
+
+            Particle coldCore = new SquishyLightParticle(
+                Projectile.Center - forward * Main.rand.NextFloat(1f, 8f),
+                -forward * Main.rand.NextFloat(0.02f, 0.1f),
+                Main.rand.NextFloat(0.18f, 0.28f),
+                Color.Lerp(FrostBlue, FrostWhite, 0.56f) * 0.54f,
+                Main.rand.Next(14, 22),
+                opacity: 0.82f,
+                squishStrenght: 1.25f,
+                maxSquish: 2.7f);
+            GeneralParticleHandler.SpawnParticle(coldCore);
         }
 
-        public override bool PreDraw(ref Color lightColor)
+        private static void SpawnIceNeedleParticle(Vector2 position, Vector2 velocity, Color color, float scale, int lifetime)
         {
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineFade").Value;
-
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-            Vector2 previous = Projectile.Center;
-            for (int i = 0; i < Projectile.oldPos.Length; i++)
-            {
-                if (Projectile.oldPos[i] == Vector2.Zero)
-                    continue;
-
-                Vector2 current = Projectile.oldPos[i] + Projectile.Size * 0.5f;
-                Vector2 delta = previous - current;
-                float length = delta.Length();
-                if (length <= 1f)
-                {
-                    previous = current;
-                    continue;
-                }
-
-                float completion = 1f - i / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(new Color(70, 125, 255, 0), new Color(220, 250, 255, 0), completion);
-
-                Main.EntitySpriteDraw(
-                    line,
-                    previous - Main.screenPosition - delta * 0.5f,
-                    null,
-                    trailColor * (0.1f + completion * 0.42f),
-                    delta.ToRotation() + MathHelper.PiOver2,
-                    line.Size() * 0.5f,
-                    new Vector2(MathHelper.Lerp(0.06f, 0.18f, completion), length / line.Height),
-                    SpriteEffects.None,
-                    0f);
-
-                previous = current;
-            }
-
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            float rotation = forward.ToRotation() + MathHelper.PiOver2;
-
-            Main.EntitySpriteDraw(
-                line,
-                drawPos - forward * 10f,
-                null,
-                new Color(90, 220, 255, 180),
-                rotation,
-                line.Size() * 0.5f,
-                new Vector2(0.11f, 0.48f),
-                SpriteEffects.None,
-                0f);
-
-            Main.EntitySpriteDraw(
-                line,
-                drawPos + forward * 8f,
-                null,
-                new Color(235, 255, 255, 210),
-                rotation,
-                line.Size() * 0.5f,
-                new Vector2(0.026f, 0.28f),
-                SpriteEffects.None,
-                0f);
-
-            Main.EntitySpriteDraw(
-                bloom,
-                drawPos + forward * 12f,
-                null,
-                new Color(245, 255, 255, 180),
-                rotation,
-                bloom.Size() * 0.5f,
-                new Vector2(0.045f, 0.018f),
-                SpriteEffects.None,
-                0f);
-
-            Main.EntitySpriteDraw(
-                bloom,
-                drawPos,
-                null,
-                new Color(120, 230, 255, 120),
-                rotation,
-                bloom.Size() * 0.5f,
-                new Vector2(0.12f, 0.07f),
-                SpriteEffects.None,
-                0f);
-
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-            return false;
+            Particle needle = new CustomSpark(
+                position,
+                velocity,
+                "CalamityMod/Particles/BloomLineSoftEdge",
+                false,
+                lifetime,
+                scale,
+                color,
+                new Vector2(Main.rand.NextFloat(2.25f, 3.35f), Main.rand.NextFloat(0.32f, 0.52f)),
+                shrinkSpeed: Main.rand.NextFloat(0.64f, 0.76f));
+            GeneralParticleHandler.SpawnParticle(needle);
         }
+
+        private static void SpawnSnowCrystalParticle(Vector2 position, Vector2 velocity, float scale, int lifetime)
+        {
+            Particle snowflakeSparkle = new SnowflakeSparkle(
+                position,
+                velocity,
+                FrostWhite,
+                FrostBlue,
+                scale,
+                lifetime,
+                Main.rand.NextFloat(0.012f, 0.026f),
+                Main.rand.NextFloat(1.08f, 1.48f),
+                6);
+            GeneralParticleHandler.SpawnParticle(snowflakeSparkle);
+
+            Particle sparkle = new GlowSparkParticle(
+                position,
+                velocity * 0.45f + Main.rand.NextVector2Circular(0.04f, 0.04f),
+                false,
+                Math.Max(10, lifetime / 2),
+                Main.rand.NextFloat(0.012f, 0.022f),
+                Color.Lerp(FrostGlass, FrostWhite, Main.rand.NextFloat(0.35f, 0.9f)),
+                new Vector2(Main.rand.NextFloat(0.8f, 1.3f), Main.rand.NextFloat(0.36f, 0.58f)),
+                true,
+                false,
+                1.05f);
+            GeneralParticleHandler.SpawnParticle(sparkle);
+        }
+
+        public override bool PreDraw(ref Color lightColor) => false;
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             EndothermicCopyState state = GetState();
 
+            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.36f, Pitch = 0.18f, PitchVariance = 0.12f, MaxInstances = 5 }, target.Center);
             target.AddBuff(BuffID.Frostburn, 300);
             target.AddBuff(BuffID.Chilled, 180);
+            if (!Main.dedServ)
+            {
+                SpawnIceFractalBurst(state, target.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX), true);
+                state.BurstSpawned = true;
+            }
+
             state.PendingShadowRelease = true;
             state.MarkedTargetIndex = target.whoAmI;
 
@@ -247,6 +231,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override void OnKill(int timeLeft)
         {
             EndothermicCopyState state = GetState();
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+            if (!Main.dedServ && !state.BurstSpawned)
+                SpawnIceFractalBurst(state, Projectile.Center, forward, false);
 
             if (Projectile.owner != Main.myPlayer)
             {
@@ -289,6 +277,97 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             }
 
             projectileStates.Remove(Projectile.whoAmI);
+        }
+
+        private static void SpawnIceFractalBurst(EndothermicCopyState state, Vector2 center, Vector2 forward, bool strong)
+        {
+            float baseRotation = forward.ToRotation() + state.SnowSeed * 0.0007f;
+            int armCount = 6;
+            int branchCount = strong ? 3 : 2;
+
+            Particle pulse = new CustomPulse(
+                center,
+                Vector2.Zero,
+                FrostGlass * (strong ? 0.38f : 0.24f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                baseRotation,
+                strong ? 0.025f : 0.018f,
+                strong ? 0.42f : 0.26f,
+                strong ? 18 : 14);
+            GeneralParticleHandler.SpawnParticle(pulse);
+
+            for (int arm = 0; arm < armCount; arm++)
+            {
+                float armAngle = baseRotation + MathHelper.TwoPi * arm / armCount;
+                Vector2 armDirection = armAngle.ToRotationVector2();
+
+                for (int branch = 0; branch < branchCount; branch++)
+                {
+                    float branchSign = branch == 1 ? -1f : 1f;
+                    float branchAngle = armAngle + branchSign * PiOver6 * branch * 0.62f;
+                    Vector2 direction = branchAngle.ToRotationVector2();
+                    float speed = Main.rand.NextFloat(strong ? 2.4f : 1.4f, strong ? 5.2f : 3.3f);
+
+                    GlowSparkParticle ray = new(
+                        center + armDirection * Main.rand.NextFloat(2f, 8f),
+                        direction * speed,
+                        false,
+                        Main.rand.Next(strong ? 13 : 9, strong ? 20 : 15),
+                        Main.rand.NextFloat(0.016f, 0.032f),
+                        Color.Lerp(FrostBlue, FrostWhite, Main.rand.NextFloat(0.28f, 0.78f)),
+                        new Vector2(1.9f, 0.55f),
+                        true,
+                        false,
+                        1.04f);
+                    GeneralParticleHandler.SpawnParticle(ray);
+                }
+
+                Particle snowflake = new SnowflakeSparkle(
+                    center + armDirection * Main.rand.NextFloat(6f, strong ? 22f : 15f),
+                    armDirection * Main.rand.NextFloat(strong ? 1.5f : 0.8f, strong ? 3.4f : 2.2f),
+                    FrostWhite,
+                    FrostBlue,
+                    Main.rand.NextFloat(strong ? 0.74f : 0.48f, strong ? 1.05f : 0.78f),
+                    Main.rand.Next(strong ? 24 : 18, strong ? 36 : 28),
+                    Main.rand.NextFloat(0.018f, 0.04f),
+                    Main.rand.NextFloat(0.95f, 1.28f),
+                    6);
+                GeneralParticleHandler.SpawnParticle(snowflake);
+            }
+
+            int mistCount = strong ? 12 : 7;
+            for (int i = 0; i < mistCount; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(strong ? 1.2f : 0.7f, strong ? 3.4f : 2.1f);
+                Particle mist = new MediumMistParticle(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    velocity,
+                    FrostWhite * (strong ? 0.54f : 0.36f),
+                    Color.Transparent,
+                    Main.rand.NextFloat(strong ? 0.34f : 0.22f, strong ? 0.58f : 0.42f),
+                    Main.rand.NextFloat(95f, 150f));
+                GeneralParticleHandler.SpawnParticle(mist);
+            }
+
+            int shardCount = strong ? 18 : 10;
+            for (int i = 0; i < shardCount; i++)
+            {
+                float angle = baseRotation + i * GoldenAngle;
+                float radius = 1.6f * (float)Math.Sqrt(i + 1f);
+                Vector2 direction = angle.ToRotationVector2();
+                Particle shard = new CustomSpark(
+                    center + direction * radius,
+                    direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(0.4f, 1.2f) + direction * Main.rand.NextFloat(0.6f, strong ? 2.4f : 1.5f),
+                    "CalamityMod/Particles/BloomLineSoftEdge",
+                    false,
+                    Main.rand.Next(strong ? 18 : 12, strong ? 30 : 22),
+                    Main.rand.NextFloat(0.32f, strong ? 0.62f : 0.48f),
+                    Color.Lerp(FrostDeep, FrostWhite, Main.rand.NextFloat(0.4f, 0.9f)),
+                    new Vector2(Main.rand.NextFloat(1.3f, 2.2f), Main.rand.NextFloat(0.3f, 0.5f)),
+                    shrinkSpeed: Main.rand.NextFloat(0.66f, 0.78f));
+                GeneralParticleHandler.SpawnParticle(shard);
+            }
         }
     }
 }

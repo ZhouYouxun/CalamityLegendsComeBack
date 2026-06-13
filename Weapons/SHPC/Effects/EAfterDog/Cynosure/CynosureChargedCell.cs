@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -71,6 +72,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void OnKill(int timeLeft)
         {
+            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.16f, Pitch = 0.38f, PitchVariance = 0.14f, MaxInstances = 4 }, Projectile.Center);
+
             NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
             if (target != null && Projectile.owner == Main.myPlayer)
             {

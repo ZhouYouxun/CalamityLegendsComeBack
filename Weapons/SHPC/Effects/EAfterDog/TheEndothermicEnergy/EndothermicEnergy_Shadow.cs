@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -117,6 +118,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         private void BurstSplits(NPC target)
         {
+            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.18f, Pitch = 0.42f, PitchVariance = 0.14f, MaxInstances = 5 }, Projectile.Center);
+
             for (int arm = 0; arm < 6; arm++)
             {
                 float armAngle = OrbitAngle + MathHelper.TwoPi * arm / 6f;

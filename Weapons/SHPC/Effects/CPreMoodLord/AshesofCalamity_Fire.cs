@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float BaseLineForwardLength = 96f;
         private const float BaseLineBackLength = 210f;
         private const float BaseLineWidth = 46f;
-        private const float HomingRange = 2400f;
+        private const float HomingRange = 6000f;
         private const float HomingRearTolerance = -0.18f;
         private const float HomingMaxTurnPerUpdate = 0.034f;
         private const float HomingLeadFramesMax = 14f;
@@ -237,7 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.7f, PitchVariance = 0.12f, MaxInstances = 6 }, target.Center);
+            SoundEngine.PlaySound(SoundID.Item74, target.Center);
             target.AddBuff(ModContent.BuffType<BrimstoneFlames>(), 240);
             target.AddBuff(BuffID.OnFire, 240);
             target.AddBuff(BuffID.CursedInferno, 180);

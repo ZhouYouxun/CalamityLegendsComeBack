@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -31,12 +32,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override void SetDefaults()
         {
             // 设置弹幕的基础属性
-            Projectile.width = 11; // 弹幕宽度
-            Projectile.height = 24; // 弹幕高度
+            Projectile.width = Projectile.height = 14; // 弹幕高度
             Projectile.friendly = true; // 对敌人有效
             Projectile.DamageType = DamageClass.Magic; // 远程伤害类型
             Projectile.penetrate = 1; // 穿透力为1，击中一个敌人就消失
-            Projectile.timeLeft = 300; // 弹幕存在时间为600帧
+            Projectile.timeLeft = 120; // 弹幕存在时间为600帧
             Projectile.usesLocalNPCImmunity = true; // 弹幕使用本地无敌帧
             Projectile.localNPCHitCooldown = 14; // 无敌帧冷却时间为14帧
             Projectile.ignoreWater = true; // 弹幕不受水影响
@@ -49,6 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.2f, Pitch = 0.5f, PitchVariance = 0.12f, MaxInstances = 8 }, target.Center);
             target.AddBuff(BuffID.Frostburn, 300); // 原版的霜火效果
             target.AddBuff(BuffID.Chilled, 300); // 原版的寒冷效果
         }

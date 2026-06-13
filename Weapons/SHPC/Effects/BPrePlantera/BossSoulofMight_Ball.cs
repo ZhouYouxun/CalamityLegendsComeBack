@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -136,6 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         }
         public override void OnKill(int timeLeft)
         {
+            SoundEngine.PlaySound(SoundID.Thunder, Projectile.Center);
             // 在弹幕消失时，释放SHPExplosion
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<BossSoulofMight_EXP>(), (int)(Projectile.damage * 1.13), Projectile.knockBack, Projectile.owner);
         }

@@ -22,6 +22,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.YharonSoul
         public override float ExplosionPulseFactor => 0f;
         public override bool PlayDefaultLeftClickFireSound => false;
 
+        public override void PlayLeftClickReplacementFireSound(Projectile projectile, Player owner)
+        {
+            // SHPCLeftClickSounds handles Yharon's layered left-click fire mix.
+        }
+
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {

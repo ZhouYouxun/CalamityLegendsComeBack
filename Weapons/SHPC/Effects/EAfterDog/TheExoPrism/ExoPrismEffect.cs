@@ -14,6 +14,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         public override int AmmoType => ModContent.ItemType<ExoPrism>();
         public override bool PlayDefaultLeftClickFireSound => false;
 
+        public override void PlayLeftClickReplacementFireSound(Projectile projectile, Player owner)
+        {
+            // SHPCLeftClickSounds handles ExoPrism's custom layered fire sound.
+        }
+
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {

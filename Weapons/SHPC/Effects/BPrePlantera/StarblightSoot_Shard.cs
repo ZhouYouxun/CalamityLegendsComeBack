@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.scale = Main.rand.NextFloat(0.72f, 1.05f) * 1.5f;
             Projectile.alpha = 0;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.24f, Pitch = 0.2f, PitchVariance = 0.12f, MaxInstances = 6 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item9, Projectile.Center);
         }
 
         public override void AI()
@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<AstralInfectionDebuff>(), 240);
-            SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.3f, PitchVariance = 0.15f, MaxInstances = 6 }, target.Center);
+            SoundEngine.PlaySound(SoundID.Item9, target.Center);
 
             if (!Main.dedServ)
                 SpawnImpactParticles(target.Center, false);
@@ -132,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (Main.dedServ)
                 return;
 
-            SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.28f, Pitch = 0.18f, PitchVariance = 0.1f, MaxInstances = 6 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item9, Projectile.Center);
 
             for (int i = 0; i < 18; i++)
             {

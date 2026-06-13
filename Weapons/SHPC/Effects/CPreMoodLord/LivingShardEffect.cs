@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰有消音") { Volume = 0.85f, PitchVariance = 0.08f, MaxInstances = 3 }, projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰有消音"), projectile.Center);
             Vector2 center = projectile.Center;
 
             // ================= 1.主圆环（放射爆散） =================

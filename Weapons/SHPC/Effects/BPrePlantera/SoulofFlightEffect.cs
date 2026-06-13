@@ -52,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Main.projectile[index].penetrate = 3;
 
                 if (owner.whoAmI == Main.myPlayer)
-                    SoundEngine.PlaySound(new SoundStyle("Terraria/Sounds/Research_3") { Volume = 0.45f, PitchVariance = 0.1f, MaxInstances = 6 }, projectile.Center);
+                    SoundEngine.PlaySound(new SoundStyle("Terraria/Sounds/Research_3"), projectile.Center);
             }
 
             // ===== 重力逻辑（你原本的）=====

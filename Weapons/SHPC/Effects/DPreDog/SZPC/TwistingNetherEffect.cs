@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             if (projectile.owner == Main.myPlayer)
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HellbornImpact") { Volume = 0.8f, PitchVariance = 0.1f, MaxInstances = 4 }, projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HellbornImpact"), projectile.Center);
 
             if (projectile.owner != Main.myPlayer)
                 return;

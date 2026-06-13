@@ -346,6 +346,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.16f, Pitch = 0.28f, PitchVariance = 0.1f, MaxInstances = 6 }, target.Center);
             target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
         }
 

@@ -53,9 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         {
             SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/最后通牒爆炸")
             {
-                Volume = 3f,
-                PitchVariance = 0.08f,
-                MaxInstances = 3
+                Volume = 3f
             }, projectile.Center);
 
             bool movingDownward = projectile.velocity.Y > 0f;

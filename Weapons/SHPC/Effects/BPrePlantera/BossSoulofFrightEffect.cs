@@ -172,12 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/CalamitasClone/CalClone_Explosion", 3)
-            {
-                Volume = 0.88f,
-                PitchVariance = 0.1f,
-                MaxInstances = 4
-            }, projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/CalamitasClone/CalClone_Explosion", 3), projectile.Center);
 
             if (projectile.owner == Main.myPlayer)
             {

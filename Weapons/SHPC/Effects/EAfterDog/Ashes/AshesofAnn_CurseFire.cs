@@ -206,6 +206,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             HitSomething = 1f;
+            SoundEngine.PlaySound(SoundID.NPCDeath6, target.Center);
             target.AddBuff(ModContent.BuffType<VulnerabilityHex>(), 180);
             target.AddBuff(ModContent.BuffType<BrimstoneFlames>(), 240);
             target.AddBuff(BuffID.CursedInferno, 210);
@@ -224,9 +225,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             if (impact)
             {
-                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.28f, Pitch = -0.08f + ShotCompletion * 0.18f, PitchVariance = 0.12f, MaxInstances = 8 }, Projectile.Center);
-                if (ShotIndex == TotalRelayShots - 1)
-                    SoundEngine.PlaySound(SoundID.Item110 with { Volume = 0.42f, Pitch = -0.18f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
+                if (HitSomething != 1f)
+                {
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.28f, Pitch = -0.08f + ShotCompletion * 0.18f, PitchVariance = 0.12f, MaxInstances = 8 }, Projectile.Center);
+                    if (ShotIndex == TotalRelayShots - 1)
+                        SoundEngine.PlaySound(SoundID.Item110 with { Volume = 0.42f, Pitch = -0.18f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
+                }
             }
         }
 

@@ -9,10 +9,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
     {
         private static readonly SoundStyle ArtAttackCast = new("CalamityMod/Sounds/Item/ArtAttackCast");
         private static readonly SoundStyle ArcNovaSmallShot = new("CalamityMod/Sounds/Item/ArcNovaDiffuserSmallShot");
+        private static readonly SoundStyle AwmFire = new("CalamityLegendsComeBack/Sound/SHPC/AWM开火");
         private static readonly SoundStyle HadalUrnOpen = new("CalamityMod/Sounds/Item/HadalUrnOpen");
         private static readonly SoundStyle IceBarrageCast = new("CalamityMod/Sounds/Item/IceBarrageCast");
         private static readonly SoundStyle MechGaussRifle = new("CalamityMod/Sounds/Item/MechGaussRifle");
         private static readonly SoundStyle MeldExplosion = new("CalamityMod/Sounds/Item/MeldExplosion");
+        private static readonly SoundStyle OmicronBeam = new("CalamityMod/Sounds/Item/OmicronBeam");
+        private static readonly SoundStyle OracleHum = new("CalamityMod/Sounds/Item/OracleHum");
         private static readonly SoundStyle TeslaCannonFire = new("CalamityMod/Sounds/Item/TeslaCannonFire");
 
         public static void PlayForEffect(int effectID, Vector2 position)
@@ -133,10 +136,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     Play(SoundID.Item92 with { Volume = 0.2f, Pitch = 0.22f, MaxInstances = 5 }, position);
                     break;
                 case 37:
-                    Play(SoundID.Item74 with { Volume = 0.34f, Pitch = -0.18f, PitchVariance = 0.08f, MaxInstances = 4 }, position);
+                    Play(SoundID.Item74 with { Volume = 0.85f, Pitch = -0.24f, PitchVariance = 0.04f, MaxInstances = 4 }, position);
+                    Play(AwmFire with { Volume = 1.15f, Pitch = 0.42f, PitchVariance = 0.03f, MaxInstances = 4 }, position);
+                    Play(OmicronBeam with { Volume = 0.5f, Pitch = 0.36f, PitchVariance = 0.03f, MaxInstances = 4 }, position);
+                    Play(SoundID.Item68 with { Volume = 1.15f, Pitch = -0.42f, PitchVariance = 0.05f, MaxInstances = 4 }, position);
                     break;
                 case 38:
-                    Play(ArcNovaSmallShot with { Volume = 0.34f, Pitch = 0.12f, PitchVariance = 0.08f, MaxInstances = 5 }, position);
+                    Play(OracleHum with { Pitch = 0.25f }, position);
+                    Play(OmicronBeam with { Volume = 0.75f, Pitch = -0.35f }, position);
                     break;
                 case 39:
                     Play(SoundID.Item103 with { Volume = 0.32f, Pitch = -0.3f, PitchVariance = 0.08f, MaxInstances = 4 }, position);
@@ -144,6 +151,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 case 40:
                     Play(SoundID.Item38 with { Volume = 0.3f, Pitch = -0.12f, PitchVariance = 0.08f, MaxInstances = 5 }, position);
                     Play(SoundID.Item122 with { Volume = 0.18f, Pitch = 0.16f, MaxInstances = 5 }, position);
+                    break;
+                case 41:
+                    Play(new SoundStyle("CalamityMod/Sounds/Item/OpalFire") { Volume = 0.34f, Pitch = 0.08f, PitchVariance = 0.08f, MaxInstances = 4 }, position);
+                    Play(new SoundStyle("CalamityMod/Sounds/Item/GunShotSmall") { Volume = 0.18f, Pitch = 0.28f, PitchVariance = 0.08f, MaxInstances = 4 }, position);
+                    break;
+                case 43:
+                    Play(new SoundStyle("CalamityLegendsComeBack/Sound/Other/Helldiver2/反坦克炮-开火与换弹"), position);
+                    Play(SoundID.Item92, position);
+                    Play(MechGaussRifle, position);
+                    Play(TeslaCannonFire, position);
+                    Play(SoundID.Item68, position);
+                    Play(SoundID.Item122, position);
+                    Play(OmicronBeam, position);
                     break;
                 case 44:
                     Play(ArcNovaSmallShot with { Volume = 0.42f, Pitch = -0.2f, PitchVariance = 0.08f, MaxInstances = 5 }, position);

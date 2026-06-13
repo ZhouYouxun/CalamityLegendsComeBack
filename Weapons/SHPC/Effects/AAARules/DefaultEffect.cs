@@ -73,7 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
                 projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(projectile.damage * 0.85f),
+                (int)(projectile.damage * 1.85f),
                 projectile.knockBack,
                 projectile.owner
             );

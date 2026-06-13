@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.Item68 with { Volume = 0.75f, PitchVariance = 0.1f }, projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item68, projectile.Center);
 
             float progress = MathHelper.Clamp(MathHelper.Max(traveledDistance / (30f * 16f), lifeTimer / 60f), 0.2f, 1f);
             int soulCount = (int)MathHelper.Lerp(2f, 10f, progress);

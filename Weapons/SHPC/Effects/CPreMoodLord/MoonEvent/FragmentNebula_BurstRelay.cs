@@ -126,7 +126,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 homingDelayFrames,
                 shotIndex);
 
-            SoundEngine.PlaySound(SoundID.Item75 with { Volume = 0.5f, PitchVariance = 0.12f, MaxInstances = 8 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item75, Projectile.Center);
         }
 
         private void SpawnRelayDust(Vector2 forward)

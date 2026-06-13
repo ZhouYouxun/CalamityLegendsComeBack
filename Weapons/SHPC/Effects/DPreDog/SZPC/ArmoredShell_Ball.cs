@@ -121,6 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Vector2 inwardDirection = InwardDirection;
             Vector2 shotDirection = FindMouseNearestTargetDirection(inwardDirection);
             SpawnDeathFanFX(shotDirection);
+            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap, Projectile.Center);
 
             if (Projectile.owner != Main.myPlayer)
                 return;

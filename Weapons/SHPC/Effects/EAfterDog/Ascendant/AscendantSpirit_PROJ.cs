@@ -9,6 +9,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -383,6 +384,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(initialDirection);
             Color visualColor = VisualColor;
+
+            SoundEngine.PlaySound(SoundID.Item94 with { Volume = launched ? 0.18f : 0.1f, Pitch = launched ? 0.18f : 0.38f, PitchVariance = 0.1f, MaxInstances = 6 }, Projectile.Center);
 
             for (int i = 0; i < 10; i++)
             {

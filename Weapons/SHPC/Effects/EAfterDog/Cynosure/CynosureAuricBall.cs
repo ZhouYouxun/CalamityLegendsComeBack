@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -164,6 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             if (Main.dedServ)
                 return;
 
+            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.14f, Pitch = 0.26f, PitchVariance = 0.12f, MaxInstances = 4 }, Projectile.Center);
             CynosureVisuals.SpawnElectricBurst(Projectile.Center, 24, 2.8f, 14f);
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,

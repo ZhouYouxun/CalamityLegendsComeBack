@@ -65,8 +65,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             _ => "CalamityLegendsComeBack/Sound/Other/Helldiver2/爆裂铳开火"
         };
 
-        public virtual float LeftClickReplacementFireSoundVolume => EffectID == 43 ? 2.5f : 1f;
-        public virtual float LeftClickReplacementFireSoundPitch => 0f;
         public virtual int LeftClickReplacementFireSoundMaxInstances => 4;
 
         public virtual void PlayLeftClickReplacementFireSound(Projectile projectile, Player owner)
@@ -76,9 +74,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 
             SoundEngine.PlaySound(new SoundStyle(LeftClickReplacementFireSoundPath)
             {
-                Volume = LeftClickReplacementFireSoundVolume,
-                Pitch = LeftClickReplacementFireSoundPitch,
-                PitchVariance = 0.04f,
                 MaxInstances = LeftClickReplacementFireSoundMaxInstances
             }, projectile.Center);
         }

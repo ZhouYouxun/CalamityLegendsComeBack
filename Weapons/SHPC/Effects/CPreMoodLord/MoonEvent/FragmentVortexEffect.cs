@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             projectile.penetrate = 2;
 
             if (projectile.owner == Main.myPlayer)
-                SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/电弧发射器-蓄力结束") { Volume = 0.7f, PitchVariance = 0.1f, MaxInstances = 4 }, projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/电弧发射器-蓄力结束"), projectile.Center);
         }
 
         private int fireTimer;

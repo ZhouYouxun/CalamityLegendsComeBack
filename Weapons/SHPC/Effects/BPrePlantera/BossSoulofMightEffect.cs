@@ -57,19 +57,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            Vector2 baseVelocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * 12f;
+            Vector2 baseDirection = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float baseSpeed = 12f;
+            float centerAngle = baseDirection.ToRotation();
+            float totalSpread = Main.rand.NextFloat(MathHelper.ToRadians(7f), MathHelper.ToRadians(10f));
+            float halfSpread = totalSpread * 0.5f;
 
             for (int i = 0; i < 3; i++)
             {
-                Vector2 velocity;
-
-                // ===== 你指定的随机扩散 =====
+                float offset = i switch
                 {
-                    float speedX = baseVelocity.X + Main.rand.Next(-20, 21) * 0.05f;
-                    float speedY = baseVelocity.Y + Main.rand.Next(-20, 21) * 0.05f;
+                    0 => -halfSpread + Main.rand.NextFloat(0f, halfSpread * 0.25f),
+                    1 => Main.rand.NextFloat(-halfSpread * 0.16f, halfSpread * 0.16f),
+                    _ => halfSpread - Main.rand.NextFloat(0f, halfSpread * 0.25f)
+                };
 
-                    velocity = new Vector2(speedX, speedY);
-                }
+                float angle = centerAngle + offset;
+                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(baseSpeed * 0.94f, baseSpeed * 1.08f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),

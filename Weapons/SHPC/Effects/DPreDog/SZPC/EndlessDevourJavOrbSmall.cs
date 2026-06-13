@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -146,6 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Vector2 center = Projectile.Center;
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ShadowboltReflect") { Volume = 0.2f, Pitch = -0.35f, PitchVariance = 0.14f, MaxInstances = 5 }, center);
 
             for (int i = 0; i < 5; i++)
             {

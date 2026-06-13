@@ -57,12 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 spawnedExplosion.height = 75;
             }
 
-            SoundEngine.PlaySound(SoundID.Item106 with
-            {
-                Volume = 0.85f,
-                PitchVariance = 0.1f,
-                MaxInstances = 5
-            }, projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item106, projectile.Center);
 
             // ===== IonizingRadiation：严格原封不动保留 =====
             Particle blastRing = new CustomPulse(

@@ -161,11 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 shotIndex,
                 piercingShot ? -1f : Main.rand.NextFloat(0.7f, 1.3f));
 
-            if (shotIndex == 0 || shotIndex == ShotCount - 1 || shotIndex % 4 == 3)
-            {
-                SoundStyle style = shotIndex == ShotCount - 1 ? SoundID.Item74 : SoundID.Item20;
-                SoundEngine.PlaySound(style with { Volume = shotIndex == ShotCount - 1 ? 0.42f : 0.22f, Pitch = -0.28f + shotIndex * 0.015f, PitchVariance = 0.08f, MaxInstances = 6 }, spawnPosition);
-            }
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/VividClarityBeamAppear") { Pitch = -0.32f }, spawnPosition);
 
             SpawnShotRelease(spawnPosition, direction, shotIndex);
         }

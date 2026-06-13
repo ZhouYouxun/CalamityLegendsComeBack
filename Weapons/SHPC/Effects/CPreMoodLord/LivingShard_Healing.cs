@@ -147,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
             healTarget.statLife = System.Math.Min(healTarget.statLifeMax2, healTarget.statLife + healAmount);
             healTarget.HealEffect(healAmount);
-            SoundEngine.PlaySound(SoundID.NPCDeath58 with { Volume = 0.65f, PitchVariance = 0.15f, MaxInstances = 4 }, healTarget.Center);
+            SoundEngine.PlaySound(SoundID.NPCDeath58, healTarget.Center);
 
             Vector2 center = Projectile.Center;
 

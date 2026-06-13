@@ -253,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            SoundEngine.PlaySound(SoundID.Item66 with { Volume = 0.6f, PitchVariance = 0.12f, MaxInstances = 6 }, target.Center);
+            SoundEngine.PlaySound(SoundID.Item66, target.Center);
             HitSomething = 1f;
             Projectile.Kill();
         }

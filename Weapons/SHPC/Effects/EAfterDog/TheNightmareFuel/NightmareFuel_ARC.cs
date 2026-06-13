@@ -2,6 +2,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -81,6 +82,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ShadowboltReflect") { Volume = 0.32f, Pitch = -0.24f, PitchVariance = 0.12f, MaxInstances = 5 }, target.Center);
+
             if (!IsSplit && !hasSplit && Projectile.owner == Main.myPlayer)
             {
                 hasSplit = true;

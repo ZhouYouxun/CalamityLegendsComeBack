@@ -130,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
             if (!Main.dedServ)
             {
-                SoundEngine.PlaySound(SoundID.Item68 with { Volume = 0.18f, Pitch = 0.28f + shotIndex * 0.015f, PitchVariance = 0.08f, MaxInstances = 6 }, spawnPosition);
+                SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/AWM开火"), spawnPosition);
                 AscendantSpiritEffect.SpawnNeedleReleaseParticles(spawnPosition, direction, themeColor, Math.Abs(lane) > 2f);
             }
         }

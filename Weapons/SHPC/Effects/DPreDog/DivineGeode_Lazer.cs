@@ -172,7 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/FeatherBreak") { Volume = 0.7f, PitchVariance = 0.12f, MaxInstances = 5 }, target.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/FeatherBreak"), target.Center);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)

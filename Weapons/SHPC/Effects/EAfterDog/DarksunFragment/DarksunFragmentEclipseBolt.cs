@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -95,6 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.22f, Pitch = 0.22f, PitchVariance = 0.08f, MaxInstances = 5 }, target.Center);
             SpawnHitBurst(target.Center);
         }
 

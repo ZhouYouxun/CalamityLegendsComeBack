@@ -98,6 +98,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 return;
             }
 
+            if (projectile.timeLeft == 120 && !Main.dedServ)
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftBuilding"), projectile.Center);
+
             portalTimer += 0.03f;
             lifeTimer++;
 

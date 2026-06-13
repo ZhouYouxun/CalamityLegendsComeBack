@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             // 波浪形变化的播放间隔：在14~52帧之间正弦起伏
             int interval = (int)(33f + 19f * (float)Math.Sin(Main.GameUpdateCount * 0.055f));
             if (Main.GameUpdateCount % interval == 0 && owner.whoAmI == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.DD2_SkyDragonsFurySwing with { Volume = 0.35f, PitchVariance = 0.12f }, projectile.Center);
+                SoundEngine.PlaySound(SoundID.DD2_SkyDragonsFurySwing, projectile.Center);
         }
 
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers) { }

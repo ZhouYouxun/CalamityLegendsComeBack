@@ -231,16 +231,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             hasHit = true;
             ableToHit = false;
 
-            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.55f, PitchVariance = 0.15f, MaxInstances = 8 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap, Projectile.Center);
 
             SpawnNextArc(target);
             Projectile.Kill();
         }
 
-        public override void OnKill(int timeLeft)
-        {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/ChainLightning", 4) { Volume = 0.15f }, Projectile.Center);
-        }
+        public override void OnKill(int timeLeft) { }
 
         public override bool PreDraw(ref Color lightColor)
         {

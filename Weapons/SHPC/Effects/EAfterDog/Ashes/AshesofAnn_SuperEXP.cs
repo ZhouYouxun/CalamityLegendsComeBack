@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
@@ -38,6 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SoundEngine.PlaySound(SoundID.NPCDeath6, target.Center);
             target.AddBuff(ModContent.BuffType<VulnerabilityHex>(), 60);
         }
     }

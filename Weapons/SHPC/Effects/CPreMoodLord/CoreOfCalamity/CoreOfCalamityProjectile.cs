@@ -26,12 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         private static readonly Color BrightGray = new(224, 230, 238);
         private static readonly Color MidGray = new(138, 146, 158);
         private static readonly Color DarkGray = new(50, 54, 64);
-        private static readonly SoundStyle ImpactSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/ASH12消音")
-        {
-            Volume = 0.75f,
-            PitchVariance = 0.1f,
-            MaxInstances = 4
-        };
+        private static readonly SoundStyle ImpactSound = new("CalamityLegendsComeBack/Sound/Other/DeltaForce/ASH12消音");
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.SHPC";
@@ -77,7 +72,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(ImpactSound, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.3f, Pitch = -0.45f }, Projectile.Center);
             SpawnExplosionEffects();
 
             if (Projectile.owner != Main.myPlayer)

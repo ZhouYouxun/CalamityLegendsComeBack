@@ -52,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArsenalOffCooldown") { Volume = 0.8f, PitchVariance = 0.1f, MaxInstances = 4 }, projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArsenalOffCooldown"), projectile.Center);
             if (projectile.owner != Main.myPlayer)
                 return;
 
