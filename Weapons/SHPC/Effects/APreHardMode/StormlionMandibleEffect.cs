@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using CalamityMod.Projectiles.Typeless;
 using Microsoft.Xna.Framework;
@@ -39,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            projectile.localAI[1] = 1f; // 标记已命中敌人，防止OnKill重复触发
             int count = 5;
             float spread = MathHelper.Pi / 3f;
             float baseRot = projectile.velocity.ToRotation();
@@ -91,24 +92,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             }
         }
 
-		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
-		{
-			//int projIndex = Projectile.NewProjectile(
-			//	projectile.GetSource_FromThis(),
-			//	projectile.Center,
-			//	Vector2.Zero,
-			//	ModContent.ProjectileType<NewLegendSHPE>(),
-			//	projectile.damage,
-			//	projectile.knockBack,
-			//	projectile.owner
-			//);
+        public override void OnKill(Projectile projectile, Player owner, int timeLeft)
+        {
+            if (projectile.localAI[1] == 1f)
+                return; // 如果已经命中敌人产生过电弧，这里不重复产生
 
-			//Projectile proj = Main.projectile[projIndex];
+            // 命中方块产生电流，直接原地转圈
+            int count = 5;
+            float baseRot = Main.rand.NextFloat(MathHelper.TwoPi);
 
-			//// 手动修改范围
-			//proj.width = 50;
-			//proj.height = 50;
-		}
+            for (int i = 0; i < count; i++)
+            {
+                float angle = baseRot + MathHelper.TwoPi * i / count;
+                Vector2 velocity = angle.ToRotationVector2() * 6f;
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<StormlionMandible_ARC>(),
+                    (int)(projectile.damage * 0.2f),
+                    projectile.knockBack * 0.2f,
+                    projectile.owner,
+                    -1f, // ai[0] = -1: 标志原地转圈
+                    3f   // ai[1]：连锁次数
+                );
+            }
+        }
 
 
 

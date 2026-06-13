@@ -138,18 +138,12 @@ Mods: {
 			}
 
 			CeruleanShield: {
-				DisplayName: Cerulean Shield
-				Tooltip: ""
 			}
 
 			LostGarment: {
-				DisplayName: Lost Garment
-				Tooltip: ""
 			}
 
 			VortexPortal: {
-				DisplayName: Vortex Portal
-				Tooltip: ""
 			}
 		}
 

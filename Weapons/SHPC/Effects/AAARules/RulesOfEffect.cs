@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
@@ -35,6 +35,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         // 是否启用默认减速（默认开启）
         public virtual bool EnableDefaultSlowdown => true;
 
+        public virtual bool EnableProximityExplosion => true;
+
         // 是否播放 SHPC 左键默认开火音效 AnomalysNanogunMPFBShot。只影响左键开火声音。
         public virtual bool PlayDefaultLeftClickFireSound => true;
 
@@ -58,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             37 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/焦土-开枪",
             38 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/磁轨炮-开火",
             39 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/爆裂铳开火",
-            40 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/机炮开火",
+            40 => "CalamityLegendsComeBack/Sound/SHPC/雷霆开火与换弹",
             41 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/反器材狙击步枪开火",
             43 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/反坦克炮-开火与换弹",
             44 => "CalamityLegendsComeBack/Sound/Other/Helldiver2/榴弹发射器-开火",

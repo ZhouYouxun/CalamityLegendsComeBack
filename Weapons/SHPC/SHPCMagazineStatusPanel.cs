@@ -24,6 +24,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
+        // 0 = 正常，1 = 完全悬停透明。指数lerp产生非线性过渡。
+        private float _hoverFade;
+
         private bool FadeOut
         {
             get => Projectile.ai[0] == 1f;
@@ -84,10 +87,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Rectangle panelArea = GetPanelArea(owner, MagazineWidth, panelHeight);
             float opacity = Projectile.Opacity;
 
+            // 鼠标悬停检测 → 非线性过渡（指数 lerp：进快 0.18，退慢 0.10）
+            bool hovered = panelArea.Contains(Main.MouseScreen.ToPoint());
+            _hoverFade += ((hovered ? 1f : 0f) - _hoverFade) * (hovered ? 0.18f : 0.10f);
+            float effectiveOpacity = opacity * (1f - _hoverFade * 0.90f);
+
             NewLegendSHPC.SHPCMagazineSlot selectedSlot = weapon.GetMagazineSlot(weapon.CurrentMagazineIndex, owner);
             Color themeColor = GetSlotThemeColor(selectedSlot);
 
-            DrawMagazineBody(panelArea, themeColor, opacity);
+            DrawMagazineBody(panelArea, themeColor, effectiveOpacity);
 
             int firstBulletY = panelArea.Y + MagazinePadding + FeedLipHeight;
             for (int i = 0; i < bulletCount; i++)
@@ -99,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     BulletWidth,
                     BulletHeight);
 
-                DrawBullet(slot, bulletArea, opacity);
+                DrawBullet(slot, bulletArea, effectiveOpacity);
             }
 
             return false;

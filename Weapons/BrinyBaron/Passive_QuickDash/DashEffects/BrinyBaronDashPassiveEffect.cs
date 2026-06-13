@@ -34,6 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
 
         public void OnDashStarted(Player player)
         {
+            SpawnSlashDash(player);
             OnSpecialDashStarted(player);
         }
 
@@ -53,6 +54,40 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
 
         protected virtual void OnSpecialDashUpdate(Player player, int dashTimer)
         {
+        }
+
+        private static void SpawnSlashDash(Player player)
+        {
+            if (Main.myPlayer != player.whoAmI || HasActiveSlashDash(player))
+                return;
+
+            int direction = Math.Sign(player.velocity.X);
+            if (direction == 0)
+                direction = player.direction == 0 ? 1 : player.direction;
+
+            int damage = Math.Max(1, (int)(player.GetWeaponDamage(player.HeldItem) * 0.95f));
+            Projectile.NewProjectile(
+                player.GetSource_FromThis(),
+                player.Center,
+                Vector2.UnitX * direction,
+                ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
+                damage,
+                player.GetWeaponKnockback(player.HeldItem),
+                player.whoAmI,
+                0f,
+                direction);
+        }
+
+        private static bool HasActiveSlashDash(Player player)
+        {
+            int slashDashType = ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == slashDashType)
+                    return true;
+            }
+
+            return false;
         }
 
         private static void SpawnSideShurikenPair(Player player)

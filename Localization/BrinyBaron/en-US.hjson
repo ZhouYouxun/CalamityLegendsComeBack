@@ -62,22 +62,85 @@ Mods: {
 
 			OffshoreWindTurbine: {
 				DisplayName: Offshore Wind Turbine
-				Tooltip: Increases Briny Baron's maximum tide by 2
+				Tooltip:
+					'''
+					Increases Briny Baron's maximum tide by 2
+					A higher tide cap means more stacked 3% damage bonuses, rewarding sustained combat
+					[c/7F8FA6:Multiple copies stack]
+					'''
 			}
 
 			ImpactRestarter: {
 				DisplayName: Impact Restarter
-				Tooltip: Briny Baron's short right-click dash fully refreshes its cooldown on enemy impact\nThe full-tide spin dash reduces that cooldown to 1 second instead
+				Tooltip:
+					'''
+					Right-click dash cooldown instantly resets on enemy hit, allowing immediate re-use
+					Full-tide spin dash cooldown is compressed from 3 seconds down to 1 second on hit
+					[c/7F8FA6:Best used in dense crowds where the right-click dash becomes the core attack rhythm]
+					'''
 			}
 
 			HighTideOverloadBarrier: {
 				DisplayName: High-Tide Overload Barrier
-				Tooltip: While Briny Baron's tide is full, grants 20 defense and 20% damage reduction
+				Tooltip:
+					'''
+					While at full tide, gain 20 defense and 20% damage reduction
+					Water mist particles pulse around you as a visual indicator that the barrier is active
+					[c/7F8FA6:The barrier drops the moment tide is consumed — keeping tide full is the key]
+					'''
 			}
 
 			SurgeChainReactor: {
 				DisplayName: Surge Chain Reactor
-				Tooltip: Briny Baron's quick slash releases an extra 75x75 water burst on enemy impact
+				Tooltip:
+					'''
+					Quick slash hits trigger an extra 75×75 tidal water burst at the point of impact
+					Converts the otherwise point-targeted stab into splash damage that hits surrounding enemies
+					[c/7F8FA6:The water burst counts as melee damage and benefits from tide bonuses and damage modifiers]
+					'''
+			}
+
+			VortexPortal: {
+				DisplayName: Vortex Portal
+				Tooltip:
+					'''
+					[c/99CCFF:Replaces right-click skill with Shield-Surge Cleave]
+					Spend the cooldown to dash in the cursor's direction with a sweeping slash, then auto-follow with a back-cut on arrival
+					Leaves ocean-blue afterimage trails during the dash; ideal for double-hit burst on a single target
+					[c/FFB347:Skill priority 30 — highest; this overrides all other right-click skill accessories]
+					'''
+			}
+
+			LostGarment: {
+				DisplayName: Lost Garment
+				Tooltip:
+					'''
+					[c/99CCFF:Replaces right-click skill with Blade Dash (Standard)]
+					Spend the cooldown to surge in the cursor's direction in blade-storm form, dealing continuous melee damage along the path
+					Speed scales with dash multipliers; good for cutting through crowds or rapidly closing on a target
+					[c/FFB347:Skill priority 10 — lowest; any other right-click skill accessory overrides this]
+					'''
+			}
+
+			CeruleanShield: {
+				DisplayName: Cerulean Shield
+				Tooltip:
+					'''
+					[c/99CCFF:Replaces right-click skill with Blade Dash (Cerulean)]
+					Same surge as Standard Blade Dash, but each enemy hit also detonates a cerulean explosion on the target
+					The explosion has wide splash radius, adding significant burst to single-target hits
+					[c/FFB347:Skill priority 20 — overrides Lost Garment, overridden by Vortex Portal]
+					'''
+			}
+
+			BBPassiveChanneler: {
+				DisplayName: Tidal Passive Channeler
+				Tooltip:
+					'''
+					[c/9AEF9E:As long as Briny Baron is anywhere in your inventory, the Quick Slash passive stays active — no need to hold it]
+					Passive behavior is identical to holding the weapon; no values are changed or enhanced
+					[c/7F8FA6:Grants no other combat bonuses — purely keeps the passive running while you swap weapons]
+					'''
 			}
 		}
 

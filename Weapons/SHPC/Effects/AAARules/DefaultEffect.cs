@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
+            int explosionSize = (int)(new BalanceSHPC().GetDefaultOrbExplosionSize() * 0.66f);
             int explosionIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,
@@ -81,9 +81,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             if (explosionIndex >= 0 && explosionIndex < Main.maxProjectiles)
             {
                 Projectile explosion = Main.projectile[explosionIndex];
-                explosion.Center = projectile.Center;
                 explosion.width = explosionSize;
                 explosion.height = explosionSize;
+                explosion.Center = projectile.Center;
                 explosion.netUpdate = true;
             }
         }

@@ -355,6 +355,7 @@ Mods: {
 			AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
 			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+			PFMarkStatusArc.DisplayName: P F Mark Status Arc
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

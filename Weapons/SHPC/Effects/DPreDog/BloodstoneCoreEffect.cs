@@ -136,6 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             int radius = empowered ? 260 : 90;
             proj.width = radius;
             proj.height = radius;
+            proj.Center = projectile.Center;
             SpawnBloodstoneHealOrbs(projectile, target);
             HealOwner(owner, center, 30);
 

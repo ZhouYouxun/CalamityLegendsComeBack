@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
 using CalamityMod.Particles;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -107,7 +108,36 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 ? owner.MountedCenter.DirectionTo(Projectile.Center)
                 : Projectile.velocity;
             Projectile.rotation = rotationVector.SafeNormalize(Vector2.UnitX * owner.direction).ToRotation();
-            Lighting.AddLight(Projectile.Center, new Vector3(0.26f, 0.54f, 0.72f));
+
+            Color markColor = PristineFuryMarkHelper.GetColor(owner.GetModPlayer<PristineFuryPlayer>().CurrentMark);
+            float lightIntensity = State == HookState.Attached ? 0.72f : 0.44f;
+            Lighting.AddLight(Projectile.Center, markColor.ToVector3() * lightIntensity);
+
+            if (State == HookState.Attached && !Main.dedServ && (int)AttachTimer % 5 == 0)
+                SpawnAttachedParticles(markColor);
+        }
+
+        private void SpawnAttachedParticles(Color markColor)
+        {
+            if (!TryGetAttachedTarget(out NPC target))
+                return;
+
+            for (int i = 0; i < 2; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    target.Center + Main.rand.NextVector2Circular(target.width * 0.3f, target.height * 0.3f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 4.5f),
+                    false, Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.48f, 0.88f),
+                    Color.Lerp(markColor, Color.White, Main.rand.NextFloat(0.15f, 0.5f))));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new PointParticle(
+                Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                Main.rand.NextVector2Circular(1.5f, 1.5f),
+                false, Main.rand.Next(8, 16),
+                Main.rand.NextFloat(0.55f, 0.92f),
+                Color.Lerp(markColor, Color.White, Main.rand.NextFloat(0.25f, 0.6f)), true));
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -249,19 +279,62 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Player owner = Main.player[Projectile.owner];
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D halfStar = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+
+            Color markColor = PristineFuryMarkHelper.GetColor(owner.GetModPlayer<PristineFuryPlayer>().CurrentMark);
             Vector2 start = owner.MountedCenter - Main.screenPosition;
             Vector2 end = Projectile.Center - Main.screenPosition;
             Vector2 between = end - start;
             float length = between.Length();
-            Vector2 direction = between.SafeNormalize(Vector2.UnitX);
-            Color chainColor = new Color(120, 236, 255, 0) * 0.82f;
+            Vector2 dir = between.SafeNormalize(Vector2.UnitX);
 
-            for (float i = 14f; i < length; i += 12f)
+            float attachProgress = State == HookState.Attached ? MathHelper.Clamp(AttachTimer / 25f, 0f, 1f) : 0f;
+            float pulse = 0.80f + 0.20f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.5f + Projectile.identity * 0.42f);
+            Color chainOuter = (Color.Lerp(markColor, Color.White, 0.32f) with { A = 0 }) * (0.46f + attachProgress * 0.34f) * pulse;
+            Color chainInner = (markColor with { A = 0 }) * (0.28f + attachProgress * 0.18f);
+            float chainStep = 11f;
+
+            PFLeftEffectRules.BeginAdditive();
+
+            // Outer glow chain
+            for (float i = 10f; i < length; i += chainStep)
             {
-                Vector2 drawPosition = start + direction * i;
-                Main.EntitySpriteDraw(line, drawPosition, null, chainColor, direction.ToRotation() + MathHelper.PiOver2, line.Size() * 0.5f, new Vector2(0.012f, 0.75f), SpriteEffects.None, 0);
+                Vector2 pos = start + dir * i;
+                Main.EntitySpriteDraw(line, pos, null, chainOuter, dir.ToRotation() + MathHelper.PiOver2,
+                    line.Size() * 0.5f, new Vector2(0.022f + attachProgress * 0.012f, 0.70f), SpriteEffects.None, 0);
             }
 
+            // Inner bright core chain
+            for (float i = 10f; i < length; i += chainStep)
+            {
+                Vector2 pos = start + dir * i;
+                Main.EntitySpriteDraw(line, pos, null, chainInner, dir.ToRotation() + MathHelper.PiOver2,
+                    line.Size() * 0.5f, new Vector2(0.008f, 0.72f), SpriteEffects.None, 0);
+            }
+
+            // Hook head bloom
+            Main.EntitySpriteDraw(bloom, end, null, (markColor with { A = 0 }) * (0.62f + attachProgress * 0.52f) * pulse,
+                Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.26f, 0.18f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, end, null, (Color.White with { A = 0 }) * (0.38f + attachProgress * 0.28f),
+                Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.10f, 0.07f), SpriteEffects.None, 0);
+
+            // Rotating HalfStars at hook head
+            int starCount = State == HookState.Attached ? 4 : 3;
+            for (int i = 0; i < starCount; i++)
+            {
+                float rot = Projectile.rotation + MathHelper.TwoPi * i / starCount + Main.GlobalTimeWrappedHourly * (1.3f + attachProgress * 1.5f);
+                Main.EntitySpriteDraw(halfStar, end, null, (markColor with { A = 0 }) * (0.52f + attachProgress * 0.38f) * pulse,
+                    rot, halfStar.Size() * 0.5f, new Vector2(0.14f, (0.55f + attachProgress * 0.48f) * pulse), SpriteEffects.None, 0);
+            }
+
+            // Origin glow at player hand
+            Main.EntitySpriteDraw(bloom, start, null, (markColor with { A = 0 }) * 0.28f * pulse,
+                0f, bloom.Size() * 0.5f, 0.14f, SpriteEffects.None, 0);
+
+            PFLeftEffectRules.EndAdditive();
+
+            // Hook texture on top
             Main.EntitySpriteDraw(texture, end, null, lightColor, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }

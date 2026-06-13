@@ -134,6 +134,9 @@ Mods: {
 				PristineFuryRightNovaPseudoLaser.DisplayName: 纯净怒火右键新星伪激光
 				PFRavager_Laser.DisplayName: 纯净怒火毁灭魔像血石激光
 				// PFRavager_BloodBoilerOrb.DisplayName: P F Ravager_ Blood Boiler Orb
+				// PristineFuryLilyMainBeam.DisplayName: Pristine Fury Lily Main Beam
+				// PristineFuryLilyWavelet.DisplayName: Pristine Fury Lily Wavelet
+				// PFMarkSelectionWheel.DisplayName: P F Mark Selection Wheel
 			}
 
 			TacticalComputerReticle.DisplayName: 战术计算机准星

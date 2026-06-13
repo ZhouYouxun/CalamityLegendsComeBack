@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Accssory.SHPC.General;
+using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
@@ -32,11 +32,20 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.EverfrostEnergyCore
 
         public override void AddRecipes()
         {
-            CreateRecipe()
+            var recipe = CreateRecipe()
                 .AddIngredient<WastelandEnergyCoreItem>()
-                .AddIngredient<CryonicBar>(10)
-                .AddIngredient<PerennialBar>(25)
-                .AddTile(TileID.MythrilAnvil)
+                .AddIngredient<CryonicBar>(10);
+
+            if (ModLoader.TryGetMod("CalamityMod", out Mod calamity) && calamity.TryFind<ModItem>("Elumplate", out ModItem elumplate))
+            {
+                recipe.AddIngredient(elumplate.Type, 25);
+            }
+            else
+            {
+                recipe.AddIngredient<PerennialBar>(25);
+            }
+
+            recipe.AddTile(TileID.MythrilAnvil)
                 .Register();
         }
     }

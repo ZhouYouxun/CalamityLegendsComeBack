@@ -10,13 +10,13 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General
         public bool HasEnergyCore => EnergyCoreTier > 0;
         public bool AllowRightClickCrit => EnergyCoreTier >= 3;
         public bool HasInfiniteSHPCMana => EnergyCoreTier >= 4;
-        public int BonusMagazineCount => Utils.Clamp(EnergyCoreTier, 0, 4);
+        public int BonusMagazineCount => Utils.Clamp(EnergyCoreTier, 0, 3);
 
         public float AmmoCapacityMultiplier => EnergyCoreTier switch
         {
-            1 => 1.25f,
-            2 => 1.50f,
-            3 => 1.75f,
+            1 => 1.10f,
+            2 => 1.25f,
+            3 => 1.50f,
             >= 4 => 2f,
             _ => 1f
         };
@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General
             return itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.General.WastelandEnergyCore.WastelandEnergyCore>() ||
                    itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.General.EverfrostEnergyCore.EverfrostEnergyCore>() ||
                    itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.General.EvolutionEnergyCore.EvolutionEnergyCore>() ||
-                   itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.General.StarstreamEnergyCore.StarstreamEnergyCore>();
+                   itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.General.ExoEnergyCore.ExoEnergyCore>();
         }
 
         public static bool CanEquipWith(Item equippedItem, Item incomingItem)

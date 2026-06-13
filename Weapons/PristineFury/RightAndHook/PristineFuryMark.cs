@@ -2,6 +2,8 @@
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.CalClone;
 using CalamityMod.NPCs.DevourerofGods;
+using CalamityMod.NPCs.ExoMechs.Ares;
+using CalamityMod.NPCs.ExoMechs.Artemis;
 using CalamityMod.NPCs.ExoMechs.Thanatos;
 using CalamityMod.NPCs.PlaguebringerGoliath;
 using CalamityMod.NPCs.Polterghast;
@@ -11,7 +13,9 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -189,6 +193,76 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 _ => new Color(255, 224, 92)
             };
         }
+
+        // Returns the representative NPC type for icon display. -1 if none.
+        internal static int GetMarkRepresentativeNPCType(PristineFuryMark mark)
+        {
+            return mark switch
+            {
+                PristineFuryMark.EvilT2 => WorldGen.crimson ? NPCID.BrainofCthulhu : NPCID.EaterofWorldsHead,
+                PristineFuryMark.SlimeGod => ModContent.NPCType<SlimeGodCore>(),
+                PristineFuryMark.HardMode => NPCID.WallofFlesh,
+                PristineFuryMark.Prime => NPCID.SkeletronPrime,
+                PristineFuryMark.BrimstoneElemental => ModContent.NPCType<BrimstoneElemental>(),
+                PristineFuryMark.Plantera => NPCID.Plantera,
+                PristineFuryMark.Aurora => ModContent.NPCType<AstrumAureus>(),
+                PristineFuryMark.Goliath => ModContent.NPCType<PlaguebringerGoliath>(),
+                PristineFuryMark.Moonlord => NPCID.MoonLordCore,
+                PristineFuryMark.Providence => ModContent.NPCType<Providence>(),
+                PristineFuryMark.Polterghast => ModContent.NPCType<Polterghast>(),
+                PristineFuryMark.Dog => ModContent.NPCType<DevourerofGodsHead>(),
+                PristineFuryMark.Dragon => ModContent.NPCType<Yharon>(),
+                PristineFuryMark.FakeCalamity => ModContent.NPCType<CalamitasClone>(),
+                PristineFuryMark.ExoTwins => ModContent.NPCType<Artemis>(),
+                PristineFuryMark.ExoThanatos => ModContent.NPCType<ThanatosHead>(),
+                PristineFuryMark.ExoAres => ModContent.NPCType<AresBody>(),
+                PristineFuryMark.Ravager => ModContent.NPCType<RavagerBody>(),
+                _ => -1
+            };
+        }
+
+        // Returns the boss head icon texture for this mark, or null if unavailable.
+        // Most CalamityMod bosses use [AutoloadBossHead] which populates NPCID.Sets.BossHeadTextures.
+        // A few (Polterghast, DoG, Artemis, Thanatos) use AddBossHeadTexture(path, -1) and must be
+        // looked up by path via NPCHeadLoader.GetBossHeadSlot.
+        internal static Texture2D TryGetMarkBossHeadTexture(PristineFuryMark mark)
+        {
+            int npcType = GetMarkRepresentativeNPCType(mark);
+            if (npcType >= 0 && npcType < NPCID.Sets.BossHeadTextures.Length)
+            {
+                int headSlot = NPCID.Sets.BossHeadTextures[npcType];
+                if (headSlot >= 0 && headSlot < TextureAssets.NpcHeadBoss.Length)
+                {
+                    var asset = TextureAssets.NpcHeadBoss[headSlot];
+                    if (asset?.IsLoaded == true)
+                        return asset.Value;
+                }
+            }
+
+            string calPath = GetMarkCalamityBossHeadPath(mark);
+            if (calPath != null)
+            {
+                int headSlot = NPCHeadLoader.GetBossHeadSlot(calPath);
+                if (headSlot >= 0 && headSlot < TextureAssets.NpcHeadBoss.Length)
+                {
+                    var asset = TextureAssets.NpcHeadBoss[headSlot];
+                    if (asset?.IsLoaded == true)
+                        return asset.Value;
+                }
+            }
+
+            return null;
+        }
+
+        // Texture paths for CalamityMod bosses registered with AddBossHeadTexture(path, -1).
+        private static string GetMarkCalamityBossHeadPath(PristineFuryMark mark) => mark switch
+        {
+            PristineFuryMark.Dog        => "CalamityMod/NPCs/DevourerofGods/DevourerofGodsHead_Head_Boss",
+            PristineFuryMark.Polterghast => "CalamityMod/NPCs/Polterghast/Polterghast_Head_Boss",
+            PristineFuryMark.ExoTwins   => "CalamityMod/NPCs/ExoMechs/Artemis/ArtemisHead",
+            PristineFuryMark.ExoThanatos => "CalamityMod/NPCs/ExoMechs/Thanatos/ThanatosNormalHead",
+            _ => null
+        };
 
         internal static int GetDisplayedBaseDamage(PristineFuryMark mark)
         {

@@ -181,7 +181,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 300);
-            SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/SHPC/雷霆开火与换弹") { Volume = 3f }, target.Center);
             SpawnDragoonBoltHitFX(target.Center, BounceUsed >= 1f ? 2.1f : 3f);
 
             Vector2 launchVel = Utils.DirectionTo(Projectile.Center, target.Center);

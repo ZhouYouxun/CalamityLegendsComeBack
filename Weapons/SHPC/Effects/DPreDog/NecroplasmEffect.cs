@@ -237,6 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile proj = Main.projectile[projIndex];
                 proj.width = 250;
                 proj.height = 250;
+                proj.Center = projectile.Center;
             }
 
             const int shardCount = 6;

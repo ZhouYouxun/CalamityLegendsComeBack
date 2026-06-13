@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffects;
 using CalamityMod;
 using System;
@@ -57,13 +58,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 
         private bool CanApplyPassive(BrinyBaronQuickDashDevice activeDevice)
         {
-            return DashEnabled &&
-                activeDevice != BrinyBaronQuickDashDevice.None &&
-                Player.active &&
-                !Player.dead &&
-                Player.HeldItem != null &&
-                !Player.HeldItem.IsAir &&
-                Player.HeldItem.type == ModContent.ItemType<NewLegendBrinyBaron>();
+            if (!DashEnabled || activeDevice == BrinyBaronQuickDashDevice.None || !Player.active || Player.dead)
+                return false;
+
+            // 正常情况：手持海爵剑
+            if (Player.HeldItem != null && !Player.HeldItem.IsAir &&
+                Player.HeldItem.type == ModContent.ItemType<NewLegendBrinyBaron>())
+                return true;
+
+            // 潮汐被动触媒：背包中存有海爵剑即可激活被动，无需手持
+            if (!Player.GetModPlayer<BBAccessoryPlayer>().BBPassiveChannelerEquipped)
+                return false;
+
+            int bbType = ModContent.ItemType<NewLegendBrinyBaron>();
+            foreach (Item item in Player.inventory)
+            {
+                if (item.type == bbType)
+                    return true;
+            }
+            return false;
         }
 
         private bool IsDashingWithTrackedAccessory(BrinyBaronQuickDashDevice activeDevice)

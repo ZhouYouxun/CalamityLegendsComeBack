@@ -24,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         private const float RightClickDamageMultiplier = 1.08f;
         private const float RightClickShurikenSpeed = 21f;
+        private const int RightClickShurikenAutoUseTime = 12;
         private static bool CanUseQuickDash => true;
         private static bool HasDesignedSuperDashUnlock => NPC.downedFishron;
 
@@ -74,20 +75,21 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 if (usesAccessoryCooldown && !player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash)
                     return false;
 
-                Item.useTime = 18;
-                Item.useAnimation = 18;
+                bool defaultShuriken = rightClickMode == BBRightClickMode.DefaultShuriken;
+                Item.useTime = defaultShuriken ? RightClickShurikenAutoUseTime : 18;
+                Item.useAnimation = defaultShuriken ? RightClickShurikenAutoUseTime : 18;
                 Item.shoot = rightClickMode switch
                 {
                     BBRightClickMode.LostGarment or BBRightClickMode.CeruleanShield => ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>(),
                     BBRightClickMode.VortexPortal => ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
                     _ => ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
                 };
-                Item.channel = false;
+                Item.channel = defaultShuriken;
                 Item.noUseGraphic = true;
                 Item.noMelee = true;
                 Item.useStyle = ItemUseStyleID.Shoot;
                 Item.shootSpeed = rightClickMode == BBRightClickMode.DefaultShuriken ? RightClickShurikenSpeed : 0f;
-                Item.UseSound = rightClickMode == BBRightClickMode.DefaultShuriken ? SoundID.Item1 : SoundID.Item39;
+                Item.UseSound = rightClickMode == BBRightClickMode.DefaultShuriken ? null : SoundID.Item39;
             }
             else
             {
@@ -140,14 +142,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                     return false;
                 }
 
-                Projectile.NewProjectile(
-                    source,
-                    player.MountedCenter,
-                    shootVelocity * RightClickShurikenSpeed,
-                    ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
-                    rightClickDamage,
-                    knockback,
-                    player.whoAmI);
+                if (rightClickMode == BBRightClickMode.DefaultShuriken)
+                    return false;
 
                 return false;
             }
@@ -179,6 +175,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
+
+            HandleDefaultShurikenAutoThrow(player);
 
             if (player.Calamity().cooldowns.TryGetValue(BBTideValueCooldown.ID, out var cooldown))
             {
@@ -285,6 +283,69 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             return Math.Max(1, (int)(scaledDamage * player.GetModPlayer<BBTideValuePlayer>().TideDamageMultiplier));
         }
 
+        private void HandleDefaultShurikenAutoThrow(Player player)
+        {
+            BrinyBaronRightClickShurikenAutoPlayer autoThrow = player.GetModPlayer<BrinyBaronRightClickShurikenAutoPlayer>();
+            if (!ShouldAutoThrowDefaultShuriken(player))
+            {
+                autoThrow.ResetAutoThrow();
+                return;
+            }
+
+            if (autoThrow.ThrowDelay > 0)
+            {
+                autoThrow.ThrowDelay--;
+                return;
+            }
+
+            Vector2 direction = (Main.MouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            FireDefaultRightClickShuriken(player, player.GetSource_ItemUse(Item), direction, GetCurrentRightClickDamage(player), Item.knockBack);
+            SoundEngine.PlaySound(SoundID.Item1, player.MountedCenter);
+
+            player.ChangeDir(direction.X >= 0f ? 1 : -1);
+            player.itemTime = RightClickShurikenAutoUseTime;
+            player.itemAnimation = RightClickShurikenAutoUseTime;
+            player.reuseDelay = 0;
+            autoThrow.ThrowDelay = RightClickShurikenAutoUseTime;
+        }
+
+        private bool ShouldAutoThrowDefaultShuriken(Player player)
+        {
+            if (Main.myPlayer != player.whoAmI || player.HeldItem.type != Type)
+                return false;
+
+            if (!player.Calamity().mouseRight && !Main.mouseRight)
+                return false;
+
+            if (player.noItems || player.CCed || player.mouseInterface || Main.mapFullscreen || Main.blockMouse)
+                return false;
+
+            if (player.GetModPlayer<BBAccessoryPlayer>().RightClickMode != BBRightClickMode.DefaultShuriken || HasActiveRightClickDash(player))
+                return false;
+
+            Projectile activeLeftSwing = FindOwnedProjectile(player, ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>());
+            if (activeLeftSwing == null)
+                return true;
+
+            if (IsLeftHeld(player))
+                return false;
+
+            activeLeftSwing.Kill();
+            return true;
+        }
+
+        private static void FireDefaultRightClickShuriken(Player player, IEntitySource source, Vector2 direction, int damage, float knockback)
+        {
+            Projectile.NewProjectile(
+                source,
+                player.MountedCenter,
+                direction * RightClickShurikenSpeed,
+                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                damage,
+                knockback,
+                player.whoAmI);
+        }
+
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             Player player = Main.LocalPlayer;
@@ -376,6 +437,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             }
 
             return null;
+        }
+    }
+
+    internal class BrinyBaronRightClickShurikenAutoPlayer : ModPlayer
+    {
+        public int ThrowDelay;
+
+        public void ResetAutoThrow()
+        {
+            ThrowDelay = 0;
         }
     }
 }

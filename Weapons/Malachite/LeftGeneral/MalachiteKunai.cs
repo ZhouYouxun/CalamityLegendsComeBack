@@ -738,7 +738,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (target == null)
                 return;
 
-            float turnRate = Projectile.Calamity().stealthStrike ? PeacockHomingTurnRate * 2f : PeacockHomingTurnRate;
+            float baseTurnRate = Projectile.Calamity().stealthStrike ? PeacockHomingTurnRate * 2f : PeacockHomingTurnRate;
+            float homingGrowth = Utils.GetLerpValue(0f, 80f, Projectile.localAI[0] - 12f, true);
+            float turnRate = MathHelper.Lerp(baseTurnRate, baseTurnRate * 5f, homingGrowth);
             HomeTowardsWithTurnLimit(target.Center, 34f, turnRate);
         }
 
@@ -758,7 +760,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             NPC target = FindTarget(1500f, requireLineOfSight: false);
             if (target != null)
             {
-                HomeTowardsWithTurnLimit(target.Center, 38f, PeacockHomingTurnRate * 2f);
+                float homingGrowth = Utils.GetLerpValue(0f, 80f, Projectile.localAI[0] - 32f, true);
+                float turnRate = MathHelper.Lerp(PeacockHomingTurnRate * 2f, PeacockHomingTurnRate * 10f, homingGrowth);
+                HomeTowardsWithTurnLimit(target.Center, 38f, turnRate);
                 return;
             }
 

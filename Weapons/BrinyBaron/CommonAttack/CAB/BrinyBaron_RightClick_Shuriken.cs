@@ -58,7 +58,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private int soundTimer;
         private int homingTimer;
         private Vector2 stickOffsetFromTarget;
+        private Vector2 tileStickForward;
         private bool killedByTile;
+        private bool stuckInTile;
 
         public override void SetDefaults()
         {
@@ -86,7 +88,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             soundTimer = 0;
             homingTimer = 0;
             stickOffsetFromTarget = Vector2.Zero;
+            tileStickForward = Vector2.UnitX;
             killedByTile = false;
+            stuckInTile = false;
             shurikenProfile = CreateShurikenProfile();
             Projectile.penetrate = shurikenProfile.Penetrate;
             Projectile.tileCollide = true;
@@ -101,14 +105,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             if (soundTimer > 0)
                 soundTimer--;
 
-            if (!stuckInTarget)
+            if (stuckInTarget)
             {
-                HandleFlightMovement();
-                SpawnUnlockedFlightEffects();
+                HandleStickyState();
+            }
+            else if (stuckInTile)
+            {
+                HandleTileStickyState();
             }
             else
             {
-                HandleStickyState();
+                HandleFlightMovement();
+                SpawnUnlockedFlightEffects();
             }
         }
 
@@ -116,6 +124,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         {
             if (stuckInTarget)
                 return target.whoAmI == stuckTargetIndex;
+
+            return null;
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            if (stuckInTile)
+                return CalamityUtils.CircularHitboxCollision(Projectile.Center, Radius * 1.45f, targetHitbox);
 
             return null;
         }
@@ -134,6 +150,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
             if (shurikenProfile.GrowthTier >= 3)
                 BBShuriken_BoomerDuke_Effects.SpawnHitBurst(Projectile, target, hitForward, SizeScale);
+
+            if (stuckInTile)
+            {
+                BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, shurikenProfile.GrowthTier);
+                PlayStickySliceSound();
+                return;
+            }
 
             if (!shurikenProfile.CanStick)
             {
@@ -169,9 +192,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            killedByTile = true;
+            if (stuckInTile)
+                return false;
+
+            stuckInTile = true;
+            stuckInTarget = false;
+            stuckTargetIndex = -1;
+            tileStickForward = oldVelocity.SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+            Projectile.velocity = Vector2.Zero;
+            Projectile.tileCollide = true;
+            Projectile.timeLeft = Math.Min(Projectile.timeLeft, 90);
+            stickTimer = 0;
+            sliceEffectTimer = 0;
+            slicesPerformed = 0;
+            killedByTile = false;
+            Projectile.netUpdate = true;
+
             BBShuriken_Initial_Effects.SpawnTileDisappear(Projectile, oldVelocity, SizeScale);
-            return true;
+            SoundEngine.PlaySound(SoundID.Item39, Projectile.Center);
+            return false;
         }
 
         public override void OnKill(int timeLeft)
@@ -207,6 +246,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             writer.Write(stickTimer);
             writer.Write(sliceEffectTimer);
             writer.WriteVector2(stickOffsetFromTarget);
+            writer.Write(stuckInTile);
+            writer.WriteVector2(tileStickForward);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -216,6 +257,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             stickTimer = reader.ReadInt32();
             sliceEffectTimer = reader.ReadInt32();
             stickOffsetFromTarget = reader.ReadVector2();
+            stuckInTile = reader.ReadBoolean();
+            tileStickForward = reader.ReadVector2();
         }
 
         private void HandleFlightMovement()
@@ -359,6 +402,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 Projectile.Kill();
         }
 
+        private void HandleTileStickyState()
+        {
+            Projectile.tileCollide = true;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.rotation += Projectile.direction <= 0 ? -1.35f : 1.35f;
+
+            stickTimer++;
+            sliceEffectTimer++;
+
+            BBShuriken_Initial_Effects.SpawnTileStickyAmbient(Projectile, SizeScale, shurikenProfile.GrowthTier);
+
+            if (sliceEffectTimer >= 8)
+            {
+                sliceEffectTimer = 0;
+                slicesPerformed++;
+                BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, shurikenProfile.GrowthTier);
+                PlayStickySliceSound();
+
+                if (slicesPerformed >= GetMaxStickySlices())
+                {
+                    Projectile.Kill();
+                    return;
+                }
+            }
+
+            if (stickTimer >= StickyLifetime)
+                Projectile.Kill();
+        }
+
         private int GetMaxStickySlices()
         {
             return shurikenProfile.StickySliceCount;
@@ -388,6 +460,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 Projectile.owner,
                 shurikenProfile.StickySlashScale,
                 Main.rand.NextFloat(-0.3f, 0.3f));
+        }
+
+        private void PlayStickySliceSound()
+        {
+            if (soundTimer > 0)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item71 with
+            {
+                Volume = 0.45f,
+                Pitch = Main.rand.NextFloat(0.15f, 0.35f)
+            }, Projectile.Center);
+
+            soundTimer = 8;
         }
 
         private NPC FindNearestTarget(float maxDistance)
@@ -591,6 +677,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 if (Main.rand.NextBool())
                 {
                     Dust water = Dust.NewDustPerfect(projectile.Center, DustID.Water, dustVelocity * 0.8f);
+                    water.noGravity = true;
+                    water.scale = Main.rand.NextFloat(0.92f, 1.22f) * sizeScale;
+                }
+            }
+        }
+
+        public static void SpawnTileStickyAmbient(Projectile projectile, float sizeScale, int highestUnlockedStage)
+        {
+            int ambientCount = 1 + Math.Min(highestUnlockedStage, 1);
+            for (int i = 0; i < ambientCount; i++)
+            {
+                Vector2 offset = Main.rand.NextVector2Circular(projectile.width * 0.18f, projectile.height * 0.18f);
+                Vector2 dustVelocity = Main.rand.NextVector2Circular(2.4f, 2.4f);
+
+                Dust frost = Dust.NewDustPerfect(projectile.Center + offset, DustID.Frost, dustVelocity);
+                frost.noGravity = true;
+                frost.scale = Main.rand.NextFloat(0.85f, 1.18f) * sizeScale;
+
+                if (Main.rand.NextBool())
+                {
+                    Dust water = Dust.NewDustPerfect(projectile.Center + offset * 0.7f, DustID.Water, dustVelocity * 0.8f);
                     water.noGravity = true;
                     water.scale = Main.rand.NextFloat(0.92f, 1.22f) * sizeScale;
                 }

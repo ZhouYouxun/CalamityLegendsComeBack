@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Accssory.SHPC.General;
+using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityMod.Items.Materials;
 using CalamityMod.Tiles.Furniture.CraftingStations;
 using Terraria;
@@ -6,9 +6,9 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using EvolutionEnergyCoreItem = CalamityLegendsComeBack.Accssory.SHPC.General.EvolutionEnergyCore.EvolutionEnergyCore;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.General.StarstreamEnergyCore
+namespace CalamityLegendsComeBack.Accssory.SHPC.General.ExoEnergyCore
 {
-    public class StarstreamEnergyCore : ModItem
+    public class ExoEnergyCore : ModItem
     {
 
         public override void SetDefaults()

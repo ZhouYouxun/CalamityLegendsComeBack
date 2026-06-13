@@ -169,7 +169,7 @@ Mods: {
 					'''
 					+7% SHPC damage
 					SHPC left-click mana cost -8%; right-click mana cost -12%
-					SHPC left click gains 1 extra soul canister and loads 25% more ammo rounded up to a multiple of 5
+					SHPC left click gains 1 extra soul canister and loads 10% more ammo rounded up to a multiple of 5
 					While holding SHPC, stand still and cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					'''
@@ -181,7 +181,7 @@ Mods: {
 					'''
 					+15% SHPC damage
 					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
-					SHPC left click gains 2 extra soul canisters and loads 50% more ammo rounded up to a multiple of 5
+					SHPC left click gains 2 extra soul canisters and loads 25% more ammo rounded up to a multiple of 5
 					While holding SHPC, stop moving horizontally and cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Shortens right-click startup
@@ -194,20 +194,20 @@ Mods: {
 					'''
 					+15% SHPC damage, +5% critical strike chance, allows right-click critical hits
 					SHPC left-click mana cost -15%; right-click mana cost -30%; left click has a 20% chance not to consume ammo
-					SHPC left click gains 3 extra soul canisters and loads 75% more ammo rounded up to a multiple of 5
+					SHPC left click gains 3 extra soul canisters and loads 50% more ammo rounded up to a multiple of 5
 					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Shortens right-click startup
 					'''
 			}
 
-			StarstreamEnergyCore: {
-				DisplayName: Starstream Energy Core
+			ExoEnergyCore: {
+				DisplayName: Exo Energy Core
 				Tooltip:
 					'''
 					+20% SHPC damage, +10% critical strike chance, allows right-click critical hits
 					While holding SHPC, gain infinite mana; left click has a 50% chance not to consume ammo
-					SHPC left click gains 4 extra soul canisters and loads 100% more ammo rounded up to a multiple of 5
+					SHPC left click gains 3 extra soul canisters and loads 100% more ammo rounded up to a multiple of 5
 					Shortens right-click startup
 					'''
 			}

@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Boss;
@@ -55,6 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Projectile spawnedExplosion = Main.projectile[projIndex];
                 spawnedExplosion.width = 75;
                 spawnedExplosion.height = 75;
+                spawnedExplosion.Center = projectile.Center;
             }
 
             SoundEngine.PlaySound(SoundID.Item106, projectile.Center);

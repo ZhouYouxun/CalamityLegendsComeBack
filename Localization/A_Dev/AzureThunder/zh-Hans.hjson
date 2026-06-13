@@ -104,53 +104,51 @@ Mods: {
 			}
 
 			AdrenalineInjector: {
-				// DisplayName: Adrenaline Injector
-				// Tooltip: ""
+				DisplayName: 肾上腺素注射器
+				Tooltip:
+					'''
+					海爵剑刃命中敌人时积累肾上腺素（最高18层），距上次命中超过3.5秒则逐层消退
+					每层：+1.8% 近战伤害，+1.4% 攻击速度
+					'''
 			}
 
 			BottledAircraftCarrier: {
-				// DisplayName: Bottled Aircraft Carrier
-				// Tooltip: ""
+				DisplayName: 瓶中航母
+				Tooltip: 近战伤害 +14%
 			}
 
 			BottledBlackPearl: {
-				// DisplayName: Bottled Black Pearl
-				// Tooltip: ""
+				DisplayName: 瓶中黑珍珠
+				Tooltip: 近战伤害 +10%
 			}
 
 			BottledBoat: {
-				// DisplayName: Bottled Boat
-				// Tooltip: ""
+				DisplayName: 瓶中游艇
+				Tooltip: 近战伤害 +7%
 			}
 
 			BottledRaft: {
-				// DisplayName: Bottled Raft
-				// Tooltip: ""
+				DisplayName: 瓶中筏子
+				Tooltip: 近战伤害 +4%
 			}
 
 			DrinkingFountain: {
-				// DisplayName: Drinking Fountain
-				// Tooltip: ""
+				DisplayName: 饮水装置
+				Tooltip: 海爵剑刃命中敌人时，向玩家方向飞出一枚治疗球
 			}
 
 			TideRadar: {
-				// DisplayName: Tide Radar
-				// Tooltip: ""
+				DisplayName: 潮汐雷达
+				Tooltip: 锁定附近最近的敌人；海爵的所有弹幕命中该目标时造成额外 15% 伤害
 			}
 
 			CeruleanShield: {
-				// DisplayName: Cerulean Shield
-				// Tooltip: ""
 			}
 
 			LostGarment: {
-				// DisplayName: Lost Garment
-				// Tooltip: ""
 			}
 
 			VortexPortal: {
-				// DisplayName: Vortex Portal
-				// Tooltip: ""
 			}
 		}
 
@@ -189,7 +187,7 @@ Mods: {
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
 
-			// BBDrinkingFountainOrb.DisplayName: B B Drinking Fountain Orb
+			BBDrinkingFountainOrb.DisplayName: 饮水治疗球
 			// SeedOfSilvaTorchShockwave.DisplayName: Seed Of Silva Torch Shockwave
 		}
 

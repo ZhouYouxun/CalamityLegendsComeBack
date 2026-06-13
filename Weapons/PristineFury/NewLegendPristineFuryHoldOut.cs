@@ -1,4 +1,5 @@
 ﻿using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
+using CalamityLegendsComeBack.Weapons.PristineFury.UI;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -21,23 +22,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private const float RightFireballDamageMultiplier = 2.15f;
         private const float HoldoutDistance = 34f;
 
+        // Debug 模式下的完整印记顺序（按难度顺序，不含 Idle）。
         private static readonly PristineFuryMark[] TemporaryDebugMarkCycle =
         {
-            PristineFuryMark.Idle,
             PristineFuryMark.EvilT2,
             PristineFuryMark.SlimeGod,
             PristineFuryMark.HardMode,
             PristineFuryMark.Prime,
             PristineFuryMark.BrimstoneElemental,
-            PristineFuryMark.FakeCalamity,
             PristineFuryMark.Plantera,
             PristineFuryMark.Aurora,
+            PristineFuryMark.Goliath,
+            PristineFuryMark.FakeCalamity,
             PristineFuryMark.Moonlord,
             PristineFuryMark.Providence,
             PristineFuryMark.Ravager,
             PristineFuryMark.Polterghast,
             PristineFuryMark.Dog,
             PristineFuryMark.Dragon,
+            PristineFuryMark.ExoTwins,
+            PristineFuryMark.ExoThanatos,
+            PristineFuryMark.ExoAres,
         };
 
         private int hookChargeTimer;
@@ -126,6 +131,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             bool bothHeld = leftHeld && rightHeld;
             bool debugCycleEquipped = Owner.GetModPlayer<PristineFuryPlayer>().DebugCycleEquipped;
 
+            // 弧形 HUD：debug 模式下关闭弹夹显示，正常模式下保证存在。
+            UpdateMarkArcVisibility(debugCycleEquipped);
+
+            // 轮盘键：debug 模式下禁用。
+            if (!debugCycleEquipped && KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed == true)
+                SpawnMarkSelectionWheel();
+
             ResetLeftStateIfMarkChanged();
             UpdateLeftVisualState(leftHeld);
 
@@ -192,9 +204,89 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             pristinePlayer.ExtractMark(nextMark, temporaryDebugSwitch: true);
             ResetLeftEffectStateForMark(nextMark);
-            ApplyRecoil(2.4f);
-            TriggerMuzzleFlash(8);
-            SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.7f, Pitch = 0.08f }, Owner.Center);
+
+            if (!Main.dedServ)
+            {
+                Color markColor = PristineFuryMarkHelper.GetColor(nextMark);
+
+                // 爆发粒子环（12 个辐射 + 8 个随机）
+                for (int i = 0; i < 12; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 12f;
+                    Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(3.5f, 7.8f);
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        GunTipPosition,
+                        vel + AimDirection * 1.2f,
+                        false,
+                        Main.rand.Next(20, 32),
+                        Main.rand.NextFloat(0.20f, 0.38f),
+                        Color.Lerp(markColor, Color.White, 0.35f),
+                        true, false, true));
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 vel = AimDirection.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(2f, 5.5f);
+                    GeneralParticleHandler.SpawnParticle(new PointParticle(
+                        GunTipPosition + Main.rand.NextVector2Circular(5f, 5f),
+                        vel,
+                        false,
+                        Main.rand.Next(14, 22),
+                        Main.rand.NextFloat(0.55f, 0.95f),
+                        Color.Lerp(markColor, Color.White, Main.rand.NextFloat(0.2f, 0.65f))));
+                }
+
+                SpawnMuzzleBurst(markColor, 2.2f);
+            }
+
+            ApplyRecoil(10f);
+            TriggerMuzzleFlash(28);
+            Owner.SetScreenshake(3.5f);
+
+            // 根据印记在列表中的位置微调音调，营造"频率计"感觉
+            float pitchStep = nextIndex / (float)(TemporaryDebugMarkCycle.Length - 1);
+            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.80f, Pitch = MathHelper.Lerp(-0.12f, 0.42f, pitchStep) }, GunTipPosition);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserCompleteCharge") { Volume = 0.45f, Pitch = 0.12f + pitchStep * 0.28f }, GunTipPosition);
+        }
+
+        // debug 模式下关闭弧形弹夹 HUD，普通模式下保证它存在。
+        private void UpdateMarkArcVisibility(bool debugEquipped)
+        {
+            int arcType = ModContent.ProjectileType<PFMarkStatusArc>();
+            if (debugEquipped)
+            {
+                foreach (Projectile proj in Main.ActiveProjectiles)
+                {
+                    if (proj.active && proj.owner == Projectile.owner && proj.type == arcType)
+                    {
+                        proj.Kill();
+                        break;
+                    }
+                }
+                return;
+            }
+            foreach (Projectile proj in Main.ActiveProjectiles)
+            {
+                if (proj.active && proj.owner == Projectile.owner && proj.type == arcType)
+                    return;
+            }
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.Center, Vector2.Zero,
+                arcType, 0, 0f, Projectile.owner);
+        }
+
+        private void SpawnMarkSelectionWheel()
+        {
+            int wheelType = ModContent.ProjectileType<PFMarkSelectionWheel>();
+            // Kill any existing wheel first so only one appears at a time.
+            foreach (Projectile proj in Main.ActiveProjectiles)
+            {
+                if (proj.active && proj.owner == Projectile.owner && proj.type == wheelType)
+                {
+                    proj.Kill();
+                    break;
+                }
+            }
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.Center, Vector2.Zero,
+                wheelType, 0, 0f, Projectile.owner);
         }
 
         private void CancelHookChargeForTemporaryDebug()

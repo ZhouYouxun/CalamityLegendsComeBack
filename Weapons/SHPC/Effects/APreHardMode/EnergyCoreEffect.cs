@@ -22,6 +22,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
         public override Color ThemeColor => new Color(120, 255, 120); // 稍微偏深的Lime
         public override Color StartColor => new Color(140, 255, 140); // 稍亮一点作为起点
         public override Color EndColor => new Color(40, 180, 40);     // 深绿色收尾
+
+        public override void SetDefaults(Projectile projectile)
+        {
+            projectile.penetrate = -1;
+            projectile.timeLeft = 720;
+            projectile.usesLocalNPCImmunity = true;
+            projectile.localNPCHitCooldown = 20;
+        }
+
+        public override bool EnableProximityExplosion => false;
+
         public override void AI(Projectile projectile, Player owner)
         {
             // ===== 模拟重力 =====
@@ -47,11 +58,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             // ===== 碰撞箱变长翻倍 =====
             // 在基类设置24x24碰撞箱之后，将宽度翻倍为48，使碰撞箱沿飞行方向更长
             Vector2 oldCenter = projectile.Center;
-            projectile.width = projectile.width * 2;
+            projectile.width = 48;
             projectile.Center = oldCenter;
         }
         public override bool OnTileCollide(Projectile projectile, Player owner, Vector2 oldVelocity)
         {
+            int timeFlown = 720 - projectile.timeLeft;
+            int bounceCount = (int)projectile.localAI[0];
+            bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
+
+            if (isReady)
+            {
+                return true;
+            }
+
+            projectile.localAI[0] += 1f;
+
             // 反弹（入射=反射）
             if (projectile.velocity.X != oldVelocity.X)
                 projectile.velocity.X = -oldVelocity.X;
@@ -66,50 +88,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             return false; // 不销毁
         }
 
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            int timeFlown = 720 - projectile.timeLeft;
+            int bounceCount = (int)projectile.localAI[0];
+            bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
+
+            if (isReady)
+            {
+                projectile.Kill();
+            }
+        }
+
 		// 死亡时炸出6个电火花
 		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
 		{
             PlayEnergyCoreExplosionSound(projectile.Center);
 
 			int count = 7;
-
-			// 随机整体旋转（避免每次都一样）
-			float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
-
-			for (int i = 0; i < count; i++)
-			{
-				// 基础均分角度 + 随机扰动（±15°）
-				float baseAngle = MathHelper.TwoPi / count * i;
-				float randomOffset = Main.rand.NextFloat(-MathHelper.ToRadians(15f), MathHelper.ToRadians(15f));
-				float angle = baseRotation + baseAngle + randomOffset;
-
-				// 速度随机（4~8）
-				float speed = Main.rand.NextFloat(4f, 8f);
-				Vector2 velocity = angle.ToRotationVector2() * speed;
-
-				// 伤害随机（0.X~0.Y倍）
-				float damageFactor = Main.rand.NextFloat(0.25f, 0.4f);
-
-				Projectile.NewProjectile(
-					projectile.GetSource_FromThis(),
-					projectile.Center,
-					velocity,
-					ModContent.ProjectileType<EnergyCore_Spark>(),
-					(int)(projectile.damage * damageFactor),
-					projectile.knockBack,
-					projectile.owner
-				);
-			}
-
-            int projIndex = Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(projectile.damage * 0.8f),
-                projectile.knockBack,
-                projectile.owner
-            );
 
             Projectile proj = Main.projectile[projIndex];
             proj.width = 80;

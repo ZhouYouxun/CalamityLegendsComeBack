@@ -31,6 +31,7 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public bool DrinkingFountainEquipped;
         public bool AdrenalineInjectorEquipped;
         public bool TideRadarEquipped;
+        public bool BBPassiveChannelerEquipped;
         public float GeneralMeleeDamageBonus;
         public int TideRadarTarget = -1;
 
@@ -53,6 +54,7 @@ namespace CalamityLegendsComeBack.Accssory.BB
             DrinkingFountainEquipped = false;
             AdrenalineInjectorEquipped = false;
             TideRadarEquipped = false;
+            BBPassiveChannelerEquipped = false;
             GeneralMeleeDamageBonus = 0f;
             TideRadarTarget = -1;
             RightClickMode = BBRightClickMode.DefaultShuriken;

@@ -279,6 +279,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             Projectile proj = Main.projectile[projIndex];
             proj.width = 375;
             proj.height = 375;
+            proj.Center = Projectile.Center;
             proj.CritChance = Projectile.CritChance;
 
             int oldWidth = Projectile.width;

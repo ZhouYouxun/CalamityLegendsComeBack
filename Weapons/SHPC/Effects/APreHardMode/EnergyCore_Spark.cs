@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             base.Projectile.usesLocalNPCImmunity = true;
             base.Projectile.localNPCHitCooldown = 15;
             base.Projectile.DamageType = DamageClass.Magic;
+            base.Projectile.ArmorPenetration = 10;
         }
 
         public override void AI()

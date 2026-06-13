@@ -62,22 +62,67 @@ Mods: {
 
 			OffshoreWindTurbine: {
 				DisplayName: 离岸风力发电机
-				Tooltip: 海爵的最大潮汐值 +2
+				Tooltip:
+					'''
+					海爵剑的潮汐上限增加 2 层
+					潮汐层数越多，每层 3% 的伤害加成积累上限越高，长线战斗优势越明显
+					[c/7F8FA6:多件叠加生效]
+					'''
 			}
 
 			ImpactRestarter: {
 				DisplayName: 冲击重启器
-				Tooltip: 海爵的右键小冲刺命中敌人后立刻清空三秒冷却\n满潮回旋冲刺命中敌人时，将三秒冷却压缩为一秒
+				Tooltip:
+					'''
+					右键突进命中敌人后立刻将冷却重置为零，可以立即再次发动
+					满潮状态下的回旋冲刺命中敌人时，冷却从 3 秒压缩至 1 秒
+					[c/7F8FA6:适合在密集敌群中以右键突进为核心节奏反复冲打]
+					'''
 			}
 
 			HighTideOverloadBarrier: {
 				DisplayName: 满潮过载防护层
-				Tooltip: 海爵潮汐值为满时，额外提供 20 点防御力和 20% 伤害减免
+				Tooltip:
+					'''
+					潮汐值为满时，获得 20 点防御力与 20% 伤害减免
+					同时会在身周持续产生水尘粒子，作为满潮防护层激活的视觉标志
+					[c/7F8FA6:潮汐一旦消耗，防护立即解除；保住满潮是持续防御的关键]
+					'''
 			}
 
 			SurgeChainReactor: {
 				DisplayName: 电涌连锁反应器
-				Tooltip: 海爵的快刀斩命中敌人后，额外爆发 75x75 的蓝色水能爆炸
+				Tooltip:
+					'''
+					快刀斩命中敌人时，在命中点额外爆发一次 75×75 的蓝色水能冲击
+					将原本点对点的穿刺伤害扩散到周围敌群，显著提高密集场合的清场效率
+					[c/7F8FA6:水能爆炸属于近战伤害，同样受潮汐加成与通用伤害加成影响]
+					'''
+			}
+
+			VortexPortal: {
+				DisplayName: 涡旋传送门
+				Tooltip: 将海爵右键替换为"盾潮连斩"
+			}
+
+			LostGarment: {
+				DisplayName: 旧日战甲
+				Tooltip: 将海爵右键替换为"回旋切割"
+			}
+
+			CeruleanShield: {
+				DisplayName: 碧蓝护盾
+				Tooltip: 将海爵右键替换为"回旋切割"，命中时额外触发碧蓝爆炸
+			}
+
+			BBPassiveChanneler: {
+				DisplayName: 潮汐被动触媒
+				Tooltip:
+					'''
+					[c/9AEF9E:只要背包任意位置存有海爵剑，快刀斩被动即持续激活，无需手持武器]
+					被动效果与手持时完全一致，不会增强或改变任何数值
+					[c/7F8FA6:不提供其他战斗加成，仅用于让被动在换持武器期间也不中断]
+					'''
 			}
 		}
 

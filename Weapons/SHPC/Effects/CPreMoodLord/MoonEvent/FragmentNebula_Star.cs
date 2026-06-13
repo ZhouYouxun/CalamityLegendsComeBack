@@ -102,11 +102,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
             float distance = Projectile.Distance(target.Center);
-            float timePower = Utils.GetLerpValue(0f, 90f * (Projectile.extraUpdates + 1f), Timer - homingDelay, true);
+            float timePower = Utils.GetLerpValue(0f, 50f * (Projectile.extraUpdates + 1f), Timer - homingDelay, true);
             float closePower = Utils.GetLerpValue(900f, 120f, distance, true);
-            float trackingPower = MathHelper.Max(timePower, closePower * 0.72f);
+            float trackingPower = MathHelper.Max(timePower, closePower);
             float targetSpeed = idealSpeed * MathHelper.Lerp(1.04f, IsBlueVariant ? 1.46f : 1.38f, trackingPower);
-            float inertia = MathHelper.Lerp(IsBlueVariant ? 11f : 10f, IsBlueVariant ? 2.35f : 2.05f, trackingPower);
+            float inertia = MathHelper.Lerp(IsBlueVariant ? 11f : 10f, IsBlueVariant ? 1.8f : 1.5f, trackingPower);
 
             Projectile.velocity = (Projectile.velocity * inertia + desiredDirection * targetSpeed) / (inertia + 1f);
 
@@ -282,9 +282,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             if (Main.projectile.IndexInRange(explosionIndex))
             {
                 Projectile explosion = Main.projectile[explosionIndex];
-                explosion.Center = Projectile.Center;
                 explosion.width = 190;
                 explosion.height = 190;
+                explosion.Center = Projectile.Center;
                 explosion.netUpdate = true;
             }
         }

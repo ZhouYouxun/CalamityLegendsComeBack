@@ -48,6 +48,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override void AI()
         {
+            if ((int)Projectile.ai[0] == -1)
+            {
+                if (!initialized)
+                {
+                    initialized = true;
+                    Projectile.localAI[0] = Projectile.Center.X;
+                    Projectile.localAI[1] = Projectile.Center.Y;
+                    curveDirection = Main.rand.NextBool() ? 1f : -1f;
+                }
+
+                arcTimer++;
+
+                float radius = 24f + (float)Math.Sin(arcTimer * 0.1f) * 8f;
+                float angle = arcTimer * 0.15f * curveDirection;
+                Vector2 center = new Vector2(Projectile.localAI[0], Projectile.localAI[1]);
+                Projectile.Center = center + angle.ToRotationVector2() * radius;
+                Projectile.velocity = (angle + MathHelper.PiOver2 * curveDirection).ToRotationVector2() * 4f;
+
+                ableToHit = true;
+                return;
+            }
+
             if ((int)Projectile.ai[0] < 0 || (int)Projectile.ai[0] >= Main.maxNPCs)
             {
                 Projectile.Kill();
@@ -156,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             if (Projectile.ai[1] <= 1f)
                 return;
 
-            float maxDistance = 420f;
+            float maxDistance = 320f;
             int nextTargetIndex = -1;
 
             // ==================== 优先寻找最近的新目标 ====================

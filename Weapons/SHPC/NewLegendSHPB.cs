@@ -112,24 +112,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Projectile.velocity *= 0.98f;
 
             // ===== 默认接近爆炸 =====
-            float explodeRange = CurrentEffect.EffectID == -1
-                ? new BalanceSHPC().GetDefaultOrbExplosionSize() * 1.15f
-                : 250f;
-
-            foreach (NPC npc in Main.ActiveNPCs)
+            if (CurrentEffect.EnableProximityExplosion)
             {
-                if (!npc.CanBeChasedBy(Projectile, false))
-                    continue;
+                float explodeRange = CurrentEffect.EffectID == -1
+                    ? new BalanceSHPC().GetDefaultOrbExplosionSize() * 1.15f
+                    : 250f;
 
-                if (!Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1))
-                    continue;
-
-                float npcDist = Vector2.Distance(Projectile.Center, npc.Center);
-
-                if (npcDist < explodeRange)
+                foreach (NPC npc in Main.ActiveNPCs)
                 {
-                    explodeRange = npcDist;
-                    CanExplodeFromProximity = true;
+                    if (!npc.CanBeChasedBy(Projectile, false))
+                        continue;
+
+                    if (!Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1))
+                        continue;
+
+                    float npcDist = Vector2.Distance(Projectile.Center, npc.Center);
+
+                    if (npcDist < explodeRange)
+                    {
+                        explodeRange = npcDist;
+                        CanExplodeFromProximity = true;
+                    }
                 }
             }
 
