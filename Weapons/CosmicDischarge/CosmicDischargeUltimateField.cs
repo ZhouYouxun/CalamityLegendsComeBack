@@ -117,6 +117,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float pulse = 1f + 0.035f * MathF.Sin(Main.GlobalTimeWrappedHourly * MathHelper.TwoPi);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
@@ -141,6 +143,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     new Vector2(3f, 3f),
                     SpriteEffects.None);
             }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;
         }

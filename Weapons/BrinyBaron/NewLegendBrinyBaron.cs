@@ -199,13 +199,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 player.AddCooldown(BBSuperDashCooldownHandler.ID, superDashCooldown.CooldownDuration).timeLeft = superDashVisualValue;
             }
 
-            if (!superDashCooldown.CanUseSuperDash || !HasDesignedSuperDashUnlock || !tidePlayer.TideFull || !tidePlayer.TideChargeFull)
+            bool exUnlocked = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            if (!superDashCooldown.CanUseSuperDash || !exUnlocked || !tidePlayer.TideFull || !tidePlayer.TideChargeFull)
                 return;
 
             if (!KeybindSystem.LegendarySkill.JustPressed)
-                return;
-
-            if (!player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped)
                 return;
 
             int target = BBSuperDashTargeting.FindBestTargetIndex(player, player.Center);
@@ -352,33 +350,49 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             BBTideValuePlayer tidePlayer = player.GetModPlayer<BBTideValuePlayer>();
             Dash_Trigger dashPlayer = player.GetModPlayer<Dash_Trigger>();
 
-            string left = this.GetLocalizedValue("BB_Left");
-            string tide = this.GetLocalizedValue("BB_Tide") + tidePlayer.TideValue;
-            string right = this.GetLocalizedValue("BB_Right");
-            string dash1 = this.GetLocalizedValue("Dash1_Unlock");
-            string dash2 = this.GetLocalizedValue("Dash2_Lock");
-            string dash3 = CanUseQuickDash
-                ? this.GetLocalizedValue("Dash3_Unlock")
-                : this.GetLocalizedValue("Dash3_Lock");
-            string dash4 = HasDesignedSuperDashUnlock
-                ? this.GetLocalizedValue("Dash4_Unlock")
-                : this.GetLocalizedValue("Dash4_Lock");
+            int growthStage = BB_Balance.GetGrowthStage();
+            string left = this.GetLocalizedValue("BB_Left_" + growthStage);
+
+            BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
+            string rightDesc = rightClickMode switch
+            {
+                BBRightClickMode.LostGarment => this.GetLocalizedValue("BB_Right_LostGarment"),
+                BBRightClickMode.CeruleanShield => this.GetLocalizedValue("BB_Right_CeruleanShield"),
+                BBRightClickMode.VortexPortal => this.GetLocalizedValue("BB_Right_VortexPortal"),
+                _ => this.GetLocalizedValue("BB_Right_DefaultShuriken"),
+            };
+
+            string spinText = (growthStage >= 2)
+                ? this.GetLocalizedValue("BB_Right_Spin_Unlocked")
+                : this.GetLocalizedValue("BB_Right_Spin_Locked");
+            
+            string rightSection = rightDesc.Trim() + "\n" + spinText.Trim();
+
+            bool hasDashAcc = rightClickMode != BBRightClickMode.DefaultShuriken;
+            string tideDesc = hasDashAcc
+                ? this.GetLocalizedValue("BB_Tide_Desc_HasAccessory")
+                : this.GetLocalizedValue("BB_Tide_Desc_NoAccessory");
+            string tide = this.GetLocalizedValue("BB_Tide") + tidePlayer.TideValue + "\n" + tideDesc;
+
             string passiveState = this.GetLocalizedValue(dashPlayer.DashEnabled ? "PassiveStateOn" : "PassiveStateOff");
             string passiveDevice = this.GetLocalizedValue(dashPlayer.EquippedDashDeviceLocalizationKey);
             string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState, passiveDevice);
+
+            bool exUnlocked = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string dash4 = exUnlocked
+                ? this.GetLocalizedValue("Dash4_Unlock")
+                : this.GetLocalizedValue("Dash4_Lock");
             string final = this.GetLocalizedValue("BB_Final");
+
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
             string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
 
             string finalText =
                left + "\n\n" +
-               tide + "\n" +
-               right + "\n" +
-               dash1 + "\n" +
-               dash2 + "\n" +
-               dash3 + "\n" +
-               passive + "\n" +
+               rightSection + "\n\n" +
+               tide + "\n\n" +
+               passive + "\n\n" +
                dash4 + "\n\n" +
                final + "\n\n";
 

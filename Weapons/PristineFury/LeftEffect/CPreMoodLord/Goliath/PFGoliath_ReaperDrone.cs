@@ -72,8 +72,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                         (float)Math.Sin(Timer * 0.08f + Phase) *
                         MathHelper.Lerp(46f, 12f, Utils.GetLerpValue(CurveFrames, CurveFrames + 76f, Timer, true));
                     Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center + sideBias, currentDirection);
-                    Vector2 desiredVelocity = desiredDirection * MathHelper.Lerp(currentSpeed, HomingSpeed, 0.08f);
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.064f + 0.018f * Math.Abs((float)Math.Sin(Phase)));
+                    Vector2 desiredVelocity = desiredDirection * MathHelper.Lerp(currentSpeed, HomingSpeed, 0.24f);
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.192f + 0.054f * Math.Abs((float)Math.Sin(Phase)));
                 }
                 else
                     Projectile.velocity *= 0.996f;

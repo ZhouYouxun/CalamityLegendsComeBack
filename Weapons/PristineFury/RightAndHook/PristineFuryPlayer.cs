@@ -68,21 +68,28 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             if (temporaryDebugSwitch)
             {
-                // Debug cycle: find existing mark in queue and select it, or push if absent.
-                bool found = false;
-                for (int i = 0; i < MarkQueueCount; i++)
+                if (mark == PristineFuryMark.Idle)
                 {
-                    if (MarkQueue[i] == mark)
-                    {
-                        SelectedMarkIndex = i;
-                        found = true;
-                        break;
-                    }
+                    SelectedMarkIndex = -1;
                 }
-                if (!found)
+                else
                 {
-                    PushMark(mark);
-                    SelectedMarkIndex = MarkQueueCount - 1;
+                    // Debug cycle: find existing mark in queue and select it, or push if absent.
+                    bool found = false;
+                    for (int i = 0; i < MarkQueueCount; i++)
+                    {
+                        if (MarkQueue[i] == mark)
+                        {
+                            SelectedMarkIndex = i;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        PushMark(mark);
+                        SelectedMarkIndex = MarkQueueCount - 1;
+                    }
                 }
             }
             else

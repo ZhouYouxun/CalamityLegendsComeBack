@@ -107,9 +107,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
 			int count = 7;
 
-            Projectile proj = Main.projectile[projIndex];
-            proj.width = 80;
-            proj.height = 80;
+			// 随机整体旋转（避免每次都一样）
+			float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
+
+			for (int i = 0; i < count; i++)
+			{
+				// 基础均分角度 + 随机扰动（±15°）
+				float baseAngle = MathHelper.TwoPi / count * i;
+				float randomOffset = Main.rand.NextFloat(-MathHelper.ToRadians(15f), MathHelper.ToRadians(15f));
+				float angle = baseRotation + baseAngle + randomOffset;
+
+				// 速度随机（4~8）
+				float speed = Main.rand.NextFloat(4f, 8f);
+				Vector2 velocity = angle.ToRotationVector2() * speed;
+
+				// 伤害随机（0.X~0.Y倍）
+				float damageFactor = Main.rand.NextFloat(0.25f, 0.4f);
+
+				Projectile.NewProjectile(
+					projectile.GetSource_FromThis(),
+					projectile.Center,
+					velocity,
+					ModContent.ProjectileType<EnergyCore_Spark>(),
+					(int)(projectile.damage * damageFactor),
+					projectile.knockBack,
+					projectile.owner
+				);
+			}
+
+            int projIndex = Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                (int)(projectile.damage * 0.8f),
+                projectile.knockBack,
+                projectile.owner
+            );
+
+            if (projIndex >= 0 && projIndex < Main.maxProjectiles)
+            {
+                Projectile proj = Main.projectile[projIndex];
+                proj.width = 100;
+                proj.height = 100;
+                proj.Center = projectile.Center;
+                proj.netUpdate = true;
+            }
         }
 
         private static void PlayEnergyCoreExplosionSound(Vector2 position)

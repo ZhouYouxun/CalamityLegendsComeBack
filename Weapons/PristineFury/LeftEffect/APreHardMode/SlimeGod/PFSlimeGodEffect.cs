@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
@@ -61,6 +63,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(16);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.95f);
+
+            SoundEngine.PlaySound(SoundID.NPCDeath1 with { Volume = 0.62f, Pitch = 0.28f, PitchVariance = 0.12f }, holdout.GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item56 with { Volume = 0.45f, Pitch = -0.15f, PitchVariance = 0.1f }, holdout.GunTipPosition);
         }
     }
 }

@@ -94,6 +94,15 @@ Mods: {
 					DisplayName: 复古游戏机补给包
 					Tooltip: 右键打开，领取目前已经准备好的复古游戏机。
 				}
+
+				QuickStartBox: {
+					DisplayName: 快速发展道具箱
+					Tooltip:
+						'''
+						右键打开，获得一些快速发展的强力装备、海量药水与物资。
+						【注意：这个道具很破坏平衡，想好了再开启】
+						'''
+				}
 			}
 
 			LegendaryEmblem: {

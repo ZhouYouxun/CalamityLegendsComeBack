@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
+using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
 using CalamityLegendsComeBack.Weapons.PristineFury.UI;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -22,9 +23,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private const float RightFireballDamageMultiplier = 2.15f;
         private const float HoldoutDistance = 34f;
 
-        // Debug 模式下的完整印记顺序（按难度顺序，不含 Idle）。
+        // Debug 模式下的完整印记顺序（按难度顺序，包含 Idle 作为默认）。
         private static readonly PristineFuryMark[] TemporaryDebugMarkCycle =
         {
+            PristineFuryMark.Idle,
             PristineFuryMark.EvilT2,
             PristineFuryMark.SlimeGod,
             PristineFuryMark.HardMode,
@@ -40,9 +42,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             PristineFuryMark.Polterghast,
             PristineFuryMark.Dog,
             PristineFuryMark.Dragon,
-            PristineFuryMark.ExoTwins,
-            PristineFuryMark.ExoThanatos,
-            PristineFuryMark.ExoAres,
         };
 
         private int hookChargeTimer;
@@ -370,6 +369,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.85f, Pitch = -0.18f }, GunTipPosition);
         }
 
+        private int GetMaxRightChargeFrames()
+        {
+            if (!Main.hardMode)
+                return 119;
+            if (!NPC.downedPlantBoss)
+                return 179;
+            if (!NPC.downedMoonlord)
+                return 299;
+            return 600;
+        }
+
         private void HandleRightClick(bool rightHeld)
         {
             if (rightCooldownTimer > 0)
@@ -384,32 +394,111 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 if (rightChargeTimer == 0)
                     SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeStart") { Volume = 0.55f }, GunTipPosition);
 
-                rightChargeTimer = Math.Min(RightChargeMaxFrames, rightChargeTimer + 1);
-                float chargeCompletion = rightChargeTimer / (float)RightChargeMaxFrames;
-                EnsureRightChargeOrb(chargeCompletion);
+                int maxFrames = GetMaxRightChargeFrames();
+                rightChargeTimer = Math.Min(maxFrames, rightChargeTimer + 1);
 
-                if (rightChargeTimer == RightChargeMaxFrames / 2)
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV1") { Volume = 0.62f, Pitch = -0.08f }, GunTipPosition);
-
-                if (!rightChargeReady && rightChargeTimer >= RightChargeMaxFrames)
+                if (rightChargeTimer == 60)
                 {
-                    rightChargeReady = true;
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV2") { Volume = 0.72f, Pitch = -0.1f }, GunTipPosition);
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserCompleteCharge") { Volume = 0.5f, Pitch = 0.08f }, GunTipPosition);
+                    if (Owner.whoAmI == Main.myPlayer)
+                        CombatText.NewText(Owner.getRect(), new Color(255, 160, 60), "圣焰临界", true);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV1") { Volume = 0.62f, Pitch = -0.08f }, GunTipPosition);
+                    
+                    if (!Main.dedServ)
+                    {
+                        Color themeColor = PristineFuryMarkHelper.GetColor(CurrentMark);
+                        GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                            GunTipPosition, Vector2.Zero, themeColor * 0.9f,
+                            new Vector2(3f, 3f), 0f, 0.9f, 0.08f, 20
+                        ));
+                    }
                 }
-                else if (rightChargeTimer > 10 && rightChargeTimer < RightChargeMaxFrames && rightChargeTimer % 40 == 0)
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLoop") { Volume = 0.36f, Pitch = 0.18f }, GunTipPosition);
+                else if (rightChargeTimer == 120)
+                {
+                    if (Owner.whoAmI == Main.myPlayer)
+                        CombatText.NewText(Owner.getRect(), new Color(255, 100, 30), "净火压缩", true);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserChargeLV2") { Volume = 0.72f, Pitch = -0.1f }, GunTipPosition);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.45f }, GunTipPosition);
+                    
+                    if (!Main.dedServ)
+                    {
+                        Color themeColor = PristineFuryMarkHelper.GetColor(CurrentMark);
+                        GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                            GunTipPosition, Vector2.Zero, themeColor * 0.95f,
+                            new Vector2(4.5f, 4.5f), 0f, 0.9f, 0.08f, 20
+                        ));
+                    }
+                }
+                else if (rightChargeTimer == 180)
+                {
+                    if (Owner.whoAmI == Main.myPlayer)
+                        CombatText.NewText(Owner.getRect(), new Color(255, 50, 20), "圣火过压", true);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot") { Volume = 0.75f, Pitch = -0.1f }, GunTipPosition);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserCompleteCharge") { Volume = 0.5f, Pitch = 0.08f }, GunTipPosition);
+                    
+                    if (!Main.dedServ)
+                    {
+                        Color themeColor = PristineFuryMarkHelper.GetColor(CurrentMark);
+                        GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                            GunTipPosition, Vector2.Zero, themeColor,
+                            new Vector2(6f, 6f), 0f, 0.9f, 0.08f, 20
+                        ));
+                    }
+                }
+                else if (rightChargeTimer == 300)
+                {
+                    if (Owner.whoAmI == Main.myPlayer)
+                        CombatText.NewText(Owner.getRect(), new Color(255, 0, 0), "过载自燃", true);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.85f, Pitch = -0.2f }, GunTipPosition);
+                }
+
+                EnsureRightChargeOrb(rightChargeTimer);
+
+                if (rightChargeTimer > 300)
+                {
+                    if (rightChargeTimer % 20 == 0)
+                    {
+                        SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurnLoop") { Volume = 0.35f, MaxInstances = 1 }, GunTipPosition);
+                    }
+
+                    if (rightChargeTimer % 3 == 0 && Owner.whoAmI == Main.myPlayer)
+                    {
+                        Vector2 direction = Main.rand.NextFloat(-MathHelper.Pi, MathHelper.Pi).ToRotationVector2();
+                        int starProj = Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            GunTipPosition,
+                            direction * 11.5f,
+                            ModContent.ProjectileType<PristineFuryHomingStar>(),
+                            GetScaledDamage(0.65f),
+                            Projectile.knockBack * 0.3f,
+                            Projectile.owner
+                        );
+                        PFLeftEffectRules.ApplyTheme(starProj, CurrentMark);
+                    }
+                }
 
                 return;
             }
 
-            if (rightHeldLastFrame && rightChargeTimer >= RightChargeMaxFrames)
-                FireRightNovaFireball();
+            if (rightHeldLastFrame)
+            {
+                if (rightChargeTimer >= 180)
+                {
+                    FireRightNovaFireball(3f);
+                }
+                else if (rightChargeTimer >= 120)
+                {
+                    FireRightNovaFireball(2f);
+                }
+                else if (rightChargeTimer >= 60)
+                {
+                    FireRightNovaFireball(1f);
+                }
+            }
 
             ResetRightCharge();
         }
 
-        private void EnsureRightChargeOrb(float chargeCompletion)
+        private void EnsureRightChargeOrb(float chargeTimer)
         {
             int chargeType = ModContent.ProjectileType<PristineFuryRightNovaChargeOrb>();
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -417,7 +506,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 Projectile projectile = Main.projectile[i];
                 if (projectile.active && projectile.owner == Projectile.owner && projectile.type == chargeType && (int)projectile.ai[0] == Projectile.whoAmI)
                 {
-                    projectile.ai[1] = chargeCompletion;
+                    projectile.ai[1] = chargeTimer;
                     projectile.netUpdate = true;
                     return;
                 }
@@ -432,30 +521,46 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 0f,
                 Projectile.owner,
                 Projectile.whoAmI,
-                chargeCompletion);
+                chargeTimer);
             PFLeftEffectRules.ApplyTheme(orbIndex, CurrentMark);
         }
 
-        private void FireRightNovaFireball()
+        private void FireRightNovaFireball(float chargeLevel)
         {
             Vector2 direction = AimDirection;
             Vector2 muzzle = GunTipPosition + direction * 12f;
+            float damageMult = chargeLevel == 3f ? 3.5f : (chargeLevel == 2f ? 1.8f : 1.0f);
+
             int fireballIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 muzzle,
                 direction * RightFireballSpeed,
                 ModContent.ProjectileType<PristineFuryRightNovaFireball>(),
-                GetScaledDamage(RightFireballDamageMultiplier),
-                Projectile.knockBack * 1.4f,
-                Projectile.owner);
+                GetScaledDamage(damageMult),
+                Projectile.knockBack * (chargeLevel == 3f ? 1.6f : (chargeLevel == 2f ? 1.2f : 0.8f)),
+                Projectile.owner,
+                0f,
+                chargeLevel,
+                (float)CurrentMark);
             PFLeftEffectRules.ApplyTheme(fireballIndex, CurrentMark);
 
-            ApplyRecoil(20f);
-            TriggerMuzzleFlash(24);
-            SpawnMuzzleBurst(new Color(255, 54, 42), 1.35f);
+            ApplyRecoil(chargeLevel == 3f ? 24f : (chargeLevel == 2f ? 16f : 8f));
+            TriggerMuzzleFlash(chargeLevel == 3f ? 28 : (chargeLevel == 2f ? 18 : 10));
+
+            Color burstColor = PristineFuryMarkHelper.GetColor(CurrentMark);
+            SpawnMuzzleBurst(burstColor, chargeLevel == 3f ? 1.8f : (chargeLevel == 2f ? 1.2f : 0.7f));
             rightCooldownTimer = RightChargeCooldown;
-            Owner.SetScreenshake(6f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { PitchVariance = 0.22f, Volume = 0.82f }, muzzle);
+            Owner.SetScreenshake(chargeLevel == 3f ? 8f : (chargeLevel == 2f ? 4f : 2f));
+
+            if (chargeLevel == 3f)
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot") { PitchVariance = 0.15f, Volume = 0.85f }, muzzle);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { PitchVariance = 0.15f, Volume = 0.7f }, muzzle);
+            }
+            else
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { PitchVariance = 0.22f, Volume = 0.82f }, muzzle);
+            }
         }
 
         private void ResetRightCharge()
@@ -513,7 +618,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.spriteDirection = direction;
             Projectile.direction = direction;
             Projectile.rotation = aim.ToRotation();
-            Projectile.Center = armPosition + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -6f * Owner.gravDir);
+
+            Vector2 vibrationOffset = Vector2.Zero;
+            if (rightChargeTimer > 300)
+            {
+                float vibProgress = Math.Min(1f, (rightChargeTimer - 300f) / 60f);
+                float maxVib = 6f;
+                vibrationOffset = Main.rand.NextVector2Circular(maxVib * vibProgress, maxVib * vibProgress);
+            }
+
+            Projectile.Center = armPosition + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -6f * Owner.gravDir) + vibrationOffset;
 
             Owner.ChangeDir(direction);
             Owner.heldProj = Projectile.whoAmI;
@@ -568,7 +682,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.spriteDirection = direction;
             Projectile.direction = direction;
             Projectile.rotation = aim.ToRotation();
-            Projectile.Center = armPosition + aim * (HoldoutDistance + 8f - recoilOffset) + armOffset;
+
+            Vector2 vibrationOffset = Vector2.Zero;
+            if (rightChargeTimer > 300)
+            {
+                float vibProgress = Math.Min(1f, (rightChargeTimer - 300f) / 60f);
+                float maxVib = 6f;
+                vibrationOffset = Main.rand.NextVector2Circular(maxVib * vibProgress, maxVib * vibProgress);
+            }
+
+            Projectile.Center = armPosition + aim * (HoldoutDistance + 8f - recoilOffset) + armOffset + vibrationOffset;
 
             Owner.ChangeDir(direction);
             Owner.heldProj = Projectile.whoAmI;

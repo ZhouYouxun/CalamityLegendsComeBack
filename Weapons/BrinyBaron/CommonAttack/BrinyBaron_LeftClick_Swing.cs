@@ -28,7 +28,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float BaseHitboxOutset = 90f;
         private static readonly Vector2 BaseHitboxSize = new(132f, 132f);
         private const float SwooshRadiusCorrection = 0.575f;
-        private const int ComboLength = 6;
+        private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
+        private int ComboLength => CurrentGrowthStage switch
+        {
+            1 => 1,
+            2 => 3,
+            3 => 4,
+            _ => 4
+        };
         private const int StandardGapFrames = 0;
         private const int RightSpinTransitionFrames = 14;
         private const int RightSpinShurikenInterval = 12;
@@ -63,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
         private float RightSpinChargeRatio => MathHelper.Clamp(rightSpinEmpowerment / RightSpinMaxEmpowerment, 0f, 1f);
-        private float ActiveHitboxScale => rightSpinActive ? Projectile.scale : 1f;
+        private float ActiveHitboxScale => Projectile.scale;
 
         public override void SetDefaults()
         {
@@ -72,18 +79,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.localNPCHitCooldown = 16;
             Projectile.DamageType = DamageClass.Melee;
             Projectile.extraUpdates = 0;
-            Projectile.scale = 1f;
+            Projectile.scale = BB_Balance.GetLeftClickScale();
         }
 
         public override void WhenSpawned()
         {
-            // 涓嶅啀閿佸畾甯х巼锛岃澶栭儴鏀婚€熶慨姝ｈ兘姝ｅ父鐢熸晥
+            // 不再锁定帧率，让外部攻速修正能正常生效
             DrawUnconditionally = true;
             Projectile.timeLeft = 2;
             Projectile.knockBack = 0f;
             Projectile.ai[1] = -1f;
             thicknessScale = 1f;
             UpdateLockedAimFromMouse();
+            Projectile.scale = BB_Balance.GetLeftClickScale();
         }
 
         public override void AI()
@@ -136,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (!rightSpinActive)
             {
                 Projectile.Center = Owner.MountedCenter;
-                Projectile.scale = MathHelper.Lerp(Projectile.scale, 1f, 0.22f);
+                Projectile.scale = MathHelper.Lerp(Projectile.scale, BB_Balance.GetLeftClickScale(), 0.22f);
             }
 
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
@@ -313,28 +321,260 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             switch (kind)
             {
-                case ComboKind.Wave:
-                    SpawnWave();
+                case ComboKind.SeafoamBlade:
+                    SpawnSeafoamBlade();
+                    ApplyScreenShake(2.5f);
+                    break;
+                case ComboKind.FormalWave:
+                    SpawnFormalWave(faster: false);
                     ApplyScreenShake(3.5f);
                     break;
-                case ComboKind.ShurikenVolley:
-                    SpawnShurikenVolley();
+                case ComboKind.FormalWaveFaster:
+                    SpawnFormalWave(faster: true);
+                    ApplyScreenShake(3.5f);
+                    break;
+                case ComboKind.SingleShuriken:
+                    SpawnSingleShuriken();
+                    ApplyScreenShake(2f);
+                    break;
+                case ComboKind.FiveShurikens:
+                    SpawnFiveShurikens();
                     ApplyScreenShake(3f);
+                    break;
+                case ComboKind.EnhancedWave:
+                    SpawnEnhancedWave();
+                    ApplyScreenShake(4f);
                     break;
                 case ComboKind.Tornado:
                     SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.68f, Pitch = -0.25f }, Owner.Center);
                     SpawnTornadoBolt();
                     break;
+                case ComboKind.Stage2_ThreeSeafoam:
+                    SpawnThreeScatteredSeafoams();
+                    ApplyScreenShake(3f);
+                    break;
+                case ComboKind.Stage2_SixSeaSpirits:
+                    SpawnSixStage2SeaSpirits();
+                    ApplyScreenShake(2.5f);
+                    break;
+                case ComboKind.Stage3_FiveParallelSeafoam:
+                    SpawnFiveParallelSeafoams();
+                    ApplyScreenShake(3.5f);
+                    break;
+                case ComboKind.Stage3_TenSeaSpirits:
+                    SpawnTenStage3SeaSpirits();
+                    ApplyScreenShake(2.8f);
+                    break;
+                case ComboKind.Stage3_FiveShurikens:
+                    SpawnFiveShurikens();
+                    ApplyScreenShake(3f);
+                    break;
+                case ComboKind.Stage3_EnhancedWave:
+                case ComboKind.Stage4_EnhancedWave:
+                    SpawnEnhancedWave();
+                    ApplyScreenShake(4f);
+                    break;
+                case ComboKind.Stage4_TenSeaSpirits:
+                    SpawnTenStage4SeaSpirits();
+                    ApplyScreenShake(3f);
+                    break;
             }
         }
 
-        private void SpawnShurikenVolley()
+        private void SpawnSeafoamBlade()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            for (int i = 0; i < 3; i++)
+            float speed = 24f; // Stage 1 Seafoam is 2x speed (which makes it 24f)
+            int p = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.MountedCenter + shootDirection * 40f,
+                shootDirection * speed,
+                ModContent.ProjectileType<BrinyBaron_SeafoamBlade>(),
+                Math.Max(1, (int)(Projectile.damage * 0.5f)),
+                Projectile.knockBack * 0.5f,
+                Projectile.owner);
+            
+            if (p != Main.maxProjectiles)
             {
-                float spread = MathHelper.ToRadians((i - 1) * 10f);
-                Vector2 velocity = shootDirection.RotatedBy(spread).RotatedByRandom(0.02f) * Main.rand.NextFloat(12.5f, 15.5f);
+                Main.projectile[p].timeLeft = 60;
+            }
+
+            // Spawn 3 Sea Spirits with 5 degree spread (weak homing)
+            for (int i = -1; i <= 1; i++)
+            {
+                float spread = MathHelper.ToRadians(i * 5f);
+                Vector2 velocity = shootDirection.RotatedBy(spread) * 14f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 40f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.35f)),
+                    Projectile.knockBack * 0.4f,
+                    Projectile.owner,
+                    1f); // ai[0] = 1f: Stage 1 Sea Spirit
+            }
+        }
+
+        private void SpawnThreeScatteredSeafoams()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            float speed = 12f * 1.7f; // 20.4f
+            for (int i = -1; i <= 1; i++)
+            {
+                float spread = MathHelper.ToRadians(i * 10f); // 10 degrees spread
+                Vector2 velocity = shootDirection.RotatedBy(spread) * speed;
+                int proj = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 40f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_SeafoamBlade>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.55f)),
+                    Projectile.knockBack * 0.5f,
+                    Projectile.owner);
+                    
+                if (proj != Main.maxProjectiles)
+                {
+                    Main.projectile[proj].scale = 1.5f;
+                    Main.projectile[proj].penetrate = 6;
+                    Main.projectile[proj].ai[0] = 2f; // Stage 2 tag
+                    Main.projectile[proj].timeLeft = 80;
+                }
+            }
+        }
+
+        private void SpawnSixStage2SeaSpirits()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            for (int i = 0; i < 6; i++)
+            {
+                // Random angle and speed in 5 degrees
+                float spread = MathHelper.ToRadians(Main.rand.NextFloat(-5f, 5f));
+                float speed = Main.rand.NextFloat(16f, 22f);
+                Vector2 velocity = shootDirection.RotatedBy(spread) * speed;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 40f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                    Projectile.knockBack * 0.45f,
+                    Projectile.owner,
+                    2f); // ai[0] = 2f: Stage 2 Sea Spirit
+            }
+        }
+
+        private void SpawnFiveParallelSeafoams()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            float speed = 18f;
+            float spacing = 20f;
+            Vector2 perp = shootDirection.RotatedBy(MathHelper.PiOver2);
+            for (int i = -2; i <= 2; i++)
+            {
+                Vector2 spawnPos = Owner.MountedCenter + shootDirection * 40f + perp * (i * spacing);
+                int proj = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPos,
+                    shootDirection * speed,
+                    ModContent.ProjectileType<BrinyBaron_SeafoamBlade>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.45f)),
+                    Projectile.knockBack * 0.4f,
+                    Projectile.owner);
+                    
+                if (proj != Main.maxProjectiles)
+                {
+                    Main.projectile[proj].scale = 1.2f;
+                    Main.projectile[proj].penetrate = 8;
+                    Main.projectile[proj].ai[0] = 3f; // Stage 3 tag
+                    Main.projectile[proj].timeLeft = 90;
+                }
+            }
+        }
+
+        private void SpawnTenStage3SeaSpirits()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            for (int i = 0; i < 10; i++)
+            {
+                // Scattered in a wider angle, e.g. 30 degrees
+                float spread = MathHelper.ToRadians(Main.rand.NextFloat(-15f, 15f));
+                float speed = Main.rand.NextFloat(14f, 20f);
+                Vector2 velocity = shootDirection.RotatedBy(spread) * speed;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 40f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                    Projectile.knockBack * 0.45f,
+                    Projectile.owner,
+                    3f); // ai[0] = 3f: Stage 3 Sea Spirit
+            }
+        }
+
+        private void SpawnTenStage4SeaSpirits()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            for (int i = 0; i < 10; i++)
+            {
+                float spread = MathHelper.ToRadians(Main.rand.NextFloat(-15f, 15f));
+                float speed = Main.rand.NextFloat(14f, 20f);
+                Vector2 velocity = shootDirection.RotatedBy(spread) * speed;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 40f,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.45f)),
+                    Projectile.knockBack * 0.45f,
+                    Projectile.owner,
+                    4f); // ai[0] = 4f: Stage 4 Sea Spirit
+            }
+        }
+
+        private void SpawnFormalWave(bool faster)
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            float speed = faster ? 18f : 13.2f;
+            int proj = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.MountedCenter + shootDirection * 44f,
+                shootDirection * speed,
+                ModContent.ProjectileType<BBSwing_Wave>(),
+                Math.Max(1, (int)(Projectile.damage * 0.68f)),
+                Projectile.knockBack,
+                Projectile.owner,
+                1.42f,
+                1f);
+            if (proj != Main.maxProjectiles)
+            {
+                Main.projectile[proj].localAI[0] = -1f; // Disable tracking bubbles
+            }
+        }
+
+        private void SpawnSingleShuriken()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Owner.MountedCenter + shootDirection * 28f,
+                shootDirection * 14f,
+                ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                Math.Max(1, (int)(Projectile.damage * 0.5f)),
+                Projectile.knockBack * 0.5f,
+                Projectile.owner,
+                0f);
+        }
+
+        private void SpawnFiveShurikens()
+        {
+            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            for (int i = 0; i < 5; i++)
+            {
+                float spread = MathHelper.ToRadians((i - 2) * 10f);
+                float speedMultiplier = 1f - Math.Abs(i - 2) * 0.15f;
+                Vector2 velocity = shootDirection.RotatedBy(spread).RotatedByRandom(0.02f) * (15f * speedMultiplier);
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -344,24 +584,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Math.Max(1, (int)(Projectile.damage * 0.4f)),
                     Projectile.knockBack * 0.45f,
                     Projectile.owner,
-                    0f);
+                    0f,
+                    1f); // ai[1] = 1f enables releasing Seafoam Blade on hit
             }
         }
 
-        private void SpawnTornadoBolt()
-        {
-            Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Owner.MountedCenter + shootDirection * 34f,
-                shootDirection.RotatedByRandom(0.075f) * 16.5f,
-                ModContent.ProjectileType<BrinyBaron_TornadoBolt>(),
-                Math.Max(1, (int)(Projectile.damage * 0.58f)),
-                Projectile.knockBack * 0.65f,
-                Projectile.owner);
-        }
-
-        private void SpawnWave()
+        private void SpawnEnhancedWave()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Projectile.NewProjectile(
@@ -373,7 +601,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.knockBack,
                 Projectile.owner,
                 1.42f,
-                1f);
+                3f); // ai[1] = 3f sets SpawnStage to 3 (Post Moon Lord)
+        }
+
+        private void SpawnTornadoBolt()
+        {
+            // Deprecated, no longer used
         }
 
         private void DoRightSpin()
@@ -555,16 +788,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 swingSign = 1f;
 
             Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * swingSign);
-            float bladeReach = BaseHitboxOutset + BaseHitboxSize.X * 0.38f;
+            float bladeReach = (BaseHitboxOutset + BaseHitboxSize.X * 0.38f) * Projectile.scale;
             int lineCount = profile.Tilted ? 2 : 3;
+            int scaledLineCount = (int)Math.Max(1, lineCount * Projectile.scale);
 
-            for (int i = 0; i < lineCount; i++)
+            for (int i = 0; i < scaledLineCount; i++)
             {
-                float radialDistance = Main.rand.NextFloat(32f, bladeReach);
+                float radialDistance = Main.rand.NextFloat(32f * Projectile.scale, bladeReach);
                 Vector2 position =
                     Owner.Center +
                     slashDirection * radialDistance +
-                    tangentDirection * Main.rand.NextFloat(-10f, 18f);
+                    tangentDirection * Main.rand.NextFloat(-10f * Projectile.scale, 18f * Projectile.scale);
 
                 Vector2 velocity =
                     tangentDirection * Main.rand.NextFloat(3.2f, 8.2f) +
@@ -579,12 +813,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Main.rand.NextBool(3) ? Color.DeepSkyBlue : Color.Cyan));
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextFloat() < 0.5f * Projectile.scale)
             {
                 Vector2 starPosition =
                     Owner.Center +
                     slashDirection * Main.rand.NextFloat(bladeReach * 0.72f, bladeReach * 1.02f) +
-                    tangentDirection * Main.rand.NextFloat(-8f, 16f);
+                    tangentDirection * Main.rand.NextFloat(-8f * Projectile.scale, 16f * Projectile.scale);
 
                 Vector2 starVelocity =
                     tangentDirection * Main.rand.NextFloat(2.4f, 5.6f) +
@@ -601,12 +835,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     1.15f));
             }
 
-            if (Main.rand.NextBool(2))
+            if (Main.rand.NextFloat() < 0.5f * Projectile.scale)
             {
                 Vector2 dustPosition =
                     Owner.Center +
                     slashDirection * bladeReach +
-                    tangentDirection * Main.rand.NextFloat(-18f, 18f);
+                    tangentDirection * Main.rand.NextFloat(-18f * Projectile.scale, 18f * Projectile.scale);
 
                 Dust dust = Dust.NewDustPerfect(
                     dustPosition,
@@ -643,6 +877,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private bool WantsRightSpin()
         {
+            if (CurrentGrowthStage < 2)
+                return false;
+
             if (Owner.whoAmI != Main.myPlayer)
                 return rightSpinActive;
 
@@ -689,7 +926,36 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.GetModPlayer<BBTideValuePlayer>().AddTide();
 
             if (!rightSpinActive)
-                SpawnTrueMeleeTyphoon(target);
+            {
+                int growthStage = CurrentGrowthStage;
+                if (growthStage > 1)
+                {
+                    SpawnTrueMeleeTyphoon(target);
+                }
+
+                if (growthStage >= 4)
+                {
+                    // Release a burst of 8 Sea Spirits with sin-wave homing on melee hits
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                        float speed = Main.rand.NextFloat(8f, 12f);
+                        Vector2 velocity = angle.ToRotationVector2() * speed;
+
+                        Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            target.Center,
+                            velocity,
+                            ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                            Math.Max(1, (int)(Projectile.damage * 0.35f)),
+                            Projectile.knockBack * 0.3f,
+                            Projectile.owner,
+                            5f, // ai[0] = 5f: Stage 4/5 melee-spawned
+                            1f  // ai[1] = 1f: enable sin wave movement
+                        );
+                    }
+                }
+            }
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -761,6 +1027,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     effects);
             }
 
+            bool tideFull = Owner.GetModPlayer<BBTideValuePlayer>().TideFull;
+            if (tideFull)
+            {
+                Color outlineColor = new Color(0, 191, 255) with { A = 0 } * 0.6f * fadeIn;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 6f * fadeIn;
+                    Main.EntitySpriteDraw(
+                        ghost.Value,
+                        drawPosition + offset,
+                        ghost.Value.Frame(1, FrameCount, 0, Frame),
+                        outlineColor,
+                        Projectile.rotation + RotationOffset + r,
+                        origin,
+                        bladeScale,
+                        effects);
+                }
+            }
+
             Main.EntitySpriteDraw(
                 texture.Value,
                 drawPosition,
@@ -776,24 +1061,58 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         // abb abc 杩炴嫑妯℃澘锛歐ave, Shuriken, Shuriken, Wave, Shuriken, Tornado
         // 鎵€鏈夋敾鍑婚棿闅斿钩绛夊寲锛屼笉鍐嶆湁蹇參涔嬪垎
-        private static StageProfile GetStageProfile(int stage)
+        private StageProfile GetStageProfile(int stage)
         {
-            return stage switch
+            int growthStage = CurrentGrowthStage;
+            if (growthStage == 1)
             {
-                0 => new StageProfile(ComboKind.Wave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                1 => new StageProfile(ComboKind.ShurikenVolley, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                2 => new StageProfile(ComboKind.ShurikenVolley, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                3 => new StageProfile(ComboKind.Wave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                4 => new StageProfile(ComboKind.ShurikenVolley, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-                _ => new StageProfile(ComboKind.Tornado, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false),
-            };
+                return new StageProfile(ComboKind.SeafoamBlade, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            }
+            if (growthStage == 2)
+            {
+                if (stage == 0)
+                    return new StageProfile(ComboKind.Stage2_ThreeSeafoam, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+                if (stage == 1)
+                    return new StageProfile(ComboKind.Stage2_SixSeaSpirits, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+                return new StageProfile(ComboKind.FormalWave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            }
+            if (growthStage == 3)
+            {
+                if (stage == 0)
+                    return new StageProfile(ComboKind.Stage3_FiveParallelSeafoam, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+                if (stage == 1)
+                    return new StageProfile(ComboKind.Stage3_TenSeaSpirits, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+                if (stage == 2)
+                    return new StageProfile(ComboKind.Stage3_FiveShurikens, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+                return new StageProfile(ComboKind.Stage3_EnhancedWave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            }
+            // Stage 4
+            if (stage == 0)
+                return new StageProfile(ComboKind.Stage3_FiveParallelSeafoam, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            if (stage == 1)
+                return new StageProfile(ComboKind.Stage4_TenSeaSpirits, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            if (stage == 2)
+                return new StageProfile(ComboKind.Stage3_FiveShurikens, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            return new StageProfile(ComboKind.Stage4_EnhancedWave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
         }
 
         private enum ComboKind
         {
-            Wave,
-            ShurikenVolley,
-            Tornado
+            SeafoamBlade,
+            FormalWave,
+            FormalWaveFaster,
+            SingleShuriken,
+            FiveShurikens,
+            EnhancedWave,
+            Tornado,
+            Stage2_ThreeSeafoam,
+            Stage2_SixSeaSpirits,
+            Stage3_FiveParallelSeafoam,
+            Stage3_TenSeaSpirits,
+            Stage3_FiveShurikens,
+            Stage3_EnhancedWave,
+            Stage4_TenSeaSpirits,
+            Stage4_EnhancedWave
         }
 
         private readonly struct StageProfile

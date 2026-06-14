@@ -12,7 +12,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Tools.QOL
+namespace CalamityLegendsComeBack.QOL
 {
     internal class SHPC_AdditionGI : ModSystem
     {

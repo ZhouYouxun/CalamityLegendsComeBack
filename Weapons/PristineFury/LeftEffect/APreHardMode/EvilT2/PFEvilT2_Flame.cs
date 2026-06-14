@@ -65,12 +65,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center, direction);
                 float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(2.2f), MathHelper.ToRadians(10.5f), rushPower);
                 direction = direction.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
-                speed = MathHelper.Lerp(speed, MathHelper.Lerp(7.5f, 18.2f, rushPower), 0.08f);
+                speed = MathHelper.Lerp(speed, MathHelper.Lerp(3.75f, 9.1f, rushPower), 0.08f);
             }
             else
             {
                 direction = direction.RotatedBy(Math.Sin(Timer * 0.11f + Projectile.ai[1]) * 0.035f);
-                speed = MathHelper.Lerp(speed, 10.5f, 0.035f);
+                speed = MathHelper.Lerp(speed, 5.25f, 0.035f);
             }
 
             Projectile.velocity = direction * speed;
@@ -145,6 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
+            // 原本的火焰尘
             if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -157,18 +158,48 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 dust.noGravity = true;
             }
 
-            if ((int)Timer % 4 == 0)
+            // 新增恶鬼主题尘（猩红为血，腐化为暗影焰）
+            if (Main.rand.NextBool(2))
+            {
+                int themedDustType = WorldGen.crimson ? DustID.Blood : DustID.Shadowflame;
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + Main.rand.NextVector2Circular(6f, 6f),
+                    themedDustType,
+                    -direction * Main.rand.NextFloat(0.3f, 1.2f) + Main.rand.NextVector2Circular(0.2f, 0.2f),
+                    100,
+                    default,
+                    Main.rand.NextFloat(0.8f, 1.3f));
+                dust.noGravity = true;
+            }
+
+            // 增加 GlowOrb 粒子数量
+            if ((int)Timer % 3 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    -direction * Main.rand.NextFloat(0.4f, 1.3f),
+                    -direction * Main.rand.NextFloat(0.3f, 1.0f) + Main.rand.NextVector2Circular(0.3f, 0.3f),
                     false,
-                    Main.rand.Next(9, 15),
+                    Main.rand.Next(10, 16),
                     Main.rand.NextFloat(0.18f, 0.32f) * (1f + rushPower * 0.4f),
                     Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.08f, 0.32f)),
                     true,
                     false,
                     true));
+            }
+
+            // 新增定期辐射脉冲环，增强高级感
+            if ((int)Timer % 18 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ThemeColor * 0.45f,
+                    Vector2.One * 0.35f,
+                    Projectile.rotation,
+                    0.04f,
+                    0.26f,
+                    16
+                ));
             }
         }
 
@@ -252,16 +283,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 {
                     Vector2 mid = (previous + current) * 0.5f - Main.screenPosition;
 
-                    //Main.EntitySpriteDraw(
-                    //    line,
-                    //    mid,
-                    //    null,
-                    //    theme * MathHelper.Lerp(0.55f, 0.22f, i / (float)segments.Length),
-                    //    between.ToRotation() + MathHelper.PiOver2,
-                    //    line.Size() * 0.5f,
-                    //    new Vector2(0.18f, length / line.Height),
-                    //    SpriteEffects.None,
-                    //    0f);
+                    Main.EntitySpriteDraw(
+                        line,
+                        mid,
+                        null,
+                        theme * MathHelper.Lerp(0.55f, 0.22f, i / (float)segments.Length),
+                        between.ToRotation() + MathHelper.PiOver2,
+                        line.Size() * 0.5f,
+                        new Vector2(0.18f, length / line.Height),
+                        SpriteEffects.None,
+                        0f);
                 }
 
                 float completion = i / (float)(segments.Length - 1);

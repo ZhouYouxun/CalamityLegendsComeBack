@@ -13,6 +13,21 @@ Mods: {
 					Label: 允许大量材料可制作
 					Tooltip: 开启后可以允许大量材料以较简单的方式进行复制或制作
 				}
+
+				AllowBossRelicWeaponRecipes: {
+					Label: 允许Boss圣遗物转化武器
+					Tooltip: 开启后可以允许将Boss纪念章/圣遗物在空手状态下制作成该Boss对应的专属武器
+				}
+
+				AllowOtherRecipes: {
+					Label: 允许其他合成配方
+					Tooltip: 开启后允许以简易配方合成一些原版或额外的其他物品（例如大自然恩赐）
+				}
+
+				GiveQuickStartBoxOnSpawn: {
+					Label: 开局赠送快速发展道具箱
+					Tooltip: 开启后，新玩家/新角色创号生成时，背包内将自动获得一个【快速发展道具箱】（注意：此功能会极大地破坏游戏平衡，请谨慎开启）
+				}
 			}
 		}
 	}

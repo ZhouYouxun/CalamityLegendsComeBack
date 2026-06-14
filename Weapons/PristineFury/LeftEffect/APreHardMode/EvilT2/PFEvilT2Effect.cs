@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             PFLeftEffectRules.FireSingle(
                 holdout,
                 ModContent.ProjectileType<PFEvilT2_Flame>(),
-                9.6f,
+                4.8f,
                 0.075f,
                 0.98f,
                 4.8f,

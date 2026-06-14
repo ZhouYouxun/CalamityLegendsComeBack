@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
     internal static class CosmicDischargeCommon
     {
-        public const string ChainTexturePath = "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischargeFlail";
+        public const string ChainTexturePath = "CalamityLegendsComeBack/Weapons/CosmicDischarge/LeftClick/CosmicDischargeFlail";
         public const string RingTexturePath = "CalamityMod/Particles/BloomRing";
         public static readonly Color FrostCoreColor = new(150, 255, 255);
         public static readonly Color FrostGlowColor = new(110, 175, 255);
@@ -245,6 +245,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Vector2 drawPosition = player.Bottom - Main.screenPosition + new Vector2(0f, -6f + player.gfxOffY);
             Color ringColor = Color.Lerp(FrostGlowColor, FrostCoreColor, 0.45f) * (0.35f * intensity);
 
+            spriteBatch.SetBlendState(BlendState.Additive);
+
             Main.EntitySpriteDraw(
                 ring,
                 drawPosition,
@@ -264,6 +266,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 ring.Size() * 0.5f,
                 new Vector2(0.45f, 0.14f) * (1f + 0.15f * intensity),
                 SpriteEffects.None);
+
+            spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
         private static void DrawBodySegment(Texture2D texture, Rectangle frame, Vector2 start, Vector2 end, Color drawColor, float scale, Vector2 drawOffset)

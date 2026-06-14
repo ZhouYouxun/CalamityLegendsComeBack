@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -28,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int lifeTimer;
         private int bubbleTimer;
         private float initialSpeed;
+        private int tornadoCooldown = 0;
 
         private int SpawnStage => Utils.Clamp((int)Projectile.ai[1], 0, 3);
         private float StageScale => Projectile.ai[0] > 0f ? Projectile.ai[0] : DefaultFinalWaveScale;
@@ -66,11 +68,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             initialSpeed = Projectile.velocity.Length();
             ApplyStageStats();
+            
+            // Energetic creation sound for any released wave
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot") with { Volume = 0.65f, Pitch = 0.05f }, Projectile.Center);
         }
 
         public override void AI()
         {
             lifeTimer++;
+            if (tornadoCooldown > 0)
+                tornadoCooldown--;
+
             float velocityLoss = GetVelocityLoss();
             Projectile.velocity *= 1f - velocityLoss;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
@@ -90,6 +98,46 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             }
 
             SpawnHitEffects(Projectile, target.Center, SpawnStage, StageIntensity);
+
+            // Stage 4/5 (SpawnStage == 3) summons a tornado on hit with 5 frames cooldown
+            if (SpawnStage == 3 && tornadoCooldown <= 0)
+            {
+                tornadoCooldown = 5;
+                
+                Player owner = Main.player[Projectile.owner];
+                if (owner.ownedProjectileCounts[ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinySpout>()] == 0)
+                {
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        target.Center,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinyTyphoonBubble>(),
+                        Math.Max(1, (int)(Projectile.damage * 1.85f)),
+                        Projectile.knockBack,
+                        Projectile.owner);
+                }
+
+                // Spawn water explosions
+                int explosionType = ModContent.ProjectileType<BrinyBaron_TornadoWaterExplosion>();
+                int explosionDamage = Math.Max(1, (int)(Projectile.damage * 0.46f));
+                float explosionKnockback = Projectile.knockBack * 0.55f;
+
+                for (int i = 0; i < 5; i++)
+                {
+                    Vector2 spawnPosition = target.Center + Main.rand.NextVector2Circular(54f, 54f);
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        spawnPosition,
+                        Vector2.Zero,
+                        explosionType,
+                        explosionDamage,
+                        explosionKnockback,
+                        Projectile.owner,
+                        Main.rand.NextFloat(MathHelper.TwoPi));
+                }
+
+                SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.62f, Pitch = -0.18f }, target.Center);
+            }
         }
 
         public override void OnKill(int timeLeft)
@@ -232,6 +280,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner)
                 return;
 
+            if (Projectile.localAI[0] == -1f)
+                return;
+
             bubbleTimer++;
             if (bubbleTimer < BubbleSpawnFrameInterval)
                 return;
@@ -241,15 +292,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            // ????λ?ò???????????????????????????????????????????????
             Vector2 spawnPosition =
                 Projectile.Center -
                 forward * Main.rand.NextFloat(Projectile.width * 0.16f, Projectile.width * 0.38f) +
                 right * Main.rand.NextFloat(-Projectile.width * 0.34f, Projectile.width * 0.34f) +
                 Main.rand.NextVector2Circular(Projectile.width * 0.08f, Projectile.width * 0.08f);
 
-            // ?????????????????????????????????????
-            // ??????????????????????????????????????????е????????????????о???
             Vector2 baseDirection = (-forward).RotatedByRandom(Main.rand.NextFloat(0.35f, 0.95f));
             Vector2 velocity = (baseDirection + right * Main.rand.NextFloatDirection() * 0.18f)
                 .SafeNormalize(-forward) * Main.rand.NextFloat(4.8f, 7.2f);

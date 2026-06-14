@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
@@ -31,6 +33,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 PristineFuryMarkHelper.GetColor(holdout.CurrentMark),
                 1.3f,
                 20f);
+
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.85f, Pitch = -0.15f, PitchVariance = 0.12f }, holdout.GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.65f, Pitch = 0.15f, PitchVariance = 0.1f }, holdout.GunTipPosition);
         }
     }
 }

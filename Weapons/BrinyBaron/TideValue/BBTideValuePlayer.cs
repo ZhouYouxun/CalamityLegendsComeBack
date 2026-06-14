@@ -110,7 +110,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
 
         private static int GetCurrentTideMax()
         {
-            return TideMaxValues[GetTideGrowthTier()];
+            int growthStage = BB_Balance.GetGrowthStage();
+            return growthStage switch
+            {
+                1 => 4,
+                2 => 6,
+                3 => 8,
+                _ => 10
+            };
         }
 
         private static int GetTideGrowthTier()

@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
     public class CosmicDischargeScytheProjectile : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Melee";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/镰刀弹幕用这个贴图";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/Passive/镰刀弹幕用这个贴图";
 
         private ref float Mode => ref Projectile.ai[0];
         private ref float Time => ref Projectile.ai[1];

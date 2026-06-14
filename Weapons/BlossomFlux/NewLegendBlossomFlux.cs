@@ -106,11 +106,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             BlossomFluxChloroplastPresetType currentPreset = GetDisplayedPreset();
             BFPassivePlayer passivePlayer = Main.LocalPlayer.GetModPlayer<BFPassivePlayer>();
-            string presetName = this.GetLocalizedValue($"PresetName{(int)currentPreset}");
-            string introText = string.Format(this.GetLocalizedValue("BF_Intro"), presetName);
             string leftPresetText = this.GetLocalizedValue($"PresetLeft{(int)currentPreset}");
             string rightPresetText = this.GetLocalizedValue($"PresetRight{(int)currentPreset}");
-            string presetPassiveText = this.GetLocalizedValue($"PresetPassive{(int)currentPreset}");
+            
+            var formAssignedKeys = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys();
+            string formKeyText = formAssignedKeys.Count > 0 ? formAssignedKeys[0] : "Unbound";
+            string formWheelHint = string.Format(this.GetLocalizedValue("BF_FormWheelHint"), formKeyText);
+
             string passiveStatus = !passivePlayer.PassiveUnlocked
                 ? this.GetLocalizedValue("PassiveStateLocked")
                 : passivePlayer.FinalStandActive
@@ -119,27 +121,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                         ? this.GetLocalizedValue("PassiveStateReady")
                         : string.Format(this.GetLocalizedValue("PassiveStateCooldown"), passivePlayer.ChargeSeconds, passivePlayer.RequiredChargeSeconds);
             string passiveText = string.Format(this.GetLocalizedValue("BF_Passive"), passiveStatus);
-            string legendaryText = this.GetLocalizedValue("LegendaryText");
-            string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
+
             var assignedKeys = KeybindSystem.LegendarySkill.GetAssignedKeys();
             string keyText = assignedKeys.Count > 0 ? assignedKeys[0] : "Unbound";
-            var formAssignedKeys = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys();
-            string formKeyText = formAssignedKeys.Count > 0 ? formAssignedKeys[0] : "Unbound";
             bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
             string exHint = legendaryEmblemEquipped
                 ? string.Format(this.GetLocalizedValue("BF_EXHint"), keyText)
                 : this.GetLocalizedValue("BF_EXDisabledHint");
-            string formWheelHint = string.Format(this.GetLocalizedValue("BF_FormWheelHint"), formKeyText);
+
+            string legendaryText = this.GetLocalizedValue("LegendaryText");
+            string shiftHint = this.GetLocalizedValue("LegendaryHint");
+            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
 
             string merged =
-                introText + "\n\n" +
-                passiveText + "\n" +
-                presetPassiveText + "\n" +
                 leftPresetText + "\n" +
                 rightPresetText + "\n\n" +
-                exHint + "\n\n" +
-                formWheelHint + "\n\n";
+                formWheelHint + "\n\n" +
+                passiveText + "\n\n" +
+                exHint + "\n\n";
 
             tooltips.FindAndReplace("[GFB]", merged);
             tooltips.Add(new TooltipLine(Mod, "BlossomFluxForestLegendaryText", legendarySection));

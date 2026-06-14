@@ -275,7 +275,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             Vector2 target = QueuedTarget == Vector2.Zero ? Main.MouseWorld : QueuedTarget;
             Vector2 direction = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
-            direction = direction.RotatedBy(Main.rand.NextFloat(-0.26f, 0.26f));
+            // 5 degrees is approximately 0.087266 radians. Spread range is -2.5 to 2.5 degrees (-0.043633 to 0.043633 radians).
+            direction = direction.RotatedBy(Main.rand.NextFloat(-0.043633f, 0.043633f));
             float speed = Main.rand.NextFloat(32f, 42f) * owner.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
 
             Projectile.velocity = direction * speed + owner.velocity * 0.08f;

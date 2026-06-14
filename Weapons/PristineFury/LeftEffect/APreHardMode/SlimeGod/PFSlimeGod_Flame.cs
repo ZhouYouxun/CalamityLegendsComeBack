@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private ref float BounceCount => ref Projectile.localAI[1];
         private const float VisualScale = 0.5f;
         private bool HasBounced => BounceCount > 0f;
-        private bool CanHome => Timer >= 24f && !HasBounced;
+        private bool CanHome => Timer >= 48f && !HasBounced;
         private float BloomPower => Utils.Remap(Timer, 0f, 130f, 0.82f, CanHome ? 1.9f : 1.22f, true) * Utils.GetLerpValue(0f, 40f, Projectile.timeLeft, true);
 
         public override void SetStaticDefaults()
@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Timer++;
 
-            if (Timer == 24f && !HasBounced)
+            if (Timer == 48f && !HasBounced)
             {
                 Projectile.penetrate = 1;
                 Projectile.damage = (int)(Projectile.originalDamage * 1.55f);
@@ -88,13 +88,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (best != null)
             {
-                float trackingPower = Utils.GetLerpValue(24f, 54f, Timer, true);
+                // Tracking efficiency reduced by 66% (multiply power and turn limits by 0.34f)
+                float trackingPower = Utils.GetLerpValue(48f, 78f, Timer, true) * 0.34f;
                 Vector2 currentDirection = Projectile.velocity.SafeNormalize(Projectile.SafeDirectionTo(best.Center));
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(best.Center, currentDirection);
                 float speed = MathHelper.Lerp(6f, 12f, trackingPower);
-                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(12f), MathHelper.ToRadians(37.5f), trackingPower);
+                float maxTurn = MathHelper.Lerp(MathHelper.ToRadians(12f), MathHelper.ToRadians(37.5f), trackingPower) * 0.34f;
                 Vector2 newDirection = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), maxTurn).ToRotationVector2();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, 0.17f + trackingPower * 0.14f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, newDirection * speed, (0.17f + trackingPower * 0.14f) * 0.34f);
             }
         }
 

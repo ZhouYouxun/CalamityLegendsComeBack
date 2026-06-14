@@ -235,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else if (Time <= snapEnd)
             {
                 float t = (Time - WhipArcWindup) / WhipArcSnap;
-                float snap = EaseOutExpo(t);
+                float snap = MathF.Sin(t * MathHelper.PiOver2);
                 float over = MathF.Sin(MathHelper.Pi * t);
                 SetBlade(baseDirection.RotatedBy(MathHelper.Lerp(-0.2f, 0.05f, snap) * sign), MathHelper.Lerp(178f, WhipReach + 30f, snap), -0.08f * sign, 38f + over * 8f);
                 PlayReleaseOnce(SoundID.Item71, 0.86f, side < 0f ? -0.22f : 0.05f, 4.1f);
@@ -252,7 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float t = Utils.GetLerpValue(holdEnd, WhipArcDuration, Time, true);
                 currentlyRetracting = true;
                 Projectile.localNPCHitCooldown = 4;
-                float retract = EaseInCubic(t);
+                float retract = MathF.Sin(t * MathHelper.PiOver2);
                 SetBlade(baseDirection.RotatedBy(sign * MathHelper.Lerp(0.08f, 0.28f, retract)), MathHelper.Lerp(WhipReach, 64f, retract), 0.12f * sign, MathHelper.Lerp(30f, 18f, retract));
             }
 
@@ -262,10 +262,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         private void UpdateThrust(bool quickDraw)
         {
-            int duration = quickDraw ? QuickDrawDuration : WhipThrustDuration;
+            int duration = quickDraw ? 48 : 64;
             int windup = quickDraw ? QuickDrawWindup : WhipThrustWindup;
-            int snapFrames = quickDraw ? 5 : 8;
-            int holdFrames = quickDraw ? 8 : 6;
+            int snapFrames = quickDraw ? 7 : 11;
+            int holdFrames = quickDraw ? 9 : 8;
             int snapEnd = windup + snapFrames;
             int holdEnd = snapEnd + holdFrames;
             float maxReach = quickDraw ? QuickDrawReach : ThrustReach;
@@ -282,7 +282,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else if (Time <= snapEnd)
             {
                 float t = (Time - windup) / snapFrames;
-                float snap = EaseOutExpo(t);
+                float snap = MathF.Sin(t * MathHelper.PiOver2);
                 float over = MathF.Sin(MathHelper.Pi * t);
                 SetBlade(direction, MathHelper.Lerp(126f, maxReach + (quickDraw ? 70f : 34f), snap), 0f, 42f + over * 10f);
                 PlayReleaseOnce(SoundID.Item122, quickDraw ? 0.9f : 0.72f, quickDraw ? 0.28f : 0.06f, quickDraw ? 6.2f : 4.4f);
@@ -301,7 +301,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float t = Utils.GetLerpValue(holdEnd, duration, Time, true);
                 currentlyRetracting = true;
                 Projectile.localNPCHitCooldown = quickDraw ? 3 : 16;
-                float retract = quickDraw ? EaseInExpo(t) : EaseInCubic(t);
+                float retract = MathF.Sin(t * MathHelper.PiOver2);
                 SetBlade(direction.RotatedBy(Owner.direction * MathHelper.Lerp(0f, 0.18f, retract)), MathHelper.Lerp(maxReach, 52f, retract), 0.08f * Owner.direction, MathHelper.Lerp(36f, 18f, retract));
                 if (quickDraw)
                     SpawnQuickDrawBombs();
@@ -344,7 +344,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else
             {
                 float t = Utils.GetLerpValue(holdEnd, SwordSwingDuration, Time, true);
-                float recover = EaseInCubic(t);
+                float recover = MathF.Sin(t * MathHelper.PiOver2);
                 float angle = AimAngle + MathHelper.Lerp(1.14f * swingSign, 0.18f * swingSign, recover);
                 SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(SwordReach, 78f, recover), 0f, MathHelper.Lerp(30f, 18f, recover));
             }
@@ -409,7 +409,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
             else
             {
-                float recover = EaseInCubic(Utils.GetLerpValue(strikeEnd, SwordFinisherDuration, Time, true));
+                float t = Utils.GetLerpValue(strikeEnd, SwordFinisherDuration, Time, true);
+                float recover = MathF.Sin(t * MathHelper.PiOver2);
                 float angle = AimAngle + MathHelper.Lerp(1.22f * Owner.direction, 0.16f * Owner.direction, recover);
                 SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(FinisherReach, 78f, recover), 0f, MathHelper.Lerp(38f, 18f, recover));
             }
@@ -421,8 +422,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private void SetBlade(Vector2 direction, float reach, float armRotationOffset, float collisionWidth)
         {
             direction = direction.SafeNormalize(Vector2.UnitX * Owner.direction);
-            Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
             Projectile.velocity = direction * Math.Max(12f, reach);
+            Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true) - Projectile.velocity;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.spriteDirection = Owner.direction;
             currentCollisionWidth = collisionWidth;
@@ -449,7 +450,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
         }
 
-        private Vector2 TipPosition => Projectile.Center + Projectile.velocity;
+        private Vector2 TipPosition => Owner.MountedCenter + Projectile.velocity;
 
         private void PlayReleaseOnce(SoundStyle sound, float volume, float pitch, float shake)
         {
@@ -525,7 +526,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < bombCount; i++)
             {
                 float t = (i + 0.5f) / bombCount;
-                Vector2 spawnPosition = Projectile.Center + direction * Projectile.velocity.Length() * t + Main.rand.NextVector2Circular(24f, 24f);
+                Vector2 spawnPosition = Owner.MountedCenter + direction * Projectile.velocity.Length() * t + Main.rand.NextVector2Circular(24f, 24f);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
@@ -550,7 +551,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (!Main.rand.NextBool(impactFlashTimer > 0 ? 1 : 2))
                     continue;
 
-                Vector2 point = Projectile.Center + direction * Main.rand.NextFloat(32f, Projectile.velocity.Length());
+                Vector2 point = Owner.MountedCenter + direction * Main.rand.NextFloat(32f, Projectile.velocity.Length());
                 Dust dust = Dust.NewDustPerfect(
                     point + Main.rand.NextVector2Circular(8f, 8f),
                     Main.rand.NextBool() ? DustID.Frost : DustID.SnowflakeIce,
@@ -791,6 +792,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Color glow = CosmicDischargeCommon.FrostGlowColor * (0.26f + flash * 0.25f);
             Color core = CosmicDischargeCommon.FrostWhiteColor * (0.28f + flash * 0.4f);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
             for (int i = 0; i < points.Count - 1; i++)
             {
                 Vector2 start = points[i] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
@@ -816,6 +819,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     (0.22f + flash * 0.08f) * Projectile.scale,
                     SpriteEffects.None);
             }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
         private static void DrawLine(Texture2D pixel, Vector2 start, Vector2 segment, Color color, float width)

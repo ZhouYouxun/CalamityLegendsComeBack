@@ -395,5 +395,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Projectile.oldPos.Length * 2
             );
         }
+
+        public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
+        {
+            if (CurrentEffect.EffectID == 1 || CurrentEffect.EffectID == 2 || CurrentEffect.EffectID == 3 || CurrentEffect.EffectID == 4)
+            {
+                width = 8;
+                height = 8;
+            }
+            return true;
+        }
     }
 }

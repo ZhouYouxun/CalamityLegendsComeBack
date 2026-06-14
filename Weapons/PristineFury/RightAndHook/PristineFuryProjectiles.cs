@@ -468,11 +468,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 2;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 8;
         }
 
         public override bool ShouldUpdatePosition() => false;
 
-        public override bool? CanDamage() => false;
+        public override bool? CanDamage() => Charge > 300f ? true : false;
 
         public override void AI()
         {
@@ -484,31 +486,53 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
             }
 
-            float charge = MathHelper.Clamp(Charge, 0f, 1f);
+            float chargeRatio = MathHelper.Clamp(Charge / 120f, 0f, 1f);
             Vector2 direction = holdout.AimDirection;
-            Projectile.Center = holdout.GunTipPosition + direction * (6f + charge * 5f);
+
+            Vector2 vibrationOffset = Vector2.Zero;
+            if (Charge > 300f)
+            {
+                float vibProgress = Math.Min(1f, (Charge - 300f) / 60f);
+                float maxVib = 6f;
+                vibrationOffset = Main.rand.NextVector2Circular(maxVib * vibProgress, maxVib * vibProgress);
+
+                Projectile.friendly = true;
+                Projectile.width = Projectile.height = 28; // Reduced size by 75%
+                Projectile.damage = holdout.GetScaledDamage(6f);
+            }
+            else
+            {
+                Projectile.friendly = false;
+                Projectile.width = Projectile.height = 2;
+            }
+
+            Projectile.Center = holdout.GunTipPosition + direction * (6f + chargeRatio * 5f) + vibrationOffset;
             Projectile.velocity = direction;
             Projectile.rotation = direction.ToRotation();
             Projectile.timeLeft = 2;
 
             Color themeColor = PristineFuryMarkHelper.GetColor(holdout.CurrentMark);
-            Color glow = Color.Lerp(themeColor, Color.White, charge * 0.34f);
-            Lighting.AddLight(Projectile.Center, glow.ToVector3() * (0.35f + charge * 1.25f));
+            Color glow = Color.Lerp(themeColor, Color.White, chargeRatio * 0.34f);
+            Lighting.AddLight(Projectile.Center, glow.ToVector3() * (0.35f + chargeRatio * 1.25f));
 
             if (Main.dedServ)
                 return;
 
-            SpawnChargeParticles(direction, charge);
-            if (charge >= 1f && FullChargePulseCreated == 0f)
+            SpawnChargeParticles(direction, Charge);
+            if (Charge >= 120f && FullChargePulseCreated == 0f)
             {
                 FullChargePulseCreated = 1f;
                 SpawnFullChargePulse();
             }
         }
 
-        private void SpawnChargeParticles(Vector2 direction, float charge)
+        private void SpawnChargeParticles(Vector2 direction, float chargeTimer)
         {
-            float chance = 0.68f + charge * 0.28f;
+            float chargeRatio = MathHelper.Clamp(chargeTimer / 120f, 0f, 1f);
+            float chance = 0.68f + chargeRatio * 0.28f;
+            if (chargeTimer > 300f)
+                chance = 1f;
+
             if (Main.rand.NextFloat() > chance)
                 return;
 
@@ -518,9 +542,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Color themeColor = PristineFuryMarkHelper.GetColor(holdout.CurrentMark);
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            Vector2 offset = -direction * Main.rand.NextFloat(22f, 76f + charge * 36f) + side * Main.rand.NextFloat(-15f - charge * 18f, 15f + charge * 18f);
+            float pullOffsetBase = 76f + chargeRatio * 36f;
+            if (chargeTimer > 300f)
+                pullOffsetBase += 30f;
+
+            Vector2 offset = -direction * Main.rand.NextFloat(22f, pullOffsetBase) + side * Main.rand.NextFloat(-15f - chargeRatio * 18f, 15f + chargeRatio * 18f);
             Vector2 spawnPosition = Projectile.Center + offset;
-            Vector2 pullVelocity = -offset.SafeNormalize(-direction) * Main.rand.NextFloat(2.2f, 5.6f + charge * 2.4f);
+            Vector2 pullVelocity = -offset.SafeNormalize(-direction) * Main.rand.NextFloat(2.2f, 5.6f + chargeRatio * 2.4f);
             Color particleColor = Main.rand.NextBool(4)
                 ? Color.White
                 : Color.Lerp(themeColor, Color.Lerp(themeColor, Color.White, 0.5f), Main.rand.NextFloat(0.2f, 0.75f));
@@ -531,28 +559,44 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     pullVelocity,
                     false,
                     Main.rand.Next(13, 24),
-                    Main.rand.NextFloat(0.55f, 1.05f) * (0.75f + charge * 0.55f),
+                    Main.rand.NextFloat(0.55f, 1.05f) * (0.75f + chargeRatio * 0.55f),
                     particleColor)
                 : new PointParticle(
                     spawnPosition,
                     pullVelocity,
                     false,
                     Main.rand.Next(15, 26),
-                    Main.rand.NextFloat(0.72f, 1.18f) * (0.85f + charge * 0.4f),
+                    Main.rand.NextFloat(0.72f, 1.18f) * (0.85f + chargeRatio * 0.4f),
                     particleColor);
 
             GeneralParticleHandler.SpawnParticle(spark);
 
-            if (Main.rand.NextFloat() < 0.45f + charge * 0.45f)
+            if (chargeTimer > 300f)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 extraVel = Main.rand.NextVector2Circular(5f, 5f) - direction * Main.rand.NextFloat(1f, 4f);
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(24f, 24f),
+                        extraVel,
+                        false,
+                        Main.rand.Next(16, 28),
+                        Main.rand.NextFloat(0.8f, 1.4f),
+                        Color.Lerp(themeColor, Color.White, Main.rand.NextFloat(0.3f, 0.9f))
+                    ));
+                }
+            }
+
+            if (Main.rand.NextFloat() < 0.45f + chargeRatio * 0.45f)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     Projectile.Center + direction * Main.rand.NextFloat(-5f, 8f),
                     direction * Main.rand.NextFloat(0.2f, 0.8f),
-                    Color.Lerp(themeColor, Color.White, 0.18f) * (0.24f + charge * 0.42f),
+                    Color.Lerp(themeColor, Color.White, 0.18f) * (0.24f + chargeRatio * 0.42f),
                     new Vector2(0.42f, 0.88f),
                     Projectile.rotation - MathHelper.PiOver2,
                     0.05f,
-                    0.16f + charge * 0.16f,
+                    0.16f + chargeRatio * 0.16f,
                     12));
             }
         }
@@ -602,12 +646,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override bool PreDraw(ref Color lightColor)
         {
-            float charge = MathHelper.Clamp(Charge, 0f, 1f);
-            if (charge <= 0.02f || Main.dedServ)
-                return false;
-
             int holdoutIndex = (int)HoldoutIndex;
             if (holdoutIndex < 0 || holdoutIndex >= Main.maxProjectiles || !Main.projectile[holdoutIndex].active || Main.projectile[holdoutIndex].ModProjectile is not NewLegendPristineFuryHoldOut holdout)
+                return false;
+
+            float chargeTimer = Charge;
+            float chargeRatio = MathHelper.Clamp(chargeTimer / 120f, 0f, 1f);
+            if (chargeTimer <= 0.02f || Main.dedServ)
                 return false;
 
             Color themeColor = PristineFuryMarkHelper.GetColor(holdout.CurrentMark);
@@ -615,9 +660,60 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Color themeColorA0 = themeColor with { A = 0 };
             Color whiteA0 = Color.White with { A = 0 };
             float pulse = 0.88f + 0.16f * (float)Math.Sin(Timer * 0.16f);
-            float chargeScale = 0.25f + charge * 0.95f;
+            float chargeScale = 0.25f + chargeRatio * 0.95f;
 
-            PristineFuryRightNovaVisuals.DrawArcNovaOrb(Projectile.Center, direction, Projectile.rotation, Timer, charge, chargeScale * pulse, themeColorA0, whiteA0);
+            PristineFuryRightNovaVisuals.DrawArcNovaOrb(Projectile.Center, direction, Projectile.rotation, Timer, chargeRatio, chargeScale * pulse, themeColorA0, whiteA0);
+
+            if (chargeTimer > 180f)
+            {
+                float progress3to5 = MathHelper.Clamp((chargeTimer - 180f) / 120f, 0f, 1f);
+                Texture2D holyBlastTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Boss/HolyBlast").Value;
+
+                int frames = 4;
+                if (ModContent.TryFind<ModProjectile>("CalamityMod", "HolyBlast", out var holyBlastProj))
+                {
+                    frames = Main.projFrames[holyBlastProj.Type];
+                }
+                int frameHeight = holyBlastTexture.Height / frames;
+                int currentFrame = (int)(Timer / 5f) % frames;
+                Rectangle sourceRect = new Rectangle(0, currentFrame * frameHeight, holyBlastTexture.Width, frameHeight);
+                Vector2 origin = sourceRect.Size() * 0.5f;
+
+                float holyBlastOpacity = MathHelper.Lerp(0f, 0.75f, progress3to5);
+                Color drawColor = Color.White * (holyBlastOpacity * Projectile.Opacity);
+                float drawScale = 0.3f; // Reduced size by 75%
+
+                // Draw red outline
+                Color outlineColor = Color.Red * (holyBlastOpacity * Projectile.Opacity);
+                outlineColor.A = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 outlineOffset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 2f;
+                    Main.EntitySpriteDraw(
+                        holyBlastTexture,
+                        Projectile.Center - Main.screenPosition + outlineOffset,
+                        sourceRect,
+                        outlineColor,
+                        Projectile.rotation,
+                        origin,
+                        drawScale,
+                        SpriteEffects.None,
+                        0
+                    );
+                }
+
+                Main.EntitySpriteDraw(
+                    holyBlastTexture,
+                    Projectile.Center - Main.screenPosition,
+                    sourceRect,
+                    drawColor,
+                    Projectile.rotation,
+                    origin,
+                    drawScale,
+                    SpriteEffects.None,
+                    0
+                );
+            }
             return false;
         }
     }
@@ -647,7 +743,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.timeLeft = 150;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = 1;
+            Projectile.extraUpdates = 3; // Processing speed multiplied by 2x (runs 4 times per frame)
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -657,6 +753,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public override void AI()
         {
             Timer++;
+
+            if (Timer == 1)
+            {
+                float chargeLevel = Projectile.ai[1];
+                if (chargeLevel == 1f)
+                {
+                    Projectile.scale = 0.6f;
+                    Projectile.width = Projectile.height = (int)(42 * 0.6f);
+                }
+                else if (chargeLevel == 2f)
+                {
+                    Projectile.scale = 1.0f;
+                    Projectile.width = Projectile.height = 42;
+                }
+                else if (chargeLevel == 3f)
+                {
+                    Projectile.scale = 0.35f; // Reduced size by 75%
+                    Projectile.width = Projectile.height = (int)(42 * 0.35f);
+                }
+            }
 
             if (Projectile.ai[0] == 0f)
             {
@@ -684,7 +800,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     -direction.RotatedByRandom(0.34f) * Main.rand.NextFloat(1.3f, 3.8f),
                     Color.Lerp(NovaRed, NovaOrange, Main.rand.NextFloat(0.2f, 0.75f)),
                     Color.Black,
-                    Main.rand.NextFloat(0.62f, 1.08f),
+                    Main.rand.NextFloat(0.62f, 1.08f) * Projectile.scale,
                     Main.rand.Next(22, 38),
                     Main.rand.NextFloat(-0.08f, 0.08f));
                 GeneralParticleHandler.SpawnParticle(flame);
@@ -698,7 +814,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     "CalamityMod/Particles/SmallBloom",
                     false,
                     Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.22f, 0.42f),
+                    Main.rand.NextFloat(0.22f, 0.42f) * Projectile.scale,
                     Main.rand.NextBool(4) ? Color.White : NovaRed,
                     Vector2.One,
                     glowCenter: true,
@@ -708,13 +824,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             if ((int)Timer % 3 == 0)
             {
-                Vector2 side = direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-13f, 13f);
+                Vector2 side = direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-13f, 13f) * Projectile.scale;
                 GeneralParticleHandler.SpawnParticle(new PointParticle(
-                    Projectile.Center - direction * Main.rand.NextFloat(2f, 18f) + side,
+                    Projectile.Center - direction * Main.rand.NextFloat(2f, 18f) * Projectile.scale + side,
                     -direction.RotatedByRandom(0.22f) * Main.rand.NextFloat(2.4f, 6.2f),
                     false,
                     Main.rand.Next(14, 24),
-                    Main.rand.NextFloat(0.76f, 1.2f),
+                    Main.rand.NextFloat(0.76f, 1.2f) * Projectile.scale,
                     Main.rand.NextBool(5) ? Color.White : Color.Lerp(NovaRed, NovaOrange, Main.rand.NextFloat()),
                     true));
             }
@@ -745,6 +861,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, NovaRed);
             float opacity = Projectile.Opacity;
 
+            int frames = 1;
+            int currentFrame = 0;
+            bool isHeavy = Projectile.ai[1] == 3f;
+            if (isHeavy)
+            {
+                texture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Boss/HolyBlast").Value;
+                frames = 4;
+                if (ModContent.TryFind<ModProjectile>("CalamityMod", "HolyBlast", out var holyBlastProj))
+                {
+                    frames = Main.projFrames[holyBlastProj.Type];
+                }
+                currentFrame = (int)(Timer / 5f) % frames;
+            }
+
+            int frameHeight = texture.Height / frames;
+            Rectangle sourceRect = new Rectangle(0, currentFrame * frameHeight, texture.Width, frameHeight);
+            Vector2 origin = sourceRect.Size() * 0.5f;
+
             PFLeftEffectRules.BeginAdditive();
 
             // Draw afterimages
@@ -759,13 +893,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 trailColor.A = 0;
                 float trailScale = Projectile.scale * MathHelper.Lerp(1.15f, 0.45f, completion);
 
+                float oldRot = Projectile.oldRot[i];
+                if (!isHeavy)
+                    oldRot += MathHelper.PiOver2; // Rotate core texture by 90 degrees for lower tiers
+
                 Main.EntitySpriteDraw(
                     texture,
                     oldDrawPosition,
-                    null,
+                    sourceRect,
                     trailColor,
-                    Projectile.oldRot[i],
-                    texture.Size() * 0.5f,
+                    oldRot,
+                    origin,
                     trailScale,
                     SpriteEffects.None,
                     0);
@@ -776,23 +914,49 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     oldDrawPosition,
                     null,
                     trailColor * 0.45f,
-                    Projectile.oldRot[i],
+                    oldRot,
                     bloom.Size() * 0.5f,
                     trailScale * 0.65f,
                     SpriteEffects.None,
                     0);
             }
 
+            // Draw red outline if it is the heavy fireball
+            if (isHeavy)
+            {
+                float outlineScale = Projectile.scale * 1.15f;
+                Color outlineColor = Color.Red * opacity;
+                outlineColor.A = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 outlineOffset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 2f;
+                    Main.EntitySpriteDraw(
+                        texture,
+                        drawPosition + outlineOffset,
+                        sourceRect,
+                        outlineColor,
+                        Projectile.rotation,
+                        origin,
+                        outlineScale,
+                        SpriteEffects.None,
+                        0);
+                }
+            }
+
             // Draw main fireball
             Color drawColor = Color.Lerp(theme, Color.White, 0.22f) * opacity;
             drawColor.A = 0;
+            float drawRotation = Projectile.rotation;
+            if (!isHeavy)
+                drawRotation += MathHelper.PiOver2; // Rotate core texture by 90 degrees for lower tiers
+
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition,
-                null,
+                sourceRect,
                 drawColor,
-                Projectile.rotation,
-                texture.Size() * 0.5f,
+                drawRotation,
+                origin,
                 Projectile.scale * 1.15f,
                 SpriteEffects.None,
                 0);
@@ -826,8 +990,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void OnKill(int timeLeft)
         {
-            // Lily burst was already triggered in AI state 1→2.
-            // Only do a small fizzle if fireball expired without hitting anything.
             if (Projectile.ai[0] < 1f)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.38f, Pitch = 0.1f }, Projectile.Center);
@@ -845,32 +1007,56 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private void SpawnLilyBurst()
         {
             Color themeColor = PFLeftEffectRules.GetThemeColor(Projectile, NovaRed);
+            float chargeLevel = Projectile.ai[1];
 
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.92f, PitchVariance = 0.12f }, Projectile.Center);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = 0.66f, Pitch = -0.38f, MaxInstances = 4 }, Projectile.Center);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { Volume = 0.52f, Pitch = -0.22f, PitchVariance = 0.1f }, Projectile.Center);
+            if (chargeLevel == 1f) // Small
+            {
+                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.8f, Pitch = 0.1f }, Projectile.Center);
+                if (!Main.dedServ)
+                {
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, Color.Lerp(themeColor, NovaRed, 0.45f) * 0.8f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.3f, 1.5f, 20));
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.White * 0.5f, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f, 1.2f, 20, true));
+                    for (int i = 0; i < 20; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 8f);
+                        GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, vel, false, Main.rand.Next(12, 24), Main.rand.NextFloat(0.6f, 1.2f), Main.rand.NextBool(4) ? Color.White : Color.Lerp(NovaRed, themeColor, Main.rand.NextFloat())));
+                    }
+                }
+                return;
+            }
+
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = chargeLevel == 3f ? 0.92f : 0.75f, PitchVariance = 0.12f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = chargeLevel == 3f ? 0.66f : 0.4f, Pitch = -0.38f, MaxInstances = 4 }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { Volume = chargeLevel == 3f ? 0.52f : 0.35f, Pitch = -0.22f, PitchVariance = 0.1f }, Projectile.Center);
 
             if (!Main.dedServ)
             {
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, Color.Lerp(themeColor, NovaRed, 0.45f) * 0.95f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.25f, 3.4f, 32));
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.White * 0.72f, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.06f, 2.2f, 30, true));
-                for (int k = 0; k < 3; k++)
+                float pulseRingFinalScale = chargeLevel == 3f ? 3.4f : 2.2f;
+                float customPulseFinalScale = chargeLevel == 3f ? 2.2f : 1.5f;
+                int sparkCount = chargeLevel == 3f ? 76 : 40;
+
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, Color.Lerp(themeColor, NovaRed, 0.45f) * 0.95f, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.25f, pulseRingFinalScale, 32));
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.White * 0.72f, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.06f, customPulseFinalScale, 30, true));
+                
+                int pulseCount = chargeLevel == 3f ? 3 : 2;
+                for (int k = 0; k < pulseCount; k++)
                     GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Lerp(themeColor, Color.White, 0.25f) * (0.76f - k * 0.12f), "CalamityMod/Particles/FlameExplosion", Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.08f + k * 0.03f, 1.15f + k * 0.18f, 22 + k * 5, true));
 
-                for (int i = 0; i < 76; i++)
+                for (int i = 0; i < sparkCount; i++)
                 {
                     Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 16f);
                     GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, vel, false, Main.rand.Next(18, 42), Main.rand.NextFloat(0.88f, 1.95f), Main.rand.NextBool(4) ? Color.White : Color.Lerp(NovaRed, themeColor, Main.rand.NextFloat())));
                 }
 
-                // Petal streak visuals along each of the 3 beam directions
+                int beamCount = chargeLevel == 3f ? 3 : 2;
                 float petalBase = Main.rand.NextFloat(MathHelper.TwoPi);
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < beamCount; i++)
                 {
-                    float angle = petalBase + MathHelper.TwoPi * i / 3f;
-                    for (int j = 0; j < 20; j++)
+                    float angle = petalBase + MathHelper.TwoPi * i / (float)beamCount;
+                    int streakCount = chargeLevel == 3f ? 20 : 12;
+                    for (int j = 0; j < streakCount; j++)
                     {
-                        float t = j / 20f;
+                        float t = j / (float)streakCount;
                         Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(7f + t * 9f, 11f + t * 14f);
                         GeneralParticleHandler.SpawnParticle(new PointParticle(
                             Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(6f, 50f),
@@ -884,21 +1070,25 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            Main.player[Projectile.owner].SetScreenshake(10f);
+            Main.player[Projectile.owner].SetScreenshake(chargeLevel == 3f ? 10f : 6f);
             PristineFuryMark mark = (PristineFuryMark)(int)Projectile.ai[2];
             float rotOffset = Main.rand.NextFloat(MathHelper.TwoPi);
-            int mainBeamDamage = Math.Max(1, (int)(Projectile.damage * 0.90f));
-            int waveletDamage = Math.Max(1, (int)(Projectile.damage * 0.58f));
+            
+            float damageMult = chargeLevel == 3f ? 0.90f : 0.70f;
+            float waveletDamageMult = chargeLevel == 3f ? 0.58f : 0.45f;
+            int mainBeamDamage = Math.Max(1, (int)(Projectile.damage * damageMult));
+            int waveletDamage = Math.Max(1, (int)(Projectile.damage * waveletDamageMult));
 
-            for (int i = 0; i < 3; i++)
+            int finalBeamCount = chargeLevel == 3f ? 3 : 2;
+            for (int i = 0; i < finalBeamCount; i++)
             {
-                float angle = rotOffset + MathHelper.TwoPi * i / 3f;
+                float angle = rotOffset + MathHelper.TwoPi * i / (float)finalBeamCount;
                 Vector2 beamDir = angle.ToRotationVector2();
 
                 int beam = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, beamDir, ModContent.ProjectileType<PristineFuryLilyMainBeam>(), mainBeamDamage, Projectile.knockBack * 0.55f, Projectile.owner);
                 PFLeftEffectRules.ApplyTheme(beam, mark);
 
-                int waveletCount = Main.rand.Next(3, 6);
+                int waveletCount = chargeLevel == 3f ? Main.rand.Next(3, 6) : Main.rand.Next(2, 4);
                 for (int j = 0; j < waveletCount; j++)
                 {
                     float spread = Main.rand.NextFloat(-0.38f, 0.38f);
@@ -910,7 +1100,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 }
             }
         }
-
     }
 
     internal sealed class PristineFuryRightNovaPseudoLaser : ModProjectile, ILocalizedModType
@@ -1377,6 +1566,96 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 0f, bloom.Size() * 0.5f, 0.11f, SpriteEffects.None, 0);
 
             PFLeftEffectRules.EndAdditive();
+            return false;
+        }
+    }
+    internal sealed class PristineFuryHomingStar : ModProjectile, ILocalizedModType
+    {
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 180, 50));
+
+        public new string LocalizationCategory => "Projectiles.PristineFury";
+        public override string Texture => "CalamityMod/Projectiles/StarProj";
+
+        public override void SetDefaults()
+        {
+            Projectile.width = Projectile.height = 16;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.penetrate = 1;
+            Projectile.timeLeft = 180;
+            Projectile.tileCollide = false; // Prevent hitting blocks while flying out/homing
+            Projectile.ignoreWater = true;
+            Projectile.extraUpdates = 2; // Snappy extra updates
+        }
+
+        public override void AI()
+        {
+            NPC target = PristineFuryTargeting.FindTarget(Projectile.Center, 1200f, Main.player[Projectile.owner]);
+            if (target != null)
+            {
+                float speed = Projectile.velocity.Length();
+                if (speed < 12f) speed = 12f;
+                speed = Math.Min(speed + 0.35f, 32f); // Rapidly accelerate up to 32f
+
+                Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center) * speed;
+                // High responsiveness / low inertia (lerp factor 0.32f) for aggressive tracking
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.32f);
+            }
+            else
+            {
+                // Drift slightly
+                Projectile.velocity *= 0.985f;
+            }
+
+            Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.PiOver2;
+
+            Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.66f);
+            if (!Main.dedServ)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center,
+                    -Projectile.velocity * 0.15f,
+                    false,
+                    10,
+                    0.5f,
+                    ThemeColor,
+                    true,
+                    false,
+                    true
+                ));
+                if (Main.rand.NextBool(2))
+                {
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        Projectile.Center,
+                        -Projectile.velocity.RotatedByRandom(0.2f) * 0.2f,
+                        false,
+                        15,
+                        0.7f,
+                        Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.2f, 0.7f))
+                    ));
+                }
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(BuffID.OnFire3, 180);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
+            Vector2 origin = texture.Size() * 0.5f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Color glow = ThemeColor with { A = 0 };
+
+            for (int i = 0; i < 3; i++)
+            {
+                float rot = Projectile.rotation + MathHelper.PiOver2 * i * 0.2f;
+                Main.EntitySpriteDraw(texture, drawPosition, null, glow * 0.25f, rot, origin, Projectile.scale * 1.1f, SpriteEffects.None, 0f);
+            }
+
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, ThemeColor, 0.45f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             return false;
         }
     }

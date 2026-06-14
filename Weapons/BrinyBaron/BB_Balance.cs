@@ -5,6 +5,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     internal static class BB_Balance
     {
+        public static readonly object[,] StageInfo =
+        {
+            { "Initial", 0.6f },
+            { "Eye of Cthulhu", 0.72f },
+            { "Evil Boss", 0.84f },
+            { "Skeletron", 0.96f },
+            { "Hardmode", 1.08f },
+            { "Any Mechanical Boss", 1.2f },
+            { "Plantera", 1.32f },
+            { "Golem", 1.44f },
+            { "Moon Lord", 1.56f },
+            { "Providence", 1.68f },
+            { "Polterghast", 1.8f },
+            { "Devourer of Gods", 1.92f },
+            { "Yharon", 2.04f },
+            { "Exo Mechs and Supreme Calamitas", 2.15f }
+        };
+
         public static readonly string[] StageNames =
         {
             "Initial",
@@ -45,6 +63,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, LeftClickBaseDamage.Length - 1);
             return System.Math.Max(1, LeftClickBaseDamage[stageIndex]);
+        }
+
+        public static float GetLeftClickScale()
+        {
+            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, StageInfo.GetLength(0) - 1);
+            return (float)StageInfo[stageIndex, 1];
+        }
+
+        public static int GetGrowthStage()
+        {
+            int stageIndex = GetCompletedStageIndex();
+            if (stageIndex < 4) // Pre-hardmode
+                return 1;
+            if (stageIndex < 6) // Hardmode to pre-Plantera
+                return 2;
+            if (stageIndex < 8) // Plantera to Moon Lord
+                return 3;
+            return 4; // Moon Lord onwards
         }
 
         private static int GetCompletedStageIndex()

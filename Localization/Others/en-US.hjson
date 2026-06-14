@@ -89,6 +89,15 @@ Mods: {
 					DisplayName: Retro Game Console Supply Box
 					Tooltip: Right click to claim the currently available retro game consoles.
 				}
+
+				QuickStartBox: {
+					DisplayName: Quick Start Supply Box
+					Tooltip:
+						'''
+						Right click to open. Grants strong early-game equipment, potions, and bulk resources.
+						[WARNING: This item severely breaks game balance. Think twice before opening!]
+						'''
+				}
 			}
 
 			LegendaryEmblem: {

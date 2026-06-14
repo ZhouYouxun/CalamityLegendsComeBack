@@ -28,8 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         public float RightHoldProgress => rightChargeProgress;
         public bool ShowRightHoldBar => showRightChargeBar && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool LongHoldActive => trackingRightPress && rightPressFrames > 0;
-        public bool PassiveRainUnlocked => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh);
-        public bool UltimateUnlocked => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee);
+        public bool PassiveRainUnlocked => true;
+        public bool UltimateUnlocked => true;
         public int UnlockedPresetCount
         {
             get
@@ -148,20 +148,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             return preset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => true,
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => true,
-                BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh),
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss),
-                BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath),
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.EyeOfCthulhu),
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee),
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh),
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss),
                 _ => false
             };
-        }
-
-        public void TogglePassiveRain()
-        {
-            if (!PassiveRainUnlocked)
-                return;
-
-            PassiveRainEnabled = !PassiveRainEnabled;
         }
 
         public void SetReconPriorityTarget(int npcIndex, int timeLeft)

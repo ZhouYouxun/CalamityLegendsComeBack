@@ -147,6 +147,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Color outer = CosmicDischargeCommon.FrostGlowColor * 0.18f * Projectile.Opacity;
             Color inner = CosmicDischargeCommon.FrostCoreColor * 0.34f * Projectile.Opacity;
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
             for (int i = oldCenters.Count - 1; i >= 0; i--)
             {
                 float fade = 1f - i / (float)oldCenters.Count;
@@ -163,6 +165,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, outer, Projectile.rotation, origin, scale * 1.45f, SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, inner, Projectile.rotation, origin, scale, SpriteEffects.None);
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
             return false;
         }
 
@@ -256,6 +261,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 origin = bloom.Size() * 0.5f;
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
             if (!detonated)
             {
                 float pulse = 0.7f + 0.18f * MathF.Sin(Time * 0.35f);
@@ -268,6 +275,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     origin,
                     0.18f * pulse,
                     SpriteEffects.None);
+                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
                 return false;
             }
 
@@ -282,6 +290,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 origin,
                 MathHelper.Lerp(0.35f, 1.45f, progress),
                 SpriteEffects.None);
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
 

@@ -356,6 +356,9 @@ Mods: {
 			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
 			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 			PFMarkStatusArc.DisplayName: P F Mark Status Arc
+			BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
+			BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
+			BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

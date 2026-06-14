@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const int BaseSize = 50;
         private const int StickyLifetime = 72;
         private static readonly int[] ShurikenPenetrates = { -1, -1, -1, -1 };
-        private static readonly int[] ShurikenStickySliceCounts = { 3, 4, 5, 6 };
+        private static readonly int[] ShurikenStickySliceCounts = { 0, 4, 5, 6 };
         private static readonly bool[] ShurikenDeathSpawnsShpcExplosion = { false, false, false, false };
         private static readonly bool[] ShurikenDeathSpawnsCrossLights = { false, false, false, false };
         private static readonly float[] ShurikenTideHomingRanges = { 900f, 1040f, 1180f, 1320f };
@@ -192,6 +192,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
+            if (!shurikenProfile.CanStick)
+                return true;
+
             if (stuckInTile)
                 return false;
 
@@ -263,16 +266,22 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private void HandleFlightMovement()
         {
-            bool homing = TideEmpowered;
+            bool homing = false;
+            if (shurikenProfile.GrowthTier == 1)
+                homing = TideEmpowered;
+            else if (shurikenProfile.GrowthTier >= 2)
+                homing = true;
+
             float homingRange = shurikenProfile.TideHomingRange;
             NPC target = homing ? FindNearestTarget(homingRange) : null;
 
             if (homing && target != null && target.active)
             {
                 homingTimer++;
-                if (homingTimer <= TideHomingDelayFrames)
+                int delay = shurikenProfile.GrowthTier >= 2 ? 15 : TideHomingDelayFrames;
+                if (homingTimer <= delay)
                 {
-                    EnsureFallbackFlightVelocity();
+                    EnsureFallbackFallbackVelocity();
                     Projectile.velocity *= TideHomingIdleAcceleration;
                     ClampFlightSpeed(shurikenProfile.TideHomingFinalSpeed);
                 }
@@ -300,7 +309,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             else
             {
                 homingTimer = 0;
-                EnsureFallbackFlightVelocity();
+                EnsureFallbackFallbackVelocity();
 
                 if (homing)
                 {
@@ -320,7 +329,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Projectile.rotation += (Projectile.direction <= 0 ? -1f : 1f) * shurikenProfile.RotationSpeed;
         }
 
-        private void EnsureFallbackFlightVelocity()
+        private void EnsureFallbackFallbackVelocity()
         {
             if (Projectile.velocity.LengthSquared() > 0.01f)
                 return;
@@ -379,6 +388,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 slicesPerformed++;
                 BBShuriken_Initial_Effects.SpawnStickySliceBurst(Projectile, SizeScale, shurikenProfile.GrowthTier);
                 TrySpawnStickySlash(target);
+
+                if ((shurikenProfile.GrowthTier >= 3 || Projectile.ai[1] == 1f) && Main.myPlayer == Projectile.owner)
+                {
+                    Vector2 dir = Main.rand.NextVector2CircularEdge(1f, 1f);
+                    int foam = Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        dir * 20f,
+                        ModContent.ProjectileType<BrinyBaron_SeafoamBlade>(),
+                        Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                        Projectile.knockBack * 0.3f,
+                        Projectile.owner,
+                        1f);
+
+                    if (foam >= 0 && foam < Main.maxProjectiles && shurikenProfile.GrowthTier >= 3)
+                    {
+                        Main.projectile[foam].ai[1] = 1f;
+                        Main.projectile[foam].netUpdate = true;
+                    }
+                }
 
                 if (soundTimer <= 0)
                 {
@@ -533,14 +562,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private static int GetShurikenGrowthTier()
         {
-            if (CalamityMod.DownedBossSystem.downedBoomerDuke)
-                return 3;
-            if (NPC.downedFishron)
-                return 2;
-            if (Main.hardMode)
-                return 1;
-
-            return 0;
+            return BB_Balance.GetGrowthStage() - 1;
         }
 
         private readonly struct ShurikenProfile
