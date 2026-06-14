@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
             Projectile.timeLeft = 50;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = 2;
+            Projectile.extraUpdates = 1;
         }
 
         public override void AI()
@@ -68,7 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                     Projectile.Center,
                     velocity,
                     ModContent.ProjectileType<PearlShardSmallPearl>(),
-                    Projectile.damage,
+                    (int)(Projectile.damage * 0.7),
                     Projectile.knockBack,
                     Projectile.owner,
                     Main.rand.NextFloat(MathHelper.TwoPi));
