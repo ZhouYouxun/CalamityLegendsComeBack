@@ -16,8 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void SetDefaults()
         {
-            Projectile.width = 150;
-            Projectile.height = 150;
+            Projectile.width = 224;
+            Projectile.height = 224;
             Projectile.friendly = true;
             Projectile.ignoreWater = false;
             Projectile.tileCollide = false;
