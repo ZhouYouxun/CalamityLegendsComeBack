@@ -352,6 +352,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             int growthStage = BB_Balance.GetGrowthStage();
             string left = this.GetLocalizedValue("BB_Left_" + growthStage);
+            if (growthStage >= 2)
+            {
+                left = left.Trim() + "\n" + this.GetLocalizedValue("BB_Right_Spin_Unlocked").Trim();
+            }
 
             BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
             string rightDesc = rightClickMode switch
@@ -362,11 +366,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 _ => this.GetLocalizedValue("BB_Right_DefaultShuriken"),
             };
 
-            string spinText = (growthStage >= 2)
-                ? this.GetLocalizedValue("BB_Right_Spin_Unlocked")
-                : this.GetLocalizedValue("BB_Right_Spin_Locked");
-            
-            string rightSection = rightDesc.Trim() + "\n" + spinText.Trim();
+            string rightSection = rightDesc.Trim();
 
             bool hasDashAcc = rightClickMode != BBRightClickMode.DefaultShuriken;
             string tideDesc = hasDashAcc
@@ -394,7 +394,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                tide + "\n\n" +
                passive + "\n\n" +
                dash4 + "\n\n" +
-               final + "\n\n";
+               final + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, "BrinyBaronOceanLegendaryText", legendarySection));

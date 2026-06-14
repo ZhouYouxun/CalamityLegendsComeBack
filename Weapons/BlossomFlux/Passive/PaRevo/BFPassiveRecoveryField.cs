@@ -80,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.3f, Pitch = -0.25f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.PassiveRecoveryFieldSpawn, Projectile.Center);
 
             for (int i = 0; i < 12; i++)
             {
@@ -268,8 +268,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private void PlayFieldActivationSounds()
         {
-            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.62f, Pitch = -0.12f }, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.54f, Pitch = -0.24f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.PassiveRecoveryFieldPulse1, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.PassiveRecoveryFieldPulse2, Projectile.Center);
         }
 
         private static void DrawAdditive(Texture2D texture, Vector2 position, Color color, float rotation, float scale)

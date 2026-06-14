@@ -125,9 +125,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(2, 4), 1.2f);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 0.9f, 3f, 0.85f, 1.15f);
             SpawnPlagueAnchorFX(target.Center, 1.1f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PBGAttackSwitchShort") { Volume = 0.42f, Pitch = 0.05f }, target.Center);
-            SoundEngine.PlaySound(SoundID.NPCDeath13 with { Volume = 0.38f, Pitch = 0.1f }, target.Center);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.36f, Pitch = -0.24f }, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjHit1, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjHit2, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjHit3, target.Center);
         }
 
         private void ExtendReconMark(NPC target)
@@ -155,14 +155,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.netUpdate = true;
 
             SpawnPlagueAnchorFX(Projectile.Center, 0.9f);
-            SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.22f, Pitch = 0.1f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjAction, Projectile.Center);
             return false;
         }
 
         public override void OnKill(int timeLeft)
         {
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 14, 1.2f, 4.2f, 0.9f, 1.25f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PlagueBoom" + Main.rand.Next(1, 5)) { Volume = 0.46f, PitchVariance = 0.14f }, Projectile.Center);
+            BlossomFluxSounds.PlayRightPlagueProjExplode(Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)

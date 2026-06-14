@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         private const int SpiritCount = 9;
         private const int WarmupFrames = 3;
         private const int FireInterval = 3;
-        private const float ReleaseRadius = 48f;
+        private const float ReleaseRadius = 0f;
         private const float MinMuzzleDistance = 42f;
         private const float MaxMuzzleDistance = 92f;
 

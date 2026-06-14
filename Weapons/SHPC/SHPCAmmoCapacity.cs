@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             75, // EffectID 1: Energy Core
             75, // EffectID 2: Stormlion Mandible
             50, // EffectID 3: Sulphuric Scale
-            50, // EffectID 4: Purified Gel
+            75, // EffectID 4: Purified Gel
             50, // EffectID 5: Essence of Havoc
             50, // EffectID 6: Essence of Eleum
             50, // EffectID 7: Essence of Sunlight

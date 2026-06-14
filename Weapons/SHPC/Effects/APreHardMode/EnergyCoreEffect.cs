@@ -31,10 +31,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             projectile.localNPCHitCooldown = 20;
         }
 
+        public override void OnSpawn(Projectile projectile, Player owner)
+        {
+            SetDefaults(projectile);
+            projectile.localAI[0] = 0f; // 弹射次数
+            projectile.localAI[1] = 0f; // 是否已准备好在下一次碰撞中爆炸
+            projectile.localAI[2] = 0f; // 飞行时间（帧数）
+        }
+
         public override bool EnableProximityExplosion => false;
 
         public override void AI(Projectile projectile, Player owner)
         {
+            // 累计飞行时间
+            projectile.localAI[2] += 1f;
+
+            int bounceCount = (int)projectile.localAI[0];
+            int timeFlown = (int)projectile.localAI[2];
+            bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
+
+            // 飞行达到4秒（240帧）或弹射达到5次后，开始准备下一次撞击爆炸：
+            // 将生存时间不断设为2，穿透次数设为1
+            if (isReady)
+            {
+                projectile.timeLeft = 2;
+                projectile.penetrate = 1;
+            }
+
             // ===== 模拟重力 =====
 
             float gravity = 0.18f;      // 重力强度（你可以调，0.1~0.3之间比较自然）
@@ -63,8 +86,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
         }
         public override bool OnTileCollide(Projectile projectile, Player owner, Vector2 oldVelocity)
         {
-            int timeFlown = 720 - projectile.timeLeft;
             int bounceCount = (int)projectile.localAI[0];
+            int timeFlown = (int)projectile.localAI[2];
             bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
 
             if (isReady)
@@ -91,8 +114,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            int timeFlown = 720 - projectile.timeLeft;
             int bounceCount = (int)projectile.localAI[0];
+            int timeFlown = (int)projectile.localAI[2];
             bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
 
             if (isReady)

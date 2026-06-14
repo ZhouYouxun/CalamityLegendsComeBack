@@ -76,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         private void UpdateWindup()
         {
-            Projectile.velocity *= 0.86f;
+            Projectile.velocity *= 0.99f;
             Projectile.rotation += 0.18f * (Projectile.velocity.X >= 0f ? 1f : -1f);
 
             if (timer % 3 == 0)

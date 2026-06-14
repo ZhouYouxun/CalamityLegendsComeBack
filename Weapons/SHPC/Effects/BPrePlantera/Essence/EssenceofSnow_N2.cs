@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 200;
+            Projectile.width = Projectile.height = 280;
 
             Projectile.friendly = true;
             Projectile.ignoreWater = false;
@@ -38,15 +38,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             timer++;
 
             {
-                // ===== 尺寸线性增长（50帧内 400 → 800）=====
+                // ===== 尺寸线性增长（50帧内 280 → 560，缩小了 30%）=====
                 float progress = Utils.GetLerpValue(0f, 50f, timer, true);
                 sizeFactor = MathHelper.Lerp(1f, 2f, progress);
 
                 // 保持中心不变，动态调整大小
                 Vector2 center = Projectile.Center;
 
-                Projectile.width = (int)(400 * sizeFactor);
-                Projectile.height = (int)(400 * sizeFactor);
+                Projectile.width = (int)(280 * sizeFactor);
+                Projectile.height = (int)(280 * sizeFactor);
 
                 Projectile.Center = center;
             }

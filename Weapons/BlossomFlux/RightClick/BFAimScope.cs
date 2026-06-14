@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 if (!playedReadySound && Charge >= MaxChargeOrTargetRotation)
                 {
                     playedReadySound = true;
-                    SoundEngine.PlaySound(SoundID.Item82 with { Volume = SoundID.Item82.Volume * 0.7f }, Owner.MountedCenter);
+                    SoundEngine.PlaySound(BlossomFluxSounds.AimScopeReady, Owner.MountedCenter);
                 }
 
                 if (Charge < MaxChargeOrTargetRotation)

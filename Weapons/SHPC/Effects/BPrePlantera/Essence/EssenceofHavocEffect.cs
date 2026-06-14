@@ -56,6 +56,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 Volume = 3f
             }, projectile.Center);
 
+            if (projectile.owner == Main.myPlayer)
+            {
+                int explosionIndex = Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<NewLegendSHPE>(),
+                    projectile.damage,
+                    projectile.knockBack,
+                    projectile.owner);
+
+                if (Main.projectile.IndexInRange(explosionIndex))
+                {
+                    Projectile explosion = Main.projectile[explosionIndex];
+                    int explosionSize = 224; // 边长为224像素
+                    explosion.width = explosionSize;
+                    explosion.height = explosionSize;
+                    explosion.Center = projectile.Center;
+                    explosion.netUpdate = true;
+                }
+            }
+
             bool movingDownward = projectile.velocity.Y > 0f;
 
             Vector2 dirX = Vector2.UnitX;
@@ -117,6 +139,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                         projectile.owner
                     );
                 }
+            }
+
+            // ===== 新增自定义火花与Dust特效，配合原有的十字爆炸 =====
+            if (!Main.dedServ)
+            {
+                // 1. 环状散开的火尘 (SolarFlare & Torch & CopperCoin dusts)
+                for (int i = 0; i < 35; i++)
+                {
+                    Vector2 dustVel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 11f);
+                    Dust d = Dust.NewDustPerfect(
+                        projectile.Center,
+                        Utils.SelectRandom(Main.rand, DustID.SolarFlare, DustID.Torch, DustID.CopperCoin),
+                        dustVel,
+                        100,
+                        default,
+                        Main.rand.NextFloat(1.3f, 2.4f)
+                    );
+                    d.noGravity = true;
+                }
+
+                // 2. 随机四射的火花粒子 (SparkParticles)
+                for (int i = 0; i < 18; i++)
+                {
+                    Vector2 sparkVel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 10f);
+                    Color sparkColor = Main.rand.NextBool() ? new Color(255, 125, 40) : new Color(255, 60, 20);
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                        sparkVel,
+                        false,
+                        Main.rand.Next(24, 36),
+                        Main.rand.NextFloat(0.9f, 1.5f),
+                        sparkColor
+                    ));
+                }
+
+                // 3. 逐渐扩大的红色光圈 (DirectionalPulseRing)
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    projectile.Center,
+                    Vector2.Zero,
+                    new Color(255, 90, 30),
+                    Vector2.One,
+                    0f,
+                    0.28f,
+                    0f,
+                    24
+                ));
             }
         }
     }

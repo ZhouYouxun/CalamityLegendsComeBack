@@ -193,69 +193,84 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             if (Projectile.ai[2] == 4f)
             {
-                int targetIndex = (int)Projectile.localAI[0];
-                if (Main.npc.IndexInRange(targetIndex))
+                hasDetached = true;
+            }
+
+            // ===== 检查主弹幕是否存活 =====
+            bool mainProjActive = false;
+            Projectile mainProj = null;
+            if (Main.projectile.IndexInRange(boundMainProjectileID))
+            {
+                mainProj = Main.projectile[boundMainProjectileID];
+                if (mainProj.active && mainProj.type == ModContent.ProjectileType<NewLegendSHPB>())
                 {
-                    NPC strikeTarget = Main.npc[targetIndex];
-                    if (strikeTarget.active && strikeTarget.CanBeChasedBy(Projectile))
+                    mainProjActive = true;
+                }
+            }
+
+            if (!mainProjActive || hasDetached)
+            {
+                // 主弹幕消失或被命令脱离：开始强力追踪
+                hasDetached = true;
+
+                // 锁敌范围为 50 格方块 (50 * 16 = 800 像素)
+                NPC target = null;
+                float closestDist = 800f;
+                foreach (NPC n in Main.npc)
+                {
+                    if (n.CanBeChasedBy(Projectile))
                     {
-                        hasDetached = true;
-                        Vector2 desiredDirection = (strikeTarget.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-                        float speed = MathHelper.Lerp(18f, 28f, Utils.GetLerpValue(420f, 36f, Projectile.Distance(strikeTarget.Center), true));
-                        Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.28f);
-                        Projectile.rotation = Projectile.velocity.ToRotation();
-                        return;
+                        float d = Vector2.Distance(n.Center, Projectile.Center);
+                        if (d < closestDist)
+                        {
+                            closestDist = d;
+                            target = n;
+                        }
                     }
                 }
 
-                Projectile.velocity *= 1.02f;
-                return;
-            }
+                // 如果范围里没有敌人，直接自毁！
+                if (target == null)
+                {
+                    Projectile.Kill();
+                    return;
+                }
 
-            // ===== 如果已经脱离过，就永远冲锋 =====
-            if (hasDetached)
-            {
-                Projectile.velocity *= 1.01f;
+                // 加速冲向目标
+                Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                float speed = MathHelper.Lerp(18f, 28f, Utils.GetLerpValue(420f, 36f, Projectile.Distance(target.Center), true));
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * speed, 0.28f);
+                Projectile.rotation = Projectile.velocity.ToRotation();
+                Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
                 return;
             }
 
             // ===== 正常绑定逻辑 =====
-            if (Main.projectile.IndexInRange(boundMainProjectileID))
+            if (mainProjActive && mainProj != null)
             {
-                Projectile mainProj = Main.projectile[boundMainProjectileID];
+                float syncedPulse = 0.5f + 0.5f * (float)Math.Sin(Main.GameUpdateCount * 0.15f + boundMainProjectileID * 0.23f);
+                float orbitScale = MathHelper.SmoothStep(0.58f, 1.45f, syncedPulse);
+                float a = 62f * orbitScale;
+                float b = 30f * orbitScale;
 
-                if (mainProj.active)
-                {
-                    float syncedPulse = 0.5f + 0.5f * (float)Math.Sin(Main.GameUpdateCount * 0.15f + boundMainProjectileID * 0.23f);
-                    float orbitScale = MathHelper.SmoothStep(0.58f, 1.45f, syncedPulse);
-                    float a = 62f * orbitScale;
-                    float b = 30f * orbitScale;
+                orbitAngle += 0.128f;
+                ellipseRotation += 0.048f;
 
-                    orbitAngle += 0.128f;
-                    ellipseRotation += 0.048f;
+                Vector2 ellipse = new Vector2(
+                    (float)Math.Cos(orbitAngle + orbitOffset) * a,
+                    (float)Math.Sin(orbitAngle + orbitOffset) * b
+                ).RotatedBy(ellipseRotation);
 
-                    Vector2 ellipse = new Vector2(
-                        (float)Math.Cos(orbitAngle + orbitOffset) * a,
-                        (float)Math.Sin(orbitAngle + orbitOffset) * b
-                    ).RotatedBy(ellipseRotation);
+                Projectile.Center = mainProj.Center + ellipse;
 
-                    Projectile.Center = mainProj.Center + ellipse;
+                Vector2 futurePos = mainProj.Center + new Vector2(
+                    (float)Math.Cos(orbitAngle + orbitOffset + 0.24f) * a,
+                    (float)Math.Sin(orbitAngle + orbitOffset + 0.24f) * b
+                ).RotatedBy(ellipseRotation);
 
-                    Vector2 futurePos = mainProj.Center + new Vector2(
-                        (float)Math.Cos(orbitAngle + orbitOffset + 0.24f) * a,
-                        (float)Math.Sin(orbitAngle + orbitOffset + 0.24f) * b
-                    ).RotatedBy(ellipseRotation);
-
-                    Projectile.velocity = futurePos - Projectile.Center;
-                    return;
-                }
+                Projectile.velocity = futurePos - Projectile.Center;
+                return;
             }
-
-            // ===== 一旦进入这里 → 标记为永久脱离 =====
-            hasDetached = true;
-
-            // ===== 冲锋 =====
-            Projectile.velocity *= 1.01f;
         }
 
         // =========================

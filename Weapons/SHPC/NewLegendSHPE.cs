@@ -22,10 +22,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Projectile.ignoreWater = false;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 2;
+            Projectile.timeLeft = 5;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 15;
+            Projectile.localNPCHitCooldown = -1;
         }
         public override bool PreDraw(ref Color lightColor)
         {

@@ -132,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Vector2 sparkPosition = Projectile.Center - forward * Main.rand.NextFloat(5f, 20f) + right * Main.rand.NextFloat(-7f, 7f);
             Particle glint = new GlowSparkParticle(
                 sparkPosition,
-                -forward * Main.rand.NextFloat(0.2f, 0.55f) + right * Main.rand.NextFloat(-0.28f, 0.28f),
+                -forward * Main.rand.NextFloat(0.2f, 0.55f),
                 false,
                 Main.rand.Next(11, 18),
                 Main.rand.NextFloat(0.018f, 0.034f),
@@ -175,6 +175,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 scale,
                 color,
                 new Vector2(Main.rand.NextFloat(2.25f, 3.35f), Main.rand.NextFloat(0.32f, 0.52f)),
+                true,
+                true,
                 shrinkSpeed: Main.rand.NextFloat(0.64f, 0.76f));
             GeneralParticleHandler.SpawnParticle(needle);
         }
@@ -195,7 +197,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
             Particle sparkle = new GlowSparkParticle(
                 position,
-                velocity * 0.45f + Main.rand.NextVector2Circular(0.04f, 0.04f),
+                velocity * 0.45f,
                 false,
                 Math.Max(10, lifetime / 2),
                 Main.rand.NextFloat(0.012f, 0.022f),
@@ -364,9 +366,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                     Main.rand.Next(strong ? 18 : 12, strong ? 30 : 22),
                     Main.rand.NextFloat(0.32f, strong ? 0.62f : 0.48f),
                     Color.Lerp(FrostDeep, FrostWhite, Main.rand.NextFloat(0.4f, 0.9f)),
-                    new Vector2(Main.rand.NextFloat(1.3f, 2.2f), Main.rand.NextFloat(0.3f, 0.5f)),
+                    new Vector2(Main.rand.NextFloat(1.3f, 2.25f), Main.rand.NextFloat(0.3f, 0.5f)),
+                    true,
+                    true,
                     shrinkSpeed: Main.rand.NextFloat(0.66f, 0.78f));
-                GeneralParticleHandler.SpawnParticle(shard);
             }
         }
     }

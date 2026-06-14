@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             TriggerDamageBuff();
 
             if (Main.myPlayer == Player.whoAmI)
-                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.5f, Pitch = 0.32f }, Player.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.Pa5BreakthroughSound, Player.Center);
         }
 
         private void TriggerDamageBuff()

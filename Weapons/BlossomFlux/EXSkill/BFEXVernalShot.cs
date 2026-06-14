@@ -81,12 +81,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.26f, Pitch = 0.3f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXVernalShotFire1, Projectile.Center);
         }
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.34f, Pitch = -0.08f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXVernalShotFire2, Projectile.Center);
 
             if (Main.dedServ)
                 return;

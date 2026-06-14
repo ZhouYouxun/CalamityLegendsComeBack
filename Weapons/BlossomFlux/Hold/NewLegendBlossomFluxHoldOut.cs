@@ -394,7 +394,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             if (reloadTimer == 1)
-                SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.45f, Pitch = 0.1f }, GunTipPosition);
+                SoundEngine.PlaySound(BlossomFluxSounds.ReloadComplete, GunTipPosition);
 
             reloadTimer--;
         }
@@ -579,7 +579,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 0f,
                 BFSelectionPanel.FormSwitchMode);
 
-            SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.1f, Volume = 0.55f }, Owner.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.SelectionPanelOpen, Owner.Center);
         }
 
         // 生成瞄准镜弹幕；如果已经存在，就不重复生成

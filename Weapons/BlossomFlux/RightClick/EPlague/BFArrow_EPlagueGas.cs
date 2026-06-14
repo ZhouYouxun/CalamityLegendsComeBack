@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Audio;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
@@ -83,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             target.AddBuff(BuffID.Venom, 120);
             if (Main.rand.NextBool(8))
             {
-                Terraria.Audio.SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.22f, Pitch = 0.42f }, target.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueGas, target.Center);
             }
         }
 

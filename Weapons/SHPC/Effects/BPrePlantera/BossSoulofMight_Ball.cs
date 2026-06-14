@@ -137,7 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         }
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.Thunder, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.DD2_DefenseTowerSpawn with { Volume = 0.55f }, Projectile.Center);
             // 在弹幕消失时，释放SHPExplosion
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<BossSoulofMight_EXP>(), (int)(Projectile.damage * 1.13), Projectile.knockBack, Projectile.owner);
         }

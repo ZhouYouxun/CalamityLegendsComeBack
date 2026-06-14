@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
@@ -371,8 +371,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             SpawnBombardImpactFX(center, MathHelper.Clamp(explosionSize / 180f, 1.35f, 2.8f));
             SpawnBombardAuraFX(center, 1.35f);
             Main.player[Projectile.owner].SetScreenshake(MathHelper.Clamp(explosionSize / 24f, 8f, 22f));
-            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.65f, Pitch = -0.2f }, center);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.5f, Pitch = -0.18f }, center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightBombardImpact1, center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightBombardImpact2, center);
         }
 
         private void AccelerateThroughBombardTarget()
@@ -409,7 +409,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 SpawnArrowRain(bombardCenter);
 
             if (rainCounter % 20 == 0)
-                SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.2f, Pitch = 0.42f }, bombardCenter);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightBombardSkyRain, bombardCenter);
 
             if (rainCounter % 12 == 0)
                 SpawnBombardAuraFX(bombardCenter, 0.78f);

@@ -138,7 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
                     leftBurstTimer = PastLingeringAssaultActive ? GetPastLingeringFireInterval() : GetNextBreakthroughFireInterval();
                     if (PastLingeringAssaultActive && leftShotsFired == 12)
-                        SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.45f, Pitch = 0.35f }, Owner.Center);
+                        SoundEngine.PlaySound(BlossomFluxSounds.LeftPastLingeringBurst, Owner.Center);
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
@@ -210,7 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             SpawnLeftProjectile(source, spawnPosition, shootVelocity, projectileType, damage, knockback, CurrentPreset);
             SpawnSHPCLeftMuzzleParticles(spawnPosition, shootVelocity, CurrentPreset, 1.05f);
             if (leftShotsFired % 3 == 0)
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffFire", 3) { Volume = 0.52f, PitchVariance = 0.12f }, Owner.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.LeftBreakthroughFire, Owner.Center);
         }
 
         private void FirePastLingeringVolley(IEntitySource source, int projectileType, float speed, int damage, float knockback)
@@ -247,7 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             SpawnSHPCLeftMuzzleParticles(GunTipPosition, direction * projectileSpeed, CurrentPreset, 0.94f + fireSpeedTier * 0.08f);
             if (leftShotsFired % 4 == 0)
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SylvestaffFire", 3) { PitchVariance = 0.12f, Volume = 0.48f }, Owner.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.LeftPastLingeringFire, Owner.Center);
         }
 
         private void FireRecoveryVolley(IEntitySource source, int projectileType, float speed, int damage, float knockback)
@@ -255,7 +255,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Vector2 velocity = GetAimVelocity(speed);
             FireRecoveryDnaPair(source, velocity, projectileType, damage, knockback);
             SpawnSHPCLeftMuzzleParticles(GetShootOrigin(velocity), velocity, CurrentPreset, 0.92f + burstGroupsStarted * 0.08f);
-            SoundEngine.PlaySound(SoundID.Item8 with { Pitch = 0.2f + burstGroupsStarted * 0.04f, Volume = 0.58f }, Owner.Center);
+            BlossomFluxSounds.PlayLeftRecoveryFire(Owner.Center, burstGroupsStarted);
         }
 
         private void FireRecoveryDnaPair(IEntitySource source, Vector2 velocity, int projectileType, int damage, float knockback)
@@ -299,7 +299,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             SpawnSHPCLeftMuzzleParticles(origin, baseVelocity, CurrentPreset, 0.92f + reconShotsFiredInBurst * 0.06f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/LunicShot2") { Pitch = 0.15f + reconShotsFiredInBurst * 0.03f, Volume = 0.48f }, Owner.Center);
+            BlossomFluxSounds.PlayLeftReconFire(Owner.Center, reconShotsFiredInBurst);
         }
 
         private void FireBombardRain(IEntitySource source, int projectileType, float speed, int damage, float knockback)
@@ -324,9 +324,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 mouseDistance = arrowSpeed / mouseDistance;
 
             if (leftShotsFired % 2 == 0)
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ImpalerLaunch") { Volume = 0.58f, PitchVariance = 0.15f }, Owner.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.LeftBombardFire1, Owner.Center);
             else
-                SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.3f, Pitch = -0.22f, PitchVariance = 0.08f }, Owner.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.LeftBombardFire2, Owner.Center);
 
             for (int i = 0; i < 3; i++)
             {
@@ -406,7 +406,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             SpawnSHPCLeftMuzzleParticles(spawnPosition, shootVelocity, CurrentPreset, 0.66f);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/BEES/bees" + Main.rand.Next(1, 13)) { Volume = 0.55f, PitchVariance = 0.12f }, spawnPosition);
+            BlossomFluxSounds.PlayLeftPlagueFire(spawnPosition);
         }
 
         private int SpawnLeftProjectile(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BlossomFluxChloroplastPresetType preset, bool noTileCollide = false)

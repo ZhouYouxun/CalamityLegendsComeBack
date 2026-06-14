@@ -169,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 this.GetLocalizedValue("RightClick") + "\n\n" +
                 this.GetLocalizedValue("Passive") + "\n\n" +
                 exText + "\n\n" +
-                this.GetLocalizedValue("Final") + "\n\n";
+                this.GetLocalizedValue("Final") + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
             string legendarySection = Main.keyState.PressingShift() ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");

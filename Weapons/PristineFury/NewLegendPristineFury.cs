@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 left + "\n\n" +
                 right + "\n" +
                 hook + "\n\n" +
-                passive + "\n\n";
+                passive + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, "PristineFuryHolyFireLegendaryText", legendarySection));

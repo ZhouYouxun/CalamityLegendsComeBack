@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             SpawnPenetrationImpactFX(target.Center, 1.1f);
             ReleaseRecoveryOrb(target.Center, BFArrow_BRecovTransfer.LeftHitSpawnMode);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 16, 1.4f, 4.4f, 1f, 1.5f);
-            SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.42f, Pitch = 0.3f }, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryProjHit, target.Center);
 
             if (Projectile.velocity.LengthSquared() > 0.01f)
             {
@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             SpawnPenetrationImpactFX(Projectile.Center, 0.92f);
-            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.26f, Pitch = 0.18f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryTileCollide, Projectile.Center);
             return true;
         }
 
@@ -83,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             SpawnRecoveryPulse(Projectile.Center, 1.25f);
             SpawnOrbReleaseFX(Projectile.Center, 1.45f);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_BRecov, 28, 1.65f, 6.2f, 1.05f, 1.78f);
-            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.36f, Pitch = 0.22f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryProjKill, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)

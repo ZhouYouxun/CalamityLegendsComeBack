@@ -71,10 +71,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             targetPosition = GetParentCenter();
             float completion = 1f - Projectile.timeLeft / (float)actualLifetime;
             completion = MathHelper.Clamp(completion, 0f, 1f);
-            float radiusProgress = MathF.Pow(completion, 1.85f);
-            float angleProgress = MathF.Pow(completion, 1.18f);
+
+            // 使用相同的线性进度 progress，使得路径为完美不扭曲的阿基米德螺旋线（圆弧）
+            float progress = completion;
+            float radiusProgress = progress;
+            float angleProgress = progress;
+
             float spinDirection = Projectile.ai[1] == 0f ? (Projectile.identity % 2 == 0 ? 1f : -1f) : Math.Sign(Projectile.ai[1]);
-            float spiralTurns = MathHelper.Lerp(1.45f, 2.2f, Utils.GetLerpValue(240f, 420f, initialDistance, true));
+            // 减少圈数使其呈现更完美的圆形弧线
+            float spiralTurns = MathHelper.Lerp(0.6f, 1.0f, Utils.GetLerpValue(240f, 420f, initialDistance, true));
             float currentRadius = MathHelper.Lerp(initialDistance, 0f, radiusProgress);
             float currentAngle = initialAngle + spinDirection * MathHelper.TwoPi * spiralTurns * angleProgress;
             Vector2 previous = Projectile.Center;

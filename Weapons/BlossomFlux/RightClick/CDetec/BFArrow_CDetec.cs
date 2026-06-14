@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             EmitPenetrationFlightFX();
 
             if ((int)FlightTimer % 16 == 0 && Projectile.owner == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.Item9 with { Volume = 0.12f, Pitch = 0.72f }, Projectile.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightReconProjAction, Projectile.Center);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -92,13 +92,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.localNPCImmunity[target.whoAmI] = 24;
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 8, 0.7f, 2.6f, 0.72f, 1.05f);
             SpawnPenetrationImpactFX(target.Center, 1f);
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.28f, Pitch = 0.24f }, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightReconProjHit, target.Center);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 12, 1f, 3.8f, 0.82f, 1.18f);
-            SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.25f, Pitch = 0.35f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightReconTileCollide, Projectile.Center);
             return true;
         }
 
@@ -177,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, configuredMarkDuration);
 
             SpawnMarkAcquireFX(target.Center);
-            SoundEngine.PlaySound(SoundID.Item25 with { Volume = 0.38f, Pitch = 0.34f }, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightReconProjEvent, target.Center);
 
             if (Projectile.owner != Main.myPlayer)
                 return;

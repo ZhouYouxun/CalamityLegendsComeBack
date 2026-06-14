@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Projectile.height = blastSize;
                 Projectile.Center = center;
 
-                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.55f, Pitch = 0.15f }, Projectile.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightBombardExplosion, Projectile.Center);
 
                 for (int i = 0; i < 18; i++)
                 {

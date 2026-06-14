@@ -23,6 +23,7 @@
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Olds\MarniteBayonet\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
+	  <Folder Include="Weapons\BlossomFlux\Hold\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />

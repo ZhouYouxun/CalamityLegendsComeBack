@@ -22,16 +22,16 @@ Mods: {
 					BB_Left_3:
 						'''
 						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Stage 3, 4-swing cycle: parallel Seafoams ×5 → Sea Spirits ×10 → Shurikens ×5 → enhanced Light Wave.]
-						[c/99CCFF:Parallel Seafoams: faster, slightly larger, no homing, heavy pierce; enhanced Light Wave fires tracking bubbles.]
+						[c/7F8FA6:Stage 3, 4-swing cycle: parallel Seafoams ×5 + normal wave → Sea Spirits ×10 + normal wave → Shurikens ×5 + normal wave → giant enhanced Light Wave.]
+						[c/99CCFF:Parallel Seafoams: extremely fast, no homing, heavy pierce; giant enhanced Light Wave fires tracking bubbles (normal waves do not).]
 						[c/4FAEFF:Direct blade hits summon a tornado. Sea Spirits deal no damage for the first 10 frames.]
 						'''
 					BB_Left_4:
 						'''
 						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Stage 4, 4-swing cycle: parallel Seafoams ×5 → Sea Spirits ×10 → Shurikens ×5 → ultimate Light Wave.]
-						[c/99CCFF:Ultimate Light Wave triggers tornado on hit (5-frame cooldown); direct blade hits also trigger one and scatter fast Sea Spirits.]
-						[c/4FAEFF:Scattered Sea Spirits: sine-wave path for 20 frames then strong homing; no damage for first 10 frames.]
+						[c/7F8FA6:Stage 4, 4-swing cycle: parallel Seafoams ×5 + normal wave → Sea Spirits ×10 + normal wave → Shurikens ×5 + normal wave → giant ultimate Light Wave.]
+						[c/99CCFF:Giant ultimate Light Wave triggers tornado on hit (5-frame cooldown) and fires tracking bubbles; direct blade hits also trigger one and scatter fast sine-wave Sea Spirits.]
+						[c/4FAEFF:Scattered Sea Spirits: sine-wave path for 20 frames then strong homing; no damage for first 10 frames. Normal waves do not fire tracking bubbles.]
 						'''
 					BB_Right_DefaultShuriken:
 						'''

@@ -64,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 int previousTimer = PassiveCooldownTimer;
                 PassiveCooldownTimer = System.Math.Min(requiredFrames, PassiveCooldownTimer + 1);
                 if (previousTimer < requiredFrames && PassiveCooldownTimer >= requiredFrames && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
-                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
+                    SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerBuffSpawn, Player.Center);
             }
 
             if (FinalStandTimer > 0)
@@ -169,8 +169,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
             if (Player.whoAmI == Main.myPlayer)
             {
-                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.75f, Pitch = -0.2f }, Player.Center);
-                SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.65f, Pitch = -0.08f }, Player.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction1, Player.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction2, Player.Center);
             }
         }
 
@@ -192,7 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             finalStandBlockedHits = 0;
 
             if (Player.whoAmI == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.58f, Pitch = 0.22f }, Player.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction3, Player.Center);
         }
 
         private void NullifyFinalStandHit(ref Player.HurtInfo info)

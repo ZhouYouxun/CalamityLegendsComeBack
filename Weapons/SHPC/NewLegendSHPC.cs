@@ -1232,7 +1232,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 rightStateText + "\n\n" +
                 exHint + "\n\n" +
                 ammoWheelHint + "\n\n" +
-                finalLine + "\n\n";
+                finalLine + "\n";
 
             // ===== 替换 Tooltip =====
             tooltips.FindAndReplace("[GFB]", finalText);

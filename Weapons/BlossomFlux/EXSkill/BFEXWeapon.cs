@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill.SpecialEffects;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera;
@@ -73,7 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         {
             CloseSelectionPanel();
             KillNormalHoldout();
-            SoundEngine.PlaySound(SoundID.Item164 with { Volume = 0.8f, Pitch = -0.35f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXWeaponProjSpawn, Projectile.Center);
         }
 
         public override void AI()
@@ -173,7 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             if (fireSoundTimer >= 4)
             {
                 fireSoundTimer = 0;
-                SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.58f, Pitch = 0.2f + Main.rand.NextFloat(-0.08f, 0.08f) }, GunTip);
+                BlossomFluxSounds.PlayEXWeaponNormalFire(GunTip);
             }
 
             if (timer >= BarrageFrames)
@@ -188,8 +188,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             FadeChargeConvergenceProjectiles();
             SpawnChargeBurst(1.1f);
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.78f, Pitch = -0.08f }, GunTip);
-            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.42f, Pitch = -0.2f }, GunTip);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXWeaponChargedFire1, GunTip);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXWeaponChargedFire2, GunTip);
         }
 
         private void EnterBarragePhase()
@@ -212,9 +212,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 FireBarrageVolley();
             }
 
-            SoundEngine.PlaySound(SoundID.Item163 with { Volume = 1.05f, Pitch = -0.22f }, GunTip);
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.88f, Pitch = -0.34f, PitchVariance = 0.08f }, Owner.Center);
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.6f, Pitch = -0.45f }, Owner.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXWeaponFullChargedFire1, GunTip);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXWeaponFullChargedFire2, Owner.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.EXWeaponFullChargedFire3, Owner.Center);
         }
 
         private void FireBarrageVolley()

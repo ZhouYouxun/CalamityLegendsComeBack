@@ -38,25 +38,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             readyBurstPlayed = true;
             rightOutlinePulseTimer = RightOutlinePulseFrames + 15;
 
-            SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.6f, Pitch = 0.25f }, GunTipPosition);
-            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.4f, Pitch = -0.15f }, GunTipPosition);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightChargeReadyBurst1, GunTipPosition);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightChargeReadyBurst2, GunTipPosition);
         }
 
         private void PlayBreakthroughArrowLoadedBurst()
         {
-            SoundEngine.PlaySound(SoundID.Item108 with { Volume = 0.22f, Pitch = 0.35f }, GunTipPosition);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightBreakthroughArrowLoaded, GunTipPosition);
         }
 
         private void PlayRightReleaseSound()
         {
             if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
             {
-                SoundStyle bombardFire = new("CalamityMod/Sounds/Item/LauncherHeavyShot");
-                SoundEngine.PlaySound(bombardFire with { Volume = 0.82f, Pitch = -0.08f, PitchVariance = 0.08f }, GunTipPosition);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightReleaseBombard, GunTipPosition);
             }
             else
             {
-                SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.72f, Pitch = -0.05f }, GunTipPosition);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightReleaseOthers, GunTipPosition);
             }
         }
 

@@ -1576,13 +1576,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/StarProj";
 
+        private const float HomingRange = 1200f;
+        private const float MaxSpeed = 28f;
+        private const int HomingDelay = 60; // 5 times longer delay before homing starts
+        private const float HomingInertia = 30f; // Lazy steering inertia
+        private const float FreeFlightDamping = 0.995f;
+        private const float NoTargetDamping = 0.99f;
+        private const float WanderingTurnStrength = 0.005f;
+
+        private int timer;
+
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 16;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = 240; // Increased to allow time for lazy drift and chase
             Projectile.tileCollide = false; // Prevent hitting blocks while flying out/homing
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 2; // Snappy extra updates
@@ -1590,22 +1600,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void AI()
         {
-            NPC target = PristineFuryTargeting.FindTarget(Projectile.Center, 1200f, Main.player[Projectile.owner]);
-            if (target != null)
-            {
-                float speed = Projectile.velocity.Length();
-                if (speed < 12f) speed = 12f;
-                speed = Math.Min(speed + 0.35f, 32f); // Rapidly accelerate up to 32f
+            timer++;
 
-                Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center) * speed;
-                // High responsiveness / low inertia (lerp factor 0.32f) for aggressive tracking
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.32f);
-            }
-            else
-            {
-                // Drift slightly
-                Projectile.velocity *= 0.985f;
-            }
+            HomeTowardTarget();
 
             Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.PiOver2;
 
@@ -1635,6 +1632,55 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     ));
                 }
             }
+        }
+
+        private void HomeTowardTarget()
+        {
+            if (timer <= HomingDelay)
+            {
+                FreeDrift();
+                return;
+            }
+
+            NPC target = PristineFuryTargeting.FindTarget(Projectile.Center, HomingRange, Main.player[Projectile.owner]);
+            if (target == null)
+            {
+                FreeDrift(NoTargetDamping);
+                return;
+            }
+
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+
+            if (currentSpeed < 0.1f)
+                currentVelocity = Projectile.SafeDirectionTo(target.Center) * 4f;
+
+            Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center);
+
+            // Transition pull strength from 0.2 to 1.0 slowly over 60 updates
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 60f, timer, true);
+            float closePressure = Utils.GetLerpValue(360f, 80f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.2f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+
+            float targetSpeed = MathHelper.Lerp(12f, MaxSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            // Lazy tracking: merge current velocity with desired velocity using inertia
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+
+            // Gentle wandering side sway
+            float sideSway = (float)Math.Sin((timer + Projectile.identity * 7f) * 0.06f) *
+                MathHelper.Lerp(0.01f, 0.003f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxSpeed;
+        }
+
+        private void FreeDrift(float damping = FreeFlightDamping)
+        {
+            float wander = (float)Math.Sin((timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -76,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.35f, Pitch = 0.2f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightBreakthroughTileCollide, Projectile.Center);
             if (ConfiguredPenetrate != 0f)
             {
                 SpawnBreakthroughImpactFX(Projectile.Center, 1.25f);
@@ -103,7 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.netUpdate = true;
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_ABreak, 12, 0.9f, 3.4f, 0.8f, 1.2f);
             SpawnBreakthroughImpactFX(Projectile.Center, 1.1f);
-            SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.22f, Pitch = 0.25f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightBreakthroughProjHit, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)

@@ -138,7 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 rightPresetText + "\n\n" +
                 formWheelHint + "\n\n" +
                 passiveText + "\n\n" +
-                exHint + "\n\n";
+                exHint + "\n";
 
             tooltips.FindAndReplace("[GFB]", merged);
             tooltips.Add(new TooltipLine(Mod, "BlossomFluxForestLegendaryText", legendarySection));

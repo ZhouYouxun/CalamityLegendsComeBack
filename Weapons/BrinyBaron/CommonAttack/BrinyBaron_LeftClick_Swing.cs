@@ -42,6 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float RightSpinMaxEmpowerment = 180f;
 
         private int comboIndex;
+        private int onHitSpawnsCount;
         private int currentStage;
         private int stageTimer;
         private int gapTimer;
@@ -214,6 +215,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void StartStage()
         {
+            onHitSpawnsCount = 0;
             StageProfile profile = GetStageProfile(comboIndex % ComboLength);
             stageActive = true;
             currentStage = comboIndex % ComboLength;
@@ -359,14 +361,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     break;
                 case ComboKind.Stage3_FiveParallelSeafoam:
                     SpawnFiveParallelSeafoams();
+                    SpawnFormalWave(faster: false);
                     ApplyScreenShake(3.5f);
                     break;
                 case ComboKind.Stage3_TenSeaSpirits:
                     SpawnTenStage3SeaSpirits();
+                    SpawnFormalWave(faster: false);
                     ApplyScreenShake(2.8f);
                     break;
                 case ComboKind.Stage3_FiveShurikens:
                     SpawnFiveShurikens();
+                    SpawnFormalWave(faster: false);
                     ApplyScreenShake(3f);
                     break;
                 case ComboKind.Stage3_EnhancedWave:
@@ -376,6 +381,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     break;
                 case ComboKind.Stage4_TenSeaSpirits:
                     SpawnTenStage4SeaSpirits();
+                    SpawnFormalWave(faster: false);
                     ApplyScreenShake(3f);
                     break;
             }
@@ -467,7 +473,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private void SpawnFiveParallelSeafoams()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            float speed = 18f;
+            float speed = 18f * 2.5f;
             float spacing = 20f;
             Vector2 perp = shootDirection.RotatedBy(MathHelper.PiOver2);
             for (int i = -2; i <= 2; i++)
@@ -600,7 +606,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Math.Max(1, (int)(Projectile.damage * 0.68f)),
                 Projectile.knockBack,
                 Projectile.owner,
-                1.42f,
+                2.35f,
                 3f); // ai[1] = 3f sets SpawnStage to 3 (Post Moon Lord)
         }
 
@@ -919,6 +925,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinSmear = null;
         }
 
+        private Vector2 GetBladeTip()
+        {
+            Vector2 slashDirection = SlashAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            float bladeReach = (BaseHitboxOutset + BaseHitboxSize.X * 0.38f) * Projectile.scale;
+            return Owner.MountedCenter + slashDirection * bladeReach;
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            Vector2 bladeStart = Owner.MountedCenter;
+            Vector2 bladeEnd = GetBladeTip();
+            float collisionPoint = 0f;
+            return Collision.CheckAABBvLineCollision(
+                targetHitbox.TopLeft(),
+                targetHitbox.Size(),
+                bladeStart,
+                bladeEnd,
+                38f * Projectile.scale,
+                ref collisionPoint);
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Frostburn, 180);
@@ -928,31 +955,39 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (!rightSpinActive)
             {
                 int growthStage = CurrentGrowthStage;
-                if (growthStage > 1)
+                if (growthStage > 1 && onHitSpawnsCount < 3)
                 {
+                    bool spawnedSomething = false;
+
                     SpawnTrueMeleeTyphoon(target);
-                }
+                    spawnedSomething = true;
 
-                if (growthStage >= 4)
-                {
-                    // Release a burst of 8 Sea Spirits with sin-wave homing on melee hits
-                    for (int i = 0; i < 8; i++)
+                    if (growthStage >= 4)
                     {
-                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                        float speed = Main.rand.NextFloat(8f, 12f);
-                        Vector2 velocity = angle.ToRotationVector2() * speed;
+                        // Release a burst of 8 Sea Spirits with sin-wave homing on melee hits
+                        for (int i = 0; i < 8; i++)
+                        {
+                            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                            float speed = Main.rand.NextFloat(8f, 12f);
+                            Vector2 velocity = angle.ToRotationVector2() * speed;
 
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Center,
-                            velocity,
-                            ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
-                            Math.Max(1, (int)(Projectile.damage * 0.35f)),
-                            Projectile.knockBack * 0.3f,
-                            Projectile.owner,
-                            5f, // ai[0] = 5f: Stage 4/5 melee-spawned
-                            1f  // ai[1] = 1f: enable sin wave movement
-                        );
+                            Projectile.NewProjectile(
+                                Projectile.GetSource_FromThis(),
+                                target.Center,
+                                velocity,
+                                ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                                Math.Max(1, (int)(Projectile.damage * 0.35f)),
+                                Projectile.knockBack * 0.3f,
+                                Projectile.owner,
+                                5f, // ai[0] = 5f: Stage 4/5 melee-spawned
+                                1f  // ai[1] = 1f: enable sin wave movement
+                            );
+                        }
+                    }
+
+                    if (spawnedSomething)
+                    {
+                        onHitSpawnsCount++;
                     }
                 }
             }

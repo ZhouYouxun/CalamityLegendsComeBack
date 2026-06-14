@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
@@ -94,80 +94,104 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             }
         }
 
-        private static void SpawnMainExplosion(Projectile projectile)
+        private static void SpawnFrightExplosions(Projectile projectile)
         {
-            int explosionIndex = Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<NewLegendSHPE>(),
-                System.Math.Max(1, (int)(GetSplitDamage(projectile) * 2.5f)),
-                projectile.knockBack,
-                projectile.owner);
+            int numExplosions = Main.rand.Next(5, 8); // 5 to 7
+            List<Vector2> placedCenters = new();
 
-            if (!Main.projectile.IndexInRange(explosionIndex))
-                return;
-
-            Projectile explosion = Main.projectile[explosionIndex];
-            int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
-            explosion.Resize(explosionSize, explosionSize);
-            explosion.Center = projectile.Center;
-            explosion.DamageType = DamageClass.Magic;
-            explosion.netUpdate = true;
-        }
-
-        private static void SpawnSecondaryProjectiles(Projectile projectile)
-        {
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            List<float> usedAngles = new(SecondaryCount);
-            int remainingSplits = SplitCount;
-
-            for (int i = 0; i < SecondaryCount; i++)
+            // 1. 优先以敌人为中心进行产生 (锁敌范围为 50 格方块，即 800 像素)
+            float detectRange = 800f;
+            List<NPC> targetNPCs = new();
+            foreach (NPC npc in Main.npc)
             {
-                float angle = PickSecondaryAngle(usedAngles);
-                usedAngles.Add(angle);
-
-                Vector2 direction = forward.RotatedBy(angle).SafeNormalize(forward);
-                int slotsLeft = SecondaryCount - i;
-                int splitCount = System.Math.Max(1, remainingSplits / slotsLeft);
-                remainingSplits -= splitCount;
-                float travelDistance = Main.rand.NextFloat(8f * 16f, 14f * 16f);
-                float speed = 11.5f;
-
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center + direction * 18f,
-                    direction * speed,
-                    ModContent.ProjectileType<BossSoulofFright_SecondarySoul>(),
-                    (int)(projectile.damage * 1.13),
-                    projectile.knockBack,
-                    projectile.owner,
-                    splitCount,
-                    travelDistance);
-            }
-        }
-
-        private static float PickSecondaryAngle(List<float> usedAngles)
-        {
-            for (int attempt = 0; attempt < 80; attempt++)
-            {
-                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                bool valid = true;
-
-                foreach (float usedAngle in usedAngles)
+                if (npc.active && !npc.friendly && npc.CanBeChasedBy(projectile) && Vector2.Distance(npc.Center, projectile.Center) <= detectRange)
                 {
-                    if (System.Math.Abs(MathHelper.WrapAngle(angle - usedAngle)) < MathHelper.PiOver4)
+                    targetNPCs.Add(npc);
+                }
+            }
+
+            // 按距离排序，优先选择较近的敌人
+            targetNPCs.Sort((n1, n2) => Vector2.Distance(n1.Center, projectile.Center).CompareTo(Vector2.Distance(n2.Center, projectile.Center)));
+
+            foreach (NPC npc in targetNPCs)
+            {
+                if (placedCenters.Count >= numExplosions)
+                    break;
+
+                Vector2 candidate = npc.Center;
+                bool overlap = false;
+                foreach (Vector2 placed in placedCenters)
+                {
+                    if (Vector2.Distance(candidate, placed) < 224f) // 边长 224，因此最小距离保持在 224
                     {
-                        valid = false;
+                        overlap = true;
                         break;
                     }
                 }
 
-                if (valid)
-                    return angle;
+                if (!overlap)
+                {
+                    placedCenters.Add(candidate);
+                }
             }
 
-            return usedAngles.Count * MathHelper.TwoPi / SecondaryCount;
+            // 2. 如果爆炸位置不足，在弹幕周围随机生成，同时确保不重叠
+            int attempts = 0;
+            while (placedCenters.Count < numExplosions && attempts < 150)
+            {
+                attempts++;
+                Vector2 offset = Main.rand.NextVector2Circular(400f, 400f);
+                if (offset.Length() < 90f)
+                    offset = offset.SafeNormalize(Vector2.UnitY) * 90f;
+
+                Vector2 candidate = projectile.Center + offset;
+
+                bool overlap = false;
+                foreach (Vector2 placed in placedCenters)
+                {
+                    if (Vector2.Distance(candidate, placed) < 224f)
+                    {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                if (!overlap)
+                {
+                    placedCenters.Add(candidate);
+                }
+            }
+
+            // 兜底逻辑：如果尝试后依然不够，至少放入中心点
+            if (placedCenters.Count == 0)
+            {
+                placedCenters.Add(projectile.Center);
+            }
+
+            // 3. 产生爆炸 (NewLegendSHPE) 弹幕并设置属性
+            int damage = (int)(projectile.damage * 1.5f);
+            foreach (Vector2 center in placedCenters)
+            {
+                int idx = Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<NewLegendSHPE>(),
+                    damage,
+                    projectile.knockBack,
+                    projectile.owner
+                );
+
+                if (Main.projectile.IndexInRange(idx))
+                {
+                    Projectile explosion = Main.projectile[idx];
+                    explosion.width = 224;
+                    explosion.height = 224;
+                    explosion.Center = center;
+                    explosion.DamageType = DamageClass.Magic;
+                    explosion.netUpdate = true;
+                }
+            }
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
@@ -176,8 +200,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             if (projectile.owner == Main.myPlayer)
             {
-                SpawnMainExplosion(projectile);
-                SpawnSecondaryProjectiles(projectile);
+                SpawnFrightExplosions(projectile);
             }
 
             // ===== 光粒子核心：中心炸亮，制造"灵魂爆裂"感 =====

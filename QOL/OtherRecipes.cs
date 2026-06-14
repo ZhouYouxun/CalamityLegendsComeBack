@@ -19,6 +19,19 @@ namespace CalamityLegendsComeBack.QOL
             recipe.AddIngredient(ItemID.ManaCrystal, 1);
             recipe.AddTile(TileID.WorkBenches);
             recipe.Register();
+
+            // 酸雨泪 (Caustic Tear)
+            // 1 Bottled Water (水瓶) @ Near Water (水旁)
+            if (ModLoader.TryGetMod("CalamityMod", out Mod calamity))
+            {
+                if (calamity.TryFind<ModItem>("CausticTear", out ModItem causticTear))
+                {
+                    Recipe causticTearRecipe = Recipe.Create(causticTear.Type);
+                    causticTearRecipe.AddIngredient(ItemID.BottledWater, 1);
+                    causticTearRecipe.AddCondition(Condition.NearWater);
+                    causticTearRecipe.Register();
+                }
+            }
         }
     }
 }

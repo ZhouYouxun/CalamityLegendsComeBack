@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CalamityMod;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
@@ -412,7 +412,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             healedTarget = true;
             SpawnTransferBurst(target.Center, 1.15f, true);
-            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.56f, Pitch = 0.38f }, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryTransfer, target.Center);
             Projectile.Kill();
         }
 

@@ -136,26 +136,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         private void SpawnEclipseBolt(float radius)
         {
             float levelProgress = Utils.GetLerpValue(1f, MaxLevel, Level, true);
-            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
             float spinDirection = Main.rand.NextBool() ? 1f : -1f;
             float spawnDistance = Main.rand.NextFloat(EclipseBoltSpawnDistance, EclipseBoltSpawnDistance + EclipseBoltSpawnDistanceJitter) + Level * 10f;
-            Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * spawnDistance;
 
-            int bolt = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawn,
-                Vector2.Zero,
-                ModContent.ProjectileType<DarksunFragmentEclipseBolt>(),
-                Math.Max(1, (int)(Projectile.damage * (0.24f + Level * 0.06f))),
-                Projectile.knockBack * 0.3f,
-                Projectile.owner,
-                Projectile.whoAmI,
-                spinDirection);
-
-            if (Main.projectile.IndexInRange(bolt))
+            for (int i = 0; i < 4; i++)
             {
-                Projectile eclipseBolt = Main.projectile[bolt];
-                eclipseBolt.localAI[0] = MathHelper.Lerp(36f, 23f, levelProgress);
+                float angle = baseAngle + i * MathHelper.PiOver2;
+                Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * spawnDistance;
+
+                int bolt = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawn,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<DarksunFragmentEclipseBolt>(),
+                    Math.Max(1, (int)(Projectile.damage * (0.24f + Level * 0.06f))),
+                    Projectile.knockBack * 0.3f,
+                    Projectile.owner,
+                    Projectile.whoAmI,
+                    spinDirection);
+
+                if (Main.projectile.IndexInRange(bolt))
+                {
+                    Projectile eclipseBolt = Main.projectile[bolt];
+                    eclipseBolt.localAI[0] = MathHelper.Lerp(36f, 23f, levelProgress);
+                }
             }
         }
 

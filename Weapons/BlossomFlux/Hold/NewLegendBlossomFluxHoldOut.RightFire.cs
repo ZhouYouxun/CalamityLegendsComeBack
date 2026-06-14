@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb && HasActiveBombardStrike())
             {
-                SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = -0.3f }, Owner.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.RightBombardStrikeBlocked, Owner.Center);
                 return;
             }
 
@@ -48,7 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             else
                 KillAimScopeProjectiles();
 
-            SoundEngine.PlaySound(SoundID.Item149 with { Volume = 0.55f, Pitch = -0.2f }, Projectile.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightBeginCharge, Projectile.Center);
         }
 
         private void UpdateRightChargeState(BFRightUIPlayer rightUIPlayer)
@@ -345,7 +345,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 breakthroughQueuedNoFalloff);
 
             SpawnSHPCLeftMuzzleParticles(spawnPosition, shootVelocity, CurrentPreset, 0.68f);
-            SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.28f, Pitch = 0.16f + breakthroughQueuedShotIndex * 0.04f }, spawnPosition);
+            BlossomFluxSounds.PlayRightBreakthroughQueuedFire(spawnPosition, breakthroughQueuedShotIndex);
 
             breakthroughQueuedShotIndex++;
             if (breakthroughQueuedShotIndex >= breakthroughQueuedShotCount)

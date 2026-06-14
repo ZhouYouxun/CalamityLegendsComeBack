@@ -168,13 +168,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             target.AddBuff(BuffID.Venom, 100);
             target.AddBuff(ModContent.BuffType<MiracleBlight>(), markedTarget ? 480 : 240);
 
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/PlagueSounds/PBGAttackSwitchShort") { Volume = 0.35f, Pitch = 0.05f }, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.LeftPlagueProjHit, target.Center);
         }
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/BEES/bees" + Main.rand.Next(1, 13)) { Volume = 0.45f, PitchVariance = 0.15f }, Projectile.Center);
+            BlossomFluxSounds.PlayLeftPlagueProjKill(Projectile.Center);
 
             for (int d = 0; d < 25; d++)
             {

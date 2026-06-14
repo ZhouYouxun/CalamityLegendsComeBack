@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const int BaseSize = 50;
         private const int StickyLifetime = 72;
         private static readonly int[] ShurikenPenetrates = { -1, -1, -1, -1 };
-        private static readonly int[] ShurikenStickySliceCounts = { 0, 4, 5, 6 };
+        private static readonly int[] ShurikenStickySliceCounts = { 4, 4, 5, 6 };
         private static readonly bool[] ShurikenDeathSpawnsShpcExplosion = { false, false, false, false };
         private static readonly bool[] ShurikenDeathSpawnsCrossLights = { false, false, false, false };
         private static readonly float[] ShurikenTideHomingRanges = { 900f, 1040f, 1180f, 1320f };
@@ -158,7 +158,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 return;
             }
 
-            if (!shurikenProfile.CanStick)
+            bool canStickToNPC = shurikenProfile.GrowthTier >= 1;
+            if (!canStickToNPC)
             {
                 Projectile.Kill();
                 return;
@@ -264,13 +265,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             tileStickForward = reader.ReadVector2();
         }
 
+        private bool IsHomingAllowed()
+        {
+            if (shurikenProfile.GrowthTier == 0) // Stage 1
+                return false;
+            if (shurikenProfile.GrowthTier == 1) // Stage 2
+                return TideEmpowered;
+            return true; // Stage 3 & 4
+        }
+
         private void HandleFlightMovement()
         {
-            bool homing = false;
-            if (shurikenProfile.GrowthTier == 1)
-                homing = TideEmpowered;
-            else if (shurikenProfile.GrowthTier >= 2)
-                homing = true;
+            bool homing = IsHomingAllowed();
+            Projectile.tileCollide = !homing;
 
             float homingRange = shurikenProfile.TideHomingRange;
             NPC target = homing ? FindNearestTarget(homingRange) : null;
