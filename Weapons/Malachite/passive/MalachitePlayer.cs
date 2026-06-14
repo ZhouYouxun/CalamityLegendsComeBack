@@ -1,10 +1,8 @@
 using CalamityLegendsComeBack.Accssory.MC.PeacockBox;
-using CalamityLegendsComeBack.Weapons.Malachite.passive;
 using CalamityMod;
 using CalamityMod.CalPlayer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -17,10 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
     {
         public const int DepletionBurstFrames = 90;
 
-        private readonly HashSet<int> grazedProjectileIds = new();
         private bool holdingMalachite;
         private bool wasHoldingMalachite;
-        private int grazeVisualCooldown;
         private int depletionBurstTimer;
         private int rightFeatherGenerationTimer;
 
@@ -37,8 +33,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             wasHoldingMalachite = false;
             depletionBurstTimer = 0;
             rightFeatherGenerationTimer = 0;
-            grazedProjectileIds.Clear();
-            grazeVisualCooldown = 0;
         }
 
         public override void PostUpdateEquips()
@@ -53,9 +47,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             if (depletionBurstTimer > 0)
                 depletionBurstTimer--;
-
-            if (grazeVisualCooldown > 0)
-                grazeVisualCooldown--;
 
             TryGenerateRightFeather();
 
@@ -76,9 +67,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
 
             ApplyShadowStepBonuses();
-
-            if (Player.whoAmI == Main.myPlayer)
-                UpdateGrazeDetection();
         }
 
         public void SetHoldingMalachite()
@@ -235,46 +223,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 : mouseWorld;
         }
 
-        private void UpdateGrazeDetection()
-        {
-            if (grazeVisualCooldown > 0)
-                return;
-
-            grazedProjectileIds.RemoveWhere(id => id < 0 || id >= Main.maxProjectiles || !Main.projectile[id].active);
-
-            Rectangle grazeBox = Player.Hitbox;
-            grazeBox.Inflate(42, 42);
-
-            foreach (Projectile projectile in Main.ActiveProjectiles)
-            {
-                if (!CanGrazeProjectile(projectile, grazeBox))
-                    continue;
-
-                grazedProjectileIds.Add(projectile.whoAmI);
-                AddStealthPoints(5f);
-                SpawnGrazeFeedback(projectile.Center);
-                return;
-            }
-        }
-
-        private bool CanGrazeProjectile(Projectile projectile, Rectangle grazeBox)
-        {
-            if (!projectile.active ||
-                !projectile.hostile ||
-                projectile.friendly ||
-                projectile.damage <= 0 ||
-                projectile.owner == Player.whoAmI ||
-                grazedProjectileIds.Contains(projectile.whoAmI))
-            {
-                return false;
-            }
-
-            if (projectile.Hitbox.Intersects(Player.Hitbox))
-                return false;
-
-            return projectile.Hitbox.Intersects(grazeBox);
-        }
-
         private void AddStealthPoints(float points)
         {
             CalamityPlayer calamity = Player.Calamity();
@@ -283,39 +231,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             float amount = calamity.rogueStealthMax * points / 100f;
             calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + amount, 0f, calamity.rogueStealthMax);
-        }
-
-        private void SpawnGrazeFeedback(Vector2 center)
-        {
-            if (grazeVisualCooldown <= 0)
-            {
-                grazeVisualCooldown = 10;
-                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.28f, Pitch = 0.55f }, Player.Center);
-                if (Player.whoAmI == Main.myPlayer)
-                {
-                    Projectile.NewProjectile(
-                        Player.GetSource_FromThis(),
-                        Player.Center,
-                        Main.rand.NextVector2CircularEdge(1f, 1f),
-                        ModContent.ProjectileType<MalachiteGrazeSlashVisual>(),
-                        0,
-                        0f,
-                        Player.whoAmI,
-                        Main.rand.NextFloat(MathHelper.TwoPi));
-                }
-            }
-
-            for (int i = 0; i < 6; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(10f, 10f),
-                    DustID.Terra,
-                    Main.rand.NextVector2Circular(2.4f, 2.4f),
-                    80,
-                    new Color(120, 255, 150),
-                    Main.rand.NextFloat(0.75f, 1.15f));
-                dust.noGravity = true;
-            }
         }
 
         private void OnSwitchToMalachite()

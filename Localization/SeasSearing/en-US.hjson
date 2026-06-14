@@ -33,6 +33,9 @@ Mods: {
 				SeasSearingThermonuclearWarhead.DisplayName: Abyssal Thermonuclear Warhead
 				SeasSearingNuclearDetonation.DisplayName: Deep-Sea Nuclear Disaster
 				SeasSearingFalloutRain.DisplayName: Radioactive Abyssal Rain
+				SSDeathPollutionCloud.DisplayName: Death Pollution Cloud
+				SSPollutionSpike.DisplayName: Abyssal Pollution Spike
+				SSPollutionVortex.DisplayName: Abyssal Pollution Vortex
 			}
 		}
 

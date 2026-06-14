@@ -31,10 +31,8 @@ Mods: {
 						'''
 					Passive:
 						'''
-						[c/9AFFC8:Passives while held:]
-						Phantom Blade: left and right stealth attacks only consume half stealth and restore 15 stealth points afterward.
-						Into Shadow: above 50% stealth, gain 15% movement speed.
-						Nimble Step: enables grazing; each graze grants 5 stealth points with a 10 frame cooldown.
+						[c/9AFFC8:Passive while held:]
+						Into Shadow: stealth attacks consume only half of your stealth and instantly restore 15 stealth points; while above 50% stealth, also gain 15% movement speed.
 						'''
 					LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
 					LegendaryText:

@@ -102,6 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             string left = this.GetLocalizedValue($"Left_{mark}");
             string right = this.GetLocalizedValue("RightClick");
             string hook = this.GetLocalizedValue("Hook");
+            string passive = this.GetLocalizedValue("Passive").TrimEnd('\r', '\n');
             string legendarySection = Main.keyState.PressingShift()
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
@@ -110,7 +111,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 intro + "\n\n" +
                 left + "\n\n" +
                 right + "\n" +
-                hook + "\n\n";
+                hook + "\n\n" +
+                passive + "\n\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, "PristineFuryHolyFireLegendaryText", legendarySection));

@@ -69,6 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             if (isReady)
             {
+                projectile.localAI[1] = 1f;
                 return true;
             }
 
@@ -96,13 +97,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             if (isReady)
             {
+                projectile.localAI[1] = 1f;
                 projectile.Kill();
             }
         }
 
-		// 死亡时炸出6个电火花
+		// 死亡时炸出6个电火花（仅在碰撞触发的死亡时爆炸，自然到期不炸）
 		public override void OnKill(Projectile projectile, Player owner, int timeLeft)
 		{
+            if (projectile.localAI[1] <= 0f)
+                return;
+
             PlayEnergyCoreExplosionSound(projectile.Center);
 
 			int count = 7;

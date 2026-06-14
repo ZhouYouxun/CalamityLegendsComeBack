@@ -31,6 +31,12 @@ Mods: {
 					Left_ExoThanatos: "[c/FFE05C:左键：三道塔纳托斯预警线缓慢收束，最终释放灭绝激光并撕出侧向激光。]"
 					Left_ExoAres: "[c/FF4C40:左键：阿瑞斯式普通激光从枪口高速全自动连射。]"
 					Left_Dragon: "[c/FFE05C:左键：龙息齐射会从慢速预热逐渐加快，进入短暂疯狂扫射，休息后循环。]"
+					Passive:
+						'''
+						[c/FF9340:被动（火尾）：]
+						玩家背后伸出三条火狐尾，持续造成高频伤害。
+						伤害继承武器直接面板，命中冷却为 10 帧。
+						'''
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
 					LegendaryText:

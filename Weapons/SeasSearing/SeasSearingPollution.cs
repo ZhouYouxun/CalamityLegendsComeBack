@@ -26,17 +26,60 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public const int HighStackSpreadThreshold = 12;
         public const int PracticalStackLimit = 9999;
 
+        // Normal NPC grade thresholds (stacks required for each grade 1-5)
+        private static readonly int[] NormalThresholds = { 10, 28, 55, 95, 150 };
+        // Boss/worm grade thresholds
+        private static readonly int[] BossThresholds = { 25, 65, 130, 220, 350 };
+
         private int pollutionTimeLeft;
         private int pollutionStacks;
         private int pollutionOwner = -1;
         private int spreadCooldown;
         private int pressureExposureTimer;
         private float visualPulse;
+        private bool useHighThresholds;
 
         public override bool InstancePerEntity => true;
 
         public int PollutionStacks => pollutionTimeLeft > 0 ? pollutionStacks : 0;
         public int PollutionOwner => pollutionOwner;
+
+        public int GetGrade()
+        {
+            int stacks = PollutionStacks;
+            if (stacks <= 0)
+                return 0;
+
+            int[] thresholds = useHighThresholds ? BossThresholds : NormalThresholds;
+            for (int i = thresholds.Length - 1; i >= 0; i--)
+            {
+                if (stacks >= thresholds[i])
+                    return i + 1;
+            }
+
+            return 0;
+        }
+
+        // Returns 0..1 fill fraction within current grade (for UI bar)
+        public float GetGradeFillFraction()
+        {
+            int stacks = PollutionStacks;
+            if (stacks <= 0)
+                return 0f;
+
+            int[] thresholds = useHighThresholds ? BossThresholds : NormalThresholds;
+            int grade = GetGrade();
+
+            if (grade <= 0)
+                return MathHelper.Clamp(stacks / (float)thresholds[0], 0f, 1f);
+
+            if (grade >= thresholds.Length)
+                return 1f;
+
+            int lower = thresholds[grade - 1];
+            int upper = thresholds[grade];
+            return MathHelper.Clamp((stacks - lower) / (float)(upper - lower), 0f, 1f);
+        }
 
         public void ApplyPollution(NPC npc, int owner, int amount, int duration = PollutionDuration, bool fromSpread = false)
         {
@@ -110,8 +153,37 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             return detonated;
         }
 
+        public override void OnKill(NPC npc)
+        {
+            int stacks = PollutionStacks;
+            if (stacks <= 0 || Main.myPlayer != pollutionOwner)
+                return;
+
+            int grade = GetGrade();
+            if (grade <= 0)
+                return;
+
+            float cloudRadius = MathHelper.Clamp(80f + grade * 28f + stacks * 0.8f, 100f, 280f);
+            int cloudDuration = Math.Clamp(120 + grade * 55, 180, 480);
+
+            Projectile.NewProjectile(
+                npc.GetSource_Death(),
+                npc.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<SSDeathPollutionCloud>(),
+                Math.Max(1, (int)(cloudRadius * 0.4f)),
+                0f,
+                pollutionOwner,
+                stacks,
+                (float)cloudDuration);
+
+            SeasSearingVisualUtility.SpawnGradeBurst(npc.Center, grade, 12 + grade * 4);
+        }
+
         public override void PostAI(NPC npc)
         {
+            useHighThresholds = npc.boss || HasWormSegments(npc);
+
             if (pollutionTimeLeft <= 0)
             {
                 pollutionStacks = 0;
@@ -143,15 +215,27 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void UpdateLifeRegen(NPC npc, ref int damage)
         {
-            if (PollutionStacks <= 0)
+            int grade = GetGrade();
+            if (grade <= 0)
                 return;
 
-            int dot = Math.Min(240, 8 + PollutionStacks / 2);
+            // Grade 1→18 HP/s, 2→35, 3→65, 4→110, 5→180
+            // lifeRegen is in half-HP-per-second units
+            int dot = grade switch
+            {
+                1 => 36,
+                2 => 70,
+                3 => 130,
+                4 => 220,
+                5 => 360,
+                _ => 0
+            };
+
             if (npc.lifeRegen > 0)
                 npc.lifeRegen = 0;
 
             npc.lifeRegen -= dot;
-            damage = Math.Max(damage, Math.Max(2, dot / 8));
+            damage = Math.Max(damage, dot / 2);
         }
 
         public override void DrawEffects(NPC npc, ref Color drawColor)
@@ -159,21 +243,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (PollutionStacks <= 0 && visualPulse <= 0f)
                 return;
 
+            int grade = GetGrade();
             float intensity = Math.Max(GetIntensity(), visualPulse);
-            Color color = SeasSearingPalette.PollutionColor(intensity);
-            drawColor = Color.Lerp(drawColor, color, 0.18f + intensity * 0.34f);
-            Lighting.AddLight(npc.Center, color.ToVector3() * (0.12f + intensity * 0.42f));
+            Color gradeColor = grade >= 1 ? SeasSearingPalette.GradeColor(grade) : SeasSearingPalette.DeepBlue;
+            Color pollColor = Color.Lerp(SeasSearingPalette.PollutionColor(intensity), gradeColor, MathHelper.Clamp((grade - 1) / 4f, 0f, 1f));
+
+            drawColor = Color.Lerp(drawColor, pollColor, 0.18f + intensity * 0.34f);
+            Lighting.AddLight(npc.Center, pollColor.ToVector3() * (0.12f + intensity * 0.42f));
 
             if (Main.dedServ || Main.rand.NextFloat() > 0.08f + intensity * 0.18f)
                 return;
 
+            int dustType = grade >= 4 ? DustID.Vortex : (grade >= 3 ? 89 : (Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald));
             Dust dust = Dust.NewDustPerfect(
                 npc.Center + Main.rand.NextVector2Circular(npc.width * 0.44f, npc.height * 0.44f),
-                Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald,
+                dustType,
                 -Vector2.UnitY.RotatedByRandom(0.7f) * Main.rand.NextFloat(0.35f, 1.4f),
                 145,
-                color,
-                Main.rand.NextFloat(0.55f, 1.05f));
+                Color.Lerp(pollColor, SeasSearingPalette.RadioactiveCyan, Main.rand.NextFloat(0.15f, 0.55f)),
+                Main.rand.NextFloat(0.55f, 1.05f + grade * 0.06f));
             dust.noGravity = true;
         }
 
@@ -252,6 +340,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void DetonateCarrier(NPC npc, Player owner, int baseDamage, Vector2 pulseOrigin)
         {
             int stacks = PollutionStacks;
+            int grade = GetGrade();
             bool worm = HasWormSegments(npc);
             int mode = worm ? 2 : npc.boss ? 1 : 0;
             int damage = ComputeDetonationDamage(baseDamage, stacks, mode);
@@ -266,14 +355,50 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 knockback,
                 owner.whoAmI,
                 stacks,
-                mode);
+                grade * 10 + mode);
 
             if (worm)
                 SpawnWormResonance(npc, owner, stacks);
             else if (!npc.boss)
                 SpreadOnDetonation(npc, owner, stacks);
 
-            SeasSearingVisualUtility.SpawnPressureRing(npc.Center, 4.8f + Math.Min(stacks, 80) * 0.035f, 10f, 34, SeasSearingPalette.RadioactiveCyan);
+            // Grade 3+: spawn pollution spike burst
+            if (grade >= 3 && Main.myPlayer == owner.whoAmI)
+            {
+                int spikeCount = grade == 3 ? 6 : (grade == 4 ? 10 : 14);
+                for (int i = 0; i < spikeCount; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / spikeCount + Main.rand.NextFloat(0.12f);
+                    Vector2 velocity = angle.ToRotationVector2() * (4f + grade * 1.5f);
+                    Projectile.NewProjectile(
+                        npc.GetSource_FromThis(),
+                        npc.Center,
+                        velocity,
+                        ModContent.ProjectileType<SSPollutionSpike>(),
+                        Math.Max(1, damage / 4),
+                        1.5f,
+                        owner.whoAmI,
+                        stacks,
+                        grade);
+                }
+            }
+
+            // Grade 4+: spawn rotating vortex
+            if (grade >= 4 && Main.myPlayer == owner.whoAmI)
+            {
+                Projectile.NewProjectile(
+                    npc.GetSource_FromThis(),
+                    npc.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<SSPollutionVortex>(),
+                    Math.Max(1, damage / 3),
+                    2.5f,
+                    owner.whoAmI,
+                    stacks,
+                    grade);
+            }
+
+            SeasSearingVisualUtility.SpawnPressureRing(npc.Center, 4.8f + Math.Min(stacks, 80) * 0.035f, 10f, 34, SeasSearingPalette.GradeColor(Math.Max(1, grade)));
             SeasSearingVisualUtility.ShakeAt(npc.Center, mode == 0 ? 3.6f : 7.2f);
             ClearPollution(npc);
         }
@@ -389,18 +514,24 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (Main.dedServ || PollutionStacks <= 0)
                 return;
 
+            int grade = GetGrade();
             int interval = PollutionStacks >= 45 ? 6 : PollutionStacks >= 20 ? 10 : 16;
             if (Main.GameUpdateCount % interval != 0)
                 return;
 
             float intensity = GetIntensity();
+            Color baseColor = grade >= 1
+                ? Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.GradeColor(grade), MathHelper.Clamp((grade - 1) / 3f, 0f, 1f))
+                : Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, intensity);
+
             Vector2 position = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.42f, npc.height * 0.42f);
+            int dustType = grade >= 3 ? 89 : DustID.Water;
             Dust bubble = Dust.NewDustPerfect(
                 position,
-                DustID.Water,
+                dustType,
                 -Vector2.UnitY.RotatedByRandom(0.9f) * Main.rand.NextFloat(0.35f, 1.35f),
                 120,
-                Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, intensity),
+                baseColor,
                 Main.rand.NextFloat(0.55f, 1.05f));
             bubble.noGravity = true;
         }

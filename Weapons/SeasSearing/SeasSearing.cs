@@ -23,6 +23,15 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SeasSearing/NewLegendSeasSearing";
 
+        // Stage 0 = pre-hardmode, 1 = hardmode, 2 = post-Plantera, 3 = post-Moonlord
+        public static int GetProgressionStage()
+        {
+            if (NPC.downedMoonlord) return 3;
+            if (NPC.downedPlantBoss) return 2;
+            if (Main.hardMode) return 1;
+            return 0;
+        }
+
         public override void SetStaticDefaults()
         {
             ItemID.Sets.ItemsThatAllowRepeatedRightClick[Type] = true;
@@ -44,8 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Item.knockBack = 5f;
             Item.UseSound = null;
             Item.shoot = HoldoutType;
-            Item.shootSpeed = 18f;
-            Item.useAmmo = AmmoID.Bullet;
+            Item.shootSpeed = 34f;
             Item.value = CalamityGlobalItem.RarityTurquoiseBuyPrice;
             Item.rare = ModContent.RarityType<Turquoise>();
         }
@@ -191,7 +199,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             }
 
             int totalPollution = SeasSearingPollutionNPC.CountPollutionForOwner(Player.whoAmI);
-            float pollutionFactor = MathHelper.Clamp(totalPollution / 160f, 0f, 1f);
+            float pollutionFactor = MathHelper.Clamp(totalPollution / 200f, 0f, 1f);
             PressureVisualPower = MathHelper.Lerp(PressureVisualPower, 0.32f + pollutionFactor * 0.68f, 0.08f);
             ApplyPressureField(pollutionFactor);
             EmitPressureAtmosphere(pollutionFactor);
@@ -263,7 +271,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 color,
                 Main.rand.NextFloat(0.55f, 1.05f));
             dust.noGravity = true;
-            dust.fadeIn = Main.rand.NextFloat(0.7f, 1.2f);
         }
     }
 
@@ -274,6 +281,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public static readonly Color PressureBlue = new(34, 120, 185);
         public static readonly Color RadioactiveCyan = new(88, 255, 218);
         public static readonly Color ToxicGreen = new(68, 210, 104);
+        public static readonly Color BiohazardLime = new(140, 255, 60);
         public static readonly Color FalloutAsh = new(90, 112, 120);
         public static readonly Color WarningOrange = new(255, 132, 48);
 
@@ -284,6 +292,16 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             return Color.Lerp(RadioactiveCyan, ToxicGreen, (completion - 0.45f) / 0.55f);
         }
+
+        public static Color GradeColor(int grade) => grade switch
+        {
+            1 => PressureBlue,
+            2 => RadioactiveCyan,
+            3 => ToxicGreen,
+            4 => BiohazardLime,
+            5 => new Color(210, 255, 140),
+            _ => DeepBlue
+        };
     }
 
     internal static class SeasSearingVisualUtility
@@ -339,6 +357,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     color,
                     Main.rand.NextFloat(0.75f, 1.2f));
                 dust.noGravity = true;
+            }
+        }
+
+        public static void SpawnGradeBurst(Vector2 center, int grade, int count)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color baseColor = SeasSearingPalette.GradeColor(grade);
+            for (int i = 0; i < count; i++)
+            {
+                int dustType = grade >= 4 ? DustID.Vortex : (grade >= 3 ? 89 : (Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald));
+                Vector2 velocity = Main.rand.NextVector2Circular(1f, 1f) * Main.rand.NextFloat(1.5f + grade * 0.8f, 3f + grade * 1.4f);
+                Dust d = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    dustType, velocity, 100,
+                    Color.Lerp(baseColor, SeasSearingPalette.RadioactiveCyan, Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.6f, 1.1f + grade * 0.1f));
+                d.noGravity = true;
             }
         }
 

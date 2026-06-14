@@ -33,6 +33,9 @@ Mods: {
 				SeasSearingThermonuclearWarhead.DisplayName: 深海热核弹
 				SeasSearingNuclearDetonation.DisplayName: 深海核灾变
 				SeasSearingFalloutRain.DisplayName: 放射性深渊雨
+				SSDeathPollutionCloud.DisplayName: 死亡污染云
+				SSPollutionSpike.DisplayName: 深渊污染尖刺
+				SSPollutionVortex.DisplayName: 深渊污染漩涡
 			}
 		}
 

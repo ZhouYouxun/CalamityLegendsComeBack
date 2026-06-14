@@ -31,6 +31,12 @@ Mods: {
 					Left_ExoThanatos: "[c/FFE05C:Left Click: three Thanatos telegraphs converge before a terminal extinction beam tears open side lasers.]"
 					Left_ExoAres: "[c/FF4C40:Left Click: rapid Ares laser beams fire continuously from the muzzle.]"
 					Left_Dragon: "[c/FFE05C:Left Click: dragon-breath volleys ramp from slow fire into a short frenzy, rest, then repeat.]"
+					Passive:
+						'''
+						[c/FF9340:Passive (Fire Tail):]
+						Three fox fire tails extend behind the player, continuously dealing rapid damage.
+						Damage inherits the weapon's stats directly, with a 10-frame per-target hit cooldown.
+						'''
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:

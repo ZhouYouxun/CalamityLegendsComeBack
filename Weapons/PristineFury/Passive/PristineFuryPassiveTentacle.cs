@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             Projectile.netImportant = false;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 15;
+            Projectile.localNPCHitCooldown = 10;
         }
 
         public override bool? CanDamage() => ActiveFlames ? null : false;
@@ -67,9 +67,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             Vector2 playerMovement = owner.position - owner.oldPosition;
             Projectile.position += playerMovement;
 
-            bool active = IsOwnerUsingPristineFury(owner);
-            ActiveState = active ? 1f : 0f;
-            Projectile.friendly = active;
+            ActiveState = 1f;
+            Projectile.friendly = true;
 
             Vector2 toIdle = idlePoint - Projectile.Center;
             Projectile.velocity += toIdle * 0.035f;
@@ -84,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             Lighting.AddLight(Vector2.Lerp(buttAnchor, Projectile.Center, 0.62f), new Vector3(0.36f, 0.08f, 0.1f));
 
-            if (!Main.dedServ && active)
+            if (!Main.dedServ)
                 EmitTentacleFlames(owner, buttAnchor);
         }
 
@@ -117,17 +116,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<HolyFlames>(), 120);
-
-        private static bool IsOwnerUsingPristineFury(Player owner)
-        {
-            if (owner.whoAmI == Main.myPlayer)
-            {
-                bool validMouse = !Main.mapFullscreen && !Main.blockMouse && !owner.mouseInterface;
-                return validMouse && (Main.mouseLeft || Main.mouseRight || owner.controlUseItem || owner.controlUseTile);
-            }
-
-            return owner.channel || owner.controlUseItem || owner.controlUseTile;
-        }
 
         private static float GetLeftClickDamageMultiplier(Player owner)
         {

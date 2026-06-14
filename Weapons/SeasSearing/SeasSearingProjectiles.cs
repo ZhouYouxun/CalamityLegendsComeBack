@@ -16,6 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private static readonly Color CoreColor = new(170, 255, 238);
         private static readonly Color TrailColor = new(26, 128, 190);
 
+        private int Stage => (int)Projectile.ai[1];
+
         public new string LocalizationCategory => "Projectiles.SeasSearing";
         public override string Texture => "Terraria/Images/Projectile_14";
 
@@ -33,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.penetrate = 1;
+            Projectile.penetrate = 2;
             Projectile.timeLeft = 540;
             Projectile.extraUpdates = 4;
             Projectile.usesLocalNPCImmunity = true;
@@ -43,23 +45,54 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
+            // Initialize penetrate from stage on first tick
+            if (Projectile.localAI[0] == 0f)
+            {
+                int stage = Stage;
+                Projectile.penetrate = stage >= 3 ? 4 : (stage >= 1 ? 3 : 2);
+                Projectile.netUpdate = true;
+            }
+
             Projectile.rotation = Projectile.velocity.ToRotation();
             Projectile.spriteDirection = Projectile.direction;
-            Lighting.AddLight(Projectile.Center, new Vector3(0.05f, 0.22f, 0.24f));
+
+            int stage2 = Stage;
+            Lighting.AddLight(Projectile.Center, stage2 >= 3
+                ? new Vector3(0.09f, 0.28f, 0.14f)
+                : new Vector3(0.05f, 0.22f, 0.24f));
 
             if (Projectile.localAI[0]++ < 2f)
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            if (Main.rand.NextBool(2))
+            bool emitDust = stage2 >= 2 ? Main.rand.NextBool() : Main.rand.NextBool(2);
+            if (emitDust)
             {
+                Color dustColor;
+                int dustType;
+                if (stage2 >= 3)
+                {
+                    dustColor = Color.Lerp(SeasSearingPalette.BiohazardLime, SeasSearingPalette.ToxicGreen, Main.rand.NextFloat());
+                    dustType = Main.rand.NextBool(3) ? DustID.Vortex : 89;
+                }
+                else if (stage2 == 2)
+                {
+                    dustColor = Main.rand.NextBool() ? CoreColor : SeasSearingPalette.BiohazardLime;
+                    dustType = Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald;
+                }
+                else
+                {
+                    dustColor = Main.rand.NextBool() ? CoreColor : SeasSearingPalette.ToxicGreen;
+                    dustType = Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald;
+                }
+
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + Main.rand.NextVector2Circular(1.5f, 1.5f),
-                    Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald,
+                    dustType,
                     -direction.RotatedByRandom(0.22f) * Main.rand.NextFloat(0.6f, 1.9f),
                     110,
-                    Main.rand.NextBool() ? CoreColor : SeasSearingPalette.ToxicGreen,
-                    Main.rand.NextFloat(0.45f, 0.78f));
+                    dustColor,
+                    Main.rand.NextFloat(0.45f, 0.78f + stage2 * 0.06f));
                 dust.noGravity = true;
             }
         }
@@ -76,6 +109,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             int stackAmount = hit.Crit ? 6 : 4;
             if (target.boss || target.realLife >= 0)
+                stackAmount += 1;
+            if (Stage >= 2)
+                stackAmount += 1;
+            if (Stage >= 3)
                 stackAmount += 1;
 
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, stackAmount);
@@ -97,6 +134,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 bloomOrigin = bloom.Size() * 0.5f;
 
+            int stage = Stage;
+            Color headColor = stage >= 3 ? SeasSearingPalette.BiohazardLime : CoreColor;
+            Color tailColor = stage >= 2
+                ? Color.Lerp(TrailColor, SeasSearingPalette.ToxicGreen, 0.55f)
+                : TrailColor;
+
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
@@ -104,14 +147,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Color color = Color.Lerp(TrailColor, CoreColor, completion) * (0.08f + completion * 0.42f);
+                Color color = Color.Lerp(tailColor, headColor, completion) * (0.08f + completion * 0.42f);
                 color.A = 0;
 
                 Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, Projectile.rotation, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(texture, drawPosition, null, color, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, (CoreColor with { A = 0 }) * 0.6f, Projectile.rotation, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, (headColor with { A = 0 }) * 0.6f, Projectile.rotation, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
@@ -186,7 +229,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private float blastRadius;
 
         private int Stacks => Math.Max(1, (int)Projectile.ai[0]);
-        private int Mode => (int)Projectile.ai[1];
+        // ai[1] = grade * 10 + mode
+        private int Grade => (int)Projectile.ai[1] / 10;
+        private int Mode => (int)Projectile.ai[1] % 10;
 
         public new string LocalizationCategory => "Projectiles.SeasSearing";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -213,8 +258,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 InitializeBlast();
 
             Projectile.velocity *= 0f;
+            int grade = Grade;
+            Color glowColor = grade >= 1 ? SeasSearingPalette.GradeColor(grade) : SeasSearingPalette.RadioactiveCyan;
             float completion = 1f - Projectile.timeLeft / 30f;
-            Lighting.AddLight(Projectile.Center, SeasSearingPalette.PollutionColor(1f - completion).ToVector3() * (0.35f + completion * 0.5f));
+            Lighting.AddLight(Projectile.Center, Color.Lerp(glowColor, SeasSearingPalette.ToxicGreen, completion * 0.5f).ToVector3() * (0.35f + completion * 0.5f));
 
             if (Projectile.timeLeft == 22 && Main.myPlayer == Projectile.owner && Stacks >= 18)
             {
@@ -232,19 +279,28 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.DefenseEffectiveness *= Mode == 0 ? 0.45f : 0.08f;
-            modifiers.ScalingArmorPenetration += Mode == 0 ? 0.12f : 0.38f;
+            int mode = Mode;
+            int grade = Grade;
+            modifiers.DefenseEffectiveness *= mode == 0 ? 0.45f : 0.08f;
+            modifiers.ScalingArmorPenetration += mode == 0 ? 0.12f : 0.38f;
 
-            if (Mode == 1)
+            if (mode == 1)
                 modifiers.FinalDamage *= 1f + MathHelper.Clamp(Stacks / 140f, 0f, 0.8f);
-            else if (Mode == 2)
+            else if (mode == 2)
                 modifiers.FinalDamage *= 1.22f;
+
+            if (grade >= 3)
+                modifiers.FinalDamage *= 1f + (grade - 2) * 0.12f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Venom, 360);
             target.AddBuff(ModContent.BuffType<Irradiated>(), 420);
+
+            int grade = Grade;
+            if (grade >= 2)
+                target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, grade * 3, 10 * 60, fromSpread: true);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -258,8 +314,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float opacity = (float)Math.Sin(completion * MathHelper.Pi);
             Vector2 center = Projectile.Center - Main.screenPosition;
 
+            int grade = Grade;
+            Color gradeColor = grade >= 1 ? SeasSearingPalette.GradeColor(grade) : SeasSearingPalette.RadioactiveCyan;
+            int mode = Mode;
+
             Color outer = (SeasSearingPalette.DeepBlue with { A = 0 }) * opacity;
-            Color inner = (SeasSearingPalette.RadioactiveCyan with { A = 0 }) * opacity;
+            Color inner = (gradeColor with { A = 0 }) * opacity;
             Color toxic = (SeasSearingPalette.ToxicGreen with { A = 0 }) * opacity;
             float scale = blastRadius / bloom.Width * (0.65f + completion * 0.85f);
 
@@ -267,8 +327,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Main.EntitySpriteDraw(bloom, center, null, inner * 0.58f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(scale * 1.1f, scale * 0.74f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(ring, center, null, toxic * 0.8f, Main.GlobalTimeWrappedHourly * 1.6f, ring.Size() * 0.5f, scale * 1.9f, SpriteEffects.None, 0);
 
-            if (Mode > 0)
+            if (mode > 0)
                 Main.EntitySpriteDraw(ring, center, null, (Color.White with { A = 0 }) * opacity * 0.44f, -Main.GlobalTimeWrappedHourly * 2.1f, ring.Size() * 0.5f, scale * 0.78f, SpriteEffects.None, 0);
+
+            if (grade >= 3)
+                Main.EntitySpriteDraw(ring, center, null, (gradeColor with { A = 0 }) * opacity * 0.62f, Main.GlobalTimeWrappedHourly * 2.8f, ring.Size() * 0.5f, scale * 2.6f, SpriteEffects.None, 0);
 
             return false;
         }
@@ -276,15 +339,21 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void InitializeBlast()
         {
             initialized = true;
-            blastRadius = MathHelper.Clamp(94f + Stacks * 3.4f, 130f, Mode == 0 ? 390f : 520f);
-            if (Mode == 2)
+            int mode = Mode;
+            int grade = Grade;
+            float gradeBonus = grade >= 1 ? grade * 18f : 0f;
+            blastRadius = MathHelper.Clamp(94f + Stacks * 3.4f + gradeBonus, 130f, mode == 0 ? 390f : 520f);
+            if (mode == 2)
                 blastRadius = MathHelper.Clamp(blastRadius + 120f, 260f, 650f);
 
             Vector2 center = Projectile.Center;
             Projectile.width = Projectile.height = Math.Max(12, (int)(blastRadius * 2f));
             Projectile.Center = center;
-            SeasSearingVisualUtility.SpawnAbyssDust(center, Mode == 0 ? 38 : 70, Mode == 0 ? 6f : 9f, Math.Min(blastRadius * 0.28f, 80f), Mode == 0 ? 1f : 1.35f);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = Mode == 0 ? 0.56f : 0.86f, Pitch = Mode == 0 ? -0.3f : -0.58f }, center);
+            SeasSearingVisualUtility.SpawnAbyssDust(center, mode == 0 ? 38 : 70, mode == 0 ? 6f : 9f, Math.Min(blastRadius * 0.28f, 80f), mode == 0 ? 1f : 1.35f);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = mode == 0 ? 0.56f : 0.86f, Pitch = mode == 0 ? -0.3f : -0.58f }, center);
+
+            if (grade >= 2)
+                SeasSearingVisualUtility.SpawnGradeBurst(center, grade, 18 + grade * 6);
         }
     }
 
@@ -349,6 +418,316 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             Main.EntitySpriteDraw(bloom, center, null, deep * 0.8f, 0f, bloom.Size() * 0.5f, new Vector2(Radius / bloom.Width * 2.2f, Radius / bloom.Height * 1.35f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(bloom, center, null, toxic * 0.18f, Main.GlobalTimeWrappedHourly, bloom.Size() * 0.5f, new Vector2(Radius / bloom.Width * 1.4f, Radius / bloom.Height * 0.9f), SpriteEffects.None, 0);
+            return false;
+        }
+    }
+
+    // Spawned on death of a polluted NPC; floats in place and inflicts pollution on contact
+    internal sealed class SSDeathPollutionCloud : ModProjectile, ILocalizedModType
+    {
+        private const int FrameCount = 10;
+
+        private int Stacks => (int)Projectile.ai[0];
+        private int Duration => (int)Projectile.ai[1];
+
+        private int CloudGrade
+        {
+            get
+            {
+                int s = Stacks;
+                if (s >= 150) return 5;
+                if (s >= 95) return 4;
+                if (s >= 55) return 3;
+                if (s >= 28) return 2;
+                if (s >= 10) return 1;
+                return 0;
+            }
+        }
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "CalamityMod/Projectiles/Boss/SandPoisonCloudOldDuke";
+
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Type] = FrameCount;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 70;
+            Projectile.height = 70;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 360;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 30;
+        }
+
+        public override void AI()
+        {
+            // Set size and duration on first frame
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                int grade = CloudGrade;
+                float radius = MathHelper.Clamp(50f + grade * 22f + Stacks * 0.5f, 65f, 180f);
+                Vector2 center = Projectile.Center;
+                Projectile.width = Projectile.height = (int)(radius * 2f);
+                Projectile.Center = center;
+                Projectile.timeLeft = Math.Max(Duration, 60);
+                Projectile.netUpdate = true;
+            }
+
+            // Gentle upward drift
+            Projectile.velocity.Y = MathHelper.Lerp(Projectile.velocity.Y, -0.38f, 0.04f);
+            Projectile.velocity.X *= 0.98f;
+
+            // Animate
+            if (++Projectile.frameCounter >= 4)
+            {
+                Projectile.frameCounter = 0;
+                if (++Projectile.frame >= FrameCount)
+                    Projectile.frame = 0;
+            }
+
+            float age = Projectile.timeLeft / (float)Math.Max(1, Duration);
+            int grade2 = CloudGrade;
+            Color gradeColor = grade2 >= 1 ? SeasSearingPalette.GradeColor(grade2) : SeasSearingPalette.ToxicGreen;
+            Lighting.AddLight(Projectile.Center, gradeColor.ToVector3() * (0.15f + (1f - age) * 0.1f));
+
+            if (!Main.dedServ && Main.rand.NextBool(4))
+            {
+                float radius = Projectile.width * 0.4f;
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(radius, radius),
+                    grade2 >= 3 ? 89 : DustID.GemEmerald,
+                    (-Vector2.UnitY + Main.rand.NextVector2Circular(0.5f, 0.5f)) * Main.rand.NextFloat(0.4f, 1.2f),
+                    140,
+                    Color.Lerp(gradeColor, SeasSearingPalette.DeepBlue, Main.rand.NextFloat(0.2f, 0.6f)),
+                    Main.rand.NextFloat(0.55f, 0.95f));
+                dust.noGravity = true;
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            int grade = CloudGrade;
+            int amount = Math.Max(1, grade * 2 + Stacks / 20);
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, amount, 12 * 60, fromSpread: true);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 240);
+            if (grade >= 3)
+                target.AddBuff(BuffID.Venom, 180);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            int frameH = texture.Height / FrameCount;
+            Rectangle frame = new(0, Projectile.frame * frameH, texture.Width, frameH);
+            Vector2 origin = frame.Size() * 0.5f;
+
+            int grade = CloudGrade;
+            Color gradeColor = grade >= 1 ? SeasSearingPalette.GradeColor(grade) : SeasSearingPalette.ToxicGreen;
+            float opacity = MathHelper.Clamp(Projectile.timeLeft / 60f, 0f, 1f) * MathHelper.Clamp(1f - (Projectile.timeLeft - 30f) / 30f, 0f, 1f);
+            opacity = MathHelper.Clamp(opacity, 0f, 0.85f);
+
+            float scale = Projectile.width / (float)(frameH * 2);
+            Color drawColor = Color.Lerp(Color.White, gradeColor, 0.55f) * opacity;
+
+            for (int i = 0; i < 3; i++)
+            {
+                float layerScale = scale * (0.85f + i * 0.12f);
+                float layerRot = Main.GlobalTimeWrappedHourly * (0.2f + i * 0.15f) * (i % 2 == 0 ? 1f : -1f);
+                Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, drawColor * (1f - i * 0.22f), layerRot, origin, layerScale, SpriteEffects.None, 0);
+            }
+
+            return false;
+        }
+    }
+
+    // Spawned on grade-3+ detonation in radial burst; flies outward and inflicts pollution
+    internal sealed class SSPollutionSpike : ModProjectile, ILocalizedModType
+    {
+        private int SpikeGrade => (int)Projectile.ai[1];
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "CalamityMod/Projectiles/Boss/OldDukeToothBallSpike";
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 26;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.tileCollide = true;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 220;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 14;
+        }
+
+        public override void AI()
+        {
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + 0.16f, 14f);
+
+            int grade = SpikeGrade;
+            Color spikeColor = SeasSearingPalette.GradeColor(grade);
+            Lighting.AddLight(Projectile.Center, spikeColor.ToVector3() * 0.22f);
+
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    89,
+                    -Projectile.velocity * 0.1f + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                    120,
+                    spikeColor,
+                    Main.rand.NextFloat(0.45f, 0.8f));
+                dust.noGravity = true;
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            int grade = SpikeGrade;
+            int amount = Math.Clamp(grade * 3, 4, 14);
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, amount, 10 * 60, fromSpread: true);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 240);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SeasSearingVisualUtility.SpawnGradeBurst(Projectile.Center, SpikeGrade, 8);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 origin = texture.Size() * 0.5f;
+            int grade = SpikeGrade;
+            Color gradeColor = SeasSearingPalette.GradeColor(grade);
+
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, (gradeColor with { A = 0 }) * 0.5f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.08f, 0.22f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Color.White, gradeColor, 0.42f), Projectile.rotation, origin, Projectile.scale * (0.9f + grade * 0.04f), SpriteEffects.None, 0);
+            return false;
+        }
+    }
+
+    // Spawned on grade-4+ detonation; rotates in area and inflicts heavy pollution
+    internal sealed class SSPollutionVortex : ModProjectile, ILocalizedModType
+    {
+        private const int Lifetime = 300;
+        private bool initialized;
+
+        private int VortexGrade => (int)Projectile.ai[1];
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "CalamityMod/Projectiles/Boss/OldDukeVortex";
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 120;
+            Projectile.height = 120;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 18;
+        }
+
+        public override void AI()
+        {
+            if (!initialized)
+            {
+                initialized = true;
+                int grade = VortexGrade;
+                float radius = MathHelper.Clamp(70f + grade * 20f, 90f, 160f);
+                Vector2 center = Projectile.Center;
+                Projectile.width = Projectile.height = (int)(radius * 2f);
+                Projectile.Center = center;
+                Projectile.netUpdate = true;
+            }
+
+            Projectile.velocity = Vector2.Zero;
+            Projectile.rotation += 0.028f;
+
+            float age = 1f - Projectile.timeLeft / (float)Lifetime;
+            int grade2 = VortexGrade;
+            Color vortexColor = SeasSearingPalette.GradeColor(grade2);
+            Lighting.AddLight(Projectile.Center, vortexColor.ToVector3() * (0.25f + age * 0.15f));
+
+            // Pull nearby enemies toward center
+            float pullRadius = Projectile.width * 1.4f;
+            float pullRadiusSq = pullRadius * pullRadius;
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.active || !npc.CanBeChasedBy())
+                    continue;
+                if (Vector2.DistanceSquared(npc.Center, Projectile.Center) > pullRadiusSq)
+                    continue;
+
+                Vector2 toCenter = (Projectile.Center - npc.Center).SafeNormalize(Vector2.Zero);
+                float strength = 1f - Vector2.Distance(npc.Center, Projectile.Center) / pullRadius;
+                float pull = MathHelper.Lerp(0.12f, 0.32f, strength);
+                if (npc.boss || npc.knockBackResist <= 0f)
+                    pull *= 0.2f;
+
+                npc.velocity += toCenter * pull;
+            }
+
+            // Ambient dust
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                float r = Projectile.width * 0.45f;
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 pos = Projectile.Center + angle.ToRotationVector2() * r;
+                Vector2 vel = (Projectile.Center - pos).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(0.5f, 2.2f);
+                vel = vel.RotatedBy(MathHelper.PiOver2 * Main.rand.NextFloat(-0.3f, 0.3f));
+                Dust d = Dust.NewDustPerfect(
+                    pos, DustID.Vortex, vel, 120,
+                    Color.Lerp(vortexColor, SeasSearingPalette.BiohazardLime, Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.55f, 0.9f));
+                d.noGravity = true;
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            int grade = VortexGrade;
+            int amount = Math.Clamp(grade * 4 + (int)Projectile.ai[0] / 12, 8, 22);
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, amount, 14 * 60, fromSpread: true);
+            target.AddBuff(BuffID.Venom, 360);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 420);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Vector2 origin = texture.Size() * 0.5f;
+            float age = 1f - Projectile.timeLeft / (float)Lifetime;
+            float fadeIn = MathHelper.Clamp(Projectile.timeLeft > Lifetime - 20 ? (Lifetime - Projectile.timeLeft) / 20f : 1f, 0f, 1f);
+            float fadeOut = MathHelper.Clamp(Projectile.timeLeft / 40f, 0f, 1f);
+            float opacity = fadeIn * fadeOut * 0.82f;
+
+            int grade = VortexGrade;
+            Color gradeColor = SeasSearingPalette.GradeColor(grade);
+            float drawScale = (Projectile.width / (float)texture.Width) * (0.85f + age * 0.15f);
+
+            Color drawColor = Color.Lerp(gradeColor, SeasSearingPalette.BiohazardLime, age * 0.45f) * opacity;
+            drawColor.A = (byte)(40 * opacity);
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, drawColor, Projectile.rotation, origin, drawScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, drawColor * 0.55f, -Projectile.rotation * 0.7f, origin, drawScale * 0.82f, SpriteEffects.None, 0);
             return false;
         }
     }

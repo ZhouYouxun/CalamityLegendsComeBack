@@ -15,7 +15,7 @@ Mods: {
 						'''
 					SHPC_Passive:
 						'''
-						[c/B8FF9E:Passive: Holding SHPC grants +100 maximum mana, and current mana receives the same temporary bonus; it is removed as soon as SHPC is no longer held.]
+						[c/B8FF9E:Passive (Resource Recovery): Holding SHPC grants +100 maximum mana, and current mana receives the same temporary bonus; it is removed as soon as SHPC is no longer held.]
 						[c/B8FF9E:Mana potions restore twice as much mana, and Mana Sickness duration is reduced to about one third.]
 						'''
 					SHPC_RightIntro1:
@@ -54,7 +54,7 @@ Mods: {
 					SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
 					SHPC_EXHint:
 						'''
-						[c/66CCFF:When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
+						[c/66CCFF:EX Skill (Super Laser): When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
 						[c/FFD966:Once fully charged, press [{0}] to activate the ultimate mode.]
 						[c/FF7043:After a brief charge, unleash a colossal laser that pierces through everything.]
 						'''

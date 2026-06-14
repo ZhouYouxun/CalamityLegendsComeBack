@@ -26,7 +26,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int rightChargeTimer;
         private int rightCooldownTimer;
         private int muzzleFlashTimer;
-        private int emptyClickCooldown;
         private int useAnimationTimer;
         private bool rightHeldLastFrame;
         private float recoilOffset;
@@ -186,21 +185,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void FirePollutionRound(int burstIndex)
         {
-            if (!Owner.PickAmmo(Owner.HeldItem, out _, out float shootSpeed, out int damage, out float knockback, out _))
-            {
-                if (emptyClickCooldown <= 0)
-                {
-                    SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.25f, Pitch = -0.35f }, Owner.Center);
-                    emptyClickCooldown = 16;
-                }
-
-                burstShotsRemaining = 0;
-                return;
-            }
+            int stage = SeasSearing.GetProgressionStage();
+            float shootSpeed = 34f + stage * 2.5f;
+            int damage = Projectile.damage;
+            float knockback = Owner.HeldItem.knockBack;
 
             Vector2 direction = AimDirection;
             float spread = MathHelper.ToRadians(0.65f + burstIndex * 0.22f);
-            Vector2 velocity = direction.RotatedByRandom(spread) * Math.Max(34f, shootSpeed * 2.18f);
+            Vector2 velocity = direction.RotatedByRandom(spread) * shootSpeed;
             int projectileIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 GunTipPosition + direction * 8f + Main.rand.NextVector2Circular(1.2f, 1.2f),
@@ -209,7 +201,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 damage,
                 knockback,
                 Projectile.owner,
-                burstIndex);
+                burstIndex,
+                stage);
 
             if (Main.projectile.IndexInRange(projectileIndex))
             {
@@ -295,9 +288,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (muzzleFlashTimer > 0)
                 muzzleFlashTimer--;
-
-            if (emptyClickCooldown > 0)
-                emptyClickCooldown--;
 
             if (useAnimationTimer > 0)
                 useAnimationTimer--;
