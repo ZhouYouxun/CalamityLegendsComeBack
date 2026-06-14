@@ -96,7 +96,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Timer++;
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
             Projectile.velocity *= 1.003f;
-            ApplyPeacockDartGravity(owner);
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, 0.08f, 0.42f, 0.16f);
             SpawnFlightDust();
@@ -277,7 +276,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Vector2 direction = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
             // 5 degrees is approximately 0.087266 radians. Spread range is -2.5 to 2.5 degrees (-0.043633 to 0.043633 radians).
             direction = direction.RotatedBy(Main.rand.NextFloat(-0.043633f, 0.043633f));
-            float speed = Main.rand.NextFloat(32f, 42f) * owner.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
+            float baseSpeed = MalachiteBalance.GetRightClickVelocity();
+            float speed = Main.rand.NextFloat(baseSpeed - 5f, baseSpeed + 5f) * owner.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
 
             Projectile.velocity = direction * speed + owner.velocity * 0.08f;
             Projectile.friendly = true;

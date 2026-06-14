@@ -129,20 +129,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 SpawnSnowCrystalParticle(position, velocity, Main.rand.NextFloat(0.74f, 1.08f), Main.rand.Next(30, 48));
             }
 
-            Vector2 sparkPosition = Projectile.Center - forward * Main.rand.NextFloat(5f, 20f) + right * Main.rand.NextFloat(-7f, 7f);
-            Particle glint = new GlowSparkParticle(
-                sparkPosition,
-                -forward * Main.rand.NextFloat(0.2f, 0.55f),
-                false,
-                Main.rand.Next(11, 18),
-                Main.rand.NextFloat(0.018f, 0.034f),
-                Color.Lerp(FrostGlass, FrostWhite, Main.rand.NextFloat(0.25f, 0.85f)) * 1.08f,
-                new Vector2(Main.rand.NextFloat(1.1f, 1.8f), Main.rand.NextFloat(0.34f, 0.58f)),
-                true,
-                false,
-                1.04f);
-            GeneralParticleHandler.SpawnParticle(glint);
-
             Particle mist = new MediumMistParticle(
                 Projectile.Center - forward * Main.rand.NextFloat(18f, 44f) + right * Main.rand.NextFloat(-14f, 14f),
                 -forward * Main.rand.NextFloat(0.01f, 0.06f) + right * Main.rand.NextFloat(-0.04f, 0.04f),
@@ -166,19 +152,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
 
         private static void SpawnIceNeedleParticle(Vector2 position, Vector2 velocity, Color color, float scale, int lifetime)
         {
-            Particle needle = new CustomSpark(
-                position,
-                velocity,
-                "CalamityMod/Particles/BloomLineSoftEdge",
-                false,
-                lifetime,
-                scale,
-                color,
-                new Vector2(Main.rand.NextFloat(2.25f, 3.35f), Main.rand.NextFloat(0.32f, 0.52f)),
-                true,
-                true,
-                shrinkSpeed: Main.rand.NextFloat(0.64f, 0.76f));
-            GeneralParticleHandler.SpawnParticle(needle);
+            //Particle needle = new CustomSpark(
+            //    position,
+            //    velocity,
+            //    "CalamityMod/Particles/BloomLineSoftEdge",
+            //    false,
+            //    lifetime,
+            //    scale,
+            //    color,
+            //    new Vector2(Main.rand.NextFloat(2.25f, 3.35f), Main.rand.NextFloat(0.32f, 0.52f)),
+            //    true,
+            //    true,
+            //    shrinkSpeed: Main.rand.NextFloat(0.64f, 0.76f));
+            //GeneralParticleHandler.SpawnParticle(needle);
         }
 
         private static void SpawnSnowCrystalParticle(Vector2 position, Vector2 velocity, float scale, int lifetime)
@@ -194,19 +180,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 Main.rand.NextFloat(1.08f, 1.48f),
                 6);
             GeneralParticleHandler.SpawnParticle(snowflakeSparkle);
-
-            Particle sparkle = new GlowSparkParticle(
-                position,
-                velocity * 0.45f,
-                false,
-                Math.Max(10, lifetime / 2),
-                Main.rand.NextFloat(0.012f, 0.022f),
-                Color.Lerp(FrostGlass, FrostWhite, Main.rand.NextFloat(0.35f, 0.9f)),
-                new Vector2(Main.rand.NextFloat(0.8f, 1.3f), Main.rand.NextFloat(0.36f, 0.58f)),
-                true,
-                false,
-                1.05f);
-            GeneralParticleHandler.SpawnParticle(sparkle);
         }
 
         public override bool PreDraw(ref Color lightColor) => false;
@@ -311,18 +284,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                     Vector2 direction = branchAngle.ToRotationVector2();
                     float speed = Main.rand.NextFloat(strong ? 2.4f : 1.4f, strong ? 5.2f : 3.3f);
 
-                    GlowSparkParticle ray = new(
-                        center + armDirection * Main.rand.NextFloat(2f, 8f),
-                        direction * speed,
-                        false,
-                        Main.rand.Next(strong ? 13 : 9, strong ? 20 : 15),
-                        Main.rand.NextFloat(0.016f, 0.032f),
-                        Color.Lerp(FrostBlue, FrostWhite, Main.rand.NextFloat(0.28f, 0.78f)),
-                        new Vector2(1.9f, 0.55f),
-                        true,
-                        false,
-                        1.04f);
-                    GeneralParticleHandler.SpawnParticle(ray);
                 }
 
                 Particle snowflake = new SnowflakeSparkle(

@@ -553,21 +553,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 ? Color.White
                 : Color.Lerp(themeColor, Color.Lerp(themeColor, Color.White, 0.5f), Main.rand.NextFloat(0.2f, 0.75f));
 
-            Particle spark = Main.rand.NextBool(3)
-                ? new SparkParticle(
-                    spawnPosition,
-                    pullVelocity,
-                    false,
-                    Main.rand.Next(13, 24),
-                    Main.rand.NextFloat(0.55f, 1.05f) * (0.75f + chargeRatio * 0.55f),
-                    particleColor)
-                : new PointParticle(
-                    spawnPosition,
-                    pullVelocity,
-                    false,
-                    Main.rand.Next(15, 26),
-                    Main.rand.NextFloat(0.72f, 1.18f) * (0.85f + chargeRatio * 0.4f),
-                    particleColor);
+            Particle spark = new SparkParticle(
+                spawnPosition,
+                pullVelocity,
+                false,
+                Main.rand.Next(13, 24),
+                Main.rand.NextFloat(0.55f, 1.05f) * (0.75f + chargeRatio * 0.55f),
+                particleColor);
 
             GeneralParticleHandler.SpawnParticle(spark);
 
@@ -756,6 +748,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             if (Timer == 1)
             {
+                // 记录发射方向，供 SpawnLilyBurst 判断激光朝向
+                Projectile.localAI[1] = Projectile.velocity.ToRotation();
+
                 float chargeLevel = Projectile.ai[1];
                 if (chargeLevel == 1f)
                 {
@@ -1048,18 +1043,25 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     GeneralParticleHandler.SpawnParticle(new SparkParticle(Projectile.Center, vel, false, Main.rand.Next(18, 42), Main.rand.NextFloat(0.88f, 1.95f), Main.rand.NextBool(4) ? Color.White : Color.Lerp(NovaRed, themeColor, Main.rand.NextFloat())));
                 }
 
-                int beamCount = chargeLevel == 3f ? 3 : 2;
-                float petalBase = Main.rand.NextFloat(MathHelper.TwoPi);
-                for (int i = 0; i < beamCount; i++)
+                // 视觉粒子条纹：跟随实际激光方向
+                Vector2 forward = Projectile.localAI[1].ToRotationVector2();
+                Vector2[] visualDirs = chargeLevel >= 3f
+                    ? new[] {
+                        (forward.ToRotation() + MathHelper.PiOver2).ToRotationVector2(),
+                        (forward.ToRotation() + MathHelper.PiOver2 + MathHelper.TwoPi / 3f).ToRotationVector2(),
+                        (forward.ToRotation() + MathHelper.PiOver2 + MathHelper.TwoPi * 2f / 3f).ToRotationVector2()
+                    }
+                    : new[] { forward };
+
+                foreach (Vector2 vDir in visualDirs)
                 {
-                    float angle = petalBase + MathHelper.TwoPi * i / (float)beamCount;
-                    int streakCount = chargeLevel == 3f ? 20 : 12;
+                    int streakCount = chargeLevel >= 3f ? 20 : 12;
                     for (int j = 0; j < streakCount; j++)
                     {
                         float t = j / (float)streakCount;
-                        Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(7f + t * 9f, 11f + t * 14f);
+                        Vector2 vel = vDir * Main.rand.NextFloat(7f + t * 9f, 11f + t * 14f);
                         GeneralParticleHandler.SpawnParticle(new PointParticle(
-                            Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(6f, 50f),
+                            Projectile.Center + vDir * Main.rand.NextFloat(6f, 50f),
                             vel, false, Main.rand.Next(22, 42),
                             Main.rand.NextFloat(0.85f, 1.42f),
                             Main.rand.NextBool(5) ? Color.White : Color.Lerp(NovaRed, themeColor, Main.rand.NextFloat(0.2f, 0.9f)), true));
@@ -1072,30 +1074,36 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Main.player[Projectile.owner].SetScreenshake(chargeLevel == 3f ? 10f : 6f);
             PristineFuryMark mark = (PristineFuryMark)(int)Projectile.ai[2];
-            float rotOffset = Main.rand.NextFloat(MathHelper.TwoPi);
-            
+
             float damageMult = chargeLevel == 3f ? 0.90f : 0.70f;
             float waveletDamageMult = chargeLevel == 3f ? 0.58f : 0.45f;
             int mainBeamDamage = Math.Max(1, (int)(Projectile.damage * damageMult));
             int waveletDamage = Math.Max(1, (int)(Projectile.damage * waveletDamageMult));
 
-            int finalBeamCount = chargeLevel == 3f ? 3 : 2;
-            for (int i = 0; i < finalBeamCount; i++)
-            {
-                float angle = rotOffset + MathHelper.TwoPi * i / (float)finalBeamCount;
-                Vector2 beamDir = angle.ToRotationVector2();
+            // 激光方向：最高级三道往旁边，次高级一道往正前方
+            Vector2 fwd = Projectile.localAI[1].ToRotationVector2();
+            Vector2[] beamDirs = chargeLevel >= 3f
+                ? new[] {
+                    (fwd.ToRotation() + MathHelper.PiOver2).ToRotationVector2(),
+                    (fwd.ToRotation() + MathHelper.PiOver2 + MathHelper.TwoPi / 3f).ToRotationVector2(),
+                    (fwd.ToRotation() + MathHelper.PiOver2 + MathHelper.TwoPi * 2f / 3f).ToRotationVector2()
+                }
+                : new[] { fwd };
 
+            foreach (Vector2 beamDir in beamDirs)
+            {
                 int beam = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, beamDir, ModContent.ProjectileType<PristineFuryLilyMainBeam>(), mainBeamDamage, Projectile.knockBack * 0.55f, Projectile.owner);
                 PFLeftEffectRules.ApplyTheme(beam, mark);
 
-                int waveletCount = chargeLevel == 3f ? Main.rand.Next(3, 6) : Main.rand.Next(2, 4);
+                // Wavelet 参数大幅增强：更大振幅、更快速度、更多数量
+                int waveletCount = chargeLevel >= 3f ? Main.rand.Next(5, 9) : Main.rand.Next(3, 6);
                 for (int j = 0; j < waveletCount; j++)
                 {
-                    float spread = Main.rand.NextFloat(-0.38f, 0.38f);
+                    float spread = Main.rand.NextFloat(-0.52f, 0.52f);
                     Vector2 wDir = beamDir.RotatedBy(spread);
-                    float freq = Main.rand.NextFloat(0.12f, 0.21f);
-                    float wAmp = Main.rand.NextFloat(9f, 15f);
-                    int wavelet = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, wDir * Main.rand.NextFloat(7f, 11f), ModContent.ProjectileType<PristineFuryLilyWavelet>(), waveletDamage, Projectile.knockBack * 0.25f, Projectile.owner, freq, wAmp);
+                    float freq = Main.rand.NextFloat(0.09f, 0.16f);
+                    float wAmp = Main.rand.NextFloat(48f, 88f); // 原 9~15，现大幅增加
+                    int wavelet = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, wDir * Main.rand.NextFloat(13f, 20f), ModContent.ProjectileType<PristineFuryLilyWavelet>(), waveletDamage, Projectile.knockBack * 0.25f, Projectile.owner, freq, wAmp);
                     PFLeftEffectRules.ApplyTheme(wavelet, mark);
                 }
             }
@@ -1356,18 +1364,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Main.dedServ)
                 return;
 
-            if ((int)Timer % 2 == 0)
-            {
-                Color sparkColor = PFLeftEffectRules.GetThemeColor(Projectile, LilyRed);
-                Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(BeamLength);
-                GeneralParticleHandler.SpawnParticle(new PointParticle(
-                    position + Main.rand.NextVector2Circular(6f, 6f),
-                    direction.RotatedByRandom(0.88f) * Main.rand.NextFloat(1.6f, 5.5f),
-                    false, Main.rand.Next(14, 26),
-                    Main.rand.NextFloat(0.92f, 1.55f),
-                    Main.rand.NextBool(5) ? Color.White : Color.Lerp(LilyRed, sparkColor, Main.rand.NextFloat()), true));
-            }
-
             if ((int)Timer % 3 == 0)
             {
                 Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(BeamLength);
@@ -1464,29 +1460,29 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         }
     }
 
-    // 正弦波动弹（百合副瓣）
+    // 正弦波动弹（百合副瓣）——围绕主激光大幅旋转摆动
     internal sealed class PristineFuryLilyWavelet : ModProjectile, ILocalizedModType
     {
-        private static readonly Color LilyRed = new(255, 54, 42);
+        private static readonly Color LilyRed    = new(255, 54, 42);
         private static readonly Color LilyOrange = new(255, 126, 42);
-        private const int Lifetime = 62;
+        private const int Lifetime = 110;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private ref float Timer => ref Projectile.localAI[0];
+        private ref float Timer    => ref Projectile.localAI[0];
         private ref float BaseAngle => ref Projectile.localAI[1];
         private ref float BaseSpeed => ref Projectile.localAI[2];
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 20;
+            ProjectileID.Sets.TrailCacheLength[Type] = 24;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 14;
+            Projectile.width = Projectile.height = 20;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 4;
@@ -1495,7 +1491,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 12;
+            Projectile.localNPCHitCooldown = 14;
         }
 
         public override void AI()
@@ -1504,11 +1500,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Timer == 1f)
             {
                 BaseAngle = Projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation();
-                BaseSpeed = Math.Max(Projectile.velocity.Length(), 5f);
+                BaseSpeed = Math.Max(Projectile.velocity.Length(), 8f);
             }
 
-            float frequency = Projectile.ai[0] > 0f ? Projectile.ai[0] : 0.15f;
-            float waveAmplitude = Projectile.ai[1] > 0f ? Projectile.ai[1] : 11f;
+            float frequency    = Projectile.ai[0] > 0f ? Projectile.ai[0] : 0.12f;
+            float waveAmplitude = Projectile.ai[1] > 0f ? Projectile.ai[1] : 60f;
             Vector2 baseDir = BaseAngle.ToRotationVector2();
             Vector2 perpDir = baseDir.RotatedBy(MathHelper.PiOver2);
             float waveVelocity = waveAmplitude * (float)Math.Cos(frequency * Timer);
@@ -1516,16 +1512,33 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Projectile.rotation = Projectile.velocity.ToRotation();
 
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, LilyOrange);
-            Lighting.AddLight(Projectile.Center, theme.ToVector3() * 0.42f);
+            Lighting.AddLight(Projectile.Center, theme.ToVector3() * 0.55f);
 
-            if (!Main.dedServ && Main.rand.NextBool(3))
+            if (Main.dedServ)
+                return;
+
+            // 飞行中持续生成发光粒子，营造螺旋轨迹感
+            if (Main.rand.NextBool(2))
             {
-                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
-                    -Projectile.velocity * Main.rand.NextFloat(0.03f, 0.07f),
-                    false, Main.rand.Next(8, 16),
-                    Main.rand.NextFloat(0.48f, 0.82f),
-                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.15f, 0.5f)), true));
+                    -Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                    false,
+                    Main.rand.Next(8, 16),
+                    Main.rand.NextFloat(0.22f, 0.42f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f)),
+                    true, false, true));
+            }
+
+            if ((int)Timer % 4 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.18f) + Main.rand.NextVector2Circular(1.2f, 1.2f),
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.32f, 0.65f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.2f, 0.6f))));
             }
         }
 
@@ -1541,13 +1554,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return false;
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D star  = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, LilyOrange);
+            Color themeA0 = theme with { A = 0 };
+            Color whiteA0 = Color.White with { A = 0 };
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float fade = Projectile.timeLeft / (float)Lifetime;
-            float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f + Projectile.identity * 0.55f);
+            float pulse = 0.88f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 11f + Projectile.identity * 0.55f);
 
             PFLeftEffectRules.BeginAdditive();
 
+            // 拖尾——大尺寸 bloom 渐退
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
@@ -1555,15 +1572,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 float completion = i / (float)Projectile.oldPos.Length;
                 Vector2 oldPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 Main.EntitySpriteDraw(bloom, oldPos, null,
-                    (theme with { A = 0 }) * (0.55f * (1f - completion) * fade),
+                    themeA0 * (0.65f * (1f - completion) * fade),
                     0f, bloom.Size() * 0.5f,
-                    MathHelper.Lerp(0.26f, 0.06f, completion), SpriteEffects.None, 0);
+                    MathHelper.Lerp(0.48f, 0.08f, completion), SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(bloom, drawPos, null, (theme with { A = 0 }) * (0.88f * fade) * pulse,
-                0f, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(bloom, drawPos, null, (Color.White with { A = 0 }) * (0.58f * fade),
-                0f, bloom.Size() * 0.5f, 0.11f, SpriteEffects.None, 0);
+            // 弹头主体——大 bloom + 白芯
+            Main.EntitySpriteDraw(bloom, drawPos, null, themeA0 * (1.05f * fade) * pulse,
+                0f, bloom.Size() * 0.5f, 0.52f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, drawPos, null, whiteA0 * (0.72f * fade),
+                0f, bloom.Size() * 0.5f, 0.22f, SpriteEffects.None, 0);
+
+            // 四棱星光
+            for (int i = 0; i < 4; i++)
+            {
+                float rot = Projectile.rotation + MathHelper.PiOver2 * i + Main.GlobalTimeWrappedHourly * (1.4f + i * 0.12f);
+                Main.EntitySpriteDraw(star, drawPos, null,
+                    themeA0 * (0.58f * fade) * pulse, rot,
+                    star.Size() * 0.5f,
+                    new Vector2(0.10f, 0.48f + fade * 0.22f),
+                    SpriteEffects.None, 0);
+            }
 
             PFLeftEffectRules.EndAdditive();
             return false;

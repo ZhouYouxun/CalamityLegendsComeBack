@@ -75,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             Projectile.velocity = direction * speed;
             Projectile.rotation = direction.ToRotation();
-            Projectile.Opacity = Utils.GetLerpValue(0f, 14f, Timer, true) * Utils.GetLerpValue(0f, 24f, Projectile.timeLeft, true);
+            Projectile.Opacity = Utils.GetLerpValue(0f, 3f, Timer, true) * Utils.GetLerpValue(0f, 24f, Projectile.timeLeft, true);
             Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * (0.45f + rushPower * 0.38f));
 
             UpdateSegments();
@@ -145,61 +145,81 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ)
                 return;
 
-            // 原本的火焰尘
-            if (Main.rand.NextBool(2))
+            Color theme = ThemeColor;
+            int themedDust = WorldGen.crimson ? DustID.Blood : DustID.Shadowflame;
+
             {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + Main.rand.NextVector2Circular(6f, 6f),
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center - direction * Main.rand.NextFloat(4f, 20f) + Main.rand.NextVector2Circular(7f, 7f),
                     Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch,
-                    -direction * Main.rand.NextFloat(0.5f, 1.8f) + Main.rand.NextVector2Circular(0.25f, 0.25f),
+                    -direction * Main.rand.NextFloat(0.5f, 2.2f) + Main.rand.NextVector2Circular(0.4f, 0.4f),
                     30,
-                    Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.04f, 0.24f)),
-                    Main.rand.NextFloat(0.6f, 1.05f));
-                dust.noGravity = true;
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.04f, 0.28f)),
+                    Main.rand.NextFloat(0.7f, 1.3f) * (1f + rushPower * 0.4f));
+                d.noGravity = true;
             }
 
-            // 新增恶鬼主题尘（猩红为血，腐化为暗影焰）
-            if (Main.rand.NextBool(2))
             {
-                int themedDustType = WorldGen.crimson ? DustID.Blood : DustID.Shadowflame;
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + Main.rand.NextVector2Circular(6f, 6f),
-                    themedDustType,
-                    -direction * Main.rand.NextFloat(0.3f, 1.2f) + Main.rand.NextVector2Circular(0.2f, 0.2f),
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center - direction * Main.rand.NextFloat(2f, 16f) + Main.rand.NextVector2Circular(8f, 8f),
+                    themedDust,
+                    -direction * Main.rand.NextFloat(0.4f, 1.8f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
                     100,
                     default,
-                    Main.rand.NextFloat(0.8f, 1.3f));
-                dust.noGravity = true;
+                    Main.rand.NextFloat(1f, 1.6f));
+                d.noGravity = true;
             }
 
-            // 增加 GlowOrb 粒子数量
-            if ((int)Timer % 3 == 0)
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                -direction * Main.rand.NextFloat(0.2f, 1.2f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                false,
+                Main.rand.Next(7, 13),
+                Main.rand.NextFloat(0.14f, 0.26f) * (1f + rushPower * 0.55f),
+                Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.06f, 0.28f)),
+                true,
+                false,
+                true));
+
+            if ((int)Timer % 5 == 0)
             {
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    -direction * Main.rand.NextFloat(0.3f, 1.0f) + Main.rand.NextVector2Circular(0.3f, 0.3f),
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.18f, 0.32f) * (1f + rushPower * 0.4f),
-                    Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.08f, 0.32f)),
-                    true,
-                    false,
-                    true));
+                int burstCount = 2 + (int)(rushPower * 2f);
+                for (int i = 0; i < burstCount; i++)
+                {
+                    Vector2 burst = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5.2f + rushPower * 3.5f);
+                    Color primary = WorldGen.crimson ? new Color(255, 55, 55) : new Color(195, 75, 255);
+                    GeneralParticleHandler.SpawnParticle(new CritSpark(
+                        Projectile.Center + Main.rand.NextVector2Circular(9f, 9f),
+                        burst,
+                        primary,
+                        Color.Lerp(theme, Color.White, 0.5f),
+                        Main.rand.NextFloat(0.3f, 0.6f) * (1f + rushPower * 0.5f),
+                        Main.rand.Next(6, 12)));
+                }
             }
 
-            // 新增定期辐射脉冲环，增强高级感
-            if ((int)Timer % 18 == 0)
+            if ((int)Timer % 4 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    -direction * Main.rand.NextFloat(1.2f, 4f) + Main.rand.NextVector2Circular(1f, 1f),
+                    false,
+                    Main.rand.Next(9, 17),
+                    Main.rand.NextFloat(0.3f, 0.65f),
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.2f, 0.6f))));
+            }
+
+            if ((int)Timer % 9 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     Projectile.Center,
                     Vector2.Zero,
-                    ThemeColor * 0.45f,
-                    Vector2.One * 0.35f,
+                    theme * (0.48f + rushPower * 0.22f),
+                    new Vector2(0.75f, 0.45f) * (1f + rushPower * 0.45f),
                     Projectile.rotation,
-                    0.04f,
-                    0.26f,
-                    16
-                ));
+                    0.022f,
+                    0.2f,
+                    13));
             }
         }
 

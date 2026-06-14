@@ -9,60 +9,25 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             "初始 / Initial",
             "击败克苏鲁之眼 / Eye of Cthulhu",
+            "击败吞噬者/克苏鲁之脑 / Eater of Worlds or Brain of Cthulhu",
+            "击败骷髅王 / Skeletron",
             "击败蜂王 / Queen Bee",
             "击败血肉墙 / Wall of Flesh",
             "击败任意机械 Boss / Any Mechanical Boss",
             "击败世纪之花 / Plantera",
+            "击败石巨人 / Golem",
             "击败瘟疫使者歌莉娅 / Plaguebringer Goliath",
             "击败月亮领主 / Moon Lord",
+            "击败神圣 / Providence",
             "击败噬魂幽花 / Polterghast",
-            "击败神明吞噬者 / Devourer of Gods"
+            "击败神明吞噬者 / Devourer of Gods",
+            "击败亚哈伦 / Yharon",
+            "击败机械异形 & 至高天灾 / Exo Mechs & Calamitas"
         };
 
-        // 左键基础伤害。数组顺序与 StageNames 完全一致。
-        private static readonly int[] LeftClickBaseDamage =
-        {
-            10, // 初始 / Initial
-            12, // 击败克苏鲁之眼 / Eye of Cthulhu
-            17, // 击败蜂王 / Queen Bee
-            27, // 击败血肉墙 / Wall of Flesh
-            40, // 击败任意机械 Boss / Any Mechanical Boss
-            54, // 击败世纪之花 / Plantera
-            82, // 击败瘟疫使者歌莉娅 / Plaguebringer Goliath
-            96, // 击败月亮领主 / Moon Lord
-            155, // 击败噬魂幽花 / Polterghast
-            185 // 击败神明吞噬者 / Devourer of Gods
-        };
-
-        // 右键基础伤害。数组顺序与 StageNames 完全一致。
-        private static readonly int[] RightClickBaseDamage =
-        {
-            10, // 初始 / Initial
-            12, // 击败克苏鲁之眼 / Eye of Cthulhu
-            17, // 击败蜂王 / Queen Bee
-            27, // 击败血肉墙 / Wall of Flesh
-            40, // 击败任意机械 Boss / Any Mechanical Boss
-            54, // 击败世纪之花 / Plantera
-            82, // 击败瘟疫使者歌莉娅 / Plaguebringer Goliath
-            96, // 击败月亮领主 / Moon Lord
-            155, // 击败噬魂幽花 / Polterghast
-            185 // 击败神明吞噬者 / Devourer of Gods
-        };
-
-        public int GetCompletedStageIndex() => BlossomFluxProgression.StageIndex;
-
-        public int GetLeftClickBaseDamage() => GetValueForStage(LeftClickBaseDamage, GetCompletedStageIndex());
-
-        public int GetRightClickBaseDamage() => GetValueForStage(RightClickBaseDamage, GetCompletedStageIndex());
-
-        private static int GetValueForStage(int[] values, int stageIndex)
-        {
-            if (values == null || values.Length == 0)
-                return 1;
-
-            int clampedIndex = Utils.Clamp(stageIndex, 0, values.Length - 1);
-            return System.Math.Max(1, values[clampedIndex]);
-        }
+        // 向后兼容旧调用方——直接从二维表读取
+        public int GetLeftClickBaseDamage()  => BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage);
+        public int GetRightClickBaseDamage() => BFBalanceTable.Get(BFStat.Breakthrough_Right_Damage);
     }
 }
 
@@ -790,16 +755,22 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
     internal enum BlossomFluxProgressionStage
     {
-        Start = 0,
-        EyeOfCthulhu = 1,
-        QueenBee = 2,
-        WallOfFlesh = 3,
-        MechBoss = 4,
-        Plantera = 5,
-        PlaguebringerGoliath = 6,
-        MoonLord = 7,
-        Polterghast = 8,
-        DevourerOfGods = 9
+        Start               = 0,
+        EyeOfCthulhu        = 1,
+        EaterOrBrain        = 2,
+        Skeletron           = 3,
+        QueenBee            = 4,
+        WallOfFlesh         = 5,
+        MechBoss            = 6,
+        Plantera            = 7,
+        Golem               = 8,
+        PlaguebringerGoliath = 9,
+        MoonLord            = 10,
+        Providence          = 11,
+        Polterghast         = 12,
+        DevourerOfGods      = 13,
+        Yharon              = 14,
+        ExoMechsAndCalamitas = 15
     }
 
     internal static class BlossomFluxProgression
@@ -844,32 +815,281 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (NPC.downedBoss1)
                 stage = BlossomFluxProgressionStage.EyeOfCthulhu;
-
+            if (NPC.downedBoss2)
+                stage = BlossomFluxProgressionStage.EaterOrBrain;
+            if (NPC.downedBoss3)
+                stage = BlossomFluxProgressionStage.Skeletron;
             if (NPC.downedQueenBee)
                 stage = BlossomFluxProgressionStage.QueenBee;
-
             if (Main.hardMode)
                 stage = BlossomFluxProgressionStage.WallOfFlesh;
-
             if (DownedAnyMechBoss())
                 stage = BlossomFluxProgressionStage.MechBoss;
-
             if (NPC.downedPlantBoss)
                 stage = BlossomFluxProgressionStage.Plantera;
-
+            if (NPC.downedGolemBoss)
+                stage = BlossomFluxProgressionStage.Golem;
             if (DownedBossSystem.downedPlaguebringer)
                 stage = BlossomFluxProgressionStage.PlaguebringerGoliath;
-
             if (NPC.downedMoonlord)
                 stage = BlossomFluxProgressionStage.MoonLord;
-
+            if (DownedBossSystem.downedProvidence)
+                stage = BlossomFluxProgressionStage.Providence;
             if (DownedBossSystem.downedPolterghast)
                 stage = BlossomFluxProgressionStage.Polterghast;
-
             if (DownedBossSystem.downedDoG)
                 stage = BlossomFluxProgressionStage.DevourerOfGods;
+            if (DownedBossSystem.downedYharon)
+                stage = BlossomFluxProgressionStage.Yharon;
+            if (DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas)
+                stage = BlossomFluxProgressionStage.ExoMechsAndCalamitas;
 
             return stage;
+        }
+    }
+}
+
+// ============================================================
+// 二维成长表
+// 横轴（列）= 16 个阶段，纵轴（行）= BFStat 枚举的各项数值
+// 未在此表中出现的数值在各自的 Balance 类里写死。
+// ============================================================
+namespace CalamityLegendsComeBack.Weapons.BlossomFlux
+{
+    internal enum BFStat
+    {
+        // 突击 Breakthrough
+        Breakthrough_Left_Damage      = 0,
+        Breakthrough_Left_UseInterval = 1,   // 连射帧间隔，越小越快
+        Breakthrough_Right_MaxArrows  = 2,   // 最大装填箭矢数
+        Breakthrough_Right_Damage     = 3,
+
+        // 复苏 Recovery
+        Recovery_Left_Damage          = 4,   // DNA 链式自动攻击单次伤害（攻击方式写死）
+        Recovery_Right_OrbCount       = 5,   // 蓄力释放的光球数量（治疗量/颗写死，蓄力时长写死 5s）
+
+        // 侦查 Recon
+        Recon_Left_Damage             = 6,   // 三连发每发伤害
+        Recon_Left_BurstCooldown      = 7,   // 三连发后等待帧数（连发间隔写死）
+        Recon_Left_ShotsPerBurst      = 8,   // 每次触发射出几发（默认 1）
+        Recon_Right_Penetrate         = 9,   // 穿透次数（-1 = 无限）
+        Recon_Right_Damage            = 10,
+
+        // 轰炸 Bombard
+        Bombard_Left_Interval         = 11,  // 两次攻击之间的等待帧（每次固定 3 发从天而降）
+        Bombard_Left_Damage           = 12,
+        Bombard_Right_Damage          = 13,
+        Bombard_Right_WaveCount       = 14,  // 迫击炮落地后召唤几波天降弹幕
+
+        // 瘟疫 Plague
+        Plague_Left_Damage            = 15,
+        Plague_Right_Damage           = 16,
+
+        StatCount                     = 17
+    }
+
+    internal static class BFBalanceTable
+    {
+        public const int StageCount = 16;
+
+        // 列顺序与 BlossomFluxProgressionStage 枚举完全一致（0~15）：
+        // Start  EoC  EoB  Ske  QB   WoF  Mech Plan Gol  Pla  ML   Prov Pol  DoG  Yha  ExoCal
+        private static readonly int[,] Table = new int[(int)BFStat.StatCount, StageCount]
+        {
+            // Row 0  — Breakthrough_Left_Damage
+            { 10,  12,  14,  16,  17,  27,  40,  54,  68,  82,  96, 120, 155, 185, 220, 260 },
+            // Row 1  — Breakthrough_Left_UseInterval  (帧，越小越快)
+            { 15,  10,  10,   8,   6,   5,   4,   3,   3,   2,   2,   2,   2,   1,   1,   1 },
+            // Row 2  — Breakthrough_Right_MaxArrows
+            {  3,   3,   3,   3,   4,   5,   6,   6,   6,   7,   7,   7,   7,   7,   8,   8 },
+            // Row 3  — Breakthrough_Right_Damage
+            { 10,  12,  14,  16,  17,  27,  40,  54,  68,  82,  96, 120, 155, 185, 220, 260 },
+            // Row 4  — Recovery_Left_Damage
+            {  8,   9,  11,  12,  14,  22,  32,  44,  56,  68,  80, 100, 130, 155, 185, 220 },
+            // Row 5  — Recovery_Right_OrbCount
+            {  3,   3,   3,   4,   4,   5,   5,   6,   6,   6,   7,   7,   8,   8,   9,  10 },
+            // Row 6  — Recon_Left_Damage
+            { 10,  13,  16,  18,  20,  32,  46,  62,  76,  90, 108, 134, 170, 205, 245, 290 },
+            // Row 7  — Recon_Left_BurstCooldown  (三连发后等待帧)
+            { 90,  85,  80,  75,  70,  65,  60,  55,  50,  45,  40,  36,  30,  24,  18,  12 },
+            // Row 8  — Recon_Left_ShotsPerBurst
+            {  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3 },
+            // Row 9  — Recon_Right_Penetrate  (-1 = 无限)
+            {  2,   2,   3,   3,   3,   4,   5,   6,   7,   8,  -1,  -1,  -1,  -1,  -1,  -1 },
+            // Row 10 — Recon_Right_Damage
+            { 15,  18,  22,  26,  30,  46,  65,  86, 105, 126, 150, 186, 234, 280, 334, 396 },
+            // Row 11 — Bombard_Left_Interval  (两次攻击间帧数)
+            {120, 110, 100,  90,  80,  70,  60,  52,  45,  40,  35,  30,  25,  20,  16,  12 },
+            // Row 12 — Bombard_Left_Damage
+            { 10,  12,  14,  16,  17,  27,  40,  56,  70,  86, 102, 128, 162, 195, 232, 275 },
+            // Row 13 — Bombard_Right_Damage
+            { 14,  17,  20,  23,  26,  40,  58,  78,  96, 116, 138, 172, 216, 258, 308, 366 },
+            // Row 14 — Bombard_Right_WaveCount
+            {  1,   1,   1,   1,   2,   2,   2,   3,   3,   3,   4,   4,   5,   5,   6,   7 },
+            // Row 15 — Plague_Left_Damage
+            {  9,  11,  13,  15,  17,  25,  38,  52,  64,  78,  94, 118, 148, 178, 212, 252 },
+            // Row 16 — Plague_Right_Damage
+            { 12,  14,  17,  20,  23,  35,  52,  70,  86, 105, 126, 158, 198, 238, 284, 338 }
+        };
+
+        public static int Get(BFStat stat)
+            => Get(stat, BlossomFluxProgression.StageIndex);
+
+        public static int Get(BFStat stat, int stageIndex)
+        {
+            int row = (int)stat;
+            int col = Utils.Clamp(stageIndex, 0, StageCount - 1);
+            return Table[row, col];
+        }
+    }
+}
+
+// ============================================================
+// 非数值成长项
+// 布尔值、浮点倍率、枚举阶段、常数——无法放入整数二维表的所有成长内容
+// ============================================================
+namespace CalamityLegendsComeBack.Weapons.BlossomFlux
+{
+    // ── 突击 Breakthrough ─────────────────────────────────────
+    internal static class BFBreakthroughNonNumerical
+    {
+        // 右键装填箭矢的飞行速度倍率（随阶段线性提升）
+        public static float RightArrowSpeedMultiplier
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.ExoMechsAndCalamitas)) return 3f;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Yharon))               return 2f;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))       return 1.66f;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))          return 1.33f;
+                return 1f;
+            }
+        }
+
+        // 月亮领主后右键箭矢切换为无限穿透（对应表 Row 9 出现 -1 的阶段）
+        public static bool RightArrowInfinitePenetrate
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+    }
+
+    // ── 复苏 Recovery ─────────────────────────────────────────
+    internal static class BFRecoveryNonNumerical
+    {
+        // 左键 DNA 链对自身 Debuff 的免疫（随阶段逐步解锁）
+        public static bool ImmuneToFireAndPoison
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh);
+        public static bool ImmuneToAcidVenom
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera);
+        public static bool ImmuneToPlagueDebuffs
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath);
+        public static bool ImmuneToMostPreDragonDebuffs
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods);
+
+        // 移动时回血不受移动惩罚（月亮领主后解锁）
+        public static bool MovementRegenIgnoresPenalty
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+
+        // 低血量额外回血触发阈值（月亮领主后解锁；0 = 未解锁）
+        public static float LowHealthBonusRegenThreshold
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord) ? 0.4f : 0f;
+
+        // 受到 Debuff 伤害时的减伤乘数（世纪之花后开始减少）
+        public static float DebuffDamageTakenMultiplier
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 0.5f;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))        return 0.67f;
+                return 1f;
+            }
+        }
+    }
+
+    // ── 侦查 Recon ────────────────────────────────────────────
+    internal static class BFReconNonNumerical
+    {
+        // 左键普通标记持续帧数（常数）
+        public const int MarkDurationFrames                  = 30 * 60;
+        // 左键锁定后追踪延迟（常数）
+        public const int HomingDelayFrames                   = 18;
+        // 左键普通追踪转向灵敏度（常数）
+        public const float HomingTurnResponsiveness          = 0.22f;
+        // 左键优先目标追踪转向灵敏度（常数）
+        public const float PriorityHomingTurnResponsiveness  = 0.34f;
+
+        // 右键侦查效果等级（影响特效密度与侦查描述）
+        public static int ReconEffectTier
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence)) return 2;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))   return 1;
+                return 0;
+            }
+        }
+
+        // 右键侦查弹命中最大生命值敌人时的优先标记持续帧数（随阶段成长）
+        public static int PriorityMarkDurationFrames
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.ExoMechsAndCalamitas)) return 55 * 60;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))       return 45 * 60;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))          return 38 * 60;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))           return 32 * 60;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))             return 28 * 60;
+                return 20 * 60;
+            }
+        }
+
+        // 右键蓄力所需帧数（随阶段缩短）
+        public static int ChargeFrames
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 55;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))      return 65;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))        return 75;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Golem))           return 85;
+                return 100;
+            }
+        }
+    }
+
+    // ── 瘟疫 Plague ───────────────────────────────────────────
+    internal static class BFPlagueNonNumerical
+    {
+        // 左键瘟疫印记追加的 Debuff 种类（随阶段解锁）
+        public static bool InflictBetsysCurse
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+        public static bool InflictAstralInfection
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+        public static bool InflictWither
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+        public static bool InflictWhisperingDeath
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast);
+        public static bool InflictAbsorberAffliction
+            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods);
+
+        // 右键：同时可标记敌人数量上限（永久堆叠上限）
+        public static int MaxPermanentMarkStacks
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 3;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))      return 2;
+                return 1;
+            }
+        }
+
+        // 右键：印记持续时长倍率（基础 1x）
+        public static float MarkDurationMultiplier
+        {
+            get
+            {
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 2f;
+                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))      return 1.5f;
+                return 1f;
+            }
         }
     }
 }

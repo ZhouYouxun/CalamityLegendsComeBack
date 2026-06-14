@@ -26,7 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
     {
         public override void PostSetupContent()
         {
-            RegisterAllEffects();
+            RegisterAllEffects();  
         }
 
         private void RegisterAllEffects()

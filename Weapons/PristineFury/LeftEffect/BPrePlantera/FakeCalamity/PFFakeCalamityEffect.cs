@@ -597,11 +597,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 GeneralParticleHandler.SpawnParticle(new SparkParticle(center, velocity, false, Main.rand.Next(14, 28), Main.rand.NextFloat(0.75f, 1.45f) * scale, Main.rand.NextBool(5) ? Color.White : Color.Lerp(theme, Color.Goldenrod, Main.rand.NextFloat())));
             }
 
-            for (int i = 0; i < 26; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new PointParticle(center + Main.rand.NextVector2Circular(52f, 52f) * scale, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 6.4f) * scale, false, Main.rand.Next(12, 24), Main.rand.NextFloat(0.8f, 1.22f), Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.38f))));
-            }
-
             for (int i = 0; i < 50; i++)
             {
                 Dust dust = Dust.NewDustPerfect(

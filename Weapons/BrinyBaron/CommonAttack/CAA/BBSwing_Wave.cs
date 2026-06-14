@@ -396,17 +396,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     -forward * MathHelper.Lerp(0.5f, 1.55f + spawnStage * 0.2f, speedRatio) +
                     right * driftBand * Main.rand.NextFloat(0.08f, 0.5f);
 
-                GlowOrbParticle slowOrb = new GlowOrbParticle(
-                    driftPos,
-                    driftVelocity,
-                    false,
-                    Main.rand.Next(10, 16),
-                    MathHelper.Lerp(0.35f, 0.62f, 1f - speedRatio),
-                    Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
-                    true,
-                    false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(slowOrb);
+                //GlowOrbParticle slowOrb = new GlowOrbParticle(
+                //    driftPos,
+                //    driftVelocity,
+                //    false,
+                //    Main.rand.Next(10, 16),
+                //    MathHelper.Lerp(0.35f, 0.62f, 1f - speedRatio),
+                //    Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
+                //    true,
+                //    false,
+                //    true);
+                //GeneralParticleHandler.SpawnParticle(slowOrb);
             }
 
             if (spawnStage >= 1 && lifeTimer % 3 == 0)

@@ -144,9 +144,24 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return true;
         }
 
+        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
+        {
+            if (player.altFunctionUse == 2)
+            {
+                damage.Base = MalachiteBalance.GetRightClickBaseDamage();
+            }
+            else
+            {
+                damage.Base = MalachiteBalance.GetLeftClickBaseDamage();
+            }
+        }
+
         public override void ModifyStatsExtra(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
-            velocity *= player.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
+            float baseSpeed = player.altFunctionUse == 2
+                ? MalachiteBalance.GetRightClickVelocity()
+                : MalachiteBalance.GetLeftClickVelocity();
+            velocity = velocity.SafeNormalize(Vector2.UnitX * player.direction) * baseSpeed * player.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
         }
 
         public override void HoldItem(Player player)

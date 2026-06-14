@@ -189,26 +189,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             // =========================
-            // 第四层：大型外扩星爆
-            // =========================
-
-            for (int i = 0; i < 54; i++)
-            {
-                Vector2 velocity =
-                    Main.rand.NextVector2CircularEdge(1f, 1f) *
-                    Main.rand.NextFloat(4f, 18f) *
-                    scale;
-
-                GeneralParticleHandler.SpawnParticle(new PointParticle(
-                    center + Main.rand.NextVector2Circular(42f, 42f) * scale,
-                    velocity,
-                    false,
-                    Main.rand.Next(16, 28),
-                    Main.rand.NextFloat(0.8f, 1.6f) * scale,
-                    Color.Lerp(warm, Color.White, Main.rand.NextFloat(0.1f, 0.4f))));
-            }
-
-            // =========================
             // 第五层：真正的“陪衬型”烟雾
             // 烟雾只能当辅助
             // =========================

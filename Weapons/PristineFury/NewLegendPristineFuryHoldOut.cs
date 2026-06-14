@@ -771,17 +771,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 true);
             GeneralParticleHandler.SpawnParticle(glow);
 
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 velocity = direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.6f, 4.2f);
-                GeneralParticleHandler.SpawnParticle(new PointParticle(
-                    muzzle + Main.rand.NextVector2Circular(3f, 3f),
-                    velocity,
-                    false,
-                    Main.rand.Next(14, 22),
-                    Main.rand.NextFloat(0.62f, 1f) * scale,
-                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.18f, 0.5f))));
-            }
         }
 
         private void SpawnHookChargeEffects(float charge)
@@ -1026,23 +1015,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (power <= 0.02f || Main.dedServ)
                 return;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
-            Vector2 muzzle = GunTipPosition - AimDirection * 21f - Main.screenPosition;
             Color color = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, 0.48f) with { A = 0 }) * power;
-            float flameScale = 1.5f;
-
-            PFLeftEffectRules.BeginAdditive();
-            Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.55f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.34f + power * 0.24f, 0.18f + power * 0.12f) * flameScale, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(magic, muzzle + AimDirection * 4f, null, color * 0.34f, -Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.1f, magic.Size() * 0.5f, (0.05f + power * 0.05f) * flameScale, SpriteEffects.None, 0);
-
-            for (int i = 0; i < 4; i++)
-            {
-                float rotation = Projectile.rotation + MathHelper.PiOver4 * i + Main.GlobalTimeWrappedHourly * (1.1f + i * 0.15f);
-                Main.EntitySpriteDraw(star, muzzle, null, color * 0.62f, rotation, star.Size() * 0.5f, new Vector2(0.24f + power * 0.18f, 1.1f + power * 1.4f) * flameScale, SpriteEffects.None, 0);
-            }
-            PFLeftEffectRules.EndAdditive();
+            Vector2 drawCenter = GunTipPosition - AimDirection * 21f - Main.screenPosition;
+            PFMuzzleGlow.Draw(drawCenter, AimDirection, Projectile.rotation, color, power);
         }
 
         private void DrawHookChargeBar()

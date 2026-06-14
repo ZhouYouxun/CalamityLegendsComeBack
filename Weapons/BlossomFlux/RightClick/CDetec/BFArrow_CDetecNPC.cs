@@ -100,7 +100,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (intensity <= 0f)
                 return;
 
-            drawColor = Color.Lerp(drawColor, new Color(112, 225, 255), 0.45f * intensity);
             Lighting.AddLight(npc.Center, new Vector3(0.08f, 0.34f, 0.4f) * intensity);
 
             if (Main.dedServ || !Main.rand.NextBool(3))
@@ -128,18 +127,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Vector2 origin = frame.Size() * 0.5f;
             Vector2 drawPosition = npc.Center - screenPos + new Vector2(0f, npc.gfxOffY);
             SpriteEffects effects = npc.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            Color outlineColor = new Color(100, 220, 255, 0) * (0.22f + 0.26f * intensity);
 
-            Vector2[] offsets =
-            {
-                new Vector2(2f, 0f),
-                new Vector2(-2f, 0f),
-                new Vector2(0f, 2f),
-                new Vector2(0f, -2f)
-            };
+            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(Main.GameUpdateCount * 0.09f + npc.whoAmI * 0.53f);
+            float outlineOpacity = (0.52f + 0.38f * pulse) * intensity;
+            Color outlineColor = new Color(100, 220, 255, 0) * outlineOpacity;
+            const float thickness = 2.8f;
 
-            foreach (Vector2 offset in offsets)
+            for (int i = 0; i < 8; i++)
             {
+                float angle = MathHelper.TwoPi * i / 8f;
+                Vector2 offset = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * thickness;
                 Main.EntitySpriteDraw(
                     texture,
                     drawPosition + offset,

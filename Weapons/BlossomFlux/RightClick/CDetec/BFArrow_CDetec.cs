@@ -237,6 +237,25 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Color.Lerp(mainColor, accentColor, 0.35f),
                 0.38f * intensity,
                 9));
+
+            // 上下交替爆发 — 参考 Nightwither 的 CritSpark 垂直爆射风格
+            for (int i = 0; i < 10; i++)
+            {
+                float yDir = (i % 2 == 0) ? -1f : 1f;
+                float baseSpeed = yDir < 0f ? Main.rand.NextFloat(5f, 9f) : Main.rand.NextFloat(3f, 6f);
+                Vector2 sparkVel = new Vector2(0f, yDir * baseSpeed);
+                sparkVel = sparkVel.RotatedByRandom(MathHelper.Pi / 7.2f);
+                sparkVel *= Main.rand.NextFloat(0.1f, 1.9f) * intensity;
+
+                Color primary = Main.rand.NextBool() ? Color.Cyan : Color.Turquoise;
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    sparkVel,
+                    primary,
+                    Color.PaleTurquoise,
+                    Main.rand.NextFloat(0.55f, 0.85f) * intensity,
+                    Main.rand.Next(11, 17)));
+            }
         }
 
         private void SpawnMarkAcquireFX(Vector2 center)
