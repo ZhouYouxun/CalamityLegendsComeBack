@@ -102,49 +102,6 @@ Mods: {
 					'''
 			}
 
-			AdrenalineInjector: {
-				DisplayName: Adrenaline Injector
-				Tooltip: ""
-			}
-
-			BottledAircraftCarrier: {
-				DisplayName: Bottled Aircraft Carrier
-				Tooltip: ""
-			}
-
-			BottledBlackPearl: {
-				DisplayName: Bottled Black Pearl
-				Tooltip: ""
-			}
-
-			BottledBoat: {
-				DisplayName: Bottled Boat
-				Tooltip: ""
-			}
-
-			BottledRaft: {
-				DisplayName: Bottled Raft
-				Tooltip: ""
-			}
-
-			DrinkingFountain: {
-				DisplayName: Drinking Fountain
-				Tooltip: ""
-			}
-
-			TideRadar: {
-				DisplayName: Tide Radar
-				Tooltip: ""
-			}
-
-			CeruleanShield: {
-			}
-
-			LostGarment: {
-			}
-
-			VortexPortal: {
-			}
 		}
 
 		Buffs: {
@@ -167,21 +124,6 @@ Mods: {
 				DisplayName: Long Barge Lock
 				Description: Movement speed reduced by 15%
 			}
-
-			CosmicDischargeFrostMarkDebuff: {
-				DisplayName: Cosmic Discharge Frost Mark Debuff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrostMarkDebuff.Description
-			}
-
-			CosmicDischargeFrozenEmperorBuff: {
-				DisplayName: Cosmic Discharge Frozen Emperor Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorBuff.Description
-			}
-
-			CosmicDischargeFrozenEmperorSliverBuff: {
-				DisplayName: Cosmic Discharge Frozen Emperor Sliver Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorSliverBuff.Description
-			}
 		}
 
 		Projectiles: {
@@ -196,9 +138,6 @@ Mods: {
 				AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
-
-			BBDrinkingFountainOrb.DisplayName: B B Drinking Fountain Orb
-			SeedOfSilvaTorchShockwave.DisplayName: Seed Of Silva Torch Shockwave
 		}
 
 		Cooldowns: {

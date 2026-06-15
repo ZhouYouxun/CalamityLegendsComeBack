@@ -66,7 +66,7 @@
 				VesuviusAshFall.DisplayName: 火山灰
 				VesuviusLandingQuake.DisplayName: 地震落地
 				VesuviusEXWeapon.DisplayName: 超级火山喷发
-				// VesuviusVolcanicGasCloud.DisplayName: Vesuvius Volcanic Gas Cloud
+				VesuviusVolcanicGasCloud.DisplayName: 火山气云
 			}
 		}
 

@@ -142,27 +142,27 @@ Mods: {
 				YC_TyrantPrismBolt.DisplayName: 暴君水晶棱镜光弹
 				YC_TyrantPrismMainBeam.DisplayName: 暴君水晶破坏死光
 				YC_TyrantPrismConvergeBeam.DisplayName: 暴君水晶汇聚光束
-				// YC_TyrantPrismLaserLance.DisplayName: Y C_ Tyrant Prism Laser Lance
-				// YC_TyrantPrismMissile.DisplayName: Y C_ Tyrant Prism Missile
-				// YC_TyrantSlaughterFlame.DisplayName: Y C_ Tyrant Slaughter Flame
-				// YC_TyrantSlaughterHoldout.DisplayName: Y C_ Tyrant Slaughter Holdout
-				// YC_TyrantSlaughterSlash.DisplayName: Y C_ Tyrant Slaughter Slash
-				// YC_TyrantSlaughterTail.DisplayName: Y C_ Tyrant Slaughter Tail
-				// YC_YharimsCrystalBeam.DisplayName: Y C_ Yharims Crystal Beam
-				// YC_EXBladeGrandSlash.DisplayName: Y C_ E X Blade Grand Slash
-				// YC_EXFirePillar.DisplayName: Y C_ E X Fire Pillar
-				// YC_EXStormLaser.DisplayName: Y C_ E X Storm Laser
-				// YC_AuricJudgementWave.DisplayName: Y C_ Auric Judgement Wave
-				// YC_BrimstoneWheelMissile.DisplayName: Y C_ Brimstone Wheel Missile
-				// YC_BurningShard.DisplayName: Y C_ Burning Shard
-				// YC_BurningShardSplinter.DisplayName: Y C_ Burning Shard Splinter
-				// YC_LeftBladeSwing.DisplayName: Y C_ Left Blade Swing
-				// YC_RainbowUltimaBolt.DisplayName: Y C_ Rainbow Ultima Bolt
-				// YC_RightCrystalHoldout.DisplayName: Y C_ Right Crystal Holdout
-				// YC_RightScorchingLaser.DisplayName: Y C_ Right Scorching Laser
-				// YC_EssenceFlame.DisplayName: Y C_ Essence Flame
-				// YC_ThrownBlade.DisplayName: Y C_ Thrown Blade
-				// YC_RightDrone.DisplayName: Y C_ Right Drone
+				YC_TyrantPrismLaserLance.DisplayName: 暴君水晶棱镜光矛
+				YC_TyrantPrismMissile.DisplayName: 暴君水晶棱镜导弹
+				YC_TyrantSlaughterFlame.DisplayName: 暴君屠戮火焰
+				YC_TyrantSlaughterHoldout.DisplayName: 暴君屠戮持握体
+				YC_TyrantSlaughterSlash.DisplayName: 暴君屠戮斩击
+				YC_TyrantSlaughterTail.DisplayName: 暴君屠戮尾迹
+				YC_YharimsCrystalBeam.DisplayName: 亚利姆水晶光束
+				YC_EXBladeGrandSlash.DisplayName: 亚利姆水晶EX巨刃斩
+				YC_EXFirePillar.DisplayName: 亚利姆水晶EX火柱
+				YC_EXStormLaser.DisplayName: 亚利姆水晶EX风暴激光
+				YC_AuricJudgementWave.DisplayName: 金源审判波
+				YC_BrimstoneWheelMissile.DisplayName: 硫火轮导弹
+				YC_BurningShard.DisplayName: 燃烧碎片
+				YC_BurningShardSplinter.DisplayName: 燃烧碎片裂片
+				YC_LeftBladeSwing.DisplayName: 亚利姆水晶左键挥刃
+				YC_RainbowUltimaBolt.DisplayName: 彩虹终焉光弹
+				YC_RightCrystalHoldout.DisplayName: 亚利姆水晶右键持握体
+				YC_RightScorchingLaser.DisplayName: 亚利姆水晶灼热激光
+				YC_EssenceFlame.DisplayName: 精华火焰
+				YC_ThrownBlade.DisplayName: 投掷水晶刃
+				YC_RightDrone.DisplayName: 亚利姆水晶右键无人机
 			}
 		}
 

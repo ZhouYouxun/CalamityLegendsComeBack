@@ -319,7 +319,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                             Projectile.GetSource_FromThis(),
                             player.MountedCenter + Main.rand.NextVector2Circular(32f, 32f),
                             angle.ToRotationVector2() * speed,
-                            ModContent.ProjectileType<CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BrinyBaron_SeaSpirit>(),
+                            ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BrinyBaron_SeaSpirit>(),
                             Math.Max(1, (int)(Projectile.damage * 0.4f)),
                             Projectile.knockBack * 0.3f,
                             Projectile.owner,

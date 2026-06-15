@@ -103,53 +103,6 @@ Mods: {
 					'''
 			}
 
-			AdrenalineInjector: {
-				DisplayName: 肾上腺素注射器
-				Tooltip:
-					'''
-					海爵剑刃命中敌人时积累肾上腺素（最高18层），距上次命中超过3.5秒则逐层消退
-					每层：+1.8% 近战伤害，+1.4% 攻击速度
-					'''
-			}
-
-			BottledAircraftCarrier: {
-				DisplayName: 瓶中航母
-				Tooltip: 近战伤害 +14%
-			}
-
-			BottledBlackPearl: {
-				DisplayName: 瓶中黑珍珠
-				Tooltip: 近战伤害 +10%
-			}
-
-			BottledBoat: {
-				DisplayName: 瓶中游艇
-				Tooltip: 近战伤害 +7%
-			}
-
-			BottledRaft: {
-				DisplayName: 瓶中筏子
-				Tooltip: 近战伤害 +4%
-			}
-
-			DrinkingFountain: {
-				DisplayName: 饮水装置
-				Tooltip: 海爵剑刃命中敌人时，向玩家方向飞出一枚治疗球
-			}
-
-			TideRadar: {
-				DisplayName: 潮汐雷达
-				Tooltip: 锁定附近最近的敌人；海爵的所有弹幕命中该目标时造成额外 15% 伤害
-			}
-
-			CeruleanShield: {
-			}
-
-			LostGarment: {
-			}
-
-			VortexPortal: {
-			}
 		}
 
 		Buffs: {
@@ -172,21 +125,6 @@ Mods: {
 				DisplayName: 孤舟锁定
 				Description: 移动速度降低15%
 			}
-
-			CosmicDischargeFrostMarkDebuff: {
-				// DisplayName: Cosmic Discharge Frost Mark Debuff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrostMarkDebuff.Description
-			}
-
-			CosmicDischargeFrozenEmperorBuff: {
-				// DisplayName: Cosmic Discharge Frozen Emperor Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorBuff.Description
-			}
-
-			CosmicDischargeFrozenEmperorSliverBuff: {
-				// DisplayName: Cosmic Discharge Frozen Emperor Sliver Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorSliverBuff.Description
-			}
 		}
 
 		Projectiles: {
@@ -201,9 +139,6 @@ Mods: {
 				AzureThunderHarmonyBar.DisplayName: 破天刃苍穹条
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
-
-			BBDrinkingFountainOrb.DisplayName: 饮水治疗球
-			// SeedOfSilvaTorchShockwave.DisplayName: Seed Of Silva Torch Shockwave
 		}
 
 		Cooldowns: {

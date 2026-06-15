@@ -115,7 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
             bool markedTarget = target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner);
             int advTier = BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers)
-                ? Main.player[Projectile.owner].GetModPlayer<CalamityLegendsComeBack.Accssory.BF.Common.BFAccessoryPlayer>().PlagueAdvancedTier : 0;
+                ? Main.player[Projectile.owner].GetModPlayer<global::CalamityLegendsComeBack.Accssory.BF.Common.BFAccessoryPlayer>().PlagueAdvancedTier : 0;
             pollution.ApplyPermanentSpore(target);
             ExtendReconMark(target);
             pollution.ApplyPlagueDebuffs(target, markedTarget, advTier);

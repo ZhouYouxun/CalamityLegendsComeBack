@@ -968,7 +968,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             else
                 modifiers.SourceDamage *= 1.35f * damageMult;
 
-            if (Owner.GetModPlayer<CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().SurgeChainReactorEquipped)
+            if (Owner.GetModPlayer<global::CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().SurgeChainReactorEquipped)
                 modifiers.SourceDamage *= 0.5f;
         }
 

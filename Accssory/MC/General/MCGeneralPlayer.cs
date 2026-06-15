@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Accssory.MC.PeacockScroll;
 using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityMod;
+using CalamityMod.CalPlayer;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;

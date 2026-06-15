@@ -270,6 +270,8 @@ Mods: {
 				BrinyBaron_SeafoamExplosion.DisplayName: 海爵海沫爆炸
 				BrinyBaron_SeaSpirit.DisplayName: 海灵
 			}
+
+			BBDrinkingFountainOrb.DisplayName: 饮水治疗球
 		}
 
 		Cooldowns: {

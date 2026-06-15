@@ -111,7 +111,6 @@ Mods: {
 						'''
 					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
 					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手即可切换至当前扇区战术。]"
-					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:
 						'''
@@ -126,39 +125,43 @@ Mods: {
 				}
 			}
 
-			ATunedQuiver: {
+			BFSpareQuiver: {
+				DisplayName: 备用箭袋
+				Tooltip:
+					'''
+					远程伤害 +8%，防御力 +4
+					所有叶流右键蓄力时间 ×0.90
+					突击右键最大装填 +1，复苏治疗闪光 +1，侦察右键标记时间小幅提高。
+					'''
+			}
+
+			BFTunedQuiver: {
 				DisplayName: 同调箭袋
 				Tooltip:
 					'''
-					+15% 远程伤害
-					+4 防御力
-					提升箭矢速度。叶流的每种战术会获得不同的加成。
+					远程伤害 +11%，远程暴击率 +6%
+					所有叶流右键蓄力时间 ×0.80
+					突击右键最大装填 +2，复苏治疗闪光 +2，侦察右键标记时间提高，歼灭右键爆炸范围提高。
 					'''
 			}
 
-			BResonatingQuiver: {
+			BFResonatingQuiver: {
 				DisplayName: 共鸣箭袋
 				Tooltip:
 					'''
-					+15% 远程伤害
-					+5% 远程暴击率
-					+15 远程弹幕护甲穿透
-					+6 防御力
-					提升箭矢速度。叶流的每种战术会获得不同的加成。
+					远程伤害 +14%，远程护甲穿透 +12
+					所有叶流右键蓄力时间 ×0.65
+					突击右键最大装填 +4，复苏治疗闪光 +3，侦察右键标记时间大幅提高，歼灭右键弹幕伤害提高，侵染解锁第一批高级 Debuff。
 					'''
 			}
 
-			CDominationQuiver: {
+			BFDominationQuiver: {
 				DisplayName: 主宰箭袋
 				Tooltip:
 					'''
-					+15% 远程伤害
-					+5% 远程暴击率
-					+15 远程弹幕护甲穿透
-					+16 防御力
-					+15% 最大生命值
-					提升箭矢速度。叶流的每种战术会获得不同的加成。
-					所有攻击都能穿墙且无视防御。
+					远程伤害 +18%，远程暴击率 +8%
+					所有叶流右键蓄力时间 ×0.50
+					突击右键最大装填 +6，复苏治疗闪光 +4，侦察右键标记时间达到最高，歼灭右键弹幕伤害与范围提高，侵染解锁全部高级 Debuff。
 					'''
 			}
 
@@ -242,93 +245,6 @@ Mods: {
 				SporeBomb.DisplayName: 孢子炸弹
 			}
 
-			BarrierShieldVisual.DisplayName: 屏障护盾视觉体
-			TeachingProjectile.DisplayName: 教学弹幕
-
-			A_Dev: {
-				DesertEagleHeavyRound.DisplayName: 沙漠之鹰重型弹
-				DesertEagleLifeRound.DisplayName: 沙漠之鹰生命弹
-			}
-
-			DesertEagleHoldout.DisplayName: 沙漠之鹰持握体
-			BFArrow_ABreak.DisplayName: 叶流箭A破防
-			BFArrow_BRecov.DisplayName: 叶流箭B恢复
-			BFArrow_BRecovBlast.DisplayName: 叶流箭B恢复爆破
-			BFArrow_BRecovTransfer.DisplayName: 叶流箭B恢复转移
-			BFArrow_CDetec.DisplayName: 叶流箭C探测
-			BFArrow_CDetecReticle.DisplayName: 叶流箭C探测准星
-			BFArrow_DBomb.DisplayName: 叶流箭D炸弹
-			BFArrow_EPlague.DisplayName: 叶流箭E瘟疫
-			BFArrow_EPlagueGas.DisplayName: 叶流箭E瘟疫毒气
-			BFLeftPlagueFlame.DisplayName: 叶流左键瘟疫火焰
-			FuckYou.DisplayName: 去你的
-			BBShuriken_Lazer.DisplayName: BB手里剑激光
-			BBShuriken_Light.DisplayName: BB手里剑光芒
-			BrinyBaron_LeftClick_Swing.DisplayName: 海爵左键挥砍
-			BrinyBaron_RightClick_Shuriken.DisplayName: 海爵右键手里剑
-			BrinyBaron.BBASD_Lighting.DisplayName: BBASD闪电
-			BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 海爵技能冲刺龙卷刃冲
-			BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 海爵技能旋转突进旋刃
-			BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 海爵技能斩击冲刺
-			BBSD_Star.DisplayName: BBSD星辰
-			BBSD_VirtualPROJ.DisplayName: BBSD虚拟弹幕
-			Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z海爵技能超级蓄力冲刺
-
-			Melee: {
-				CosmicDischargeComboHoldout.DisplayName: 寒宙弹刃
-				CosmicDischargeEndothermicSplit.DisplayName: 宇宙放电吸热分裂体
-				CosmicDischargeHookHead.DisplayName: 宇宙放电钩头
-				CosmicDischargeHookLimb.DisplayName: 宇宙放电钩链节
-				CosmicDischargeKillModeReady.DisplayName: 宇宙放电击杀模式就绪
-				CosmicDischargeKillModeSlash.DisplayName: 宇宙放电击杀模式斩击
-				CosmicDischargeScytheProjectile.DisplayName: 宇宙放电镰刀弹幕
-				CosmicDischargeFlail.DisplayName: 宇宙放电脱链锤
-				// CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
-				// CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
-			}
-
-			LeonidAstralBlast.DisplayName: 狮子座星界爆破
-			LeonidChainLightning.DisplayName: 狮子座链式闪电
-			LeonidEvilWisp.DisplayName: 狮子座邪恶鬼火
-			LeonidHealingOrb.DisplayName: 狮子座治疗球
-			LeonidHolyLaser.DisplayName: 狮子座神圣激光
-			LeonidLavaGlob.DisplayName: 狮子座熔岩团
-			LeonidLingeringField.DisplayName: 狮子座滞留力场
-			LeonidLunarStrike.DisplayName: 狮子座月之打击
-			LeonidOrbitFlame.DisplayName: 狮子座环绕火焰
-			LeonidPetalBolt.DisplayName: 狮子座花瓣弹
-			LeonidShockwave.DisplayName: 狮子座冲击波
-			LeonidSimpleShard.DisplayName: 狮子座简易碎片
-			LeonidSplitMeteor.DisplayName: 狮子座分裂流星
-			LeonidTrailMushroom.DisplayName: 狮子座拖尾蘑菇
-			PurifiedGel_Ball.DisplayName: 净化凝胶球
-			NewSHPS.DisplayName: 新SHPS
-			AshesofCalamity_Fire.DisplayName: 灾厄余烬火焰
-			DepthCells_Drop.DisplayName: 深渊细胞滴液
-			PlagueCell_Marked.DisplayName: 瘟疫细胞标记
-			ArmoredShell_Ball.DisplayName: 装甲壳球
-			AshesofAnn_Located.DisplayName: 安之余烬定位标记
-			ExoPrism_Geometry.DisplayName: 外骨棱镜几何体
-			NightmareFuel_ARC.DisplayName: 梦魇燃料弧光
-			NightmareFuel_Scythe.DisplayName: 梦魇燃料镰刀
-			NL_SHPC_EXWeapon.DisplayName: NL SHPC EX武器
-			Copper_ChainLightning.DisplayName: 铜链式闪电
-			Demonite_Wisp.DisplayName: 魔矿鬼火
-			Perennial_HealingOrb.DisplayName: 亘青治疗球
-			Scoria_LavaGlob.DisplayName: 熔渣熔岩团
-			Mythril_OrbitFlame.DisplayName: 秘银环绕火焰
-			Orichalcum_PetalBolt.DisplayName: 山铜花瓣弹
-			Hallowed_Laser.DisplayName: 神圣激光
-			Lunar_Strike.DisplayName: 月之打击
-			Shroomite_TrailMushroom.DisplayName: 蘑菇矿拖尾蘑菇
-			Astral_Blast.DisplayName: 星辉爆破
-			PostLunar_Shard.DisplayName: 月后碎片
-			Shared_LingeringField.DisplayName: 通用滞留力场
-			Shared_Shockwave.DisplayName: 通用冲击波
-			Shared_SplitMeteor.DisplayName: 通用分裂流星
-			NewWeapons.DPreDog.SODLazer.DisplayName: SOD激光
-			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
-			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
 			PastLingeringShard.DisplayName: 旧日残影碎片
 			SeedOfSilvaDelphiniumArc.DisplayName: 席尔瓦飞燕草弧光
 			SeedOfSilvaDelphinium.DisplayName: 席尔瓦飞燕草
@@ -339,22 +255,14 @@ Mods: {
 			SeedOfSilvaSunflower.DisplayName: 席尔瓦向日葵
 			SeedOfSilvaTorchflower.DisplayName: 席尔瓦火炬花
 			SeedOfSilvaTorchFlame.DisplayName: 席尔瓦火炬花火焰
+			SeedOfSilvaTorchShockwave.DisplayName: 席尔瓦火炬花冲击波
 			BFBreakthroughChargeConvergeFX.DisplayName: 叶流突破充能汇聚特效
 			BFBombardStrafeFX.DisplayName: 叶流轰炸扫射特效
 			BFPlagueNanomachineCloudFX.DisplayName: 叶流瘟疫纳米机械云特效
 			BFReconContractingWaveFX.DisplayName: 叶流侦察收缩波特效
 			BFRecoveryHeartConvergeFX.DisplayName: 叶流恢复之心汇聚特效
 			BFChargeGlowSparkFX.DisplayName: 叶流充能辉光火花特效
-			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
-			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
-			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
-			// PFMarkStatusArc.DisplayName: P F Mark Status Arc
-			// BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
-			// BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
-			// BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
 		}
-
-		Projectile.EndothermicEnergy_Split.DisplayName: 吸热能量分裂体
 
 		Cooldowns: {
 			BlossomFlux_Passive: 叶流终末防线
@@ -364,16 +272,6 @@ Mods: {
 		TheSpecialText.BlossomFluxPresetSelected: 已选择 {0} 战术
 
 		Buffs: {
-			YharonSoulFragment_Buff: {
-				DisplayName: 丛林龙魂碎片
-				Description: 灵魂碎片正在灼烧目标。
-			}
-
-			SHPCRight_DeBuff: {
-				DisplayName: SHPC 过热
-				Description: 过热正在持续惩罚玩家。
-			}
-
 			BFRecoveryLeafBuff: {
 				DisplayName: 复苏之叶
 				Description: 复苏枝流正在保护并治疗你。
@@ -382,26 +280,6 @@ Mods: {
 			BFPlaguePollutionBuff: {
 				DisplayName: 侵染污染
 				Description: 防御正被侵染逐层侵蚀。
-			}
-
-			CosmicDischargeChainKnifeBuff: {
-				// DisplayName: Cosmic Discharge Chain Knife Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeChainKnifeBuff.Description
-			}
-
-			CosmicDischargeGreatswordBuff: {
-				// DisplayName: Cosmic Discharge Greatsword Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeGreatswordBuff.Description
-			}
-
-			CosmicDischargeSwordBuff: {
-				// DisplayName: Cosmic Discharge Sword Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeSwordBuff.Description
-			}
-
-			CosmicDischargeWhipBuff: {
-				// DisplayName: Cosmic Discharge Whip Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeWhipBuff.Description
 			}
 		}
 	}

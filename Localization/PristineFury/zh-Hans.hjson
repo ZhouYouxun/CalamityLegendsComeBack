@@ -181,12 +181,12 @@
 				PristineFuryHomingStar.DisplayName: 纯元追踪星弹
 				PristineFuryRightNovaPseudoLaser.DisplayName: 纯净怒火右键新星伪激光
 				PFRavager_Laser.DisplayName: 纯净怒火毁灭魔像血石激光
-				// PFRavager_BloodBoilerOrb.DisplayName: P F Ravager_ Blood Boiler Orb
-				// PristineFuryLilyMainBeam.DisplayName: Pristine Fury Lily Main Beam
-				// PristineFuryLilyWavelet.DisplayName: Pristine Fury Lily Wavelet
+				PFRavager_BloodBoilerOrb.DisplayName: 毁灭魔像血沸球
+				PristineFuryLilyMainBeam.DisplayName: 纯净怒火百合主光束
+				PristineFuryLilyWavelet.DisplayName: 纯净怒火百合波纹
 				PFMoonhaloStamp.DisplayName: 月华烙印
-				// PFMarkSelectionWheel.DisplayName: P F Mark Selection Wheel
-				// PFIdleGroundBurn.DisplayName: P F Idle Ground Burn
+				PFMarkSelectionWheel.DisplayName: 纯元怒焰印记轮盘
+				PFIdleGroundBurn.DisplayName: 纯元怒焰地火
 			}
 
 			TacticalComputerReticle.DisplayName: 战术计算机准星

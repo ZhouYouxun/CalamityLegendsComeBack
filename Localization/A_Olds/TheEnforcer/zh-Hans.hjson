@@ -37,8 +37,6 @@
 
 			ChangedWeapons: {
 				EAfterDog: {
-					EndlessDevourJavBlackHole.DisplayName: 无尽吞噬标枪黑洞
-					EndlessDevourJavOrbSmall.DisplayName: 无尽吞噬标枪小球
 					OldEssenceFlame2.DisplayName: 旧日精华火焰2
 				}
 			}

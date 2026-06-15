@@ -284,7 +284,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             {
                 homingTimer++;
                 bool boatEnhanced = Main.player.IndexInRange(Projectile.owner) &&
-                    Main.player[Projectile.owner].GetModPlayer<CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
+                    Main.player[Projectile.owner].GetModPlayer<global::CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
                 int delay = (shurikenProfile.GrowthTier >= 2 || boatEnhanced) ? 15 : TideHomingDelayFrames;
                 if (homingTimer <= delay)
                 {
@@ -549,7 +549,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         {
             int tier = GetShurikenGrowthTier();
             bool boatEnhanced = Main.player.IndexInRange(Projectile.owner) &&
-                                Main.player[Projectile.owner].GetModPlayer<CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
+                                Main.player[Projectile.owner].GetModPlayer<global::CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
             int sliceCount = ShurikenStickySliceCounts[tier] + (boatEnhanced ? 2 : 0);
             float finalSpeed = boatEnhanced ? TideHomingFinalSpeed * 1.25f : TideHomingFinalSpeed;
             return new ShurikenProfile(

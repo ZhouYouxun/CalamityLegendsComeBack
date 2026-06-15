@@ -41,17 +41,6 @@ Mods: {
 						'''
 				}
 
-				Ranged: {
-					Riftburst: {
-						DisplayName: Riftburst
-						Tooltip: ""
-					}
-
-					BlossomFlux: {
-						DisplayName: Blossom Flux
-						Tooltip: ""
-					}
-				}
 			}
 		}
 
@@ -69,6 +58,21 @@ Mods: {
 			CosmicDischargeUltimateGuardBuff: {
 				DisplayName: 寒宙力场
 				Description: 受到伤害降低，防御提高。
+			}
+
+			CosmicDischargeFrostMarkDebuff: {
+				DisplayName: 冰霜印记
+				Description: 被寒宙标记，特定攻击会引爆印记。
+			}
+
+			CosmicDischargeFrozenEmperorBuff: {
+				DisplayName: 冰皇形态
+				Description: 伤害、机动、防御、伤害减免与近战攻速提高。
+			}
+
+			CosmicDischargeFrozenEmperorSliverBuff: {
+				DisplayName: 冰皇残辉
+				Description: 伤害与防御小幅提高。
 			}
 		}
 

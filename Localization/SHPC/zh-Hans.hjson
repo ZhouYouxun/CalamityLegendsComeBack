@@ -370,10 +370,10 @@
 				StarblightSootShard.DisplayName: 凋星微尘星魂
 				EndothermicEnergy_ARROW.DisplayName: 吸热能量箭矢
 				SHPCAmmoSelectionPanel.DisplayName: SHPC弹药选择面板
-				// SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
-				// PlagueCell_Fog.DisplayName: Plague Cell_ Fog
-				// PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
-				// SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
+				SHPCRight_HeatRedirectField.DisplayName: SHPC热量转移力场
+				PlagueCell_Fog.DisplayName: 瘟疫细胞毒雾
+				PlagueCell_Nuke.DisplayName: 瘟疫细胞核爆
+				SHPC_ChargeSpiralInv.DisplayName: SHPC蓄能螺旋视觉体
 			}
 
 			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面

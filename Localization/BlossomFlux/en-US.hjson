@@ -126,42 +126,43 @@ Mods: {
 				}
 			}
 
-			ATunedQuiver: {
+			BFSpareQuiver: {
+				DisplayName: Spare Quiver
+				Tooltip:
+					'''
+					+8% ranged damage, +4 defense
+					All BlossomFlux right-click charge times x0.90
+					Breakthrough right-click maximum load +1, Recovery healing flashes +1, Reconnaissance right-click mark duration slightly increased.
+					'''
+			}
+
+			BFTunedQuiver: {
 				DisplayName: Tuned Quiver
 				Tooltip:
 					'''
-					+15% ranged damage
-					+4 defense
-					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
-					Recipe: Magic Quiver + 10 Jungle Spores + 5 Vines @ Anvil
+					+11% ranged damage, +6% ranged critical strike chance
+					All BlossomFlux right-click charge times x0.80
+					Breakthrough right-click maximum load +2, Recovery healing flashes +2, Reconnaissance right-click mark duration increased, Bombardment right-click explosion radius increased.
 					'''
 			}
 
-			BResonatingQuiver: {
+			BFResonatingQuiver: {
 				DisplayName: Resonating Quiver
 				Tooltip:
 					'''
-					+15% ranged damage
-					+5% ranged critical strike chance
-					+15 ranged projectile armor penetration
-					+6 defense
-					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
-					Recipe: Tuned Quiver + Ranger Emblem + 5 Life Alloys + 5 Galactica Singularities @ Ancient Manipulator
+					+14% ranged damage, +12 ranged armor penetration
+					All BlossomFlux right-click charge times x0.65
+					Breakthrough right-click maximum load +4, Recovery healing flashes +3, Reconnaissance right-click mark duration greatly increased, Bombardment right-click barrage damage increased, Plague unlocks the first set of advanced debuffs.
 					'''
 			}
 
-			CDominationQuiver: {
+			BFDominationQuiver: {
 				DisplayName: Domination Quiver
 				Tooltip:
 					'''
-					+15% ranged damage
-					+5% ranged critical strike chance
-					+15 ranged projectile armor penetration
-					+16 defense
-					+15% maximum life
-					Grants arrow speed bonuses. Each BlossomFlux doctrine receives a different bonus.
-					All attacks pass through walls and ignore defense.
-					Recipe: Resonating Quiver + 10 Reaper Teeth + 10 Ruinous Souls @ Ancient Manipulator
+					+18% ranged damage, +8% ranged critical strike chance
+					All BlossomFlux right-click charge times x0.50
+					Breakthrough right-click maximum load +6, Recovery healing flashes +4, Reconnaissance right-click mark duration reaches its maximum, Bombardment right-click barrage damage and radius increased, Plague unlocks all advanced debuffs.
 					'''
 			}
 
@@ -247,93 +248,6 @@ Mods: {
 				SporeBomb.DisplayName: Spore Bomb
 			}
 
-			BarrierShieldVisual.DisplayName: Barrier Shield Visual
-			TeachingProjectile.DisplayName: Teaching Projectile
-
-			A_Dev: {
-				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
-			}
-
-			DesertEagleHoldout.DisplayName: Desert Eagle Holdout
-			BFArrow_ABreak.DisplayName: B F Arrow_ A Break
-			BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
-			BFArrow_BRecovBlast.DisplayName: B F Arrow_ B Recov Blast
-			BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
-			BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
-			BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
-			BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
-			BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
-			BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
-			BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
-			FuckYou.DisplayName: Fuck You
-			BBShuriken_Lazer.DisplayName: B B Shuriken_ Lazer
-			BBShuriken_Light.DisplayName: B B Shuriken_ Light
-			BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
-			BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
-			BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
-			BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
-			BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Briny Baron_ Skill Spin Rush_ Spin Blade
-			BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
-			BBSD_Star.DisplayName: B B S D_ Star
-			BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
-			Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
-
-			Melee: {
-				CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
-				CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
-				CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
-				CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
-				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
-				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
-				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
-				CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
-				CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
-				CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
-			}
-
-			LeonidAstralBlast.DisplayName: Leonid Astral Blast
-			LeonidChainLightning.DisplayName: Leonid Chain Lightning
-			LeonidEvilWisp.DisplayName: Leonid Evil Wisp
-			LeonidHealingOrb.DisplayName: Leonid Healing Orb
-			LeonidHolyLaser.DisplayName: Leonid Holy Laser
-			LeonidLavaGlob.DisplayName: Leonid Lava Glob
-			LeonidLingeringField.DisplayName: Leonid Lingering Field
-			LeonidLunarStrike.DisplayName: Leonid Lunar Strike
-			LeonidOrbitFlame.DisplayName: Leonid Orbit Flame
-			LeonidPetalBolt.DisplayName: Leonid Petal Bolt
-			LeonidShockwave.DisplayName: Leonid Shockwave
-			LeonidSimpleShard.DisplayName: Leonid Simple Shard
-			LeonidSplitMeteor.DisplayName: Leonid Split Meteor
-			LeonidTrailMushroom.DisplayName: Leonid Trail Mushroom
-			PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-			NewSHPS.DisplayName: New S H P S
-			AshesofCalamity_Fire.DisplayName: Ashesof Calamity_ Fire
-			DepthCells_Drop.DisplayName: Depth Cells_ Drop
-			PlagueCell_Marked.DisplayName: Plague Cell_ Marked
-			ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
-			AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
-			ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
-			NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
-			NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
-			NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
-			Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
-			Demonite_Wisp.DisplayName: Demonite_ Wisp
-			Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
-			Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
-			Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
-			Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
-			Hallowed_Laser.DisplayName: Hallowed_ Laser
-			Lunar_Strike.DisplayName: Lunar_ Strike
-			Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
-			Astral_Blast.DisplayName: Astral_ Blast
-			PostLunar_Shard.DisplayName: Post Lunar_ Shard
-			Shared_LingeringField.DisplayName: Shared_ Lingering Field
-			Shared_Shockwave.DisplayName: Shared_ Shockwave
-			Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
-			NewWeapons.DPreDog.SODLazer.DisplayName: S O D Lazer
-			LegendaryCodexPanel.DisplayName: Legendary Codex Panel
-			TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
 			PastLingeringShard.DisplayName: Lingering Remnant Shard
 			SeedOfSilvaDelphiniumArc.DisplayName: Silva Delphinium Arc
 			SeedOfSilvaDelphinium.DisplayName: Silva Delphinium
@@ -344,22 +258,14 @@ Mods: {
 			SeedOfSilvaSunflower.DisplayName: Silva Sunflower
 			SeedOfSilvaTorchflower.DisplayName: Silva Torchflower
 			SeedOfSilvaTorchFlame.DisplayName: Silva Torchflower Flame
+			SeedOfSilvaTorchShockwave.DisplayName: Silva Torchflower Shockwave
 			BFBreakthroughChargeConvergeFX.DisplayName: B F Breakthrough Charge Converge F X
 			BFBombardStrafeFX.DisplayName: B F Bombard Strafe F X
 			BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
 			BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
 			BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
 			BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
-			AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
-			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
-			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
-			PFMarkStatusArc.DisplayName: P F Mark Status Arc
-			BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
-			BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
-			BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
 		}
-
-		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 		Cooldowns: {
 			BlossomFlux_Passive: BlossomFlux Final Stand
@@ -369,44 +275,14 @@ Mods: {
 		TheSpecialText.BlossomFluxPresetSelected: Doctrine Selected: {0}
 
 		Buffs: {
-			YharonSoulFragment_Buff: {
-				DisplayName: Yharon Soul Fragment_ Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
-			}
-
-			SHPCRight_DeBuff: {
-				DisplayName: S H P C Right_ De Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
-			}
-
 			BFRecoveryLeafBuff: {
-				DisplayName: B F Recovery Leaf Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.BFRecoveryLeafBuff.Description
+				DisplayName: Recovery Leaf
+				Description: The recovery branchflow is protecting and healing you.
 			}
 
 			BFPlaguePollutionBuff: {
-				DisplayName: B F Plague Pollution Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.BFPlaguePollutionBuff.Description
-			}
-
-			CosmicDischargeChainKnifeBuff: {
-				DisplayName: Cosmic Discharge Chain Knife Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeChainKnifeBuff.Description
-			}
-
-			CosmicDischargeGreatswordBuff: {
-				DisplayName: Cosmic Discharge Greatsword Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeGreatswordBuff.Description
-			}
-
-			CosmicDischargeSwordBuff: {
-				DisplayName: Cosmic Discharge Sword Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeSwordBuff.Description
-			}
-
-			CosmicDischargeWhipBuff: {
-				DisplayName: Cosmic Discharge Whip Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeWhipBuff.Description
+				DisplayName: Plague Pollution
+				Description: Defense is being eroded by Plague layers.
 			}
 		}
 	}

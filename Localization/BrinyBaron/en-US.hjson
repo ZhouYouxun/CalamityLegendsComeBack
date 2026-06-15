@@ -272,6 +272,8 @@ Mods: {
 				BrinyBaron_SeafoamExplosion.DisplayName: Tidal Seafoam Explosion
 				BrinyBaron_SeaSpirit.DisplayName: Sea Spirit
 			}
+
+			BBDrinkingFountainOrb.DisplayName: Drinking Fountain Orb
 		}
 
 		Cooldowns: {
