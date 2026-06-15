@@ -8,7 +8,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
+using System.Collections.Generic;
+using CalamityMod.Graphics.Primitives;
 using Terraria;
+using Terraria.Graphics.Shaders;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -68,6 +71,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int rightSpinTransitionTimer;
         private Vector2 rightSpinDirectionVector = Vector2.UnitX;
         private Particle rightSpinSmear;
+
+        // EXO 弧形刀光（Stage 2+ 专用）
+        private const int BladeTrailHistoryFrames = 16;
+        private Vector2[] bladeTipHistory = new Vector2[BladeTrailHistoryFrames];
+        private int bladeTipHistoryLength = 0;
+        private float slashOpacity = 0f;
+        private static Asset<Texture2D> exoLensFlare;
+        private const float BladeLength = 140f;
 
         private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
         private float RightSpinChargeRatio => MathHelper.Clamp(rightSpinEmpowerment / RightSpinMaxEmpowerment, 0f, 1f);
@@ -147,6 +158,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.Center = Owner.MountedCenter;
                 Projectile.scale = MathHelper.Lerp(Projectile.scale, BB_Balance.GetLeftClickScale(), 0.22f);
             }
+
+            if (CurrentGrowthStage >= 2 && !rightSpinActive)
+                TrackBladeTip();
 
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
         }
@@ -1020,6 +1034,93 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.whoAmI);
         }
 
+        private void TrackBladeTip()
+        {
+            if (CanHit)
+            {
+                slashOpacity = MathHelper.Lerp(slashOpacity, 1f, 0.4f);
+                Vector2 currentTip = SlashAngle.ToRotationVector2() * BladeLength * Projectile.scale;
+                Array.Copy(bladeTipHistory, 0, bladeTipHistory, 1, bladeTipHistory.Length - 1);
+                bladeTipHistory[0] = currentTip;
+                if (bladeTipHistoryLength < bladeTipHistory.Length)
+                    bladeTipHistoryLength++;
+            }
+            else
+            {
+                slashOpacity = MathHelper.Lerp(slashOpacity, 0f, 0.2f);
+                if (slashOpacity < 0.01f)
+                    bladeTipHistoryLength = 0;
+            }
+        }
+
+        private void DrawSlash()
+        {
+            if (bladeTipHistoryLength < 2 || slashOpacity <= 0.01f || Main.dedServ)
+                return;
+
+            Main.spriteBatch.EnterShaderRegion();
+
+            var slashShader = GameShaders.Misc["CalamityMod:ExobladeSlash"];
+            slashShader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/VoronoiShapes"));
+            slashShader.UseColor(new Color(0, 180, 255));
+            slashShader.UseSecondaryColor(new Color(0, 30, 80));
+            slashShader.Shader.Parameters["fireColor"].SetValue(new Color(80, 240, 255).ToVector3());
+            slashShader.Shader.Parameters["flipped"].SetValue(Owner.direction == 1);
+            slashShader.Apply();
+
+            var points = new List<Vector2>();
+            for (int i = 0; i < bladeTipHistoryLength; i++)
+                points.Add(bladeTipHistory[i]);
+
+            float SlashWidthFunction(float completionRatio, Vector2 _)
+            {
+                float fade = Utils.GetLerpValue(1f, 0f, completionRatio, true);
+                return Projectile.scale * 55f * fade * slashOpacity;
+            }
+
+            Color SlashColorFunction(float completionRatio, Vector2 _)
+            {
+                float alpha = Utils.GetLerpValue(0.95f, 0.3f, completionRatio, true);
+                return Color.White * alpha * slashOpacity;
+            }
+
+            PrimitiveRenderer.RenderTrail(
+                points,
+                new PrimitiveSettings(
+                    SlashWidthFunction,
+                    SlashColorFunction,
+                    (_, _) => Owner.MountedCenter,
+                    shader: slashShader
+                ),
+                BladeTrailHistoryFrames
+            );
+
+            Main.spriteBatch.ExitShaderRegion();
+        }
+
+        private void DrawLensFlare()
+        {
+            if (slashOpacity <= 0.01f || Main.dedServ)
+                return;
+
+            exoLensFlare ??= ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar");
+            Texture2D shineTex = exoLensFlare.Value;
+            Vector2 bladeTip = Owner.MountedCenter + SlashAngle.ToRotationVector2() * BladeLength * Projectile.scale;
+            Color lensColor = Color.Lerp(Color.DeepSkyBlue, Color.Cyan, Main.rand.NextFloat()) with { A = 0 };
+
+            Main.EntitySpriteDraw(
+                shineTex,
+                bladeTip - Main.screenPosition,
+                null,
+                lensColor * slashOpacity * 0.7f,
+                MathHelper.PiOver2,
+                shineTex.Size() / 2f,
+                new Vector2(1f, 3f) * Projectile.scale,
+                SpriteEffects.None,
+                0
+            );
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             if (!DrawUnconditionally && Owner.itemAnimation <= 0)
@@ -1090,6 +1191,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 origin,
                 bladeScale,
                 effects);
+
+            if (CurrentGrowthStage >= 2)
+            {
+                DrawSlash();
+                DrawLensFlare();
+            }
 
             return false;
         }

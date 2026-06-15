@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -40,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.hide = true;
+            Projectile.hide = false;
             Projectile.netImportant = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.timeLeft = 2;
@@ -95,9 +96,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
             if (Timer == BladeChargeTime && Projectile.owner == Main.myPlayer)
             {
-                SpawnBladeFinisher(owner, aim);
-                SpawnFirePillars(owner, aim);
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 11f);
+                // Play massive explosion sounds
+                SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.0f, Pitch = -0.1f }, owner.Center);
+                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.0f, Pitch = -0.15f }, owner.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HellkiteSwing", 2) { Volume = 1.0f, Pitch = -0.2f }, owner.Center);
+
+                SpawnCrossSlashes(owner, aim);
+                SpawnCircularFirePillars(owner);
+                SpawnSpiralEssenceFlames(owner);
+
+                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 15f);
             }
 
             if (Timer > BladeChargeTime + BladeCleanupTime)
@@ -119,56 +127,118 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
             if (Timer >= CrystalChargeTime && Timer <= CrystalChargeTime + CrystalStormTime && Projectile.owner == Main.myPlayer)
             {
-                int interval = balance.GetRightLaserTier() >= YCRightLaserVisualTier.Providence ? 6 : 8;
+                int interval = balance.GetRightLaserTier() >= YCRightLaserVisualTier.Providence ? 4 : 5;
                 if ((int)(Timer - CrystalChargeTime) % interval == 0)
+                {
                     SpawnStormLaser(owner);
+                }
+
+                // Rain down auric fireballs (meteors)
+                int meteorInterval = 10;
+                if ((int)(Timer - CrystalChargeTime) % meteorInterval == 0)
+                {
+                    SpawnMeteor(owner);
+                }
             }
 
             if (Timer > CrystalChargeTime + CrystalStormTime + 24)
                 Projectile.Kill();
         }
 
-        private void SpawnBladeFinisher(Player owner, Vector2 aim)
+        private void SpawnCrossSlashes(Player owner, Vector2 aim)
         {
-            int slash = Projectile.NewProjectile(
+            float baseRot = aim.ToRotation();
+            float offset = 0.35f;
+
+            int slash1 = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                owner.Center + aim * 210f - Vector2.UnitY * 40f,
-                aim,
+                owner.Center + aim * 150f,
+                aim.RotatedBy(-offset) * 5f,
                 ModContent.ProjectileType<YC_EXBladeGrandSlash>(),
                 Projectile.damage,
                 Projectile.knockBack,
                 Projectile.owner,
-                aim.ToRotation());
+                baseRot - offset);
 
-            if (Main.projectile.IndexInRange(slash))
+            if (Main.projectile.IndexInRange(slash1))
             {
-                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[slash], YCWeaponForm.Blade);
-                Main.projectile[slash].CritChance = Projectile.CritChance;
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[slash1], YCWeaponForm.Blade);
+                Main.projectile[slash1].CritChance = Projectile.CritChance;
+            }
+
+            int slash2 = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                owner.Center + aim * 150f,
+                aim.RotatedBy(offset) * 5f,
+                ModContent.ProjectileType<YC_EXBladeGrandSlash>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner,
+                baseRot + offset);
+
+            if (Main.projectile.IndexInRange(slash2))
+            {
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[slash2], YCWeaponForm.Blade);
+                Main.projectile[slash2].CritChance = Projectile.CritChance;
             }
         }
 
-        private void SpawnFirePillars(Player owner, Vector2 aim)
+        private void SpawnCircularFirePillars(Player owner)
         {
-            int count = balance.GetCompletedStageIndex() >= 8 ? 9 : 7;
+            int count = 12;
             for (int i = 0; i < count; i++)
             {
-                float distance = 160f + i * 92f;
-                Vector2 spawn = owner.Center + aim * distance + Vector2.UnitY * 240f;
+                float angle = MathHelper.TwoPi * i / count;
+                Vector2 dir = angle.ToRotationVector2();
+                Vector2 spawnPos = owner.Center + dir * 120f;
+                Vector2 vel = dir * 4.5f;
+
                 int pillar = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    spawn,
-                    -Vector2.UnitY,
+                    spawnPos,
+                    vel,
                     ModContent.ProjectileType<YC_EXFirePillar>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.45f)),
                     Projectile.knockBack * 0.35f,
                     Projectile.owner,
-                    i * 5f,
-                    MathHelper.Lerp(0.75f, 1.25f, i / (float)Math.Max(1, count - 1)));
+                    0f,
+                    1.0f);
 
                 if (Main.projectile.IndexInRange(pillar))
                 {
                     YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[pillar], YCWeaponForm.Blade);
                     Main.projectile[pillar].CritChance = Projectile.CritChance;
+                }
+            }
+        }
+
+        private void SpawnSpiralEssenceFlames(Player owner)
+        {
+            int count = 18;
+            for (int i = 0; i < count; i++)
+            {
+                if (!YC_EssenceFlame.CanSpawnMoreFor(owner, i))
+                    break;
+
+                float angle = MathHelper.TwoPi * i / count;
+                Vector2 vel = (angle + 0.45f).ToRotationVector2() * 14f;
+                Vector2 spawnPos = owner.Center + angle.ToRotationVector2() * 40f;
+
+                int flame = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPos,
+                    vel,
+                    ModContent.ProjectileType<YC_EssenceFlame>(),
+                    (int)(Projectile.damage * 0.65f),
+                    Projectile.knockBack * 0.2f,
+                    Projectile.owner,
+                    -1f,
+                    Main.rand.NextFloat(0f, 100f));
+
+                if (Main.projectile.IndexInRange(flame))
+                {
+                    YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[flame], YCWeaponForm.Blade);
+                    Main.projectile[flame].CritChance = Projectile.CritChance;
                 }
             }
         }
@@ -199,6 +269,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             {
                 YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laser], YCWeaponForm.Crystal);
                 Main.projectile[laser].CritChance = Projectile.CritChance;
+            }
+        }
+
+        private void SpawnMeteor(Player owner)
+        {
+            Vector2 focus = NewLegendYharimsCrystal.GetMouseWorld(owner);
+            Vector2 spawnPos = focus + new Vector2(Main.rand.NextFloat(-250f, 250f), -Main.rand.NextFloat(650f, 800f));
+            Vector2 velocity = (focus - spawnPos).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.12f) * Main.rand.NextFloat(12f, 18f);
+
+            int shard = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPos,
+                velocity,
+                ModContent.ProjectileType<YC_BurningShard>(),
+                (int)(Projectile.damage * 0.85f),
+                Projectile.knockBack * 0.5f,
+                Projectile.owner,
+                0f,
+                0f);
+
+            if (Main.projectile.IndexInRange(shard))
+            {
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shard], YCWeaponForm.Crystal);
+                Main.projectile[shard].CritChance = Projectile.CritChance;
             }
         }
 
@@ -267,6 +361,138 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
 
             if ((int)Timer % 30 == 0)
                 SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.18f + charge * 0.18f, Pitch = -0.35f + charge * 0.12f, MaxInstances = 5 }, owner.Center);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Player owner = Main.player[Projectile.owner];
+            if (Mode == YCWeaponForm.Blade)
+            {
+                if (Timer < BladeChargeTime)
+                {
+                    float charge = MathHelper.Clamp(Timer / BladeChargeTime, 0f, 1f);
+
+                    Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/Earth").Value;
+                    Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/EarthGlow").Value;
+                    Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+
+                    Vector2 drawPos = owner.Center - Main.screenPosition + new Vector2(0f, owner.gfxOffY);
+                    Vector2 aim = Projectile.velocity;
+                    float rotation = aim.ToRotation() + MathHelper.ToRadians(owner.direction < 0 ? 0f : 120f);
+
+                    if (charge > 0.8f)
+                    {
+                        drawPos += Main.rand.NextVector2Circular(3f, 3f);
+                    }
+
+                    SpriteEffects effects = owner.direction < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                    Vector2 origin = owner.direction < 0 ? new Vector2(texture.Width - 0f, 186f) : new Vector2(0f, 186f);
+
+                    float scale = Projectile.scale * MathHelper.Lerp(1.2f, 3.2f, charge);
+                    Color color = Color.Lerp(new Color(255, 80, 32), new Color(255, 222, 90), charge) with { A = 0 };
+
+                    Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+                    Main.EntitySpriteDraw(
+                        bloom,
+                        drawPos + aim * 80f,
+                        null,
+                        color * 0.45f,
+                        0f,
+                        bloom.Size() * 0.5f,
+                        scale * 1.5f,
+                        SpriteEffects.None,
+                        0);
+
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 8f * (1f - charge);
+                        Main.EntitySpriteDraw(
+                            texture,
+                            drawPos + offset,
+                            null,
+                            color * 0.25f,
+                            rotation,
+                            origin,
+                            scale,
+                            effects,
+                            0);
+                    }
+
+                    Main.EntitySpriteDraw(
+                        glow,
+                        drawPos,
+                        null,
+                        Color.White with { A = 0 } * charge,
+                        rotation,
+                        origin,
+                        scale,
+                        effects,
+                        0);
+
+                    Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+                }
+            }
+            else
+            {
+                if (Timer < CrystalChargeTime)
+                {
+                    float charge = MathHelper.Clamp(Timer / CrystalChargeTime, 0f, 1f);
+
+                    Texture2D droneTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone").Value;
+                    Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                    Texture2D pixel = Terraria.GameContent.TextureAssets.MagicPixel.Value;
+
+                    Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float angle = Main.GlobalTimeWrappedHourly * 8f + i * MathHelper.TwoPi / 6f;
+                        float radius = MathHelper.Lerp(220f, 40f, charge);
+                        Vector2 orbitPos = owner.Center + angle.ToRotationVector2() * radius;
+                        Vector2 drawPos = orbitPos - Main.screenPosition;
+
+                        Vector2 toPlayer = owner.Center - orbitPos;
+                        float lineRot = toPlayer.ToRotation();
+                        Main.EntitySpriteDraw(
+                            pixel,
+                            drawPos,
+                            new Rectangle(0, 0, 1, 1),
+                            Color.Gold * 0.45f * charge,
+                            lineRot,
+                            new Vector2(0f, 0.5f),
+                            new Vector2(toPlayer.Length(), 2f),
+                            SpriteEffects.None,
+                            0);
+
+                        Main.EntitySpriteDraw(
+                            bloom,
+                            drawPos,
+                            null,
+                            Color.Orange * 0.5f * charge,
+                            0f,
+                            bloom.Size() * 0.5f,
+                            0.35f,
+                            SpriteEffects.None,
+                            0);
+
+                        float droneRot = lineRot + MathHelper.PiOver2;
+                        Main.EntitySpriteDraw(
+                            droneTexture,
+                            drawPos,
+                            null,
+                            Color.Lerp(Color.Orange, Color.Gold, charge),
+                            droneRot,
+                            droneTexture.Size() * 0.5f,
+                            1.0f,
+                            SpriteEffects.None,
+                            0);
+                    }
+
+                    Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+                }
+            }
+            return false;
         }
     }
 

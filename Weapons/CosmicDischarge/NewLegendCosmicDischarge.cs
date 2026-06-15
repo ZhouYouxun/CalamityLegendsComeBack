@@ -119,13 +119,33 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     _ => CosmicDischargeAttackKind.WhipThrust
                 };
             }
-
-            return comboIndex switch
+            else if (mode == CosmicDischargeAttackMode.Sword)
             {
-                0 => CosmicDischargeAttackKind.SwordSwingOne,
-                1 => CosmicDischargeAttackKind.SwordSwingTwo,
-                _ => CosmicDischargeAttackKind.SwordFinisher
-            };
+                return comboIndex switch
+                {
+                    0 => CosmicDischargeAttackKind.SwordSwingOne,
+                    1 => CosmicDischargeAttackKind.SwordSwingTwo,
+                    _ => CosmicDischargeAttackKind.SwordFinisher
+                };
+            }
+            else if (mode == CosmicDischargeAttackMode.ChainKnife)
+            {
+                return comboIndex switch
+                {
+                    0 => CosmicDischargeAttackKind.ChainKnifeSingle,
+                    1 => CosmicDischargeAttackKind.ChainKnifeScatter,
+                    _ => CosmicDischargeAttackKind.ChainKnifeBiteAll
+                };
+            }
+            else
+            {
+                return comboIndex switch
+                {
+                    0 => CosmicDischargeAttackKind.GreatswordSwingOne,
+                    1 => CosmicDischargeAttackKind.GreatswordSwingTwo,
+                    _ => CosmicDischargeAttackKind.GreatswordFinisher
+                };
+            }
         }
 
         private static bool TryRequestQuickDraw(Player player)

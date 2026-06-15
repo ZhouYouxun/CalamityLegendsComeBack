@@ -24,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         private static int LeftHoldoutType => ModContent.ProjectileType<YC_LeftBladeSwing>();
         private static int RightHoldoutType => ModContent.ProjectileType<YC_RightCrystalHoldout>();
+        private static int ThrownBladeType => ModContent.ProjectileType<YC_ThrownBlade>();
         private static int VipType => ModContent.ProjectileType<YC_EX_VIP>();
 
         public override void SetDefaults()
@@ -52,10 +53,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override bool CanUseItem(Player player)
         {
+            if (HasActivePrimaryAttack(player))
+                return false;
+
             bool rightClick = player.altFunctionUse == 2;
             if (rightClick)
             {
-                if (player.ownedProjectileCounts[RightHoldoutType] > 0)
+                if (player.GetModPlayer<YharimsCrystalStatePlayer>().RightClickCooldown > 0)
                     return false;
 
                 Item.useTime = 20;
@@ -66,9 +70,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             }
             else
             {
-                if (player.ownedProjectileCounts[LeftHoldoutType] > 0)
-                    return false;
-
                 Item.useTime = 25;
                 Item.useAnimation = 25;
                 Item.channel = true;
@@ -85,9 +86,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override bool CanShoot(Player player)
         {
-            return player.altFunctionUse == 2
-                ? player.ownedProjectileCounts[RightHoldoutType] <= 0
-                : player.ownedProjectileCounts[LeftHoldoutType] <= 0;
+            if (HasActivePrimaryAttack(player))
+                return false;
+
+            if (player.altFunctionUse == 2)
+            {
+                if (player.GetModPlayer<YharimsCrystalStatePlayer>().RightClickCooldown > 0)
+                    return false;
+            }
+
+            return true;
         }
 
         public override void HoldItem(Player player)
@@ -193,6 +201,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+        }
+
+        private static bool HasActivePrimaryAttack(Player player)
+        {
+            return player.ownedProjectileCounts[LeftHoldoutType] > 0 ||
+                player.ownedProjectileCounts[RightHoldoutType] > 0 ||
+                player.ownedProjectileCounts[ThrownBladeType] > 0;
         }
 
         private static void SyncCooldownDisplay(Player player, YCEXPlayer exPlayer)

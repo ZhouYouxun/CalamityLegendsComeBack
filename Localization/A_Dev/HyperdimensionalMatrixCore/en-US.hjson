@@ -6,17 +6,23 @@ Mods: {
 					DisplayName: Hyperdimensional Matrix
 					Tooltip:
 						'''
-						Summons the Matrix Core — a singular development engine made manifest
-						Occupies every available minion slot; each additional slot grants +50% damage
-						The core autonomously cycles through five attack modules
-						Module I  · Data Grid: computes an optimal strike path, fires all lit cells simultaneously
-						Module II · Geometry Burst: constructs a rotating polyhedron, then detonates it into edge shards
-						Module III· Shader Experiments: deploys five experimental orbs, each running a different shader
-						Module IV · Metaball Fusion: spawns energy spheres that converge and collapse into a supermass
-						Module V  · Space Warp: warps local spacetime around large enemies
-						Every 900 frames the core enters Compile Storm — all modules fire simultaneously
-						Its defensive matrix grants 15 defense and 15% damage reduction
-						"You did not summon a minion. You instantiated a runtime."
+						[c/7EB8FF:Summons the Matrix Core — a singular development engine made manifest]
+						[c/CC88FF:Scales with every available minion slot; claiming more slots multiplies damage substantially]
+						[c/50D0C8:The core autonomously cycles through five attack modules]
+						[c/FF9040:Module I   · Data Grid: cells home onto targets with inertia and redirect on target loss; hits occasionally steal life]
+						[c/3C8AFF:Module II  · Geometry Burst: constructs a rotating polyhedron, then detonates it into piercing edge shards]
+						[c/C040FF:Module III · Geometry Satellites: deploys hyperdimensional wireframe projections as orbiting sentinels]
+						[c/FF3C8A:Module IV  · Metaball Fusion: spawns convergent plasma spheres that collapse into a supermass with visible plasma bridges]
+						[c/A060FF:Module V   · Space Warp: hooks onto large enemies, suppressing movement and dealing sustained contact damage]
+						[c/FFEC40:At long intervals the core erupts into Compile Storm — all modules fire at once; the wielder briefly becomes invincible]
+						[c/5880C0:The defensive matrix hardens your body and reduces incoming damage]
+						[c/28E868:Perpetually regenerates the wielder's health]
+						[c/F0C828:Accelerates your movement]
+						[c/E040C0:Distorts probability fields in your favor]
+						[c/707888:Erases the core's presence from enemy threat calculations]
+						[c/FF3030:When critically wounded, the core overclocks — dramatically accelerating all module cycles]
+						[c/30E898:A passive data field silently damages all enemies in close proximity]
+						[c/787888:"You did not summon a minion. You instantiated a runtime."]
 						'''
 				}
 			}
@@ -25,7 +31,7 @@ Mods: {
 		Buffs: {
 			HyperdimensionalMatrixCoreBuff: {
 				DisplayName: Matrix Protection Field
-				Description: 15 defense and 15% damage reduction; the core is continuously recompiling the battlefield
+				Description: Fortifies body · reduces damage · regenerates life · boosts speed · reduces aggro; the core recompiles the battlefield
 			}
 		}
 
@@ -33,13 +39,14 @@ Mods: {
 			HyperdimensionalMatrixCore: {
 				HyperdimensionalMatrixCoreProjectile.DisplayName: Hyperdimensional Matrix Core
 				MatrixDataGridPanel.DisplayName: Data Matrix Panel
-				MatrixGridCell.DisplayName: Grid Cell Projectile
+				MatrixGridCell.DisplayName: Data Lance
 				MatrixGeoBurst.DisplayName: Geometry Burst
 				MatrixGeoShard.DisplayName: Geometry Edge Shard
-				MatrixShaderOrb.DisplayName: Shader Experiment Orb
+				MatrixShaderOrb.DisplayName: Geometry Satellite
 				MatrixFusionController.DisplayName: Fusion Convergence
 				MatrixFusionExplosion.DisplayName: Fusion Collapse
 				MatrixSpaceWarpField.DisplayName: Space Warp Field
+				MatrixDataAura.DisplayName: Data Field Aura
 				MatrixCompileStorm.DisplayName: Compile Storm
 				MatrixSingularity.DisplayName: Data Singularity
 			}

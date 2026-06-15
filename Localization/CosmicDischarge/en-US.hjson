@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -12,15 +12,22 @@
 				NewLegendCosmicDischarge: {
 					DisplayName: Cosmic Discharge - Legend Reborn
 					Tooltip: "[GFB]"
+					WhipName: Whip Mode
+					SwordName: Sword Mode
+					ChainKnifeName: Chain Knife Mode
+					GreatswordName: Greatsword Mode
+					UltimateActiveText: Glacial Age!
 					CosmicDischargeLeft:
 						'''
-						[c/8DEBFF:Left click: performs a three-hit combo in the current form.]
-						[c/8DEBFF:Whip form: slashes the blade-chain from above, then below, then thrusts toward the cursor. The returning blade deals reduced damage.]
-						[c/8DEBFF:Sword form: swings twice, then spins the blade twice before cleaving downward and releasing a short frost wave.]
+						[c/8DEBFF:Left click: performs a three-hit combo in the current form. Hits apply a Frost Mark (5s).]
+						[c/8DEBFF:Whip form: slashes from above, below, then thrusts forward. Whip hits apply Frost Mark. Under Frozen Emperor, swings dual whips simultaneously from both directions.]
+						[c/8DEBFF:Sword form: sweeps twice and slams. Striking a target with Frost Mark detonates it, dealing 1.4x damage and launching 8 radial ice bolts (12 under Frozen Emperor).]
+						[c/8DEBFF:Chain Knife form: throws latching chain blades. Bites detonate Frost Mark to spawn 3 homing ice shards. Under Frozen Emperor, boss shackling slow is increased to 60%.]
+						[c/8DEBFF:Greatsword form: straightens the chain-blade. Slashes absorb all Frost Marks within 300 units; each absorbed mark grants 1 stack of Frozen Emperor charge. Scales up by 1.5x under Frozen Emperor.]
 						'''
 					CosmicDischargeRight:
 						'''
-						[c/6FDFFF:Right click: switches between whip and sword form.]
+						[c/6FDFFF:Right click: cycles left-click attack forms (Whip -> Sword -> Chain Knife -> Greatsword).]
 						[c/6FDFFF:During the third hit windup: triggers Frostflash Draw instead, instantly thrusting the blade-chain and rapidly retracting it. Only this attack grants 10 ultimate energy.]
 						'''
 					CosmicDischargeUltimate:
@@ -78,6 +85,7 @@
 		Cooldowns: {
 			CosmicDischarge_Ultimate: Frostflash Energy
 			CosmicDischarge_Icebound: Voidfrost Seal
+			CosmicDischarge_QuickDraw: Frostflash Draw
 		}
 	}
 }

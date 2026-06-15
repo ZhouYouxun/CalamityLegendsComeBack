@@ -88,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            NPC target = FindTarget(20f * 16f, forward);
+            NPC target = FindTarget(3200f, forward);
             float wave = (float)Math.Sin(shotIndex * 1.83f) * MathHelper.Lerp(0.26f, 0.06f, shotIndex / (float)(ShotCount - 1));
             Vector2 direction = forward.RotatedBy(wave);
 
@@ -232,7 +232,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Timer++;
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            NPC target = FindTarget(20f * 16f, currentDirection);
+            NPC target = FindTarget(4200f, currentDirection);
             if (target is not null)
             {
                 Vector2 desiredDirection = (target.Center + target.velocity * 12f - Projectile.Center).SafeNormalize(currentDirection);
@@ -302,16 +302,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             if (Main.dedServ)
                 return;
 
+            Color orange = new(255, 140, 42);
+            Color red = new(180, 12, 8);
+
             for (int i = 0; i < 10; i++)
             {
-                Dust dust = Dust.NewDustPerfect(
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 6f);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     Projectile.Center,
-                    Main.rand.NextBool(3) ? DustID.CursedTorch : (int)CalamityDusts.Brimstone,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 6f),
-                    100,
-                    Main.rand.NextBool() ? new Color(255, 176, 68) : new Color(210, 42, 18),
-                    Main.rand.NextFloat(0.85f, 1.35f));
-                dust.noGravity = true;
+                    velocity,
+                    "CalamityMod/Particles/VerticalSmear",
+                    false,
+                    Main.rand.Next(10, 15),
+                    Main.rand.NextFloat(0.6f, 1.2f),
+                    Color.Lerp(orange, red, Main.rand.NextFloat(0.15f, 0.65f)),
+                    new Vector2(0.18f, 0.86f),
+                    true,
+                    true,
+                    shrinkSpeed: 0.82f,
+                    glowOpacity: 0.48f));
             }
         }
 

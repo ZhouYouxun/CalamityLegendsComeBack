@@ -78,6 +78,18 @@
 					DisplayName: Boss进度修改器
 					Tooltip: 左键打开或关闭 Boss 进度调试面板。
 				}
+
+				SoundproofEarmuffs: {
+					DisplayName: 隔音耳罩
+					Tooltip:
+						'''
+						在背包中右键切换隔音。
+						开启后音效降低90%，音乐不受影响。
+						当前状态：[STATE]
+						'''
+					EnabledState: 开启
+					DisabledState: 关闭
+				}
 			}
 
 			Consumables: {

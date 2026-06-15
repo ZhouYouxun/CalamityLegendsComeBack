@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Common.NoMana: Not enough mana
 
@@ -166,6 +166,21 @@
 			AzureThunderGuZhouSlowDebuff: {
 				DisplayName: Long Barge Lock
 				Description: Movement speed reduced by 15%
+			}
+
+			CosmicDischargeFrostMarkDebuff: {
+				DisplayName: Cosmic Discharge Frost Mark Debuff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrostMarkDebuff.Description
+			}
+
+			CosmicDischargeFrozenEmperorBuff: {
+				DisplayName: Cosmic Discharge Frozen Emperor Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorBuff.Description
+			}
+
+			CosmicDischargeFrozenEmperorSliverBuff: {
+				DisplayName: Cosmic Discharge Frozen Emperor Sliver Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorSliverBuff.Description
 			}
 		}
 

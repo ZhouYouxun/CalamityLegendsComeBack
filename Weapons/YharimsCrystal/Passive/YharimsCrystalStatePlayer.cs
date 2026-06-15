@@ -14,6 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
         public int BladeEmpowerTimer;
         public int CrystalEmpowerTimer;
 
+        public int RightClickCooldown;
+
         public bool BladeEmpowered => BladeEmpowerTimer > 0;
         public bool CrystalEmpowered => CrystalEmpowerTimer > 0;
 
@@ -23,6 +25,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
                 BladeEmpowerTimer--;
             if (CrystalEmpowerTimer > 0)
                 CrystalEmpowerTimer--;
+            if (RightClickCooldown > 0)
+                RightClickCooldown--;
         }
 
         public void SetLastWeapon(YCWeaponForm form)

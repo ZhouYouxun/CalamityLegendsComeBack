@@ -41,6 +41,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         private int lastFiredModule = -1;
         private int targetRefreshTimer;
         private int idleTimer;
+        private float _spinBoost;
+        private int _lastSpinModule = -1;
+        private bool _auraSpawned;
 
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -92,8 +95,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             UpdateDamage(owner);
             UpdateTarget(owner);
             TickCooldowns();
+            if (_spinBoost > 0f)
+                _spinBoost = Math.Max(0f, _spinBoost - 0.055f);
 
             idleTimer++;
+
+            // Spawn the persistent data field aura once, so it lives alongside this core
+            if (!_auraSpawned && Main.myPlayer == Projectile.owner)
+            {
+                _auraSpawned = true;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixDataAura>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.10f)),
+                    0f, Projectile.owner,
+                    Projectile.whoAmI);
+            }
 
             NPC target = GetTarget();
             if (Main.myPlayer == Projectile.owner)
@@ -197,9 +215,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private void TickCooldowns()
         {
-            for (int i = 0; i < ModuleCount; i++)
-                if (moduleCooldowns[i] > 0) moduleCooldowns[i]--;
+            // Matrix Overload: below 50% HP the core double-ticks all cooldowns
+            Player owner = Main.player[Projectile.owner];
+            bool overloading = owner.active && owner.statLife < owner.statLifeMax2 * 0.5f;
 
+            for (int i = 0; i < ModuleCount; i++)
+            {
+                if (moduleCooldowns[i] <= 0)
+                    continue;
+                moduleCooldowns[i]--;
+                if (overloading && moduleCooldowns[i] > 0)
+                    moduleCooldowns[i]--;
+            }
             compileStormTimer++;
         }
 
@@ -246,6 +273,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private void FireModule(int m, NPC target)
         {
+            // Rubik's-cube-style spin burst when a module fires
+            _spinBoost = 3.2f + m * 0.22f;
+            _lastSpinModule = m;
+
             IEntitySource src = Projectile.GetSource_FromThis();
             int dmg = Projectile.damage;
 
@@ -318,6 +349,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 Projectile.whoAmI, target.whoAmI);
 
             SoundEngine.PlaySound(SoundID.Item88 with { Volume = 0.6f, Pitch = -0.4f, MaxInstances = 1 }, Projectile.Center);
+
+            // Compile Storm immunity: wielder becomes briefly invincible as the storm erupts
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Player stormOwner = Main.player[Projectile.owner];
+                stormOwner.immuneTime  = Math.Max(stormOwner.immuneTime, 60);
+                stormOwner.immuneAlpha = 180;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -325,29 +364,66 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             float t = Main.GlobalTimeWrappedHourly;
             Player owner = Main.player[Projectile.owner];
 
+            // Dynamic spin: different modules twist different axes at different speeds
+            float spinMult = 1f + _spinBoost;
+            // Module-based twist direction alternates like a Rubik's cube
+            float icoDir = (_lastSpinModule % 2 == 0) ? 1f : -1f;
+            float cubeDir = -icoDir;
+            float icoSpin  = t * (1.6f * spinMult * icoDir);
+            float cubeSpin = t * (2.1f * spinMult * cubeDir) + 0.42f;
+            float hyperSpin = t * (1.0f + _spinBoost * 0.35f);
+
             // Layer 1: player orbit shield
             HyperdimensionalMatrixVisuals.DrawShield(owner, 0.60f);
 
-            // Layer 2: icosahedron wire-frame rotating around core
+            // Layer 2: icosahedron — faster and direction-reactive
             HyperdimensionalMatrixVisuals.DrawGeometry(
                 Projectile.Center, MatrixGeometryShape.Icosahedron,
-                54f, t * 0.80f, 0.55f, Projectile.identity);
+                54f, icoSpin, 0.55f + _spinBoost * 0.05f, Projectile.identity);
 
-            // Layer 3: cube rotating opposite direction (smaller)
+            // Layer 3: cube rotating opposite direction
             HyperdimensionalMatrixVisuals.DrawGeometry(
                 Projectile.Center, MatrixGeometryShape.Cube,
-                34f, -t * 1.18f + 0.42f, 0.42f, Projectile.identity + 7, false);
+                34f, cubeSpin, 0.42f + _spinBoost * 0.04f, Projectile.identity + 7, false);
 
             // Layer 4: hypercube at the core center
-            HyperdimensionalMatrixVisuals.DrawHypercube(Projectile.Center, 26f, t, 0.88f);
+            HyperdimensionalMatrixVisuals.DrawHypercube(Projectile.Center, 26f, hyperSpin, 0.88f);
 
-            // Rune rings
+            // Rune rings — expand slightly when spinning
+            float ringR = 74f + _spinBoost * 3f;
             HyperdimensionalMatrixVisuals.DrawScanRing(
-                Projectile.Center, 74f, t * 0.48f,
+                Projectile.Center, ringR, t * (0.48f + _spinBoost * 0.15f),
                 HyperdimensionalMatrixVisuals.GetDataColor(0.18f, 0.36f), 32, 1.4f);
             HyperdimensionalMatrixVisuals.DrawScanRing(
-                Projectile.Center, 90f, -t * 0.32f,
+                Projectile.Center, ringR + 16f, -t * (0.32f + _spinBoost * 0.1f),
                 HyperdimensionalMatrixVisuals.GetDataColor(0.62f, 0.26f), 24, 1.0f);
+
+            // Module status HUD ring — 5 nodes, brightness = readiness, size = urgency
+            for (int m = 0; m < ModuleCount; m++)
+            {
+                float mAngle = MathHelper.TwoPi * m / ModuleCount - t * 0.22f;
+                Vector2 mPos = Projectile.Center + mAngle.ToRotationVector2() * 102f;
+                float readyPct = 1f - Math.Min(1f, moduleCooldowns[m] / (float)GetModuleMaxCooldown(m));
+                Color mColor = GetModuleIndicatorColor(m) * Math.Max(0.12f, readyPct * readyPct);
+                float mSize = MathHelper.Lerp(2f, 8f, readyPct);
+                HyperdimensionalMatrixVisuals.DrawNode(mPos, mColor, mSize);
+                if (readyPct > 0.92f)
+                {
+                    HyperdimensionalMatrixVisuals.DrawNode(mPos, mColor * 0.35f, mSize * 2.2f);
+                    Main.spriteBatch.DrawLineBetter(Projectile.Center, mPos, mColor * 0.10f, 1f);
+                }
+            }
+
+            // Matrix Overload visual — red alert rings when below 50% HP
+            if (owner.active && owner.statLife < owner.statLifeMax2 * 0.5f)
+            {
+                float pulse = 0.5f + 0.5f * (float)Math.Sin(t * 8f);
+                Color alertColor = new Color(255, 50, 10, 0) * (0.4f + pulse * 0.3f);
+                HyperdimensionalMatrixVisuals.DrawScanRing(
+                    Projectile.Center, 88f + pulse * 14f, -t * 2.1f, alertColor, 8, 1.9f + pulse * 0.5f);
+                HyperdimensionalMatrixVisuals.DrawScanRing(
+                    Projectile.Center, 70f + pulse * 9f,   t * 2.8f, alertColor * 0.55f, 6, 1.3f);
+            }
 
             // Targeting line
             NPC target = GetTarget();
@@ -368,5 +444,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             return false;
         }
+
+        private static int GetModuleMaxCooldown(int m) => m switch
+        {
+            0 => MatrixModuleNumbers.DataGridCooldown,
+            1 => MatrixModuleNumbers.GeoBurstCooldown,
+            2 => MatrixModuleNumbers.ShaderOrbsCooldown,
+            3 => MatrixModuleNumbers.FusionCooldown,
+            4 => MatrixModuleNumbers.SpaceWarpCooldown,
+            _ => 360
+        };
+
+        private static Color GetModuleIndicatorColor(int m) => m switch
+        {
+            0 => new Color(255, 100, 30,  0),
+            1 => new Color(40,  200, 255, 0),
+            2 => HyperdimensionalMatrixVisuals.GetDataColor(Main.GlobalTimeWrappedHourly * 0.35f),
+            3 => new Color(200, 220, 255, 0),
+            4 => new Color(80,  255, 120, 0),
+            _ => Color.White with { A = 0 }
+        };
     }
 }

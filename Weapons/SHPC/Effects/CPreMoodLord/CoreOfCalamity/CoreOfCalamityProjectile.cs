@@ -89,8 +89,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             {
                 Projectile hitbox = Main.projectile[explosion];
                 Vector2 center = Projectile.Center;
-                hitbox.width = 250;
-                hitbox.height = 250;
+                int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
+                hitbox.width = explosionSize;
+                hitbox.height = explosionSize;
                 hitbox.Center = center;
                 hitbox.DamageType = DamageClass.Magic;
                 hitbox.netUpdate = true;
@@ -502,6 +503,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 0.54f,
                 14));
 
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                OrbColor,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One * 0.45f,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.48f,
+                0.05f,
+                16));
+
             for (int i = 0; i < 12; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
@@ -530,7 +542,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 return;
 
             Projectile explosion = Main.projectile[explosionIndex];
-            int explosionSize = new BalanceSHPC().GetDefaultOrbExplosionSize();
+            int explosionSize = (int)(new BalanceSHPC().GetDefaultOrbExplosionSize() * 0.66f);
             explosion.Resize(explosionSize, explosionSize);
             explosion.Center = Projectile.Center;
             explosion.DamageType = DamageClass.Magic;

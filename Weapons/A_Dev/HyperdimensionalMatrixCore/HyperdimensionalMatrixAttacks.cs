@@ -1,5 +1,7 @@
 using System;
 using CalamityMod;
+using CalamityMod.Particles;
+using CalamityLegendsComeBack;
 using CalamityLegendsComeBack.Shader;
 using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
@@ -63,9 +65,37 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override void AI()
         {
+            int age = Age;
             // Fire all lit cells on the designated frame (owner client only)
-            if (Age == FireFrame && Main.myPlayer == Projectile.owner)
+            if (age == FireFrame && Main.myPlayer == Projectile.owner)
                 SpawnCells();
+
+            // Visual flash at each lit cell when firing (all clients)
+            if (age == FireFrame && !Main.dedServ)
+                SpawnCellFlashParticles();
+        }
+
+        private void SpawnCellFlashParticles()
+        {
+            Vector2 origin = GetGridOrigin();
+            for (int i = 0; i < CellCount; i++)
+            {
+                if (!CellIsLit(i))
+                    continue;
+                Vector2 cellWorld = origin + GetCellLocalPos(i) + new Vector2(CellSize * 0.5f);
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)CellCount);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    cellWorld, Main.rand.NextVector2Unit() * Main.rand.NextFloat(1f, 2.5f),
+                    false, 8 + Main.rand.Next(6), 0.5f, c, true, false, false));
+                if (Main.rand.NextBool(3))
+                    GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                        cellWorld, Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.5f, 1.8f),
+                        false, 16, 0.8f + Main.rand.NextFloat(0.4f), c * 1.4f));
+            }
+            // Data burst at panel center
+            CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(
+                GetGridOrigin() + new Vector2(Cols * CellSize * 0.5f, Rows * CellSize * 0.5f),
+                HyperdimensionalMatrixVisuals.GetDataColor(0.5f), 0.6f);
         }
 
         private void SpawnCells()
@@ -179,6 +209,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
     /// <summary>矩阵面板射出的单个数据格，归向目标。</summary>
     public sealed class MatrixGridCell : ModProjectile, ILocalizedModType
     {
+        private const float HomingInertia = 24f;
+        private const float MaxSpeed      = 22f;
+        private const int   HomingDelay   = 12;
+
+        private int _timer;
+
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -186,7 +222,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             ProjectileID.Sets.MinionShot[Type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Type] = true;
-            ProjectileID.Sets.TrailCacheLength[Type] = 10;
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -198,7 +234,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = 3;
-            Projectile.timeLeft = 100;
+            Projectile.timeLeft = 110;
             Projectile.extraUpdates = 1;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
@@ -213,53 +249,152 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override void AI()
         {
+            _timer++;
             int targetIndex = (int)Projectile.ai[0];
-            if (Main.npc.IndexInRange(targetIndex))
+
+            if (_timer <= HomingDelay)
+            {
+                // Free-flight: gentle wander, no homing
+                float wander = (float)Math.Sin((_timer + Projectile.identity * 5f) * 0.08f) * 0.006f;
+                Projectile.velocity = Projectile.velocity.RotatedBy(wander) * 0.997f;
+            }
+            else if (Main.npc.IndexInRange(targetIndex))
             {
                 NPC target = Main.npc[targetIndex];
                 if (target.CanBeChasedBy(Projectile, false))
                 {
-                    float maxTurn = 0.18f;
-                    float desired = (target.Center - Projectile.Center).ToRotation();
-                    float current = Projectile.velocity.ToRotation();
-                    Projectile.velocity = current.AngleTowards(desired, maxTurn)
-                        .ToRotationVector2() * MathHelper.Lerp(Projectile.velocity.Length(), 26f, 0.08f);
+                    float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 22f, _timer, true);
+                    float closePressure = Utils.GetLerpValue(500f, 80f, Projectile.Distance(target.Center), true);
+                    float pull = MathHelper.Lerp(0.25f, 1f, Math.Max(warmup, closePressure * 0.75f));
+
+                    Vector2 curVel = Projectile.velocity;
+                    if (curVel.LengthSquared() < 0.01f)
+                        curVel = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 4f;
+
+                    Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(curVel) * MaxSpeed;
+                    Projectile.velocity = (curVel * HomingInertia + desired * pull + curVel * (1f - pull)) / (HomingInertia + 1f);
+
+                    // Organic side-sway — creates the "lazy arc" feel
+                    float sway = (float)Math.Sin((_timer + Projectile.identity * 7f) * 0.065f)
+                               * MathHelper.Lerp(0.013f, 0.003f, pull);
+                    Projectile.velocity = Projectile.velocity.RotatedBy(sway);
+
+                    // Close-range burst: lances accelerate as they close in, punching through near targets
+                    float maxAllowed = MaxSpeed * (1f + closePressure * 0.38f);
+                    if (Projectile.velocity.Length() > maxAllowed)
+                        Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * maxAllowed;
                 }
+                else
+                {
+                    // Chain redirect: switch to nearest live enemy rather than coasting to a stop
+                    int bestIdx = -1;
+                    float bestDist = 1100f;
+                    for (int n = 0; n < Main.maxNPCs; n++)
+                    {
+                        NPC cand = Main.npc[n];
+                        if (!cand.active || !cand.CanBeChasedBy(Projectile, false)) continue;
+                        float d = Projectile.Distance(cand.Center);
+                        if (d < bestDist) { bestDist = d; bestIdx = n; }
+                    }
+                    if (bestIdx >= 0) Projectile.ai[0] = bestIdx;
+                    else Projectile.velocity *= 0.994f;
+                }
+            }
+            else
+            {
+                Projectile.velocity *= 0.996f;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.07f).ToVector3() * 0.28f);
+
+            // Particle trail
+            if (!Main.dedServ && _timer % 3 == 0)
+            {
+                Color tc = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.073f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center, -Projectile.velocity * 0.18f, false, 5, 0.38f, tc, true, false, false));
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            // Data siphon: occasional life steal
+            if (Projectile.owner == Main.myPlayer && Main.rand.NextBool(3))
+            {
+                Player owner = Main.player[Projectile.owner];
+                owner.statLife = Math.Min(owner.statLife + 1, owner.statLifeMax2);
+                owner.HealEffect(1);
+            }
+            // Impact spark burst — visually punchy feedback on every hit
+            if (!Main.dedServ)
+            {
+                Color hitColor = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.073f);
+                for (int i = 0; i < 7; i++)
+                {
+                    Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 11f);
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        target.Center, vel, false, 5 + Main.rand.Next(8), 0.5f, hitColor, true, false, i < 3));
+                }
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.073f);
-            float half = 6f;
+            Color baseColor = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.073f);
+            Vector2 center = Projectile.Center;
+            float speed = Projectile.velocity.Length();
+            Vector2 dir = speed > 0.1f ? Projectile.velocity.SafeNormalize(Vector2.UnitX) : Vector2.UnitX;
+            Vector2 perp = dir.RotatedBy(MathHelper.PiOver2);
 
-            // Trail
+            // Lance shaft: thick, brightly fading trail
             for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero || Projectile.oldPos[i - 1] == Vector2.Zero)
                     continue;
-
                 float pct = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 a = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 Vector2 b = Projectile.oldPos[i - 1] + Projectile.Size * 0.5f;
-                Main.spriteBatch.DrawLineBetter(a, b, color * (pct * 0.45f), 1f + pct * 2f);
+                Main.spriteBatch.DrawLineBetter(a, b, baseColor * (pct * 0.70f), 2.8f + pct * 2.2f);
             }
 
-            // Square cell shape at head
-            Vector2 c = Projectile.Center;
-            float r = Projectile.rotation;
-            Vector2 right = r.ToRotationVector2() * half;
-            Vector2 up = (r + MathHelper.PiOver2).ToRotationVector2() * half;
-            Main.spriteBatch.DrawLineBetter(c - right - up, c + right - up, color, 1.8f);
-            Main.spriteBatch.DrawLineBetter(c + right - up, c + right + up, color, 1.8f);
-            Main.spriteBatch.DrawLineBetter(c + right + up, c - right + up, color, 1.8f);
-            Main.spriteBatch.DrawLineBetter(c - right + up, c - right - up, color, 1.8f);
-            HyperdimensionalMatrixVisuals.DrawNode(c, color, 4f);
+            // V-arrowhead tip pointing in the direction of travel
+            float tipLen = 14f;
+            float tipWidth = 6.5f;
+            Vector2 tip       = center + dir * tipLen * 0.6f;
+            Vector2 leftWing  = center - dir * tipLen * 0.3f + perp * tipWidth;
+            Vector2 rightWing = center - dir * tipLen * 0.3f - perp * tipWidth;
+            Main.spriteBatch.DrawLineBetter(leftWing,  tip, baseColor, 2.2f);
+            Main.spriteBatch.DrawLineBetter(rightWing, tip, baseColor, 2.2f);
+            Main.spriteBatch.DrawLineBetter(leftWing, rightWing, baseColor * 0.28f, 1.2f);
+
+            // Bright tip node + soft outer halo
+            HyperdimensionalMatrixVisuals.DrawNode(tip, baseColor,          6.5f);
+            HyperdimensionalMatrixVisuals.DrawNode(tip, baseColor * 0.20f, 16f);
+
+            // Three fading echo nodes along the shaft wake
+            for (int w = 1; w <= 3; w++)
+            {
+                float wPct = w / 4f;
+                Vector2 wPos = center - dir * (tipLen * 0.6f + wPct * 30f);
+                HyperdimensionalMatrixVisuals.DrawNode(wPos, baseColor * ((1f - wPct) * 0.38f), 3.5f - w * 0.6f);
+            }
 
             return false;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color c = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.073f);
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.5f, 4f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center, vel, false, 5 + Main.rand.Next(6), 0.5f, c, true, false, false));
+            }
         }
     }
 
@@ -310,11 +445,37 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public override void AI()
         {
             int age = Age;
+            // Particle burst: all clients see it
+            if (age == FlashEnd && !Main.dedServ)
+                SpawnExplosionParticles();
             // Spawn shards at the explosion frame (owner only)
             if (age == FlashEnd && Main.myPlayer == Projectile.owner)
                 SpawnShards();
 
             Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(age * 0.01f).ToVector3() * 0.35f);
+        }
+
+        private void SpawnExplosionParticles()
+        {
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 9f);
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.055f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center, vel, false, 12 + Main.rand.Next(14),
+                    0.6f + Main.rand.NextFloat(0.45f), c, true, false, i < 5));
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 7f);
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.1f + 0.05f);
+                GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                    Projectile.Center, vel, false, 26, 1.5f + Main.rand.NextFloat(0.9f), c * 1.6f));
+            }
+            Color burstColor = HyperdimensionalMatrixVisuals.GetDataColor(Main.GlobalTimeWrappedHourly * 0.55f);
+            CLCBLightingBoltsSystem.Spawn_MatrixGeometryShatter(Projectile.Center, burstColor);
+            CLCBLightingBoltsSystem.Spawn_GaussDischargeShards(Projectile.Center);
+            CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(Projectile.Center, burstColor, 0.7f);
         }
 
         private void SpawnShards()
@@ -462,6 +623,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.05f).ToVector3() * 0.25f);
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color c = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.053f);
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.5f, 4f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center, vel, false, 6 + Main.rand.Next(7), 0.5f, c, true, false, false));
+            }
+            if (Main.rand.NextBool())
+            {
+                GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                    Projectile.Center, Projectile.velocity * 0.3f, false, 22,
+                    1.3f + Main.rand.NextFloat(0.5f), c * 1.5f));
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.053f);
@@ -488,12 +669,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
     }
 
     // ──────────────────────────────────────────────────────
-    // MODULE 3 · SHADER EXPERIMENT ORBS
+    // MODULE 3 · ENERGY ORBS
     // ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// Shader实验模块：五个实验体绕目标轨道飞行，
-    /// 每个展示一种不同的 Overlay Shader，存活后爆炸伤害。
+    /// 能量光球模块：五个风格各异的光球绕目标轨道飞行，
+    /// 各自持续释放环境粒子，消亡时爆炸为弹幕+粒子。
     /// </summary>
     public sealed class MatrixShaderOrb : ModProjectile, ILocalizedModType
     {
@@ -542,6 +723,252 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             Projectile.rotation += 0.12f;
             Lighting.AddLight(Projectile.Center, GetOrbColor().ToVector3() * 0.35f);
+
+            // Periodic ambient particles
+            if (!Main.dedServ && Age % GetEmitInterval() == 0)
+                EmitAmbientParticle();
+        }
+
+        private int GetEmitInterval() => OrbType switch
+        {
+            0 => 7,
+            1 => 10,
+            2 => 6,
+            3 => 12,
+            4 => 9,
+            _ => 10
+        };
+
+        private void EmitAmbientParticle()
+        {
+            switch (OrbType)
+            {
+                case 0: // Fire — upward sparks
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f),
+                        new Vector2(Main.rand.NextFloat(-0.8f, 0.8f), -Main.rand.NextFloat(1f, 2.5f)),
+                        false, 8 + Main.rand.Next(6), 0.35f + Main.rand.NextFloat(0.2f),
+                        Color.Lerp(new Color(255, 100, 0), new Color(255, 220, 50), Main.rand.NextFloat()),
+                        true, false, false));
+                    break;
+
+                case 1: // Cryo — drifting crystal flakes
+                    GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                        Projectile.Center + Main.rand.NextVector2Unit() * Main.rand.NextFloat(8f),
+                        Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.3f, 1.2f),
+                        false, 18 + Main.rand.Next(8), 0.8f + Main.rand.NextFloat(0.4f),
+                        new Color(80, 210, 255) * 1.2f));
+                    break;
+
+                case 2: // Chaos — random data sparks
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + Main.rand.NextVector2Unit() * Main.rand.NextFloat(10f),
+                        Main.rand.NextVector2Unit() * Main.rand.NextFloat(1f, 3f),
+                        false, 5 + Main.rand.Next(8), 0.4f + Main.rand.NextFloat(0.3f),
+                        HyperdimensionalMatrixVisuals.GetDataColor(Main.rand.NextFloat()),
+                        true, false, false));
+                    break;
+
+                case 3: // Singularity — wisps drawn inward
+                    Vector2 orbOffset = Main.rand.NextVector2Unit() * Main.rand.NextFloat(30f, 45f);
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + orbOffset,
+                        -orbOffset.SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(0.8f, 1.8f),
+                        false, 10 + Main.rand.Next(8), 0.4f,
+                        Color.Lerp(Color.White, new Color(160, 200, 255), Main.rand.NextFloat()),
+                        true, false, false));
+                    break;
+
+                case 4: // Aurora — slow upward motes
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + Main.rand.NextVector2Unit() * Main.rand.NextFloat(10f),
+                        new Vector2(Main.rand.NextFloat(-0.5f, 0.5f), -Main.rand.NextFloat(0.5f, 1.5f)),
+                        false, 12 + Main.rand.Next(10), 0.4f + Main.rand.NextFloat(0.25f),
+                        Color.Lerp(new Color(80, 255, 120), new Color(180, 60, 255), Main.rand.NextFloat()),
+                        true, false, false));
+                    break;
+            }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            // Universal white flash
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                Projectile.Center, Vector2.Zero, false, 8, 1.8f, Color.White, true, false, true));
+
+            switch (OrbType)
+            {
+                case 0: // Fire — explosive outward burst
+                    for (int i = 0; i < 14; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2.5f, 7f);
+                        Color c = Color.Lerp(new Color(255, 80, 0), new Color(255, 210, 30), Main.rand.NextFloat());
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 14 + Main.rand.Next(10), 0.65f + Main.rand.NextFloat(0.4f), c, true, false, i < 3));
+                    }
+                    for (int i = 0; i < 7; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.5f, 4f);
+                        GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                            Projectile.Center, vel, false, 28, 1.5f + Main.rand.NextFloat(0.7f), new Color(255, 130, 30) * 1.4f));
+                    }
+                    break;
+
+                case 1: // Cryo — hexagonal shard ring
+                    for (int i = 0; i < 6; i++)
+                    {
+                        Vector2 vel = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * Main.rand.NextFloat(3.5f, 5.5f);
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 20, 0.9f, new Color(20, 200, 255), true, false, true));
+                    }
+                    for (int i = 0; i < 16; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 5f);
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 10 + Main.rand.Next(12), 0.55f, new Color(80, 235, 220), true, false, false));
+                    }
+                    for (int i = 0; i < 7; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1f, 3f);
+                        GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                            Projectile.Center, vel, false, 32, 1.6f + Main.rand.NextFloat(0.6f), new Color(20, 180, 255) * 1.5f));
+                    }
+                    break;
+
+                case 2: // Chaos — data scatter explosion
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 9f);
+                        Color dc = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.083f + Main.rand.NextFloat(0.2f));
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 8 + Main.rand.Next(14), 0.6f + Main.rand.NextFloat(0.45f), dc, true, false, i < 3));
+                    }
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 6f);
+                        GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                            Projectile.Center, vel, false, 24, 1.3f + Main.rand.NextFloat(0.9f),
+                            HyperdimensionalMatrixVisuals.GetDataColor(i * 0.1f) * 1.5f));
+                    }
+                    break;
+
+                case 3: // Singularity — white nova
+                    for (int i = 0; i < 24; i++)
+                    {
+                        Vector2 vel = (MathHelper.TwoPi * i / 24f).ToRotationVector2() * Main.rand.NextFloat(5f, 9f);
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 12 + Main.rand.Next(10),
+                            0.7f + Main.rand.NextFloat(0.4f),
+                            Color.Lerp(Color.White, new Color(160, 200, 255), 0.3f), true, false, i % 4 == 0));
+                    }
+                    // Central flash orb
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center, Vector2.Zero, false, 14, 4f, Color.White, true, false, true));
+                    break;
+
+                case 4: // Aurora — cascade
+                    for (int i = 0; i < 16; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2.5f, 6f);
+                        Color ac = Color.Lerp(new Color(80, 255, 120), new Color(180, 60, 255), Main.rand.NextFloat());
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 14 + Main.rand.Next(12), 0.65f + Main.rand.NextFloat(0.4f), ac, true, false, i < 4));
+                    }
+                    for (int i = 0; i < 7; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.5f, 4f);
+                        Color sq = i % 2 == 0 ? new Color(80, 255, 120) : new Color(180, 60, 255);
+                        GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                            Projectile.Center, vel, false, 28, 1.5f + Main.rand.NextFloat(0.7f), sq * 1.5f));
+                    }
+                    break;
+            }
+
+            // CLB sparkle burst — each type has a different signature
+            if (OrbType == 3)
+                CLCBLightingBoltsSystem.Spawn_MatrixSingularityCollapse(Projectile.Center);
+            else
+                CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(Projectile.Center, GetOrbColor(), 0.78f);
+
+            // Screen shake
+            if (Main.LocalPlayer.active)
+            {
+                float _sd = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                if (_sd < 700f)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower, 2.25f * (1f - _sd / 700f));
+            }
+
+            if (Main.myPlayer == Projectile.owner)
+                SpawnOrbExplosionProjectiles(GetTarget());
+
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.28f, Pitch = 0.15f + OrbType * 0.08f, MaxInstances = 5 }, Projectile.Center);
+        }
+
+        private void SpawnOrbExplosionProjectiles(NPC target)
+        {
+            IEntitySource src = Projectile.GetSource_FromThis();
+            int dmg = Projectile.damage;
+
+            switch (OrbType)
+            {
+                case 0: // Fire — 8 directions
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Vector2 vel = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 18f;
+                        Projectile.NewProjectile(src, Projectile.Center, vel,
+                            ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                            target?.whoAmI ?? -1);
+                    }
+                    break;
+
+                case 1: // Cryo — hexagonal ring
+                    for (int i = 0; i < 6; i++)
+                    {
+                        Vector2 vel = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * 22f;
+                        Projectile.NewProjectile(src, Projectile.Center, vel,
+                            ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                            target?.whoAmI ?? -1);
+                    }
+                    break;
+
+                case 2: // Chaos — 12 random shots
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(14f, 24f);
+                        Projectile.NewProjectile(src, Projectile.Center, vel,
+                            ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                            target?.whoAmI ?? -1);
+                    }
+                    break;
+
+                case 3: // Singularity — focused fan toward target
+                    if (target != null)
+                    {
+                        for (int i = 0; i < 6; i++)
+                        {
+                            float spread = MathHelper.ToRadians(28f) * (i / 5f - 0.5f);
+                            Vector2 dir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedBy(spread);
+                            Projectile.NewProjectile(src, Projectile.Center, dir * 20f,
+                                ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                                target.whoAmI);
+                        }
+                    }
+                    break;
+
+                case 4: // Aurora — 5-point star
+                    for (int i = 0; i < 5; i++)
+                    {
+                        Vector2 vel = (MathHelper.TwoPi * i / 5f).ToRotationVector2() * 16f;
+                        Projectile.NewProjectile(src, Projectile.Center, vel,
+                            ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                            target?.whoAmI ?? -1);
+                    }
+                    break;
+            }
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -561,87 +988,154 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             int age = Age;
             float opacity = age < 10 ? age / 10f : age > Lifetime - 10 ? (Lifetime - age) / 10f : 1f;
-            float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6f + OrbType);
+            float t = Main.GlobalTimeWrappedHourly;
+            float pulse = 0.85f + 0.15f * MathF.Sin(t * 6f + OrbType);
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Effect shader = GetOrbShader();
             Color orbColor = GetOrbColor() * opacity * pulse;
-            float orbScale = 0.52f + 0.18f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3f + OrbType * 1.2f);
 
-            // Apply overlay shader if available; otherwise fall back to additive glow
-            if (shader != null)
-            {
-                ConfigureShaderParams(shader, orbColor);
-                Main.spriteBatch.End();
-                Main.spriteBatch.Begin(
-                    SpriteSortMode.Immediate,
-                    BlendState.Additive,
-                    SamplerState.LinearClamp,
-                    DepthStencilState.None,
-                    Main.Rasterizer,
-                    shader,
-                    Main.GameViewMatrix.TransformationMatrix);
-            }
-            else
-            {
-                Main.spriteBatch.End();
-                Main.spriteBatch.Begin(
-                    SpriteSortMode.Deferred,
-                    BlendState.Additive,
-                    SamplerState.LinearClamp,
-                    DepthStencilState.None,
-                    Main.Rasterizer,
-                    null,
-                    Main.GameViewMatrix.TransformationMatrix);
-            }
-
-            Main.spriteBatch.Draw(bloom, drawPos, null, orbColor, Projectile.rotation, bloom.Size() * 0.5f, orbScale, SpriteEffects.None, 0f);
-            // Second pass: slightly larger, dimmer glow halo
-            Main.spriteBatch.Draw(bloom, drawPos, null, orbColor * 0.38f, -Projectile.rotation * 0.7f, bloom.Size() * 0.5f, orbScale * 1.55f, SpriteEffects.None, 0f);
-
+            // ── Pass 1: Additive — soft bloom glow underneath the geometry ──
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                Main.DefaultSamplerState,
-                DepthStencilState.None,
-                Main.Rasterizer,
-                null,
-                Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            // Orbit track faint ring
+            Main.spriteBatch.Draw(bloom, drawPos, null, orbColor * 0.65f, 0f,
+                bloom.Size() * 0.5f, 0.20f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(bloom, drawPos, null, orbColor * 0.20f, t * 0.8f,
+                bloom.Size() * 0.5f, 0.48f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(bloom, drawPos, null, Color.White with { A = 0 } * (opacity * 0.35f), t * 2.2f,
+                bloom.Size() * 0.5f, 0.09f, SpriteEffects.None, 0f);
+
+            // ── Pass 2: AlphaBlend — mini geometry wireframe projection ──
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            DrawMiniGeometry(opacity, t);
+            DrawOrbDecorations(opacity, t);
+
             HyperdimensionalMatrixVisuals.DrawScanRing(
-                GetTarget()?.Center ?? Projectile.Center,
-                OrbitRadius,
-                Main.GlobalTimeWrappedHourly * 0.4f,
-                GetOrbColor() * (opacity * 0.12f),
-                20, 0.8f);
+                GetTarget()?.Center ?? Projectile.Center, OrbitRadius, t * 0.4f,
+                GetOrbColor() * (opacity * 0.10f), 20, 0.8f);
 
             return false;
         }
 
-        private Effect GetOrbShader()
+        private void DrawMiniGeometry(float opacity, float t)
         {
-            return OrbType switch
+            // Each orb type projects a distinctive small wireframe geometry body
+            switch (OrbType)
             {
-                0 => ShaderGames.FireBurnShader,
-                1 => ShaderGames.ScanlineShader,
-                2 => ShaderGames.GlitchBlocksShader,
-                3 => ShaderGames.GlassRefractionShader,
-                4 => ShaderGames.AuroraWaveShader,
-                _ => null
-            };
+                case 0: // Fire Matrix — tetrahedron, fast CW spin
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Tetrahedron,
+                        20f, t * 2.4f, opacity * 0.78f, Projectile.identity);
+                    break;
+
+                case 1: // Cryo Data — icosahedron, slow CCW spin
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Icosahedron,
+                        18f, -t * 1.3f, opacity * 0.72f, Projectile.identity);
+                    break;
+
+                case 2: // Chaos Matrix — nested cubes, chaotic counter-rotation
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Cube,
+                        22f, t * 3.5f, opacity * 0.82f, Projectile.identity);
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Cube,
+                        13f, -t * 2.8f + 0.6f, opacity * 0.52f, Projectile.identity + 3, false);
+                    break;
+
+                case 3: // Singularity Core — cube pulsing between large and small
+                {
+                    float pulseSz = 16f + 7f * MathF.Sin(t * 6.5f + Projectile.identity);
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Cube,
+                        pulseSz, t * 1.9f, opacity * 0.88f, Projectile.identity);
+                    break;
+                }
+
+                case 4: // Aurora Cascade — icosahedron + inner tetrahedron counter-rotating
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Icosahedron,
+                        19f, t * 1.7f, opacity * 0.76f, Projectile.identity);
+                    HyperdimensionalMatrixVisuals.DrawGeometry(
+                        Projectile.Center, MatrixGeometryShape.Tetrahedron,
+                        11f, -t * 2.3f, opacity * 0.48f, Projectile.identity + 5, false);
+                    break;
+            }
         }
 
-        private void ConfigureShaderParams(Effect shader, Color color)
+        private void DrawOrbDecorations(float opacity, float t)
         {
-            float t = Main.GlobalTimeWrappedHourly;
-            shader.Parameters["uTime"]?.SetValue(t);
-            shader.Parameters["uOpacity"]?.SetValue(color.A / 255f);
-            shader.Parameters["uBlockSize"]?.SetValue(0.08f);
-            shader.Parameters["uFrequency"]?.SetValue(8f);
-            shader.Parameters["uSpeed"]?.SetValue(1.2f);
+            switch (OrbType)
+            {
+                case 0: // Fire Matrix — 4 rotating fire nodes + flame arc
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float angle = t * 2.8f + i * MathHelper.PiOver2 + MathHelper.Pi * 0.12f;
+                        HyperdimensionalMatrixVisuals.DrawNode(
+                            Projectile.Center + angle.ToRotationVector2() * 18f,
+                            new Color(255, 100, 0, 0) * opacity, 4.5f);
+                    }
+                    HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, 24f, t * 3.2f,
+                        new Color(255, 160, 0, 0) * (opacity * 0.45f), 6, 2f);
+                    break;
+
+                case 1: // Cryo Data — hexagonal crystal ring
+                    HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, 28f, -t * 1.5f,
+                        new Color(20, 200, 255, 0) * (opacity * 0.55f), 6, 1.8f);
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float angle = MathHelper.TwoPi * i / 6f - t * 0.85f;
+                        HyperdimensionalMatrixVisuals.DrawNode(
+                            Projectile.Center + angle.ToRotationVector2() * 26f,
+                            new Color(20, 200, 255, 0) * opacity, 3.5f);
+                    }
+                    break;
+
+                case 2: // Chaos Matrix — multi-ring cycling hues + center node
+                    for (int i = 0; i < 3; i++)
+                    {
+                        Color rc = HyperdimensionalMatrixVisuals.GetDataColor(t * 0.45f + i * 0.33f, opacity * 0.5f);
+                        HyperdimensionalMatrixVisuals.DrawScanRing(
+                            Projectile.Center, 18f + i * 9f, t * (1.3f - i * 0.4f), rc, 8 + i * 4, 1.4f);
+                    }
+                    HyperdimensionalMatrixVisuals.DrawNode(Projectile.Center,
+                        HyperdimensionalMatrixVisuals.GetDataColor(t * 0.6f, opacity * 0.8f), 6f);
+                    break;
+
+                case 3: // Singularity Core — inward convergence lines
+                    for (int i = 0; i < 12; i++)
+                    {
+                        float angle = MathHelper.TwoPi * i / 12f + t * 0.45f;
+                        Vector2 outer = Projectile.Center + angle.ToRotationVector2() * 32f;
+                        Main.spriteBatch.DrawLineBetter(outer, Projectile.Center,
+                            Color.White with { A = 0 } * (opacity * 0.20f), 1.2f);
+                        HyperdimensionalMatrixVisuals.DrawNode(outer,
+                            Color.White with { A = 0 } * (opacity * 0.5f), 2.5f);
+                    }
+                    HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, 30f, t * 2.2f,
+                        Color.White with { A = 0 } * (opacity * 0.38f), 12, 1.6f);
+                    break;
+
+                case 4: // Aurora Cascade — 3 tri-orbit nodes + aurora ring
+                    for (int i = 0; i < 3; i++)
+                    {
+                        float angle = t * (1.6f + i * 0.28f) + i * (MathHelper.TwoPi / 3f);
+                        Color ac = Color.Lerp(
+                            new Color(80, 255, 120, 0), new Color(180, 60, 255, 0),
+                            0.5f + 0.5f * MathF.Sin(t * 2.4f + i));
+                        HyperdimensionalMatrixVisuals.DrawNode(
+                            Projectile.Center + angle.ToRotationVector2() * (18f + i * 7f),
+                            ac * opacity, 4.5f);
+                    }
+                    HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, 25f, -t * 1.9f,
+                        new Color(80, 255, 120, 0) * (opacity * 0.45f), 8, 1.4f);
+                    break;
+            }
         }
 
         private Color GetOrbColor()
@@ -649,11 +1143,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             float t = Main.GlobalTimeWrappedHourly;
             return OrbType switch
             {
-                0 => Color.Lerp(new Color(255, 120, 20), new Color(255, 55, 0), 0.5f + 0.5f * (float)Math.Sin(t * 4f)) with { A = 0 },
-                1 => Color.Lerp(new Color(20, 180, 255), new Color(80, 255, 220), 0.5f + 0.5f * (float)Math.Sin(t * 3f)) with { A = 0 },
+                0 => Color.Lerp(new Color(255, 120, 20), new Color(255, 55, 0), 0.5f + 0.5f * MathF.Sin(t * 4f)) with { A = 0 },
+                1 => Color.Lerp(new Color(20, 180, 255), new Color(80, 255, 220), 0.5f + 0.5f * MathF.Sin(t * 3f)) with { A = 0 },
                 2 => HyperdimensionalMatrixVisuals.GetDataColor(t * 0.35f),
-                3 => new Color(255, 255, 255, 0),
-                4 => HyperdimensionalMatrixVisuals.GetDataColor(OrbType * 0.2f + t * 0.25f),
+                3 => Color.Lerp(Color.White, new Color(160, 200, 255), 0.2f) with { A = 0 },
+                4 => Color.Lerp(new Color(80, 255, 120), new Color(180, 60, 255), 0.5f + 0.5f * MathF.Sin(t * 1.8f)) with { A = 0 },
                 _ => Color.White with { A = 0 }
             };
         }
@@ -720,6 +1214,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (age == CompressEnd && Main.myPlayer == Projectile.owner)
                 SpawnExplosion();
 
+            // Ambient particles on each converging ball
+            if (!Main.dedServ && age < ConvergeEnd && age % 5 == 0)
+            {
+                for (int i = 0; i < BallCount; i++)
+                {
+                    Vector2 ballPos = GetBallPosition(i, age);
+                    Color bc = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)BallCount);
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        ballPos, Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.5f, 1.8f),
+                        false, 8, 0.45f, bc, true, false, false));
+                }
+            }
+
+            // Screen shake build-up during compress phase
+            if (!Main.dedServ && age >= ConvergeEnd && age < CompressEnd && Main.LocalPlayer.active)
+            {
+                float mergePct = (age - ConvergeEnd) / (float)(CompressEnd - ConvergeEnd);
+                float _sd = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                if (_sd < 400f)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower,
+                        mergePct * 1.75f * (1f - _sd / 400f));
+            }
+
             Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(age * 0.02f).ToVector3() * 0.55f);
         }
 
@@ -749,16 +1267,43 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             if (age < ConvergeEnd)
             {
-                // Draw 8 balls converging toward center
+                // Cache all ball positions for metaball bridge pass
+                Vector2[] ballPositions = new Vector2[BallCount];
+                float[] ballSizes = new float[BallCount];
+                Color[] ballColors = new Color[BallCount];
                 for (int i = 0; i < BallCount; i++)
                 {
-                    Vector2 ballPos = GetBallPosition(i, age);
-                    float distPct = 1f - Vector2.Distance(ballPos, Projectile.Center) / GetBallInitialRadius(i);
-                    float ballSize = MathHelper.Lerp(0.12f, 0.38f, distPct);
-                    Color ballColor = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)BallCount);
-                    Vector2 ballScreen = ballPos - Main.screenPosition;
-                    Main.spriteBatch.Draw(bloom, ballScreen, null, ballColor, t * 0.8f + i, bloom.Size() * 0.5f, ballSize, SpriteEffects.None, 0f);
-                    Main.spriteBatch.Draw(bloom, ballScreen, null, ballColor * 0.35f, -t * 0.5f, bloom.Size() * 0.5f, ballSize * 1.6f, SpriteEffects.None, 0f);
+                    ballPositions[i] = GetBallPosition(i, age);
+                    float distPct = 1f - Vector2.Distance(ballPositions[i], Projectile.Center) / GetBallInitialRadius(i);
+                    ballSizes[i] = MathHelper.Lerp(0.12f, 0.38f, distPct);
+                    ballColors[i] = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)BallCount);
+                }
+
+                // Pass A: metaball connection bridges between nearby balls (drawn first, under the balls)
+                for (int i = 0; i < BallCount; i++)
+                {
+                    for (int j = i + 1; j < BallCount; j++)
+                    {
+                        float dist = Vector2.Distance(ballPositions[i], ballPositions[j]);
+                        if (dist > 90f) continue;
+                        float bridgeAlpha = MathHelper.Lerp(0.55f, 0f, dist / 90f);
+                        Color bridgeColor = Color.Lerp(ballColors[i], ballColors[j], 0.5f) * bridgeAlpha;
+                        // Stretched bloom along the bridge midpoint — simulates metaball neck
+                        Vector2 mid = (ballPositions[i] + ballPositions[j]) * 0.5f - Main.screenPosition;
+                        float bridgeScale = (ballSizes[i] + ballSizes[j]) * 0.35f * (1f - dist / 90f);
+                        float bridgeRot = (ballPositions[j] - ballPositions[i]).ToRotation();
+                        Main.spriteBatch.Draw(bloom, mid, null, bridgeColor, bridgeRot,
+                            bloom.Size() * 0.5f, new Vector2(dist / bloom.Width * 0.6f, bridgeScale),
+                            SpriteEffects.None, 0f);
+                    }
+                }
+
+                // Pass B: the balls themselves
+                for (int i = 0; i < BallCount; i++)
+                {
+                    Vector2 ballScreen = ballPositions[i] - Main.screenPosition;
+                    Main.spriteBatch.Draw(bloom, ballScreen, null, ballColors[i], t * 0.8f + i, bloom.Size() * 0.5f, ballSizes[i], SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(bloom, ballScreen, null, ballColors[i] * 0.35f, -t * 0.5f, bloom.Size() * 0.5f, ballSizes[i] * 1.6f, SpriteEffects.None, 0f);
                 }
             }
             else if (age < CompressEnd)
@@ -787,6 +1332,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            // AlphaBlend pass: mini geometry wireframes on each converging ball (no state switching in loop)
+            if (age < ConvergeEnd)
+            {
+                for (int i = 0; i < BallCount; i++)
+                {
+                    Vector2 bp = GetBallPosition(i, age);
+                    float sz = MathHelper.Lerp(0.12f, 0.38f, 1f - Vector2.Distance(bp, Projectile.Center) / GetBallInitialRadius(i));
+                    if (sz > 0.16f)
+                    {
+                        HyperdimensionalMatrixVisuals.DrawGeometry(
+                            bp, MatrixGeometryShape.Tetrahedron,
+                            10f + sz * 20f, t * (1.7f + i * 0.20f), sz * 1.5f, i + 100);
+                    }
+                }
+            }
 
             return false;
         }
@@ -841,6 +1402,42 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         }
 
         public override bool ShouldUpdatePosition() => false;
+
+        public override void OnSpawn(IEntitySource source)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 26; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(4f, 11f);
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.038f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center, vel, false, 16 + Main.rand.Next(18),
+                    0.6f + Main.rand.NextFloat(0.5f), c, true, false, i < 6));
+            }
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2.5f, 8f);
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.055f + 0.1f);
+                GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                    Projectile.Center, vel, false, 30, 1.6f + Main.rand.NextFloat(1.1f), c * 1.5f));
+            }
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                Projectile.Center, Vector2.Zero, false, 12, 3.5f, Color.White, true, false, true));
+
+            Color fuseColor = HyperdimensionalMatrixVisuals.GetDataColor(Main.GlobalTimeWrappedHourly * 0.4f);
+            CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(Projectile.Center, fuseColor, 1.4f);
+            CLCBLightingBoltsSystem.Spawn_MatrixGeometryShatter(Projectile.Center, fuseColor);
+
+            if (Main.LocalPlayer.active)
+            {
+                float _sd = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                if (_sd < 850f)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower, 4f * (1f - _sd / 850f));
+            }
+        }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
@@ -924,6 +1521,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (!Main.dedServ && Projectile.owner == Main.myPlayer)
                 ShaderFullScreenSystem.ActivateScreenShader("BlackHoleDistortion");
 
+            // Periodic screen shake during warp
+            int _age = Age;
+            if (!Main.dedServ && _age % 25 == 0 && Main.LocalPlayer.active)
+            {
+                float _sd = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                if (_sd < 500f)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower, 1.25f * (1f - _sd / 500f));
+            }
+
             Lighting.AddLight(Projectile.Center, new Vector3(0.15f, 0.05f, 0.3f) * 0.5f);
         }
 
@@ -946,6 +1553,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             if (!Main.dedServ && Projectile.owner == Main.myPlayer)
                 ShaderFullScreenSystem.DeactivateScreenShader("BlackHoleDistortion");
+
+            if (!Main.dedServ)
+            {
+                Color warpColor = new Color(180, 60, 255);
+                CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(Projectile.Center, warpColor, 1f);
+                CLCBLightingBoltsSystem.Spawn_GaussSingularityPulse(Projectile.Center);
+
+                if (Main.LocalPlayer.active)
+                {
+                    float _sd = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                    if (_sd < 700f)
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                            Main.LocalPlayer.Calamity().GeneralScreenShakePower, 2.5f * (1f - _sd / 700f));
+                }
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -994,6 +1616,72 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             NPC npc = Main.npc[TargetIndex];
             return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // PASSIVE · DATA FIELD AURA
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 被动数据场：跟随核心，对周围敌人造成持续轻微伤害。
+    /// 每120帧对同一敌人最多触发一次。
+    /// </summary>
+    public sealed class MatrixDataAura : ModProjectile, ILocalizedModType
+    {
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int CoreWhoAmI => (int)Projectile.ai[0];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width  = 480;
+            Projectile.height = 480;
+            Projectile.friendly     = true;
+            Projectile.ignoreWater  = true;
+            Projectile.tileCollide  = false;
+            Projectile.penetrate    = -1;
+            Projectile.timeLeft     = int.MaxValue / 2;
+            Projectile.DamageType   = DamageClass.Summon;
+            Projectile.usesLocalNPCImmunity   = true;
+            Projectile.localNPCHitCooldown    = 120;
+        }
+
+        public override bool ShouldUpdatePosition() => false;
+        public override bool? CanDamage() => true;
+
+        public override void AI()
+        {
+            int coreId = CoreWhoAmI;
+            if (!Main.projectile.IndexInRange(coreId)
+                || !Main.projectile[coreId].active
+                || Main.projectile[coreId].type != ModContent.ProjectileType<HyperdimensionalMatrixCoreProjectile>())
+            {
+                Projectile.Kill();
+                return;
+            }
+            Projectile.Center = Main.projectile[coreId].Center;
+            Projectile.damage = Math.Max(1, (int)(Main.projectile[coreId].damage * 0.10f));
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.dedServ) return;
+            Color c = HyperdimensionalMatrixVisuals.GetDataColor(
+                Main.GlobalTimeWrappedHourly * 0.55f + target.whoAmI * 0.14f);
+            for (int i = 0; i < 5; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.5f, 5f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    target.Center + Main.rand.NextVector2Circular(target.width * 0.35f, target.height * 0.35f),
+                    vel, false, 8 + Main.rand.Next(10), 0.38f, c, true, false, false));
+            }
         }
     }
 
@@ -1094,6 +1782,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     Projectile.whoAmI, tIdx);
 
                 SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.65f, Pitch = -0.3f, MaxInstances = 1 }, target.Center);
+
+                if (!Main.dedServ && Main.LocalPlayer.active)
+                {
+                    float _sd = Vector2.Distance(Main.LocalPlayer.Center, target.Center);
+                    if (_sd < 1200f)
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                            Main.LocalPlayer.Calamity().GeneralScreenShakePower, 6f * (1f - _sd / 1200f));
+
+                    Color stormColor = HyperdimensionalMatrixVisuals.GetDataColor(Main.GlobalTimeWrappedHourly * 0.55f);
+                    CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(target.Center, stormColor, 1.2f);
+                    CLCBLightingBoltsSystem.Spawn_MatrixGeometryShatter(target.Center, stormColor);
+                }
             }
 
             // Spawn singularity
@@ -1108,6 +1808,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     Projectile.owner);
 
                 SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.7f, Pitch = -0.6f, MaxInstances = 1 }, target.Center);
+
+                if (!Main.dedServ && Main.LocalPlayer.active)
+                {
+                    float _sd = Vector2.Distance(Main.LocalPlayer.Center, target.Center);
+                    if (_sd < 1500f)
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                            Main.LocalPlayer.Calamity().GeneralScreenShakePower, 8f * (1f - _sd / 1500f));
+
+                    CLCBLightingBoltsSystem.Spawn_MatrixSingularityCollapse(target.Center);
+                    CLCBLightingBoltsSystem.Spawn_GaussSingularityPulse(target.Center);
+                }
             }
         }
 
@@ -1151,6 +1862,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
                 // Targeting line (bright during storm)
                 HyperdimensionalMatrixVisuals.DrawTargetingLine(corePos, tgtPos, buildPct * 0.7f);
+
+                // 矩阵UI — holographic compile status panel floating between core and target
+                DrawCompilePanel(corePos, tgtPos, buildPct, t);
             }
             else if (age >= Phase2Fire && age < Phase3Sing)
             {
@@ -1169,6 +1883,86 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             return false;
         }
+
+        private void DrawCompilePanel(Vector2 corePos, Vector2 tgtPos, float buildPct, float t)
+        {
+            // Holographic module-compile status panel floating above the midpoint
+            Vector2 panelCenter = Vector2.Lerp(corePos, tgtPos, 0.38f) + new Vector2(0f, -90f);
+
+            const float cellSize = 7.5f;
+            const float gap      = 3f;
+            const int   cols     = 5;   // one column per module
+            const int   rows     = 4;
+            float panelW = cols * cellSize + (cols - 1) * gap;
+            float panelH = rows * cellSize + (rows - 1) * gap;
+
+            Vector2 topLeft  = panelCenter - new Vector2(panelW * 0.5f, panelH * 0.5f);
+            Vector2 botRight = panelCenter + new Vector2(panelW * 0.5f, panelH * 0.5f);
+
+            Color frameColor = HyperdimensionalMatrixVisuals.GetDataColor(0.28f, buildPct * 0.65f);
+
+            // Corner brackets
+            float bl = 9f;
+            void Corner(Vector2 a, float sx, float sy)
+            {
+                Main.spriteBatch.DrawLineBetter(a, a + Vector2.UnitX * (bl * sx), frameColor, 1.5f);
+                Main.spriteBatch.DrawLineBetter(a, a + Vector2.UnitY * (bl * sy), frameColor, 1.5f);
+            }
+            Corner(topLeft,                          1f,  1f);
+            Corner(new Vector2(botRight.X, topLeft.Y), -1f,  1f);
+            Corner(new Vector2(topLeft.X, botRight.Y),  1f, -1f);
+            Corner(botRight,                         -1f, -1f);
+
+            // Module cell grid: rows fill from bottom as buildPct rises
+            for (int m = 0; m < cols; m++)
+            {
+                Color mColor = GetPanelModuleColor(m, t);
+                float cx = topLeft.X + m * (cellSize + gap) + cellSize * 0.5f;
+
+                for (int r = 0; r < rows; r++)
+                {
+                    float threshold = (rows - 1 - r) / (float)(rows - 1); // 0=top, 1=bottom
+                    float mOffset = m * (1f / (cols * 6f));                // stagger per module
+                    bool lit = buildPct > threshold * 0.9f + mOffset;
+                    float cellAlpha = lit
+                        ? MathHelper.Lerp(0.55f, 1f, buildPct) * (0.78f + 0.22f * MathF.Sin(t * 9f + m * 1.4f))
+                        : 0.12f;
+                    float cy = topLeft.Y + r * (cellSize + gap) + cellSize * 0.5f;
+                    HyperdimensionalMatrixVisuals.DrawNode(
+                        new Vector2(cx, cy), mColor * cellAlpha, cellSize * 0.85f);
+                }
+
+                // Module ready indicator dot below grid
+                bool ready = buildPct > 0.85f + m * 0.02f;
+                float dotSize = ready
+                    ? 4f + 2f * MathF.Sin(t * 12f + m)
+                    : 2f;
+                HyperdimensionalMatrixVisuals.DrawNode(
+                    new Vector2(cx, botRight.Y + 7f), mColor * (ready ? buildPct : buildPct * 0.3f), dotSize);
+            }
+
+            // Horizontal scan line sweeping across the panel
+            float scanX = topLeft.X + panelW * ((t * 0.72f) % 1f);
+            Main.spriteBatch.DrawLineBetter(
+                new Vector2(scanX, topLeft.Y - 2f),
+                new Vector2(scanX, botRight.Y + 2f),
+                frameColor * 0.38f, 1f);
+
+            // Subtle outer ring
+            HyperdimensionalMatrixVisuals.DrawScanRing(
+                panelCenter, Math.Max(panelW, panelH) * 0.72f + 6f, t * 0.55f,
+                frameColor * 0.22f, 10, 1f);
+        }
+
+        private static Color GetPanelModuleColor(int m, float t) => m switch
+        {
+            0 => new Color(255, 100, 30, 0),
+            1 => new Color(40, 200, 255, 0),
+            2 => HyperdimensionalMatrixVisuals.GetDataColor(t * 0.35f),
+            3 => new Color(200, 220, 255, 0),
+            4 => new Color(80, 255, 120, 0),
+            _ => Color.White with { A = 0 }
+        };
 
         private Projectile GetCore()
         {
@@ -1245,7 +2039,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override void AI()
         {
+            int age = Age;
             Lighting.AddLight(Projectile.Center, new Vector3(0.9f, 0.9f, 1f) * 0.85f);
+
+            if (!Main.dedServ)
+            {
+                // Collapse → explosion transition: massive particle burst
+                if (age == CollapseEnd)
+                {
+                    for (int i = 0; i < 32; i++)
+                    {
+                        Vector2 vel = (MathHelper.TwoPi * i / 32f).ToRotationVector2() * Main.rand.NextFloat(5f, 13f);
+                        Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.031f);
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            Projectile.Center, vel, false, 18 + Main.rand.Next(16),
+                            0.7f + Main.rand.NextFloat(0.55f), c, true, false, i % 5 == 0));
+                    }
+                    for (int i = 0; i < 22; i++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(4f, 11f);
+                        Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.045f + 0.2f);
+                        GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                            Projectile.Center, vel, false, 35, 1.6f + Main.rand.NextFloat(1.3f), c * 1.8f));
+                    }
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center, Vector2.Zero, false, 16, 5.5f, Color.White, true, false, true));
+
+                    CLCBLightingBoltsSystem.Spawn_MatrixSingularityCollapse(Projectile.Center);
+                    CLCBLightingBoltsSystem.Spawn_GaussSingularityPulse(Projectile.Center);
+
+                    if (Main.LocalPlayer.active)
+                    {
+                        float _sd = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                        if (_sd < 1000f)
+                            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                                Main.LocalPlayer.Calamity().GeneralScreenShakePower, 7f * (1f - _sd / 1000f));
+                    }
+                }
+
+                // Trailing sparks during explosion expansion
+                if (age > CollapseEnd && age % 4 == 0)
+                {
+                    float blastR = (age - CollapseEnd) / (float)(Lifetime - CollapseEnd) * 280f;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        float a = Main.rand.NextFloat(MathHelper.TwoPi);
+                        Vector2 pos = Projectile.Center + a.ToRotationVector2() * (blastR * Main.rand.NextFloat(0.85f, 1.1f));
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                            pos, Vector2.Zero, false, 7, 0.7f,
+                            HyperdimensionalMatrixVisuals.GetDataColor(Main.rand.NextFloat()), true, false, false));
+                    }
+                }
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)

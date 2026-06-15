@@ -16,15 +16,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
         private bool deployed;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
-        public override string Texture => "CalamityMod/Items/Materials/DubiousPlating";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/RightClickTurret/空投仓";
 
         private MilitaryTurretKind Kind => (MilitaryTurretKind)Utils.Clamp((int)Projectile.ai[0], 0, 6);
         private int SourceDamage => (int)Projectile.ai[1];
 
         public override void SetDefaults()
         {
-            Projectile.width = 26;
-            Projectile.height = 42;
+            Projectile.width = 34;
+            Projectile.height = 64;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
@@ -141,10 +141,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = texture.Size() * 0.5f;
             Color themeColor = MilitaryTurretUtility.GetStats(Kind).ThemeColor with { A = 0 };
+            Color drawColor = Projectile.GetAlpha(lightColor);
+            Color outlineColor = Color.White * 0.82f;
+            const float outlineDistance = 2f;
 
             Main.EntitySpriteDraw(bloom, drawPosition, null, themeColor * 0.48f, 0f, bloom.Size() * 0.5f, new Vector2(0.32f, 0.48f), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(texture, drawPosition, null, Projectile.GetAlpha(lightColor), Projectile.rotation, texture.Size() * 0.5f, new Vector2(1f, 1.45f), SpriteEffects.None, 0);
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 outlineOffset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * outlineDistance;
+                Main.EntitySpriteDraw(texture, drawPosition + outlineOffset, null, outlineColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+            }
+
+            Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
     }

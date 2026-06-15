@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -283,6 +283,8 @@
 				CosmicDischargeKillModeSlash.DisplayName: 宇宙放电击杀模式斩击
 				CosmicDischargeScytheProjectile.DisplayName: 宇宙放电镰刀弹幕
 				CosmicDischargeFlail.DisplayName: 宇宙放电脱链锤
+				// CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
+				// CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
 			}
 
 			LeonidAstralBlast.DisplayName: 狮子座星界爆破
@@ -380,6 +382,26 @@
 			BFPlaguePollutionBuff: {
 				DisplayName: 侵染污染
 				Description: 防御正被侵染逐层侵蚀。
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				// DisplayName: Cosmic Discharge Chain Knife Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeChainKnifeBuff.Description
+			}
+
+			CosmicDischargeGreatswordBuff: {
+				// DisplayName: Cosmic Discharge Greatsword Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeGreatswordBuff.Description
+			}
+
+			CosmicDischargeSwordBuff: {
+				// DisplayName: Cosmic Discharge Sword Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeSwordBuff.Description
+			}
+
+			CosmicDischargeWhipBuff: {
+				// DisplayName: Cosmic Discharge Whip Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeWhipBuff.Description
 			}
 		}
 	}

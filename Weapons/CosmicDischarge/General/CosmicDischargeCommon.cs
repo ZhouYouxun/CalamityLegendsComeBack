@@ -13,7 +13,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
     internal enum CosmicDischargeAttackMode
     {
         Whip,
-        Sword
+        Sword,
+        ChainKnife,
+        Greatsword
     }
 
     internal enum CosmicDischargeAttackKind
@@ -24,6 +26,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         SwordSwingOne,
         SwordSwingTwo,
         SwordFinisher,
+        ChainKnifeSingle,
+        ChainKnifeScatter,
+        ChainKnifeBiteAll,
+        GreatswordSwingOne,
+        GreatswordSwingTwo,
+        GreatswordFinisher,
         QuickDraw
     }
 
@@ -31,6 +39,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
     {
         public const string ChainTexturePath = "CalamityLegendsComeBack/Weapons/CosmicDischarge/LeftClick/CosmicDischargeFlail";
         public const string RingTexturePath = "CalamityMod/Particles/BloomRing";
+        private const int ChainHandleHeight = 62;
+        private const int ChainBodyStartY = 64;
+        private const int ChainBodyHeight = 28;
+        private const int ChainTailStartY = 114;
+        private const int ChainTailHeight = 84;
+        private const float ChainBodyStartOffset = 30f;
         public static readonly Color FrostCoreColor = new(150, 255, 255);
         public static readonly Color FrostGlowColor = new(110, 175, 255);
         public static readonly Color FrostDarkColor = new(58, 84, 150);
@@ -136,16 +150,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public static void DrawChain(SpriteBatch spriteBatch, Vector2 startWorld, Vector2 endWorld, Color drawColor, float scale, bool rigid, float gfxOffY = 0f)
         {
             Texture2D texture = ModContent.Request<Texture2D>(ChainTexturePath).Value;
-            Rectangle handleFrame = new(0, 0, texture.Width, 62);
-            Rectangle body1Frame = new(0, 64, texture.Width, 28);
-            Rectangle body2Frame = new(0, 94, texture.Width, 18);
-            Rectangle tailFrame = new(0, 114, texture.Width, 84);
+            Rectangle handleFrame = new(0, 0, texture.Width, ChainHandleHeight);
+            Rectangle bodyFrame = new(0, ChainBodyStartY, texture.Width, ChainBodyHeight);
+            Rectangle tailFrame = new(0, ChainTailStartY, texture.Width, ChainTailHeight);
 
             Vector2 chain = endWorld - startWorld;
-            if (chain.LengthSquared() < 4f)
+            float chainLength = chain.Length();
+            if (chainLength < 2f)
                 return;
 
-            Vector2 direction = chain.SafeNormalize(Vector2.UnitY);
+            Vector2 direction = chain / chainLength;
             float rotation = direction.ToRotation() + MathHelper.PiOver2;
             Vector2 drawOffset = Vector2.UnitY * gfxOffY;
 
@@ -159,41 +173,40 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 scale,
                 SpriteEffects.None);
 
-            float startOffset = 30f * scale;
-            float endOffset = 66f * scale;
-            float remaining = System.Math.Max(0f, chain.Length() - startOffset - endOffset);
+            float startOffset = Math.Min(ChainBodyStartOffset * scale, chainLength);
+            float tailLength = ChainTailHeight * scale;
+            float bodyEndDistance = MathHelper.Clamp(chainLength - tailLength, startOffset, chainLength);
+            float remaining = System.Math.Max(0f, bodyEndDistance - startOffset);
             Vector2 drawPosition = startWorld + direction * startOffset;
-            bool useBody1 = rigid;
 
             while (remaining > 2f)
             {
-                Rectangle bodyFrame = useBody1 ? body1Frame : body2Frame;
-                float segmentHeight = bodyFrame.Height * scale;
+                Rectangle drawFrame = bodyFrame;
+                float segmentHeight = drawFrame.Height * scale;
                 if (remaining < segmentHeight)
                 {
                     int croppedHeight = (int)MathHelper.Clamp(remaining / scale, 2f, bodyFrame.Height);
-                    bodyFrame.Height = croppedHeight;
+                    drawFrame.Height = croppedHeight;
                     segmentHeight = croppedHeight * scale;
                 }
 
                 Main.EntitySpriteDraw(
                     texture,
                     drawPosition - Main.screenPosition + drawOffset,
-                    bodyFrame,
+                    drawFrame,
                     drawColor,
                     rotation,
-                    new Vector2(bodyFrame.Width * 0.5f, 0f),
+                    new Vector2(drawFrame.Width * 0.5f, 0f),
                     scale,
                     SpriteEffects.None);
 
                 drawPosition += direction * segmentHeight;
                 remaining -= segmentHeight;
-                useBody1 = rigid ? !useBody1 : false;
             }
 
             Main.EntitySpriteDraw(
                 texture,
-                endWorld - Main.screenPosition + drawOffset,
+                startWorld + direction * bodyEndDistance - Main.screenPosition + drawOffset,
                 tailFrame,
                 drawColor,
                 rotation,
@@ -208,9 +221,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return;
 
             Texture2D texture = ModContent.Request<Texture2D>(ChainTexturePath).Value;
-            Rectangle handleFrame = new(0, 0, texture.Width, 62);
-            Rectangle bodyFrame = new(0, 94, texture.Width, 18);
-            Rectangle tailFrame = new(0, 114, texture.Width, 84);
+            Rectangle handleFrame = new(0, 0, texture.Width, ChainHandleHeight);
+            Rectangle bodyFrame = new(0, ChainBodyStartY, texture.Width, ChainBodyHeight);
+            Rectangle tailFrame = new(0, ChainTailStartY, texture.Width, ChainTailHeight);
             Vector2 drawOffset = Vector2.UnitY * gfxOffY;
 
             Vector2 firstDirection = (points[1] - points[0]).SafeNormalize(Vector2.UnitY);
@@ -224,13 +237,49 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 scale,
                 SpriteEffects.None);
 
+            float pathLength = 0f;
             for (int i = 0; i < points.Count - 1; i++)
-                DrawBodySegment(texture, bodyFrame, points[i], points[i + 1], drawColor, scale, drawOffset);
+                pathLength += Vector2.Distance(points[i], points[i + 1]);
 
+            float bodyStartDistance = Math.Min(ChainBodyStartOffset * scale, pathLength);
+            float bodyEndDistance = MathHelper.Clamp(pathLength - ChainTailHeight * scale, bodyStartDistance, pathLength);
+            Vector2 tailPosition = points[^1];
             Vector2 lastDirection = (points[^1] - points[^2]).SafeNormalize(Vector2.UnitY);
+
+            float traveled = 0f;
+            bool foundTailPosition = false;
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 segment = points[i + 1] - points[i];
+                float segmentLength = segment.Length();
+                if (segmentLength < 2f)
+                    continue;
+
+                Vector2 segmentDirection = segment / segmentLength;
+                float segmentStartDistance = traveled;
+                float segmentEndDistance = traveled + segmentLength;
+
+                if (segmentEndDistance > bodyStartDistance && segmentStartDistance < bodyEndDistance)
+                {
+                    float localStart = Math.Max(bodyStartDistance, segmentStartDistance) - segmentStartDistance;
+                    float localEnd = Math.Min(bodyEndDistance, segmentEndDistance) - segmentStartDistance;
+                    if (localEnd - localStart > 2f)
+                        DrawBodySegment(texture, bodyFrame, points[i] + segmentDirection * localStart, points[i] + segmentDirection * localEnd, drawColor, scale, drawOffset);
+                }
+
+                if (!foundTailPosition && bodyEndDistance <= segmentEndDistance)
+                {
+                    tailPosition = points[i] + segmentDirection * (bodyEndDistance - segmentStartDistance);
+                    lastDirection = segmentDirection;
+                    foundTailPosition = true;
+                }
+
+                traveled = segmentEndDistance;
+            }
+
             Main.EntitySpriteDraw(
                 texture,
-                points[^1] - Main.screenPosition + drawOffset,
+                tailPosition - Main.screenPosition + drawOffset,
                 tailFrame,
                 Color.Lerp(drawColor, FrostWhiteColor, 0.22f),
                 lastDirection.ToRotation() + MathHelper.PiOver2,

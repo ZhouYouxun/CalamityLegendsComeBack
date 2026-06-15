@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -160,6 +160,9 @@
 				YC_RainbowUltimaBolt.DisplayName: Y C_ Rainbow Ultima Bolt
 				YC_RightCrystalHoldout.DisplayName: Y C_ Right Crystal Holdout
 				YC_RightScorchingLaser.DisplayName: Y C_ Right Scorching Laser
+				YC_EssenceFlame.DisplayName: Y C_ Essence Flame
+				YC_ThrownBlade.DisplayName: Y C_ Thrown Blade
+				YC_RightDrone.DisplayName: Y C_ Right Drone
 			}
 		}
 

@@ -1595,6 +1595,126 @@ namespace CalamityLegendsComeBack
         }
 
 
+        // ── 高维矩阵专用粒子函数 ──
+
+        // 数据爆发：32条能量射线向外爆散 + 超强中心白光
+        public static void Spawn_MatrixDataBurst(Vector2 center, Color tint, float scale = 1f)
+        {
+            PrettySparkleParticle core = _poolPrettySparkle.RequestParticle();
+            core.ColorTint = Color.White;
+            core.LocalPosition = center;
+            core.Velocity = Vector2.Zero;
+            core.Scale = new Vector2(6f, 6f) * scale;
+            core.FadeInNormalizedTime = 0.01f;
+            core.FadeOutNormalizedTime = 0.70f;
+            core.TimeToLive = 18;
+            core.FadeInEnd = 2;
+            core.FadeOutStart = 6;
+            core.FadeOutEnd = 18;
+            core.AdditiveAmount = 1f;
+            Main.ParticleSystem_World_OverPlayers.Add(core);
+
+            for (int i = 0; i < 32; i++)
+            {
+                PrettySparkleParticle ray = _poolPrettySparkle.RequestParticle();
+                float angle = MathHelper.TwoPi * i / 32f + Main.rand.NextFloat(-0.08f, 0.08f);
+                ray.ColorTint = i % 4 == 0
+                    ? Color.White
+                    : Color.Lerp(tint, new Color(200, 235, 255), Main.rand.NextFloat(0.3f));
+                ray.LocalPosition = center + Main.rand.NextVector2Circular(6f, 6f) * scale;
+                ray.Velocity = angle.ToRotationVector2() * Main.rand.NextFloat(4.5f, 11f) * scale;
+                ray.Rotation = angle;
+                ray.Scale = new Vector2(Main.rand.NextFloat(2.2f, 4f), Main.rand.NextFloat(0.4f, 0.9f)) * scale;
+                ray.FadeInNormalizedTime = 0.01f;
+                ray.FadeOutNormalizedTime = 0.88f;
+                ray.TimeToLive = Main.rand.Next(18, 34);
+                ray.FadeInEnd = 4;
+                ray.FadeOutStart = 12;
+                ray.FadeOutEnd = ray.TimeToLive;
+                ray.AdditiveAmount = 0.65f;
+                Main.ParticleSystem_World_OverPlayers.Add(ray);
+            }
+        }
+
+        // 奇点坍缩：三层超白中心 + 48条蓝白射线炸射
+        public static void Spawn_MatrixSingularityCollapse(Vector2 center)
+        {
+            for (int layer = 0; layer < 3; layer++)
+            {
+                PrettySparkleParticle flash = _poolPrettySparkle.RequestParticle();
+                flash.ColorTint = layer == 0 ? Color.White : new Color(160, 210, 255);
+                flash.LocalPosition = center;
+                flash.Velocity = Vector2.Zero;
+                flash.Scale = new Vector2(9f - layer * 2.5f, 9f - layer * 2.5f);
+                flash.FadeInNormalizedTime = 0.01f;
+                flash.FadeOutNormalizedTime = 0.65f;
+                flash.TimeToLive = 20 + layer * 5;
+                flash.FadeInEnd = 2;
+                flash.FadeOutStart = 6;
+                flash.FadeOutEnd = flash.TimeToLive;
+                flash.AdditiveAmount = 1f;
+                Main.ParticleSystem_World_OverPlayers.Add(flash);
+            }
+            for (int i = 0; i < 48; i++)
+            {
+                PrettySparkleParticle ray = _poolPrettySparkle.RequestParticle();
+                float angle = MathHelper.TwoPi * i / 48f;
+                bool bright = i % 6 == 0;
+                ray.ColorTint = bright
+                    ? Color.White
+                    : Color.Lerp(new Color(100, 180, 255), new Color(200, 230, 255), Main.rand.NextFloat());
+                ray.LocalPosition = center;
+                ray.Velocity = angle.ToRotationVector2() * Main.rand.NextFloat(7f, 18f);
+                ray.Rotation = angle;
+                ray.Scale = new Vector2(bright ? 5.5f : Main.rand.NextFloat(2.5f, 4.5f), Main.rand.NextFloat(0.35f, 0.75f));
+                ray.FadeInNormalizedTime = 0.01f;
+                ray.FadeOutNormalizedTime = 0.85f;
+                ray.TimeToLive = Main.rand.Next(24, 42);
+                ray.FadeInEnd = 4;
+                ray.FadeOutStart = 16;
+                ray.FadeOutEnd = ray.TimeToLive;
+                ray.AdditiveAmount = bright ? 0.88f : 0.65f;
+                Main.ParticleSystem_World_OverPlayers.Add(ray);
+            }
+        }
+
+        // 几何爆碎：12条几何方向射线 + 中心耀光
+        public static void Spawn_MatrixGeometryShatter(Vector2 center, Color tint)
+        {
+            PrettySparkleParticle core = _poolPrettySparkle.RequestParticle();
+            core.ColorTint = Color.Lerp(tint, Color.White, 0.6f);
+            core.LocalPosition = center;
+            core.Velocity = Vector2.Zero;
+            core.Scale = new Vector2(4.5f, 4.5f);
+            core.FadeInNormalizedTime = 0.01f;
+            core.FadeOutNormalizedTime = 0.72f;
+            core.TimeToLive = 16;
+            core.FadeInEnd = 2;
+            core.FadeOutStart = 7;
+            core.FadeOutEnd = 16;
+            core.AdditiveAmount = 0.9f;
+            Main.ParticleSystem_World_OverPlayers.Add(core);
+
+            for (int i = 0; i < 12; i++)
+            {
+                PrettySparkleParticle ray = _poolPrettySparkle.RequestParticle();
+                float angle = MathHelper.TwoPi * i / 12f;
+                ray.ColorTint = Color.Lerp(tint, Color.White, Main.rand.NextFloat(0.25f, 0.55f));
+                ray.LocalPosition = center + angle.ToRotationVector2() * Main.rand.NextFloat(12f, 48f);
+                ray.Velocity = angle.ToRotationVector2() * Main.rand.NextFloat(3f, 9f);
+                ray.Rotation = angle;
+                ray.Scale = new Vector2(Main.rand.NextFloat(1.8f, 3.4f), Main.rand.NextFloat(0.45f, 0.9f));
+                ray.FadeInNormalizedTime = 0.01f;
+                ray.FadeOutNormalizedTime = 0.88f;
+                ray.TimeToLive = Main.rand.Next(22, 38);
+                ray.FadeInEnd = 5;
+                ray.FadeOutStart = 14;
+                ray.FadeOutEnd = ray.TimeToLive;
+                ray.AdditiveAmount = 0.58f;
+                Main.ParticleSystem_World_OverPlayers.Add(ray);
+            }
+        }
+
         // 上面这些是CTS的
         // ---------------------------------------------分界线---------------------------------------------
         // 下面这些是CX除了CTS部分的

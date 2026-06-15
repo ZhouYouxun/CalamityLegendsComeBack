@@ -27,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float HomingRearTolerance = -0.18f;
         private const float HomingMaxTurnPerUpdate = 0.034f;
         private const float HomingLeadFramesMax = 14f;
+        private const float HomingStartTime = 600f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -138,7 +139,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private Vector2 UpdateHomingDirection(Vector2 currentDirection)
         {
-            if (Timer < 4f)
+            if (Timer < HomingStartTime)
                 return currentDirection;
 
             NPC target = FindHomingTarget(currentDirection);

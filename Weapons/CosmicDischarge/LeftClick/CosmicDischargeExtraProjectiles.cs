@@ -348,4 +348,140 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor);
         }
     }
+
+    public class CosmicDischargeIceShard : ModProjectile, ILocalizedModType
+    {
+        public new string LocalizationCategory => "Projectiles.Melee";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private ref float Time => ref Projectile.ai[0];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
+            ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 12;
+            Projectile.height = 12;
+            Projectile.friendly = true;
+            Projectile.penetrate = 1;
+            Projectile.timeLeft = 180;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.DamageType = DamageClass.MeleeNoSpeed;
+            Projectile.coldDamage = true;
+        }
+
+        public override void AI()
+        {
+            Time++;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.FrostCoreColor.ToVector3() * 0.25f);
+
+            if (Time >= 8f)
+            {
+                NPC target = FindBestTarget(900f);
+                if (target != null)
+                {
+                    Vector2 desiredVel = Projectile.SafeDirectionTo(target.Center) * 16.5f;
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVel, 0.12f);
+                }
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    DustID.Frost,
+                    Projectile.velocity * 0.2f,
+                    100,
+                    CosmicDischargeCommon.FrostCoreColor,
+                    0.9f
+                );
+                d.noGravity = true;
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            CosmicDischargeCommon.ApplyColdDebuffs(target, 120);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 origin = bloom.Size() * 0.5f;
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                float factor = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 drawPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(
+                    bloom,
+                    drawPos,
+                    null,
+                    CosmicDischargeCommon.FrostGlowColor * 0.28f * factor,
+                    0f,
+                    origin,
+                    0.12f * factor,
+                    SpriteEffects.None
+                );
+            }
+
+            Main.EntitySpriteDraw(
+                bloom,
+                Projectile.Center - Main.screenPosition,
+                null,
+                CosmicDischargeCommon.FrostWhiteColor * 0.6f,
+                0f,
+                origin,
+                0.16f,
+                SpriteEffects.None
+            );
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            return false;
+        }
+
+        private NPC FindBestTarget(float maxDistance)
+        {
+            NPC marked = null;
+            NPC normal = null;
+            float closestMarked = maxDistance;
+            float closestNormal = maxDistance;
+
+            int markDebuff = ModContent.BuffType<CosmicDischargeFrostMarkDebuff>();
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float dist = Projectile.Distance(npc.Center);
+                if (npc.HasBuff(markDebuff))
+                {
+                    if (dist < closestMarked)
+                    {
+                        closestMarked = dist;
+                        marked = npc;
+                    }
+                }
+                else
+                {
+                    if (dist < closestNormal)
+                    {
+                        closestNormal = dist;
+                        normal = npc;
+                    }
+                }
+            }
+
+            return marked ?? normal;
+        }
+    }
 }

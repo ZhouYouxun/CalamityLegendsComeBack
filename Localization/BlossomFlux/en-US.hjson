@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -288,6 +288,8 @@
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
 				CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
+				CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
+				CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
 			}
 
 			LeonidAstralBlast.DisplayName: Leonid Astral Blast
@@ -385,6 +387,26 @@
 			BFPlaguePollutionBuff: {
 				DisplayName: B F Plague Pollution Buff
 				Description: Mods.CalamityLegendsComeBack.Buffs.BFPlaguePollutionBuff.Description
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				DisplayName: Cosmic Discharge Chain Knife Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeChainKnifeBuff.Description
+			}
+
+			CosmicDischargeGreatswordBuff: {
+				DisplayName: Cosmic Discharge Greatsword Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeGreatswordBuff.Description
+			}
+
+			CosmicDischargeSwordBuff: {
+				DisplayName: Cosmic Discharge Sword Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeSwordBuff.Description
+			}
+
+			CosmicDischargeWhipBuff: {
+				DisplayName: Cosmic Discharge Whip Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeWhipBuff.Description
 			}
 		}
 	}

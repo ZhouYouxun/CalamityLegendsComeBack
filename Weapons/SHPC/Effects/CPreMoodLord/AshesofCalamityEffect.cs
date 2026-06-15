@@ -53,19 +53,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
             float speed = System.Math.Max(projectile.velocity.Length(), 18f);
 
-            // 旧版火焰弹幕保留在这里作为对照，不再发射。
-            // Projectile.NewProjectile(
-            //     projectile.GetSource_FromThis(),
-            //     projectile.Center + forward * 12f,
-            //     forward * speed,
-            //     ModContent.ProjectileType<AshesofCalamity_Fire>(),
-            //     projectile.damage,
-            //     projectile.knockBack,
-            //     projectile.owner,
-            //     forward.X,
-            //     forward.Y
-            // );
-
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center + forward * 12f,
@@ -75,7 +62,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 projectile.knockBack,
                 projectile.owner,
                 forward.X,
-                forward.Y);
+                forward.Y
+            );
         }
     }
 

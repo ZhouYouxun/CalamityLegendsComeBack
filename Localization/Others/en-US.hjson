@@ -77,6 +77,18 @@
 					DisplayName: Boss Progress Controller
 					Tooltip: Left click to open or close the boss progress debug panel.
 				}
+
+				SoundproofEarmuffs: {
+					DisplayName: Soundproof Earmuffs
+					Tooltip:
+						'''
+						Right-click in the inventory to toggle muffling.
+						When enabled, sound effects are reduced by 90%. Music is unaffected.
+						Current state: [STATE]
+						'''
+					EnabledState: On
+					DisabledState: Off
+				}
 			}
 
 			Consumables: {

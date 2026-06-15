@@ -512,7 +512,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 左键开火与通用发射流程 =====
 
         #region ===== 创建与手持偏移 =====
-        public override Vector2? HoldoutOffset() => new Vector2(-35f, -10f);
+        public override Vector2? HoldoutOffset() => new Vector2(-35f, -0f);
 
         public override void OnCreated(ItemCreationContext context)
         {

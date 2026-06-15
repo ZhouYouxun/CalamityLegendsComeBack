@@ -17,6 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
     internal sealed class YC_BurningShard : ModProjectile, ILocalizedModType
     {
         private const int Lifetime = 120;
+        private const int MaxFollowFireballs = 5;
+        private const float FollowOrbitRadius = 148f;
         private static readonly Color CoreGold = new(255, 215, 86);
         private static readonly Color CoreRed = new(255, 70, 34);
 
@@ -58,6 +60,37 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
             CalamityUtils.CircularHitboxCollision(Projectile.Center, 96f * Projectile.scale, targetHitbox);
 
+        internal static bool CanSpawnFollowFireballFor(Player player, int queued = 0)
+        {
+            return CountFollowFireballs(player, queued) < MaxFollowFireballs;
+        }
+
+        internal static int NextFollowOrbitSlotFor(Player player)
+        {
+            int shardType = ModContent.ProjectileType<YC_BurningShard>();
+            bool[] usedSlots = new bool[MaxFollowFireballs];
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active &&
+                    projectile.owner == player.whoAmI &&
+                    projectile.type == shardType &&
+                    projectile.ai[0] == 2f)
+                {
+                    usedSlots[PositiveModulo((int)projectile.ai[1], MaxFollowFireballs)] = true;
+                }
+            }
+
+            for (int i = 0; i < MaxFollowFireballs; i++)
+            {
+                if (!usedSlots[i])
+                    return i;
+            }
+
+            return 0;
+        }
+
         public override void AI()
         {
             Timer++;
@@ -71,6 +104,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 }
 
                 Projectile.timeLeft = 2;
+            }
+            else if (Projectile.ai[0] == 2f)
+            {
+                OrbitOwner();
             }
             else
                 Projectile.velocity *= 0.88f;
@@ -103,6 +140,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             ExplodeDamage();
             SpawnDeathEffects();
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int count = 6;
+                for (int i = 0; i < count; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / count;
+                    Vector2 velocity = angle.ToRotationVector2() * 8f;
+                    int splinter = Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        velocity,
+                        ModContent.ProjectileType<YC_BurningShardSplinter>(),
+                        Math.Max(1, (int)(Projectile.damage * 0.5f)),
+                        Projectile.knockBack * 0.3f,
+                        Projectile.owner);
+                    if (Main.projectile.IndexInRange(splinter))
+                    {
+                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[splinter], YCWeaponForm.Crystal);
+                        Main.projectile[splinter].CritChance = Projectile.CritChance;
+                    }
+                }
+            }
 
             BalanceYharimsCrystal growth = new();
             if (Projectile.owner == Main.myPlayer && growth.ShouldShardReleaseBrimstoneMissiles())
@@ -150,6 +210,49 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             Projectile.Center = holdout.Center + direction * 34f + direction.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(Timer * 0.08f) * 10f;
             return true;
+        }
+
+        private void OrbitOwner()
+        {
+            Player player = Main.player[Projectile.owner];
+            int slot = PositiveModulo((int)Projectile.ai[1], MaxFollowFireballs);
+            float spinDirection = player.direction >= 0 ? 1f : -1f;
+            float angle = MathHelper.TwoPi * slot / MaxFollowFireballs + Timer * 0.045f * spinDirection;
+            Vector2 orbitDirection = angle.ToRotationVector2();
+            Vector2 tangent = orbitDirection.RotatedBy(MathHelper.PiOver2 * spinDirection);
+            Vector2 desiredCenter = player.MountedCenter + orbitDirection * FollowOrbitRadius;
+            Vector2 toDesired = desiredCenter - Projectile.Center;
+
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, toDesired * 0.12f + tangent * 2.8f, 0.2f);
+
+            if (toDesired.Length() > 520f)
+                Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, 0.35f);
+        }
+
+        private static int CountFollowFireballs(Player player, int queued = 0)
+        {
+            int shardType = ModContent.ProjectileType<YC_BurningShard>();
+            int activeCount = queued;
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active &&
+                    projectile.owner == player.whoAmI &&
+                    projectile.type == shardType &&
+                    projectile.ai[0] == 2f)
+                {
+                    activeCount++;
+                }
+            }
+
+            return activeCount;
+        }
+
+        private static int PositiveModulo(int value, int divisor)
+        {
+            int result = value % divisor;
+            return result < 0 ? result + divisor : result;
         }
 
         private void FireSplinter()

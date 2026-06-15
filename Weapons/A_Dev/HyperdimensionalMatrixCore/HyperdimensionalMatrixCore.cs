@@ -140,7 +140,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             player.buffTime[buffIndex] = 18000;
             player.statDefense += 15;
-            player.endurance += 0.15f;
+            player.endurance   += 0.15f;
+            player.lifeRegen   += 16;      // ~8 HP/s quantum resonance
+            player.moveSpeed   += 0.08f;   // spacetime phase drift
+            player.luck        += 0.05f;   // probability interference
+            player.aggro       -= 400;     // adversarial stealth matrix
             Lighting.AddLight(player.Center, new Vector3(0.08f, 0.3f, 0.4f));
         }
     }

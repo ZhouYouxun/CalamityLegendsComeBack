@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Common.NoMana: 魔力不足
 
@@ -171,6 +171,21 @@
 			AzureThunderGuZhouSlowDebuff: {
 				DisplayName: 孤舟锁定
 				Description: 移动速度降低15%
+			}
+
+			CosmicDischargeFrostMarkDebuff: {
+				// DisplayName: Cosmic Discharge Frost Mark Debuff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrostMarkDebuff.Description
+			}
+
+			CosmicDischargeFrozenEmperorBuff: {
+				// DisplayName: Cosmic Discharge Frozen Emperor Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorBuff.Description
+			}
+
+			CosmicDischargeFrozenEmperorSliverBuff: {
+				// DisplayName: Cosmic Discharge Frozen Emperor Sliver Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeFrozenEmperorSliverBuff.Description
 			}
 		}
 

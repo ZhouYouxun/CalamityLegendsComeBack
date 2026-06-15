@@ -24,6 +24,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public int PassiveCooldownTimer;
         public int QuickDrawCooldownTimer;
         public CosmicDischargeAttackMode AttackMode;
+        public int FrozenEmperorSliverCount;
+
+        public bool FrozenEmperorActive => Player.HasBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorBuff>());
 
         private bool holdingCosmicDischarge;
         private bool wasHoldingCosmicDischarge;
@@ -60,6 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             comboResetTimer = 0;
             hadIcebound = false;
             QuickDrawCooldownTimer = 0;
+            FrozenEmperorSliverCount = 0;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
         }
 
@@ -80,6 +84,58 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (hadIcebound && !icebound && Player.active && !Player.dead)
                 Player.AddBuff(ModContent.BuffType<CosmicDischargeColdWindBuff>(), ColdWindDuration);
             hadIcebound = icebound;
+
+            if (!Player.HasBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>()))
+            {
+                FrozenEmperorSliverCount = 0;
+            }
+
+            if (FrozenEmperorSliverCount >= 10 && !FrozenEmperorActive)
+            {
+                Player.ClearBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>());
+                FrozenEmperorSliverCount = 0;
+                Player.AddBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorBuff>(), 720); // 12 seconds
+
+                if (Player.whoAmI == Main.myPlayer)
+                {
+                    SoundEngine.PlaySound(SoundID.Item30 with { Volume = 1.0f, Pitch = -0.3f }, Player.Center);
+                    SoundEngine.PlaySound(SoundID.Item29 with { Volume = 1.2f, Pitch = 0.0f }, Player.Center);
+                    Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 20f);
+                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostWhiteColor, "Frozen Emperor Mode!", true, true);
+                }
+            }
+
+            if (FrozenEmperorActive && Player.active && !Player.dead)
+            {
+                if (Main.rand.NextBool(5))
+                {
+                    Vector2 dustPos = Player.Center + Main.rand.NextVector2Circular(24f, 32f);
+                    Dust d = Dust.NewDustPerfect(
+                        dustPos,
+                        DustID.SnowflakeIce,
+                        new Vector2(Player.velocity.X * 0.4f, Main.rand.NextFloat(-2.5f, -0.6f)),
+                        120,
+                        CosmicDischargeCommon.FrostCoreColor,
+                        Main.rand.NextFloat(0.75f, 1.2f)
+                    );
+                    d.noGravity = true;
+                }
+
+                if (Main.rand.NextBool(35))
+                {
+                    if (!Main.dedServ)
+                    {
+                        GeneralParticleHandler.SpawnParticle(new PulseRing(
+                            Player.MountedCenter,
+                            Vector2.Zero,
+                            CosmicDischargeCommon.FrostGlowColor * 0.42f,
+                            0.035f,
+                            0.75f,
+                            20
+                        ));
+                    }
+                }
+            }
 
             if (HoldingCosmicDischarge)
             {
@@ -124,22 +180,77 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public void ToggleAttackMode()
         {
-            AttackMode = AttackMode == CosmicDischargeAttackMode.Whip
-                ? CosmicDischargeAttackMode.Sword
-                : CosmicDischargeAttackMode.Whip;
+            AttackMode = AttackMode switch
+            {
+                CosmicDischargeAttackMode.Whip => CosmicDischargeAttackMode.Sword,
+                CosmicDischargeAttackMode.Sword => CosmicDischargeAttackMode.ChainKnife,
+                CosmicDischargeAttackMode.ChainKnife => CosmicDischargeAttackMode.Greatsword,
+                _ => CosmicDischargeAttackMode.Whip
+            };
+
+            if (Player.whoAmI == Main.myPlayer)
+            {
+                string modeName = AttackMode switch
+                {
+                    CosmicDischargeAttackMode.Whip => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.WhipName"),
+                    CosmicDischargeAttackMode.Sword => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.SwordName"),
+                    CosmicDischargeAttackMode.ChainKnife => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.ChainKnifeName"),
+                    _ => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.GreatswordName")
+                };
+                Color textColor = AttackMode switch
+                {
+                    CosmicDischargeAttackMode.Whip => CosmicDischargeCommon.FrostCoreColor,
+                    CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostGlowColor,
+                    CosmicDischargeAttackMode.ChainKnife => new Color(170, 150, 255),
+                    _ => CosmicDischargeCommon.FrostWhiteColor
+                };
+                CombatText.NewText(Player.getRect(), textColor, modeName, true, false);
+            }
 
             comboIndex = 0;
             comboResetTimer = 0;
 
-            SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.85f, Pitch = AttackMode == CosmicDischargeAttackMode.Whip ? 0.35f : -0.15f }, Player.Center);
-            SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.55f, Pitch = AttackMode == CosmicDischargeAttackMode.Whip ? 0.2f : -0.2f }, Player.Center);
+            // Clear old mode buffs
+            Player.ClearBuff(ModContent.BuffType<CosmicDischargeWhipBuff>());
+            Player.ClearBuff(ModContent.BuffType<CosmicDischargeSwordBuff>());
+            Player.ClearBuff(ModContent.BuffType<CosmicDischargeChainKnifeBuff>());
+            Player.ClearBuff(ModContent.BuffType<CosmicDischargeGreatswordBuff>());
+
+            // Apply new mode buff
+            int nextBuffType = AttackMode switch
+            {
+                CosmicDischargeAttackMode.Whip => ModContent.BuffType<CosmicDischargeWhipBuff>(),
+                CosmicDischargeAttackMode.Sword => ModContent.BuffType<CosmicDischargeSwordBuff>(),
+                CosmicDischargeAttackMode.ChainKnife => ModContent.BuffType<CosmicDischargeChainKnifeBuff>(),
+                _ => ModContent.BuffType<CosmicDischargeGreatswordBuff>()
+            };
+            Player.AddBuff(nextBuffType, 600); // 10 seconds
+
+            float pitch = AttackMode switch
+            {
+                CosmicDischargeAttackMode.Whip => 0.35f,
+                CosmicDischargeAttackMode.Sword => -0.15f,
+                CosmicDischargeAttackMode.ChainKnife => -0.35f,
+                _ => 0.1f // Greatsword
+            };
+
+            SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.85f, Pitch = pitch }, Player.Center);
+            SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.55f, Pitch = pitch - 0.1f }, Player.Center);
 
             if (!Main.dedServ)
             {
+                Color ringColor = AttackMode switch
+                {
+                    CosmicDischargeAttackMode.Whip => CosmicDischargeCommon.FrostCoreColor * 0.8f,
+                    CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostGlowColor * 0.8f,
+                    CosmicDischargeAttackMode.ChainKnife => new Color(130, 110, 255) * 0.8f, // Purple/Dark Blue
+                    _ => CosmicDischargeCommon.FrostWhiteColor * 0.8f // Greatsword
+                };
+
                 GeneralParticleHandler.SpawnParticle(new PulseRing(
                     Player.MountedCenter,
                     Vector2.Zero,
-                    AttackMode == CosmicDischargeAttackMode.Whip ? CosmicDischargeCommon.FrostCoreColor * 0.8f : CosmicDischargeCommon.FrostGlowColor * 0.8f,
+                    ringColor,
                     0.05f,
                     0.85f,
                     15));
@@ -147,13 +258,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 for (int i = 0; i < 20; i++)
                 {
                     Vector2 velocity = Main.rand.NextVector2Circular(4f, 4f);
+                    Color sparkColor = AttackMode switch
+                    {
+                        CosmicDischargeAttackMode.Whip => CosmicDischargeCommon.FrostWhiteColor,
+                        CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostCoreColor,
+                        CosmicDischargeAttackMode.ChainKnife => new Color(180, 160, 255),
+                        _ => CosmicDischargeCommon.FrostGlowColor
+                    };
+
                     GeneralParticleHandler.SpawnParticle(new SparkParticle(
                         Player.MountedCenter,
                         velocity,
                         false,
                         Main.rand.Next(15, 25),
                         Main.rand.NextFloat(0.5f, 0.9f),
-                        AttackMode == CosmicDischargeAttackMode.Whip ? CosmicDischargeCommon.FrostWhiteColor : CosmicDischargeCommon.FrostCoreColor));
+                        sparkColor));
                 }
             }
         }
@@ -178,6 +297,22 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             UltimateEnergy = Utils.Clamp(UltimateEnergy + amount, 0, UltimateEnergyMax);
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, UltimateEnergy >= UltimateEnergyMax);
             SyncCooldownDisplays();
+        }
+
+        public void AddFrozenEmperorSliver(int amount)
+        {
+            if (FrozenEmperorActive || !Player.active || Player.dead)
+                return;
+
+            FrozenEmperorSliverCount = System.Math.Clamp(FrozenEmperorSliverCount + amount, 0, 10);
+            if (FrozenEmperorSliverCount > 0)
+            {
+                Player.AddBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>(), 1800);
+                if (Player.whoAmI == Main.myPlayer && amount > 0)
+                {
+                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostCoreColor, $"+{amount} Frost Sliver ({FrozenEmperorSliverCount}/10)", false, false);
+                }
+            }
         }
 
         private bool CanTriggerIcebound()
@@ -260,6 +395,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Player.whoAmI);
 
             SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.86f, Pitch = -0.12f }, Player.Center);
+
+            if (Player.whoAmI == Main.myPlayer)
+            {
+                Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 15f);
+                string activeText = Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.UltimateActiveText");
+                CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostCoreColor, activeText, true, true);
+            }
         }
 
         private void SyncCooldownDisplays()

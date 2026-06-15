@@ -36,8 +36,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.EvolutionEnergyCore
                 .AddIngredient<EverfrostEnergyCoreItem>()
                 .AddIngredient<LifeAlloy>(5)
                 .AddIngredient<InfectedArmorPlating>(5)
-                .AddIngredient(ModContent.Find<ModItem>("CalamityMod/PlagueCellCluster").Type, 25)
-                .AddTile(TileID.LunarCraftingStation)
+                //.AddIngredient(ModContent.Find<ModItem>("CalamityMod/PlagueCellCluster").Type, 25)
+                .AddTile(TileID.MythrilAnvil)
                 .Register();
         }
     }

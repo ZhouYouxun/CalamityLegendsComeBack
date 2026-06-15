@@ -69,16 +69,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         internal Player Owner => Main.player[Projectile.owner];
         internal Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
-        internal Vector2 GunTipPosition => Projectile.Center + AimDirection * 22f;
-        internal Vector2 DragonMouthPosition => GunTipPosition + AimDirection * 8f;
-        internal Vector2 DragonEyePosition
-        {
-            get
-            {
-                Vector2 right = AimDirection.RotatedBy(MathHelper.PiOver2) * Owner.gravDir;
-                return Projectile.Center + AimDirection * 16f - right * 12f;
-            }
-        }
+        internal Vector2 GunTipPosition => NewLegendPristineFuryHoldOut_DragonDrawData.GetGunTipPosition(Projectile.Center, AimDirection);
+        internal Vector2 DragonMouthPosition => NewLegendPristineFuryHoldOut_DragonDrawData.GetDragonMouthPosition(Projectile.Center, AimDirection);
+        internal Vector2 DragonEyePosition => NewLegendPristineFuryHoldOut_DragonDrawData.GetDragonEyePosition(Projectile.Center, AimDirection, Owner.gravDir);
         internal PristineFuryMark CurrentMark => Owner.GetModPlayer<PristineFuryPlayer>().CurrentMark;
 
         public override void SetStaticDefaults()
@@ -840,8 +833,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (power <= 0.025f || Main.dedServ)
                 return;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeBloomTexturePath).Value;
+            Texture2D star = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeStarTexturePath).Value;
             Vector2 eye = DragonEyePosition - Main.screenPosition;
             Color theme = PristineFuryMarkHelper.GetColor(CurrentMark);
             Color color = (Color.Lerp(theme, Color.White, 0.28f) with { A = 0 }) * power;
@@ -864,8 +857,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (power <= 0.025f || Main.dedServ)
                 return;
 
-            Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
-            Texture2D smoke = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/smoke_04").Value;
+            Texture2D magic = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthMagicTexturePath).Value;
+            Texture2D smoke = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthSmokeTexturePath).Value;
             Vector2 mouth = DragonMouthPosition - Main.screenPosition;
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
@@ -898,11 +891,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (charge <= 0.02f)
                 return;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
-            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeBloomTexturePath).Value;
+            Texture2D smear = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeSmearTexturePath).Value;
+            Texture2D ring = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeRingTexturePath).Value;
             Vector2 direction = AimDirection;
-            Vector2 tip = GunTipPosition + direction * (8f + charge * 6f) - Main.screenPosition;
+            Vector2 tip = DragonMouthPosition + direction * charge * NewLegendPristineFuryHoldOut_DragonDrawData.FakeCalamityChargeForwardTravelFromMouth - Main.screenPosition;
             Color theme = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, charge * 0.32f) with { A = 0 }) * charge;
             Color white = (Color.White with { A = 0 }) * charge;
             float chargeScale = charge * 1.3f;
@@ -948,11 +941,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (charge <= 0.02f)
                 return;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
-            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeBloomTexturePath).Value;
+            Texture2D smear = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeSmearTexturePath).Value;
+            Texture2D ring = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeRingTexturePath).Value;
             Vector2 direction = AimDirection;
-            Vector2 tip = GunTipPosition + direction * (8f + charge * 5f) - Main.screenPosition;
+            Vector2 tip = DragonMouthPosition + direction * charge * NewLegendPristineFuryHoldOut_DragonDrawData.RightArcNovaChargeForwardTravelFromMouth - Main.screenPosition;
             Color themeColor = PristineFuryMarkHelper.GetColor(CurrentMark);
             Color fire = (Color.Lerp(themeColor, Color.White, 0.15f) with { A = 0 }) * charge;
             Color white = (Color.White with { A = 0 }) * charge;
