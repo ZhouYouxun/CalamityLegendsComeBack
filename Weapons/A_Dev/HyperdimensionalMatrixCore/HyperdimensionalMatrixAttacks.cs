@@ -1,15 +1,183 @@
 using System;
 using CalamityMod;
+using CalamityLegendsComeBack.Shader;
+using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 {
-    public sealed class MatrixDataNeedle : ModProjectile, ILocalizedModType
+    // ──────────────────────────────────────────────────────
+    // MODULE 1 · DATA GRID
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 数据矩阵模块：在目标附近生成一张 5×6 的数据面板，
+    /// 逐格点亮后所有亮格同时向目标射出 MatrixGridCell。
+    /// </summary>
+    public sealed class MatrixDataGridPanel : ModProjectile, ILocalizedModType
+    {
+        private const int Cols = 5;
+        private const int Rows = 6;
+        private const int CellCount = Cols * Rows;
+        private const float CellSize = 18f;
+        private const int FadeInEnd = 30;
+        private const int LightUpEnd = 100;   // 30 + CellCount * 2.33
+        private const int FireFrame = 102;
+        private const int Lifetime = 130;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int Age => Lifetime - Projectile.timeLeft;
+
+        // ai[0] = coreWhoAmI, ai[1] = targetIndex
+        private int TargetIndex => (int)Projectile.ai[1];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 800;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 10;
+            Projectile.friendly = false;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.DamageType = DamageClass.Summon;
+        }
+
+        public override bool? CanDamage() => false;
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            // Fire all lit cells on the designated frame (owner client only)
+            if (Age == FireFrame && Main.myPlayer == Projectile.owner)
+                SpawnCells();
+        }
+
+        private void SpawnCells()
+        {
+            NPC target = GetTarget();
+            Vector2 aimPos = target?.Center ?? Projectile.Center;
+
+            for (int i = 0; i < CellCount; i++)
+            {
+                if (!CellIsLit(i))
+                    continue;
+
+                Vector2 worldCell = GetGridOrigin() + GetCellLocalPos(i) + new Vector2(CellSize * 0.5f);
+                Vector2 dir = (aimPos - worldCell).SafeNormalize(Vector2.UnitY);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    worldCell,
+                    dir * 22f,
+                    ModContent.ProjectileType<MatrixGridCell>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    TargetIndex);
+            }
+
+            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.22f, Pitch = 0.5f, MaxInstances = 5 }, Projectile.Center);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            int age = Age;
+            float opacity = age < FadeInEnd
+                ? age / (float)FadeInEnd
+                : age > Lifetime - FadeInEnd
+                    ? (Lifetime - age) / (float)FadeInEnd
+                    : 1f;
+
+            // GetGridOrigin returns a WORLD position; DrawLineBetter / DrawNode also expect world positions.
+            Vector2 origin = GetGridOrigin();
+
+            for (int i = 0; i < CellCount; i++)
+            {
+                Vector2 cellWorld = origin + GetCellLocalPos(i);
+                bool lit = CellIsLit(i);
+                Color c = lit
+                    ? HyperdimensionalMatrixVisuals.GetDataColor(i / (float)CellCount, opacity)
+                    : HyperdimensionalMatrixVisuals.GetDataColor(i / (float)CellCount, opacity * 0.22f);
+
+                DrawCellWorld(cellWorld, CellSize, c, lit ? 1.8f : 1f);
+                if (lit)
+                    HyperdimensionalMatrixVisuals.DrawNode(cellWorld + Vector2.One * (CellSize * 0.5f), c, 3.5f);
+            }
+
+            // Border around entire panel (world coords)
+            Color borderColor = HyperdimensionalMatrixVisuals.GetDataColor(0.25f, opacity * 0.55f);
+            float w = Cols * CellSize;
+            float h = Rows * CellSize;
+            Main.spriteBatch.DrawLineBetter(origin, origin + new Vector2(w, 0f), borderColor, 1.5f);
+            Main.spriteBatch.DrawLineBetter(origin + new Vector2(w, 0f), origin + new Vector2(w, h), borderColor, 1.5f);
+            Main.spriteBatch.DrawLineBetter(origin + new Vector2(w, h), origin + new Vector2(0f, h), borderColor, 1.5f);
+            Main.spriteBatch.DrawLineBetter(origin + new Vector2(0f, h), origin, borderColor, 1.5f);
+
+            return false;
+        }
+
+        // Draws a cell outline using WORLD space coordinates (DrawLineBetter handles screen offset).
+        private static void DrawCellWorld(Vector2 worldOrigin, float size, Color color, float width)
+        {
+            Vector2 tl = worldOrigin;
+            Vector2 tr = worldOrigin + new Vector2(size, 0f);
+            Vector2 br = worldOrigin + new Vector2(size, size);
+            Vector2 bl = worldOrigin + new Vector2(0f, size);
+            Main.spriteBatch.DrawLineBetter(tl, tr, color, width);
+            Main.spriteBatch.DrawLineBetter(tr, br, color, width);
+            Main.spriteBatch.DrawLineBetter(br, bl, color, width);
+            Main.spriteBatch.DrawLineBetter(bl, tl, color, width);
+        }
+
+        private Vector2 GetGridOrigin()
+        {
+            NPC target = GetTarget();
+            Vector2 anchor = target?.Center ?? Projectile.Center;
+            return anchor + new Vector2(-(Cols * CellSize) * 0.5f, -(Rows * CellSize) - 60f);
+        }
+
+        private static Vector2 GetCellLocalPos(int index)
+            => new Vector2((index % Cols) * CellSize, (index / Cols) * CellSize);
+
+        private bool CellIsLit(int index)
+        {
+            int age = Age;
+            if (age < FadeInEnd)
+                return false;
+
+            // Deterministic lighting order: shuffle by a simple hash
+            int lightOrder = (index * 17 + (int)Projectile.ai[0] * 7) % CellCount;
+            float litByAge = (age - FadeInEnd) / 2.33f;
+            return lightOrder < litByAge;
+        }
+
+        private NPC GetTarget()
+        {
+            if (!Main.npc.IndexInRange(TargetIndex))
+                return null;
+
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    /// <summary>矩阵面板射出的单个数据格，归向目标。</summary>
+    public sealed class MatrixGridCell : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -18,23 +186,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             ProjectileID.Sets.MinionShot[Type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Type] = true;
-            ProjectileID.Sets.TrailCacheLength[Type] = 14;
+            ProjectileID.Sets.TrailCacheLength[Type] = 10;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
+            Projectile.width = 12;
+            Projectile.height = 12;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = MatrixCoreNumbers.PiercingProjectilePenetration;
-            Projectile.timeLeft = 150;
+            Projectile.penetrate = 3;
+            Projectile.timeLeft = 100;
             Projectile.extraUpdates = 1;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = MatrixCoreNumbers.PiercingProjectileLocalHitCooldown;
+            Projectile.localNPCHitCooldown = 10;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -51,357 +219,211 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 NPC target = Main.npc[targetIndex];
                 if (target.CanBeChasedBy(Projectile, false))
                 {
-                    Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY));
-                    float newRotation = Projectile.velocity.ToRotation().AngleTowards(
-                        desiredDirection.ToRotation(),
-                        MatrixCoreNumbers.PiercingProjectileMaxTurn);
-                    float speed = MathHelper.Lerp(
-                        Projectile.velocity.Length(),
-                        MatrixCoreNumbers.PiercingProjectileHomingSpeed,
-                        MatrixCoreNumbers.PiercingProjectileAcceleration);
-                    Projectile.velocity = newRotation.ToRotationVector2() * speed;
+                    float maxTurn = 0.18f;
+                    float desired = (target.Center - Projectile.Center).ToRotation();
+                    float current = Projectile.velocity.ToRotation();
+                    Projectile.velocity = current.AngleTowards(desired, maxTurn)
+                        .ToRotationVector2() * MathHelper.Lerp(Projectile.velocity.Length(), 26f, 0.08f);
                 }
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation();
-            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.07f).ToVector3() * 0.32f);
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.07f).ToVector3() * 0.28f);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.073f);
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            float half = 6f;
 
+            // Trail
             for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
             {
-                Vector2 start = Projectile.oldPos[i] + Projectile.Size * 0.5f;
-                Vector2 end = Projectile.oldPos[i - 1] + Projectile.Size * 0.5f;
-                if (Projectile.oldPos[i] == Vector2.Zero ||
-                    Projectile.oldPos[i - 1] == Vector2.Zero ||
-                    Vector2.DistanceSquared(start, end) > 1600f * 1600f)
-                {
+                if (Projectile.oldPos[i] == Vector2.Zero || Projectile.oldPos[i - 1] == Vector2.Zero)
                     continue;
-                }
 
-                float opacity = 1f - i / (float)Projectile.oldPos.Length;
-                Main.spriteBatch.DrawLineBetter(start, end, color * opacity * 0.55f, 1f + opacity * 2f);
+                float pct = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 a = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                Vector2 b = Projectile.oldPos[i - 1] + Projectile.Size * 0.5f;
+                Main.spriteBatch.DrawLineBetter(a, b, color * (pct * 0.45f), 1f + pct * 2f);
             }
 
-            Main.spriteBatch.DrawLineBetter(Projectile.Center - forward * 16f, Projectile.Center + forward * 11f, color * 0.34f, 7f);
-            Main.spriteBatch.DrawLineBetter(Projectile.Center - forward * 16f, Projectile.Center + forward * 11f, Color.White with { A = 0 }, 1.8f);
-            HyperdimensionalMatrixVisuals.DrawNode(Projectile.Center, color, 5f);
+            // Square cell shape at head
+            Vector2 c = Projectile.Center;
+            float r = Projectile.rotation;
+            Vector2 right = r.ToRotationVector2() * half;
+            Vector2 up = (r + MathHelper.PiOver2).ToRotationVector2() * half;
+            Main.spriteBatch.DrawLineBetter(c - right - up, c + right - up, color, 1.8f);
+            Main.spriteBatch.DrawLineBetter(c + right - up, c + right + up, color, 1.8f);
+            Main.spriteBatch.DrawLineBetter(c + right + up, c - right + up, color, 1.8f);
+            Main.spriteBatch.DrawLineBetter(c - right + up, c - right - up, color, 1.8f);
+            HyperdimensionalMatrixVisuals.DrawNode(c, color, 4f);
+
             return false;
         }
     }
 
-    public sealed class MatrixOrbitalProjection : ModProjectile, ILocalizedModType
+    // ──────────────────────────────────────────────────────
+    // MODULE 2 · GEOMETRY PROJECTION BURST
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 几何投影模块：在核心位置构建不断旋转的几何体，
+    /// 展开后爆炸——每条边化作一条 MatrixGeoShard 激光。
+    /// </summary>
+    public sealed class MatrixGeoBurst : ModProjectile, ILocalizedModType
     {
+        private const int BuildEnd   = 65;
+        private const int FlashEnd   = 80;
+        private const int Lifetime   = 85;
+
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        // ai[0] = coreWhoAmI, ai[1] = targetIndex
+        // localAI[0] = shapeIndex (set on spawn via identity)
+        private int ShapeIndex => (int)(Projectile.identity % 4);
+        private int TargetIndex => (int)Projectile.ai[1];
+        private int Age => Lifetime - Projectile.timeLeft;
 
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.MinionShot[Type] = true;
-            ProjectileID.Sets.CultistIsResistantTo[Type] = true;
-            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 1800;
-        }
-
-        public override void SetDefaults()
-        {
-            Projectile.width = 28;
-            Projectile.height = 28;
-            Projectile.friendly = true;
-            Projectile.ignoreWater = true;
-            Projectile.tileCollide = true;
-            Projectile.penetrate = MatrixCoreNumbers.OrbitalProjectilePenetration;
-            Projectile.timeLeft = MatrixCoreNumbers.OrbitalProjectileLifetime;
-            Projectile.DamageType = DamageClass.Summon;
-            Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = MatrixCoreNumbers.OrbitalProjectileLocalHitCooldown;
-        }
-
-        public override void AI()
-        {
-            Projectile.localAI[0]++;
-            Projectile.rotation += 0.18f;
-            Projectile.velocity.Y = Math.Min(
-                MatrixCoreNumbers.OrbitalProjectileMaxFallSpeed,
-                Projectile.velocity.Y + MatrixCoreNumbers.OrbitalProjectileGravity);
-
-            int targetIndex = (int)Projectile.ai[0];
-            if (Main.npc.IndexInRange(targetIndex))
-            {
-                NPC target = Main.npc[targetIndex];
-                if (target.CanBeChasedBy(Projectile, false))
-                {
-                    float correction = MathHelper.Clamp(
-                        (target.Center.X - Projectile.Center.X) * MatrixCoreNumbers.OrbitalProjectileHorizontalCorrectionStrength,
-                        -MatrixCoreNumbers.OrbitalProjectileMaxHorizontalCorrection,
-                        MatrixCoreNumbers.OrbitalProjectileMaxHorizontalCorrection);
-                    Projectile.velocity.X = MathHelper.Lerp(
-                        Projectile.velocity.X,
-                        correction,
-                        MatrixCoreNumbers.OrbitalProjectileHorizontalCorrectionLerp);
-                }
-            }
-
-            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.ai[1] * 0.1f).ToVector3() * 0.38f);
-        }
-
-        public override bool OnTileCollide(Vector2 oldVelocity) => true;
-
-        public override void OnKill(int timeLeft)
-        {
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_Death(),
-                Projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<MatrixOrbitalExplosion>(),
-                Math.Max(1, (int)(Projectile.damage * MatrixCoreNumbers.OrbitalExplosionDamageMultiplier)),
-                Projectile.knockBack,
-                Projectile.owner,
-                Projectile.ai[1]);
-
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.3f, Pitch = 0.38f, MaxInstances = 7 }, Projectile.Center);
-        }
-
-        public override bool PreDraw(ref Color lightColor)
-        {
-            float time = Main.GlobalTimeWrappedHourly + Projectile.ai[1];
-            Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.ai[1] * 0.13f);
-            Vector2 trailEnd = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 82f;
-            Main.spriteBatch.DrawLineBetter(Projectile.Center, trailEnd, color * 0.26f, 11f);
-            Main.spriteBatch.DrawLineBetter(Projectile.Center, trailEnd, color, 2.2f);
-            HyperdimensionalMatrixVisuals.DrawGeometry(
-                Projectile.Center,
-                MatrixGeometryShape.Icosahedron,
-                24f,
-                time * 2.2f,
-                0.9f,
-                Projectile.identity,
-                false);
-            return false;
-        }
-    }
-
-    public sealed class MatrixOrbitalExplosion : ModProjectile, ILocalizedModType
-    {
-        private const float MaximumRadius = MatrixCoreNumbers.OrbitalExplosionSize * 0.5f;
-
-        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
-        private float Completion => 1f - Projectile.timeLeft / 20f;
-        private float Radius => MaximumRadius * (float)Math.Sin(MathHelper.Pi * MathHelper.Clamp(Completion, 0f, 1f));
-
-        public override void SetStaticDefaults() => ProjectileID.Sets.MinionShot[Type] = true;
-
-        public override void SetDefaults()
-        {
-            Projectile.width = MatrixCoreNumbers.OrbitalExplosionSize;
-            Projectile.height = MatrixCoreNumbers.OrbitalExplosionSize;
-            Projectile.friendly = true;
-            Projectile.ignoreWater = true;
-            Projectile.tileCollide = false;
-            Projectile.penetrate = MatrixCoreNumbers.OrbitalExplosionPenetration;
-            Projectile.timeLeft = 20;
-            Projectile.DamageType = DamageClass.Summon;
-            Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = MatrixCoreNumbers.OrbitalExplosionLocalHitCooldown;
-        }
-
-        public override bool ShouldUpdatePosition() => false;
-
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            Vector2 closestPoint = new(
-                MathHelper.Clamp(Projectile.Center.X, targetHitbox.Left, targetHitbox.Right),
-                MathHelper.Clamp(Projectile.Center.Y, targetHitbox.Top, targetHitbox.Bottom));
-            return Vector2.DistanceSquared(Projectile.Center, closestPoint) <= Radius * Radius;
-        }
-
-        public override bool PreDraw(ref Color lightColor)
-        {
-            float completion = MathHelper.Clamp(Completion, 0f, 1f);
-            Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.ai[0] * 0.11f, 1f - completion);
-            HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, Radius, completion * 3f, color, 42, 4f);
-            HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, Radius * 0.7f, -completion * 5f, color * 0.65f, 30, 2f);
-
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 direction = (MathHelper.TwoPi * i / 12f + Projectile.ai[0]).ToRotationVector2();
-                Main.spriteBatch.DrawLineBetter(
-                    Projectile.Center + direction * Radius * 0.25f,
-                    Projectile.Center + direction * Radius,
-                    color * 0.48f,
-                    1.5f);
-            }
-
-            return false;
-        }
-    }
-
-    public sealed class MatrixFractureField : ModProjectile, ILocalizedModType
-    {
-        private const int NodeCount = 8;
-
-        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
-        private int Age => MatrixCoreNumbers.FractureProjectileLifetime - Projectile.timeLeft;
-
-        public override void SetStaticDefaults()
-        {
-            ProjectileID.Sets.MinionShot[Type] = true;
-            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 1600;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 800;
         }
 
         public override void SetDefaults()
         {
             Projectile.width = 10;
             Projectile.height = 10;
-            Projectile.friendly = true;
+            Projectile.friendly = false;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = MatrixCoreNumbers.FractureProjectilePenetration;
-            Projectile.timeLeft = MatrixCoreNumbers.FractureProjectileLifetime;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
             Projectile.DamageType = DamageClass.Summon;
-            Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = MatrixCoreNumbers.FractureProjectileLocalHitCooldown;
         }
 
+        public override bool? CanDamage() => false;
         public override bool ShouldUpdatePosition() => false;
 
         public override void AI()
         {
-            NPC target = GetTarget();
-            if (target == null)
-            {
-                Projectile.Kill();
-                return;
-            }
+            int age = Age;
+            // Spawn shards at the explosion frame (owner only)
+            if (age == FlashEnd && Main.myPlayer == Projectile.owner)
+                SpawnShards();
 
-            Projectile.Center = target.Center;
-            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.ai[1] * 0.1f).ToVector3() * 0.42f);
+            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(age * 0.01f).ToVector3() * 0.35f);
         }
 
-        public override bool? CanDamage() => GetTarget() != null;
-
-        public override bool? CanHitNPC(NPC target) => target.whoAmI == (int)Projectile.ai[0] ? null : false;
-
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        private void SpawnShards()
         {
-            NPC target = GetTarget();
-            if (target == null)
-                return false;
-
-            if (targetHitbox.Intersects(target.Hitbox))
-                return true;
-
-            for (int i = 0; i < 7; i++)
+            float time = Main.GlobalTimeWrappedHourly;
+            MatrixGeometryShape shape = ShapeIndex switch
             {
-                GetCutLine(i, out Vector2 start, out Vector2 end);
-                float collisionPoint = 0f;
-                if (Collision.CheckAABBvLineCollision(
-                    targetHitbox.TopLeft(),
-                    targetHitbox.Size(),
-                    start,
-                    end,
-                    8f,
-                    ref collisionPoint))
+                0 => MatrixGeometryShape.Tetrahedron,
+                1 => MatrixGeometryShape.Icosahedron,
+                2 => MatrixGeometryShape.Cube,
+                _ => MatrixGeometryShape.Icosahedron
+            };
+
+            Vector2[] vertices = HyperdimensionalMatrixVisuals.GetProjectedVertices(
+                shape, Projectile.Center, 62f, time, Projectile.identity);
+
+            NPC target = GetTarget();
+            Vector2 aimPos = target?.Center ?? Projectile.Center + Vector2.UnitY * 200f;
+
+            foreach (Vector2 v in vertices)
+            {
+                Vector2 dir = (v - Projectile.Center).SafeNormalize(
+                    (aimPos - Projectile.Center).SafeNormalize(Vector2.UnitY));
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + dir * 8f,
+                    dir * 28f,
+                    ModContent.ProjectileType<MatrixGeoShard>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    TargetIndex);
+            }
+
+            // Hypercube variant also spawns 8 extra shards
+            if (ShapeIndex == 3)
+            {
+                for (int i = 0; i < 8; i++)
                 {
-                    return true;
+                    Vector2 dir = (MathHelper.TwoPi * i / 8f).ToRotationVector2();
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center + dir * 8f,
+                        dir * 24f,
+                        ModContent.ProjectileType<MatrixGeoShard>(),
+                        Projectile.damage,
+                        Projectile.knockBack,
+                        Projectile.owner,
+                        TargetIndex);
                 }
             }
 
-            return false;
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.36f, Pitch = 0.15f, MaxInstances = 4 }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (GetTarget() == null)
-                return false;
+            int age = Age;
+            float time = Main.GlobalTimeWrappedHourly;
+            float buildPct = MathHelper.Clamp(age / (float)BuildEnd, 0f, 1f);
+            float explodePct = age >= FlashEnd ? (age - FlashEnd) / (float)(Lifetime - FlashEnd) : 0f;
+            float opacity = buildPct * (1f - explodePct);
 
-            float buildProgress = MathHelper.Clamp(Age / 18f, 0f, 1f);
-            float fadeOut = MathHelper.Clamp(Projectile.timeLeft / 18f, 0f, 1f);
-            float opacity = buildProgress * fadeOut;
-            Vector2[] nodes = new Vector2[NodeCount];
+            // Grow from 0 to full during build phase, then flash-expand on explosion
+            float radius = age < FlashEnd
+                ? 62f * buildPct
+                : 62f + explodePct * 80f;
 
-            for (int i = 0; i < NodeCount; i++)
-                nodes[i] = GetNode(i);
-
-            for (int i = 0; i < NodeCount; i++)
+            MatrixGeometryShape shape = ShapeIndex switch
             {
-                Color cageColor = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)NodeCount, opacity * 0.55f);
-                Main.spriteBatch.DrawLineBetter(nodes[i], nodes[(i + 1) % NodeCount], cageColor, 1.7f);
-                Main.spriteBatch.DrawLineBetter(nodes[i], nodes[(i + 3) % NodeCount], cageColor * 0.35f, 1f);
-                HyperdimensionalMatrixVisuals.DrawNode(nodes[i], cageColor, 7f);
-            }
-
-            for (int i = 0; i < 7; i++)
-            {
-                GetCutLine(i, out Vector2 start, out Vector2 end);
-                float flash = 0.55f + 0.45f * (float)Math.Sin(Age * 0.42f + i * 1.7f);
-                Color cutColor = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.13f + Projectile.ai[1], opacity * flash);
-                Vector2 glitchOffset = new Vector2((float)Math.Sin(Age * 0.7f + i) * 2.5f, 0f);
-                Main.spriteBatch.DrawLineBetter(start + glitchOffset, end + glitchOffset, cutColor * 0.25f, 8f);
-                Main.spriteBatch.DrawLineBetter(start, end, cutColor, 2.3f);
-            }
+                0 => MatrixGeometryShape.Tetrahedron,
+                1 => MatrixGeometryShape.Icosahedron,
+                2 => MatrixGeometryShape.Cube,
+                _ => MatrixGeometryShape.Icosahedron
+            };
 
             HyperdimensionalMatrixVisuals.DrawGeometry(
-                Projectile.Center,
-                MatrixGeometryShape.Cube,
-                GetRadius() * 0.52f,
-                Main.GlobalTimeWrappedHourly * 1.9f + Projectile.ai[1],
-                opacity * 0.45f,
-                Projectile.identity,
-                false);
+                Projectile.Center, shape, radius, time * 1.4f, opacity, Projectile.identity);
+
+            // Hypercube overlay for variant 3
+            if (ShapeIndex == 3)
+                HyperdimensionalMatrixVisuals.DrawHypercube(Projectile.Center, radius * 0.55f, time, opacity * 0.75f);
+
+            // Pre-explosion convergence scan ring
+            if (age > BuildEnd * 0.7f)
+            {
+                float pulse = 0.5f + 0.5f * (float)Math.Sin(time * 12f);
+                HyperdimensionalMatrixVisuals.DrawScanRing(
+                    Projectile.Center, radius * 1.25f, time * 2f,
+                    HyperdimensionalMatrixVisuals.GetDataColor(0.85f, opacity * pulse), 16, 2.5f);
+            }
+
             return false;
         }
 
         private NPC GetTarget()
         {
-            int targetIndex = (int)Projectile.ai[0];
-            if (!Main.npc.IndexInRange(targetIndex))
+            if (!Main.npc.IndexInRange(TargetIndex))
                 return null;
 
-            NPC target = Main.npc[targetIndex];
-            return target.CanBeChasedBy(Projectile, false) ? target : null;
-        }
-
-        private float GetRadius()
-        {
-            NPC target = GetTarget();
-            return target == null ? 110f : Math.Max(105f, Math.Max(target.width, target.height) * 0.72f + 68f);
-        }
-
-        private Vector2 GetNode(int index)
-        {
-            float angle = MathHelper.TwoPi * index / NodeCount + Projectile.ai[1] + Age * 0.012f;
-            float radius = GetRadius() * (1f + (float)Math.Sin(Age * 0.09f + index) * 0.06f);
-            return Projectile.Center + new Vector2((float)Math.Cos(angle) * radius, (float)Math.Sin(angle) * radius * 0.74f);
-        }
-
-        private void GetCutLine(int index, out Vector2 start, out Vector2 end)
-        {
-            int phase = Age / 5;
-            int startIndex = (index * 3 + phase) % NodeCount;
-            int endIndex = (index * 5 + phase + 3) % NodeCount;
-            if (startIndex == endIndex)
-                endIndex = (endIndex + 3) % NodeCount;
-
-            start = GetNode(startIndex);
-            end = GetNode(endIndex);
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
         }
     }
 
-    public sealed class HyperdimensionalMatrixBeam : ModProjectile, ILocalizedModType
+    /// <summary>几何爆炸射出的单条边线，高速穿透弹。</summary>
+    public sealed class MatrixGeoShard : ModProjectile, ILocalizedModType
     {
-        private Vector2 beamDirection;
-
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -409,7 +431,471 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             ProjectileID.Sets.MinionShot[Type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Type] = true;
-            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 3600;
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 8;
+            Projectile.height = 8;
+            Projectile.friendly = true;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = 4;
+            Projectile.timeLeft = 80;
+            Projectile.extraUpdates = 1;
+            Projectile.DamageType = DamageClass.Summon;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 8;
+        }
+
+        public override void OnSpawn(IEntitySource source)
+        {
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+                Projectile.oldPos[i] = Projectile.position;
+        }
+
+        public override void AI()
+        {
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.05f).ToVector3() * 0.25f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.053f);
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+
+            for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero || Projectile.oldPos[i - 1] == Vector2.Zero)
+                    continue;
+
+                float pct = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 a = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                Vector2 b = Projectile.oldPos[i - 1] + Projectile.Size * 0.5f;
+                Main.spriteBatch.DrawLineBetter(a, b, color * (pct * 0.5f), pct * 3.5f);
+            }
+
+            // Head: a glowing short line segment representing a geometry edge
+            Main.spriteBatch.DrawLineBetter(Projectile.Center - forward * 18f, Projectile.Center + forward * 8f, color * 0.28f, 8f);
+            Main.spriteBatch.DrawLineBetter(Projectile.Center - forward * 18f, Projectile.Center + forward * 8f, color, 1.8f);
+            Main.spriteBatch.DrawLineBetter(Projectile.Center - forward * 18f, Projectile.Center + forward * 8f, Color.White with { A = 0 }, 0.8f);
+
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // MODULE 3 · SHADER EXPERIMENT ORBS
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Shader实验模块：五个实验体绕目标轨道飞行，
+    /// 每个展示一种不同的 Overlay Shader，存活后爆炸伤害。
+    /// </summary>
+    public sealed class MatrixShaderOrb : ModProjectile, ILocalizedModType
+    {
+        private const float OrbitRadius = 112f;
+        private const int Lifetime = 125;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        // ai[0] = orbType (0-4), ai[1] = targetIndex
+        private int OrbType => (int)Projectile.ai[0];
+        private int TargetIndex => (int)Projectile.ai[1];
+        private int Age => Lifetime - Projectile.timeLeft;
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 600;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 20;
+            Projectile.height = 20;
+            Projectile.friendly = true;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.DamageType = DamageClass.Summon;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 20;
+        }
+
+        public override bool? CanDamage() => Age < Lifetime - 10 ? false : null;
+
+        public override void AI()
+        {
+            NPC target = GetTarget();
+            if (target != null)
+            {
+                float baseAngle = MathHelper.TwoPi * OrbType / 5f;
+                float angle = baseAngle + Main.GlobalTimeWrappedHourly * 1.4f;
+                Projectile.Center = target.Center + angle.ToRotationVector2() * OrbitRadius;
+            }
+
+            Projectile.rotation += 0.12f;
+            Lighting.AddLight(Projectile.Center, GetOrbColor().ToVector3() * 0.35f);
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            if (Age < Lifetime - 10)
+                return false;
+
+            float cp = 0f;
+            return Collision.CheckAABBvLineCollision(
+                targetHitbox.TopLeft(), targetHitbox.Size(),
+                Projectile.Center - Vector2.One * 28f,
+                Projectile.Center + Vector2.One * 28f,
+                28f, ref cp);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            int age = Age;
+            float opacity = age < 10 ? age / 10f : age > Lifetime - 10 ? (Lifetime - age) / 10f : 1f;
+            float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6f + OrbType);
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPos = Projectile.Center - Main.screenPosition;
+            Effect shader = GetOrbShader();
+            Color orbColor = GetOrbColor() * opacity * pulse;
+            float orbScale = 0.52f + 0.18f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3f + OrbType * 1.2f);
+
+            // Apply overlay shader if available; otherwise fall back to additive glow
+            if (shader != null)
+            {
+                ConfigureShaderParams(shader, orbColor);
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(
+                    SpriteSortMode.Immediate,
+                    BlendState.Additive,
+                    SamplerState.LinearClamp,
+                    DepthStencilState.None,
+                    Main.Rasterizer,
+                    shader,
+                    Main.GameViewMatrix.TransformationMatrix);
+            }
+            else
+            {
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(
+                    SpriteSortMode.Deferred,
+                    BlendState.Additive,
+                    SamplerState.LinearClamp,
+                    DepthStencilState.None,
+                    Main.Rasterizer,
+                    null,
+                    Main.GameViewMatrix.TransformationMatrix);
+            }
+
+            Main.spriteBatch.Draw(bloom, drawPos, null, orbColor, Projectile.rotation, bloom.Size() * 0.5f, orbScale, SpriteEffects.None, 0f);
+            // Second pass: slightly larger, dimmer glow halo
+            Main.spriteBatch.Draw(bloom, drawPos, null, orbColor * 0.38f, -Projectile.rotation * 0.7f, bloom.Size() * 0.5f, orbScale * 1.55f, SpriteEffects.None, 0f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
+            // Orbit track faint ring
+            HyperdimensionalMatrixVisuals.DrawScanRing(
+                GetTarget()?.Center ?? Projectile.Center,
+                OrbitRadius,
+                Main.GlobalTimeWrappedHourly * 0.4f,
+                GetOrbColor() * (opacity * 0.12f),
+                20, 0.8f);
+
+            return false;
+        }
+
+        private Effect GetOrbShader()
+        {
+            return OrbType switch
+            {
+                0 => ShaderGames.FireBurnShader,
+                1 => ShaderGames.ScanlineShader,
+                2 => ShaderGames.GlitchBlocksShader,
+                3 => ShaderGames.GlassRefractionShader,
+                4 => ShaderGames.AuroraWaveShader,
+                _ => null
+            };
+        }
+
+        private void ConfigureShaderParams(Effect shader, Color color)
+        {
+            float t = Main.GlobalTimeWrappedHourly;
+            shader.Parameters["uTime"]?.SetValue(t);
+            shader.Parameters["uOpacity"]?.SetValue(color.A / 255f);
+            shader.Parameters["uBlockSize"]?.SetValue(0.08f);
+            shader.Parameters["uFrequency"]?.SetValue(8f);
+            shader.Parameters["uSpeed"]?.SetValue(1.2f);
+        }
+
+        private Color GetOrbColor()
+        {
+            float t = Main.GlobalTimeWrappedHourly;
+            return OrbType switch
+            {
+                0 => Color.Lerp(new Color(255, 120, 20), new Color(255, 55, 0), 0.5f + 0.5f * (float)Math.Sin(t * 4f)) with { A = 0 },
+                1 => Color.Lerp(new Color(20, 180, 255), new Color(80, 255, 220), 0.5f + 0.5f * (float)Math.Sin(t * 3f)) with { A = 0 },
+                2 => HyperdimensionalMatrixVisuals.GetDataColor(t * 0.35f),
+                3 => new Color(255, 255, 255, 0),
+                4 => HyperdimensionalMatrixVisuals.GetDataColor(OrbType * 0.2f + t * 0.25f),
+                _ => Color.White with { A = 0 }
+            };
+        }
+
+        private NPC GetTarget()
+        {
+            if (!Main.npc.IndexInRange(TargetIndex))
+                return null;
+
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // MODULE 4 · METABALL FUSION
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 流体聚合模块：8 个能量球从四面八方向目标中心聚合，
+    /// 融合成超级核心后坍缩爆炸——通过叠加 Bloom 圆模拟 Metaball 效果。
+    /// </summary>
+    public sealed class MatrixFusionController : ModProjectile, ILocalizedModType
+    {
+        private const int BallCount   = 8;
+        private const int ConvergeEnd = 85;
+        private const int CompressEnd = 115;
+        private const int Lifetime    = 125;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int Age => Lifetime - Projectile.timeLeft;
+        private int TargetIndex => (int)Projectile.ai[1];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 800;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 10;
+            Projectile.friendly = false;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.DamageType = DamageClass.Summon;
+        }
+
+        public override bool? CanDamage() => false;
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            int age = Age;
+            NPC target = GetTarget();
+            if (target != null)
+                Projectile.Center = target.Center;
+
+            if (age == CompressEnd && Main.myPlayer == Projectile.owner)
+                SpawnExplosion();
+
+            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(age * 0.02f).ToVector3() * 0.55f);
+        }
+
+        private void SpawnExplosion()
+        {
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center, Vector2.Zero,
+                ModContent.ProjectileType<MatrixFusionExplosion>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner);
+
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.45f, Pitch = -0.4f, MaxInstances = 3 }, Projectile.Center);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            int age = Age;
+            float t = Main.GlobalTimeWrappedHourly;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 center = Projectile.Center - Main.screenPosition;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            if (age < ConvergeEnd)
+            {
+                // Draw 8 balls converging toward center
+                for (int i = 0; i < BallCount; i++)
+                {
+                    Vector2 ballPos = GetBallPosition(i, age);
+                    float distPct = 1f - Vector2.Distance(ballPos, Projectile.Center) / GetBallInitialRadius(i);
+                    float ballSize = MathHelper.Lerp(0.12f, 0.38f, distPct);
+                    Color ballColor = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)BallCount);
+                    Vector2 ballScreen = ballPos - Main.screenPosition;
+                    Main.spriteBatch.Draw(bloom, ballScreen, null, ballColor, t * 0.8f + i, bloom.Size() * 0.5f, ballSize, SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(bloom, ballScreen, null, ballColor * 0.35f, -t * 0.5f, bloom.Size() * 0.5f, ballSize * 1.6f, SpriteEffects.None, 0f);
+                }
+            }
+            else if (age < CompressEnd)
+            {
+                // Merge: single growing mass
+                float mergePct = (age - ConvergeEnd) / (float)(CompressEnd - ConvergeEnd);
+                float coreScale = MathHelper.Lerp(0.35f, 0.95f, mergePct);
+                float pulse = 1f + 0.12f * (float)Math.Sin(t * 14f);
+                Color mergeColor = HyperdimensionalMatrixVisuals.GetDataColor(t * 0.3f);
+
+                Main.spriteBatch.Draw(bloom, center, null, mergeColor, t, bloom.Size() * 0.5f, coreScale * pulse, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(bloom, center, null, mergeColor * 0.4f, -t * 0.6f, bloom.Size() * 0.5f, coreScale * 1.9f * pulse, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(bloom, center, null, Color.White with { A = 0 } * 0.3f, t * 2f, bloom.Size() * 0.5f, coreScale * 0.4f, SpriteEffects.None, 0f);
+
+                HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, coreScale * 95f * pulse, t * 2f,
+                    mergeColor, 20, 2f);
+            }
+            else
+            {
+                // Flash before explosion
+                float flashPct = (age - CompressEnd) / (float)(Lifetime - CompressEnd);
+                Color flashColor = Color.White with { A = 0 };
+                Main.spriteBatch.Draw(bloom, center, null, flashColor * (1f - flashPct), 0f, bloom.Size() * 0.5f, flashPct * 2.5f, SpriteEffects.None, 0f);
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            return false;
+        }
+
+        private Vector2 GetBallPosition(int index, int age)
+        {
+            float convergeT = Math.Min(age / (float)ConvergeEnd, 1f);
+            float eased = convergeT * convergeT * (3f - 2f * convergeT); // smoothstep
+            float angle = MathHelper.TwoPi * index / BallCount + index * 0.42f + (int)Projectile.ai[0] * 0.07f;
+            float radius = GetBallInitialRadius(index);
+            return Projectile.Center + angle.ToRotationVector2() * (radius * (1f - eased));
+        }
+
+        private static float GetBallInitialRadius(int index)
+            => 90f + (index * 23 % 7) * 12f;
+
+        private NPC GetTarget()
+        {
+            if (!Main.npc.IndexInRange(TargetIndex))
+                return null;
+
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    /// <summary>聚合爆炸：膨胀圆形伤害场 + 数据外爆特效。</summary>
+    public sealed class MatrixFusionExplosion : ModProjectile, ILocalizedModType
+    {
+        private const float MaxRadius = 155f;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private float Completion => 1f - Projectile.timeLeft / 26f;
+        private float Radius => MaxRadius * (float)Math.Sin(MathHelper.Pi * MathHelper.Clamp(Completion, 0f, 1f));
+
+        public override void SetStaticDefaults() => ProjectileID.Sets.MinionShot[Type] = true;
+
+        public override void SetDefaults()
+        {
+            Projectile.width = (int)(MaxRadius * 2f);
+            Projectile.height = (int)(MaxRadius * 2f);
+            Projectile.friendly = true;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 26;
+            Projectile.DamageType = DamageClass.Summon;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        public override bool ShouldUpdatePosition() => false;
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            float r = Radius;
+            Vector2 closest = new(
+                MathHelper.Clamp(Projectile.Center.X, targetHitbox.Left, targetHitbox.Right),
+                MathHelper.Clamp(Projectile.Center.Y, targetHitbox.Top, targetHitbox.Bottom));
+            return Vector2.DistanceSquared(Projectile.Center, closest) <= r * r;
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            float c = MathHelper.Clamp(Completion, 0f, 1f);
+            float r = Radius;
+            Color color = HyperdimensionalMatrixVisuals.GetDataColor(c * 0.5f, 1f - c);
+
+            HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, r, c * 4f, color, 40, 4.5f);
+            HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, r * 0.65f, -c * 6f, color * 0.55f, 30, 2.5f);
+
+            for (int i = 0; i < 16; i++)
+            {
+                Vector2 dir = (MathHelper.TwoPi * i / 16f).ToRotationVector2();
+                Main.spriteBatch.DrawLineBetter(
+                    Projectile.Center + dir * r * 0.2f,
+                    Projectile.Center + dir * r,
+                    color * 0.5f, 2f);
+            }
+
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // MODULE 5 · SPACE WARP
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 空间扭曲模块：对大型敌人触发。
+    /// 激活全屏 BlackHoleDistortion 并在目标周围绘制扭曲环。
+    /// 同时进行连续小伤害（扭曲能量）。
+    /// </summary>
+    public sealed class MatrixSpaceWarpField : ModProjectile, ILocalizedModType
+    {
+        private const int Lifetime = 85;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int Age => Lifetime - Projectile.timeLeft;
+        private int TargetIndex => (int)Projectile.ai[1];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 1000;
         }
 
         public override void SetDefaults()
@@ -419,108 +905,421 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = MatrixCoreNumbers.HyperdimensionalProjectilePenetration;
-            Projectile.timeLeft = 2;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
             Projectile.DamageType = DamageClass.Summon;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = MatrixCoreNumbers.HyperdimensionalProjectileLocalHitCooldown;
+            Projectile.localNPCHitCooldown = 14;
         }
 
         public override bool ShouldUpdatePosition() => false;
 
         public override void AI()
         {
-            HyperdimensionalMatrixCoreProjectile core = GetCore();
-            NPC target = core?.GetTarget();
-            if (core == null ||
-                target == null ||
-                core.CurrentForm != HyperdimensionalMatrixCoreProjectile.MatrixForm.Hyperdimensional)
-            {
-                Projectile.Kill();
-                return;
-            }
+            NPC target = GetTarget();
+            if (target != null)
+                Projectile.Center = target.Center;
 
-            Projectile.timeLeft = 2;
-            Projectile.Center = core.Projectile.Center;
-            Projectile.damage = Math.Max(1, (int)(core.Projectile.damage * MatrixCoreNumbers.HyperdimensionalProjectileDamageMultiplier));
+            // Activate screen shader every frame while alive
+            if (!Main.dedServ && Projectile.owner == Main.myPlayer)
+                ShaderFullScreenSystem.ActivateScreenShader("BlackHoleDistortion");
 
-            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
-            beamDirection = desiredDirection;
-            Projectile.velocity = beamDirection;
-            Projectile.rotation = beamDirection.ToRotation();
-
-            Vector3 lightColor = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.03f).ToVector3() * 0.42f;
-            for (int i = 0; i <= 12; i++)
-                Lighting.AddLight(Projectile.Center + beamDirection * (MatrixCoreNumbers.HyperdimensionalBeamLength * i / 12f), lightColor);
+            Lighting.AddLight(Projectile.Center, new Vector3(0.15f, 0.05f, 0.3f) * 0.5f);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(
-                targetHitbox.TopLeft(),
-                targetHitbox.Size(),
-                Projectile.Center,
-                Projectile.Center + beamDirection * MatrixCoreNumbers.HyperdimensionalBeamLength,
-                22f,
-                ref collisionPoint);
+            NPC target = GetTarget();
+            if (target == null)
+                return false;
+
+            float r = Math.Max(target.width, target.height) * 0.6f + 30f;
+            Vector2 closest = new(
+                MathHelper.Clamp(Projectile.Center.X, targetHitbox.Left, targetHitbox.Right),
+                MathHelper.Clamp(Projectile.Center.Y, targetHitbox.Top, targetHitbox.Bottom));
+            return Vector2.DistanceSquared(Projectile.Center, closest) <= r * r;
+        }
+
+        public override bool? CanHitNPC(NPC target) => target.whoAmI == TargetIndex ? null : false;
+
+        public override void OnKill(int timeLeft)
+        {
+            if (!Main.dedServ && Projectile.owner == Main.myPlayer)
+                ShaderFullScreenSystem.DeactivateScreenShader("BlackHoleDistortion");
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (beamDirection == Vector2.Zero)
-                return false;
+            int age = Age;
+            float fade = age < 12 ? age / 12f : age > Lifetime - 12 ? (Lifetime - age) / 12f : 1f;
+            float t = Main.GlobalTimeWrappedHourly;
+            NPC target = GetTarget();
+            float targetR = target != null
+                ? Math.Max(target.width, target.height) * 0.6f + 40f
+                : 80f;
 
-            Vector2 normal = beamDirection.RotatedBy(MathHelper.PiOver2);
-            Vector2 end = Projectile.Center + beamDirection * MatrixCoreNumbers.HyperdimensionalBeamLength;
-            float time = Main.GlobalTimeWrappedHourly;
-            Color color = HyperdimensionalMatrixVisuals.GetDataColor(Projectile.identity * 0.033f);
+            Color distortColor = new Color(180, 80, 255, 0) * fade;
+            Color edgeColor = HyperdimensionalMatrixVisuals.GetDataColor(0.75f, fade * 0.7f);
 
-            Main.spriteBatch.DrawLineBetter(Projectile.Center, end, color * 0.18f, 34f);
-            Main.spriteBatch.DrawLineBetter(Projectile.Center, end, color * 0.6f, 12f);
-            Main.spriteBatch.DrawLineBetter(Projectile.Center, end, Color.White with { A = 0 }, 3f);
-
-            const int segments = 48;
-            for (int lane = -1; lane <= 1; lane += 2)
+            // Concentric distortion rings
+            for (int ring = 0; ring < 4; ring++)
             {
-                Vector2 previous = Projectile.Center;
-                for (int i = 1; i <= segments; i++)
-                {
-                    float completion = i / (float)segments;
-                    float wave = (float)Math.Sin(completion * MathHelper.TwoPi * 6f - time * 8f + lane) * 9f * lane;
-                    Vector2 current = Projectile.Center + beamDirection * MatrixCoreNumbers.HyperdimensionalBeamLength * completion + normal * wave;
-                    Main.spriteBatch.DrawLineBetter(
-                        previous,
-                        current,
-                        HyperdimensionalMatrixVisuals.GetDataColor(completion + lane * 0.1f, 0.42f),
-                        1.4f);
-
-                    if (i % 6 == 0)
-                        HyperdimensionalMatrixVisuals.DrawNode(current, color * 0.75f, 4f);
-
-                    previous = current;
-                }
+                float ringR = targetR * (0.5f + ring * 0.22f);
+                float rot = t * (ring % 2 == 0 ? 0.8f : -1.1f) + ring * 0.5f;
+                HyperdimensionalMatrixVisuals.DrawScanRing(
+                    Projectile.Center, ringR, rot,
+                    Color.Lerp(distortColor, edgeColor, ring / 3f), 20 + ring * 6, 1.5f + ring * 0.4f);
             }
 
-            HyperdimensionalMatrixVisuals.DrawHypercube(Projectile.Center, 34f, time * 1.8f, 0.65f);
+            // Radial distortion spokes
+            for (int i = 0; i < 12; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 12f + t * 0.6f;
+                float spoke = targetR * (0.85f + 0.15f * (float)Math.Sin(t * 5f + i));
+                Vector2 dir = angle.ToRotationVector2();
+                Main.spriteBatch.DrawLineBetter(
+                    Projectile.Center + dir * spoke * 0.3f,
+                    Projectile.Center + dir * spoke,
+                    distortColor * 0.4f, 1.5f);
+                HyperdimensionalMatrixVisuals.DrawNode(Projectile.Center + dir * spoke, edgeColor, 4f);
+            }
+
             return false;
         }
 
-        private HyperdimensionalMatrixCoreProjectile GetCore()
+        private NPC GetTarget()
         {
-            int coreIndex = (int)Projectile.ai[0];
-            if (!Main.projectile.IndexInRange(coreIndex))
+            if (!Main.npc.IndexInRange(TargetIndex))
                 return null;
 
-            Projectile coreProjectile = Main.projectile[coreIndex];
-            if (!coreProjectile.active ||
-                coreProjectile.owner != Projectile.owner ||
-                coreProjectile.type != ModContent.ProjectileType<HyperdimensionalMatrixCoreProjectile>())
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // SPECIAL · COMPILE STORM
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 编译风暴：所有模块同时启动。
+    /// 阶段1 能量汇聚 → 阶段2 同时引爆所有模块 → 阶段3 奇点。
+    /// </summary>
+    public sealed class MatrixCompileStorm : ModProjectile, ILocalizedModType
+    {
+        private const int Phase1End  = 60;   // buildup
+        private const int Phase2Fire = 62;   // spawn all modules
+        private const int Phase3Sing = 95;   // spawn singularity
+        private const int Lifetime   = 155;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int Age => Lifetime - Projectile.timeLeft;
+        // ai[0] = coreWhoAmI, ai[1] = targetIndex
+        private int CoreIndex  => (int)Projectile.ai[0];
+        private int TargetIndex => (int)Projectile.ai[1];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 3000;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 10;
+            Projectile.friendly = false;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.DamageType = DamageClass.Summon;
+        }
+
+        public override bool? CanDamage() => false;
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            int age = Age;
+            NPC target = GetTarget();
+
+            // Lock to core position during buildup
+            if (age < Phase1End)
             {
-                return null;
+                Projectile coreProj = GetCore();
+                if (coreProj != null)
+                    Projectile.Center = Vector2.Lerp(Projectile.Center, coreProj.Center, 0.15f);
             }
 
-            return coreProjectile.ModProjectile as HyperdimensionalMatrixCoreProjectile;
+            // Fire all modules simultaneously
+            if (age == Phase2Fire && Main.myPlayer == Projectile.owner && target != null)
+            {
+                IEntitySource src = Projectile.GetSource_FromThis();
+                int dmg = Projectile.damage;
+                float kb = Projectile.knockBack;
+                int owner = Projectile.owner;
+                int tIdx = target.whoAmI;
+
+                // Module 1: Data Grid
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixDataGridPanel>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.DataGridDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 2: Geometry Burst (3 shapes at once)
+                for (int s = 0; s < 3; s++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * s / 3f).ToRotationVector2() * 55f;
+                    Projectile.NewProjectile(src, Projectile.Center + offset, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixGeoBurst>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.GeoBurstDamage)), kb, owner,
+                        Projectile.whoAmI, tIdx);
+                }
+
+                // Module 3: All 5 shader orbs
+                for (int i = 0; i < 5; i++)
+                {
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixShaderOrb>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.ShaderOrbDamage)), kb, owner,
+                        i, tIdx);
+                }
+
+                // Module 4: Fusion
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixFusionController>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.FusionDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.65f, Pitch = -0.3f, MaxInstances = 1 }, target.Center);
+            }
+
+            // Spawn singularity
+            if (age == Phase3Sing && Main.myPlayer == Projectile.owner && target != null)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixSingularity>(),
+                    Projectile.damage * 3,
+                    Projectile.knockBack,
+                    Projectile.owner);
+
+                SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.7f, Pitch = -0.6f, MaxInstances = 1 }, target.Center);
+            }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            int age = Age;
+            float t = Main.GlobalTimeWrappedHourly;
+            Projectile coreProj = GetCore();
+            NPC target = GetTarget();
+            if (coreProj == null && target == null)
+                return false;
+
+            Vector2 corePos = coreProj?.Center ?? Projectile.Center;
+            Vector2 tgtPos = target?.Center ?? Projectile.Center;
+
+            if (age < Phase1End)
+            {
+                // Phase 1: data streams converging from all directions toward target
+                float buildPct = age / (float)Phase1End;
+                for (int i = 0; i < 18; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 18f + t * 0.4f;
+                    float streamLen = MathHelper.Lerp(400f, 50f, buildPct * buildPct);
+                    Vector2 streamStart = tgtPos + angle.ToRotationVector2() * streamLen;
+                    Color streamColor = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.055f, buildPct * 0.65f);
+                    Main.spriteBatch.DrawLineBetter(streamStart, tgtPos, streamColor, 1.5f);
+
+                    if (i % 3 == 0)
+                    {
+                        float nodeT = ((t * 1.8f + i * 0.2f) % 1f);
+                        HyperdimensionalMatrixVisuals.DrawNode(Vector2.Lerp(streamStart, tgtPos, nodeT), streamColor, 4f);
+                    }
+                }
+
+                // Expanding scan rings around core
+                float buildR = 60f + buildPct * 120f;
+                HyperdimensionalMatrixVisuals.DrawScanRing(corePos, buildR, t * 1.6f,
+                    HyperdimensionalMatrixVisuals.GetDataColor(0.12f, buildPct * 0.5f), 28, 2f);
+                HyperdimensionalMatrixVisuals.DrawScanRing(corePos, buildR * 1.3f, -t * 1.2f,
+                    HyperdimensionalMatrixVisuals.GetDataColor(0.62f, buildPct * 0.35f), 22, 1.5f);
+
+                // Targeting line (bright during storm)
+                HyperdimensionalMatrixVisuals.DrawTargetingLine(corePos, tgtPos, buildPct * 0.7f);
+            }
+            else if (age >= Phase2Fire && age < Phase3Sing)
+            {
+                // Phase 2: everything exploding — just draw connecting arcs
+                float pct = (age - Phase2Fire) / (float)(Phase3Sing - Phase2Fire);
+                for (int i = 0; i < 6; i++)
+                {
+                    Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.16f, (1f - pct) * 0.5f);
+                    HyperdimensionalMatrixVisuals.DrawScanRing(tgtPos, pct * 200f, t * 2f + i, c, 16, 2f);
+                }
+            }
+            else if (age >= Phase3Sing)
+            {
+                // Phase 3: singularity forming — draw nothing extra; MatrixSingularity handles itself
+            }
+
+            return false;
+        }
+
+        private Projectile GetCore()
+        {
+            if (!Main.projectile.IndexInRange(CoreIndex))
+                return null;
+
+            Projectile p = Main.projectile[CoreIndex];
+            return p.active && p.type == ModContent.ProjectileType<HyperdimensionalMatrixCoreProjectile>()
+                ? p : null;
+        }
+
+        private NPC GetTarget()
+        {
+            if (!Main.npc.IndexInRange(TargetIndex))
+                return null;
+
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    /// <summary>
+    /// 数据奇点：编译风暴的终章。
+    /// 白色奇点聚焦 → 坍缩 → 大范围数据爆发。
+    /// </summary>
+    public sealed class MatrixSingularity : ModProjectile, ILocalizedModType
+    {
+        private const int FocusEnd    = 35;
+        private const int CollapseEnd = 55;
+        private const int Lifetime    = 90;
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int Age => Lifetime - Projectile.timeLeft;
+        private float Completion => Age / (float)Lifetime;
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 1200;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 10;
+            Projectile.friendly = true;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.DamageType = DamageClass.Summon;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        public override bool ShouldUpdatePosition() => false;
+
+        public override bool? CanDamage() => Age >= CollapseEnd ? null : false;
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            if (Age < CollapseEnd)
+                return false;
+
+            // Expanding blast radius
+            float blastR = (Age - CollapseEnd) / (float)(Lifetime - CollapseEnd) * 280f;
+            Vector2 closest = new(
+                MathHelper.Clamp(Projectile.Center.X, targetHitbox.Left, targetHitbox.Right),
+                MathHelper.Clamp(Projectile.Center.Y, targetHitbox.Top, targetHitbox.Bottom));
+            return Vector2.DistanceSquared(Projectile.Center, closest) <= blastR * blastR;
+        }
+
+        public override void AI()
+        {
+            Lighting.AddLight(Projectile.Center, new Vector3(0.9f, 0.9f, 1f) * 0.85f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            int age = Age;
+            float t = Main.GlobalTimeWrappedHourly;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Vector2 center = Projectile.Center - Main.screenPosition;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            if (age < FocusEnd)
+            {
+                // Focus phase: white point appears and stabilizes
+                float focusPct = age / (float)FocusEnd;
+                float scale = MathHelper.SmoothStep(0f, 0.55f, focusPct);
+                Main.spriteBatch.Draw(bloom, center, null, Color.White with { A = 0 }, t, bloom.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(ring, center, null, Color.White with { A = 0 } * 0.7f, -t * 1.4f, ring.Size() * 0.5f, scale * 1.5f, SpriteEffects.None, 0f);
+
+                // Inward scan rings
+                for (int i = 0; i < 3; i++)
+                {
+                    float ringR = (1f - focusPct) * (180f - i * 40f);
+                    Color rColor = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.28f, focusPct * 0.5f);
+                    HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, ringR, t * (1.2f + i * 0.3f), rColor, 20, 2f);
+                }
+            }
+            else if (age < CollapseEnd)
+            {
+                // Collapse: singularity shrinks before exploding
+                float collapsePct = (age - FocusEnd) / (float)(CollapseEnd - FocusEnd);
+                float scale = MathHelper.SmoothStep(0.55f, 0.12f, collapsePct);
+                float flashIntensity = collapsePct * collapsePct;
+                Main.spriteBatch.Draw(bloom, center, null, Color.White with { A = 0 } * (0.9f + flashIntensity * 2f), t * 2f, bloom.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            }
+            else
+            {
+                // Explosion phase: expanding burst of data
+                float blastPct = (age - CollapseEnd) / (float)(Lifetime - CollapseEnd);
+                float blastR = blastPct * 280f;
+                Color blastColor = HyperdimensionalMatrixVisuals.GetDataColor(blastPct * 0.6f, 1f - blastPct);
+
+                Main.spriteBatch.Draw(bloom, center, null, Color.White with { A = 0 } * ((1f - blastPct) * 3f), t, bloom.Size() * 0.5f, blastPct * 4f, SpriteEffects.None, 0f);
+
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                    DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+                HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, blastR, t * 3f, blastColor, 40, 5f);
+                HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, blastR * 0.72f, -t * 4f, blastColor * 0.6f, 32, 3f);
+
+                for (int i = 0; i < 24; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 24f + t;
+                    Vector2 dir = angle.ToRotationVector2();
+                    Main.spriteBatch.DrawLineBetter(
+                        Projectile.Center + dir * blastR * 0.12f,
+                        Projectile.Center + dir * blastR,
+                        HyperdimensionalMatrixVisuals.GetDataColor(i * 0.042f, (1f - blastPct) * 0.6f),
+                        2f);
+                    HyperdimensionalMatrixVisuals.DrawNode(Projectile.Center + dir * blastR, blastColor, 5f);
+                }
+
+                return false;
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            return false;
         }
     }
 }

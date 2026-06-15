@@ -84,6 +84,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             lastNoiseFrame = -1;
         }
 
+        /// <summary>
+        /// Returns the screen-space projected vertex positions for a given geometry shape.
+        /// Used by attack modules to spawn projectiles at edge/vertex locations.
+        /// </summary>
+        internal static Vector2[] GetProjectedVertices(
+            MatrixGeometryShape shape,
+            Vector2 center,
+            float radius,
+            float time,
+            int identity)
+        {
+            GeometryData geometry = shape switch
+            {
+                MatrixGeometryShape.Tetrahedron => Tetrahedron,
+                MatrixGeometryShape.Icosahedron => Icosahedron,
+                _ => Cube
+            };
+
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(
+                time * 0.94f + identity * 0.013f,
+                time * 0.67f + identity * 0.021f,
+                time * 0.43f + identity * 0.008f);
+
+            return ProjectGeometry(center, geometry.Vertices, radius, rotation);
+        }
+
         public static void DrawGeometry(
             Vector2 center,
             MatrixGeometryShape shape,

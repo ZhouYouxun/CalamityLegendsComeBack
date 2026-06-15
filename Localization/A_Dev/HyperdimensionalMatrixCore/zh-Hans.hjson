@@ -1,17 +1,22 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				HyperdimensionalMatrixCore: {
-					DisplayName: 高维矩阵核心
+					DisplayName: 高维矩阵
 					Tooltip:
 						'''
-						召唤一个永久悬浮于玩家头顶、持续重写现实的数据核心
+						召唤矩阵核心——一台被实体化的开发引擎
 						占用当前全部召唤栏位；每额外占用一个栏位，伤害提高50%
-						核心会自动轮转针刺矩阵、轨道矩阵、裂变矩阵与超维矩阵
-						核心存在时右键可立即切换至下一形态
+						核心自主循环调用五个攻击模块
+						模块 I  · 数据矩阵：运算最优攻击路径，所有亮格同时向目标开火
+						模块 II · 几何投影：构建旋转多面体，随后将其引爆为边线碎片弹
+						模块 III· Shader实验：释放五个实验体，每个展示不同的着色器效果
+						模块 IV · 流体聚合：召唤向中心汇聚的能量球，融合后坍缩爆炸
+						模块 V  · 空间扭曲：对大型敌人扭曲周围时空（含全屏后处理效果）
+						每900帧核心进入编译风暴——所有模块同时启动，随后释放数据奇点
 						防护矩阵提供15防御与15%伤害减免
-						“它算出了世间万物的每一种可能性，却最终选择了你”
+						"你召唤的不是仆从——你实例化了一个运行时"
 						'''
 				}
 			}
@@ -19,19 +24,24 @@
 
 		Buffs: {
 			HyperdimensionalMatrixCoreBuff: {
-				DisplayName: 超维防护矩阵
-				Description: 提供15防御与15%伤害减免；核心正在持续重构战场
+				DisplayName: 矩阵防护场
+				Description: 提供15防御与15%伤害减免；核心正在持续重编译战场
 			}
 		}
 
 		Projectiles: {
 			HyperdimensionalMatrixCore: {
 				HyperdimensionalMatrixCoreProjectile.DisplayName: 高维矩阵核心
-				MatrixDataNeedle.DisplayName: 针刺数据针
-				MatrixOrbitalProjection.DisplayName: 轨道投影体
-				MatrixOrbitalExplosion.DisplayName: 投影坍缩
-				MatrixFractureField.DisplayName: 裂变矩阵
-				HyperdimensionalMatrixBeam.DisplayName: 超维激光
+				MatrixDataGridPanel.DisplayName: 数据矩阵面板
+				MatrixGridCell.DisplayName: 矩阵格弹幕
+				MatrixGeoBurst.DisplayName: 几何爆发体
+				MatrixGeoShard.DisplayName: 几何边线碎片
+				MatrixShaderOrb.DisplayName: Shader实验体
+				MatrixFusionController.DisplayName: 能量聚合核心
+				MatrixFusionExplosion.DisplayName: 聚合坍缩
+				MatrixSpaceWarpField.DisplayName: 空间扭曲场
+				MatrixCompileStorm.DisplayName: 编译风暴
+				MatrixSingularity.DisplayName: 数据奇点
 			}
 		}
 	}

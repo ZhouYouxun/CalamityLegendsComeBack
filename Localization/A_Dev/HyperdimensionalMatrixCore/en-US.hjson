@@ -1,17 +1,22 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				HyperdimensionalMatrixCore: {
-					DisplayName: Hyperdimensional Matrix Core
+					DisplayName: Hyperdimensional Matrix
 					Tooltip:
 						'''
-						Summons a single reality-rewriting data core that permanently hovers above you
-						Occupies every available minion slot; each additional occupied slot grants +50% damage
-						The core automatically cycles through Piercing, Orbital, Fracture, and Hyperdimensional matrices
-						Right-click while the core exists to immediately switch to the next matrix
+						Summons the Matrix Core — a singular development engine made manifest
+						Occupies every available minion slot; each additional slot grants +50% damage
+						The core autonomously cycles through five attack modules
+						Module I  · Data Grid: computes an optimal strike path, fires all lit cells simultaneously
+						Module II · Geometry Burst: constructs a rotating polyhedron, then detonates it into edge shards
+						Module III· Shader Experiments: deploys five experimental orbs, each running a different shader
+						Module IV · Metaball Fusion: spawns energy spheres that converge and collapse into a supermass
+						Module V  · Space Warp: warps local spacetime around large enemies
+						Every 900 frames the core enters Compile Storm — all modules fire simultaneously
 						Its defensive matrix grants 15 defense and 15% damage reduction
-						"It does not fire a weapon. It computes a different reality."
+						"You did not summon a minion. You instantiated a runtime."
 						'''
 				}
 			}
@@ -19,19 +24,24 @@
 
 		Buffs: {
 			HyperdimensionalMatrixCoreBuff: {
-				DisplayName: Hyperdimensional Protection Matrix
-				Description: 15 defense and 15% damage reduction; the core is continuously reconstructing the battlefield
+				DisplayName: Matrix Protection Field
+				Description: 15 defense and 15% damage reduction; the core is continuously recompiling the battlefield
 			}
 		}
 
 		Projectiles: {
 			HyperdimensionalMatrixCore: {
 				HyperdimensionalMatrixCoreProjectile.DisplayName: Hyperdimensional Matrix Core
-				MatrixDataNeedle.DisplayName: Piercing Data Needle
-				MatrixOrbitalProjection.DisplayName: Orbital Projection
-				MatrixOrbitalExplosion.DisplayName: Projection Collapse
-				MatrixFractureField.DisplayName: Fracture Matrix
-				HyperdimensionalMatrixBeam.DisplayName: Hyperdimensional Laser
+				MatrixDataGridPanel.DisplayName: Data Matrix Panel
+				MatrixGridCell.DisplayName: Grid Cell Projectile
+				MatrixGeoBurst.DisplayName: Geometry Burst
+				MatrixGeoShard.DisplayName: Geometry Edge Shard
+				MatrixShaderOrb.DisplayName: Shader Experiment Orb
+				MatrixFusionController.DisplayName: Fusion Convergence
+				MatrixFusionExplosion.DisplayName: Fusion Collapse
+				MatrixSpaceWarpField.DisplayName: Space Warp Field
+				MatrixCompileStorm.DisplayName: Compile Storm
+				MatrixSingularity.DisplayName: Data Singularity
 			}
 		}
 	}

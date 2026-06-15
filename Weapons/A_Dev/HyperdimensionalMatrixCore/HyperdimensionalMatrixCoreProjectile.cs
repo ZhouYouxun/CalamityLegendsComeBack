@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using CalamityMod;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -9,84 +9,42 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 {
-    internal static class MatrixCoreNumbers
+    internal static class MatrixModuleNumbers
     {
-        public const int FormDuration = 420;
-        public const float TargetingRange = 2400f;
+        // Module cooldowns (frames)
+        public const int DataGridCooldown    = 280;
+        public const int GeoBurstCooldown    = 220;
+        public const int ShaderOrbsCooldown  = 340;
+        public const int FusionCooldown      = 400;
+        public const int SpaceWarpCooldown   = 560;
 
-        public const int PiercingAttackInterval = 18;
-        public const int PiercingProjectileCount = 8;
-        public const float PiercingProjectileDamageMultiplier = 0.24f;
-        public const int PiercingProjectilePenetration = 8;
-        public const int PiercingProjectileLocalHitCooldown = 8;
-        public const float PiercingProjectileSpawnRadius = 24f;
-        public const float PiercingProjectileInitialSpeed = 24f;
-        public const float PiercingProjectileHomingSpeed = 33f;
-        public const float PiercingProjectileMaxTurn = 0.15f;
-        public const float PiercingProjectileAcceleration = 0.08f;
+        public const int CompileStormInterval   = 900;
+        public const float TargetingRange       = 2400f;
+        public const float SpaceWarpMinNPCSize  = 80f;
 
-        public const int OrbitalBurstCount = 5;
-        public const int OrbitalBurstShotInterval = 5;
-        public const int OrbitalBurstCooldown = 48;
-        public const int OrbitalProjectileCountMin = 6;
-        public const int OrbitalProjectileCountMax = 9;
-        public const float OrbitalProjectileDamageMultiplier = 0.5f;
-        public const int OrbitalProjectilePenetration = 1;
-        public const int OrbitalProjectileLocalHitCooldown = 10;
-        public const int OrbitalProjectileLifetime = 270;
-        public const int OrbitalMaxSimultaneousTargets = 6;
-        public const float OrbitalProjectileSpeedMultiplier = 1.3f;
-        public const float OrbitalProjectileGravity = 0.55f;
-        public const float OrbitalProjectileMaxFallSpeed = 39f;
-        public const float OrbitalProjectileSpawnSpreadX = 260f;
-        public const float OrbitalProjectileAimSpreadX = 110f;
-        public const float OrbitalProjectileAimSpreadY = 70f;
-        public const float OrbitalProjectileHorizontalCorrectionStrength = 0.006f;
-        public const float OrbitalProjectileMaxHorizontalCorrection = 1.6f;
-        public const float OrbitalProjectileHorizontalCorrectionLerp = 0.04f;
-        public const float OrbitalExplosionDamageMultiplier = 1.15f;
-        public const int OrbitalExplosionPenetration = -1;
-        public const int OrbitalExplosionLocalHitCooldown = -1;
-        public const int OrbitalExplosionSize = 75;
-
-        public const int FractureProjectileLifetime = 132;
-        public const int FractureAttackInterval = FractureProjectileLifetime;
-        public const int FractureProjectileCount = 1;
-        public const float FractureProjectileDamageMultiplier = 1f;
-        public const int FractureProjectilePenetration = -1;
-        public const int FractureProjectileLocalHitCooldown = 5;
-
-        public const int HyperdimensionalAttackInterval = 1;
-        public const int HyperdimensionalProjectileCount = 1;
-        public const float HyperdimensionalProjectileDamageMultiplier = 0.48f;
-        public const int HyperdimensionalProjectilePenetration = -1;
-        public const int HyperdimensionalProjectileLocalHitCooldown = 5;
-        public const float HyperdimensionalBeamLength = 3600f;
-
-        public static int OrbitalBurstCycleLength =>
-            (OrbitalBurstCount - 1) * OrbitalBurstShotInterval + OrbitalBurstCooldown;
+        // Damage multipliers
+        public const float DataGridDamage   = 0.18f;
+        public const float GeoBurstDamage   = 0.52f;
+        public const float ShaderOrbDamage  = 0.38f;
+        public const float FusionDamage     = 1.85f;
+        public const float SpaceWarpDamage  = 0.26f;
+        public const float CompileStormDmg  = 0.20f;
     }
 
     public sealed class HyperdimensionalMatrixCoreProjectile : ModProjectile, ILocalizedModType
     {
-        public enum MatrixForm
-        {
-            Piercing,
-            Orbital,
-            Fracture,
-            Hyperdimensional
-        }
+        private const int ModuleCount = 5;
 
-        public const int FormCount = 4;
-
-        private int attackTimer;
+        private readonly int[] moduleCooldowns = new int[ModuleCount];
+        private int compileStormTimer;
+        private int lastFiredModule = -1;
         private int targetRefreshTimer;
-        private MatrixForm previousForm = (MatrixForm)(-1);
+        private int idleTimer;
 
         public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        public MatrixForm CurrentForm => (MatrixForm)((int)(Projectile.ai[0] / MatrixCoreNumbers.FormDuration) % FormCount);
+        // ai[1] encodes the target index + 1 (0 = no target)
         public int TargetIndex => (int)Projectile.ai[1] - 1;
 
         public override void SetStaticDefaults()
@@ -117,13 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
-            if (!owner.active || owner.dead)
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            if (!owner.HasBuff<HyperdimensionalMatrixCoreBuff>())
+            if (!owner.active || owner.dead || !owner.HasBuff<HyperdimensionalMatrixCoreBuff>())
             {
                 Projectile.Kill();
                 return;
@@ -131,19 +83,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             Projectile.timeLeft = 2;
             Projectile.minionSlots = Math.Max(1f, owner.maxMinions);
+
             if (Main.myPlayer == Projectile.owner && (Main.GameUpdateCount + Projectile.identity) % 30 == 0)
                 HyperdimensionalMatrixCore.RemoveOtherSlotConsumingMinions(owner, Type);
 
             UpdatePosition(owner);
             UpdateDamage(owner);
-            UpdateForm();
             UpdateTarget(owner);
+            TickCooldowns();
+
+            idleTimer++;
 
             NPC target = GetTarget();
-            if (Main.myPlayer == Projectile.owner && target != null)
-                RunCurrentFormAttack(target);
-            else if (target == null)
-                attackTimer = 0;
+            if (Main.myPlayer == Projectile.owner)
+                TryFireModules(target);
 
             Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(0.25f).ToVector3() * 0.5f);
         }
@@ -153,84 +106,45 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (!Main.npc.IndexInRange(TargetIndex))
                 return null;
 
-            NPC target = Main.npc[TargetIndex];
-            return target.CanBeChasedBy(Projectile, false) ? target : null;
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
         }
 
         public static float GetSlotDamageMultiplier(Player owner)
         {
-            int slotsUsed = Math.Max(1, owner.maxMinions);
-            return 1f + (slotsUsed - 1) * 0.5f;
-        }
-
-        public void AdvanceToNextForm()
-        {
-            int nextForm = ((int)CurrentForm + 1) % FormCount;
-            Projectile.ai[0] = nextForm * MatrixCoreNumbers.FormDuration;
-            previousForm = (MatrixForm)(-1);
-            attackTimer = 0;
-            Projectile.netUpdate = true;
+            int slots = Math.Max(1, owner.maxMinions);
+            return 1f + (slots - 1) * 0.5f;
         }
 
         private void UpdatePosition(Player owner)
         {
-            float time = Main.GlobalTimeWrappedHourly;
-            Vector2 hoverPosition = owner.Top + new Vector2(
-                (float)Math.Sin(time * 1.5f + Projectile.identity * 0.1f) * 9f,
-                -72f + (float)Math.Sin(time * 2.2f) * 5f);
+            float t = Main.GlobalTimeWrappedHourly;
+            Vector2 hover = owner.Top + new Vector2(
+                (float)Math.Sin(t * 1.5f + Projectile.identity * 0.1f) * 9f,
+                -72f + (float)Math.Sin(t * 2.2f) * 5f);
 
-            if (Vector2.DistanceSquared(Projectile.Center, hoverPosition) > 900f * 900f)
+            if (Vector2.DistanceSquared(Projectile.Center, hover) > 900f * 900f)
             {
-                Projectile.Center = hoverPosition;
+                Projectile.Center = hover;
                 Projectile.netUpdate = true;
             }
             else
             {
-                Projectile.Center = Vector2.Lerp(Projectile.Center, hoverPosition, 0.24f);
+                Projectile.Center = Vector2.Lerp(Projectile.Center, hover, 0.24f);
             }
 
             Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = time;
+            Projectile.rotation = t;
         }
 
         private void UpdateDamage(Player owner)
         {
-            int baseDamage = Projectile.originalDamage > 0
+            int base_ = Projectile.originalDamage > 0
                 ? Projectile.originalDamage
                 : HyperdimensionalMatrixCore.BaseDamage;
-            float slotMultiplier = GetSlotDamageMultiplier(owner);
-            Projectile.damage = Math.Max(
-                1,
-                (int)owner.GetTotalDamage(DamageClass.Summon).ApplyTo(baseDamage * slotMultiplier));
-        }
-
-        private void UpdateForm()
-        {
-            Projectile.ai[0]++;
-            if (Projectile.ai[0] >= MatrixCoreNumbers.FormDuration * FormCount)
-            {
-                Projectile.ai[0] = 0f;
-                Projectile.netUpdate = true;
-            }
-
-            if (CurrentForm == previousForm)
-                return;
-
-            previousForm = CurrentForm;
-            attackTimer = 0;
-            Projectile.netUpdate = true;
-
-            if (!Main.dedServ)
-            {
-                SoundEngine.PlaySound(
-                    SoundID.Item15 with
-                    {
-                        Volume = 0.48f,
-                        Pitch = -0.18f + (int)CurrentForm * 0.12f,
-                        MaxInstances = 6
-                    },
-                    Projectile.Center);
-            }
+            Projectile.damage = Math.Max(1, (int)owner
+                .GetTotalDamage(DamageClass.Summon)
+                .ApplyTo(base_ * GetSlotDamageMultiplier(owner)));
         }
 
         private void UpdateTarget(Player owner)
@@ -243,254 +157,212 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 return;
 
             targetRefreshTimer = 12;
-            NPC target = FindTarget(owner);
-            int encodedTarget = target?.whoAmI + 1 ?? 0;
-            if ((int)Projectile.ai[1] == encodedTarget)
-                return;
-
-            Projectile.ai[1] = encodedTarget;
-            Projectile.netUpdate = true;
+            NPC found = FindTarget(owner);
+            int encoded = found?.whoAmI + 1 ?? 0;
+            if ((int)Projectile.ai[1] != encoded)
+            {
+                Projectile.ai[1] = encoded;
+                Projectile.netUpdate = true;
+            }
         }
 
         private NPC FindTarget(Player owner)
         {
             if (owner.HasMinionAttackTargetNPC && Main.npc.IndexInRange(owner.MinionAttackTargetNPC))
             {
-                NPC designatedTarget = Main.npc[owner.MinionAttackTargetNPC];
-                if (designatedTarget.CanBeChasedBy(Projectile, false) &&
-                    Vector2.Distance(owner.Center, designatedTarget.Center) <= MatrixCoreNumbers.TargetingRange * 1.35f)
-                {
-                    return designatedTarget;
-                }
+                NPC designated = Main.npc[owner.MinionAttackTargetNPC];
+                if (designated.CanBeChasedBy(Projectile, false) &&
+                    Vector2.Distance(owner.Center, designated.Center) <= MatrixModuleNumbers.TargetingRange * 1.35f)
+                    return designated;
             }
 
-            NPC closestTarget = null;
-            float closestDistance = MatrixCoreNumbers.TargetingRange;
+            NPC closest = null;
+            float closestDist = MatrixModuleNumbers.TargetingRange;
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile, false))
                     continue;
 
-                float distance = Vector2.Distance(owner.Center, npc.Center);
-                if (distance >= closestDistance)
-                    continue;
-
-                closestDistance = distance;
-                closestTarget = npc;
-            }
-
-            return closestTarget;
-        }
-
-        private void RunCurrentFormAttack(NPC target)
-        {
-            attackTimer++;
-            switch (CurrentForm)
-            {
-                case MatrixForm.Piercing:
-                    RunPiercingAttack(target);
-                    break;
-                case MatrixForm.Orbital:
-                    RunOrbitalAttack(target);
-                    break;
-                case MatrixForm.Fracture:
-                    RunFractureAttack(target);
-                    break;
-                case MatrixForm.Hyperdimensional:
-                    RunHyperdimensionalAttack(target);
-                    break;
-            }
-        }
-
-        private void RunPiercingAttack(NPC target)
-        {
-            if ((attackTimer - 1) % MatrixCoreNumbers.PiercingAttackInterval != 0)
-                return;
-
-            float startingAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-            for (int i = 0; i < MatrixCoreNumbers.PiercingProjectileCount; i++)
-            {
-                Vector2 direction = (startingAngle + MathHelper.TwoPi * i / MatrixCoreNumbers.PiercingProjectileCount)
-                    .ToRotationVector2()
-                    .RotatedByRandom(0.045f);
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center + direction * MatrixCoreNumbers.PiercingProjectileSpawnRadius,
-                    direction * MatrixCoreNumbers.PiercingProjectileInitialSpeed,
-                    ModContent.ProjectileType<MatrixDataNeedle>(),
-                    Math.Max(1, (int)(Projectile.damage * MatrixCoreNumbers.PiercingProjectileDamageMultiplier)),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    target.whoAmI);
-            }
-
-            SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.18f, Pitch = 0.45f, MaxInstances = 8 }, Projectile.Center);
-        }
-
-        private void RunOrbitalAttack(NPC target)
-        {
-            int burstFrame = (attackTimer - 1) % MatrixCoreNumbers.OrbitalBurstCycleLength;
-            int finalBurstShotFrame = (MatrixCoreNumbers.OrbitalBurstCount - 1) * MatrixCoreNumbers.OrbitalBurstShotInterval;
-            if (burstFrame > finalBurstShotFrame || burstFrame % MatrixCoreNumbers.OrbitalBurstShotInterval != 0)
-                return;
-
-            int projectileCount = Main.rand.Next(MatrixCoreNumbers.OrbitalProjectileCountMin, MatrixCoreNumbers.OrbitalProjectileCountMax + 1);
-            List<NPC> orbitalTargets = FindOrbitalTargets(target);
-            int targetOffset = orbitalTargets.Count > 0 ? Main.rand.Next(orbitalTargets.Count) : 0;
-            for (int i = 0; i < projectileCount; i++)
-            {
-                NPC selectedTarget = orbitalTargets.Count > 0
-                    ? orbitalTargets[(i + targetOffset) % orbitalTargets.Count]
-                    : target;
-                Vector2 spawnPosition = selectedTarget.Center + new Vector2(
-                    Main.rand.NextFloat(-MatrixCoreNumbers.OrbitalProjectileSpawnSpreadX, MatrixCoreNumbers.OrbitalProjectileSpawnSpreadX),
-                    -Main.rand.NextFloat(500f, 720f));
-                Vector2 aimPosition = selectedTarget.Center + new Vector2(
-                    Main.rand.NextFloat(-MatrixCoreNumbers.OrbitalProjectileAimSpreadX, MatrixCoreNumbers.OrbitalProjectileAimSpreadX),
-                    Main.rand.NextFloat(-MatrixCoreNumbers.OrbitalProjectileAimSpreadY, MatrixCoreNumbers.OrbitalProjectileAimSpreadY));
-                Vector2 velocity = (aimPosition - spawnPosition).SafeNormalize(Vector2.UnitY) *
-                    Main.rand.NextFloat(17f, 22f) *
-                    MatrixCoreNumbers.OrbitalProjectileSpeedMultiplier;
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    velocity,
-                    ModContent.ProjectileType<MatrixOrbitalProjection>(),
-                    Math.Max(1, (int)(Projectile.damage * MatrixCoreNumbers.OrbitalProjectileDamageMultiplier)),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    selectedTarget.whoAmI,
-                    Main.rand.NextFloat(MathHelper.TwoPi));
-            }
-
-            SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.24f, Pitch = 0.18f, MaxInstances = 5 }, target.Center);
-        }
-
-        private List<NPC> FindOrbitalTargets(NPC priorityTarget)
-        {
-            List<NPC> targets = new(MatrixCoreNumbers.OrbitalMaxSimultaneousTargets);
-            if (priorityTarget.CanBeChasedBy(Projectile, false))
-                targets.Add(priorityTarget);
-
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (targets.Count >= MatrixCoreNumbers.OrbitalMaxSimultaneousTargets)
-                    break;
-
-                if (npc.whoAmI == priorityTarget.whoAmI ||
-                    !npc.CanBeChasedBy(Projectile, false) ||
-                    Vector2.Distance(Projectile.Center, npc.Center) > MatrixCoreNumbers.TargetingRange)
+                float dist = Vector2.Distance(owner.Center, npc.Center);
+                if (dist < closestDist)
                 {
-                    continue;
-                }
-
-                targets.Add(npc);
-            }
-
-            return targets;
-        }
-
-        private void RunFractureAttack(NPC target)
-        {
-            if ((attackTimer - 1) % MatrixCoreNumbers.FractureAttackInterval != 0)
-                return;
-
-            for (int i = 0; i < MatrixCoreNumbers.FractureProjectileCount; i++)
-            {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    target.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<MatrixFractureField>(),
-                    Math.Max(1, (int)(Projectile.damage * MatrixCoreNumbers.FractureProjectileDamageMultiplier)),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    target.whoAmI,
-                    Main.rand.NextFloat(MathHelper.TwoPi));
-            }
-
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.28f, Pitch = 0.28f, MaxInstances = 5 }, target.Center);
-        }
-
-        private void RunHyperdimensionalAttack(NPC target)
-        {
-            if ((attackTimer - 1) % MatrixCoreNumbers.HyperdimensionalAttackInterval != 0)
-                return;
-
-            int beamType = ModContent.ProjectileType<HyperdimensionalMatrixBeam>();
-            foreach (Projectile projectile in Main.ActiveProjectiles)
-            {
-                if (projectile.owner == Projectile.owner &&
-                    projectile.type == beamType &&
-                    (int)projectile.ai[0] == Projectile.whoAmI)
-                {
-                    return;
+                    closestDist = dist;
+                    closest = npc;
                 }
             }
 
-            for (int i = 0; i < MatrixCoreNumbers.HyperdimensionalProjectileCount; i++)
+            return closest;
+        }
+
+        private void TickCooldowns()
+        {
+            for (int i = 0; i < ModuleCount; i++)
+                if (moduleCooldowns[i] > 0) moduleCooldowns[i]--;
+
+            compileStormTimer++;
+        }
+
+        private void TryFireModules(NPC target)
+        {
+            // Compile Storm fires independently on a long interval
+            if (compileStormTimer >= MatrixModuleNumbers.CompileStormInterval && target != null)
             {
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY),
-                    beamType,
-                    Math.Max(1, (int)(Projectile.damage * MatrixCoreNumbers.HyperdimensionalProjectileDamageMultiplier)),
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    Projectile.whoAmI);
+                FireCompileStorm(target);
+                compileStormTimer = 0;
+                // Reset all modules so storm carries uninterrupted momentum
+                for (int i = 0; i < ModuleCount; i++)
+                    moduleCooldowns[i] = 240;
+                return;
             }
 
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.38f, Pitch = -0.2f, MaxInstances = 4 }, Projectile.Center);
+            if (target == null)
+                return;
+
+            // Rotate through modules; fire the first ready one
+            for (int offset = 0; offset < ModuleCount; offset++)
+            {
+                int m = (lastFiredModule + 1 + offset) % ModuleCount;
+                if (!ModuleReady(m, target))
+                    continue;
+
+                FireModule(m, target);
+                lastFiredModule = m;
+                break;
+            }
+        }
+
+        private bool ModuleReady(int m, NPC target)
+        {
+            if (moduleCooldowns[m] > 0)
+                return false;
+
+            // Space Warp only fires vs boss-sized enemies
+            if (m == 4 && Math.Max(target.width, target.height) < MatrixModuleNumbers.SpaceWarpMinNPCSize)
+                return false;
+
+            return true;
+        }
+
+        private void FireModule(int m, NPC target)
+        {
+            IEntitySource src = Projectile.GetSource_FromThis();
+            int dmg = Projectile.damage;
+
+            switch (m)
+            {
+                case 0: // Data Grid
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixDataGridPanel>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.DataGridDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[0] = MatrixModuleNumbers.DataGridCooldown;
+                    SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.36f, Pitch = 0.24f, MaxInstances = 3 }, Projectile.Center);
+                    break;
+
+                case 1: // Geometry Burst
+                    Projectile.NewProjectile(src, Projectile.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixGeoBurst>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.GeoBurstDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[1] = MatrixModuleNumbers.GeoBurstCooldown;
+                    SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.30f, Pitch = 0.08f, MaxInstances = 3 }, Projectile.Center);
+                    break;
+
+                case 2: // Shader Orbs (5 types)
+                    for (int i = 0; i < 5; i++)
+                    {
+                        Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                            ModContent.ProjectileType<MatrixShaderOrb>(),
+                            Math.Max(1, (int)(dmg * MatrixModuleNumbers.ShaderOrbDamage)),
+                            Projectile.knockBack, Projectile.owner,
+                            i, target.whoAmI);
+                    }
+                    moduleCooldowns[2] = MatrixModuleNumbers.ShaderOrbsCooldown;
+                    SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.30f, Pitch = -0.12f, MaxInstances = 3 }, target.Center);
+                    break;
+
+                case 3: // Metaball Fusion
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixFusionController>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.FusionDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[3] = MatrixModuleNumbers.FusionCooldown;
+                    SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.26f, Pitch = -0.32f, MaxInstances = 3 }, target.Center);
+                    break;
+
+                case 4: // Space Warp
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixSpaceWarpField>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.SpaceWarpDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[4] = MatrixModuleNumbers.SpaceWarpCooldown;
+                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.22f, Pitch = -0.52f, MaxInstances = 2 }, target.Center);
+                    break;
+            }
+        }
+
+        private void FireCompileStorm(NPC target)
+        {
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center, Vector2.Zero,
+                ModContent.ProjectileType<MatrixCompileStorm>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner,
+                Projectile.whoAmI, target.whoAmI);
+
+            SoundEngine.PlaySound(SoundID.Item88 with { Volume = 0.6f, Pitch = -0.4f, MaxInstances = 1 }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
+            float t = Main.GlobalTimeWrappedHourly;
             Player owner = Main.player[Projectile.owner];
-            float time = Main.GlobalTimeWrappedHourly;
-            float transition = MathHelper.Clamp((Projectile.ai[0] % MatrixCoreNumbers.FormDuration) / 30f, 0f, 1f);
-            float opacity = 0.72f + transition * 0.28f;
 
-            HyperdimensionalMatrixVisuals.DrawShield(owner, 0.74f);
+            // Layer 1: player orbit shield
+            HyperdimensionalMatrixVisuals.DrawShield(owner, 0.60f);
 
+            // Layer 2: icosahedron wire-frame rotating around core
+            HyperdimensionalMatrixVisuals.DrawGeometry(
+                Projectile.Center, MatrixGeometryShape.Icosahedron,
+                54f, t * 0.80f, 0.55f, Projectile.identity);
+
+            // Layer 3: cube rotating opposite direction (smaller)
+            HyperdimensionalMatrixVisuals.DrawGeometry(
+                Projectile.Center, MatrixGeometryShape.Cube,
+                34f, -t * 1.18f + 0.42f, 0.42f, Projectile.identity + 7, false);
+
+            // Layer 4: hypercube at the core center
+            HyperdimensionalMatrixVisuals.DrawHypercube(Projectile.Center, 26f, t, 0.88f);
+
+            // Rune rings
+            HyperdimensionalMatrixVisuals.DrawScanRing(
+                Projectile.Center, 74f, t * 0.48f,
+                HyperdimensionalMatrixVisuals.GetDataColor(0.18f, 0.36f), 32, 1.4f);
+            HyperdimensionalMatrixVisuals.DrawScanRing(
+                Projectile.Center, 90f, -t * 0.32f,
+                HyperdimensionalMatrixVisuals.GetDataColor(0.62f, 0.26f), 24, 1.0f);
+
+            // Targeting line
             NPC target = GetTarget();
             if (target != null)
-                HyperdimensionalMatrixVisuals.DrawTargetingLine(Projectile.Center, target.Center, 0.3f);
+                HyperdimensionalMatrixVisuals.DrawTargetingLine(Projectile.Center, target.Center, 0.28f);
 
-            switch (CurrentForm)
+            // Idle orbiting data blocks
+            for (int i = 0; i < 14; i++)
             {
-                case MatrixForm.Piercing:
-                    HyperdimensionalMatrixVisuals.DrawGeometry(
-                        Projectile.Center,
-                        MatrixGeometryShape.Tetrahedron,
-                        59f,
-                        time * 1.45f,
-                        opacity,
-                        Projectile.identity);
-                    break;
-                case MatrixForm.Orbital:
-                    HyperdimensionalMatrixVisuals.DrawGeometry(
-                        Projectile.Center,
-                        MatrixGeometryShape.Icosahedron,
-                        68f,
-                        time * 1.05f,
-                        opacity,
-                        Projectile.identity);
-                    break;
-                case MatrixForm.Fracture:
-                    HyperdimensionalMatrixVisuals.DrawGeometry(
-                        Projectile.Center,
-                        MatrixGeometryShape.Cube,
-                        64f,
-                        time * 0.82f,
-                        opacity,
-                        Projectile.identity);
-                    break;
-                case MatrixForm.Hyperdimensional:
-                    HyperdimensionalMatrixVisuals.DrawHypercube(Projectile.Center, 57f, time, opacity);
-                    break;
+                float angle = MathHelper.TwoPi * i / 14f + t * (0.55f + i % 3 * 0.07f);
+                float r = 60f + (float)Math.Sin(t * 2.6f + i * 0.72f) * 10f;
+                Vector2 pos = Projectile.Center + angle.ToRotationVector2() * r;
+                float blink = 0.45f + 0.55f * (float)Math.Sin(t * 5f + i * 1.27f);
+                HyperdimensionalMatrixVisuals.DrawNode(pos,
+                    HyperdimensionalMatrixVisuals.GetDataColor(i * 0.071f, 0.52f * blink),
+                    3f + i % 3);
             }
 
             return false;
