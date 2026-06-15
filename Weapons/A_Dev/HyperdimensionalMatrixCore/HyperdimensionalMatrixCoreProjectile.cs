@@ -1,6 +1,7 @@
 using System;
 using CalamityMod;
 using Microsoft.Xna.Framework;
+using Terraria.DataStructures;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;

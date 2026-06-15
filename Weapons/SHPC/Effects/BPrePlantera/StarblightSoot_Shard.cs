@@ -121,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 if (Main.projectile.IndexInRange(explosionIndex))
                 {
                     Projectile explosion = Main.projectile[explosionIndex];
-                    int explosionSize = 224; // 7 blocks radius (7 * 16 * 2 diameter)
+                    int explosionSize = 224;
                     explosion.width = explosionSize;
                     explosion.height = explosionSize;
                     explosion.Center = Projectile.Center;
