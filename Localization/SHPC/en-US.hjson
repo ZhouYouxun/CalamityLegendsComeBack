@@ -7,11 +7,11 @@ Mods: {
 					SHPC_LeftIntro:
 						'''
 						[c/66CCFF:Left Click: Fires an energy sphere.]
-						[c/FFD966:Materials in your inventory can be loaded; loaded materials multiply the left-click base damage and may provide different capacities.]
-						[c/99CCFF:Automatically reloads once the current charge is depleted.]
-						[c/AAAAAA:Can still fire without any loaded material, but only as a default white orb; its multiplier and blast radius improve with progression.]
-						[c/99CCFF:Right-click the item in your inventory to purge the current load, with a chance to recover the material.]
-						[c/DDA0FF:Current Loadout: ]
+						[c/66CCFF:Materials in your inventory can be loaded; loaded materials multiply the left-click base damage and may provide different capacities.]
+						[c/66CCFF:Automatically reloads once the current charge is depleted.]
+						[c/66CCFF:Can still fire without any loaded material, but only as a default white orb; its multiplier and blast radius improve with progression.]
+						[c/66CCFF:Right-click the item in your inventory to purge the current load, with a chance to recover the material.]
+						[c/66CCFF:Current Loadout: ]
 						'''
 					SHPC_Passive:
 						'''
@@ -20,46 +20,46 @@ Mods: {
 						'''
 					SHPC_RightIntro1:
 						'''
-						[c/66CCFF:Right Click: Hold to fire a precise laser barrage.]
+						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat I. Sustained fire builds heat; once filled, output can continue briefly before forced shutdown.]
-						[c/DDA0FF:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
 						'''
 					SHPC_RightIntro2:
 						'''
-						[c/66CCFF:Right Click: Hold to fire a precise laser barrage.]
+						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat II. A secondary beam is added beside the main beam with slight deviation and spiral lateral offset.]
-						[c/99CCFF:At Heat II, beams can pierce 3 enemies and lose a little damage after each pierce.]
-						[c/DDA0FF:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:At Heat II, beams can pierce 3 enemies and lose a little damage after each pierce.]
+						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
 						'''
 					SHPC_RightIntro3:
 						'''
-						[c/66CCFF:Right Click: Hold to fire a precise laser barrage.]
+						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat III. Secondary beams can create a small thermal blast on first hit, while the main beam can create a medium thermal blast on first hit.]
-						[c/DDA0FF:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
 						'''
 					SHPC_RightIntro4:
 						'''
-						[c/66CCFF:Right Click: Hold to fire a precise laser barrage.]
+						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat IV. A second secondary beam is added; beam damage rises by 5%, thermal blast chance rises, and thermal blasts can still trigger after piercing.]
-						[c/FF7043:Heat IV suppresses life regeneration and continuously burns the user.]
-						[c/DDA0FF:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:Heat IV suppresses life regeneration and continuously burns the user.]
+						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
 						'''
 					SHPC_RightIntro5:
 						'''
-						[c/66CCFF:Right Click: Hold to fire a precise laser barrage.]
+						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat V. Beam damage rises by 5%, beams gain infinite piercing, and they deal bonus damage based on the target's maximum life.]
-						[c/FF7043:Heat V rapidly drains the user's life.]
-						[c/DDA0FF:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:Heat V rapidly drains the user's life.]
+						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
 						'''
 					SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
 					SHPC_EXHint:
 						'''
 						[c/66CCFF:EX Skill (Super Laser): When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
-						[c/FFD966:Once fully charged, press [{0}] to activate the ultimate mode.]
-						[c/FF7043:After a brief charge, unleash a colossal laser that pierces through everything.]
+						[c/66CCFF:Once fully charged, press] [[c/66CCFF:{0}]] [c/66CCFF:to activate the ultimate mode.]
+						[c/66CCFF:After a brief charge, unleash a colossal laser that pierces through everything.]
 						'''
 					SHPC_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
-					SHPC_AmmoWheelHint: "[c/F7D87C:Hold [{0}] to open the material wheel; release over a sector to load that material.]"
+					SHPC_AmmoWheelHint: "[c/F7D87C:Hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the material wheel; release over a sector to load that material.]"
 					Tooltip: "[GFB]"
 					TooltipGFB: Have you finally arrived here?
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"

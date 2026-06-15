@@ -144,6 +144,7 @@ Mods: {
 				// PristineFuryLilyMainBeam.DisplayName: Pristine Fury Lily Main Beam
 				// PristineFuryLilyWavelet.DisplayName: Pristine Fury Lily Wavelet
 				// PFMarkSelectionWheel.DisplayName: P F Mark Selection Wheel
+				// PFIdleGroundBurn.DisplayName: P F Idle Ground Burn
 			}
 
 			TacticalComputerReticle.DisplayName: 战术计算机准星

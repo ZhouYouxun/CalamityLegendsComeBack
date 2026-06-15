@@ -217,37 +217,54 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 return;
             }
 
-            if (state.PendingShadowRelease && Main.npc.IndexInRange(state.MarkedTargetIndex))
+            Vector2 explosionCenter = Projectile.Center;
+            int targetIndex = -1;
+
+            bool hasTarget = state.PendingShadowRelease && Main.npc.IndexInRange(state.MarkedTargetIndex);
+            if (hasTarget)
             {
                 NPC target = Main.npc[state.MarkedTargetIndex];
                 if (target.active && target.CanBeChasedBy(Projectile))
                 {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        target.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<EndothermicEnergy_LN2>(),
-                        Projectile.damage,
-                        Projectile.knockBack,
-                        Projectile.owner);
+                    explosionCenter = target.Center;
+                    targetIndex = target.whoAmI;
+                }
+                else
+                {
+                    hasTarget = false;
+                }
+            }
 
-                    for (int arm = 0; arm < 6; arm++)
-                    {
-                        float armAngle = MathHelper.TwoPi * arm / 6f;
-                        Vector2 spawnOffset = armAngle.ToRotationVector2() * 260f;
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                explosionCenter,
+                Vector2.Zero,
+                ModContent.ProjectileType<EndothermicEnergy_LN2>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner);
 
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Center + spawnOffset,
-                            Vector2.Zero,
-                            ModContent.ProjectileType<EndothermicEnergy_Shadow>(),
-                            (int)(Projectile.damage * 0.36f),
-                            Projectile.knockBack,
-                            Projectile.owner,
-                            0f,
-                            target.whoAmI,
-                            armAngle);
-                    }
+            for (int arm = 0; arm < 6; arm++)
+            {
+                float armAngle = MathHelper.TwoPi * arm / 6f;
+                Vector2 spawnOffset = armAngle.ToRotationVector2() * 260f;
+
+                int shadowProjIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    explosionCenter + spawnOffset,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<EndothermicEnergy_Shadow>(),
+                    (int)(Projectile.damage * 0.36f),
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    0f,
+                    targetIndex,
+                    armAngle);
+
+                if (targetIndex == -1 && Main.projectile.IndexInRange(shadowProjIndex))
+                {
+                    Main.projectile[shadowProjIndex].localAI[0] = explosionCenter.X;
+                    Main.projectile[shadowProjIndex].localAI[1] = explosionCenter.Y;
                 }
             }
 

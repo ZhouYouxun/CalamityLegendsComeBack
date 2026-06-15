@@ -9,7 +9,7 @@ Mods: {
 					LeftClick: "[c/9AEAFF:Left Click: precision three-round burst. Each hit adds Abyssal Radiation Pollution.]"
 					RightClick: "[c/58FFDA:Right Click: charge a deep-sea resonance pulse that detonates every polluted enemy on the battlefield.]"
 					Passive: "[c/4CD268:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
-					Ultimate: "[c/FF8A30:{0}: designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
+					Ultimate: "[c/FF8A30:Press] [[c/FF8A30:{0}]] [c/FF8A30: to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"
 					LegendaryText:
 						'''

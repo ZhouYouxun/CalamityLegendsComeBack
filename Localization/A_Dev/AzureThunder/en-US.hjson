@@ -9,18 +9,18 @@ Mods: {
 					Tooltip: "[GFB]"
 					AzureThunderLeft:
 						'''
-						[c/6FDFFF:Left click:] [c/DCD6C8:slowly swing the greatsword, releasing SunderBlade light orbs and multiple flying heavy swords.]
-						[c/8DEBFF:On hit,] [c/DCD6C8:release extra lightning attacks.]
+						[c/6FDFFF:Left click: slowly swing the greatsword, releasing SunderBlade light orbs and multiple flying heavy swords.]
+						[c/6FDFFF:On hit: release extra lightning attacks.]
 						'''
 					AzureThunderRight:
 						'''
-						[c/6FDFFF:Right click:] [c/DCD6C8:create multiple floating swords on nearby ground or in the air.]
-						[c/8DEBFF:Floating swords] [c/DCD6C8:periodically call down lightning on nearby enemies.]
+						[c/8DEBFF:Right click: create multiple floating swords on nearby ground or in the air.]
+						[c/8DEBFF:Floating swords: periodically call down lightning on nearby enemies.]
 						'''
 					AzureThunderUltimate:
 						'''
-						[c/FFE85A:Ultimate:] [c/DCD6C8:at 120 ultimate energy, press [{0}] to gain Empyrean of Truth for 25 seconds.]
-						[c/FFE85A:Empyrean of Truth] [c/DCD6C8:empowers SunderBlade's left click, right click, and final strikes.]
+						[c/FFE85A:Ultimate: at 120 ultimate energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to gain Empyrean of Truth for 25 seconds.]
+						[c/FFE85A:Empyrean of Truth: empowers SunderBlade's left click, right click, and final strikes.]
 						'''
 					AzureThunderPassiveHeavenEarth0: "[c/B8F4FF:Force of Nature:] [c/DCD6C8:unlocked by default. Desert Scourge will improve it.]"
 					AzureThunderPassiveHeavenEarth1: "[c/B8F4FF:Force of Nature:] [c/DCD6C8:+1 mana regeneration for each active SunderBlade sword.]"

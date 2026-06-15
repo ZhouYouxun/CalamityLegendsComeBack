@@ -17,60 +17,58 @@ Mods: {
 					PresetName4: Plague
 					PresetLeft0:
 						'''
-						[c/8BE89A:Left Click - Breakthrough: fires stable straight leaf arrows.]
-						[c/8BE89A:Wooden arrows become breakthrough leaf arrows; other arrows fire as their original ammo.]
-						[c/8BE89A:Breakthrough leaf arrows focus on direct hits and continuous piercing.]
+						[c/8BE89A:Current Mode: [Breakthrough]]
+						[c/8BE89A:Left Click: fires rapid leaf arrows, converting wooden arrows only]
+						[c/8BE89A:Leaf arrows fly straight and pierce multiple enemies]
 						'''
 					PresetLeft1:
 						'''
-						[c/8BE89A:Left Click - Recovery: converts arrows into fast twin-strand leaf shots.]
-						[c/8BE89A:Each volley fires two shots that advance along both sides of the aim line.]
-						[c/8BE89A:Hits can create a recovery flash; when it fades, it heals the player and grants Recovery Leaf.]
+						[c/70E0D0:Current Mode: [Recovery]]
+						[c/70E0D0:Left Click: converts arrows into twin-strand weaving leaf shots]
+						[c/70E0D0:Hits can heal the player and grant a protective leaf barrier]
 						'''
 					PresetLeft2:
 						'''
-						[c/8BE89A:Left Click - Reconnaissance: converts arrows into single-target tracking scout arrows.]
-						[c/8BE89A:Each volley fires five shots; scout arrows can damage multiple times.]
-						[c/8BE89A:After a short free flight, they predict moving targets, accelerate, and re-home.]
+						[c/66CCFF:Current Mode: [Reconnaissance]]
+						[c/66CCFF:Left Click: fires a 5-shot volley of tracking scout arrows]
+						[c/66CCFF:Scout arrows predict target movement and accelerate mid-flight]
 						'''
 					PresetLeft3:
 						'''
-						[c/8BE89A:Left Click - Bombardment: converts arrows into falling bombardment volleys.]
-						[c/8BE89A:Bombardment arrows create branch bursts on impact, suppressing the target area with blast damage.]
+						[c/FFA07A:Current Mode: [Bombardment]]
+						[c/FFA07A:Left Click: fires falling arrow volleys, converting wooden arrows only]
+						[c/FFA07A:Other arrows fire normally; leaf arrows explode on impact]
 						'''
 					PresetLeft4:
 						'''
-						[c/8BE89A:Left Click - Plague: converts arrows into plague reapers.]
-						[c/8BE89A:Reapers inflict pollution and debuffs on hit; repeated hits refresh or extend them.]
-						[c/8BE89A:Pollution gradually weakens enemy defense.]
+						[c/DDA0FF:Current Mode: [Plague]]
+						[c/DDA0FF:Left Click: fires plague reapers that reduce enemy defense]
+						[c/DDA0FF:Repeated hits refresh the pollution, continuously weakening defense]
 						'''
 					PresetRight0:
 						'''
-						[c/F4D57A:Right Click - Breakthrough Charge: loads breakthrough arrows one by one, then releases them in sequence from the aim line.]
-						[c/F4D57A:Loaded arrows deal greatly increased damage, fire in parallel, accelerate during flight, and ignore defense and damage reduction.]
+						[c/8BE89A:Right Click: hold to charge and load enhanced leaf arrows]
+						[c/8BE89A:Loading increases damage, released sequentially at high speed]
 						'''
 					PresetRight1:
 						'''
-						[c/F4D57A:Right Click - Recovery Charge: raises the bow and releases a group of pure recovery flashes.]
-						[c/F4D57A:Pure recovery flashes are larger and more spread out; they heal the player but do not grant Recovery Leaf.]
+						[c/70E0D0:Right Click: hold to release widespread recovery flashes]
+						[c/70E0D0:Heals the player but does not grant a leaf barrier]
 						'''
 					PresetRight2:
 						'''
-						[c/F4D57A:Right Click - Reconnaissance Charge: fires a high-speed marking arrow.]
-						[c/F4D57A:The arrow ignores gravity, records enemies it hits, and marks the highest-value target when it expires.]
-						[c/F4D57A:The mark improves BlossomFlux left-click fire against that target.]
+						[c/66CCFF:Right Click: hold to fire a gravity-immune marking arrow]
+						[c/66CCFF:Marks the highest-life target to increase Left Click damage]
 						'''
 					PresetRight3:
 						'''
-						[c/F4D57A:Right Click - Bombardment Charge: creates a crimson reticle at the cursor.]
-						[c/F4D57A:After charging, the arrow launches upward, then dives from above to the reticle and detonates.]
-						[c/F4D57A:The reticle keeps following the cursor until the falling arrow locks its final point.]
+						[c/FFA07A:Right Click: hold to target, releasing an arrow that launches upward]
+						[c/FFA07A:Dives from above to the reticle, triggering a massive explosion]
 						'''
 					PresetRight4:
 						'''
-						[c/F4D57A:Right Click - Plague Charge: stores a large spore projectile.]
-						[c/F4D57A:On hit, it creates a plague-themed burst and continuously releases spore clouds.]
-						[c/F4D57A:A charged hit permanently weakens that enemy.]
+						[c/DDA0FF:Right Click: hold to fire a large spore cloud projectile]
+						[c/DDA0FF:Permanently reduces the target enemy's attributes and defense]
 						'''
 					PresetPassive0:
 						'''
@@ -99,9 +97,8 @@ Mods: {
 						'''
 					BF_Passive:
 						'''
-						[c/9AEF9E:Final Stand: while holding BlossomFlux, one lethal hit is blocked; charges for 180 seconds and does not charge while a boss is alive.]
-						[c/9AEF9E:On trigger, stay at 1 life and open a 5-second recovery field. During it, you are nearly invincible and immune to debuffs and environmental damage.]
-						[c/9AEF9E:When it ends, revive up to full life; each blocked hit during the field reduces revival life by 20%, down to 1. Current state: {0}.]
+						[c/9AEF9E:Passive - Final Stand: while holding the weapon, blocks one lethal hit]
+						[c/9AEF9E:Grants brief invincibility and healing; does not charge during Boss battles. Current: {0}]
 						'''
 					PassiveStateReady: "[c/7BFFB7:Ready]"
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
@@ -109,12 +106,11 @@ Mods: {
 					PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
 					BF_EXHint:
 						'''
-						[c/8EF5A8:Ultimate: Stores up to 60 Bloom Energy.]
-						[c/8EF5A8:While held, restores 1 energy every 2 seconds; releasing a charged right-click arrow restores 3 energy.]
-						[c/8EF5A8:At full energy, press [{0}] to release the verdant arrow curtain barrage.]
+						[c/8EF5A8:Ultimate - Vernal Energy Burst: charge energy by holding or right-click attacks]
+						[c/8EF5A8:At full energy, press] [[c/8EF5A8:{0}]] [c/8EF5A8:to release the verdant arrow curtain barrage]
 						'''
 					BF_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
-					BF_FormWheelHint: "[c/F7D87C:Hold [{0}] to open the doctrine wheel; release over a sector to switch doctrine.]"
+					BF_FormWheelHint: "[c/F7D87C:Hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the doctrine wheel; release over a sector to switch doctrine.]"
 					BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:

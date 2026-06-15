@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -191,21 +191,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             Player owner = Main.player[Projectile.owner];
             BFRightUIPlayer rightUIPlayer = owner.GetModPlayer<BFRightUIPlayer>();
             Vector2 drawPosition = screenCenter.Floor();
-            Texture2D outerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/flower_015").Value;
             Texture2D innerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
-            Color outerColor = new Color(82, 175, 110, 0) * (0.36f * Projectile.Opacity);
             Color innerColor = new Color(182, 255, 190, 0) * (0.28f * Projectile.Opacity);
-
-            Main.EntitySpriteDraw(
-                outerRing,
-                drawPosition,
-                null,
-                outerColor,
-                Main.GlobalTimeWrappedHourly * 0.8f,
-                outerRing.Size() * 0.5f,
-                0.22f * Projectile.scale,
-                SpriteEffects.None,
-                0f);
 
             Main.EntitySpriteDraw(
                 innerRing,

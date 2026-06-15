@@ -418,7 +418,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => convertWoodenArrow,
                 BlossomFluxChloroplastPresetType.Chlo_BRecov => true,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => true,
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => true,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => convertWoodenArrow,
                 _ => false
             };
             int finalProjectileType = convertToLeaf ? leafProjectileType : projectileType;

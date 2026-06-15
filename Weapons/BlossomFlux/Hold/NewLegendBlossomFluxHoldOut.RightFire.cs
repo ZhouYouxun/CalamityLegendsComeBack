@@ -351,6 +351,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (breakthroughQueuedShotIndex >= breakthroughQueuedShotCount)
             {
                 breakthroughQueuedShotCount = 0;
+
+
                 breakthroughQueuedShotIndex = 0;
                 breakthroughQueuedShotTimer = 0;
                 return;
@@ -375,12 +377,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * MathHelper.Lerp(0.8f, 1.35f, chargeCompletion) * damageMultiplier);
             float knockback = Projectile.knockBack * MathHelper.Lerp(0.85f, 1.15f, chargeCompletion);
             Vector2 bombardTarget = GetBombardReticleCenter();
-            Vector2 skyAim = GetBombardSkyAimDirection();
 
             int projectileIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 GunTipPosition,
-                skyAim * speed,
+                AimDirection * speed,
                 projectileType,
                 damage,
                 knockback,

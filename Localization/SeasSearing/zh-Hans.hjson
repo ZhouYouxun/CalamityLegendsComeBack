@@ -9,7 +9,7 @@ Mods: {
 					LeftClick: "[c/9AEAFF:左键：精准三连点射。每次命中叠加深渊辐射污染。]"
 					RightClick: "[c/58FFDA:右键：蓄积深海共振脉冲，引爆战场中所有被污染的敌人。]"
 					Passive: "[c/4CD268:手持：释放深渊水压领域，迟滞附近敌人并缓慢播撒污染。]"
-					Ultimate: "[c/FF8A30:{0}：标定目标，引导深海热核打击。核爆会让幸存者获得巨量污染。]"
+					Ultimate: "[c/FF8A30:按下] [[c/FF8A30:{0}]] [c/FF8A30:标定目标，引导深海热核打击。核爆会让幸存者获得巨量污染。]"
 					LegendaryHint: "[c/BABABA:按住 Shift 读取灾害记录]"
 					LegendaryText:
 						'''

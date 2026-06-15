@@ -107,7 +107,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             bombardFallStart = fallStart;
             delayedReturnVelocity = fallDirection * Math.Max(42f, desiredSpeed * 2.2f);
             pendingBombardTeleport = true;
-            Projectile.velocity = -Vector2.UnitY * 5.2f;
             ReturnDelayTimer = ReturnDelayFrames * (Projectile.extraUpdates + 1);
             FlightTimer = 0f;
             Projectile.tileCollide = false;
@@ -274,7 +273,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 ReturnDelayTimer--;
                 UpdateOffscreenBombardTarget();
-                Projectile.velocity = -Vector2.UnitY * 5.2f;
+                Projectile.velocity *= 0.995f;
                 Projectile.tileCollide = false;
                 Projectile.friendly = false;
                 if (ReturnDelayTimer % 6f == 0f)

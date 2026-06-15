@@ -219,7 +219,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
         private void FireBarrageVolley()
         {
-            Vector2 forward = GetCurrentMouseAimDirection();
+            Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 backfieldCenter = Owner.Center - forward * BarrageSpawnBackDistance + Owner.velocity * 0.35f;
             int shotDamage = (int)(Projectile.damage * 0.72f);
@@ -260,15 +260,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                     Main.rand.NextFloat(MathHelper.TwoPi),
                     Main.rand.NextFloat(MathHelper.TwoPi));
             }
-        }
-
-        private Vector2 GetCurrentMouseAimDirection()
-        {
-            Vector2 aimTarget = Owner.Calamity().mouseWorld;
-            if (aimTarget == Vector2.Zero)
-                aimTarget = Main.MouseWorld;
-
-            return (aimTarget - Owner.Center).SafeNormalize(AimDirection);
         }
 
         private NPC FindBarrageTarget(Vector2 forward)

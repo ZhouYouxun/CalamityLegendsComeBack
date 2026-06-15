@@ -41,15 +41,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
         public override void AI()
         {
             NPC target = Main.npc.IndexInRange((int)TargetIndex) ? Main.npc[(int)TargetIndex] : null;
-            if (target == null || !target.active || !target.CanBeChasedBy())
+            Vector2 orbitCenter;
+
+            if (TargetIndex == -1f)
             {
-                Projectile.Kill();
-                return;
+                // 如果没有锁定目标，使用 localAI 记录的爆炸中心点作为轨道中心
+                orbitCenter = new Vector2(Projectile.localAI[0], Projectile.localAI[1]);
+            }
+            else
+            {
+                if (target == null || !target.active || !target.CanBeChasedBy())
+                {
+                    Projectile.Kill();
+                    return;
+                }
+                orbitCenter = target.Center;
             }
 
             float radius = MathHelper.Lerp(48f, 88f, Utils.GetLerpValue(0f, 15f, Timer, true));
             Vector2 offset = OrbitAngle.ToRotationVector2() * radius;
-            Projectile.Center = target.Center + offset;
+            Projectile.Center = orbitCenter + offset;
 
             float appearProgress = Utils.GetLerpValue(0f, 15f, Timer, true);
             Lighting.AddLight(Projectile.Center, Color.Lerp(FrostBlue, FrostWhite, 0.35f).ToVector3() * (0.18f + appearProgress * 0.5f));
@@ -108,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             }
             else
             {
-                BurstSplits(target);
+                BurstSplits(orbitCenter);
                 Projectile.Kill();
                 return;
             }
@@ -116,7 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
             Timer++;
         }
 
-        private void BurstSplits(NPC target)
+        private void BurstSplits(Vector2 centerPos)
         {
             SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.18f, Pitch = 0.42f, PitchVariance = 0.14f, MaxInstances = 5 }, Projectile.Center);
 
@@ -136,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                     arm);
             }
 
-            Vector2 forward = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            Vector2 forward = (centerPos - Projectile.Center).SafeNormalize(Vector2.UnitY);
             float goldenAngle = MathHelper.TwoPi * 0.38196601125f;
 
             // ===== 主中心轴：冰霜脉冲核心 =====
@@ -254,6 +265,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheEndothermicE
                 dust.noGravity = true;
             }
         }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Asset<Texture2D> bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");

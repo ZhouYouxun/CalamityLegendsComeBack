@@ -7,32 +7,32 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/7DFF9A:Left:] Throw a peacock kunai.
-						Stored stealth kunai fire first, one by one.
-						Post-WoF ignores gravity; later tiers add shots.
+						[c/7DFF9A:Left: Throw a peacock kunai.]
+						[c/7DFF9A:Stored stealth kunai fire first, one by one.]
+						[c/7DFF9A:Post-WoF ignores gravity; later tiers add shots.]
 						'''
 					RightClick:
 						'''
-						[c/80FFC8:Right:] Store right feathers behind you.
-						Right click pours all stored feathers out.
-						Normal right feathers do not explode or gain stealth power.
+						[c/80FFC8:Right: Store right feathers behind you.]
+						[c/80FFC8:Right click pours all stored feathers out.]
+						[c/80FFC8:Normal right feathers do not explode or gain stealth power.]
 						'''
 					StealthStrike:
 						'''
-						[c/B5FF74:Stealth left:] Store 23 malachite darts.
-						[c/B5FF74:Stealth right:] Fire every stored right feather.
-						Stealth right feathers explode and gain power.
+						[c/B5FF74:Stealth left: Store 23 malachite darts.]
+						[c/B5FF74:Stealth right: Fire every stored right feather.]
+						[c/B5FF74:Stealth right feathers explode and gain power.]
 						'''
 					Finale:
 						'''
-						[c/D6FF9A:Finale:] At full stealth and off cooldown, press [{0}].
-						Spotlights mark you and nearby enemies.
-						23 petals turn into blades and split by distance.
+						[c/D6FF9A:Finale: At full stealth and off cooldown, press] [[c/D6FF9A:{0}]] [c/D6FF9A:.]
+						[c/D6FF9A:Spotlights mark you and nearby enemies.]
+						[c/D6FF9A:23 petals turn into blades and split by distance.]
 						'''
 					Passive:
 						'''
 						[c/9AFFC8:Passive while held:]
-						Into Shadow: stealth attacks consume only half of your stealth and instantly restore 15 stealth points; while above 50% stealth, also gain 15% movement speed.
+						[c/9AFFC8:Into Shadow: stealth attacks consume only half of your stealth and instantly restore 15 stealth points; while above 50% stealth, also gain 15% movement speed.]
 						'''
 					LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
 					LegendaryText:

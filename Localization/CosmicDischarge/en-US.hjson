@@ -14,19 +14,19 @@ Mods: {
 					Tooltip: "[GFB]"
 					CosmicDischargeLeft:
 						'''
-						[c/8DEBFF:Left click:] [c/DCD6C8:performs a three-hit combo in the current form.]
-						[c/8DEBFF:Whip form:] [c/DCD6C8:slashes the blade-chain from above, then below, then thrusts toward the cursor. The returning blade deals reduced damage.]
-						[c/8DEBFF:Sword form:] [c/DCD6C8:swings twice, then spins the blade twice before cleaving downward and releasing a short frost wave.]
+						[c/8DEBFF:Left click: performs a three-hit combo in the current form.]
+						[c/8DEBFF:Whip form: slashes the blade-chain from above, then below, then thrusts toward the cursor. The returning blade deals reduced damage.]
+						[c/8DEBFF:Sword form: swings twice, then spins the blade twice before cleaving downward and releasing a short frost wave.]
 						'''
 					CosmicDischargeRight:
 						'''
-						[c/6FDFFF:Right click:] [c/DCD6C8:switches between whip and sword form.]
-						[c/6FDFFF:During the third hit windup:] [c/DCD6C8:triggers Frostflash Draw instead, instantly thrusting the blade-chain and rapidly retracting it. Only this attack grants 10 ultimate energy.]
+						[c/6FDFFF:Right click: switches between whip and sword form.]
+						[c/6FDFFF:During the third hit windup: triggers Frostflash Draw instead, instantly thrusting the blade-chain and rapidly retracting it. Only this attack grants 10 ultimate energy.]
 						'''
 					CosmicDischargeUltimate:
 						'''
-						[c/FFE85A:Ultimate:] [c/DCD6C8:at 120 energy, press [{0}] to inflict Glacial State on enemies within 25 tiles and create a 10 second frost field.]
-						[c/FFE85A:Frost field:] [c/DCD6C8:enemies within 8 tiles are heavily slowed; you take 35% less damage and gain 20 defense. Ultimate energy cannot be gained while it exists.]
+						[c/FFE85A:Ultimate: at 120 energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to inflict Glacial State on enemies within 25 tiles and create a 10 second frost field.]
+						[c/FFE85A:Frost field: enemies within 8 tiles are heavily slowed; you take 35% less damage and gain 20 defense. Ultimate energy cannot be gained while it exists.]
 						'''
 					CosmicDischargePassive:
 						'''

@@ -8,7 +8,7 @@ Mods: {
 					LeftClick:
 						'''
 						[c/FF8A3D:Left Click: Hold to charge Supervolcanic Eruption, then release to fire.]
-						[c/FFCA70:Short taps are forced into Stage 0 and only release three weak meteors.]
+						[c/FF8A3D:Short taps are forced into Stage 0 and only release three weak meteors.]
 						'''
 					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I - basaltic jet.]"
 					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II - strombolian bombs.]"
@@ -18,18 +18,18 @@ Mods: {
 					RightClick:
 						'''
 						[c/FFB15C:Right Click: Throw the staff like a javelin.]
-						[c/FF8A3D:When it strikes terrain it becomes an active fault core; progression adds turret fire, pyroclastic flow, and a subduction zone.]
+						[c/FFB15C:When it strikes terrain it becomes an active fault core; progression adds turret fire, pyroclastic flow, and a subduction zone.]
 						'''
 					Passive:
 						'''
 						[c/CC9A6A:Passive: Volcanic ash falls around you while held.]
-						[c/FFB15C:Landing after a fall causes a quake. Greater fall speed means greater range and damage.]
+						[c/CC9A6A:Landing after a fall causes a quake. Greater fall speed means greater range and damage.]
 						'''
 					EXHint:
 						'''
 						[c/FFD86B:While held, Vesuvius charges ultimate energy up to 60.]
-						[c/FF7043:At full energy, press [{0}] to raise the staff overhead and charge Supervolcanic Eruption.]
-						[c/D84BFF:After the ready sound, left click to unleash five seconds of ash, magma, meteors, fireballs, and obsidian shards.]
+						[c/FFD86B:At full energy, press] [[c/FFD86B:{0}]] [c/FFD86B: to raise the staff overhead and charge Supervolcanic Eruption.]
+						[c/FFD86B:After the ready sound, left click to unleash five seconds of ash, magma, meteors, fireballs, and obsidian shards.]
 						'''
 					EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
 					Final: "[c/FFB15C:The crust splits, ash shuts out the sky, and the pyroclastic flow sweeps the battlefield.]"

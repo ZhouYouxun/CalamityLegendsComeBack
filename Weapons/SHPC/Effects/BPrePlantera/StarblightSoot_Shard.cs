@@ -96,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             SoundEngine.PlaySound(SoundID.Item9, target.Center);
 
             if (!Main.dedServ)
-                SpawnImpactParticles(target.Center, false);
+                SpawnImpactParticles(target.Center, false, 1.0f);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -134,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             SoundEngine.PlaySound(SoundID.Item9, Projectile.Center);
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < 11; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center,
@@ -146,10 +146,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 dust.noGravity = true;
             }
 
+            for (int i = 0; i < 8; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    Utils.SelectRandom(Main.rand, ModContent.DustType<AstralOrange>(), ModContent.DustType<AstralBlue>()),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(9.5f, 15.5f),
+                    0,
+                    default,
+                    Main.rand.NextFloat(0.8f, 1.3f));
+                dust.noGravity = true;
+            }
+
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
                 Vector2.Zero,
-                new Color(255, 136, 72),
+                new Color(255, 136, 72) * 0.6f,
                 "CalamityMod/Particles/BloomCircle",
                 Vector2.One,
                 Main.rand.NextFloat(-0.2f, 0.2f),
@@ -157,7 +169,41 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 0.52f,
                 16));
 
-            SpawnImpactParticles(Projectile.Center, true);
+            SpawnImpactParticles(Projectile.Center, true, 0.6f);
+
+            for (int i = 0; i < 7; i++)
+            {
+                Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+                Vector2 velocity = direction * Main.rand.NextFloat(7.5f, 13.5f);
+                Color color = Main.rand.NextBool() ? Color.Orange : Color.LightBlue;
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + direction * Main.rand.NextFloat(4f, 12f),
+                    velocity,
+                    false,
+                    Main.rand.Next(35, 55),
+                    Main.rand.NextFloat(0.6f, 1.0f),
+                    color));
+            }
+
+            float pulseFactor = Projectile.scale;
+            Color pulseColor = new Color(255, 136, 72);
+            float startSize = 0.07f * pulseFactor;
+            float endSize = 0.33f * pulseFactor;
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center, Vector2.Zero, pulseColor,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One, Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center, Vector2.Zero, pulseColor,
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One, Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center, Vector2.Zero, pulseColor,
+                "CalamityMod/Particles/PlasmaExplosion",
+                Vector2.One, Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30));
         }
 
         private void SpawnOrbitSparks()
@@ -262,11 +308,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             }
         }
 
-        private static void SpawnImpactParticles(Vector2 center, bool stronger)
+        private static void SpawnImpactParticles(Vector2 center, bool stronger, float density = 1.0f)
         {
-            int dustCount = stronger ? 28 : 18;
-            int sparkCount = stronger ? 18 : 11;
-            int rayCount = stronger ? 4 : 3;
+            int dustCount  = Math.Max(1, (int)Math.Round((stronger ? 28 : 18) * density));
+            int sparkCount = Math.Max(1, (int)Math.Round((stronger ? 18 : 11) * density));
+            int rayCount   = Math.Max(1, (int)Math.Round((stronger ? 4  : 3)  * density));
 
             for (int i = 0; i < dustCount; i++)
             {
@@ -292,7 +338,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     velocity,
                     false,
                     Main.rand.Next(28, 44),
-                    Main.rand.NextFloat(0.72f, 1.25f),
+                    Main.rand.NextFloat(0.72f, 1.25f) * density,
                     color));
             }
 
@@ -304,22 +350,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     direction * Main.rand.NextFloat(10f, 16f),
                     false,
                     Main.rand.Next(20, 32),
-                    Main.rand.NextFloat(0.62f, 0.92f),
+                    Main.rand.NextFloat(0.62f, 0.92f) * density,
                     side % 2 == 0 ? Color.Orange : Color.LightBlue));
             }
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center,
                 Vector2.Zero,
-                stronger ? new Color(255, 148, 82) : new Color(102, 214, 255),
+                (stronger ? new Color(255, 148, 82) : new Color(102, 214, 255)) * density,
                 Vector2.One,
                 0f,
                 stronger ? 0.3f : 0.22f,
                 0f,
                 stronger ? 28 : 22));
 
-            CLCBLightingBoltsSystem.Spawn_AstralSoulLightsA(center);
-            CLCBLightingBoltsSystem.Spawn_CelestialBurst(center);
+            if (Main.rand.NextFloat() < density)
+                CLCBLightingBoltsSystem.Spawn_AstralSoulLightsA(center);
+            if (Main.rand.NextFloat() < density)
+                CLCBLightingBoltsSystem.Spawn_CelestialBurst(center);
         }
 
         public override bool PreDraw(ref Color lightColor)

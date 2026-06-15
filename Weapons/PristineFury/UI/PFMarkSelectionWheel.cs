@@ -111,7 +111,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
             float time = Main.GlobalTimeWrappedHourly;
             Vector2 drawPos = screenCenter.Floor();
 
-            Texture2D outerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/flower_015").Value;
             Texture2D innerRing = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_03").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D halfStar = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
@@ -120,10 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
             bool keyReleased = KeybindSystem.LegendaryWeaponFormSwitch?.JustReleased == true;
 
             // Center decoration (PristineFury dark-gold theme).
-            Color decorOuter = new Color(200, 155, 60, 0) * (0.32f * opacity);
             Color decorInner = new Color(255, 200, 80, 0) * (0.22f * opacity);
-            Main.EntitySpriteDraw(outerRing, drawPos, null, decorOuter, time * 0.75f,
-                outerRing.Size() * 0.5f, 0.20f * Projectile.scale, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(innerRing, drawPos, null, decorInner, -time * 0.5f,
                 innerRing.Size() * 0.5f, 0.38f * Projectile.scale, SpriteEffects.None, 0f);
 

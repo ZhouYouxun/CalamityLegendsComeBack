@@ -1,3 +1,4 @@
+using System;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
@@ -22,6 +23,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
         // 是否已经进入追踪
         private bool homingActivated;
+
+        // 追踪启动时的初始速度
+        private float initialHomingSpeed = -1f;
+
+        // 追踪累计 ticks
+        private int homingTicks;
 
         public override void SetStaticDefaults()
         {
@@ -104,22 +111,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
                 if (target != null)
                 {
+                    if (initialHomingSpeed <= 0f)
+                    {
+                        initialHomingSpeed = Projectile.velocity.Length();
+                        if (initialHomingSpeed < 10f)
+                            initialHomingSpeed = 10f;
+                    }
+
+                    homingTicks++;
+
+                    // 逐渐加速到 2 倍速度
+                    float speedMultiplier = MathHelper.Lerp(1f, 2f, Math.Min(1f, homingTicks / 120f));
+                    float desiredSpeed = initialHomingSpeed * speedMultiplier;
+
                     Vector2 targetDirection = Projectile.DirectionTo(target.Center);
 
-                    // 当前速度长度
-                    float currentSpeed = Projectile.velocity.Length();
-
                     // 目标速度
-                    Vector2 desiredVelocity = targetDirection * currentSpeed;
+                    Vector2 desiredVelocity = targetDirection * desiredSpeed;
+
+                    // 随着速度变快，也逐渐增加转向灵敏度，防止速度过快导致绕圈追不上
+                    float lerpAmount = MathHelper.Lerp(0.06f, 0.15f, Math.Min(1f, homingTicks / 120f));
 
                     // 平滑追踪
                     Projectile.velocity = Vector2.Lerp(
                         Projectile.velocity,
                         desiredVelocity,
-                        0.06f);
-
-                    // 稍微再加一点速度，避免转向后越来越慢
-                    Projectile.velocity *= 1.003f;
+                        lerpAmount);
                 }
             }
 
