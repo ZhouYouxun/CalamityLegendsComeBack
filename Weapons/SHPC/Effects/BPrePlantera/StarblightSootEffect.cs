@@ -74,6 +74,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         {
             projectile.Kill();
         }
+
+        public override void OnKill(Projectile projectile, Player owner, int timeLeft)
+        {
+            // Do nothing to prevent DefaultEffect's default OnKill explosion from spawning
+        }
     }
 
  
