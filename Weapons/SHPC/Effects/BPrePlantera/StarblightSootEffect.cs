@@ -43,13 +43,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             float baseSpeed = MathHelper.Clamp(projectile.velocity.Length(), 12f, 28f);
             float[] shotAngles =
             {
-                MathHelper.ToRadians(Main.rand.NextFloat(-2.5f, 2.5f)),
-                MathHelper.ToRadians(Main.rand.NextFloat(12f, 15f)),
-                MathHelper.ToRadians(Main.rand.NextFloat(-15f, -12f)),
-                MathHelper.ToRadians(Main.rand.NextFloat(-15f, 15f)),
-                MathHelper.ToRadians(Main.rand.NextFloat(-15f, 15f)),
-                MathHelper.ToRadians(Main.rand.NextFloat(-15f, 15f)),
-                MathHelper.ToRadians(Main.rand.NextFloat(-15f, 15f))
+                MathHelper.ToRadians(Main.rand.NextFloat(-5f, 5f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(15f, 24f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-24f, -15f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-24f, 24f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-24f, 24f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-24f, 24f)),
+                MathHelper.ToRadians(Main.rand.NextFloat(-24f, 24f))
             };
 
             for (int i = 0; i < shotAngles.Length; i++)

@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.02f, // EffectID 5: Essence of Havoc / 混沌精华
             0.84f, // EffectID 6: Essence of Eleum / 冰精华
             1.03f, // EffectID 7: Essence of Sunlight / 日光精华
-            1.33f, // EffectID 8: Titan Heart / 泰坦之心
+            1.06f, // EffectID 8: Titan Heart / 泰坦之心
             0.80f, // EffectID 9: Soul of Light / 光明之魂
             0.78f, // EffectID 10: Soul of Night / 暗影之魂
             0.90f, // EffectID 11: Soul of Flight / 飞翔之魂

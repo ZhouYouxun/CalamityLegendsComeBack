@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     Projectile.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<NewLegendSHPE>(),
-                    Projectile.damage,
+                    (int)(Projectile.damage * 0.4),
                     Projectile.knockBack,
                     Projectile.owner);
 
