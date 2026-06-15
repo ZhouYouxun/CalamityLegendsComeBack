@@ -187,8 +187,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             float pulseFactor = Projectile.scale;
             Color pulseColor = new Color(255, 136, 72);
-            float startSize = 0.07f * pulseFactor;
-            float endSize = 0.33f * pulseFactor;
+            float startSize = 0.07f * pulseFactor * 0.25f;
+            float endSize = 0.33f * pulseFactor * 0.25f;
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center, Vector2.Zero, pulseColor,

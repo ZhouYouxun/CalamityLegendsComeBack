@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
     public class Game2048 : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/GAMES/Tetris";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/GAMES/Game2048";
 
         private static int PanelType => ModContent.ProjectileType<Game2048Panel>();
 
