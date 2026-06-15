@@ -184,7 +184,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 CosmicDischargeAttackMode.Whip => CosmicDischargeAttackMode.Sword,
                 CosmicDischargeAttackMode.Sword => CosmicDischargeAttackMode.ChainKnife,
-                CosmicDischargeAttackMode.ChainKnife => CosmicDischargeAttackMode.Greatsword,
                 _ => CosmicDischargeAttackMode.Whip
             };
 
@@ -192,17 +191,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 string modeName = AttackMode switch
                 {
-                    CosmicDischargeAttackMode.Whip => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.WhipName"),
                     CosmicDischargeAttackMode.Sword => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.SwordName"),
                     CosmicDischargeAttackMode.ChainKnife => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.ChainKnifeName"),
-                    _ => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.GreatswordName")
+                    _ => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.WhipName")
                 };
                 Color textColor = AttackMode switch
                 {
-                    CosmicDischargeAttackMode.Whip => CosmicDischargeCommon.FrostCoreColor,
                     CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostGlowColor,
                     CosmicDischargeAttackMode.ChainKnife => new Color(170, 150, 255),
-                    _ => CosmicDischargeCommon.FrostWhiteColor
+                    _ => CosmicDischargeCommon.FrostCoreColor
                 };
                 CombatText.NewText(Player.getRect(), textColor, modeName, true, false);
             }
@@ -214,24 +211,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Player.ClearBuff(ModContent.BuffType<CosmicDischargeWhipBuff>());
             Player.ClearBuff(ModContent.BuffType<CosmicDischargeSwordBuff>());
             Player.ClearBuff(ModContent.BuffType<CosmicDischargeChainKnifeBuff>());
-            Player.ClearBuff(ModContent.BuffType<CosmicDischargeGreatswordBuff>());
 
             // Apply new mode buff
             int nextBuffType = AttackMode switch
             {
-                CosmicDischargeAttackMode.Whip => ModContent.BuffType<CosmicDischargeWhipBuff>(),
                 CosmicDischargeAttackMode.Sword => ModContent.BuffType<CosmicDischargeSwordBuff>(),
                 CosmicDischargeAttackMode.ChainKnife => ModContent.BuffType<CosmicDischargeChainKnifeBuff>(),
-                _ => ModContent.BuffType<CosmicDischargeGreatswordBuff>()
+                _ => ModContent.BuffType<CosmicDischargeWhipBuff>()
             };
             Player.AddBuff(nextBuffType, 600); // 10 seconds
 
             float pitch = AttackMode switch
             {
-                CosmicDischargeAttackMode.Whip => 0.35f,
                 CosmicDischargeAttackMode.Sword => -0.15f,
                 CosmicDischargeAttackMode.ChainKnife => -0.35f,
-                _ => 0.1f // Greatsword
+                _ => 0.35f
             };
 
             SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.85f, Pitch = pitch }, Player.Center);
@@ -241,10 +235,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 Color ringColor = AttackMode switch
                 {
-                    CosmicDischargeAttackMode.Whip => CosmicDischargeCommon.FrostCoreColor * 0.8f,
                     CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostGlowColor * 0.8f,
-                    CosmicDischargeAttackMode.ChainKnife => new Color(130, 110, 255) * 0.8f, // Purple/Dark Blue
-                    _ => CosmicDischargeCommon.FrostWhiteColor * 0.8f // Greatsword
+                    CosmicDischargeAttackMode.ChainKnife => new Color(130, 110, 255) * 0.8f,
+                    _ => CosmicDischargeCommon.FrostCoreColor * 0.8f
                 };
 
                 GeneralParticleHandler.SpawnParticle(new PulseRing(
@@ -260,10 +253,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2 velocity = Main.rand.NextVector2Circular(4f, 4f);
                     Color sparkColor = AttackMode switch
                     {
-                        CosmicDischargeAttackMode.Whip => CosmicDischargeCommon.FrostWhiteColor,
                         CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostCoreColor,
                         CosmicDischargeAttackMode.ChainKnife => new Color(180, 160, 255),
-                        _ => CosmicDischargeCommon.FrostGlowColor
+                        _ => CosmicDischargeCommon.FrostWhiteColor
                     };
 
                     GeneralParticleHandler.SpawnParticle(new SparkParticle(

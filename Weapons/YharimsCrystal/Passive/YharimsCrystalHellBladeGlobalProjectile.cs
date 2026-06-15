@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using CalamityMod;
 using CalamityMod.DataStructures;
-using CalamityMod.Systems.Collections;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
@@ -72,11 +72,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
 
         internal static bool HasHeatDebuff(NPC target)
         {
-            return target.buffType.Any(buffID =>
-                buffID > 0 &&
-                buffID < CalamityBuffSets.DebuffDataset.Length &&
-                CalamityBuffSets.DebuffDataset[buffID] is not null &&
-                CalamityBuffSets.DebuffDataset[buffID].HeatDebuffScaling > 0);
+            return target.buffType.Any(IsHeatDebuff);
+        }
+
+        private static bool IsHeatDebuff(int buffID)
+        {
+            if (buffID is BuffID.OnFire or BuffID.OnFire3 or BuffID.CursedInferno or BuffID.ShadowFlame or BuffID.Daybreak or BuffID.Burning)
+                return true;
+
+            return BuffLoader.GetBuff(buffID)?.FullName is
+                "CalamityMod/BanishingFire" or
+                "CalamityMod/BrimstoneFlames" or
+                "CalamityMod/DemonicFlames" or
+                "CalamityMod/Dragonfire" or
+                "CalamityMod/GodSlayerInferno" or
+                "CalamityMod/HolyFlames" or
+                "CalamityMod/HolyInferno" or
+                "CalamityMod/SearingLava" or
+                "CalamityMod/SmashedEvil" or
+                "CalamityMod/TrueVulnerabilityHex" or
+                "CalamityMod/VulnerabilityHex" or
+                "CalamityMod/WeakBrimstoneFlames";
         }
 
         private static bool IsOwnerHoldingCrystal(Projectile projectile)

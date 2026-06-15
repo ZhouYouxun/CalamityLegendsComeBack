@@ -128,22 +128,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     _ => CosmicDischargeAttackKind.SwordFinisher
                 };
             }
-            else if (mode == CosmicDischargeAttackMode.ChainKnife)
+            else
             {
                 return comboIndex switch
                 {
                     0 => CosmicDischargeAttackKind.ChainKnifeSingle,
                     1 => CosmicDischargeAttackKind.ChainKnifeScatter,
                     _ => CosmicDischargeAttackKind.ChainKnifeBiteAll
-                };
-            }
-            else
-            {
-                return comboIndex switch
-                {
-                    0 => CosmicDischargeAttackKind.GreatswordSwingOne,
-                    1 => CosmicDischargeAttackKind.GreatswordSwingTwo,
-                    _ => CosmicDischargeAttackKind.GreatswordFinisher
                 };
             }
         }

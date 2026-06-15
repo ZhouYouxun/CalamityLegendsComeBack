@@ -14,8 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
     {
         Whip,
         Sword,
-        ChainKnife,
-        Greatsword
+        ChainKnife
     }
 
     internal enum CosmicDischargeAttackKind
@@ -29,9 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         ChainKnifeSingle,
         ChainKnifeScatter,
         ChainKnifeBiteAll,
-        GreatswordSwingOne,
-        GreatswordSwingTwo,
-        GreatswordFinisher,
         QuickDraw
     }
 
@@ -171,7 +167,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 rotation,
                 handleFrame.Size() * 0.5f,
                 scale,
-                SpriteEffects.None);
+                SpriteEffects.FlipVertically);
 
             float startOffset = Math.Min(ChainBodyStartOffset * scale, chainLength);
             float tailLength = ChainTailHeight * scale;
@@ -212,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 rotation,
                 new Vector2(tailFrame.Width * 0.5f, 0f),
                 scale,
-                SpriteEffects.None);
+                SpriteEffects.FlipVertically);
         }
 
         public static void DrawCurvedChain(SpriteBatch spriteBatch, IReadOnlyList<Vector2> points, Color drawColor, float scale, float gfxOffY = 0f)
@@ -235,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 firstDirection.ToRotation() + MathHelper.PiOver2,
                 handleFrame.Size() * 0.5f,
                 scale,
-                SpriteEffects.None);
+                SpriteEffects.FlipVertically);
 
             float pathLength = 0f;
             for (int i = 0; i < points.Count - 1; i++)
@@ -285,7 +281,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 lastDirection.ToRotation() + MathHelper.PiOver2,
                 new Vector2(tailFrame.Width * 0.5f, 0f),
                 scale,
-                SpriteEffects.None);
+                SpriteEffects.FlipVertically);
         }
 
         public static void DrawRightHoldIndicator(SpriteBatch spriteBatch, Player player, float intensity)

@@ -16,7 +16,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 {
     public sealed class HyperdimensionalMatrixCore : ModItem, ILocalizedModType
     {
-        public const int BaseDamage = 45;
 
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -31,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             Item.width = 64;
             Item.height = 64;
-            Item.damage = BaseDamage;
+            Item.damage = 59;
             Item.DamageType = DamageClass.Summon;
             Item.mana = 10;
             Item.useTime = 24;

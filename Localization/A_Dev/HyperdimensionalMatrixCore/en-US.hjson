@@ -6,22 +6,11 @@ Mods: {
 					DisplayName: Hyperdimensional Matrix
 					Tooltip:
 						'''
-						[c/7EB8FF:Summons the Matrix Core — a singular development engine made manifest]
-						[c/CC88FF:Scales with every available minion slot; claiming more slots multiplies damage substantially]
-						[c/50D0C8:The core autonomously cycles through five attack modules]
-						[c/FF9040:Module I   · Data Grid: cells home onto targets with inertia and redirect on target loss; hits occasionally steal life]
-						[c/3C8AFF:Module II  · Geometry Burst: constructs a rotating polyhedron, then detonates it into piercing edge shards]
-						[c/C040FF:Module III · Geometry Satellites: deploys hyperdimensional wireframe projections as orbiting sentinels]
-						[c/FF3C8A:Module IV  · Metaball Fusion: spawns convergent plasma spheres that collapse into a supermass with visible plasma bridges]
-						[c/A060FF:Module V   · Space Warp: hooks onto large enemies, suppressing movement and dealing sustained contact damage]
-						[c/FFEC40:At long intervals the core erupts into Compile Storm — all modules fire at once; the wielder briefly becomes invincible]
-						[c/5880C0:The defensive matrix hardens your body and reduces incoming damage]
-						[c/28E868:Perpetually regenerates the wielder's health]
-						[c/F0C828:Accelerates your movement]
-						[c/E040C0:Distorts probability fields in your favor]
-						[c/707888:Erases the core's presence from enemy threat calculations]
-						[c/FF3030:When critically wounded, the core overclocks — dramatically accelerating all module cycles]
-						[c/30E898:A passive data field silently damages all enemies in close proximity]
+						[c/7EB8FF:Summons the Matrix Core — a development engine made manifest; damage scales substantially with minion slots]
+						[c/FF9040:Autonomously cycles five modules: Data Grid · Geometry Burst · Geo Satellites · Metaball Fusion · Space Warp]
+						[c/FFEC40:Periodically erupts into Compile Storm — all modules fire simultaneously; the wielder briefly becomes invincible]
+						[c/5880C0:Fortifies your body · reduces incoming damage · regenerates life · accelerates movement · reduces aggro]
+						[c/FF3030:Overclocks all module cycles when critically wounded; passively damages all nearby enemies]
 						[c/787888:"You did not summon a minion. You instantiated a runtime."]
 						'''
 				}

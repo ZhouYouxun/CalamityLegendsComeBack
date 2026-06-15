@@ -162,6 +162,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.42f, Pitch = -0.15f }, Projectile.Center);
         }
 
+        protected override bool IsRightHeld()
+        {
+            // After all drones are deployed, left click also keeps the holdout alive
+            // so the player can release right click and press left click without the holdout dying first.
+            if (HoldFrameCounter >= 120 &&
+                Main.mouseLeft &&
+                !Main.mapFullscreen &&
+                !Main.blockMouse &&
+                !Owner.mouseInterface)
+            {
+                return true;
+            }
+            return base.IsRightHeld();
+        }
+
         private bool WantsHeavyAttack()
         {
             return Main.mouseLeft &&

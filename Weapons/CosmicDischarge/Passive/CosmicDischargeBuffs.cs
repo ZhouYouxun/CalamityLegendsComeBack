@@ -136,24 +136,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
     }
 
-    internal sealed class CosmicDischargeGreatswordBuff : ModBuff
-    {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
-
-        public override void SetStaticDefaults()
-        {
-            Main.buffNoSave[Type] = true;
-            Main.debuff[Type] = false;
-        }
-
-        public override void Update(Player player, ref int buffIndex)
-        {
-            player.statDefense += 22;
-            player.endurance += 0.12f;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.FrostGlowColor.ToVector3() * 0.26f);
-        }
-    }
-
     public class CosmicDischargeFrostMarkDebuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";

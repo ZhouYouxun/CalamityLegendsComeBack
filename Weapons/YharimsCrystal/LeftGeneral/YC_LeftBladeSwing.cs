@@ -243,7 +243,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             if (loopTimer >= LoopSpinFrames)
             {
-                if (judgementRequested && HasValidJudgementTarget())
+                if (judgementRequested)
                     StartJudgementRaise();
                 else
                     StartLoopHold();
@@ -269,17 +269,28 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             float progress = MathHelper.Clamp(loopTimer / (float)LoopHoldFrames, 0f, 1f);
             CanHit = false;
             postSwing = false;
-            fadeIn = MathHelper.Lerp(fadeIn, 0.18f, 0.18f);
-            bladeFade = MathHelper.Lerp(bladeFade, MathHelper.Lerp(0.58f, 1f, progress), 0.16f);
-            chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, MathHelper.Lerp(0.45f, 1f, progress), 0.18f);
+            // Keep the blade visible during the rest period with a gentle idle pulse
+            float idlePulse = 0.68f + 0.12f * MathF.Sin(loopTimer * 0.22f);
+            fadeIn = MathHelper.Lerp(fadeIn, idlePulse, 0.12f);
+            bladeFade = MathHelper.Lerp(bladeFade, MathHelper.Lerp(0.75f, 1f, progress), 0.16f);
+            chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, MathHelper.Lerp(0.55f, 0.85f, progress), 0.18f);
             Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.12f);
-            RotationOffset = RotationOffset.AngleLerp(MathHelper.ToRadians(112f * Projectile.ai[1]), 0.18f);
+            // Gentle idle sway
+            float idleSwing = MathF.Sin(loopTimer * 0.18f) * MathHelper.ToRadians(7f);
+            RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(112f * Projectile.ai[1]) + idleSwing, 0.15f);
 
             EmitChargeSparks();
             if (loopTimer == LoopHoldFrames - 8 && !chargeCompleteSoundPlayed)
             {
                 chargeCompleteSoundPlayed = true;
                 SoundEngine.PlaySound(SoundID.MaxMana with { Volume = 0.55f, Pitch = 0.08f }, Projectile.Center);
+            }
+
+            // Right click during the hold period launches the blade immediately
+            if (judgementRequested)
+            {
+                StartJudgementRaise();
+                return;
             }
 
             if (loopTimer >= LoopHoldFrames)

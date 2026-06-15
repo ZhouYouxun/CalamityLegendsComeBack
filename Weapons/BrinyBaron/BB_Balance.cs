@@ -8,19 +8,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public static readonly object[,] StageInfo =
         {
             { "Initial", 0.6f },
-            { "Eye of Cthulhu", 0.72f },
-            { "Evil Boss", 0.84f },
-            { "Skeletron", 0.96f },
-            { "Hardmode", 1.08f },
-            { "Any Mechanical Boss", 1.2f },
-            { "Plantera", 1.32f },
-            { "Golem", 1.44f },
-            { "Moon Lord", 1.56f },
-            { "Providence", 1.68f },
-            { "Polterghast", 1.8f },
-            { "Devourer of Gods", 1.92f },
-            { "Yharon", 2.04f },
-            { "Exo Mechs and Supreme Calamitas", 2.15f }
+            { "Eye of Cthulhu", 0.607f },
+            { "Evil Boss", 0.628f },
+            { "Skeletron", 0.664f },
+            { "Hardmode", 0.714f },
+            { "Any Mechanical Boss", 0.778f },
+            { "Plantera", 0.856f },
+            { "Golem", 0.948f },
+            { "Moon Lord", 1.054f },
+            { "Providence", 1.174f },
+            { "Polterghast", 1.309f },
+            { "Devourer of Gods", 1.457f },
+            { "Yharon", 1.62f },
+            { "Exo Mechs and Supreme Calamitas", 1.8f }
         };
 
         public static readonly string[] StageNames =
