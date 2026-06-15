@@ -1,4 +1,4 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -110,51 +110,7 @@ Mods: {
 						[c/8EF5A8:能量充满后，按下] [[c/8EF5A8:{0}]] [c/8EF5A8:释放倾泻而出的森绿箭幕]
 						'''
 					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
-					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手即可切换至当前扇区战术。]"蓄力命中会永久降低该 NPC 的能力。该削弱绑定在敌人身上，不要求玩家继续手持叶流。]
-						'''
-					PresetPassive0:
-						'''
-						[c/B7FFB0:战术被动 - 突击：获得无无敌帧的高速冲刺；已有冲刺的冷却减半。]
-						[c/B7FFB0:冲刺后 0.75 秒内，叶流伤害提高 20%。]
-						'''
-					PresetPassive1:
-						'''
-						[c/B7FFB0:战术被动 - 复苏：免疫防御损伤，大幅扩大红心拾取范围。]
-						[c/B7FFB0:减益造成的生命流失减半；单次伤害超过最大生命值 30% 时，超出部分减半。]
-						'''
-					PresetPassive2:
-						'''
-						[c/B7FFB0:战术被动 - 侦察：免疫移速降低，移动速度 +25%，加速度 +100%，飞行时间 +50%。]
-						[c/B7FFB0:钩爪发射、回收和牵引速度 +30%；钩中平台或斜坡后，抵达钩点会自动松钩。]
-						'''
-					PresetPassive3:
-						'''
-						[c/B7FFB0:战术被动 - 歼灭：根据屏幕内敌人数量提升射速。]
-						[c/B7FFB0:屏幕内有 5/10/20 个敌人时，叶流使用时间和左键循环延迟 -1/-2/-3。]
-						'''
-					PresetPassive4:
-						'''
-						[c/B7FFB0:战术被动 - 侵染：叶流攻击会延长目标身上已有的任何减益。]
-						[c/B7FFB0:任意敌人身上的减益以一半速度流逝。]
-						'''
-					BF_Passive:
-						'''
-						[c/9AEF9E:终末防线：手持叶流时，可抵消一次致命伤害；180 秒充能，Boss 存活时不会计时。]
-						[c/9AEF9E:触发时保持 1 生命并展开 5 秒复苏立场，期间几乎无敌，免疫负面效果和环境伤害。]
-						[c/9AEF9E:结束后恢复至最大生命；期间每拦下一次伤害，复苏生命 -20%，最低为 1。当前状态：{0}。]
-						'''
-					PassiveStateReady: "[c/7BFFB7:已就绪]"
-					PassiveStateActive: "[c/FF9B8B:终末防线中]"
-					PassiveStateCooldown: "[c/F0D070:充能 {0}/{1} 秒]"
-					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
-					BF_EXHint:
-						'''
-						[c/8EF5A8:大招：最多储存60点森绿能量。]
-						[c/8EF5A8:手持叶流时，每2秒恢复1点能量；释放蓄力右键箭会恢复3点能量。]
-						[c/8EF5A8:能量充满后，按下 [{0}] 释放森绿箭幕。]
-						'''
-					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
-					BF_FormWheelHint: "[c/F7D87C:按住 [{0}] 打开战术轮盘；松开时会切换到当前扇区的战术。]"
+					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手即可切换至当前扇区战术。]"
 					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:
