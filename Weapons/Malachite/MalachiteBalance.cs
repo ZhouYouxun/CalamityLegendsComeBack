@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityMod;
 using Terraria;
 
@@ -15,7 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public static bool DownedPlaguebringerGoliath => DownedBossSystem.downedPlaguebringer;
         public static bool DownedMoonLord => NPC.downedMoonlord;
 
-        public static bool NormalKunaiIgnoresGravity => DownedWallOfFlesh;
+        public static bool NormalKunaiIgnoresGravity(Player player) =>
+            player.GetModPlayer<MCGeneralPlayer>().NormalKunaiIgnoresGravity;
 
         public static float LeftClickUseSpeedMultiplier => DownedWallOfFlesh ? 1f : 1.35f;
 

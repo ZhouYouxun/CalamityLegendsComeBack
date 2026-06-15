@@ -1,5 +1,3 @@
-using CalamityMod;
-using CalamityMod.Items.Accessories;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -18,21 +16,6 @@ namespace CalamityLegendsComeBack.Accssory.MC.PrecisionEmblem
             Item.value = Item.sellPrice(gold: 7);
             Item.rare = ItemRarityID.LightRed;
         }
-
-        public override void UpdateAccessory(Player player, bool hideVisual)
-        {
-            player.GetModPlayer<PrecisionEmblemPlayer>().PrecisionEmblemEquipped = true;
-        }
-
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient<RogueEmblem>()
-                .AddIngredient(ItemID.SoulofLight, 5)
-                .AddIngredient(ItemID.Emerald, 5)
-                .AddTile(TileID.MythrilAnvil)
-                .Register();
-        }
     }
 
     public sealed class PrecisionEmblemPlayer : ModPlayer
@@ -42,15 +25,6 @@ namespace CalamityLegendsComeBack.Accssory.MC.PrecisionEmblem
         public override void ResetEffects()
         {
             PrecisionEmblemEquipped = false;
-        }
-
-        public override void PostUpdateEquips()
-        {
-            if (PrecisionEmblemEquipped)
-            {
-                Player.GetDamage<RogueDamageClass>() += 0.05f;
-                Player.GetCritChance<RogueDamageClass>() += 10f;
-            }
         }
     }
 }

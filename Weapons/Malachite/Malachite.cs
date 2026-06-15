@@ -1,6 +1,5 @@
 using CalamityLegendsComeBack.Accssory;
-using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
-using CalamityLegendsComeBack.Accssory.MC.GaleAce;
+using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
@@ -161,7 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             float baseSpeed = player.altFunctionUse == 2
                 ? MalachiteBalance.GetRightClickVelocity()
                 : MalachiteBalance.GetLeftClickVelocity();
-            velocity = velocity.SafeNormalize(Vector2.UnitX * player.direction) * baseSpeed * player.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
+            velocity = velocity.SafeNormalize(Vector2.UnitX * player.direction) * baseSpeed * player.GetModPlayer<MCGeneralPlayer>().ProjectileSpeedMult;
         }
 
         public override void HoldItem(Player player)
@@ -242,9 +241,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             calamity.ConsumeStealthByAttacking();
 
             Vector2 direction = (GetMouseWorld(player) - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
-            if (player.GetModPlayer<GaleAcePlayer>().GaleAceEquipped)
-                MalachiteKunai.ActivateStoredKunaiAsAces(player, GetMouseWorld(player));
-
             int finaleDamage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(Item.damage * 7.5f);
 
             Projectile.NewProjectile(

@@ -1,7 +1,6 @@
-using CalamityLegendsComeBack.Accssory.MC.PrecisionEmblem;
-using CalamityLegendsComeBack.Weapons.Malachite.LeftGeneral;
-using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
+using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityLegendsComeBack.Accssory.MC.PeacockDart;
+using CalamityLegendsComeBack.Weapons.Malachite.LeftGeneral;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
@@ -128,9 +127,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.alpha = Math.Max(0, Projectile.alpha - 24);
             Projectile.localAI[0]++;
 
-            if (WasActivated && owner.active && owner.GetModPlayer<PrecisionEmblemPlayer>().PrecisionEmblemEquipped)
-                Projectile.ArmorPenetration = Math.Max(Projectile.ArmorPenetration, 10);
-
             switch (Mode)
             {
                 case MalachiteKunaiMode.StoredFrenzy:
@@ -166,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     break;
 
                 default:
-                    AINormalThrown();
+                    AINormalThrown(owner);
                     break;
             }
 
@@ -334,7 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             count = Utils.Clamp(count, 1, MalachiteBalance.DepletionBurstKunaiCount);
             Vector2 aimDirection = (mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-            float speedMultiplier = player.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
+            float speedMultiplier = player.GetModPlayer<MCGeneralPlayer>().ProjectileSpeedMult;
             float curve = Main.rand.NextFloat(-1f, 1f);
             if (MathF.Abs(curve) < 0.25f)
                 curve += 0.35f * MathF.Sign(curve == 0f ? player.direction : curve);
@@ -507,9 +503,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             projectile.localNPCHitCooldown = isAce ? 6 : (leftThrow ? 12 : (mode == MalachiteKunaiMode.FiredFrenzy ? 4 : 8));
             projectile.Calamity().stealthStrike = stealthStrike;
             Player owner = Main.player[projectile.owner];
-            float speedMultiplier = owner.active
-                ? owner.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier
-                : 1f;
+            float speedMultiplier = owner.active ? owner.GetModPlayer<MCGeneralPlayer>().ProjectileSpeedMult : 1f;
             float baseSpeed = mode == MalachiteKunaiMode.FiredFrenzy ? 27f : 23f;
             if (isAce)
                 baseSpeed *= 1.5f;
@@ -596,10 +590,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return true;
         }
 
-        private void AINormalThrown()
+        private void AINormalThrown(Player owner)
         {
             Projectile.extraUpdates = 1;
-            if (!MalachiteBalance.NormalKunaiIgnoresGravity)
+            if (!MalachiteBalance.NormalKunaiIgnoresGravity(owner))
             {
                 float gravityFade = Utils.GetLerpValue(110f, 20f, Projectile.localAI[0], true);
                 Projectile.velocity.Y += 0.15f * gravityFade;
@@ -621,7 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
             }
 
-            if (Mode == MalachiteKunaiMode.NormalThrown && !MalachiteBalance.NormalKunaiIgnoresGravity)
+            if (Mode == MalachiteKunaiMode.NormalThrown && !MalachiteBalance.NormalKunaiIgnoresGravity(owner))
                 return;
 
             if (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] <= StagedNormalLaunchDelay)
@@ -1004,14 +998,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (!owner.active)
                 return;
 
-            if (owner.GetModPlayer<PrecisionEmblemPlayer>().PrecisionEmblemEquipped)
-            {
-                if (WasActivated)
-                    modifiers.ArmorPenetration += 10f;
-
-                if (IsPeacockOrAceKunai)
-                    modifiers.SourceDamage *= 1.05f;
-            }
+            int kunaiArmorPen = owner.GetModPlayer<MCGeneralPlayer>().KunaiArmorPen;
+            if (kunaiArmorPen > 0)
+                modifiers.ArmorPenetration += kunaiArmorPen;
 
             if (owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
                 modifiers.SourceDamage *= 1.3f;

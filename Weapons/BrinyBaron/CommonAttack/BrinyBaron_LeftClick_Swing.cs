@@ -960,11 +960,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 ref collisionPoint);
         }
 
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            float damageMult = Utils.Remap(Projectile.numHits, 0, 10, 1f, 0.62f, true);
+            if (rightSpinActive)
+                modifiers.SourceDamage *= MathHelper.Lerp(0.72f, 1.05f, RightSpinChargeRatio) * damageMult;
+            else
+                modifiers.SourceDamage *= 1.35f * damageMult;
+
+            if (Owner.GetModPlayer<CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().SurgeChainReactorEquipped)
+                modifiers.SourceDamage *= 0.5f;
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Frostburn, 180);
             if (Main.myPlayer == Projectile.owner)
-                Owner.GetModPlayer<BBTideValuePlayer>().AddTide();
+                Owner.GetModPlayer<BBTideValuePlayer>().TryAddTideFromBlade();
 
             if (!rightSpinActive)
             {
@@ -1005,15 +1017,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     }
                 }
             }
-        }
-
-        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
-        {
-            float damageMult = Utils.Remap(Projectile.numHits, 0, 10, 1f, 0.62f, true);
-            if (rightSpinActive)
-                modifiers.SourceDamage *= MathHelper.Lerp(0.72f, 1.05f, RightSpinChargeRatio) * damageMult;
-            else
-                modifiers.SourceDamage *= 1.35f * damageMult;
         }
 
         private void SpawnTrueMeleeTyphoon(NPC target)

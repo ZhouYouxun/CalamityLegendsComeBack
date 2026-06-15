@@ -6,6 +6,46 @@
 				Tooltip: While equipped, Pristine Fury single right clicks cycle imprints for testing
 			}
 
+			// General (Lily) accessories
+			PFLily: {
+				DisplayName: Lily
+				Tooltip: Imprint queue +1 (total 4)\nRanged damage +8%\nRaises purification cap to level 3\nLv3 purification increases sustained damage; slightly weakens enemy attack rhythm; Boss takes more PF damage and extra purification burns on left-click hits
+			}
+			PFSlightlyBloomLily: {
+				DisplayName: Slightly Bloomed Lily
+				Tooltip: Imprint queue +2 (total 5)\nRanged damage +12%\nRaises purification cap to level 4\nLv4 purification causes purification combustion on regular enemy death; Boss periodically triggers mini combustion
+			}
+			PFBloomLily: {
+				DisplayName: Bloomed Lily
+				Tooltip: Imprint queue +3 (total 6)\nRanged damage +16%\nRaises purification cap to level 5\nLv5 purification enhances combustion; spreads lv2 purification on enemy death; Boss periodically releases white flames
+			}
+			PFKillIntentLily: {
+				DisplayName: Lily of Killing Intent
+				Tooltip: Imprint queue +4 (total 7)\nRanged damage +22%\nRaises purification cap to level 6\nLv6 purification causes large combustion and spreads lv3 purification on death; Boss enters kill-intent purification state with powerful periodic bursts
+			}
+
+			// Skill accessories
+			PFChangEFireCan: {
+				DisplayName: Chang'E Grievance Fire Can
+				Tooltip: While holding Pristine Fury, the fuel backpack gains independent HP and can block enemy projectiles\nIf a blocked projectile exceeds the backpack's remaining HP, the backpack explodes in a 500x500 purification blast that does not harm the player or allies
+			}
+			PFMooncake: {
+				DisplayName: Mooncake
+				Tooltip: When a right-click nova fireball hits or explodes, it leaves a brief Moonhalo Brand in the area\nEnemies inside the brand accumulate purification faster\nEnemies already at the purification cap trigger an extra mini purification combustion
+			}
+			PFNineTails: {
+				DisplayName: Pristine Nine Tails
+				Tooltip: While holding Pristine Fury, the three fox fire tails become nine pristine fox tails\nTails are larger, have greater range, and automatically home toward nearby enemies\nHits deal high purification damage and slightly advance purification progress
+			}
+			PFLingmuFOMO: {
+				DisplayName: Reimu FOMO
+				Tooltip: When firing the left-click attack with the current imprint, non-selected imprints in the queue each fire a low-power echo projectile every 60 frames\nEffectively an additional set of side-cannon salvos
+			}
+			PFHellFairyTorch: {
+				DisplayName: Hell Fairy's Torch
+				Tooltip: When a regular enemy reaches the max purification level, it instantly takes 60% of its max HP as true damage, then periodically emits friendly purification sparks\nWhen a Boss triggers purification combustion, all purification levels reset and the Boss instantly takes 10% of its max HP as true damage, then fires a spiral burst of purification projectiles
+			}
+
 			Weapons: {
 				NewLegendPristineFury: {
 					DisplayName: Pristine Fury - Return of Legends
@@ -143,6 +183,7 @@
 				PFRavager_BloodBoilerOrb.DisplayName: P F Ravager_ Blood Boiler Orb
 				PristineFuryLilyMainBeam.DisplayName: Pristine Fury Lily Main Beam
 				PristineFuryLilyWavelet.DisplayName: Pristine Fury Lily Wavelet
+				PFMoonhaloStamp.DisplayName: Moonhalo Brand
 				PFMarkSelectionWheel.DisplayName: P F Mark Selection Wheel
 				PFIdleGroundBurn.DisplayName: P F Idle Ground Burn
 			}

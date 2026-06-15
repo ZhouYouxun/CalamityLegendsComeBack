@@ -1,7 +1,3 @@
-using CalamityLegendsComeBack.Accssory.MC.PeacockScroll;
-using CalamityLegendsComeBack.Accssory.MC.PrecisionEmblem;
-using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
-using CalamityLegendsComeBack.Accssory.MC.GaleAce;
 using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
@@ -292,8 +288,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             float flash = timer >= DetonateTime ? Utils.GetLerpValue(TotalTime, DetonateTime, timer, true) : charge;
             Vector2 playerScreen = Projectile.Center - Main.screenPosition;
             Player owner = Main.player[Projectile.owner];
-            bool galeAce = owner.active && owner.GetModPlayer<GaleAcePlayer>().GaleAceEquipped;
-
             DrawSpotlight(texture, origin, playerScreen, charge, flash);
             if (owner.active)
             {
@@ -306,7 +300,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 }
             }
 
-            DrawPetals(texture, origin, charge, galeAce, owner.direction);
+            DrawPetals(texture, origin, charge, false, owner.direction);
             return false;
         }
 

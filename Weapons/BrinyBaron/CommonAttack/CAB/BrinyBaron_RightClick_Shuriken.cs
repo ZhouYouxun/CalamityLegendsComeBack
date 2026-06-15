@@ -267,11 +267,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private bool IsHomingAllowed()
         {
-            if (shurikenProfile.GrowthTier == 0) // Stage 1
-                return false;
-            if (shurikenProfile.GrowthTier == 1) // Stage 2
-                return TideEmpowered;
-            return true; // Stage 3 & 4
+            if (TideEmpowered) return true; // Full tide enables homing at all stages
+            if (shurikenProfile.GrowthTier < 2) return false;
+            return true; // Stage 3+: always homing
         }
 
         private void HandleFlightMovement()
@@ -285,7 +283,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             if (homing && target != null && target.active)
             {
                 homingTimer++;
-                int delay = shurikenProfile.GrowthTier >= 2 ? 15 : TideHomingDelayFrames;
+                bool boatEnhanced = Main.player.IndexInRange(Projectile.owner) &&
+                    Main.player[Projectile.owner].GetModPlayer<CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
+                int delay = (shurikenProfile.GrowthTier >= 2 || boatEnhanced) ? 15 : TideHomingDelayFrames;
                 if (homingTimer <= delay)
                 {
                     EnsureFallbackFallbackVelocity();
@@ -545,13 +545,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Projectile.Center = center;
         }
 
-        private static ShurikenProfile CreateShurikenProfile()
+        private ShurikenProfile CreateShurikenProfile()
         {
             int tier = GetShurikenGrowthTier();
+            bool boatEnhanced = Main.player.IndexInRange(Projectile.owner) &&
+                                Main.player[Projectile.owner].GetModPlayer<CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
+            int sliceCount = ShurikenStickySliceCounts[tier] + (boatEnhanced ? 2 : 0);
+            float finalSpeed = boatEnhanced ? TideHomingFinalSpeed * 1.25f : TideHomingFinalSpeed;
             return new ShurikenProfile(
                 tier,
                 ShurikenPenetrates[tier],
-                ShurikenStickySliceCounts[tier],
+                sliceCount,
                 ShurikenDeathSpawnsShpcExplosion[tier],
                 ShurikenDeathSpawnsCrossLights[tier],
                 ShurikenTideHomingRanges[tier],
@@ -559,7 +563,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 ShurikenStickySlashUnlocks[tier],
                 TideHomingBlendTargetWeight,
                 TideHomingBlendTotalWeight,
-                TideHomingFinalSpeed,
+                finalSpeed,
                 TideHomingFinalSpeedLerp,
                 NonEmpoweredShurikenAcceleration,
                 NonEmpoweredShurikenMaxSpeed,

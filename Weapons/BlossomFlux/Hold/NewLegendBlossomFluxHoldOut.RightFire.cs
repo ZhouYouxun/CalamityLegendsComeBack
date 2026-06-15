@@ -244,7 +244,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            int flashCount = stats.FlashCount;
+            int flashCount = stats.FlashCount + Owner.GetModPlayer<BFAccessoryPlayer>().RecoveryExtraFlashes;
             Vector2 upward = -Vector2.UnitY * Owner.gravDir;
             Vector2 side = skyDirection.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.UnitX);
 
@@ -287,7 +287,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
 
             if (Main.projectile[projectileIndex].ModProjectile is BFArrow_CDetec reconArrow)
-                reconArrow.ConfigureMark(stats.MarkDuration, stats.EffectTier);
+            {
+                int markDuration = stats.MarkDuration + Owner.GetModPlayer<BFAccessoryPlayer>().ReconExtraMarkFrames;
+                reconArrow.ConfigureMark(markDuration, stats.EffectTier);
+            }
 
             Main.projectile[projectileIndex].netUpdate = true;
         }
@@ -391,7 +394,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
 
             if (Main.projectile[projectileIndex].ModProjectile is BFArrow_DBomb bombardArrow)
-                bombardArrow.ConfigureBombardTarget(bombardTarget, stats.ExplosionSize, stats.SkyRainMultiplier);
+            {
+                BFAccessoryPlayer acc = Owner.GetModPlayer<BFAccessoryPlayer>();
+                float explosionSize = stats.ExplosionSize + (acc.BombardExplosionBonus ? 60f : 0f);
+                float rainMult = acc.BombardRainDamageBonus ? 1.5f : stats.SkyRainMultiplier;
+                bombardArrow.ConfigureBombardTarget(bombardTarget, explosionSize, rainMult);
+            }
 
             Main.projectile[projectileIndex].netUpdate = true;
         }

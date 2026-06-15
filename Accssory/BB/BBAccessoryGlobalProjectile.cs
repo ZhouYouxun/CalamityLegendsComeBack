@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BB
@@ -11,15 +12,13 @@ namespace CalamityLegendsComeBack.Accssory.BB
     {
         public override bool InstancePerEntity => false;
 
-        public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
+        public override void OnSpawn(Projectile projectile, IEntitySource source)
         {
-            if (!IsBrinyBaronProjectile(projectile) || !Main.player.IndexInRange(projectile.owner))
+            if (projectile.ModProjectile is not BBSwing_Wave || !Main.player.IndexInRange(projectile.owner))
                 return;
 
-            Player owner = Main.player[projectile.owner];
-            BBAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BBAccessoryPlayer>();
-            if (accessoryPlayer.TideRadarEquipped && accessoryPlayer.TideRadarTarget == target.whoAmI)
-                modifiers.FinalDamage *= 1f + BBAccessoryPlayer.TideRadarDamageBonusPercent / 100f;
+            if (Main.player[projectile.owner].GetModPlayer<BBAccessoryPlayer>().WaveInfinitePenetration)
+                projectile.penetrate = -1;
         }
 
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)

@@ -101,7 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private BFAccessoryPlayer BFAccessories => Owner.GetModPlayer<BFAccessoryPlayer>();
         private bool PastLingeringAssaultActive => CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && BFAccessories.PastLingeringEquipped;
         private bool BreakthroughChargeActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak;
-        private int BreakthroughMaxLoadedArrows => Math.Max(1, BFBreakthroughRightBalance.GetStats().MaxLoadedArrows);
+        private int BreakthroughMaxLoadedArrows => Math.Max(1, BFBreakthroughRightBalance.GetStats().MaxLoadedArrows + BFAccessories.BreakthroughExtraLoads);
         private int BreakthroughFramesPerArrow => Math.Max(MinBreakthroughChargeFrames, BFBreakthroughRightBalance.GetStats().FramesPerArrow);
         private float BreakthroughCurrentArrowCompletion => MathHelper.Clamp(chargeTimer / (float)BreakthroughFramesPerArrow, 0f, 1f);
         private float ChargeCompletion => BreakthroughChargeActive
@@ -175,13 +175,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int GetCurrentReadyChargeFrames()
         {
-            return CurrentPreset switch
+            int baseFrames = CurrentPreset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_BRecov => BFRecoveryRightBalance.GetStats().ChargeFrames,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => BFReconRightBalance.GetStats().ChargeFrames,
                 BlossomFluxChloroplastPresetType.Chlo_DBomb => BFBombardRightBalance.GetStats().ChargeFrames,
                 _ => MaxChargeFrames
             };
+            return Math.Max(1, (int)Math.Round(baseFrames * BFAccessories.ChargeMultiplier));
         }
 
         private int GetCurrentMaxChargeFrames()

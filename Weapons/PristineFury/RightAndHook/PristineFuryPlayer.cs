@@ -1,4 +1,6 @@
+using CalamityLegendsComeBack.Accssory.PF;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -7,7 +9,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 {
     internal sealed class PristineFuryPlayer : ModPlayer
     {
-        internal const int MaxMarkSlots = 5;
+        // Absolute max the array can hold (supports all lily tiers: default 3 + up to +4).
+        internal const int MaxMarkSlots = 7;
+
+        // Effective capacity this frame based on equipped lily accessories (3 to 7).
+        internal int EffectiveMaxSlots =>
+            Math.Clamp(3 + Player.GetModPlayer<PFAccessoryPlayer>().BonusMarkSlots, 3, MaxMarkSlots);
 
         internal readonly PristineFuryMark[] MarkQueue = new PristineFuryMark[MaxMarkSlots];
         internal int MarkQueueCount = 0;
@@ -37,16 +44,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (mark == PristineFuryMark.Idle)
                 return;
 
-            if (MarkQueueCount < MaxMarkSlots)
+            int cap = EffectiveMaxSlots;
+
+            if (MarkQueueCount < cap)
             {
                 MarkQueue[MarkQueueCount++] = mark;
             }
             else
             {
                 // Shift everything left, add new mark at back.
-                for (int i = 0; i < MaxMarkSlots - 1; i++)
+                for (int i = 0; i < cap - 1; i++)
                     MarkQueue[i] = MarkQueue[i + 1];
-                MarkQueue[MaxMarkSlots - 1] = mark;
+                MarkQueue[cap - 1] = mark;
                 // Shift selected index to stay on the same mark.
                 if (SelectedMarkIndex > 0)
                     SelectedMarkIndex--;

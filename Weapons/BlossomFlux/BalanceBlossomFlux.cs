@@ -129,21 +129,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFBombardRightBalance
     {
+        // 歼灭右键：基础固定值，不随进度成长。强化通过箭袋叠加。
         public static BFBombardRightStats GetStats()
         {
-            float size = 190f;
-            float skyRainMultiplier = 1f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-                size += 55f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
-                size += 55f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-                skyRainMultiplier = 1.5f;
-
-            return new BFBombardRightStats(60, size, skyRainMultiplier);
+            return new BFBombardRightStats(120, 190f, 1f);
         }
     }
 }
@@ -261,58 +250,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFBreakthroughRightBalance
     {
+        // 突击右键：基础固定值，不随进度成长。强化通过箭袋叠加。
         public static BFBreakthroughRightStats GetStats()
         {
-            int framesPerArrow = 45;
-            int maxArrows = 3;
-            int penetrate = 5;
-            bool noFalloff = true;
-            float speedMult = 1f;
-            float damagePerChargeStack = 0f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.EyeOfCthulhu))
-                framesPerArrow = 40;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee))
-                maxArrows = 4;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh))
-            {
-                framesPerArrow = 35;
-                maxArrows = 5;
-                penetrate = 9;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss))
-                maxArrows = 6;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
-                penetrate = 15;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath))
-                maxArrows = 7;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-            {
-                penetrate = -1;
-                noFalloff = true;
-                framesPerArrow = 30;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
-            {
-                penetrate = -1;
-                speedMult = 1.65f;
-                damagePerChargeStack = 0.05f;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-            {
-                speedMult = 2.15f;
-                framesPerArrow = 24;
-            }
-
-            return new BFBreakthroughRightStats(framesPerArrow, maxArrows, penetrate, noFalloff, speedMult, damagePerChargeStack);
+            return new BFBreakthroughRightStats(
+                framesPerArrow: 60,
+                maxLoadedArrows: 2,
+                penetrate: 5,
+                ignorePenetrationDamageFalloff: false,
+                projectileSpeedMultiplier: 1f,
+                damagePerChargeStack: 0f);
         }
     }
 }
@@ -353,44 +300,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFPlagueLeftBalance
     {
+        // 侵染：基础时长固定，不随进度成长。
+        // 高级 Debuff 由箭袋等级控制，见 BFAccessoryPlayer.PlagueAdvancedTier。
         public static BFPlagueLeftStats GetStats()
         {
-            int initial = 10 * 60;
-            int stack = 5 * 60;
-            int max = 30 * 60;
-            bool betsysCurse = false;
-            bool astral = false;
-            bool wither = false;
-            bool whisper = false;
-            bool absorber = false;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-            {
-                initial = 15 * 60;
-                stack = 10 * 60;
-                max = 50 * 60;
-                betsysCurse = true;
-                astral = true;
-                wither = true;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
-            {
-                initial = 20 * 60;
-                stack = 15 * 60;
-                max = 70 * 60;
-                whisper = true;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-            {
-                initial = 30 * 60;
-                stack = 20 * 60;
-                max = 90 * 60;
-                absorber = true;
-            }
-
-            return new BFPlagueLeftStats(initial, stack, max, betsysCurse, astral, wither, whisper, absorber);
+            return new BFPlagueLeftStats(
+                initialDuration: 10 * 60,
+                stackDuration: 5 * 60,
+                maxDuration: 30 * 60,
+                inflictBetsysCurse: false,
+                inflictAstralInfection: false,
+                inflictWither: false,
+                inflictWhisperingDeath: false,
+                inflictAbsorberAffliction: false);
         }
     }
 }
@@ -470,37 +392,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFReconRightBalance
     {
+        // 侦察右键：基础固定值，不随进度成长。强化通过箭袋叠加。
         public static BFReconRightStats GetStats()
         {
-            int chargeFrames = 90;
-            int markDuration = 15 * 60;
-            int effectTier = 0;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss))
-                markDuration = 20 * 60;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
-                chargeFrames = 75;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath))
-                markDuration = 25 * 60;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-            {
-                chargeFrames = 60;
-                effectTier = 1;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
-                markDuration = 30 * 60;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-            {
-                chargeFrames = 45;
-                effectTier = 2;
-            }
-
-            return new BFReconRightStats(chargeFrames, markDuration, effectTier);
+            return new BFReconRightStats(
+                chargeFrames: 90,
+                markDuration: 15 * 60,
+                effectTier: 0);
         }
     }
 }
@@ -721,32 +619,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFRecoveryRightBalance
     {
+        // 复苏右键：基础固定值，不随进度成长。强化通过箭袋叠加。
+        // 每个治疗光球固定提供 20 点生命，该值永久固定不变。
         public static BFRecoveryRightStats GetStats()
         {
-            int chargeFrames = 5 * 60;
-            int flashCount = 7;
-            int heal = 10;
-            float chargeDr = 0f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh))
-            {
-                heal = 12;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath))
-                chargeFrames = 4 * 60;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-                heal = 15;
-
-            if (DownedBossSystem.downedYharon)
-            {
-                heal = 20;
-                chargeFrames = 3 * 60;
-                chargeDr = 0.30f;
-            }
-
-            return new BFRecoveryRightStats(chargeFrames, flashCount, heal, chargeDr);
+            return new BFRecoveryRightStats(
+                chargeFrames: 5 * 60,
+                flashCount: 4,
+                healAmount: 20,
+                chargeDamageReduction: 0f);
         }
     }
 }

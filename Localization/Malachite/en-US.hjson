@@ -9,7 +9,7 @@
 						'''
 						[c/7DFF9A:Left: Throw a peacock kunai.]
 						[c/7DFF9A:Stored stealth kunai fire first, one by one.]
-						[c/7DFF9A:Post-WoF ignores gravity; later tiers add shots.]
+						[c/7DFF9A:Ignores gravity with Clear Breeze Kunai; later tiers add shots.]
 						'''
 					RightClick:
 						'''
@@ -46,43 +46,76 @@
 			}
 
 			Accessories: {
+				BreezeKunai: {
+					DisplayName: Breeze Kunai
+					Tooltip:
+						'''
+						+10 rogue stealth maximum
+						Peacock Plume projectile speed +8%
+						Peacock Plume kunai gain +10 armor penetration
+						'''
+				}
+
+				ClearBreezeKunai: {
+					DisplayName: Clear Breeze Kunai
+					Tooltip:
+						'''
+						+15 rogue stealth maximum
+						Peacock Plume projectile speed +12%
+						Peacock Plume kunai gain +15 armor penetration
+						Peacock Plume left-click normal kunai are no longer affected by gravity
+						'''
+				}
+
+				GaleKunai: {
+					DisplayName: Gale Kunai
+					Tooltip:
+						'''
+						+20 rogue stealth maximum
+						Peacock Plume projectile speed +16%
+						Peacock Plume kunai gain +25 armor penetration
+						After a stealth strike, refund an additional 25% of consumed stealth
+						'''
+				}
+
+				WillowBlade: {
+					DisplayName: Willow Blade
+					Tooltip:
+						'''
+						+40 rogue stealth maximum
+						Peacock Plume projectile speed +22%
+						Peacock Plume kunai gain +50 armor penetration
+						While both left fan and right feathers are full, "Peacock Display": +20% move speed, +2 jump speed, +230% flight time
+						'''
+				}
+
 				PeacockScroll: {
 					DisplayName: Peacock Scroll
 					Tooltip:
 						'''
-						+10% rogue damage
-						While Peacock Plume has stored right feathers, +15% rogue attack speed
-						After Plantera is defeated, helps Peacock Plume refill right feathers faster
+						Right feather generation speed doubled
+						While Peacock Plume is in your inventory, generates right feathers at the same rate as when held
+						Right feather speed +15% and damage +20%
 						'''
 				}
 
 				PrecisionEmblem: {
-					DisplayName: Precision Emblem
-					Tooltip:
-						'''
-						+5% rogue damage and +10% rogue critical strike chance
-						Awakened Peacock Plume kunai gain 10 armor penetration
-						Peacock kunai and ace kunai deal 5% extra multiplicative damage
-						'''
+					DisplayName: Precision Emblem (Retired)
+					Tooltip: This accessory has been removed and no longer has any effect.
 				}
 
 				MalachiteFeather: {
-					DisplayName: Malachite Feather
-					Tooltip:
-						'''
-						While holding Peacock Plume, +15% rogue damage, +5% rogue critical strike chance, and +10% Peacock Plume projectile speed
-						If no stealth peacock kunai are present, helps generate one right feather every 30 frames
-						'''
+					DisplayName: Malachite Feather (Retired)
+					Tooltip: This accessory has been removed and no longer has any effect.
 				}
 
 				GaleAce: {
 					DisplayName: Gale Ace
 					Tooltip:
 						'''
-						While holding Peacock Plume, +15% rogue damage and +5% rogue critical strike chance
-						Poison damage is doubled
-						Peacock Plume's finale petals are blown toward your facing direction
-						Hanging kunai awakened by the finale become ace kunai
+						Enables grazing: nearby enemy projectiles trigger a graze
+						On successful graze: restore 20% stealth
+						Gain 1 stack of brief attack boost (each stack: +8% rogue damage, max 5 stacks)
 						'''
 				}
 

@@ -1,4 +1,6 @@
+using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityLegendsComeBack.Accssory.MC.PeacockBox;
+using CalamityLegendsComeBack.Accssory.MC.PeacockScroll;
 using CalamityMod;
 using CalamityMod.CalPlayer;
 using Microsoft.Xna.Framework;
@@ -89,7 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             float previousStealth = calamity.rogueStealth;
             calamity.ConsumeStealthByAttacking();
-            calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + previousStealth * 0.5f, 0f, calamity.rogueStealthMax);
+            float bonusRestore = previousStealth * Player.GetModPlayer<MCGeneralPlayer>().StealthRestoreOnStealthStrike;
+            calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + previousStealth * 0.5f + bonusRestore, 0f, calamity.rogueStealthMax);
             AddStealthPoints(15f);
         }
 
@@ -115,8 +118,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
 
             bool peacockBoxEquipped = Player.GetModPlayer<PeacockBoxPlayer>().PeacockBoxEquipped;
+            bool peacockScrollEquipped = Player.GetModPlayer<PeacockScrollPlayer>().PeacockScrollEquipped;
             Item malachiteItem = FindMalachiteItem(out bool isHeld);
-            if (malachiteItem == null || (!isHeld && !peacockBoxEquipped))
+            if (malachiteItem == null || (!isHeld && !peacockBoxEquipped && !peacockScrollEquipped))
             {
                 rightFeatherGenerationTimer = 0;
                 return;
@@ -132,9 +136,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
             }
 
-            int targetDelay = isHeld
+            int baseDelay = (isHeld || peacockScrollEquipped)
                 ? MalachiteBalance.RightFeatherGenerationFrames
                 : MalachiteBalance.PeacockBoxFeatherGenerationFrames;
+            int targetDelay = peacockScrollEquipped ? baseDelay / 2 : baseDelay;
 
             rightFeatherGenerationTimer++;
             if (rightFeatherGenerationTimer < targetDelay)

@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private const float FlightState = 0f;
         private const float AttachedNpcState = 1f;
         private const float GroundAnchorState = 2f;
-        private const int BombardDuration = 108;
+        private const int BombardDuration = 40; // 8 波 × 5 帧/波
         private const float MortarGravity = 0.28f;
         private const float MortarFallGravityMultiplier = 2.5f;
         private const float MinMortarApexHeight = 620f;

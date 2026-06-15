@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 if (rightClickMode == BBRightClickMode.VortexPortal)
                 {
                     ExecuteVortexPortal(player, source, shootVelocity, rightClickDamage, knockback);
-                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown();
+                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(360);
                     return false;
                 }
 

@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -16,13 +17,12 @@ namespace CalamityLegendsComeBack.Accssory.BB
 
     public class BBAccessoryPlayer : ModPlayer
     {
-        public const int OffshoreWindTurbineTideBonus = 2;
+        public const int OffshoreWindTurbineTideBonus = 4;
         public const int ImpactRestarterShortDashCooldown = 0;
         public const int ImpactRestarterSpinDashCooldown = 60;
         public const int HighTideDefenseBonus = 20;
         public const float HighTideDamageReduction = 0.20f;
         public const float SurgeChainReactorDamageFactor = 0.55f;
-        public const int TideRadarDamageBonusPercent = 15;
 
         public bool OffshoreWindTurbineEquipped;
         public bool ImpactRestarterEquipped;
@@ -30,10 +30,14 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public bool SurgeChainReactorEquipped;
         public bool DrinkingFountainEquipped;
         public bool AdrenalineInjectorEquipped;
-        public bool TideRadarEquipped;
         public bool BBPassiveChannelerEquipped;
         public float GeneralMeleeDamageBonus;
-        public int TideRadarTarget = -1;
+
+        public int BottleTideCapBonus;
+        public float BottleFullTideDamageBonus;
+        public bool ShurikenBoatEnhanced;
+        public bool WaveInfinitePenetration;
+        public bool BottledBlackPearlEquipped;
 
         private int rightClickPriority;
         private int adrenalineTimer;
@@ -43,7 +47,7 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public float AdrenalineDamageBonus => adrenalineStacks * 0.018f;
         public float AdrenalineAttackSpeedBonus => adrenalineStacks * 0.014f;
 
-        public int BonusTideMax => OffshoreWindTurbineEquipped ? OffshoreWindTurbineTideBonus : 0;
+        public int BonusTideMax => (OffshoreWindTurbineEquipped ? OffshoreWindTurbineTideBonus : 0) + BottleTideCapBonus;
 
         public override void ResetEffects()
         {
@@ -53,10 +57,13 @@ namespace CalamityLegendsComeBack.Accssory.BB
             SurgeChainReactorEquipped = false;
             DrinkingFountainEquipped = false;
             AdrenalineInjectorEquipped = false;
-            TideRadarEquipped = false;
             BBPassiveChannelerEquipped = false;
             GeneralMeleeDamageBonus = 0f;
-            TideRadarTarget = -1;
+            BottleTideCapBonus = 0;
+            BottleFullTideDamageBonus = 0f;
+            ShurikenBoatEnhanced = false;
+            WaveInfinitePenetration = false;
+            BottledBlackPearlEquipped = false;
             RightClickMode = BBRightClickMode.DefaultShuriken;
             rightClickPriority = -1;
         }
@@ -69,34 +76,53 @@ namespace CalamityLegendsComeBack.Accssory.BB
                 adrenalineStacks--;
         }
 
+        public override void ModifyHurt(ref Player.HurtModifiers modifiers)
+        {
+            if (!AdrenalineInjectorEquipped || adrenalineStacks <= 0)
+                return;
+
+            modifiers.FinalDamage *= 1f + adrenalineStacks * 0.05f;
+        }
+
+        public override void OnHurt(Player.HurtInfo info)
+        {
+            if (AdrenalineInjectorEquipped && adrenalineStacks > 0)
+            {
+                adrenalineStacks = 0;
+                adrenalineTimer = 0;
+            }
+        }
+
         public override void PostUpdateEquips()
         {
             Player.GetDamage(DamageClass.Melee) += GeneralMeleeDamageBonus + AdrenalineDamageBonus;
             Player.GetAttackSpeed(DamageClass.Melee) += AdrenalineAttackSpeedBonus;
 
-            UpdateTideRadarTarget();
+            if (HighTideOverloadBarrierEquipped && Player.GetModPlayer<BBTideValuePlayer>().TideFull)
+            {
+                Player.statDefense += HighTideDefenseBonus;
+                Player.endurance += HighTideDamageReduction;
 
-            if (!HighTideOverloadBarrierEquipped)
+                if (Main.dedServ || Main.rand.NextBool(4))
+                    return;
+
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.6f, 1.8f);
+                Dust water = Dust.NewDustPerfect(
+                    Player.Center + Main.rand.NextVector2Circular(Player.width * 0.65f, Player.height * 0.65f),
+                    DustID.Water,
+                    velocity,
+                    120,
+                    new Color(75, 175, 255),
+                    Main.rand.NextFloat(0.7f, 1.05f));
+                water.noGravity = true;
                 return;
+            }
 
-            if (!Player.GetModPlayer<BBTideValuePlayer>().TideFull)
-                return;
-
-            Player.statDefense += HighTideDefenseBonus;
-            Player.endurance += HighTideDamageReduction;
-
-            if (Main.dedServ || Main.rand.NextBool(4))
-                return;
-
-            Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.6f, 1.8f);
-            Dust water = Dust.NewDustPerfect(
-                Player.Center + Main.rand.NextVector2Circular(Player.width * 0.65f, Player.height * 0.65f),
-                DustID.Water,
-                velocity,
-                120,
-                new Color(75, 175, 255),
-                Main.rand.NextFloat(0.7f, 1.05f));
-            water.noGravity = true;
+            if (BottledBlackPearlEquipped && Player.GetModPlayer<BBTideValuePlayer>().TideFull)
+            {
+                Player.statDefense += 10;
+                Player.endurance += 0.10f;
+            }
         }
 
         public void SetRightClickMode(BBRightClickMode mode, int priority)
@@ -128,30 +154,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
                     0f,
                     Player.whoAmI);
             }
-        }
-
-        private void UpdateTideRadarTarget()
-        {
-            if (!TideRadarEquipped)
-                return;
-
-            float bestDistance = 1200f;
-            int bestTarget = -1;
-            for (int i = 0; i < Main.maxNPCs; i++)
-            {
-                NPC npc = Main.npc[i];
-                if (!npc.active || npc.friendly || npc.dontTakeDamage || npc.lifeMax <= 5)
-                    continue;
-
-                float distance = Player.Distance(npc.Center);
-                if (distance >= bestDistance)
-                    continue;
-
-                bestDistance = distance;
-                bestTarget = i;
-            }
-
-            TideRadarTarget = bestTarget;
         }
     }
 }

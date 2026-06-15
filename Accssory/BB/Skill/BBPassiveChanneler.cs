@@ -7,8 +7,7 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
     public class BBPassiveChanneler : ModItem
     {
-        // 暂借 LostGarment 贴图，后续替换为专属图。
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/Skill/LostGarment";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/General/TideRadar";
 
         public override void SetDefaults()
         {

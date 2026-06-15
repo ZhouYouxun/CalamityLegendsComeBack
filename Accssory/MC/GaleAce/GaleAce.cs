@@ -1,7 +1,11 @@
 using CalamityLegendsComeBack.Weapons.Malachite;
+using CalamityLegendsComeBack.Weapons.Malachite.passive;
 using CalamityMod;
-using System;
+using CalamityMod.CalPlayer;
+using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -28,9 +32,17 @@ namespace CalamityLegendsComeBack.Accssory.MC.GaleAce
 
     public sealed class GaleAcePlayer : ModPlayer
     {
+        private const float GrazeRadius = 110f;
+        private const int GrazeStackDuration = 300;
+        private const int MaxStacks = 5;
+        private const float DamageBoostPerStack = 0.08f;
+        private const float StealthRestorePercent = 0.20f;
+
         public bool GaleAceEquipped;
 
-        public bool HoldingMalachite => Player.HeldItem.type == ModContent.ItemType<Weapons.Malachite.Malachite>();
+        private int grazeStacks;
+        private int grazeDecayTimer;
+        private readonly HashSet<int> grazedSlots = new();
 
         public override void ResetEffects()
         {
@@ -39,37 +51,77 @@ namespace CalamityLegendsComeBack.Accssory.MC.GaleAce
 
         public override void PostUpdateEquips()
         {
-            if (HoldingMalachite && GaleAceEquipped)
-            {
-                Player.GetDamage<RogueDamageClass>() += 0.15f;
-                Player.GetCritChance<RogueDamageClass>() += 5f;
-            }
-        }
-    }
-
-    public sealed class GaleAceGlobalNPC : GlobalNPC
-    {
-        public override void UpdateLifeRegen(NPC npc, ref int damage)
-        {
-            if (!npc.HasBuff(BuffID.Poisoned) || !AnyGaleAcePlayerActive())
+            if (!GaleAceEquipped || grazeStacks <= 0)
                 return;
 
-            if (npc.lifeRegen > 0)
-                npc.lifeRegen = 0;
-
-            npc.lifeRegen -= 4;
-            damage = Math.Max(damage, 2);
+            Player.GetDamage<RogueDamageClass>() += grazeStacks * DamageBoostPerStack;
         }
 
-        private static bool AnyGaleAcePlayerActive()
+        public override void PostUpdate()
         {
-            foreach (Player player in Main.ActivePlayers)
+            if (!GaleAceEquipped || Player.dead)
             {
-                if (player.active && !player.dead && player.GetModPlayer<GaleAcePlayer>().GaleAceEquipped)
-                    return true;
+                grazeStacks = 0;
+                grazeDecayTimer = 0;
+                grazedSlots.Clear();
+                return;
             }
 
-            return false;
+            if (grazeStacks > 0)
+            {
+                grazeDecayTimer--;
+                if (grazeDecayTimer <= 0)
+                {
+                    grazeStacks--;
+                    grazeDecayTimer = grazeStacks > 0 ? GrazeStackDuration : 0;
+                }
+            }
+
+            if (Player.whoAmI == Main.myPlayer)
+                CheckForGrazes();
+        }
+
+        private void CheckForGrazes()
+        {
+            grazedSlots.RemoveWhere(slot => slot < 0 || slot >= Main.maxProjectiles || !Main.projectile[slot].active);
+
+            float radiusSq = GrazeRadius * GrazeRadius;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile proj = Main.projectile[i];
+                if (!proj.active || !proj.hostile || grazedSlots.Contains(i))
+                    continue;
+
+                if (Vector2.DistanceSquared(Player.Center, proj.Center) > radiusSq)
+                    continue;
+
+                grazedSlots.Add(i);
+                TriggerGraze(proj);
+            }
+        }
+
+        private void TriggerGraze(Projectile proj)
+        {
+            grazeStacks = System.Math.Min(grazeStacks + 1, MaxStacks);
+            grazeDecayTimer = GrazeStackDuration;
+
+            CalamityPlayer calamity = Player.Calamity();
+            if (calamity.rogueStealthMax > 0f)
+            {
+                float restoreAmount = calamity.rogueStealthMax * StealthRestorePercent;
+                calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + restoreAmount, 0f, calamity.rogueStealthMax);
+            }
+
+            SoundEngine.PlaySound(SoundID.Item7 with { Volume = 0.60f, Pitch = 0.65f, MaxInstances = 3 }, Player.Center);
+
+            Vector2 graceDir = (Player.Center - proj.Center).SafeNormalize(Vector2.UnitY);
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<MalachiteGrazeSlashVisual>(),
+                0, 0f, Player.whoAmI,
+                graceDir.ToRotation());
         }
     }
 }

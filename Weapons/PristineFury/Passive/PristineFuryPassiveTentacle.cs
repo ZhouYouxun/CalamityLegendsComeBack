@@ -1,5 +1,6 @@
-using CalamityMod.Particles;
+using CalamityLegendsComeBack.Accssory.PF;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -17,7 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private int TentacleIndex => Utils.Clamp((int)Projectile.ai[0], 0, 2);
+        private int TentacleIndex => Utils.Clamp((int)Projectile.ai[0], 0, 8);
+        private bool IsNineTailsMode(Player owner) => owner.GetModPlayer<PFAccessoryPlayer>().NineTailsEquipped;
         private ref float Timer => ref Projectile.localAI[0];
         private ref float ActiveState => ref Projectile.localAI[1];
         private bool ActiveFlames => ActiveState > 0f;
@@ -70,8 +72,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             ActiveState = 1f;
             Projectile.friendly = true;
 
+            bool nineTails = IsNineTailsMode(owner);
             Vector2 toIdle = idlePoint - Projectile.Center;
-            Projectile.velocity += toIdle * 0.035f;
+            float idleWeight = 0.035f;
+
+            if (nineTails)
+            {
+                // Home toward nearest NPC; idle point acts as fallback.
+                NPC target = FindNearestTarget(owner, 700f);
+                if (target != null)
+                {
+                    Vector2 toTarget = target.Center - Projectile.Center;
+                    Projectile.velocity += toTarget.SafeNormalize(Vector2.Zero) * 3.2f;
+                    Projectile.velocity = Vector2.Clamp(Projectile.velocity, new Vector2(-18f), new Vector2(18f));
+                    idleWeight = 0.012f;
+                }
+
+                // Nine tails deal higher purification damage; register hits to global NPC.
+                Projectile.damage = Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * GetLeftClickDamageMultiplier(owner) * 1.85f));
+            }
+
+            Projectile.velocity += toIdle * idleWeight;
             Projectile.velocity *= 0.9f;
 
             float distance = toIdle.Length();
@@ -115,7 +136,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             return false;
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<HolyFlames>(), 120);
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(ModContent.BuffType<HolyFlames>(), 120);
+            Player owner = Main.player[Projectile.owner];
+            if (IsNineTailsMode(owner))
+            {
+                // Nine tails actively advance purification progress on hit.
+                target.GetGlobalNPC<PFPurificationGlobalNPC>().RegisterPFHit(Projectile.owner);
+            }
+        }
 
         private static float GetLeftClickDamageMultiplier(Player owner)
         {
@@ -154,16 +184,33 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         {
             float behind = -owner.direction;
             int index = TentacleIndex;
-            Vector2[] idleOffsets =
-            {
-                new(behind * 70f, -20f * owner.gravDir),
-                new(behind * 90f, -45f * owner.gravDir),
-                new(behind * 60f, -70f * owner.gravDir)
-            };
 
+            // Nine tails: indices 0-8 arranged in 3 tiers (0-2 close, 3-5 medium, 6-8 far).
+            Vector2[] idleOffsets = index < 3
+                ? new Vector2[]  // Normal 3 tails
+                {
+                    new(behind * 70f, -20f * owner.gravDir),
+                    new(behind * 90f, -45f * owner.gravDir),
+                    new(behind * 60f, -70f * owner.gravDir)
+                }
+                : index < 6
+                ? new Vector2[]  // Medium-range extra tails
+                {
+                    new(behind * 120f, 10f * owner.gravDir),
+                    new(behind * 140f, -30f * owner.gravDir),
+                    new(behind * 100f, -80f * owner.gravDir)
+                }
+                : new Vector2[]  // Far-range extra tails
+                {
+                    new(behind * 170f, 30f * owner.gravDir),
+                    new(behind * 190f, -15f * owner.gravDir),
+                    new(behind * 150f, -95f * owner.gravDir)
+                };
+
+            int localIndex = index % 3;
             float phase = index * 2.1f;
             float time = Main.GlobalTimeWrappedHourly;
-            Vector2 idlePoint = buttAnchor + idleOffsets[index];
+            Vector2 idlePoint = buttAnchor + idleOffsets[localIndex];
             idlePoint += new Vector2(
                 behind * MathF.Sin(time * 2.2f + phase) * 10f,
                 MathF.Cos(time * 1.7f + phase) * 8f * owner.gravDir);
@@ -171,12 +218,32 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             return idlePoint;
         }
 
+        private static NPC FindNearestTarget(Player owner, float maxRange)
+        {
+            NPC best = null;
+            float bestDist = maxRange * maxRange;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.active || npc.friendly || npc.dontTakeDamage || npc.lifeMax <= 5)
+                    continue;
+                float dist = Vector2.DistanceSquared(owner.Center, npc.Center);
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = npc;
+                }
+            }
+            return best;
+        }
+
         private Vector2 GetCurvePoint(Player owner, Vector2 buttAnchor, float t)
         {
             int index = TentacleIndex;
             float behind = -owner.direction;
-            float backDistance = 78f + index * 13f;
-            float upDistance = 108f + index * 18f;
+            // Each tail group (0-2, 3-5, 6-8) extends progressively further.
+            float groupScale = 1f + (index / 3) * 0.6f;
+            float backDistance = (78f + (index % 3) * 13f) * groupScale;
+            float upDistance = (108f + (index % 3) * 18f) * groupScale;
             float phase = index * 1.7f;
 
             float x = behind * backDistance * (1f - MathF.Pow(1f - t, 2.5f));

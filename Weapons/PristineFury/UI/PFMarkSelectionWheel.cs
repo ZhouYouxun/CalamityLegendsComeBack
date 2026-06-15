@@ -16,14 +16,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
     // 布局与 BFSelectionPanel 相同（正五边形），每个格显示boss头像。
     internal sealed class PFMarkSelectionWheel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
-        // Pentagon offsets: top, upper-right, lower-right, lower-left, upper-left.
+        // Polygon offsets for up to 7 slots arranged in a regular polygon (radius 66).
+        // Slots 0-4 = pentagon; slots 5-6 = heptagon positions added when lily >= 3.
         private static readonly Vector2[] SlotOffsets =
         {
-            new(0f, -66f),
-            new(63f, -20f),
-            new(39f, 54f),
-            new(-39f, 54f),
-            new(-63f, -20f)
+            new(0f, -66f),       // top
+            new(63f, -20f),      // upper-right
+            new(39f, 54f),       // lower-right
+            new(-39f, 54f),      // lower-left
+            new(-63f, -20f),     // upper-left
+            new(-52f, -41f),     // heptagon slot 6 (upper-left extension)
+            new(52f, -41f),      // heptagon slot 7 (upper-right extension)
         };
 
         private const float DeadZone = 16f;
@@ -135,8 +138,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
             // Sector separator lines.
             DrawSectorLines(drawPos, hoveredIndex, pfPlayer, opacity);
 
+            int wheelSlots = Math.Min(pfPlayer.EffectiveMaxSlots, SlotOffsets.Length);
+
             // Slot icons.
-            for (int i = 0; i < PristineFuryPlayer.MaxMarkSlots; i++)
+            for (int i = 0; i < wheelSlots; i++)
             {
                 bool filled = i < pfPlayer.MarkQueueCount;
                 bool selected = (i == pfPlayer.SelectedMarkIndex);

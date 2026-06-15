@@ -10,12 +10,11 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
 {
-    // 右侧弧形弹夹面板：将玩家存储的5个印记以圆形图标弧排列显示在玩家右侧。
+    // 右侧弧形弹夹面板：将玩家存储的印记以圆形图标弧排列显示在玩家右侧。
     // 被选中的印记有旋转星芒高亮，空格暗化显示。
     internal sealed class PFMarkStatusArc : ModProjectile, IScreenOverlayProjectile
     {
-        // 5个格子的屏幕坐标偏移（相对于玩家中心，X 已乘 direction，Y 含 gfxOffY）
-        private const int SlotCount = PristineFuryPlayer.MaxMarkSlots;
+        // 弧形布局参数（槽数由 pfPlayer.EffectiveMaxSlots 动态决定）
         private const float ArcBaseX = 82f;
         private const float ArcBulgeX = 17f;
         private const float ArcHalfSpan = 52f;
@@ -81,17 +80,20 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
             float opacity = Projectile.Opacity;
             float time = Main.GlobalTimeWrappedHourly;
 
-            // Compute the 5 arc slot centers in screen space.
-            Vector2[] slots = ComputeSlotPositions(owner);
+            int slotCount = pfPlayer.EffectiveMaxSlots;
+
+            // Compute the arc slot centers in screen space.
+            Vector2[] slots = ComputeSlotPositions(owner, slotCount);
 
             // === Pass 1: alpha-blend backgrounds + connecting spine ===
-            // Spine: thin line linking all 5 slot centers.
-            for (int i = 0; i < SlotCount - 1; i++)
+            // Spine: thin line linking all slot centers.
+            for (int i = 0; i < slotCount - 1; i++)
                 DrawScreenLine(slots[i], slots[i + 1], new Color(62, 48, 88, 0) * (0.20f * opacity), 1.4f);
 
             // Boss head icons (alpha blend).
             for (int i = 0; i < pfPlayer.MarkQueueCount; i++)
             {
+                if (i >= slotCount) break;
                 Texture2D icon = PristineFuryMarkHelper.TryGetMarkBossHeadTexture(pfPlayer.MarkQueue[i]);
                 if (icon == null)
                     continue;
@@ -108,7 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
                 SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null,
                 Main.GameViewMatrix.TransformationMatrix);
 
-            for (int i = 0; i < SlotCount; i++)
+            for (int i = 0; i < slotCount; i++)
             {
                 bool filled = i < pfPlayer.MarkQueueCount;
                 bool selected = (i == pfPlayer.SelectedMarkIndex);
@@ -172,12 +174,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.UI
             return false;
         }
 
-        private static Vector2[] ComputeSlotPositions(Player owner)
+        private static Vector2[] ComputeSlotPositions(Player owner, int slotCount)
         {
-            Vector2[] result = new Vector2[SlotCount];
-            for (int i = 0; i < SlotCount; i++)
+            Vector2[] result = new Vector2[slotCount];
+            for (int i = 0; i < slotCount; i++)
             {
-                float t = i / (float)(SlotCount - 1); // 0..1
+                float t = slotCount > 1 ? i / (float)(slotCount - 1) : 0.5f; // 0..1
                 float arcY = MathHelper.Lerp(-ArcHalfSpan, ArcHalfSpan, t) + owner.gfxOffY;
                 // Arc bows outward in the middle (sin curve).
                 float arcX = (ArcBaseX + (float)Math.Sin(t * MathHelper.Pi) * ArcBulgeX) * owner.direction;

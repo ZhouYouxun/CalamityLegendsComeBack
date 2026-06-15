@@ -306,6 +306,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                 }
 
                 Lighting.AddLight(Projectile.Center, 0.05f, 0.24f, 0.34f);
+
+                if (Main.myPlayer == Projectile.owner &&
+                    player.GetModPlayer<BBAccessoryPlayer>().SurgeChainReactorEquipped &&
+                    timer % 8 == 0)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                        float speed = Main.rand.NextFloat(10f, 16f);
+                        Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            player.MountedCenter + Main.rand.NextVector2Circular(32f, 32f),
+                            angle.ToRotationVector2() * speed,
+                            ModContent.ProjectileType<CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BrinyBaron_SeaSpirit>(),
+                            Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                            Projectile.knockBack * 0.3f,
+                            Projectile.owner,
+                            5f,
+                            1f);
+                    }
+                }
             }
 
             //base.AdditionalAI();
@@ -330,12 +351,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             return MathHelper.ToRadians(trueAngle * -swingDirection);
         }
 
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (!Main.player.IndexInRange(Projectile.owner))
+                return;
+
+            if (Main.player[Projectile.owner].GetModPlayer<BBAccessoryPlayer>().SurgeChainReactorEquipped)
+                modifiers.SourceDamage *= 20f;
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             target.AddBuff(BuffID.Frostburn, 180);
 
-            // 卢克雷西亚 primary 是一次挥砍打一组切割反馈，这里也照这个思路来
             if (!hitTriggered)
             {
                 hitTriggered = true;
@@ -381,18 +410,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                     d.noGravity = true;
                     d.scale = Main.rand.NextFloat(1.1f, 1.7f);
                     d.color = Main.rand.NextBool() ? Color.DeepSkyBlue : Color.Cyan;
-                }
-
-                if (Main.myPlayer == Projectile.owner && player.GetModPlayer<BBAccessoryPlayer>().SurgeChainReactorEquipped)
-                {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        target.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<SurgeChainWaterBurst>(),
-                        Math.Max(1, (int)(Projectile.damage * BBAccessoryPlayer.SurgeChainReactorDamageFactor)),
-                        2f,
-                        Projectile.owner);
                 }
             }
         }

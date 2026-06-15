@@ -1545,7 +1545,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             const int arcHoldFrames = 5;
             int arcSnapEnd = arcWindup + arcSwingFrames;
             int arcHoldEnd = arcSnapEnd + arcHoldFrames;
-            const int arcTotalDuration = arcHoldEnd + 14;
+            int arcTotalDuration = arcHoldEnd + 14;
 
             float swingSign = Kind == CosmicDischargeAttackKind.ChainKnifeScatter ? -1f : 1f;
             float dirSign = swingSign * Math.Sign(Owner.direction == 0 ? 1 : Owner.direction);

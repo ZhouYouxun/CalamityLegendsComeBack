@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.PF;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -6,7 +7,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 {
     internal sealed class PristineFuryPassivePlayer : ModPlayer
     {
-        private const int TentacleCount = 3;
+        private const int DefaultTentacleCount = 3;
+        private const int NineTailsCount = 9;
         private bool holdingPristineFury;
 
         public override void ResetEffects()
@@ -37,8 +39,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
         private void EnsureTentacles()
         {
+            bool nineTails = Player.GetModPlayer<PFAccessoryPlayer>().NineTailsEquipped;
+            int count = nineTails ? NineTailsCount : DefaultTentacleCount;
             int tentacleType = ModContent.ProjectileType<PristineFuryPassiveTentacle>();
-            for (int index = 0; index < TentacleCount; index++)
+
+            for (int index = 0; index < count; index++)
             {
                 bool found = false;
                 for (int i = 0; i < Main.maxProjectiles; i++)

@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.PF;
 using CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect;
 using CalamityLegendsComeBack.Weapons.PristineFury.UI;
 using CalamityMod;
@@ -63,6 +64,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal int LeftChargeTimer;
         internal int LeftAuxTimer;
         internal int LeftBurstIndex;
+
+        private int fomoEchoTimer;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/NewLegendPristineFuryHoldOut";
@@ -175,6 +178,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             PristineFuryLeftEffectRegistry.Update(CurrentMark, this, leftHeld, leftHeld && !leftHeldLastFrame, !leftHeld && leftHeldLastFrame);
             HandleRightClick(rightHeld);
+            if (leftHeld)
+                HandleFOMOEchoes();
 
             leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;
@@ -1033,6 +1038,52 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Main.EntitySpriteDraw(back, drawPosition, null, Color.Black * (0.55f * opacity), 0f, backOrigin, scale, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(front, frontPosition, frontFrame, Color.Lerp(color, Color.White, completion) * opacity, 0f, frontOrigin, scale, SpriteEffects.None, 0);
+        }
+
+        // 灵梦FOMO：每 60 帧从未选中的印记方向各发射一颗低威力残响火球。
+        private const int FOMOEchoInterval = 60;
+        private void HandleFOMOEchoes()
+        {
+            if (!Owner.GetModPlayer<PFAccessoryPlayer>().LingmuFOMOEquipped)
+                return;
+
+            fomoEchoTimer++;
+            if (fomoEchoTimer < FOMOEchoInterval)
+                return;
+
+            fomoEchoTimer = 0;
+
+            PristineFuryPlayer pfPlayer = Owner.GetModPlayer<PristineFuryPlayer>();
+            if (pfPlayer.MarkQueueCount < 2)
+                return;
+
+            int idleFlameType = ModContent.ProjectileType<PFIdle_Flame>();
+            Vector2 muzzle = GunTipPosition;
+
+            for (int i = 0; i < pfPlayer.MarkQueueCount; i++)
+            {
+                if (i == pfPlayer.SelectedMarkIndex)
+                    continue;
+
+                PristineFuryMark echMark = pfPlayer.MarkQueue[i];
+                Color echColor = PristineFuryMarkHelper.GetColor(echMark);
+
+                float spread = Main.rand.NextFloat(-0.22f, 0.22f);
+                Vector2 vel = AimDirection.RotatedBy(spread) * 14f;
+
+                int idx = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    muzzle,
+                    vel,
+                    idleFlameType,
+                    GetScaledDamage(0.35f),
+                    Projectile.knockBack * 0.5f,
+                    Projectile.owner,
+                    i);
+                PFLeftEffectRules.ApplyTheme(idx, echMark);
+            }
+
+            SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(CurrentMark), 0.5f);
         }
     }
 }

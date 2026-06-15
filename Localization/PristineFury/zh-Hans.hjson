@@ -6,6 +6,47 @@
 				Tooltip: 佩戴时，纯元单击右键改为按顺序切换印记
 			}
 
+			// 通用配饰（百合系列）
+			PFLily: {
+				DisplayName: 百合
+				Tooltip: 印记队列 +1（共4）\n远程伤害 +8%\n纯化等级上限提高至 3 级\n3 级纯化会进一步提高持续伤害；小怪受到轻微攻击节奏削弱；Boss 受到更多纯元伤害并在被左键命中时额外受到纯化灼伤
+			}
+			PFSlightlyBloomLily: {
+				DisplayName: 稍微绽放的百合
+				Tooltip: 印记队列 +2（共5）\n远程伤害 +12%\n纯化等级上限提高至 4 级\n4 级纯化会使小怪死亡时产生纯化爆燃；Boss 会周期性触发小型纯化爆燃
+			}
+			PFBloomLily: {
+				DisplayName: 绽放的百合
+				Tooltip: 印记队列 +3（共6）\n远程伤害 +16%\n纯化等级上限提高至 5 级\n5 级纯化会强化爆燃；小怪死亡时向周围施加 2 级纯化；Boss 周期性释放白焰
+			}
+			PFKillIntentLily: {
+				DisplayName: 杀意的百合
+				Tooltip: 印记队列 +4（共7）\n远程伤害 +22%\n纯化等级上限提高至 6 级\n6 级纯化会使小怪死亡时产生大型爆燃并施加 3 级纯化；Boss 进入杀意纯化状态，周期性触发强力爆燃并释放扩散纯化火花
+
+			}
+
+			// 技能配饰
+			PFChangEFireCan: {
+				DisplayName: 嫦娥怨火罐
+				Tooltip: 手持纯元时，燃料背包获得独立血量，可以阻挡敌方弹幕\n若挡下的弹幕伤害超过剩余血量，背包爆炸产生 500×500 像素的纯化爆炸，不伤害玩家与友方
+			}
+			PFMooncake: {
+				DisplayName: 月饼
+				Tooltip: 右键纯化火球命中或爆炸时，范围内留下短暂的月华烙印\n处于烙印中的敌人会更快积累纯化等级\n已达到纯化上限的敌人会额外触发一次小型纯化爆燃
+			}
+			PFNineTails: {
+				DisplayName: 无秽九尾
+				Tooltip: 手持纯元时，原本的三条火狐狸尾巴变为九条无秽狐尾\n狐尾体型大幅提高，会自动追踪附近敌人\n狐尾命中时造成高额纯化伤害，并少量推进纯化进度
+			}
+			PFLingmuFOMO: {
+				DisplayName: 灵梦FOMO
+				Tooltip: 左键使用当前印记攻击时，队列中未被选中的印记会每 60 帧释放一次低威力残响弹幕\n相当于额外的副炮
+			}
+			PFHellFairyTorch: {
+				DisplayName: 地狱妖精的火把
+				Tooltip: 小怪达到当前最高纯化等级后，直接造成最大生命值 60% 的真实伤害，然后周期性释放友方纯化火花\nBoss 触发纯化爆燃时，清空所有纯化等级并立刻造成最大生命值 10% 的真实伤害，然后一次性释放螺旋扩散的纯化弹幕
+			}
+
 			Weapons: {
 				NewLegendPristineFury: {
 					DisplayName: 纯元：传奇归来
@@ -143,6 +184,7 @@
 				// PFRavager_BloodBoilerOrb.DisplayName: P F Ravager_ Blood Boiler Orb
 				// PristineFuryLilyMainBeam.DisplayName: Pristine Fury Lily Main Beam
 				// PristineFuryLilyWavelet.DisplayName: Pristine Fury Lily Wavelet
+				PFMoonhaloStamp.DisplayName: 月华烙印
 				// PFMarkSelectionWheel.DisplayName: P F Mark Selection Wheel
 				// PFIdleGroundBurn.DisplayName: P F Idle Ground Burn
 			}

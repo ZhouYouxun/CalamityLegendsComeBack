@@ -40,7 +40,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             npc.AddBuff(ModContent.BuffType<BFPlaguePollutionBuff>(), pollutionTimeLeft);
         }
 
-        public void ApplyPlagueDebuffs(NPC npc, bool markedTarget)
+        // plagueAdvancedTier: 0=仅基础 Debuff，1=第一批高级（贝西诅咒/星界/凋零），2=全部高级
+        public void ApplyPlagueDebuffs(NPC npc, bool markedTarget, int plagueAdvancedTier = 0)
         {
             BFPlagueLeftStats stats = BFPlagueLeftBalance.GetStats();
             bool alreadyAfflicted = HasAnyPlagueDebuff(npc);
@@ -58,20 +59,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             AddOrExtendBuff(npc, ModContent.BuffType<Plague>(), addTime, maxTime);
             AddOrExtendBuff(npc, ModContent.BuffType<MarkedforDeath>(), addTime, maxTime);
 
-            if (stats.InflictBetsysCurse)
+            if (plagueAdvancedTier >= 1)
+            {
                 AddOrExtendBuff(npc, BuffID.BetsysCurse, addTime, maxTime);
-
-            if (stats.InflictAstralInfection)
                 AddOrExtendBuff(npc, ModContent.BuffType<AstralInfectionDebuff>(), addTime, maxTime);
-
-            if (stats.InflictWither)
                 AddOrExtendBuff(npc, ModContent.BuffType<WitherDebuff>(), addTime, maxTime);
+            }
 
-            if (stats.InflictWhisperingDeath)
+            if (plagueAdvancedTier >= 2)
+            {
                 AddOrExtendBuff(npc, ModContent.BuffType<WhisperingDeath>(), addTime, maxTime);
-
-            if (stats.InflictAbsorberAffliction)
                 AddOrExtendBuff(npc, ModContent.BuffType<AbsorberAffliction>(), addTime, maxTime);
+            }
         }
 
         public void ApplyPermanentSpore(NPC npc)

@@ -178,8 +178,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
             BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
 
+            int advTier = BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers)
+                ? Main.player[Projectile.owner].GetModPlayer<CalamityLegendsComeBack.Accssory.BF.Common.BFAccessoryPlayer>().PlagueAdvancedTier : 0;
             pollution.ApplyPollution(target, markedTarget);
-            pollution.ApplyPlagueDebuffs(target, markedTarget);
+            pollution.ApplyPlagueDebuffs(target, markedTarget, advTier);
 
             target.AddBuff(BuffID.Poisoned, 180);
             target.AddBuff(BuffID.Venom, 100);

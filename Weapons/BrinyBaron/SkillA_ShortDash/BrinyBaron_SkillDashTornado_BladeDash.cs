@@ -271,25 +271,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Player owner = Main.player[Projectile.owner];
             if (Main.myPlayer == Projectile.owner)
-                owner.GetModPlayer<BBTideValuePlayer>().AddTide();
-
-            if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
-                owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ClearCooldown();
+                owner.GetModPlayer<BBTideValuePlayer>().TryAddTideFromBlade();
 
             if (CeruleanShieldMode)
             {
                 SpawnCeruleanShieldExplosion(target.Center, GetReliableDashDirection());
+                StartRebound(target.Center);
+                if (Main.myPlayer == Projectile.owner)
+                {
+                    var dashCooldown = owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                    if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
+                        dashCooldown.ClearCooldown();
+                    else
+                        dashCooldown.ReduceCooldownTo(60);
+                }
                 Projectile.netUpdate = true;
                 return;
             }
 
-            if (!enemyReboundUnlocked)
-            {
-                Projectile.Kill();
-                return;
-            }
+            if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped && Main.myPlayer == Projectile.owner)
+                owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ClearCooldown();
 
-            StartRebound(target.Center);
+            // LostGarment mode: pass through enemies, keep dashing
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)

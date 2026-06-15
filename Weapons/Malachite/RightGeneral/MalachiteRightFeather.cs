@@ -1,5 +1,6 @@
-using CalamityLegendsComeBack.Accssory.MC.MalachiteFeather;
+using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityLegendsComeBack.Accssory.MC.PeacockDart;
+using CalamityLegendsComeBack.Accssory.MC.PeacockScroll;
 using CalamityLegendsComeBack.Weapons.Malachite.RightGeneral.Stealth;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
@@ -277,7 +278,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             // 5 degrees is approximately 0.087266 radians. Spread range is -2.5 to 2.5 degrees (-0.043633 to 0.043633 radians).
             direction = direction.RotatedBy(Main.rand.NextFloat(-0.043633f, 0.043633f));
             float baseSpeed = MalachiteBalance.GetRightClickVelocity();
-            float speed = Main.rand.NextFloat(baseSpeed - 5f, baseSpeed + 5f) * owner.GetModPlayer<MalachiteFeatherPlayer>().MalachiteProjectileVelocityMultiplier;
+            float speed = Main.rand.NextFloat(baseSpeed - 5f, baseSpeed + 5f)
+                * owner.GetModPlayer<MCGeneralPlayer>().ProjectileSpeedMult
+                * owner.GetModPlayer<PeacockScrollPlayer>().RightFeatherSpeedMult;
 
             Projectile.velocity = direction * speed + owner.velocity * 0.08f;
             Projectile.friendly = true;
@@ -393,8 +396,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             Player owner = Main.player[Projectile.owner];
-            if (owner.active && owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
+            if (!owner.active)
+                return;
+
+            if (owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
                 modifiers.SourceDamage *= 1.3f;
+
+            if (owner.GetModPlayer<PeacockScrollPlayer>().PeacockScrollEquipped)
+                modifiers.SourceDamage *= 1.20f;
         }
 
         public override bool PreDraw(ref Color lightColor)
