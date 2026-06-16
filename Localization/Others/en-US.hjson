@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -136,6 +136,8 @@
 				MinesweeperPanel.DisplayName: Minesweeper Board
 				Strikers1945Panel.DisplayName: 1945 Striker Board
 				CTRLBossPanel.DisplayName: Boss Progress Panel
+				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
+				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
 			}
 
 			SacredThunder.SacredThunderPROJ.DisplayName: Sacred Thunder
@@ -154,6 +156,7 @@
 			TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
 			TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
 			TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
+			TeachingProjectile.DisplayName: Teaching Projectile
 
 			GhostSniperRifle: {
 				GhostSniperRound.DisplayName: Ghost Sniper Round

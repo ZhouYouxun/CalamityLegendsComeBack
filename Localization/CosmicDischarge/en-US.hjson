@@ -40,7 +40,6 @@ Mods: {
 						[c/B8F4FF:Cold Wind Rising:] [c/DCD6C8:Icebound Undying greatly improves recovery and adds 25 life regeneration. When it ends, gain 3 seconds of x1.5 final damage.]
 						'''
 				}
-
 			}
 		}
 
@@ -81,6 +80,16 @@ Mods: {
 				CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Frost Wave
 				CosmicDischargeIceBomb.DisplayName: Cosmic Discharge Ice Bomb
 				CosmicDischargeUltimateField.DisplayName: Cosmic Discharge Frost Field
+				CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
+				CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
+				CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
+				CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
+				CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
+				CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
+				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
+				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
+				CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
 			}
 		}
 

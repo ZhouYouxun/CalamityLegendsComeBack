@@ -23,29 +23,41 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Locked,
             Teleporting,
             Striking,
-            ImpactDrifting
+            ImpactDrifting,
+            FinalPause,
+            FinalExecutionStrike
         }
 
         private const int ChargeFrames = 120;
         private const int ChargeSearchInterval = 6;
         private const int LockSearchInterval = 10;
         private const int TeleportWindupFrames = 1;
-        private const int StrikeFrames = 8;
+        private const int NormalStrikeCount = 24;
+        private const int StartingStrikeFrames = 15;
+        private const int EndingStrikeFrames = 4;
         private const int FocusDashFrames = 18;
-        private const int ImpactDriftFrames = 10;
+        private const int StartingImpactDriftFrames = 12;
+        private const int EndingImpactDriftFrames = 4;
+        private const int FinalPauseFrames = 20;
+        private const int FinalExecutionFrames = 9;
         private const float ChargeHoldDistance = 22f;
         private const float LockHoldDistance = 28f;
         private const float StrikeHoldDistance = 34f;
-        private const float ImpactDriftSlowdownFactor = 0.98f;
+        private const float HitSlowStartFactor = 0.4f;
+        private const float HitSlowEndFactor = 0.15f;
         private const float FinalStrikeExitSpeed = 4.75f;
         private const float ChargeTurnRate = 0.14f;
         private const float LockTurnRate = 0.24f;
         private const float StrikeCollisionWidth = 84f;
+        private const float FinalStrikeCollisionWidth = 150f;
         private const float TeleportRadiusBase = 280f;
         private const float TeleportRadiusWave = 46f;
         private const float DashOvershootDistance = 220f;
         private const float StrikeSlashDamageFactor = 0.75f;
         private const float StrikeSlashScale = 1.45f;
+        private const float ExecutionGlowGain = 0.16f;
+        private const float ExecutionGlowMax = 1.4f;
+        private const float ExecutionGlowDecay = 0.008f;
         private const float GoldenAngle = 2.39996323f;
 
         private Player Owner => Main.player[Projectile.owner];
@@ -65,6 +77,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private bool impactTriggeredThisStrike;
         private bool finishedNormally;
         private bool focusDashMode;
+        private bool finalMarkSpawned;
+        private float executionGlowIntensity;
         private Vector2 lockedDirection = Vector2.UnitX;
         private Vector2 focusPoint;
         private Vector2 strikeStart;
@@ -99,12 +113,21 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         public override bool ShouldUpdatePosition() => false;
 
-        public override bool? CanDamage() => phase == SuperDashPhase.Striking || phase == SuperDashPhase.ImpactDrifting ? null : false;
+        public override bool? CanDamage() =>
+            phase == SuperDashPhase.Striking ||
+            phase == SuperDashPhase.ImpactDrifting ||
+            phase == SuperDashPhase.FinalExecutionStrike
+                ? null
+                : false;
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            if (phase != SuperDashPhase.Striking && phase != SuperDashPhase.ImpactDrifting)
+            if (phase != SuperDashPhase.Striking &&
+                phase != SuperDashPhase.ImpactDrifting &&
+                phase != SuperDashPhase.FinalExecutionStrike)
+            {
                 return false;
+            }
 
             float collisionPoint = 0f;
             return Collision.CheckAABBvLineCollision(
@@ -112,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 targetHitbox.Size(),
                 collisionStart,
                 collisionEnd,
-                StrikeCollisionWidth * Projectile.scale,
+                GetCurrentCollisionWidth() * Projectile.scale,
                 ref collisionPoint);
         }
 
@@ -129,6 +152,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             writer.Write(impactTriggeredThisStrike);
             writer.Write(finishedNormally);
             writer.Write(focusDashMode);
+            writer.Write(finalMarkSpawned);
+            writer.Write(executionGlowIntensity);
             writer.WriteVector2(lockedDirection);
             writer.WriteVector2(focusPoint);
             writer.WriteVector2(strikeStart);
@@ -151,6 +176,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             impactTriggeredThisStrike = reader.ReadBoolean();
             finishedNormally = reader.ReadBoolean();
             focusDashMode = reader.ReadBoolean();
+            finalMarkSpawned = reader.ReadBoolean();
+            executionGlowIntensity = reader.ReadSingle();
             lockedDirection = reader.ReadVector2();
             focusPoint = reader.ReadVector2();
             strikeStart = reader.ReadVector2();
@@ -175,6 +202,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Initialize(owner);
 
             UpdateFocusPoint(owner);
+            DecayExecutionGlow();
             MaintainCameraLock(owner);
 
             if (targetSearchCooldown > 0)
@@ -224,6 +252,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
                     DoImpactDrift(owner, target);
                     break;
+
+                case SuperDashPhase.FinalPause:
+                    if (target is null)
+                    {
+                        CancelLockedDashAndRefundCooldown();
+                        return;
+                    }
+
+                    DoFinalPause(owner, target);
+                    break;
+
+                case SuperDashPhase.FinalExecutionStrike:
+                    if (target is null)
+                    {
+                        CancelLockedDashAndRefundCooldown();
+                        return;
+                    }
+
+                    DoFinalExecutionStrike(owner, target);
+                    break;
             }
         }
 
@@ -234,13 +282,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             phase = SuperDashPhase.Charging;
             phaseTimer = 0;
             strikeIndex = 0;
-            totalStrikes = 20;
+            totalStrikes = NormalStrikeCount;
             targetNpcIndex = -1;
             targetSearchCooldown = 0;
             hadLockedTarget = false;
             impactTriggeredThisStrike = false;
             finishedNormally = false;
             focusDashMode = false;
+            finalMarkSpawned = false;
+            executionGlowIntensity = 0f;
             lockedDirection = (Main.MouseWorld - owner.MountedCenter).SafeNormalize(DefaultDirection);
             focusPoint = Main.MouseWorld;
             strikeStart = owner.Center;
@@ -490,7 +540,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 previousCenter = owner.Center;
 
             phaseTimer++;
-            int dashFrames = focusDashMode ? FocusDashFrames : StrikeFrames;
+            int dashFrames = focusDashMode ? FocusDashFrames : GetCurrentStrikeFrames();
             float progress = Utils.GetLerpValue(0f, dashFrames, phaseTimer, true);
             float easedProgress = 1f - (float)Math.Pow(1f - progress, 2f);
             Vector2 currentCenter = Vector2.Lerp(strikeStart, strikeEnd, easedProgress);
@@ -518,9 +568,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             float swingAngleOffset = MathHelper.Lerp(-MathHelper.Pi, MathHelper.Pi, easedSwing) * swingDir;
             Vector2 swingDirection = lockedDirection.RotatedBy(swingAngleOffset);
 
-            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance, 1.24f, 0f);
+            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance, 1.24f + executionGlowIntensity * 0.05f, 0f);
             BBSD_Strike_Effects.SpawnStrikeTravelEffects(Projectile, previousCenter, currentCenter, lockedDirection, phaseTimer, strikeIndex);
-            Lighting.AddLight(WeaponTip, new Vector3(0.2f, 0.62f, 0.82f));
+            Lighting.AddLight(WeaponTip, new Vector3(0.2f, 0.62f, 0.82f) * (1f + executionGlowIntensity * 0.3f));
 
             if (!impactTriggeredThisStrike && target is not null && SegmentHitsTarget(target, previousCenter, currentCenter))
             {
@@ -557,16 +607,181 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             float swingAngleOffset = MathHelper.Pi * swingDir;
             Vector2 swingDirection = lockedDirection.RotatedBy(swingAngleOffset);
 
-            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance, 1.24f, 0f);
-            BBSD_Strike_Effects.SpawnStrikeTravelEffects(Projectile, previousCenter, owner.Center, lockedDirection, StrikeFrames + phaseTimer, strikeIndex);
-            Lighting.AddLight(WeaponTip, new Vector3(0.18f, 0.54f, 0.74f));
+            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance, 1.24f + executionGlowIntensity * 0.06f, 0f);
+            BBSD_Strike_Effects.SpawnStrikeTravelEffects(Projectile, previousCenter, owner.Center, lockedDirection, GetCurrentStrikeFrames() + phaseTimer, strikeIndex);
+            Lighting.AddLight(WeaponTip, new Vector3(0.18f, 0.54f, 0.74f) * (1f + executionGlowIntensity * 0.35f));
 
-            impactDriftVelocity *= ImpactDriftSlowdownFactor;
+            impactDriftVelocity *= GetCurrentImpactDriftDecay();
 
-            if (phaseTimer < ImpactDriftFrames)
+            if (phaseTimer < GetCurrentImpactDriftFrames())
                 return;
 
             AdvanceAfterStrike(owner, target);
+        }
+
+        private void BeginFinalPause(Player owner, NPC target)
+        {
+            phase = SuperDashPhase.FinalPause;
+            phaseTimer = 0;
+            Projectile.friendly = false;
+            impactTriggeredThisStrike = false;
+            lockedDirection = (target.Center - owner.Center).SafeNormalize(lockedDirection);
+            strikeStart = target.Center - lockedDirection * 148f;
+            strikeEnd = target.Center;
+            collisionStart = strikeStart;
+            collisionEnd = strikeStart;
+            executionGlowIntensity = MathHelper.Max(executionGlowIntensity, 1.12f);
+            TeleportOwner(owner, strikeStart);
+            Projectile.netUpdate = true;
+
+            BBSD_Strike_Effects.SpawnFinalPauseStartEffects(Projectile, target.Center, lockedDirection);
+            SoundEngine.PlaySound(SoundID.Item122 with
+            {
+                Volume = 1f,
+                Pitch = -0.42f
+            }, target.Center);
+        }
+
+        private void DoFinalPause(Player owner, NPC target)
+        {
+            phaseTimer++;
+            Projectile.friendly = false;
+            Projectile.velocity = Vector2.Zero;
+
+            Vector2 pausePosition = target.Center - lockedDirection.SafeNormalize(DefaultDirection) * 148f;
+            owner.Center = Vector2.Lerp(owner.Center, pausePosition, 0.42f);
+            owner.velocity = Vector2.Zero;
+            owner.immune = true;
+            owner.immuneTime = 2;
+            owner.noKnockback = true;
+
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(phaseTimer * 0.42f);
+            ApplyHeldBlade(owner, lockedDirection, StrikeHoldDistance + 8f, 1.38f + pulse * 0.08f + executionGlowIntensity * 0.04f, 0.45f);
+            BBSD_Strike_Effects.SpawnFinalPauseEffects(Projectile, target.Center, lockedDirection, phaseTimer, FinalPauseFrames);
+            Lighting.AddLight(WeaponTip, new Vector3(0.22f, 0.7f, 0.92f) * (1.2f + pulse * 0.35f));
+
+            if (phaseTimer < FinalPauseFrames)
+                return;
+
+            BeginFinalExecutionStrike(owner, target);
+        }
+
+        private void BeginFinalExecutionStrike(Player owner, NPC target)
+        {
+            phase = SuperDashPhase.FinalExecutionStrike;
+            phaseTimer = 0;
+            impactTriggeredThisStrike = false;
+            Projectile.friendly = true;
+            lockedDirection = (target.Center - owner.Center).SafeNormalize(lockedDirection);
+            strikeStart = owner.Center;
+            strikeEnd = target.Center + lockedDirection * (DashOvershootDistance + 180f);
+            collisionStart = strikeStart;
+            collisionEnd = strikeStart;
+            impactDriftVelocity = Vector2.Zero;
+            executionGlowIntensity = ExecutionGlowMax;
+            Projectile.netUpdate = true;
+
+            BBSD_Strike_Effects.SpawnFinalExecutionLaunchEffects(Projectile, strikeStart, target.Center, lockedDirection);
+            SoundEngine.PlaySound(SoundID.Item71 with
+            {
+                Volume = 1.25f,
+                Pitch = -0.45f
+            }, strikeStart);
+        }
+
+        private void DoFinalExecutionStrike(Player owner, NPC target)
+        {
+            Vector2 previousCenter = owner.Center;
+
+            phaseTimer++;
+            float progress = Utils.GetLerpValue(0f, FinalExecutionFrames, phaseTimer, true);
+            float easedProgress = 1f - (float)Math.Pow(1f - progress, 3f);
+            Vector2 currentCenter = Vector2.Lerp(strikeStart, strikeEnd, easedProgress);
+            Vector2 dashVelocity = currentCenter - previousCenter;
+
+            owner.Center = currentCenter;
+            owner.velocity = dashVelocity;
+            owner.immune = true;
+            owner.immuneTime = 2;
+            owner.noKnockback = true;
+
+            collisionStart = previousCenter;
+            collisionEnd = currentCenter;
+            Projectile.velocity = dashVelocity;
+
+            if (dashVelocity.LengthSquared() > 1f)
+                lockedDirection = dashVelocity.SafeNormalize(lockedDirection);
+
+            float swingSign = strikeIndex % 2 == 0 ? 1f : -1f;
+            float swingAngleOffset = MathHelper.Lerp(-MathHelper.PiOver2, MathHelper.PiOver2, progress) * swingSign;
+            Vector2 swingDirection = lockedDirection.RotatedBy(swingAngleOffset);
+
+            ApplyHeldBlade(owner, swingDirection, StrikeHoldDistance + 10f, 1.64f + executionGlowIntensity * 0.05f, 0f);
+            BBSD_Strike_Effects.SpawnStrikeTravelEffects(Projectile, previousCenter, currentCenter, lockedDirection, totalStrikes + phaseTimer, totalStrikes);
+            Lighting.AddLight(WeaponTip, new Vector3(0.28f, 0.82f, 1f) * 1.75f);
+
+            if (!impactTriggeredThisStrike && SegmentHitsTarget(target, previousCenter, currentCenter))
+                HandleFinalExecutionImpact(target);
+
+            if (phaseTimer < FinalExecutionFrames)
+                return;
+
+            if (!finalMarkSpawned)
+                SpawnFinalMark(target);
+
+            ApplyFinalStrikeSlowdown(owner);
+            finishedNormally = true;
+            Projectile.Kill();
+        }
+
+        private void HandleFinalExecutionImpact(NPC target)
+        {
+            impactTriggeredThisStrike = true;
+            executionGlowIntensity = ExecutionGlowMax;
+            SpawnFinalMark(target);
+            BBSD_Strike_Effects.SpawnFinalExecutionImpactEffects(Projectile, target.Center, lockedDirection);
+
+            float distanceFactor = Utils.GetLerpValue(1400f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower,
+                28f * distanceFactor);
+
+            if (Main.myPlayer == Projectile.owner)
+                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(28f);
+
+            SoundEngine.PlaySound(SoundID.Item84 with
+            {
+                Volume = 1.25f,
+                Pitch = -0.35f
+            }, target.Center);
+            SoundEngine.PlaySound(SoundID.Item14 with
+            {
+                Volume = 1.1f,
+                Pitch = -0.48f
+            }, target.Center);
+
+            Projectile.netUpdate = true;
+        }
+
+        private void SpawnFinalMark(NPC target)
+        {
+            if (finalMarkSpawned)
+                return;
+
+            finalMarkSpawned = true;
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BBSD_Final_INV>(),
+                Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                Projectile.knockBack * 0.2f,
+                Projectile.owner,
+                target.whoAmI,
+                lockedDirection.ToRotation());
         }
 
         private void AdvanceAfterStrike(Player owner, NPC target)
@@ -583,17 +798,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
             }
 
-            if (strikeIndex >= totalStrikes)
-            {
-                ApplyFinalStrikeSlowdown(owner);
-                finishedNormally = true;
-                Projectile.Kill();
-                return;
-            }
-
             if (target is null)
             {
                 CancelLockedDashAndRefundCooldown();
+                return;
+            }
+
+            if (strikeIndex >= totalStrikes)
+            {
+                BeginFinalPause(owner, target);
                 return;
             }
 
@@ -618,7 +831,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 target.Hitbox.Size(),
                 lineStart,
                 lineEnd,
-                StrikeCollisionWidth,
+                GetCurrentCollisionWidth() * Projectile.scale,
                 ref collisionPoint);
         }
 
@@ -628,17 +841,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Projectile.netUpdate = true;
 
             Vector2 strikeDirection = lockedDirection.SafeNormalize(DefaultDirection);
+            executionGlowIntensity = MathHelper.Clamp(executionGlowIntensity + ExecutionGlowGain, 0f, ExecutionGlowMax);
             SpawnImpactShurikenBurst(target, strikeDirection);
 
             BBSD_Strike_Effects.SpawnStrikeImpactEffects(Projectile, target.Center, strikeDirection, strikeIndex, totalStrikes);
-            float shakePower = 15f;
+            BBSD_Strike_Effects.SpawnStrikeSlowdownEffects(Projectile, target.Center, strikeDirection, GetStrikeProgress(), executionGlowIntensity);
+            float shakePower = MathHelper.Lerp(15f, 8f, GetStrikeProgress());
             float distanceFactor = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
                 Main.LocalPlayer.Calamity().GeneralScreenShakePower,
                 shakePower * distanceFactor);
 
             if (Main.myPlayer == Projectile.owner)
-                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(15f);
+                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(shakePower);
 
             SoundEngine.PlaySound(SoundID.Item84 with
             {
@@ -651,8 +866,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Pitch = -0.34f
             }, target.Center);
 
-            impactDriftVelocity = Projectile.velocity * ImpactDriftSlowdownFactor;
-            phaseTimer = Math.Min(phaseTimer, StrikeFrames - 1);
+            impactDriftVelocity = Projectile.velocity * HitSlowStartFactor;
+            phase = SuperDashPhase.ImpactDrifting;
+            phaseTimer = 0;
             Projectile.friendly = true;
             Projectile.netUpdate = true;
         }
@@ -660,6 +876,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private void FireForwardShuriken(Player owner, Vector2 dashDir)
         {
             if (Main.myPlayer != Projectile.owner)
+                return;
+
+            if (!focusDashMode && strikeIndex % 3 != 0)
                 return;
 
             Vector2 shootDirection = dashDir.SafeNormalize(lockedDirection);
@@ -680,9 +899,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return;
 
             Vector2 forward = strikeDirection.SafeNormalize(DefaultDirection);
-            for (int i = 0; i < 3; i++)
+            int shurikenCount = GetStrikeProgress() < 0.55f ? 2 : 1;
+            for (int i = 0; i < shurikenCount; i++)
             {
-                float angle = forward.ToRotation() + MathHelper.TwoPi * i / 3f + Main.rand.NextFloat(-0.08f, 0.08f);
+                float angle = forward.ToRotation() + MathHelper.TwoPi * i / shurikenCount + Main.rand.NextFloat(-0.08f, 0.08f);
                 Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(12.5f, 15.5f);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -692,8 +912,48 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                     Math.Max(1, (int)(Projectile.damage * 0.28f)),
                     Projectile.knockBack * 0.35f,
                     Projectile.owner,
-                    0f);
+                0f);
             }
+        }
+
+        private float GetStrikeProgress()
+        {
+            if (totalStrikes <= 1)
+                return 1f;
+
+            return MathHelper.Clamp(strikeIndex / (float)(totalStrikes - 1), 0f, 1f);
+        }
+
+        private int GetCurrentStrikeFrames()
+        {
+            float frames = MathHelper.Lerp(StartingStrikeFrames, EndingStrikeFrames, GetStrikeProgress());
+            return Math.Max(1, (int)Math.Round(frames));
+        }
+
+        private int GetCurrentImpactDriftFrames()
+        {
+            float frames = MathHelper.Lerp(StartingImpactDriftFrames, EndingImpactDriftFrames, GetStrikeProgress());
+            return Math.Max(1, (int)Math.Round(frames));
+        }
+
+        private float GetCurrentImpactDriftDecay()
+        {
+            return (float)Math.Pow(HitSlowEndFactor / HitSlowStartFactor, 1f / GetCurrentImpactDriftFrames());
+        }
+
+        private float GetCurrentCollisionWidth()
+        {
+            return phase == SuperDashPhase.FinalExecutionStrike ? FinalStrikeCollisionWidth : StrikeCollisionWidth;
+        }
+
+        private void DecayExecutionGlow()
+        {
+            executionGlowIntensity = MathHelper.Max(0f, executionGlowIntensity - ExecutionGlowDecay);
+
+            if (phase == SuperDashPhase.FinalPause)
+                executionGlowIntensity = MathHelper.Max(executionGlowIntensity, 1.12f);
+            else if (phase == SuperDashPhase.FinalExecutionStrike)
+                executionGlowIntensity = MathHelper.Max(executionGlowIntensity, 1.28f);
         }
 
         private void ApplyChargeShake(Player owner, float chargeCompletion)
@@ -735,7 +995,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         {
             BBSuperDashCameraPlayer cameraPlayer = owner.GetModPlayer<BBSuperDashCameraPlayer>();
 
-            if (phase == SuperDashPhase.Teleporting || phase == SuperDashPhase.Striking || phase == SuperDashPhase.ImpactDrifting)
+            if (phase == SuperDashPhase.Teleporting ||
+                phase == SuperDashPhase.Striking ||
+                phase == SuperDashPhase.ImpactDrifting ||
+                phase == SuperDashPhase.FinalPause ||
+                phase == SuperDashPhase.FinalExecutionStrike)
             {
                 // ===== 闁告瑯浜濆﹢渚€鎯囬悢鍓插妧閺夆晜绋戦崣鍡樺緞閸曨偄鐏夐梻鍐煐椤斿矂骞嶅澶嬫暁闂傗偓濠婂啨浠?=====
                 if (CurrentTarget is not null)
@@ -804,10 +1068,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY) + jitter;
             Vector2 origin = frame.Size() * 0.5f;
-            Color bladeColor = Projectile.GetAlpha(lightColor);
+            float executionGlow = MathHelper.Clamp(executionGlowIntensity / ExecutionGlowMax, 0f, 1f);
+            Color bladeColor = Color.Lerp(Projectile.GetAlpha(lightColor), Color.White, executionGlow * 0.35f);
             bool facingLeft = BladeDirection.X < 0f;
             SpriteEffects effects = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             float drawRotation = Projectile.rotation + (facingLeft ? MathHelper.PiOver2 : 0f);
+            bool drawingExecutionAura =
+                phase == SuperDashPhase.Striking ||
+                phase == SuperDashPhase.ImpactDrifting ||
+                phase == SuperDashPhase.FinalPause ||
+                phase == SuperDashPhase.FinalExecutionStrike;
+            bool drawingSlashSwoosh =
+                phase == SuperDashPhase.Striking ||
+                phase == SuperDashPhase.ImpactDrifting ||
+                phase == SuperDashPhase.FinalExecutionStrike;
 
             if (phase == SuperDashPhase.Charging && chargeCompletion > 0f)
             {
@@ -828,26 +1102,41 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 }
             }
 
-            if (phase == SuperDashPhase.Striking || phase == SuperDashPhase.ImpactDrifting)
+            if (drawingExecutionAura)
             {
-                // Draw the trailing water swoosh aligned with the sword's swing
-                Texture2D swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
-                float swingSign = (strikeIndex % 2 == 0 ? 1f : -1f);
-                float swooshRotation = Projectile.rotation - MathHelper.PiOver4 + MathHelper.PiOver2 * swingSign;
-
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
+                Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
                 Main.EntitySpriteDraw(
-                    swoosh,
+                    bloom,
                     drawPosition,
                     null,
-                    Color.DeepSkyBlue with { A = 0 } * 0.48f,
-                    swooshRotation,
-                    swoosh.Size() * 0.5f,
-                    Projectile.scale * 0.65f,
+                    new Color(80, 220, 255, 0) * (0.18f + executionGlow * 0.44f),
+                    Main.GlobalTimeWrappedHourly,
+                    bloom.Size() * 0.5f,
+                    Projectile.scale * (0.22f + executionGlow * 0.16f),
                     SpriteEffects.None,
                     0f);
+
+                if (drawingSlashSwoosh)
+                {
+                    Texture2D swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
+                    float swingSign = strikeIndex % 2 == 0 ? 1f : -1f;
+                    float swooshRotation = Projectile.rotation - MathHelper.PiOver4 + MathHelper.PiOver2 * swingSign;
+                    float swooshScale = phase == SuperDashPhase.FinalExecutionStrike ? 1.08f : 0.65f;
+
+                    Main.EntitySpriteDraw(
+                        swoosh,
+                        drawPosition,
+                        null,
+                        Color.DeepSkyBlue with { A = 0 } * (0.42f + executionGlow * 0.24f),
+                        swooshRotation,
+                        swoosh.Size() * 0.5f,
+                        Projectile.scale * swooshScale,
+                        SpriteEffects.None,
+                        0f);
+                }
 
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
@@ -856,12 +1145,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Texture2D ghost = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaronGoest").Value;
                 for (int i = 0; i < 18; i++)
                 {
-                    Vector2 offset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * 4.2f;
+                    Vector2 offset = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * (4.2f + executionGlow * 2.5f);
                     Main.EntitySpriteDraw(
                         ghost,
                         drawPosition + offset,
                         frame,
-                        Color.Aqua with { A = 0 } * 0.12f,
+                        Color.Aqua with { A = 0 } * (0.1f + executionGlow * 0.1f),
                         drawRotation,
                         origin,
                         Projectile.scale * Vector2.One,
@@ -869,18 +1158,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                         0f);
                 }
 
-                for (int i = 0; i < 4; i++)
+                int outlineCount = phase == SuperDashPhase.FinalExecutionStrike ? 8 : 4;
+                for (int i = 0; i < outlineCount; i++)
                 {
-                    float angle = MathHelper.TwoPi * i / 4f + Main.GlobalTimeWrappedHourly * 4f;
-                    Vector2 outlineOffset = angle.ToRotationVector2() * 2f;
+                    float angle = MathHelper.TwoPi * i / outlineCount + Main.GlobalTimeWrappedHourly * 4f;
+                    Vector2 outlineOffset = angle.ToRotationVector2() * (2f + executionGlow * 2f);
                     Main.EntitySpriteDraw(
                         weaponTexture,
                         drawPosition + outlineOffset,
                         frame,
-                        new Color(105, 220, 255, 0) * 0.4f,
+                        new Color(105, 220, 255, 0) * (0.36f + executionGlow * 0.24f),
                         drawRotation,
                         origin,
-                        Projectile.scale * 1.04f,
+                        Projectile.scale * (1.04f + executionGlow * 0.04f),
                         effects,
                         0f);
                 }

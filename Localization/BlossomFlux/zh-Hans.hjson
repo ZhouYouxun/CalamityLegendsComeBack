@@ -111,6 +111,7 @@ Mods: {
 						'''
 					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
 					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手即可切换至当前扇区战术。]"
+					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:
 						'''
@@ -262,7 +263,60 @@ Mods: {
 			BFReconContractingWaveFX.DisplayName: 叶流侦察收缩波特效
 			BFRecoveryHeartConvergeFX.DisplayName: 叶流恢复之心汇聚特效
 			BFChargeGlowSparkFX.DisplayName: 叶流充能辉光火花特效
+			// BarrierShieldVisual.DisplayName: Barrier Shield Visual
+			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
+			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// DesertEagleHoldout.DisplayName: Desert Eagle Holdout
+			// BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
+			// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+			// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			// BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
+			// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+			// BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
+			// BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+			// FuckYou.DisplayName: Fuck You
+			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			// BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
+			// BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
+			// BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			// BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+			// Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
+			// Demonite_Wisp.DisplayName: Demonite_ Wisp
+			// Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
+			// Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
+			// Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
+			// Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
+			// Lunar_Strike.DisplayName: Lunar_ Strike
+			// Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
+			// Astral_Blast.DisplayName: Astral_ Blast
+			// PostLunar_Shard.DisplayName: Post Lunar_ Shard
+			// Shared_LingeringField.DisplayName: Shared_ Lingering Field
+			// Shared_Shockwave.DisplayName: Shared_ Shockwave
+			// Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
+			// PFMarkStatusArc.DisplayName: P F Mark Status Arc
+			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			// NewSHPS.DisplayName: New S H P S
+			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 		}
+
+		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 		Cooldowns: {
 			BlossomFlux_Passive: 叶流终末防线
@@ -280,6 +334,31 @@ Mods: {
 			BFPlaguePollutionBuff: {
 				DisplayName: 侵染污染
 				Description: 防御正被侵染逐层侵蚀。
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				// DisplayName: Cosmic Discharge Chain Knife Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeChainKnifeBuff.Description
+			}
+
+			CosmicDischargeSwordBuff: {
+				// DisplayName: Cosmic Discharge Sword Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeSwordBuff.Description
+			}
+
+			CosmicDischargeWhipBuff: {
+				// DisplayName: Cosmic Discharge Whip Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeWhipBuff.Description
+			}
+
+			YharonSoulFragment_Buff: {
+				// DisplayName: Yharon Soul Fragment_ Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+			}
+
+			SHPCRight_DeBuff: {
+				// DisplayName: S H P C Right_ De Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
 			}
 		}
 	}

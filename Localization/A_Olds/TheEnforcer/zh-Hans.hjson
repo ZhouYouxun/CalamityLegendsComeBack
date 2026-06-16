@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -35,11 +35,7 @@
 				TheNewEnforcerRiftCrack.DisplayName: 暴政裂痕
 			}
 
-			ChangedWeapons: {
-				EAfterDog: {
-					OldEssenceFlame2.DisplayName: 旧日精华火焰2
-				}
-			}
+			ChangedWeapons.EAfterDog.OldEssenceFlame2.DisplayName: 旧日精华火焰2
 		}
 	}
 }

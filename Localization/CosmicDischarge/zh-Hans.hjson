@@ -40,7 +40,6 @@ Mods: {
 						[c/B8F4FF:寒风再起：] [c/DCD6C8:冰固免死期间大幅提高恢复效率并增加25点再生；解除后获得3秒寒风再起，最终伤害x1.5。]
 						'''
 				}
-
 			}
 		}
 
@@ -81,6 +80,16 @@ Mods: {
 				CosmicDischargeSwordWave.DisplayName: 寒宙剑气
 				CosmicDischargeIceBomb.DisplayName: 寒宙冰炸弹
 				CosmicDischargeUltimateField.DisplayName: 寒宙力场
+				// CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
+				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
+				// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
+				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
+				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
+				// CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
+				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
+				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
+				// CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
 			}
 		}
 

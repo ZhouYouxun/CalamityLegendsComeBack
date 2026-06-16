@@ -27,12 +27,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float HomingRearTolerance = -0.18f;
         private const float HomingMaxTurnPerUpdate = 0.034f;
         private const float HomingLeadFramesMax = 14f;
-        private const float HomingStartTime = 600f;
+        private const float HomingStartFrames = 30f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
+        private ref float HomingTimer => ref Projectile.localAI[1];
+
         private int targetIndex = -1;
 
         private Vector2 FixedDirection
@@ -76,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
             Projectile.MaxUpdates = 10;
-            Projectile.timeLeft = 35;
+            Projectile.timeLeft = 105;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
             Projectile.alpha = 255;
@@ -110,6 +112,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         {
             Timer++;
 
+            // 只在每个真实游戏帧加一次，避免 MaxUpdates = 10 导致追踪计时过快。
+            if (Projectile.numUpdates == 0)
+                HomingTimer++;
+
             Vector2 direction = FixedDirection;
             if (direction.LengthSquared() <= 0.0001f)
                 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -139,7 +145,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private Vector2 UpdateHomingDirection(Vector2 currentDirection)
         {
-            if (Timer < HomingStartTime)
+            // 生成后前 30 个真实游戏帧保持直线飞行，之后才开始追踪。
+            if (HomingTimer < HomingStartFrames)
                 return currentDirection;
 
             NPC target = FindHomingTarget(currentDirection);

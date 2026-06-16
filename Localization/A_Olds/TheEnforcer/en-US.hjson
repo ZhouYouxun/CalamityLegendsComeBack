@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -28,11 +28,7 @@
 				TheNewEnforcerRiftCrack.DisplayName: Enforcement Rift Crack
 			}
 
-			ChangedWeapons: {
-				EAfterDog: {
-					OldEssenceFlame2.DisplayName: Old Essence Flame2
-				}
-			}
+			ChangedWeapons.EAfterDog.OldEssenceFlame2.DisplayName: Old Essence Flame2
 		}
 	}
 }

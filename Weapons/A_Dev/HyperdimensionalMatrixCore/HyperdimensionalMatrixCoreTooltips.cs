@@ -24,45 +24,109 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             Vector2 position = new(line.X, line.Y);
             float sine = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f / MathHelper.Pi);
-            Color dataColor = GetDataColor(lineIndex * 0.15f);
+            string text = ExtractTooltipTextAndColor(line.Text, lineIndex, out Color dataColor);
 
             switch (lineIndex)
             {
                 case 0:
-                    DrawFlowingText(line, position, dataColor);
+                    DrawFlowingText(line, text, position, dataColor);
                     break;
                 case 1:
-                    DrawInvertedText(line, position, sine);
+                    DrawInvertedText(line, text, position, dataColor, sine);
                     break;
                 case 2:
-                    DrawDoubleOutlineText(line, position, dataColor, sine);
+                    DrawDoubleOutlineText(line, text, position, dataColor, sine);
                     break;
                 case 3:
-                    DrawShakyText(line, position, dataColor, sine);
+                    DrawShakyText(line, text, position, dataColor, sine);
                     break;
                 case 4:
-                    DrawDarkHorizonText(line, position, dataColor);
+                    DrawDarkHorizonText(line, text, position, dataColor);
                     break;
                 case 5:
-                    DrawGlitchText(line, position, dataColor, sine);
+                    DrawGlitchText(line, text, position, dataColor, sine);
                     break;
             }
 
             return false;
         }
 
-        private static Color GetDataColor(float offset)
+        private static string ExtractTooltipTextAndColor(string text, int lineIndex, out Color color)
         {
-            float hue = (Main.GlobalTimeWrappedHourly * 0.24f + offset) % 1f;
-            return Main.hslToRgb(hue, 0.95f, 0.7f);
+            color = GetFallbackColor(lineIndex);
+
+            if (!text.StartsWith("[c/", StringComparison.Ordinal))
+                return text;
+
+            int colorStart = 3;
+            int separator = text.IndexOf(':', colorStart);
+            if (separator < 0 || separator + 1 >= text.Length)
+                return text;
+
+            ReadOnlySpan<char> hex = text.AsSpan(colorStart, separator - colorStart);
+            if (hex.Length is 6 or 8 && TryParseHexColor(hex, out Color parsed))
+                color = parsed;
+
+            int closingBracket = text.EndsWith("]", StringComparison.Ordinal) ? text.Length - 1 : text.Length;
+            return text[(separator + 1)..closingBracket];
         }
 
-        private static void DrawFlowingText(DrawableTooltipLine line, Vector2 position, Color color)
+        private static Color GetFallbackColor(int lineIndex) => lineIndex switch
+        {
+            0 => new Color(126, 184, 255),
+            1 => new Color(255, 144, 64),
+            2 => new Color(255, 236, 64),
+            3 => new Color(88, 128, 192),
+            4 => new Color(255, 48, 48),
+            _ => new Color(120, 120, 136)
+        };
+
+        private static bool TryParseHexColor(ReadOnlySpan<char> hex, out Color color)
+        {
+            color = Color.White;
+            if (!TryParseHexByte(hex[0..2], out byte r) ||
+                !TryParseHexByte(hex[2..4], out byte g) ||
+                !TryParseHexByte(hex[4..6], out byte b))
+            {
+                return false;
+            }
+
+            color = new Color(r, g, b);
+            return true;
+        }
+
+        private static bool TryParseHexByte(ReadOnlySpan<char> hex, out byte value)
+        {
+            value = 0;
+            if (hex.Length != 2)
+                return false;
+
+            int high = HexValue(hex[0]);
+            int low = HexValue(hex[1]);
+            if (high < 0 || low < 0)
+                return false;
+
+            value = (byte)((high << 4) | low);
+            return true;
+        }
+
+        private static int HexValue(char c)
+        {
+            if (c is >= '0' and <= '9')
+                return c - '0';
+            if (c is >= 'a' and <= 'f')
+                return c - 'a' + 10;
+            if (c is >= 'A' and <= 'F')
+                return c - 'A' + 10;
+            return -1;
+        }
+
+        private static void DrawFlowingText(DrawableTooltipLine line, string text, Vector2 position, Color color)
         {
             ChatManager.DrawColorCodedStringWithShadow(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position,
                 color,
                 line.Rotation,
@@ -72,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 line.Spread);
         }
 
-        private static void DrawInvertedText(DrawableTooltipLine line, Vector2 position, float sine)
+        private static void DrawInvertedText(DrawableTooltipLine line, string text, Vector2 position, Color color, float sine)
         {
             for (int i = 0; i < OutlineDrawCount; i++)
             {
@@ -81,9 +145,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 ChatManager.DrawColorCodedStringWithShadow(
                     Main.spriteBatch,
                     line.Font,
-                    line.Text,
+                    text,
                     outlinePosition,
-                    Color.White with { A = 0 },
+                    color with { A = 0 },
                     line.Rotation,
                     line.Origin,
                     line.BaseScale,
@@ -94,15 +158,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             ChatManager.DrawColorCodedString(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position,
-                Color.Black,
+                Color.Lerp(Color.Black, color, 0.35f),
                 line.Rotation,
                 line.Origin,
                 line.BaseScale);
         }
 
-        private static void DrawDoubleOutlineText(DrawableTooltipLine line, Vector2 position, Color color, float sine)
+        private static void DrawDoubleOutlineText(DrawableTooltipLine line, string text, Vector2 position, Color color, float sine)
         {
             for (int i = 0; i < OutlineDrawCount; i++)
             {
@@ -111,7 +175,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 ChatManager.DrawColorCodedStringWithShadow(
                     Main.spriteBatch,
                     line.Font,
-                    line.Text,
+                    text,
                     outerPosition,
                     color with { A = 0 },
                     line.Rotation,
@@ -128,7 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 ChatManager.DrawColorCodedString(
                     Main.spriteBatch,
                     line.Font,
-                    line.Text,
+                    text,
                     innerPosition,
                     Color.Black,
                     line.Rotation,
@@ -139,7 +203,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             ChatManager.DrawColorCodedString(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position,
                 Color.White,
                 line.Rotation,
@@ -147,7 +211,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 line.BaseScale);
         }
 
-        private static void DrawShakyText(DrawableTooltipLine line, Vector2 position, Color color, float sine)
+        private static void DrawShakyText(DrawableTooltipLine line, string text, Vector2 position, Color color, float sine)
         {
             for (int i = 0; i < 4; i++)
             {
@@ -155,7 +219,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 ChatManager.DrawColorCodedStringWithShadow(
                     Main.spriteBatch,
                     line.Font,
-                    line.Text,
+                    text,
                     shakePosition,
                     Color.Black,
                     line.Rotation,
@@ -169,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             ChatManager.DrawColorCodedString(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position,
                 foreground,
                 line.Rotation,
@@ -177,11 +241,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 line.BaseScale);
         }
 
-        private static void DrawDarkHorizonText(DrawableTooltipLine line, Vector2 position, Color color)
+        private static void DrawDarkHorizonText(DrawableTooltipLine line, string text, Vector2 position, Color color)
         {
             Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Particles/Light").Value;
             Vector2 origin = texture.Size() * 0.5f;
-            Vector2 horizonCenter = position + new Vector2(line.Text.Length * 4f, 10f);
+            Vector2 horizonCenter = position + new Vector2(text.Length * 4f, 10f);
 
             for (int i = 0; i < 6; i++)
             {
@@ -213,7 +277,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 ChatManager.DrawColorCodedString(
                     Main.spriteBatch,
                     line.Font,
-                    line.Text,
+                    text,
                     outlinePosition,
                     color with { A = 0 } * 0.6f,
                     line.Rotation,
@@ -224,7 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             ChatManager.DrawColorCodedString(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position,
                 Color.Black,
                 line.Rotation,
@@ -232,13 +296,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 line.BaseScale);
         }
 
-        private static void DrawGlitchText(DrawableTooltipLine line, Vector2 position, Color color, float sine)
+        private static void DrawGlitchText(DrawableTooltipLine line, string text, Vector2 position, Color color, float sine)
         {
             Vector2 horizontalGlitch = Vector2.UnitX * (2.5f + Math.Abs(sine) * 2f);
             ChatManager.DrawColorCodedString(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position - horizontalGlitch,
                 Color.Magenta with { A = 0 },
                 line.Rotation,
@@ -247,7 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             ChatManager.DrawColorCodedString(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position + horizontalGlitch,
                 Color.Cyan with { A = 0 },
                 line.Rotation,
@@ -256,7 +320,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             ChatManager.DrawColorCodedStringWithShadow(
                 Main.spriteBatch,
                 line.Font,
-                line.Text,
+                text,
                 position,
                 Color.Lerp(Color.White, color, 0.45f),
                 line.Rotation,

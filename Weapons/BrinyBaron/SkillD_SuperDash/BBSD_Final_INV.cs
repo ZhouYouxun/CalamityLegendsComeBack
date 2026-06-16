@@ -13,9 +13,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     internal class BBSD_Final_INV : ModProjectile, ILocalizedModType
     {
         // ===== 终结刻印：挂在目标身上，定时追砍 =====
-        private const int Lifetime = 60;
-        private const int SlashInterval = 5;
-        private const float SlashScale = 3.1f;
+        private const int Lifetime = 120;
+        private const int SlashInterval = 8;
+        private const float SlashScale = 1.55f;
         private const float OrbitRadius = 42f;
 
         private int TargetNpcIndex => (int)Projectile.ai[0];
@@ -63,8 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         private void ReleaseFinalSlash(NPC target, int sequenceIndex)
         {
-            // ===== 每 5 帧补一道超大 Slash =====
-            float wave = (sequenceIndex - 1) * 0.58f;
+            float wave = (sequenceIndex - 1) * 0.72f;
             float slashRotation = BaseRotation + wave;
             Vector2 slashDirection = slashRotation.ToRotationVector2();
 
@@ -81,14 +80,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             SoundEngine.PlaySound(SoundID.Item71 with
             {
-                Volume = 1f,
-                Pitch = -0.22f + Main.rand.NextFloat(-0.06f, 0.06f)
+                Volume = 0.58f,
+                Pitch = 0.08f + Main.rand.NextFloat(-0.06f, 0.08f)
             }, target.Center);
 
             SoundEngine.PlaySound(SoundID.Item105 with
             {
-                Volume = 0.85f,
-                Pitch = 0.1f + Main.rand.NextFloat(-0.05f, 0.05f)
+                Volume = 0.38f,
+                Pitch = 0.18f + Main.rand.NextFloat(-0.04f, 0.08f)
             }, target.Center);
 
         }
@@ -123,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 drawPos = target.Center - Main.screenPosition;
             float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true) * Utils.GetLerpValue(Lifetime, Lifetime - 8f, Projectile.timeLeft, true);
             Color outer = new Color(130, 225, 255, 0) * 0.42f * fade;
-            Color inner = new Color(255, 238, 180, 0) * 0.28f * fade;
+            Color inner = new Color(210, 248, 255, 0) * 0.28f * fade;
 
             Main.EntitySpriteDraw(glowTex, drawPos, null, outer, Projectile.rotation, glowTex.Size() * 0.5f, 0.38f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(glowTex, drawPos, null, inner, -Projectile.rotation * 1.3f, glowTex.Size() * 0.5f, 0.2f, SpriteEffects.None, 0f);

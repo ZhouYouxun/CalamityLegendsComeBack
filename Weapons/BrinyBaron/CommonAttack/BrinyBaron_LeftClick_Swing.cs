@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int bladeTipHistoryLength = 0;
         private float slashOpacity = 0f;
         private static Asset<Texture2D> exoLensFlare;
-        private const float BladeLength = 140f;
+        private const float BladeLength = 70f;
 
         private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
         private float RightSpinChargeRatio => MathHelper.Clamp(rightSpinEmpowerment / RightSpinMaxEmpowerment, 0f, 1f);
@@ -1078,7 +1078,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             float SlashWidthFunction(float completionRatio, Vector2 _)
             {
                 float fade = Utils.GetLerpValue(1f, 0f, completionRatio, true);
-                return Projectile.scale * 55f * fade * slashOpacity;
+                return Projectile.scale * 27.5f * fade * slashOpacity;
             }
 
             Color SlashColorFunction(float completionRatio, Vector2 _)
