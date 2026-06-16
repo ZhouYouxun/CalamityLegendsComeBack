@@ -79,6 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private float slashOpacity = 0f;
         private static Asset<Texture2D> exoLensFlare;
         private const float BladeLength = 70f;
+        private const float BladeTrailOutwardMultiplier = 1.5f;
 
         private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
         private float RightSpinChargeRatio => MathHelper.Clamp(rightSpinEmpowerment / RightSpinMaxEmpowerment, 0f, 1f);
@@ -1042,7 +1043,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (CanHit)
             {
                 slashOpacity = MathHelper.Lerp(slashOpacity, 1f, 0.4f);
-                Vector2 currentTip = SlashAngle.ToRotationVector2() * BladeLength * Projectile.scale;
+                Vector2 currentTip = SlashAngle.ToRotationVector2() * BladeLength * BladeTrailOutwardMultiplier * Projectile.scale;
                 Array.Copy(bladeTipHistory, 0, bladeTipHistory, 1, bladeTipHistory.Length - 1);
                 bladeTipHistory[0] = currentTip;
                 if (bladeTipHistoryLength < bladeTipHistory.Length)
@@ -1108,7 +1109,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             exoLensFlare ??= ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar");
             Texture2D shineTex = exoLensFlare.Value;
-            Vector2 bladeTip = Owner.MountedCenter + SlashAngle.ToRotationVector2() * BladeLength * Projectile.scale;
+            Vector2 bladeTip = Owner.MountedCenter + SlashAngle.ToRotationVector2() * BladeLength * BladeTrailOutwardMultiplier * Projectile.scale;
             Color lensColor = Color.Lerp(Color.DeepSkyBlue, Color.Cyan, Main.rand.NextFloat()) with { A = 0 };
 
             Main.EntitySpriteDraw(
