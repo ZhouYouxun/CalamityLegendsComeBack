@@ -840,18 +840,63 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeBloomTexturePath).Value;
             Texture2D star = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeStarTexturePath).Value;
+            Texture2D iris = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeIrisTexturePath).Value;
             Vector2 eye = DragonEyePosition - Main.screenPosition;
             Color theme = PristineFuryMarkHelper.GetColor(CurrentMark);
-            Color color = (Color.Lerp(theme, Color.White, 0.28f) with { A = 0 }) * power;
-            float pulse = 0.86f + 0.14f * (float)Math.Sin(dragonEyeTimer * 0.22f);
+            Color eyeColor = (Color.Lerp(theme, Color.White, 0.28f) with { A = 0 }) * power;
+
+            // fireRamp 类比 ApoctosisArray 的 manaPower：按住左键越久眼睛越亮越剧烈
+            float fireRamp = MathHelper.Clamp(dragonEyeTimer / 120f, 0f, 1f);
+            // reverseRamp 类比 reverseManaPower：控制正弦基线，决定星芒"静止时的偏置"
+            float reverseRamp = MathHelper.Lerp(0.62f, 0.14f, fireRamp);
+            float globalPulse = 0.88f + 0.12f * (float)Math.Sin(dragonEyeTimer * 0.22f);
 
             PFLeftEffectRules.BeginAdditive();
-            Main.EntitySpriteDraw(bloom, eye, null, color * 0.72f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.18f, 0.12f) * pulse, SpriteEffects.None, 0);
 
-            for (int i = 0; i < 3; i++)
+            // 虹膜环：SmallBloomRingLayered 缓慢旋转，营造龙眼瞳孔/虹膜质感。
+            float irisScale = (0.078f + fireRamp * 0.048f) * globalPulse;
+            Main.EntitySpriteDraw(iris, eye, null, eyeColor * (0.42f + fireRamp * 0.30f),
+                Projectile.rotation + dragonEyeTimer * 0.038f,
+                iris.Size() * 0.5f, irisScale, SpriteEffects.None, 0);
+
+            // 中心 BloomCircle：接近正圆光晕（改掉原来偏扁的 0.18×0.12）
+            Main.EntitySpriteDraw(bloom, eye, null, eyeColor * 0.78f,
+                Projectile.rotation,
+                bloom.Size() * 0.5f, new Vector2(0.145f, 0.140f) * globalPulse, SpriteEffects.None, 0);
+
+            // FullStar 放射星芒：5层 × 双向 b — ApoctosisArray 结构，但关键差异在于旋转基准。
+            // ApoctosisArray 所有层都对齐武器轴（枪管方向）；
+            // 这里改为「放射五角分布」（TwoPi * i / 5f），星芒从眼球向四周散开，而非指向同一方向。
+            int layers = 5;
+            for (int i = 0; i < layers; i++)
             {
-                float rotation = Projectile.rotation + MathHelper.TwoPi * i / 3f + dragonEyeTimer * 0.035f;
-                Main.EntitySpriteDraw(star, eye, null, color * 0.58f, rotation, star.Size() * 0.5f, new Vector2(0.12f, 0.72f + power * 0.38f), SpriteEffects.None, 0);
+                float iMult = 1f - 0.10f * i;
+
+                for (int b = -1; b <= 1; b += 2)
+                {
+                    // 正弦脉冲率略快于 ApoctosisArray 的射击模式（20f），因为眼睛要显得更活跃
+                    float sine = MathHelper.Lerp(
+                        (float)Math.Sin(dragonEyeTimer * 22f / MathHelper.Pi),
+                        reverseRamp * b,
+                        0.72f);
+
+                    // 旋转：以放射状五角为基准 + 双向差速漂移（两个 b 方向转速微差，产生复合花样）
+                    // ApoctosisArray 用 Projectile.rotation + time*manaPower*Max(i-2,0)*0.2f + PiOver4*b
+                    // 我们：用 i 的五角相位 + dragonEyeTimer 驱动的差速漂移 + 同样的 PiOver4*b 偏置
+                    float rotation = MathHelper.TwoPi * i / layers
+                        + dragonEyeTimer * 0.036f * (b > 0 ? 1f : -1.08f)
+                        + fireRamp * Math.Max(i - 2, 0) * 0.30f
+                        + MathHelper.PiOver4 * b;
+
+                    float starOpacity = (0.40f + fireRamp * 0.32f + power * 0.14f) * (1f - 0.10f * i);
+                    // 比例：X 窄（针形），Y 随 sine × b 动态，整体随 fireRamp 放大
+                    Vector2 starScale = new Vector2(0.135f, (0.80f + fireRamp * 0.45f) * sine * b)
+                        * iMult * power;
+
+                    Main.EntitySpriteDraw(star, eye, null,
+                        (Color.Lerp(theme, Color.White, i * 0.10f) with { A = 0 }) * starOpacity,
+                        rotation, star.Size() * 0.5f, starScale, SpriteEffects.None, 0);
+                }
             }
 
             PFLeftEffectRules.EndAdditive();

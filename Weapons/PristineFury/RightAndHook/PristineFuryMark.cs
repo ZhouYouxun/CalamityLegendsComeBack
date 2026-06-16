@@ -264,30 +264,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             _ => null
         };
 
-        internal static int GetDisplayedBaseDamage(PristineFuryMark mark)
-        {
-            return mark switch
-            {
-                PristineFuryMark.SlimeGod => 95,
-                PristineFuryMark.HardMode => 118,
-                PristineFuryMark.Prime => 120,
-                PristineFuryMark.BrimstoneElemental => 175,
-                PristineFuryMark.Plantera => 210,
-                PristineFuryMark.Aurora => 205,
-                PristineFuryMark.Goliath => 230,
-                PristineFuryMark.Moonlord => 270,
-                PristineFuryMark.Providence => 420,
-                PristineFuryMark.Ravager => 440,
-                PristineFuryMark.Polterghast => 285,
-                PristineFuryMark.Dog => 330,
-                PristineFuryMark.Dragon => 360,
-                PristineFuryMark.ExoTwins => 390,
-                PristineFuryMark.ExoThanatos => 460,
-                PristineFuryMark.ExoAres => 430,
-                PristineFuryMark.EvilT2 => 88,
-                PristineFuryMark.FakeCalamity => 190,
-                _ => 77
-            };
-        }
+        internal static int GetDisplayedBaseDamage(PristineFuryMark mark) =>
+            PF_Balance.GetMarkBaseDamage(mark);
     }
 }

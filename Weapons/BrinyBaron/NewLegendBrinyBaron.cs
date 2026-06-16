@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             Item.width = 120;
             Item.height = 120;
-            Item.damage = 120;
+            Item.damage = 0;
             Item.DamageType = DamageClass.Melee;
 
             Item.useAnimation = 30;

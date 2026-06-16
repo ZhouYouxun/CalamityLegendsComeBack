@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Item.width = 78;
             Item.height = 78;
-            Item.damage = 12;
+            Item.damage = 0;
             Item.DamageType = DamageClass.Ranged;
             Item.useAnimation = 2;
             Item.useTime = 2;

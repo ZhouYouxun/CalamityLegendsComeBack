@@ -14,7 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         // Dragon eye starburst textures.
         internal const string DragonEyeBloomTexturePath = "CalamityMod/Particles/BloomCircle";
-        internal const string DragonEyeStarTexturePath = "CalamityMod/Particles/HalfStar";
+        internal const string DragonEyeStarTexturePath = "CalamityMod/Particles/FullStar";         // 四角对称，比 HalfStar 更完整，视觉上更像晶眼
+        internal const string DragonEyeIrisTexturePath = "CalamityMod/Particles/SmallBloomRingLayered"; // 虹膜环，营造龙眼瞳孔感
 
         // Dragon mouth visual textures.
         internal const string DragonMouthChargeBloomTexturePath = "CalamityMod/Particles/BloomCircle";

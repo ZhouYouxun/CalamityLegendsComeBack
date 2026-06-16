@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         {
             Item.width = 44;
             Item.height = 44;
-            Item.damage = 30;
+            Item.damage = 0;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 6;
             Item.useTime = 25;

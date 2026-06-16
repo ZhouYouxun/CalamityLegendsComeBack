@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         {
             Item.width = 32;
             Item.height = 48;
-            Item.damage = 112;
+            Item.damage = 0;
             Item.knockBack = 4f;
             Item.useAnimation = Item.useTime = 20;
             Item.autoReuse = true;
@@ -35,6 +35,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         }
 
         public override float StealthDamageMultiplier => 1.2f;
+
+        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
+        {
+            damage.Base = LP_Balance.GetLeftClickBaseDamage();
+        }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {

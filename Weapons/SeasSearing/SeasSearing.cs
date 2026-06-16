@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             Item.width = 74;
             Item.height = 34;
-            Item.damage = 156;
+            Item.damage = 0;
             Item.DamageType = DamageClass.Ranged;
             Item.useTime = 2;
             Item.useAnimation = 2;
@@ -59,6 +59,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         }
 
         public override bool AltFunctionUse(Player player) => true;
+
+        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
+        {
+            damage.Base = SS_Balance.GetBaseDamage();
+        }
 
         public override bool CanUseItem(Player player) => false;
 

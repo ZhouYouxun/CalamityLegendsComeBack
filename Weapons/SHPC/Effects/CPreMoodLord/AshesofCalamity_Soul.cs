@@ -18,13 +18,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
     internal sealed class AshesofCalamity_Soul : ModProjectile, ILocalizedModType
     {
         private const float BaseSpeed = 15.5f;
-        private const float HomingRange = 4200f;
+        private const float HomingRange = 8400f;
         private const float HomingStartFrames = 30f;
         private const float HomingWarmupFrames = 52f;
         private const float HomingInertia = 31f;
         private const float MinHomingSpeed = 10.5f;
         private const float MaxHomingSpeed = 17.25f;
-        private const float HomingMaxTurnPerFrame = MathHelper.Pi / 60f;
+        private const float HomingMaxTurnPerFrame = MathHelper.Pi / 20f;
         private const float FreeFlightDamping = 0.996f;
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.008f;

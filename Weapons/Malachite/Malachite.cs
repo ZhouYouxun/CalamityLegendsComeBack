@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             Item.width = 28;
             Item.height = 58;
-            Item.damage = 180;
+            Item.damage = 0;
             Item.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Item.noMelee = true;
             Item.noUseGraphic = true;
