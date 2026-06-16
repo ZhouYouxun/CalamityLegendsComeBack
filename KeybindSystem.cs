@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack
         public override void Load()
         {
             LegendarySkill = KeybindLoader.RegisterKeybind(Mod, "LegendarySkill", "P");
-            LegendaryWeaponFormSwitch = KeybindLoader.RegisterKeybind(Mod, "LegendaryWeaponFormSwitch", "O");
+            LegendaryWeaponFormSwitch = KeybindLoader.RegisterKeybind(Mod, "LegendaryWeaponFormSwitch", "LeftControl");
         }
 
         public override void Unload()

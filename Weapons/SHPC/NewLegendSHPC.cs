@@ -67,6 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public const int BaseMagazineCount = 3;
         public const int MagazineCount = BaseMagazineCount + 4;
+        private const int BaseManaCost = 15;
 
         private readonly int[] magazineEffectPowers = new int[MagazineCount];
         private readonly int[] magazineAmmoTypes = new int[MagazineCount];
@@ -178,7 +179,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Item.height = 52;
             Item.damage = 11;
             Item.DamageType = DamageClass.Magic;
-            Item.mana = 15;
+            Item.mana = BaseManaCost;
             Item.useAnimation = 60;
             Item.useTime = 60;
             Item.useStyle = ItemUseStyleID.Shoot;
@@ -540,12 +541,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (player.altFunctionUse == 2)
             {
+                Item.mana = 0;
                 Item.channel = true;         // Right-click channel
                 Item.noUseGraphic = true;    // Holdout draws the weapon
                 Item.UseSound = null;
             }
             else
             {
+                Item.mana = BaseManaCost;
                 Item.channel = false;
                 Item.noUseGraphic = false;
                 if (!IsMagazineLoaded(CurrentMagazineIndex))

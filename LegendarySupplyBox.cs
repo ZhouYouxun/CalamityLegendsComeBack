@@ -34,13 +34,13 @@ namespace CalamityLegendsComeBack
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendSHPC>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBrinyBaron>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Malachite>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewVesuvius>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendMK14EBR>()));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<SeasSearing>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBrinyBaron>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<Malachite>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewVesuvius>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendMK14EBR>()));
+            //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<SeasSearing>()));
         }
 
 
