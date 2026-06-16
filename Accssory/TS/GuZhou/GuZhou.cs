@@ -4,23 +4,23 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.TS
 {
-    internal sealed class QianDingWanDing : ModItem
+    internal sealed class GuZhou : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/千定万定";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/GuZhou/GuZhou";
 
         public override void SetDefaults()
         {
             Item.width = 32;
             Item.height = 32;
             Item.accessory = true;
-            Item.value = Item.sellPrice(gold: 12);
-            Item.rare = ItemRarityID.Cyan;
+            Item.value = Item.sellPrice(gold: 8);
+            Item.rare = ItemRarityID.Yellow;
         }
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<AzureThunderAccessoryPlayer>().QianDingWanDingEquipped = true;
+            player.GetModPlayer<AzureThunderAccessoryPlayer>().GuZhouEquipped = true;
         }
     }
 }

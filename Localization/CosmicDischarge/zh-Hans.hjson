@@ -35,9 +35,7 @@ Mods: {
 						'''
 					CosmicDischargePassive:
 						'''
-						[c/B8F4FF:寒宇冰封：] [c/DCD6C8:手持时受到致死伤害会免疫本次伤害、恢复60生命并获得3秒冰固免死，冷却300秒。]
-						[c/B8F4FF:零度武装：] [c/DCD6C8:手持时，在雪地，或自身带有冷系减益且没有保暖增益时，伤害+10%，防御+10。]
-						[c/B8F4FF:寒风再起：] [c/DCD6C8:冰固免死期间大幅提高恢复效率并增加25点再生；解除后获得3秒寒风再起，最终伤害x1.5。]
+						[c/B8F4FF:寒宇冰封：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分将被削减至上限。触发时获得5秒"寒风再起"（伤害+20%），冷却60秒。]
 						'''
 				}
 			}
@@ -49,9 +47,9 @@ Mods: {
 				Description: 致死伤害被压制，生命再生大幅提高。
 			}
 
-			CosmicDischargeColdWindBuff: {
+			CosmicDischargeFrostwindRevivalBuff: {
 				DisplayName: 寒风再起
-				Description: 最终伤害x1.5。
+				Description: 寒冷打破极限，伤害提升20%。
 			}
 
 			CosmicDischargeUltimateGuardBuff: {

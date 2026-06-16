@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
     }
 
-    internal sealed class CosmicDischargeColdWindBuff : ModBuff
+    internal sealed class CosmicDischargeFrostwindRevivalBuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
 
@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void Update(Player player, ref int buffIndex)
         {
-            player.GetDamage(DamageClass.Generic) *= 1.5f;
+            player.GetDamage(DamageClass.Generic) += 0.20f;
             Lighting.AddLight(player.Center, new Color(130, 220, 255).ToVector3() * 0.4f);
         }
     }

@@ -35,9 +35,7 @@ Mods: {
 						'''
 					CosmicDischargePassive:
 						'''
-						[c/B8F4FF:Voidfrost Seal:] [c/DCD6C8:while held, fatal damage is negated, 60 life is restored, and Icebound Undying is gained for 3 seconds. Cooldown: 300 seconds.]
-						[c/B8F4FF:Zero-Degree Armament:] [c/DCD6C8:while held, being in the snow biome or suffering a cold debuff without Warmth grants +10% damage and +10 defense.]
-						[c/B8F4FF:Cold Wind Rising:] [c/DCD6C8:Icebound Undying greatly improves recovery and adds 25 life regeneration. When it ends, gain 3 seconds of x1.5 final damage.]
+						[c/B8F4FF:Voidfrost Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Frostwind Revival (+20% damage). Cooldown: 60 seconds.]
 						'''
 				}
 			}
@@ -49,9 +47,9 @@ Mods: {
 				Description: Fatal damage is being suppressed and life regeneration is greatly increased.
 			}
 
-			CosmicDischargeColdWindBuff: {
-				DisplayName: Cold Wind Rising
-				Description: Final damage is multiplied by 1.5.
+			CosmicDischargeFrostwindRevivalBuff: {
+				DisplayName: Frostwind Revival
+				Description: The cold shatters your limits. Damage increased by 20%.
 			}
 
 			CosmicDischargeUltimateGuardBuff: {

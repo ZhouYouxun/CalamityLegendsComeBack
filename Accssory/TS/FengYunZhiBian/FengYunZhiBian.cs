@@ -4,23 +4,23 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.TS
 {
-    internal sealed class GuZhou : ModItem
+    internal sealed class FengYunZhiBian : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/孤舟";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/FengYunZhiBian/FengYunZhiBian";
 
         public override void SetDefaults()
         {
             Item.width = 32;
             Item.height = 32;
             Item.accessory = true;
-            Item.value = Item.sellPrice(gold: 8);
-            Item.rare = ItemRarityID.Yellow;
+            Item.value = Item.sellPrice(gold: 14);
+            Item.rare = ItemRarityID.Cyan;
         }
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<AzureThunderAccessoryPlayer>().GuZhouEquipped = true;
+            player.GetModPlayer<AzureThunderAccessoryPlayer>().FengYunZhiBianEquipped = true;
         }
     }
 }

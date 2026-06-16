@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
     internal sealed class JiDianFa : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/Jidianfa/疾电法";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/JiDianFa/JiDianFa";
 
         public override void SetDefaults()
         {
@@ -380,9 +380,9 @@ namespace CalamityLegendsComeBack.Accssory.TS
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.JoltingArts_Lightning");
 
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/Jidianfa/EXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Accssory/TS/Jidianfa/EXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Accssory/TS/Jidianfa/EXCoolDownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/JiDianFa/EXCoolDown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Accssory/TS/JiDianFa/EXCoolDownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Accssory/TS/JiDianFa/EXCoolDownOverlay";
 
         public override Color OutlineColor => new(16, 86, 122);
         public override Color CooldownStartColor => Color.Lerp(AzureThunderColors.Azure, Color.White, instance.Completion);

@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public const int UltimateEnergyMax = 120;
         public const int RightThrustEnergyGain = 10;
         public const int UltimateFieldDuration = 10 * 60;
-        public const int PassiveCooldownFrames = 300 * 60;
+        public const int PassiveCooldownFrames = 60 * 60;
         public const int IceboundDuration = 3 * 60;
         public const int ColdWindDuration = 3 * 60;
 
@@ -29,9 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public bool FrozenEmperorActive => Player.HasBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorBuff>());
 
         private bool holdingCosmicDischarge;
-        private bool wasHoldingCosmicDischarge;
         private bool wasUltimateReady;
-        private bool hadIcebound;
         private int comboIndex;
         private int comboResetTimer;
         private CosmicDischargeAttackMode comboMode;
@@ -47,8 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public bool ShouldShowPassiveCooldown =>
             HoldingCosmicDischarge ||
             PassiveCooldownTimer > 0 ||
-            Player.HasBuff(ModContent.BuffType<CosmicDischargeIceboundBuff>()) ||
-            Player.HasBuff(ModContent.BuffType<CosmicDischargeColdWindBuff>());
+            Player.HasBuff(ModContent.BuffType<CosmicDischargeFrostwindRevivalBuff>());
 
         public override void ResetEffects()
         {
@@ -61,7 +58,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             UltimateEnergy = 0;
             comboIndex = 0;
             comboResetTimer = 0;
-            hadIcebound = false;
             QuickDrawCooldownTimer = 0;
             FrozenEmperorSliverCount = 0;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
@@ -79,11 +75,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 comboResetTimer--;
             else
                 comboIndex = 0;
-
-            bool icebound = Player.HasBuff(ModContent.BuffType<CosmicDischargeIceboundBuff>());
-            if (hadIcebound && !icebound && Player.active && !Player.dead)
-                Player.AddBuff(ModContent.BuffType<CosmicDischargeColdWindBuff>(), ColdWindDuration);
-            hadIcebound = icebound;
 
             if (!Player.HasBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>()))
             {
@@ -139,7 +130,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (HoldingCosmicDischarge)
             {
-                ApplyZeroDegreeArmament();
                 HandleUltimateInput();
                 SyncCooldownDisplays();
             }
@@ -153,24 +143,26 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             if (UltimateFieldActive || Player.HasBuff(ModContent.BuffType<CosmicDischargeUltimateGuardBuff>()))
                 modifiers.FinalDamage *= 0.65f;
+
+            if (HoldingCosmicDischarge && PassiveCooldownTimer <= 0)
+                modifiers.ModifyHurtInfo += CapIncomingDamage;
         }
 
-        public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
+        private void CapIncomingDamage(ref Player.HurtInfo info)
         {
-            if (Player.HasBuff(ModContent.BuffType<CosmicDischargeIceboundBuff>()))
+            if (info.Cancelled)
+                return;
+            int cap = (int)(Player.statLifeMax2 * 0.20f);
+            if (info.Damage > cap)
             {
-                Player.statLife = System.Math.Max(Player.statLife, 1);
-                Player.SetImmuneTimeForAllTypes(30);
-                return false;
+                info.Damage = cap;
+                if (Player.whoAmI == Main.myPlayer)
+                {
+                    PassiveCooldownTimer = PassiveCooldownFrames;
+                    Player.AddBuff(ModContent.BuffType<CosmicDischargeFrostwindRevivalBuff>(), 300);
+                    SyncCooldownDisplays();
+                }
             }
-
-            if (!CanTriggerIcebound())
-                return true;
-
-            TriggerIcebound();
-            playSound = false;
-            genGore = false;
-            return false;
         }
 
         public void SetHoldingCosmicDischarge()
@@ -305,63 +297,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostCoreColor, $"+{amount} Frost Sliver ({FrozenEmperorSliverCount}/10)", false, false);
                 }
             }
-        }
-
-        private bool CanTriggerIcebound()
-        {
-            return HoldingCosmicDischarge &&
-                PassiveCooldownTimer <= 0 &&
-                Player.active &&
-                !Player.dead;
-        }
-
-        private void TriggerIcebound()
-        {
-            int healAmount = System.Math.Min(60, Player.statLifeMax2 - System.Math.Max(Player.statLife, 0));
-            Player.statLife = System.Math.Min(Player.statLifeMax2, System.Math.Max(Player.statLife, 0) + 60);
-            if (healAmount > 0)
-                Player.HealEffect(healAmount, true);
-
-            PassiveCooldownTimer = PassiveCooldownFrames;
-            Player.AddBuff(ModContent.BuffType<CosmicDischargeIceboundBuff>(), IceboundDuration);
-            Player.immune = true;
-            Player.immuneNoBlink = true;
-            Player.SetImmuneTimeForAllTypes(70);
-            SyncCooldownDisplays();
-
-            if (Player.whoAmI == Main.myPlayer)
-                SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.75f, Pitch = 0.2f }, Player.Center);
-
-            for (int i = 0; i < 32; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Player.Center + Main.rand.NextVector2Circular(Player.width, Player.height),
-                    DustID.SnowflakeIce,
-                    Vector2.UnitY.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(2f, 7f),
-                    120,
-                    CosmicDischargeCommon.FrostWhiteColor,
-                    Main.rand.NextFloat(1f, 1.55f));
-                dust.noGravity = true;
-            }
-        }
-
-        private void ApplyZeroDegreeArmament()
-        {
-            if (!Player.ZoneSnow && (!HasColdDebuff() || Player.HasBuff(BuffID.Warmth)))
-                return;
-
-            Player.GetDamage(DamageClass.Generic) += 0.1f;
-            Player.statDefense += 10;
-            Lighting.AddLight(Player.Center, CosmicDischargeCommon.FrostGlowColor.ToVector3() * 0.18f);
-        }
-
-        private bool HasColdDebuff()
-        {
-            return Player.HasBuff(BuffID.Chilled) ||
-                Player.HasBuff(BuffID.Frozen) ||
-                Player.HasBuff(BuffID.Frostburn) ||
-                Player.HasBuff(BuffID.Frostburn2) ||
-                Player.HasBuff(ModContent.BuffType<Nightwither>());
         }
 
         private void HandleUltimateInput()
