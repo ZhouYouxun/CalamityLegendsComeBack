@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
     // 同调箭袋 — 需要备用箭袋作为材料。
     public sealed class BFTunedQuiver : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/ATunedQuiver/ATunedQuiver";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFTunedQuiver";
 
         public override void SetDefaults()
         {

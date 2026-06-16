@@ -18,6 +18,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool SeedOfSilvaEquipped;
         public bool SilvaHarpEquipped;
         public bool PastLingeringEquipped;
+        public bool SwordsplosionQuiverEquipped;
+        public bool BlightSpewerQuiverEquipped;
 
         // ── 箭袋强化字段（每帧由 EquipQuiver 写入，ResetEffects 清零）──
         public float ChargeMultiplier = 1f;           // 所有战术右键蓄力时间乘数
@@ -40,6 +42,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             SeedOfSilvaEquipped = false;
             SilvaHarpEquipped = false;
             PastLingeringEquipped = false;
+            SwordsplosionQuiverEquipped = false;
+            BlightSpewerQuiverEquipped = false;
 
             ChargeMultiplier = 1f;
             BreakthroughExtraLoads = 0;

@@ -176,6 +176,24 @@ Mods: {
 					'''
 			}
 
+			SwordsplosionQuiver: {
+				DisplayName: 爆破剑箭袋
+				Tooltip:
+					'''
+					将歼灭战术从天而降的弹幕替换为爆破剑彩剑雨。
+					每把彩剑只能造成一次伤害。
+					'''
+			}
+
+			BlightSpewerQuiver: {
+				DisplayName: 枯萎散播者箭袋
+				Tooltip:
+					'''
+					将侵染战术左键替换为枯萎散播者的瘟疫火焰。
+					保留叶流自身的基础侵染效果。
+					'''
+			}
+
 			SeedOfSilva: {
 				DisplayName: 席尔瓦之种
 				Tooltip:

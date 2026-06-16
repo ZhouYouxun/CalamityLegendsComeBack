@@ -19,10 +19,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         private static readonly string[] SmallSeedTextures =
         {
-            "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/SmallSeed1",
-            "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/SmallSeed2",
-            "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/SmallSeed3",
-            "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/SmallSeed4"
+            "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/SmallSeed1",
+            "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/SmallSeed2",
+            "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/SmallSeed3",
+            "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/SmallSeed4"
         };
 
         public BlossomFluxChloroplastPresetType CurrentPreset => FlowerPreset;

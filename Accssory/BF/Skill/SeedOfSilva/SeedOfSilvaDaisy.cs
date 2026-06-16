@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         protected override int FlowerSlot => 1;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_BRecov;
-        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/Daisy";
+        protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/Daisy";
 
         protected override void UpdateBlooming(Player owner, BFAccessoryPlayer accessoryPlayer)
         {

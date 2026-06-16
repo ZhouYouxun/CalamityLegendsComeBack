@@ -8,6 +8,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
 {
     public sealed class SilvaHarp : ModItem
     {
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/SilvaHarp/SilvaHarp";
+
         public override void SetDefaults()
         {
             Item.width = 32;

@@ -1,12 +1,15 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
+using CalamityMod.Items.Weapons.Ranged;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
+namespace CalamityLegendsComeBack.Accssory.BF.ChangeZS
 {
-    public sealed class SeedOfSilva : ModItem
+    public sealed class BlightSpewerQuiver : ModItem
     {
+        public override string Texture => "CalamityMod/Items/Weapons/Ranged/BlightSpewer";
+
         public override void SetDefaults()
         {
             Item.width = 32;
@@ -18,15 +21,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<BFAccessoryPlayer>().SeedOfSilvaEquipped = true;
+            player.GetModPlayer<BFAccessoryPlayer>().BlightSpewerQuiverEquipped = true;
         }
 
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.SunStone)
-                .AddIngredient(ItemID.ChlorophyteBar, 50)
-                .AddIngredient(ItemID.LunarBar, 10)
+                .AddIngredient<BlightSpewer>()
+                .AddIngredient(ItemID.MagicQuiver)
+                .AddIngredient(ItemID.ChlorophyteBar, 10)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

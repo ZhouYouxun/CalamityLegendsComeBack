@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Accssory.PF.General
     internal sealed class PFSlightlyBloomLily : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/NewLegendPristineFury";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/PF/General/PFSlightlyBloomLily";
 
         public override void SetDefaults()
         {

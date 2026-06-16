@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
     // 备用箭袋 — 合成同调箭袋的前置材料。
     public sealed class BFSpareQuiver : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/ATunedQuiver/ATunedQuiver";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFSpareQuiver";
 
         public override void SetDefaults()
         {

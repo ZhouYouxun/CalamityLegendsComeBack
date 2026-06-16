@@ -82,6 +82,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Projectile.timeLeft = Math.Max(Projectile.timeLeft, 30);
 
                     AttachTimer++;
+
+                    // Spawn healing souls every 6 frames when attached to a mark enemy
+                    if (!Main.dedServ && Projectile.owner == Main.myPlayer && (int)AttachTimer % 6 == 1)
+                    {
+                        if (PristineFuryMarkHelper.TryGetMarkFromNPC(target, out PristineFuryMark soulMark))
+                        {
+                            Vector2 soulVel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 5f);
+                            Projectile.NewProjectile(
+                                Projectile.GetSource_FromThis(),
+                                Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                                soulVel,
+                                ModContent.ProjectileType<PristineFuryHookSoul>(),
+                                0, 0f, Projectile.owner,
+                                (float)(int)soulMark);
+                        }
+                    }
+
                     if (AttachTimer >= AttachDurationFrames)
                     {
                         CompleteAttachment(owner, target);

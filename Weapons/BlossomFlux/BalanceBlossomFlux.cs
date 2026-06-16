@@ -339,22 +339,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         public static BFPlagueRightStats GetStats()
         {
-            int stacks = 1;
-            float markMultiplier = 1f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-                markMultiplier = 1.5f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
-                stacks = 2;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-            {
-                stacks = 3;
-                markMultiplier = 2f;
-            }
-
-            return new BFPlagueRightStats(stacks, 15, 0.05f, markMultiplier);
+            return new BFPlagueRightStats(1, 15, 0.05f, 1f);
         }
     }
 }
@@ -782,13 +767,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // Row 1  — Breakthrough_Left_UseInterval  (帧，越小越快)
             { 15,  10,  10,   8,   6,   5,   4,   3,   3,   2,   2,   2,   2,   1,   1,   1 },
             // Row 2  — Breakthrough_Right_MaxArrows
-            {  3,   3,   3,   3,   4,   5,   6,   6,   6,   7,   7,   7,   7,   7,   8,   8 },
+            {  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2 },
             // Row 3  — Breakthrough_Right_Damage
             { 10,  12,  14,  16,  17,  27,  40,  54,  68,  82,  96, 120, 155, 185, 220, 260 },
             // Row 4  — Recovery_Left_Damage
             {  8,   9,  11,  12,  14,  22,  32,  44,  56,  68,  80, 100, 130, 155, 185, 220 },
             // Row 5  — Recovery_Right_OrbCount
-            {  3,   3,   3,   4,   4,   5,   5,   6,   6,   6,   7,   7,   8,   8,   9,  10 },
+            {  4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4 },
             // Row 6  — Recon_Left_Damage
             { 10,  13,  16,  18,  20,  32,  46,  62,  76,  90, 108, 134, 170, 205, 245, 290 },
             // Row 7  — Recon_Left_BurstCooldown  (三连发后等待帧)
@@ -796,7 +781,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // Row 8  — Recon_Left_ShotsPerBurst
             {  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3 },
             // Row 9  — Recon_Right_Penetrate  (-1 = 无限)
-            {  2,   2,   3,   3,   3,   4,   5,   6,   7,   8,  -1,  -1,  -1,  -1,  -1,  -1 },
+            {  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2 },
             // Row 10 — Recon_Right_Damage
             { 15,  18,  22,  26,  30,  46,  65,  86, 105, 126, 150, 186, 234, 280, 334, 396 },
             // Row 11 — Bombard_Left_Interval  (两次攻击间帧数)
@@ -806,7 +791,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // Row 13 — Bombard_Right_Damage
             { 14,  17,  20,  23,  26,  40,  58,  78,  96, 116, 138, 172, 216, 258, 308, 366 },
             // Row 14 — Bombard_Right_WaveCount
-            {  1,   1,   1,   1,   2,   2,   2,   3,   3,   3,   4,   4,   5,   5,   6,   7 },
+            {  8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   8 },
             // Row 15 — Plague_Left_Damage
             {  9,  11,  13,  15,  17,  25,  38,  52,  64,  78,  94, 118, 148, 178, 212, 252 },
             // Row 16 — Plague_Right_Damage
@@ -839,17 +824,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.ExoMechsAndCalamitas)) return 3f;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Yharon))               return 2f;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))       return 1.66f;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))          return 1.33f;
                 return 1f;
             }
         }
 
         // 月亮领主后右键箭矢切换为无限穿透（对应表 Row 9 出现 -1 的阶段）
         public static bool RightArrowInfinitePenetrate
-            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+            => false;
     }
 
     // ── 复苏 Recovery ─────────────────────────────────────────
@@ -889,7 +870,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     internal static class BFReconNonNumerical
     {
         // 左键普通标记持续帧数（常数）
-        public const int MarkDurationFrames                  = 30 * 60;
+        public const int MarkDurationFrames                  = 30;
         // 左键锁定后追踪延迟（常数）
         public const int HomingDelayFrames                   = 18;
         // 左键普通追踪转向灵敏度（常数）
@@ -902,8 +883,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence)) return 2;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))   return 1;
                 return 0;
             }
         }
@@ -913,12 +892,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.ExoMechsAndCalamitas)) return 55 * 60;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))       return 45 * 60;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))          return 38 * 60;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))           return 32 * 60;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))             return 28 * 60;
-                return 20 * 60;
+                return 15 * 60;
             }
         }
 
@@ -927,11 +901,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 55;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))      return 65;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))        return 75;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Golem))           return 85;
-                return 100;
+                return 90;
             }
         }
     }
@@ -941,23 +911,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         // 左键瘟疫印记追加的 Debuff 种类（随阶段解锁）
         public static bool InflictBetsysCurse
-            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+            => false;
         public static bool InflictAstralInfection
-            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+            => false;
         public static bool InflictWither
-            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
+            => false;
         public static bool InflictWhisperingDeath
-            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast);
+            => false;
         public static bool InflictAbsorberAffliction
-            => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods);
+            => false;
 
         // 右键：同时可标记敌人数量上限（永久堆叠上限）
         public static int MaxPermanentMarkStacks
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 3;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))      return 2;
                 return 1;
             }
         }
@@ -967,8 +935,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods)) return 2f;
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Providence))      return 1.5f;
                 return 1f;
             }
         }

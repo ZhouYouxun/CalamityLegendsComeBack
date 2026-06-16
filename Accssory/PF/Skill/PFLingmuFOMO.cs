@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Accssory.PF.Skill
     internal sealed class PFLingmuFOMO : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/NewLegendPristineFury";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/PF/Skill/PFLingmuFOMO";
 
         public override void SetDefaults()
         {

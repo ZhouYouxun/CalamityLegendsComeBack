@@ -23,22 +23,4 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
             player.GetModPlayer<BBAccessoryPlayer>().SetRightClickMode(Mode, Priority);
         }
     }
-
-    public class VortexPortal : BBRightClickAccessory
-    {
-        protected override BBRightClickMode Mode => BBRightClickMode.VortexPortal;
-        protected override int Priority => 30;
-    }
-
-    public class LostGarment : BBRightClickAccessory
-    {
-        protected override BBRightClickMode Mode => BBRightClickMode.LostGarment;
-        protected override int Priority => 10;
-    }
-
-    public class CeruleanShield : BBRightClickAccessory
-    {
-        protected override BBRightClickMode Mode => BBRightClickMode.CeruleanShield;
-        protected override int Priority => 20;
-    }
 }

@@ -7,6 +7,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.PastLingering
 {
     public sealed class PastLingering : ModItem
     {
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/ChangeZS/PastLingering/PastLingering";
+
         public override void SetDefaults()
         {
             Item.width = 32;

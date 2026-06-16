@@ -211,7 +211,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
     internal sealed class SeedOfSilvaMandrakeDart : ModProjectile
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/SeedOfSilva/SeedPack/WitheredPetal";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/WitheredPetal";
 
         public override void SetStaticDefaults()
         {

@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
 using CalamityMod;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Melee;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -509,6 +511,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Vector2 targetPosition = center + Main.rand.NextVector2Circular(82f, 42f);
                 Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * (storedAmmoSpeed * Main.rand.NextFloat(1.25f, 1.62f));
 
+                if (Main.player[Projectile.owner].GetModPlayer<BFAccessoryPlayer>().SwordsplosionQuiverEquipped)
+                {
+                    SpawnSwordsplosionRainSword(spawnPosition, velocity);
+                    continue;
+                }
+
                 int projectileIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
@@ -531,6 +539,44 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             }
 
             SpawnBombardAuraFX(center, 0.92f);
+        }
+
+        private void SpawnSwordsplosionRainSword(Vector2 spawnPosition, Vector2 velocity)
+        {
+            int projectileIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                GetRandomSwordsplosionProjectileType(),
+                storedRainDamage,
+                storedAmmoKnockback,
+                Projectile.owner,
+                2f);
+
+            if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
+                return;
+
+            Projectile sword = Main.projectile[projectileIndex];
+            sword.DamageType = DamageClass.Ranged;
+            sword.penetrate = 1;
+            sword.usesLocalNPCImmunity = true;
+            sword.localNPCHitCooldown = -1;
+            sword.noDropItem = true;
+
+            BFAccessoryGlobalProjectile accessoryEffect = sword.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
+            accessoryEffect.BlossomFluxArrow = true;
+            accessoryEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_DBomb;
+        }
+
+        private static int GetRandomSwordsplosionProjectileType()
+        {
+            return Main.rand.Next(4) switch
+            {
+                0 => ModContent.ProjectileType<SwordsplosionBlue>(),
+                1 => ModContent.ProjectileType<SwordsplosionGreen>(),
+                2 => ModContent.ProjectileType<SwordsplosionPurple>(),
+                _ => ModContent.ProjectileType<SwordsplosionRed>()
+            };
         }
 
         private void SpawnBombardImpactFX(Vector2 center, float intensity)

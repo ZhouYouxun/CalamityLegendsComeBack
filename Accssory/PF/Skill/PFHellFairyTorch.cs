@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Accssory.PF.Skill
     internal sealed class PFHellFairyTorch : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/NewLegendPristineFury";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/PF/Skill/PFHellFairyTorch";
 
         public override void SetDefaults()
         {

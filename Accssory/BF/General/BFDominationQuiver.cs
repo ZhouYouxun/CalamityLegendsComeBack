@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
     // 主宰箭袋
     public sealed class BFDominationQuiver : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/CDominationQuiver/CDominationQuiver";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFDominationQuiver";
 
         public override void SetDefaults()
         {

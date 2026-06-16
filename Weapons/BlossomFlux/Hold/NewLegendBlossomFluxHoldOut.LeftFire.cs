@@ -7,6 +7,8 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
+using CalamityMod.Projectiles.Melee;
+using CalamityMod.Projectiles.Ranged;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -304,6 +306,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FireBombardRain(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
+            if (BFAccessories.SwordsplosionQuiverEquipped)
+            {
+                FireSwordsplosionRain(source, damage, knockback);
+                return;
+            }
+
             BFBombardLeftStats stats = BFBombardLeftBalance.GetStats();
             float arrowSpeed = Main.rand.Next(25, 30) * stats.ProjectileSpeedMultiplier;
             Vector2 realPlayerPos = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
@@ -358,6 +366,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             SpawnSHPCLeftMuzzleParticles(GetCurrentMouseWorld(), Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);
         }
 
+        private void FireSwordsplosionRain(IEntitySource source, int damage, float knockback)
+        {
+            float swordSpeed = Main.rand.Next(22, 30);
+            Vector2 realPlayerPos = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
+            Vector2 target = GetCurrentMouseWorld();
+
+            if (leftShotsFired % 2 == 0)
+                SoundEngine.PlaySound(BlossomFluxSounds.LeftBombardFire1, Owner.Center);
+            else
+                SoundEngine.PlaySound(BlossomFluxSounds.LeftBombardFire2, Owner.Center);
+
+            for (int i = 0; i < 16; i++)
+            {
+                Vector2 spawnPosition = new(
+                    Owner.position.X + Owner.width * 0.5f - Owner.direction + target.X - Owner.position.X,
+                    Owner.MountedCenter.Y - 100f * i);
+                spawnPosition.X = (spawnPosition.X + Owner.Center.X) * 0.5f;
+
+                Vector2 velocity = (target - spawnPosition).SafeNormalize(Vector2.UnitY) * swordSpeed;
+                velocity += new Vector2(Main.rand.Next(-360, 361) * 0.02f, Main.rand.Next(-360, 361) * 0.02f);
+                SpawnSwordsplosionProjectile(source, spawnPosition, velocity, damage, knockback);
+            }
+
+            SpawnSHPCLeftMuzzleParticles(target, Vector2.UnitY * Owner.gravDir, CurrentPreset, 1.08f);
+        }
+
         private void SpawnBombardStormArrow(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BFBombardLeftStats stats)
         {
             int projectileIndex = SpawnLeftProjectile(source, spawnPosition, velocity, projectileType, damage, knockback, CurrentPreset);
@@ -371,11 +405,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            int finalProjectileType = ModContent.ProjectileType<BFLeftPlagueReaper>();
+            int finalProjectileType = BFAccessories.BlightSpewerQuiverEquipped
+                ? ModContent.ProjectileType<BlightFlames>()
+                : ModContent.ProjectileType<BFLeftPlagueReaper>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 origin = GunTipPosition;
             float speedMultiplier = GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_EPlague);
-            float shotSpeed = Math.Max(speed, 12.5f) * 0.92f * speedMultiplier;
+            float shotSpeed = Math.Max(speed, BFAccessories.BlightSpewerQuiverEquipped ? 7f : 12.5f) * (BFAccessories.BlightSpewerQuiverEquipped ? 0.62f : 0.92f) * speedMultiplier;
             Vector2 shootVelocity = baseDirection.RotatedBy(Main.rand.NextFloat(-0.05f, 0.05f)) * shotSpeed;
             Vector2 spawnPosition = origin + baseDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-4f, 4f);
 
@@ -384,11 +420,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 spawnPosition,
                 shootVelocity,
                 finalProjectileType,
-                Math.Max(1, (int)(damage * 1.05f)),
+                Math.Max(1, (int)(damage * (BFAccessories.BlightSpewerQuiverEquipped ? 0.8f : 1.05f))),
                 knockback * 0.72f,
                 Owner.whoAmI,
-                Main.rand.NextFloat(1000f),
-                Main.rand.NextFloat(3f));
+                BFAccessories.BlightSpewerQuiverEquipped ? 0f : Main.rand.NextFloat(1000f),
+                BFAccessories.BlightSpewerQuiverEquipped ? 0f : Main.rand.NextFloat(3f));
 
             if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
             {
@@ -407,6 +443,44 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             SpawnSHPCLeftMuzzleParticles(spawnPosition, shootVelocity, CurrentPreset, 0.66f);
             BlossomFluxSounds.PlayLeftPlagueFire(spawnPosition);
+        }
+
+        private static int GetRandomSwordsplosionProjectileType()
+        {
+            return Main.rand.Next(4) switch
+            {
+                0 => ModContent.ProjectileType<SwordsplosionBlue>(),
+                1 => ModContent.ProjectileType<SwordsplosionGreen>(),
+                2 => ModContent.ProjectileType<SwordsplosionPurple>(),
+                _ => ModContent.ProjectileType<SwordsplosionRed>()
+            };
+        }
+
+        private void SpawnSwordsplosionProjectile(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int damage, float knockback)
+        {
+            int projectileIndex = Projectile.NewProjectile(
+                source,
+                spawnPosition,
+                velocity,
+                GetRandomSwordsplosionProjectileType(),
+                damage,
+                knockback,
+                Owner.whoAmI,
+                2f);
+
+            if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
+                return;
+
+            Projectile swordProjectile = Main.projectile[projectileIndex];
+            swordProjectile.DamageType = DamageClass.Ranged;
+            swordProjectile.penetrate = 1;
+            swordProjectile.usesLocalNPCImmunity = true;
+            swordProjectile.localNPCHitCooldown = -1;
+            swordProjectile.noDropItem = true;
+            BFArrowCommon.TagBlossomFluxLeftArrow(swordProjectile);
+            BFAccessoryGlobalProjectile accessoryEffect = swordProjectile.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
+            accessoryEffect.BlossomFluxArrow = true;
+            accessoryEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_DBomb;
         }
 
         private int SpawnLeftProjectile(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BlossomFluxChloroplastPresetType preset, bool noTileCollide = false)

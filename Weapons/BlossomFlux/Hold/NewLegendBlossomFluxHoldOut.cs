@@ -102,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private bool PastLingeringAssaultActive => CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && BFAccessories.PastLingeringEquipped;
         private bool BreakthroughChargeActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak;
         private int BreakthroughMaxLoadedArrows => Math.Max(1, BFBreakthroughRightBalance.GetStats().MaxLoadedArrows + BFAccessories.BreakthroughExtraLoads);
-        private int BreakthroughFramesPerArrow => Math.Max(MinBreakthroughChargeFrames, BFBreakthroughRightBalance.GetStats().FramesPerArrow);
+        private int BreakthroughFramesPerArrow => GetScaledRightChargeFrames(BFBreakthroughRightBalance.GetStats().FramesPerArrow);
         private float BreakthroughCurrentArrowCompletion => MathHelper.Clamp(chargeTimer / (float)BreakthroughFramesPerArrow, 0f, 1f);
         private float ChargeCompletion => BreakthroughChargeActive
             ? MathHelper.Clamp((breakthroughLoadedArrows + (breakthroughLoadedArrows >= BreakthroughMaxLoadedArrows ? 0f : BreakthroughCurrentArrowCompletion)) / BreakthroughMaxLoadedArrows, 0f, 1f)
@@ -182,17 +182,23 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 BlossomFluxChloroplastPresetType.Chlo_DBomb => BFBombardRightBalance.GetStats().ChargeFrames,
                 _ => MaxChargeFrames
             };
-            return Math.Max(1, (int)Math.Round(baseFrames * BFAccessories.ChargeMultiplier));
+            return GetScaledRightChargeFrames(baseFrames);
         }
 
         private int GetCurrentMaxChargeFrames()
         {
             if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
             {
-                return BFBombardRightBalance.GetStats().ChargeFrames;
+                return GetScaledRightChargeFrames(BFBombardRightBalance.GetStats().ChargeFrames);
             }
 
             return GetCurrentReadyChargeFrames();
+        }
+
+        private int GetScaledRightChargeFrames(int baseFrames)
+        {
+            int floor = BreakthroughChargeActive ? MinBreakthroughChargeFrames : 1;
+            return Math.Max(floor, (int)Math.Round(baseFrames * BFAccessories.ChargeMultiplier));
         }
 
         internal Vector2 GetBombardReticleCenter() => BombardChargePoseActive ? bombardReticleCenter : GetCurrentMouseWorld();

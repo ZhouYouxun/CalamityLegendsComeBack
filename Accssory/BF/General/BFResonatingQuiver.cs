@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
     // 共鸣箭袋
     public sealed class BFResonatingQuiver : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/BResonatingQuiver/BResonatingQuiver";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFResonatingQuiver";
 
         public override void SetDefaults()
         {

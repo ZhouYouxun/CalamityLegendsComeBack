@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Accssory.PF.Skill
     internal sealed class PFMooncake : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/NewLegendPristineFury";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/PF/Skill/PFMooncake";
 
         public override void SetDefaults()
         {

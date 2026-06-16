@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Accssory.PF.Skill
     internal sealed class PFNineTails : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/NewLegendPristineFury";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/PF/Skill/PFNineTails";
 
         public override void SetDefaults()
         {
