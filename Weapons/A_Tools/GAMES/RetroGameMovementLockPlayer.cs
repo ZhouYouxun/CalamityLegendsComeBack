@@ -25,7 +25,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
             return heldType == ModContent.ItemType<Tetris>() ||
                    heldType == ModContent.ItemType<Game2048>() ||
                    heldType == ModContent.ItemType<Snake>() ||
-                   heldType == ModContent.ItemType<Minesweeper>();
+                   heldType == ModContent.ItemType<Minesweeper>() ||
+                   heldType == ModContent.ItemType<Strikers1945>();
         }
     }
 }

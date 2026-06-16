@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SoundEngine.PlaySound(
                 new SoundStyle("CalamityMod/Sounds/Custom/ExoMechs/ArtemisApolloDash")
                 {
-                    Volume = 0.95f,
+                    Volume = 0.57f,
                     Pitch = -0.18f,
                     MaxInstances = 2
                 },

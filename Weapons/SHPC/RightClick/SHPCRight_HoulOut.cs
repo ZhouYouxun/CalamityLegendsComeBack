@@ -99,9 +99,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private float bonusHeatProgress;
         private int manualCoolingVisualTimer;
 
-        private float visualProgress; // 用于UI的真实进度（可升可降）
+        private float visualProgress; // 用于UI的真实进度（可升可降�?
 
-        // ===== 世界进度状态（来自武器）====
+        // ===== 世界进度状态（来自武器�?===
         public int ProgressState; // 0~4
 
         private int MaxHeatStage;
@@ -111,16 +111,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         // ===== 每阶段升级所需时间 =====
         private int GetStageUpTime()
         {
-            return balance.GetHeatFillTime(stage);
+            return balance.GetHeatFillTime(stage, MaxHeatStage);
         }
 
         #endregion
 
-        #region ===== 冷却 / 技能控�?=====
+        #region ===== 冷却 / 技能控�?=====
 
         private int reduceCooldown;
         private int fireStopTimer;
         private int manaStarvedStopTimer;
+        private int forcedShutdownVisualDuration = BalanceSHPC.ForcedShutdownTime;
         private bool manaStarvedSoundPlayed;
         private bool maxHeatEntrySoundPlayed;
 
@@ -128,9 +129,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #region ===== 枪托位置 =====
 
-        // ===== 枪托位置（可手动调节�?====
+        // ===== 枪托位置（可手动调节�?====
         private const float GunBackOffset = 26f;     // 往后距离（核心调这里）
-        private const float GunBackUpOffset = 4f;    // 往上微调（类似Tau�?
+        private const float GunBackUpOffset = 4f;    // 往上微调（类似Tau�?
 
         private Vector2 GunBackPosition =>
             Projectile.Center
@@ -145,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 初始�?=====
+        #region ===== 初始�?=====
         public override void OnSpawn(IEntitySource source)
         {
             ProgressState = (int)Projectile.ai[0];
@@ -156,40 +157,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             spawnDelay = owner.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickStartupFrames(spawnDelay);
             SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
             stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-            stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+            stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
             heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
         }
-        // ===== 根据进度初始化规�?=====
+        // ===== 根据进度初始化规�?=====
         private void InitializeProgressRules()
         {
-            switch (ProgressState)
-            {
-                default: // 初始
-                case 0:
-                    MaxHeatStage = 1;
-                    LaserChainCount = 1;
-                    break;
-
-                case 1: // Hardmode
-                    MaxHeatStage = 2;
-                    LaserChainCount = 2;
-                    break;
-
-                case 2: // Plantera
-                    MaxHeatStage = 3;
-                    LaserChainCount = 2;
-                    break;
-
-                case 3: // Moon Lord
-                    MaxHeatStage = 4;
-                    LaserChainCount = 3;
-                    break;
-
-                case 4: // Devourer of Gods
-                    MaxHeatStage = 5;
-                    LaserChainCount = 3;
-                    break;
-            }
+            MaxHeatStage = balance.GetRightClickMaxHeatLevelForProgressState(ProgressState);
+            LaserChainCount = balance.GetRightClickLaserCountForProgressState(ProgressState);
         }
 
         #endregion
@@ -258,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (forcedShutdownCooling)
             {
                 stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
                 frameCounter = 0;
             }
 
@@ -288,7 +263,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #endregion
 
-            #region ===== 开火控�?=====
+            #region ===== 开火控�?=====
 
             if (forcedShutdownCooling)
             {
@@ -316,7 +291,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatPlayer.IsForcedShutdownCooling())
             {
                 stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
             }
 
             #endregion
@@ -355,7 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     {
                         overheatTimer++;
 
-                        if (overheatTimer >= BalanceSHPC.OverheatGraceTime)
+                        if (overheatTimer >= balance.GetOverheatGraceTime(MaxHeatStage))
                             ForceShutdown(player);
                     }
                 }
@@ -363,12 +338,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             #endregion
 
-            #region ===== 后坐�?& 充能 =====
+            #region ===== 后坐�?& 充能 =====
 
             if (heatPlayer.IsForcedShutdownCooling())
             {
                 stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage));
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
             }
             else if (!stageFilledThisFrame)
                 heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
@@ -413,7 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 else
                     targetProgress = manualCoolingVisualTimer > 0
                     ? manualCoolingVisualTimer / (float)CoolingRecoilTotalTime
-                    : fireStopTimer / (float)BalanceSHPC.ForcedShutdownTime;
+                    : fireStopTimer / (float)Math.Max(1, forcedShutdownVisualDuration);
             }
 
             if (manualCoolingVisualTimer > 0)
@@ -460,7 +435,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             #endregion
 
 
-            // 普通开火特效的额外模块，必须得放在这【可能有点难找，但是你懂的，有些�?
+            // 普通开火特效的额外模块，必须得放在这【可能有点难找，但是你懂的，有些�?
             if (normalShotFXLastCenter == Vector2.Zero)
                 normalShotFXLastCenter = GunTipPosition;
 
@@ -484,7 +459,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         #endregion
 
         #region ===== 核心技能：降温 =====
-        // ===== 后坐�?=====TryReduceHeat
+        // ===== 后坐�?=====TryReduceHeat
         private int recoilFrame;
         private bool recoilActive;
         private int recoilDirection = 1;
@@ -502,16 +477,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             PlayForcedShutdownSound();
             stage = MaxHeatStage;
-            stageTimer = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4));
+            stageTimer = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4), MaxHeatStage);
             overheatTimer = 0;
-            fireStopTimer = BalanceSHPC.ForcedShutdownTime;
+            int shutdownTime = balance.GetForcedShutdownTime(player);
+            forcedShutdownVisualDuration = shutdownTime;
+            fireStopTimer = shutdownTime;
             manualCoolingVisualTimer = 0;
             frameCounter = 0;
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
-            heatPlayer.StartForcedShutdownCooling(BalanceSHPC.ForcedShutdownTime, MaxHeatStage);
+            heatPlayer.StartForcedShutdownCooling(shutdownTime, MaxHeatStage);
             TriggerStageOutlinePulse();
             SpawnForcedShutdownGasBurst();
-            SpawnHeatRedirectField(player, 280, BalanceSHPC.ForcedShutdownTime);
+            SpawnHeatRedirectField(player, 280, shutdownTime);
         }
 
         private void ApplyRecoilRotation()
@@ -553,7 +530,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Projectile.spriteDirection = recoilDirection;
             Owner.ChangeDir(recoilDirection);
 
-            // ===== 手臂也同步到这个新角度，否则会有一帧不�?=====
+            // ===== 手臂也同步到这个新角度，否则会有一帧不�?=====
             Owner.itemRotation = (Projectile.velocity * recoilDirection).ToRotation();
 
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir +
@@ -592,7 +569,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             OffsetLengthFromArm -= 18f;
 
-            // ===== 抬枪后坐力：启动三段式动�?=====
+            // ===== 抬枪后坐力：启动三段式动�?=====
             Vector2 aimWorld = TacticalComputerPlayer.GetAimWorld(Owner, Main.MouseWorld);
             Vector2 aimDir = (aimWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
             recoilDirection = Math.Sign(aimDir.X);
@@ -620,7 +597,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             int manaCost = player.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickManaCost(2);
             if (manaCost > 0 && !player.CheckMana(player.HeldItem, manaCost, true, false))
             {
-                // 蓝不�?�?停火
+                // 蓝不�?�?停火
                 if (!manaStarvedSoundPlayed)
                 {
                     manaStarvedSoundPlayed = true;
@@ -678,7 +655,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             // ===== Heat4+：施加过热Debuff =====
             if (stage >= 4)
             {
-                player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3�?
+                player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3�?
             }
 
             spiralCounter++;
@@ -691,7 +668,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #endregion
 
-        #region ===== 开火辅�?=====
+        #region ===== 开火辅�?=====
 
         private void SpawnHeatRedirectField(Player player, int size, int duration)
         {
@@ -710,7 +687,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (Collision.SolidCollision(gunTip, 1, 1))
                 return Projectile.Center;
 
-            // ===== 2. 获取最近敌�?=====
+            // ===== 2. 获取最近敌�?=====
             NPC target = null;
             float maxDetect = 300f;
             float closestDist = maxDetect;
@@ -732,7 +709,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // ===== 3. 距离判定（贴脸）=====
-            float dangerRange = 56f; // 和你的枪口长度一�?
+            float dangerRange = 56f; // 和你的枪口长度一�?
 
             if (target != null && closestDist < dangerRange)
                 return Projectile.Center;
@@ -834,7 +811,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             {
                 Texture2D tex = TextureAssets.Projectile[Projectile.type].Value;
 
-                // 0 �?1 �?0 的线性曲�?
+                // 0 �?1 �?0 的线性曲�?
                 float half = StageOutlineDuration / 2f;
                 float t = stageOutlineTimer > half
                     ? (StageOutlineDuration - stageOutlineTimer) / half
@@ -852,7 +829,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                         ? SpriteEffects.FlipHorizontally
                         : SpriteEffects.None;
 
-                // �?4 个方向的描边（十字）
+                // �?4 个方向的描边（十字）
                 Vector2[] offsets =
                 {
                     new Vector2( outlineStrength, 0),
@@ -909,7 +886,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             int maxHeatStage = MaxHeatStage > 0 ? MaxHeatStage : balance.GetRightClickMaxHeatLevel();
             maxHeatStage = Utils.Clamp(maxHeatStage, 1, balance.GetRightClickMaxHeatLevel());
             int safeStage = Utils.Clamp(stage, 0, maxHeatStage);
-            int fillTime = balance.GetHeatFillTime(Utils.Clamp(safeStage, 0, 4));
+            int fillTime = balance.GetHeatFillTime(Utils.Clamp(safeStage, 0, 4), maxHeatStage);
             int safeTimer = Utils.Clamp(stageTimer, 0, fillTime);
 
             heatPlayer.SyncHeatFromHoldout(safeStage, safeTimer, maxHeatStage);

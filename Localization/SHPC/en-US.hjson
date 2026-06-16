@@ -22,34 +22,44 @@
 						'''
 						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat I. Sustained fire builds heat; once filled, output can continue briefly before forced shutdown.]
+						[c/FFB347:As progression advances, maximum heat capacity rises; later forms heat up faster at first, but take longer to approach maximum heat.]
 						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:While Inferno is active or any Energy Core is equipped, forced overheat shutdown time is halved.]
 						'''
 					SHPC_RightIntro2:
 						'''
 						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat II. A secondary beam is added beside the main beam with slight deviation and spiral lateral offset.]
 						[c/FFB347:At Heat II, beams can pierce 3 enemies and lose a little damage after each pierce.]
+						[c/FFB347:As progression advances, maximum heat capacity rises; later forms heat up faster at first, but take longer to approach maximum heat.]
 						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:While Inferno is active or any Energy Core is equipped, forced overheat shutdown time is halved.]
 						'''
 					SHPC_RightIntro3:
 						'''
 						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat III. Secondary beams can create a small thermal blast on first hit, while the main beam can create a medium thermal blast on first hit.]
+						[c/FFB347:As progression advances, maximum heat capacity rises; later forms heat up faster at first, but take longer to approach maximum heat.]
 						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:While Inferno is active or any Energy Core is equipped, forced overheat shutdown time is halved.]
 						'''
 					SHPC_RightIntro4:
 						'''
 						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat IV. A second secondary beam is added; beam damage rises by 5%, thermal blast chance rises, and thermal blasts can still trigger after piercing.]
 						[c/FFB347:Heat IV suppresses life regeneration and continuously burns the user.]
+						[c/FFB347:As progression advances, maximum heat capacity rises; later forms heat up faster at first, but take longer to approach maximum heat.]
 						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:While Inferno is active or any Energy Core is equipped, forced overheat shutdown time is halved.]
 						'''
 					SHPC_RightIntro5:
 						'''
 						[c/FFB347:Right Click: Hold to fire a precise laser barrage.]
 						[c/FFB347:Current form: Heat V. Beam damage rises by 5%, beams gain infinite piercing, and they deal bonus damage based on the target's maximum life.]
 						[c/FFB347:Heat V rapidly drains the user's life.]
+						[c/FFB347:As progression advances, maximum heat capacity rises; later forms heat up faster at first, but take longer to approach maximum heat.]
 						[c/FFB347:Left click while firing to manually vent heat, fire 3 energy orbs, and remove one heat level.]
+						[c/FFB347:While Inferno is active or any Energy Core is equipped, forced overheat shutdown time is halved.]
 						'''
 					SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
 					SHPC_EXHint:
@@ -172,6 +182,7 @@
 					SHPC left click gains 1 extra soul canister and loads 10% more ammo rounded up to a multiple of 5
 					While holding SHPC, stand still and cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
+					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 
@@ -185,6 +196,7 @@
 					While holding SHPC, stop moving horizontally and cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Shortens right-click startup
+					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 
@@ -198,6 +210,7 @@
 					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Shortens right-click startup
+					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 
@@ -209,6 +222,7 @@
 					While holding SHPC, gain infinite mana; left click has a 50% chance not to consume ammo
 					SHPC left click gains 3 extra soul canisters and loads 100% more ammo rounded up to a multiple of 5
 					Shortens right-click startup
+					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 		}

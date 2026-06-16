@@ -1,5 +1,7 @@
+using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityMod;
 using Terraria;
+using Terraria.ID;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC
 {
@@ -111,7 +113,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.53f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };
 
-        public const int OverheatGraceTime = 60;
         public const int ForcedShutdownTime = 120;
         public const int NormalHeatDecayTime = 90;
         public const int ManualCoolingExtraLockout = 30;
@@ -192,41 +193,75 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetRightClickMaxHeatLevel()
         {
-            if (DownedBossSystem.downedDoG)
-                return 5;
+            return GetRightClickMaxHeatLevelForProgressState(GetRightClickProgressState());
+        }
 
-            if (NPC.downedMoonlord)
-                return 4;
-
-            if (NPC.downedPlantBoss)
-                return 3;
-
-            if (Main.hardMode)
-                return 2;
-
-            return 1;
+        public int GetRightClickMaxHeatLevelForProgressState(int progressState)
+        {
+            return GetValueForStage(RightClickMaxHeatLevelsByProgressState, progressState);
         }
 
         public int GetRightClickLaserCount()
         {
-            if (NPC.downedMoonlord)
-                return 3;
+            return GetRightClickLaserCountForProgressState(GetRightClickProgressState());
+        }
 
-            if (Main.hardMode)
-                return 2;
-
-            return 1;
+        public int GetRightClickLaserCountForProgressState(int progressState)
+        {
+            return GetValueForStage(RightClickLaserCountsByProgressState, progressState);
         }
 
         public int GetRightClickProgressState()
         {
-            return GetRightClickMaxHeatLevel() - 1;
+            if (DownedBossSystem.downedDoG)
+                return 4;
+
+            if (NPC.downedMoonlord)
+                return 3;
+
+            if (NPC.downedPlantBoss)
+                return 2;
+
+            if (Main.hardMode)
+                return 1;
+
+            return 0;
         }
 
         public int GetHeatFillTime(int completedHeatLevel)
         {
-            int clampedIndex = Utils.Clamp(completedHeatLevel, 0, HeatFillTimes.Length - 1);
-            return HeatFillTimes[clampedIndex];
+            return GetHeatFillTime(completedHeatLevel, GetRightClickMaxHeatLevel());
+        }
+
+        public int GetHeatFillTime(int completedHeatLevel, int maxHeatLevel)
+        {
+            int rowIndex = Utils.Clamp(maxHeatLevel, 1, HeatFillTimesByMaxHeatLevel.Length) - 1;
+            int[] row = HeatFillTimesByMaxHeatLevel[rowIndex];
+            int clampedIndex = Utils.Clamp(completedHeatLevel, 0, row.Length - 1);
+            return System.Math.Max(1, row[clampedIndex]);
+        }
+
+        public int GetOverheatGraceTime()
+        {
+            return GetOverheatGraceTime(GetRightClickMaxHeatLevel());
+        }
+
+        public int GetOverheatGraceTime(int maxHeatLevel)
+        {
+            int clampedIndex = Utils.Clamp(maxHeatLevel, 1, OverheatGraceTimes.Length) - 1;
+            return System.Math.Max(1, OverheatGraceTimes[clampedIndex]);
+        }
+
+        public int GetForcedShutdownTime(Player player)
+        {
+            bool hasCoolingBoost = player != null &&
+                (player.HasBuff(BuffID.Inferno) || player.GetModPlayer<SHPCEnergyCorePlayer>().HasEnergyCore);
+
+            float multiplier = hasCoolingBoost
+                ? AcceleratedForcedShutdownMultiplier
+                : 1f;
+
+            return System.Math.Max(1, (int)System.MathF.Ceiling(ForcedShutdownTime * multiplier));
         }
 
         // 下面这些是内部支撑参数，不是主要平衡入口。
@@ -266,14 +301,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             360
         };
 
-        private static readonly int[] HeatFillTimes =
+        private static readonly int[][] HeatFillTimesByMaxHeatLevel =
         {
-            116,
-            116,
-            116,
-            116,
-            116
+            new[] { 720 },
+            new[] { 360, 300 },
+            new[] { 210, 240, 270 },
+            new[] { 195, 225, 255, 285 },
+            new[] { 180, 210, 240, 270, 300 }
         };
+
+        private static readonly int[] RightClickMaxHeatLevelsByProgressState =
+        {
+            1,
+            2,
+            3,
+            4,
+            5
+        };
+
+        private static readonly int[] RightClickLaserCountsByProgressState =
+        {
+            1,
+            2,
+            2,
+            3,
+            3
+        };
+
+        private static readonly int[] OverheatGraceTimes =
+        {
+            180,
+            150,
+            120,
+            90,
+            60
+        };
+
+        private const float AcceleratedForcedShutdownMultiplier = 0.5f;
 
         private int GetValueForStage(int[] values, int stageIndex)
         {
