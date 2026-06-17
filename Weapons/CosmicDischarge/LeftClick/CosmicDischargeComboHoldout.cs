@@ -71,9 +71,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
              (Kind == CosmicDischargeAttackKind.SwordFinisher && Time <= SwordFinisherWindup) ||
              (Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll && Time <= 9));
 
-        public override Color SpecialDrawColor => CosmicDischargeCommon.FrostCoreColor;
-        public override int ExudeDustType => DustID.SnowflakeIce;
-        public override int WhipDustType => DustID.Frost;
+        public override Color SpecialDrawColor => CosmicDischargeCommon.DoGSpecialColor;
+        public override int ExudeDustType => DustID.PurpleTorch;
+        public override int WhipDustType => DustID.PurpleTorch;
         public override int HandleHeight => 62;
         public override int BodyType1StartY => 64;
         public override int BodyType1SectionHeight => 28;
@@ -97,7 +97,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 9;
             Projectile.ownerHitCheck = true;
-            Projectile.coldDamage = true;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -211,19 +210,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Owner.velocity += direction * 1.8f;
             Owner.SetImmuneTimeForAllTypes(8);
             ApplyScreenShake(5.8f);
-            SoundEngine.PlaySound(SoundID.Item119 with { Volume = 0.64f, Pitch = 0.38f }, Owner.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.64f, Pitch = 0.38f, MaxInstances = 2 }, Owner.Center);
 
             if (!Main.dedServ)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     Owner.MountedCenter,
                     direction * 1.8f,
-                    CosmicDischargeCommon.FrostGlowColor * 0.48f,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.48f,
                     Vector2.One,
                     direction.ToRotation(),
                     0.03f,
                     0.2f,
                     15));
+                CosmicDischargeCommon.SpawnDoGSparkBurst(Owner.MountedCenter, 8, 2.4f, 7f, 0.58f, -direction * 1.1f);
+                CosmicDischargeCommon.SpawnDoGRiftCracks(Owner.MountedCenter, 2, 3f, 7f, 0.4f);
             }
         }
 
@@ -261,23 +262,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (!impactEffectsPlayed && t >= 0.7f)
                 {
                     EmitAirCrack(TipPosition, baseDirection, 0.8f);
-                    if (ultActive && Main.myPlayer == Projectile.owner)
-                    {
-                        float spread = MathHelper.ToRadians(15f);
-                        for (int i = -2; i <= 2; i++)
-                        {
-                            Vector2 vel = baseDirection.RotatedBy(i * spread) * 12.5f;
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                TipPosition,
-                                vel,
-                                ProjectileID.IceBolt,
-                                (int)(Projectile.damage * 0.45f),
-                                Projectile.knockBack * 0.5f,
-                                Projectile.owner
-                            );
-                        }
-                    }
+                    SpawnWhipRiftBombFan(baseDirection, ultActive || empActive ? 4 : 3, ultActive || empActive ? 0.48f : 0.36f);
                 }
             }
             else if (Time <= holdEnd)
@@ -361,18 +346,22 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 float prep = EaseOutCubic(Time / SwordSwingWindup);
                 float angle = AimAngle + swingSign * MathHelper.Lerp(-1.42f, -0.86f, prep);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(112f, 194f, prep), second ? 0.12f : -0.12f, 28f);
+                SetBlade(angle.ToRotationVector2(), SwordReach, second ? 0.12f : -0.12f, 28f);
             }
             else if (Time <= strikeEnd)
             {
                 float t = (Time - SwordSwingWindup) / 8f;
                 float strike = EaseOutCubic(t);
                 float angle = AimAngle + MathHelper.Lerp(-0.86f * swingSign, 1.1f * swingSign, strike);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(205f, SwordReach + 30f, strike), second ? 0.12f : -0.12f, 38f);
+                Vector2 slashDirection = angle.ToRotationVector2();
+                SetBlade(slashDirection, SwordReach, second ? 0.12f : -0.12f, 38f);
                 PlayReleaseOnce(SoundID.Item71, 0.82f, second ? 0.14f : -0.08f, 3.8f);
 
                 if (!impactEffectsPlayed && t >= 0.58f)
-                    EmitAirCrack(TipPosition, angle.ToRotationVector2(), 0.74f);
+                {
+                    EmitAirCrack(TipPosition, slashDirection, 0.74f);
+                    SpawnSwordHomingBolts(TipPosition, slashDirection, second ? 4 : 3, second ? 0.42f : 0.36f);
+                }
             }
             else if (Time <= holdEnd)
             {
@@ -383,7 +372,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float t = Utils.GetLerpValue(holdEnd, SwordSwingDuration, Time, true);
                 float recover = MathF.Sin(t * MathHelper.PiOver2);
                 float angle = AimAngle + MathHelper.Lerp(1.14f * swingSign, 0.18f * swingSign, recover);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(SwordReach, 78f, recover), 0f, MathHelper.Lerp(30f, 18f, recover));
+                SetBlade(angle.ToRotationVector2(), SwordReach, 0f, MathHelper.Lerp(30f, 18f, recover));
             }
 
             if (Time > SwordSwingWindup && Time <= strikeEnd)
@@ -417,12 +406,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float t = Time / SwordFinisherWindup;
                 float spinAngle = AimAngle + Owner.direction * (MathHelper.TwoPi * 2f * t - MathHelper.PiOver2);
                 float chargeBump = 0.5f + 0.5f * MathF.Sin(MathHelper.Pi * t);
-                SetBlade(spinAngle.ToRotationVector2(), MathHelper.Lerp(128f, 228f, chargeBump), 0.05f * Owner.direction, 32f + chargeBump * 7f);
+                SetBlade(spinAngle.ToRotationVector2(), FinisherReach, 0.05f * Owner.direction, 32f + chargeBump * 7f);
 
                 bool ultActive = Owner.GetModPlayer<CosmicDischargePlayer>().UltimateFieldActive;
 
                 if (Time == 1f)
-                    SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.55f, Pitch = -0.12f }, Owner.Center);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftBuilding") { Volume = 0.45f, Pitch = -0.12f, MaxInstances = 2 }, Owner.Center);
 
                 if (Time % 8f == 0f)
                     ApplyScreenShake(1.2f + t * 1.5f);
@@ -447,7 +436,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             false,
                             Main.rand.Next(12, 22),
                             Main.rand.NextFloat(0.45f, 0.82f),
-                            Main.rand.NextBool() ? CosmicDischargeCommon.FrostCoreColor : CosmicDischargeCommon.FrostWhiteColor
+                            CosmicDischargeCommon.RandomDoGColor()
                         ));
                     }
                 }
@@ -484,9 +473,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     float subTime = MathHelper.Lerp(previousTime, Time, i / (float)SwordTipTrailSubsteps);
                     float subT = MathHelper.Clamp(subTime / SwordFinisherWindup, 0f, 1f);
                     float subSpinAngle = AimAngle + Owner.direction * (MathHelper.TwoPi * 2f * subT - MathHelper.PiOver2);
-                    float subChargeBump = 0.5f + 0.5f * MathF.Sin(MathHelper.Pi * subT);
-                    float subReach = MathHelper.Lerp(128f, 228f, subChargeBump);
-                    Vector2 subTip = Owner.MountedCenter + subSpinAngle.ToRotationVector2() * subReach;
+                    Vector2 subTip = Owner.MountedCenter + subSpinAngle.ToRotationVector2() * FinisherReach;
 
                     tipHistory.Add(subTip);
                 }
@@ -501,19 +488,19 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 float lift = EaseOutCubic(Utils.GetLerpValue(SwordFinisherWindup, SwordFinisherSlamFrame, Time, true));
                 float angle = AimAngle - Owner.direction * MathHelper.Lerp(1.38f, 1.05f, lift);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(220f, 304f, lift), 0.05f * Owner.direction, 38f);
+                SetBlade(angle.ToRotationVector2(), FinisherReach, 0.05f * Owner.direction, 38f);
             }
             else if (Time <= strikeEnd)
             {
                 float t = (Time - SwordFinisherSlamFrame) / strikeFrames;
                 float slam = EaseOutCubic(t);
                 float angle = AimAngle + MathHelper.Lerp(-1.05f * Owner.direction, 1.22f * Owner.direction, slam);
-                SetBlade(angle.ToRotationVector2(), FinisherReach + MathF.Sin(MathHelper.Pi * t) * 36f, 0f, 48f);
+                SetBlade(angle.ToRotationVector2(), FinisherReach, 0f, 48f);
 
                 if (!releaseSoundPlayed && t >= 0.12f)
                 {
                     releaseSoundPlayed = true;
-                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.95f, Pitch = -0.35f }, Owner.Center);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.7f, Pitch = -0.18f, MaxInstances = 2 }, Owner.Center);
                     SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HeavySwing") { Volume = 0.55f, Pitch = -0.18f }, Owner.Center);
                     ApplyScreenShake(7.2f);
                 }
@@ -523,6 +510,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     spawnedSwordWave = true;
                     SpawnSwordWave(direction);
                     EmitAirCrack(TipPosition, direction, 1.35f);
+                    SpawnSwordHomingBolts(TipPosition, direction, 6, 0.52f);
                 }
             }
             else
@@ -530,7 +518,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float t = Utils.GetLerpValue(strikeEnd, SwordFinisherDuration, Time, true);
                 float recover = MathF.Sin(t * MathHelper.PiOver2);
                 float angle = AimAngle + MathHelper.Lerp(1.22f * Owner.direction, 0.16f * Owner.direction, recover);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(FinisherReach, 78f, recover), 0f, MathHelper.Lerp(38f, 18f, recover));
+                SetBlade(angle.ToRotationVector2(), FinisherReach, 0f, MathHelper.Lerp(38f, 18f, recover));
             }
 
             if (Time > SwordFinisherWindup && Time <= strikeEnd)
@@ -544,8 +532,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     {
                         float lift = EaseOutCubic(Utils.GetLerpValue(SwordFinisherWindup, SwordFinisherSlamFrame, subTime, true));
                         float angle = AimAngle - Owner.direction * MathHelper.Lerp(1.38f, 1.05f, lift);
-                        float reach = MathHelper.Lerp(220f, 304f, lift);
-                        Vector2 subTip = Owner.MountedCenter + angle.ToRotationVector2() * reach;
+                        Vector2 subTip = Owner.MountedCenter + angle.ToRotationVector2() * FinisherReach;
                         tipHistory.Add(subTip);
                     }
                     else
@@ -553,8 +540,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         float t = (subTime - SwordFinisherSlamFrame) / strikeFrames;
                         float slam = EaseOutCubic(t);
                         float angle = AimAngle + MathHelper.Lerp(-1.05f * Owner.direction, 1.22f * Owner.direction, slam);
-                        float reach = FinisherReach + MathF.Sin(MathHelper.Pi * t) * 36f;
-                        Vector2 subTip = Owner.MountedCenter + angle.ToRotationVector2() * reach;
+                        Vector2 subTip = Owner.MountedCenter + angle.ToRotationVector2() * FinisherReach;
                         tipHistory.Add(subTip);
                     }
                 }
@@ -594,10 +580,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 Dust dust = Dust.NewDustPerfect(
                     TipPosition + Main.rand.NextVector2Circular(12f, 12f),
-                    DustID.SnowflakeIce,
+                    DustID.PurpleTorch,
                     Main.rand.NextVector2Circular(1.8f, 1.8f),
                     100,
-                    CosmicDischargeCommon.FrostWhiteColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(0.8f, 1.25f));
                 dust.noGravity = true;
             }
@@ -610,8 +596,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             float t = MathHelper.Clamp((sampleTime - SwordSwingWindup) / 8f, 0f, 1f);
             float strike = EaseOutCubic(t);
             float angle = AimAngle + MathHelper.Lerp(-0.86f * swingSign, 1.1f * swingSign, strike);
-            float reach = MathHelper.Lerp(205f, SwordReach + 30f, strike);
-            return Owner.MountedCenter + angle.ToRotationVector2() * reach;
+            return Owner.MountedCenter + angle.ToRotationVector2() * SwordReach;
         }
 
         private void TrimTipHistory(int maxCount)
@@ -650,7 +635,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center,
                 direction * 0.7f,
-                CosmicDischargeCommon.FrostGlowColor * (0.38f * intensity),
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * (0.38f * intensity),
                 Vector2.One,
                 direction.ToRotation(),
                 0.035f,
@@ -666,8 +651,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     false,
                     Main.rand.Next(10, 18),
                     Main.rand.NextFloat(0.42f, 0.82f),
-                    Main.rand.NextBool() ? CosmicDischargeCommon.FrostWhiteColor : CosmicDischargeCommon.FrostCoreColor));
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RandomDoGColor()) * 0.75f));
             }
+
+            CosmicDischargeCommon.SpawnDoGRiftCracks(center, intensity > 1f ? 5 : 3, 3f, 8f + intensity * 2f, 0.45f * intensity);
         }
 
         private void SpawnSwordWave(Vector2 direction)
@@ -685,13 +672,75 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Projectile.owner);
         }
 
+        private void SpawnWhipRiftBombFan(Vector2 direction, int count, float damageFactor)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            count = Math.Max(1, count);
+            float spread = MathHelper.ToRadians(24f);
+            for (int i = 0; i < count; i++)
+            {
+                float offset = count == 1 ? 0f : MathHelper.Lerp(-spread, spread, i / (float)(count - 1));
+                Vector2 velocity = direction.RotatedBy(offset) * Main.rand.NextFloat(8.5f, 12.5f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    TipPosition + direction * 8f,
+                    velocity,
+                    ModContent.ProjectileType<CosmicDischargeDoGRiftBomb>(),
+                    (int)(Projectile.damage * damageFactor),
+                    Projectile.knockBack * 0.35f,
+                    Projectile.owner,
+                    Main.rand.NextFloat(20f, 34f));
+            }
+        }
+
+        private void SpawnSwordHomingBolts(Vector2 position, Vector2 direction, int count, float damageFactor)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            count = Math.Max(1, count);
+            float spread = MathHelper.ToRadians(18f);
+            for (int i = 0; i < count; i++)
+            {
+                float offset = count == 1 ? 0f : MathHelper.Lerp(-spread, spread, i / (float)(count - 1));
+                Vector2 velocity = direction.RotatedBy(offset) * Main.rand.NextFloat(10f, 14.5f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    position + direction * 12f,
+                    velocity,
+                    ModContent.ProjectileType<CosmicDischargeDoGEnergyBolt>(),
+                    (int)(Projectile.damage * damageFactor),
+                    Projectile.knockBack * 0.45f,
+                    Projectile.owner);
+            }
+        }
+
+        private void SpawnRiftExplosion(Vector2 position, float radius, float damageFactor)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                position,
+                Vector2.Zero,
+                ModContent.ProjectileType<CosmicDischargeDoGConvergenceExplosion>(),
+                (int)(Projectile.damage * damageFactor),
+                Projectile.knockBack,
+                Projectile.owner,
+                0f,
+                radius);
+        }
+
         private void SpawnQuickDrawBombs()
         {
-            int bombCount = CosmicDischargeProgression.QuickDrawIceBombCount;
+            int bombCount = CosmicDischargeProgression.QuickDrawRiftBombCount;
             if (bombCount <= 0 || Main.myPlayer != Projectile.owner)
                 return;
 
-            if (spawnedBombBursts >= CosmicDischargeProgression.QuickDrawIceBombBursts)
+            if (spawnedBombBursts >= CosmicDischargeProgression.QuickDrawRiftBombBursts)
                 return;
 
             bool shouldBurst = Time == 10f || Time == 16f || Time == 23f;
@@ -708,8 +757,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
                     Main.rand.NextVector2Circular(1.8f, 1.8f),
-                    ModContent.ProjectileType<CosmicDischargeIceBomb>(),
-                    (int)(Projectile.damage * CosmicDischargeProgression.QuickDrawIceBombDamageFactor),
+                    ModContent.ProjectileType<CosmicDischargeDoGRiftBomb>(),
+                    (int)(Projectile.damage * CosmicDischargeProgression.QuickDrawRiftBombDamageFactor),
                     0f,
                     Projectile.owner,
                     Main.rand.NextFloat(12f, 24f));
@@ -731,10 +780,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2 point = Owner.MountedCenter + direction * Main.rand.NextFloat(32f, Projectile.velocity.Length());
                 Dust dust = Dust.NewDustPerfect(
                     point + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextBool() ? DustID.Frost : DustID.SnowflakeIce,
+                    DustID.PurpleTorch,
                     direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(0.35f, 2.4f),
                     120,
-                    Main.rand.NextBool() ? CosmicDischargeCommon.FrostCoreColor : CosmicDischargeCommon.FrostWhiteColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(0.85f, 1.32f));
                 dust.noGravity = true;
             }
@@ -748,10 +797,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Vector2 radius = Main.rand.NextVector2CircularEdge(58f + charge * 42f, 58f + charge * 42f);
             Dust dust = Dust.NewDustPerfect(
                 Owner.MountedCenter + radius,
-                DustID.SnowflakeIce,
+                DustID.PurpleTorch,
                 radius.RotatedBy(MathHelper.PiOver2 * Owner.direction).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.2f, 3.8f),
                 110,
-                CosmicDischargeCommon.FrostCoreColor,
+                CosmicDischargeCommon.RandomDoGColor(),
                 Main.rand.NextFloat(0.9f, 1.25f));
             dust.noGravity = true;
         }
@@ -777,8 +826,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
             else
             {
-                GetBendAndCurl(out float sideBend, out float curl);
-                return CosmicDischargeCommon.BuildCurvedBlade(Owner, direction, reach, sideBend, curl, 18);
+                return GenerateChainConvergencePoints(direction, reach, 0f);
             }
         }
 
@@ -811,6 +859,26 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             bool collide = CosmicDischargeCommon.CheckCurveCollision(points, targetHitbox, currentCollisionWidth);
             if (collide)
                 return true;
+
+            bool isChainArc = Kind == CosmicDischargeAttackKind.ChainKnifeSingle ||
+                              Kind == CosmicDischargeAttackKind.ChainKnifeScatter ||
+                              Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
+            if (isChainArc)
+            {
+                Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
+                float reach = Projectile.velocity.Length();
+                int chainCount = GetChainCount();
+                for (int i = 0; i < chainCount; i++)
+                {
+                    float lane = i - (chainCount - 1) * 0.5f;
+                    if (Math.Abs(lane) < 0.01f)
+                        continue;
+
+                    var extraPoints = GenerateChainConvergencePoints(direction, reach, lane);
+                    if (CosmicDischargeCommon.CheckCurveCollision(extraPoints, targetHitbox, currentCollisionWidth * 0.86f))
+                        return true;
+                }
+            }
 
             // Check collision for mirror whip if Frozen Emperor is active
             bool isWhip = Kind == CosmicDischargeAttackKind.WhipOver || Kind == CosmicDischargeAttackKind.WhipUnder;
@@ -858,7 +926,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                            Kind == CosmicDischargeAttackKind.SwordSwingTwo ||
                            Kind == CosmicDischargeAttackKind.SwordFinisher;
 
-            if (isSword && target.HasBuff(ModContent.BuffType<CosmicDischargeFrostMarkDebuff>()))
+            if (isSword && target.HasBuff(ModContent.BuffType<CosmicDischargeDoGMarkDebuff>()))
             {
                 modifiers.FinalDamage *= 1.4f;
             }
@@ -935,7 +1003,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             bool ultActive = modPlayer.UltimateFieldActive;
             bool empActive = modPlayer.FrozenEmperorActive;
 
-            CosmicDischargeCommon.ApplyColdDebuffs(target, Kind == CosmicDischargeAttackKind.QuickDraw ? 210 : 150);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, Kind == CosmicDischargeAttackKind.QuickDraw ? 420 : 300);
             ApplyHitStop(heavy ? 6 : 3);
             ApplyScreenShake(empActive ? 12.5f : (heavy ? 9.5f : 4.6f));
             SpawnHitEffects(target, heavy, tip);
@@ -948,7 +1016,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                               Kind == CosmicDischargeAttackKind.WhipThrust;
                 if (isWhip)
                 {
-                    target.AddBuff(ModContent.BuffType<CosmicDischargeFrostMarkDebuff>(), 300);
+                    target.AddBuff(ModContent.BuffType<CosmicDischargeDoGMarkDebuff>(), 300);
 
                     // Under Frozen Emperor, trigger double hits (mirror whip strike)
                     if (empActive)
@@ -962,7 +1030,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                                 target.Center,
                                 Vector2.Zero,
-                                CosmicDischargeCommon.FrostWhiteColor * 0.45f,
+                                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGWhiteColor) * 0.45f,
                                 0.5f,
                                 15
                             ));
@@ -970,40 +1038,38 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     }
                 }
 
-                // 2. SWORD FORM SYNERGIES (FROST MARK DETONATION)
+                // 2. SWORD FORM SYNERGIES (DOG MARK DETONATION)
                 bool isSword = Kind == CosmicDischargeAttackKind.SwordSwingOne ||
                                Kind == CosmicDischargeAttackKind.SwordSwingTwo ||
                                Kind == CosmicDischargeAttackKind.SwordFinisher;
 
-                int markType = ModContent.BuffType<CosmicDischargeFrostMarkDebuff>();
+                int markType = ModContent.BuffType<CosmicDischargeDoGMarkDebuff>();
                 if (isSword && target.HasBuff(markType))
                 {
                     target.DelBuff(target.FindBuffIndex(markType));
 
-                    int boltCount = empActive ? 12 : 8;
-                    float speed = empActive ? 13.5f : 11f;
-
+                    int boltCount = empActive ? 10 : 6;
+                    SpawnRiftExplosion(target.Center, empActive ? 150f : 118f, empActive ? 0.68f : 0.46f);
                     for (int i = 0; i < boltCount; i++)
                     {
-                        Vector2 velocity = (MathHelper.TwoPi * i / (float)boltCount).ToRotationVector2() * speed;
+                        Vector2 velocity = (MathHelper.TwoPi * i / (float)boltCount).ToRotationVector2() * (empActive ? 13.5f : 11f);
                         Projectile.NewProjectile(
                             Projectile.GetSource_FromThis(),
                             target.Center,
                             velocity,
-                            ProjectileID.IceBolt,
-                            (int)(Projectile.damage * (empActive ? 0.75f : 0.55f)),
+                            ModContent.ProjectileType<CosmicDischargeDoGEnergyBolt>(),
+                            (int)(Projectile.damage * (empActive ? 0.58f : 0.42f)),
                             Projectile.knockBack * 0.5f,
-                            Projectile.owner
-                        );
+                            Projectile.owner);
                     }
 
                     if (!Main.dedServ)
                     {
-                        SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.9f, Pitch = -0.15f }, target.Center);
+                        SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.55f, Pitch = -0.05f, MaxInstances = 4 }, target.Center);
                         GeneralParticleHandler.SpawnParticle(new PulseRing(
                             target.Center,
                             Vector2.Zero,
-                            CosmicDischargeCommon.FrostCoreColor,
+                            CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
                             0.04f,
                             1.4f,
                             22
@@ -1018,7 +1084,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                 false,
                                 Main.rand.Next(16, 28),
                                 Main.rand.NextFloat(0.7f, 1.1f),
-                                CosmicDischargeCommon.FrostWhiteColor
+                                CosmicDischargeCommon.RandomDoGColor()
                             ));
                         }
                     }
@@ -1030,24 +1096,26 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                   Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
                 if (isChainArc)
                 {
-                    target.AddBuff(ModContent.BuffType<CosmicDischargeFrostMarkDebuff>(), 240);
-                    if (target.HasBuff(markType))
+                    bool hadMark = target.HasBuff(markType);
+                    target.AddBuff(ModContent.BuffType<CosmicDischargeDoGMarkDebuff>(), 240);
+                    if (hadMark)
                     {
                         target.DelBuff(target.FindBuffIndex(markType));
                         int shardCount = empActive ? 5 : 3;
                         for (int i = 0; i < shardCount; i++)
                         {
-                            Vector2 shardVel = Main.rand.NextVector2Circular(6f, 6f) + new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-4f, -2f));
+                            Vector2 shardVel = Main.rand.NextVector2Circular(4f, 4f) + (MathHelper.TwoPi * i / shardCount).ToRotationVector2() * Main.rand.NextFloat(7f, 11f);
                             Projectile.NewProjectile(
                                 Projectile.GetSource_FromThis(),
                                 target.Center,
                                 shardVel,
-                                ModContent.ProjectileType<CosmicDischargeIceShard>(),
+                                ModContent.ProjectileType<CosmicDischargeDoGEnergyBolt>(),
                                 (int)(Projectile.damage * 0.48f),
                                 0f,
                                 Projectile.owner);
                         }
-                        SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.7f, Pitch = -0.05f }, target.Center);
+                        SpawnRiftExplosion(target.Center, 110f, 0.42f);
+                        SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.45f, Pitch = 0.12f, MaxInstances = 4 }, target.Center);
                     }
                 }
 
@@ -1055,106 +1123,36 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (Kind == CosmicDischargeAttackKind.SwordSwingOne)
                 {
                     Vector2 slashDir = Projectile.velocity.SafeNormalize(AimDirection);
-                    int shardCount = ultActive ? 2 : 1;
-                    for (int i = -shardCount; i <= shardCount; i++)
-                    {
-                        Vector2 speed = slashDir.RotatedBy(i * 0.15f) * (ultActive ? 15.5f : 13.5f);
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Center,
-                            speed,
-                            ProjectileID.IceBolt,
-                            (int)(Projectile.damage * 0.45f),
-                            Projectile.knockBack * 0.5f,
-                            Projectile.owner
-                        );
-                    }
+                    SpawnSwordHomingBolts(target.Center, slashDir, ultActive ? 4 : 2, 0.34f);
                 }
                 else if (Kind == CosmicDischargeAttackKind.SwordSwingTwo)
                 {
-                    if (ultActive)
-                    {
-                        for (int i = -1; i <= 1; i++)
-                        {
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                target.Bottom + new Vector2(i * 24f, 16f),
-                                -Vector2.UnitY * 8f,
-                                ProjectileID.IceSpike,
-                                (int)(Projectile.damage * 0.55f),
-                                Projectile.knockBack * 0.7f,
-                                Projectile.owner
-                            );
-                        }
-                    }
-                    else
-                    {
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Bottom + new Vector2(0f, 16f),
-                            -Vector2.UnitY * 7.5f,
-                            ProjectileID.IceSpike,
-                            (int)(Projectile.damage * 0.55f),
-                            Projectile.knockBack * 0.7f,
-                            Projectile.owner
-                        );
-                    }
+                    SpawnRiftExplosion(target.Center, ultActive ? 130f : 104f, 0.44f);
+                    SpawnSwordHomingBolts(target.Center, Projectile.velocity.SafeNormalize(AimDirection), ultActive ? 5 : 3, 0.36f);
 
                     if (!target.boss && target.knockBackResist > 0f)
                     {
-                        target.velocity.Y = ultActive ? -8.5f : -6.5f;
+                        target.velocity += (Owner.MountedCenter - target.Center).SafeNormalize(Vector2.Zero) * (ultActive ? 6f : 4.5f);
                         target.netUpdate = true;
                     }
                 }
                 else if (Kind == CosmicDischargeAttackKind.SwordFinisher)
                 {
-                    int burstCount = ultActive ? 16 : 8;
-                    for (int i = 0; i < burstCount; i++)
-                    {
-                        Vector2 velocity = (MathHelper.TwoPi * i / (float)burstCount).ToRotationVector2() * (ultActive ? 9.2f : 6.5f);
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Center,
-                            velocity,
-                            ModContent.ProjectileType<CalamityMod.Projectiles.Melee.CosmicIceBurst>(),
-                            (int)(Projectile.damage * (ultActive ? 0.65f : 0.5f)),
-                            0f,
-                            Projectile.owner,
-                            0f,
-                            ultActive ? 1.3f : 1.0f
-                        );
-                    }
+                    SpawnRiftExplosion(target.Center, ultActive ? 172f : 136f, ultActive ? 0.72f : 0.54f);
+                    SpawnSwordHomingBolts(target.Center, Projectile.velocity.SafeNormalize(AimDirection), ultActive ? 8 : 5, ultActive ? 0.45f : 0.36f);
                 }
 
-                // 5. GIANT FROST BURSTS & ICE EXPLOSIONS
+                // 5. DoG rift explosions
                 if (empActive)
                 {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        target.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<CalamityMod.Projectiles.Melee.CosmicIceBurst>(),
-                        (int)(Projectile.damage * 0.75f),
-                        0f,
-                        Projectile.owner,
-                        0f,
-                        1.5f
-                    );
+                    SpawnRiftExplosion(target.Center, 170f, 0.64f);
                 }
                 else if (tip ||
+                         Kind == CosmicDischargeAttackKind.WhipThrust ||
                          Kind == CosmicDischargeAttackKind.SwordFinisher ||
                          (ultActive && (Kind == CosmicDischargeAttackKind.WhipOver || Kind == CosmicDischargeAttackKind.WhipUnder || Kind == CosmicDischargeAttackKind.WhipThrust)))
                 {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        target.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<CalamityMod.Projectiles.Melee.CosmicIceBurst>(),
-                        (int)(Projectile.damage * (Kind == CosmicDischargeAttackKind.QuickDraw ? 0.64f : 0.48f)),
-                        0f,
-                        Projectile.owner,
-                        0f,
-                        heavy ? 1.15f : 0.88f);
+                    SpawnRiftExplosion(target.Center, heavy ? 138f : 108f, Kind == CosmicDischargeAttackKind.QuickDraw ? 0.58f : 0.42f);
                 }
             }
         }
@@ -1177,22 +1175,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Pitch = tip ? 0.12f : -0.08f,
                 MaxInstances = 4
             }, target.Center);
+            if (heavy)
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerAttack") { Volume = 0.42f, Pitch = tip ? 0.18f : 0f, MaxInstances = 4 }, target.Center);
 
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(target.Center, Vector2.Zero, CosmicDischargeCommon.FrostCoreColor * (heavy ? 0.55f : 0.34f), heavy ? 0.62f : 0.42f, heavy ? 22 : 16));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, direction, CosmicDischargeCommon.FrostWhiteColor * (heavy ? 0.46f : 0.28f), Vector2.One, direction.ToRotation(), 0.04f, heavy ? 0.32f : 0.18f, heavy ? 18 : 12));
-
-            int sparks = heavy ? 22 : 12;
-            for (int i = 0; i < sparks; i++)
-            {
-                Vector2 velocity = direction.RotatedByRandom(0.95f) * Main.rand.NextFloat(3f, heavy ? 14f : 8f);
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                    target.Center + Main.rand.NextVector2Circular(18f, 18f),
-                    velocity,
-                    false,
-                    Main.rand.Next(14, heavy ? 28 : 20),
-                    Main.rand.NextFloat(0.35f, heavy ? 0.86f : 0.58f),
-                    Main.rand.NextBool() ? CosmicDischargeCommon.FrostCoreColor : CosmicDischargeCommon.FrostWhiteColor));
-            }
+            CosmicDischargeCommon.SpawnDoGImpact(target.Center, direction, heavy, tip);
         }
 
         private void ApplyScreenShake(float power)
@@ -1217,6 +1203,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                            Kind == CosmicDischargeAttackKind.SwordFinisher;
             bool isWhip = Kind == CosmicDischargeAttackKind.WhipOver ||
                           Kind == CosmicDischargeAttackKind.WhipUnder;
+            bool isChainArc = Kind == CosmicDischargeAttackKind.ChainKnifeSingle ||
+                              Kind == CosmicDischargeAttackKind.ChainKnifeScatter ||
+                              Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
 
             if (isSword)
             {
@@ -1231,13 +1220,30 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             DrawCurvedBladeGlow(points);
             CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, points, lightColor, Projectile.scale, Owner.gfxOffY);
 
+            if (isChainArc)
+            {
+                int chainCount = GetChainCount();
+                float reach = Projectile.velocity.Length();
+                Color chainColor = Color.Lerp(lightColor, CosmicDischargeCommon.DoGPurpleColor, 0.35f);
+                for (int i = 0; i < chainCount; i++)
+                {
+                    float lane = i - (chainCount - 1) * 0.5f;
+                    if (Math.Abs(lane) < 0.01f)
+                        continue;
+
+                    var extraPoints = GenerateChainConvergencePoints(direction, reach, lane);
+                    DrawCurvedBladeGlow(extraPoints);
+                    CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, extraPoints, chainColor, Projectile.scale * 0.92f, Owner.gfxOffY);
+                }
+            }
+
             // Under Frozen Emperor, draw the mirror whip simultaneously
             if (isWhip && Owner.GetModPlayer<CosmicDischargePlayer>().FrozenEmperorActive)
             {
                 float mirrorSide = Kind == CosmicDischargeAttackKind.WhipOver ? 1f : -1f;
                 var mirrorPoints = GenerateWhipPointsForSide(direction, Projectile.velocity.Length(), mirrorSide);
                 DrawCurvedBladeGlow(mirrorPoints);
-                Color mirrorColor = Color.Lerp(lightColor, CosmicDischargeCommon.FrostCoreColor, 0.35f);
+                Color mirrorColor = Color.Lerp(lightColor, CosmicDischargeCommon.DoGSpecialColor, 0.35f);
                 CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, mirrorPoints, mirrorColor, Projectile.scale, Owner.gfxOffY);
             }
 
@@ -1252,9 +1258,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float flash = impactFlashTimer > 0 ? impactFlashTimer / 8f : 0f;
-            Color outer = CosmicDischargeCommon.FrostDarkColor * (0.18f + flash * 0.12f);
-            Color glow = CosmicDischargeCommon.FrostGlowColor * (0.26f + flash * 0.25f);
-            Color core = CosmicDischargeCommon.FrostWhiteColor * (0.28f + flash * 0.4f);
+            Color outer = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * (0.18f + flash * 0.12f);
+            Color cyanGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * (0.24f + flash * 0.22f);
+            Color fuchsiaGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * (0.18f + flash * 0.18f);
+            Color core = CosmicDischargeCommon.DoGWhiteColor * (0.25f + flash * 0.38f);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
@@ -1266,8 +1273,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (segment.LengthSquared() < 0.1f)
                     continue;
 
-                DrawLine(pixel, start, segment, outer, currentCollisionWidth * 1.4f);
-                DrawLine(pixel, start, segment, glow, currentCollisionWidth * 0.72f);
+                DrawLine(pixel, start, segment, outer, currentCollisionWidth * 1.48f);
+                DrawLine(pixel, start, segment, cyanGlow, currentCollisionWidth * 0.82f);
+                DrawLine(pixel, start, segment, fuchsiaGlow, currentCollisionWidth * 0.46f);
                 DrawLine(pixel, start, segment, core, MathHelper.Clamp(currentCollisionWidth * 0.16f, 2f, 5f));
             }
 
@@ -1277,7 +1285,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     bloom,
                     points[^1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY,
                     null,
-                    CosmicDischargeCommon.FrostCoreColor * (0.22f + flash * 0.24f),
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * (0.22f + flash * 0.24f),
                     0f,
                     bloom.Size() * 0.5f,
                     (0.22f + flash * 0.08f) * Projectile.scale,
@@ -1537,81 +1545,95 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             return points;
         }
 
+        private int GetChainCount()
+        {
+            return Kind switch
+            {
+                CosmicDischargeAttackKind.ChainKnifeBiteAll => 5,
+                CosmicDischargeAttackKind.ChainKnifeScatter => 4,
+                _ => 3
+            };
+        }
+
+        private System.Collections.Generic.List<Vector2> GenerateChainConvergencePoints(Vector2 direction, float reach, float lane)
+        {
+            System.Collections.Generic.List<Vector2> points = new();
+            Vector2 startPos = Owner.MountedCenter;
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            float chainCount = Math.Max(1, GetChainCount() - 1);
+            float laneOffset = lane * 18f;
+            float curveSign = lane == 0f ? 0f : Math.Sign(lane);
+            float curveStrength = Math.Abs(lane) / chainCount;
+            int segments = 20;
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float t = i / (float)segments;
+                float convergence = 1f - t;
+                float side = laneOffset * convergence + curveSign * MathF.Sin(MathHelper.Pi * t) * MathHelper.Lerp(24f, 92f, curveStrength);
+                float wave = MathF.Sin(Time * 0.42f + t * MathHelper.TwoPi) * 6f * curveStrength * convergence;
+                points.Add(startPos + direction * (reach * t) + normal * (side + wave));
+            }
+
+            return points;
+        }
+
         private void UpdateChainArcSwing()
         {
-            // Spine-of-Thanatos-style: chain sweeps in a wide arc from windup side to the far side
-            const int arcWindup = 9;
-            const int arcSwingFrames = 36;
-            const int arcHoldFrames = 5;
-            int arcSnapEnd = arcWindup + arcSwingFrames;
+            // Spine-of-Thanatos-style convergence: several segment chains meet at the cursor and detonate.
+            const int arcWindup = 8;
+            const int arcExtendFrames = 22;
+            const int arcHoldFrames = 16;
+            int arcSnapEnd = arcWindup + arcExtendFrames;
             int arcHoldEnd = arcSnapEnd + arcHoldFrames;
-            int arcTotalDuration = arcHoldEnd + 14;
+            int arcTotalDuration = arcHoldEnd + 12;
 
-            float swingSign = Kind == CosmicDischargeAttackKind.ChainKnifeScatter ? -1f : 1f;
-            float dirSign = swingSign * Math.Sign(Owner.direction == 0 ? 1 : Owner.direction);
-            float maxReach = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 480f : 420f;
+            float maxReach = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 560f : 500f;
             bool ultActive = Owner.GetModPlayer<CosmicDischargePlayer>().UltimateFieldActive;
             bool empActive = Owner.GetModPlayer<CosmicDischargePlayer>().FrozenEmperorActive;
             if (ultActive || empActive) maxReach *= 1.2f;
 
             if (Time <= arcWindup)
-            {
                 AimAngle = CosmicDischargeCommon.GetAimDirection(Owner, AimDirection).ToRotation();
+
+            Vector2 desired = Owner.Calamity().mouseWorld - Owner.MountedCenter;
+            if (desired.LengthSquared() < 0.001f)
+                desired = AimDirection;
+            Vector2 direction = desired.SafeNormalize(AimDirection);
+            float targetReach = MathHelper.Clamp(desired.Length(), 160f, maxReach);
+
+            if (Time <= arcWindup)
+            {
                 float prep = EaseOutCubic(Time / arcWindup);
-                float angle = AimAngle - dirSign * MathHelper.Lerp(0.25f, 1.15f, prep);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(72f, 230f, prep), 0f, 28f);
+                SetBlade(direction, MathHelper.Lerp(78f, targetReach * 0.36f, prep), 0f, 30f);
             }
             else if (Time <= arcSnapEnd)
             {
-                float t = (Time - arcWindup) / (float)arcSwingFrames;
-                float swing = EaseOutCubic(t);
-                float angle = AimAngle + MathHelper.Lerp(-dirSign * 1.15f, dirSign * 1.42f, swing);
-                float reach = maxReach + MathF.Sin(MathHelper.Pi * t) * 70f;
-                SetBlade(angle.ToRotationVector2(), reach, 0f, 52f);
+                float t = (Time - arcWindup) / (float)arcExtendFrames;
+                float extend = EaseOutCubic(t);
+                SetBlade(direction, MathHelper.Lerp(targetReach * 0.36f, targetReach, extend), 0f, 52f);
 
                 PlayReleaseOnce(SoundID.Item71, 0.9f, 0.2f, 6.2f);
 
-                // At peak of arc, spawn ice bolt fan
-                if (!impactEffectsPlayed && t >= 0.46f)
+                if (!impactEffectsPlayed && t >= 0.74f)
                 {
-                    impactEffectsPlayed = true;
-                    EmitAirCrack(TipPosition, angle.ToRotationVector2(), 1.2f);
-
-                    if (Main.myPlayer == Projectile.owner)
-                    {
-                        int boltCount = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? (empActive ? 8 : 5) :
-                                        Kind == CosmicDischargeAttackKind.ChainKnifeScatter ? (empActive ? 5 : 3) :
-                                        (empActive ? 3 : 1);
-                        float boltSpread = MathHelper.ToRadians(11f);
-                        Vector2 tipDir = angle.ToRotationVector2();
-                        for (int i = 0; i < boltCount; i++)
-                        {
-                            float offset = (i - (boltCount - 1) * 0.5f) * boltSpread;
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                TipPosition,
-                                tipDir.RotatedBy(offset) * 15f,
-                                ProjectileID.IceBolt,
-                                (int)(Projectile.damage * 0.5f),
-                                Projectile.knockBack * 0.5f,
-                                Projectile.owner);
-                        }
-                    }
+                    EmitAirCrack(TipPosition, direction, 1.35f);
+                    float radius = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 176f :
+                                   Kind == CosmicDischargeAttackKind.ChainKnifeScatter ? 146f : 126f;
+                    SpawnRiftExplosion(TipPosition, empActive ? radius * 1.2f : radius, Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 0.82f : 0.62f);
                 }
             }
             else if (Time <= arcHoldEnd)
             {
-                float angle = AimAngle + dirSign * 1.42f;
-                SetBlade(angle.ToRotationVector2(), maxReach * 0.78f, 0f, 38f);
+                SetBlade(direction, targetReach, 0f, 38f);
             }
             else
             {
                 float t = Utils.GetLerpValue(arcHoldEnd, arcTotalDuration, Time, true);
                 currentlyRetracting = true;
-                Projectile.localNPCHitCooldown = 120;
+                Projectile.localNPCHitCooldown = 8;
                 float retract = MathF.Sin(t * MathHelper.PiOver2);
-                float angle = AimAngle + MathHelper.Lerp(dirSign * 1.42f, dirSign * 0.15f, retract);
-                SetBlade(angle.ToRotationVector2(), MathHelper.Lerp(maxReach * 0.78f, 55f, retract), 0f, MathHelper.Lerp(34f, 16f, retract));
+                SetBlade(direction, MathHelper.Lerp(targetReach, 55f, retract), 0f, MathHelper.Lerp(34f, 16f, retract));
             }
 
             if (Time >= arcTotalDuration)
@@ -1635,8 +1657,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < tipHistory.Count - 1; i++)
             {
                 float fade = 1f - i / (float)tipHistory.Count;
-                Color glowColor = Color.Lerp(CosmicDischargeCommon.FrostGlowColor, Color.White, 0.2f) * (0.5f * fade * Projectile.Opacity);
-                Color coreColor = Color.Lerp(CosmicDischargeCommon.FrostWhiteColor, CosmicDischargeCommon.FrostCoreColor, 0.4f) * (0.7f * fade * Projectile.Opacity);
+                Color glowColor = Color.Lerp(CosmicDischargeCommon.DoGFuchsiaColor, CosmicDischargeCommon.DoGCyanColor, 1f - fade);
+                glowColor = CosmicDischargeCommon.Transparent(glowColor) * (0.55f * fade * Projectile.Opacity);
+                Color coreColor = CosmicDischargeCommon.DoGWhiteColor * (0.78f * fade * Projectile.Opacity);
 
                 Vector2 start = tipHistory[i] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
                 Vector2 end = tipHistory[i + 1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
@@ -1646,6 +1669,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     continue;
 
                 DrawLine(pixel, start, segment, glowColor, glowWidth * fade);
+                DrawLine(pixel, start, segment, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * (0.28f * fade * Projectile.Opacity), glowWidth * 0.42f * fade);
                 DrawLine(pixel, start, segment, coreColor, coreWidth * fade);
             }
 

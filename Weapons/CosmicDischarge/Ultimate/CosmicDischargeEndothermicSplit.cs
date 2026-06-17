@@ -39,14 +39,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
             Projectile.tileCollide = false;
-            Projectile.coldDamage = true;
         }
 
         public override void AI()
         {
             Time++;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.Pi;
-            Lighting.AddLight(Projectile.Center, Color.LightSkyBlue.ToVector3() * 0.49f);
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.49f);
 
             if (Time >= 10f)
             {
@@ -64,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (Projectile.numUpdates % 3 == 0)
             {
-                Color outerSparkColor = new Color(173, 216, 230);
+                Color outerSparkColor = CosmicDischargeCommon.RandomDoGColor();
                 float scaleBoost = MathHelper.Clamp(Time * 0.01f, 0f, 1.8f);
                 float outerSparkScale = 1.2f + scaleBoost;
                 SparkParticle spark = new(Projectile.Center, Projectile.velocity, false, 7, outerSparkScale, outerSparkColor);
@@ -73,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (Main.rand.NextBool(4))
             {
-                Dust iceDust = Dust.NewDustPerfect(Projectile.Center, DustID.SnowflakeIce, Projectile.velocity * 0.5f, 150, Color.LightBlue, 1.2f);
+                Dust iceDust = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, Projectile.velocity * 0.5f, 150, CosmicDischargeCommon.RandomDoGColor(), 1.2f);
                 iceDust.noGravity = true;
                 iceDust.velocity *= 0.3f;
                 iceDust.fadeIn = 1.5f;
@@ -82,8 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(BuffID.Frostburn, 300);
-            target.AddBuff(BuffID.Chilled, 300);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, 300);
         }
 
         private NPC FindTarget(float maxDistance)

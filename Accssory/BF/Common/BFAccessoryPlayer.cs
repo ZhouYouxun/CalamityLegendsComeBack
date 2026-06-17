@@ -30,6 +30,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool BombardRainDamageBonus;           // 歼灭右键弹幕伤害提升（共鸣/主宰）
         public int PlagueAdvancedTier;                // 侵染高级 Debuff 等级：0=无，1=第一批，2=全部
 
+        public bool ArrowConversionEquipped;
+
         public bool HoldingBlossomFlux => Player.HeldItem?.type == ModContent.ItemType<NewLegendBlossomFlux>();
 
         public BlossomFluxChloroplastPresetType CurrentPreset =>
@@ -44,6 +46,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             PastLingeringEquipped = false;
             SwordsplosionQuiverEquipped = false;
             BlightSpewerQuiverEquipped = false;
+            ArrowConversionEquipped = false;
 
             ChargeMultiplier = 1f;
             BreakthroughExtraLoads = 0;

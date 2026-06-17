@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -34,7 +35,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 12;
-            Projectile.coldDamage = true;
         }
 
         public override void AI()
@@ -66,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * 23f;
             }
 
-            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.FrostGlowColor.ToVector3() * 0.32f);
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.32f);
 
             if (Main.rand.NextBool(2))
             {
@@ -75,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextBool() ? 67 : 187,
                     Projectile.velocity.RotatedByRandom(0.45f) * Main.rand.NextFloat(0.1f, 0.55f),
                     120,
-                    CosmicDischargeCommon.FrostCoreColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(0.95f, 1.35f));
                 dust.noGravity = true;
             }
@@ -83,15 +83,25 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(ModContent.BuffType<Nightwither>(), 180);
-            target.AddBuff(BuffID.Frozen, 90);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, 180);
+            if (!Main.dedServ)
+            {
+                CosmicDischargeCommon.SpawnDoGImpact(target.Center, Projectile.velocity, false, false);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    target.Center,
+                    Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.75f) * 5f,
+                    false,
+                    14,
+                    0.45f,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.7f));
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
             Vector2 origin = texture.Size() * 0.5f;
-            Color trailColor = Color.Lerp(CosmicDischargeCommon.FrostGlowColor, Color.White, 0.2f) * 0.45f;
+            Color trailColor = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * 0.45f;
 
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
@@ -100,7 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Main.EntitySpriteDraw(texture, drawPosition, null, trailColor, Projectile.rotation, origin, scale, SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, CosmicDischargeCommon.FrostCoreColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, CosmicDischargeCommon.DoGSpecialColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }
 

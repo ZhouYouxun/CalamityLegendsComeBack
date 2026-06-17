@@ -25,16 +25,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             player.immune = true;
             player.immuneNoBlink = true;
             player.immuneTime = System.Math.Max(player.immuneTime, 4);
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.FrostCoreColor.ToVector3() * 0.35f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.35f);
 
             if (Main.rand.NextBool(2))
             {
                 Dust dust = Dust.NewDustPerfect(
                     player.Center + Main.rand.NextVector2Circular(player.width * 0.55f, player.height * 0.55f),
-                    DustID.SnowflakeIce,
+                    DustID.PurpleTorch,
                     new Vector2(Main.rand.NextFloat(-0.45f, 0.45f), Main.rand.NextFloat(-2f, -0.8f)),
                     120,
-                    CosmicDischargeCommon.FrostWhiteColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(0.8f, 1.2f));
                 dust.noGravity = true;
             }
@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override void Update(Player player, ref int buffIndex)
         {
             player.GetDamage(DamageClass.Generic) += 0.20f;
-            Lighting.AddLight(player.Center, new Color(130, 220, 255).ToVector3() * 0.4f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.4f);
         }
     }
 
@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
 
             player.statDefense += 20;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.FrostGlowColor.ToVector3() * 0.35f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGPurpleColor.ToVector3() * 0.35f);
         }
     }
 
@@ -96,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             player.GetAttackSpeed(DamageClass.Melee) += 0.12f;
             player.GetKnockback(DamageClass.Melee) += 0.15f;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.FrostCoreColor.ToVector3() * 0.22f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGCyanColor.ToVector3() * 0.22f);
         }
     }
 
@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             player.GetCritChance(DamageClass.Generic) += 10f;
             player.GetDamage(DamageClass.Generic) += 0.12f;
-            Lighting.AddLight(player.Center, new Color(130, 200, 255).ToVector3() * 0.25f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGFuchsiaColor.ToVector3() * 0.25f);
         }
     }
 
@@ -132,11 +132,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             player.moveSpeed += 0.12f;
             player.GetArmorPenetration(DamageClass.Generic) += 15f;
-            Lighting.AddLight(player.Center, new Color(160, 140, 255).ToVector3() * 0.24f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGPurpleColor.ToVector3() * 0.24f);
         }
     }
 
-    public class CosmicDischargeFrostMarkDebuff : ModBuff
+    public class CosmicDischargeDoGMarkDebuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
 
@@ -187,10 +187,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 Dust d = Dust.NewDustPerfect(
                     player.Center + Main.rand.NextVector2Circular(player.width * 0.8f, player.height * 0.8f),
-                    DustID.SnowflakeIce,
+                    DustID.PurpleTorch,
                     new Vector2(Main.rand.NextFloat(-0.5f, 0.5f), Main.rand.NextFloat(-3f, -1.2f)),
                     110,
-                    CosmicDischargeCommon.FrostWhiteColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(0.9f, 1.35f)
                 );
                 d.noGravity = true;

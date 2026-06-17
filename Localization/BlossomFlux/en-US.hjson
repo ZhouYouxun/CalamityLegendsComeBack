@@ -231,6 +231,16 @@ Mods: {
 					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
 					'''
 			}
+
+			BFArrowConversionCore: {
+				DisplayName: Ballistic Adapter Core
+				Tooltip:
+					'''
+					While equipped, BlossomFlux Breakthrough and Bombardment convert wooden arrows into their own projectiles; all other arrows fire normally.
+					Without this accessory, both modes always fire their own projectiles regardless of arrow type.
+					Recovery, Reconnaissance, and Plague are unaffected and always fire their custom projectiles.
+					'''
+			}
 		}
 
 		Projectiles: {

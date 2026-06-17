@@ -32,7 +32,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
-            Projectile.coldDamage = true;
         }
 
         public override void AI()
@@ -50,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 }
             }
 
-            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.FrostCoreColor.ToVector3() * 0.28f);
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.28f);
 
             if (Main.rand.NextBool(3))
             {
@@ -59,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextBool() ? 67 : 187,
                     Projectile.velocity.RotatedByRandom(0.55f) * Main.rand.NextFloat(0.15f, 0.65f),
                     120,
-                    CosmicDischargeCommon.FrostGlowColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(0.9f, 1.2f));
                 dust.noGravity = true;
             }
@@ -67,8 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(ModContent.BuffType<Nightwither>(), 180);
-            target.AddBuff(BuffID.Frozen, 120);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, 240);
         }
 
         private NPC FindTarget(float maxDistance)

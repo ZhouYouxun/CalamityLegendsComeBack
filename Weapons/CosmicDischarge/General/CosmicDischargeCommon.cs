@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -41,10 +42,45 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private const int ChainTailStartY = 114;
         private const int ChainTailHeight = 84;
         private const float ChainBodyStartOffset = 30f;
-        public static readonly Color FrostCoreColor = new(150, 255, 255);
-        public static readonly Color FrostGlowColor = new(110, 175, 255);
-        public static readonly Color FrostDarkColor = new(58, 84, 150);
-        public static readonly Color FrostWhiteColor = new(225, 250, 255);
+        public static readonly Color DoGCyanColor = Color.Cyan;
+        public static readonly Color DoGFuchsiaColor = Color.Fuchsia;
+        public static readonly Color DoGPurpleColor = new(145, 0, 255);
+        public static readonly Color DoGWhiteColor = Color.White;
+        public static readonly Color DoGBlackColor = new(0, 0, 0, 0);
+
+        // Compatibility aliases: old callers now inherit the DoG palette instead of the removed frost palette.
+        public static Color FrostCoreColor => DoGSpecialColor;
+        public static Color FrostGlowColor => DoGPurpleColor;
+        public static Color FrostDarkColor => Color.Lerp(DoGPurpleColor, Color.Black, 0.35f);
+        public static Color FrostWhiteColor => DoGWhiteColor;
+
+        public static Color DoGSpecialColor =>
+            Color.Lerp(
+                DoGFuchsiaColor,
+                DoGCyanColor,
+                MathHelper.SmoothStep(0f, 1f, (MathF.Sin(Main.GlobalTimeWrappedHourly * 2f) + 1f) * 0.5f));
+
+        public static Color GetModeColor(CosmicDischargeAttackMode mode) => mode switch
+        {
+            CosmicDischargeAttackMode.Whip => DoGCyanColor,
+            CosmicDischargeAttackMode.Sword => DoGFuchsiaColor,
+            CosmicDischargeAttackMode.ChainKnife => DoGPurpleColor,
+            _ => DoGSpecialColor
+        };
+
+        public static Color Transparent(Color color) => new(color.R, color.G, color.B, 0);
+
+        public static Color RandomDoGColor(bool includePurple = true)
+        {
+            int max = includePurple ? 4 : 3;
+            return Main.rand.Next(max) switch
+            {
+                0 => DoGCyanColor,
+                1 => DoGFuchsiaColor,
+                2 => DoGSpecialColor,
+                _ => DoGPurpleColor
+            };
+        }
 
         public static Vector2 GetAimDirection(Player player, Vector2 fallback)
         {
@@ -115,15 +151,82 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             return Vector2.DistanceSquared(closest, tip) <= radius * radius;
         }
 
-        public static void ApplyColdDebuffs(NPC target, int duration)
+        public static void ApplyColdDebuffs(NPC target, int duration) => ApplyDoGDebuffs(target, duration);
+
+        public static void ApplyDoGDebuffs(NPC target, int duration)
         {
             if (target == null || !target.active)
                 return;
 
-            target.AddBuff(ModContent.BuffType<Nightwither>(), duration);
-            target.AddBuff(BuffID.Frozen, duration);
-            target.AddBuff(BuffID.Frostburn2, duration);
-            target.AddBuff(BuffID.Chilled, duration);
+            target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), duration);
+        }
+
+        public static void SpawnDoGSparkBurst(Vector2 center, int count, float minSpeed, float maxSpeed, float scale = 0.65f, Vector2? bias = null)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 biasDirection = bias.GetValueOrDefault(Vector2.Zero);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 direction = count <= 1
+                    ? Main.rand.NextVector2CircularEdge(1f, 1f)
+                    : (MathHelper.TwoPi * i / count).ToRotationVector2().RotatedByRandom(0.45f);
+                Vector2 velocity = direction * Main.rand.NextFloat(minSpeed, maxSpeed) + biasDirection;
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center + Main.rand.NextVector2Circular(18f, 18f),
+                    velocity,
+                    false,
+                    Main.rand.Next(14, 28),
+                    Main.rand.NextFloat(scale * 0.72f, scale * 1.25f),
+                    RandomDoGColor()));
+            }
+        }
+
+        public static void SpawnDoGRiftCracks(Vector2 center, int count, float minLength, float maxLength, float scale = 0.55f)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 direction = (MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    center + direction * Main.rand.NextFloat(2f, 18f),
+                    direction * Main.rand.NextFloat(minLength, maxLength),
+                    false,
+                    Main.rand.Next(8, 15),
+                    Main.rand.NextFloat(scale * 0.7f, scale * 1.15f),
+                    Transparent(RandomDoGColor()) * 0.75f));
+            }
+        }
+
+        public static void SpawnDoGImpact(Vector2 center, Vector2 direction, bool heavy, bool tip = false)
+        {
+            if (Main.dedServ)
+                return;
+
+            direction = direction.SafeNormalize(Vector2.UnitX);
+            Color main = heavy ? DoGFuchsiaColor : DoGSpecialColor;
+            Color secondary = tip ? DoGWhiteColor : DoGCyanColor;
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                center,
+                Vector2.Zero,
+                Transparent(main) * (heavy ? 0.55f : 0.35f),
+                heavy ? 0.68f : 0.44f,
+                heavy ? 24 : 16));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                direction * 0.7f,
+                Transparent(secondary) * (heavy ? 0.45f : 0.3f),
+                Vector2.One,
+                direction.ToRotation(),
+                0.04f,
+                heavy ? 0.32f : 0.19f,
+                heavy ? 18 : 12));
+            SpawnDoGSparkBurst(center, heavy ? 22 : 12, 3f, heavy ? 13f : 8f, heavy ? 0.72f : 0.5f, direction * 1.2f);
+            if (heavy || tip)
+                SpawnDoGRiftCracks(center, tip ? 5 : 3, 4f, tip ? 10f : 7f, tip ? 0.72f : 0.48f);
         }
 
         public static bool HasOwnedProjectile(Player player, params int[] projectileTypes)
@@ -277,7 +380,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 texture,
                 tailPosition - Main.screenPosition + drawOffset,
                 tailFrame,
-                Color.Lerp(drawColor, FrostWhiteColor, 0.22f),
+                Color.Lerp(drawColor, DoGWhiteColor, 0.22f),
                 lastDirection.ToRotation() + MathHelper.PiOver2,
                 new Vector2(tailFrame.Width * 0.5f, 0f),
                 scale,
@@ -288,7 +391,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Texture2D ring = ModContent.Request<Texture2D>(RingTexturePath).Value;
             Vector2 drawPosition = player.Bottom - Main.screenPosition + new Vector2(0f, -6f + player.gfxOffY);
-            Color ringColor = Color.Lerp(FrostGlowColor, FrostCoreColor, 0.45f) * (0.35f * intensity);
+            Color ringColor = Color.Lerp(DoGPurpleColor, DoGSpecialColor, 0.45f) * (0.35f * intensity);
 
             spriteBatch.SetBlendState(BlendState.Additive);
 
@@ -306,7 +409,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 ring,
                 drawPosition,
                 null,
-                FrostCoreColor * (0.18f * intensity),
+                DoGSpecialColor * (0.18f * intensity),
                 Main.GlobalTimeWrappedHourly * 0.8f,
                 ring.Size() * 0.5f,
                 new Vector2(0.45f, 0.14f) * (1f + 0.15f * intensity),

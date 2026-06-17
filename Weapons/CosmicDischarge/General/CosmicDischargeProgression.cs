@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public static bool DownedDoG => DownedBossSystem.downedDoG;
         public static bool DownedYharon => DownedBossSystem.downedYharon;
 
-        public static int QuickDrawIceBombCount
+        public static int QuickDrawRiftBombCount
         {
             get
             {
@@ -30,9 +30,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
         }
 
-        public static int QuickDrawIceBombBursts => DownedMoonLord ? 3 : DownedPlantera ? 2 : 1;
+        public static int QuickDrawRiftBombBursts => DownedMoonLord ? 3 : DownedPlantera ? 2 : 1;
 
-        public static float QuickDrawIceBombDamageFactor
+        public static float QuickDrawRiftBombDamageFactor
         {
             get
             {
@@ -46,5 +46,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return 0.22f;
             }
         }
+
+        public static int QuickDrawIceBombCount => QuickDrawRiftBombCount;
+        public static int QuickDrawIceBombBursts => QuickDrawRiftBombBursts;
+        public static float QuickDrawIceBombDamageFactor => QuickDrawRiftBombDamageFactor;
     }
 }

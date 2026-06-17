@@ -445,6 +445,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             magazineEffectIDs[index] = 0;
         }
 
+        public void PublicClearMagazine(int index) => ClearMagazine(index);
+
+        public void PublicClearMagazineWithReturn(Player player, int index) => ClearMagazineWithAmmoReturn(player, index);
+
+        public void DirectLoadMagazine(int slotIndex, int ammoType, int effectID, int capacity)
+        {
+            slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
+            magazineAmmoTypes[slotIndex] = ammoType;
+            magazineEffectIDs[slotIndex] = effectID;
+            magazineEffectPowers[slotIndex] = capacity;
+        }
+
         private void TryReturnStoredAmmo(Player player)
         {
             TryReturnMagazineAmmo(player, CurrentMagazineIndex);
@@ -1195,49 +1207,44 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            // ===== 左键固定文案 =====
-            string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
+            Player player = Main.LocalPlayer;
+            bool isChinese = Language.ActiveCulture.Name.StartsWith("zh");
 
-            string ammoText = BuildMagazineTooltipText(Main.LocalPlayer);
+            string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
+            string ammoText = BuildMagazineTooltipText(player);
             string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
 
-            // ===== 右键阶段 =====
             int state = GetRightClickProgressState();
             string rightStateText = this.GetLocalizedValue($"SHPC_RightIntro{state + 1}");
 
-            // ===== 最后一行 =====
             string finalLine = this.GetLocalizedValue("SHPC_Final");
-
-            // ===== 传奇文本 =====
             string legendaryText = this.GetLocalizedValue("LegendaryText");
-
-            // ===== Shift提示 =====
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
+            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
 
-            // ===== 明确检测 Shift 是否按下 =====
-            string legendarySection = shiftHint;
-            if (Main.keyState.PressingShift())
-                legendarySection = legendaryText;
+            string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+            string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+            string loadingKeyText = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
 
-            string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            bool legendaryEmblemEquipped = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
             string exHint = legendaryEmblemEquipped
                 ? string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText)
                 : this.GetLocalizedValue("SHPC_EXDisabledHint");
-            string ammoWheelHint = string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), formKeyText);
 
-            // ===== 拼接 =====
+            string ammoWheelHint = string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), formKeyText);
+            string loadingUIHint = string.Format(this.GetLocalizedValue("SHPC_LoadingUIHint"), loadingKeyText);
+
             string finalText =
                 leftIntro + ammoText +
                 "\n\n" +
-                passiveText + "\n\n" +
+                loadingUIHint + "\n" +
+                ammoWheelHint +
+                "\n\n" +
                 rightStateText + "\n\n" +
+                passiveText + "\n\n" +
                 exHint + "\n\n" +
-                ammoWheelHint + "\n\n" +
                 finalLine + "\n";
 
-            // ===== 替换 Tooltip =====
             tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName, legendarySection));
         }

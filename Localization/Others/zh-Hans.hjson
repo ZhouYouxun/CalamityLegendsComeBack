@@ -209,6 +209,7 @@ Mods: {
 		Keybinds: {
 			LegendarySkill.DisplayName: 传奇技能
 			LegendaryWeaponFormSwitch.DisplayName: 传奇武器形态切换
+			SHPCLoadingUI.DisplayName: SHPC界面
 		}
 	}
 }

@@ -15,72 +15,74 @@ Mods: {
 					WhipName: Whip Mode
 					SwordName: Sword Mode
 					ChainKnifeName: Chain Blade Mode
-					UltimateActiveText: Glacial Age!
+					UltimateActiveText: God-rift opened!
 					CosmicDischargeLeft:
 						'''
-						[c/8DEBFF:Left click: performs a three-hit combo in the current form. Hits apply a Frost Mark (5s).]
-						[c/8DEBFF:Whip form: slashes from above, below, then thrusts forward. Whip hits apply Frost Mark. Under Frozen Emperor, swings dual whips simultaneously from both directions.]
-						[c/8DEBFF:Sword form: sweeps twice and slams. Striking a target with Frost Mark detonates it, dealing 1.4x damage and launching 8 radial ice bolts (12 under Frozen Emperor).]
-						[c/8DEBFF:Chain Blade form: sweeps the chain in a wide arc. Detonates Frost Marks on contact; releases ice bolts at the arc's peak. Under Frozen Emperor, reach and bolt count are increased.]
+						[c/8DEBFF:Left click: performs a three-hit combo in the current form. Hits apply a Devourer rift mark.]
+						[c/8DEBFF:Whip form: clockwise and counterclockwise lashes throw slowing rift bombs; the thrust detonates where it hits.]
+						[c/8DEBFF:Sword form: the blade stays straight at fixed length. Each swing releases multiple heavy-homing DoG light blades for repeated single-target hits.]
+						[c/8DEBFF:Chain Blade form: several segment chains converge on the cursor, creating a severe explosion and lingering damage.]
 						'''
 					CosmicDischargeRight:
 						'''
-						[c/6FDFFF:Right click: cycles left-click attack forms (Whip -> Sword -> Chain Blade).]
-						[c/6FDFFF:During the third hit windup: triggers Frostflash Draw instead, instantly thrusting the blade-chain and rapidly retracting it. Only this attack grants 10 ultimate energy.]
+						[c/6FDFFF:Right click: opens a rift portal and cycles forms (Whip -> Sword -> Chain Blade).]
+						[c/6FDFFF:During the third hit windup: triggers Rift Draw instead, instantly thrusting the blade-chain and rapidly retracting it. Only this attack grants 10 ultimate energy.]
 						'''
 					CosmicDischargeUltimate:
 						'''
-						[c/FFE85A:Ultimate: at 120 energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to inflict Glacial State on enemies within 25 tiles and create a 10 second frost field.]
-						[c/FFE85A:Frost field: enemies within 8 tiles are heavily slowed; you take 35% less damage and gain 20 defense. Ultimate energy cannot be gained while it exists.]
+						[c/FFE85A:Ultimate: at 120 energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to tear open a Devourer rift and create a 10 second field.]
+						[c/FFE85A:Rift field: nearby enemies are heavily slowed, suffer GodSlayerInferno, and periodic DoG laser walls fire through the field.]
 						'''
-					CosmicDischargePassive: "[c/B8F4FF:Voidfrost Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Frostwind Revival (+20% damage). Cooldown: 60 seconds.]"
+					CosmicDischargePassive: "[c/B8F4FF:Rift Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Rift Revival (+20% damage). Cooldown: 60 seconds.]"
 				}
 			}
 		}
 
 		Buffs: {
 			CosmicDischargeIceboundBuff: {
-				DisplayName: Icebound Undying
+				DisplayName: Riftbound Undying
 				Description: Fatal damage is being suppressed and life regeneration is greatly increased.
 			}
 
 			CosmicDischargeFrostwindRevivalBuff: {
-				DisplayName: Frostwind Revival
-				Description: The cold shatters your limits. Damage increased by 20%.
+				DisplayName: Rift Revival
+				Description: The Devourer rift shatters your limits. Damage increased by 20%.
 			}
 
 			CosmicDischargeUltimateGuardBuff: {
-				DisplayName: Frost Field Guard
+				DisplayName: Rift Field Guard
 				Description: Damage taken is reduced and defense is increased.
 			}
 
-			CosmicDischargeFrostMarkDebuff: {
-				DisplayName: Frost Mark
-				Description: Marked by Cosmic Discharge. Certain attacks can detonate the mark.
+			CosmicDischargeDoGMarkDebuff: {
+				DisplayName: Rift Mark
+				Description: Marked by Devourer rift energy. Certain attacks can detonate the mark.
 			}
 
 			CosmicDischargeFrozenEmperorBuff: {
-				DisplayName: Frozen Emperor
+				DisplayName: Devourer Ascension
 				Description: Damage, mobility, defense, damage reduction, and melee attack speed are increased.
 			}
 
 			CosmicDischargeFrozenEmperorSliverBuff: {
-				DisplayName: Frozen Emperor Sliver
+				DisplayName: Rift Sliver
 				Description: Damage and defense are slightly increased.
 			}
 		}
 
 		Projectiles: {
 			Melee: {
-				CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Frost Wave
-				CosmicDischargeIceBomb.DisplayName: Cosmic Discharge Ice Bomb
-				CosmicDischargeUltimateField.DisplayName: Cosmic Discharge Frost Field
+				CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Rift Wave
+				CosmicDischargeDoGRiftBomb.DisplayName: Cosmic Discharge Rift Bomb
+				CosmicDischargeDoGEnergyBolt.DisplayName: Cosmic Discharge DoG Blade
+				CosmicDischargeDoGConvergenceExplosion.DisplayName: Cosmic Discharge Segment Rift
+				CosmicDischargeModeShift.DisplayName: Cosmic Discharge Mode Rift
+				CosmicDischargeUltimateField.DisplayName: Cosmic Discharge Rift Field
 				CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
 				CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
 				CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
 				CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
 				CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
-				CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
 				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
@@ -88,9 +90,9 @@ Mods: {
 		}
 
 		Cooldowns: {
-			CosmicDischarge_Ultimate: Frostflash Energy
-			CosmicDischarge_Icebound: Voidfrost Seal
-			CosmicDischarge_QuickDraw: Frostflash Draw
+			CosmicDischarge_Ultimate: Rift Energy
+			CosmicDischarge_Icebound: Rift Seal
+			CosmicDischarge_QuickDraw: Rift Draw
 		}
 	}
 }

@@ -1,6 +1,5 @@
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
-using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -89,10 +88,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 if (Player.whoAmI == Main.myPlayer)
                 {
-                    SoundEngine.PlaySound(SoundID.Item30 with { Volume = 1.0f, Pitch = -0.3f }, Player.Center);
-                    SoundEngine.PlaySound(SoundID.Item29 with { Volume = 1.2f, Pitch = 0.0f }, Player.Center);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.8f, Pitch = -0.08f }, Player.Center);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerSpawn") { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
                     Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 20f);
-                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostWhiteColor, "Frozen Emperor Mode!", true, true);
+                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGWhiteColor, "Devourer Ascension!", true, true);
                 }
             }
 
@@ -103,10 +102,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2 dustPos = Player.Center + Main.rand.NextVector2Circular(24f, 32f);
                     Dust d = Dust.NewDustPerfect(
                         dustPos,
-                        DustID.SnowflakeIce,
+                        DustID.PurpleTorch,
                         new Vector2(Player.velocity.X * 0.4f, Main.rand.NextFloat(-2.5f, -0.6f)),
                         120,
-                        CosmicDischargeCommon.FrostCoreColor,
+                        CosmicDischargeCommon.RandomDoGColor(),
                         Main.rand.NextFloat(0.75f, 1.2f)
                     );
                     d.noGravity = true;
@@ -119,7 +118,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         GeneralParticleHandler.SpawnParticle(new PulseRing(
                             Player.MountedCenter,
                             Vector2.Zero,
-                            CosmicDischargeCommon.FrostGlowColor * 0.42f,
+                            CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.42f,
                             0.035f,
                             0.75f,
                             20
@@ -172,12 +171,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public void ToggleAttackMode()
         {
-            AttackMode = AttackMode switch
+            SetAttackMode(AttackMode switch
             {
                 CosmicDischargeAttackMode.Whip => CosmicDischargeAttackMode.Sword,
                 CosmicDischargeAttackMode.Sword => CosmicDischargeAttackMode.ChainKnife,
                 _ => CosmicDischargeAttackMode.Whip
-            };
+            });
+        }
+
+        public void SetAttackMode(CosmicDischargeAttackMode mode)
+        {
+            AttackMode = mode;
 
             if (Player.whoAmI == Main.myPlayer)
             {
@@ -187,12 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     CosmicDischargeAttackMode.ChainKnife => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.ChainKnifeName"),
                     _ => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.WhipName")
                 };
-                Color textColor = AttackMode switch
-                {
-                    CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostGlowColor,
-                    CosmicDischargeAttackMode.ChainKnife => new Color(170, 150, 255),
-                    _ => CosmicDischargeCommon.FrostCoreColor
-                };
+                Color textColor = CosmicDischargeCommon.GetModeColor(AttackMode);
                 CombatText.NewText(Player.getRect(), textColor, modeName, true, false);
             }
 
@@ -220,17 +219,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 _ => 0.35f
             };
 
-            SoundEngine.PlaySound(SoundID.Item30 with { Volume = 0.85f, Pitch = pitch }, Player.Center);
-            SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.55f, Pitch = pitch - 0.1f }, Player.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DemonSwordKillMode") { Volume = 0.68f, Pitch = pitch, MaxInstances = 2 }, Player.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.34f, Pitch = pitch + 0.2f, MaxInstances = 2 }, Player.Center);
 
             if (!Main.dedServ)
             {
-                Color ringColor = AttackMode switch
-                {
-                    CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostGlowColor * 0.8f,
-                    CosmicDischargeAttackMode.ChainKnife => new Color(130, 110, 255) * 0.8f,
-                    _ => CosmicDischargeCommon.FrostCoreColor * 0.8f
-                };
+                Color ringColor = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.GetModeColor(AttackMode)) * 0.8f;
 
                 GeneralParticleHandler.SpawnParticle(new PulseRing(
                     Player.MountedCenter,
@@ -243,20 +237,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 for (int i = 0; i < 20; i++)
                 {
                     Vector2 velocity = Main.rand.NextVector2Circular(4f, 4f);
-                    Color sparkColor = AttackMode switch
-                    {
-                        CosmicDischargeAttackMode.Sword => CosmicDischargeCommon.FrostCoreColor,
-                        CosmicDischargeAttackMode.ChainKnife => new Color(180, 160, 255),
-                        _ => CosmicDischargeCommon.FrostWhiteColor
-                    };
-
                     GeneralParticleHandler.SpawnParticle(new SparkParticle(
                         Player.MountedCenter,
                         velocity,
                         false,
                         Main.rand.Next(15, 25),
                         Main.rand.NextFloat(0.5f, 0.9f),
-                        sparkColor));
+                        CosmicDischargeCommon.RandomDoGColor()));
                 }
             }
         }
@@ -294,7 +281,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Player.AddBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>(), 1800);
                 if (Player.whoAmI == Main.myPlayer && amount > 0)
                 {
-                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostCoreColor, $"+{amount} Frost Sliver ({FrozenEmperorSliverCount}/10)", false, false);
+                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGSpecialColor, $"+{amount} Rift Sliver ({FrozenEmperorSliverCount}/10)", false, false);
                 }
             }
         }
@@ -321,13 +308,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 0f,
                 Player.whoAmI);
 
-            SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.86f, Pitch = -0.12f }, Player.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.78f, Pitch = -0.12f }, Player.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerSpawn") { Volume = 0.46f, Pitch = 0.12f }, Player.Center);
 
             if (Player.whoAmI == Main.myPlayer)
             {
                 Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 15f);
                 string activeText = Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.UltimateActiveText");
-                CombatText.NewText(Player.getRect(), CosmicDischargeCommon.FrostCoreColor, activeText, true, true);
+                CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGSpecialColor, activeText, true, true);
             }
         }
 

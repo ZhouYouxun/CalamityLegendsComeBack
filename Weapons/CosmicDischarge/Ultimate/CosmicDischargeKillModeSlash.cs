@@ -35,7 +35,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 12;
             Projectile.ownerHitCheck = true;
-            Projectile.coldDamage = true;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -48,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Owner.Center,
                 Vector2.Zero,
-                CosmicDischargeCommon.FrostGlowColor * 0.35f,
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.35f,
                 Vector2.One,
                 0f,
                 0.04f,
@@ -58,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < 18; i++)
             {
                 Vector2 velocity = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * Main.rand.NextFloat(4f, 10f);
-                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.FrostCoreColor, Main.rand.NextFloat(1.15f, 1.7f));
+                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.RandomDoGColor(), Main.rand.NextFloat(1.15f, 1.7f));
                 dust.noGravity = true;
             }
         }
@@ -97,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         Main.rand.NextBool() ? 67 : 187,
                         slashDirection.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 5.5f),
                         120,
-                        CosmicDischargeCommon.FrostCoreColor,
+                        CosmicDischargeCommon.RandomDoGColor(),
                         Main.rand.NextFloat(1.15f, 1.8f));
                     dust.noGravity = true;
                 }
@@ -107,7 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                         Projectile.Center,
                         slashDirection * 0.3f,
-                        CosmicDischargeCommon.FrostGlowColor * 0.3f,
+                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * 0.3f,
                         Vector2.One,
                         slashDirection.ToRotation(),
                         0.02f,
@@ -135,8 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(ModContent.BuffType<Nightwither>(), 240);
-            target.AddBuff(BuffID.Frozen, 180);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, 360);
             Owner.AddBuff(ModContent.BuffType<CosmicFreeze>(), 240);
             Owner.SetScreenshake(8f);
 
@@ -146,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                 target.Center,
                 Vector2.Zero,
-                CosmicDischargeCommon.FrostCoreColor * 0.4f,
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.4f,
                 0.55f,
                 24));
 

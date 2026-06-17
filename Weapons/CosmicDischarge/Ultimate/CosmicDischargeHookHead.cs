@@ -50,7 +50,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 6;
             Projectile.ownerHitCheck = true;
-            Projectile.coldDamage = true;
         }
 
         public override void AI()
@@ -93,7 +92,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextBool() ? 67 : 187,
                     Projectile.velocity.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.25f, 0.9f),
                     120,
-                    CosmicDischargeCommon.FrostCoreColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(1f, 1.35f));
                 dust.noGravity = true;
             }
@@ -149,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextBool() ? 67 : 187,
                     Main.rand.NextVector2Circular(0.8f, 0.8f),
                     120,
-                    CosmicDischargeCommon.FrostGlowColor,
+                    CosmicDischargeCommon.RandomDoGColor(),
                     Main.rand.NextFloat(1.05f, 1.45f));
                 dust.noGravity = true;
             }
@@ -179,8 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(ModContent.BuffType<Nightwither>(), 240);
-            target.AddBuff(BuffID.Frozen, 120);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, 360);
             Owner.AddBuff(ModContent.BuffType<CosmicFreeze>(), 180);
 
             if (State == HookState.Firing)
@@ -201,12 +199,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Projectile.GetSource_FromThis(),
                     target.Center,
                     Vector2.Zero,
-                    ModContent.ProjectileType<CalamityMod.Projectiles.Melee.CosmicIceBurst>(),
+                    ModContent.ProjectileType<CosmicDischargeDoGConvergenceExplosion>(),
                     (int)(Projectile.damage * 0.55f),
                     0f,
                     Projectile.owner,
                     0f,
-                    1.15f);
+                    130f);
 
                 explosionCooldown = 10;
             }

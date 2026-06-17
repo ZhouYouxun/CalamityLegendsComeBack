@@ -14,73 +14,75 @@ Mods: {
 					Tooltip: "[GFB]"
 					WhipName: 鞭形态
 					SwordName: 剑形态
-					ChainKnifeName: 弧斩形态
-					UltimateActiveText: 冰河时代!
+					ChainKnifeName: 链刀形态
+					UltimateActiveText: 神明裂隙展开!
 					CosmicDischargeLeft:
 						'''
-						[c/8DEBFF:左键：根据当前形态释放三连击。命中时施加”冰霜印记”(持续5秒)。]
-						[c/8DEBFF:鞭形态：从上下甩出并突刺。击中时施加印记。在冰皇形态下，将同时自上方与下方挥舞双重鞭刃，进行双重打击。]
-						[c/8DEBFF:剑形态：两次挥舞与一次砸击。攻击带有印记的敌人会引爆印记，造成1.4倍最终伤害并向外散射8枚寒冰飞弹(冰皇形态下为12枚)。]
-						[c/8DEBFF:弧斩形态：挥动铁链进行大范围弧形斩击。命中时引爆冰霜印记；弧顶释放寒冰飞弹。在冰皇形态下，攻击范围与飞弹数量提升。]
+						[c/8DEBFF:左键：根据当前形态释放三连击，命中施加神明吞噬者风格的裂隙印记。]
+						[c/8DEBFF:鞭形态：顺/逆时针甩动会甩出逐渐减速的裂隙炸弹；直线突刺命中会在原地爆炸。]
+						[c/8DEBFF:剑形态：刀刃保持伸直并固定长度。每次挥动都会释放多枚强追踪 DoG 光刃，适合反复压制单体目标。]
+						[c/8DEBFF:链刀形态：多条段体锁链汇聚到鼠标位置，引发严重爆炸和短暂滞留伤害。]
 						'''
 					CosmicDischargeRight:
 						'''
-						[c/6FDFFF:右键：循环切换左键的形态（鞭子 -> 剑 -> 弧斩）。]
-						[c/6FDFFF:第三段前摇期间右键：触发寒芒出鞘，直接刺出并快速抽回弹刃。只有寒芒出鞘会提供10点终结技能量。]
+						[c/6FDFFF:右键：通过裂隙传送门循环切换左键形态（鞭 -> 剑 -> 链刀）。]
+						[c/6FDFFF:第三段前摇期间右键：触发裂隙出鞘，直接刺出并快速抽回弹刃。只有裂隙出鞘会提供10点终结技能量。]
 						'''
 					CosmicDischargeUltimate:
 						'''
-						[c/FFE85A:终结技：能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，给予25格内敌怪10秒冰河时代，并在玩家身上生成10秒力场。]
-						[c/FFE85A:力场：8格内敌怪被高额减速；玩家受到伤害-35%，防御+20。力场存在期间无法获得终结技能量。]
+						[c/FFE85A:终结技：能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，撕开神明裂隙并在玩家身上生成10秒力场。]
+						[c/FFE85A:力场：8格内敌怪被高额减速并持续遭受 GodSlayerInferno；周期性生成 DoG 激光墙。]
 						'''
-					CosmicDischargePassive: '''[c/B8F4FF:寒宇冰封：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分将被削减至上限。触发时获得5秒"寒风再起"（伤害+20%），冷却60秒。]'''
+					CosmicDischargePassive: '''[c/B8F4FF:裂隙封存：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分将被削减至上限。触发时获得5秒"裂隙复苏"（伤害+20%），冷却60秒。]'''
 				}
 			}
 		}
 
 		Buffs: {
 			CosmicDischargeIceboundBuff: {
-				DisplayName: 冰固免死
+				DisplayName: 裂隙免死
 				Description: 致死伤害被压制，生命再生大幅提高。
 			}
 
 			CosmicDischargeFrostwindRevivalBuff: {
-				DisplayName: 寒风再起
-				Description: 寒冷打破极限，伤害提升20%。
+				DisplayName: 裂隙复苏
+				Description: 神明裂隙打破极限，伤害提升20%。
 			}
 
 			CosmicDischargeUltimateGuardBuff: {
-				DisplayName: 寒宙力场
+				DisplayName: 神明裂隙场
 				Description: 受到伤害降低，防御提高。
 			}
 
-			CosmicDischargeFrostMarkDebuff: {
-				DisplayName: 冰霜印记
-				Description: 被寒宙标记，特定攻击会引爆印记。
+			CosmicDischargeDoGMarkDebuff: {
+				DisplayName: 裂隙印记
+				Description: 被神明吞噬者裂隙标记，特定攻击会引爆印记。
 			}
 
 			CosmicDischargeFrozenEmperorBuff: {
-				DisplayName: 冰皇形态
+				DisplayName: 吞噬升格
 				Description: 伤害、机动、防御、伤害减免与近战攻速提高。
 			}
 
 			CosmicDischargeFrozenEmperorSliverBuff: {
-				DisplayName: 冰皇残辉
+				DisplayName: 裂隙残辉
 				Description: 伤害与防御小幅提高。
 			}
 		}
 
 		Projectiles: {
 			Melee: {
-				CosmicDischargeSwordWave.DisplayName: 寒宙剑气
-				CosmicDischargeIceBomb.DisplayName: 寒宙冰炸弹
-				CosmicDischargeUltimateField.DisplayName: 寒宙力场
+				CosmicDischargeSwordWave.DisplayName: 裂隙剑气
+				CosmicDischargeDoGRiftBomb.DisplayName: 裂隙炸弹
+				CosmicDischargeDoGEnergyBolt.DisplayName: 神明光刃
+				CosmicDischargeDoGConvergenceExplosion.DisplayName: 段体裂隙爆破
+				CosmicDischargeModeShift.DisplayName: 形态裂隙
+				CosmicDischargeUltimateField.DisplayName: 神明裂隙场
 				// CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
 				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
 				// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
 				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
 				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
-				// CosmicDischargeIceShard.DisplayName: Cosmic Discharge Ice Shard
 				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
@@ -88,9 +90,9 @@ Mods: {
 		}
 
 		Cooldowns: {
-			CosmicDischarge_Ultimate: 寒芒能量
-			CosmicDischarge_Icebound: 寒宇冰封
-			CosmicDischarge_QuickDraw: 寒芒出鞘
+			CosmicDischarge_Ultimate: 裂隙能量
+			CosmicDischarge_Icebound: 裂隙封存
+			CosmicDischarge_QuickDraw: 裂隙出鞘
 		}
 	}
 }

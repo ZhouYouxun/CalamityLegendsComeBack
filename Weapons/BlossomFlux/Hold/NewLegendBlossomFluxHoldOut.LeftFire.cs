@@ -219,6 +219,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             int fireSpeedTier = GetPastLingeringFireSpeedTier();
             Vector2 direction = GetAimVelocity(1f).SafeNormalize(Vector2.UnitX * Owner.direction);
+            bool arrowConversion = BFAccessories.ArrowConversionEquipped;
+            bool convertWoodenArrow = CalamityUtils.CheckWoodenAmmo(projectileType, Owner);
+            bool convertToLeaf = arrowConversion ? convertWoodenArrow : true;
+            int finalProjectileType = convertToLeaf ? ModContent.ProjectileType<BFLeafProj>() : projectileType;
             float projectileSpeed = speed;
             Vector2 visualVelocity = direction * Owner.HeldItem.shootSpeed * 0.55f;
             Projectile.velocity = visualVelocity;
@@ -227,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             {
                 Vector2 shotVelocity = direction * projectileSpeed * Main.rand.NextFloat(0.6f, 1.4f);
                 Vector2 spawnPosition = Owner.RotatedRelativePoint(Owner.MountedCenter, true) + Utils.RandomVector2(Main.rand, -15f, 15f);
-                int projectileIndex = Projectile.NewProjectile(source, spawnPosition, shotVelocity, projectileType, damage, knockback, Projectile.owner);
+                int projectileIndex = Projectile.NewProjectile(source, spawnPosition, shotVelocity, finalProjectileType, damage, knockback, Projectile.owner);
                 if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
                     continue;
 
@@ -240,7 +244,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
                 BFArrow_CDetecEffect arrowEffect = arrowProjectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
                 arrowEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_ABreak;
-                arrowEffect.ConvertedLeafArrow = false;
+                arrowEffect.ConvertedLeafArrow = convertToLeaf;
 
                 BFAccessoryGlobalProjectile accessoryEffect = arrowProjectile.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
                 accessoryEffect.BlossomFluxArrow = true;
@@ -488,12 +492,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             int leafProjectileType = ModContent.ProjectileType<BFLeafProj>();
             bool convertWoodenArrow = CalamityUtils.CheckWoodenAmmo(projectileType, Owner);
+            bool arrowConversion = BFAccessories.ArrowConversionEquipped;
             bool convertToLeaf = preset switch
             {
-                BlossomFluxChloroplastPresetType.Chlo_ABreak => convertWoodenArrow,
+                BlossomFluxChloroplastPresetType.Chlo_ABreak => arrowConversion ? convertWoodenArrow : true,
                 BlossomFluxChloroplastPresetType.Chlo_BRecov => true,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => true,
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => convertWoodenArrow,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => arrowConversion ? convertWoodenArrow : true,
                 _ => false
             };
             int finalProjectileType = convertToLeaf ? leafProjectileType : projectileType;

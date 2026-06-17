@@ -1,6 +1,7 @@
 using System;
 using CalamityMod;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Typeless;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -64,19 +65,28 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (!npc.active || npc.friendly || npc.dontTakeDamage || Vector2.DistanceSquared(npc.Center, Projectile.Center) > GlacialAgeRadius * GlacialAgeRadius)
                     continue;
 
-                CosmicDischargeCommon.ApplyColdDebuffs(npc, 10 * 60);
+                CosmicDischargeCommon.ApplyDoGDebuffs(npc, 10 * 60);
             }
 
             if (!Main.dedServ)
             {
-                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.82f, Pitch = 0.28f }, Projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.82f, Pitch = -0.05f }, Projectile.Center);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerSpawn") { Volume = 0.46f, Pitch = 0.18f }, Projectile.Center);
                 GeneralParticleHandler.SpawnParticle(new PulseRing(
                     Projectile.Center,
                     Vector2.Zero,
-                    CosmicDischargeCommon.FrostCoreColor * 0.65f,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.65f,
                     0.08f,
                     GlacialAgeRadius / 90f,
                     26));
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                    Projectile.Center,
+                    Vector2.Zero,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.7f,
+                    1.25f,
+                    28));
+                CosmicDischargeCommon.SpawnDoGSparkBurst(Projectile.Center, 40, 4f, 16f, 0.82f);
+                CosmicDischargeCommon.SpawnDoGRiftCracks(Projectile.Center, 25, 8f, 18f, 0.75f);
             }
         }
 
@@ -88,13 +98,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     continue;
 
                 npc.velocity *= npc.boss ? 0.93f : 0.76f;
-                npc.AddBuff(BuffID.Chilled, 30);
-                CosmicDischargeCommon.ApplyColdDebuffs(npc, 45);
+                CosmicDischargeCommon.ApplyDoGDebuffs(npc, 90);
             }
         }
 
         private void SpawnFieldDust()
         {
+            if (Time % 90f == 30f && Main.myPlayer == Projectile.owner)
+                SpawnLaserWallCycle();
+
             if (Main.dedServ || Main.rand.NextBool(2))
                 return;
 
@@ -102,21 +114,48 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Vector2 velocity = (Projectile.Center - rim).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(0.25f, 1.1f);
             Dust dust = Dust.NewDustPerfect(
                 rim,
-                Main.rand.NextBool() ? DustID.Frost : DustID.SnowflakeIce,
+                DustID.PurpleTorch,
                 velocity,
                 120,
-                CosmicDischargeCommon.FrostCoreColor,
+                CosmicDischargeCommon.RandomDoGColor(),
                 Main.rand.NextFloat(0.85f, 1.25f));
             dust.noGravity = true;
+
+        }
+
+        private void SpawnLaserWallCycle()
+        {
+            int beams = Main.rand.Next(2, 5);
+            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            for (int i = 0; i < beams; i++)
+            {
+                Vector2 direction = (baseAngle + MathHelper.TwoPi * i / beams).ToRotationVector2();
+                int beam = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    direction,
+                    ModContent.ProjectileType<FriendlyLaserWallBeam>(),
+                    (int)(Projectile.damage * 0.38f),
+                    0f,
+                    Projectile.owner,
+                    1f,
+                    0f,
+                    4f);
+                if (Main.projectile.IndexInRange(beam))
+                    Main.projectile[beam].scale = 1.1f;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D portal = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Melee/StreamGougePortal").Value;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Vector2 origin = bloom.Size() * 0.5f;
+            Vector2 portalOrigin = portal.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float pulse = 1f + 0.035f * MathF.Sin(Main.GlobalTimeWrappedHourly * MathHelper.TwoPi);
+            float portalRotation = Main.GlobalTimeWrappedHourly * 5.5f + Projectile.identity * 0.18f;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
@@ -124,11 +163,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 bloom,
                 drawPosition,
                 null,
-                CosmicDischargeCommon.FrostGlowColor * 0.15f * Projectile.Opacity,
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.15f * Projectile.Opacity,
                 0f,
                 origin,
                 FieldRadius / bloom.Width * 2f * pulse,
                 SpriteEffects.None);
+
+            Main.EntitySpriteDraw(portal, drawPosition, null, Color.Black * 0.28f * Projectile.Opacity, portalRotation, portalOrigin, 0.42f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * 0.34f * Projectile.Opacity, portalRotation * 0.6f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.34f * Projectile.Opacity, -portalRotation * 0.7f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
 
             for (int i = 0; i < 42; i++)
             {
@@ -138,7 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     pixel,
                     point,
                     new Rectangle(0, 0, 1, 1),
-                    CosmicDischargeCommon.FrostWhiteColor * 0.4f * Projectile.Opacity,
+                    CosmicDischargeCommon.Transparent(Color.Lerp(CosmicDischargeCommon.DoGCyanColor, CosmicDischargeCommon.DoGFuchsiaColor, (float)i / 41f)) * 0.48f * Projectile.Opacity,
                     angle,
                     new Vector2(0.5f),
                     new Vector2(3f, 3f),

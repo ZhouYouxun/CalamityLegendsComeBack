@@ -204,6 +204,7 @@ Mods: {
 		Keybinds: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
+			SHPCLoadingUI.DisplayName: SHPC Loading UI
 		}
 	}
 }

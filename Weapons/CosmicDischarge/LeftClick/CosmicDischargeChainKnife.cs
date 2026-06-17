@@ -47,7 +47,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 6;
-            Projectile.coldDamage = true;
         }
 
         public override void AI()
@@ -58,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return;
             }
 
-            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.FrostGlowColor.ToVector3() * 0.35f);
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGPurpleColor.ToVector3() * 0.35f);
 
             // State 0: Fly Out
             if (State == 0)
@@ -107,8 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         int biteDamage = (int)(Projectile.damage * damageMult * 0.48f);
                         target.StrikeNPC(target.CalculateHitInfo(biteDamage, Math.Sign(target.Center.X - Player.Center.X), false, 0f));
 
-                        // Frost Mark detonation
-                        int markType = ModContent.BuffType<CosmicDischargeFrostMarkDebuff>();
+                        int markType = ModContent.BuffType<CosmicDischargeDoGMarkDebuff>();
                         if (target.HasBuff(markType))
                         {
                             target.DelBuff(target.FindBuffIndex(markType)); // Consume mark
@@ -119,7 +117,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                     Projectile.GetSource_FromThis(),
                                     target.Center,
                                     speed,
-                                    ModContent.ProjectileType<CosmicDischargeIceShard>(),
+                                    ModContent.ProjectileType<CosmicDischargeDoGEnergyBolt>(),
                                     (int)(Projectile.damage * 0.52f),
                                     0f,
                                     Projectile.owner
@@ -145,17 +143,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                         if (ultActive || empActive)
                         {
-                            // Spawn mini CosmicIceBurst at target center
                             Projectile.NewProjectile(
                                 Projectile.GetSource_FromThis(),
                                 target.Center,
                                 Vector2.Zero,
-                                ModContent.ProjectileType<CalamityMod.Projectiles.Melee.CosmicIceBurst>(),
+                                ModContent.ProjectileType<CosmicDischargeDoGConvergenceExplosion>(),
                                 (int)(Projectile.damage * (empActive ? 0.55f : 0.42f)),
                                 0f,
                                 Projectile.owner,
                                 0f,
-                                empActive ? 0.95f : 0.72f
+                                empActive ? 150f : 118f
                             );
 
                             // Spawn 6 radial line particles
@@ -168,7 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                     false,
                                     Main.rand.Next(10, 15),
                                     Main.rand.NextFloat(0.35f, 0.55f),
-                                    Main.rand.NextBool() ? CosmicDischargeCommon.FrostCoreColor : CosmicDischargeCommon.FrostWhiteColor
+                                    CosmicDischargeCommon.RandomDoGColor()
                                 ));
                             }
                         }
@@ -235,7 +232,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            CosmicDischargeCommon.ApplyColdDebuffs(target, 120);
+            CosmicDischargeCommon.ApplyDoGDebuffs(target, 180);
 
             if (State == 0)
             {
@@ -254,7 +251,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     GeneralParticleHandler.SpawnParticle(new StrongBloom(
                         target.Center,
                         Vector2.Zero,
-                        CosmicDischargeCommon.FrostCoreColor * 0.45f,
+                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.45f,
                         0.5f,
                         16
                     ));

@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (player.altFunctionUse == 2)
             {
                 if (!TryRequestQuickDraw(player))
-                    player.GetModPlayer<CosmicDischargePlayer>().ToggleAttackMode();
+                    TryStartModeShift(player);
 
                 Item.useTime = Item.useAnimation = 8;
                 Item.shoot = ProjectileID.None;
@@ -157,13 +157,40 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 if (projectile.ModProjectile is CosmicDischargeComboHoldout holdout && holdout.TryRequestQuickDraw())
                 {
-                    SoundEngine.PlaySound(SoundID.Item119 with { Volume = 0.72f, Pitch = 0.25f }, player.Center);
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.62f, Pitch = 0.28f, MaxInstances = 2 }, player.Center);
                     return true;
                 }
             }
 
-            SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.42f, Pitch = player.GetModPlayer<CosmicDischargePlayer>().AttackMode == CosmicDischargeAttackMode.Whip ? 0.15f : -0.1f }, player.Center);
             return false;
         }
+
+        private static void TryStartModeShift(Player player)
+        {
+            if (Main.myPlayer != player.whoAmI)
+                return;
+
+            int modeShiftType = ModContent.ProjectileType<CosmicDischargeModeShift>();
+            if (player.ownedProjectileCounts[modeShiftType] > 0)
+                return;
+
+            CosmicDischargeAttackMode nextMode = GetNextMode(player.GetModPlayer<CosmicDischargePlayer>().AttackMode);
+            Projectile.NewProjectile(
+                player.GetSource_ItemUse(player.HeldItem),
+                player.Top,
+                Vector2.Zero,
+                modeShiftType,
+                0,
+                0f,
+                player.whoAmI,
+                (float)nextMode);
+        }
+
+        private static CosmicDischargeAttackMode GetNextMode(CosmicDischargeAttackMode mode) => mode switch
+        {
+            CosmicDischargeAttackMode.Whip => CosmicDischargeAttackMode.Sword,
+            CosmicDischargeAttackMode.Sword => CosmicDischargeAttackMode.ChainKnife,
+            _ => CosmicDischargeAttackMode.Whip
+        };
     }
 }
