@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
-            0f, // EffectID 43: Cynosure / 保持使用阶段默认倍率
+            0f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
             1.53f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };
 
@@ -168,16 +168,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public float GetLeftClickMaterialDamageMultiplier(int effectID)
         {
-            // Cynosure 过去依赖数组越界返回 0，从而使用阶段默认倍率。
-            // 新增 EffectID 44 后需要保留该行为，避免唯一弹药被意外改成固定 1 倍伤害。
-            if (effectID == 43)
-                return 0f;
-
             float[] values = GetLeftClickMaterialDamageMultiplierValues();
             if (effectID < 0 || effectID >= values.Length)
                 return 0f;
 
-            return 1f + System.Math.Max(0f, values[effectID]);
+            float rawValue = values[effectID];
+            if (rawValue <= 0f)
+                return 0f;  // 0 → 触发 GetDefaultOrbDamageMultiplier() fallback
+
+            return 1f + rawValue;
         }
 
         public float GetDefaultOrbDamageMultiplier()
