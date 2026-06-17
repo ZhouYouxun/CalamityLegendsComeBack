@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// <summary>
     /// Cynosure 的主穿甲弹。飞行特效以 BloomLineSoftEdge 直绘拖尾为主体，
     /// 辅以对数螺旋、傅里叶合成波和利萨如轨道三层数学装饰粒子。
-    /// </summary>
+    /// </summary>damage
     public class CynosureArmorPiercingRound : ModProjectile, ILocalizedModType
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureArmorPiercingRound";
@@ -185,7 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/AuricBulletHit") { Volume = 0.9f, Pitch = -0.12f }, Projectile.Center);
             SpawnImpactSparks();
 
-            int burstDamage = Math.Max(1, (int)(Projectile.damage * 0.72f));
+            int burstDamage = Math.Max(1, (int)(Projectile.damage * 0.95f));
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                 ModContent.ProjectileType<CynosureLightningExplosion>(), burstDamage, Projectile.knockBack, Projectile.owner);
 
@@ -197,7 +197,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             {
                 float angle = MathHelper.TwoPi * i / chargedCount;
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
-                    ModContent.ProjectileType<CynosureChargedCell>(), Math.Max(1, (int)(Projectile.damage * 0.18f)),
+                    ModContent.ProjectileType<CynosureChargedCell>(), Math.Max(1, (int)(Projectile.damage * 0.32f)),
                     Projectile.knockBack, Projectile.owner, preferredTarget, angle);
             }
         }
@@ -208,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             {
                 float angle = MathHelper.TwoPi * i / count;
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
-                    ModContent.ProjectileType<CynosureAuricBall>(), Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                    ModContent.ProjectileType<CynosureAuricBall>(), Math.Max(1, (int)(Projectile.damage * 0.48f)),
                     Projectile.knockBack, Projectile.owner, preferredTarget, ellipseGroup, angle);
             }
         }
