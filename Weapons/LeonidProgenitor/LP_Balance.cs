@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Terraria;
 
@@ -5,6 +6,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     internal static class LP_Balance
     {
+        private const string SourceFile = "Weapons/LeonidProgenitor/LP_Balance.cs";
+
         // 14 stages:
         // Initial, EoC, Evil, Skeletron, Hardmode, Mech, Plantera, Golem,
         // MoonLord, Providence, Polterghast, DoG, Yharon, Exo+SC
@@ -13,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         // early Hardmode. Stealth strike applies StealthDamageMultiplier (1.2×)
         // on top of these values automatically via CalamityMod.
 
-        public static readonly int[] LeftClickBaseDamage =
+        private static readonly int[] DefaultLeftClickBaseDamage =
         {
             14,     // Initial
             20,     // Eye of Cthulhu
@@ -33,9 +36,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public static int GetLeftClickBaseDamage()
         {
-            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, LeftClickBaseDamage.Length - 1);
-            return System.Math.Max(1, LeftClickBaseDamage[stage]);
+            int[] values = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage);
+            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, values.Length - 1);
+            return System.Math.Max(1, values[stage]);
         }
+
+        public static int GetInitialLeftClickBaseDamage() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage)[0];
 
         public static int GetCompletedStageIndex()
         {

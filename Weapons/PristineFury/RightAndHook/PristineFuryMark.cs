@@ -265,6 +265,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         };
 
         internal static int GetDisplayedBaseDamage(PristineFuryMark mark) =>
-            PF_Balance.GetMarkBaseDamage(mark);
+            PF_Balance.GetBaseDamage();
     }
 }

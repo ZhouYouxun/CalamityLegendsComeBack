@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Terraria;
 
@@ -5,6 +6,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 {
     internal static class CD_Balance
     {
+        private const string SourceFile = "Weapons/CosmicDischarge/CD_Balance.cs";
+
         // 14 stages, matching the standard BB_Balance layout:
         // Initial, EoC, Evil, Skeletron, Hardmode, Mech, Plantera, Golem,
         // MoonLord, Providence, Polterghast, DoG, Yharon, Exo+SC
@@ -13,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         // Values before stage 10 are placeholders — the weapon is not
         // obtainable that early.
 
-        public static readonly int[] WhipBaseDamage =
+        private static readonly int[] DefaultWhipBaseDamage =
         {
             35,     // Initial
             48,     // Eye of Cthulhu
@@ -31,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             17500,  // Exo Mechs & Supreme Calamitas
         };
 
-        public static readonly int[] SwordBaseDamage =
+        private static readonly int[] DefaultSwordBaseDamage =
         {
             42,     // Initial
             58,     // Eye of Cthulhu
@@ -49,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             21000,  // Exo Mechs & Supreme Calamitas
         };
 
-        public static readonly int[] ChainKnifeBaseDamage =
+        private static readonly int[] DefaultChainKnifeBaseDamage =
         {
             28,     // Initial
             38,     // Eye of Cthulhu
@@ -69,14 +72,20 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public static int GetBaseDamage(CosmicDischargeAttackMode mode)
         {
-            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, WhipBaseDamage.Length - 1);
+            int[] whip = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultWhipBaseDamage), DefaultWhipBaseDamage);
+            int[] sword = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultSwordBaseDamage), DefaultSwordBaseDamage);
+            int[] chainKnife = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultChainKnifeBaseDamage), DefaultChainKnifeBaseDamage);
+            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, whip.Length - 1);
             return mode switch
             {
-                CosmicDischargeAttackMode.Sword      => System.Math.Max(1, SwordBaseDamage[stage]),
-                CosmicDischargeAttackMode.ChainKnife => System.Math.Max(1, ChainKnifeBaseDamage[stage]),
-                _                                    => System.Math.Max(1, WhipBaseDamage[stage]),
+                CosmicDischargeAttackMode.Sword      => System.Math.Max(1, sword[Utils.Clamp(stage, 0, sword.Length - 1)]),
+                CosmicDischargeAttackMode.ChainKnife => System.Math.Max(1, chainKnife[Utils.Clamp(stage, 0, chainKnife.Length - 1)]),
+                _                                    => System.Math.Max(1, whip[stage]),
             };
         }
+
+        public static int GetInitialBaseDamage() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultWhipBaseDamage), DefaultWhipBaseDamage)[0];
 
         public static int GetCompletedStageIndex()
         {

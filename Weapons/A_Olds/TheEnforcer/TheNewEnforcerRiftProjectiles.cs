@@ -1,6 +1,7 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Enums;
+using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -409,6 +410,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                 0.44f,
                 18,
                 true));
+
+            for (int i = 0; i < 10; i++)
+            {
+                float rot = MathHelper.TwoPi * i / 10f;
+                Vector2 vel = new Vector2(5f, 0f).RotatedBy(rot) * Main.rand.NextFloat(0.8f, 1.4f);
+                GalaxyMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(14f, 14f), vel, 44f * Main.rand.NextFloat(0.8f, 1.25f));
+            }
         }
 
         private static void ApplyScreenShake(Vector2 center, float power)
@@ -843,6 +851,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                     Main.rand.NextFloat(0.38f, 0.82f),
                     Color.Lerp(lightColor, Color.White, 0.16f),
                     Main.rand.Next(16, 28)));
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.8f, 9.5f);
+                GalaxyMetaball.SpawnParticle(Projectile.Center + Main.rand.NextVector2Circular(22f, 22f), velocity, 56f * Main.rand.NextFloat(0.75f, 1.3f));
             }
         }
 

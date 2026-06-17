@@ -21,7 +21,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private const int RightChargeMaxFrames = 120;
         private const int RightChargeCooldown = 42;
         private const float RightFireballSpeed = 15.5f;
-        private const float RightFireballDamageMultiplier = 2.15f;
         private const float HoldoutDistance = 34f;
 
         // Debug 模式下的完整印记顺序（按难度顺序，包含 Idle 作为默认）。
@@ -466,7 +465,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                             GunTipPosition,
                             direction * 11.5f,
                             ModContent.ProjectileType<PristineFuryHomingStar>(),
-                            GetScaledDamage(0.65f),
+                            GetRightScaledDamage(PF_Balance.GetRightOverheatStarDamageMultiplier()),
                             Projectile.knockBack * 0.3f,
                             Projectile.owner
                         );
@@ -527,7 +526,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             Vector2 direction = AimDirection;
             Vector2 muzzle = GunTipPosition + direction * 12f;
-            float damageMult = chargeLevel == 3f ? 3.5f : (chargeLevel == 2f ? 1.8f : 1.0f);
+            float damageMult = PF_Balance.GetRightFireballDamageMultiplier(chargeLevel);
 
             int fireballIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -739,7 +738,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             muzzleFlashTimer = Math.Max(muzzleFlashTimer, frames);
         }
 
-        internal int GetScaledDamage(float multiplier) => Math.Max(1, (int)(Projectile.damage * multiplier));
+        internal int GetScaledDamage(float multiplier) => GetScaledDamage(multiplier, CurrentMark);
+
+        internal int GetScaledDamage(float multiplier, PristineFuryMark mark) =>
+            Math.Max(1, (int)(Projectile.damage * PF_Balance.GetLeftClickMarkDamageMultiplier(mark) * multiplier));
+
+        internal int GetRightScaledDamage(float multiplier) => Math.Max(1, (int)(Projectile.damage * multiplier));
 
         internal Vector2 GetMouseWorld()
         {
@@ -1121,7 +1125,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     muzzle,
                     vel,
                     idleFlameType,
-                    GetScaledDamage(0.35f),
+                    GetScaledDamage(0.35f, echMark),
                     Projectile.knockBack * 0.5f,
                     Projectile.owner,
                     i);

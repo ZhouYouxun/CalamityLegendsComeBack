@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             Item.width = 28;
             Item.height = 58;
-            Item.damage = 0;
+            Item.damage = MalachiteBalance.GetInitialLeftClickBaseDamage();
             Item.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Item.noMelee = true;
             Item.noUseGraphic = true;
@@ -145,14 +145,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            if (player.altFunctionUse == 2)
-            {
-                damage.Base = MalachiteBalance.GetRightClickBaseDamage();
-            }
-            else
-            {
-                damage.Base = MalachiteBalance.GetLeftClickBaseDamage();
-            }
+            int targetDamage = player.altFunctionUse == 2
+                ? MalachiteBalance.GetRightClickBaseDamage()
+                : MalachiteBalance.GetLeftClickBaseDamage();
+            damage.Base += targetDamage - Item.damage;
         }
 
         public override void ModifyStatsExtra(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
@@ -241,7 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             calamity.ConsumeStealthByAttacking();
 
             Vector2 direction = (GetMouseWorld(player) - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
-            int finaleDamage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(Item.damage * 7.5f);
+            int finaleDamage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(MalachiteBalance.GetLeftClickBaseDamage() * 7.5f);
 
             Projectile.NewProjectile(
                 player.GetSource_ItemUse(Item),

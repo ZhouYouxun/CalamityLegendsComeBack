@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.SHPC.General;
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Terraria;
 using Terraria.ID;
@@ -7,6 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 {
     public class BalanceSHPC
     {
+        private const string SourceFile = "Weapons/SHPC/BalanceSHPC.cs";
+
         // 1. 左键基础倍率/伤害成长：平衡时先看这个进度表和下面的左键基础值。
         public static readonly string[] StageNames =
         {
@@ -26,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             "Exo Mechs and Supreme Calamitas"
         };
 
-        public static readonly int[] LeftClickProgressDamage =
+        private static readonly int[] DefaultLeftClickProgressDamage =
         {
             15, // 15Initial / 初始
             24, // 24Eye of Cthulhu / 克苏鲁之眼
@@ -45,7 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         };
 
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
-        public static readonly int[] RightClickBaseDamage =
+        private static readonly int[] DefaultRightClickBaseDamage =
         {
             15, // 6Initial / 初始
             21, // 8Eye of Cthulhu / 克苏鲁之眼
@@ -64,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         };
 
         // 3. 左键材料控制倍率：按 SHPC EffectID 索引，材料会乘到左键基础伤害上。
-        public static readonly float[] LeftClickMaterialDamageMultipliers =
+        private static readonly float[] DefaultLeftClickMaterialDamageMultipliers =
         {
             0f, // EffectID 0: Unused gap / 未使用空位
             0.46f, // EffectID 1: Energy Core / 钨钢能量核心
@@ -151,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetLeftClickBaseDamage()
         {
-            return GetValueForStage(LeftClickProgressDamage, GetCompletedStageIndex());
+            return GetValueForStage(GetLeftClickProgressDamageValues(), GetCompletedStageIndex());
         }
 
         public int GetLeftClickBaseDamageForEffect(int effectID)
@@ -170,25 +173,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (effectID == 43)
                 return 0f;
 
-            if (effectID < 0 || effectID >= LeftClickMaterialDamageMultipliers.Length)
+            float[] values = GetLeftClickMaterialDamageMultiplierValues();
+            if (effectID < 0 || effectID >= values.Length)
                 return 0f;
 
-            return 1f + System.Math.Max(0f, LeftClickMaterialDamageMultipliers[effectID]);
+            return 1f + System.Math.Max(0f, values[effectID]);
         }
 
         public float GetDefaultOrbDamageMultiplier()
         {
-            return GetFloatValueForStage(DefaultOrbDamageMultipliers, GetCompletedStageIndex());
+            return GetFloatValueForStage(GetDefaultOrbDamageMultiplierValues(), GetCompletedStageIndex());
         }
 
         public int GetDefaultOrbExplosionSize()
         {
-            return GetValueForStage(DefaultOrbExplosionSizes, GetCompletedStageIndex());
+            return GetValueForStage(GetDefaultOrbExplosionSizeValues(), GetCompletedStageIndex());
         }
 
         public int GetRightClickBaseDamage()
         {
-            return GetValueForStage(RightClickBaseDamage, GetCompletedStageIndex());
+            return GetValueForStage(GetRightClickBaseDamageValues(), GetCompletedStageIndex());
         }
 
         public int GetRightClickMaxHeatLevel()
@@ -265,7 +269,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         }
 
         // 下面这些是内部支撑参数，不是主要平衡入口。
-        private static readonly float[] DefaultOrbDamageMultipliers =
+        private static readonly float[] DefaultDefaultOrbDamageMultipliers =
         {
             1f,
             1f,
@@ -283,7 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.65f
         };
 
-        private static readonly int[] DefaultOrbExplosionSizes =
+        private static readonly int[] DefaultDefaultOrbExplosionSizes =
         {
             112,
             112,
@@ -356,5 +360,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int clampedIndex = Utils.Clamp(stageIndex, 0, values.Length - 1);
             return System.Math.Max(0.01f, values[clampedIndex]);
         }
+
+        private static int[] GetLeftClickProgressDamageValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickProgressDamage), DefaultLeftClickProgressDamage);
+
+        private static int[] GetRightClickBaseDamageValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultRightClickBaseDamage), DefaultRightClickBaseDamage);
+
+        private static float[] GetLeftClickMaterialDamageMultiplierValues() =>
+            RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(DefaultLeftClickMaterialDamageMultipliers), DefaultLeftClickMaterialDamageMultipliers);
+
+        private static float[] GetDefaultOrbDamageMultiplierValues() =>
+            RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(DefaultDefaultOrbDamageMultipliers), DefaultDefaultOrbDamageMultipliers);
+
+        private static int[] GetDefaultOrbExplosionSizeValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultDefaultOrbExplosionSizes), DefaultDefaultOrbExplosionSizes);
     }
 }

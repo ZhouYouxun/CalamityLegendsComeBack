@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Item.width = 50;
             Item.height = 52;
-            Item.damage = 0;
+            Item.damage = CD_Balance.GetInitialBaseDamage();
             Item.knockBack = 6f;
             Item.noMelee = true;
             Item.noUseGraphic = true;
@@ -86,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             CosmicDischargeAttackMode mode = player.GetModPlayer<CosmicDischargePlayer>().AttackMode;
-            damage.Base = CD_Balance.GetBaseDamage(mode);
+            damage.Base += CD_Balance.GetBaseDamage(mode) - Item.damage;
         }
 
         public override void HoldItem(Player player)

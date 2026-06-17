@@ -33,10 +33,7 @@ Mods: {
 						[c/FFE85A:终结技：能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，给予25格内敌怪10秒冰河时代，并在玩家身上生成10秒力场。]
 						[c/FFE85A:力场：8格内敌怪被高额减速；玩家受到伤害-35%，防御+20。力场存在期间无法获得终结技能量。]
 						'''
-					CosmicDischargePassive:
-						'''
-						[c/B8F4FF:寒宇冰封：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分将被削减至上限。触发时获得5秒"寒风再起"（伤害+20%），冷却60秒。]
-						'''
+					CosmicDischargePassive: '''[c/B8F4FF:寒宇冰封：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分将被削减至上限。触发时获得5秒"寒风再起"（伤害+20%），冷却60秒。]'''
 				}
 			}
 		}
@@ -87,7 +84,6 @@ Mods: {
 				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
-				// CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
 			}
 		}
 

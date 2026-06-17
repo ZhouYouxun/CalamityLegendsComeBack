@@ -239,7 +239,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         public override void PostDraw(Color lightColor)
         {
-            if (shurikenProfile.GrowthTier >= 3)
+            if (shurikenProfile.GrowthTier >= 2)
                 BBShuriken_BoomerDuke_Effects.DrawBladeDisc(Projectile);
         }
 

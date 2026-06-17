@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
@@ -19,34 +20,36 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
     public class BalanceYharimsCrystal
     {
+        private const string SourceFile = "Weapons/YharimsCrystal/BalanceYharimsCrystal.cs";
         public const float BaseLeftBladeScale = 0.65f;
+        public const int InitialLeftClickBaseDamage = 30;
 
-        private static readonly int[] LeftClickBaseDamage =
+        private static readonly int[] DefaultLeftClickBaseDamage =
         {
-            30,
-            44,
-            58,
-            88,
-            126,
-            190,
-            250,
-            360,
-            485,
-            720
+            InitialLeftClickBaseDamage, // Stage 0: Initial
+            44,  // Stage 1: Desert Scourge
+            58,  // Stage 2: Evil Boss T1
+            88,  // Stage 3: Wall of Flesh
+            126, // Stage 4: Brimstone Elemental
+            190, // Stage 5: Golem
+            250, // Stage 6: Empress of Light
+            360, // Stage 7: Moon Lord
+            485, // Stage 8: Providence
+            720  // Stage 9: Yharon
         };
 
-        private static readonly int[] RightClickBaseDamage =
+        private static readonly int[] DefaultRightClickBaseDamage =
         {
-            38,
-            54,
-            72,
-            116,
-            165,
-            250,
-            330,
-            470,
-            640,
-            940
+            38,  // Stage 0: Initial
+            54,  // Stage 1: Desert Scourge
+            72,  // Stage 2: Evil Boss T1
+            116, // Stage 3: Wall of Flesh
+            165, // Stage 4: Brimstone Elemental
+            250, // Stage 5: Golem
+            330, // Stage 6: Empress of Light
+            470, // Stage 7: Moon Lord
+            640, // Stage 8: Providence
+            940  // Stage 9: Yharon
         };
 
         public int GetCompletedStageIndex()
@@ -74,8 +77,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             return stage;
         }
 
-        public int GetLeftClickBaseDamage() => GetValueForStage(LeftClickBaseDamage, GetCompletedStageIndex());
-        public int GetRightClickBaseDamage() => GetValueForStage(RightClickBaseDamage, GetCompletedStageIndex());
+        public int GetLeftClickBaseDamage() => GetValueForStage(GetLeftClickBaseDamageValues(), GetCompletedStageIndex());
+        public int GetRightClickBaseDamage() => GetValueForStage(GetRightClickBaseDamageValues(), GetCompletedStageIndex());
+
+        public static int GetInitialLeftClickBaseDamage() => GetLeftClickBaseDamageValues()[0];
 
         public float GetLeftBladeScale()
         {
@@ -201,6 +206,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             int clampedIndex = Utils.Clamp(stageIndex, 0, values.Length - 1);
             return System.Math.Max(1, values[clampedIndex]);
         }
+
+        private static int[] GetLeftClickBaseDamageValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage);
+
+        private static int[] GetRightClickBaseDamageValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultRightClickBaseDamage), DefaultRightClickBaseDamage);
 
         public static bool DownedDesertScourge => DownedBossSystem.downedDesertScourge;
         public static bool DownedEvilTier1 => NPC.downedBoss2;

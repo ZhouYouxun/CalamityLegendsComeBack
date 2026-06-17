@@ -56,7 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
             noAttackTimer++;
             if (noAttackTimer >= NoAttackClearDelay)
             {
-                TideValue = 0;
+                if (!Player.GetModPlayer<Accssory.LegendaryUltimateTesterPlayer>().Equipped)
+                    TideValue = 0;
                 noAttackTimer = 0;
                 bossAutoGainTimer = 0;
                 nonBossDecayTimer = 0;

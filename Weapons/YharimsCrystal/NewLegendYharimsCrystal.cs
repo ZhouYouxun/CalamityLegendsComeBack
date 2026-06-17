@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         {
             Item.width = 44;
             Item.height = 44;
-            Item.damage = 0;
+            Item.damage = BalanceYharimsCrystal.GetInitialLeftClickBaseDamage();
             Item.DamageType = DamageClass.Magic;
             Item.mana = 6;
             Item.useTime = 25;
@@ -161,7 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base = balance.GetLeftClickBaseDamage();
+            damage.Base += balance.GetLeftClickBaseDamage() - Item.damage;
             damage *= GetConvertedMeleeBonus(player);
             damage *= player.GetModPlayer<YCAccessoryPlayer>().WeaponDamageMultiplier;
         }

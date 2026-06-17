@@ -340,17 +340,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                             -forward * MathHelper.Lerp(1.8f, 4.8f + spawnStage * 0.8f, speedRatio) +
                             right * side * MathHelper.Lerp(0.55f, 1.85f + spawnStage * 0.2f, speedRatio);
 
-                        GlowOrbParticle wakeOrb = new GlowOrbParticle(
-                            edgePos,
-                            edgeVelocity,
-                            false,
-                            Main.rand.Next(9, 15),
-                            MathHelper.Lerp(0.4f, 0.76f, speedRatio) * (1f + burst * 0.08f),
-                            side < 0 ? new Color(70, 180, 255) : new Color(185, 245, 255),
-                            true,
-                            false,
-                            true);
-                        GeneralParticleHandler.SpawnParticle(wakeOrb);
+                        //GlowOrbParticle wakeOrb = new GlowOrbParticle(
+                        //    edgePos,
+                        //    edgeVelocity,
+                        //    false,
+                        //    Main.rand.Next(9, 15),
+                        //    MathHelper.Lerp(0.4f, 0.76f, speedRatio) * (1f + burst * 0.08f),
+                        //    side < 0 ? new Color(70, 180, 255) : new Color(185, 245, 255),
+                        //    true,
+                        //    false,
+                        //    true);
+                        //GeneralParticleHandler.SpawnParticle(wakeOrb);
                     }
                 }
             }
@@ -396,17 +396,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     -forward * MathHelper.Lerp(0.5f, 1.55f + spawnStage * 0.2f, speedRatio) +
                     right * driftBand * Main.rand.NextFloat(0.08f, 0.5f);
 
-                //GlowOrbParticle slowOrb = new GlowOrbParticle(
-                //    driftPos,
-                //    driftVelocity,
-                //    false,
-                //    Main.rand.Next(10, 16),
-                //    MathHelper.Lerp(0.35f, 0.62f, 1f - speedRatio),
-                //    Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
-                //    true,
-                //    false,
-                //    true);
-                //GeneralParticleHandler.SpawnParticle(slowOrb);
+                GlowOrbParticle slowOrb = new GlowOrbParticle(
+                    driftPos,
+                    driftVelocity,
+                    false,
+                    Main.rand.Next(10, 16),
+                    MathHelper.Lerp(0.35f, 0.62f, 1f - speedRatio),
+                    Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(slowOrb);
             }
 
             if (spawnStage >= 1 && lifeTimer % 3 == 0)

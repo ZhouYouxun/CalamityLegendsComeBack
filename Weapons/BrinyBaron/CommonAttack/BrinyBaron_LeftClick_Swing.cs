@@ -123,6 +123,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 return;
             }
 
+            SyncCurrentWeaponDamage();
+
             Owner.Calamity().mouseWorldListener = true;
             Owner.Calamity().rightClickListener = true;
             Animation++;
@@ -1033,9 +1035,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 target.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<BrinyTyphoonBubble>(),
-                Owner.HeldItem.damage,
+                CurrentProjectileDamage(),
                 Owner.HeldItem.knockBack,
                 Owner.whoAmI);
+        }
+
+        private void SyncCurrentWeaponDamage()
+        {
+            int currentDamage = CurrentProjectileDamage();
+            if (Projectile.damage == currentDamage && Projectile.originalDamage == currentDamage)
+                return;
+
+            Projectile.damage = currentDamage;
+            Projectile.originalDamage = currentDamage;
+        }
+
+        private int CurrentProjectileDamage()
+        {
+            if (Owner?.HeldItem == null || Owner.HeldItem.type != AssignedItemID)
+                return Math.Max(1, Projectile.damage);
+
+            return Math.Max(1, Owner.GetWeaponDamage(Owner.HeldItem));
         }
 
         private void TrackBladeTip()

@@ -334,6 +334,8 @@ Mods: {
 			NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
 			NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+			SHPC.StellarVortexShard.DisplayName: Stellar Vortex Shard
+			PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

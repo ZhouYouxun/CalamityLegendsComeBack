@@ -293,7 +293,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             };
             float[] speedMultipliers = { 1.08f, 0.96f, 1.02f };
 
-            for (int i = 0; i < ReconTriangulationShotCount; i++)
+            int shotsThisTrigger = Math.Min(BFBalanceTable.Get(BFStat.Recon_Left_ShotsPerBurst), ReconTriangulationShotCount);
+            for (int i = 0; i < shotsThisTrigger; i++)
             {
                 Vector2 shotVelocity = baseVelocity.RotatedBy(angleOffsets[i]) * speedMultipliers[i];
                 Vector2 spawnPosition = origin + normal * offsets[i] - baseVelocity.SafeNormalize(Vector2.UnitX * Owner.direction) * (i == 0 ? 0f : 5f + i * 4f);

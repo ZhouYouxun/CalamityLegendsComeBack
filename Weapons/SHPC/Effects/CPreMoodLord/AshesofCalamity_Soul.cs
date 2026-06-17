@@ -21,10 +21,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float HomingRange = 8400f;
         private const float HomingStartFrames = 30f;
         private const float HomingWarmupFrames = 52f;
-        private const float HomingInertia = 31f;
         private const float MinHomingSpeed = 10.5f;
         private const float MaxHomingSpeed = 17.25f;
-        private const float HomingMaxTurnPerFrame = MathHelper.Pi / 20f;
+        private const float HomingMaxTurnPerFrame = MathHelper.Pi / 8f;
         private const float FreeFlightDamping = 0.996f;
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.008f;
@@ -100,35 +99,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
         private void SoftHomeTowardTarget(NPC target, Vector2 fallbackDirection)
         {
-            Vector2 currentVelocity = Projectile.velocity;
-            float currentSpeed = currentVelocity.Length();
+            float currentSpeed = Projectile.velocity.Length();
             if (currentSpeed < 0.1f)
-                currentVelocity = fallbackDirection.SafeNormalize(Vector2.UnitX) * BaseSpeed;
+                Projectile.velocity = fallbackDirection.SafeNormalize(Vector2.UnitX) * BaseSpeed;
 
-            Vector2 currentDirection = currentVelocity.SafeNormalize(fallbackDirection);
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(fallbackDirection);
             Vector2 desiredDirection = (target.Center + target.velocity * 4f - Projectile.Center).SafeNormalize(fallbackDirection);
-            float maxTurnThisUpdate = HomingMaxTurnPerFrame / Math.Max(1, Projectile.MaxUpdates);
-            Vector2 steeredDirection = currentDirection.ToRotation()
-                .AngleTowards(desiredDirection.ToRotation(), maxTurnThisUpdate)
-                .ToRotationVector2();
+
             float homingTimer = Timer - HomingStartFrames;
             float warmup = Utils.GetLerpValue(0f, HomingWarmupFrames, homingTimer, true);
             float closePressure = Utils.GetLerpValue(420f, 90f, Projectile.Distance(target.Center), true);
             float pullStrength = MathHelper.Lerp(0.28f, 1f, MathHelper.Max(warmup, closePressure * 0.72f));
 
-            float targetSpeed = MathHelper.Lerp(MinHomingSpeed, MaxHomingSpeed, pullStrength);
-            Vector2 desiredVelocity = steeredDirection * targetSpeed;
-            Vector2 nextVelocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+            float maxTurnThisUpdate = HomingMaxTurnPerFrame / Math.Max(1, Projectile.MaxUpdates) * (0.3f + pullStrength * 0.7f);
+            Vector2 newDirection = currentDirection.ToRotation()
+                .AngleTowards(desiredDirection.ToRotation(), maxTurnThisUpdate)
+                .ToRotationVector2();
 
             float sideSway = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.065f) *
                 MathHelper.Lerp(0.013f, 0.0035f, pullStrength);
-            nextVelocity = nextVelocity.RotatedBy(sideSway);
+            newDirection = newDirection.RotatedBy(sideSway);
 
-            float finalSpeed = Math.Min(nextVelocity.Length(), MaxHomingSpeed);
-            Vector2 finalDirection = currentDirection.ToRotation()
-                .AngleTowards(nextVelocity.SafeNormalize(steeredDirection).ToRotation(), maxTurnThisUpdate)
-                .ToRotationVector2();
-            Projectile.velocity = finalDirection * finalSpeed;
+            float targetSpeed = MathHelper.Lerp(MinHomingSpeed, MaxHomingSpeed, pullStrength);
+            float newSpeed = MathHelper.Lerp(currentSpeed, targetSpeed, 0.12f);
+            Projectile.velocity = newDirection * newSpeed;
         }
 
         private void FreeDrift(float damping)

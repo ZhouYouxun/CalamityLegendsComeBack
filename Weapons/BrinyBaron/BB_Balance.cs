@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Terraria;
 
@@ -5,25 +6,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     internal static class BB_Balance
     {
-        public static readonly object[,] StageInfo =
+        private const string SourceFile = "Weapons/BrinyBaron/BB_Balance.cs";
+        private const int DamageColumn = 1;
+        private const int ScaleColumn = 2;
+
+        private static readonly object[,] DefaultStageTable =
         {
-            { "Initial", 0.6f },
-            { "Eye of Cthulhu", 0.607f },
-            { "Evil Boss", 0.628f },
-            { "Skeletron", 0.664f },
-            { "Hardmode", 0.714f },
-            { "Any Mechanical Boss", 0.778f },
-            { "Plantera", 0.856f },
-            { "Golem", 0.948f },
-            { "Moon Lord", 1.054f },
-            { "Providence", 1.174f },
-            { "Polterghast", 1.309f },
-            { "Devourer of Gods", 1.457f },
-            { "Yharon", 1.62f },
-            { "Exo Mechs and Supreme Calamitas", 1.8f }
+            { "Initial", 19, 0.6f },
+            { "Eye of Cthulhu", 25, 0.607f },
+            { "Evil Boss", 33, 0.628f },
+            { "Skeletron", 45, 0.664f },
+            { "Hardmode", 70, 0.714f },
+            { "Any Mechanical Boss", 80, 0.778f },
+            { "Plantera", 101, 0.856f },
+            { "Golem", 124, 0.948f },
+            { "Moon Lord", 200, 1.054f },
+            { "Providence", 250, 1.174f },
+            { "Polterghast", 295, 1.309f },
+            { "Devourer of Gods", 435, 1.457f },
+            { "Yharon", 475, 1.62f },
+            { "Exo Mechs and Supreme Calamitas", 1000, 1.8f }
         };
 
-        public static readonly string[] StageNames =
+        private static readonly string[] DefaultStageNames =
         {
             "Initial",
             "Eye of Cthulhu",
@@ -41,46 +46,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             "Exo Mechs and Supreme Calamitas"
         };
 
-        public static readonly int[] LeftClickBaseDamage =
-        {
-            10,
-            15,
-            24,
-            33,
-            42,
-            79,
-            121,
-            144,
-            465,
-            472,
-            505,
-            1248,
-            1351,
-            16590
-        };
+        public static string[] StageNames => DefaultStageNames;
 
-        public static int GetLeftClickBaseDamage()
-        {
-            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, LeftClickBaseDamage.Length - 1);
-            return System.Math.Max(1, LeftClickBaseDamage[stageIndex]);
-        }
+        public static int GetInitialLeftClickBaseDamage() => GetStageDamage(0);
+
+        public static int GetLeftClickBaseDamage() => GetStageDamage(GetCompletedStageIndex());
 
         public static float GetLeftClickScale()
         {
-            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, StageInfo.GetLength(0) - 1);
-            return (float)StageInfo[stageIndex, 1];
+            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, DefaultStageTable.GetLength(0) - 1);
+            float fallback = (float)DefaultStageTable[stageIndex, ScaleColumn];
+            return RuntimeBalanceData.GetSourceTableFloat(SourceFile, nameof(DefaultStageTable), stageIndex, ScaleColumn, fallback);
         }
 
         public static int GetGrowthStage()
         {
             int stageIndex = GetCompletedStageIndex();
-            if (stageIndex < 4) // Pre-hardmode
+            if (stageIndex < 4)
                 return 1;
-            if (stageIndex < 6) // Hardmode to pre-Plantera
+            if (stageIndex < 6)
                 return 2;
-            if (stageIndex < 8) // Plantera to Moon Lord
+            if (stageIndex < 8)
                 return 3;
-            return 4; // Moon Lord onwards
+            return 4;
         }
 
         private static int GetCompletedStageIndex()
@@ -112,6 +100,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             }
 
             return stageIndex;
+        }
+
+        private static int GetStageDamage(int stageIndex)
+        {
+            stageIndex = Utils.Clamp(stageIndex, 0, DefaultStageTable.GetLength(0) - 1);
+            int fallback = (int)DefaultStageTable[stageIndex, DamageColumn];
+            return System.Math.Max(1, RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(DefaultStageTable), stageIndex, DamageColumn, fallback));
         }
     }
 }

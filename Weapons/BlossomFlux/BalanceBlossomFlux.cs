@@ -1,33 +1,86 @@
 using Terraria;
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
     public class BalanceBlossomFlux
     {
-        public static readonly string[] StageNames =
+        // Main edit table. Columns:
+        // Stage, Breakthrough damage, Recovery damage, Recon damage, Bombard damage, Plague damage.
+        internal static readonly object[,] MainDamageTable =
         {
-            "初始 / Initial",
-            "击败克苏鲁之眼 / Eye of Cthulhu",
-            "击败吞噬者/克苏鲁之脑 / Eater of Worlds or Brain of Cthulhu",
-            "击败骷髅王 / Skeletron",
-            "击败蜂王 / Queen Bee",
-            "击败血肉墙 / Wall of Flesh",
-            "击败任意机械 Boss / Any Mechanical Boss",
-            "击败世纪之花 / Plantera",
-            "击败石巨人 / Golem",
-            "击败瘟疫使者歌莉娅 / Plaguebringer Goliath",
-            "击败月亮领主 / Moon Lord",
-            "击败神圣 / Providence",
-            "击败噬魂幽花 / Polterghast",
-            "击败神明吞噬者 / Devourer of Gods",
-            "击败亚哈伦 / Yharon",
-            "击败机械异形 & 至高天灾 / Exo Mechs & Calamitas"
+            // 分别代表：突击，复苏，侦查，轰炸，瘟疫，五大形态的伤害
+            { "Initial", 10, 1, 1, 1, 1 }, // 该阶段仅解锁突击
+            { "Eye of Cthulhu", 12, 8, 1, 1, 1 }, // 该阶段已解锁复苏
+            { "Evil Boss", 14, 10, 1, 1, 1 },
+            { "Skeletron", 16, 12, 15, 1, 1 }, // 该阶段解锁侦查
+            { "Queen Bee", 17, 14, 18, 1, 1 },
+            { "Hardmode", 27, 22, 40, 40, 1 }, // 该阶段解锁轰炸
+            { "Any Mechanical Boss", 40, 32, 46, 40, 1 },
+            { "Plantera", 54, 44, 62, 56, 1 },
+            { "Golem", 68, 56, 76, 70, 64 }, // 该阶段才能解锁瘟疫
+            { "Plaguebringer Goliath", 82, 68, 90, 86, 78 },
+            { "Moon Lord", 96, 80, 108, 102, 94 },
+            { "Providence", 120, 100, 134, 128, 118 },
+            { "Polterghast", 155, 130, 170, 162, 148 },
+            { "Devourer of Gods", 185, 155, 205, 195, 178 },
+            { "Yharon", 220, 185, 245, 232, 212 },
+            { "Exo Mechs and Supreme Calamitas", 260, 220, 290, 275, 252 }
         };
 
-        // 向后兼容旧调用方——直接从二维表读取
         public int GetLeftClickBaseDamage()  => BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage);
         public int GetRightClickBaseDamage() => BFBalanceTable.Get(BFStat.Breakthrough_Right_Damage);
+
+        internal static int GetMainDamageFallback(int stageIndex, int columnIndex)
+        {
+            int stage = Utils.Clamp(stageIndex, 0, MainDamageTable.GetLength(0) - 1);
+            int column = Utils.Clamp(columnIndex, 1, MainDamageTable.GetLength(1) - 1);
+            return (int)MainDamageTable[stage, column];
+        }
+
+        // 各形态非伤害参数（每行 = 一个进度阶段，直接改这里即可）
+        // 列：阶段名 / 突击射速间隔（帧）/ 复苏光球数 / 侦查散射发数★ / 侦查停顿（帧）/ 轰炸左键间隔（帧）/ 轰炸右键波次
+        // ★ 侦查散射发数 已接入游戏逻辑，改了立刻生效
+        // △ 其余列为参考值，暂未接入（游戏逻辑仍由下方对应 Balance 类控制）
+        internal static readonly object[,] MainParamsTable =
+        {
+            //                                              突击间隔  复苏光球  侦查散射★ 侦查停顿  轰炸左键  轰炸右键波次
+            { "Initial",                                      15,      4,       1,       90,      20,      8 },
+            { "Eye of Cthulhu",                               10,      4,       1,       85,      20,      8 },
+            { "Evil Boss",                                    10,      4,       1,       80,      20,      8 },
+            { "Skeletron",                                    10,      4,       1,       75,      20,      8 },
+            { "Queen Bee",                                     6,      4,       1,       70,      20,      8 },
+            { "Hardmode",                                      4,      4,       2,       65,      20,      8 },
+            { "Any Mechanical Boss",                           3,      4,       2,       60,      20,      8 },
+            { "Plantera",                                      2,      4,       3,       55,      20,      8 },
+            { "Golem",                                         2,      4,       3,       50,      20,      8 },
+            { "Plaguebringer Goliath",                         2,      4,       3,       45,      17,      8 },
+            { "Moon Lord",                                     2,      4,       3,       40,      16,      8 },
+            { "Providence",                                    2,      4,       3,       36,      16,      8 },
+            { "Polterghast",                                   2,      4,       3,       30,      16,      8 },
+            { "Devourer of Gods",                              2,      4,       3,       24,      14,      8 },
+            { "Yharon",                                        2,      4,       3,       18,      14,      8 },
+            { "Exo Mechs and Supreme Calamitas",               2,      4,       3,       12,      14,      8 },
+        };
+
+        internal static int GetMainParamsFallback(int stageIndex, int columnIndex)
+        {
+            int stage = Utils.Clamp(stageIndex, 0, MainParamsTable.GetLength(0) - 1);
+            int column = Utils.Clamp(columnIndex, 1, MainParamsTable.GetLength(1) - 1);
+            return (int)MainParamsTable[stage, column];
+        }
+
+        // ── 瘟疫追加 Debuff 解锁 ────────────────────────────────────────
+        // 左键命中和右键标记命中时共用这套条件。
+        // false  = 永不施加
+        // true   = 全程施加
+        // BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.XXX) = 击败指定 Boss 后施加
+        internal static bool Plague_BetsysCurse         => false;  // 贝茨诅咒（目标受弓箭/魔法伤害提升）
+        internal static bool Plague_AstralInfection     => false;  // 星界感染
+        internal static bool Plague_Wither              => false;  // 凋零
+        internal static bool Plague_WhisperingDeath     => false;  // 低语之死
+        internal static bool Plague_AbsorberAffliction  => false;  // 吸收者折磨
     }
 }
 
@@ -308,11 +361,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 initialDuration: 10 * 60,
                 stackDuration: 5 * 60,
                 maxDuration: 30 * 60,
-                inflictBetsysCurse: false,
-                inflictAstralInfection: false,
-                inflictWither: false,
-                inflictWhisperingDeath: false,
-                inflictAbsorberAffliction: false);
+                inflictBetsysCurse: BalanceBlossomFlux.Plague_BetsysCurse,
+                inflictAstralInfection: BalanceBlossomFlux.Plague_AstralInfection,
+                inflictWither: BalanceBlossomFlux.Plague_Wither,
+                inflictWhisperingDeath: BalanceBlossomFlux.Plague_WhisperingDeath,
+                inflictAbsorberAffliction: BalanceBlossomFlux.Plague_AbsorberAffliction);
         }
     }
 }
@@ -756,10 +809,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFBalanceTable
     {
+        private const string SourceFile = "Weapons/BlossomFlux/BalanceBlossomFlux.cs";
         public const int StageCount = 16;
 
         // 列顺序与 BlossomFluxProgressionStage 枚举完全一致（0~15）：
         // Start  EoC  EoB  Ske  QB   WoF  Mech Plan Gol  Pla  ML   Prov Pol  DoG  Yha  ExoCal
+        // Advanced edit table. Main tactic damage is read from MainDamageTable at the top of this file.
         private static readonly int[,] Table = new int[(int)BFStat.StatCount, StageCount]
         {
             // Row 0  — Breakthrough_Left_Damage
@@ -778,7 +833,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { 10,  13,  16,  18,  20,  32,  46,  62,  76,  90, 108, 134, 170, 205, 245, 290 },
             // Row 7  — Recon_Left_BurstCooldown  (三连发后等待帧)
             { 90,  85,  80,  75,  70,  65,  60,  55,  50,  45,  40,  36,  30,  24,  18,  12 },
-            // Row 8  — Recon_Left_ShotsPerBurst
+            // Row 8  — Recon_Left_ShotsPerBurst  (已移至顶部 MainParamsTable 第 3 列，此行不再使用)
             {  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3 },
             // Row 9  — Recon_Right_Penetrate  (-1 = 无限)
             {  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2 },
@@ -803,9 +858,74 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public static int Get(BFStat stat, int stageIndex)
         {
+            if (TryGetMainDamageColumn(stat, out int damageColumn))
+            {
+                int stage = Utils.Clamp(stageIndex, 0, StageCount - 1);
+                int fallback = BalanceBlossomFlux.GetMainDamageFallback(stage, damageColumn);
+                return RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(BalanceBlossomFlux.MainDamageTable), stage, damageColumn, fallback);
+            }
+
+            if (TryGetMainParamsColumn(stat, out int paramsColumn))
+            {
+                int stage = Utils.Clamp(stageIndex, 0, StageCount - 1);
+                int fallback = BalanceBlossomFlux.GetMainParamsFallback(stage, paramsColumn);
+                return RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(BalanceBlossomFlux.MainParamsTable), stage, paramsColumn, fallback);
+            }
+
             int row = (int)stat;
             int col = Utils.Clamp(stageIndex, 0, StageCount - 1);
-            return Table[row, col];
+            int[] values = RuntimeBalanceData.GetSourceIntTableRow(SourceFile, nameof(Table), row, GetDefaultRow(row));
+            col = Utils.Clamp(stageIndex, 0, values.Length - 1);
+            return values[col];
+        }
+
+        private static bool TryGetMainParamsColumn(BFStat stat, out int column)
+        {
+            switch (stat)
+            {
+                case BFStat.Recon_Left_ShotsPerBurst: column = 3; return true;
+                default: column = 0; return false;
+            }
+        }
+
+        private static bool TryGetMainDamageColumn(BFStat stat, out int column)
+        {
+            switch (stat)
+            {
+                case BFStat.Breakthrough_Left_Damage:
+                case BFStat.Breakthrough_Right_Damage:
+                    column = 1;
+                    return true;
+
+                case BFStat.Recovery_Left_Damage:
+                    column = 2;
+                    return true;
+
+                case BFStat.Recon_Left_Damage:
+                    column = 3;
+                    return true;
+
+                case BFStat.Bombard_Left_Damage:
+                    column = 4;
+                    return true;
+
+                case BFStat.Plague_Left_Damage:
+                    column = 5;
+                    return true;
+
+                default:
+                    column = 0;
+                    return false;
+            }
+        }
+
+        private static int[] GetDefaultRow(int row)
+        {
+            int[] values = new int[StageCount];
+            for (int i = 0; i < StageCount; i++)
+                values[i] = Table[row, i];
+
+            return values;
         }
     }
 }
@@ -909,17 +1029,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     // ── 瘟疫 Plague ───────────────────────────────────────────
     internal static class BFPlagueNonNumerical
     {
-        // 左键瘟疫印记追加的 Debuff 种类（随阶段解锁）
-        public static bool InflictBetsysCurse
-            => false;
-        public static bool InflictAstralInfection
-            => false;
-        public static bool InflictWither
-            => false;
-        public static bool InflictWhisperingDeath
-            => false;
-        public static bool InflictAbsorberAffliction
-            => false;
+        // 左键瘟疫印记追加的 Debuff 种类（由顶部 BalanceBlossomFlux 统一控制）
+        public static bool InflictBetsysCurse        => BalanceBlossomFlux.Plague_BetsysCurse;
+        public static bool InflictAstralInfection    => BalanceBlossomFlux.Plague_AstralInfection;
+        public static bool InflictWither             => BalanceBlossomFlux.Plague_Wither;
+        public static bool InflictWhisperingDeath    => BalanceBlossomFlux.Plague_WhisperingDeath;
+        public static bool InflictAbsorberAffliction => BalanceBlossomFlux.Plague_AbsorberAffliction;
 
         // 右键：同时可标记敌人数量上限（永久堆叠上限）
         public static int MaxPermanentMarkStacks

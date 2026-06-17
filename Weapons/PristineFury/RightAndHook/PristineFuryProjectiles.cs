@@ -471,7 +471,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
                 Projectile.friendly = true;
                 Projectile.width = Projectile.height = 28; // Reduced size by 75%
-                Projectile.damage = holdout.GetScaledDamage(6f);
+                Projectile.damage = holdout.GetRightScaledDamage(PF_Balance.GetRightOverheatContactDamageMultiplier());
             }
             else
             {

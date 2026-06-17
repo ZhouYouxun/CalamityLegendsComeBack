@@ -291,7 +291,10 @@ namespace CalamityLegendsComeBack.Shader
                 if (!IsWithinScreenInfluence(screenCenter, (radius + 24f) * GetMaximumZoom()))
                     continue;
 
-                float score = Vector2.DistanceSquared(screenCenter, new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f);
+                // Prefer highest-level black sun so a newly-spawned level-1 never steals
+                // the shader from an existing high-level one. Level difference dominates;
+                // screen-center proximity breaks ties within the same level.
+                float score = -level * 1_000_000f + Vector2.Distance(screenCenter, new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f);
                 if (score >= bestScore)
                     continue;
 

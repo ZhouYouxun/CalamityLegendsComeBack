@@ -1,4 +1,6 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityMod.Dusts;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,10 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
     {
         public override int EffectID => 22;
 
-        // 先占位，后面你自己换真实弹药
         public override int AmmoType => ItemID.FragmentVortex;
 
-        // ===== Vortex主题色 =====
         public override Color ThemeColor => new Color(0, 128, 128);
         public override Color StartColor => new Color(80, 220, 220);
         public override Color EndColor => new Color(0, 70, 90);
@@ -30,8 +30,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             projectile.velocity *= 1.9f;
-
-            // 只存活很短时间
             projectile.timeLeft = 12;
             projectile.penetrate = 2;
 
@@ -41,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
 
         private int fireTimer;
         private float spiralAngle;
+        private int shardTimer;
 
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
@@ -48,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             // 抵消默认减速，尽量保持高速感
             projectile.velocity *= 1.1f;
 
-
+            // 后向双侧导弹
             {
                 fireTimer++;
 
@@ -85,8 +84,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 }
             }
 
+            // StellarContempt-style LightDust 旋转轨道粒子
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 orbitOffset = new Vector2(16f, 0f).RotatedByRandom(MathHelper.TwoPi);
+                Dust ld = Dust.NewDustPerfect(
+                    projectile.Center + orbitOffset,
+                    ModContent.DustType<LightDust>(),
+                    projectile.velocity * 0.2f + new Vector2(3f, 0f).RotatedBy(orbitOffset.ToRotation()));
+                ld.noGravity = true;
+                ld.color = Main.rand.NextBool(3) ? Color.PaleTurquoise : new Color(0, 200, 200);
+                ld.scale = Main.rand.NextFloat(0.8f, 1.3f);
+            }
 
-
+            // StellarVortexShard 纯视觉碎片，每3帧从两侧各喷一枚
+            shardTimer++;
+            if (shardTimer >= 3 && projectile.owner == Main.myPlayer)
+            {
+                shardTimer = 0;
+                Vector2 perp = projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector2 shardVel = perp * side * Main.rand.NextFloat(2f, 4f)
+                                     - projectile.velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0.5f, 2.5f);
+                    Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        shardVel,
+                        ModContent.ProjectileType<StellarVortexShard>(),
+                        0, 0f, projectile.owner,
+                        Main.rand.NextFloat(4f, 9f),
+                        Main.rand.NextFloat(0f, 1f),
+                        Main.rand.Next(12, 22));
+                }
+            }
 
             // 青绿色飞行粒子
             if (Main.rand.NextBool(2))
@@ -131,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnHitNPC =================
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // 简单命中特效：青绿能量散开
+            // 命中特效：青绿能量散开
             for (int i = 0; i < 12; i++)
             {
                 float angle = MathHelper.TwoPi * i / 12f;
@@ -354,7 +385,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            // 先补一点Vortex风格退场粒子
+            // 退场粒子
             for (int i = 0; i < 20; i++)
             {
                 int dustType = Utils.SelectRandom(Main.rand, 99, 202, 229);
@@ -370,36 +401,88 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 dust.noGravity = true;
             }
 
-
-
-
-
-
-
-
-
+            // ===== StellarContempt Echo 风格：旋转环形爆炸 =====
+            const float stellarDustCount = 120f;
+            float stellarRotFactor = 360f / stellarDustCount;
+            for (int i = 0; i < (int)stellarDustCount; i++)
             {
-                // ===== 前向导弹：傅里叶调制七发结构 =====
+                float rot = MathHelper.ToRadians(i * stellarRotFactor);
+                float intensity = Main.rand.NextFloat(0.25f, 1f);
+                Vector2 offset = new Vector2(28f, 5f).RotatedBy(rot);
+                Vector2 velOffset = new Vector2(24f, 5.4f).RotatedBy(rot);
+
+                if (i % 3 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                        projectile.Center + offset,
+                        velOffset * intensity * 0.65f,
+                        "CalamityMod/Particles/Sparkle",
+                        false,
+                        (int)(38 * intensity),
+                        intensity,
+                        Main.rand.NextBool(3) ? Color.PaleTurquoise : new Color(0, 200, 200),
+                        new Vector2(1f, 2f), true, true));
+                }
+                else
+                {
+                    Dust d = Dust.NewDustPerfect(
+                        projectile.Center + offset,
+                        ModContent.DustType<LightDust>(),
+                        velOffset);
+                    d.noGravity = true;
+                    d.velocity = velOffset * intensity;
+                    d.scale = Main.rand.NextFloat(1.6f, 2.4f) * intensity;
+                    d.color = Main.rand.NextBool(3) ? Color.PaleTurquoise : new Color(0, 200, 200);
+                }
+            }
+
+            // GlowSparkParticle 八方向迸射
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 sparkVel = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * Main.rand.NextFloat(3.35f, 6.7f);
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    projectile.Center,
+                    sparkVel,
+                    false, 16, 0.18f,
+                    Color.Lerp(new Color(0, 200, 200), Color.PaleTurquoise, Main.rand.NextFloat()),
+                    new Vector2(2f, 0.7f),
+                    true, true, 0.85f));
+            }
+
+            // CustomPulse BloomRing 双层：内紧外宽
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                projectile.Center, Vector2.Zero,
+                new Color(0, 200, 200),
+                "CalamityMod/Particles/BloomRing",
+                new Vector2(0.7f, 1f),
+                projectile.velocity.ToRotation(),
+                0f, 2.35f, 28));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                projectile.Center, Vector2.Zero,
+                Color.PaleTurquoise,
+                "CalamityMod/Particles/BloomRing",
+                new Vector2(0.45f, 1f),
+                projectile.velocity.ToRotation(),
+                0f, 3.2f, 28));
+
+            // ===== 前向导弹：傅里叶调制七发结构 =====
+            {
                 Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-                // 基础对称索引（保证结构稳定）
                 float[] baseIndex = { -3f, -2f, -1f, 0f, 1f, 2f, 3f };
 
                 for (int i = 0; i < 7; i++)
                 {
                     float t = baseIndex[i];
 
-                    // ===== 角度：线性项 + 正弦调制（傅里叶一阶）=====
-                    float baseAngle = t * 9f; // 基础展开（线性）
-                    float waveOffset = 6f * (float)Math.Sin(t * 1.3f); // 波形扰动
-
+                    float baseAngle = t * 9f;
+                    float waveOffset = 6f * (float)Math.Sin(t * 1.3f);
                     float finalAngle = baseAngle + waveOffset;
 
-                    // ===== 方向 =====
                     Vector2 dir = forward.RotatedBy(MathHelper.ToRadians(finalAngle));
 
-                    // ===== 速度：中心强，两侧弱（高斯分布感）=====
-                    float speedFactor = 1f - Math.Abs(t) / 3f; // [-3,3] → [0,1]
+                    float speedFactor = 1f - Math.Abs(t) / 3f;
                     float speed = MathHelper.Lerp(7.5f, 13f, speedFactor);
 
                     Vector2 velocity = dir * speed;
@@ -425,14 +508,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                         missile.DamageType = DamageClass.Magic;
                     }
                 }
-            }           
-
-
-            
-
-
-
-
+            }
         }
     }
 }

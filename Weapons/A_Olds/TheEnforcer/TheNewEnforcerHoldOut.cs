@@ -1,6 +1,8 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
+using CalamityMod.Dusts;
+using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,6 +22,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
         private const float RiftSeedDamageFactor = 0.32f;
         private const float FlameTargetRange = 4400f;
         private const float lineCollisionLength = 226f;
+
+        private static Color GalaxyAccentColor =>
+            Color.Lerp(Color.Aqua, Color.Magenta, MathF.Sin(Main.GlobalTimeWrappedHourly * 6f) * 0.5f + 0.5f);
 
         private Vector2 mousePos;
         private Vector2 aimVel;
@@ -99,6 +104,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
             Lighting.AddLight(Projectile.Center, new Vector3(0.42f, 0.18f, 0.74f) * Projectile.Opacity);
+            if (fadeIn > 0.05f)
+                Lighting.AddLight(GetBladeTip(Owner), GalaxyAccentColor.ToVector3() * 0.3f * fadeIn);
         }
 
         private void ResetSwing(Player owner)
@@ -352,6 +359,38 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                 Color.Lerp(violet, cyan, Main.rand.NextFloat()),
                 Main.rand.NextFloat(0.9f, 1.35f));
             dust.noGravity = true;
+
+            if (Main.rand.NextBool(3))
+                GalaxyMetaball.SpawnParticle(
+                    bladeTip + Main.rand.NextVector2Circular(16f, 16f),
+                    -bladeDirection * Main.rand.NextFloat(1.2f, 3.8f),
+                    28f * Main.rand.NextFloat(0.9f, 1.2f) * intensity);
+
+            if (Main.rand.NextBool(4))
+            {
+                Dust galaxyDust = Dust.NewDustPerfect(
+                    bladeTip + Main.rand.NextVector2Circular(12f, 12f),
+                    DustID.FireworksRGB,
+                    -bladeDirection.RotatedByRandom(0.55f) * Main.rand.NextFloat(1.5f, 5.5f),
+                    0, default,
+                    Main.rand.NextFloat(0.5f, 0.85f));
+                galaxyDust.noGravity = true;
+                galaxyDust.color = GalaxyAccentColor;
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    bladeTip + Main.rand.NextVector2Circular(10f, 10f),
+                    -bladeDirection * Main.rand.NextFloat(0.8f, 2.5f),
+                    "CalamityMod/Particles/BloomRing",
+                    false,
+                    Main.rand.Next(7, 13),
+                    Main.rand.NextFloat(0.18f, 0.38f) * Projectile.scale,
+                    GalaxyAccentColor * (0.38f + intensity * 0.42f),
+                    Vector2.One,
+                    true));
+            }
         }
 
         private void SpawnExecutionSlashes(NPC target)
@@ -491,6 +530,41 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
         {
             target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), 180);
             SpawnExecutionSlashes(target);
+            SpawnGalaxyHitVFX(target.Center);
+        }
+
+        private static void SpawnGalaxyHitVFX(Vector2 center)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color accentColor = GalaxyAccentColor;
+            for (int i = 0; i < 22; i++)
+            {
+                float rot = MathHelper.TwoPi * i / 22f;
+                Vector2 offset = new Vector2(7f, 0f).RotatedBy(rot * Main.rand.NextFloat(0.85f, 4.1f));
+                Vector2 vel = new Vector2(8f, 0f).RotatedBy(rot * Main.rand.NextFloat(0.85f, 4.1f));
+                if (i % 3 == 0)
+                    GalaxyMetaball.SpawnParticle(center + offset * Main.rand.NextFloat(0.5f, 2.5f), vel * Main.rand.NextFloat(0.8f, 1.2f), 50f * Main.rand.NextFloat(0.85f, 1.3f));
+                else
+                {
+                    Dust d = Dust.NewDustPerfect(center + offset, DustID.FireworksRGB, vel * Main.rand.NextFloat(0.4f, 1.1f), 100, default, Main.rand.NextFloat(0.8f, 1.7f));
+                    d.noGravity = true;
+                    d.color = Main.rand.NextBool() ? Color.Aqua : Color.Magenta;
+                }
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.Lerp(accentColor, Color.White, 0.18f) * 0.45f,
+                "CalamityMod/Particles/HighResHollowCircleHardEdge",
+                Vector2.One,
+                0f,
+                0.06f,
+                0.88f,
+                22,
+                true));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -587,6 +661,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer
                 bladeDirection.ToRotation(),
                 new Vector2(streak.Width() * 0.5f, streak.Height() * 0.5f),
                 new Vector2(0.74f, 0.18f) * Projectile.scale,
+                SpriteEffects.None,
+                0f);
+
+            Asset<Texture2D> smokey = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey");
+            Color galaxyGlow = GalaxyAccentColor;
+            galaxyGlow.A = 0;
+            Main.EntitySpriteDraw(
+                smokey.Value,
+                drawPosition,
+                null,
+                galaxyGlow * 0.22f,
+                bladeDirection.ToRotation() + Main.GlobalTimeWrappedHourly * 2.4f,
+                smokey.Size() * 0.5f,
+                Projectile.scale * 0.28f,
+                SpriteEffects.None,
+                0f);
+            Main.EntitySpriteDraw(
+                bloom.Value,
+                drawPosition,
+                null,
+                galaxyGlow * 0.28f * pulse,
+                0f,
+                bloom.Size() * 0.5f,
+                Projectile.scale * 0.18f,
                 SpriteEffects.None,
                 0f);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);

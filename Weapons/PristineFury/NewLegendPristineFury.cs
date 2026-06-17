@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             Item.width = 100;
             Item.height = 46;
-            Item.damage = 77;
+            Item.damage = PF_Balance.GetInitialBaseDamage();
             Item.DamageType = DamageClass.Ranged;
             Item.useTime = 2;
             Item.useAnimation = 2;
@@ -90,8 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            PristineFuryMark mark = player.GetModPlayer<PristineFuryPlayer>().CurrentMark;
-            damage.Base += PristineFuryMarkHelper.GetDisplayedBaseDamage(mark) - Item.damage;
+            damage.Base += PF_Balance.GetBaseDamage() - Item.damage;
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)

@@ -102,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.22f, Pitch = 0.22f, PitchVariance = 0.08f, MaxInstances = 5 }, target.Center);
-            SpawnHitBurst(target.Center);
+            SpawnHitBurst(GetParentCenter());
         }
 
         private void SpawnHitBurst(Vector2 center)

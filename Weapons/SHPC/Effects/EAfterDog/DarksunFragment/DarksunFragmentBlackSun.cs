@@ -43,7 +43,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Projectile.localNPCHitCooldown = 4;
         }
 
-        public override bool ShouldUpdatePosition() => false;
+        private const float AttractionSpeed = 3f;
+        private const float MergeDistance = 24f;
+
+        public override bool ShouldUpdatePosition() => true;
 
         public override void OnSpawn(IEntitySource source)
         {
@@ -72,13 +75,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public override void AI()
         {
             Timer++;
-            Projectile.velocity = Vector2.Zero;
             Projectile.ai[0] = MathHelper.Clamp(Projectile.ai[0], 1f, MaxLevel);
             if (Level >= MaxLevel && Projectile.owner == Main.myPlayer)
             {
                 Projectile.Kill();
                 return;
             }
+
+            // Mutual attraction toward nearest same-owner black sun; merges when close
+            Projectile.velocity = ComputeAttractionVelocity();
 
             PlayRiftBuildingLoop();
 
@@ -114,6 +119,49 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             }
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.78f, 0.46f, 0.08f) * (0.3f + Level * 0.08f));
+        }
+
+        private Vector2 ComputeAttractionVelocity()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return Vector2.Zero;
+
+            int sunType = ModContent.ProjectileType<DarksunFragmentBlackSun>();
+            Projectile nearestSun = null;
+            float nearestDist = float.MaxValue;
+
+            foreach (Projectile other in Main.ActiveProjectiles)
+            {
+                if (other.whoAmI == Projectile.whoAmI || other.type != sunType || other.owner != Projectile.owner)
+                    continue;
+
+                float dist = Vector2.Distance(Projectile.Center, other.Center);
+                if (dist < nearestDist)
+                {
+                    nearestDist = dist;
+                    nearestSun = other;
+                }
+            }
+
+            if (nearestSun is null)
+                return Vector2.Zero;
+
+            // Lower whoAmI absorbs the other to prevent both suns from merging simultaneously
+            if (nearestDist <= MergeDistance && nearestSun.whoAmI > Projectile.whoAmI)
+            {
+                int mergedLevel = Math.Max(Level, Utils.Clamp((int)nearestSun.ai[0], 1, MaxLevel));
+                Projectile.ai[0] = mergedLevel;
+                Projectile.timeLeft = Lifetime;
+                Projectile.netUpdate = true;
+                SpawnUpgradeBurst(Projectile.Center, mergedLevel);
+                nearestSun.Kill();
+                return Vector2.Zero;
+            }
+
+            if (nearestDist <= MergeDistance)
+                return Vector2.Zero;
+
+            return (nearestSun.Center - Projectile.Center).SafeNormalize(Vector2.Zero) * AttractionSpeed;
         }
 
         private void PlayRiftBuildingLoop()

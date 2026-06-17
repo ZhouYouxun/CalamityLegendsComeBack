@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.MC.General;
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Terraria;
 
@@ -6,6 +7,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 {
     internal static class MalachiteBalance
     {
+        private const string SourceFile = "Weapons/Malachite/MalachiteBalance.cs";
+
         public const int DepletionBurstKunaiCount = 5;
         public const int RightFeatherMaxCount = 23;
         public const int RightFeatherGenerationFrames = 36;
@@ -24,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public static int NormalLeftClickKunaiCount => 1;
 
         // Damage progression arrays for left and right click
-        public static readonly int[] LeftClickBaseDamage =
+        private static readonly int[] DefaultLeftClickBaseDamage =
         {
             12,   // Initial
             18,   // Eye of Cthulhu
@@ -42,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             16800 // Exo Mechs and Supreme Calamitas
         };
 
-        public static readonly int[] RightClickBaseDamage =
+        private static readonly int[] DefaultRightClickBaseDamage =
         {
             8,    // Initial
             12,   // Eye of Cthulhu
@@ -61,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         };
 
         // 2D Array for projectile velocities: Column 0 is Left-click, Column 1 is Right-click
-        public static readonly float[,] ProjectileVelocities = new float[,]
+        private static readonly float[,] DefaultProjectileVelocities = new float[,]
         {
             { 18f, 24f }, // Pre-hardmode
             { 22f, 30f }, // Hardmode to Plantera
@@ -102,15 +105,20 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static int GetLeftClickBaseDamage()
         {
-            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, LeftClickBaseDamage.Length - 1);
-            return System.Math.Max(1, LeftClickBaseDamage[stageIndex]);
+            int[] values = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage);
+            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, values.Length - 1);
+            return System.Math.Max(1, values[stageIndex]);
         }
 
         public static int GetRightClickBaseDamage()
         {
-            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, RightClickBaseDamage.Length - 1);
-            return System.Math.Max(1, RightClickBaseDamage[stageIndex]);
+            int[] values = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultRightClickBaseDamage), DefaultRightClickBaseDamage);
+            int stageIndex = Utils.Clamp(GetCompletedStageIndex(), 0, values.Length - 1);
+            return System.Math.Max(1, values[stageIndex]);
         }
+
+        public static int GetInitialLeftClickBaseDamage() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage)[0];
 
         public static int GetVelocityStageIndex()
         {
@@ -125,12 +133,16 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static float GetLeftClickVelocity()
         {
-            return ProjectileVelocities[GetVelocityStageIndex(), 0];
+            int stage = GetVelocityStageIndex();
+            float fallback = DefaultProjectileVelocities[stage, 0];
+            return RuntimeBalanceData.GetSourceFloatTableColumn(SourceFile, nameof(DefaultProjectileVelocities), stage, 0, fallback);
         }
 
         public static float GetRightClickVelocity()
         {
-            return ProjectileVelocities[GetVelocityStageIndex(), 1];
+            int stage = GetVelocityStageIndex();
+            float fallback = DefaultProjectileVelocities[stage, 1];
+            return RuntimeBalanceData.GetSourceFloatTableColumn(SourceFile, nameof(DefaultProjectileVelocities), stage, 1, fallback);
         }
     }
 }

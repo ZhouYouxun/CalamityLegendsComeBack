@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             Item.width = 78;
             Item.height = 78;
-            Item.damage = 0;
+            Item.damage = BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage, 0);
             Item.DamageType = DamageClass.Ranged;
             Item.useAnimation = 2;
             Item.useTime = 2;
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base = damageBalance.GetLeftClickBaseDamage();
+            damage.Base += damageBalance.GetLeftClickBaseDamage() - Item.damage;
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)

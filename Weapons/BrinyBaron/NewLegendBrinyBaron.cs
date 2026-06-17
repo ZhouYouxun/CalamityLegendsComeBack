@@ -23,7 +23,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public new string LocalizationCategory => "Items.Weapons";
 
         private const float RightClickDamageMultiplier = 1.08f;
-        private const float RightClickShurikenSpeed = 21f;
+        private const float DefaultRightClickShurikenDamageMultiplier = RightClickDamageMultiplier * 0.67f;
+        private const float RightClickShurikenSpeed = 14.07f;
         private const int RightClickShurikenAutoUseTime = 12;
         private static bool CanUseQuickDash => true;
         private static bool HasDesignedSuperDashUnlock => NPC.downedFishron;
@@ -32,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             Item.width = 120;
             Item.height = 120;
-            Item.damage = 0;
+            Item.damage = BB_Balance.GetInitialLeftClickBaseDamage();
             Item.DamageType = DamageClass.Melee;
 
             Item.useAnimation = 30;
@@ -230,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 player.Center,
                 dir,
                 ModContent.ProjectileType<Z_BrinyBaron_SkillSuperCharge_SuperDash>(),
-                Item.damage * 5,
+                BB_Balance.GetLeftClickBaseDamage() * 5,
                 Item.knockBack,
                 player.whoAmI,
                 consumedTide);
@@ -270,7 +271,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base = BB_Balance.GetLeftClickBaseDamage();
+            damage.Base += BB_Balance.GetLeftClickBaseDamage() - Item.damage;
             damage *= player.GetModPlayer<BBTideValuePlayer>().TideDamageMultiplier;
         }
 
@@ -297,7 +298,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             }
 
             Vector2 direction = (Main.MouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-            FireDefaultRightClickShuriken(player, player.GetSource_ItemUse(Item), direction, GetCurrentRightClickDamage(player), Item.knockBack);
+            FireDefaultRightClickShuriken(player, player.GetSource_ItemUse(Item), direction, GetCurrentDefaultShurikenDamage(player), Item.knockBack);
             SoundEngine.PlaySound(SoundID.Item1, player.MountedCenter);
 
             player.ChangeDir(direction.X >= 0f ? 1 : -1);
@@ -330,6 +331,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             activeLeftSwing.Kill();
             return true;
+        }
+
+        private int GetCurrentDefaultShurikenDamage(Player player)
+        {
+            int baseDamage = BB_Balance.GetLeftClickBaseDamage();
+            float scaledDamage = player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * DefaultRightClickShurikenDamageMultiplier);
+            return Math.Max(1, (int)(scaledDamage * player.GetModPlayer<BBTideValuePlayer>().TideDamageMultiplier));
         }
 
         private static void FireDefaultRightClickShuriken(Player player, IEntitySource source, Vector2 direction, int damage, float knockback)

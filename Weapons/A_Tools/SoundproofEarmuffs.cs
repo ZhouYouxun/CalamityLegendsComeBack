@@ -58,6 +58,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
                 player.GetModPlayer<SoundproofEarmuffsPlayer>().SoundEffectsMuffled = true;
         }
 
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.IronBar, 2)
+                .AddIngredient(ItemID.Wood, 5)
+                .AddTile(TileID.WorkBenches)
+                .Register();
+        }
+
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string state = Enabled ? this.GetLocalizedValue("EnabledState") : this.GetLocalizedValue("DisabledState");

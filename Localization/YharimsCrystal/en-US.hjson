@@ -37,8 +37,13 @@ Mods: {
 					Tooltip: While using Tyrant Crystal, increases weapon damage by 10%.
 				}
 
-				YharimsCrystalBeta: {
-					DisplayName: Tyrant Crystal - Beta
+				YharimsCrystalChi: {
+					DisplayName: Tyrant Crystal - Chi
+					Tooltip: While using Tyrant Crystal, adds a smaller weapon damage bonus.
+				}
+
+				YharimsCrystalDelta: {
+					DisplayName: Tyrant Crystal - Delta
 					Tooltip: Strengthens Tyrant Crystal's Slaughter form and shortens its kill-mode cooldown.
 				}
 
@@ -52,8 +57,13 @@ Mods: {
 					Tooltip: Tyrant Prism drone bolts fly 12% faster.
 				}
 
-				YharimsCrystalLambda: {
-					DisplayName: Tyrant Crystal - Lambda
+				YharimsCrystalOmega: {
+					DisplayName: Tyrant Crystal - Omega
+					Tooltip: Adds a small Tyrant Crystal damage bonus and improves legendary skill charge gain.
+				}
+
+				YharimsCrystalPhi: {
+					DisplayName: Tyrant Crystal - Phi
 					Tooltip: Tyrant Crystal's legendary skill charges faster and has a shorter cooldown.
 				}
 
@@ -62,14 +72,19 @@ Mods: {
 					Tooltip: Improves Tyrant Prism heavy salvos and fires Aetherflux rays more often.
 				}
 
-				YharimsCrystalEpsilon: {
-					DisplayName: Tyrant Crystal - Epsilon
+				YharimsCrystalPsi: {
+					DisplayName: Tyrant Crystal - Psi
+					Tooltip: Tyrant Prism drones fire one additional machine-gun bolt during attack form.
+				}
+
+				YharimsCrystalTheta: {
+					DisplayName: Tyrant Crystal - Theta
 					Tooltip: Reduces Tyrant Crystal's mana cost by 18%.
 				}
 
-				YharimsCrystalTau: {
-					DisplayName: Tyrant Crystal - Tau
-					Tooltip: Adds a small Tyrant Crystal damage bonus and improves legendary skill charge gain.
+				YharimsCrystalUpsilon: {
+					DisplayName: Tyrant Crystal - Upsilon
+					Tooltip: Tyrant Prism drone bolts fly slightly faster.
 				}
 			}
 		}

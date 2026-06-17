@@ -33,10 +33,7 @@ Mods: {
 						[c/FFE85A:Ultimate: at 120 energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to inflict Glacial State on enemies within 25 tiles and create a 10 second frost field.]
 						[c/FFE85A:Frost field: enemies within 8 tiles are heavily slowed; you take 35% less damage and gain 20 defense. Ultimate energy cannot be gained while it exists.]
 						'''
-					CosmicDischargePassive:
-						'''
-						[c/B8F4FF:Voidfrost Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Frostwind Revival (+20% damage). Cooldown: 60 seconds.]
-						'''
+					CosmicDischargePassive: "[c/B8F4FF:Voidfrost Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Frostwind Revival (+20% damage). Cooldown: 60 seconds.]"
 				}
 			}
 		}
@@ -87,7 +84,6 @@ Mods: {
 				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
-				CosmicDischargeFlail.DisplayName: Cosmic Discharge Flail
 			}
 		}
 

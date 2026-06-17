@@ -1,10 +1,13 @@
 using CalamityMod;
+using CalamityLegendsComeBack.Systems;
 using Terraria;
 
 namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
     internal static class SS_Balance
     {
+        private const string SourceFile = "Weapons/SeasSearing/SS_Balance.cs";
+
         // 14 stages:
         // Initial, EoC, Evil, Skeletron, Hardmode, Mech, Plantera, Golem,
         // MoonLord, Providence, Polterghast, DoG, Yharon, Exo+SC
@@ -14,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         // The weapon is crafted with Hardmode Calamity materials and becomes
         // meaningfully available around the Mechanical Boss stage.
 
-        public static readonly int[] BaseDamage =
+        private static readonly int[] DefaultBaseDamage =
         {
             18,     // Initial
             26,     // Eye of Cthulhu
@@ -34,9 +37,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public static int GetBaseDamage()
         {
-            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, BaseDamage.Length - 1);
-            return System.Math.Max(1, BaseDamage[stage]);
+            int[] values = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultBaseDamage), DefaultBaseDamage);
+            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, values.Length - 1);
+            return System.Math.Max(1, values[stage]);
         }
+
+        public static int GetInitialBaseDamage() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultBaseDamage), DefaultBaseDamage)[0];
 
         public static int GetCompletedStageIndex()
         {
