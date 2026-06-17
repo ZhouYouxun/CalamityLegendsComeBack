@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
-            0f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
+            4.00f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
             1.53f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };
 
