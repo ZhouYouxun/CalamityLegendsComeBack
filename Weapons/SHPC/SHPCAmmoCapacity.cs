@@ -41,14 +41,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             225, // EffectID 33: Twisting Nether
             100, // EffectID 34: Endothermic Energy
             100, // EffectID 35: Nightmare Fuel
-            150, // EffectID 36: Ascendant Spirit Essence
+            500, // EffectID 36: Ascendant Spirit Essence
             150, // EffectID 37: Yharon Soul Fragment
             200, // EffectID 38: Exo Prism
             200, // EffectID 39: Ashes of Annihilation
             225, // EffectID 40: Armored Shell
             75, // EffectID 41: Pearl Shard
             100, // EffectID 42: Darksun Fragment
-            999, // EffectID 43: Cynosure
+            1, // EffectID 43: Cynosure
             225 // EffectID 44: Core of Calamity
         };
 

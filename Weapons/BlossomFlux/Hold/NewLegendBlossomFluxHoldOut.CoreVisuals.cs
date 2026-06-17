@@ -23,21 +23,27 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     internal sealed partial class NewLegendBlossomFluxHoldOut
     {
         // 弓体核心位置：矢台（箭搭位）在弓身中心处。
-        private Vector2 CoreBodyPosition => Projectile.Center;
+        private Vector2 CoreBodyPosition => Projectile.Center + (Projectile.Center - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction) * 13f;
 
         // ================= 星芒/核心绘制参数自定义配置 =================
         public static string CoreBloomTexture = "CalamityMod/Particles/BloomCircle";
-        public static string CoreStarTexture = "CalamityMod/Particles/RoundedStar";  // 圆角柔和星，有机自然感
-        public static string CoreFlowerTexture = "CalamityMod/Particles/MiniFlower"; // 小花瓣公转点缀，强化森林主题
+        public static string CoreStarTexture = "CalamityLegendsComeBack/Texture/KsTexture/star_06";  // 原：CalamityMod/Particles/RoundedStar（128×128）；新贴图 512×512，scale 已 ×0.25
+        public static string CoreFlowerTexture = "CalamityLegendsComeBack/Texture/KsTexture/star_08"; // 原：CalamityMod/Particles/MiniFlower（128×128）；新贴图 512×512，scale 已 ×0.25
+
+        // ================= 描边颜色配置 =================
+        // 外层/内层描边与白色的混合比（0=纯主题色，1=纯白）；值越小颜色越纯、越跟随战术主题色
+        public static float OutlineOuterWhiteMix = 0.15f;
+        public static float OutlineInnerWhiteMix = 0.20f;
+        // =================================================
 
         // 旋转速度基数
         public static float CoreRotationSpeedMultiplier = 1.0f;
 
-        // 核心星芒大小/缩放比例（RoundedStar 400×400，比 HalfStar 33×33 大约 12× 维度，需相应缩小 scale）
-        public static float CoreStarScaleX = 0.022f; // 修长尖端感（约对应 HalfStar 0.35 的视觉宽度）
-        public static float CoreStarScaleY = 0.125f; // 长度系数（约对应 HalfStar 1.0 × 1.5 的视觉高度）
-        public static float CoreBloomScaleX = 0.30f; // 背景光晕宽度（改为接近正圆，去掉激光炮口焰扁感）
-        public static float CoreBloomScaleY = 0.28f; // 背景光晕高度
+        // 核心星芒大小/缩放比例（star_06 512×512，原 RoundedStar 128×128，×0.25 补偿尺寸差）
+        public static float CoreStarScaleX = 0.0033f; // 原 0.022f（RoundedStar）；×0.25×0.6 → 512×512 等效宽度
+        public static float CoreStarScaleY = 0.0186f; // 原 0.125f（RoundedStar）；×0.25×0.6 → 512×512 等效高度
+        public static float CoreBloomScaleX = 0.18f; // 背景光晕宽度（原 0.30f，×0.6）
+        public static float CoreBloomScaleY = 0.168f; // 背景光晕高度（原 0.28f，×0.6）
         // =============================================================
 
         public override bool PreDraw(ref Color lightColor)
@@ -123,8 +129,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float idlePulse = 0.78f + 0.22f * (float)Math.Sin(time * 5.1f + Projectile.identity * 0.37f);
             float outlineDistance = 1.35f + activity * 2.65f + rightPulse * 2.2f;
             int outlineDraws = 8 + (int)(activity * 5f);
-            Color outerColor = Color.Lerp(mainColor, Color.White, 0.45f) * (0.18f + activity * 0.34f) * idlePulse;
-            Color innerColor = Color.Lerp(accentColor, Color.White, 0.55f) * (0.12f + activity * 0.22f);
+            Color outerColor = Color.Lerp(mainColor, Color.White, OutlineOuterWhiteMix) * (0.18f + activity * 0.34f) * idlePulse;
+            Color innerColor = Color.Lerp(accentColor, Color.White, OutlineInnerWhiteMix) * (0.12f + activity * 0.22f);
 
             for (int i = 0; i < outlineDraws; i++)
             {
@@ -170,9 +176,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             Color themeColor = BFArrowCommon.GetPresetColor(preset);
             Color accentColor = BFArrowCommon.GetPresetAccentColor(preset);
-            // 嫩绿混合主题色，替换原来的科幻青蓝
-            Color naturalGlow = Color.Lerp(themeColor, new Color(160, 235, 120), 0.28f);
-            Color white = Color.Lerp(accentColor, new Color(235, 255, 230), 0.60f);
+            Color naturalGlow = themeColor;
+            Color white = Color.Lerp(accentColor, Color.White, 0.60f);
 
             float charge = MathHelper.Clamp(power, 0f, 1f);
             float flashPulse = idleCore ? 0f : charge;
@@ -181,8 +186,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // 绘制底光背景 BloomCircle
             // 激活状态参考 ApoctosisArray 使用随机抖动旋转，制造"能量不稳定"感；闲置时平滑旋转。
             float bloomOpacity = idleCore
-                ? 0.20f + charge * 0.15f
-                : 0.26f + charge * 0.22f + flashPulse * 0.30f;
+                ? 0.14f + charge * 0.105f
+                : 0.182f + charge * 0.154f + flashPulse * 0.21f;
 
             for (int i = 0; i < 3; i++)
             {
@@ -204,66 +209,31 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     0);
             }
 
-            // 绘制圆角星芒层级（RoundedStar，比 HalfStar 更柔和有机），5 层双向交叉旋转
-            int layers = 5;
-            for (int i = 0; i < layers; i++)
+            // star_06 単層自転
             {
-                float iMult = 1f - 0.12f * i;
+                float pulseRate = idleCore ? 15f : (rightCharge ? 35f : 20f);
+                float sine = MathHelper.Lerp((float)Math.Sin(Main.GlobalTimeWrappedHourly * pulseRate / MathHelper.Pi), 0.5f, 0.6f);
+                float chargeRotationBoost = rightCharge ? time * 0.45f : 0f;
+                float starRotation = direction.ToRotation() + chargeRotationBoost + MathHelper.PiOver4 + phaseKick;
+                float starOpacity = idleCore
+                    ? 0.224f + charge * 0.098f
+                    : 0.336f + charge * 0.21f + flashPulse * 0.294f;
+                Vector2 starScale = new Vector2(CoreStarScaleX, CoreStarScaleY * sine) * (idleCore ? 0.85f : 1.35f + charge * 0.55f);
 
-                for (int b = -1; b <= 1; b += 2)
-                {
-                    float pulseRate = idleCore ? 15f : (rightCharge ? 35f : 20f);
-                    float sine = MathHelper.Lerp((float)Math.Sin(Main.GlobalTimeWrappedHourly * pulseRate / MathHelper.Pi), 0.5f * b, 0.6f);
-
-                    float chargeRotationBoost = rightCharge ? time * 0.45f : 0f;
-                    float rotation = direction.ToRotation()
-                        + time * charge * Math.Max(i - 2, 0) * (rightCharge ? 0.4f : 0.15f)
-                        + chargeRotationBoost
-                        + MathHelper.PiOver4 * b
-                        + phaseKick
-                        + (MathHelper.TwoPi * i / layers);
-
-                    float starOpacity = idleCore
-                        ? 0.32f + charge * 0.14f
-                        : 0.48f + charge * 0.30f + flashPulse * 0.42f;
-
-                    Vector2 starScale = new Vector2(CoreStarScaleX, CoreStarScaleY * sine * b)
-                        * (idleCore ? 0.85f : 1.35f + charge * 0.55f)
-                        * iMult;
-
-                    Main.EntitySpriteDraw(
-                        star,
-                        core,
-                        null,
-                        Color.Lerp(naturalGlow, white, 0.55f) * starOpacity * (1f - 0.10f * i),
-                        rotation,
-                        star.Size() * 0.5f,
-                        starScale,
-                        SpriteEffects.None,
-                        0);
-                }
+                Main.EntitySpriteDraw(star, core, null,
+                    Color.Lerp(naturalGlow, white, 0.55f) * starOpacity,
+                    starRotation, star.Size() * 0.5f, starScale, SpriteEffects.None, 0);
             }
 
-            // 小花瓣公转层：3 朵 MiniFlower 绕核心匀速公转，强化森林/自然主题身份。
-            int flowerCount = 3;
-            for (int i = 0; i < flowerCount; i++)
+            // star_08 単層自転
             {
-                float orbitAngle = time * 0.85f + MathHelper.TwoPi * i / flowerCount;
-                float orbitRadius = (5f + charge * 7f) * (idleCore ? 0.65f : 1f);
-                Vector2 flowerPos = CoreBodyPosition + orbitAngle.ToRotationVector2() * orbitRadius - Main.screenPosition;
-                float flowerOpacity = idleCore ? 0.42f + charge * 0.20f : 0.60f + charge * 0.28f + flashPulse * 0.22f;
-                float flowerScale = (0.7f + charge * 0.5f) * (idleCore ? 0.80f : 1f);
+                float spinAngle = time * 0.85f;
+                float flowerOpacity = idleCore ? 0.294f + charge * 0.14f : 0.42f + charge * 0.196f + flashPulse * 0.154f;
+                float flowerScale = (0.7f + charge * 0.5f) * (idleCore ? 0.80f : 1f) * 0.25f * 0.6f; // ×0.25×0.6：star_08 512×512
 
-                Main.EntitySpriteDraw(
-                    flower,
-                    flowerPos,
-                    null,
+                Main.EntitySpriteDraw(flower, core, null,
                     Color.Lerp(themeColor, Color.White, 0.58f) * flowerOpacity,
-                    orbitAngle + MathHelper.PiOver2,
-                    flower.Size() * 0.5f,
-                    flowerScale,
-                    SpriteEffects.None,
-                    0);
+                    spinAngle + MathHelper.PiOver2, flower.Size() * 0.5f, flowerScale, SpriteEffects.None, 0);
             }
         }
     }

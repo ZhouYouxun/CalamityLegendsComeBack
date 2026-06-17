@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -54,14 +55,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             float age = 74f - Projectile.timeLeft;
             Projectile.rotation += 0.22f;
-            Lighting.AddLight(Projectile.Center, new Vector3(0.35f, 0.62f, 1f) * 0.45f);
+            Lighting.AddLight(Projectile.Center, new Vector3(0.72f, 0.52f, 0.10f) * 0.55f);
 
             if (age < 38f)
             {
                 Projectile.velocity *= 0.9f;
 
-                if (Main.rand.NextBool(3))
-                    CynosureVisuals.SpawnElectricBurst(Projectile.Center, 1, 0.8f, 2.2f);
+                // 充能蓄力特效：随机电火花 + 偶发光球
+                if (Main.rand.NextBool(2))
+                    CynosureVisuals.SpawnElectricBurst(Projectile.Center, 1, 0.8f, 2.5f);
+
+                if (!Main.dedServ && Main.rand.NextBool(4))
+                {
+                    GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                        Main.rand.NextVector2Circular(1.2f, 1.2f),
+                        Main.rand.NextFloat(0.10f, 0.20f),
+                        Color.Lerp(new Color(255, 214, 88), Color.White, Main.rand.NextFloat(0.2f, 0.6f)),
+                        Main.rand.Next(5, 10)));
+                }
                 return;
             }
 
@@ -72,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.16f, Pitch = 0.38f, PitchVariance = 0.14f, MaxInstances = 4 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.22f, Pitch = 0.28f, PitchVariance = 0.14f, MaxInstances = 4 }, Projectile.Center);
 
             NPC target = CynosureTargeting.FindTarget((int)Projectile.ai[0], Projectile.Center);
             if (target != null && Projectile.owner == Main.myPlayer)
@@ -80,22 +92,83 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                     ModContent.ProjectileType<CynosureLightningArc>(), Projectile.damage, Projectile.knockBack,
                     Projectile.owner, target.whoAmI, target.Center.X, target.Center.Y);
+
+                // 在目标处同时产生闪电爆炸
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<CynosureLightningExplosion>(), Projectile.damage, Projectile.knockBack,
+                    Projectile.owner);
             }
 
-            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 14, 2.4f, 10f);
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 22, 2.4f, 12f);
+
+            // 脉冲环
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
+                Projectile.Center, Vector2.Zero,
                 new Color(255, 214, 88),
                 "CalamityMod/Particles/BloomRing",
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
-                0.035f,
-                0.18f,
-                12));
+                0.035f, 0.22f, 14));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center, Vector2.Zero,
+                Color.White,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One * 0.30f,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.55f, 0.04f, 10));
+
+            // 放射状线条火花（仿 AuricBall OnKill）
+            for (int i = 0; i < 16; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 16f;
+                Vector2 dir = angle.ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center + dir * Main.rand.NextFloat(2f, 7f),
+                    dir * Main.rand.NextFloat(2.5f, 10f),
+                    false,
+                    Main.rand.Next(8, 15),
+                    Main.rand.NextFloat(0.16f, 0.38f),
+                    i % 2 == 0 ? new Color(255, 214, 88) : new Color(255, 240, 160)));
+            }
         }
 
         public override bool? CanDamage() => false;
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D circle = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 center = Projectile.Center - Main.screenPosition;
+            Vector2 texOrigin = texture.Size() * 0.5f;
+            Vector2 circleOrigin = circle.Size() * 0.5f;
+            float pulse = 1f + 0.08f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f + Projectile.identity * 1.4f);
+            Color gold = new Color(255, 214, 88, 0);
+            Color white = Color.White with { A = 0 };
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            // 光晕 bloom
+            Main.EntitySpriteDraw(circle, center, null, gold * 0.70f, 0f, circleOrigin, 0.30f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(circle, center, null, gold * 0.45f, 0f, circleOrigin, 0.50f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(circle, center, null, white * 0.35f, 0f, circleOrigin, 0.15f, SpriteEffects.None);
+
+            // 贴图轮廓辉光（10 圈，仿 AuricBall）
+            float outlinePulse = 1f + 0.10f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2.4f * outlinePulse);
+                Main.EntitySpriteDraw(texture, center + offset, null,
+                    (Color.White with { A = 0 }) * 0.38f,
+                    Projectile.rotation, texOrigin, Projectile.scale * 1.08f, SpriteEffects.None);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // 实体贴图（正常混合，保证可见）
+            Main.EntitySpriteDraw(texture, center, null, Color.White, Projectile.rotation, texOrigin, Projectile.scale, SpriteEffects.None);
+            return false;
+        }
     }
 
     /// <summary>

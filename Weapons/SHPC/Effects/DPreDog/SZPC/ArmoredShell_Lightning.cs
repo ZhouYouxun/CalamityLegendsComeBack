@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const int MaxChainCount = 4;
+        private const int MaxChainCount = 3;
         private ref float BounceUsed => ref Projectile.localAI[0];
 
         private int time;
@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 20;
         }
 
         public override void AI()
@@ -176,15 +176,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         {
             float damageMult = Utils.Remap(Projectile.numHits, 0f, 3f, 1f, 0.15f, true);
             modifiers.SourceDamage *= damageMult;
+            if (IsTargetInsideBallSphere(target))
+                modifiers.SourceDamage *= 1.2f;
+            modifiers.Knockback *= 0f;
+        }
+
+        private static bool IsTargetInsideBallSphere(NPC target)
+        {
+            foreach (Projectile proj in Main.ActiveProjectiles)
+            {
+                if (proj.type != ModContent.ProjectileType<ArmoredShell_Ball>())
+                    continue;
+                if (proj.Distance(target.Center) <= 20f * proj.scale)
+                    return true;
+            }
+            return false;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, 300);
             SpawnDragoonBoltHitFX(target.Center, BounceUsed >= 1f ? 2.1f : 3f);
-
-            Vector2 launchVel = Utils.DirectionTo(Projectile.Center, target.Center);
-            target.MoveNPC(launchVel, 20f, true);
 
             if (BounceUsed >= MaxChainCount)
             {
@@ -252,23 +264,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private NPC FindBounceTarget(NPC previousTarget)
         {
-            NPC bestTarget = null;
-            float bestDistance = 1300f;
+            var candidates = new System.Collections.Generic.List<NPC>();
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (npc.whoAmI == previousTarget.whoAmI || !npc.CanBeChasedBy(Projectile))
                     continue;
-
-                float distance = Projectile.Distance(npc.Center);
-                if (distance >= bestDistance)
+                if (Projectile.localNPCImmunity[npc.whoAmI] != 0)
                     continue;
-
-                bestDistance = distance;
-                bestTarget = npc;
+                if (Projectile.Distance(npc.Center) >= 500f)
+                    continue;
+                candidates.Add(npc);
             }
 
-            return bestTarget;
+            return candidates.Count > 0 ? Main.rand.Next(candidates) : null;
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -288,17 +297,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Vector2 previous = Projectile.Center;
+            Vector2? previous = null;
 
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
-                Vector2 current = Projectile.oldPos[i] + Projectile.Size * 0.5f;
-                if (current == Projectile.Size * 0.5f)
+                if (Projectile.oldPos[i] == Vector2.Zero)
                     continue;
 
-                float fade = 1f - i / (float)Projectile.oldPos.Length;
-                DrawSegment(pixel, previous, current, new Color(80, 220, 255) * fade, 3.2f * fade);
-                DrawSegment(pixel, previous, current, Color.White * 0.55f * fade, 1.35f * fade);
+                Vector2 current = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                if (previous.HasValue)
+                {
+                    float fade = 1f - i / (float)Projectile.oldPos.Length;
+                    DrawSegment(pixel, previous.Value, current, new Color(80, 220, 255) * fade, 3.2f * fade);
+                    DrawSegment(pixel, previous.Value, current, Color.White * 0.55f * fade, 1.35f * fade);
+                }
                 previous = current;
             }
 

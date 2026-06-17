@@ -19,6 +19,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 {
     public class DarkPlasmaEffect : DefaultEffect
     {
+        public const int BlackHoleLifetime = 420;
+        private const int BlackHoleHitCooldown = 8;
+
         public override int EffectID => 32;
 
         public override int AmmoType => ModContent.ItemType<DarkPlasma>();
@@ -28,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override Color EndColor => new Color(5, 5, 5);
 
         public override float SquishyLightParticleFactor => 0f;
-        public override float ExplosionPulseFactor => 1.5f;
+        public override float ExplosionPulseFactor => 0f;
 
         // 自定义计时器
         private float portalTimer;
@@ -47,7 +50,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             projectile.velocity *= 0.8f;
             projectile.tileCollide = false;
             projectile.penetrate = -1;
-            projectile.timeLeft = Math.Max(projectile.timeLeft, 420);
+            projectile.timeLeft = BlackHoleLifetime;
+            projectile.usesLocalNPCImmunity = true;
+            projectile.localNPCHitCooldown = BlackHoleHitCooldown;
 
             if (gp.releaseOnly)
             {
@@ -212,7 +217,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             // ===== 5. 轨道虚空尘（随寿命增强）=====
 
             // 👉 归一化寿命（越接近死亡 → 越接近1）
-            float lifeFactor = 1f - projectile.timeLeft / 420f;
+            float lifeFactor = 1f - projectile.timeLeft / (float)BlackHoleLifetime;
             lifeFactor = MathHelper.Clamp(lifeFactor, 0f, 1f);
 
             // 👉 平滑强化（避免前期突变）
@@ -253,7 +258,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             // ===== 2. 黑色高速裂流（随寿命外扩增强）=====
 
             // 👉 同一套寿命因子（和黑洞吸附形成对照）
-            lifeFactor = 1f - projectile.timeLeft / 420f;
+            lifeFactor = 1f - projectile.timeLeft / (float)BlackHoleLifetime;
             lifeFactor = MathHelper.Clamp(lifeFactor, 0f, 1f);
 
             // 👉 这里用更激进的曲线（爆裂感）
@@ -309,7 +314,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 GeneralParticleHandler.SpawnParticle(corePulse);
             }
 
-            float orbReleaseFactor = MathHelper.Clamp(lifeTimer / 420f, 0f, 1f);
+            float orbReleaseFactor = MathHelper.Clamp(lifeTimer / (float)BlackHoleLifetime, 0f, 1f);
             TryReleaseDevourOrbs(projectile, owner, (float)Math.Pow(orbReleaseFactor, 0.72f));
             Lighting.AddLight(projectile.Center, new Vector3(0.06f, 0.06f, 0.06f));
         }
@@ -684,7 +689,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             float scale01;
 
             if (projectile.timeLeft > 360)
-                scale01 = Utils.GetLerpValue(420f, 360f, projectile.timeLeft, true);
+                scale01 = Utils.GetLerpValue(BlackHoleLifetime, 360f, projectile.timeLeft, true);
             else if (projectile.timeLeft >= 60)
                 scale01 = 1f;
             else

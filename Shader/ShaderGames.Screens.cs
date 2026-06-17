@@ -97,7 +97,7 @@ namespace CalamityLegendsComeBack.Shader
                 return;
             }
 
-            float lifeProgress = Utils.GetLerpValue(420f, 0f, target.timeLeft, true);
+            float lifeProgress = Utils.GetLerpValue(DarkPlasmaEffect.BlackHoleLifetime, 0f, target.timeLeft, true);
             float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.2f + target.identity * 0.17f);
             float strength = (MathHelper.Lerp(1.65f, 1.95f, lifeProgress) + 0.05f * pulse) *
                 opacity * DarkPlasmaDistortionStrengthMultiplier;
@@ -142,6 +142,8 @@ namespace CalamityLegendsComeBack.Shader
             ScreenShaderData shaderData = filter.GetShader();
             shaderData.UseTargetPosition(center);
             Effect effect = shaderData.Shader;
+            effect.Parameters["uScreenResolution"]?.SetValue(GetScreenSize());
+            effect.Parameters["uScreenPosition"]?.SetValue(Main.screenPosition);
             effect.Parameters["uRadius"]?.SetValue(DarkPlasmaVortexRadius);
             effect.Parameters["uStrength"]?.SetValue(strength);
             effect.Parameters["uOpacity"]?.SetValue(opacity);
@@ -220,6 +222,8 @@ namespace CalamityLegendsComeBack.Shader
             ScreenShaderData shaderData = filter.GetShader();
             shaderData.UseTargetPosition(center);
             Effect effect = shaderData.Shader;
+            effect.Parameters["uScreenResolution"]?.SetValue(GetScreenSize());
+            effect.Parameters["uScreenPosition"]?.SetValue(Main.screenPosition);
             effect.Parameters["uRadius"]?.SetValue(Math.Max(1f, outerRadius));
             effect.Parameters["uHorizonRadius"]?.SetValue(Math.Max(1f, horizonRadius));
             effect.Parameters["uStrength"]?.SetValue(Math.Max(0f, strength));
