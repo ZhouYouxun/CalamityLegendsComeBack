@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		LegendaryCodex: {
 			SHPC: {
@@ -10,46 +10,6 @@
 					It does not pray for impact;
 					it folds orbit, matter, and muzzle light
 					into one answer.
-					'''
-			}
-
-			BlossomFlux: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
-					'''
-			}
-
-			BrinyBaron: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
-					'''
-			}
-
-			PristineFury: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
-					'''
-			}
-
-			Vesuvius: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
 					'''
 			}
 		}

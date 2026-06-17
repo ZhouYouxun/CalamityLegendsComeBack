@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		LegendaryCodex: {
 			SHPC: {
@@ -10,46 +10,6 @@
 					它不祈祷命中；
 					它把轨道、材料和枪口的白光
 					压成同一个答案。
-					'''
-			}
-
-			BlossomFlux: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
-					'''
-			}
-
-			BrinyBaron: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
-					'''
-			}
-
-			PristineFury: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
-					'''
-			}
-
-			Vesuvius: {
-				Tag: ???
-				Body:
-					'''
-					???
-					???
-					???
 					'''
 			}
 		}

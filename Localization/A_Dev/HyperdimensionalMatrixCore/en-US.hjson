@@ -22,6 +22,16 @@ Mods: {
 				DisplayName: Matrix Protection Field
 				Description: Fortifies body · reduces damage · regenerates life · boosts speed · reduces aggro; the core recompiles the battlefield
 			}
+
+			YharonSoulFragment_Buff: {
+				DisplayName: Yharon Soul Fragment_ Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+			}
+
+			SHPCRight_DeBuff: {
+				DisplayName: S H P C Right_ De Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+			}
 		}
 
 		Projectiles: {
@@ -39,6 +49,23 @@ Mods: {
 				MatrixCompileStorm.DisplayName: Compile Storm
 				MatrixSingularity.DisplayName: Data Singularity
 			}
+
+			BarrierShieldVisual.DisplayName: Barrier Shield Visual
+			TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
+			TacticalComputerReticle.DisplayName: Tactical Computer Reticle
+			LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			NewSHPS.DisplayName: New S H P S
+			DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 		}
+
+		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 	}
 }

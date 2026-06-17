@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     internal sealed class StarblightSootShard : ModProjectile, ILocalizedModType
     {
-        private const string GlowBladeTexture = "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade";
+        private const string GlowBladeTexture = "CalamityLegendsComeBack/Weapons/SHPC/GlowBlade";
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/Ranged/StarmageddonStar2";

@@ -10,8 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -20,20 +18,6 @@ namespace CalamityLegendsComeBack
 	// Please read https://github.com/tModLoader/tModLoader/wiki/Basic-tModLoader-Modding-Guide#mod-skeleton-contents for more information about the various files in a mod.
 	public class CalamityLegendsComeBack : Mod
 	{
-        internal const string AzureThunderGreenUltimateFilterKey = "CalamityLegendsComeBack:AzureThunderGreenUltimateFilter";
-
-        public override void Load()
-        {
-            if (Main.dedServ)
-                return;
-
-            Filters.Scene[AzureThunderGreenUltimateFilterKey] = new Filter(
-                new ScreenShaderData("FilterMiniTower")
-                    .UseColor(0.55f, 1f, 0.65f)
-                    .UseOpacity(0f),
-                EffectPriority.Medium);
-        }
-
         public override void Unload()
         {
         }
