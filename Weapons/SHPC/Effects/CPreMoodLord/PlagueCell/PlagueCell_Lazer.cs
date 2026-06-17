@@ -8,7 +8,7 @@ using Terraria.Enums;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
+namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
 {
     internal class PlagueCell_Lazer : ModProjectile, ILocalizedModType
     {
@@ -17,8 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         private const float BeamWidth = 24f;
         private const float MinMuzzleDistance = 42f;
         private const float MaxMuzzleDistance = 92f;
-        private const int MaxHits = 4;
-        private const int DamageChannelCloseHits = 4;
+        private const int MaxHits = 3;
+        private const int DamageChannelCloseHits = 3;
         private static readonly Color OuterColor = new(255, 24, 16);
         private static readonly Color InnerColor = Color.White;
 
@@ -208,6 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
             if (Projectile.owner != Main.myPlayer || markedTargets.Count >= MaxHits || !IsValidLaserTarget(target) || !markedTargets.Add(target.whoAmI))
                 return;
 
+            bool isBig = markedTargets.Count == 1;
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 target.Center,
@@ -216,7 +217,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
                 Projectile.damage,
                 0f,
                 Projectile.owner,
-                target.whoAmI);
+                target.whoAmI,
+                isBig ? 1f : 0f);
         }
 
         private static bool IsValidLaserTarget(NPC target)

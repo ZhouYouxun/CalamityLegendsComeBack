@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private const int Lifetime = 300;
-        private const int ScatterSlowdownFrames = 60;
+        private const int ScatterSlowdownFrames = 120;
         private const float HomingRange = 2600f;
         private const float StartingHomingSpeed = 24f;
         private const float MaxHomingSpeed = 96f;

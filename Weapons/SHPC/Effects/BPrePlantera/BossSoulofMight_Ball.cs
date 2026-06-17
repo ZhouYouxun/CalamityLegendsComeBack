@@ -47,8 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // 逐渐消失的光效
             float endFade = Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
-            Color coreBlue = new Color(118, 176, 255);
-            Color deepBlue = new Color(34, 68, 176);
+            Color coreBlue = new Color(255, 80, 55);
+            Color deepBlue = new Color(160, 28, 18);
             Color mainColor = coreBlue * Projectile.Opacity * endFade * 0.92f;
             mainColor.A = (byte)(255 - Projectile.alpha);
 
@@ -100,7 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // Lighting - 添加深橙色光源，光照强度为 0.55
-            Lighting.AddLight(Projectile.Center, new Color(50, 110, 255).ToVector3() * 0.35f);
+            Lighting.AddLight(Projectile.Center, new Color(255, 60, 40).ToVector3() * 0.35f);
 
             // 弹幕保持直线运动并逐渐加速
             //Projectile.velocity *= 1.01f;
@@ -116,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 {
                     Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 45f;
                     Dust light = Dust.NewDustPerfect(dustSpawnPosition, DustID.RainbowMk2);
-                    light.color = Color.Lerp(new Color(32, 64, 180), new Color(110, 170, 255), Main.rand.NextFloat(0.35f, 0.9f));
+                    light.color = Color.Lerp(new Color(180, 28, 18), new Color(255, 110, 80), Main.rand.NextFloat(0.35f, 0.9f));
                     light.velocity = Main.rand.NextVector2Circular(10f, 10f);
                     light.scale = MathHelper.Lerp(0.92f, 0.52f, Projectile.Opacity) * Main.rand.NextFloat(0.7f, 1f);
                     light.noGravity = true;
@@ -138,8 +138,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.DD2_DefenseTowerSpawn with { Volume = 0.55f }, Projectile.Center);
-            // 在弹幕消失时，释放SHPExplosion
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<BossSoulofMight_EXP>(), (int)(Projectile.damage * 1.13), Projectile.knockBack, Projectile.owner);
         }
     }
 }

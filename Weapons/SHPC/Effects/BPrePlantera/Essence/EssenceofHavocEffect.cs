@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         {
             projectile.velocity *= 1.1f;
             //projectile.extraUpdates++;
-            projectile.timeLeft = 300;
+            projectile.timeLeft = 900;
         }
 
         public override void AI(Projectile projectile, Player owner)

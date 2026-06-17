@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
         public override void AI()
         {
             // 挂一个 0.985 倍的减速
-            Projectile.velocity *= 0.985f;
+            Projectile.velocity *= 0.96f;
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, new Vector3(0.38f, 0.24f, 0.32f));
 
