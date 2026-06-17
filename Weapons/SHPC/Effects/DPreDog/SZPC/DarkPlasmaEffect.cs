@@ -37,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         private float portalTimer;
         private int lifeTimer;
         public override bool EnableDefaultSlowdown => false;
+        public override bool EnableProximityExplosion => false;
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
