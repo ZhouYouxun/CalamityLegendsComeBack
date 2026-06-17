@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.77f, // EffectID 35: Nightmare Fuel / 梦魇魔能
             2.15f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
             3.25f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
-            2.64f, // EffectID 38: Exo Prism / 星流棱晶
+            2.72f, // EffectID 38: Exo Prism / 星流棱晶
             2.69f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
