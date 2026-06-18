@@ -73,60 +73,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
 
         #region ===== Update：检测开关触发 =====
-        public override void PostUpdateEverything()
-        {
-            if (Main.netMode == NetmodeID.Server) { prevMouseMiddle = Main.mouseMiddle; return; }
-
-            Player player = Main.LocalPlayer;
-
-            if (IsOpen && !Main.playerInventory)
-            {
-                Close();
-                prevMouseMiddle = Main.mouseMiddle;
-                return;
-            }
-
-            if (!Main.playerInventory)
-            {
-                prevMouseMiddle = Main.mouseMiddle;
-                return;
-            }
-
-            bool keyBound = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().Any();
-
-            // 鼠标中键触发（仅限未绑定时）
-            if (!keyBound)
-            {
-                bool justPressedMiddle = Main.mouseMiddle && !prevMouseMiddle;
-                if (justPressedMiddle && Main.HoverItem.ModItem is NewLegendSHPC)
-                {
-                    bool wasOpen = IsOpen;
-                    Toggle(player.whoAmI);
-                    SoundEngine.PlaySound(
-                        wasOpen
-                            ? SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }
-                            : SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f },
-                        player.Center);
-                }
-            }
-
-            // 绑定按键触发（背包打开时）
-            if (keyBound && KeybindSystem.SHPCLoadingUI.JustPressed)
-            {
-                if (HasSHPCInInventory(player))
-                {
-                    bool wasOpen = IsOpen;
-                    Toggle(player.whoAmI);
-                    SoundEngine.PlaySound(
-                        wasOpen
-                            ? SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }
-                            : SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f },
-                        player.Center);
-                }
-            }
-
-            prevMouseMiddle = Main.mouseMiddle;
-        }
+        // 所有输入检测已迁移至 Draw()，以兼容自动暂停模式（gamePaused 时 PostUpdateEverything 可能被跳过）
+        #endregion
 
         private static bool HasSHPCInInventory(Player player)
         {
@@ -141,11 +89,63 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 if (player.inventory[i].ModItem is NewLegendSHPC w) return w;
             return null;
         }
-        #endregion
+        //#endregion
 
         #region ===== 绘制主入口 =====
         private static void Draw(SpriteBatch sb)
         {
+            // ---- 开关触发检测（在 Draw 内执行，自动暂停时依然有效）----
+            if (Main.netMode != NetmodeID.Server && Main.myPlayer >= 0)
+            {
+                Player localPlayer = Main.LocalPlayer;
+
+                // 背包关闭 → 自动收起界面
+                if (IsOpen && !Main.playerInventory)
+                {
+                    Close();
+                    prevMouseMiddle = Main.mouseMiddle;
+                    return;
+                }
+
+                if (Main.playerInventory)
+                {
+                    bool keyBound = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().Any();
+
+                    // 鼠标中键触发（仅限未绑定时）
+                    if (!keyBound)
+                    {
+                        bool justPressedMiddle = Main.mouseMiddle && !prevMouseMiddle;
+                        if (justPressedMiddle && Main.HoverItem.ModItem is NewLegendSHPC)
+                        {
+                            bool wasOpen = IsOpen;
+                            Toggle(localPlayer.whoAmI);
+                            SoundEngine.PlaySound(
+                                wasOpen
+                                    ? SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }
+                                    : SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f },
+                                localPlayer.Center);
+                        }
+                    }
+
+                    // 绑定按键触发
+                    if (keyBound && KeybindSystem.SHPCLoadingUI.JustPressed)
+                    {
+                        if (HasSHPCInInventory(localPlayer))
+                        {
+                            bool wasOpen = IsOpen;
+                            Toggle(localPlayer.whoAmI);
+                            SoundEngine.PlaySound(
+                                wasOpen
+                                    ? SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }
+                                    : SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f },
+                                localPlayer.Center);
+                        }
+                    }
+                }
+            }
+
+            prevMouseMiddle = Main.mouseMiddle;
+
             if (!IsOpen) return;
             if (ownerWhoAmI < 0 || ownerWhoAmI >= Main.maxPlayers) { Close(); return; }
 
@@ -254,45 +254,92 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private static void DrawMatrixBackground(int slotCount)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            float pulse = 0.94f + 0.06f * MathF.Sin(Main.GlobalTimeWrappedHourly * 6f);
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
+            float t = Main.GlobalTimeWrappedHourly;
+            float pulse = 0.92f + 0.08f * MathF.Sin(t * 5.2f);
 
+            // 半透明深色背景板（加强与战斗轮盘的区分）
+            float panelExtent = SlotSize * 1.7f + 70f;
+            Rectangle bg = Utils.CenteredRectangle(panelCenter, new Vector2(panelExtent * 2f, panelExtent * 2f));
+            DrawRectangle(bg, new Color(5, 8, 16, 148));
+
+            // 外层扩散光晕（鲜艳科技蓝）
             Main.EntitySpriteDraw(bloom, panelCenter, null,
-                new Color(92, 176, 255, 0) * 0.22f, 0f, bloom.Size() * 0.5f, 0.54f * pulse, SpriteEffects.None, 0f);
+                new Color(12, 170, 255, 0) * 0.38f * pulse, 0f, bloom.Size() * 0.5f, 0.68f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(bloom, panelCenter, null,
-                new Color(255, 238, 160, 0) * 0.14f, 0f, bloom.Size() * 0.5f, 0.30f * pulse, SpriteEffects.None, 0f);
+                new Color(0, 100, 210, 0) * 0.22f, 0f, bloom.Size() * 0.5f, 0.48f, SpriteEffects.None, 0f);
 
-            // 外旋六边形
-            DrawRegularPolygon(6, 96f, Main.GlobalTimeWrappedHourly * 0.4f, new Color(60, 180, 255, 0) * 0.28f, 1.5f);
-
-            // 内反旋三角形
-            DrawRegularPolygon(3, 46f, -Main.GlobalTimeWrappedHourly * 0.7f, new Color(200, 160, 255, 0) * 0.22f, 1.5f);
-
-            // 六边形顶点脉冲光点
-            float hexRot = Main.GlobalTimeWrappedHourly * 0.4f;
-            for (int v = 0; v < 6; v++)
+            // 水平扫描线（矩阵感，匀速向下滚动）
             {
-                float angle = hexRot + MathHelper.TwoPi * v / 6f;
-                Vector2 vertex = panelCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 96f;
-                float brightness = 0.35f + 0.25f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3f + v * 1.05f);
-                Main.EntitySpriteDraw(bloom, vertex, null,
-                    new Color(120, 200, 255, 0) * brightness, 0f, bloom.Size() * 0.5f, 0.06f, SpriteEffects.None, 0f);
+                Texture2D pixel = TextureAssets.MagicPixel.Value;
+                float scrollY = t * 42f % 16f;
+                float scanHalfW = panelExtent * 0.88f;
+                for (int i = -1; i < 18; i++)
+                {
+                    float lineY = panelCenter.Y - panelExtent + i * 16f + scrollY;
+                    if (lineY < panelCenter.Y - panelExtent || lineY > panelCenter.Y + panelExtent) continue;
+                    float distFrac = Math.Abs(lineY - panelCenter.Y) / panelExtent;
+                    float scanAlpha = (0.075f - distFrac * 0.06f) * MathF.Max(0f, 1f - distFrac);
+                    Main.spriteBatch.Draw(pixel,
+                        new Rectangle((int)(panelCenter.X - scanHalfW), (int)lineY, (int)(scanHalfW * 2f), 1),
+                        new Color(0, 195, 255, 0) * MathF.Max(0f, scanAlpha));
+                }
             }
 
-            // 中心脉冲光
-            float cPulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f);
-            Main.EntitySpriteDraw(bloom, panelCenter, null,
-                new Color(200, 220, 255, 0) * (0.42f * cPulse), 0f, bloom.Size() * 0.5f, 0.09f * cPulse, SpriteEffects.None, 0f);
+            // 三层同心六边形（不同大小，营造深度感）
+            float hexRot = t * 0.30f;
+            DrawRegularPolygon(6, 115f, hexRot, new Color(20, 140, 230, 0) * 0.20f, 1f);
+            DrawRegularPolygon(6, 92f, hexRot + MathHelper.Pi / 6f, new Color(25, 185, 255, 0) * 0.35f, 2f);
+            DrawRegularPolygon(6, 65f, hexRot, new Color(35, 200, 255, 0) * 0.22f, 1.5f);
 
-            // 弹夹分区线
+            // 内反旋三角形（蓝紫色，与六边形形成对比）
+            DrawRegularPolygon(3, 50f, -t * 0.50f, new Color(90, 155, 255, 0) * 0.40f, 2f);
+
+            // 外六边形顶点脉冲光点（更亮）
+            for (int v = 0; v < 6; v++)
+            {
+                float angle = hexRot + MathHelper.Pi / 6f + MathHelper.TwoPi * v / 6f;
+                Vector2 vertex = panelCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 92f;
+                float bright = 0.55f + 0.38f * MathF.Sin(t * 3.8f + v * 1.05f);
+                Main.EntitySpriteDraw(bloom, vertex, null,
+                    new Color(70, 210, 255, 0) * bright, 0f, bloom.Size() * 0.5f, 0.072f, SpriteEffects.None, 0f);
+            }
+
+            // 三角形顶点快速脉冲光点
+            for (int v = 0; v < 3; v++)
+            {
+                float angle = -t * 0.50f + MathHelper.TwoPi * v / 3f;
+                Vector2 vertex = panelCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 50f;
+                float bright = 0.40f + 0.32f * MathF.Sin(t * 6.2f + v * 2.1f);
+                Main.EntitySpriteDraw(bloom, vertex, null,
+                    new Color(140, 180, 255, 0) * bright, 0f, bloom.Size() * 0.5f, 0.052f, SpriteEffects.None, 0f);
+            }
+
+            // 中心核心脉冲（更强烈的闪烁感）
+            float cPulse = 0.5f + 0.5f * MathF.Sin(t * 9.5f);
+            Main.EntitySpriteDraw(bloom, panelCenter, null,
+                new Color(180, 235, 255, 0) * (0.30f + 0.45f * cPulse), 0f, bloom.Size() * 0.5f,
+                0.058f + 0.028f * cPulse, SpriteEffects.None, 0f);
+
+            // 中心十字星芒（区别于战斗轮盘，加旋转速率更快）
+            float starRot = t * 1.1f;
+            Main.EntitySpriteDraw(star, panelCenter, null,
+                new Color(110, 230, 255, 0) * 0.50f, starRot, star.Size() * 0.5f,
+                new Vector2(0.38f, 1.95f) * 0.058f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(star, panelCenter, null,
+                new Color(110, 230, 255, 0) * 0.50f, starRot + MathHelper.PiOver4, star.Size() * 0.5f,
+                new Vector2(0.38f, 1.95f) * 0.058f, SpriteEffects.None, 0f);
+
+            // 弹夹分区线（更明显）
             if (slotCount <= 1) return;
-            Color lineColor = new Color(132, 190, 240, 0) * 0.26f;
-            float lineRadius = 86f;
+            Color lineColor = new Color(50, 185, 245, 0) * 0.42f;
+            float lineRadius = 108f;
             for (int i = 0; i < slotCount; i++)
             {
                 Vector2 cur = GetSlotOffset(i, slotCount).SafeNormalize(-Vector2.UnitY);
                 Vector2 nxt = GetSlotOffset((i + 1) % slotCount, slotCount).SafeNormalize(-Vector2.UnitY);
                 Vector2 boundary = (cur + nxt).SafeNormalize(cur);
-                DrawLine(panelCenter, panelCenter + boundary * lineRadius, lineColor, 1.4f);
+                DrawLine(panelCenter + boundary * 24f, panelCenter + boundary * lineRadius, lineColor, 1.6f);
             }
         }
 

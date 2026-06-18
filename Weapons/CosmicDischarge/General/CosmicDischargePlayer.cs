@@ -16,16 +16,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public const int RightThrustEnergyGain = 10;
         public const int UltimateFieldDuration = 10 * 60;
         public const int PassiveCooldownFrames = 60 * 60;
-        public const int IceboundDuration = 3 * 60;
-        public const int ColdWindDuration = 3 * 60;
+        public const int RiftGuardDuration = 3 * 60;
+        public const int RiftRevivalDuration = 3 * 60;
 
         public int UltimateEnergy;
         public int PassiveCooldownTimer;
         public int QuickDrawCooldownTimer;
         public CosmicDischargeAttackMode AttackMode;
-        public int FrozenEmperorSliverCount;
+        public int DevourerSliverCount;
 
-        public bool FrozenEmperorActive => Player.HasBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorBuff>());
+        public bool DevourerAscensionActive => Player.HasBuff(ModContent.BuffType<CosmicDischargeDevourerAscensionBuff>());
 
         private bool holdingCosmicDischarge;
         private bool wasUltimateReady;
@@ -44,7 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public bool ShouldShowPassiveCooldown =>
             HoldingCosmicDischarge ||
             PassiveCooldownTimer > 0 ||
-            Player.HasBuff(ModContent.BuffType<CosmicDischargeFrostwindRevivalBuff>());
+            Player.HasBuff(ModContent.BuffType<CosmicDischargeRiftRevivalBuff>());
 
         public override void ResetEffects()
         {
@@ -58,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             comboIndex = 0;
             comboResetTimer = 0;
             QuickDrawCooldownTimer = 0;
-            FrozenEmperorSliverCount = 0;
+            DevourerSliverCount = 0;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
         }
 
@@ -75,16 +75,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else
                 comboIndex = 0;
 
-            if (!Player.HasBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>()))
+            if (!Player.HasBuff(ModContent.BuffType<CosmicDischargeDevourerSliverBuff>()))
             {
-                FrozenEmperorSliverCount = 0;
+                DevourerSliverCount = 0;
             }
 
-            if (FrozenEmperorSliverCount >= 10 && !FrozenEmperorActive)
+            if (DevourerSliverCount >= 10 && !DevourerAscensionActive)
             {
-                Player.ClearBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>());
-                FrozenEmperorSliverCount = 0;
-                Player.AddBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorBuff>(), 720); // 12 seconds
+                Player.ClearBuff(ModContent.BuffType<CosmicDischargeDevourerSliverBuff>());
+                DevourerSliverCount = 0;
+                Player.AddBuff(ModContent.BuffType<CosmicDischargeDevourerAscensionBuff>(), 720); // 12 seconds
 
                 if (Player.whoAmI == Main.myPlayer)
                 {
@@ -95,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 }
             }
 
-            if (FrozenEmperorActive && Player.active && !Player.dead)
+            if (DevourerAscensionActive && Player.active && !Player.dead)
             {
                 if (Main.rand.NextBool(5))
                 {
@@ -158,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (Player.whoAmI == Main.myPlayer)
                 {
                     PassiveCooldownTimer = PassiveCooldownFrames;
-                    Player.AddBuff(ModContent.BuffType<CosmicDischargeFrostwindRevivalBuff>(), 300);
+                    Player.AddBuff(ModContent.BuffType<CosmicDischargeRiftRevivalBuff>(), 300);
                     SyncCooldownDisplays();
                 }
             }
@@ -270,18 +270,18 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             SyncCooldownDisplays();
         }
 
-        public void AddFrozenEmperorSliver(int amount)
+        public void AddDevourerSliver(int amount)
         {
-            if (FrozenEmperorActive || !Player.active || Player.dead)
+            if (DevourerAscensionActive || !Player.active || Player.dead)
                 return;
 
-            FrozenEmperorSliverCount = System.Math.Clamp(FrozenEmperorSliverCount + amount, 0, 10);
-            if (FrozenEmperorSliverCount > 0)
+            DevourerSliverCount = System.Math.Clamp(DevourerSliverCount + amount, 0, 10);
+            if (DevourerSliverCount > 0)
             {
-                Player.AddBuff(ModContent.BuffType<CosmicDischargeFrozenEmperorSliverBuff>(), 1800);
+                Player.AddBuff(ModContent.BuffType<CosmicDischargeDevourerSliverBuff>(), 1800);
                 if (Player.whoAmI == Main.myPlayer && amount > 0)
                 {
-                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGSpecialColor, $"+{amount} Rift Sliver ({FrozenEmperorSliverCount}/10)", false, false);
+                    CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGSpecialColor, $"+{amount} Rift Sliver ({DevourerSliverCount}/10)", false, false);
                 }
             }
         }

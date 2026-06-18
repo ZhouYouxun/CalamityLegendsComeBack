@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 {
-    public class CosmicDischargeEndothermicSplit : ModProjectile, ILocalizedModType
+    public class CosmicDischargeRiftSplit : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Melee";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";

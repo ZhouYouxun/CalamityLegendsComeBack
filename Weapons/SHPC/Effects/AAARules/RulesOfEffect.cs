@@ -136,6 +136,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
 
         // 光芒亮度控制（默认与原行为一致）
         public virtual float GlowIntensityFactor => 0.9f;
+
+        // 左键一次触发的视觉爆发脉冲次数（普通=1，连射材料=N）
+        // 用于左键手持弹幕决定做几次小后坐力与星芒闪烁
+        public virtual int LeftClickBurstCount => 1;
         // 绘制前附加
         public virtual void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
         {

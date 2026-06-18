@@ -5,7 +5,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 {
-    internal sealed class CosmicDischargeIceboundBuff : ModBuff
+    internal sealed class CosmicDischargeRiftGuardBuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
 
@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
     }
 
-    internal sealed class CosmicDischargeFrostwindRevivalBuff : ModBuff
+    internal sealed class CosmicDischargeRiftRevivalBuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
 
@@ -148,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
     }
 
-    public class CosmicDischargeFrozenEmperorSliverBuff : ModBuff
+    public class CosmicDischargeDevourerSliverBuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
 
@@ -165,7 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
     }
 
-    public class CosmicDischargeFrozenEmperorBuff : ModBuff
+    public class CosmicDischargeDevourerAscensionBuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/CosmicDischarge";
 

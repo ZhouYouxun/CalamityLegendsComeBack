@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
         public override bool SuppressDefaultOnKillEffects => true;
         public override bool EnableDefaultSlowdown => false;
         public override bool PlayDefaultLeftClickFireSound => false;
+        public override int LeftClickBurstCount => 4;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {

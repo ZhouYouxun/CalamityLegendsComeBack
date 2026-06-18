@@ -229,25 +229,23 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
             else if (!Main.dedServ && Main.rand.NextBool(3))
             {
-                Dust dust = Dust.NewDustPerfect(
+                GeneralParticleHandler.SpawnParticle(new GlowSquareParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    DustID.PurpleTorch,
-                    Main.rand.NextVector2Circular(0.8f, 0.8f),
-                    120,
-                    CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.8f, 1.1f));
-                dust.noGravity = true;
-
-                if (Main.rand.NextBool(2))
-                {
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                        Projectile.velocity.RotatedBy(MathHelper.Pi) * Main.rand.NextFloat(0.45f, 0.95f),
-                        false,
-                        Main.rand.Next(10, 16),
-                        Main.rand.NextFloat(0.28f, 0.48f),
-                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RandomDoGColor()) * 0.72f));
-                }
+                    Main.rand.NextVector2Circular(1.4f, 1.4f),
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.05f, 0.1f),
+                    CosmicDischargeCommon.ThreeColorSpark,
+                    rotation: Main.rand.NextFloat(0.05f, 0.12f)));
+                GeneralParticleHandler.SpawnParticle(new ElectricSpark(
+                    Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    Projectile.velocity.RotatedByRandom(0.7f) * -0.35f,
+                    CosmicDischargeCommon.DoGCyanColor,
+                    CosmicDischargeCommon.DoGFuchsiaColor,
+                    0.45f,
+                    10,
+                    MathHelper.PiOver4,
+                    5f));
             }
         }
 
@@ -328,30 +326,39 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.42f,
                 0.5f,
                 16));
-            CosmicDischargeCommon.SpawnDoGRiftCracks(Projectile.Center, 5, 4f, 9f, 0.58f);
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
+                Projectile.Center,
+                Vector2.Zero,
+                CosmicDischargeCommon.DoGCyanColor,
+                new Vector2(1.2f, 0.8f),
+                0f,
+                0.15f,
+                0.95f,
+                16));
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
+                Projectile.Center,
+                Vector2.Zero,
+                CosmicDischargeCommon.DoGFuchsiaColor * 0.8f,
+                new Vector2(0.8f, 1.25f),
+                MathHelper.Pi / 3f,
+                0.12f,
+                0.78f,
+                14));
+            CosmicDischargeCommon.SpawnRiftCrackProjectiles(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.owner, 5, 3f, 8f, 14f, 22f);
+            CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 6, 3, 38f, 25f);
 
             for (int i = 0; i < 12; i++)
             {
                 Vector2 velocity = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * Main.rand.NextFloat(2.4f, 6.2f);
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.PurpleTorch,
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
                     velocity,
-                    120,
-                    CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(1f, 1.45f));
-                dust.noGravity = true;
-
-                if (i % 2 == 0)
-                {
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                        velocity * 1.25f,
-                        false,
-                        Main.rand.Next(10, 16),
-                        Main.rand.NextFloat(0.3f, 0.52f),
-                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RandomDoGColor()) * 0.75f));
-                }
+                    true,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.55f, 0.95f),
+                    CosmicDischargeCommon.ThreeColorSpark,
+                    new Vector2(0.25f, 1.7f),
+                    true));
             }
         }
 
@@ -419,6 +426,32 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     0.9f
                 );
                 d.noGravity = true;
+            }
+
+            if (!Main.dedServ)
+            {
+                Vector2 back = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
+                    back * Main.rand.NextFloat(2f, 5f),
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.38f, 0.7f),
+                    CosmicDischargeCommon.ThreeColorSpark,
+                    new Vector2(0.2f, 2.1f),
+                    true));
+
+                if (Main.rand.NextBool(4))
+                    GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                        Projectile.Center,
+                        back.RotatedByRandom(0.5f) * Main.rand.NextFloat(2f, 6f),
+                        false,
+                        10,
+                        0.45f,
+                        CosmicDischargeCommon.DoGCyanColor,
+                        new Vector2(0.1f, 3.2f),
+                        true,
+                        true));
             }
         }
 
@@ -543,20 +576,36 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Time == 1f)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.48f, Pitch = 0.18f, MaxInstances = 3 }, Projectile.Center);
-                CosmicDischargeCommon.SpawnDoGImpact(Projectile.Center, Vector2.UnitY, true, true);
-                CosmicDischargeCommon.SpawnDoGRiftCracks(Projectile.Center, 8, 6f, 13f, 0.7f);
+                CosmicDischargeCommon.SpawnRiftCrackProjectiles(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.owner, 6, 3f, 8f, 14f, 22f);
+
+                if (!Main.dedServ)
+                {
+                    CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 8, 4, 48f, 30f);
+                    CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGWhiteColor, 0.3f, 2.4f, "CalamityMod/Particles/PlasmaExplosion", 20);
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGCyanColor, new Vector2(1.1f, 0.75f), 0f, 0.25f, 1.55f, 20));
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGFuchsiaColor, new Vector2(0.75f, 1.1f), MathHelper.PiOver4, 0.25f, 1.35f, 18));
+                    GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, 1.8f, 20));
+                }
             }
 
             if (!Main.dedServ && Main.rand.NextBool(2))
             {
                 Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    Projectile.Center + direction * Main.rand.NextFloat(8f, Radius * 0.75f),
-                    direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(1.8f, 4.8f),
-                    false,
-                    Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.25f, 0.55f),
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RandomDoGColor()) * 0.72f));
+                GeneralParticleHandler.SpawnParticle(new StaticGlowLine(
+                    Projectile.Center,
+                    Projectile.Center + direction * Main.rand.NextFloat(60f, Radius),
+                    direction * 0.4f,
+                    14,
+                    0.07f,
+                    0.9f,
+                    Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor));
+                GeneralParticleHandler.SpawnParticle(new NanoParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.7f, Radius * 0.7f),
+                    Main.rand.NextVector2Circular(2f, 2f),
+                    CosmicDischargeCommon.DoGSpecialColor,
+                    0.35f,
+                    18,
+                    emitsLight: true));
             }
         }
 
@@ -593,7 +642,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
     }
 
-    public class CosmicDischargeModeShift : ModProjectile, ILocalizedModType
+    public class CosmicDischargeSwitchPortal : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Melee";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -630,17 +679,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Owner.itemTime = 2;
             Owner.itemAnimation = 2;
 
+            CosmicDischargeCommon.SpawnSwitchPortalAI(Owner, Projectile.Center, Time, (CosmicDischargeAttackMode)(int)TargetMode);
+
             if (Time == 1f)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DemonSwordKillMode") { Volume = 0.78f, Pitch = 0.15f, MaxInstances = 2 }, Owner.Center);
-                CosmicDischargeCommon.SpawnDoGSparkBurst(Owner.MountedCenter, 10, 2f, 7f, 0.65f);
             }
 
-            if (Time == 12f && Main.myPlayer == Projectile.owner)
+            if (Time == 8f && Main.myPlayer == Projectile.owner)
             {
                 Owner.GetModPlayer<CosmicDischargePlayer>().SetAttackMode((CosmicDischargeAttackMode)(int)TargetMode);
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.45f, Pitch = 0.35f, MaxInstances = 2 }, Owner.Center);
-                CosmicDischargeCommon.SpawnDoGImpact(Owner.MountedCenter, Vector2.UnitY, false, true);
                 Projectile.netUpdate = true;
             }
         }

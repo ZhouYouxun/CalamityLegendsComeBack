@@ -4,54 +4,54 @@ Mods: {
 			Weapons: {
 				Melee: {
 					CosmicDischarge: {
-						DisplayName: 寒宙弹刃
+						DisplayName: 神噬裂宙弹刃
 						Tooltip: ""
 					}
 				}
 
 				NewLegendCosmicDischarge: {
-					DisplayName: 寒宙弹刃-传奇归来
+					DisplayName: 神噬裂宙弹刃-传奇归来
 					Tooltip: "[GFB]"
 					WhipName: 鞭形态
 					SwordName: 剑形态
-					ChainKnifeName: 链刀形态
+					ChainKnifeName: 链刃形态
 					UltimateActiveText: 神明裂隙展开!
 					CosmicDischargeLeft:
 						'''
-						[c/8DEBFF:左键：根据当前形态释放三连击，命中施加神明吞噬者风格的裂隙印记。]
-						[c/8DEBFF:鞭形态：顺/逆时针甩动会甩出逐渐减速的裂隙炸弹；直线突刺命中会在原地爆炸。]
-						[c/8DEBFF:剑形态：刀刃保持伸直并固定长度。每次挥动都会释放多枚强追踪 DoG 光刃，适合反复压制单体目标。]
-						[c/8DEBFF:链刀形态：多条段体锁链汇聚到鼠标位置，引发严重爆炸和短暂滞留伤害。]
+						[c/8DEBFF:左键：根据当前形态释放三连击，所有命中施加 GodSlayerInferno 和裂隙标记。]
+						[c/8DEBFF:鞭形态：三段分别使用半弧残影、电弧闪电、直线光束；甩动会抛出裂隙炸弹，刺击命中会原地爆破。]
+						[c/8DEBFF:剑形态：刀刃保持伸直并固定长度；两段挥砍释放强追踪神明光刃，终结斩触发扭曲元球、裂缝和三连爆。]
+						[c/8DEBFF:链刃形态：多条链刃向鼠标汇聚；前两段分别偏电流和星屑，第三段以星烟、激光墙和严重爆炸收束。]
 						'''
 					CosmicDischargeRight:
 						'''
-						[c/6FDFFF:右键：通过裂隙传送门循环切换左键形态（鞭 -> 剑 -> 链刀）。]
-						[c/6FDFFF:第三段前摇期间右键：触发裂隙出鞘，直接刺出并快速抽回弹刃。只有裂隙出鞘会提供10点终结技能量。]
+						[c/6FDFFF:右键：开启三层 Stream Gouge 裂隙门并循环切换形态（鞭 -> 剑 -> 链刃）。]
+						[c/6FDFFF:第三段前摇期间右键：触发 QuickDraw。20帧蓄力后在目标点释放完整 DoG 粒子库爆发，并获得10点终结技能量。]
 						'''
 					CosmicDischargeUltimate:
 						'''
-						[c/FFE85A:终结技：能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，撕开神明裂隙并在玩家身上生成10秒力场。]
-						[c/FFE85A:力场：8格内敌怪被高额减速并持续遭受 GodSlayerInferno；周期性生成 DoG 激光墙。]
+						[c/FFE85A:终结技：能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，进行60帧裂隙蓄力。]
+						[c/FFE85A:爆发：全屏 FriendlyLaserWallBeam 激光墙 + DoGTeleportRift 级裂隙爆炸；随后留下 DoGFire 风格持续场。]
 						'''
-					CosmicDischargePassive: '''[c/B8F4FF:裂隙封存：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分将被削减至上限。触发时获得5秒"裂隙复苏"（伤害+20%），冷却60秒。]'''
+					CosmicDischargePassive: "[c/B8F4FF:裂隙封存：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分会被削减至上限。触发时获得5秒“裂隙复苏”（伤害+20%），冷却60秒。]"
 				}
 			}
 		}
 
 		Buffs: {
-			CosmicDischargeIceboundBuff: {
-				DisplayName: 裂隙免死
-				Description: 致死伤害被压制，生命再生大幅提高。
+			CosmicDischargeRiftGuardBuff: {
+				DisplayName: 裂隙不灭
+				Description: 致命伤害被压制，生命再生大幅提高。
 			}
 
-			CosmicDischargeFrostwindRevivalBuff: {
+			CosmicDischargeRiftRevivalBuff: {
 				DisplayName: 裂隙复苏
-				Description: 神明裂隙打破极限，伤害提升20%。
+				Description: 神明裂隙打破极限，伤害提高20%。
 			}
 
 			CosmicDischargeUltimateGuardBuff: {
 				DisplayName: 神明裂隙场
-				Description: 受到伤害降低，防御提高。
+				Description: 受到的伤害降低，防御提高。
 			}
 
 			CosmicDischargeDoGMarkDebuff: {
@@ -59,12 +59,12 @@ Mods: {
 				Description: 被神明吞噬者裂隙标记，特定攻击会引爆印记。
 			}
 
-			CosmicDischargeFrozenEmperorBuff: {
+			CosmicDischargeDevourerAscensionBuff: {
 				DisplayName: 吞噬升格
 				Description: 伤害、机动、防御、伤害减免与近战攻速提高。
 			}
 
-			CosmicDischargeFrozenEmperorSliverBuff: {
+			CosmicDischargeDevourerSliverBuff: {
 				DisplayName: 裂隙残辉
 				Description: 伤害与防御小幅提高。
 			}
@@ -76,22 +76,22 @@ Mods: {
 				CosmicDischargeDoGRiftBomb.DisplayName: 裂隙炸弹
 				CosmicDischargeDoGEnergyBolt.DisplayName: 神明光刃
 				CosmicDischargeDoGConvergenceExplosion.DisplayName: 段体裂隙爆破
-				CosmicDischargeModeShift.DisplayName: 形态裂隙
+				CosmicDischargeSwitchPortal.DisplayName: 形态裂隙门
 				CosmicDischargeUltimateField.DisplayName: 神明裂隙场
-				// CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Knife
-				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
-				// CosmicDischargeEndothermicSplit.DisplayName: Cosmic Discharge Endothermic Split
-				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
-				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
-				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
-				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
-				// CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
+				CosmicDischargeChainKnife.DisplayName: 裂隙链刃
+				CosmicDischargeComboHoldout.DisplayName: 裂宙连击
+				CosmicDischargeRiftSplit.DisplayName: 裂隙分流
+				CosmicDischargeHookHead.DisplayName: 裂隙钩首
+				CosmicDischargeHookLimb.DisplayName: 裂隙钩肢
+				CosmicDischargeKillModeReady.DisplayName: 吞噬蓄势
+				CosmicDischargeKillModeSlash.DisplayName: 吞噬斩击
+				CosmicDischargeScytheProjectile.DisplayName: 裂隙镰影
 			}
 		}
 
 		Cooldowns: {
 			CosmicDischarge_Ultimate: 裂隙能量
-			CosmicDischarge_Icebound: 裂隙封存
+			CosmicDischarge_RiftSeal: 裂隙封存
 			CosmicDischarge_QuickDraw: 裂隙出鞘
 		}
 	}

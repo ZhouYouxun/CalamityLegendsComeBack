@@ -46,9 +46,5 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return 0.22f;
             }
         }
-
-        public static int QuickDrawIceBombCount => QuickDrawRiftBombCount;
-        public static int QuickDrawIceBombBursts => QuickDrawRiftBombBursts;
-        public static float QuickDrawIceBombDamageFactor => QuickDrawRiftBombDamageFactor;
     }
 }

@@ -29,6 +29,7 @@ Mods: {
 			}
 
 			ChangedWeapons.EAfterDog.OldEssenceFlame2.DisplayName: Old Essence Flame2
+			SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
 		}
 	}
 }

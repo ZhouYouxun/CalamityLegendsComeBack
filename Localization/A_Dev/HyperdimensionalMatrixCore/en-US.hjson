@@ -7,10 +7,11 @@ Mods: {
 					Tooltip:
 						'''
 						[c/7EB8FF:Summons the Matrix Core — a development engine made manifest; damage scales substantially with minion slots]
-						[c/FF9040:Autonomously cycles five modules: Data Grid · Geometry Burst · Geo Satellites · Metaball Fusion · Space Warp]
-						[c/FFEC40:Periodically erupts into Compile Storm — all modules fire simultaneously; the wielder briefly becomes invincible]
+						[c/FF9040:Autonomously cycles six modules: Data Grid · Geometry Burst · Geo Satellites · Metaball Fusion · Space Warp · Runic Inscription]
+						[c/FFEC40:Periodically erupts into Compile Storm — all six modules fire simultaneously, culminating in a Data Singularity]
 						[c/5880C0:Fortifies your body · reduces incoming damage · regenerates life · accelerates movement · reduces aggro]
 						[c/FF3030:Overclocks all module cycles when critically wounded; passively damages all nearby enemies]
+						[c/AA88FF:Non-homing projectiles deal double damage as a precision reward]
 						[c/787888:"You did not summon a minion. You instantiated a runtime."]
 						'''
 				}
@@ -36,6 +37,7 @@ Mods: {
 				MatrixFusionExplosion.DisplayName: Fusion Collapse
 				MatrixSpaceWarpField.DisplayName: Space Warp Field
 				MatrixDataAura.DisplayName: Data Field Aura
+				MatrixRunicStamp.DisplayName: Runic Inscription
 				MatrixCompileStorm.DisplayName: Compile Storm
 				MatrixSingularity.DisplayName: Data Singularity
 			}

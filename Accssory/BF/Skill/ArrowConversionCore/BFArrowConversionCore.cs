@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
+using CalamityMod.Tiles.Furniture.CraftingStations;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -23,15 +24,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.Skill.ArrowConversionCore
             player.GetModPlayer<BFAccessoryPlayer>().ArrowConversionEquipped = true;
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient(ItemID.ChlorophyteBar, 18)
-                .AddIngredient(ItemID.SoulofLight, 8)
-                .AddIngredient(ItemID.SoulofNight, 8)
-                .AddIngredient(ItemID.MagicQuiver)
-                .AddTile(TileID.MythrilAnvil)
-                .Register();
-        }
+        //public override void AddRecipes()
+        //{
+        //    CreateRecipe()
+        //        .AddIngredient(ItemID.ChlorophyteBar, 18)
+        //        .AddIngredient(ItemID.SoulofLight, 8)
+        //        .AddIngredient(ItemID.SoulofNight, 8)
+        //        .AddIngredient(ItemID.MagicQuiver)
+        //        .AddTile<LunarCraftingStation>()
+        //        .Register();
+        //}
     }
 }

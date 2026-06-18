@@ -18,23 +18,36 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public const int ShaderOrbsCooldown  = 340;
         public const int FusionCooldown      = 400;
         public const int SpaceWarpCooldown   = 560;
+        public const int InscriptionCooldown = 360;
 
         public const int CompileStormInterval   = 900;
         public const float TargetingRange       = 2400f;
         public const float SpaceWarpMinNPCSize  = 80f;
 
         // Damage multipliers
-        public const float DataGridDamage   = 0.18f;
-        public const float GeoBurstDamage   = 0.52f;
-        public const float ShaderOrbDamage  = 0.38f;
-        public const float FusionDamage     = 1.85f;
-        public const float SpaceWarpDamage  = 0.26f;
-        public const float CompileStormDmg  = 0.20f;
+        public const float DataGridDamage    = 0.18f;
+        public const float GeoBurstDamage    = 1.04f;
+        public const float ShaderOrbDamage   = 0.38f;
+        public const float FusionDamage      = 3.70f;
+        public const float SpaceWarpDamage   = 0.26f;
+        public const float CompileStormDmg   = 0.20f;
+        public const float InscriptionDamage = 1.04f; // non-homing shards
+
+        // 模组自定义音效路径（使用时不调音量 / 音调）
+        public const string SndGeoBurst     = "CalamityLegendsComeBack/Sound/Other/Helldiver2/磁轨炮-开火";
+        public const string SndShaderOrbs   = "CalamityLegendsComeBack/Sound/Other/Helldiver2/电弧发射器-发射";
+        public const string SndFusion       = "CalamityLegendsComeBack/Sound/SHPC/蜃景普通攻击";
+        public const string SndSpaceWarp    = "CalamityLegendsComeBack/Sound/Other/Helldiver2/激光大炮开火";
+        public const string SndInscription  = "CalamityLegendsComeBack/Sound/Other/ShellShockLive/拉链闪电";
+        public const string SndCompileStorm = "CalamityLegendsComeBack/Sound/Other/Helldiver2/类星体爆炸";
+        public const string SndSingularity  = "CalamityLegendsComeBack/Sound/Other/Helldiver2/轨道炮攻击-仅开火";
+        public const string SndFusionBoom   = "CalamityLegendsComeBack/Sound/Other/OtherSS/heavy-cineamtic-hit-166888";
+        public const string SndInscFire     = "CalamityLegendsComeBack/Sound/Other/OtherSS/retro-explode-1-236678";
     }
 
     public sealed class HyperdimensionalMatrixCoreProjectile : ModProjectile, ILocalizedModType
     {
-        private const int ModuleCount = 5;
+        private const int ModuleCount = 6;
 
         private readonly int[] moduleCooldowns = new int[ModuleCount];
         private int compileStormTimer;
@@ -274,7 +287,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         private void FireModule(int m, NPC target)
         {
             // Rubik's-cube-style spin burst when a module fires
-            _spinBoost = 3.2f + m * 0.22f;
+            _spinBoost = (3.2f + m * 0.22f) * 0.3f;
             _lastSpinModule = m;
 
             IEntitySource src = Projectile.GetSource_FromThis();
@@ -299,7 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                         Projectile.knockBack, Projectile.owner,
                         Projectile.whoAmI, target.whoAmI);
                     moduleCooldowns[1] = MatrixModuleNumbers.GeoBurstCooldown;
-                    SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.30f, Pitch = 0.08f, MaxInstances = 3 }, Projectile.Center);
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndGeoBurst), Projectile.Center);
                     break;
 
                 case 2: // Shader Orbs (5 types)
@@ -312,7 +325,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                             i, target.whoAmI);
                     }
                     moduleCooldowns[2] = MatrixModuleNumbers.ShaderOrbsCooldown;
-                    SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.30f, Pitch = -0.12f, MaxInstances = 3 }, target.Center);
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndShaderOrbs), target.Center);
                     break;
 
                 case 3: // Metaball Fusion
@@ -322,7 +335,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                         Projectile.knockBack, Projectile.owner,
                         Projectile.whoAmI, target.whoAmI);
                     moduleCooldowns[3] = MatrixModuleNumbers.FusionCooldown;
-                    SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.26f, Pitch = -0.32f, MaxInstances = 3 }, target.Center);
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndFusion), target.Center);
                     break;
 
                 case 4: // Space Warp
@@ -332,7 +345,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                         Projectile.knockBack, Projectile.owner,
                         Projectile.whoAmI, target.whoAmI);
                     moduleCooldowns[4] = MatrixModuleNumbers.SpaceWarpCooldown;
-                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.22f, Pitch = -0.52f, MaxInstances = 2 }, target.Center);
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndSpaceWarp), target.Center);
+                    break;
+
+                case 5: // Runic Inscription
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixRunicStamp>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.InscriptionDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[5] = MatrixModuleNumbers.InscriptionCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndInscription), Projectile.Center);
                     break;
             }
         }
@@ -348,15 +371,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 Projectile.owner,
                 Projectile.whoAmI, target.whoAmI);
 
-            SoundEngine.PlaySound(SoundID.Item88 with { Volume = 0.6f, Pitch = -0.4f, MaxInstances = 1 }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndCompileStorm), Projectile.Center);
 
-            // Compile Storm immunity: wielder becomes briefly invincible as the storm erupts
-            if (Projectile.owner == Main.myPlayer)
-            {
-                Player stormOwner = Main.player[Projectile.owner];
-                stormOwner.immuneTime  = Math.Max(stormOwner.immuneTime, 60);
-                stormOwner.immuneAlpha = 180;
-            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -452,6 +468,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             2 => MatrixModuleNumbers.ShaderOrbsCooldown,
             3 => MatrixModuleNumbers.FusionCooldown,
             4 => MatrixModuleNumbers.SpaceWarpCooldown,
+            5 => MatrixModuleNumbers.InscriptionCooldown,
             _ => 360
         };
 
@@ -462,6 +479,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             2 => HyperdimensionalMatrixVisuals.GetDataColor(Main.GlobalTimeWrappedHourly * 0.35f),
             3 => new Color(200, 220, 255, 0),
             4 => new Color(80,  255, 120, 0),
+            5 => new Color(255, 200, 255, 0),
             _ => Color.White with { A = 0 }
         };
     }

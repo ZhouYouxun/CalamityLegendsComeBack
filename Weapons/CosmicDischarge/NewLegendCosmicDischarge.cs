@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (player.altFunctionUse == 2)
             {
                 if (!TryRequestQuickDraw(player))
-                    TryStartModeShift(player);
+                    TryStartSwitchPortal(player);
 
                 Item.useTime = Item.useAnimation = 8;
                 Item.shoot = ProjectileID.None;
@@ -165,12 +165,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             return false;
         }
 
-        private static void TryStartModeShift(Player player)
+        private static void TryStartSwitchPortal(Player player)
         {
             if (Main.myPlayer != player.whoAmI)
                 return;
 
-            int modeShiftType = ModContent.ProjectileType<CosmicDischargeModeShift>();
+            int modeShiftType = ModContent.ProjectileType<CosmicDischargeSwitchPortal>();
             if (player.ownedProjectileCounts[modeShiftType] > 0)
                 return;
 

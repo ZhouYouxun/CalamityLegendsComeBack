@@ -2,7 +2,6 @@ using System;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityLegendsComeBack;
-using CalamityLegendsComeBack.Shader;
 using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -1251,7 +1250,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 Projectile.knockBack,
                 Projectile.owner);
 
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.45f, Pitch = -0.4f, MaxInstances = 3 }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndFusionBoom), Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1517,10 +1516,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (target != null)
                 Projectile.Center = target.Center;
 
-            // Activate screen shader every frame while alive
-            if (!Main.dedServ && Projectile.owner == Main.myPlayer)
-                ShaderFullScreenSystem.ActivateScreenShader("BlackHoleDistortion");
-
             // Periodic screen shake during warp
             int _age = Age;
             if (!Main.dedServ && _age % 25 == 0 && Main.LocalPlayer.active)
@@ -1551,9 +1546,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override void OnKill(int timeLeft)
         {
-            if (!Main.dedServ && Projectile.owner == Main.myPlayer)
-                ShaderFullScreenSystem.DeactivateScreenShader("BlackHoleDistortion");
-
             if (!Main.dedServ)
             {
                 Color warpColor = new Color(180, 60, 255);
@@ -1781,7 +1773,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     Math.Max(1, (int)(dmg * MatrixModuleNumbers.FusionDamage)), kb, owner,
                     Projectile.whoAmI, tIdx);
 
-                SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.65f, Pitch = -0.3f, MaxInstances = 1 }, target.Center);
+                // Module 5: Runic Inscription
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixRunicStamp>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.InscriptionDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndCompileStorm), target.Center);
 
                 if (!Main.dedServ && Main.LocalPlayer.active)
                 {
@@ -1803,11 +1801,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     Projectile.GetSource_FromThis(),
                     target.Center, Vector2.Zero,
                     ModContent.ProjectileType<MatrixSingularity>(),
-                    Projectile.damage * 3,
+                    Projectile.damage * 6,
                     Projectile.knockBack,
                     Projectile.owner);
 
-                SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.7f, Pitch = -0.6f, MaxInstances = 1 }, target.Center);
+                SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndSingularity), target.Center);
 
                 if (!Main.dedServ && Main.LocalPlayer.active)
                 {
@@ -1891,7 +1889,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             const float cellSize = 7.5f;
             const float gap      = 3f;
-            const int   cols     = 5;   // one column per module
+            const int   cols     = 6;   // one column per module
             const int   rows     = 4;
             float panelW = cols * cellSize + (cols - 1) * gap;
             float panelH = rows * cellSize + (rows - 1) * gap;
@@ -1956,11 +1954,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private static Color GetPanelModuleColor(int m, float t) => m switch
         {
-            0 => new Color(255, 100, 30, 0),
-            1 => new Color(40, 200, 255, 0),
+            0 => new Color(255, 100, 30,  0),
+            1 => new Color(40,  200, 255, 0),
             2 => HyperdimensionalMatrixVisuals.GetDataColor(t * 0.35f),
             3 => new Color(200, 220, 255, 0),
-            4 => new Color(80, 255, 120, 0),
+            4 => new Color(80,  255, 120, 0),
+            5 => new Color(255, 200, 255, 0),
             _ => Color.White with { A = 0 }
         };
 
@@ -1979,6 +1978,205 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (!Main.npc.IndexInRange(TargetIndex))
                 return null;
 
+            NPC npc = Main.npc[TargetIndex];
+            return npc.CanBeChasedBy(Projectile, false) ? npc : null;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────
+    // MODULE 6 · RUNIC INSCRIPTION
+    // ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 超维刻印：在目标位置逐笔描绘一个七芒星阵，完成后从每个顶点射出非追踪几何碎片，
+    /// 并在中心释放一枚追踪数据矛。描绘笔画实时可见，是矩阵运算过程的直观化表达。
+    /// </summary>
+    public sealed class MatrixRunicStamp : ModProjectile, ILocalizedModType
+    {
+        private const int DrawEnd   = 60;  // 七芒星完全描绘完毕
+        private const int FlashEnd  = 76;  // 闪烁/脉冲阶段
+        private const int FireFrame = 77;  // 射出碎片
+        private const int Lifetime  = 105;
+
+        private const float StampRadius = 82f;
+        private const int   VertexCount = 7;
+
+        // {7/2} 七芒星描绘顺序：0→2→4→6→1→3→5→0（连续单笔画完）
+        private static readonly int[] StarTrace = { 0, 2, 4, 6, 1, 3, 5 };
+
+        public new string LocalizationCategory => "Projectiles.HyperdimensionalMatrixCore";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private int Age => Lifetime - Projectile.timeLeft;
+        private int TargetIndex => (int)Projectile.ai[1];
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.MinionShot[Type] = true;
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 600;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 10;
+            Projectile.friendly = false;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.DamageType = DamageClass.Summon;
+        }
+
+        public override bool? CanDamage() => false;
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            int age = Age;
+            NPC target = GetTarget();
+            if (target != null)
+                Projectile.Center = target.Center;
+
+            if (age == FireFrame && !Main.dedServ)
+                SpawnFireParticles();
+            if (age == FireFrame && Main.myPlayer == Projectile.owner)
+                FireInscriptionShards();
+
+            Lighting.AddLight(Projectile.Center,
+                HyperdimensionalMatrixVisuals.GetDataColor(age * 0.016f).ToVector3() * 0.42f);
+        }
+
+        private static Vector2[] GetStarVerts(Vector2 center, float rotation)
+        {
+            var verts = new Vector2[VertexCount];
+            for (int i = 0; i < VertexCount; i++)
+                verts[i] = center + (MathHelper.TwoPi * i / VertexCount + rotation).ToRotationVector2() * StampRadius;
+            return verts;
+        }
+
+        private void FireInscriptionShards()
+        {
+            float rot = Main.GlobalTimeWrappedHourly * 0.3f;
+            Vector2[] verts = GetStarVerts(Projectile.Center, rot);
+            IEntitySource src = Projectile.GetSource_FromThis();
+
+            // 7枚非追踪碎片从各顶点射出（非追踪 → 双倍伤害奖励已计入 InscriptionDamage）
+            for (int i = 0; i < VertexCount; i++)
+            {
+                Vector2 dir = (verts[i] - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                Projectile.NewProjectile(src, verts[i], dir * 26f,
+                    ModContent.ProjectileType<MatrixGeoShard>(),
+                    Projectile.damage, Projectile.knockBack, Projectile.owner, -1);
+            }
+
+            // 1枚追踪数据矛从中心射出
+            NPC target = GetTarget();
+            if (target != null)
+            {
+                Vector2 dir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+                Projectile.NewProjectile(src, Projectile.Center, dir * 20f,
+                    ModContent.ProjectileType<MatrixGridCell>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.6f)),
+                    Projectile.knockBack, Projectile.owner, target.whoAmI);
+            }
+
+            SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndInscFire), Projectile.Center);
+        }
+
+        private void SpawnFireParticles()
+        {
+            for (int i = 0; i < 24; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 10f);
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(i * 0.042f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center, vel, false, 10 + Main.rand.Next(14),
+                    0.55f + Main.rand.NextFloat(0.45f), c, true, false, i < 5));
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, 7f);
+                GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                    Projectile.Center, vel, false, 28, 1.4f + Main.rand.NextFloat(0.9f),
+                    HyperdimensionalMatrixVisuals.GetDataColor(i * 0.1f) * 1.5f));
+            }
+            Color burstColor = HyperdimensionalMatrixVisuals.GetDataColor(Main.GlobalTimeWrappedHourly * 0.5f);
+            CLCBLightingBoltsSystem.Spawn_MatrixGeometryShatter(Projectile.Center, burstColor);
+            CLCBLightingBoltsSystem.Spawn_MatrixDataBurst(Projectile.Center, burstColor, 0.8f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            int age = Age;
+            float t = Main.GlobalTimeWrappedHourly;
+            float rot = t * 0.3f;
+            Vector2[] verts = GetStarVerts(Projectile.Center, rot);
+
+            float fadeOpacity = age < 12 ? age / 12f : age > Lifetime - 14 ? (Lifetime - age) / 14f : 1f;
+            float flashPulse  = age >= DrawEnd ? 1f + 0.45f * MathF.Sin(t * 15f) : 1f;
+
+            // 七芒星逐笔描绘
+            float edgeProgress = age < DrawEnd
+                ? age / (float)DrawEnd * VertexCount
+                : VertexCount;
+
+            for (int i = 0; i < VertexCount; i++)
+            {
+                float edgePct = MathHelper.Clamp(edgeProgress - i, 0f, 1f);
+                if (edgePct <= 0f)
+                    break;
+
+                int fromIdx = StarTrace[i];
+                int toIdx   = StarTrace[(i + 1) % VertexCount];
+                Vector2 edgeStart = verts[fromIdx];
+                Vector2 edgeEnd   = Vector2.Lerp(verts[fromIdx], verts[toIdx], edgePct);
+
+                Color edgeColor = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)VertexCount)
+                    * fadeOpacity * flashPulse;
+
+                Main.spriteBatch.DrawLineBetter(edgeStart, edgeEnd, edgeColor, 2.4f);
+                Main.spriteBatch.DrawLineBetter(edgeStart, edgeEnd, edgeColor * 0.22f, 7f);
+
+                // 笔锋光点
+                if (edgePct < 0.98f)
+                {
+                    float tipPulse = 1f + 0.6f * MathF.Sin(t * 18f);
+                    HyperdimensionalMatrixVisuals.DrawNode(edgeEnd, edgeColor, 5f * tipPulse);
+                    HyperdimensionalMatrixVisuals.DrawNode(edgeEnd, edgeColor * 0.28f, 13f * tipPulse);
+                }
+            }
+
+            // 已描绘顶点亮起
+            int litVerts = (int)Math.Min(edgeProgress + 1f, VertexCount);
+            for (int i = 0; i < litVerts; i++)
+            {
+                int vIdx = StarTrace[i];
+                Color nodeColor = HyperdimensionalMatrixVisuals.GetDataColor(i / (float)VertexCount)
+                    * fadeOpacity * flashPulse;
+                HyperdimensionalMatrixVisuals.DrawNode(verts[vIdx], nodeColor, 4.5f + flashPulse * 1.2f);
+            }
+
+            // 描绘完成后出现内层几何体与扫描环
+            if (age >= DrawEnd)
+            {
+                float innerFade = MathHelper.SmoothStep(0f, 1f, (age - DrawEnd) / (float)(FlashEnd - DrawEnd));
+                HyperdimensionalMatrixVisuals.DrawGeometry(Projectile.Center, MatrixGeometryShape.Tetrahedron,
+                    18f, t * 2.8f, fadeOpacity * innerFade * 0.75f, Projectile.identity);
+                HyperdimensionalMatrixVisuals.DrawScanRing(Projectile.Center, StampRadius * 1.18f, t * 1.6f,
+                    HyperdimensionalMatrixVisuals.GetDataColor(0.65f, fadeOpacity * innerFade * 0.45f), 14, 2f);
+                HyperdimensionalMatrixVisuals.DrawNode(Projectile.Center,
+                    HyperdimensionalMatrixVisuals.GetDataColor(t * 0.5f, fadeOpacity * innerFade * 0.9f),
+                    6f * flashPulse);
+            }
+
+            return false;
+        }
+
+        private NPC GetTarget()
+        {
+            if (!Main.npc.IndexInRange(TargetIndex))
+                return null;
             NPC npc = Main.npc[TargetIndex];
             return npc.CanBeChasedBy(Projectile, false) ? npc : null;
         }

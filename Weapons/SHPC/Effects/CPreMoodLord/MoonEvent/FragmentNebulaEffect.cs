@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         public override float GlowScaleFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
         public override bool PlayDefaultLeftClickFireSound => false;
+        public override int LeftClickBurstCount => 3;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {

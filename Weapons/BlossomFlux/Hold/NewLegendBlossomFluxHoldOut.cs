@@ -101,7 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private BFAccessoryPlayer BFAccessories => Owner.GetModPlayer<BFAccessoryPlayer>();
         private bool PastLingeringAssaultActive => CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && BFAccessories.PastLingeringEquipped;
         private bool BreakthroughChargeActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak;
-        private int BreakthroughMaxLoadedArrows => Math.Max(1, BFBreakthroughRightBalance.GetStats().MaxLoadedArrows + BFAccessories.BreakthroughExtraLoads);
+        private int BreakthroughMaxLoadedArrows => Math.Max(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_MaxArrows));
         private int BreakthroughFramesPerArrow => GetScaledRightChargeFrames(BFBreakthroughRightBalance.GetStats().FramesPerArrow);
         private float BreakthroughCurrentArrowCompletion => MathHelper.Clamp(chargeTimer / (float)BreakthroughFramesPerArrow, 0f, 1f);
         private float ChargeCompletion => BreakthroughChargeActive

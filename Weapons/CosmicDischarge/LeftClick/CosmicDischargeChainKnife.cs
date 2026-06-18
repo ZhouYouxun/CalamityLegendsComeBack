@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     {
                         var modPlayer = Player.GetModPlayer<CosmicDischargePlayer>();
                         bool ultActive = modPlayer.UltimateFieldActive;
-                        bool empActive = modPlayer.FrozenEmperorActive;
+                        bool empActive = modPlayer.DevourerAscensionActive;
                         float damageMult = 1.0f;
                         if (ultActive) damageMult += 0.5f;
                         if (empActive) damageMult += 0.4f;
@@ -175,7 +175,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 // Pull effect: Drag non-boss targets toward the player
                 var cosPlayer = Player.GetModPlayer<CosmicDischargePlayer>();
                 bool isUltimateActive = cosPlayer.UltimateFieldActive;
-                bool isEmpActive = cosPlayer.FrozenEmperorActive;
+                bool isEmpActive = cosPlayer.DevourerAscensionActive;
                 if (!target.boss && target.knockBackResist > 0f)
                 {
                     Vector2 pullDir = Player.MountedCenter - target.Center;
@@ -191,7 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 {
                     if (isEmpActive)
                     {
-                        // Shackling bosses: even heavier slow under Frozen Emperor!
+                        // Shackling bosses: even heavier slow under Devourer Ascension!
                         target.velocity *= 0.4f; // 60% slow
                         target.netUpdate = true;
                     }

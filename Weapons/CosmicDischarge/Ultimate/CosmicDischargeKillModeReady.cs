@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < 12; i++)
             {
                 Vector2 velocity = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * Main.rand.NextFloat(3f, 6.5f);
-                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.FrostCoreColor, Main.rand.NextFloat(1.1f, 1.45f));
+                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.DoGSpecialColor, Main.rand.NextFloat(1.1f, 1.45f));
                 dust.noGravity = true;
             }
         }
@@ -73,7 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextBool() ? 67 : 187,
                     aimDirection.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.4f, 1.5f),
                     120,
-                    CosmicDischargeCommon.FrostCoreColor,
+                    CosmicDischargeCommon.DoGSpecialColor,
                     Main.rand.NextFloat(1.15f, 1.55f));
                 dust.noGravity = true;
             }
@@ -83,8 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 GeneralParticleHandler.SpawnParticle(new GenericSparkle(
                     Owner.Bottom + new Vector2(0f, -14f),
                     Vector2.Zero,
-                    CosmicDischargeCommon.FrostCoreColor,
-                    CosmicDischargeCommon.FrostGlowColor,
+                    CosmicDischargeCommon.DoGSpecialColor,
+                    CosmicDischargeCommon.DoGFuchsiaColor,
                     Main.rand.NextFloat(1.2f, 1.8f),
                     14,
                     Main.rand.NextFloat(-0.04f, 0.04f),
@@ -96,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Vector2 aimDirection = AimAngle.ToRotationVector2();
             Vector2 endpoint = Owner.MountedCenter + aimDirection * MathHelper.Lerp(90f, 350f, ExtendProgress);
-            Color drawColor = Color.Lerp(CosmicDischargeCommon.FrostDarkColor, CosmicDischargeCommon.FrostCoreColor, 0.68f);
+            Color drawColor = Color.Lerp(CosmicDischargeCommon.DoGPurpleColor, CosmicDischargeCommon.DoGSpecialColor, 0.68f);
 
             CosmicDischargeCommon.DrawChain(Main.spriteBatch, Owner.MountedCenter, endpoint, drawColor, 1f, true, Owner.gfxOffY);
             CosmicDischargeCommon.DrawRightHoldIndicator(Main.spriteBatch, Owner, 1.15f);

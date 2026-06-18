@@ -12,21 +12,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             // 分别代表：突击，复苏，侦查，轰炸，瘟疫，五大形态的伤害
             { "Initial", 10, 1, 1, 1, 1 }, // 该阶段仅解锁突击
-            { "Eye of Cthulhu", 12, 8, 1, 1, 1 }, // 该阶段已解锁复苏
-            { "Evil Boss", 14, 10, 1, 1, 1 },
-            { "Skeletron", 16, 12, 15, 1, 1 }, // 该阶段解锁侦查
-            { "Queen Bee", 17, 14, 18, 1, 1 },
-            { "Hardmode", 27, 22, 40, 40, 1 }, // 该阶段解锁轰炸
-            { "Any Mechanical Boss", 40, 32, 46, 40, 1 },
-            { "Plantera", 54, 44, 62, 56, 1 },
-            { "Golem", 68, 56, 76, 70, 64 }, // 该阶段才能解锁瘟疫
-            { "Plaguebringer Goliath", 82, 68, 90, 86, 78 },
-            { "Moon Lord", 96, 80, 108, 102, 94 },
-            { "Providence", 120, 100, 134, 128, 118 },
-            { "Polterghast", 155, 130, 170, 162, 148 },
-            { "Devourer of Gods", 185, 155, 205, 195, 178 },
+            { "Eye of Cthulhu", 19, 8, 1, 1, 1 }, // 该阶段已解锁复苏
+            { "Evil Boss", 27, 10, 1, 1, 1 },
+            { "Skeletron", 36, 12, 15, 1, 1 }, // 该阶段解锁侦查
+            { "Queen Bee", 44, 14, 18, 1, 1 },
+            { "Hardmode", 53, 2, 40, 40, 1 }, // 该阶段解锁轰炸
+            { "Any Mechanical Boss", 61, 32, 46, 40, 1 },
+            { "Plantera", 70, 44, 62, 56, 1 },
+            { "Golem", 77, 56, 76, 70, 64 }, // 该阶段才能解锁瘟疫
+            { "Plaguebringer Goliath", 84, 68, 90, 86, 78 },
+            { "Moon Lord", 91, 80, 108, 102, 94 },
+            { "Providence", 126, 100, 134, 128, 118 },
+            { "Polterghast", 160, 130, 170, 162, 148 },
+            { "Devourer of Gods", 195, 155, 205, 195, 178 },
             { "Yharon", 220, 185, 245, 232, 212 },
-            { "Exo Mechs and Supreme Calamitas", 260, 220, 290, 275, 252 }
+            { "Exo Mechs and Supreme Calamitas", 300, 220, 290, 275, 252 }
         };
 
         public int GetLeftClickBaseDamage()  => BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage);
@@ -821,8 +821,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { 10,  12,  14,  16,  17,  27,  40,  54,  68,  82,  96, 120, 155, 185, 220, 260 },
             // Row 1  — Breakthrough_Left_UseInterval  (帧，越小越快)
             { 15,  10,  10,   8,   6,   5,   4,   3,   3,   2,   2,   2,   2,   1,   1,   1 },
-            // Row 2  — Breakthrough_Right_MaxArrows
-            {  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2 },
+            // Row 2  — Breakthrough_Right_MaxArrows  (随游戏进程提升，箭袋不影响此值)
+            // Start EoC  EoB  Ske  QB   WoF  Mech Plan  Gol  Pla  ML   Prov Pol  DoG  Yha  ExoCal
+            {  2,   2,   2,   2,   2,   3,   3,   4,   4,   4,   5,   5,   5,   6,   6,   6 },
             // Row 3  — Breakthrough_Right_Damage
             { 10,  12,  14,  16,  17,  27,  40,  54,  68,  82,  96, 120, 155, 185, 220, 260 },
             // Row 4  — Recovery_Left_Damage

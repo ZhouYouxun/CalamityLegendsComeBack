@@ -563,9 +563,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Item.mana = BaseManaCost;
                 Item.channel = false;
                 Item.noUseGraphic = false;
-                if (!IsMagazineLoaded(CurrentMagazineIndex))
-                    TryFillEmptyMagazines(player);
-
                 Item.UseSound = ShouldPlayDefaultLeftClickFireSound(GetProjectileEffectIDForShot()) ? FireSound : null;
             }
 
@@ -649,6 +646,32 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 player.whoAmI,
                 shotEffectID
             );
+
+            // 生成左键手持弹幕（先清除旧的再重新生成以重置动画）
+            if (player.whoAmI == Main.myPlayer)
+            {
+                for (int i = 0; i < Main.maxProjectiles; i++)
+                {
+                    Projectile p = Main.projectile[i];
+                    if (p.active && p.owner == player.whoAmI && p.type == ModContent.ProjectileType<SHPCLeftClickHoldout>())
+                        p.Kill();
+                }
+
+                RulesOfEffect shotEffect = EffectRegistry.GetEffectByID(shotEffectID);
+                int burstCount = shotEffect?.LeftClickBurstCount ?? 1;
+                Projectile.NewProjectile(
+                    source,
+                    player.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<SHPCLeftClickHoldout>(),
+                    0,
+                    0f,
+                    player.whoAmI,
+                    shotEffectID,
+                    burstCount
+                );
+            }
+
             SHPCLeftClickSounds.PlayForEffect(shotEffectID, player.Center);
             leftClickCooldown = shotEffectID == AshesofAnnEffect.AshesofAnnEffectID ? Math.Max(1, (int)MathF.Ceiling(Item.useTime * 0.6f)) : Item.useTime;
             if (!heatPlayer.IsForcedShutdownCooling())
@@ -1132,7 +1155,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     proj.type == ModContent.ProjectileType<RightClickMortar_HoldOut>() ||
                     proj.type == ModContent.ProjectileType<MilitaryCaller_HoldOut>() ||
                     proj.type == ModContent.ProjectileType<ProjectilePossessionHoldout>() ||
-                    proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>())
+                    proj.type == ModContent.ProjectileType<NL_SHPC_EXWeapon>() ||
+                    proj.type == ModContent.ProjectileType<SHPCLeftClickHoldout>())
                 {
                     shouldHide = true;
                     break;
@@ -1209,43 +1233,54 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             Player player = Main.LocalPlayer;
             bool isChinese = Language.ActiveCulture.Name.StartsWith("zh");
+            bool shiftPressed = Main.keyState.PressingShift();
 
-            string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
-            string ammoText = BuildMagazineTooltipText(player);
-            string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
-
-            int state = GetRightClickProgressState();
-            string rightStateText = this.GetLocalizedValue($"SHPC_RightIntro{state + 1}");
-
-            string finalLine = this.GetLocalizedValue("SHPC_Final");
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
+            string legendarySection = shiftPressed ? legendaryText : shiftHint;
 
-            string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
-            string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
-            string loadingKeyText = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+            if (shiftPressed)
+            {
+                // 按住Shift：隐藏所有功能描述，只显示传奇文本
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            }
+            else
+            {
+                string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
+                string ammoText = BuildMagazineTooltipText(player);
+                string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
 
-            bool legendaryEmblemEquipped = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
-            string exHint = legendaryEmblemEquipped
-                ? string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText)
-                : this.GetLocalizedValue("SHPC_EXDisabledHint");
+                int state = GetRightClickProgressState();
+                string rightStateText = this.GetLocalizedValue($"SHPC_RightIntro{state + 1}");
 
-            string ammoWheelHint = string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), formKeyText);
-            string loadingUIHint = string.Format(this.GetLocalizedValue("SHPC_LoadingUIHint"), loadingKeyText);
+                string finalLine = this.GetLocalizedValue("SHPC_Final");
 
-            string finalText =
-                leftIntro + ammoText +
-                "\n\n" +
-                loadingUIHint + "\n" +
-                ammoWheelHint +
-                "\n\n" +
-                rightStateText + "\n\n" +
-                passiveText + "\n\n" +
-                exHint + "\n\n" +
-                finalLine + "\n";
+                string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+                string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+                string loadingKeyText = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
 
-            tooltips.FindAndReplace("[GFB]", finalText);
+                bool legendaryEmblemEquipped = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+                string exHint = legendaryEmblemEquipped
+                    ? string.Format(this.GetLocalizedValue("SHPC_EXHint"), keyText)
+                    : this.GetLocalizedValue("SHPC_EXDisabledHint");
+
+                string ammoWheelHint = string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), formKeyText);
+                string loadingUIHint = string.Format(this.GetLocalizedValue("SHPC_LoadingUIHint"), loadingKeyText);
+
+                string finalText =
+                    leftIntro + ammoText +
+                    "\n\n" +
+                    loadingUIHint + "\n" +
+                    ammoWheelHint +
+                    "\n\n" +
+                    rightStateText + "\n\n" +
+                    passiveText + "\n\n" +
+                    exHint + "\n\n" +
+                    finalLine + "\n";
+
+                tooltips.FindAndReplace("[GFB]", finalText);
+            }
+
             tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName, legendarySection));
         }
 

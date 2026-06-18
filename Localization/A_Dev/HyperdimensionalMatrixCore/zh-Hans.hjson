@@ -7,10 +7,11 @@ Mods: {
 					Tooltip:
 						'''
 						[c/7EB8FF:召唤矩阵核心——被实体化的开发引擎；伤害随召唤栏位数量大幅扩展]
-						[c/FF9040:自主循环五个模块：数据矩阵 · 几何投影 · 几何卫星 · 流体聚合 · 空间扭曲]
-						[c/FFEC40:定时触发编译风暴——所有模块同时引爆；装备者短暂获得无敌状态]
+						[c/FF9040:自主循环六个模块：数据矩阵 · 几何投影 · 几何卫星 · 流体聚合 · 空间扭曲 · 超维刻印]
+						[c/FFEC40:定时触发编译风暴——六模块同时引爆，终章为数据奇点]
 						[c/5880C0:强化躯体 · 降低受到的伤害 · 恢复生命值 · 提升移动速度 · 降低仇恨]
 						[c/FF3030:生命危急时超频加速所有模块循环；被动数据场持续伤害附近所有敌人]
+						[c/AA88FF:非追踪弹幕造成双倍伤害，这是精准打击的奖励]
 						[c/787888:"很高兴与你合作，二维生物"]
 						'''
 				}
@@ -36,6 +37,7 @@ Mods: {
 				MatrixFusionExplosion.DisplayName: 聚合坍缩
 				MatrixSpaceWarpField.DisplayName: 空间扭曲场
 				MatrixDataAura.DisplayName: 数据场
+				MatrixRunicStamp.DisplayName: 超维刻印
 				MatrixCompileStorm.DisplayName: 编译风暴
 				MatrixSingularity.DisplayName: 数据奇点
 			}

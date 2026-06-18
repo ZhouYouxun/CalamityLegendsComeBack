@@ -634,9 +634,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (weapon == null)
                 return;
 
-            if (weapon.storedEffectPower <= 0)
-                weapon.TryFillEmptyMagazines(player);
-
             int effectID = weapon.GetProjectileEffectIDForShot();
             int leftClickDamage = weapon.GetCurrentLeftClickDamage(player, effectID);
 

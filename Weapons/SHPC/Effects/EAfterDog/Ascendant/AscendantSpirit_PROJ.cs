@@ -459,6 +459,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
 
         public override bool? CanDamage() => launched && launchTimer > 2f;
 
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color visualColor = VisualColor;
+            Vector2 hitPos = Projectile.Center;
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                hitPos,
+                Vector2.Zero,
+                "CalamityMod/Particles/BloomCircle",
+                false,
+                12,
+                Main.rand.NextFloat(0.28f, 0.42f),
+                Color.Lerp(visualColor, Color.White, 0.25f),
+                new Vector2(0.85f, 1.15f),
+                glowCenter: true,
+                shrinkSpeed: 0.28f,
+                glowOpacity: 0.65f,
+                extraRotation: Projectile.velocity.ToRotation()));
+
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    hitPos + Main.rand.NextVector2Circular(3f, 3f),
+                    Main.rand.NextVector2Circular(2.8f, 2.8f),
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(9, 14),
+                    Main.rand.NextFloat(0.06f, 0.11f),
+                    Color.Lerp(GetRandomThemeColor(visualColor), Color.White, Main.rand.NextFloat(0.18f, 0.4f)),
+                    Vector2.One,
+                    glowCenter: true,
+                    shrinkSpeed: 0.3f,
+                    glowOpacity: 0.58f));
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    hitPos + Main.rand.NextVector2Circular(3f, 3f),
+                    ModContent.DustType<SquashDust>());
+                dust.scale = Main.rand.NextFloat(0.65f, 1.05f);
+                dust.velocity = Main.rand.NextVector2Circular(2.2f, 2.2f);
+                dust.noGravity = true;
+                dust.color = GetRandomThemeColor(visualColor);
+                dust.fadeIn = 1.6f;
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;

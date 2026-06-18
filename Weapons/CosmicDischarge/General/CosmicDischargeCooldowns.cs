@@ -30,8 +30,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderChargeOverlay";
 
         public override Color OutlineColor => new(18, 44, 72);
-        public override Color CooldownStartColor => Color.Lerp(CosmicDischargeCommon.FrostDarkColor, CosmicDischargeCommon.FrostGlowColor, AdjustedCompletion);
-        public override Color CooldownEndColor => Color.Lerp(CosmicDischargeCommon.FrostCoreColor, Color.White, AdjustedCompletion);
+        public override Color CooldownStartColor => Color.Lerp(CosmicDischargeCommon.DoGPurpleColor, CosmicDischargeCommon.DoGFuchsiaColor, AdjustedCompletion);
+        public override Color CooldownEndColor => Color.Lerp(CosmicDischargeCommon.DoGSpecialColor, Color.White, AdjustedCompletion);
 
         public override void ApplyBarShaders(float opacity)
         {
@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
     internal sealed class CosmicDischargePassiveCooldown : CooldownHandler
     {
-        public static new string ID => "CosmicDischarge_Icebound";
+        public static new string ID => "CosmicDischarge_RiftSeal";
 
         private CosmicDischargePlayer DischargePlayer => instance.player.GetModPlayer<CosmicDischargePlayer>();
         private float AdjustedCompletion => MathHelper.Clamp(DischargePlayer.PassiveCooldownTimer / (float)CosmicDischargePlayer.PassiveCooldownFrames, 0f, 1f);
@@ -87,15 +87,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override bool ShouldDisplay => DischargePlayer.ShouldShowPassiveCooldown;
 
         public override LocalizedText DisplayName =>
-            Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CosmicDischarge_Icebound");
+            Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CosmicDischarge_RiftSeal");
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldown";
         public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOutline";
         public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOverlay";
 
         public override Color OutlineColor => new(22, 48, 70);
-        public override Color CooldownStartColor => CosmicDischargeCommon.FrostDarkColor;
-        public override Color CooldownEndColor => CosmicDischargeCommon.FrostCoreColor;
+        public override Color CooldownStartColor => CosmicDischargeCommon.DoGPurpleColor;
+        public override Color CooldownEndColor => CosmicDischargeCommon.DoGSpecialColor;
 
         public override void ApplyBarShaders(float opacity)
         {
@@ -156,8 +156,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOverlay";
 
         public override Color OutlineColor => new(22, 48, 70);
-        public override Color CooldownStartColor => CosmicDischargeCommon.FrostDarkColor;
-        public override Color CooldownEndColor => CosmicDischargeCommon.FrostCoreColor;
+        public override Color CooldownStartColor => CosmicDischargeCommon.DoGPurpleColor;
+        public override Color CooldownEndColor => CosmicDischargeCommon.DoGSpecialColor;
 
         public override void ApplyBarShaders(float opacity)
         {

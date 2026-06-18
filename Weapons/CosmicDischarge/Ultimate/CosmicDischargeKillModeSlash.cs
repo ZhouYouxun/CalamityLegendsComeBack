@@ -168,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         Projectile.GetSource_FromThis(),
                         target.Center,
                         velocity,
-                        ModContent.ProjectileType<CosmicDischargeEndothermicSplit>(),
+                        ModContent.ProjectileType<CosmicDischargeRiftSplit>(),
                         (int)(Projectile.damage * 0.32f),
                         0f,
                         Projectile.owner);
@@ -178,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Color drawColor = Color.Lerp(CosmicDischargeCommon.FrostDarkColor, CosmicDischargeCommon.FrostCoreColor, 0.75f);
+            Color drawColor = Color.Lerp(CosmicDischargeCommon.DoGPurpleColor, CosmicDischargeCommon.DoGSpecialColor, 0.75f);
             CosmicDischargeCommon.DrawChain(Main.spriteBatch, Owner.MountedCenter, Projectile.Center, drawColor, 1.06f, true, Owner.gfxOffY);
             CosmicDischargeCommon.DrawRightHoldIndicator(Main.spriteBatch, Owner, 1.35f);
             return false;
