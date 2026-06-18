@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const int Lifetime = 300;
+        private const int Lifetime = 150;
         private const int MaxUpdateCount = 4;
 
         private static readonly Color TrailStartColor = Color.Black;

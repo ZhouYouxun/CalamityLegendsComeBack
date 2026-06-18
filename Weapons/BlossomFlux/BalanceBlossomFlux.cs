@@ -12,21 +12,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             // 分别代表：突击，复苏，侦查，轰炸，瘟疫，五大形态的伤害
             { "Initial", 10, 1, 1, 1, 1 }, // 该阶段仅解锁突击
-            { "Eye of Cthulhu", 19, 8, 1, 1, 1 }, // 该阶段已解锁复苏
-            { "Evil Boss", 27, 10, 1, 1, 1 },
-            { "Skeletron", 36, 12, 15, 1, 1 }, // 该阶段解锁侦查
-            { "Queen Bee", 44, 14, 18, 1, 1 },
-            { "Hardmode", 53, 2, 40, 40, 1 }, // 该阶段解锁轰炸
-            { "Any Mechanical Boss", 61, 32, 46, 40, 1 },
-            { "Plantera", 70, 44, 62, 56, 1 },
-            { "Golem", 77, 56, 76, 70, 64 }, // 该阶段才能解锁瘟疫
-            { "Plaguebringer Goliath", 84, 68, 90, 86, 78 },
-            { "Moon Lord", 91, 80, 108, 102, 94 },
-            { "Providence", 126, 100, 134, 128, 118 },
-            { "Polterghast", 160, 130, 170, 162, 148 },
-            { "Devourer of Gods", 195, 155, 205, 195, 178 },
-            { "Yharon", 220, 185, 245, 232, 212 },
-            { "Exo Mechs and Supreme Calamitas", 300, 220, 290, 275, 252 }
+            { "Eye of Cthulhu", 19, 18, 1, 1, 1 }, // 该阶段已解锁复苏
+            { "Evil Boss", 27, 26, 1, 1, 1 },
+            { "Skeletron", 36, 34, 38, 1, 1 }, // 该阶段解锁侦查
+            { "Queen Bee", 44, 42, 46, 1, 1 },
+            { "Hardmode", 53, 50, 56, 69, 1 }, // 该阶段解锁轰炸
+            { "Any Mechanical Boss", 61, 58, 64, 79, 1 },
+            { "Plantera", 70, 67, 74, 91, 1 },
+            { "Golem", 77, 73, 81, 100, 46 }, // 该阶段才能解锁瘟疫
+            { "Plaguebringer Goliath", 84, 80, 88, 109, 50 },
+            { "Moon Lord", 91, 86, 96, 118, 55 },
+            { "Providence", 126, 120, 132, 164, 76 },
+            { "Polterghast", 160, 152, 168, 208, 96 },
+            { "Devourer of Gods", 195, 185, 205, 254, 117 },
+            { "Yharon", 220, 209, 231, 286, 132 },
+            { "Exo Mechs and Supreme Calamitas", 300, 285, 315, 390, 180 }
         };
 
         public int GetLeftClickBaseDamage()  => BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage);

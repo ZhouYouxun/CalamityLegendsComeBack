@@ -21,10 +21,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private const int Lifetime = 72;
+        private const float CoreVanishDistance = 10f;
         private Vector2 startPosition;
         private Vector2 targetPosition;
-        private float initialDistance;
-        private float initialAngle;
         private int ActualLifetime => Projectile.localAI[0] > 0f ? (int)Projectile.localAI[0] : Lifetime;
 
         public override void SetStaticDefaults()
@@ -51,7 +50,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         {
             startPosition = Projectile.Center;
             targetPosition = GetParentCenter();
-            InitializeSpiralState();
             Projectile.rotation = (targetPosition - Projectile.Center).ToRotation();
         }
 
@@ -65,31 +63,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             {
                 startPosition = Projectile.Center;
                 targetPosition = GetParentCenter();
-                InitializeSpiralState();
             }
 
             targetPosition = GetParentCenter();
             float completion = 1f - Projectile.timeLeft / (float)actualLifetime;
             completion = MathHelper.Clamp(completion, 0f, 1f);
 
-            // 使用相同的线性进度 progress，使得路径为完美不扭曲的阿基米德螺旋线（圆弧）
-            float progress = completion;
-            float radiusProgress = progress;
-            float angleProgress = progress;
-
-            float spinDirection = Projectile.ai[1] == 0f ? (Projectile.identity % 2 == 0 ? 1f : -1f) : Math.Sign(Projectile.ai[1]);
-            // 减少圈数使其呈现更完美的圆形弧线
-            float spiralTurns = MathHelper.Lerp(0.6f, 1.0f, Utils.GetLerpValue(240f, 420f, initialDistance, true));
-            float currentRadius = MathHelper.Lerp(initialDistance, 0f, radiusProgress);
-            float currentAngle = initialAngle + spinDirection * MathHelper.TwoPi * spiralTurns * angleProgress;
             Vector2 previous = Projectile.Center;
-            Vector2 point = targetPosition + currentAngle.ToRotationVector2() * currentRadius;
+            Vector2 point = Vector2.Lerp(startPosition, targetPosition, completion);
             Projectile.Center = point;
             Projectile.velocity = point - previous;
             if (Projectile.velocity.LengthSquared() > 0.001f)
                 Projectile.rotation = Projectile.velocity.ToRotation();
 
-            if (currentRadius < 12f || !ParentIsActive())
+            if (Vector2.DistanceSquared(Projectile.Center, targetPosition) <= CoreVanishDistance * CoreVanishDistance || !ParentIsActive())
                 Projectile.Kill();
 
             if (Main.rand.NextBool(2))
@@ -163,13 +150,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 return Main.projectile[parent].Center;
 
             return Projectile.Center;
-        }
-
-        private void InitializeSpiralState()
-        {
-            Vector2 offset = startPosition - targetPosition;
-            initialDistance = Math.Max(offset.Length(), 12f);
-            initialAngle = offset.ToRotation();
         }
 
         public override bool PreDraw(ref Color lightColor)

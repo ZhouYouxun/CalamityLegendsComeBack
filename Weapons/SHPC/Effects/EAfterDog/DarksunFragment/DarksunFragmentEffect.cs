@@ -15,6 +15,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
     internal class DarksunFragmentEffect : DefaultEffect
     {
         public const int DarksunEffectID = 42;
+        private const float NormalSpeed = 24f;
+        private const float HomingMaxSpeed = 30f;
+        private const int HomingDelay = 8;
+        private const float HomingInertia = 24f;
+        private const float FreeFlightDamping = 0.996f;
+        private const float WanderingTurnStrength = 0.006f;
 
         public override int EffectID => DarksunEffectID;
         public override int AmmoType => ModContent.ItemType<CalamityDarksunFragment>();
@@ -42,18 +48,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             SetDefaults(projectile);
-            projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * 24f;
+            projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * NormalSpeed;
+            projectile.localAI[0] = 0f;
             projectile.GetGlobalProjectile<DarksunFragmentOrbGlobalProjectile>().hitSomething = false;
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
+            projectile.localAI[0]++;
             projectile.ai[1] = 0f;
             projectile.ai[2] = 0f;
-            projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction) * 24f;
+
+            Projectile targetSun = FindNearestBlackSun(projectile);
+            if (targetSun is null)
+                FreeDrift(projectile, owner);
+            else
+                HomeTowardBlackSun(projectile, owner, targetSun);
+
             projectile.rotation += 0.38f * Math.Sign(projectile.velocity.X == 0f ? owner.direction : projectile.velocity.X);
 
-            if (projectile.owner == Main.myPlayer && TryAbsorbNearbyBlackSun(projectile))
+            if (projectile.owner == Main.myPlayer && TryAbsorbNearbyBlackSun(projectile, targetSun))
                 return;
 
             if (Main.rand.NextBool(2))
@@ -71,25 +85,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Lighting.AddLight(projectile.Center, new Vector3(1f, 0.68f, 0.12f) * 0.45f);
         }
 
-        private static bool TryAbsorbNearbyBlackSun(Projectile projectile)
+        private static bool TryAbsorbNearbyBlackSun(Projectile projectile, Projectile preferredSun = null)
         {
-            int sunType = ModContent.ProjectileType<DarksunFragmentBlackSun>();
+            if (TryAbsorbBlackSun(projectile, preferredSun))
+                return true;
+
             foreach (Projectile other in Main.ActiveProjectiles)
             {
-                if (other.type != sunType || other.owner != projectile.owner)
-                    continue;
-
-                float absorbRadius = DarksunFragmentBlackSun.GetRadiusForLevel((int)other.ai[0]);
-                if (Vector2.Distance(other.Center, projectile.Center) > absorbRadius)
-                    continue;
-
-                projectile.GetGlobalProjectile<DarksunFragmentOrbGlobalProjectile>().hitSomething = true;
-                DarksunFragmentBlackSun.UpgradeOrExplode(other);
-                projectile.Kill();
-                return true;
+                if (TryAbsorbBlackSun(projectile, other))
+                    return true;
             }
 
             return false;
+        }
+
+        private static bool TryAbsorbBlackSun(Projectile projectile, Projectile sun)
+        {
+            if (sun is null || !sun.active || sun.type != ModContent.ProjectileType<DarksunFragmentBlackSun>() || sun.owner != projectile.owner)
+                return false;
+
+            float absorbRadius = DarksunFragmentBlackSun.GetRadiusForLevel((int)sun.ai[0]);
+            if (Vector2.Distance(sun.Center, projectile.Center) > absorbRadius)
+                return false;
+
+            projectile.GetGlobalProjectile<DarksunFragmentOrbGlobalProjectile>().hitSomething = true;
+            DarksunFragmentBlackSun.UpgradeOrExplode(sun);
+            projectile.Kill();
+            return true;
+        }
+
+        public override bool? CanHitNPC(Projectile projectile, Player owner, NPC target)
+        {
+            return FindNearestBlackSun(projectile) is null ? null : false;
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
@@ -192,6 +219,66 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 projectile.knockBack,
                 owner.whoAmI,
                 1f);
+        }
+
+        private static Projectile FindNearestBlackSun(Projectile projectile)
+        {
+            int sunType = ModContent.ProjectileType<DarksunFragmentBlackSun>();
+            Projectile closestSun = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (Projectile other in Main.ActiveProjectiles)
+            {
+                if (other.type != sunType || other.owner != projectile.owner)
+                    continue;
+
+                float distance = Vector2.Distance(projectile.Center, other.Center);
+                if (distance >= closestDistance)
+                    continue;
+
+                closestDistance = distance;
+                closestSun = other;
+            }
+
+            return closestSun;
+        }
+
+        private static void HomeTowardBlackSun(Projectile projectile, Player owner, Projectile targetSun)
+        {
+            if (projectile.localAI[0] <= HomingDelay)
+            {
+                FreeDrift(projectile, owner, FreeFlightDamping);
+                return;
+            }
+
+            Vector2 currentVelocity = projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            if (currentSpeed < 0.1f)
+                currentVelocity = (targetSun.Center - projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction) * 4f;
+
+            Vector2 desiredDirection = (targetSun.Center - projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX * owner.direction));
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 36f, projectile.localAI[0], true);
+            float closePressure = Utils.GetLerpValue(420f, 70f, projectile.Distance(targetSun.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+            float targetSpeed = MathHelper.Lerp(16f, HomingMaxSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+
+            float sideSway = (float)Math.Sin((projectile.localAI[0] + projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            projectile.velocity = projectile.velocity.RotatedBy(sideSway);
+
+            if (projectile.velocity.Length() > HomingMaxSpeed)
+                projectile.velocity = projectile.velocity.SafeNormalize(desiredDirection) * HomingMaxSpeed;
+        }
+
+        private static void FreeDrift(Projectile projectile, Player owner, float damping = 1f)
+        {
+            Vector2 fallback = Vector2.UnitX * owner.direction;
+            float wander = (float)Math.Sin((projectile.localAI[0] + projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            projectile.velocity = projectile.velocity.SafeNormalize(fallback) * NormalSpeed;
+            projectile.velocity = projectile.velocity.RotatedBy(wander) * damping;
         }
     }
 

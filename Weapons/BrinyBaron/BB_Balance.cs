@@ -22,10 +22,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             { "Golem", 124, 0.948f },
             { "Moon Lord", 200, 1.054f },
             { "Providence", 250, 1.174f },
-            { "Polterghast", 295, 1.309f },
-            { "Devourer of Gods", 435, 1.457f },
-            { "Yharon", 475, 1.62f },
-            { "Exo Mechs and Supreme Calamitas", 1000, 1.8f }
+            { "Polterghast", 295, 1.3f },
+            { "Devourer of Gods", 435, 1.3f },
+            { "Yharon", 475, 1.3f },
+            { "Exo Mechs and Supreme Calamitas", 1000, 1.3f }
         };
 
         private static readonly string[] DefaultStageNames =

@@ -260,8 +260,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             // 半透明深色背景板（加强与战斗轮盘的区分）
             float panelExtent = SlotSize * 1.7f + 70f;
-            Rectangle bg = Utils.CenteredRectangle(panelCenter, new Vector2(panelExtent * 2f, panelExtent * 2f));
-            DrawRectangle(bg, new Color(5, 8, 16, 148));
 
             // 外层扩散光晕（鲜艳科技蓝）
             Main.EntitySpriteDraw(bloom, panelCenter, null,

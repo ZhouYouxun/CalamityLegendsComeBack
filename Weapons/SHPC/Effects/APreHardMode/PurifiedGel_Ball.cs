@@ -7,7 +7,6 @@ using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Terraria.Audio;
 using System;
-using System.Collections.Generic;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
@@ -16,7 +15,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public new string LocalizationCategory => "Projectiles.SHPC";
         // 自定义计时器
         private int timer;
-        private static readonly Dictionary<int, int> SharedBounceTargets = new();
+        private const int MaxRicochets = 2;
+        private const float BounceTargetRange = 1100f;
+        private const float MinRicochetSpeed = 8f;
+        private static readonly Color PurifiedGelPink = new(255, 140, 200);
+        private static readonly Color PurifiedGelBlue = new(120, 200, 255);
 
         public override void SetStaticDefaults()
         {
@@ -30,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.width = 20;
             Projectile.height = 20;
             Projectile.friendly = true;
-            Projectile.penetrate = 2;
+            Projectile.penetrate = MaxRicochets + 1;
             Projectile.timeLeft = 300;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
@@ -52,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             {
                 float interp = (float)Math.Cos(Projectile.timeLeft / 32f + Main.GlobalTimeWrappedHourly / 20f + i / (float)Projectile.oldPos.Length * MathHelper.Pi) * 0.5f + 0.5f;
 
-                Color color = Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), interp) * 0.45f;
+                Color color = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, interp) * 0.45f;
                 color.A = 0;
 
                 Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -88,8 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
             Projectile.rotation += 0.22f;
 
-            Color pink = new Color(255, 140, 200);
-            Color blue = new Color(120, 200, 255);
+            Color pink = PurifiedGelPink;
+            Color blue = PurifiedGelBlue;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.Pi / 2f);
@@ -171,125 +174,177 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            if (Projectile.localAI[0] >= 1f)
-                return true;
-
-            Projectile.localAI[0] = 1f;
-            float speed = Math.Max(8f, oldVelocity.Length());
+            Vector2 reflectedVelocity = Projectile.velocity;
 
             if (Projectile.velocity.X != oldVelocity.X)
-                Projectile.velocity.X = -oldVelocity.X;
+                reflectedVelocity.X = -oldVelocity.X;
             if (Projectile.velocity.Y != oldVelocity.Y)
-                Projectile.velocity.Y = -oldVelocity.Y;
+                reflectedVelocity.Y = -oldVelocity.Y;
 
-            NPC target = GetSharedBounceTarget();
-            if (target != null)
-                Projectile.velocity = Projectile.DirectionTo(target.Center) * speed;
-            else
-                Projectile.velocity = Projectile.velocity.SafeNormalize(oldVelocity.SafeNormalize(Vector2.UnitX)) * speed;
+            if (reflectedVelocity == Vector2.Zero)
+                reflectedVelocity = -oldVelocity;
 
-            Projectile.netUpdate = true;
-            return false;
+            return !TryRicochet(Projectile.Center, oldVelocity, -1, reflectedVelocity);
         }
 
-        private NPC GetSharedBounceTarget()
+        private bool TryRicochet(Vector2 bouncePoint, Vector2 incomingVelocity, int excludedTargetIndex, Vector2 fallbackVelocity)
         {
-            int groupKey = (int)Projectile.ai[0];
-            if (SharedBounceTargets.Count > 256)
-                SharedBounceTargets.Clear();
+            if (Projectile.localAI[0] >= MaxRicochets)
+                return false;
 
-            if (SharedBounceTargets.TryGetValue(groupKey, out int targetIndex) &&
-                targetIndex >= 0 &&
-                targetIndex < Main.maxNPCs)
+            Projectile.localAI[0]++;
+            SpawnBounceExplosion(bouncePoint, excludedTargetIndex);
+
+            float speed = Math.Max(MinRicochetSpeed, incomingVelocity.Length());
+            NPC target = FindBounceTarget(bouncePoint, BounceTargetRange, excludedTargetIndex);
+            Vector2 targetVelocity = fallbackVelocity;
+
+            if (target != null)
+                targetVelocity = target.Center - bouncePoint;
+
+            Projectile.velocity = targetVelocity.SafeNormalize(incomingVelocity.SafeNormalize(Vector2.UnitX)) * speed;
+            Projectile.netUpdate = true;
+            return true;
+        }
+
+        private void SpawnBounceExplosion(Vector2 center, int excludedTargetIndex)
+        {
+            if (Projectile.owner == Main.myPlayer)
             {
-                NPC cachedTarget = Main.npc[targetIndex];
-                if (cachedTarget.active && cachedTarget.CanBeChasedBy(Projectile, false))
-                    return cachedTarget;
+                int explosionIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<PurifiedGel_BallExplosion>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    excludedTargetIndex);
+
+                if (explosionIndex >= 0 && explosionIndex < Main.maxProjectiles)
+                {
+                    Projectile explosion = Main.projectile[explosionIndex];
+                    explosion.Center = center;
+                    explosion.netUpdate = true;
+                }
             }
 
-            NPC target = FindBounceTarget(1100f);
-            if (target != null)
-                SharedBounceTargets[groupKey] = target.whoAmI;
-
-            return target;
+            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.65f, Pitch = 0.35f }, center);
         }
 
-        private NPC FindBounceTarget(float maxRange)
+        private NPC FindBounceTarget(Vector2 bouncePoint, float maxRange, int excludedTargetIndex)
         {
-            NPC bossTarget = null;
-            NPC normalTarget = null;
-            float bestBossDistance = maxRange;
-            float bestNormalDistance = maxRange;
+            NPC closestTarget = null;
+            float closestDistanceSq = maxRange * maxRange;
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
-                if (!npc.CanBeChasedBy(Projectile, false))
+                if (npc.whoAmI == excludedTargetIndex || !npc.CanBeChasedBy(Projectile, false))
                     continue;
 
-                float distance = Vector2.Distance(Projectile.Center, npc.Center);
-                if (npc.boss)
+                float distanceSq = Vector2.DistanceSquared(bouncePoint, npc.Center);
+                if (distanceSq < closestDistanceSq)
                 {
-                    if (distance < bestBossDistance)
-                    {
-                        bestBossDistance = distance;
-                        bossTarget = npc;
-                    }
-                }
-                else if (distance < bestNormalDistance)
-                {
-                    bestNormalDistance = distance;
-                    normalTarget = npc;
+                    closestDistanceSq = distanceSq;
+                    closestTarget = npc;
                 }
             }
 
-            return bossTarget ?? normalTarget;
+            return closestTarget;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Vector2 pos = Projectile.Center;
+            Vector2 bouncePoint = Projectile.Center;
+            Vector2 awayFromTarget = bouncePoint - target.Center;
+            Vector2 fallbackVelocity = awayFromTarget.SafeNormalize(-Projectile.velocity.SafeNormalize(Vector2.UnitX));
 
-            // ===== 爆炸环 =====
-            for (int i = 0; i < 16; i++)
+            TryRicochet(bouncePoint, Projectile.velocity, target.whoAmI, fallbackVelocity);
+        }
+    }
+
+    public class PurifiedGel_BallExplosion : ModProjectile
+    {
+        public new string LocalizationCategory => "Projectiles.SHPC";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private const int ExplosionHitboxSize = 64;
+        private const float ExplosionRadius = ExplosionHitboxSize / 2f;
+        private static readonly Color PurifiedGelPink = new(255, 140, 200);
+        private static readonly Color PurifiedGelBlue = new(120, 200, 255);
+
+        public override void SetDefaults()
+        {
+            Projectile.width = ExplosionHitboxSize;
+            Projectile.height = ExplosionHitboxSize;
+            Projectile.friendly = true;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 3;
+            Projectile.DamageType = DamageClass.Magic;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.hide = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        public override bool? CanHitNPC(NPC target)
+        {
+            int excludedTargetIndex = (int)Projectile.ai[0];
+            if (target.whoAmI == excludedTargetIndex)
+                return false;
+
+            return null;
+        }
+
+        public override void AI()
+        {
+            if (Projectile.localAI[0]++ > 0f)
+                return;
+
+            if (Main.dedServ)
+                return;
+
+            SpawnClassicDustExplosion(Projectile.Center);
+            Lighting.AddLight(Projectile.Center, Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f).ToVector3() * 0.9f);
+        }
+
+        private static void SpawnClassicDustExplosion(Vector2 center)
+        {
+            for (int i = 0; i < 30; i++)
             {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 7f);
+                Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
+                float distance = Main.rand.NextFloat(4f, ExplosionRadius);
+                Vector2 velocity = direction * Main.rand.NextFloat(2.5f, 7.5f);
+                Color color = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, Main.rand.NextFloat());
 
                 Dust dust = Dust.NewDustPerfect(
-                    pos,
+                    center + direction * distance,
                     DustID.GemDiamond,
-                    vel,
+                    velocity,
                     80,
-                    Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.2f, 1.6f)
-                );
+                    color,
+                    Main.rand.NextFloat(1.15f, 1.75f));
+
+                dust.noGravity = true;
+                dust.fadeIn = 0.8f;
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 direction = (MathHelper.TwoPi * i / 18f).ToRotationVector2();
+                Color color = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, i / 17f);
+
+                Dust dust = Dust.NewDustPerfect(
+                    center + direction * ExplosionRadius,
+                    DustID.UnusedWhiteBluePurple,
+                    direction * Main.rand.NextFloat(1.5f, 4.5f),
+                    100,
+                    color,
+                    Main.rand.NextFloat(0.9f, 1.35f));
+
                 dust.noGravity = true;
             }
-
-            // ===== 螺旋粒子 =====
-            int count = 14;
-            float radius = 30f;
-            float baseRot = Main.rand.NextFloat(MathHelper.TwoPi);
-
-            for (int i = 0; i < count; i++)
-            {
-                float angle = baseRot + MathHelper.TwoPi * i / count;
-
-                Vector2 posOffset = angle.ToRotationVector2() * radius;
-                Vector2 vel = posOffset.RotatedBy(MathHelper.Pi / 2).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2f, 4f);
-
-                Particle spark = new SparkParticle(
-                    pos + posOffset,
-                    vel,
-                    false,
-                    30,
-                    1.1f,
-                    Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat())
-                );
-
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-
-            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.6f, Pitch = 0.4f }, pos);
         }
     }
 }

@@ -105,6 +105,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
         }
 
         // 命中后逻辑
+        public virtual void ModifyDamageHitbox(Projectile projectile, Player owner, ref Rectangle hitbox)
+        {
+        }
+
         public virtual void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
 

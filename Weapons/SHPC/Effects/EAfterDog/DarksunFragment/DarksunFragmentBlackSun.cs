@@ -18,8 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
         public const int MaxLevel = 5;
         public const float BaseRadius = 4f * 16f;
         private const float RadiusPerLevel = 16f;
-        private const float EclipseBoltSpawnDistance = 20f * 16f;
-        private const float EclipseBoltSpawnDistanceJitter = 4f * 16f;
+        private const float EclipseBoltSpawnDistance = 75f * 16f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -42,9 +41,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 4;
         }
-
-        private const float AttractionSpeed = 3f;
-        private const float MergeDistance = 24f;
 
         public override bool ShouldUpdatePosition() => true;
 
@@ -82,9 +78,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 return;
             }
 
-            // Mutual attraction toward nearest same-owner black sun; merges when close
-            Projectile.velocity = ComputeAttractionVelocity();
-
             PlayRiftBuildingLoop();
 
             float radius = GetRadiusForLevel(Level);
@@ -96,11 +89,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             ShotTimer++;
             float lifeProgress = Utils.GetLerpValue(Lifetime, 0f, Projectile.timeLeft, true);
             int baseInterval = Math.Max(3, (int)MathHelper.Lerp(16f, 7f, lifeProgress) - Level * 2);
-            int interval = Math.Max(2, (int)Math.Ceiling(baseInterval * 0.5f));
+            int interval = Math.Max(2, (int)Math.Ceiling(baseInterval / 3f));
             if (Projectile.owner == Main.myPlayer && ShotTimer >= interval)
             {
                 ShotTimer = 0f;
-                SpawnEclipseBolt(radius);
+                SpawnEclipseBolt();
             }
 
             MaintainOrbitingShps();
@@ -121,49 +114,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             Lighting.AddLight(Projectile.Center, new Vector3(0.78f, 0.46f, 0.08f) * (0.3f + Level * 0.08f));
         }
 
-        private Vector2 ComputeAttractionVelocity()
-        {
-            if (Projectile.owner != Main.myPlayer)
-                return Vector2.Zero;
-
-            int sunType = ModContent.ProjectileType<DarksunFragmentBlackSun>();
-            Projectile nearestSun = null;
-            float nearestDist = float.MaxValue;
-
-            foreach (Projectile other in Main.ActiveProjectiles)
-            {
-                if (other.whoAmI == Projectile.whoAmI || other.type != sunType || other.owner != Projectile.owner)
-                    continue;
-
-                float dist = Vector2.Distance(Projectile.Center, other.Center);
-                if (dist < nearestDist)
-                {
-                    nearestDist = dist;
-                    nearestSun = other;
-                }
-            }
-
-            if (nearestSun is null)
-                return Vector2.Zero;
-
-            // Lower whoAmI absorbs the other to prevent both suns from merging simultaneously
-            if (nearestDist <= MergeDistance && nearestSun.whoAmI > Projectile.whoAmI)
-            {
-                int mergedLevel = Math.Max(Level, Utils.Clamp((int)nearestSun.ai[0], 1, MaxLevel));
-                Projectile.ai[0] = mergedLevel;
-                Projectile.timeLeft = Lifetime;
-                Projectile.netUpdate = true;
-                SpawnUpgradeBurst(Projectile.Center, mergedLevel);
-                nearestSun.Kill();
-                return Vector2.Zero;
-            }
-
-            if (nearestDist <= MergeDistance)
-                return Vector2.Zero;
-
-            return (nearestSun.Center - Projectile.Center).SafeNormalize(Vector2.Zero) * AttractionSpeed;
-        }
-
         private void PlayRiftBuildingLoop()
         {
             if (Main.dedServ || Timer < 72f || (int)Timer % 88 != 0)
@@ -181,35 +131,46 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
             }, Projectile.Center);
         }
 
-        private void SpawnEclipseBolt(float radius)
+        private void SpawnEclipseBolt()
         {
             float levelProgress = Utils.GetLerpValue(1f, MaxLevel, Level, true);
             float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-            float spinDirection = Main.rand.NextBool() ? 1f : -1f;
-            float spawnDistance = Main.rand.NextFloat(EclipseBoltSpawnDistance, EclipseBoltSpawnDistance + EclipseBoltSpawnDistanceJitter) + Level * 10f;
+            float spawnDistance = EclipseBoltSpawnDistance;
+            int boltCount = GetEclipseBoltCount();
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < boltCount; i++)
             {
-                float angle = baseAngle + i * MathHelper.PiOver2;
+                float angle = baseAngle + MathHelper.TwoPi * i / boltCount;
                 Vector2 spawn = Projectile.Center + angle.ToRotationVector2() * spawnDistance;
+                Vector2 velocity = (Projectile.Center - spawn).SafeNormalize(Vector2.UnitX) * 30f;
 
                 int bolt = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawn,
-                    Vector2.Zero,
+                    velocity,
                     ModContent.ProjectileType<DarksunFragmentEclipseBolt>(),
                     Math.Max(1, (int)(Projectile.damage * (0.24f + Level * 0.06f))),
                     Projectile.knockBack * 0.3f,
                     Projectile.owner,
-                    Projectile.whoAmI,
-                    spinDirection);
+                    Projectile.whoAmI);
 
                 if (Main.projectile.IndexInRange(bolt))
                 {
                     Projectile eclipseBolt = Main.projectile[bolt];
-                    eclipseBolt.localAI[0] = MathHelper.Lerp(36f, 23f, levelProgress);
+                    eclipseBolt.localAI[0] = MathHelper.Lerp(54f, 34f, levelProgress);
                 }
             }
+        }
+
+        private int GetEclipseBoltCount()
+        {
+            return Level switch
+            {
+                1 => 3,
+                2 => 5,
+                3 => 7,
+                _ => 9
+            };
         }
 
         private void MaintainOrbitingShps()

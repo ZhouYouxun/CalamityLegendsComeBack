@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Placeables: {
+				SHPCPlatform: {
+					DisplayName: SHPC平台
+					// Tooltip: ""
+				}
+			}
+		}
+	}
+}

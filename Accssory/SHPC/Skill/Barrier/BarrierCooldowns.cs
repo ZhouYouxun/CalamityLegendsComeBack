@@ -107,9 +107,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.SHPC_BarrierRecharge");
 
-        public override string Texture => "CalamityMod/Cooldowns/WulfrumRoverDrive";
-        public override string OutlineTexture => "CalamityMod/Cooldowns/WulfrumRoverDriveOutline";
-        public override string OverlayTexture => "CalamityMod/Cooldowns/WulfrumRoverDriveOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOverlay";
 
         public override Color OutlineColor => new(194, 255, 67);
         public override Color CooldownStartColor => Color.Lerp(new Color(194, 255, 57), new Color(92, 187, 99), instance.Completion);

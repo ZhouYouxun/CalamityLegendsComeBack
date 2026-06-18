@@ -162,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.scale = MathHelper.Lerp(Projectile.scale, BB_Balance.GetLeftClickScale(), 0.22f);
             }
 
-            if (CurrentGrowthStage >= 2 && !rightSpinActive)
+            if (CurrentGrowthStage >= 2)
                 TrackBladeTip();
 
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
@@ -709,6 +709,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinOverEmpowerment = 0f;
             rightSpinTransitionTimer = 0;
             thicknessScale = 1f;
+            ClearBladeShaderTrail();
 
             for (int i = 0; i < Main.maxNPCs; i++)
                 Projectile.localNPCImmunity[i] = 0;
@@ -727,6 +728,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinTransitionTimer = 0;
             rightSpinSmear?.Kill();
             rightSpinSmear = null;
+            ClearBladeShaderTrail();
             CanHit = false;
             postSwing = false;
             gapTimer = 0;
@@ -1060,6 +1062,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void TrackBladeTip()
         {
+            if (!CanUseBladeShaderTrail())
+            {
+                ClearBladeShaderTrail();
+                return;
+            }
+
             if (CanHit)
             {
                 slashOpacity = MathHelper.Lerp(slashOpacity, 1f, 0.4f);
@@ -1077,9 +1085,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             }
         }
 
+        private bool CanUseBladeShaderTrail()
+        {
+            return CurrentGrowthStage >= 2 && !rightSpinActive;
+        }
+
+        private void ClearBladeShaderTrail()
+        {
+            slashOpacity = 0f;
+            bladeTipHistoryLength = 0;
+        }
+
         private void DrawSlash()
         {
-            if (bladeTipHistoryLength < 2 || slashOpacity <= 0.01f || Main.dedServ)
+            if (!CanUseBladeShaderTrail() || bladeTipHistoryLength < 2 || slashOpacity <= 0.01f || Main.dedServ)
                 return;
 
             Main.spriteBatch.EnterShaderRegion();
@@ -1124,7 +1143,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void DrawLensFlare()
         {
-            if (slashOpacity <= 0.01f || Main.dedServ)
+            if (!CanUseBladeShaderTrail() || slashOpacity <= 0.01f || Main.dedServ)
                 return;
 
             exoLensFlare ??= ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar");
@@ -1216,7 +1235,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 bladeScale,
                 effects);
 
-            if (CurrentGrowthStage >= 2)
+            if (CanUseBladeShaderTrail())
             {
                 DrawSlash();
                 DrawLensFlare();

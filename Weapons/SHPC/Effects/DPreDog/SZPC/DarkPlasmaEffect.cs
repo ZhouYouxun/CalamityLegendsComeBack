@@ -8,6 +8,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -21,6 +22,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
     {
         public const int BlackHoleLifetime = 420;
         private const int BlackHoleHitCooldown = 8;
+        private const int MultiStarHitCooldown = 4;
+        private const int MultiStarCollisionSize = 160;
+        private const float MultiStarMergeDistance = 160f;
+        private const float BinaryOrbitRadius = MultiStarCollisionSize * 0.5f;
+        private const float TrinaryHeight = 160f;
+        private const float TrinaryOrbitRadius = TrinaryHeight * 2f / 3f;
+        private const float OrbReleaseIntervalMultiplier = 2f;
+        private const float MultiStarExplosionDamagePerBlackHole = 2.5f;
+        private static readonly float MultiStarAngularVelocity = MathHelper.ToRadians(42f);
 
         public override int EffectID => 32;
 
@@ -33,20 +43,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override float SquishyLightParticleFactor => 0f;
         public override float ExplosionPulseFactor => 0f;
 
-        // 自定义计时器
-        private float portalTimer;
-        private int lifeTimer;
         public override bool EnableDefaultSlowdown => false;
         public override bool EnableProximityExplosion => false;
         // ================= OnSpawn =================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            portalTimer = 0f;
-            lifeTimer = 0;
             projectile.localAI[0] = 0f;
 
             DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
-            gp.releaseOnly = HasExistingBlackHole(projectile);
+            gp.ResetForNewBlackHole(projectile.Center);
 
             projectile.velocity *= 0.8f;
             projectile.tileCollide = false;
@@ -54,12 +59,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             projectile.timeLeft = BlackHoleLifetime;
             projectile.usesLocalNPCImmunity = true;
             projectile.localNPCHitCooldown = BlackHoleHitCooldown;
-
-            if (gp.releaseOnly)
-            {
-                projectile.timeLeft = 2;
-                return;
-            }
 
             // 出生时先来一圈黑暗塌缩感
             for (int i = 0; i < 14; i++)
@@ -98,82 +97,100 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // ================= AI =================
         public override void AI(Projectile projectile, Player owner)
         {
-            if (projectile.GetGlobalProjectile<DarkPlasma_GP>().releaseOnly)
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+            if (gp.releaseOnly)
             {
                 projectile.Kill();
                 return;
             }
 
+            if (gp.suppressDeathEffects)
+                return;
+
             if (projectile.timeLeft == 120 && !Main.dedServ)
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftBuilding"), projectile.Center);
 
-            portalTimer += 0.03f;
-            lifeTimer++;
+            gp.portalTimer += 0.03f;
+            gp.lifeTimer++;
+
+            TryMergeWithNearbyBlackHoles(projectile, owner, gp);
+            if (gp.suppressDeathEffects)
+                return;
+
+            bool inMultiStar = UpdateMultiStarSystem(projectile, owner, gp);
+            Vector2 gravityCenter = inMultiStar ? gp.systemCenter : projectile.Center;
+            bool handlesSystemDamage = !inMultiStar || IsMultiStarDamageOwner(projectile, gp);
 
             // ===== 缓慢追踪最近敌人 =====
-            NPC blackHoleTarget = FindBlackHoleTarget(projectile.Center, 1800f);
-            if (blackHoleTarget is not null)
+            if (!inMultiStar)
             {
-                Vector2 toTarget = blackHoleTarget.Center - projectile.Center;
-                float dist = toTarget.Length();
-
-                if (dist > 10f)
+                NPC blackHoleTarget = FindBlackHoleTarget(projectile.Center, 1800f);
+                if (blackHoleTarget is not null)
                 {
-                    Vector2 dir = toTarget / dist;
-                    projectile.velocity = (projectile.velocity * 25f + dir * 1.8f) / 26f;
-                }
-            }
-            else
-                projectile.velocity *= 0.985f;
+                    Vector2 toTarget = blackHoleTarget.Center - projectile.Center;
+                    float dist = toTarget.Length();
 
-            projectile.rotation += 0.045f;
+                    if (dist > 10f)
+                    {
+                        Vector2 dir = toTarget / dist;
+                        projectile.velocity = (projectile.velocity * 25f + dir * 1.8f) / 26f;
+                    }
+                }
+                else
+                    projectile.velocity *= 0.985f;
+            }
+
+            projectile.rotation += inMultiStar ? MultiStarAngularVelocity : 0.045f;
 
             // ===== 吸附敌人 =====
-            bool bossAlive = BossIsAlive();
-            float range = 1800f;
-            for (int i = 0; i < Main.maxNPCs; i++)
+            if (handlesSystemDamage)
             {
-                NPC npc = Main.npc[i];
-                if (!npc.active || npc.friendly || npc.dontTakeDamage)
-                    continue;
-
-                float distance = Vector2.Distance(projectile.Center, npc.Center);
-                if (distance < range)
+                bool bossAlive = BossIsAlive();
+                float range = 1800f;
+                for (int i = 0; i < Main.maxNPCs; i++)
                 {
-                    Vector2 pull = (projectile.Center - npc.Center).SafeNormalize(Vector2.UnitY);
-                    float closeness = 1f - distance / range;
+                    NPC npc = Main.npc[i];
+                    if (!npc.active || npc.friendly || npc.dontTakeDamage)
+                        continue;
 
-                    if (!bossAlive)
+                    float distance = Vector2.Distance(gravityCenter, npc.Center);
+                    if (distance < range)
                     {
-                        Vector2 desiredVelocity = pull * MathHelper.Lerp(1.8f, 9.5f, closeness);
-                        npc.velocity = Vector2.Lerp(npc.velocity, desiredVelocity, MathHelper.Lerp(0.025f, 0.18f, closeness));
-                        if (distance < 120f)
-                            npc.velocity *= 0.72f;
-                    }
+                        Vector2 pull = (gravityCenter - npc.Center).SafeNormalize(Vector2.UnitY);
+                        float closeness = 1f - distance / range;
 
-                    // 吸收轨迹 dust
-                    if (Main.rand.NextBool(4))
-                    {
-                        Vector2 start = npc.Center + Main.rand.NextVector2Circular(24f, 24f);
-                        Vector2 vel = (projectile.Center - start).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.5f, 5f);
+                        if (!bossAlive)
+                        {
+                            Vector2 desiredVelocity = pull * MathHelper.Lerp(1.8f, 9.5f, closeness);
+                            npc.velocity = Vector2.Lerp(npc.velocity, desiredVelocity, MathHelper.Lerp(0.025f, 0.18f, closeness));
+                            if (distance < 120f)
+                                npc.velocity *= 0.72f;
+                        }
 
-                        Dust dust = Dust.NewDustPerfect(
-                            start,
-                            ModContent.DustType<VoidDustInverted>(),
-                            vel,
-                            0,
-                            Color.Lerp(new Color(100, 100, 100), Color.Black, Main.rand.NextFloat()),
-                            Main.rand.NextFloat(0.85f, 1.35f)
-                        );
-                        dust.noGravity = true;
-                        dust.noLightEmittence = true;
-                    }
+                        // 吸收轨迹 dust
+                        if (Main.rand.NextBool(4))
+                        {
+                            Vector2 start = npc.Center + Main.rand.NextVector2Circular(24f, 24f);
+                            Vector2 vel = (gravityCenter - start).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.5f, 5f);
 
-                    // 稳定持续伤害
-                    if (lifeTimer % 8 == 0)
-                    {
-                        float damageScale = MathHelper.Lerp(0.75f, 3.4f, closeness);
-                        npc.StrikeNPC(npc.CalculateHitInfo(Math.Max(1, (int)(projectile.damage / 10f * damageScale)), 0));
+                            Dust dust = Dust.NewDustPerfect(
+                                start,
+                                ModContent.DustType<VoidDustInverted>(),
+                                vel,
+                                0,
+                                Color.Lerp(new Color(100, 100, 100), Color.Black, Main.rand.NextFloat()),
+                                Main.rand.NextFloat(0.85f, 1.35f)
+                            );
+                            dust.noGravity = true;
+                            dust.noLightEmittence = true;
+                        }
+
+                        // 稳定持续伤害
+                        if (gp.lifeTimer % 8 == 0)
+                        {
+                            float damageScale = MathHelper.Lerp(0.75f, 3.4f, closeness);
+                            npc.StrikeNPC(npc.CalculateHitInfo(Math.Max(1, (int)(projectile.damage / 10f * damageScale)), 0));
+                        }
                     }
                 }
             }
@@ -268,7 +285,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             // ===== 触发频率提升（最多≈2倍）=====
             int interval = (int)MathHelper.Lerp(3f, 1f, lifeFactor);
 
-            if (lifeTimer % interval == 0)
+            if (gp.lifeTimer % interval == 0)
             {
                 // ===== 生成范围扩大（向外爆）=====
                 float spawnRadius = MathHelper.Lerp(12f, 38f, lifeFactor);
@@ -298,7 +315,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
 
             // ===== 7. 中心暗核呼吸 =====
-            if (lifeTimer % 5 == 0)
+            if (gp.lifeTimer % 5 == 0)
             {
                 Particle corePulse = new CustomPulse(
                     projectile.Center,
@@ -315,31 +332,310 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 GeneralParticleHandler.SpawnParticle(corePulse);
             }
 
-            float orbReleaseFactor = MathHelper.Clamp(lifeTimer / (float)BlackHoleLifetime, 0f, 1f);
+            float orbReleaseFactor = MathHelper.Clamp(gp.lifeTimer / (float)BlackHoleLifetime, 0f, 1f);
             TryReleaseDevourOrbs(projectile, owner, (float)Math.Pow(orbReleaseFactor, 0.72f));
             Lighting.AddLight(projectile.Center, new Vector3(0.06f, 0.06f, 0.06f));
         }
 
-        private static bool HasExistingBlackHole(Projectile projectile)
+        private static bool IsDarkPlasmaBlackHole(Projectile projectile, int owner)
         {
-            int shpbType = ModContent.ProjectileType<NewLegendSHPB>();
+            if (!projectile.active || projectile.owner != owner)
+                return false;
+
+            if (projectile.type != ModContent.ProjectileType<NewLegendSHPB>() || (int)projectile.ai[0] != 32)
+                return false;
+
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+            return !gp.releaseOnly && !gp.suppressDeathEffects;
+        }
+
+        private static void TryMergeWithNearbyBlackHoles(Projectile projectile, Player owner, DarkPlasma_GP gp)
+        {
+            if (gp.IsInMultiStar || !IsDarkPlasmaBlackHole(projectile, owner.whoAmI))
+                return;
+
+            Projectile candidate = null;
+            bool candidateIsSystem = false;
+            float bestDistance = MultiStarMergeDistance;
 
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile other = Main.projectile[i];
-                if (!other.active || other.whoAmI == projectile.whoAmI || other.owner != projectile.owner)
+                if (other.whoAmI == projectile.whoAmI || !IsDarkPlasmaBlackHole(other, owner.whoAmI))
                     continue;
 
-                if (other.type != shpbType || (int)other.ai[0] != 32)
+                DarkPlasma_GP otherGP = other.GetGlobalProjectile<DarkPlasma_GP>();
+                float distanceToBody = Vector2.Distance(projectile.Center, other.Center);
+                float distanceToSystem = otherGP.IsInMultiStar ? Vector2.Distance(projectile.Center, otherGP.systemCenter) : distanceToBody;
+                float distance = Math.Min(distanceToBody, distanceToSystem);
+
+                if (distance > bestDistance)
                     continue;
 
-                if (other.GetGlobalProjectile<DarkPlasma_GP>().releaseOnly)
-                    continue;
-
-                return true;
+                bestDistance = distance;
+                candidate = other;
+                candidateIsSystem = otherGP.IsInMultiStar;
             }
 
-            return false;
+            if (candidate == null)
+                return;
+
+            if (candidateIsSystem)
+            {
+                DarkPlasma_GP candidateGP = candidate.GetGlobalProjectile<DarkPlasma_GP>();
+                List<Projectile> members = GetSystemMembers(owner.whoAmI, candidateGP.multiStarLeader);
+
+                if (members.Count >= 3)
+                    DetonateMultiStarSystem(projectile, members, members.Count + 1);
+                else
+                    AddBlackHoleToSystem(projectile, members);
+
+                return;
+            }
+
+            CreateMultiStarSystem(projectile, candidate);
+        }
+
+        private static bool UpdateMultiStarSystem(Projectile projectile, Player owner, DarkPlasma_GP gp)
+        {
+            if (!gp.IsInMultiStar)
+                return false;
+
+            Projectile leader = GetLeaderProjectile(gp.multiStarLeader);
+            if (leader == null || !IsDarkPlasmaBlackHole(leader, owner.whoAmI))
+            {
+                gp.ClearMultiStar();
+                projectile.localNPCHitCooldown = BlackHoleHitCooldown;
+                return false;
+            }
+
+            if (projectile.whoAmI == leader.whoAmI)
+            {
+                List<Projectile> members = GetSystemMembers(owner.whoAmI, gp.multiStarLeader);
+                if (members.Count < 2)
+                {
+                    foreach (Projectile member in members)
+                    {
+                        DarkPlasma_GP memberGP = member.GetGlobalProjectile<DarkPlasma_GP>();
+                        memberGP.ClearMultiStar();
+                        member.localNPCHitCooldown = BlackHoleHitCooldown;
+                    }
+
+                    return false;
+                }
+
+                DarkPlasma_GP leaderGP = leader.GetGlobalProjectile<DarkPlasma_GP>();
+                Vector2 center = leaderGP.systemCenter == Vector2.Zero ? AverageCenter(members) : leaderGP.systemCenter;
+                Vector2 velocity = leaderGP.systemVelocity == Vector2.Zero ? AverageVelocity(members) : leaderGP.systemVelocity;
+
+                NPC blackHoleTarget = FindBlackHoleTarget(center, 1800f);
+                if (blackHoleTarget is not null)
+                {
+                    Vector2 toTarget = blackHoleTarget.Center - center;
+                    float dist = toTarget.Length();
+
+                    if (dist > 10f)
+                    {
+                        Vector2 dir = toTarget / dist;
+                        velocity = (velocity * 25f + dir * 1.8f) / 26f;
+                    }
+                }
+                else
+                    velocity *= 0.985f;
+
+                center += velocity;
+                float angle = leaderGP.systemAngle + MultiStarAngularVelocity;
+                AssignMultiStarMembers(members, center, velocity, angle, false);
+            }
+
+            ApplyMultiStarPlacement(projectile, gp);
+            return gp.IsInMultiStar;
+        }
+
+        private static void CreateMultiStarSystem(Projectile first, Projectile second)
+        {
+            List<Projectile> members = new() { first, second };
+            members.Sort((a, b) => a.whoAmI.CompareTo(b.whoAmI));
+
+            Vector2 center = (first.Center + second.Center) * 0.5f;
+            Vector2 velocity = (first.velocity + second.velocity) * 0.5f;
+            float angle = (members[0].Center - center).SafeNormalize(Vector2.UnitX).ToRotation();
+
+            AssignMultiStarMembers(members, center, velocity, angle, true);
+            SpawnMultiStarJoinEffects(center, members.Count);
+        }
+
+        private static void AddBlackHoleToSystem(Projectile incoming, List<Projectile> members)
+        {
+            if (members.Count <= 0)
+                return;
+
+            DarkPlasma_GP leaderGP = members[0].GetGlobalProjectile<DarkPlasma_GP>();
+            int newCount = members.Count + 1;
+            Vector2 center = (leaderGP.systemCenter * members.Count + incoming.Center) / newCount;
+            Vector2 velocity = (leaderGP.systemVelocity * members.Count + incoming.velocity) / newCount;
+            float angle = leaderGP.systemAngle;
+
+            members.Add(incoming);
+            members.Sort((a, b) => a.whoAmI.CompareTo(b.whoAmI));
+
+            AssignMultiStarMembers(members, center, velocity, angle, true);
+            SpawnMultiStarJoinEffects(center, members.Count);
+        }
+
+        private static void AssignMultiStarMembers(List<Projectile> members, Vector2 center, Vector2 velocity, float angle, bool refreshLifetime)
+        {
+            if (members.Count <= 0)
+                return;
+
+            members.Sort((a, b) => a.whoAmI.CompareTo(b.whoAmI));
+            int leader = members[0].whoAmI;
+            int count = Math.Min(members.Count, 3);
+
+            for (int i = 0; i < members.Count; i++)
+            {
+                Projectile member = members[i];
+                DarkPlasma_GP memberGP = member.GetGlobalProjectile<DarkPlasma_GP>();
+                memberGP.multiStarLeader = leader;
+                memberGP.multiStarSlot = Math.Min(i, 2);
+                memberGP.multiStarCount = count;
+                memberGP.systemCenter = center;
+                memberGP.systemVelocity = velocity;
+                memberGP.systemAngle = angle;
+                member.localNPCHitCooldown = MultiStarHitCooldown;
+
+                if (refreshLifetime)
+                {
+                    member.timeLeft = BlackHoleLifetime;
+                    member.localAI[0] = 0f;
+                    memberGP.lifeTimer = 0;
+                }
+
+                ApplyMultiStarPlacement(member, memberGP);
+                member.netUpdate = true;
+            }
+        }
+
+        private static void ApplyMultiStarPlacement(Projectile projectile, DarkPlasma_GP gp)
+        {
+            if (!gp.IsInMultiStar)
+                return;
+
+            Vector2 offset = GetMultiStarOffset(gp.multiStarSlot, gp.multiStarCount, gp.systemAngle);
+            projectile.Center = gp.systemCenter + offset;
+            projectile.velocity = gp.systemVelocity + offset.RotatedBy(MathHelper.PiOver2) * MultiStarAngularVelocity;
+            projectile.localNPCHitCooldown = MultiStarHitCooldown;
+        }
+
+        private static Vector2 GetMultiStarOffset(int slot, int count, float angle)
+        {
+            if (count <= 1)
+                return Vector2.Zero;
+
+            if (count == 2)
+                return (angle + MathHelper.Pi * slot).ToRotationVector2() * BinaryOrbitRadius;
+
+            return (angle - MathHelper.PiOver2 + MathHelper.TwoPi * slot / 3f).ToRotationVector2() * TrinaryOrbitRadius;
+        }
+
+        private static bool IsMultiStarDamageOwner(Projectile projectile, DarkPlasma_GP gp)
+        {
+            return gp.IsInMultiStar && projectile.whoAmI == gp.multiStarLeader;
+        }
+
+        private static Projectile GetLeaderProjectile(int leader)
+        {
+            if (leader < 0 || leader >= Main.maxProjectiles)
+                return null;
+
+            Projectile projectile = Main.projectile[leader];
+            return projectile.active ? projectile : null;
+        }
+
+        private static List<Projectile> GetSystemMembers(int owner, int leader)
+        {
+            List<Projectile> members = new();
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (!IsDarkPlasmaBlackHole(projectile, owner))
+                    continue;
+
+                DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+                if (gp.multiStarLeader == leader)
+                    members.Add(projectile);
+            }
+
+            members.Sort((a, b) => a.whoAmI.CompareTo(b.whoAmI));
+            return members;
+        }
+
+        private static Vector2 AverageCenter(List<Projectile> projectiles)
+        {
+            Vector2 center = Vector2.Zero;
+            foreach (Projectile projectile in projectiles)
+                center += projectile.Center;
+
+            return center / Math.Max(1, projectiles.Count);
+        }
+
+        private static Vector2 AverageVelocity(List<Projectile> projectiles)
+        {
+            Vector2 velocity = Vector2.Zero;
+            foreach (Projectile projectile in projectiles)
+                velocity += projectile.velocity;
+
+            return velocity / Math.Max(1, projectiles.Count);
+        }
+
+        private static void DetonateMultiStarSystem(Projectile incoming, List<Projectile> members, int blackHoleCount)
+        {
+            if (members.Count <= 0)
+                return;
+
+            DarkPlasma_GP leaderGP = members[0].GetGlobalProjectile<DarkPlasma_GP>();
+            Vector2 center = leaderGP.systemCenter == Vector2.Zero ? AverageCenter(members) : leaderGP.systemCenter;
+            Player owner = Main.player[incoming.owner];
+            int count = Math.Min(Math.Max(blackHoleCount, 2), 4);
+
+            foreach (Projectile member in members)
+                member.GetGlobalProjectile<DarkPlasma_GP>().suppressDeathEffects = true;
+
+            incoming.GetGlobalProjectile<DarkPlasma_GP>().suppressDeathEffects = true;
+
+            SpawnMultiStarDetonation(incoming, owner, center, count);
+
+            foreach (Projectile member in members)
+            {
+                if (member.active)
+                    member.Kill();
+            }
+
+            if (incoming.active)
+                incoming.Kill();
+        }
+
+        private static void SpawnMultiStarJoinEffects(Vector2 center, int count)
+        {
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.48f + count * 0.08f, Pitch = -0.35f }, center);
+
+            for (int i = 0; i < 18 + count * 6; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 8f);
+                Dust dust = Dust.NewDustPerfect(
+                    center,
+                    ModContent.DustType<VoidDustInverted>(),
+                    velocity,
+                    0,
+                    Color.Lerp(new Color(80, 80, 80), Color.Black, Main.rand.NextFloat()),
+                    Main.rand.NextFloat(1.05f, 1.8f));
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+            }
         }
 
         private static bool BossIsAlive()
@@ -381,7 +677,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
             projectile.localAI[0]++;
             lifeFactor = MathHelper.Clamp(lifeFactor, 0f, 1f);
-            int interval = Math.Max(2, (int)MathHelper.Lerp(7f, 2f, lifeFactor));
+            int interval = Math.Max(4, (int)(MathHelper.Lerp(7f, 2f, lifeFactor) * OrbReleaseIntervalMultiplier));
             if ((int)projectile.localAI[0] % interval != 0)
                 return;
 
@@ -420,6 +716,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         }
 
         // ================= ModifyHitNPC =================
+        public override bool? CanDamage(Projectile projectile, Player owner)
+        {
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+            if (gp.suppressDeathEffects)
+                return false;
+
+            if (gp.IsInMultiStar && !IsMultiStarDamageOwner(projectile, gp))
+                return false;
+
+            return null;
+        }
+
+        public override void ModifyDamageHitbox(Projectile projectile, Player owner, ref Rectangle hitbox)
+        {
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+            if (!gp.IsInMultiStar || !IsMultiStarDamageOwner(projectile, gp))
+                return;
+
+            hitbox = new Rectangle(
+                (int)(gp.systemCenter.X - MultiStarCollisionSize * 0.5f),
+                (int)(gp.systemCenter.Y - MultiStarCollisionSize * 0.5f),
+                MultiStarCollisionSize,
+                MultiStarCollisionSize);
+        }
+
         public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.DefenseEffectiveness *= 0f;
@@ -437,9 +758,39 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         // ================= OnKill =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            if (projectile.GetGlobalProjectile<DarkPlasma_GP>().releaseOnly)
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
+            if (gp.suppressDeathEffects)
+                return;
+
+            if (gp.releaseOnly)
             {
                 SpawnForwardDarkEnergyBurst(projectile);
+                return;
+            }
+
+            if (gp.IsInMultiStar)
+            {
+                if (!IsMultiStarDamageOwner(projectile, gp))
+                    return;
+
+                List<Projectile> members = GetSystemMembers(owner.whoAmI, gp.multiStarLeader);
+                int count = Math.Max(2, members.Count);
+                Vector2 center = gp.systemCenter == Vector2.Zero ? projectile.Center : gp.systemCenter;
+
+                foreach (Projectile member in members)
+                {
+                    if (member.whoAmI != projectile.whoAmI)
+                        member.GetGlobalProjectile<DarkPlasma_GP>().suppressDeathEffects = true;
+                }
+
+                SpawnMultiStarDetonation(projectile, owner, center, count);
+
+                foreach (Projectile member in members)
+                {
+                    if (member.whoAmI != projectile.whoAmI && member.active)
+                        member.Kill();
+                }
+
                 return;
             }
 
@@ -449,10 +800,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             PlayDarkPlasmaDeathSounds(projectile);
         }
 
+        private static void SpawnMultiStarDetonation(Projectile projectile, Player owner, Vector2 center, int blackHoleCount)
+        {
+            int count = Math.Min(Math.Max(blackHoleCount, 2), 4);
+            float power = 1.95f + 0.35f * (count - 1);
+            int explosionSize = MultiStarCollisionSize + 80 * count;
+            float damageMultiplier = MultiStarExplosionDamagePerBlackHole * count;
+
+            owner.SetScreenshake(8.5f + 2f * count);
+            SpawnDarkPlasmaAccretionDeath(projectile, owner, center, power);
+            SpawnDarkPlasmaDeathDamage(projectile, center, damageMultiplier, explosionSize, explosionSize);
+            SpawnDarkPlasmaDeathOrbs(projectile, center, 10 + count * 8, 0.36f + count * 0.06f);
+            PlayDarkPlasmaDeathSounds(projectile, center);
+        }
+
         private static void SpawnDarkPlasmaAccretionDeath(Projectile projectile, Player owner)
         {
+            SpawnDarkPlasmaAccretionDeath(projectile, owner, projectile.Center, 1.95f);
+        }
+
+        private static void SpawnDarkPlasmaAccretionDeath(Projectile projectile, Player owner, Vector2 center, float power)
+        {
             owner.SetScreenshake(8.5f);
-            float power = 1.95f;
             float diskRotation = projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation() + Main.rand.NextFloat(-0.35f, 0.35f);
 
             for (int i = 0; i < 55; i++)
@@ -464,7 +833,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 Vector2 velocity = (tangent * Main.rand.NextFloat(4f, 11f) + radial * Main.rand.NextFloat(-2.6f, 4.6f)) * power;
 
                 Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
+                    center,
                     Main.rand.NextBool(6) ? ModContent.DustType<VoidDustInverted>() : ModContent.DustType<VoidDust>(),
                     velocity);
                 dust.noGravity = true;
@@ -480,7 +849,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                         .RotatedBy(diskRotation)
                         * Main.rand.NextFloat(0.1f, 1f);
                     Particle spark = new CustomSpark(
-                        projectile.Center,
+                        center,
                         sparkVelocity,
                         "CalamityMod/Particles/Sparkle",
                         false,
@@ -496,7 +865,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             {
                 Color useColor = GetDarkPlasmaVisibleBurstColor(owner);
                 Particle softExplosion = new CustomPulse(
-                    projectile.Center,
+                    center,
                     Vector2.Zero,
                     useColor,
                     "CalamityMod/Particles/SoftRoundExplosion",
@@ -534,7 +903,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 smearVelocity.Y *= 0.58f;
 
                 Particle smear = new CustomSpark(
-                    projectile.Center,
+                    center,
                     smearVelocity,
                     "CalamityMod/Particles/VerticalSmearRagged",
                     false,
@@ -546,7 +915,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             }
 
             Particle blackCore = new CustomPulse(
-                projectile.Center,
+                center,
                 Vector2.Zero,
                 Color.Black,
                 "CalamityMod/Particles/SmallBloom",
@@ -590,15 +959,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private static void SpawnDarkPlasmaDeathDamage(Projectile projectile)
         {
+            SpawnDarkPlasmaDeathDamage(projectile, projectile.Center, 2f, 364, 286);
+        }
+
+        private static void SpawnDarkPlasmaDeathDamage(Projectile projectile, Vector2 center, float damageMultiplier, int width, int height)
+        {
             if (projectile.owner != Main.myPlayer)
                 return;
 
             int projIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
-                projectile.Center,
+                center,
                 Vector2.Zero,
                 ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.NewLegendSHPE>(),
-                (int)(projectile.damage * 2f),
+                (int)(projectile.damage * damageMultiplier),
                 projectile.knockBack,
                 projectile.owner);
 
@@ -606,9 +980,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 return;
 
             Projectile proj = Main.projectile[projIndex];
-            proj.width = 364;
-            proj.height = 286;
-            proj.Center = projectile.Center;
+            proj.width = width;
+            proj.height = height;
+            proj.Center = center;
             proj.netUpdate = true;
         }
 
@@ -642,20 +1016,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private static void SpawnDarkPlasmaDeathOrbs(Projectile projectile)
         {
+            SpawnDarkPlasmaDeathOrbs(projectile, projectile.Center, 20, 0.42f);
+        }
+
+        private static void SpawnDarkPlasmaDeathOrbs(Projectile projectile, Vector2 center, int orbCount, float damageMultiplier)
+        {
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < orbCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / 28f + Main.rand.NextFloat(-0.08f, 0.08f);
+                float angle = MathHelper.TwoPi * i / Math.Max(1, orbCount) + Main.rand.NextFloat(-0.08f, 0.08f);
                 Vector2 direction = angle.ToRotationVector2();
                 Vector2 orbVelocity = direction * Main.rand.NextFloat(10f, 22f);
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
-                    projectile.Center + direction * Main.rand.NextFloat(8f, 28f),
+                    center + direction * Main.rand.NextFloat(8f, 28f),
                     orbVelocity,
                     ModContent.ProjectileType<EndlessDevourJavOrbSmall>(),
-                    (int)(projectile.damage * 0.42f),
+                    (int)(projectile.damage * damageMultiplier),
                     projectile.knockBack * 0.5f,
                     projectile.owner,
                     0f,
@@ -665,19 +1044,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private static void PlayDarkPlasmaDeathSounds(Projectile projectile)
         {
+            PlayDarkPlasmaDeathSounds(projectile, projectile.Center);
+        }
+
+        private static void PlayDarkPlasmaDeathSounds(Projectile projectile, Vector2 center)
+        {
             for (int i = 0; i < 3; i++)
             {
                 SoundStyle fire = new("CalamityMod/Sounds/Item/EarthMeteor");
-                SoundEngine.PlaySound(fire with { Volume = 0.6f, Pitch = -0.1f * (i + 1), MaxInstances = 3 }, projectile.Center);
+                SoundEngine.PlaySound(fire with { Volume = 0.6f, Pitch = -0.1f * (i + 1), MaxInstances = 3 }, center);
             }
 
             SoundStyle reflect = new("CalamityMod/Sounds/Item/ShadowboltReflect");
-            SoundEngine.PlaySound(reflect with { Volume = 0.9f, Pitch = -0.4f }, projectile.Center);
+            SoundEngine.PlaySound(reflect with { Volume = 0.9f, Pitch = -0.4f }, center);
         }
 
         // ================= PreDraw =================
         public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
         {
+            DarkPlasma_GP gp = projectile.GetGlobalProjectile<DarkPlasma_GP>();
             Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleVortex").Value;
             Texture2D bloom = TextureAssets.Extra[ExtrasID.SharpTears].Value;
             Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmear").Value;
@@ -725,7 +1110,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
 
             // ===== 白色刀盘层：恢复旧版的亮刃切盘感 =====
-            float bladePulse = 0.92f + (float)Math.Sin(portalTimer * 7f) * 0.08f;
+            float bladePulse = 0.92f + (float)Math.Sin(gp.portalTimer * 7f) * 0.08f;
             float independentBladeSpin = Main.GlobalTimeWrappedHourly * 7.2f +
                 (float)Math.Sin(Main.GlobalTimeWrappedHourly * 1.8f) * 0.16f;
             for (int i = 0; i < 8; i++)
@@ -844,7 +1229,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             // ===== 新增：中心黑色呼吸点 =====
             for (int i = 0; i < 3; i++)
             {
-                float pulse = 0.88f + (float)System.Math.Sin(portalTimer * 5f + i * 0.7f) * 0.12f;
+                float pulse = 0.88f + (float)System.Math.Sin(gp.portalTimer * 5f + i * 0.7f) * 0.12f;
                 Color c = Color.Black * 0.14f * (1f - i * 0.18f);
                 c.A = 0;
 
@@ -868,5 +1253,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         public override bool InstancePerEntity => true;
 
         public bool releaseOnly;
+        public bool suppressDeathEffects;
+        public float portalTimer;
+        public int lifeTimer;
+        public int multiStarLeader = -1;
+        public int multiStarSlot = -1;
+        public int multiStarCount = 1;
+        public float systemAngle;
+        public Vector2 systemCenter;
+        public Vector2 systemVelocity;
+
+        public bool IsInMultiStar => multiStarLeader >= 0 && multiStarCount > 1;
+
+        public void ResetForNewBlackHole(Vector2 center)
+        {
+            releaseOnly = false;
+            suppressDeathEffects = false;
+            portalTimer = 0f;
+            lifeTimer = 0;
+            systemCenter = center;
+            systemVelocity = Vector2.Zero;
+            systemAngle = 0f;
+            ClearMultiStar();
+        }
+
+        public void ClearMultiStar()
+        {
+            multiStarLeader = -1;
+            multiStarSlot = -1;
+            multiStarCount = 1;
+        }
     }
 }

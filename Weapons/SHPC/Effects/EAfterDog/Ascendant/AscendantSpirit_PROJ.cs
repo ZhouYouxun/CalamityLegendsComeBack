@@ -378,6 +378,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                     glowOpacity: 0.65f);
                 GeneralParticleHandler.SpawnParticle(star);
             }
+
+            SpawnRhythmicFlightStars(direction, normal, visualColor);
+        }
+
+        private void SpawnRhythmicFlightStars(Vector2 direction, Vector2 normal, Color visualColor)
+        {
+            int flightBeat = (int)(launchTimer / (Projectile.extraUpdates + 1f));
+            if (flightBeat <= 0 || flightBeat % 3 != 0)
+                return;
+
+            float beatPhase = flightBeat * 0.73f + Projectile.identity * 0.17f;
+            int starCount = flightBeat % 2 == 0 ? 5 : 3;
+            float spacing = starCount == 5 ? 5.5f : 7f;
+            Vector2 anchor = Projectile.Center - direction * (18f + starCount * 2f);
+
+            for (int i = 0; i < starCount; i++)
+            {
+                float lane = i - (starCount - 1f) * 0.5f;
+                float pulse = (float)Math.Sin(beatPhase + i * 1.17f);
+                Vector2 starPosition = anchor - direction * (i * 4.5f) + normal * (lane * spacing + pulse * 2.2f);
+                Vector2 starVelocity = -direction * Main.rand.NextFloat(0.75f, 1.7f) + normal * (lane * 0.1f + pulse * 0.55f);
+                float scale = Main.rand.NextFloat(0.075f, 0.13f) * (i == starCount / 2 ? 1.25f : 1f);
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    starPosition,
+                    starVelocity,
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(14, 22),
+                    scale,
+                    Color.Lerp(GetRandomThemeColor(visualColor), Color.White, 0.28f),
+                    Vector2.One,
+                    glowCenter: true,
+                    shrinkSpeed: 0.24f,
+                    glowOpacity: 0.72f));
+            }
+
+            if (flightBeat % 6 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    anchor,
+                    -direction * 0.7f,
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    12,
+                    0.16f,
+                    Color.Lerp(visualColor, Color.White, 0.18f) * 0.55f,
+                    new Vector2(0.7f, 1.35f),
+                    glowCenter: true,
+                    shrinkSpeed: 0.42f,
+                    glowOpacity: 0.5f,
+                    extraRotation: direction.ToRotation()));
+            }
         }
 
         public override void OnKill(int timeLeft)
@@ -508,6 +561,71 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 dust.color = GetRandomThemeColor(visualColor);
                 dust.fadeIn = 1.6f;
             }
+
+            SpawnImpactSigil(hitPos, visualColor);
+        }
+
+        private void SpawnImpactSigil(Vector2 hitPos, Color visualColor)
+        {
+            Vector2 direction = Projectile.velocity.SafeNormalize(initialDirection);
+            float baseRotation = direction.ToRotation() + MathHelper.PiOver2 + Main.rand.NextFloat(-0.18f, 0.18f);
+            float radius = Main.rand.NextFloat(18f, 25f);
+
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = baseRotation + MathHelper.TwoPi * i / 5f;
+                Vector2 point = hitPos + angle.ToRotationVector2() * radius;
+                Vector2 nextPoint = hitPos + (angle + MathHelper.TwoPi * 2f / 5f).ToRotationVector2() * radius;
+                Vector2 lineVelocity = (nextPoint - point) * 0.16f;
+
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    point,
+                    lineVelocity,
+                    false,
+                    Main.rand.Next(13, 18),
+                    Main.rand.NextFloat(0.62f, 0.95f),
+                    Color.Lerp(GetRandomThemeColor(visualColor), Color.White, 0.38f) * 0.88f));
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    point,
+                    (point - hitPos).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.7f, 1.8f),
+                    "CalamityMod/Particles/PulseStar",
+                    false,
+                    Main.rand.Next(12, 18),
+                    Main.rand.NextFloat(0.08f, 0.14f),
+                    Color.Lerp(visualColor, Color.White, 0.32f),
+                    Vector2.One,
+                    glowCenter: true,
+                    shrinkSpeed: 0.24f,
+                    glowOpacity: 0.72f));
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                float angle = baseRotation + MathHelper.TwoPi * i / 10f;
+                Vector2 burstVelocity = angle.ToRotationVector2() * Main.rand.NextFloat(2.1f, 4.8f);
+                Dust dust = Dust.NewDustPerfect(hitPos, ModContent.DustType<SquashDust>(), burstVelocity);
+                dust.scale = Main.rand.NextFloat(0.8f, 1.35f);
+                dust.noGravity = true;
+                dust.color = GetRandomThemeColor(visualColor);
+                dust.fadeIn = Main.rand.NextFloat(1.8f, 2.8f);
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                hitPos,
+                Vector2.Zero,
+                "CalamityMod/Particles/BloomCircle",
+                false,
+                16,
+                0.34f,
+                Color.Lerp(visualColor, Color.White, 0.2f),
+                Vector2.One,
+                true,
+                true,
+                0,
+                false,
+                false,
+                glowOpacity: 0.78f));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -603,13 +721,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         {
             Vector2[] trailPoints = Projectile.oldPos
                 .Where(position => position != Vector2.Zero)
-                .Select(position => position + Projectile.Size * 0.5f)
                 .ToArray();
 
             if (trailPoints.Length == 0)
-                trailPoints = new[] { Projectile.Center, Projectile.Center - Projectile.velocity };
-            else if (trailPoints[0] != Projectile.Center)
-                trailPoints = new[] { Projectile.Center }.Concat(trailPoints).ToArray();
+                trailPoints = new[] { Projectile.position, Projectile.position - Projectile.velocity };
+            else if (trailPoints[0] != Projectile.position)
+                trailPoints = new[] { Projectile.position }.Concat(trailPoints).ToArray();
 
             if (trailPoints.Length < 2)
                 return;
@@ -622,7 +739,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 new PrimitiveSettings(
                     TrailWidthFunction,
                     TrailColorFunction,
-                    (_, _) => Projectile.Size * 0.5f,
+                    TrailOffsetFunction,
                     true,
                     true,
                     GameShaders.Misc["CalamityMod:TrailStreak"]),
@@ -640,12 +757,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
                 new PrimitiveSettings(
                     TrailCoreWidthFunction,
                     TrailCoreColorFunction,
-                    (_, _) => Projectile.Size * 0.5f,
+                    TrailOffsetFunction,
                     true,
                     true,
                     GameShaders.Misc["CalamityMod:TrailStreak"]),
                 corePoints.Length * 2);
         }
+
+        private Vector2 TrailOffsetFunction(float completion, Vector2 _) => Projectile.Size * 0.5f;
 
         private float TrailWidthFunction(float completion, Vector2 _)
         {
