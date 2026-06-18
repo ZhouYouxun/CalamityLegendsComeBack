@@ -29,8 +29,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Exo Mechs and Supreme Calamitas", 300, 285, 315, 390, 180 }
         };
 
-        public int GetLeftClickBaseDamage()  => BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage);
-        public int GetRightClickBaseDamage() => BFBalanceTable.Get(BFStat.Breakthrough_Right_Damage);
+        internal int GetLeftClickBaseDamage(BlossomFluxChloroplastPresetType preset) => BFBalanceTable.Get(GetLeftDamageStat(preset));
+        internal int GetRightClickBaseDamage(BlossomFluxChloroplastPresetType preset) => BFBalanceTable.Get(GetRightDamageStat(preset));
+
+        private static BFStat GetLeftDamageStat(BlossomFluxChloroplastPresetType preset)
+        {
+            return preset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => BFStat.Recovery_Left_Damage,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => BFStat.Recon_Left_Damage,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => BFStat.Bombard_Left_Damage,
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => BFStat.Plague_Left_Damage,
+                _ => BFStat.Breakthrough_Left_Damage
+            };
+        }
+
+        private static BFStat GetRightDamageStat(BlossomFluxChloroplastPresetType preset)
+        {
+            return preset switch
+            {
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => BFStat.Recovery_Left_Damage,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => BFStat.Recon_Right_Damage,
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => BFStat.Bombard_Right_Damage,
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => BFStat.Plague_Right_Damage,
+                _ => BFStat.Breakthrough_Right_Damage
+            };
+        }
 
         internal static int GetMainDamageFallback(int stageIndex, int columnIndex)
         {
@@ -903,14 +927,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     return true;
 
                 case BFStat.Recon_Left_Damage:
+                case BFStat.Recon_Right_Damage:
                     column = 3;
                     return true;
 
                 case BFStat.Bombard_Left_Damage:
+                case BFStat.Bombard_Right_Damage:
                     column = 4;
                     return true;
 
                 case BFStat.Plague_Left_Damage:
+                case BFStat.Plague_Right_Damage:
                     column = 5;
                     return true;
 

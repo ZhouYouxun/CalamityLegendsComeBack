@@ -1,6 +1,6 @@
 using Terraria;
 using Terraria.ModLoader;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChargeModule;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip;
 using CalamityLegendsComeBack.Weapons;
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public static int GetCurrentEXMax(Player player)
         {
-            if (player.GetModPlayer<FastChargeModulePlayer>().FastChargeModuleEquipped)
+            if (player.GetModPlayer<FastChipPlayer>().FastChipEquipped)
                 return BaseEXMax / 2;
 
             return BaseEXMax;

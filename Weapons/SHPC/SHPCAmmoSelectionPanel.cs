@@ -140,7 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     weapon.SelectMagazine(hoveredIndex, owner);
                     clickFeedbackTimers[hoveredIndex] = 10;
                     NewLegendSHPC.SHPCMagazineSlot selectedSlot = weapon.GetMagazineSlot(hoveredIndex, owner);
-                    Color textColor = selectedSlot.HasAmmo ? GetEffectColor(selectedSlot.EffectID) : Color.LightGray;
+                    Color textColor = selectedSlot.IsConfigured ? GetEffectColor(selectedSlot.EffectID) : Color.LightGray;
                     CombatText.NewText(owner.Hitbox, textColor, GetMagazineSwitchText(selectedSlot), dramatic: false, dot: false);
                     SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
                 }
@@ -249,7 +249,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static void DrawAmmoSlot(NewLegendSHPC.SHPCMagazineSlot slot, Rectangle slotArea, bool hovered, int clickTimer, float opacity)
         {
-            Color effectColor = slot.HasAmmo ? GetEffectColor(slot.EffectID) : new Color(86, 92, 104);
+            Color effectColor = slot.IsConfigured ? GetEffectColor(slot.EffectID) : new Color(86, 92, 104);
             Color slotBack = Color.Lerp(new Color(24, 28, 36), effectColor, 0.18f);
             Color slotBorder = Color.Lerp(new Color(112, 126, 150), effectColor, 0.42f);
 
@@ -272,7 +272,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             DrawRectangle(innerArea, Color.Lerp(new Color(10, 12, 18), effectColor, 0.08f) * (opacity * 0.82f));
             DrawBorder(innerArea, slotBorder * (opacity * 0.68f), 1);
 
-            if (!slot.HasAmmo)
+            if (!slot.IsConfigured)
             {
                 CalamityUtils.DrawBorderStringEightWay(
                     Main.spriteBatch,
@@ -296,7 +296,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             float hoverScale = hovered ? 1.1f : 1f;
             float clickScale = clickTimer > 0 ? 1.08f : 1f;
             float bob = 1f + (hovered ? 0.025f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f) : 0f);
-            Color iconColor = hovered ? Color.White : Color.Lerp(Color.White, effectColor, 0.12f);
+            Color iconColor = hovered ? Color.White : Color.Lerp(Color.White, effectColor, slot.HasAmmo ? 0.12f : 0.55f);
 
             Main.EntitySpriteDraw(
                 texture,
@@ -314,7 +314,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 FontAssets.MouseText.Value,
                 slot.Power.ToString(),
                 new Vector2(slotArea.Right, slotArea.Bottom) - new Vector2(18f, 18f),
-                Color.White * opacity,
+                (slot.HasAmmo ? Color.White : Color.LightGray) * opacity,
                 Color.Black * opacity,
                 0.55f);
         }
@@ -420,7 +420,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static string GetHoverText(NewLegendSHPC.SHPCMagazineSlot slot, Player owner)
         {
-            if (!slot.HasAmmo)
+            if (!slot.IsConfigured)
                 return $"{slot.Index + 1}号弹夹: 空";
 
             string itemName = Lang.GetItemNameValue(slot.AmmoType);
@@ -430,7 +430,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static string GetMagazineSwitchText(NewLegendSHPC.SHPCMagazineSlot slot)
         {
-            if (!slot.HasAmmo)
+            if (!slot.IsConfigured)
                 return $"{slot.Index + 1}号弹夹: 空";
 
             return $"{slot.Index + 1}号弹夹: {Lang.GetItemNameValue(slot.AmmoType)}";

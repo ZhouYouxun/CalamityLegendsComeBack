@@ -297,7 +297,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int GetCurrentRightClickDamage()
         {
-            int baseDamage = damageBalance.GetRightClickBaseDamage();
+            int baseDamage = damageBalance.GetRightClickBaseDamage(CurrentPreset);
             DamageClass damageType = Owner.HeldItem?.DamageType ?? DamageClass.Ranged;
             return (int)Owner.GetTotalDamage(damageType).ApplyTo(baseDamage);
         }

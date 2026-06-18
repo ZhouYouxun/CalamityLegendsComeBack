@@ -2,8 +2,8 @@ using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -275,8 +275,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             Player owner = Main.player[Projectile.owner];
-            TacticalComputerPlayer tacticalPlayer = owner.GetModPlayer<TacticalComputerPlayer>();
-            if (!tacticalPlayer.TacticalComputerEquipped)
+            CtrlChipPlayer tacticalPlayer = owner.GetModPlayer<CtrlChipPlayer>();
+            if (!tacticalPlayer.CtrlChipEquipped)
                 return;
 
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -284,8 +284,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             float currentAngle = currentDirection.ToRotation();
 
             // ===== 第一优先级：追踪准星弹幕 =====
-            // 直接搜索 TacticalComputerNEWReticle 弹幕实体，而不仅仅使用 ReticleWorld
-            int reticleType = ModContent.ProjectileType<TacticalComputerNEWReticle>();
+            // 直接搜索 CtrlChipNEWReticle 弹幕实体，而不仅仅使用 ReticleWorld
+            int reticleType = ModContent.ProjectileType<CtrlChipNEWReticle>();
             Projectile reticleProj = null;
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
@@ -421,7 +421,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             int heat = Math.Max(WeaponStage, HeatLevel);
             Player owner = Main.player[Projectile.owner];
             modifiers.SourceDamage *= GetLateHeatDamageMultiplier(heat);
-            modifiers.SourceDamage *= owner.GetModPlayer<HeatRedirectModulePlayer>().GetHeatDamageMultiplier(heat);
+            modifiers.SourceDamage *= owner.GetModPlayer<HeatModulePlayer>().GetHeatDamageMultiplier(heat);
         }
 
         private static float GetLateHeatDamageMultiplier(int heat)

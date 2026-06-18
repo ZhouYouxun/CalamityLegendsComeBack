@@ -39,7 +39,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public bool WaveInfinitePenetration;
         public bool BottledBlackPearlEquipped;
 
-        private int rightClickPriority;
         private int adrenalineTimer;
         private int adrenalineStacks;
 
@@ -65,7 +64,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
             WaveInfinitePenetration = false;
             BottledBlackPearlEquipped = false;
             RightClickMode = BBRightClickMode.DefaultShuriken;
-            rightClickPriority = -1;
         }
 
         public override void PostUpdate()
@@ -125,12 +123,8 @@ namespace CalamityLegendsComeBack.Accssory.BB
             }
         }
 
-        public void SetRightClickMode(BBRightClickMode mode, int priority)
+        public void SetRightClickMode(BBRightClickMode mode)
         {
-            if (priority < rightClickPriority)
-                return;
-
-            rightClickPriority = priority;
             RightClickMode = mode;
         }
 

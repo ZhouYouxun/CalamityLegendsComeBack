@@ -101,8 +101,8 @@
 				}
 			}
 
-			FastChargeModule: {
-				DisplayName: 快充模块
+			FastChip: {
+				DisplayName: 快充芯片
 				Tooltip:
 					'''
 					大招超级激光的最大充能减半
@@ -110,8 +110,8 @@
 					'''
 			}
 
-			ConcentrationModule: {
-				DisplayName: 集中模块
+			DiffuChip: {
+				DisplayName: 扩散芯片
 				Tooltip:
 					'''
 					魔法伤害和魔法暴击率各提高7%
@@ -151,8 +151,8 @@
 					'''
 			}
 
-			TacticalComputer: {
-				DisplayName: 战术电脑
+			CtrlChip: {
+				DisplayName: 火控芯片
 				Tooltip:
 					'''
 					手持SHPC时会出现一枚准星
@@ -164,14 +164,32 @@
 					'''
 			}
 
-			HeatRedirectModule: {
-				DisplayName: 热量重导模块
+			FlyChip: {
+				DisplayName: 飞升芯片
+				Tooltip:
+					'''
+					飞行时间增加300%
+					加速度提高70%，移动速度与跳跃速度提高25%
+					'''
+			}
+
+			HeatModule: {
+				DisplayName: 导热模块
 				Tooltip:
 					'''
 					SHPC右键射击产生的热量增加20%，自然散热速度降低33%
 					前两级热量每一级额外增加25% SHPC右键伤害，此后不再增加
 					武器过热停机时释放范围扩大的烟雾场，持续伤害周围敌人
 					达到五级满热后继续射击，会持续在玩家周围释放伤害烟雾场
+					'''
+			}
+
+			AllInOnePC: {
+				DisplayName: 全合一芯片组
+				Tooltip:
+					'''
+					同时启用扩散芯片、快充芯片、火控芯片、飞升芯片的全部效果
+					关闭可见性会让准心隐藏，但火控效果保留
 					'''
 			}
 

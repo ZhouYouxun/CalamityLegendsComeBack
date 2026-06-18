@@ -637,7 +637,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             int effectID = weapon.GetProjectileEffectIDForShot();
             int leftClickDamage = weapon.GetCurrentLeftClickDamage(player, effectID);
 
-            weapon.ConsumeCurrentMagazineShots(1);
+            weapon.ConsumeCurrentMagazineShots(1, player);
 
             Vector2 dir = Vector2.UnitX.RotatedBy(Projectile.rotation);
 
@@ -652,7 +652,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, dir);
             SpawnRocketSalvoMuzzleEffect(player, dir);
 
-            var concentrationModule = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.ConcentrationModule.ConcentrationModulePlayer>();
+            var concentrationModule = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.DiffuChip.DiffuChipPlayer>();
             int orbCount = 3;
             float maxAngle = 0.22f * concentrationModule.EmpoweredLeftClickSpreadMultiplier;
             for (int i = 0; i < orbCount; i++)

@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+﻿using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
         private Player Owner => Main.player[Projectile.owner];
         private ref float Timer => ref Projectile.localAI[0];
 
-        private Vector2 AimWorld => TacticalComputerPlayer.GetAimWorld(Owner, Owner.Calamity().mouseWorld);
+        private Vector2 AimWorld => CtrlChipPlayer.GetAimWorld(Owner, Owner.Calamity().mouseWorld);
         private Vector2 AimDirection => Owner.DirectionTo(AimWorld).SafeNormalize(Vector2.UnitX * Owner.direction);
         private Vector2 TipPosition => Projectile.Center + Vector2.UnitX.RotatedBy(Projectile.rotation) * 62f + Vector2.UnitY * DrawOffset.Y;
 

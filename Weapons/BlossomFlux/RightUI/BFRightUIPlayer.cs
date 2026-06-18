@@ -3,6 +3,7 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 {
@@ -14,7 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
         private float rightChargeProgress;
         private ulong lastProcessedFrame;
 
-        public BlossomFluxChloroplastPresetType CurrentPreset { get; private set; } = BlossomFluxChloroplastPresetType.Chlo_BRecov;
+        private const string SavedPresetKey = "BlossomFluxCurrentPreset";
+
+        public BlossomFluxChloroplastPresetType CurrentPreset { get; private set; } = BlossomFluxChloroplastPresetType.Chlo_ABreak;
         public int ReconPriorityTargetIndex { get; private set; } = -1;
         public int ReconPriorityTimeLeft { get; private set; }
         public bool PassiveRainEnabled { get; private set; } = true;
@@ -47,9 +50,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
 
         public override void UpdateDead()
         {
-            CurrentPreset = BlossomFluxChloroplastPresetType.Chlo_BRecov;
             ClearReconPriorityTarget();
             ResetRightClickState();
+        }
+
+        public override void SaveData(TagCompound tag)
+        {
+            tag[SavedPresetKey] = (int)CurrentPreset;
+        }
+
+        public override void LoadData(TagCompound tag)
+        {
+            CurrentPreset = tag.ContainsKey(SavedPresetKey) && IsValidPresetValue(tag.GetInt(SavedPresetKey))
+                ? (BlossomFluxChloroplastPresetType)tag.GetInt(SavedPresetKey)
+                : BlossomFluxChloroplastPresetType.Chlo_ABreak;
         }
 
         public override void ResetEffects()
@@ -200,7 +214,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             if (IsPresetUnlocked(BlossomFluxChloroplastPresetType.Chlo_BRecov))
                 return BlossomFluxChloroplastPresetType.Chlo_BRecov;
 
-            return BlossomFluxChloroplastPresetType.Chlo_BRecov;
+            return BlossomFluxChloroplastPresetType.Chlo_ABreak;
+        }
+
+        private static bool IsValidPresetValue(int value)
+        {
+            return value >= (int)BlossomFluxChloroplastPresetType.Chlo_ABreak &&
+                value <= (int)BlossomFluxChloroplastPresetType.Chlo_EPlague;
         }
     }
 }

@@ -2,7 +2,7 @@
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatRedirectModule;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
 using Terraria;
 using Terraria.ModLoader;
@@ -62,7 +62,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             float heatUnits = GetTotalHeatUnits();
-            float dissipationMultiplier = Player.GetModPlayer<HeatRedirectModulePlayer>().HeatDissipationMultiplier;
+            float dissipationMultiplier = Player.GetModPlayer<HeatModulePlayer>().HeatDissipationMultiplier;
             heatUnits -= dissipationMultiplier / BalanceSHPC.NormalHeatDecayTime;
             ApplyHeatUnits(heatUnits);
         }

@@ -99,7 +99,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base += damageBalance.GetLeftClickBaseDamage() - Item.damage;
+            BlossomFluxChloroplastPresetType currentPreset = player.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
+            damage.Base += damageBalance.GetLeftClickBaseDamage(currentPreset) - Item.damage;
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
@@ -161,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private static BlossomFluxChloroplastPresetType GetDisplayedPreset()
         {
             if (Main.LocalPlayer?.active != true)
-                return BlossomFluxChloroplastPresetType.Chlo_BRecov;
+                return BlossomFluxChloroplastPresetType.Chlo_ABreak;
 
             return BlossomFluxTacticalTextures.GetLocalDisplayedPreset();
         }

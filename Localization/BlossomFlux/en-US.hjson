@@ -232,8 +232,8 @@ Mods: {
 					'''
 			}
 
-			BFArrowConversionCore: {
-				DisplayName: Ballistic Adapter Core
+			BFArrowRest: {
+				DisplayName: BFArrowRest
 				Tooltip:
 					'''
 					While equipped, BlossomFlux Breakthrough and Bombardment convert wooden arrows into their own projectiles; all other arrows fire normally.

@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityMod;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
@@ -208,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
 
-            return TacticalComputerPlayer.GetAimWorld(owner, mouseWorld);
+            return CtrlChipPlayer.GetAimWorld(owner, mouseWorld);
         }
 
         private void UpdateAnimation()
@@ -271,7 +271,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(sourceDamage * 1.5f),
+                sourceDamage,
                 Projectile.knockBack,
                 Projectile.owner
             );
@@ -281,18 +281,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             proj.height = 375;
             proj.Center = Projectile.Center;
             proj.CritChance = Projectile.CritChance;
-
-            int oldWidth = Projectile.width;
-            int oldHeight = Projectile.height;
-            Projectile.position = Projectile.Center;
-            Projectile.width = Projectile.height = 190;
-            Projectile.Center = explosionCenter;
-            Projectile.penetrate = -1;
-            Projectile.damage = Math.Max(1, (int)(sourceDamage * 0.5f));
-            Projectile.Damage();
-            Projectile.width = oldWidth;
-            Projectile.height = oldHeight;
-            Projectile.Center = explosionCenter;
 
             SoundEngine.PlaySound(NewLegendSHPC.AntiPersonnelMineExplosion, explosionCenter);
 

@@ -6,6 +6,8 @@ namespace CalamityLegendsComeBack.Accssory.BB.General
 {
     public abstract class BBMeleeBonusAccessory : ModItem
     {
+        public override string Texture => $"CalamityLegendsComeBack/Accssory/BB/General/{GetType().Name}/{GetType().Name}";
+
         protected abstract float MeleeBonus { get; }
         protected virtual int TideCapBonus => 0;
         protected virtual float FullTideDamageBonus => 0f;

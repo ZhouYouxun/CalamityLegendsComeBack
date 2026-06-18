@@ -103,7 +103,23 @@ namespace CalamityLegendsComeBack.Accssory.YC
     internal abstract class YCAccessoryBase : ModItem
     {
         public override string LocalizationCategory => "Items.Accessories";
-        public override string Texture => $"CalamityLegendsComeBack/Accssory/YC/{GetType().Name}/{GetType().Name}";
+        public override string Texture
+        {
+            get
+            {
+                string typeName = GetType().Name;
+                string category = typeName is
+                    nameof(YharimsCrystalAlpha) or
+                    nameof(YharimsCrystalDelta) or
+                    nameof(YharimsCrystalSigma) or
+                    nameof(YharimsCrystalGamma) or
+                    nameof(YharimsCrystalOmega)
+                    ? "Mainline"
+                    : "Sideline";
+
+                return $"CalamityLegendsComeBack/Accssory/YC/{category}/{typeName}/{typeName}";
+            }
+        }
 
         protected abstract YCAccessoryKind Kind { get; }
         protected virtual int LunarFragmentType => ItemID.FragmentSolar;

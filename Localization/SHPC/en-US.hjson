@@ -74,13 +74,13 @@
 				}
 			}
 
-			FastChargeModule: {
-				DisplayName: Fast Charge Module
+			FastChip: {
+				DisplayName: Fast Chip
 				Tooltip: Halves the maximum charge time of the EX super laser, but also halves the player's life regeneration
 			}
 
-			ConcentrationModule: {
-				DisplayName: Concentration Module
+			DiffuChip: {
+				DisplayName: Diffusion Chip
 				Tooltip:
 					'''
 					+7% magic damage and magic critical strike chance
@@ -118,8 +118,8 @@
 				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life rounded down to a multiple of 5. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
 			}
 
-			TacticalComputer: {
-				DisplayName: Tactical Computer
+			CtrlChip: {
+				DisplayName: Control Chip
 				Tooltip:
 					'''
 					Gives SHPC right click automatic lock-on
@@ -128,14 +128,32 @@
 					'''
 			}
 
-			HeatRedirectModule: {
-				DisplayName: Heat Redirect Module
+			FlyChip: {
+				DisplayName: Ascension Chip
+				Tooltip:
+					'''
+					Flight time increased by 300%
+					Acceleration increased by 70%, movement speed and jump speed increased by 25%
+					'''
+			}
+
+			HeatModule: {
+				DisplayName: Heat Module
 				Tooltip:
 					'''
 					SHPC right-click shots generate 20% more heat and natural heat dissipation is reduced by 33%
 					Each of the first two heat levels grants an additional 25% SHPC right-click damage, capped at +50%
 					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
 					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
+					'''
+			}
+
+			AllInOnePC: {
+				DisplayName: AIOC
+				Tooltip:
+					'''
+					Simultaneously activates all effects of Diffusion Chip, Fast Chip, Control Chip, and Ascension Chip
+					Hiding visuals conceals the targeting reticle while preserving all effects
 					'''
 			}
 

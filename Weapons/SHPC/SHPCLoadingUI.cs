@@ -169,8 +169,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 bool hovered = slotArea.Contains(Main.mouseX, Main.mouseY);
 
                 // 绿色提示：当悬停空槽且鼠标持有有效弹药时，且该弹药未被其他槽占用
-                bool canLoadHere = !slot.HasAmmo && hovered && hasCursorAmmo && !weapon.HasLoadedAmmoType(Main.mouseItem.type);
-                bool slotFull = slot.HasAmmo && hovered && hasCursorAmmo;
+                bool canLoadHere = !slot.IsConfigured && hovered && hasCursorAmmo && !weapon.HasLoadedAmmoType(Main.mouseItem.type);
+                bool slotFull = slot.IsConfigured && hovered && hasCursorAmmo;
 
                 DrawSlot(slot, slotArea, hovered, canLoadHere, slotFull);
 
@@ -209,7 +209,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 // 左键：装填 or 取出
                 if (Main.mouseLeft && Main.mouseLeftRelease)
                 {
-                    if (!slot.HasAmmo && !Main.mouseItem.IsAir
+                    if (!slot.IsConfigured && !Main.mouseItem.IsAir
                         && EffectRegistry.IsRegisteredAmmo(Main.mouseItem.type)
                         && !weapon.HasLoadedAmmoType(Main.mouseItem.type))
                     {
@@ -240,7 +240,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 // 右键：弹回背包
                 if (Main.mouseRight && Main.mouseRightRelease)
                 {
-                    if (slot.HasAmmo)
+                    if (slot.IsConfigured)
                     {
                         weapon.PublicClearMagazineWithReturn(owner, i);
                         SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.42f, Pitch = 0.1f }, owner.Center);
@@ -357,7 +357,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 槽位绘制 =====
         private static void DrawSlot(NewLegendSHPC.SHPCMagazineSlot slot, Rectangle slotArea, bool hovered, bool canLoad, bool slotFull)
         {
-            Color effectColor = slot.HasAmmo ? SHPCAmmoSelectionPanel.GetEffectColor(slot.EffectID) : new Color(86, 92, 104);
+            Color effectColor = slot.IsConfigured ? SHPCAmmoSelectionPanel.GetEffectColor(slot.EffectID) : new Color(86, 92, 104);
             Color slotBack = Color.Lerp(new Color(24, 28, 36), effectColor, 0.18f);
             Color slotBorder = Color.Lerp(new Color(112, 126, 150), effectColor, 0.42f);
 
@@ -379,7 +379,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             DrawRectangle(innerArea, Color.Lerp(new Color(10, 12, 18), effectColor, 0.08f) * 0.82f);
             DrawBorder(innerArea, slotBorder * 0.68f, 1);
 
-            if (!slot.HasAmmo)
+            if (!slot.IsConfigured)
             {
                 CalamityUtils.DrawBorderStringEightWay(
                     Main.spriteBatch, FontAssets.MouseText.Value,
@@ -398,7 +398,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             float fitScale = Math.Min(MaxIconDrawSize / Math.Max(1f, srcSize.X), MaxIconDrawSize / Math.Max(1f, srcSize.Y));
             float hoverScale = hovered ? 1.1f : 1f;
             float bob = 1f + (hovered ? 0.025f * MathF.Sin(Main.GlobalTimeWrappedHourly * 10f) : 0f);
-            Color iconColor = hovered ? Color.White : Color.Lerp(Color.White, effectColor, 0.12f);
+            Color iconColor = hovered ? Color.White : Color.Lerp(Color.White, effectColor, slot.HasAmmo ? 0.12f : 0.55f);
 
             Main.EntitySpriteDraw(tex, iconCenter, src, iconColor,
                 hovered ? 0.03f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f) : 0f,
@@ -408,7 +408,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Main.spriteBatch, FontAssets.MouseText.Value,
                 slot.Power.ToString(),
                 new Vector2(slotArea.Right, slotArea.Bottom) - new Vector2(18f, 18f),
-                Color.White, Color.Black, 0.55f);
+                (slot.HasAmmo ? Color.White : Color.LightGray), Color.Black, 0.55f);
         }
         #endregion
 
@@ -442,7 +442,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             bool isChinese = Language.ActiveCulture.Name.StartsWith("zh");
 
-            if (!slot.HasAmmo)
+            if (!slot.IsConfigured)
             {
                 return isChinese
                     ? $"{slot.Index + 1}号弹夹：空  [左键：将材料拿到鼠标上，再点此处装填  右键：无效]"

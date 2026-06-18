@@ -144,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Color emptyFill = new(30, 36, 46, 210);
             Color emptyEdge = new(74, 88, 108, 170);
             Color fill = slot.HasAmmo ? Color.Lerp(themeColor, Color.White, 0.08f) : emptyFill;
-            Color edge = slot.HasAmmo ? Color.Lerp(themeColor, Color.White, 0.24f) : emptyEdge;
+            Color edge = slot.IsConfigured ? Color.Lerp(themeColor, Color.White, slot.HasAmmo ? 0.24f : 0.04f) : emptyEdge;
 
             float selectedPulse = slot.Selected ? 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f) : 0f;
             if (slot.Selected)
@@ -166,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static Color GetSlotThemeColor(NewLegendSHPC.SHPCMagazineSlot slot)
         {
-            if (!slot.HasAmmo)
+            if (!slot.IsConfigured)
                 return new Color(82, 92, 108);
 
             return SHPCAmmoSelectionPanel.GetEffectColor(slot.EffectID);

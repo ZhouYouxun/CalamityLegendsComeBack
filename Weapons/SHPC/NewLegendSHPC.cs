@@ -2,7 +2,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
@@ -252,6 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             public int EffectID { get; }
             public int Power { get; }
             public bool Selected { get; }
+            public bool IsConfigured => AmmoType > ItemID.None && EffectID > 0;
             public bool HasAmmo => AmmoType > ItemID.None && EffectID > 0 && Power > 0;
         }
 
@@ -338,9 +339,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private bool IsMagazineLoaded(int index)
         {
-            return magazineAmmoTypes[index] > ItemID.None &&
-                   magazineEffectIDs[index] > 0 &&
+            return IsMagazineConfigured(index) &&
                    magazineEffectPowers[index] > 0;
+        }
+
+        private bool IsMagazineConfigured(int index)
+        {
+            return magazineAmmoTypes[index] > ItemID.None &&
+                   magazineEffectIDs[index] > 0;
         }
 
         /// <summary>
@@ -350,7 +356,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             for (int i = 0; i < MagazineCount; i++)
             {
-                if (IsMagazineLoaded(i) && magazineAmmoTypes[i] == ammoType)
+                if (IsMagazineConfigured(i) && magazineAmmoTypes[i] == ammoType)
                     return true;
             }
 
@@ -364,7 +370,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             HashSet<int> unavailableAmmoTypes = new();
             for (int i = 0; i < MagazineCount; i++)
             {
-                if (IsMagazineLoaded(i))
+                if (IsMagazineConfigured(i))
                     unavailableAmmoTypes.Add(magazineAmmoTypes[i]);
             }
 
@@ -373,7 +379,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             for (int magazineIndex = 0; magazineIndex < candidates.Count && magazineIndex < activeMagazineCount; magazineIndex++)
             {
-                if (IsMagazineLoaded(magazineIndex))
+                if (IsMagazineConfigured(magazineIndex))
                     continue;
 
                 SHPCAmmoCandidate selectedCandidate = candidates[magazineIndex];
@@ -411,30 +417,134 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             HandleDepletedMagazine(index);
         }
 
-        public void ConsumeCurrentMagazineShots(int amount)
+        private void ConsumeCurrentMagazineShot(Player player)
+        {
+            int index = CurrentMagazineIndex;
+            if (!IsMagazineLoaded(index))
+                return;
+
+            magazineEffectPowers[index]--;
+            HandleDepletedMagazine(index, player);
+        }
+
+        public void ConsumeCurrentMagazineShots(int amount, Player player = null)
         {
             int index = CurrentMagazineIndex;
             if (!IsMagazineLoaded(index))
                 return;
 
             magazineEffectPowers[index] -= Math.Max(1, amount);
-            HandleDepletedMagazine(index);
+            HandleDepletedMagazine(index, player);
         }
 
-        private void HandleDepletedMagazine(int index)
+        private void HandleDepletedMagazine(int index, Player player = null)
         {
             if (magazineEffectPowers[index] > 0)
                 return;
 
-            // Cynosure 只能获得一次，因此最后一发保留为不可销毁的占位。
-            // 这使玩家即使耗尽可用装填，也仍然能通过取出操作拿回材料。
-            if (magazineEffectIDs[index] == CynosureEffect.CynosureEffectID)
+            magazineEffectPowers[index] = 0;
+            if (player != null && !HasReloadMaterialInInventory(player, index))
+                ClearMagazine(index);
+        }
+
+        private bool TryPrepareCurrentMagazineForShot(Player player)
+        {
+            ClampSelectedMagazineToActiveCount(player);
+            int index = CurrentMagazineIndex;
+            if (IsMagazineLoaded(index))
+                return true;
+
+            if (IsMagazineConfigured(index))
             {
-                magazineEffectPowers[index] = 1;
-                return;
+                if (TryReloadMagazineFromInventory(player, index))
+                    return true;
+
+                ClearMagazine(index);
+                return false;
             }
 
-            ClearMagazine(index);
+            if (AreAllActiveMagazinesUnconfigured(player) && TryFillEmptyMagazines(player))
+            {
+                if (IsMagazineLoaded(index))
+                    return true;
+
+                int activeMagazineCount = GetActiveMagazineCount(player);
+                for (int i = 0; i < activeMagazineCount; i++)
+                {
+                    if (!IsMagazineLoaded(i))
+                        continue;
+
+                    selectedMagazineIndex = i;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasProjectileEffectAvailableForCost(Player player)
+        {
+            ClampSelectedMagazineToActiveCount(player);
+            int index = CurrentMagazineIndex;
+            if (IsMagazineLoaded(index) || HasReloadMaterialInInventory(player, index))
+                return true;
+
+            return !IsMagazineConfigured(index) &&
+                   AreAllActiveMagazinesUnconfigured(player) &&
+                   FindEffectAmmo(player) != -1;
+        }
+
+        private bool AreAllActiveMagazinesUnconfigured(Player player)
+        {
+            int activeMagazineCount = GetActiveMagazineCount(player);
+            for (int i = 0; i < activeMagazineCount; i++)
+            {
+                if (IsMagazineConfigured(i))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool TryReloadMagazineFromInventory(Player player, int index)
+        {
+            index = Utils.Clamp(index, 0, MagazineCount - 1);
+            if (!IsMagazineConfigured(index))
+                return false;
+
+            int inventoryIndex = FindReloadMaterialInventoryIndex(player, magazineAmmoTypes[index]);
+            if (inventoryIndex < 0)
+                return false;
+
+            Item consumedItem = player.inventory[inventoryIndex];
+            consumedItem.stack--;
+            if (consumedItem.stack <= 0)
+                consumedItem.TurnToAir();
+
+            magazineEffectPowers[index] = GetAdjustedAmmoCapacity(player, magazineEffectIDs[index]);
+            return magazineEffectPowers[index] > 0;
+        }
+
+        private bool HasReloadMaterialInInventory(Player player, int index)
+        {
+            index = Utils.Clamp(index, 0, MagazineCount - 1);
+            return IsMagazineConfigured(index) &&
+                   FindReloadMaterialInventoryIndex(player, magazineAmmoTypes[index]) >= 0;
+        }
+
+        private static int FindReloadMaterialInventoryIndex(Player player, int ammoType)
+        {
+            if (player == null || ammoType <= ItemID.None)
+                return -1;
+
+            for (int i = 0; i < 58 && i < player.inventory.Length; i++)
+            {
+                Item item = player.inventory[i];
+                if (item != null && item.stack > 0 && item.type == ammoType)
+                    return i;
+            }
+
+            return -1;
         }
 
         private void ClearMagazine(int index)
@@ -596,7 +706,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             SHPCEnergyCorePlayer energyCore = player.GetModPlayer<SHPCEnergyCorePlayer>();
             mult *= 1.5f * energyCore.LeftManaCostMultiplier;
 
-            if (player.altFunctionUse != 2 && GetProjectileEffectIDForShot() <= 0)
+            if (player.altFunctionUse != 2 && !HasProjectileEffectAvailableForCost(player))
                 mult *= 0.5f;
         }
 
@@ -635,7 +745,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return false;
             }
 
-            int shotEffectID = GetProjectileEffectIDForShot();
+            int shotEffectID = TryPrepareCurrentMagazineForShot(player) ? storedEffectID : -1;
             Projectile.NewProjectile(
                 source,
                 GetSafeFirePosition(player, velocity) + new Vector2(0f, -10f),
@@ -678,7 +788,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 heatPlayer.PauseHeatDissipation(30);
             GainEXFromLeftShot(player);
             if (!player.GetModPlayer<SHPCEnergyCorePlayer>().ShouldSaveLeftClickAmmo())
-                ConsumeCurrentMagazineShot();
+                ConsumeCurrentMagazineShot(player);
 
             return false;
         }
@@ -918,7 +1028,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         player.Center + new Vector2(0f, -10f) + velocity * 3f,
                         velocity,
                         ModContent.ProjectileType<NewLegendSHPB>(),
-                        GetCurrentRightDamage(player),
+                        GetCurrentRightDamage(player, ModContent.ProjectileType<SHPCRight_HoulOut>()),
                         Item.knockBack,
                         player.whoAmI,
                         storedEffectID > 0 ? storedEffectID : -1
@@ -985,7 +1095,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 }
 
                 // ===== 生成右键 Holdout =====
-                Vector2 aimWorld = TacticalComputerPlayer.GetAimWorld(player, player.Calamity().mouseWorld);
+                Vector2 aimWorld = CtrlChipPlayer.GetAimWorld(player, player.Calamity().mouseWorld);
                 Vector2 shootDirection = (aimWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
 
                 int projIndex = Projectile.NewProjectile(
@@ -993,7 +1103,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     player.Center,
                     shootDirection,
                     rightClickHoldoutType,
-                    GetCurrentRightDamage(player),
+                    GetCurrentRightDamage(player, rightClickHoldoutType),
                     Item.knockBack,
                     player.whoAmI,
                     GetRightClickProgressState(),                 // ai[0]
@@ -1198,10 +1308,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region ===== 传奇成长与伤害覆盖 =====
 
-        // 应用右键最终伤害
-        private int GetCurrentRightDamage(Player player)
+        private int GetCurrentRightDamage(Player player, int rightClickHoldoutType)
         {
-            int baseDamage = balance.GetRightClickBaseDamage();
+            int baseDamage =
+                rightClickHoldoutType == ModContent.ProjectileType<RightClickMortar_HoldOut>() ? balance.GetMortarRightClickBaseDamage() :
+                rightClickHoldoutType == ModContent.ProjectileType<MilitaryCaller_HoldOut>() ? balance.GetTurretRightClickBaseDamage() :
+                balance.GetRightClickBaseDamage();
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
             float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
             return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier));
@@ -1299,7 +1411,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 string slotName = $"{i + 1}{prefix}";
                 string contentText;
 
-                if (!IsMagazineLoaded(i))
+                if (!IsMagazineConfigured(i))
                 {
                     contentText = emptyText;
                 }

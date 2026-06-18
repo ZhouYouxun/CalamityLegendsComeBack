@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+﻿using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.Visuals;
@@ -144,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                     spawnPosition,
                     direction.RotatedByRandom(MathHelper.ToRadians(3f)) * MortarSpeed,
                     ModContent.ProjectileType<RightClickMortar_Proj>(),
-                    (int)(damage * 4.8f),
+                    damage,
                     Projectile.knockBack,
                     Projectile.owner,
                     mouseWorld.X,
@@ -290,7 +290,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
 
-            return TacticalComputerPlayer.GetAimWorld(Owner, mouseWorld);
+            return CtrlChipPlayer.GetAimWorld(Owner, mouseWorld);
         }
 
         public override bool PreDraw(ref Color lightColor)

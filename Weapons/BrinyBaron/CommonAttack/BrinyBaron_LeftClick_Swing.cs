@@ -666,8 +666,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             CanHit = rightSpinTransitionTimer >= RightSpinTransitionFrames && RightSpinChargeRatio >= 0.45f;
             fadeIn = MathHelper.Lerp(fadeIn, MathHelper.Clamp(RightSpinChargeRatio, 0f, 1f), 0.16f);
 
-            Owner.ChangeDir(rightSpinFacingDirection);
-            FlipAsSword = rightSpinFacingDirection < 0;
+            ApplyRightSpinHeldPose();
 
             if (rightSpinTimer % 34 == 1 || (rightSpinSound && RightSpinChargeRatio > 0.72f))
             {
@@ -702,8 +701,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinDirectionVector.Normalize();
             RotationOffset = 0f;
             Projectile.rotation = rightSpinDirectionVector.ToRotation() + MathHelper.PiOver4;
-            Owner.ChangeDir(rightSpinFacingDirection);
-            FlipAsSword = rightSpinFacingDirection < 0;
+            ApplyRightSpinHeldPose();
             rightSpinSound = true;
             rightSpinEmpowerment = 0f;
             rightSpinOverEmpowerment = 0f;
@@ -934,8 +932,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void ApplyArmRotation()
         {
+            if (rightSpinActive)
+            {
+                ArmRotationOffset = MathHelper.ToRadians(-135f);
+                ArmRotationOffsetBack = MathHelper.ToRadians(-102f);
+                return;
+            }
+
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
+        }
+
+        private void ApplyRightSpinHeldPose()
+        {
+            int facing = rightSpinDirectionVector.X >= 0f ? 1 : -1;
+            Owner.ChangeDir(facing);
+            FlipAsSword = facing < 0;
+
+            Owner.itemRotation = rightSpinDirectionVector.ToRotation();
+            if (Owner.direction != 1)
+                Owner.itemRotation -= MathHelper.Pi;
+
+            Owner.itemRotation = MathHelper.WrapAngle(Owner.itemRotation);
+            Owner.itemTime = Math.Max(Owner.itemTime, 2);
+            Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
         }
 
         public override void OnKill(int timeLeft)

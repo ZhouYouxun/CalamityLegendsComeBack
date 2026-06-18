@@ -47,19 +47,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 return;
 
             Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
-            float speed = System.Math.Max(projectile.velocity.Length(), 16f);
+            float baseSpeed = System.Math.Max(projectile.velocity.Length(), 16f);
+
+            // 5发，总散射角10度，间距2.5度
             float[] spreadAngles =
             {
-                MathHelper.ToRadians(-14f),
-                MathHelper.ToRadians(-7f),
+                MathHelper.ToRadians(-5f),
+                MathHelper.ToRadians(-2.5f),
                 0f,
-                MathHelper.ToRadians(7f),
-                MathHelper.ToRadians(14f)
+                MathHelper.ToRadians(2.5f),
+                MathHelper.ToRadians(5f)
             };
 
             for (int i = 0; i < spreadAngles.Length; i++)
             {
-                Vector2 velocity = forward.RotatedBy(spreadAngles[i]) * speed;
+                // 每发独立浮动：角度±1.5°，速度±10%
+                float jitterAngle = Main.rand.NextFloat(-MathHelper.ToRadians(1.5f), MathHelper.ToRadians(1.5f));
+                float speedMult = Main.rand.NextFloat(0.90f, 1.10f);
+                Vector2 velocity = forward.RotatedBy(spreadAngles[i] + jitterAngle) * (baseSpeed * speedMult);
+
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center + forward * 8f,

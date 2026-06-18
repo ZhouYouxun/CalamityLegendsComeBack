@@ -18,7 +18,7 @@ namespace CalamityLegendsComeBack.Accssory
     internal sealed class LegendaryUltimateTester : ModItem
     {
         public new string LocalizationCategory => "Items.Accessories";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/LegendaryEmblem";
+        //public override string Texture => "CalamityLegendsComeBack/Accssory/LegendaryEmblem";
 
         public override void SetDefaults()
         {

@@ -17,26 +17,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 {
-    internal enum CosmicDischargeAttackMode
-    {
-        Whip,
-        Sword,
-        ChainKnife
-    }
 
-    internal enum CosmicDischargeAttackKind
-    {
-        WhipOver,
-        WhipUnder,
-        WhipThrust,
-        SwordSwingOne,
-        SwordSwingTwo,
-        SwordFinisher,
-        ChainKnifeSingle,
-        ChainKnifeScatter,
-        ChainKnifeBiteAll,
-        QuickDraw
-    }
 
     internal static class CosmicDischargeCommon
     {

@@ -230,8 +230,8 @@ Mods: {
 					'''
 			}
 
-			BFArrowConversionCore: {
-				DisplayName: 弹道适配核心
+			BFArrowRest: {
+				DisplayName: 战术箭台
 				Tooltip:
 					'''
 					佩戴后，叶流的突击与歼灭战术会将木箭转化为自身弹幕，其余箭矢正常发射。

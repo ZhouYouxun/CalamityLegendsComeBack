@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
 {
     public sealed class ProjectilePossessionModule : ModItem
     {
-        //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/Skill/HeatRedirectModule/HeatRedirectModule";
+        //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/Skill/HeatModule/HeatModule";
 
         public override void SetDefaults()
         {

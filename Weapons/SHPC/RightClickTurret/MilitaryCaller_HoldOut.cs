@@ -1,5 +1,5 @@
 ﻿using CalamityLegendsComeBack.Accssory.SHPC.General;
-using CalamityLegendsComeBack.Accssory.SHPC.Skill.TacticalComputer;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
@@ -219,7 +219,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
 
-            return TacticalComputerPlayer.GetAimWorld(Owner, mouseWorld);
+            return CtrlChipPlayer.GetAimWorld(Owner, mouseWorld);
         }
 
         public override bool PreDraw(ref Color lightColor)
