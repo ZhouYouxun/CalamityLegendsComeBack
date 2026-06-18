@@ -121,17 +121,41 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int totalDur = GetCurrentAnimationDuration();
             int segLen = Math.Max(1, totalDur / burst);
             int segTimer = timer % segLen;
+            const float maxRecoil = 14f;
 
-            int kickFrames = Math.Min(segLen, 8);
-            int returnFrames = Math.Min(segLen, 16);
-            float maxRecoil = MathHelper.Clamp(14f / burst, 1f, 14f);
+            if (burst == 1)
+            {
+                // 单发：正常 kick(8帧) → return(16帧)
+                int kickFrames = Math.Min(segLen, 8);
+                int returnFrames = Math.Min(segLen, 16);
 
-            if (segTimer < kickFrames)
-                recoilOffset = MathF.Sin((float)segTimer / kickFrames * MathHelper.PiOver2) * maxRecoil;
-            else if (segTimer < returnFrames)
-                recoilOffset = MathF.Cos((float)(segTimer - kickFrames) / (returnFrames - kickFrames) * MathHelper.PiOver2) * maxRecoil;
+                if (segTimer < kickFrames)
+                    recoilOffset = MathF.Sin((float)segTimer / kickFrames * MathHelper.PiOver2) * maxRecoil;
+                else if (segTimer < returnFrames)
+                    recoilOffset = MathF.Cos((float)(segTimer - kickFrames) / (returnFrames - kickFrames) * MathHelper.PiOver2) * maxRecoil;
+                else
+                    recoilOffset = 0f;
+            }
             else
-                recoilOffset = 0f;
+            {
+                // 连射：第1发快速 kick 到底 → 中间各段保持最大 → 最后一段缓回
+                int currentSegment = Math.Min(timer / segLen, burst - 1);
+                int kickFrames = Math.Min(4, segLen);
+
+                if (currentSegment == 0 && segTimer < kickFrames)
+                {
+                    recoilOffset = MathF.Sin((float)segTimer / kickFrames * MathHelper.PiOver2) * maxRecoil;
+                }
+                else if (currentSegment < burst - 1)
+                {
+                    recoilOffset = maxRecoil;
+                }
+                else
+                {
+                    float returnT = (float)segTimer / Math.Max(1, segLen);
+                    recoilOffset = MathF.Cos(returnT * MathHelper.PiOver2) * maxRecoil;
+                }
+            }
         }
 
         private void TriggerBurstEffects(Player owner)
@@ -304,31 +328,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return false;
         }
 
-        // 完全对齐右键激光 DrawApoctosisCoreGlow 的绘制逻辑
+        // 完全对齐右键激光 DrawApoctosisCoreGlow 的绘制逻辑，并补充 SimpleStar 十字星
         private void DrawEnergyCoreGlow(Color themeColor, SpriteEffects flip, Vector2 recoilVec)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D simpleStar = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
 
             float manaPower = MathHelper.Clamp(energyCoreGlowBurst / 12f, 0f, 1f);
 
-            // effectsColor = 材料主题色；coreWhite = 主题色偏白
             Color effectsColor = themeColor;
             Color coreWhite = Color.Lerp(themeColor, Color.White, 0.45f);
 
             Vector2 shake = Main.rand.NextVector2Circular(2f, 2f) * manaPower;
-            // recoilVec 使星芒随后坐力同步移动，与枪体保持一致
             Vector2 corePos = EnergyCorePosition + recoilVec - Main.screenPosition;
             float time = energyCoreGlowTime;
 
             // reverseManaPower：开火时臂展更大，与右键公式完全一致
             float reverseManaPower = MathHelper.Lerp(0.7f, 0.1f, manaPower > 0f ? 1f - manaPower : 0.5f);
 
+            // ── 常驻小光晕（无论是否开火都可见）──
+            float idleBreath = 0.06f + 0.04f * (float)Math.Sin(time * 0.13f);
+            Main.EntitySpriteDraw(
+                bloom,
+                corePos,
+                null,
+                Color.Lerp(effectsColor, coreWhite, 0.2f) with { A = 0 } * (0.22f + manaPower * 0.5f),
+                0f,
+                bloom.Size() * 0.5f,
+                new Vector2(1f, 0.35f) * (idleBreath + manaPower * 0.65f),
+                flip);
+
+            // ── SimpleStar 旋转十字星（与右键的中心晶核视觉对齐）──
+            float starRot = gunRotation + time * 0.022f;
+            float starScale = 0.038f + 0.018f * (float)Math.Sin(time * 0.09f) + manaPower * 0.065f;
+            for (int s = 0; s < 2; s++)
+            {
+                Main.EntitySpriteDraw(
+                    simpleStar,
+                    corePos + shake,
+                    null,
+                    Color.Lerp(effectsColor, coreWhite, 0.35f) with { A = 0 } * (0.28f + manaPower * 0.48f),
+                    starRot + s * MathHelper.PiOver4,
+                    simpleStar.Size() * 0.5f,
+                    new Vector2(0.28f + manaPower * 0.12f, 1.15f + manaPower * 0.5f) * starScale,
+                    flip);
+            }
+
+            // ── HalfStar 双向长臂（5层，与右键一致）──
             for (int i = 0; i < 5; i++)
             {
                 float iMult = 1f - 0.1f * i;
 
-                // BloomCircle：仅在开火时绘制（与右键一致）
+                // BloomCircle 叠层：开火时追加震动光晕
                 if (manaPower > 0f)
                 {
                     Main.EntitySpriteDraw(
@@ -342,7 +394,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         flip);
                 }
 
-                // HalfStar 双向臂（与右键完全一致的参数）
                 for (int b = -1; b <= 1; b += 2)
                 {
                     float sine = MathHelper.Lerp(
