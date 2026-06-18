@@ -86,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                 spawnPos,
                 velocity,
                 ModContent.ProjectileType<PlagueCell_Nuke>(),
-                (int)(Projectile.damage * 4),
+                (int)(Projectile.damage * 3),
                 0f,
                 Projectile.owner,
                 target.whoAmI,

@@ -108,7 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Projectile.Center + direction * 20f,
                     direction * 11.5f,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
-                    Math.Max(1, (int)(Projectile.damage * 1.15f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.9)),
                     Projectile.knockBack * 0.72f,
                     Projectile.owner,
                     i);

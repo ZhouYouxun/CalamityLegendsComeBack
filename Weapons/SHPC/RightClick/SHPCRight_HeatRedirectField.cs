@@ -48,7 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.SourceDamage *= 0.7f + HeatStage * 0.12f;
+            modifiers.SourceDamage *= 0.7f + HeatStage * 0.07f;
         }
 
         public override bool PreDraw(ref Color lightColor)
