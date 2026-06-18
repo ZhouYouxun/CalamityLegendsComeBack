@@ -124,11 +124,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                     Projectile.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<PlagueCell_Fog>(),
-                    System.Math.Max(1, Projectile.damage / 6),
+                    System.Math.Max(1, Projectile.damage / 8),
                     0f,
                     Projectile.owner);
 
-                int beeCount = (Main.player[Projectile.owner].strongBees ? 12 : 10) + 3;
+                int beeCount = (Main.player[Projectile.owner].strongBees ? 9 : 7) + 3;
                 for (int i = 0; i < beeCount; i++)
                 {
                     float delayFactor = Main.rand.NextFloat(0.7f, 1.4f);
@@ -139,7 +139,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                         Projectile.Center,
                         velocity,
                         ModContent.ProjectileType<BasicPlagueBee>(),
-                        System.Math.Max(1, (int)(Projectile.damage * 0.16f)),
+                        System.Math.Max(1, (int)(Projectile.damage * 0.06f)),
                         0f,
                         Projectile.owner,
                         initialHomingCounter,

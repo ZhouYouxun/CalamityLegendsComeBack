@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -68,6 +68,8 @@
 				VesuviusEXWeapon.DisplayName: Supervolcanic Eruption
 				VesuviusVolcanicGasCloud.DisplayName: Vesuvius Volcanic Gas Cloud
 			}
+
+			PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion
 		}
 
 		Cooldowns.Vesuvius_EX: Vesuvius Ultimate

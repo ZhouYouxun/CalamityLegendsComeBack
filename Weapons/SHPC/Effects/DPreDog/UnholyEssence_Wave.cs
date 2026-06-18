@@ -34,14 +34,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 63;
+            Projectile.timeLeft = 65;
             Projectile.light = 0.45f;
             Projectile.scale = 0.9f;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 5;
+            Projectile.localNPCHitCooldown = 10;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -351,7 +351,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 pos,
                 Vector2.Zero,
                 ModContent.ProjectileType<FuckYou>(),
-                (int)(Projectile.damage * 1.15f),
+                (int)(Projectile.damage * 0.85f),
                 Projectile.knockBack,
                 Projectile.owner
             );
@@ -380,7 +380,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     spawnPosition,
                     velocity,
                     ModContent.ProjectileType<UnholyEssence_HolyNova>(),
-                    (int)(Projectile.damage * 0.2f),
+                    (int)(Projectile.damage * 0.15f),
                     Projectile.knockBack * 0.15f,
                     Projectile.owner);
             }
@@ -393,7 +393,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                Projectile.damage,
+                (int)(Projectile.damage * 0.85f),
                 Projectile.knockBack,
                 Projectile.owner);
 

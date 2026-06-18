@@ -58,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                 projectile.Center + forward * 12f,
                 forward * 6f,
                 ModContent.ProjectileType<AshesofCalamity_SoulRelay>(),
-                projectile.damage,
+                (int)(projectile.damage * 1.00),
                 projectile.knockBack,
                 projectile.owner,
                 forward.X,

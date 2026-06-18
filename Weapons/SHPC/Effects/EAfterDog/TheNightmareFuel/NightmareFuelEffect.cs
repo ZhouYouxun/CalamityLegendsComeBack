@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheNightmareFue
                 projectile.Center,
                 baseVelocity,
                 ModContent.ProjectileType<NightmareFuel_ARC>(),
-                (int)(projectile.damage * 0.8),
+                (int)(projectile.damage * 0.93),
                 projectile.knockBack,
                 owner.whoAmI,
                 projectile.ai[0],

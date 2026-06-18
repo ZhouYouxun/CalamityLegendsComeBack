@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.05f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
             1.02f, // EffectID 17: Depth Cells / 深渊细胞
-            1.44f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
+            1.40f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐
             1.13f, // EffectID 19: Ashes of Calamity / 灾厄尘
             0f, // EffectID 20: Beetle Husk / 甲虫外壳，未实现
             1.72f, // EffectID 21: Solar Fragment / 日曜碎片
@@ -95,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.50f, // EffectID 23: Nebula Fragment / 星云碎片
             1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
             1.94f, // EffectID 25: Meld Blob / 冥思溶剂
-            2.10f, // EffectID 26: Unholy Essence / 浊火精华
+            2.04f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
             2.00f, // EffectID 28: Divine Geode / 神圣晶石
             2.48f, // EffectID 29: Bloodstone Core / 血神核心
@@ -103,7 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.22f, // EffectID 31: Necroplasm / 灵质
             1.97f, // EffectID 32: Dark Plasma / 暗离子体
             2.20f, // EffectID 33: Twisting Nether / 扭曲虚空
-            2.93f, // EffectID 34: Endothermic Energy / 恒温能量
+            2.96f, // EffectID 34: Endothermic Energy / 恒温能量
             2.77f, // EffectID 35: Nightmare Fuel / 梦魇魔能
             2.15f, // EffectID 36: Ascendant Spirit Essence / 化神魂精
             3.25f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
             4.00f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
-            1.53f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
+            1.12f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };
 
         public const int ForcedShutdownTime = 120;
