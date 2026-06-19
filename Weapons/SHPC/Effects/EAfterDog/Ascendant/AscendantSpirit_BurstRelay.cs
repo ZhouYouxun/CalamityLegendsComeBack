@@ -106,7 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
             float lane = shotIndex - (SpiritCount - 1f) * 0.5f;
             Vector2 spawnPosition = Projectile.Center + Main.rand.NextVector2Circular(ReleaseRadius, ReleaseRadius);
             Vector2 targetPoint = GetOwnerMouseWorld(owner);
-            Vector2 direction = (targetPoint - spawnPosition).SafeNormalize(forward).RotatedByRandom(MathHelper.ToRadians(2f));
+            Vector2 direction = (targetPoint - spawnPosition).SafeNormalize(forward).RotatedByRandom(MathHelper.ToRadians(5f));
             Color themeColor = AscendantSpirit_PROJ.RandomThemeColor();
             float launchDelay = 2f + Main.rand.NextFloat(0f, 0.75f);
 

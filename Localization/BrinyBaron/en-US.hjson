@@ -7,71 +7,60 @@ Mods: {
 					Tooltip: "[GFB]"
 					BB_Left_1:
 						'''
-						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Combo cycle (Stage 1): Fires a Seafoam Blade and three Sea Spirits with a 5-degree spread on each attack.]
-						[c/99CCFF:The Seafoam Blade features glowing aquamarine star particles; the Sea Spirits have weak homing and deal no damage for the first 10 frames.]
-						[c/4FAEFF:Tide rules: Blade hit +1 (2s cooldown), Boss fight auto +1 per 5s, no boss -1 per 5s, taking damage -1, no attack for 5s clears tide.]
-						[c/4FAEFF:Bonus: +3% Briny Baron damage per stack; full tide +10% extra; full tide shurikens gain homing.]
+						[c/66CCFF:Left Click: a steady sea-blade chain that grows with progression.]
+						[c/66CCFF:Stage I fires foam blades and sea spirits; tide stacks raise damage and empower full-tide attacks.]
 						'''
 					BB_Left_2:
 						'''
-						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Stage 2, 3-swing cycle: Seafoams ×3 → faster Sea Spirits ×6 → Light Wave.]
-						[c/99CCFF:Seafoams at 1.7× speed, 1.5× size, more pierce, with trail; Light Wave has a charge sound.]
-						[c/4FAEFF:Direct blade hits summon a tornado. Sea Spirits deal no damage for the first 10 frames.]
+						[c/66CCFF:Left Click: a three-step tide chain with sharper foam and a light wave.]
+						[c/66CCFF:True blade hits call tornadoes; tide stacks raise damage and empower full-tide attacks.]
 						'''
 					BB_Left_3:
 						'''
-						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Stage 3, 4-swing cycle: parallel Seafoams ×5 + normal wave → Sea Spirits ×10 + normal wave → Shurikens ×5 + normal wave → giant enhanced Light Wave.]
-						[c/99CCFF:Parallel Seafoams: extremely fast, no homing, heavy pierce; giant enhanced Light Wave fires tracking bubbles (normal waves do not).]
-						[c/4FAEFF:Direct blade hits summon a tornado. Sea Spirits deal no damage for the first 10 frames.]
+						[c/66CCFF:Left Click: a four-step tide chain mixing foam, spirits, shurikens, and waves.]
+						[c/66CCFF:The finisher releases a larger light wave; tide stacks raise damage and empower full-tide attacks.]
 						'''
 					BB_Left_4:
 						'''
-						[c/66CCFF:Left Click: Swing in a steady one-way rhythm.]
-						[c/7F8FA6:Stage 4, 4-swing cycle: parallel Seafoams ×5 + normal wave → Sea Spirits ×10 + normal wave → Shurikens ×5 + normal wave → giant ultimate Light Wave.]
-						[c/99CCFF:Giant ultimate Light Wave triggers tornado on hit (5-frame cooldown) and fires tracking bubbles; direct blade hits also trigger one and scatter fast sine-wave Sea Spirits.]
-						[c/4FAEFF:Scattered Sea Spirits: sine-wave path for 20 frames then strong homing; no damage for first 10 frames. Normal waves do not fire tracking bubbles.]
+						[c/66CCFF:Left Click: a complete tide chain ending in the ultimate light wave.]
+						[c/66CCFF:Blade hits and the finisher flood the field with tornadoes, spirits, and full-tide pressure.]
 						'''
 					BB_Right_DefaultShuriken:
 						'''
-						[c/66CCFF:Right Click: Throw Tide Shurikens (Default).]
-						[c/7F8FA6:Shurikens deal damage on hit. Throwing speed scales with range. Gain homing when tide is full.]
+						[c/FFB347:Right Click: throw tide shurikens at the cursor.]
+						[c/FFB347:At full tide, shurikens begin hunting enemies on their own.]
 						'''
 					BB_Right_LostGarment:
 						'''
-						[c/66CCFF:Right Click (Lost Garment): Dash through enemies.]
-						[c/7F8FA6:Dashes forward and passes straight through all enemies along the path, dealing damage without being deflected.]
+						[c/FFB347:Right Click: Lost Garment converts the attack into a piercing dash.]
+						[c/FFB347:The dash cuts through every enemy in its path without rebounding.]
 						'''
 					BB_Right_CeruleanShield:
 						'''
-						[c/66CCFF:Right Click (Cerulean Shield): Dash and rebound off enemies.]
-						[c/7F8FA6:Dashes forward and slams into the first enemy, bouncing back and triggering a cerulean explosion.]
-						[c/7F8FA6:If an enemy is hit, the dash cooldown is immediately reduced to 1 second instead of 3.]
+						[c/FFB347:Right Click: Cerulean Shield converts the attack into a rebound dash.]
+						[c/FFB347:Striking an enemy bursts outward and shortens the dash cooldown.]
 						'''
 					BB_Right_VortexPortal:
 						'''
-						[c/66CCFF:Right Click (Vortex Portal): Teleport to cursor, then swing twice.]
-						[c/7F8FA6:Instantly teleports to the target location and performs two consecutive slashes. Cooldown: 6 seconds.]
+						[c/FFB347:Right Click: Vortex Portal warps to the cursor.]
+						[c/FFB347:After teleporting, immediately performs two tidal slashes.]
 						'''
-					BB_Right_Spin_Locked: "[c/7F8FA6:Hold Left Click, then hold Right Click: Locked (Unlock Whirl Cleave at Stage 2)]"
+					BB_Right_Spin_Locked: "[c/DDA0FF:Hold Left Click, then hold Right Click: Whirl Cleave is locked until Stage II.]"
 					BB_Right_Spin_Unlocked:
 						'''
-						[c/7F8FA6:Hold Left Click, then hold Right Click: Whirl the blade around you.]
-						[c/DDA0FF:The wheel gains speed while held; only at full speed does it scatter tidal blades around you.]
-						[c/FFB347:Low-speed whirling builds pressure, while the completed wheel controls nearby space.]
+						[c/DDA0FF:Hold Left Click, then hold Right Click: whirl the blade around you.]
+						[c/DDA0FF:The wheel accelerates while held; at full speed, it scatters tidal blades.]
 						'''
 					BB_Tide: "[c/4FAEFF:Current tide value: ]"
-					BB_Tide_Desc_NoAccessory: "[c/4FAEFF:(No dash/teleport accessory equipped, Tide only increases weapon damage)]"
-					BB_Tide_Desc_HasAccessory: "[c/4FAEFF:(Accessory equipped, can perform dash/teleport attacks)]"
+					BB_Tide_Desc_NoAccessory: "[c/4FAEFF:Tide currently feeds only weapon damage.]"
+					BB_Tide_Desc_HasAccessory: "[c/4FAEFF:Equipped gear converts right click into a movement attack.]"
 					Dash1_Unlock: "[c/66FFAA:Unlocked: Basic Dash]"
 					Dash1_Lock: "[c/7F8FA6:Locked: Defeat the Eye of Cthulhu to unlock it.]"
 					Dash2_Unlock: "[c/66FFAA:Unlocked: Spiral Cleave]"
 					Dash2_Lock: "[c/DDA0FF:Locked: Defeat the Wall of Flesh to unlock it.]"
 					Dash3_Unlock: "[c/66FFAA:Unlocked: Quick Slash]"
 					Dash3_Lock: "[c/99CCFF:Locked: Defeat the Wall of Flesh to unlock it.]"
-					BB_Passive: "[c/9AEF9E:When the player performs a dash, executes a dash reinforcement based on the currently equipped dash shield. Passive State: {0} (Right-click in inventory to toggle).]"
+					BB_Passive: "[c/9AEF9E:Dash reinforcement follows the current shield device. State: {0}; right-click in inventory to toggle.]"
 					PassiveStateOn: "[c/7BFFB7:On]"
 					PassiveStateOff: "[c/F0D070:Off]"
 					PassiveDevice_None: "[c/7F8FA6:No shield dash device is being read.]"
@@ -82,7 +71,7 @@ Mods: {
 					PassiveDevice_AsgardianAegis: "[c/99CCFF:Asgardian Aegis is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
 					Dash4_Unlock: "[c/66FFAA:Unlocked: EX Skill「Oceanic Execution」]"
 					Dash4_Lock: "[c/FFB347:EX Skill「Oceanic Execution」locked (Equip Legendary Emblem to unlock)]"
-					BB_Final: "[c/9FD8A2:When tide is full and EX is ready, press the Legendary Skill key to lock onto a target, then left-click to sentence and execute.]"
+					BB_Final: "[c/9FD8A2:At full tide, press the Legendary Skill key to mark prey; left click confirms the execution.]"
 					LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
 					LegendaryText:
 						'''

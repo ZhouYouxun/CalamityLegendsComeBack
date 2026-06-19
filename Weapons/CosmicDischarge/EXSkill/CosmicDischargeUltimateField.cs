@@ -95,11 +95,20 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             foreach (NPC npc in Main.ActiveNPCs)
             {
-                if (!npc.active || npc.friendly || npc.dontTakeDamage || Vector2.DistanceSquared(npc.Center, Projectile.Center) > FieldRadius * FieldRadius)
+                if (!npc.active || npc.friendly || npc.dontTakeDamage)
                     continue;
 
-                npc.velocity *= npc.boss ? 0.93f : 0.76f;
+                npc.velocity *= 0.85f;
                 CosmicDischargeCommon.ApplyDoGDebuffs(npc, 90);
+            }
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile proj = Main.projectile[i];
+                if (!proj.active || proj.friendly || !proj.hostile)
+                    continue;
+
+                proj.velocity *= 0.85f;
             }
         }
 

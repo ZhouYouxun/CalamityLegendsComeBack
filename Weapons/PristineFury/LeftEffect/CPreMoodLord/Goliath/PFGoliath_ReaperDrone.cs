@@ -68,15 +68,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 NPC target = FindTarget();
                 if (target != null)
                 {
-                    Vector2 sideBias = currentDirection.RotatedBy(MathHelper.PiOver2) *
-                        (float)Math.Sin(Timer * 0.08f + Phase) *
-                        MathHelper.Lerp(46f, 12f, Utils.GetLerpValue(CurveFrames, CurveFrames + 76f, Timer, true));
-                    Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center + sideBias, currentDirection);
-                    Vector2 desiredVelocity = desiredDirection * MathHelper.Lerp(currentSpeed, HomingSpeed, 0.24f);
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.192f + 0.054f * Math.Abs((float)Math.Sin(Phase)));
+                    // 螺旋式追踪：半径随时间收缩，转速逐渐加快
+                    float spiralProgress = Utils.GetLerpValue(CurveFrames, CurveFrames + 110f, Timer, true);
+                    float spiralRadius = MathHelper.Lerp(160f, 0f, spiralProgress);
+                    float spiralSpeed = Timer * 0.22f + Phase;
+                    Vector2 spiralOffset = currentDirection.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(spiralSpeed) * spiralRadius;
+                    Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center + spiralOffset, currentDirection);
+                    float targetSpeed = MathHelper.Lerp(HomingSpeed * 0.85f, HomingSpeed * 1.55f, spiralProgress);
+                    Vector2 desiredVelocity = desiredDirection * MathHelper.Lerp(currentSpeed, targetSpeed, 0.26f);
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.22f + 0.08f * spiralProgress);
                 }
                 else
-                    Projectile.velocity *= 0.996f;
+                {
+                    // 无目标：直线加速飞行，快速消失
+                    float accelSpeed = Math.Min(currentSpeed * 1.032f + 0.3f, 32f);
+                    Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * accelSpeed;
+                    Projectile.timeLeft = Math.Min(Projectile.timeLeft, 55);
+                }
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;

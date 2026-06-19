@@ -39,14 +39,9 @@ Mods: {
 		}
 
 		Buffs: {
-			CosmicDischargeRiftGuardBuff: {
-				DisplayName: Riftbound Undying
-				Description: Fatal damage is being suppressed and life regeneration is greatly increased.
-			}
-
 			CosmicDischargeRiftRevivalBuff: {
 				DisplayName: Rift Revival
-				Description: The Devourer rift shatters your limits. Damage increased by 20%.
+				Description: The Devourer rift shatters your limits. Damage, defense, and movement speed increased by 20%.
 			}
 
 			CosmicDischargeUltimateGuardBuff: {
@@ -85,7 +80,6 @@ Mods: {
 				CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
 				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
-				CosmicDischargeScytheProjectile.DisplayName: Cosmic Discharge Scythe Projectile
 			}
 		}
 

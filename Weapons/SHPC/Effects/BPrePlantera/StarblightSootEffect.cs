@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            Vector2 forward = (Main.MouseWorld - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction));
+            Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
             float baseSpeed = MathHelper.Clamp(projectile.velocity.Length(), 12f, 28f);
             float[] shotAngles =
             {

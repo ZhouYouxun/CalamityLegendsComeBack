@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             {
                 PeaShooterPeaType peaType = (PeaShooterPeaType)Main.rand.Next((int)PeaShooterPeaType.Rock + 1);
                 float angleDegrees = startDegrees + i * BalancePeaShooter.LineSpreadDegrees;
-                Vector2 velocity = aim.RotatedBy(MathHelper.ToRadians(angleDegrees) + Main.rand.NextFloat(-0.012f, 0.012f)) * speed;
+                Vector2 velocity = aim.RotatedBy(MathHelper.ToRadians(angleDegrees) + Main.rand.NextFloat(-0.012f, 0.012f)) * speed * PeaShooterPea.GetInitialSpeedMultiplier(peaType);
                 Vector2 spawnPosition = muzzle + aim.RotatedBy(MathHelper.PiOver2) * (i - (queuedLineCount - 1) * 0.5f) * 3f;
 
                 int peaIndex = Projectile.NewProjectile(
@@ -225,7 +225,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
                 PeaShooterPeaType peaType = (PeaShooterPeaType)Main.rand.Next((int)PeaShooterPeaType.Rock + 1);
                 float angle = MathHelper.ToRadians(Main.rand.NextFloat(-BalancePeaShooter.AdrenalineStormSpreadDegrees, BalancePeaShooter.AdrenalineStormSpreadDegrees));
                 float speedMultiplier = Main.rand.NextFloat(BalancePeaShooter.AdrenalineStormMinSpeedMultiplier, BalancePeaShooter.AdrenalineStormMaxSpeedMultiplier);
-                Vector2 velocity = aim.RotatedBy(angle) * speed * speedMultiplier;
+                Vector2 velocity = aim.RotatedBy(angle) * speed * speedMultiplier * PeaShooterPea.GetInitialSpeedMultiplier(peaType);
                 Vector2 spawnPosition = muzzle + Main.rand.NextVector2Circular(6f, 5f) + aim * Main.rand.NextFloat(-2f, 5f);
 
                 int peaIndex = Projectile.NewProjectile(

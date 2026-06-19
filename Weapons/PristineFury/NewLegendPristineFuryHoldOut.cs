@@ -832,13 +832,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 ? SpriteEffects.FlipHorizontally
                 : SpriteEffects.None;
             int layerCount = NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeLayerCount();
+            float sizeMultiplier = NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeSizeMultiplier();
+            float brightnessMultiplier = NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeBrightnessMultiplier();
 
             PFLeftEffectRules.BeginAdditive();
 
             for (int i = 0; i < layerCount; i++)
             {
                 float iMult = 1f - 0.1f * i;
-                Color layerColor = (Color.Lerp(theme, coreWhite, i * 0.1f) with { A = 0 }) * power;
+                Color layerColor = (Color.Lerp(theme, coreWhite, i * 0.1f) with { A = 0 }) * power * brightnessMultiplier;
 
                 Main.EntitySpriteDraw(
                     bloom,
@@ -851,7 +853,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                         * NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeBloomScale()
                         * manaPower
                         * Main.rand.NextFloat(0.7f, 1.3f)
-                        * iMult,
+                        * iMult
+                        * sizeMultiplier,
                     flipSprite,
                     0);
 
@@ -864,7 +867,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Vector2 starScale = new Vector2(0.3f, 1f * sine * b)
                         * (Main.rand.NextFloat(
                             NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeHalfStarMinScale(),
-                            NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeHalfStarMaxScale()) * iMult + manaPower * 1.2f);
+                            NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeHalfStarMaxScale()) * iMult + manaPower * 1.2f)
+                        * sizeMultiplier;
                     float rotation = Projectile.rotation
                         + dragonEyeTimer * manaPower * Math.Max(i - 2, 0) * 0.2f
                         + MathHelper.PiOver4 * b;

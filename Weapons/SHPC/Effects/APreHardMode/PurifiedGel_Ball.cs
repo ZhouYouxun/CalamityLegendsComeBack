@@ -51,12 +51,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
             // Bloom光圈（A=0 → 加法混合）
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            float bloomPulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7f + Projectile.identity);
-            Color bloomColor = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f);
-            bloomColor.A = 0;
-            Main.EntitySpriteDraw(bloom, drawPos, null, bloomColor * 0.65f, 0f, bloom.Size() * 0.5f, 0.2f * bloomPulse, SpriteEffects.None, 0f);
-
             // 拖尾
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
@@ -65,8 +59,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 trailColor.A = 0;
                 Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 float intensity = MathHelper.Lerp(0.2f, 1f, 1f - i / (float)Projectile.oldPos.Length);
-                Main.EntitySpriteDraw(tex, pos, frame, trailColor, Projectile.rotation, frameOrigin, 1.8f * intensity * 0.6f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(tex, pos, frame, trailColor * 0.5f, Projectile.rotation, frameOrigin, 1.8f * intensity * 0.6f * 0.7f, SpriteEffects.None, 0);
+                //Main.EntitySpriteDraw(tex, pos, frame, trailColor, Projectile.rotation, frameOrigin, 1.8f * intensity * 0.6f, SpriteEffects.None, 0);
+                //Main.EntitySpriteDraw(tex, pos, frame, trailColor * 0.5f, Projectile.rotation, frameOrigin, 1.8f * intensity * 0.6f * 0.7f, SpriteEffects.None, 0);
             }
 
             // 本体内光晕

@@ -17,58 +17,53 @@ Mods: {
 					PresetName4: Plague
 					PresetLeft0:
 						'''
-						[c/8BE89A:Current Mode: [Breakthrough]]
-						[c/8BE89A:Left Click: fires rapid leaf arrows, converting wooden arrows only]
-						[c/8BE89A:Leaf arrows fly straight and pierce multiple enemies]
+						[c/8BE89A:Left Click - Breakthrough: converts wooden arrows into rapid leaf arrows.]
+						[c/8BE89A:Straight shots pierce cleanly and reward sustained fire.]
 						'''
 					PresetLeft1:
 						'''
-						[c/70E0D0:Current Mode: [Recovery]]
-						[c/70E0D0:Left Click: converts arrows into twin-strand weaving leaf shots]
-						[c/70E0D0:Hits can heal the player and grant a protective leaf barrier]
+						[c/70E0D0:Left Click - Recovery: fires twin-strand leaf shots.]
+						[c/70E0D0:Hits can heal the player and prepare a protective leaf barrier.]
 						'''
 					PresetLeft2:
 						'''
-						[c/66CCFF:Current Mode: [Reconnaissance]]
-						[c/66CCFF:Left Click: fires a 5-shot volley of tracking scout arrows]
-						[c/66CCFF:Scout arrows predict target movement and accelerate mid-flight]
+						[c/66CCFF:Left Click - Reconnaissance: fires tracking scout volleys.]
+						[c/66CCFF:Scout arrows re-read their target and accelerate mid-flight.]
 						'''
 					PresetLeft3:
 						'''
-						[c/FFA07A:Current Mode: [Bombardment]]
-						[c/FFA07A:Left Click: fires falling arrow volleys, converting wooden arrows only]
-						[c/FFA07A:Other arrows fire normally; leaf arrows explode on impact]
+						[c/FFA07A:Left Click - Bombardment: converts wooden arrows into falling volleys.]
+						[c/FFA07A:Converted arrows detonate on impact; other arrows fire normally.]
 						'''
 					PresetLeft4:
 						'''
-						[c/DDA0FF:Current Mode: [Plague]]
-						[c/DDA0FF:Left Click: fires plague reapers that reduce enemy defense]
-						[c/DDA0FF:Repeated hits refresh the pollution, continuously weakening defense]
+						[c/DDA0FF:Left Click - Plague: fires reapers that erode enemy defense.]
+						[c/DDA0FF:Repeated hits refresh pollution and keep the target weakened.]
 						'''
 					PresetRight0:
 						'''
-						[c/8BE89A:Right Click: hold to charge and load enhanced leaf arrows]
-						[c/8BE89A:Loading increases damage, released sequentially at high speed]
+						[c/FFB347:Right Click - Breakthrough: hold to load enhanced leaf arrows.]
+						[c/FFB347:Release to fire the stored arrows in a fast burst.]
 						'''
 					PresetRight1:
 						'''
-						[c/70E0D0:Right Click: hold to release widespread recovery flashes]
-						[c/70E0D0:Heals the player but does not grant a leaf barrier]
+						[c/FFB347:Right Click - Recovery: hold to gather a wide recovery flash.]
+						[c/FFB347:Release to heal yourself without granting a leaf barrier.]
 						'''
 					PresetRight2:
 						'''
-						[c/66CCFF:Right Click: hold to fire a gravity-immune marking arrow]
-						[c/66CCFF:Marks the highest-life target to increase Left Click damage]
+						[c/FFB347:Right Click - Reconnaissance: hold to fire a gravity-immune marking arrow.]
+						[c/FFB347:The marked high-life target takes increased left-click damage.]
 						'''
 					PresetRight3:
 						'''
-						[c/FFA07A:Right Click: hold to target, releasing an arrow that launches upward]
-						[c/FFA07A:Dives from above to the reticle, triggering a massive explosion]
+						[c/FFB347:Right Click - Bombardment: hold to place the reticle and launch a guide arrow.]
+						[c/FFB347:The strike falls from above and detonates at the marked point.]
 						'''
 					PresetRight4:
 						'''
-						[c/DDA0FF:Right Click: hold to fire a large spore cloud projectile]
-						[c/DDA0FF:Permanently reduces the target enemy's attributes and defense]
+						[c/FFB347:Right Click - Plague: hold to fire a heavy spore cloud.]
+						[c/FFB347:The cloud permanently weakens the struck enemy.]
 						'''
 					PresetPassive0:
 						'''
@@ -97,8 +92,8 @@ Mods: {
 						'''
 					BF_Passive:
 						'''
-						[c/9AEF9E:Passive - Final Stand: while holding the weapon, blocks one lethal hit]
-						[c/9AEF9E:Grants brief invincibility and healing; does not charge during Boss battles. Current: {0}]
+						[c/9AEF9E:Passive - Final Stand: blocks one lethal hit while held.]
+						[c/9AEF9E:Briefly grants invincibility and healing. Current: {0}]
 						'''
 					PassiveStateReady: "[c/7BFFB7:Ready]"
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
@@ -106,11 +101,11 @@ Mods: {
 					PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
 					BF_EXHint:
 						'''
-						[c/8EF5A8:Ultimate - Vernal Energy Burst: charge energy by holding or right-click attacks]
-						[c/8EF5A8:At full energy, press] [[c/8EF5A8:{0}]] [c/8EF5A8:to release the verdant arrow curtain barrage]
+						[c/8EF5A8:Ultimate: holding fire and right-click attacks charge vernal energy.]
+						[c/8EF5A8:At full energy, press] [[c/8EF5A8:{0}]] [c/8EF5A8:to release the verdant barrage.]
 						'''
 					BF_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
-					BF_FormWheelHint: "[c/F7D87C:Hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the doctrine wheel; release over a sector to switch doctrine.]"
+					BF_FormWheelHint: "[c/F7D87C:Hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the doctrine wheel; release over a sector to switch.]"
 					BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:

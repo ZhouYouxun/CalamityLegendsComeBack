@@ -426,21 +426,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private static float GetLateHeatDamageMultiplier(int heat)
         {
-            return heat >= 4 ? 1.05f : 1f;
+            int cappedHeat = Math.Min(5, Math.Max(0, heat));
+            return MathF.Pow(1.05f, cappedHeat);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             int heat = Math.Max(WeaponStage, HeatLevel);
-            TrySpawnHeatExplosion(target, heat);
+            Vector2 impactCenter = Projectile.Center;
+            TrySpawnHeatExplosion(heat, impactCenter, target.whoAmI);
 
             if (heat >= 2 && heat < 5)
                 Projectile.damage = Math.Max(1, (int)(Projectile.damage * 0.9f));
 
-            SpawnHitEffects(target);
+            SpawnHitEffects(impactCenter);
         }
 
-        private void TrySpawnHeatExplosion(NPC target, int heat)
+        private void TrySpawnHeatExplosion(int heat, Vector2 impactCenter, int targetID)
         {
             if (heat < 3)
                 return;
@@ -465,13 +467,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             int explosionIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                target.Center,
+                impactCenter,
                 Vector2.Zero,
                 ModContent.ProjectileType<SHPCRight_Explosion>(),
                 explosionDamage,
                 Projectile.knockBack,
                 Projectile.owner,
-                target.whoAmI,
+                targetID,
                 explosionSize
             );
 
@@ -544,36 +546,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         //    }
         //}
 
-        private void SpawnHitEffects(NPC target)
+        private void SpawnHitEffects(Vector2 impactCenter)
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 back = -forward;
             float baseAngle = back.ToRotation();
 
             // 扇形Dust
-            int dustCount = 10;
-            float fanHalfAngle = MathHelper.ToRadians(28f);
+            int dustCount = 13;
+            float fanHalfAngle = MathHelper.ToRadians(54f);
             for (int i = 0; i < dustCount; i++)
             {
-                float t = dustCount == 1 ? 0.5f : i / (float)(dustCount - 1);
-                float angle = baseAngle + MathHelper.Lerp(-fanHalfAngle, fanHalfAngle, t);
-                float speed = MathHelper.Lerp(2.5f, 6.8f, 1f - Math.Abs(t - 0.5f) * 2f);
+                float angle = baseAngle + Main.rand.NextFloat(-fanHalfAngle, fanHalfAngle) + Main.rand.NextFloat(-0.18f, 0.18f);
+                float speed = Main.rand.NextFloat(1.8f, 7.6f);
 
-                Dust light = Dust.NewDustPerfect(target.Center, DustID.RainbowMk2);
+                Dust light = Dust.NewDustPerfect(impactCenter + Main.rand.NextVector2Circular(8f, 8f), DustID.RainbowMk2);
                 light.color = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.4f, 0.95f));
-                light.velocity = angle.ToRotationVector2() * speed;
-                light.scale = Main.rand.NextFloat(0.9f, 1.25f);
+                light.velocity = angle.ToRotationVector2() * speed + Main.rand.NextVector2Circular(1.2f, 1.2f);
+                light.scale = Main.rand.NextFloat(0.75f, 1.35f);
                 light.noGravity = true;
             }
 
             // 扇形辉光�?
-            int orbCount = 4;
+            int orbCount = 5;
             for (int i = 0; i < orbCount; i++)
             {
-                float t = orbCount == 1 ? 0.5f : i / (float)(orbCount - 1);
-                float angle = baseAngle + MathHelper.Lerp(-fanHalfAngle, fanHalfAngle, t);
+                float angle = baseAngle + Main.rand.NextFloat(-fanHalfAngle, fanHalfAngle);
                 Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(1.6f, 3.8f);
-                Vector2 position = target.Center + Main.rand.NextVector2Circular(4f, 4f);
+                Vector2 position = impactCenter + Main.rand.NextVector2Circular(7f, 7f);
 
                 Color glowColor = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.3f, 0.85f));
                 GlowOrbParticle glow = new GlowOrbParticle(
@@ -590,16 +590,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // 命中光粒�?
-            int lightCount = 3;
+            int lightCount = 4;
             for (int i = 0; i < lightCount; i++)
             {
-                Vector2 velocity = back.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.8f, 2.2f);
+                Vector2 velocity = back.RotatedByRandom(0.95f) * Main.rand.NextFloat(0.6f, 2.8f) + Main.rand.NextVector2Circular(0.8f, 0.8f);
                 float scale = Main.rand.NextFloat(0.28f, 0.48f);
                 Color particleColor = Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.2f, 0.8f));
                 int lifetime = Main.rand.Next(12, 18);
 
                 SquishyLightParticle particle = new(
-                    target.Center,
+                    impactCenter + Main.rand.NextVector2Circular(5f, 5f),
                     velocity,
                     scale,
                     particleColor,

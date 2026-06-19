@@ -102,18 +102,27 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             string right = this.GetLocalizedValue("RightClick");
             string hook = this.GetLocalizedValue("Hook");
             string passive = this.GetLocalizedValue("Passive").TrimEnd('\r', '\n');
-            string legendarySection = Main.keyState.PressingShift()
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
 
-            string finalText =
-                intro + "\n\n" +
-                left + "\n\n" +
-                right + "\n" +
-                hook + "\n\n" +
-                passive + "\n";
+            if (shiftPressed)
+            {
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            }
+            else
+            {
+                string finalText =
+                    intro.TrimEnd('\r', '\n') + "\n" +
+                    left.TrimEnd('\r', '\n') + "\n" +
+                    right.TrimEnd('\r', '\n') + "\n" +
+                    hook.TrimEnd('\r', '\n') + "\n" +
+                    passive.TrimEnd('\r', '\n') + "\n";
 
-            tooltips.FindAndReplace("[GFB]", finalText);
+                tooltips.FindAndReplace("[GFB]", finalText);
+            }
+
             tooltips.Add(new TooltipLine(Mod, "PristineFuryHolyFireLegendaryText", legendarySection));
         }
 

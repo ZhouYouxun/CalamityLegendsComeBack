@@ -394,17 +394,26 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed ? legendaryText : shiftHint;
 
-            string finalText =
-               left + "\n\n" +
-               rightSection + "\n\n" +
-               tide + "\n\n" +
-               passive + "\n\n" +
-               dash4 + "\n\n" +
-               final + "\n";
+            if (shiftPressed)
+            {
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            }
+            else
+            {
+                string finalText =
+                   left.TrimEnd('\r', '\n') + "\n" +
+                   rightSection.TrimEnd('\r', '\n') + "\n" +
+                   tide.TrimEnd('\r', '\n') + "\n" +
+                   passive.TrimEnd('\r', '\n') + "\n" +
+                   dash4.TrimEnd('\r', '\n') + "\n" +
+                   final.TrimEnd('\r', '\n') + "\n";
 
-            tooltips.FindAndReplace("[GFB]", finalText);
+                tooltips.FindAndReplace("[GFB]", finalText);
+            }
+
             tooltips.Add(new TooltipLine(Mod, "BrinyBaronOceanLegendaryText", legendarySection));
         }
 

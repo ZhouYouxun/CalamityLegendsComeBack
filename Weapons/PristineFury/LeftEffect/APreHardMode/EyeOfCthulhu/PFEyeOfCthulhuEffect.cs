@@ -15,6 +15,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const int FireInterval = 34;
         private const int BeamCount = 5;
         private const float SearchRange = 1320f;
+        private const float BeamLength = 920f;
+        private const float MaxTargetLeanAngle = MathHelper.Pi / 36f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -36,14 +38,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Vector2 muzzle = holdout.GunTipPosition + holdout.AimDirection * 18f;
             List<NPC> targets = FindForwardTargets(muzzle, holdout.AimDirection);
-            Vector2 fallbackEnd = muzzle + holdout.AimDirection * 920f;
 
             for (int i = 0; i < BeamCount; i++)
             {
                 NPC target = targets.Count > 0 ? targets[i % targets.Count] : null;
-                Vector2 end = target?.Center ?? fallbackEnd + holdout.AimDirection.RotatedBy(MathHelper.Lerp(-0.22f, 0.22f, i / (BeamCount - 1f))) * 120f;
-                Vector2 jitter = targets.Count > 0 ? Main.rand.NextVector2Circular(18f, 18f) : Vector2.Zero;
-                Vector2 vector = end + jitter - muzzle;
+                Vector2 direction = GetLimitedTargetDirection(holdout.AimDirection, muzzle, target);
+                Vector2 vector = direction * BeamLength;
 
                 int beam = Projectile.NewProjectile(
                     holdout.Projectile.GetSource_FromThis(),
@@ -63,6 +63,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(6.4f);
             holdout.TriggerMuzzleFlash(10);
             holdout.SpawnMuzzleBurst(new Color(228, 72, 72), 0.64f);
+        }
+
+        private static Vector2 GetLimitedTargetDirection(Vector2 forward, Vector2 origin, NPC target)
+        {
+            Vector2 baseDirection = forward.SafeNormalize(Vector2.UnitX);
+            if (target == null)
+                return baseDirection;
+
+            Vector2 targetDirection = (target.Center - origin).SafeNormalize(baseDirection);
+            float angleOffset = MathHelper.WrapAngle(targetDirection.ToRotation() - baseDirection.ToRotation());
+            angleOffset = MathHelper.Clamp(angleOffset, -MaxTargetLeanAngle, MaxTargetLeanAngle);
+            return baseDirection.RotatedBy(angleOffset);
         }
 
         private static List<NPC> FindForwardTargets(Vector2 origin, Vector2 forward)

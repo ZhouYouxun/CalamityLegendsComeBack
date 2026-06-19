@@ -6,39 +6,41 @@ Mods: {
 					DisplayName: SHPC - Return of Legends
 					SHPC_LeftIntro: "[c/66CCFF:Left click fires energy orbs. By default, white orbs deal area damage.]"
 					SHPC_LoadingUIHint: "[c/66CCFF:Open inventory and press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Load specific materials to change attack effects.]"
+					SHPC_CurrentAmmoEffect: "[c/66CCFF:Current loaded effect: {0}]"
+					SHPC_DefaultAmmoEffect: No special material loaded; fires default white orbs that deal area damage.
 					SHPC_Passive: "[c/B8FF9E:Passive: increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
 					SHPC_RightIntro1:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
-						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
 						[c/FFB347:Current heat cap: I. Effect: no bonus.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro2:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
-						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
 						[c/FFB347:Current heat cap: II. Effect: adds a secondary beam; beams pierce 3 enemies.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro3:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
-						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
 						[c/FFB347:Current heat cap: III. Effect: first hits from main and secondary beams may trigger heat blasts.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro4:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
-						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
 						[c/FFB347:Current heat cap: IV. Effect: adds a second secondary beam, increases damage, and lets heat blasts trigger through pierce.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro5:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
-						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
 						[c/FFB347:Current heat cap: V. Effect: infinite pierce and bonus damage based on target maximum life.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
@@ -143,13 +145,14 @@ Mods: {
 			}
 
 			HeatModule: {
-				DisplayName: Heat Module
+				DisplayName: Heat Sensor
 				Tooltip:
 					'''
-					SHPC right-click shots generate 40% more heat and natural heat dissipation is reduced by 33%
-					Each of the first two heat levels grants an additional 25% SHPC right-click damage, capped at +50%
-					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
-					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
+					SHPC right-click barrage generates 25% more heat and natural heat dissipation is reduced by 33%
+					Heat-level right-click damage scaling is raised to 7.5% per level
+					Forced shutdown vents a wider searing smoke field that repeatedly damages nearby enemies
+					At full Heat V, continued fire constantly vents damaging smoke around the player
+					Forced shutdown cooling runs faster, halving the downtime
 					'''
 			}
 

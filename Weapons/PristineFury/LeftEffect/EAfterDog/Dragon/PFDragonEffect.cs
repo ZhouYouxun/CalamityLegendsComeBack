@@ -94,8 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             for (int i = 0; i < PelletCount; i++)
             {
-                float ratio = PelletCount == 1 ? 0.5f : i / (float)(PelletCount - 1);
-                float spread = MathHelper.Lerp(-Fan, Fan, ratio);
+                float spread = Main.rand.NextFloat(-Fan, Fan);
                 float speed = FireSpeed * Main.rand.NextFloat(0.72f, 1.28f);
                 Vector2 velocity = direction.RotatedBy(spread) * speed;
                 int projectileIndex = Projectile.NewProjectile(

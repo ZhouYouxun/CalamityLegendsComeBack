@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.SHPC.General;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule;
 using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Terraria;
@@ -269,10 +270,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetHeatFillTime(int completedHeatLevel, int maxHeatLevel)
         {
-            int rowIndex = Utils.Clamp(maxHeatLevel, 1, HeatFillTimesByMaxHeatLevel.Length) - 1;
-            int[] row = HeatFillTimesByMaxHeatLevel[rowIndex];
-            int clampedIndex = Utils.Clamp(completedHeatLevel, 0, row.Length - 1);
-            return System.Math.Max(1, row[clampedIndex]);
+            int progressIndex = Utils.Clamp(maxHeatLevel, 1, HeatFillTimesByProgressState.Length) - 1;
+            int[] values = GetHeatFillTimesByProgressStateValues();
+            progressIndex = Utils.Clamp(progressIndex, 0, values.Length - 1);
+            return System.Math.Max(1, values[progressIndex]);
         }
 
         public int GetOverheatGraceTime()
@@ -289,7 +290,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public int GetForcedShutdownTime(Player player)
         {
             bool hasCoolingBoost = player != null &&
-                (player.HasBuff(BuffID.Inferno) || player.GetModPlayer<SHPCEnergyCorePlayer>().HasEnergyCore);
+                (player.HasBuff(BuffID.Inferno) ||
+                player.GetModPlayer<SHPCEnergyCorePlayer>().HasEnergyCore ||
+                player.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped);
 
             float multiplier = hasCoolingBoost
                 ? AcceleratedForcedShutdownMultiplier
@@ -335,13 +338,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             360
         };
 
-        private static readonly int[][] HeatFillTimesByMaxHeatLevel =
+        // 右键热量每一级使用同一积攒时间；只随右键流程阶段变化。
+        // 0: 早期 12秒；1: 困难模式 10.5秒；2: 世纪之花后 9秒；3: 月亮领主后 7.5秒；4: 最后期 6秒。
+        private static readonly int[] HeatFillTimesByProgressState =
         {
-            new[] { 720 },
-            new[] { 360, 300 },
-            new[] { 210, 240, 270 },
-            new[] { 195, 225, 255, 285 },
-            new[] { 180, 210, 240, 270, 300 }
+            720,
+            630,
+            540,
+            450,
+            360
         };
 
         private static readonly int[] RightClickMaxHeatLevelsByProgressState =
@@ -416,5 +421,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static int[] GetDefaultOrbExplosionSizeValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultDefaultOrbExplosionSizes), DefaultDefaultOrbExplosionSizes);
+
+        private static int[] GetHeatFillTimesByProgressStateValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(HeatFillTimesByProgressState), HeatFillTimesByProgressState);
     }
 }

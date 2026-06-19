@@ -189,7 +189,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             for (int i = 0; i < lineCount; i++)
             {
                 float angleDegrees = startDegrees + i * BalancePeaShooter.LineSpreadDegrees;
-                Vector2 velocity = aim.RotatedBy(MathHelper.ToRadians(angleDegrees) + Main.rand.NextFloat(-0.012f, 0.012f)) * speed;
+                Vector2 velocity = aim.RotatedBy(MathHelper.ToRadians(angleDegrees) + Main.rand.NextFloat(-0.012f, 0.012f)) * speed * PeaShooterPea.GetInitialSpeedMultiplier(peaType);
                 Vector2 spawnPosition = muzzle + aim.RotatedBy(MathHelper.PiOver2) * (i - (lineCount - 1) * 0.5f) * 3f;
 
                 int peaIndex = Projectile.NewProjectile(

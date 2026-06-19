@@ -132,16 +132,25 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            string legendarySection = Main.keyState.PressingShift() ? legendaryText : shiftHint;
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed ? legendaryText : shiftHint;
 
-            string merged =
-                leftPresetText + "\n" +
-                rightPresetText + "\n\n" +
-                formWheelHint + "\n\n" +
-                passiveText + "\n\n" +
-                exHint + "\n";
+            if (shiftPressed)
+            {
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            }
+            else
+            {
+                string merged =
+                    leftPresetText.TrimEnd('\r', '\n') + "\n" +
+                    rightPresetText.TrimEnd('\r', '\n') + "\n" +
+                    formWheelHint.TrimEnd('\r', '\n') + "\n" +
+                    passiveText.TrimEnd('\r', '\n') + "\n" +
+                    exHint.TrimEnd('\r', '\n') + "\n";
 
-            tooltips.FindAndReplace("[GFB]", merged);
+                tooltips.FindAndReplace("[GFB]", merged);
+            }
+
             tooltips.Add(new TooltipLine(Mod, "BlossomFluxForestLegendaryText", legendarySection));
         }
 

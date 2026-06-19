@@ -39,14 +39,9 @@ Mods: {
 		}
 
 		Buffs: {
-			CosmicDischargeRiftGuardBuff: {
-				DisplayName: 裂隙不灭
-				Description: 致命伤害被压制，生命再生大幅提高。
-			}
-
 			CosmicDischargeRiftRevivalBuff: {
 				DisplayName: 裂隙复苏
-				Description: 神明裂隙打破极限，伤害提高20%。
+				Description: 神明裂隙打破极限，伤害、防御力与移动速度各提高20%。
 			}
 
 			CosmicDischargeUltimateGuardBuff: {
@@ -85,7 +80,6 @@ Mods: {
 				CosmicDischargeHookLimb.DisplayName: 裂隙钩肢
 				CosmicDischargeKillModeReady.DisplayName: 吞噬蓄势
 				CosmicDischargeKillModeSlash.DisplayName: 吞噬斩击
-				CosmicDischargeScytheProjectile.DisplayName: 裂隙镰影
 			}
 		}
 

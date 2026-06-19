@@ -59,11 +59,91 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             Projectile.rotation += MathHelper.Clamp(Projectile.velocity.X * 0.018f, -0.26f, 0.26f);
             Color color = GetPeaColor(PeaType);
             Lighting.AddLight(Projectile.Center, color.ToVector3() * 0.18f);
+            ApplyMovementRules();
 
             if (Projectile.localAI[0]++ <= 2f)
                 return;
 
             SpawnFlightEffects(PeaType);
+        }
+
+        private void ApplyMovementRules()
+        {
+            switch (PeaType)
+            {
+                case PeaShooterPeaType.Normal:
+                    if (StageIndex >= BalancePeaShooter.NormalHomingStageIndex)
+                        ApplyNormalHoming();
+                    break;
+
+                case PeaShooterPeaType.Fire:
+                case PeaShooterPeaType.Ice:
+                    Projectile.velocity *= BalancePeaShooter.FireIceAcceleration;
+                    break;
+
+                case PeaShooterPeaType.Poison:
+                    Projectile.velocity *= BalancePeaShooter.PoisonDeceleration;
+                    break;
+            }
+        }
+
+        private void ApplyNormalHoming()
+        {
+            if (Projectile.localAI[0] < BalancePeaShooter.NormalHomingDelay)
+            {
+                float wander = (float)Math.Sin((Projectile.localAI[0] + Projectile.identity * 5f) * 0.08f) * 0.006f;
+                Projectile.velocity = Projectile.velocity.RotatedBy(wander);
+                return;
+            }
+
+            NPC target = FindNearestTarget(BalancePeaShooter.NormalHomingRange);
+            if (target is null)
+                return;
+
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            if (currentSpeed < 0.1f)
+            {
+                currentVelocity = Projectile.Center.DirectionTo(target.Center) * 4f;
+                currentSpeed = currentVelocity.Length();
+            }
+
+            Vector2 desiredDirection = Projectile.Center.DirectionTo(target.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+            float warmup = Utils.GetLerpValue(BalancePeaShooter.NormalHomingDelay, BalancePeaShooter.NormalHomingDelay + 36f, Projectile.localAI[0], true);
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+            float targetSpeed = MathHelper.Min(currentSpeed * BalancePeaShooter.NormalHomingMaxSpeedMultiplier, currentSpeed + 2.6f);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            Projectile.velocity = (currentVelocity * BalancePeaShooter.NormalHomingInertia + desiredVelocity * pullStrength) / (BalancePeaShooter.NormalHomingInertia + pullStrength);
+
+            float sideSway = (float)Math.Sin((Projectile.localAI[0] + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > targetSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * targetSpeed;
+        }
+
+        private NPC FindNearestTarget(float maxDistance)
+        {
+            NPC closestTarget = null;
+            float closestDistance = maxDistance;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= closestDistance)
+                    continue;
+
+                closestDistance = distance;
+                closestTarget = npc;
+            }
+
+            return closestTarget;
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -188,13 +268,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
                 int lightningIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center,
-                    direction.RotatedByRandom(0.16f) * 18f,
+                    direction.RotatedByRandom(0.16f) * 18f * BalancePeaShooter.ElectricLightningSpeedMultiplier,
                     ModContent.ProjectileType<PeaShooterLightning>(),
                     damage,
                     Projectile.knockBack * 0.25f,
                     Projectile.owner,
                     0f,
-                    0.2f);
+                    BalancePeaShooter.ElectricLightningSizeMultiplier);
 
                 if (Main.projectile.IndexInRange(lightningIndex))
                 {
@@ -502,6 +582,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             _ => new Color(126, 238, 92)
         };
 
+        internal static float GetInitialSpeedMultiplier(PeaShooterPeaType peaType) => peaType switch
+        {
+            PeaShooterPeaType.Rock => BalancePeaShooter.RockSpeedMultiplier,
+            PeaShooterPeaType.Starlight => BalancePeaShooter.StarlightSpeedMultiplier,
+            PeaShooterPeaType.Poison => BalancePeaShooter.PoisonSpeedMultiplier,
+            _ => 1f
+        };
+
         internal static int GetDustType(PeaShooterPeaType peaType) => peaType switch
         {
             PeaShooterPeaType.Electric => DustID.Electric,
@@ -639,7 +727,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float BounceCount => ref Projectile.localAI[0];
-        private float sizeMult = 0.2f;
+        private int time;
+        private float colorValue;
+        private float sizeMult = BalancePeaShooter.ElectricLightningSizeMultiplier;
 
         public override void SetStaticDefaults()
         {
@@ -655,31 +745,47 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 3;
-            Projectile.timeLeft = 72;
+            Projectile.timeLeft = 120;
             Projectile.extraUpdates = 18;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 12;
+            Projectile.localNPCHitCooldown = 20;
         }
 
         public override void AI()
         {
-            if (Projectile.ai[1] > 0f)
+            colorValue = MathHelper.Lerp(colorValue, 50f, 0.025f);
+            Color usedColor = Color.Lerp(Color.Cyan, Color.Orchid, Utils.GetLerpValue(0f, 50f, colorValue));
+
+            if (time == 0)
+            {
+                colorValue += 30f;
                 sizeMult = Projectile.ai[1];
+                if (sizeMult <= 0f)
+                    sizeMult = BalancePeaShooter.ElectricLightningSizeMultiplier;
+            }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, new Color(80, 220, 255).ToVector3() * 0.11f);
+            Lighting.AddLight(Projectile.Center, usedColor.ToVector3() * 0.32f);
+
+            SpawnArmoredShellLikeFlightFX(usedColor);
+            time++;
+        }
+
+        private void SpawnArmoredShellLikeFlightFX(Color usedColor)
+        {
+            Vector2 pos = Projectile.Center;
 
             if (Projectile.timeLeft % 4 == 0)
             {
                 Particle bolt = new BoltParticle(
-                    Projectile.Center,
+                    pos,
                     -Projectile.velocity * 0.05f,
                     false,
-                    20,
+                    30,
                     0.6f * sizeMult,
-                    Main.rand.NextBool(4) ? Color.Orchid : Color.Cyan,
+                    usedColor,
                     new Vector2(1.8f, 0.8f) * sizeMult,
                     true,
                     true,
@@ -688,21 +794,50 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
                 GeneralParticleHandler.SpawnParticle(bolt);
             }
 
-            if (Main.rand.NextBool(24))
+            if (Main.rand.NextBool(35))
             {
                 Particle sideBolt = new BoltParticle(
-                    Projectile.Center,
+                    pos,
                     Projectile.velocity.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.3f, 1.9f),
                     false,
-                    16,
-                    Main.rand.NextFloat(0.04f, 0.055f),
-                    Color.Cyan,
-                    new Vector2(0.36f, 0.16f),
+                    23,
+                    Main.rand.NextFloat(0.2f, 0.25f) * sizeMult,
+                    usedColor,
+                    new Vector2(1.8f, 0.8f) * sizeMult,
                     true,
                     true,
                     false,
-                    0.06f);
+                    0.3f * sizeMult);
                 GeneralParticleHandler.SpawnParticle(sideBolt);
+            }
+
+            if (Main.rand.NextBool(10))
+            {
+                Particle drainLine = new CustomSpark(
+                    pos,
+                    Projectile.velocity * Main.rand.NextFloat(-0.4f, 0.4f),
+                    "CalamityMod/Particles/DrainLineBloom",
+                    false,
+                    80,
+                    Main.rand.NextFloat(1.2f, 1.3f) * sizeMult,
+                    usedColor,
+                    new Vector2(1f, 4f) * sizeMult,
+                    true,
+                    true);
+                GeneralParticleHandler.SpawnParticle(drainLine);
+            }
+
+            if (time % 5 == 0)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    pos,
+                    DustID.FireworksRGB,
+                    new Vector2(5f, 5f).RotatedByRandom(100f) * Main.rand.NextFloat(0.5f, 1f) * sizeMult,
+                    0,
+                    default,
+                    Main.rand.NextFloat(0.45f, 0.6f) * sizeMult);
+                dust.noGravity = true;
+                dust.color = usedColor;
             }
         }
 
@@ -715,22 +850,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Electrified, BalancePeaShooter.DebuffDuration);
-
-            for (int i = 0; i < 3; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                    target.Center,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.7f, 2.2f),
-                    true,
-                    12,
-                    Main.rand.NextFloat(0.025f, 0.04f),
-                    Main.rand.NextBool(4) ? Color.Orchid : Color.Cyan,
-                    new Vector2(0.36f, 0.16f),
-                    true,
-                    true,
-                    false,
-                    0.12f));
-            }
+            SpawnArmoredShellLikeHitFX(target.Center, BounceCount >= 1f ? 1.05f : 1.35f);
 
             if (BounceCount >= 1f)
             {
@@ -747,9 +867,50 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             }
 
             Projectile.Center = target.Center;
-            Projectile.velocity = target.Center.DirectionTo(next.Center) * MathHelper.Max(Projectile.velocity.Length(), 16f);
-            Projectile.timeLeft = Math.Min(Projectile.timeLeft, 48);
+            Projectile.velocity = target.Center.DirectionTo(next.Center) * MathHelper.Max(Projectile.velocity.Length(), 18f * BalancePeaShooter.ElectricLightningSpeedMultiplier);
+            Projectile.timeLeft = Math.Min(Projectile.timeLeft, 72);
+            colorValue += 18f;
+            sizeMult = MathHelper.Max(sizeMult, BalancePeaShooter.ElectricLightningSizeMultiplier * 0.8f);
             Projectile.netUpdate = true;
+        }
+
+        private void SpawnArmoredShellLikeHitFX(Vector2 pos, float fxScale)
+        {
+            float scale = fxScale * sizeMult;
+            for (int i = 0; i < (int)(7 * fxScale); i++)
+            {
+                Particle spark = new BoltParticle(
+                    pos,
+                    new Vector2(4f, 4f).RotatedByRandom(100f) * Main.rand.NextFloat(0.3f, 1.9f) * scale,
+                    true,
+                    13,
+                    Main.rand.NextFloat(0.1f, 0.15f) * scale,
+                    Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid,
+                    new Vector2(1.8f, 0.8f) * sizeMult,
+                    true,
+                    true,
+                    false,
+                    0.7f * sizeMult);
+                GeneralParticleHandler.SpawnParticle(spark);
+
+                Dust dust = Dust.NewDustPerfect(
+                    pos,
+                    ModContent.DustType<LightDust>(),
+                    new Vector2(5f, 5f).RotatedByRandom(100f) * Main.rand.NextFloat(0.5f, 1f) * scale,
+                    0,
+                    default,
+                    Main.rand.NextFloat(0.4f, 0.55f) * scale);
+                dust.noGravity = !Main.rand.NextBool(3);
+                dust.color = Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid;
+            }
+
+            for (int i = 0; i < 2; i++)
+            {
+                Particle orb = new CustomPulse(pos, Vector2.Zero, Color.Orchid, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.966f * scale, 0.35f * scale, 14);
+                GeneralParticleHandler.SpawnParticle(orb);
+                Particle orb2 = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.6475f * scale, 0.14f * scale, 14);
+                GeneralParticleHandler.SpawnParticle(orb2);
+            }
         }
 
         private NPC FindBounceTarget(NPC previousTarget)
@@ -798,8 +959,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
                 if (previous.HasValue)
                 {
                     float fade = 1f - i / (float)Projectile.oldPos.Length;
-                    DrawSegment(pixel, previous.Value, current, new Color(80, 220, 255) * fade, 1.2f * fade);
-                    DrawSegment(pixel, previous.Value, current, Color.White * 0.5f * fade, 0.45f * fade);
+                    DrawSegment(pixel, previous.Value, current, new Color(80, 220, 255) * fade, 3.2f * sizeMult * fade);
+                    DrawSegment(pixel, previous.Value, current, Color.White * 0.55f * fade, 1.35f * sizeMult * fade);
                 }
                 previous = current;
             }

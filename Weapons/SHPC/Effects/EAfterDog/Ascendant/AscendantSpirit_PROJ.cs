@@ -385,37 +385,37 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ascendant
         private void SpawnRhythmicFlightStars(Vector2 direction, Vector2 normal, Color visualColor)
         {
             int flightBeat = (int)(launchTimer / (Projectile.extraUpdates + 1f));
-            if (flightBeat <= 0 || flightBeat % 3 != 0)
+            if (flightBeat <= 0)
                 return;
 
-            float beatPhase = flightBeat * 0.73f + Projectile.identity * 0.17f;
-            int starCount = flightBeat % 2 == 0 ? 5 : 3;
-            float spacing = starCount == 5 ? 5.5f : 7f;
-            Vector2 anchor = Projectile.Center - direction * (18f + starCount * 2f);
+            float beatPhase = flightBeat * 0.62f + Projectile.identity * 0.19f;
+            int starCount = flightBeat % 2 == 0 ? 2 : 1;
+            Vector2 anchor = Projectile.Center - direction * 18f;
 
             for (int i = 0; i < starCount; i++)
             {
-                float lane = i - (starCount - 1f) * 0.5f;
-                float pulse = (float)Math.Sin(beatPhase + i * 1.17f);
-                Vector2 starPosition = anchor - direction * (i * 4.5f) + normal * (lane * spacing + pulse * 2.2f);
-                Vector2 starVelocity = -direction * Main.rand.NextFloat(0.75f, 1.7f) + normal * (lane * 0.1f + pulse * 0.55f);
-                float scale = Main.rand.NextFloat(0.075f, 0.13f) * (i == starCount / 2 ? 1.25f : 1f);
+                float spiralPhase = beatPhase + i * MathHelper.Pi;
+                float spiralOffset = (float)Math.Sin(spiralPhase) * 6.5f;
+                float depthOffset = (float)Math.Cos(spiralPhase) * 3.2f;
+                Vector2 starPosition = anchor - direction * (i * 4.2f + depthOffset) + normal * spiralOffset;
+                Vector2 starVelocity = -direction * Main.rand.NextFloat(0.45f, 1.15f) + normal * ((float)Math.Cos(spiralPhase) * 0.55f);
+                float scale = Main.rand.NextFloat(0.055f, 0.095f);
 
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     starPosition,
                     starVelocity,
                     "CalamityMod/Particles/PulseStar",
                     false,
-                    Main.rand.Next(14, 22),
+                    Main.rand.Next(11, 17),
                     scale,
-                    Color.Lerp(GetRandomThemeColor(visualColor), Color.White, 0.28f),
+                    Color.Lerp(GetRandomThemeColor(visualColor), Color.White, 0.34f),
                     Vector2.One,
                     glowCenter: true,
-                    shrinkSpeed: 0.24f,
-                    glowOpacity: 0.72f));
+                    shrinkSpeed: 0.3f,
+                    glowOpacity: 0.58f));
             }
 
-            if (flightBeat % 6 == 0)
+            if (flightBeat % 8 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     anchor,

@@ -12,6 +12,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public static float DragonEyeBloomScale() => 0.75f; // SHPC BloomCircle scale at maximum visual power.
         public static float DragonEyeHalfStarMinScale() => 3f; // SHPC HalfStar random scale lower bound.
         public static float DragonEyeHalfStarMaxScale() => 4.5f; // SHPC HalfStar random scale upper bound.
+        public static float DragonEyeSizeMultiplier() => 0.33f; // Global scale multiplier for all dragon-eye starburst sizes.
+        public static float DragonEyeBrightnessMultiplier() => 0.66f; // Global opacity multiplier for all dragon-eye starburst colors.
 
         public static string SourceFile => "Weapons/PristineFury/NewLegendPristineFuryHoldOut_DragonDrawData.cs";
 

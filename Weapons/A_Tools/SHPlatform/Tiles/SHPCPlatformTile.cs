@@ -14,8 +14,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform.Tiles
 
         public override void SetStaticDefaults()
         {
-            RegisterItemDrop(ModContent.ItemType<SHPCPlatform>());
-
             Main.tileLighted[Type] = true;
             Main.tileFrameImportant[Type] = true;
             Main.tileSolidTop[Type] = true;

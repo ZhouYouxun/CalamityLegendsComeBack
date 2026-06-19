@@ -479,6 +479,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             stage = MaxHeatStage;
             stageTimer = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4), MaxHeatStage);
             overheatTimer = 0;
+            bool heatModuleEquipped = player.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped;
             int shutdownTime = balance.GetForcedShutdownTime(player);
             forcedShutdownVisualDuration = shutdownTime;
             fireStopTimer = shutdownTime;
@@ -488,7 +489,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             heatPlayer.StartForcedShutdownCooling(shutdownTime, MaxHeatStage);
             TriggerStageOutlinePulse();
             SpawnForcedShutdownGasBurst();
-            SpawnHeatRedirectField(player, 280, shutdownTime);
+            SpawnHeatRedirectField(player, heatModuleEquipped ? 420 : 280, shutdownTime);
         }
 
         private void ApplyRecoilRotation()
@@ -663,7 +664,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             SpawnNormalShotMuzzleEffect(player, Vector2.UnitX.RotatedBy(Projectile.rotation));
 
             if (stage >= 5 && (int)Main.GameUpdateCount % 15 == 0)
-                SpawnHeatRedirectField(player, 200, 45);
+                SpawnHeatRedirectField(player, 240, 45);
         }
 
         #endregion
