@@ -54,7 +54,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private bool leftHeldLastFrame;
         private bool rightHeldLastFrame;
         private int rightChargeTimer;
-        private bool rightChargeReady;
         private int rightCooldownTimer;
         private int muzzleFlashTimer;
         private int leftEffectResetKey = -1;
@@ -75,8 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal Player Owner => Main.player[Projectile.owner];
         internal Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         internal Vector2 GunTipPosition => Projectile.Center + AimDirection * 2f;
-        internal Vector2 DragonMouthPosition => NewLegendPristineFuryHoldOut_DragonDrawData.GetDragonMouthPosition(Projectile.Center, AimDirection, Owner.gravDir);
-        internal Vector2 DragonEyePosition => NewLegendPristineFuryHoldOut_DragonDrawData.GetDragonEyePosition(Projectile.Center, AimDirection, Owner.gravDir);
+        internal Vector2 DragonEyePosition => NewLegendPristineFuryHoldOut_DragonDrawData.GetDragonEyePosition(Projectile.Center, AimDirection, Owner.gravDir, Projectile.spriteDirection);
         internal PristineFuryMark CurrentMark => Owner.GetModPlayer<PristineFuryPlayer>().CurrentMark;
 
         public override void SetStaticDefaults()
@@ -566,7 +564,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private void ResetRightCharge()
         {
             rightChargeTimer = 0;
-            rightChargeReady = false;
 
             int chargeType = ModContent.ProjectileType<PristineFuryRightNovaChargeOrb>();
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -758,24 +755,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         internal void SpawnMuzzleBurst(Color color, float scale = 1f)
         {
-            if (Main.dedServ)
-                return;
-
-            Vector2 direction = AimDirection;
-            Vector2 muzzle = GunTipPosition - direction * 14f;
-
-            Particle glow = new GlowOrbParticle(
-                muzzle + direction * 2f,
-                direction * 1.8f,
-                false,
-                16,
-                0.46f * scale,
-                Color.Lerp(color, Color.White, 0.42f),
-                true,
-                false,
-                true);
-            GeneralParticleHandler.SpawnParticle(glow);
-
         }
 
         private void SpawnHookChargeEffects(float charge)
@@ -832,10 +811,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (hasGlow)
                 Main.EntitySpriteDraw(glowAsset.Value, drawPosition, frame, (Color.White with { A = 0 }) * (0.45f + flash), Projectile.rotation, origin, Projectile.scale, effects, 0);
             DrawDragonEyeGlow(leftVisualPower);
-            DrawDragonMouthSmoke(leftVisualPower);
-            DrawFakeCalamityArcNovaCharge();
-            DrawRightArcNovaCharge();
-            DrawMuzzleGlow(flash);
             DrawHookChargeBar();
             return false;
         }
@@ -846,228 +821,68 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return;
 
             Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeBloomTexturePath()).Value;
-            Texture2D star = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeStarTexturePath()).Value;
-            Texture2D iris = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeIrisTexturePath()).Value;
+            Texture2D halfStar = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeHalfStarTexturePath()).Value;
             Vector2 eye = DragonEyePosition - Main.screenPosition;
             Color theme = PristineFuryMarkHelper.GetColor(CurrentMark);
-            Color eyeColor = (Color.Lerp(theme, Color.White, 0.28f) with { A = 0 }) * power;
-
-            // fireRamp 类比 ApoctosisArray 的 manaPower：按住左键越久眼睛越亮越剧烈
-            float fireRamp = MathHelper.Clamp(dragonEyeTimer / 120f, 0f, 1f);
-            // reverseRamp 类比 reverseManaPower：控制正弦基线，决定星芒"静止时的偏置"
-            float reverseRamp = MathHelper.Lerp(0.62f, 0.14f, fireRamp);
-            float globalPulse = 0.88f + 0.12f * (float)Math.Sin(dragonEyeTimer * 0.22f);
+            Color coreWhite = Color.Lerp(theme, Color.White, 0.45f);
+            float manaPower = MathHelper.Clamp(power, 0f, 1f);
+            float reverseManaPower = MathHelper.Lerp(0.7f, 0.1f, manaPower > 0f ? 1f - manaPower : 0.5f);
+            Vector2 shake = Main.rand.NextVector2Circular(2f, 2f) * manaPower;
+            SpriteEffects flipSprite = Projectile.spriteDirection * Owner.gravDir == -1f
+                ? SpriteEffects.FlipHorizontally
+                : SpriteEffects.None;
+            int layerCount = NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeLayerCount();
 
             PFLeftEffectRules.BeginAdditive();
 
-            // 虹膜环：SmallBloomRingLayered 缓慢旋转，营造龙眼瞳孔/虹膜质感。
-            float irisScale = (0.078f + fireRamp * 0.048f) * globalPulse;
-            Main.EntitySpriteDraw(iris, eye, null, eyeColor * (0.42f + fireRamp * 0.30f),
-                Projectile.rotation + dragonEyeTimer * 0.038f,
-                iris.Size() * 0.5f, irisScale, SpriteEffects.None, 0);
-
-            // 中心 BloomCircle：接近正圆光晕（改掉原来偏扁的 0.18×0.12）
-            Main.EntitySpriteDraw(bloom, eye, null, eyeColor * 0.78f,
-                Projectile.rotation,
-                bloom.Size() * 0.5f, new Vector2(0.145f, 0.140f) * globalPulse, SpriteEffects.None, 0);
-
-            // FullStar 放射星芒：5层 × 双向 b — ApoctosisArray 结构，但关键差异在于旋转基准。
-            // ApoctosisArray 所有层都对齐武器轴（枪管方向）；
-            // 这里改为「放射五角分布」（TwoPi * i / 5f），星芒从眼球向四周散开，而非指向同一方向。
-            int layers = 5;
-            for (int i = 0; i < layers; i++)
+            for (int i = 0; i < layerCount; i++)
             {
-                float iMult = 1f - 0.10f * i;
+                float iMult = 1f - 0.1f * i;
+                Color layerColor = (Color.Lerp(theme, coreWhite, i * 0.1f) with { A = 0 }) * power;
+
+                Main.EntitySpriteDraw(
+                    bloom,
+                    eye + shake,
+                    null,
+                    layerColor,
+                    Main.rand.NextFloat(-5f, 5f),
+                    bloom.Size() * 0.5f,
+                    new Vector2(1f, 0.35f)
+                        * NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeBloomScale()
+                        * manaPower
+                        * Main.rand.NextFloat(0.7f, 1.3f)
+                        * iMult,
+                    flipSprite,
+                    0);
 
                 for (int b = -1; b <= 1; b += 2)
                 {
-                    // 正弦脉冲率略快于 ApoctosisArray 的射击模式（20f），因为眼睛要显得更活跃
                     float sine = MathHelper.Lerp(
-                        (float)Math.Sin(dragonEyeTimer * 22f / MathHelper.Pi),
-                        reverseRamp * b,
-                        0.72f);
-
-                    // 旋转：以放射状五角为基准 + 双向差速漂移（两个 b 方向转速微差，产生复合花样）
-                    // ApoctosisArray 用 Projectile.rotation + time*manaPower*Max(i-2,0)*0.2f + PiOver4*b
-                    // 我们：用 i 的五角相位 + dragonEyeTimer 驱动的差速漂移 + 同样的 PiOver4*b 偏置
-                    float rotation = MathHelper.TwoPi * i / layers
-                        + dragonEyeTimer * 0.036f * (b > 0 ? 1f : -1.08f)
-                        + fireRamp * Math.Max(i - 2, 0) * 0.30f
+                        (float)Math.Sin(Main.GlobalTimeWrappedHourly * 20f / MathHelper.Pi),
+                        reverseManaPower * b,
+                        0.75f);
+                    Vector2 starScale = new Vector2(0.3f, 1f * sine * b)
+                        * (Main.rand.NextFloat(
+                            NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeHalfStarMinScale(),
+                            NewLegendPristineFuryHoldOut_DragonDrawData.DragonEyeHalfStarMaxScale()) * iMult + manaPower * 1.2f);
+                    float rotation = Projectile.rotation
+                        + dragonEyeTimer * manaPower * Math.Max(i - 2, 0) * 0.2f
                         + MathHelper.PiOver4 * b;
 
-                    float starOpacity = (0.40f + fireRamp * 0.32f + power * 0.14f) * (1f - 0.10f * i);
-                    // 比例：X 窄（针形），Y 随 sine × b 动态，整体随 fireRamp 放大
-                    Vector2 starScale = new Vector2(0.135f, (0.80f + fireRamp * 0.45f) * sine * b)
-                        * iMult * power;
-
-                    Main.EntitySpriteDraw(star, eye, null,
-                        (Color.Lerp(theme, Color.White, i * 0.10f) with { A = 0 }) * starOpacity,
-                        rotation, star.Size() * 0.5f, starScale, SpriteEffects.None, 0);
+                    Main.EntitySpriteDraw(
+                        halfStar,
+                        eye,
+                        null,
+                        layerColor,
+                        rotation,
+                        halfStar.Size() * 0.5f,
+                        starScale,
+                        flipSprite,
+                        0);
                 }
             }
 
             PFLeftEffectRules.EndAdditive();
-        }
-
-        private void DrawDragonMouthSmoke(float power)
-        {
-            if (power <= 0.025f || Main.dedServ)
-                return;
-
-            Texture2D magic = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthMagicTexturePath()).Value;
-            Texture2D smoke = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthSmokeTexturePath()).Value;
-            Vector2 mouth = DragonMouthPosition - Main.screenPosition;
-            Vector2 forward = AimDirection;
-            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Color theme = PristineFuryMarkHelper.GetColor(CurrentMark) with { A = 0 };
-            Color white = Color.White with { A = 0 };
-            float time = Main.GlobalTimeWrappedHourly * 4.8f;
-
-            PFLeftEffectRules.BeginAdditive();
-            for (int i = 0; i < 5; i++)
-            {
-                float local = i / 5f;
-                float swirl = time + local * MathHelper.TwoPi;
-                Vector2 offset = forward * (2f + i * 3.2f) + right * (float)Math.Sin(swirl) * (1.1f + i * 0.35f);
-                float opacity = power * (1f - local * 0.12f);
-                float scale = 0.035f + local * 0.012f;
-                Main.EntitySpriteDraw(smoke, mouth + offset, null, theme * opacity * 0.26f, Projectile.rotation + swirl * 0.18f, smoke.Size() * 0.5f, scale, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(magic, mouth + offset * 0.7f, null, Color.Lerp(theme, white, 0.25f) * opacity * 0.18f, -Projectile.rotation + swirl * 0.12f, magic.Size() * 0.5f, scale * 0.72f, SpriteEffects.None, 0);
-            }
-
-            PFLeftEffectRules.EndAdditive();
-        }
-
-        private void DrawFakeCalamityArcNovaCharge()
-        {
-            if (CurrentMark != PristineFuryMark.FakeCalamity || LeftChargeTimer <= 0 || Main.dedServ)
-                return;
-
-            const float chargeFrames = 108f;
-            float charge = MathHelper.Clamp(LeftChargeTimer / chargeFrames, 0f, 1f);
-            if (charge <= 0.02f)
-                return;
-
-            Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeBloomTexturePath()).Value;
-            Texture2D smear = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeSmearTexturePath()).Value;
-            Texture2D ring = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeRingTexturePath()).Value;
-            Vector2 direction = AimDirection;
-            Vector2 tip = DragonMouthPosition + direction * charge * 6f - Main.screenPosition;
-            Color theme = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, charge * 0.32f) with { A = 0 }) * charge;
-            Color white = (Color.White with { A = 0 }) * charge;
-            float chargeScale = charge * 1.3f;
-            float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
-
-            PFLeftEffectRules.BeginAdditive();
-            for (int i = 0; i < 6; i++)
-            {
-                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1f, 7f) * charge;
-                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(18f, 42f) + direction * -8f * (6f - chargeScale * 2f);
-                Vector2 smearScale = new(0.18f * chargeScale, (1.2f + (Main.rand.NextBool(4) ? 1.3f : 0f)) * 0.055f * chargeScale);
-                Main.EntitySpriteDraw(smear, drawPosition, null, theme * 0.86f, direction.RotatedByRandom(0.26f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                Color layerColor = Color.Lerp(theme, white, i * 0.22f);
-                Vector2 layerScale = new Vector2(1.42f, 1.02f) * chargeScale * (1f - i * 0.24f) * 0.16f * pulse;
-                Main.EntitySpriteDraw(bloom, tip, null, layerColor * (0.88f - i * 0.13f), Projectile.rotation, bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
-            }
-
-            Main.EntitySpriteDraw(ring, tip, null, theme * (0.24f + charge * 0.15f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.85f, ring.Size() * 0.5f, (0.1f + charge * 0.32f) * pulse, SpriteEffects.None, 0f);
-
-            if (charge >= 0.98f)
-            {
-                for (int satellite = 0; satellite < 3; satellite++)
-                {
-                    Vector2 orbit = (MathHelper.TwoPi * satellite / 3f + Main.GlobalTimeWrappedHourly * 7.2f).ToRotationVector2();
-                    Vector2 offset = new Vector2(orbit.X * 0.72f, orbit.Y * 1.18f).RotatedBy(Projectile.rotation) * chargeScale * 9f;
-                    Main.EntitySpriteDraw(bloom, tip + offset, null, Color.Lerp(theme, white, 0.45f) * 0.82f, Projectile.rotation, bloom.Size() * 0.5f, chargeScale * 0.055f, SpriteEffects.None, 0f);
-                }
-            }
-
-            PFLeftEffectRules.EndAdditive();
-        }
-
-        private void DrawRightArcNovaCharge()
-        {
-            if (rightChargeTimer <= 0 || Main.dedServ)
-                return;
-
-            float charge = MathHelper.Clamp(rightChargeTimer / (float)RightChargeMaxFrames, 0f, 1f);
-            if (charge <= 0.02f)
-                return;
-
-            Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeBloomTexturePath()).Value;
-            Texture2D smear = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeSmearTexturePath()).Value;
-            Texture2D ring = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeRingTexturePath()).Value;
-            Vector2 direction = AimDirection;
-            Vector2 tip = DragonMouthPosition + direction * charge * 5f - Main.screenPosition;
-            Color themeColor = PristineFuryMarkHelper.GetColor(CurrentMark);
-            Color fire = (Color.Lerp(themeColor, Color.White, 0.15f) with { A = 0 }) * charge;
-            Color white = (Color.White with { A = 0 }) * charge;
-            float chargeScale = Math.Min(charge * 1.35f, 1.35f);
-            float pulse = 0.9f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 13f + Projectile.identity);
-
-            PFLeftEffectRules.BeginAdditive();
-
-            for (int i = 0; i < 10; i++)
-            {
-                Vector2 place = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.5f, 5f) * charge;
-                Vector2 drawPosition = tip + place - Vector2.Lerp(place, -direction, 0.9f) * Main.rand.NextFloat(12f, 31f) + direction * -4f * (6f - chargeScale * 2f);
-                Vector2 smearScale = new(0.11f * chargeScale, (1.5f + (Main.rand.NextBool(3) ? 1.6f : 0f)) * 0.0275f * chargeScale);
-                Color smearColor = Main.rand.NextBool(4) ? white : fire;
-                Main.EntitySpriteDraw(smear, drawPosition, null, smearColor * 0.94f, direction.RotatedByRandom(0.168f).ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), smearScale, SpriteEffects.None, 0f);
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                Color layerColor = Color.Lerp(fire, white, i * 0.25f);
-                Vector2 layerScale = new Vector2(1.58f, 1.08f) * chargeScale * (1f - 0.21f * i) * 0.08f * pulse;
-                Main.EntitySpriteDraw(bloom, tip, null, layerColor * 0.9f, Projectile.rotation + Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
-            }
-
-            Main.EntitySpriteDraw(ring, tip, null, fire * (0.26f + charge * 0.32f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.25f, ring.Size() * 0.5f, (0.06f + charge * 0.2f) * pulse, SpriteEffects.None, 0f);
-
-            Main.EntitySpriteDraw(
-                smear,
-                tip + direction * (12f + charge * 10f),
-                null,
-                Color.Lerp(fire, white, 0.36f) * (0.52f + charge * 0.36f),
-                direction.ToRotation() - MathHelper.PiOver2,
-                new Vector2(smear.Width * 0.5f, smear.Height),
-                new Vector2(0.175f + charge * 0.14f, 0.06f + charge * 0.04f),
-                SpriteEffects.None,
-                0f);
-
-            if (rightChargeReady)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    Vector2 angle = (MathHelper.TwoPi * i / 3f).ToRotationVector2().RotatedBy(Main.GlobalTimeWrappedHourly * 7.2f);
-                    Vector2 offset = new Vector2(angle.X * 0.7f, angle.Y * 1.2f).RotatedBy(Projectile.rotation) * chargeScale * 4f;
-                    for (int layer = 0; layer < 2; layer++)
-                    {
-                        Color layerColor = Color.Lerp(fire, white, layer) * 0.8f;
-                        float layerScale = chargeScale * (1f - 0.25f * layer) * 0.0275f;
-                        Main.EntitySpriteDraw(bloom, tip + offset, null, layerColor, Main.rand.NextFloat(-5f, 5f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
-                    }
-                }
-            }
-
-            PFLeftEffectRules.EndAdditive();
-        }
-
-        private void DrawMuzzleGlow(float flash)
-        {
-            float charge = Owner.GetModPlayer<PristineFuryPlayer>().HookChargeOpacity;
-            float power = Math.Max(flash, charge * 0.7f);
-            if (power <= 0.02f || Main.dedServ)
-                return;
-
-            Color color = (Color.Lerp(PristineFuryMarkHelper.GetColor(CurrentMark), Color.White, 0.48f) with { A = 0 }) * power;
-            Vector2 drawCenter = GunTipPosition - AimDirection * 21f - Main.screenPosition;
-            PFMuzzleGlow.Draw(drawCenter, AimDirection, Projectile.rotation, color, power);
         }
 
         private void DrawHookChargeBar()

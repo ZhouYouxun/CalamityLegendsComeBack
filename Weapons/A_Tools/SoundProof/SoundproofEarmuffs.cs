@@ -9,12 +9,12 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace CalamityLegendsComeBack.Weapons.A_Tools
+namespace CalamityLegendsComeBack.Weapons.A_Tools.SoundProof
 {
     public class SoundproofEarmuffs : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/隔音耳罩";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/SoundProof/隔音耳罩";
 
         public bool Enabled;
 

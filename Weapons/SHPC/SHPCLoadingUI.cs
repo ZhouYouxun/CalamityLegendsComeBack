@@ -168,9 +168,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Rectangle slotArea = GetSlotArea(i, slotCount);
                 bool hovered = slotArea.Contains(Main.mouseX, Main.mouseY);
 
-                // 绿色提示：当悬停空槽且鼠标持有有效弹药时，且该弹药未被其他槽占用
-                bool canLoadHere = !slot.IsConfigured && hovered && hasCursorAmmo && !weapon.HasLoadedAmmoType(Main.mouseItem.type);
-                bool slotFull = slot.IsConfigured && hovered && hasCursorAmmo;
+                // 绿色：可以追加（空槽装新类型，或同类型追加到外置库）
+                bool canLoadHere = hovered && hasCursorAmmo && (
+                    (!slot.IsConfigured && !weapon.HasLoadedAmmoType(Main.mouseItem.type)) ||
+                    (slot.IsConfigured && Main.mouseItem.type == slot.AmmoType && slot.Reserve < NewLegendSHPC.MaxReservePerSlot)
+                );
+                // 红色：类型不符或外置库已满
+                bool slotFull = hovered && hasCursorAmmo && slot.IsConfigured &&
+                    (Main.mouseItem.type != slot.AmmoType || slot.Reserve >= NewLegendSHPC.MaxReservePerSlot);
 
                 DrawSlot(slot, slotArea, hovered, canLoadHere, slotFull);
 
@@ -206,38 +211,50 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 owner.mouseInterface = true;
                 NewLegendSHPC.SHPCMagazineSlot slot = weapon.GetMagazineSlot(i, owner);
 
-                // 左键：装填 or 取出
+                // 左键：装填（加入外置库）or 取出外置库
                 if (Main.mouseLeft && Main.mouseLeftRelease)
                 {
-                    if (!slot.IsConfigured && !Main.mouseItem.IsAir
-                        && EffectRegistry.IsRegisteredAmmo(Main.mouseItem.type)
-                        && !weapon.HasLoadedAmmoType(Main.mouseItem.type))
+                    if (!Main.mouseItem.IsAir && EffectRegistry.IsRegisteredAmmo(Main.mouseItem.type))
                     {
-                        // 从鼠标物品装填
-                        int effectID = EffectRegistry.GetEffectIDByAmmo(Main.mouseItem.type);
-                        int capacity = NewLegendSHPC.GetAdjustedAmmoCapacity(owner, effectID);
-                        weapon.DirectLoadMagazine(i, Main.mouseItem.type, effectID, capacity);
-
-                        Main.mouseItem.stack--;
-                        if (Main.mouseItem.stack <= 0)
-                            Main.mouseItem.TurnToAir();
-
-                        SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
+                        if (!slot.IsConfigured && !weapon.HasLoadedAmmoType(Main.mouseItem.type))
+                        {
+                            // 空槽：初始化类型并把鼠标上所有材料存入外置库
+                            int effectID = EffectRegistry.GetEffectIDByAmmo(Main.mouseItem.type);
+                            int canAdd = Math.Min(Main.mouseItem.stack, NewLegendSHPC.MaxReservePerSlot);
+                            weapon.AddToReserve(i, Main.mouseItem.type, effectID, canAdd);
+                            Main.mouseItem.stack -= canAdd;
+                            if (Main.mouseItem.stack <= 0)
+                                Main.mouseItem.TurnToAir();
+                            SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
+                        }
+                        else if (slot.IsConfigured && Main.mouseItem.type == slot.AmmoType
+                                 && slot.Reserve < NewLegendSHPC.MaxReservePerSlot)
+                        {
+                            // 相同材料：追加到外置库
+                            int canAdd = Math.Min(Main.mouseItem.stack, NewLegendSHPC.MaxReservePerSlot - slot.Reserve);
+                            if (canAdd > 0)
+                            {
+                                weapon.AddToReserve(i, slot.AmmoType, slot.EffectID, canAdd);
+                                Main.mouseItem.stack -= canAdd;
+                                if (Main.mouseItem.stack <= 0)
+                                    Main.mouseItem.TurnToAir();
+                                SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.58f, Pitch = 0.08f }, owner.Center);
+                            }
+                        }
                     }
-                    else if (slot.HasAmmo && Main.mouseItem.IsAir)
+                    else if (Main.mouseItem.IsAir && slot.IsConfigured && slot.Reserve > 0)
                     {
-                        // 取出到鼠标
+                        // 取出外置库全部到鼠标（不动内弹夹）
                         Item returned = new Item();
                         returned.SetDefaults(slot.AmmoType);
-                        returned.stack = 1;
+                        returned.stack = slot.Reserve;
                         Main.mouseItem = returned;
-                        weapon.PublicClearMagazine(i);
-
+                        weapon.SetReserve(i, 0);
                         SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.1f }, owner.Center);
                     }
                 }
 
-                // 右键：弹回背包
+                // 右键：全部弹回背包（外置库直接返还 + 内弹夹概率返还）
                 if (Main.mouseRight && Main.mouseRightRelease)
                 {
                     if (slot.IsConfigured)
@@ -404,11 +421,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 hovered ? 0.03f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f) : 0f,
                 srcSize * 0.5f, fitScale * hoverScale * bob, SpriteEffects.None, 0f);
 
+            // 外置库数量（右下角，橙色）
+            CalamityUtils.DrawBorderStringEightWay(
+                Main.spriteBatch, FontAssets.MouseText.Value,
+                $"×{slot.Reserve}",
+                new Vector2(slotArea.Right, slotArea.Bottom) - new Vector2(22f, 16f),
+                slot.Reserve > 0 ? new Color(255, 185, 50) : new Color(100, 100, 100), Color.Black, 0.52f);
+
+            // 内弹夹剩余发数（左下角，青色）
             CalamityUtils.DrawBorderStringEightWay(
                 Main.spriteBatch, FontAssets.MouseText.Value,
                 slot.Power.ToString(),
-                new Vector2(slotArea.Right, slotArea.Bottom) - new Vector2(18f, 18f),
-                (slot.HasAmmo ? Color.White : Color.LightGray), Color.Black, 0.55f);
+                new Vector2(slotArea.Left, slotArea.Bottom) - new Vector2(-4f, 16f),
+                slot.HasAmmo ? new Color(100, 220, 255) : new Color(80, 80, 80), Color.Black, 0.45f);
         }
         #endregion
 
@@ -445,16 +470,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (!slot.IsConfigured)
             {
                 return isChinese
-                    ? $"{slot.Index + 1}号弹夹：空  [左键：将材料拿到鼠标上，再点此处装填  右键：无效]"
-                    : $"Canister {slot.Index + 1}: Empty  [LClick: hold ammo on cursor then click to load]";
+                    ? $"{slot.Index + 1}号弹夹：空  [左键（材料在鼠标上）：存入外置库  右键：无效]"
+                    : $"Canister {slot.Index + 1}: Empty  [LClick with ammo on cursor: add to reserve]";
             }
 
             string itemName = Lang.GetItemNameValue(slot.AmmoType);
             int capacity = NewLegendSHPC.GetAdjustedAmmoCapacity(owner, slot.EffectID);
-            string action = isChinese
-                ? "  [左键：取到鼠标  右键：弹回背包]"
-                : "  [LClick: pick up  RClick: return to bag]";
-            return $"{slot.Index + 1}{(isChinese ? "号弹夹" : "")}: {itemName} ({slot.Power}/{capacity}){action}";
+
+            if (isChinese)
+            {
+                return $"{slot.Index + 1}号弹夹: {itemName}" +
+                    $"  内弹夹 {slot.Power}/{capacity}发" +
+                    $"  外置库 ×{slot.Reserve}/{NewLegendSHPC.MaxReservePerSlot}" +
+                    $"  [左键（材料）：追加储备  左键（空）：取出外置库  右键：全部弹回背包]";
+            }
+            else
+            {
+                return $"Canister {slot.Index + 1}: {itemName}" +
+                    $"  Internal {slot.Power}/{capacity}" +
+                    $"  Reserve ×{slot.Reserve}/{NewLegendSHPC.MaxReservePerSlot}" +
+                    $"  [LClick(ammo): add reserve  LClick(empty): take reserve  RClick: dump all]";
+            }
         }
         #endregion
 

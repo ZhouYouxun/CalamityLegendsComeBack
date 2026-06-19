@@ -16,11 +16,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         private const float HoldoutLength = 30f;
         private const float MuzzleLength = 36f;
         private const int MuzzleFlashFrames = 8;
+        private static readonly SoundStyle FireSound = new("CalamityLegendsComeBack/Sound/Other/Helldiver2/榴弹发射器-爆炸");
 
         private readonly BalancePeaShooter balance = new();
-        private int autoFireTimer;
+        private int burstCooldown;
+        private int queuedPulseCount;
+        private int queuedPulseTimer;
+        private int queuedLineCount;
         private int muzzleFlashTimer;
-        private bool leftHeldLastFrame;
         private bool rightHeldLastFrame;
         private float recoilOffset;
 
@@ -82,94 +85,138 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             bool leftHeld = validInput && Main.mouseLeft && !rightHeld;
 
             if (rightHeld && !rightHeldLastFrame)
-                ToggleMode();
+                CyclePeaType();
 
-            if (PeaPlayer.AutomaticFire)
-                HandleAutomaticFire(leftHeld);
-            else
-                HandleSemiAutomaticFire(leftHeld);
-
-            leftHeldLastFrame = leftHeld;
+            HandleBurstFire(leftHeld);
             rightHeldLastFrame = rightHeld;
         }
 
-        private void HandleAutomaticFire(bool leftHeld)
+        private void HandleBurstFire(bool leftHeld)
         {
             if (!leftHeld)
             {
-                autoFireTimer = 0;
+                burstCooldown = 0;
+                queuedPulseCount = 0;
+                queuedPulseTimer = 0;
                 return;
             }
 
             KeepWeaponUseAnimation();
 
-            if (autoFireTimer > 0)
+            if (queuedPulseCount > 0)
             {
-                autoFireTimer--;
+                TryFireQueuedPulse();
                 return;
             }
 
-            FireRandomPea();
-            autoFireTimer = BalancePeaShooter.AutoFireInterval - 1;
-        }
-
-        private void HandleSemiAutomaticFire(bool leftHeld)
-        {
-            if (!leftHeld)
+            if (burstCooldown > 0)
+            {
+                burstCooldown--;
                 return;
+            }
 
-            KeepWeaponUseAnimation();
-
-            if (!leftHeldLastFrame)
-                FireRandomPea();
+            QueueCurrentBurst();
+            TryFireQueuedPulse();
+            burstCooldown = BalancePeaShooter.BaseBurstInterval;
         }
 
-        private void ToggleMode()
+        private void QueueCurrentBurst()
         {
-            PeaPlayer.ToggleFireMode();
-            autoFireTimer = 0;
+            PeaShooterFireStyle style = BalancePeaShooter.GetFireStyle(balance.GetCompletedStageIndex());
+            switch (style)
+            {
+                case PeaShooterFireStyle.Double:
+                    queuedPulseCount = 2;
+                    queuedLineCount = 1;
+                    break;
 
-            string textKey = PeaPlayer.AutomaticFire
-                ? "Mods.CalamityLegendsComeBack.PeaShooter.ModeAuto"
-                : "Mods.CalamityLegendsComeBack.PeaShooter.ModeSemi";
-            Color textColor = PeaPlayer.AutomaticFire ? new Color(122, 255, 138) : new Color(255, 214, 104);
-            CombatText.NewText(Owner.Hitbox, textColor, Language.GetTextValue(textKey), dramatic: false, dot: false);
-            SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.65f, Pitch = PeaPlayer.AutomaticFire ? 0.18f : -0.12f }, Owner.Center);
+                case PeaShooterFireStyle.ThreeLine:
+                    queuedPulseCount = 1;
+                    queuedLineCount = 3;
+                    break;
+
+                case PeaShooterFireStyle.Gatling:
+                    queuedPulseCount = 4;
+                    queuedLineCount = 1;
+                    break;
+
+                case PeaShooterFireStyle.WildGatling:
+                    queuedPulseCount = 4;
+                    queuedLineCount = 5;
+                    break;
+
+                default:
+                    queuedPulseCount = 1;
+                    queuedLineCount = 1;
+                    break;
+            }
+
+            queuedPulseTimer = 0;
         }
 
-        private void FireRandomPea()
+        private void TryFireQueuedPulse()
         {
-            int stageIndex = balance.GetCompletedStageIndex();
-            PeaShooterPeaType peaType = (PeaShooterPeaType)Main.rand.Next((int)PeaShooterPeaType.Rock + 1);
+            if (queuedPulseTimer > 0)
+            {
+                queuedPulseTimer--;
+                return;
+            }
+
+            FirePeaPulse(queuedLineCount, PeaPlayer.SelectedPea, Projectile.damage, Projectile.knockBack, balance.GetCompletedStageIndex());
+            queuedPulseCount--;
+            queuedPulseTimer = BalancePeaShooter.BurstShotSpacing;
+        }
+
+        private void CyclePeaType()
+        {
+            PeaPlayer.CycleSelectedPea();
+            burstCooldown = 0;
+            queuedPulseCount = 0;
+            queuedPulseTimer = 0;
+
+            string peaName = Language.GetTextValue(BalancePeaShooter.GetPeaNameKey(PeaPlayer.SelectedPea));
+            CombatText.NewText(Owner.Hitbox, PeaShooterPea.GetPeaColor(PeaPlayer.SelectedPea), peaName, dramatic: false, dot: false);
+            SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 1.65f, Pitch = 0.08f + (int)PeaPlayer.SelectedPea * 0.03f }, Owner.Center);
+        }
+
+        private void FirePeaPulse(int lineCount, PeaShooterPeaType peaType, int damage, float knockback, int stageIndex)
+        {
             Vector2 aim = AimDirection;
-            Vector2 velocity = aim.RotatedByRandom(0.055f) * balance.GetShootSpeed();
             Vector2 muzzle = MuzzlePosition + Main.rand.NextVector2Circular(1.2f, 1.2f);
-            float knockback = Projectile.knockBack * BalancePeaShooter.GetKnockbackMultiplier(peaType);
+            float speed = balance.GetShootSpeed();
+            float startDegrees = -BalancePeaShooter.LineSpreadDegrees * (lineCount - 1) * 0.5f;
 
-            int peaIndex = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                muzzle,
-                velocity,
-                ModContent.ProjectileType<PeaShooterPea>(),
-                Projectile.damage,
-                knockback,
-                Projectile.owner,
-                (float)peaType,
-                stageIndex);
-
-            if (Main.projectile.IndexInRange(peaIndex))
+            for (int i = 0; i < lineCount; i++)
             {
-                Projectile pea = Main.projectile[peaIndex];
-                pea.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-                pea.originalDamage = pea.damage;
-                pea.netUpdate = true;
+                float angleDegrees = startDegrees + i * BalancePeaShooter.LineSpreadDegrees;
+                Vector2 velocity = aim.RotatedBy(MathHelper.ToRadians(angleDegrees) + Main.rand.NextFloat(-0.012f, 0.012f)) * speed;
+                Vector2 spawnPosition = muzzle + aim.RotatedBy(MathHelper.PiOver2) * (i - (lineCount - 1) * 0.5f) * 3f;
+
+                int peaIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    ModContent.ProjectileType<PeaShooterPea>(),
+                    damage,
+                    knockback,
+                    Projectile.owner,
+                    (float)peaType,
+                    stageIndex);
+
+                if (Main.projectile.IndexInRange(peaIndex))
+                {
+                    Projectile pea = Main.projectile[peaIndex];
+                    pea.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+                    pea.originalDamage = pea.damage;
+                    pea.netUpdate = true;
+                }
             }
 
             recoilOffset = MathHelper.Clamp(recoilOffset + (peaType == PeaShooterPeaType.Rock ? 5.4f : 2.5f), 0f, 12f);
             muzzleFlashTimer = MuzzleFlashFrames;
             Owner.velocity -= aim * (peaType == PeaShooterPeaType.Rock ? 0.24f : 0.08f);
             SpawnMuzzleDust(peaType, muzzle, aim);
-            SoundEngine.PlaySound(SoundID.Item17 with { Volume = 0.32f, Pitch = Main.rand.NextFloat(0.18f, 0.42f), MaxInstances = 8 }, muzzle);
+            SoundEngine.PlaySound(FireSound with { Volume = 3f, Pitch = Main.rand.NextFloat(0.18f, 0.42f), MaxInstances = 8 }, muzzle);
         }
 
         private void UpdatePose()

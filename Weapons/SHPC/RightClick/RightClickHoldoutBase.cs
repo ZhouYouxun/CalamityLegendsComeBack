@@ -96,8 +96,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
             if (!Main.mouseRight ||
-                (Projectile.owner == Main.myPlayer && !NewLegendSHPC.CanUseWorldRightClick(Owner)))
+                !NewLegendSHPC.CanUseWorldRightClick(Owner))
             {
                 Projectile.Kill();
                 return;
@@ -156,6 +159,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Owner.heldProj = Projectile.whoAmI;
             Owner.itemTime = Owner.itemAnimation = 2;
             Owner.itemRotation = (Projectile.velocity * Projectile.direction).ToRotation();
+            Owner.manaRegenDelay = System.Math.Max(Owner.manaRegenDelay, 60);
+            Owner.manaRegen = 0;
 
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir +
                                 (Owner.gravDir == -1 ? MathHelper.Pi : 0f);

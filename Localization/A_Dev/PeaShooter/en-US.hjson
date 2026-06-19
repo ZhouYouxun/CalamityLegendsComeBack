@@ -1,27 +1,21 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				NewLegendPeaShooter: {
 					DisplayName: Pea Shooter
 					Tooltip: "[GFB]"
-					ModeAuto: Full Auto 30 RPS
-					ModeSemi: Semi Auto up to 60 RPS
-					PeaShooter_Intro: "[c/9FEA78:Current stage: {0}]"
-					PeaShooter_Mode: "[c/F7D87C:Current fire mode: {0}]"
-					PeaShooter_Left: "[c/9FEA78:Left click fires a random pea. Every pea splashes when it hits an enemy or tile.]"
-					PeaShooter_Right: "[c/F7D87C:Right click switches between full auto and semi auto. Full auto is fixed at 30 RPS; semi auto fires as fast as you click, up to 60 RPS.]"
-					PeaShooter_Passive: "[c/B8FF9E:Holding it improves jump power and grants +10% ranged critical strike chance.]"
-					PeaShooter_Beans:
+					PeaShooter_Left: "[c/9FEA78:Left click: current form is {0}.]"
+					PeaShooter_Right: "[c/F7D87C:Right click cycles peas. Current: {0}.]"
+					PeaShooter_Effect: "[c/B8FF9E:{0}]"
+					PeaShooter_Accessory:
 						'''
-						[c/FF8E55:Fire Pea: inflicts On Fire and Hellfire.]
-						[c/8FE8FF:Ice Pea: inflicts Frostburn and Frostbite.]
-						[c/8DFF6A:Poison Pea: inflicts Poisoned and Acid Venom.]
-						[c/80E6FF:Electric Pea: leaves a brief electric mist.]
-						[c/C9B28A:Rock Pea: has a larger splash radius and stronger knockback.]
+						[c/8FE8FF:Equip it to become a Pea Zombie.]
+						[c/8FE8FF:It fires random peas at the same rate.]
+						[c/79DFBF:Adrenaline briefly turns it into a Super Gatling Pea.]
 						'''
-					LegendaryHint: "[c/BABABA:Hold Shift to read the full record]"
-					LegendaryText: "[c/9FEA78:The first pop in the garden is not always a joke. Sometimes it plants the whole battlefield with craters.]"
+					PeaShooter_Zombie: "[c/9FEA78:Deals 1.5x damage to zombies.]"
+					PeaShooter_Flavor: "[c/BABABA:No matter how many times, we will defend the garden.]"
 				}
 			}
 		}
@@ -29,15 +23,34 @@
 		Projectiles: {
 			A_Dev: {
 				PeaShooterHoldout.DisplayName: Pea Shooter Holdout
+				PeaShooterASSHold.DisplayName: Pea Zombie Helmet
 				PeaShooterPea.DisplayName: Pea
 				PeaShooterSplash.DisplayName: Pea Splash
-				PeaShooterElectricCloud.DisplayName: Pea Electric Mist
+				PeaShooterLightning.DisplayName: Pea Micro Lightning
+				PeaShooterFirePatch.DisplayName: Pea Fire Patch
 			}
 		}
 
 		PeaShooter: {
-			ModeAuto: Full Auto 30 RPS
-			ModeSemi: Semi Auto up to 60 RPS
+			FireStyleSingle: Single Peashooter
+			FireStyleDouble: Repeater
+			FireStyleThreeLine: Threepeater
+			FireStyleGatling: Gatling Pea
+			FireStyleWildGatling: Wild Gatling Pea
+			PeaNameNormal: Normal Pea
+			PeaNameElectric: Electric Pea
+			PeaNameFire: Fire Pea
+			PeaNameIce: Ice Pea
+			PeaNameStarlight: Starlight Pea
+			PeaNamePoison: Poison Pea
+			PeaNameRock: Rock Pea
+			PeaEffectNormal: Normal Pea: direct hits deal 1.2x damage.
+			PeaEffectElectric: Electric Pea: releases tiny lightning.
+			PeaEffectFire: Fire Pea: may leave a brief fire patch.
+			PeaEffectIce: Ice Pea: can freeze non-boss enemies.
+			PeaEffectStarlight: Starlight Pea: infects with blue star sparks.
+			PeaEffectPoison: Poison Pea: rolls many toxic debuffs.
+			PeaEffectRock: Rock Pea: huge knockback, may stun bosses.
 		}
 	}
 }

@@ -16,7 +16,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Systems;
 
-namespace CalamityLegendsComeBack.Weapons.A_Tools
+namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
 {
     public class SHPCBook : ModItem, ILocalizedModType
     {

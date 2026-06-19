@@ -174,7 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             lifeTimer++;
 
-            Projectile.velocity *= 1.03f; // 更狂一点
+            Projectile.velocity *= 1.01f; // 更狂一点
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
@@ -187,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
                 if (Projectile.owner == Main.myPlayer)
                 {
-                    if (frameTimer % 4 == 0)
+                    if (frameTimer % 8 == 0)
                         ReleaseTrailingNovas(forward, right);
 
                     if (frameTimer % 2 == 0)

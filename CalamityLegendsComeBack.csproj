@@ -23,6 +23,7 @@
 	  <Folder Include="Weapons\A_Dev\MK14EBR\M14\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Olds\MarniteBayonet\" />
+	  <Folder Include="Weapons\A_Tools\CTRLBoss\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BlossomFlux\Hold\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
@@ -30,6 +31,7 @@
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\ApolloArtemis\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Thanatos\" />
+	  <Folder Include="Weapons\A_Upgrade\" />
 	  <Folder Include="Z_TeachingProjectile\" />
 	</ItemGroup>
 	<ItemGroup>

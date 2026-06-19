@@ -53,10 +53,10 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             }
 
             BarrierPlayer modPlayer = owner.GetModPlayer<BarrierPlayer>();
-            if (!modPlayer.ShieldActive)
+            if (!modPlayer.ShouldDrawShield)
             {
                 // Shattering visual only when shield was destroyed by damage
-                bool brokeFromDamage = modPlayer.ShieldCurrentHitPoints == 0 && modPlayer.ShieldHitFlashTimer > 0;
+                bool brokeFromDamage = modPlayer.BarrierVisible && modPlayer.ShieldCurrentHitPoints == 0 && modPlayer.ShieldHitFlashTimer > 0;
                 if (!Main.dedServ && brokeFromDamage)
                     SpawnBreakEffect(owner.Center);
                 Projectile.Kill();

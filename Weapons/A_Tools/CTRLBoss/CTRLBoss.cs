@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools
     public class CTRLBoss : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/CTRLBoss/CTRLBoss";
 
         private static int PanelType => ModContent.ProjectileType<CTRLBossPanel>();
 

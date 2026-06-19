@@ -26,14 +26,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         public int attackTime = 160;
         private float previousFlightState = -1f;
 
-        private Vector2 orbitAnchorCenter;
-        private Vector2 orbitStartOffset;
-        private float orbitAngle;
-        private float orbitRadius;
-        private float orbitRadiusTarget;
-        private int orbitDirection;
-        private bool orbitConfigured;
-
         private ref float FlightState => ref Projectile.localAI[0];
         private ref float FlightTimer => ref Projectile.localAI[1];
 
@@ -107,52 +99,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
         {
             FlightTimer++;
 
-            if (FlightState == 0f)
-            {
-                Vector2 toOwner = owner.Center - Projectile.Center;
-                float entryDistance = MathHelper.Clamp(toOwner.Length() * 0.45f, 54f, 110f);
-                Vector2 entryDirection = toOwner.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.9f);
-                Vector2 entryPoint = owner.Center + entryDirection * entryDistance;
-                Vector2 desiredVelocity = (entryPoint - Projectile.Center).SafeNormalize(Vector2.UnitY) * 14f;
-
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.18f);
-
-                if (Vector2.Distance(Projectile.Center, entryPoint) < 26f || FlightTimer > 45f)
-                {
-                    ConfigureOrbit(owner);
-                    FlightState = 1f;
-                    FlightTimer = 0f;
-                }
-                return;
-            }
-
-            if (FlightState == 1f)
-            {
-                if (!orbitConfigured || Vector2.Distance(orbitAnchorCenter, owner.Center) > 28f)
-                    ConfigureOrbit(owner);
-
-                orbitAnchorCenter = owner.Center;
-                orbitAngle += 0.15f * orbitDirection;
-
-                if ((int)FlightTimer % 10 == 0)
-                    orbitRadiusTarget = Main.rand.NextFloat(52f, 92f);
-
-                orbitRadius = MathHelper.Lerp(orbitRadius, orbitRadiusTarget, 0.1f);
-
-                Vector2 desiredPosition = orbitAnchorCenter + orbitAngle.ToRotationVector2() * orbitRadius;
-                Vector2 desiredVelocity = (desiredPosition - Projectile.Center).SafeNormalize(Vector2.UnitY) * 13f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.22f);
-
-                if (Math.Abs(orbitAngle) >= MathHelper.TwoPi)
-                {
-                    FlightState = 2f;
-                    FlightTimer = 0f;
-                }
-                return;
-            }
-
-            Vector2 returnVelocity = (owner.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 15f;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, returnVelocity, 0.24f);
+            FlightState = 2f;
+            Vector2 returnVelocity = (owner.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 18f;
+            Projectile.velocity = returnVelocity;
 
             if (Vector2.Distance(Projectile.Center, owner.Center) < 20f)
             {
@@ -173,21 +122,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
             int restored = owner.statMana - previousMana;
             if (restored > 0 && owner.whoAmI == Main.myPlayer)
                 owner.ManaEffect(restored);
-        }
-
-        private void ConfigureOrbit(Player owner)
-        {
-            orbitConfigured = true;
-            orbitAnchorCenter = owner.Center;
-            orbitStartOffset = Projectile.Center - owner.Center;
-
-            if (orbitStartOffset.LengthSquared() < 16f)
-                orbitStartOffset = Main.rand.NextVector2Unit() * Main.rand.NextFloat(56f, 84f);
-
-            orbitAngle = orbitStartOffset.ToRotation();
-            orbitRadius = MathHelper.Clamp(orbitStartOffset.Length(), 48f, 96f);
-            orbitRadiusTarget = Main.rand.NextFloat(52f, 92f);
-            orbitDirection = Main.rand.NextBool() ? 1 : -1;
         }
 
         private void SpawnSpawnEffects()

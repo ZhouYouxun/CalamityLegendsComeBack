@@ -19,7 +19,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<FastChipPlayer>().FastChipEquipped = true;
+            FastChipPlayer fastChip = player.GetModPlayer<FastChipPlayer>();
+            fastChip.FastChipEquipped = true;
+            fastChip.FastChipDrawbackActive = true;
         }
 
         public override void AddRecipes()

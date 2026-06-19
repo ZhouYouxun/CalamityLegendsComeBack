@@ -46,8 +46,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
-            bool wantsToRelease = !Main.mouseRight ||
-                (Projectile.owner == Main.myPlayer && !NewLegendSHPC.CanUseWorldRightClick(Owner));
+            bool wantsToRelease = Projectile.owner == Main.myPlayer &&
+                (!Main.mouseRight || !NewLegendSHPC.CanUseWorldRightClick(Owner));
 
             if (!wantsToRelease)
                 return;

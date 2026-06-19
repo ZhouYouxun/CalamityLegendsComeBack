@@ -32,10 +32,10 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.General.WastelandEnergyCore
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient<WulfrumMetalScrap>(10)
+                .AddIngredient<WulfrumMetalScrap>(5)
                 .AddIngredient(ModContent.Find<ModItem>("CalamityMod/ScorchedBone").Type, 10)
                 .AddIngredient(ModContent.Find<ModItem>("CalamityMod/SeaPrism").Type, 5)
-                .AddIngredient(ModContent.Find<ModItem>("CalamityMod/EnergyCore").Type, 5)
+                .AddIngredient(ModContent.Find<ModItem>("CalamityMod/EnergyCore").Type)
                 .AddIngredient(ItemID.ManaFlower)
                 .AddTile(TileID.TinkerersWorkbench)
                 .Register();

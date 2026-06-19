@@ -27,11 +27,25 @@ namespace CalamityLegendsComeBack.QOL
             recipe1.AddTile(TileID.WorkBenches);
             recipe1.Register();
 
+            Recipe recipeWulfrumScrap = Recipe.Create(ModContent.ItemType<WulfrumMetalScrap>(), 2);
+            recipeWulfrumScrap.AddIngredient(ModContent.ItemType<WulfrumMetalScrap>());
+            recipeWulfrumScrap.AddIngredient(ItemID.Chain);
+            recipeWulfrumScrap.AddIngredient(ItemID.StoneBlock, 5);
+            recipeWulfrumScrap.AddTile(TileID.WorkBenches);
+            recipeWulfrumScrap.Register();
+
             // 风暴上颚
             Recipe recipe2 = Recipe.Create(ModContent.ItemType<StormlionMandible>(), 10);
             recipe2.AddIngredient(ModContent.ItemType<StormjawStaff>(), 1);
             recipe2.AddTile(TileID.WorkBenches);
             recipe2.Register();
+
+            Recipe recipeStormlionMandible = Recipe.Create(ModContent.ItemType<StormlionMandible>(), 2);
+            recipeStormlionMandible.AddIngredient(ModContent.ItemType<StormlionMandible>());
+            recipeStormlionMandible.AddIngredient(ItemID.Cactus);
+            recipeStormlionMandible.AddIngredient(ItemID.AntlionMandible);
+            recipeStormlionMandible.AddTile(TileID.WorkBenches);
+            recipeStormlionMandible.Register();
             
             // 纯净凝胶
             Recipe recipe3 = Recipe.Create(ModContent.ItemType <PurifiedGel> (), 2);

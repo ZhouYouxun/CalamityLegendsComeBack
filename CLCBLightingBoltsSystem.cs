@@ -1294,6 +1294,45 @@ namespace CalamityLegendsComeBack
         }
 
 
+        public static void Spawn_PeaShooterBlueStars(Vector2 center, Vector2 forward, float intensity = 1f)
+        {
+            if (Main.dedServ)
+                return;
+
+            forward = forward.SafeNormalize(Vector2.UnitY);
+            int count = Math.Max(2, (int)Math.Round(7f * intensity));
+            Color[] colors =
+            {
+                new Color(82, 184, 255),
+                new Color(130, 216, 255),
+                new Color(210, 238, 255),
+                new Color(96, 132, 255)
+            };
+
+            for (int i = 0; i < count; i++)
+            {
+                PrettySparkleParticle spark = _poolPrettySparkle.RequestParticle();
+                float angle = MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 direction = angle.ToRotationVector2();
+                spark.ColorTint = colors[Main.rand.Next(colors.Length)];
+                spark.LocalPosition = center + Main.rand.NextVector2Circular(4f, 4f);
+                spark.Velocity = direction * Main.rand.NextFloat(0.8f, 2.6f + intensity) - forward * Main.rand.NextFloat(0.2f, 0.8f);
+                spark.Rotation = direction.ToRotation();
+                spark.Scale = new Vector2(
+                    Main.rand.NextFloat(1.15f, 2.4f) * intensity,
+                    Main.rand.NextFloat(0.35f, 0.72f) * intensity);
+                spark.FadeInNormalizedTime = 0.01f;
+                spark.FadeOutNormalizedTime = 0.9f;
+                spark.TimeToLive = Main.rand.Next(20, 34);
+                spark.FadeInEnd = 4;
+                spark.FadeOutStart = 12;
+                spark.FadeOutEnd = spark.TimeToLive;
+                spark.AdditiveAmount = 0.62f;
+                Main.ParticleSystem_World_OverPlayers.Add(spark);
+            }
+        }
+
+
         public static void Spawn_PlantScatterBurst(Vector2 center, int count = 18, float baseSpeed = 6f)
         {
             // 黄金角度分布（137.5°），让点排列有“自然美感”

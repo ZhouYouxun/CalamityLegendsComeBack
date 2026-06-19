@@ -140,27 +140,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
 
             bool notFiring = IsNotFiring();
             int tier = Player.GetModPlayer<SHPCEnergyCorePlayer>().EnergyCoreTier;
-            if (tier >= 3)
+            if (tier >= 1)
                 return notFiring;
 
-            bool notMovingHorizontally =
-                !Player.controlLeft &&
-                !Player.controlRight &&
-                Math.Abs(Player.velocity.X) <= 0.08f;
-
-            if (tier >= 2)
-                return notFiring && notMovingHorizontally;
-
-            bool noMovementInput =
-                !Player.controlLeft &&
-                !Player.controlRight &&
-                !Player.controlUp &&
-                !Player.controlDown &&
-                !Player.controlJump;
-            bool stationary = noMovementInput &&
-                              Player.velocity.LengthSquared() <= 0.01f &&
-                              Player.grapCount <= 0;
-            return stationary && notFiring;
+            return false;
         }
 
         private bool IsNotFiring()
@@ -210,8 +193,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Passive
                 Vector2 spawnOffset = angle.ToRotationVector2() * distance;
                 Vector2 spawnPosition = Player.Center + spawnOffset;
 
-                Vector2 inwardVelocity = (-spawnOffset).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.8f, 3.6f);
-                inwardVelocity += spawnOffset.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(-0.7f, 0.7f);
+                Vector2 inwardVelocity = (-spawnOffset).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(3.2f, 4.8f);
 
                 Projectile.NewProjectile(
                     Player.GetSource_FromThis(),

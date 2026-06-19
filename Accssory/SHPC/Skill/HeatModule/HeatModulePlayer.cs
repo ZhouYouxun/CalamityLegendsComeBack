@@ -6,7 +6,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule
     {
         public bool HeatModuleEquipped;
 
-        public float HeatGenerationMultiplier => HeatModuleEquipped ? 1.2f : 1f;
+        public float HeatGenerationMultiplier => HeatModuleEquipped ? 1.4f : 1f;
         public float HeatDissipationMultiplier => HeatModuleEquipped ? 0.67f : 1f;
 
         public float GetHeatDamageMultiplier(int heatStage)

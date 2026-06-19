@@ -56,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 120;
+            Projectile.netImportant = true;
         }
 
         public override bool? CanDamage() => false;
@@ -84,6 +85,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             UpdateTransform(owner);
+            if (Projectile.owner == Main.myPlayer)
+                Projectile.netUpdate = true;
             UpdateRecoil();
             TriggerBurstEffects(owner);
 
@@ -247,9 +250,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Main.myPlayer != Projectile.owner)
-                return false;
-
             Player owner = Main.player[Projectile.owner];
             if (owner.HeldItem.ModItem is not NewLegendSHPC)
                 return false;

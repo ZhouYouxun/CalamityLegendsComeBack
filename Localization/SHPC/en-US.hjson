@@ -1,48 +1,48 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				NewLegendSHPC: {
 					DisplayName: SHPC - Return of Legends
-					SHPC_LeftIntro:
-						'''
-						[c/66CCFF:Left Click: Fires energy spheres. Default white orbs deal AoE damage and improve with progression.]
-						[c/66CCFF:Load materials to change the attack. In inventory: right-click to clear current canister; Shift+right-click to clear all.]
-						[c/66CCFF:Current Loadout: ]
-						'''
-					SHPC_LoadingUIHint: "[c/66CCFF:While inventory is open, press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Place materials into canister slots to change left-click effects; right-click slot to return.]"
-					SHPC_Passive: "[c/B8FF9E:Passive (Resource Recovery): Holding SHPC grants +100 max mana, doubles mana potion restore, and reduces Mana Sickness to ~1/3 duration.]"
+					SHPC_LeftIntro: "[c/66CCFF:Left click fires energy orbs. By default, white orbs deal area damage.]"
+					SHPC_LoadingUIHint: "[c/66CCFF:Open inventory and press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Load specific materials to change attack effects.]"
+					SHPC_Passive: "[c/B8FF9E:Passive: increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
 					SHPC_RightIntro1:
 						'''
-						[c/FFB347:Right Click: Hold to fire a laser barrage. Sustained fire builds heat; overheat forces shutdown; heat dissipates when you stop.]
-						[c/FFB347:Higher heat levels unlock with progression, increasing damage and adding special effects.]
-						[c/FFB347:Current heat cap: Ⅰ (no bonus) | While firing, left click: consume one heat level, fire 3 energy orbs immediately.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:Current heat cap: I. Effect: no bonus.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro2:
 						'''
-						[c/FFB347:Right Click: Hold to fire a laser barrage. Sustained fire builds heat; overheat forces shutdown; heat dissipates when you stop.]
-						[c/FFB347:Higher heat levels unlock with progression, increasing damage and adding special effects.]
-						[c/FFB347:Current heat cap: Ⅱ (secondary beam added; beams pierce 3 enemies) | While firing, left click: consume one heat level, fire 3 energy orbs immediately.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:Current heat cap: II. Effect: adds a secondary beam; beams pierce 3 enemies.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro3:
 						'''
-						[c/FFB347:Right Click: Hold to fire a laser barrage. Sustained fire builds heat; overheat forces shutdown; heat dissipates when you stop.]
-						[c/FFB347:Higher heat levels unlock with progression, increasing damage and adding special effects.]
-						[c/FFB347:Current heat cap: Ⅲ (secondary beam first-hit may trigger small thermal blast; main beam first-hit may trigger medium blast) | While firing, left click: consume one heat level, fire 3 orbs.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:Current heat cap: III. Effect: first hits from main and secondary beams may trigger heat blasts.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro4:
 						'''
-						[c/FFB347:Right Click: Hold to fire a laser barrage. Sustained fire builds heat; overheat forces shutdown; heat dissipates when you stop.]
-						[c/FFB347:Higher heat levels unlock with progression, increasing damage and adding special effects.]
-						[c/FFB347:Current heat cap: Ⅳ (+5% beam dmg, 2nd secondary beam, blasts trigger through pierce; Ⅳ suppresses regen and burns user) | While firing, left click: consume one heat level, fire 3 orbs.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:Current heat cap: IV. Effect: adds a second secondary beam, increases damage, and lets heat blasts trigger through pierce.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_RightIntro5:
 						'''
-						[c/FFB347:Right Click: Hold to fire a laser barrage. Sustained fire builds heat; overheat forces shutdown; heat dissipates when you stop.]
-						[c/FFB347:Higher heat levels unlock with progression, increasing damage and adding special effects.]
-						[c/FFB347:Current heat cap: Ⅴ (infinite pierce, +5% beam dmg, bonus dmg based on target max life; Ⅴ rapidly drains user life) | While firing, left click: consume one heat level, fire 3 orbs.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Higher heat increases damage and adds special effects.]
+						[c/FFB347:Current heat cap: V. Effect: infinite pierce and bonus damage based on target maximum life.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
-					SHPC_Final: "[c/99B3FF:The system remains in evolution. Its flaws are not yet resolved, yet its potential endures. Perhaps one day, it will reach true completion.]"
+					SHPC_Final: "[c/99B3FF:The system is still evolving......]"
 					SHPC_EXHint:
 						'''
 						[c/66CCFF:EX Skill (Super Laser): When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
@@ -50,7 +50,7 @@
 						[c/66CCFF:After a brief charge, unleash a colossal laser that pierces through everything.]
 						'''
 					SHPC_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
-					SHPC_AmmoWheelHint: "[c/F7D87C:With inventory closed, hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the selection wheel; release over a sector to switch to that canister.]"
+					SHPC_AmmoWheelHint: "[c/F7D87C:Close inventory and press] [[c/F7D87C:{0}]] [c/F7D87C:to open the selection wheel and switch loaded ammo.]"
 					Tooltip: "[GFB]"
 					TooltipGFB: Have you finally arrived here?
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
@@ -76,7 +76,12 @@
 
 			FastChip: {
 				DisplayName: Fast Chip
-				Tooltip: Halves the maximum charge time of the EX super laser, but also halves the player's life regeneration
+				Tooltip:
+					'''
+					Left-click energy orbs grant double ultimate charge
+					Right-click laser barrage grants 1 ultimate charge per second
+					Life regeneration is halved; during right-click barrage, each heat level reduces life regeneration by another 2 HP/s
+					'''
 			}
 
 			DiffuChip: {
@@ -113,8 +118,8 @@
 					'''
 			}
 
-			Barrier: {
-				DisplayName: Barrier
+			MatrixChargingBarrier: {
+				DisplayName: Matrix Charging Barrier
 				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life rounded down to a multiple of 5. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
 			}
 
@@ -141,7 +146,7 @@
 				DisplayName: Heat Module
 				Tooltip:
 					'''
-					SHPC right-click shots generate 20% more heat and natural heat dissipation is reduced by 33%
+					SHPC right-click shots generate 40% more heat and natural heat dissipation is reduced by 33%
 					Each of the first two heat levels grants an additional 25% SHPC right-click damage, capped at +50%
 					Forced shutdown releases an expanded smoke field that repeatedly damages nearby enemies
 					At maximum Heat V, continued fire constantly releases damaging smoke fields around the player
@@ -153,6 +158,7 @@
 				Tooltip:
 					'''
 					Simultaneously activates all effects of Diffusion Chip, Fast Chip, Control Chip, and Ascension Chip
+					Inherits Fast Chip's charge benefits, but not its life regeneration penalties
 					Hiding visuals conceals the targeting reticle while preserving all effects
 					'''
 			}
@@ -179,7 +185,7 @@
 					+7% SHPC damage
 					SHPC left-click mana cost -8%; right-click mana cost -12%
 					SHPC left click gains 1 extra soul canister and loads 10% more ammo rounded up to a multiple of 5
-					While holding SHPC, stand still and cease fire to rapidly restore mana
+					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Halves SHPC right-click forced overheat shutdown time
 					'''
@@ -192,7 +198,7 @@
 					+15% SHPC damage
 					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
 					SHPC left click gains 2 extra soul canisters and loads 25% more ammo rounded up to a multiple of 5
-					While holding SHPC, stop moving horizontally and cease fire to rapidly restore mana
+					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Shortens right-click startup
 					Halves SHPC right-click forced overheat shutdown time
@@ -393,8 +399,8 @@
 
 		Cooldowns: {
 			SHPC_EX: SHPC Cooldown
-			SHPC_BarrierDurability: SHPC Barrier Durability
-			SHPC_BarrierRecharge: SHPC Barrier Recharge
+			SHPC_BarrierDurability: Matrix Charging Barrier Durability
+			SHPC_BarrierRecharge: Matrix Charging Barrier Recharge
 		}
 	}
 }

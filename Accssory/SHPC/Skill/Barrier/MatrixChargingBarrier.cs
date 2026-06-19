@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 {
-    public class Barrier : ModItem
+    public class MatrixChargingBarrier : ModItem
     {
         public override void SetDefaults()
         {
@@ -19,7 +19,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<BarrierPlayer>().BarrierEquipped = true;
+            BarrierPlayer modPlayer = player.GetModPlayer<BarrierPlayer>();
+            modPlayer.BarrierEquipped = true;
+            modPlayer.BarrierVisible = !hideVisual;
         }
 
         public override void AddRecipes()

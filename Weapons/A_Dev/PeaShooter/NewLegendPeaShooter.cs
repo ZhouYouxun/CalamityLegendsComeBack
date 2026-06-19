@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
@@ -14,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         public const string TextureAssetPath = "CalamityLegendsComeBack/Weapons/A_Dev/PeaShooter/豌豆炮";
 
         private static int HoldoutType => ModContent.ProjectileType<PeaShooterHoldout>();
+        private static int AccessoryHoldoutType => ModContent.ProjectileType<PeaShooterASSHold>();
         private readonly BalancePeaShooter balance = new();
 
         public new string LocalizationCategory => "Items.Weapons";
@@ -28,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         {
             Item.width = 56;
             Item.height = 28;
-            Item.damage = BalancePeaShooter.BaseDamage[0];
+            Item.damage = balance.GetBaseDamage();
             Item.DamageType = DamageClass.Ranged;
             Item.useTime = 2;
             Item.useAnimation = 2;
@@ -40,9 +42,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             Item.knockBack = 3.2f;
             Item.UseSound = null;
             Item.shoot = HoldoutType;
-            Item.shootSpeed = BalancePeaShooter.ShootSpeeds[0];
+            Item.shootSpeed = balance.GetShootSpeed();
             Item.value = CalamityGlobalItem.RarityTurquoiseBuyPrice;
             Item.rare = ModContent.RarityType<Turquoise>();
+            Item.accessory = true;
             Item.Calamity().devItem = true;
         }
 
@@ -54,6 +57,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
 
         public override bool ConsumeItem(Player player) => false;
 
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.JungleSpores, 3)
+                .AddIngredient(ItemID.Vine)
+                .AddIngredient(ItemID.RichMahogany, 15)
+                .AddTile(TileID.WorkBenches)
+                .Register();
+        }
+
         public override void HoldItem(Player player)
         {
             player.Calamity().mouseWorldListener = true;
@@ -61,7 +74,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
                 player.Calamity().rightClickListener = true;
 
             player.GetModPlayer<PeaShooterPlayer>().SetHoldingPeaShooter();
-            ApplyHoldPassives(player);
 
             if (Main.myPlayer != player.whoAmI || player.ownedProjectileCounts[HoldoutType] > 0)
                 return;
@@ -80,6 +92,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
                 Main.projectile[holdoutIndex].CritChance = player.GetWeaponCrit(Item);
         }
 
+        public override void UpdateAccessory(Player player, bool hideVisual)
+        {
+            PeaShooterPlayer peaPlayer = player.GetModPlayer<PeaShooterPlayer>();
+            peaPlayer.SetPeaShooterAccessory();
+
+            if (player.dead || Main.myPlayer != player.whoAmI || player.ownedProjectileCounts[AccessoryHoldoutType] > 0)
+                return;
+
+            Projectile.NewProjectile(
+                player.GetSource_FromThis(),
+                player.Center,
+                Vector2.Zero,
+                AccessoryHoldoutType,
+                0,
+                Item.knockBack,
+                player.whoAmI);
+        }
+
         public override void UpdateInventory(Player player)
         {
             Item.noUseGraphic = true;
@@ -95,21 +125,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             PeaShooterPlayer peaPlayer = Main.LocalPlayer.GetModPlayer<PeaShooterPlayer>();
             int stageIndex = balance.GetCompletedStageIndex();
             string stageName = BalancePeaShooter.GetStageName(stageIndex);
-            string modeName = peaPlayer.AutomaticFire
-                ? this.GetLocalizedValue("ModeAuto")
-                : this.GetLocalizedValue("ModeSemi");
-            string legendarySection = Main.keyState.PressingShift()
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
+            PeaShooterFireStyle style = BalancePeaShooter.GetFireStyle(stageIndex);
+            string styleName = Language.GetTextValue(BalancePeaShooter.GetFireStyleKey(style));
+            string peaName = Language.GetTextValue(BalancePeaShooter.GetPeaNameKey(peaPlayer.SelectedPea));
+            string peaEffect = Language.GetTextValue(BalancePeaShooter.GetPeaEffectKey(peaPlayer.SelectedPea));
 
             string merged =
-                string.Format(this.GetLocalizedValue("PeaShooter_Intro"), stageName) + "\n" +
-                string.Format(this.GetLocalizedValue("PeaShooter_Mode"), modeName) + "\n\n" +
-                this.GetLocalizedValue("PeaShooter_Left") + "\n" +
-                this.GetLocalizedValue("PeaShooter_Right") + "\n" +
-                this.GetLocalizedValue("PeaShooter_Passive") + "\n\n" +
-                this.GetLocalizedValue("PeaShooter_Beans") + "\n\n" +
-                legendarySection + "\n";
+                string.Format(this.GetLocalizedValue("PeaShooter_Left"), styleName, stageName) + "\n" +
+                string.Format(this.GetLocalizedValue("PeaShooter_Right"), peaName) + "\n" +
+                string.Format(this.GetLocalizedValue("PeaShooter_Effect"), peaEffect) + "\n" +
+                this.GetLocalizedValue("PeaShooter_Accessory") + "\n" +
+                this.GetLocalizedValue("PeaShooter_Zombie") + "\n" +
+                this.GetLocalizedValue("PeaShooter_Flavor");
 
             tooltips.FindAndReplace("[GFB]", merged);
         }
@@ -135,12 +162,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
-        }
-
-        private static void ApplyHoldPassives(Player player)
-        {
-            player.jumpSpeedBoost += BalancePeaShooter.JumpSpeedBoost;
-            player.GetCritChance(DamageClass.Ranged) += BalancePeaShooter.CritBonus;
         }
     }
 }

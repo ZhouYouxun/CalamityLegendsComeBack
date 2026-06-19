@@ -29,6 +29,15 @@
 					Tooltip: 开启后，新玩家/新角色创号生成时，背包内将自动获得一个【快速发展道具箱】（注意：此功能会极大地破坏游戏平衡，请谨慎开启）
 				}
 			}
+
+			CLCBClientConfig: {
+				DisplayName: 传奇归来客户端设置
+
+				ShowMatrixBossBar: {
+					Label: 显示矩阵风格Boss血条
+					Tooltip: 开启后，在屏幕正上方居中显示我们自制的矩阵风格 Boss 血条。
+				}
+			}
 		}
 	}
 }

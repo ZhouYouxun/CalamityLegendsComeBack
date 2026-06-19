@@ -68,10 +68,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public const int BaseMagazineCount = 3;
         public const int MagazineCount = BaseMagazineCount + 4;
         private const int BaseManaCost = 15;
+        public const int MaxReservePerSlot = 9999;
 
         private readonly int[] magazineEffectPowers = new int[MagazineCount];
         private readonly int[] magazineAmmoTypes = new int[MagazineCount];
         private readonly int[] magazineEffectIDs = new int[MagazineCount];
+        // 外置弹药库：每格最多存 MaxReservePerSlot 个相同材料，开火时自动补充内弹夹
+        private readonly int[] magazineReserve = new int[MagazineCount];
         private int selectedMagazineIndex;
 
         public int storedEffectPower
@@ -238,22 +241,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public readonly struct SHPCMagazineSlot
         {
-            public SHPCMagazineSlot(int index, int ammoType, int effectID, int power, bool selected)
+            public SHPCMagazineSlot(int index, int ammoType, int effectID, int power, int reserve, bool selected)
             {
                 Index = index;
                 AmmoType = ammoType;
                 EffectID = effectID;
                 Power = power;
+                Reserve = reserve;
                 Selected = selected;
             }
 
             public int Index { get; }
             public int AmmoType { get; }
             public int EffectID { get; }
+            /// <summary>内弹夹剩余发数（当前装填的一份材料还能打多少发）</summary>
             public int Power { get; }
+            /// <summary>外置弹药库数量（最多 MaxReservePerSlot 个，供补充内弹夹用）</summary>
+            public int Reserve { get; }
             public bool Selected { get; }
             public bool IsConfigured => AmmoType > ItemID.None && EffectID > 0;
             public bool HasAmmo => AmmoType > ItemID.None && EffectID > 0 && Power > 0;
+            public bool HasReserve => Reserve > 0;
         }
 
         public static List<SHPCAmmoCandidate> FindEffectAmmoCandidates(Player player, int maxCount)
@@ -309,14 +317,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public SHPCMagazineSlot GetMagazineSlot(int index)
         {
             index = Utils.Clamp(index, 0, MagazineCount - 1);
-            return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], index == CurrentMagazineIndex);
+            return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], magazineReserve[index], index == CurrentMagazineIndex);
         }
 
         public SHPCMagazineSlot GetMagazineSlot(int index, Player player)
         {
             ClampSelectedMagazineToActiveCount(player);
             index = Utils.Clamp(index, 0, GetActiveMagazineCount(player) - 1);
-            return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], index == CurrentMagazineIndex);
+            return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], magazineReserve[index], index == CurrentMagazineIndex);
         }
 
         public bool SelectMagazine(int index)
@@ -443,8 +451,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             magazineEffectPowers[index] = 0;
-            if (player != null && !HasReloadMaterialInInventory(player, index))
-                ClearMagazine(index);
+            // 槽位不自动清空：有外置储备时下次开火会自动补充；
+            // 外置储备为零且背包也空时，保留配置供玩家手动补充（通过UI）
         }
 
         private bool TryPrepareCurrentMagazineForShot(Player player)
@@ -456,10 +464,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (IsMagazineConfigured(index))
             {
+                // 优先从外置弹药库补充
+                if (magazineReserve[index] > 0)
+                {
+                    magazineReserve[index]--;
+                    magazineEffectPowers[index] = GetAdjustedAmmoCapacity(player, magazineEffectIDs[index]);
+                    return magazineEffectPowers[index] > 0;
+                }
+
+                // 回退：从背包补充（兼容未使用UI的玩家）
                 if (TryReloadMagazineFromInventory(player, index))
                     return true;
 
-                ClearMagazine(index);
+                // 无弹药：保留配置，本次开火无效果
                 return false;
             }
 
@@ -486,7 +503,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ClampSelectedMagazineToActiveCount(player);
             int index = CurrentMagazineIndex;
-            if (IsMagazineLoaded(index) || HasReloadMaterialInInventory(player, index))
+            if (IsMagazineLoaded(index) ||
+                (IsMagazineConfigured(index) && (magazineReserve[index] > 0 || HasReloadMaterialInInventory(player, index))))
                 return true;
 
             return !IsMagazineConfigured(index) &&
@@ -553,6 +571,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             magazineEffectPowers[index] = 0;
             magazineAmmoTypes[index] = ItemID.None;
             magazineEffectIDs[index] = 0;
+            magazineReserve[index] = 0;
         }
 
         public void PublicClearMagazine(int index) => ClearMagazine(index);
@@ -565,6 +584,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             magazineAmmoTypes[slotIndex] = ammoType;
             magazineEffectIDs[slotIndex] = effectID;
             magazineEffectPowers[slotIndex] = capacity;
+        }
+
+        /// <summary>
+        /// 向外置弹药库追加材料。若槽位为空则同时初始化类型；追加上限 MaxReservePerSlot。
+        /// </summary>
+        public void AddToReserve(int slotIndex, int ammoType, int effectID, int count)
+        {
+            slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
+            if (!IsMagazineConfigured(slotIndex))
+            {
+                magazineAmmoTypes[slotIndex] = ammoType;
+                magazineEffectIDs[slotIndex] = effectID;
+            }
+            magazineReserve[slotIndex] = Math.Min(MaxReservePerSlot, magazineReserve[slotIndex] + count);
+        }
+
+        /// <summary>直接设置外置库数量（UI取出时用）。</summary>
+        public void SetReserve(int slotIndex, int count)
+        {
+            slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
+            magazineReserve[slotIndex] = Math.Max(0, count);
         }
 
         private void TryReturnStoredAmmo(Player player)
@@ -584,24 +624,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int effectID = magazineEffectIDs[index];
             int ammoType = magazineAmmoTypes[index];
             int power = magazineEffectPowers[index];
+            int reserve = magazineReserve[index];
 
-            if (effectID <= 0 || ammoType <= ItemID.None || power <= 0)
+            if (effectID <= 0 || ammoType <= ItemID.None)
                 return;
 
-            // 普通材料按剩余弹量概率返还；唯一 Lore 材料必须无条件返还。
-            if (effectID == CynosureEffect.CynosureEffectID && ammoType == ModContent.ItemType<LoreCynosure>())
+            // 外置弹药库：全部直接返还（稳定数量）
+            if (reserve > 0)
+                player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, reserve);
+
+            // 内弹夹剩余：按 power/capacity 概率返还一份材料
+            if (power > 0)
             {
-                player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
-                return;
+                // 唯一 Lore 材料必须无条件返还
+                if (effectID == CynosureEffect.CynosureEffectID && ammoType == ModContent.ItemType<LoreCynosure>())
+                {
+                    player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
+                }
+                else
+                {
+                    int maxShots = GetAdjustedAmmoCapacity(player, effectID);
+                    if (maxShots > 0)
+                    {
+                        float returnChance = MathHelper.Clamp(power / (float)maxShots, 0f, 1f);
+                        if (Main.rand.NextFloat() < returnChance)
+                            player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
+                    }
+                }
             }
 
-            int maxShots = GetAdjustedAmmoCapacity(player, effectID);
-            if (maxShots <= 0)
-                return;
-
-            float returnChance = MathHelper.Clamp(power / (float)maxShots, 0f, 1f);
-            if (Main.rand.NextFloat() < returnChance)
-                player.QuickSpawnItem(player.GetSource_FromThis(), ammoType, 1);
+            magazineReserve[index] = 0;
         }
 
         // 根据当前效果ID获取主题色
@@ -810,7 +862,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             int currentMaxEX = NewLegend_EXPlayer.GetCurrentEXMax(player);
-            exPlayer.EXValue += NewLegend_EXPlayer.GetFramesPerDisplayUnit(player) * Math.Max(1, multiplier);
+            int chargeMultiplier = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip.FastChipPlayer>().FastChipEquipped ? 2 : 1;
+            exPlayer.EXValue += NewLegend_EXPlayer.GetBaseFramesPerDisplayUnit() * Math.Max(1, multiplier) * chargeMultiplier;
 
             if (exPlayer.EXValue > currentMaxEX)
                 exPlayer.EXValue = currentMaxEX;
@@ -1358,6 +1411,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
             else
             {
+                bool useCompactTooltip = true;
+                if (useCompactTooltip)
+                {
+                    int compactState = GetRightClickProgressState();
+                    string compactFormKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+                    string compactLoadingKeyText = GetSHPCLoadingUIKeyText(isChinese);
+                    string compactAmmoEffectText = BuildCurrentAmmoEffectTooltipText();
+
+                    string compactText =
+                        this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n') + "\n" +
+                        string.Format(this.GetLocalizedValue("SHPC_LoadingUIHint"), compactLoadingKeyText).TrimEnd('\r', '\n') + "\n" +
+                        compactAmmoEffectText + "\n" +
+                        string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), compactFormKeyText).TrimEnd('\r', '\n') + "\n" +
+                        this.GetLocalizedValue($"SHPC_RightIntro{compactState + 1}").TrimEnd('\r', '\n') + "\n" +
+                        this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
+                        this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n') + "\n";
+
+                    tooltips.FindAndReplace("[GFB]", compactText);
+                }
+                else
+                {
                 string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
                 string ammoText = BuildMagazineTooltipText(player);
                 string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
@@ -1369,7 +1443,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                 string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
                 string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
-                string loadingKeyText = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+                string loadingKeyText = GetSHPCLoadingUIKeyText(isChinese);
 
                 bool legendaryEmblemEquipped = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
                 string exHint = legendaryEmblemEquipped
@@ -1391,9 +1465,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     finalLine + "\n";
 
                 tooltips.FindAndReplace("[GFB]", finalText);
+                }
             }
 
             tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName, legendarySection));
+        }
+
+        private string GetSHPCLoadingUIKeyText(bool isChinese)
+        {
+            return KeybindSystem.SHPCLoadingUI.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "鼠标中键" : "Middle Mouse");
+        }
+
+        private string BuildCurrentAmmoEffectTooltipText()
+        {
+            string effectDescription = IsMagazineConfigured(CurrentMagazineIndex)
+                ? Language.GetTextValue($"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{magazineEffectIDs[CurrentMagazineIndex]}")
+                : this.GetLocalizedValue("SHPC_DefaultAmmoEffect");
+
+            return string.Format(this.GetLocalizedValue("SHPC_CurrentAmmoEffect"), effectDescription).TrimEnd('\r', '\n');
         }
 
         private string BuildMagazineTooltipText(Player player)
@@ -1419,8 +1508,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 {
                     int ammoType = magazineAmmoTypes[i];
                     int power = magazineEffectPowers[i];
+                    int reserve = magazineReserve[i];
                     int maxShots = GetAdjustedAmmoCapacity(player, magazineEffectIDs[i]);
-                    contentText = $"[i:{ammoType}]({power}/{maxShots})";
+                    contentText = reserve > 0
+                        ? $"[i:{ammoType}]({power}/{maxShots})+{reserve}"
+                        : $"[i:{ammoType}]({power}/{maxShots})";
                 }
 
                 if (isActive)
@@ -1507,6 +1599,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     newItem.magazineEffectPowers[i] = oldItem.magazineEffectPowers[i];
                     newItem.magazineAmmoTypes[i] = oldItem.magazineAmmoTypes[i];
                     newItem.magazineEffectIDs[i] = oldItem.magazineEffectIDs[i];
+                    newItem.magazineReserve[i] = oldItem.magazineReserve[i];
                 }
             }
 
@@ -1521,6 +1614,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 tag[$"magazineEffectPower{i}"] = magazineEffectPowers[i];
                 tag[$"magazineAmmoType{i}"] = magazineAmmoTypes[i];
                 tag[$"magazineEffectID{i}"] = magazineEffectIDs[i];
+                tag[$"magazineReserve{i}"] = magazineReserve[i];
             }
         }
 
@@ -1536,6 +1630,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     magazineEffectPowers[i] = tag.GetInt($"magazineEffectPower{i}");
                     magazineAmmoTypes[i] = tag.GetInt($"magazineAmmoType{i}");
                     magazineEffectIDs[i] = tag.GetInt($"magazineEffectID{i}");
+                    magazineReserve[i] = tag.GetInt($"magazineReserve{i}"); // 旧存档没有此键时默认 0
                 }
 
                 return;
@@ -1544,6 +1639,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             magazineEffectPowers[CurrentMagazineIndex] = tag.GetInt("storedEffectPower");
             magazineAmmoTypes[CurrentMagazineIndex] = tag.GetInt("storedAmmoType");
             magazineEffectIDs[CurrentMagazineIndex] = tag.GetInt("storedEffectID");
+            // 旧存档无外置储备，reserve 保持 0
         }
 
         public override void NetSend(BinaryWriter writer)
@@ -1554,6 +1650,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 writer.Write(magazineEffectPowers[i]);
                 writer.Write(magazineAmmoTypes[i]);
                 writer.Write(magazineEffectIDs[i]);
+                writer.Write(magazineReserve[i]);
             }
         }
 
@@ -1565,6 +1662,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 magazineEffectPowers[i] = reader.ReadInt32();
                 magazineAmmoTypes[i] = reader.ReadInt32();
                 magazineEffectIDs[i] = reader.ReadInt32();
+                magazineReserve[i] = reader.ReadInt32();
             }
         }
         #endregion

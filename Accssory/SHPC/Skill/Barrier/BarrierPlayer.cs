@@ -14,6 +14,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         public const int FullChargeFrames = 5 * 60;
 
         public bool BarrierEquipped;
+        public bool BarrierVisible;
         public int ShieldHitFlashTimer;
 
         private int chargeDelayTimer;
@@ -47,14 +48,20 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             shieldHitPoints > 0f &&
             !Player.dead;
 
+        public bool ShouldDrawShield =>
+            ShieldActive &&
+            BarrierVisible;
+
         public override void ResetEffects()
         {
             BarrierEquipped = false;
+            BarrierVisible = false;
         }
 
         public override void UpdateDead()
         {
             BarrierEquipped = false;
+            BarrierVisible = false;
             chargeDelayTimer = 0;
             shieldHitPoints = 0f;
             ShieldHitFlashTimer = 0;
@@ -90,7 +97,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
             SyncCooldownDisplays();
 
-            if (Main.myPlayer != Player.whoAmI || !ShieldActive)
+            if (Main.myPlayer != Player.whoAmI || !ShouldDrawShield)
                 return;
 
             if (Player.ownedProjectileCounts[ModContent.ProjectileType<BarrierShieldVisual>()] <= 0)

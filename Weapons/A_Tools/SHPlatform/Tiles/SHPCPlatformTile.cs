@@ -49,6 +49,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform.Tiles
             Main.tileNoSunLight[Type] = false;
         }
 
+        public override void FloorVisuals(Player player)
+        {
+            base.FloorVisuals(player);
+
+            if (Main.dedServ || player.velocity.Y != 0f || player.velocity.X > -0.25f && player.velocity.X < 0.25f || !Main.rand.NextBool(12))
+                return;
+
+            Vector2 dustPosition = player.Bottom + new Vector2(Main.rand.NextFloat(-player.width * 0.35f, player.width * 0.35f), -4f);
+            Dust dust = Dust.NewDustDirect(dustPosition, 2, 2, DustID.Electric, player.velocity.X * -0.04f, -0.25f, 180, new Color(86, 196, 255), 0.45f);
+            dust.noGravity = true;
+        }
+
         public override bool CreateDust(int i, int j, ref int type)
         {
             Dust.NewDust(new Vector2(i, j) * 16f, 16, 16, DustID.Electric, 0f, 0f, 1, new Color(86, 196, 255), 0.85f);

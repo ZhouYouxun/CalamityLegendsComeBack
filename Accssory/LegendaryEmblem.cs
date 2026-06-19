@@ -1,5 +1,6 @@
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory
@@ -12,14 +13,36 @@ namespace CalamityLegendsComeBack.Accssory
         {
             Item.width = 24;
             Item.height = 24;
-            Item.accessory = true;
+            Item.useAnimation = 30;
+            Item.useTime = 30;
+            Item.useStyle = ItemUseStyleID.HoldUp;
+            Item.UseSound = SoundID.Item4;
+            Item.consumable = true;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.buyPrice(0, 1);
             Item.rare = ItemRarityID.LightRed;
         }
 
-        public override void UpdateAccessory(Player player, bool hideVisual)
+        public override bool CanUseItem(Player player)
         {
-            player.GetModPlayer<LegendaryEmblemPlayer>().EXAccessoryEquipped = true;
+            if (!player.GetModPlayer<LegendaryEmblemPlayer>().PermanentEXUnlock)
+                return true;
+
+            if (player.whoAmI == Main.myPlayer)
+                Main.NewText(Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.LegendaryEmblem.AlreadyConsumed"));
+
+            return false;
+        }
+
+        public override bool? UseItem(Player player)
+        {
+            if (player.itemAnimation > 0 && player.itemTime == 0)
+            {
+                player.itemTime = Item.useTime;
+                player.GetModPlayer<LegendaryEmblemPlayer>().PermanentEXUnlock = true;
+            }
+
+            return true;
         }
 
         public override void AddRecipes()

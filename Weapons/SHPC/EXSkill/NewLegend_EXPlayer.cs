@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         // EX条当前值
         public int EXValue;
         private bool wasEXReady;
+        private int fastChipRightClickChargeTimer;
 
 // 两分钟攒满：2 × 60 × 60 = 7200帧
         public const int BaseEXMax = 7200;
@@ -22,15 +23,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         public static int GetCurrentEXMax(Player player)
         {
-            if (player.GetModPlayer<FastChipPlayer>().FastChipEquipped)
-                return BaseEXMax / 2;
-
             return BaseEXMax;
         }
 
         public static int GetFramesPerDisplayUnit(Player player)
         {
             return System.Math.Max(1, GetCurrentEXMax(player) / EXDisplayMax);
+        }
+
+        public static int GetBaseFramesPerDisplayUnit()
+        {
+            return System.Math.Max(1, BaseEXMax / EXDisplayMax);
         }
 
         public override void ResetEffects()
@@ -56,10 +59,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             if (holdingSHPC)
             {
-                EXValue += System.Math.Max(1, GetFramesPerDisplayUnit(Player) / PassiveChargeTime);
+                EXValue += System.Math.Max(1, GetBaseFramesPerDisplayUnit() / PassiveChargeTime);
+                ApplyFastChipRightClickCharge();
                 EXValue = Utils.Clamp(EXValue, 0, maxEX);
             }
-if (EXValue > maxEX)
+            else
+            {
+                fastChipRightClickChargeTimer = 0;
+            }
+
+            if (EXValue > maxEX)
                 EXValue = maxEX;
 
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasEXReady, EXValue >= maxEX);
@@ -69,6 +78,23 @@ if (EXValue > maxEX)
         public void ResetEX()
         {
             EXValue = 0;
+        }
+
+        private void ApplyFastChipRightClickCharge()
+        {
+            if (!Player.GetModPlayer<FastChipPlayer>().FastChipEquipped ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.RightClick.SHPCRight_HoulOut>()] <= 0)
+            {
+                fastChipRightClickChargeTimer = 0;
+                return;
+            }
+
+            fastChipRightClickChargeTimer++;
+            if (fastChipRightClickChargeTimer < 60)
+                return;
+
+            fastChipRightClickChargeTimer = 0;
+            EXValue += GetBaseFramesPerDisplayUnit();
         }
     }
 }

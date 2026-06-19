@@ -1,27 +1,21 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				NewLegendPeaShooter: {
 					DisplayName: 豌豆射手
 					Tooltip: "[GFB]"
-					ModeAuto: 全自动 30 RPS
-					ModeSemi: 半自动 最高 60 RPS
-					PeaShooter_Intro: "[c/9FEA78:当前阶段：{0}]"
-					PeaShooter_Mode: "[c/F7D87C:当前开火模式：{0}]"
-					PeaShooter_Left: "[c/9FEA78:左键发射随机豌豆；所有豌豆命中敌怪或物块时都会溅射。]"
-					PeaShooter_Right: "[c/F7D87C:右键切换全自动和半自动。全自动固定 30 RPS；半自动按得多快射得多快，最高 60 RPS。]"
-					PeaShooter_Passive: "[c/B8FF9E:手持时提高跳跃力，远程暴击率 +10%。]"
-					PeaShooter_Beans:
+					PeaShooter_Left: "[c/9FEA78:左键：当前形态为{0}。]"
+					PeaShooter_Right: "[c/F7D87C:右键循环切换豌豆。当前：{0}。]"
+					PeaShooter_Effect: "[c/B8FF9E:{0}]"
+					PeaShooter_Accessory:
 						'''
-						[c/FF8E55:火豆：施加着火和狱火。]
-						[c/8FE8FF:冰豆：施加霜冻和冻伤。]
-						[c/8DFF6A:毒豆：施加中毒和酸毒。]
-						[c/80E6FF:电豆：落点留下短暂电雾。]
-						[c/C9B28A:岩豆：拥有更大的溅射范围和击退。]
+						[c/8FE8FF:佩戴在饰品栏，可变身豌豆僵尸。]
+						[c/8FE8FF:以左键相同频率发射随机豌豆。]
+						[c/79DFBF:开启肾上腺素时，短暂变成超级机枪豌豆。]
 						'''
-					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整记录]"
-					LegendaryText: "[c/9FEA78:花园里的第一声噗响不总是玩笑，有时它会把整片战场都种满弹坑。]"
+					PeaShooter_Zombie: "[c/9FEA78:对僵尸造成1.5倍伤害。]"
+					PeaShooter_Flavor: "[c/BABABA:无论是多少次，我们都会誓死捍卫花园。]"
 				}
 			}
 		}
@@ -29,15 +23,34 @@
 		Projectiles: {
 			A_Dev: {
 				PeaShooterHoldout.DisplayName: 豌豆射手手持弹幕
+				PeaShooterASSHold.DisplayName: 豌豆僵尸头盔
 				PeaShooterPea.DisplayName: 豌豆
 				PeaShooterSplash.DisplayName: 豌豆溅射
-				PeaShooterElectricCloud.DisplayName: 豌豆电雾
+				PeaShooterLightning.DisplayName: 豌豆微型闪电
+				PeaShooterFirePatch.DisplayName: 豌豆火区
 			}
 		}
 
 		PeaShooter: {
-			ModeAuto: 全自动 30 RPS
-			ModeSemi: 半自动 最高 60 RPS
+			FireStyleSingle: 单发豌豆射手
+			FireStyleDouble: 双发射手
+			FireStyleThreeLine: 三线射手
+			FireStyleGatling: 机枪射手
+			FireStyleWildGatling: 狂野机枪射手
+			PeaNameNormal: 普通豌豆
+			PeaNameElectric: 电磁豌豆
+			PeaNameFire: 火焰豌豆
+			PeaNameIce: 寒冰豌豆
+			PeaNameStarlight: 星光豌豆
+			PeaNamePoison: 毒性豌豆
+			PeaNameRock: 岩石豌豆
+			PeaEffectNormal: 普通豌豆：命中造成1.2倍伤害。
+			PeaEffectElectric: 电磁豌豆：命中释放多条微型闪电。
+			PeaEffectFire: 火焰豌豆：概率留下短暂火区。
+			PeaEffectIce: 寒冰豌豆：小概率冻结非Boss。
+			PeaEffectStarlight: 星光豌豆：蓝色光点感染敌怪。
+			PeaEffectPoison: 毒性豌豆：随机释放多种毒疫。
+			PeaEffectRock: 岩石豌豆：大击退，概率眩晕Boss。
 		}
 	}
 }

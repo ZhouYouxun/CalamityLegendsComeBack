@@ -3,143 +3,65 @@ using Terraria;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
 {
+    internal enum PeaShooterFireStyle
+    {
+        Single,
+        Double,
+        ThreeLine,
+        Gatling,
+        WildGatling
+    }
+
     internal sealed class BalancePeaShooter
     {
-        public static readonly string[] StageNames =
+        public const int StageNameColumn = 0;
+        public const int DamageColumn = 1;
+        public const int ShootSpeedColumn = 2;
+
+        public static readonly string[,] StageStats =
         {
-            "Initial",
-            "Eye of Cthulhu",
-            "Evil Boss",
-            "Skeletron",
-            "Hardmode",
-            "Any Mechanical Boss",
-            "Plantera",
-            "Golem",
-            "Moon Lord",
-            "Providence",
-            "Polterghast",
-            "Devourer of Gods",
-            "Yharon",
-            "Exo Mechs and Supreme Calamitas"
+            { "Initial", "6", "14.5" },
+            { "Eye of Cthulhu", "8", "14.8" },
+            { "Evil Boss", "10", "15.1" },
+            { "Skeletron", "13", "15.6" },
+            { "Hardmode", "18", "16.2" },
+            { "Any Mechanical Boss", "24", "16.8" },
+            { "Plantera", "32", "17.4" },
+            { "Golem", "42", "18.0" },
+            { "Moon Lord", "58", "18.8" },
+            { "Providence", "76", "19.6" },
+            { "Polterghast", "98", "20.4" },
+            { "Devourer of Gods", "128", "21.2" },
+            { "Yharon", "168", "22.0" },
+            { "Exo Mechs and Supreme Calamitas", "220", "22.8" }
         };
 
-        public static readonly int[] BaseDamage =
-        {
-            6,
-            8,
-            10,
-            13,
-            18,
-            24,
-            32,
-            42,
-            58,
-            76,
-            98,
-            128,
-            168,
-            220
-        };
-
-        public static readonly float[] ShootSpeeds =
-        {
-            14.5f,
-            14.8f,
-            15.1f,
-            15.6f,
-            16.2f,
-            16.8f,
-            17.4f,
-            18.0f,
-            18.8f,
-            19.6f,
-            20.4f,
-            21.2f,
-            22.0f,
-            22.8f
-        };
-
-        public static readonly int[] SplashRadii =
-        {
-            48,
-            50,
-            52,
-            54,
-            58,
-            62,
-            66,
-            70,
-            76,
-            82,
-            88,
-            96,
-            104,
-            112
-        };
-
-        public static readonly int[] RockSplashRadii =
-        {
-            82,
-            86,
-            90,
-            94,
-            100,
-            106,
-            112,
-            118,
-            126,
-            134,
-            142,
-            152,
-            164,
-            176
-        };
-
-        public static readonly int[] ElectricCloudRadii =
-        {
-            56,
-            58,
-            60,
-            62,
-            66,
-            70,
-            74,
-            78,
-            84,
-            90,
-            96,
-            104,
-            112,
-            120
-        };
-
-        public static readonly int[] DebuffDurations =
-        {
-            150,
-            165,
-            180,
-            195,
-            210,
-            225,
-            240,
-            255,
-            270,
-            285,
-            300,
-            330,
-            360,
-            390
-        };
-
-        public const int AutoFireInterval = 2;
-        public const int CritBonus = 10;
-        public const float JumpSpeedBoost = 1.25f;
-        public const float BaseSplashDamageMultiplier = 0.48f;
-        public const float RockSplashDamageMultiplier = 0.62f;
-        public const float ElectricCloudDamageMultiplier = 0.28f;
-        public const float RockKnockbackMultiplier = 2.1f;
-        public const int ElectricCloudLifetime = 92;
-        public const int ElectricCloudHitCooldown = 18;
+        public const int BaseBurstInterval = 90;
+        public const int BurstShotSpacing = 4;
+        public const float LineSpreadDegrees = 3f;
+        public const int SplashRadius = 64;
+        public const int DebuffDuration = 240;
+        public const int FirePatchLifetime = 30;
+        public const int FirePatchSize = 75;
+        public const int IceFreezeTime = 60;
+        public const int BossStunTime = 15;
+        public const float AccessoryDamageMultiplier = 0.3f;
+        public const float NormalDirectDamageMultiplier = 1.2f;
+        public const float ZombieDamageMultiplier = 1.5f;
+        public const float SplashDamageMultiplier = 0.45f;
+        public const float FirePatchDamageMultiplier = 0.35f;
+        public const float ElectricLightningDamageMultiplier = 0.34f;
+        public const float RockKnockbackMultiplier = 6.5f;
+        public const int ElectricLightningCount = 5;
+        public const int AdrenalineStormFireInterval = 2;
+        public const int AdrenalineStormMinPeas = 5;
+        public const int AdrenalineStormMaxPeas = 10;
+        public const float AdrenalineStormSpreadDegrees = 15f;
+        public const float AdrenalineStormDamageMultiplier = 0.05f;
+        public const float AdrenalineStormMinSpeedMultiplier = 0.72f;
+        public const float AdrenalineStormMaxSpeedMultiplier = 1.35f;
+        public const float AdrenalineStormMinScale = 0.95f;
+        public const float AdrenalineStormMaxScale = 1.05f;
 
         public int GetCompletedStageIndex()
         {
@@ -170,51 +92,74 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             return stageIndex;
         }
 
-        public int GetBaseDamage() => GetValueForStage(BaseDamage, GetCompletedStageIndex());
+        public int GetBaseDamage() => GetIntStageValue(GetCompletedStageIndex(), DamageColumn);
 
-        public float GetShootSpeed() => GetFloatValueForStage(ShootSpeeds, GetCompletedStageIndex());
+        public float GetShootSpeed() => GetFloatStageValue(GetCompletedStageIndex(), ShootSpeedColumn);
 
         public static string GetStageName(int stageIndex)
         {
-            int clampedIndex = Utils.Clamp(stageIndex, 0, StageNames.Length - 1);
-            return StageNames[clampedIndex];
+            int clampedIndex = Utils.Clamp(stageIndex, 0, StageStats.GetLength(0) - 1);
+            return StageStats[clampedIndex, StageNameColumn];
         }
 
-        public static int GetSplashRadius(int stageIndex, PeaShooterPeaType peaType)
+        public static PeaShooterFireStyle GetFireStyle(int stageIndex)
         {
-            return GetValueForStage(peaType == PeaShooterPeaType.Rock ? RockSplashRadii : SplashRadii, stageIndex);
+            if (stageIndex >= 8)
+                return PeaShooterFireStyle.WildGatling;
+
+            if (stageIndex >= 6)
+                return PeaShooterFireStyle.Gatling;
+
+            if (stageIndex >= 4)
+                return PeaShooterFireStyle.ThreeLine;
+
+            if (stageIndex >= 3)
+                return PeaShooterFireStyle.Double;
+
+            return PeaShooterFireStyle.Single;
         }
 
-        public static int GetElectricCloudRadius(int stageIndex) => GetValueForStage(ElectricCloudRadii, stageIndex);
-
-        public static int GetDebuffDuration(int stageIndex) => GetValueForStage(DebuffDurations, stageIndex);
-
-        public static float GetSplashDamageMultiplier(PeaShooterPeaType peaType)
+        public static string GetFireStyleKey(PeaShooterFireStyle style) => style switch
         {
-            return peaType == PeaShooterPeaType.Rock ? RockSplashDamageMultiplier : BaseSplashDamageMultiplier;
+            PeaShooterFireStyle.Double => "Mods.CalamityLegendsComeBack.PeaShooter.FireStyleDouble",
+            PeaShooterFireStyle.ThreeLine => "Mods.CalamityLegendsComeBack.PeaShooter.FireStyleThreeLine",
+            PeaShooterFireStyle.Gatling => "Mods.CalamityLegendsComeBack.PeaShooter.FireStyleGatling",
+            PeaShooterFireStyle.WildGatling => "Mods.CalamityLegendsComeBack.PeaShooter.FireStyleWildGatling",
+            _ => "Mods.CalamityLegendsComeBack.PeaShooter.FireStyleSingle"
+        };
+
+        public static string GetPeaNameKey(PeaShooterPeaType peaType) => peaType switch
+        {
+            PeaShooterPeaType.Electric => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNameElectric",
+            PeaShooterPeaType.Fire => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNameFire",
+            PeaShooterPeaType.Ice => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNameIce",
+            PeaShooterPeaType.Starlight => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNameStarlight",
+            PeaShooterPeaType.Poison => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNamePoison",
+            PeaShooterPeaType.Rock => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNameRock",
+            _ => "Mods.CalamityLegendsComeBack.PeaShooter.PeaNameNormal"
+        };
+
+        public static string GetPeaEffectKey(PeaShooterPeaType peaType) => peaType switch
+        {
+            PeaShooterPeaType.Electric => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectElectric",
+            PeaShooterPeaType.Fire => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectFire",
+            PeaShooterPeaType.Ice => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectIce",
+            PeaShooterPeaType.Starlight => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectStarlight",
+            PeaShooterPeaType.Poison => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectPoison",
+            PeaShooterPeaType.Rock => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectRock",
+            _ => "Mods.CalamityLegendsComeBack.PeaShooter.PeaEffectNormal"
+        };
+
+        private static int GetIntStageValue(int stageIndex, int column)
+        {
+            int clampedIndex = Utils.Clamp(stageIndex, 0, StageStats.GetLength(0) - 1);
+            return int.TryParse(StageStats[clampedIndex, column], out int value) ? System.Math.Max(1, value) : 1;
         }
 
-        public static float GetKnockbackMultiplier(PeaShooterPeaType peaType)
+        private static float GetFloatStageValue(int stageIndex, int column)
         {
-            return peaType == PeaShooterPeaType.Rock ? RockKnockbackMultiplier : 1f;
-        }
-
-        private static int GetValueForStage(int[] values, int stageIndex)
-        {
-            if (values == null || values.Length == 0)
-                return 1;
-
-            int clampedIndex = Utils.Clamp(stageIndex, 0, values.Length - 1);
-            return System.Math.Max(1, values[clampedIndex]);
-        }
-
-        private static float GetFloatValueForStage(float[] values, int stageIndex)
-        {
-            if (values == null || values.Length == 0)
-                return 1f;
-
-            int clampedIndex = Utils.Clamp(stageIndex, 0, values.Length - 1);
-            return System.Math.Max(0.01f, values[clampedIndex]);
+            int clampedIndex = Utils.Clamp(stageIndex, 0, StageStats.GetLength(0) - 1);
+            return float.TryParse(StageStats[clampedIndex, column], out float value) ? System.Math.Max(0.01f, value) : 1f;
         }
     }
 }

@@ -114,7 +114,8 @@ Mods: {
 
 			LegendaryEmblem: {
 				DisplayName: Legendary Emblem
-				Tooltip: Must be equipped to activate legendary weapon ultimates
+				Tooltip: Permanently unlocks every legendary weapon ultimate for this character
+				AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
 			}
 
 			LegendaryUltimateTester: {
