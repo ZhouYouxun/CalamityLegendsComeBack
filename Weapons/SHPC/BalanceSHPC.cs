@@ -31,8 +31,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static readonly int[] DefaultLeftClickProgressDamage =
         {
-            15, // Initial / 初始
-            24, // Eye of Cthulhu / 克苏鲁之眼
+            17, // Initial / 初始
+            25, // Eye of Cthulhu / 克苏鲁之眼
             28, // Evil Boss / 腐化或猩红 Boss T2
             36, // Skeletron / 骷髅王
             40, // Hardmode / 困难模式
@@ -50,14 +50,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
         private static readonly int[] DefaultRightClickBaseDamage =
         {
-            15, // Initial / 初始
-            21, // Eye of Cthulhu / 克苏鲁之眼
-            27, // Evil Boss / 腐化或猩红 Boss T2
-            33, // Skeletron / 骷髅王
-            45, // Hardmode / 困难模式
-            54, // Any Mechanical Boss / 任意机械 Boss
-            66, // Plantera / 世纪之花
-            75, // Golem / 石巨人
+            13, // Initial / 初始
+            17, // Eye of Cthulhu / 克苏鲁之眼
+            22, // Evil Boss / 腐化或猩红 Boss T2
+            28, // Skeletron / 骷髅王
+            40, // Hardmode / 困难模式
+            50, // Any Mechanical Boss / 任意机械 Boss
+            64, // Plantera / 世纪之花
+            72, // Golem / 石巨人
             84, // Moon Lord / 月亮领主
             90, // Providence / 亵渎天神
             100, // Polterghast / 噬魂幽花
@@ -92,9 +92,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             0f, // EffectID 0: Unused gap / 未使用空位
             0.46f, // EffectID 1: Energy Core / 钨钢能量核心
-            0.46f, // EffectID 2: Stormlion Mandible / 风暴之颚
+            0.48f, // EffectID 2: Stormlion Mandible / 风暴之颚
             0.58f, // EffectID 3: Sulphuric Scale / 硫磺鳞片
-            0.80f, // EffectID 4: Purified Gel / 纯净凝胶
+            0.50f, // EffectID 4: Purified Gel / 纯净凝胶
             1.02f, // EffectID 5: Essence of Havoc / 混沌精华
             0.84f, // EffectID 6: Essence of Eleum / 冰精华
             1.03f, // EffectID 7: Essence of Sunlight / 日光精华
@@ -116,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.50f, // EffectID 23: Nebula Fragment / 星云碎片
             1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
             1.94f, // EffectID 25: Meld Blob / 冥思溶剂
-            2.04f, // EffectID 26: Unholy Essence / 浊火精华
+            2.00f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
             2.00f, // EffectID 28: Divine Geode / 神圣晶石
             2.48f, // EffectID 29: Bloodstone Core / 血神核心
@@ -131,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.72f, // EffectID 38: Exo Prism / 星流棱晶
             2.69f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
-            0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
+            0.42f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
             4.00f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
             1.12f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
