@@ -7,16 +7,19 @@ using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Terraria.Audio;
 using System;
-using System.Collections.Generic;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 {
     public class PurifiedGel_Ball : ModProjectile
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
-        // 自定义计时器
+
         private int timer;
-        private static readonly Dictionary<int, int> SharedBounceTargets = new();
+        private const int MaxRicochets = 5;
+        private const float MinRicochetSpeed = 8f;
+        private static readonly Color PurifiedGelPink = new(255, 140, 200);
+        private static readonly Color PurifiedGelBlue = new(120, 200, 255);
 
         public override void SetStaticDefaults()
         {
@@ -30,8 +33,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.width = 20;
             Projectile.height = 20;
             Projectile.friendly = true;
-            Projectile.penetrate = 2;
-            Projectile.timeLeft = 300;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 380;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
@@ -41,41 +44,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override bool PreDraw(ref Color lightColor)
         {
-            SpriteBatch spriteBatch = Main.spriteBatch;
             Texture2D tex = Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value;
             int frameHeight = tex.Height / Main.projFrames[Type];
             Rectangle frame = new Rectangle(0, frameHeight * Projectile.frame, tex.Width, frameHeight);
             Vector2 frameOrigin = new Vector2(tex.Width * 0.5f, frameHeight * 0.5f);
+            Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
-            // ===== Aerialite风格拖尾 =====
+            // Bloom光圈（A=0 → 加法混合）
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            float bloomPulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7f + Projectile.identity);
+            Color bloomColor = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f);
+            bloomColor.A = 0;
+            Main.EntitySpriteDraw(bloom, drawPos, null, bloomColor * 0.65f, 0f, bloom.Size() * 0.5f, 0.2f * bloomPulse, SpriteEffects.None, 0f);
+
+            // 拖尾
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 float interp = (float)Math.Cos(Projectile.timeLeft / 32f + Main.GlobalTimeWrappedHourly / 20f + i / (float)Projectile.oldPos.Length * MathHelper.Pi) * 0.5f + 0.5f;
-
-                Color color = Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), interp) * 0.45f;
-                color.A = 0;
-
+                Color trailColor = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, interp) * 0.45f;
+                trailColor.A = 0;
                 Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-
                 float intensity = MathHelper.Lerp(0.2f, 1f, 1f - i / (float)Projectile.oldPos.Length);
-
-                Vector2 scaleOuter = new Vector2(1.8f) * intensity;
-                Vector2 scaleInner = new Vector2(1.8f) * intensity * 0.7f;
-
-                Main.EntitySpriteDraw(tex, pos, frame, color, Projectile.rotation, frameOrigin, scaleOuter * 0.6f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(tex, pos, frame, color * 0.5f, Projectile.rotation, frameOrigin, scaleInner * 0.6f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex, pos, frame, trailColor, Projectile.rotation, frameOrigin, 1.8f * intensity * 0.6f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex, pos, frame, trailColor * 0.5f, Projectile.rotation, frameOrigin, 1.8f * intensity * 0.6f * 0.7f, SpriteEffects.None, 0);
             }
 
+            // 本体内光晕
+            Color coreGlow = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f);
+            coreGlow.A = 0;
+            Main.EntitySpriteDraw(tex, drawPos, frame, coreGlow * 0.3f, Projectile.rotation, frameOrigin, Projectile.scale * 1.5f, SpriteEffects.None, 0);
+
             // 本体
-            Main.EntitySpriteDraw(tex,
-                Projectile.Center - Main.screenPosition,
-                frame,
-                lightColor,
-                Projectile.rotation,
-                frameOrigin,
-                Projectile.scale,
-                SpriteEffects.None,
-                0);
+            Main.EntitySpriteDraw(tex, drawPos, frame, lightColor, Projectile.rotation, frameOrigin, Projectile.scale, SpriteEffects.None, 0);
 
             return false;
         }
@@ -85,211 +85,152 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             timer++;
             Projectile.frameCounter++;
             Projectile.frame = Projectile.frameCounter / 3 % Main.projFrames[Type];
-
             Projectile.rotation += 0.22f;
 
-            Color pink = new Color(255, 140, 200);
-            Color blue = new Color(120, 200, 255);
+            Color pink = PurifiedGelPink;
+            Color blue = PurifiedGelBlue;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.Pi / 2f);
 
-            // ===== 原有双螺旋（加强数学感）=====
-            float sine = (float)Math.Sin(timer * 0.45f);
-            float squeeze = (float)Math.Cos(timer * 0.7f) * 0.6f;
-
-            Vector2 offset = normal * sine * (10f + squeeze * 4f);
-
-            for (int i = 0; i < 2; i++)
+            // 双螺旋尘埃（削弱：每3帧只生成1个）
+            if (Main.rand.NextBool(3))
             {
-                Vector2 pos = Projectile.Center + (i == 0 ? offset : -offset);
-
+                float sine = (float)Math.Sin(timer * 0.45f);
+                float squeeze = (float)Math.Cos(timer * 0.7f) * 0.6f;
+                Vector2 offset = normal * sine * (10f + squeeze * 4f);
+                int side = Main.rand.NextBool() ? 1 : -1;
                 Dust dust = Dust.NewDustPerfect(
-                    pos,
+                    Projectile.Center + offset * side,
                     ModContent.DustType<SquashDust>(),
-                    -Projectile.velocity * Main.rand.NextFloat(0.3f, 0.8f)
-                );
-
+                    -Projectile.velocity * Main.rand.NextFloat(0.3f, 0.8f) * 0.5f);
                 dust.noGravity = true;
-                dust.scale = Main.rand.NextFloat(1.7f, 2.2f);
+                dust.scale = Main.rand.NextFloat(1.4f, 1.9f);
                 dust.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
-                dust.fadeIn = 1.6f;
+                dust.fadeIn = 1.4f;
             }
 
-            // ===== Auric示波器结构（改色版）=====
-            int points = 2;
-            float amplitude = 5.5f;
-            float freq = 0.35f;
-
-            for (int i = 0; i < points; i++)
+            // 示波器宝石尘（削弱：隔帧）
+            if (timer % 2 == 0)
             {
-                float t = timer + i * 0.4f;
-
-                float wave1 = MathF.Sin(t * freq) * amplitude;
-                float wave2 = MathF.Sin(t * freq + MathHelper.Pi) * amplitude;
-
-                Vector2 pos1 = Projectile.Center + normal * wave1 - forward * (i * 4f);
-                Vector2 pos2 = Projectile.Center + normal * wave2 - forward * (i * 4f);
-
-                Dust d1 = Dust.NewDustPerfect(pos1, DustID.GemDiamond, Vector2.Zero, 100, pink, 0.9f);
-                d1.noGravity = true;
-
-                Dust d2 = Dust.NewDustPerfect(pos2, DustID.GemDiamond, Vector2.Zero, 100, blue, 0.9f);
-                d2.noGravity = true;
+                float wave = MathF.Sin(timer * 0.35f) * 5.5f;
+                Dust d = Dust.NewDustPerfect(Projectile.Center + normal * wave, DustID.GemDiamond, Vector2.Zero, 100, pink, 0.8f);
+                d.noGravity = true;
             }
 
-            // ===== 中轴能量火花 =====
+            // 中轴能量火花（削弱：缩小尺寸范围）
             if (Main.rand.NextBool(2))
             {
-                PointParticle spark = new PointParticle(
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
                     Projectile.Center,
-                    -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.8f, 2.5f),
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.7f, 1.1f),
-                    Main.rand.NextBool() ? pink : blue
-                );
-                GeneralParticleHandler.SpawnParticle(spark);
+                    -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.6f, 2.0f) * 0.5f,
+                    false, 10,
+                    Main.rand.NextFloat(0.5f, 0.85f),
+                    Main.rand.NextBool() ? pink : blue));
             }
 
-            // ===== 轻量光点 =====
-            if (Main.rand.NextBool(2))
+            // 随机光点（削弱：25%概率，小尺寸）
+            if (Main.rand.NextBool(4))
             {
                 Dust d = Dust.NewDustPerfect(
-                    Projectile.Center + Main.rand.NextVector2Circular(14f, 14f),
+                    Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
                     DustID.GemDiamond,
-                    -Projectile.velocity * 0.2f
-                );
+                    -Projectile.velocity * 0.15f * 0.5f);
                 d.noGravity = true;
-                d.scale = Main.rand.NextFloat(0.5f, 0.8f);
+                d.scale = Main.rand.NextFloat(0.35f, 0.6f);
                 d.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
             }
 
-            // 光照
-            Lighting.AddLight(Projectile.Center, Color.Lerp(pink, blue, 0.5f).ToVector3() * 0.45f);
+            Lighting.AddLight(Projectile.Center, Color.Lerp(pink, blue, 0.5f).ToVector3() * 0.25f);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            if (Projectile.localAI[0] >= 1f)
-                return true;
-
-            Projectile.localAI[0] = 1f;
-            float speed = Math.Max(8f, oldVelocity.Length());
-
-            if (Projectile.velocity.X != oldVelocity.X)
-                Projectile.velocity.X = -oldVelocity.X;
-            if (Projectile.velocity.Y != oldVelocity.Y)
-                Projectile.velocity.Y = -oldVelocity.Y;
-
-            NPC target = GetSharedBounceTarget();
-            if (target != null)
-                Projectile.velocity = Projectile.DirectionTo(target.Center) * speed;
-            else
-                Projectile.velocity = Projectile.velocity.SafeNormalize(oldVelocity.SafeNormalize(Vector2.UnitX)) * speed;
-
-            Projectile.netUpdate = true;
-            return false;
-        }
-
-        private NPC GetSharedBounceTarget()
-        {
-            int groupKey = (int)Projectile.ai[0];
-            if (SharedBounceTargets.Count > 256)
-                SharedBounceTargets.Clear();
-
-            if (SharedBounceTargets.TryGetValue(groupKey, out int targetIndex) &&
-                targetIndex >= 0 &&
-                targetIndex < Main.maxNPCs)
-            {
-                NPC cachedTarget = Main.npc[targetIndex];
-                if (cachedTarget.active && cachedTarget.CanBeChasedBy(Projectile, false))
-                    return cachedTarget;
-            }
-
-            NPC target = FindBounceTarget(1100f);
-            if (target != null)
-                SharedBounceTargets[groupKey] = target.whoAmI;
-
-            return target;
-        }
-
-        private NPC FindBounceTarget(float maxRange)
-        {
-            NPC bossTarget = null;
-            NPC normalTarget = null;
-            float bestBossDistance = maxRange;
-            float bestNormalDistance = maxRange;
-
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (!npc.CanBeChasedBy(Projectile, false))
-                    continue;
-
-                float distance = Vector2.Distance(Projectile.Center, npc.Center);
-                if (npc.boss)
-                {
-                    if (distance < bestBossDistance)
-                    {
-                        bestBossDistance = distance;
-                        bossTarget = npc;
-                    }
-                }
-                else if (distance < bestNormalDistance)
-                {
-                    bestNormalDistance = distance;
-                    normalTarget = npc;
-                }
-            }
-
-            return bossTarget ?? normalTarget;
+            Vector2 reflected = Projectile.velocity;
+            if (Projectile.velocity.X != oldVelocity.X) reflected.X = -oldVelocity.X;
+            if (Projectile.velocity.Y != oldVelocity.Y) reflected.Y = -oldVelocity.Y;
+            if (reflected == Vector2.Zero) reflected = -oldVelocity;
+            return !TryRicochet(Projectile.Center, oldVelocity, reflected);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Vector2 pos = Projectile.Center;
+            Vector2 away = (Projectile.Center - target.Center).SafeNormalize(-Projectile.velocity.SafeNormalize(Vector2.UnitX));
+            TryRicochet(Projectile.Center, Projectile.velocity, away);
+        }
 
-            // ===== 爆炸环 =====
-            for (int i = 0; i < 16; i++)
+        private bool TryRicochet(Vector2 bouncePoint, Vector2 incomingVelocity, Vector2 newDirection)
+        {
+            if (Projectile.localAI[0] >= MaxRicochets)
+                return false;
+
+            Projectile.localAI[0]++;
+            SpawnBounceExplosion(bouncePoint);
+
+            float speed = Math.Max(MinRicochetSpeed, incomingVelocity.Length());
+            Projectile.velocity = newDirection.SafeNormalize(incomingVelocity.SafeNormalize(Vector2.UnitX)) * speed;
+            Projectile.netUpdate = true;
+            return true;
+        }
+
+        private void SpawnBounceExplosion(Vector2 center)
+        {
+            if (Projectile.owner == Main.myPlayer)
             {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 7f);
+                // 伤害冲击波：75×75范围
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center, Vector2.Zero,
+                    ModContent.ProjectileType<SHPCRight_Explosion>(),
+                    (int)(Projectile.damage * 0.5), Projectile.knockBack, Projectile.owner,
+                    -1f, 75f);
+            }
 
+            SoundEngine.PlaySound(SoundID.Item110 with { Volume = 0.65f, Pitch = 0.35f }, center);
+
+            if (!Main.dedServ)
+                SpawnBounceVisual(center);
+        }
+
+        private static void SpawnBounceVisual(Vector2 center)
+        {
+            // Bloom环扩散
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center, Vector2.Zero,
+                new Color(255, 140, 200),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One, 0f, 0.055f, 0.24f, 14));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center, Vector2.Zero,
+                new Color(120, 200, 255),
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One, 0f, 0.075f, 0.16f, 11));
+
+            // 宝石尘爆散
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 dir = Main.rand.NextVector2CircularEdge(1f, 1f);
+                Color color = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, Main.rand.NextFloat());
                 Dust dust = Dust.NewDustPerfect(
-                    pos,
+                    center + dir * Main.rand.NextFloat(3f, 18f),
                     DustID.GemDiamond,
-                    vel,
-                    80,
-                    Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat()),
-                    Main.rand.NextFloat(1.2f, 1.6f)
-                );
+                    dir * Main.rand.NextFloat(2f, 6.5f) * 0.5f,
+                    80, color, Main.rand.NextFloat(0.9f, 1.5f));
                 dust.noGravity = true;
             }
 
-            // ===== 螺旋粒子 =====
-            int count = 14;
-            float radius = 30f;
-            float baseRot = Main.rand.NextFloat(MathHelper.TwoPi);
-
-            for (int i = 0; i < count; i++)
+            // 能量火花
+            for (int i = 0; i < 4; i++)
             {
-                float angle = baseRot + MathHelper.TwoPi * i / count;
-
-                Vector2 posOffset = angle.ToRotationVector2() * radius;
-                Vector2 vel = posOffset.RotatedBy(MathHelper.Pi / 2).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2f, 4f);
-
-                Particle spark = new SparkParticle(
-                    pos + posOffset,
-                    vel,
-                    false,
-                    30,
-                    1.1f,
-                    Color.Lerp(new Color(255, 140, 200), new Color(120, 200, 255), Main.rand.NextFloat())
-                );
-
-                GeneralParticleHandler.SpawnParticle(spark);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    center,
+                    Main.rand.NextVector2Circular(5.5f, 5.5f) * 0.5f,
+                    false, 10,
+                    Main.rand.NextFloat(0.5f, 1.1f),
+                    Main.rand.NextBool() ? PurifiedGelPink : PurifiedGelBlue));
             }
 
-            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.6f, Pitch = 0.4f }, pos);
+            Lighting.AddLight(center, Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f).ToVector3() * 0.9f);
         }
     }
 }

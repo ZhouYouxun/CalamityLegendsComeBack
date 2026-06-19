@@ -65,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     projectile.Center + forward * 8f,
                     velocity,
                     ModContent.ProjectileType<PurifiedGel_Ball>(),
-                    projectile.damage,
+                    (int)(projectile.damage * 0.6),
                     projectile.knockBack,
                     projectile.owner,
                     projectile.identity);

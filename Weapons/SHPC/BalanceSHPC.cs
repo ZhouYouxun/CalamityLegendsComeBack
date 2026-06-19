@@ -31,49 +31,70 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static readonly int[] DefaultLeftClickProgressDamage =
         {
-            15, // 15Initial / 初始
-            24, // 24Eye of Cthulhu / 克苏鲁之眼
-            28, // 30Evil Boss / 腐化或猩红 Boss T2
-            36, // 42Skeletron / 骷髅王
-            40, // 54Hardmode / 困难模式
-            45, // 72Any Mechanical Boss / 任意机械 Boss
-            50, // 90Plantera / 世纪之花
-            54, // 120Golem / 石巨人
-            55, // 180Moon Lord / 月亮领主
-            56, // 240Providence / 亵渎天神
-            72, // 300Polterghast / 噬魂幽花
-            81, // 360Devourer of Gods / 神明吞噬者
-            90, // 500Yharon / 犽戎
-            100 // 750Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            17, // Initial / 初始
+            25, // Eye of Cthulhu / 克苏鲁之眼
+            28, // Evil Boss / 腐化或猩红 Boss T2
+            36, // Skeletron / 骷髅王
+            40, // Hardmode / 困难模式
+            45, // Any Mechanical Boss / 任意机械 Boss
+            50, // Plantera / 世纪之花
+            54, // Golem / 石巨人
+            55, // Moon Lord / 月亮领主
+            56, // Providence / 亵渎天神
+            72, // Polterghast / 噬魂幽花
+            81, // Devourer of Gods / 神明吞噬者
+            90, // Yharon / 犽戎
+            100 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
         private static readonly int[] DefaultRightClickBaseDamage =
         {
-            15, // 6Initial / 初始
-            21, // 8Eye of Cthulhu / 克苏鲁之眼
-            27, // 9Evil Boss / 腐化或猩红 Boss T2
-            33, // 11Skeletron / 骷髅王
-            45, // 17Hardmode / 困难模式
-            54, // 24Any Mechanical Boss / 任意机械 Boss
-            66, // 32Plantera / 世纪之花
-            75, // 40Golem / 石巨人
-            84, // 54Moon Lord / 月亮领主
-            90, // 66Providence / 亵渎天神
-            100, // 77Polterghast / 噬魂幽花
-            127, // 90Devourer of Gods / 神明吞噬者
-            200, // 100Yharon / 犽戎
-            333 // 150Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            13, // Initial / 初始
+            17, // Eye of Cthulhu / 克苏鲁之眼
+            22, // Evil Boss / 腐化或猩红 Boss T2
+            28, // Skeletron / 骷髅王
+            40, // Hardmode / 困难模式
+            50, // Any Mechanical Boss / 任意机械 Boss
+            64, // Plantera / 世纪之花
+            72, // Golem / 石巨人
+            84, // Moon Lord / 月亮领主
+            90, // Providence / 亵渎天神
+            100, // Polterghast / 噬魂幽花
+            127, // Devourer of Gods / 神明吞噬者
+            200, // Yharon / 犽戎
+            333 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
-        // 3. 左键材料控制倍率：按 SHPC EffectID 索引，材料会乘到左键基础伤害上。
+        // 迫击炮模式倍率
+        private static readonly int[] MortarRightClickBaseDamage =
+        {
+            540, // Providence / 亵渎天神
+            600, // Polterghast / 噬魂幽花
+            762, // Devourer of Gods / 神明吞噬者
+            2000, // Yharon / 犽戎
+            3330 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+        };
+
+        // 炮台模式倍率
+        private static readonly int[] TurretRightClickBaseDamage =
+        {
+            150, // Golem / 石巨人
+            168, // Moon Lord / 月亮领主
+            180, // Providence / 亵渎天神
+            200, // Polterghast / 噬魂幽花
+            254, // Devourer of Gods / 神明吞噬者
+            400, // Yharon / 犽戎
+            666 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+        };
+
         private static readonly float[] DefaultLeftClickMaterialDamageMultipliers =
         {
             0f, // EffectID 0: Unused gap / 未使用空位
             0.46f, // EffectID 1: Energy Core / 钨钢能量核心
-            0.46f, // EffectID 2: Stormlion Mandible / 风暴之颚
+            0.48f, // EffectID 2: Stormlion Mandible / 风暴之颚
             0.58f, // EffectID 3: Sulphuric Scale / 硫磺鳞片
-            0.80f, // EffectID 4: Purified Gel / 纯净凝胶
+            0.50f, // EffectID 4: Purified Gel / 纯净凝胶
             1.02f, // EffectID 5: Essence of Havoc / 混沌精华
             0.84f, // EffectID 6: Essence of Eleum / 冰精华
             1.03f, // EffectID 7: Essence of Sunlight / 日光精华
@@ -95,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.50f, // EffectID 23: Nebula Fragment / 星云碎片
             1.73f, // EffectID 24: Stardust Fragment / 星尘碎片
             1.94f, // EffectID 25: Meld Blob / 冥思溶剂
-            2.04f, // EffectID 26: Unholy Essence / 浊火精华
+            2.00f, // EffectID 26: Unholy Essence / 浊火精华
             0f, // EffectID 27: Unused gap / 未使用空位
             2.00f, // EffectID 28: Divine Geode / 神圣晶石
             2.48f, // EffectID 29: Bloodstone Core / 血神核心
@@ -110,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             2.72f, // EffectID 38: Exo Prism / 星流棱晶
             2.69f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
             2.80f, // EffectID 40: Armored Shell / 装甲外壳
-            0.75f, // EffectID 41: Pearl Shard / 珍珠碎片
+            0.42f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
             4.00f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
             1.12f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
@@ -192,6 +213,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public int GetRightClickBaseDamage()
         {
             return GetValueForStage(GetRightClickBaseDamageValues(), GetCompletedStageIndex());
+        }
+
+        public int GetMortarRightClickBaseDamage()
+        {
+            return GetValueForStage(GetMortarRightClickBaseDamageValues(), GetCompletedStageIndex(), 9);
+        }
+
+        public int GetTurretRightClickBaseDamage()
+        {
+            return GetValueForStage(GetTurretRightClickBaseDamageValues(), GetCompletedStageIndex(), 7);
         }
 
         public int GetRightClickMaxHeatLevel()
@@ -351,6 +382,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return System.Math.Max(1, values[clampedIndex]);
         }
 
+        private int GetValueForStage(int[] values, int stageIndex, int firstStageIndex)
+        {
+            return GetValueForStage(values, stageIndex - firstStageIndex);
+        }
+
         private float GetFloatValueForStage(float[] values, int stageIndex)
         {
             if (values == null || values.Length == 0)
@@ -365,6 +401,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static int[] GetRightClickBaseDamageValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultRightClickBaseDamage), DefaultRightClickBaseDamage);
+
+        private static int[] GetMortarRightClickBaseDamageValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(MortarRightClickBaseDamage), MortarRightClickBaseDamage);
+
+        private static int[] GetTurretRightClickBaseDamageValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(TurretRightClickBaseDamage), TurretRightClickBaseDamage);
 
         private static float[] GetLeftClickMaterialDamageMultiplierValues() =>
             RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(DefaultLeftClickMaterialDamageMultipliers), DefaultLeftClickMaterialDamageMultipliers);
