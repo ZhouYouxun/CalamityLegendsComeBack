@@ -6,12 +6,10 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AllInOnePC
+namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
 {
     public class AIOC : ModItem
     {
-        //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/Skill/CtrlChip/CtrlChip";
-
         public override void SetDefaults()
         {
             Item.width = 32;
@@ -55,7 +53,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AllInOnePC
                 .AddIngredient(ItemID.FragmentStardust, 10)
                 .AddIngredient<FlyChip.FlyChip>()
                 .AddIngredient(ItemID.FragmentNebula, 10)
-                .AddIngredient(ItemID.LuminiteBar, 5)
+                .AddIngredient(ItemID.LunarBar, 5)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }

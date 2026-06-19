@@ -1,13 +1,14 @@
 ﻿using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.CalClone;
+using CalamityMod.NPCs.DesertScourge;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.NPCs.ExoMechs.Ares;
 using CalamityMod.NPCs.ExoMechs.Artemis;
 using CalamityMod.NPCs.ExoMechs.Thanatos;
 using CalamityMod.NPCs.PlaguebringerGoliath;
 using CalamityMod.NPCs.Polterghast;
-using CalamityMod.NPCs.Providence;
+using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.Yharon;
@@ -25,24 +26,28 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
     internal enum PristineFuryMark
     {
         Idle = 0,
-        EvilT2 = 1,
-        SlimeGod = 2,
-        HardMode = 3,
-        Prime = 4,
-        BrimstoneElemental = 5,
-        Plantera = 6,
-        Aurora = 7,
-        Goliath = 8,
-        Moonlord = 9,
-        Providence = 10,
-        Polterghast = 11,
-        Dog = 12,
-        Dragon = 13,
-        FakeCalamity = 14,
-        ExoTwins = 15,
-        ExoThanatos = 16,
-        ExoAres = 17,
-        Ravager = 18
+        DesertScourge = 1,
+        EyeOfCthulhu = 2,
+        Skeletron = 3,
+        EvilT2 = 4,
+        SlimeGod = 5,
+        HardMode = 6,
+        BrimstoneElemental = 7,
+        Prime = 8,
+        FakeCalamity = 9,
+        Plantera = 10,
+        Golem = 11,
+        Goliath = 12,
+        Empress = 13,
+        Moonlord = 14,
+        Providence = 15,
+        Polterghast = 16,
+        Dog = 17,
+        Dragon = 18,
+        ExoTwins = 19,
+        ExoThanatos = 20,
+        ExoAres = 21,
+        Ravager = 22
     }
 
     internal static class PristineFuryMarkHelper
@@ -50,6 +55,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal static bool TryGetMarkFromNPC(NPC target, out PristineFuryMark mark)
         {
             mark = PristineFuryMark.Idle;
+
+            if (target.type == ModContent.NPCType<DesertScourgeHead>() ||
+                target.type == ModContent.NPCType<DesertScourgeBody>() ||
+                target.type == ModContent.NPCType<DesertScourgeTail>())
+            {
+                mark = PristineFuryMark.DesertScourge;
+                return true;
+            }
+
+            if (target.type == NPCID.EyeofCthulhu)
+            {
+                mark = PristineFuryMark.EyeOfCthulhu;
+                return true;
+            }
+
+            if (target.type == NPCID.SkeletronHead || target.type == NPCID.SkeletronHand)
+            {
+                mark = PristineFuryMark.Skeletron;
+                return true;
+            }
 
             if (target.type == ModContent.NPCType<SlimeGodCore>())
             {
@@ -69,16 +94,16 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return true;
             }
 
-            if (target.type == ModContent.NPCType<AstrumAureus>())
+            if (IsGolemTarget(target))
             {
-                mark = PristineFuryMark.Aurora;
+                mark = PristineFuryMark.Golem;
                 return true;
             }
 
             if (target.type == ModContent.NPCType<PlaguebringerGoliath>())
                 return false;
 
-            if (target.type == ModContent.NPCType<Providence>())
+            if (IsProfanedGuardianTarget(target))
             {
                 mark = PristineFuryMark.Providence;
                 return true;
@@ -133,6 +158,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return true;
             }
 
+            if (target.type == NPCID.HallowBoss)
+            {
+                mark = PristineFuryMark.Empress;
+                return true;
+            }
+
             if (target.type == NPCID.MoonLordCore ||
                 target.type == NPCID.MoonLordHand ||
                 target.type == NPCID.MoonLordHead)
@@ -141,7 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 return true;
             }
 
-            if (target.type == NPCID.SkeletronPrime)
+            if (IsMechanicalBossTarget(target))
             {
                 mark = PristineFuryMark.Prime;
                 return true;
@@ -168,6 +199,30 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             target.type == ModContent.NPCType<RavagerLegLeft>() ||
             target.type == ModContent.NPCType<RavagerLegRight>();
 
+        private static bool IsMechanicalBossTarget(NPC target) =>
+            target.type == NPCID.SkeletronPrime ||
+            target.type == NPCID.PrimeCannon ||
+            target.type == NPCID.PrimeLaser ||
+            target.type == NPCID.PrimeSaw ||
+            target.type == NPCID.PrimeVice ||
+            target.type == NPCID.Retinazer ||
+            target.type == NPCID.Spazmatism ||
+            target.type == NPCID.TheDestroyer ||
+            target.type == NPCID.TheDestroyerBody ||
+            target.type == NPCID.TheDestroyerTail;
+
+        private static bool IsGolemTarget(NPC target) =>
+            target.type == NPCID.Golem ||
+            target.type == NPCID.GolemHead ||
+            target.type == NPCID.GolemHeadFree ||
+            target.type == NPCID.GolemFistLeft ||
+            target.type == NPCID.GolemFistRight;
+
+        private static bool IsProfanedGuardianTarget(NPC target) =>
+            target.type == ModContent.NPCType<ProfanedGuardianCommander>() ||
+            target.type == ModContent.NPCType<ProfanedGuardianDefender>() ||
+            target.type == ModContent.NPCType<ProfanedGuardianHealer>();
+
         internal static bool IsProvidenceLockedRavager(NPC target) =>
             IsRavagerTarget(target) && !DownedBossSystem.downedProvidence;
 
@@ -178,10 +233,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             return mark switch
             {
+                PristineFuryMark.DesertScourge => new Color(240, 214, 145),
+                PristineFuryMark.EyeOfCthulhu => new Color(228, 72, 72),
+                PristineFuryMark.Skeletron => new Color(220, 218, 196),
                 PristineFuryMark.EvilT2 => WorldGen.crimson ? new Color(240, 40, 70) : new Color(160, 60, 240),
                 PristineFuryMark.Plantera => new Color(0, 255, 180),
-                PristineFuryMark.Aurora => new Color(60, 220, 240),
+                PristineFuryMark.Golem => new Color(255, 190, 54),
                 PristineFuryMark.Goliath => new Color(130, 255, 60),
+                PristineFuryMark.Empress => Main.hslToRgb((Main.GlobalTimeWrappedHourly * 0.24f) % 1f, 0.88f, 0.58f),
                 PristineFuryMark.Moonlord => new Color(100, 240, 220),
                 PristineFuryMark.Providence => !Main.dayTime ? new Color(230, 80, 240) : new Color(255, 175, 50),
                 PristineFuryMark.Polterghast => new Color(115, 232, 255),
@@ -199,16 +258,20 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             return mark switch
             {
+                PristineFuryMark.DesertScourge => ModContent.NPCType<DesertScourgeHead>(),
+                PristineFuryMark.EyeOfCthulhu => NPCID.EyeofCthulhu,
+                PristineFuryMark.Skeletron => NPCID.SkeletronHead,
                 PristineFuryMark.EvilT2 => WorldGen.crimson ? NPCID.BrainofCthulhu : NPCID.EaterofWorldsHead,
                 PristineFuryMark.SlimeGod => ModContent.NPCType<SlimeGodCore>(),
                 PristineFuryMark.HardMode => NPCID.WallofFlesh,
                 PristineFuryMark.Prime => NPCID.SkeletronPrime,
                 PristineFuryMark.BrimstoneElemental => ModContent.NPCType<BrimstoneElemental>(),
                 PristineFuryMark.Plantera => NPCID.Plantera,
-                PristineFuryMark.Aurora => ModContent.NPCType<AstrumAureus>(),
+                PristineFuryMark.Golem => NPCID.Golem,
                 PristineFuryMark.Goliath => ModContent.NPCType<PlaguebringerGoliath>(),
+                PristineFuryMark.Empress => NPCID.HallowBoss,
                 PristineFuryMark.Moonlord => NPCID.MoonLordCore,
-                PristineFuryMark.Providence => ModContent.NPCType<Providence>(),
+                PristineFuryMark.Providence => ModContent.NPCType<ProfanedGuardianCommander>(),
                 PristineFuryMark.Polterghast => ModContent.NPCType<Polterghast>(),
                 PristineFuryMark.Dog => ModContent.NPCType<DevourerofGodsHead>(),
                 PristineFuryMark.Dragon => ModContent.NPCType<Yharon>(),

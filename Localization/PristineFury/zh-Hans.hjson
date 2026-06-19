@@ -60,6 +60,9 @@ Mods: {
 					RightClick: "[c/FFB066:右键：蓄力发射新星弹。佩戴 PF 测试配饰时，单击右键改为按顺序切换印记。]"
 					Hook: "[c/9AEAFF:同时按住左键与右键 3 秒会发射提取钩。有效 Boss 会授予对应印记；其他敌人会承受高额钩爪伤害。]"
 					Left_Idle: "[c/FFE05C:左键：以 400RPM 发射火花散布器风格的低速重力火星。]"
+					Left_DesertScourge: "[c/FFE05C:左键：直接射出原版玻璃块，命中后炸裂成多枚切割玻璃碎片。]"
+					Left_EyeOfCthulhu: "[c/FFE05C:左键：死亡凝视式眼球激光瞬间五连散射，优先锁定前方五个不同敌人，目标不足时集中火力。]"
+					Left_Skeletron: "[c/FFE05C:左键：发射骨火骷髅弹，飞行中轻微追踪并在命中时炸出骨火脉冲。]"
 					Left_EvilT2: "[c/FFE05C:左键：发射魔法绘制的亮黄色小虫，反复冲向附近目标。]"
 					Left_SlimeGod: "[c/FFE05C:左键：过载黄色史莱姆球偏重弹射；没弹射过的球在减速耗尽后才缓慢曲线追踪。]"
 					Left_HardMode: "[c/FFE05C:左键：缓慢发射重型火球，落地炸出终焉火碎片与持续地火。]"
@@ -67,12 +70,13 @@ Mods: {
 					Left_BrimstoneElemental: "[c/FFE05C:左键：发射硫火射线同款主激光，并沿路径生成强化追踪硫火弹。]"
 					Left_FakeCalamity: "[c/FFE05C:左键：单段蓄力发射漫散弧星风格的黄色光球，命中后造成高额爆炸。]"
 					Left_Plantera: "[c/5EF26C:左键：八次视觉伪激光后释放一次递归分裂的绿色重型闪电。]"
-					Left_Aurora: "[c/FFE05C:左键：蓄力工业焊枪射线，路径伤害较低，末端伤害极高。]"
+					Left_Golem: "[c/FFE05C:左键：引导石巨人日光配色的工业焊枪光束，末端造成极高伤害。]"
 					Left_Goliath: "[c/FFE05C:左键：短暂蓄力后向前方持续散射收割者无人机群。]"
+					Left_Empress: "[c/FFE05C:左键：持续锁定单个敌人喷射彩虹长枪火流，火流会随时间变亮并逐渐强化。]"
 					Left_Moonlord: "[c/FFE05C:左键：月曜射线逐步暖机，短暂停火后释放瞬时巨型激光。]"
 					Left_Providence: "[c/FFE05C:左键：亵渎迫击弹爆炸后生成地火，并按昼夜召唤圣光球或熔岩球雨。]"
 					Left_Ravager: "[c/FFE05C:左键：引导单体血石激光，命中时通过直接治疗与治疗球提供续航。]"
-					Left_Polterghast: "[c/FFE05C:左键：不断加速的亮黄色哈雷幽魂星火贯穿敌人。]"
+					Left_Polterghast: "[c/FFE05C:左键：高速恶鬼魂火会强力追踪并贯穿敌人，飞行时留下层叠幽魂尾迹。]"
 					Left_Dog: "[c/FFE05C:左键：光切虚空流撕开延迟裂隙与黑色吸积盘。]"
 					Left_ExoTwins: "[c/4AFFB4:左键：阿尔忒弥斯预警激光快速贯穿，随后三连发阿波罗导弹。]"
 					Left_ExoThanatos: "[c/FFE05C:左键：三道塔纳托斯预警线缓慢收束，最终释放灭绝激光并撕出侧向激光。]"
@@ -119,6 +123,11 @@ Mods: {
 				PristineFuryGroundFlame.DisplayName: 纯元地火
 				PristineFuryImpactExplosion.DisplayName: 纯元冲击爆裂
 				PFIdleFlame.DisplayName: 纯元短焰
+				PFDesertScourgeGlassBlock.DisplayName: 纯元玻璃块
+				PFDesertScourgeGlassShard.DisplayName: 纯元玻璃碎片
+				PFEyeOfCthulhuDeathstareBeam.DisplayName: 纯元死亡凝视光束
+				PFSkeletronBonefireSkull.DisplayName: 纯元骨火骷髅
+				PFEmpressRainbowFireStream.DisplayName: 纯元彩虹火流
 				PFEvilT2Flame.DisplayName: 邪恶双螺旋焰
 				PFSlimeGodOverloadedFlame.DisplayName: 过载史莱姆电容弹
 				PFHardModePressureFlame.DisplayName: 血肉墙压力焰
@@ -204,6 +213,9 @@ Mods: {
 
 			Marks: {
 				Idle: 默认
+				DesertScourge: 荒漠灾虫
+				EyeOfCthulhu: 克苏鲁之眼
+				Skeletron: 骷髅王
 				EvilT2: 邪恶 T2
 				SlimeGod: 史莱姆之神
 				HardMode: 血肉墙
@@ -211,10 +223,11 @@ Mods: {
 				BrimstoneElemental: 硫磺火元素
 				FakeCalamity: 灾厄之影
 				Plantera: 世纪之花
-				Aurora: 白金星舰
+				Golem: 石巨人
 				Goliath: 瘟疫使者歌莉娅
+				Empress: 光之女皇
 				Moonlord: 月亮领主
-				Providence: 亵渎天神
+				Providence: 亵渎守卫
 				Ravager: 毁灭魔像
 				Polterghast: 恶鬼
 				Dog: 神明吞噬者

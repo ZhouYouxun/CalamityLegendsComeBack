@@ -158,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                 PristineFuryMark.BrimstoneElemental => 1.35f,
                 PristineFuryMark.FakeCalamity => 0.34f,
                 PristineFuryMark.Plantera => 0.62f,
-                PristineFuryMark.Aurora => 3.2f,
+                PristineFuryMark.Golem => 3.2f,
                 PristineFuryMark.Goliath => 0.56f,
                 PristineFuryMark.Moonlord => 1.05f,
                 PristineFuryMark.Providence => 1.72f,

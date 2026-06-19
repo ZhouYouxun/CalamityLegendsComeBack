@@ -148,7 +148,7 @@
 					'''
 			}
 
-			AllInOnePC: {
+			AIOC: {
 				DisplayName: AIOC
 				Tooltip:
 					'''

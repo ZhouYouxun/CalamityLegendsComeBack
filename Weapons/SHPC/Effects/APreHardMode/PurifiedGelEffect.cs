@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override float GlowIntensityFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
         public override bool PlayDefaultLeftClickFireSound => false;
+        public override bool SuppressDefaultOnKillEffects => true;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
@@ -64,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 // 每发独立浮动：角度±1.5°，速度±10%
                 float jitterAngle = Main.rand.NextFloat(-MathHelper.ToRadians(1.5f), MathHelper.ToRadians(1.5f));
                 float speedMult = Main.rand.NextFloat(0.90f, 1.10f);
-                Vector2 velocity = forward.RotatedBy(spreadAngles[i] + jitterAngle) * (baseSpeed * speedMult);
+                Vector2 velocity = forward.RotatedBy(spreadAngles[i] + jitterAngle) * (baseSpeed * speedMult * 0.67f);
 
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),

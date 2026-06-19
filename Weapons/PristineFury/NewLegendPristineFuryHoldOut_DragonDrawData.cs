@@ -1,39 +1,50 @@
+using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
 
 namespace CalamityLegendsComeBack.Weapons.PristineFury
 {
     internal static class NewLegendPristineFuryHoldOut_DragonDrawData
     {
-        // Position anchors. These are world-space offsets from NewLegendPristineFuryHoldOut.Projectile.Center.
-        internal const float GunTipForwardOffset = 22f;
-        internal const float DragonMouthForwardOffsetFromGunTip = 8f;
-        internal const float DragonEyeForwardOffset = 16f;
-        internal const float DragonEyeSideOffset = 12f;
-        internal const float FakeCalamityChargeForwardTravelFromMouth = 6f;
-        internal const float RightArcNovaChargeForwardTravelFromMouth = 5f;
+        private static float DragonEyeHorizontalOffset() => 16f; // 龙眼水平偏移：改大 = 更靠枪口/瞄准方向；改小 = 更靠玩家手部。
+        private static float DragonEyeVerticalOffset() => -12f; // 龙眼垂直偏移：改大 = 往准星右侧的垂直方向移动；改小 = 往反方向移动。
+        private static float DragonMouthHorizontalOffset() => 10f; // 龙嘴水平偏移：改大 = 更靠枪口/瞄准方向；改小 = 更靠玩家手部。
+        private static float DragonMouthVerticalOffset() => 0f; // 龙嘴垂直偏移：改大 = 往准星右侧的垂直方向移动；改小 = 往反方向移动。
 
-        // Dragon eye starburst textures.
-        internal const string DragonEyeBloomTexturePath = "CalamityMod/Particles/BloomCircle";
-        internal const string DragonEyeStarTexturePath = "CalamityMod/Particles/FullStar";         // 四角对称，比 HalfStar 更完整，视觉上更像晶眼
-        internal const string DragonEyeIrisTexturePath = "CalamityMod/Particles/SmallBloomRingLayered"; // 虹膜环，营造龙眼瞳孔感
+        private static string SourceFile => "Weapons/PristineFury/NewLegendPristineFuryHoldOut_DragonDrawData.cs";
 
-        // Dragon mouth visual textures.
-        internal const string DragonMouthChargeBloomTexturePath = "CalamityMod/Particles/BloomCircle";
-        internal const string DragonMouthChargeSmearTexturePath = "CalamityMod/Particles/ForwardSmear";
-        internal const string DragonMouthChargeRingTexturePath = "CalamityMod/Particles/BloomRing";
-        internal const string DragonMouthMagicTexturePath = "CalamityLegendsComeBack/Texture/KsTexture/magic_03";
-        internal const string DragonMouthSmokeTexturePath = "CalamityLegendsComeBack/Texture/KsTexture/smoke_04";
+        internal static Vector2 GetDragonMouthPosition(Vector2 projectileCenter, Vector2 aimDirection, float gravityDirection) =>
+            GetLocalOffsetPosition(
+                projectileCenter,
+                aimDirection,
+                gravityDirection,
+                GetSourceFloat(nameof(DragonMouthHorizontalOffset), DragonMouthHorizontalOffset()),
+                GetSourceFloat(nameof(DragonMouthVerticalOffset), DragonMouthVerticalOffset()));
 
-        internal static Vector2 GetGunTipPosition(Vector2 projectileCenter, Vector2 aimDirection) =>
-            projectileCenter + aimDirection * GunTipForwardOffset;
+        internal static Vector2 GetDragonEyePosition(Vector2 projectileCenter, Vector2 aimDirection, float gravityDirection) =>
+            GetLocalOffsetPosition(
+                projectileCenter,
+                aimDirection,
+                gravityDirection,
+                GetSourceFloat(nameof(DragonEyeHorizontalOffset), DragonEyeHorizontalOffset()),
+                GetSourceFloat(nameof(DragonEyeVerticalOffset), DragonEyeVerticalOffset()));
 
-        internal static Vector2 GetDragonMouthPosition(Vector2 projectileCenter, Vector2 aimDirection) =>
-            GetGunTipPosition(projectileCenter, aimDirection) + aimDirection * DragonMouthForwardOffsetFromGunTip;
+        internal static string DragonEyeBloomTexturePath() => "CalamityMod/Particles/BloomCircle";
+        internal static string DragonEyeStarTexturePath() => "CalamityMod/Particles/FullStar";
+        internal static string DragonEyeIrisTexturePath() => "CalamityMod/Particles/SmallBloomRingLayered";
 
-        internal static Vector2 GetDragonEyePosition(Vector2 projectileCenter, Vector2 aimDirection, float gravityDirection)
+        internal static string DragonMouthChargeBloomTexturePath() => "CalamityMod/Particles/BloomCircle";
+        internal static string DragonMouthChargeSmearTexturePath() => "CalamityMod/Particles/ForwardSmear";
+        internal static string DragonMouthChargeRingTexturePath() => "CalamityMod/Particles/BloomRing";
+        internal static string DragonMouthMagicTexturePath() => "CalamityLegendsComeBack/Texture/KsTexture/magic_03";
+        internal static string DragonMouthSmokeTexturePath() => "CalamityLegendsComeBack/Texture/KsTexture/smoke_04";
+
+        private static float GetSourceFloat(string memberName, float fallback) =>
+            RuntimeBalanceData.GetSourceFloatReturn(SourceFile, memberName, fallback);
+
+        private static Vector2 GetLocalOffsetPosition(Vector2 projectileCenter, Vector2 aimDirection, float gravityDirection, float horizontalOffset, float verticalOffset)
         {
             Vector2 sideDirection = new Vector2(-aimDirection.Y, aimDirection.X) * gravityDirection;
-            return projectileCenter + aimDirection * DragonEyeForwardOffset - sideDirection * DragonEyeSideOffset;
+            return projectileCenter + aimDirection * horizontalOffset + sideDirection * verticalOffset;
         }
     }
 }

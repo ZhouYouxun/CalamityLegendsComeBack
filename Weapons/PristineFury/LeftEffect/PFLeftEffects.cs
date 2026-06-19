@@ -12,6 +12,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             switch (mark)
             {
+                case PristineFuryMark.DesertScourge:
+                    PFDesertScourgeEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
+                case PristineFuryMark.EyeOfCthulhu:
+                    PFEyeOfCthulhuEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
+                case PristineFuryMark.Skeletron:
+                    PFSkeletronEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
                 case PristineFuryMark.EvilT2:
                     PFEvilT2Effect.Update(holdout, held, justPressed, justReleased);
                     break;
@@ -33,11 +42,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 case PristineFuryMark.Plantera:
                     PFPlanteraEffect.Update(holdout, held, justPressed, justReleased);
                     break;
-                case PristineFuryMark.Aurora:
+                case PristineFuryMark.Golem:
                     PFAuroraEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Goliath:
                     PFGoliathEffect.Update(holdout, held, justPressed, justReleased);
+                    break;
+                case PristineFuryMark.Empress:
+                    PFEmpressEffect.Update(holdout, held, justPressed, justReleased);
                     break;
                 case PristineFuryMark.Moonlord:
                     PFMoonlordEffect.Update(holdout, held, justPressed, justReleased);

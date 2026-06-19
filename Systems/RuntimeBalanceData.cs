@@ -73,6 +73,24 @@ namespace CalamityLegendsComeBack.Systems
             return GetSourceTableFloat(sourceRelativePath, fieldName, rowIndex, columnIndex, fallback);
         }
 
+        public static float GetSourceFloatReturn(string sourceRelativePath, string memberName, float fallback)
+        {
+            string path = GetSourcePath(sourceRelativePath);
+            if (path == null)
+                return fallback;
+
+            SourceFileCache source = GetSource(path);
+            if (source == null)
+                return fallback;
+
+            Match match = Regex.Match(
+                source.Text,
+                $@"\b{Regex.Escape(memberName)}\b\s*\([^)]*\)\s*=>\s*(?<value>[-+]?(?:\d+\.\d+|\d+|\.\d+)f?)",
+                RegexOptions.CultureInvariant);
+
+            return match.Success && TryParseFloatCell(match.Groups["value"].Value, out float value) ? value : fallback;
+        }
+
         public static int GetSourceSwitchInt(string sourceRelativePath, string caseName, int fallback)
         {
             string path = GetSourcePath(sourceRelativePath);

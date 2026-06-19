@@ -346,6 +346,8 @@ Mods: {
 			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 			SHPC.StellarVortexShard.DisplayName: Stellar Vortex Shard
 			PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
+			CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
+			CtrlChipReticle.DisplayName: Ctrl Chip Reticle
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

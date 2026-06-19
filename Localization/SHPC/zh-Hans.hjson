@@ -184,7 +184,7 @@
 					'''
 			}
 
-			AllInOnePC: {
+			AIOC: {
 				DisplayName: 全合一芯片组
 				Tooltip:
 					'''

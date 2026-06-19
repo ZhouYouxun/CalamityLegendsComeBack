@@ -18,15 +18,21 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private static readonly int[] DefaultProgressBaseDamage =
         {
             18,   // Initial
+            20,   // Desert Scourge
             24,   // Eye of Cthulhu
+            28,   // Skeletron
             32,   // Evil Boss
-            44,   // Skeletron
-            68,   // Hardmode
+            38,   // Slime God
+            44,   // Hardmode
+            58,   // Brimstone Elemental
             82,   // Any Mechanical Boss
+            94,   // Calamitas Clone
             105,  // Plantera
             128,  // Golem
+            155,  // Plaguebringer Goliath
+            180,  // Empress of Light
             205,  // Moon Lord
-            255,  // Providence
+            255,  // Profaned Guardians
             300,  // Polterghast
             440,  // Devourer of Gods
             500,  // Yharon
@@ -37,20 +43,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private static readonly float[] DefaultLeftClickMarkDamageMultipliers =
         {
             0.78f, // Idle
+            0.82f, // DesertScourge
+            0.84f, // EyeOfCthulhu
+            0.86f, // Skeletron
             0.88f, // EvilT2
             0.92f, // SlimeGod
             0.95f, // HardMode
-            0.98f, // Prime
             1.08f, // BrimstoneElemental
+            0.98f, // Prime
+            1.36f, // FakeCalamity
             1.10f, // Plantera
-            1.12f, // Aurora
+            1.12f, // Golem
             1.16f, // Goliath
+            1.22f, // Empress
             1.24f, // Moonlord
             1.34f, // Providence
-            1.30f, // Polterghast
+            1.42f, // Polterghast
             1.46f, // Dog
             1.58f, // Dragon
-            1.36f, // FakeCalamity
             1.70f, // ExoTwins
             1.84f, // ExoThanatos
             1.78f, // ExoAres
@@ -101,15 +111,21 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             bool[] clearedStages =
             {
+                DownedBossSystem.downedDesertScourge,
                 NPC.downedBoss1,
-                NPC.downedBoss2,
                 NPC.downedBoss3,
+                NPC.downedBoss2,
+                DownedBossSystem.downedSlimeGod,
                 Main.hardMode,
+                DownedBossSystem.downedBrimstoneElemental,
                 NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3,
+                DownedBossSystem.downedCalamitasClone,
                 NPC.downedPlantBoss,
                 NPC.downedGolemBoss,
+                DownedBossSystem.downedPlaguebringer,
+                NPC.downedEmpressOfLight,
                 NPC.downedMoonlord,
-                DownedBossSystem.downedProvidence,
+                DownedBossSystem.downedGuardians,
                 DownedBossSystem.downedPolterghast,
                 DownedBossSystem.downedDoG,
                 DownedBossSystem.downedYharon,

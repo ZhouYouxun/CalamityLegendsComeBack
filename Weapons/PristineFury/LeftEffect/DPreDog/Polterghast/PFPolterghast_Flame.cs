@@ -1,4 +1,5 @@
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,20 +27,21 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 14;
+            Projectile.width = Projectile.height = 18;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = 2;
-            Projectile.timeLeft = 72;
-            Projectile.extraUpdates = 6;
+            Projectile.penetrate = 5;
+            Projectile.timeLeft = 150;
+            Projectile.extraUpdates = 4;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 8;
+            Projectile.localNPCHitCooldown = 5;
         }
 
         public override void AI()
         {
+            HomeWithPhantomCurve();
             Projectile.rotation = Projectile.velocity.ToRotation();
             Timer++;
             if (Projectile.numUpdates == 0)
@@ -59,6 +61,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
                 if (FrameTimer > 5f && Main.rand.NextBool(2))
                     SpawnThreadedTrail(back);
+
+                if (Main.rand.NextBool(3))
+                    SpawnHomingAfterimage(back);
             }
             else if (Timer == 3f)
             {
@@ -68,6 +73,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             if (Projectile.numUpdates == 0)
                 Lighting.AddLight(Projectile.Center, ThemeColor.ToVector3() * 0.28f);
+        }
+
+        private void HomeWithPhantomCurve()
+        {
+            NPC target = Projectile.Center.ClosestNPCAt(1800f);
+            if (target == null)
+                return;
+
+            float homingPower = Utils.GetLerpValue(0f, 28f, Timer, true);
+            Vector2 predictedCenter = target.Center + target.velocity * MathHelper.Lerp(4f, 10f, homingPower);
+            Vector2 desired = (predictedCenter - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * MathHelper.Lerp(18f, 32f, homingPower);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, MathHelper.Lerp(0.055f, 0.18f, homingPower));
         }
 
         private void ReleaseCometDust(int count, float spread)
@@ -115,6 +132,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     Main.rand.NextFloat(0.2f, 0.34f),
                     Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.32f, 0.68f))));
             }
+        }
+
+        private void SpawnHomingAfterimage(Vector2 back)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 side = back.RotatedBy(MathHelper.PiOver2);
+            Color core = Color.Lerp(ThemeColor, new Color(255, 255, 255), 0.48f);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center + side * Main.rand.NextFloat(-8f, 8f),
+                Projectile.velocity * 0.08f,
+                core,
+                new Vector2(Main.rand.NextFloat(0.18f, 0.28f), Main.rand.NextFloat(0.85f, 1.35f)),
+                Projectile.rotation,
+                0.045f,
+                0.012f,
+                Main.rand.Next(8, 13)));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

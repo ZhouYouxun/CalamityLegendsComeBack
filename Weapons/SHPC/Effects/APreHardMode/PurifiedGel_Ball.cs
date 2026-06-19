@@ -103,7 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center + offset * side,
                     ModContent.DustType<SquashDust>(),
-                    -Projectile.velocity * Main.rand.NextFloat(0.3f, 0.8f));
+                    -Projectile.velocity * Main.rand.NextFloat(0.3f, 0.8f) * 0.5f);
                 dust.noGravity = true;
                 dust.scale = Main.rand.NextFloat(1.4f, 1.9f);
                 dust.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
@@ -123,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             {
                 GeneralParticleHandler.SpawnParticle(new PointParticle(
                     Projectile.Center,
-                    -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.6f, 2.0f),
+                    -Projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.6f, 2.0f) * 0.5f,
                     false, 10,
                     Main.rand.NextFloat(0.5f, 0.85f),
                     Main.rand.NextBool() ? pink : blue));
@@ -135,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Dust d = Dust.NewDustPerfect(
                     Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
                     DustID.GemDiamond,
-                    -Projectile.velocity * 0.15f);
+                    -Projectile.velocity * 0.15f * 0.5f);
                 d.noGravity = true;
                 d.scale = Main.rand.NextFloat(0.35f, 0.6f);
                 d.color = Color.Lerp(pink, blue, Main.rand.NextFloat());
@@ -186,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     -1f, 75f);
             }
 
-            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.65f, Pitch = 0.35f }, center);
+            SoundEngine.PlaySound(SoundID.Item110 with { Volume = 0.65f, Pitch = 0.35f }, center);
 
             if (!Main.dedServ)
                 SpawnBounceVisual(center);
@@ -214,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Dust dust = Dust.NewDustPerfect(
                     center + dir * Main.rand.NextFloat(3f, 18f),
                     DustID.GemDiamond,
-                    dir * Main.rand.NextFloat(2f, 6.5f),
+                    dir * Main.rand.NextFloat(2f, 6.5f) * 0.5f,
                     80, color, Main.rand.NextFloat(0.9f, 1.5f));
                 dust.noGravity = true;
             }
@@ -224,7 +224,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             {
                 GeneralParticleHandler.SpawnParticle(new PointParticle(
                     center,
-                    Main.rand.NextVector2Circular(5.5f, 5.5f),
+                    Main.rand.NextVector2Circular(5.5f, 5.5f) * 0.5f,
                     false, 10,
                     Main.rand.NextFloat(0.5f, 1.1f),
                     Main.rand.NextBool() ? PurifiedGelPink : PurifiedGelBlue));

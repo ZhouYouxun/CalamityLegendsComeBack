@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal sealed class PFAurora_MuzzleOrb : ModProjectile, ILocalizedModType
     {
-        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 190, 54));
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override void AI()
         {
             int holdoutIndex = (int)Projectile.ai[0];
-            if (!Main.projectile.IndexInRange(holdoutIndex) || Main.projectile[holdoutIndex].ModProjectile is not NewLegendPristineFuryHoldOut holdout || holdout.CurrentMark != PristineFuryMark.Aurora)
+            if (!Main.projectile.IndexInRange(holdoutIndex) || Main.projectile[holdoutIndex].ModProjectile is not NewLegendPristineFuryHoldOut holdout || holdout.CurrentMark != PristineFuryMark.Golem)
             {
                 Projectile.Kill();
                 return;

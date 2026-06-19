@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 {
     internal sealed class PFAurora_Flame : ModProjectile, ILocalizedModType
     {
-        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 224, 92));
+        private Color ThemeColor => PFLeftEffectRules.GetThemeColor(Projectile, new Color(255, 190, 54));
         private float BeamLength => Projectile.ai[0];
         private int HoldoutIndex => (int)Projectile.ai[1];
         private Vector2 Direction => Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void AI()
         {
-            if (!Main.projectile.IndexInRange(HoldoutIndex) || !Main.projectile[HoldoutIndex].active || Main.projectile[HoldoutIndex].ModProjectile is not NewLegendPristineFuryHoldOut holdout || holdout.CurrentMark != PristineFuryMark.Aurora)
+            if (!Main.projectile.IndexInRange(HoldoutIndex) || !Main.projectile[HoldoutIndex].active || Main.projectile[HoldoutIndex].ModProjectile is not NewLegendPristineFuryHoldOut holdout || holdout.CurrentMark != PristineFuryMark.Golem)
             {
                 Projectile.Kill();
                 return;

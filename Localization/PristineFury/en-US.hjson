@@ -60,6 +60,9 @@ Mods: {
 					RightClick: "[c/FFB066:Right Click: charge a Nova shot. Equip the PF Test Item to make single right clicks cycle imprints for testing.]"
 					Hook: "[c/9AEAFF:Hold Left + Right for 3 seconds to launch the extraction hook. Valid bosses grant their imprint; other enemies take heavy hook damage.]"
 					Left_Idle: "[c/FFE05C:Left Click: 400 RPM slow gravity sparks in a Spark Spreader style.]"
+					Left_DesertScourge: "[c/FFE05C:Left Click: fire a glass block that shatters into cutting glass fragments on impact.]"
+					Left_EyeOfCthulhu: "[c/FFE05C:Left Click: Deathstare-style eye lasers instantly fan out toward up to five forward enemies, focusing fire when fewer targets are present.]"
+					Left_Skeletron: "[c/FFE05C:Left Click: launch bonefire skull sparks that curve around targets before bursting.]"
 					Left_EvilT2: "[c/FFE05C:Left Click: launch magic-drawn yellow worms that repeatedly rush nearby targets.]"
 					Left_SlimeGod: "[c/FFE05C:Left Click: overloaded yellow slime globes favor ricochet; only unbounced globes curve-home after slowing down.]"
 					Left_HardMode: "[c/FFE05C:Left Click: slow heavy fireballs burst into Totality fragments and persistent ground fire.]"
@@ -67,12 +70,13 @@ Mods: {
 					Left_BrimstoneElemental: "[c/FFE05C:Left Click: fire a Brimstone Ray-style laser that seeds stronger homing brimstone barrages.]"
 					Left_FakeCalamity: "[c/FFE05C:Left Click: single-charge an Arc Nova-style yellow orb that detonates for high burst damage.]"
 					Left_Plantera: "[c/5EF26C:Left Click: eight visual pseudo-lasers prime one recursively splitting green lightning strike.]"
-					Left_Aurora: "[c/FFE05C:Left Click: charge an industrial welding ray; its endpoint deals extreme damage.]"
+					Left_Golem: "[c/FFE05C:Left Click: channel a solar Golem welding ray; its endpoint deals extreme damage.]"
 					Left_Goliath: "[c/FFE05C:Left Click: briefly charge, then release a forward locust swarm of reaper drones.]"
+					Left_Empress: "[c/FFE05C:Left Click: sustain a single rainbow fire-lance on one enemy; the stream brightens and intensifies as it ramps.]"
 					Left_Moonlord: "[c/FFE05C:Left Click: warm up straight lunar bolts, pause, then release an instant massive laser.]"
 					Left_Providence: "[c/FFE05C:Left Click: profaned mortars explode into ground fire and summon day-or-night celestial rain.]"
 					Left_Ravager: "[c/FFE05C:Left Click: channel a single-target Bloodstone laser that sustains the user through direct healing and healing orbs.]"
-					Left_Polterghast: "[c/FFE05C:Left Click: accelerating yellow comet-souls pierce through targets.]"
+					Left_Polterghast: "[c/FFE05C:Left Click: rapid oni soulfire aggressively homes through targets, leaving a threaded phantom wake.]"
 					Left_Dog: "[c/FFE05C:Left Click: Photoviscerator void stream tears delayed rifts and black accretion disks.]"
 					Left_ExoTwins: "[c/4AFFB4:Left Click: Artemis warning laser snaps forward, then Apollo rockets launch in a three-shot burst.]"
 					Left_ExoThanatos: "[c/FFE05C:Left Click: three Thanatos telegraphs converge before a terminal extinction beam tears open side lasers.]"
@@ -119,6 +123,11 @@ Mods: {
 				PristineFuryGroundFlame.DisplayName: Pristine Ground Flame
 				PristineFuryImpactExplosion.DisplayName: Pristine Impact Burst
 				PFIdleFlame.DisplayName: Pristine Ember Jet
+				PFDesertScourgeGlassBlock.DisplayName: Pristine Glass Block
+				PFDesertScourgeGlassShard.DisplayName: Pristine Glass Shard
+				PFEyeOfCthulhuDeathstareBeam.DisplayName: Pristine Deathstare Beam
+				PFSkeletronBonefireSkull.DisplayName: Pristine Bonefire Skull
+				PFEmpressRainbowFireStream.DisplayName: Pristine Rainbow Fire Lance
 				PFEvilT2Flame.DisplayName: Corrupt Helix Flame
 				PFSlimeGodOverloadedFlame.DisplayName: Overloaded Slime Capacitor
 				PFHardModePressureFlame.DisplayName: Wall Pressure Flame
@@ -204,6 +213,9 @@ Mods: {
 
 			Marks: {
 				Idle: Default
+				DesertScourge: Desert Scourge
+				EyeOfCthulhu: Eye of Cthulhu
+				Skeletron: Skeletron
 				EvilT2: Evil T2
 				SlimeGod: Slime God
 				HardMode: Wall of Flesh
@@ -211,10 +223,11 @@ Mods: {
 				BrimstoneElemental: Brimstone Elemental
 				FakeCalamity: Fake Calamity
 				Plantera: Plantera
-				Aurora: Astrum Aureus
+				Golem: Golem
 				Goliath: The Plaguebringer Goliath
+				Empress: Empress of Light
 				Moonlord: Moon Lord
-				Providence: Providence
+				Providence: Profaned Guardians
 				Ravager: Ravager
 				Polterghast: Oni
 				Dog: The Devourer of Gods
