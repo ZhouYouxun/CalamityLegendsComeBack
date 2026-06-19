@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                     Projectile.GetSource_FromThis(),
                     center, Vector2.Zero,
                     ModContent.ProjectileType<SHPCRight_Explosion>(),
-                    Projectile.damage, Projectile.knockBack, Projectile.owner,
+                    (int)(Projectile.damage * 0.5), Projectile.knockBack, Projectile.owner,
                     -1f, 75f);
             }
 

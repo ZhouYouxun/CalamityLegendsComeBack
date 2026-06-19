@@ -70,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                     Projectile.Center,
                     velocity,
                     ModContent.ProjectileType<PearlShardSmallPearl>(),
-                    (int)(Projectile.damage * 0.5),
+                    (int)(Projectile.damage * 0.30),
                     Projectile.knockBack,
                     Projectile.owner,
                     Main.rand.NextFloat(MathHelper.TwoPi));
