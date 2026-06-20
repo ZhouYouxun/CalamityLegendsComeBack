@@ -118,8 +118,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Vector2 ownerToMouse = aimWorld - armPosition;
                 float proximityLookingUpwards = Vector2.Dot(ownerToMouse.SafeNormalize(Vector2.Zero), -Vector2.UnitY * Owner.gravDir);
                 int direction = MathF.Sign(ownerToMouse.X);
+                if (direction == 0)
+                    direction = Owner.direction;
 
-                Vector2 lengthOffset = Projectile.rotation.ToRotationVector2() * OffsetLengthFromArm;
+                Vector2 syncedDirection = holdoutDirection.AngleTowards(ownerToMouse.ToRotation(), WeaponTurnSpeed).ToRotationVector2();
+                Projectile.velocity = syncedDirection;
+                Projectile.rotation = syncedDirection.ToRotation();
+
+                Vector2 lengthOffset = syncedDirection * OffsetLengthFromArm;
                 Vector2 armOffset = new Vector2(
                     Utils.Remap(MathF.Abs(proximityLookingUpwards), 0f, 1f, 0f,
                     proximityLookingUpwards > 0f ? OffsetXUpwards : OffsetXDownwards) * direction,
@@ -129,17 +135,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 );
 
                 Projectile.Center = armPosition + lengthOffset + armOffset;
-                Projectile.velocity = holdoutDirection.AngleTowards(ownerToMouse.ToRotation(), WeaponTurnSpeed).ToRotationVector2();
-                Projectile.rotation = holdoutDirection;
 
-                Projectile.spriteDirection = direction;
+                Projectile.spriteDirection = Projectile.direction = direction;
                 Owner.ChangeDir(direction);
             }
             else
             {
-                Vector2 lengthOffset = Projectile.rotation.ToRotationVector2() * OffsetLengthFromArm;
-                float proximityLookingUpwards = Vector2.Dot(Projectile.velocity.SafeNormalize(Vector2.Zero), -Vector2.UnitY * Owner.gravDir);
-                int direction = Projectile.spriteDirection;
+                Vector2 syncedDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+                Projectile.rotation = syncedDirection.ToRotation();
+
+                Vector2 lengthOffset = syncedDirection * OffsetLengthFromArm;
+                float proximityLookingUpwards = Vector2.Dot(syncedDirection, -Vector2.UnitY * Owner.gravDir);
+                int direction = MathF.Sign(syncedDirection.X);
+                if (direction == 0)
+                    direction = Projectile.spriteDirection != 0 ? Projectile.spriteDirection : Owner.direction;
+                Projectile.spriteDirection = Projectile.direction = direction;
 
                 Vector2 armOffset = new Vector2(
                     Utils.Remap(MathF.Abs(proximityLookingUpwards), 0f, 1f, 0f,
@@ -150,7 +160,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 );
 
                 Projectile.Center = armPosition + lengthOffset + armOffset;
-                Projectile.velocity = Projectile.rotation.ToRotationVector2();
                 Owner.ChangeDir(direction);
             }
 

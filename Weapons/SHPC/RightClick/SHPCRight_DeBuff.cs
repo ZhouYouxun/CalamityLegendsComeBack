@@ -1,3 +1,4 @@
+using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -12,11 +13,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
     {
         public static int FireMode = 1;
 
-        private static readonly Color PlagueGreen = new(60, 180, 55);
-        private static readonly Color PlagueLime = new(120, 215, 65);
-        private static readonly Color SmolderRed = new(120, 24, 16);
-        private const int ToxicSludgeDust = 89;
-        private const int SporeColonyDust = 220;
+        private static readonly Color BrimstoneRed = new(135, 20, 36);
+        private static readonly Color BrimstoneDark = new(72, 12, 22);
+        private static readonly Color DemonicViolet = new(128, 55, 175);
+        private static readonly Color DragonEmber = new(210, 64, 26);
+        private static readonly Color SmokeGray = new(58, 50, 48);
 
         public override void SetStaticDefaults()
         {
@@ -84,54 +85,74 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (Main.dedServ || stage < 4)
                 return;
 
-            // Frequency aligned with Calamity Plague debuff: 1/3 per frame
+            // Frequency aligned with Calamity's Brimstone/Demonic fire debuffs.
             if (!Main.rand.NextBool(3))
                 return;
 
-            // Core: Calamity Plague-style DirectionalPulseRing.
-            Vector2 ringPos = RandomBodyPoint(player, 0.45f, 0.50f);
-            float endScale = stage >= 5
-                ? Main.rand.NextFloat(0.12f, 0.19f)
-                : Main.rand.NextFloat(0.07f, 0.15f);
-            Color ringColor = Main.rand.NextBool(3) ? PlagueLime : PlagueGreen;
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                ringPos,
-                Vector2.Zero,
-                ringColor * 0.68f,
-                new Vector2(1f, 1f),
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.018f,
-                endScale,
-                15));
+            Vector2 mainPos = RandomBodyPoint(player, 0.48f, 0.54f);
+            Dust brimstone = Dust.NewDustPerfect(
+                mainPos,
+                (int)CalamityDusts.Brimstone,
+                player.velocity + new Vector2(0f, Main.rand.NextFloat(-4.5f, -2.2f)).RotatedByRandom(0.24f),
+                90,
+                Color.Lerp(BrimstoneDark, BrimstoneRed, Main.rand.NextFloat(0.35f, 0.85f)),
+                Main.rand.NextFloat(stage >= 5 ? 1.15f : 0.95f, stage >= 5 ? 1.55f : 1.30f));
+            brimstone.noGravity = true;
 
-            // 4 toxic dusts per trigger, matching Plague's cadence and density.
-            for (int i = 0; i < 4; i++)
+            int ashCount = stage >= 5 ? 3 : 2;
+            for (int i = 0; i < ashCount; i++)
             {
-                Vector2 dustPos = RandomBodyPoint(player, 0.48f, 0.52f);
-                bool sporeAccent = Main.rand.NextBool(30); // ~3.3%, mirrors Plague's SporeColony ratio
-                int dustType = sporeAccent ? SporeColonyDust : ToxicSludgeDust;
-                float dustScale = sporeAccent
-                    ? Main.rand.NextFloat(0.9f, 1.15f)
-                    : Main.rand.NextFloat(0.28f, 0.40f);
-                Dust dust = Dust.NewDustPerfect(
-                    dustPos,
-                    dustType,
-                    player.velocity * 0.25f + Main.rand.NextVector2Circular(1.15f, 1.15f),
-                    0, default, dustScale);
-                dust.noGravity = true;
+                Dust ash = Dust.NewDustPerfect(
+                    RandomBodyPoint(player, 0.50f, 0.56f),
+                    Main.rand.NextBool(3) ? DustID.RuneWizard : (int)CalamityDusts.Brimstone,
+                    player.velocity + new Vector2(Main.rand.NextFloat(-2.2f, 2.2f), Main.rand.NextFloat(-3.4f, -0.8f)),
+                    110,
+                    Main.rand.NextBool() ? BrimstoneRed : BrimstoneDark,
+                    Main.rand.NextFloat(0.72f, 1.18f));
+                ash.noGravity = true;
             }
 
-            // Stage 5: sparse, dark heat accent with no bright sparks.
+            if (Main.rand.NextBool(stage >= 5 ? 2 : 4))
+            {
+                Vector2 sparkVel = new(Main.rand.NextFloat(-player.width / 8f, player.width / 8f), Main.rand.NextFloat(-player.height / 18f, -player.height / 24f));
+                Particle demonicSpark = new VelChangingSpark(
+                    player.Center + new Vector2(Main.rand.NextFloat(-10f, 10f), player.height * 0.35f) + sparkVel * 0.5f,
+                    sparkVel + player.velocity,
+                    new Vector2(-sparkVel.X * 0.5f, sparkVel.Y * 2f) * 2.4f,
+                    "CalamityMod/Particles/SmallBloom",
+                    Main.rand.Next(13, 19),
+                    Main.rand.NextFloat(0.045f, stage >= 5 ? 0.085f : 0.068f),
+                    Color.Lerp(DemonicViolet, BrimstoneRed, Main.rand.NextFloat(0.2f, 0.55f)) * 0.55f,
+                    new Vector2(0.56f, 1.05f),
+                    true,
+                    false,
+                    0,
+                    false,
+                    0.35f,
+                    0.08f);
+                GeneralParticleHandler.SpawnParticle(demonicSpark);
+            }
+
             if (stage >= 5 && Main.rand.NextBool(3))
             {
-                Dust smolder = Dust.NewDustPerfect(
-                    RandomBodyPoint(player, 0.44f, 0.48f),
-                    DustID.RuneWizard,
-                    player.velocity * 0.2f + new Vector2(Main.rand.NextFloat(-0.7f, 0.7f), Main.rand.NextFloat(-1.5f, -0.3f)),
-                    120,
-                    SmolderRed,
-                    Main.rand.NextFloat(0.65f, 0.95f));
-                smolder.noGravity = true;
+                Particle smoke = new SmallSmokeParticle(
+                    RandomBodyPoint(player, 0.46f, 0.52f),
+                    player.velocity * 0.2f - Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(1.2f, 3.4f),
+                    SmokeGray,
+                    Color.Lerp(Color.Black, SmokeGray, 0.35f),
+                    Main.rand.NextFloat(0.36f, 0.78f),
+                    0.42f,
+                    Main.rand.NextFloat(-0.04f, 0.04f));
+                GeneralParticleHandler.SpawnParticle(smoke);
+
+                Particle ember = new SparkParticle(
+                    RandomBodyPoint(player, 0.42f, 0.46f),
+                    player.velocity * 0.15f - Vector2.UnitY.RotatedByRandom(0.32f) * Main.rand.NextFloat(1.2f, 3.0f),
+                    false,
+                    Main.rand.Next(8, 12),
+                    Main.rand.NextFloat(0.18f, 0.32f),
+                    Color.Lerp(DragonEmber, BrimstoneRed, Main.rand.NextFloat(0.2f, 0.7f)) * 0.58f);
+                GeneralParticleHandler.SpawnParticle(ember);
             }
         }
 

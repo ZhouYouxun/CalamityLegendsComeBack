@@ -157,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     new Vector2(0.20f, 1.65f),
                     true,
                     true,
-                    extraRotation: -MathHelper.PiOver2,
+                    extraRotation: 0f,
                     shrinkSpeed: 0.52f,
                     glowOpacity: 0.90f));
             }
@@ -323,7 +323,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     new Vector2(0.34f, 1.15f),
                     true,
                     true,
-                    extraRotation: -MathHelper.PiOver2,
+                    extraRotation: 0f,
                     shrinkSpeed: 0.48f,
                     glowOpacity: 0.78f));
             }
@@ -370,7 +370,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                         new Vector2(0.09f, 0.82f),
                         true,
                         true,
-                        extraRotation: -MathHelper.PiOver2,
+                        extraRotation: 0f,
                         shrinkSpeed: 0.40f,
                         glowOpacity: 0.92f));
                 }

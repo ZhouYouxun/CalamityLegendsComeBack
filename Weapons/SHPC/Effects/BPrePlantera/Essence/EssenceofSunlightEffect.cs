@@ -207,14 +207,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
             Vector2 forward = projectile.velocity.SafeNormalize(owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
             
-            // 往正上方 30 * 16 = 480 像素，以及周遭区域随机 (80 像素半径)
-            Vector2 randomOffset = Main.rand.NextVector2Circular(80f, 80f);
-            Vector2 spawnPos = projectile.Center + new Vector2(0f, -480f) + randomOffset;
+            // Spawn the portal cluster at the orb impact point.
+            Vector2 spawnPos = projectile.Center;
             
-            Vector2 relativeOffset = spawnPos - owner.Center;
-            if (relativeOffset.LengthSquared() < 16f)
-                relativeOffset = forward * 72f;
-
             Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 spawnPos,
@@ -222,9 +217,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 ModContent.ProjectileType<EssenceofSunlight_BurstRelay>(),
                 projectile.damage,
                 projectile.knockBack,
-                owner.whoAmI,
-                relativeOffset.X,
-                relativeOffset.Y);
+                owner.whoAmI);
         }
     }
 

@@ -25,7 +25,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
 
-        public int OwnerIndex
+        private const int MissingParentGraceFrames = 12;
+
+        private int cachedOwnerIndex = -1;
+        private int missingParentFrames;
+
+        public int OwnerIdentity
         {
             get => (int)Projectile.ai[0];
             set => Projectile.ai[0] = value;
@@ -66,48 +71,65 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
         // 替换 AttachToSomething() 为下面版本：
         // 功能：每帧检查父弹幕，父存在 -> 刷新 timeLeft（保持永生）；父不存在 -> Kill()
-        // 已使用类内的 OwnerIndex 属性 (ai[0]) 与之前的类型兼容判断。
+        // ai[0] stores the parent EX projectile identity, not the local whoAmI index.
         public override void AttachToSomething()
         {
-            int ownerIndex = OwnerIndex; // 从 ai[0] 读取父弹幕索引
-                                         // 索引越界或无效直接自毁
-            if (!ownerIndex.WithinBounds(Main.maxProjectiles))
+            Projectile ownerProj = FindOwnerProjectile();
+
+            if (ownerProj != null)
             {
-                Projectile.Kill();
-                return;
-            }
-
-            Projectile ownerProj = Main.projectile[ownerIndex];
-
-            // 允许的父弹幕类型（兼容旧类型与 TEM00Left）
-            int exType = ModContent.ProjectileType<NL_SHPC_EXWeapon>();
-
-            // 父弹幕存在且活跃且为我们接受的类型 -> 绑定位置和朝向，并刷新寿命
-            if (ownerProj != null && ownerProj.active && ownerProj.type == exType)
-            {
-                // 绑定到父弹幕的“枪口”位置与朝向（与你原实现一致）
                 Vector2 dir = ownerProj.velocity.SafeNormalize(Vector2.UnitX);
 
                 Projectile.Center = ownerProj.Center + dir * 18f;
                 Projectile.rotation = dir.ToRotation();
-
-                // --------- 关键：只要父弹幕存在，就不断刷新自身寿命，确保永远不死 ---------
-                // 这里把 timeLeft 设为 2，基类/引擎会每帧调用 AttachToSomething 并把 timeLeft 再设回 2
-                // 因此只要父弹幕活着，本弹幕就会一直存活；父消失则下方分支会 Kill()
                 Projectile.timeLeft = 2;
-
-                // （可选）如果你需要把“持续存在”状态同步到客户端，可在首次绑定时做一次 netUpdate
-                // 但频繁 netUpdate 会增加流量，所以这里不每帧调用
+                missingParentFrames = 0;
             }
             else
             {
-                // 父弹幕不存在/类型不匹配 -> 自毁
-                // 为了多人同步，先设置 netUpdate 再 Kill()
+                if (missingParentFrames++ < MissingParentGraceFrames)
+                {
+                    Projectile.timeLeft = 2;
+                    return;
+                }
+
                 Projectile.netUpdate = true;
                 Projectile.Kill();
             }
         }
 
+        private Projectile FindOwnerProjectile()
+        {
+            int exType = ModContent.ProjectileType<NL_SHPC_EXWeapon>();
+
+            if (cachedOwnerIndex >= 0 && cachedOwnerIndex < Main.maxProjectiles)
+            {
+                Projectile cached = Main.projectile[cachedOwnerIndex];
+                if (IsMatchingOwnerProjectile(cached, exType))
+                    return cached;
+            }
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile candidate = Main.projectile[i];
+                if (!IsMatchingOwnerProjectile(candidate, exType))
+                    continue;
+
+                cachedOwnerIndex = i;
+                return candidate;
+            }
+
+            cachedOwnerIndex = -1;
+            return null;
+        }
+
+        private bool IsMatchingOwnerProjectile(Projectile projectile, int exType)
+        {
+            return projectile.active &&
+                projectile.owner == Projectile.owner &&
+                projectile.type == exType &&
+                projectile.identity == OwnerIdentity;
+        }
 
         public override void UpdateLaserMotion()
         {

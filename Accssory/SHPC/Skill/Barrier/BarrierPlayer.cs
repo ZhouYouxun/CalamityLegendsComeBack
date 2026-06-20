@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         private int chargeDelayTimer;
         private float shieldHitPoints;
+        private bool _roverDriveWasActive;
 
         public bool HoldingSHPC =>
             Player.HeldItem?.ModItem is NewLegendSHPC;
@@ -118,7 +119,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             if (!BarrierEquipped || !HoldingSHPC)
                 return;
 
-            if (ShieldActive)
+            // RoverDrive 仍有护盾时拥有完全优先权，MatrixChargingBarrier 退后
+            _roverDriveWasActive = Player.Calamity().roverDrive &&
+                                   Player.Calamity().RoverDriveShieldDurability > 0;
+
+            if (ShieldActive && !_roverDriveWasActive)
                 modifiers.SourceDamage *= 0.9f;
 
             modifiers.ModifyHurtInfo += ApplyShieldAndResetCharge;
@@ -126,6 +131,10 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         private void ApplyShieldAndResetCharge(ref Player.HurtInfo info)
         {
+            // RoverDrive 本次命中前有护盾：由它负责吸收，我们完全不介入
+            if (_roverDriveWasActive)
+                return;
+
             if (ShieldActive && info.Damage > 0)
             {
                 int incomingDamage = info.Damage;

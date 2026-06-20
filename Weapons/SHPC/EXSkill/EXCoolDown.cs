@@ -29,7 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         // ✅ 只有手持SHPC时才显示
         public override bool ShouldDisplay =>
             instance.player.HeldItem.type == ModContent.ItemType<NewLegendSHPC>() &&
-            instance.player.GetModPlayer<NewLegend_EXPlayer>().EXUnlocked;
+            instance.player.GetModPlayer<NewLegend_EXPlayer>().EXUnlocked &&
+            instance.player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
 
         // 名字（可后续本地化）
         public override LocalizedText DisplayName =>

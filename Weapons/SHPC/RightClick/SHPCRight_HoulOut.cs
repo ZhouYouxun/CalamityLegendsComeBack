@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -181,6 +182,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 player.HeldItem.type != AssociatedItemID)
             {
                 Projectile.Kill();
+                return;
+            }
+
+            if (Projectile.owner != Main.myPlayer)
+            {
+                ApplyRemoteSyncedState(player);
                 return;
             }
 
@@ -460,6 +467,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         #region ===== 核心技能：降温 =====
         // ===== 后坐�?=====TryReduceHeat
+        private void ApplyRemoteSyncedState(Player player)
+        {
+            if (MaxHeatStage <= 0 || LaserChainCount <= 0)
+                InitializeProgressRules();
+
+            stage = Utils.Clamp(stage, 0, MaxHeatStage);
+            int fillTime = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4), MaxHeatStage);
+            stageTimer = stage >= MaxHeatStage
+                ? fillTime
+                : Utils.Clamp(stageTimer, 0, fillTime);
+
+            player.GetModPlayer<SHPCRight_Player>().SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
+
+            visualProgress = stage >= MaxHeatStage
+                ? 1f
+                : Utils.Clamp(stageTimer / (float)Math.Max(1, fillTime), 0f, 1f);
+        }
+
         private int recoilFrame;
         private bool recoilActive;
         private int recoilDirection = 1;
@@ -865,6 +890,46 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             PreserveHeatState();
         }
 
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(stage);
+            writer.Write(stageTimer);
+            writer.Write(overheatTimer);
+            writer.Write(ProgressState);
+            writer.Write(MaxHeatStage);
+            writer.Write(LaserChainCount);
+            writer.Write(currentEffectID);
+            writer.Write(visualProgress);
+            writer.Write(stageOutlineTimer);
+            writer.Write(fireStopTimer);
+            writer.Write(manualCoolingVisualTimer);
+            writer.Write(forcedShutdownVisualDuration);
+            writer.Write(manaStarvedStopTimer);
+            writer.Write(recoilActive);
+            writer.Write(recoilDirection);
+            writer.Write(recoilVisualRotation);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            stage = reader.ReadInt32();
+            stageTimer = reader.ReadInt32();
+            overheatTimer = reader.ReadInt32();
+            ProgressState = reader.ReadInt32();
+            MaxHeatStage = reader.ReadInt32();
+            LaserChainCount = reader.ReadInt32();
+            currentEffectID = reader.ReadInt32();
+            visualProgress = reader.ReadSingle();
+            stageOutlineTimer = reader.ReadInt32();
+            fireStopTimer = reader.ReadInt32();
+            manualCoolingVisualTimer = reader.ReadInt32();
+            forcedShutdownVisualDuration = reader.ReadInt32();
+            manaStarvedStopTimer = reader.ReadInt32();
+            recoilActive = reader.ReadBoolean();
+            recoilDirection = reader.ReadInt32();
+            recoilVisualRotation = reader.ReadSingle();
+        }
+
         private void KillAndPreserveHeat()
         {
             PreserveHeatState();
@@ -873,6 +938,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private void PreserveHeatState()
         {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
             if (!Main.player.IndexInRange(Projectile.owner))
                 return;
 

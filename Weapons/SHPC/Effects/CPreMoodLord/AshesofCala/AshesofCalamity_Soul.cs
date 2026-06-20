@@ -18,21 +18,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
     internal sealed class AshesofCalamity_Soul : ModProjectile, ILocalizedModType
     {
         private const float BaseSpeed = 15.5f;
-        private const float HomingRange = 8400f;
-        private const float HomingStartFrames = 30f;
-        private const float HomingWarmupFrames = 52f;
+        private const float HomingRange = 150f * 16f;
+        private const float HomingStartFrames = 9f;
+        private const float HomingWarmupFrames = 18f;
         private const float MinHomingSpeed = 10.5f;
-        private const float MaxHomingSpeed = 17.25f;
-        private const float HomingMaxTurnPerFrame = MathHelper.Pi / 8f;
+        private const float MaxHomingSpeed = 16.5f;
+        private const float HomingInertia = 22f;
         private const float FreeFlightDamping = 0.996f;
         private const float NoTargetDamping = 0.992f;
-        private const float WanderingTurnStrength = 0.008f;
+        private const float WanderingTurnStrength = 0.006f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private int PreferredTargetIndex => (int)Projectile.ai[0];
 
         public override void SetStaticDefaults()
         {
@@ -74,7 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
 
             if (Timer >= HomingStartFrames)
             {
-                NPC target = FindTarget(HomingRange, currentDirection);
+                NPC target = FindNearestTarget(HomingRange);
                 if (target is not null)
                     SoftHomeTowardTarget(target, currentDirection);
                 else
@@ -82,7 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             }
             else
             {
-                // 前 30 个真实游戏帧不找目标，只保持柔和游移。
+                // 前几个真实游戏帧不找目标，只保持柔和游移。
                 FreeDrift(FreeFlightDamping);
             }
 
@@ -99,74 +98,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
 
         private void SoftHomeTowardTarget(NPC target, Vector2 fallbackDirection)
         {
-            float currentSpeed = Projectile.velocity.Length();
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
             if (currentSpeed < 0.1f)
-                Projectile.velocity = fallbackDirection.SafeNormalize(Vector2.UnitX) * BaseSpeed;
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(fallbackDirection) * 4f;
 
-            Vector2 currentDirection = Projectile.velocity.SafeNormalize(fallbackDirection);
-            Vector2 desiredDirection = (target.Center + target.velocity * 4f - Projectile.Center).SafeNormalize(fallbackDirection);
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(fallbackDirection));
 
             float homingTimer = Timer - HomingStartFrames;
             float warmup = Utils.GetLerpValue(0f, HomingWarmupFrames, homingTimer, true);
-            float closePressure = Utils.GetLerpValue(420f, 90f, Projectile.Distance(target.Center), true);
-            float pullStrength = MathHelper.Lerp(0.28f, 1f, MathHelper.Max(warmup, closePressure * 0.72f));
-
-            float maxTurnThisUpdate = HomingMaxTurnPerFrame / Math.Max(1, Projectile.MaxUpdates) * (0.3f + pullStrength * 0.7f);
-            Vector2 newDirection = currentDirection.ToRotation()
-                .AngleTowards(desiredDirection.ToRotation(), maxTurnThisUpdate)
-                .ToRotationVector2();
-
-            float sideSway = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.065f) *
-                MathHelper.Lerp(0.013f, 0.0035f, pullStrength);
-            newDirection = newDirection.RotatedBy(sideSway);
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
 
             float targetSpeed = MathHelper.Lerp(MinHomingSpeed, MaxHomingSpeed, pullStrength);
-            float newSpeed = MathHelper.Lerp(currentSpeed, targetSpeed, 0.12f);
-            Projectile.velocity = newDirection * newSpeed;
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+
+            float sideSway = (float)Math.Sin((Timer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaxHomingSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxHomingSpeed;
         }
 
         private void FreeDrift(float damping)
         {
-            float wander =
-                (float)Math.Sin((Timer + Projectile.identity * 7f) * 0.07f) * WanderingTurnStrength +
-                (float)Math.Sin((Timer + Projectile.identity * 3f) * 0.031f) * WanderingTurnStrength * 0.45f;
-
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed, 0.035f);
-            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(wander) * speed * damping;
+            float wander = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
-        private NPC FindTarget(float range, Vector2 currentDirection)
+        private NPC FindNearestTarget(float range)
         {
-            if (Main.npc.IndexInRange(PreferredTargetIndex))
-            {
-                NPC preferred = Main.npc[PreferredTargetIndex];
-                if (preferred.CanBeChasedBy(Projectile, false) && Projectile.Distance(preferred.Center) <= range)
-                    return preferred;
-            }
-
             NPC bestTarget = null;
-            float bestScore = range;
+            float bestDistance = range;
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
                 if (!npc.CanBeChasedBy(Projectile, false))
                     continue;
 
-                Vector2 toTarget = npc.Center - Projectile.Center;
-                float distance = toTarget.Length();
-                if (distance > range)
-                    continue;
-
-                float angularPenalty = (1f - MathHelper.Clamp(Vector2.Dot(currentDirection, toTarget.SafeNormalize(currentDirection)), -1f, 1f)) * 640f;
-                float score = distance + angularPenalty;
-                if (npc.boss)
-                    score *= 0.68f;
-
-                if (score >= bestScore)
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= bestDistance)
                     continue;
 
                 bestTarget = npc;
-                bestScore = score;
+                bestDistance = distance;
             }
 
             return bestTarget;

@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -299,11 +300,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (!Main.rand.NextBool(3))
                 return;
 
-            Color plagueGreen = new(60, 180, 55);
-            Color plagueLime = new(120, 215, 65);
-            Color smolderRed = new(120, 24, 16);
-            const int toxicSludgeDust = 89;
-            const int sporeColonyDust = 220;
+            Color brimstoneRed = new(135, 20, 36);
+            Color brimstoneDark = new(72, 12, 22);
+            Color demonicViolet = new(128, 55, 175);
+            Color smokeGray = new(58, 50, 48);
 
             Vector2 ringPos = player.Center + new Vector2(
                 Main.rand.NextFloat(-player.width * 0.46f, player.width * 0.46f),
@@ -311,40 +311,65 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 ringPos,
                 Vector2.Zero,
-                (Main.rand.NextBool(3) ? plagueLime : plagueGreen) * 0.62f,
+                Color.Lerp(brimstoneDark, brimstoneRed, Main.rand.NextFloat(0.25f, 0.75f)) * 0.48f,
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
-                0.016f,
-                Main.rand.NextFloat(0.08f, heatPlayer.IsForcedShutdownCooling() ? 0.18f : 0.15f),
+                0.012f,
+                Main.rand.NextFloat(0.06f, heatPlayer.IsForcedShutdownCooling() ? 0.14f : 0.11f),
                 15));
 
-            for (int i = 0; i < 4; i++)
+            int dustCount = heatPlayer.IsForcedShutdownCooling() ? 4 : 3;
+            for (int i = 0; i < dustCount; i++)
             {
                 Vector2 bodyPoint = player.Center + new Vector2(
                     Main.rand.NextFloat(-player.width * 0.48f, player.width * 0.48f),
                     Main.rand.NextFloat(-player.height * 0.56f, player.height * 0.34f));
-                bool sporeAccent = Main.rand.NextBool(30);
 
                 Dust dust = Dust.NewDustPerfect(
                     bodyPoint,
-                    sporeAccent ? sporeColonyDust : toxicSludgeDust,
-                    player.velocity * 0.22f + Main.rand.NextVector2Circular(1.1f, 1.1f),
-                    0,
-                    default,
-                    sporeAccent ? Main.rand.NextFloat(0.9f, 1.15f) : Main.rand.NextFloat(0.28f, 0.40f));
+                    Main.rand.NextBool(3) ? DustID.RuneWizard : (int)CalamityDusts.Brimstone,
+                    player.velocity + new Vector2(Main.rand.NextFloat(-2.0f, 2.0f), Main.rand.NextFloat(-3.2f, -0.7f)),
+                    110,
+                    Main.rand.NextBool() ? brimstoneRed : brimstoneDark,
+                    Main.rand.NextFloat(0.72f, 1.15f));
                 dust.noGravity = true;
+            }
+
+            if (stage >= MaxHeatStage && Main.rand.NextBool(2))
+            {
+                Vector2 sparkPos = player.Center + new Vector2(
+                    Main.rand.NextFloat(-player.width * 0.40f, player.width * 0.40f),
+                    Main.rand.NextFloat(-player.height * 0.32f, player.height * 0.30f));
+                Vector2 sparkVel = new(Main.rand.NextFloat(-player.width / 8f, player.width / 8f), Main.rand.NextFloat(-player.height / 18f, -player.height / 24f));
+                Particle demonicSpark = new VelChangingSpark(
+                    sparkPos,
+                    sparkVel + player.velocity,
+                    new Vector2(-sparkVel.X * 0.5f, sparkVel.Y * 2f) * 2.2f,
+                    "CalamityMod/Particles/SmallBloom",
+                    Main.rand.Next(13, 19),
+                    Main.rand.NextFloat(0.045f, 0.08f),
+                    Color.Lerp(demonicViolet, brimstoneRed, Main.rand.NextFloat(0.2f, 0.55f)) * 0.50f,
+                    new Vector2(0.56f, 1.05f),
+                    true,
+                    false,
+                    0,
+                    false,
+                    0.35f,
+                    0.08f);
+                GeneralParticleHandler.SpawnParticle(demonicSpark);
             }
 
             if (stage >= MaxHeatStage && Main.rand.NextBool(3))
             {
-                Dust smolder = Dust.NewDustPerfect(
+                Particle smoke = new SmallSmokeParticle(
                     player.Center + Main.rand.NextVector2Circular(player.width * 0.44f, player.height * 0.50f),
-                    DustID.RuneWizard,
-                    player.velocity * 0.2f + new Vector2(Main.rand.NextFloat(-0.7f, 0.7f), Main.rand.NextFloat(-1.5f, -0.3f)),
-                    120,
-                    smolderRed,
-                    Main.rand.NextFloat(0.65f, 0.95f));
-                smolder.noGravity = true;
+                    player.velocity * 0.18f - Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(1.1f, 3.0f),
+                    smokeGray,
+                    Color.Lerp(Color.Black, smokeGray, 0.35f),
+                    Main.rand.NextFloat(0.35f, 0.72f),
+                    0.40f,
+                    Main.rand.NextFloat(-0.04f, 0.04f));
+                GeneralParticleHandler.SpawnParticle(smoke);
             }
         }
 

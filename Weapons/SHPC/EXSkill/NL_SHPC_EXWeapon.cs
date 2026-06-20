@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Utilities;
 using System;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -55,6 +56,30 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         {
             exSkyLightningTimer = 0;
             superLaserIndex = -1;
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write((byte)state);
+            writer.Write((short)timer);
+            writer.Write((short)laserSoundTimer);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            int oldState = state;
+            state = reader.ReadByte();
+            timer = reader.ReadInt16();
+            laserSoundTimer = reader.ReadInt16();
+
+            if (oldState == state)
+                return;
+
+            if (state != 0 && SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var chargeSound))
+                chargeSound?.Stop();
+
+            if (state != 2 && SoundEngine.TryGetActiveSound(LaserSoundSlot, out var laserSound))
+                laserSound?.Stop();
         }
 
         #endregion
@@ -140,6 +165,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             state = 1;
             timer = 0;
+            if (Main.myPlayer == Projectile.owner)
+                Projectile.netUpdate = true;
 
             // 停止蓄力循环音
             if (SoundEngine.TryGetActiveSound(ChargeSoundSlot, out var s))
@@ -163,6 +190,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private void ReadyPhase()
         {
             SpawnReadyEffects();
+
+            if (Main.myPlayer != Projectile.owner)
+                return;
 
             if (!Main.mouseLeft || !Main.mouseLeftRelease)
                 return;
@@ -245,6 +275,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             state = 3;
             timer = 0;
+            if (Main.myPlayer == Projectile.owner)
+                Projectile.netUpdate = true;
         }
 
         private void EnsureSuperLaser()
@@ -256,7 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 if (existingLaser.active &&
                     existingLaser.owner == Projectile.owner &&
                     existingLaser.type == laserType &&
-                    (int)existingLaser.ai[0] == Projectile.whoAmI)
+                    (int)existingLaser.ai[0] == Projectile.identity)
                 {
                     return;
                 }
@@ -270,7 +302,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 (int)(Projectile.damage * 2.5),
                 Projectile.knockBack,
                 Projectile.owner,
-                Projectile.whoAmI);
+                Projectile.identity);
 
             if (laser >= 0 && laser < Main.maxProjectiles)
             {
@@ -290,7 +322,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             if (laser.active &&
                 laser.owner == Projectile.owner &&
                 laser.type == laserType &&
-                (int)laser.ai[0] == Projectile.whoAmI)
+                (int)laser.ai[0] == Projectile.identity)
             {
                 laser.Kill();
             }

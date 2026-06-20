@@ -1008,8 +1008,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
             bool shpcAttackLocked = heatPlayer.IsForcedShutdownCooling() || heatPlayer.AttackLockoutTimer > 0;
             bool exUnlocked = exPlayer.EXUnlocked;
+            bool legendaryEXUnlocked = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            bool canUseEX = exUnlocked && legendaryEXUnlocked;
 
-            if (exUnlocked)
+            if (canUseEX)
             {
                 if (player.Calamity().cooldowns.TryGetValue(SHPC_EXCooldown.ID, out var cooldown))
                 {
@@ -1020,12 +1022,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     player.AddCooldown(SHPC_EXCooldown.ID, 0);
                 }
             }
+            else if (player.Calamity().cooldowns.TryGetValue(SHPC_EXCooldown.ID, out var cooldown))
+            {
+                cooldown.timeLeft = 0;
+            }
 
             // ===== EX技能释放 =====
-            if (exUnlocked &&
+            if (canUseEX &&
                 !shpcAttackLocked &&
                 KeybindSystem.LegendarySkill.JustPressed &&
-                player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
                 exPlayer.EXValue >= NewLegend_EXPlayer.GetCurrentEXMax(player))
             {
                 // 防止重复生成
@@ -1054,7 +1059,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 );
 
                 if (Main.projectile.IndexInRange(exIndex))
+                {
                     Main.projectile[exIndex].CritChance = player.GetWeaponCrit(Item);
+                    Main.projectile[exIndex].netUpdate = true;
+                }
 
                 // 清空EX条（如果你之后想改，可以删这句）
                 exPlayer.EXValue = 0;

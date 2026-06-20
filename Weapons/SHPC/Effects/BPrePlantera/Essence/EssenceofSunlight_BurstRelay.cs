@@ -1,6 +1,7 @@
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
@@ -15,13 +16,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         private const int FireInterval = 6;
         private const float TargetRange = 2200f;
 
+        private const int PortalReadyDelay = FireInterval * 2;
+        private const float PortalInitialSpeed = 11.5f;
+        private const float PortalSlowdown = 0.875f;
+
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
         private ref float ShotsFired => ref Projectile.localAI[1];
 
-        private Vector2 RelativeOffset => new(Projectile.ai[0], Projectile.ai[1]);
+        private readonly Vector2[] portalOffsets = new Vector2[ShotCount];
+        private readonly Vector2[] portalVelocities = new Vector2[ShotCount];
+        private readonly float[] portalRotations = new float[ShotCount];
+        private readonly float[] portalScales = new float[ShotCount];
+        private bool portalsInitialized;
 
         public override void SetDefaults()
         {
@@ -33,7 +42,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.hide = true;
         }
 
         public override bool? CanDamage() => false;
@@ -43,17 +51,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             Player owner = Main.player[Projectile.owner];
-            Vector2 offset = RelativeOffset;
-            if (offset.LengthSquared() < 16f)
-                offset = Projectile.Center - owner.Center;
-
-            Projectile.ai[0] = offset.X;
-            Projectile.ai[1] = offset.Y;
-            Projectile.Center = owner.Center + offset;
-
             Vector2 forward = Projectile.velocity.SafeNormalize(GetOwnerAimDirection(owner, Vector2.UnitX * owner.direction));
             Projectile.velocity = forward;
             Projectile.rotation = forward.ToRotation();
+            InitializePortals(forward);
             Projectile.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.5f, Pitch = 0.14f, MaxInstances = 4 }, Projectile.Center);
@@ -69,39 +70,87 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 return;
             }
 
-            Projectile.Center = owner.Center + RelativeOffset;
+            if (!portalsInitialized)
+                InitializePortals(Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction));
+
+            UpdatePortals();
+
             Vector2 aimDirection = GetShotDirection(owner, Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction), out _);
             Projectile.velocity = Vector2.Lerp(Projectile.velocity.SafeNormalize(aimDirection), aimDirection, 0.18f).SafeNormalize(aimDirection);
             Projectile.rotation = Projectile.velocity.ToRotation();
 
             int timer = (int)Timer;
-            if (Projectile.owner == Main.myPlayer && ShotsFired < ShotCount && timer % FireInterval == 0)
+            int fireTimer = timer - PortalReadyDelay;
+            if (Projectile.owner == Main.myPlayer &&
+                ShotsFired < ShotCount &&
+                fireTimer >= 0 &&
+                fireTimer % FireInterval == 0)
             {
-                FireSolarLaser(owner, (int)ShotsFired);
+                int shotIndex = (int)ShotsFired;
+                FireSolarLaser(owner, shotIndex, GetPortalPosition(shotIndex));
                 ShotsFired++;
             }
 
-            Lighting.AddLight(Projectile.Center, new Color(255, 222, 96).ToVector3() * 0.48f);
-            SpawnRelayEffects();
+            Lighting.AddLight(Projectile.Center, new Color(255, 222, 96).ToVector3() * 0.28f);
+            for (int i = 0; i < ShotCount; i++)
+                Lighting.AddLight(GetPortalPosition(i), new Color(255, 190, 80).ToVector3() * 0.22f);
 
+            SpawnPortalEffects();
             Timer++;
         }
 
-        private void FireSolarLaser(Player owner, int shotIndex)
+        private void InitializePortals(Vector2 forward)
         {
-            Vector2 baseDir = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
-            NPC target = FindTarget(TargetRange, baseDir);
-            if (target is not null)
+            float baseAngle = forward.SafeNormalize(Vector2.UnitX).ToRotation();
+            float goldenAngle = MathHelper.TwoPi * 0.381966f;
+
+            for (int i = 0; i < ShotCount; i++)
             {
-                baseDir = (target.Center - Projectile.Center).SafeNormalize(baseDir);
+                float angle = baseAngle + goldenAngle * i + (i - ShotCount / 2f) * 0.065f;
+                Vector2 outward = angle.ToRotationVector2();
+                portalOffsets[i] = Vector2.Zero;
+                portalVelocities[i] = outward * PortalInitialSpeed * (0.88f + i % 3 * 0.045f);
+                portalRotations[i] = angle + MathHelper.PiOver2;
+                portalScales[i] = 0.72f + i % 3 * 0.055f;
             }
 
-            Vector2 normal = baseDir.RotatedBy(MathHelper.PiOver2);
-            Vector2 spawnPosition = Projectile.Center + baseDir * 18f + normal * (float)Math.Sin(shotIndex * 1.618034f) * 12f;
+            portalsInitialized = true;
+        }
+
+        private void UpdatePortals()
+        {
+            for (int i = 0; i < ShotCount; i++)
+            {
+                portalOffsets[i] += portalVelocities[i];
+                portalVelocities[i] *= PortalSlowdown;
+
+                if (portalVelocities[i].LengthSquared() < 0.04f)
+                    portalVelocities[i] = Vector2.Zero;
+
+                float spinDirection = (i & 1) == 0 ? 1f : -1f;
+                float slowFactor = Utils.GetLerpValue(PortalReadyDelay, 0f, Timer, true);
+                portalRotations[i] += spinDirection * MathHelper.Lerp(0.035f, 0.16f, slowFactor);
+            }
+        }
+
+        private Vector2 GetPortalPosition(int index)
+        {
+            index = Utils.Clamp(index, 0, ShotCount - 1);
+            return Projectile.Center + portalOffsets[index];
+        }
+
+        private void FireSolarLaser(Player owner, int shotIndex, Vector2 spawnPosition)
+        {
+            Vector2 baseDir = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
+            NPC target = FindTarget(TargetRange, baseDir, spawnPosition);
+            if (target is not null)
+            {
+                baseDir = (target.Center - spawnPosition).SafeNormalize(baseDir);
+            }
+
             int damage = Math.Max(1, (int)(Projectile.damage * 0.5f));
             float side = Main.rand.NextBool() ? -1f : 1f;
 
-            // Aim exactly at target from spawnPosition, predicting slightly
             Vector2 laserDir = baseDir;
             if (target is not null)
             {
@@ -136,7 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         private Vector2 GetShotDirection(Player owner, Vector2 fallback, out NPC target)
         {
-            target = FindTarget(TargetRange, fallback);
+            target = FindTarget(TargetRange, fallback, Projectile.Center);
             if (target is not null)
             {
                 Vector2 predictedCenter = target.Center + target.velocity * 3f;
@@ -146,7 +195,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             return GetOwnerAimDirection(owner, fallback);
         }
 
-        private NPC FindTarget(float range, Vector2 aimDirection)
+        private NPC FindTarget(float range, Vector2 aimDirection, Vector2 origin)
         {
             NPC bestTarget = null;
             float bestScore = range;
@@ -156,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
                 if (!npc.CanBeChasedBy(Projectile, false))
                     continue;
 
-                float distance = Projectile.Distance(npc.Center);
+                float distance = Vector2.Distance(origin, npc.Center);
                 if (distance > range)
                     continue;
 
@@ -214,22 +263,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             }
         }
 
-        private void SpawnRelayEffects()
+        private void SpawnPortalEffects()
         {
             if (Main.dedServ || Main.rand.NextBool(2))
                 return;
 
-            Vector2 back = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = Projectile.velocity.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.UnitY);
+            int portalIndex = ((int)Timer + Projectile.identity) % ShotCount;
+            Vector2 portalPosition = GetPortalPosition(portalIndex);
+            Vector2 outward = (portalPosition - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+            Vector2 normal = outward.RotatedBy(MathHelper.PiOver2);
+
             Dust dust = Dust.NewDustPerfect(
-                Projectile.Center + normal * Main.rand.NextFloat(-11f, 11f),
+                portalPosition + normal * Main.rand.NextFloat(-8f, 8f),
                 Main.rand.NextBool() ? DustID.SolarFlare : DustID.Torch,
-                back * Main.rand.NextFloat(0.4f, 1.5f) + normal * Main.rand.NextFloat(-0.4f, 0.4f),
+                -outward * Main.rand.NextFloat(0.4f, 1.5f) + normal * Main.rand.NextFloat(-0.4f, 0.4f),
                 0,
                 new Color(255, 220, 100),
-                Main.rand.NextFloat(0.85f, 1.18f));
+                Main.rand.NextFloat(0.65f, 0.95f));
 
             dust.noGravity = true;
+
+            if (Timer < PortalReadyDelay && Main.rand.NextBool(3))
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    portalPosition,
+                    portalVelocities[portalIndex] * 0.08f,
+                    new Color(255, 214, 88) * 0.55f,
+                    new Vector2(0.42f, 0.16f),
+                    portalRotations[portalIndex],
+                    0.025f,
+                    0.26f,
+                    10));
+            }
         }
 
         private void SpawnShotFlash(Vector2 position, Vector2 direction, int shotIndex)
@@ -261,6 +326,55 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             }
         }
 
-        public override bool PreDraw(ref Color lightColor) => false;
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (!portalsInitialized)
+                InitializePortals(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+
+            Texture2D portal = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Melee/StreamGougePortal").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 portalOrigin = portal.Size() * 0.5f;
+            Vector2 bloomOrigin = bloom.Size() * 0.5f;
+            float fadeIn = Utils.GetLerpValue(0f, PortalReadyDelay, Timer, true);
+            float fadeOut = Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
+
+            for (int i = 0; i < ShotCount; i++)
+            {
+                float fireTime = PortalReadyDelay + i * FireInterval;
+                float firedAge = Timer - fireTime;
+                float fireFade = firedAge <= 0f ? 1f : MathHelper.Clamp(1f - firedAge / 12f, 0f, 1f);
+                float opacity = fadeIn * fadeOut * fireFade;
+                if (opacity <= 0f)
+                    continue;
+
+                Vector2 drawPosition = GetPortalPosition(i) - Main.screenPosition;
+                float pulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 11f + i);
+                Color portalColor = Color.Lerp(new Color(255, 166, 48), new Color(255, 246, 170), i / (float)(ShotCount - 1)) * opacity;
+                Color bloomColor = new Color(255, 210, 82, 0) * opacity * 0.45f;
+                float scale = portalScales[i] * 0.34f * pulse;
+
+                Main.EntitySpriteDraw(
+                    bloom,
+                    drawPosition,
+                    null,
+                    bloomColor,
+                    0f,
+                    bloomOrigin,
+                    scale * 1.65f,
+                    SpriteEffects.None);
+
+                Main.EntitySpriteDraw(
+                    portal,
+                    drawPosition,
+                    null,
+                    portalColor,
+                    portalRotations[i],
+                    portalOrigin,
+                    scale,
+                    SpriteEffects.None);
+            }
+
+            return false;
+        }
     }
 }

@@ -274,6 +274,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (Projectile.numUpdates != 0)
                 return;
 
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
             Player owner = Main.player[Projectile.owner];
             CtrlChipPlayer tacticalPlayer = owner.GetModPlayer<CtrlChipPlayer>();
             if (!tacticalPlayer.CtrlChipEquipped)

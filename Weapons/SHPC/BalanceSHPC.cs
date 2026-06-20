@@ -338,15 +338,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             360
         };
 
-        // 右键热量每一级使用同一积攒时间；只随右键流程阶段变化。
-        // 0: 早期 12秒；1: 困难模式 10.5秒；2: 世纪之花后 9秒；3: 月亮领主后 7.5秒；4: 最后期 6秒。
+        // 右键热量总积攒时间固定为15秒；当前可用的热量等级平分这15秒。
+        // 1级: 15秒；2级: 每级7.5秒；3级: 每级5秒；4级: 每级3.75秒；5级: 每级3秒。
         private static readonly int[] HeatFillTimesByProgressState =
         {
-            720,
-            630,
-            540,
+            900,
             450,
-            360
+            300,
+            225,
+            180
         };
 
         private static readonly int[] RightClickMaxHeatLevelsByProgressState =
