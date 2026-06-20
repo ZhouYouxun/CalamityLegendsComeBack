@@ -55,10 +55,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             modifiers.DefenseEffectiveness *= 0f;
             float calamityDamageReduction = MathHelper.Clamp(target.Calamity().DR, 0f, 0.95f);
             if (calamityDamageReduction > 0f)
-                modifiers.FinalDamage /= 1f - calamityDamageReduction;
+                modifiers.FinalDamage /= 1.25f - calamityDamageReduction;
 
             if (target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner))
-                modifiers.FinalDamage *= 1.4f;
+                modifiers.FinalDamage *= 1.5f;
         }
 
         public override void AI()

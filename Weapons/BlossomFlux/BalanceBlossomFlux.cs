@@ -11,11 +11,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         internal static readonly object[,] MainDamageTable =
         {
             // 分别代表：突击，复苏，侦查，轰炸，瘟疫，五大形态的伤害
-            { "Initial", 10, 1, 1, 1, 1 }, // 该阶段仅解锁突击
-            { "Eye of Cthulhu", 19, 18, 1, 1, 1 }, // 该阶段已解锁复苏
-            { "Evil Boss", 27, 26, 1, 1, 1 },
-            { "Skeletron", 36, 34, 38, 1, 1 }, // 该阶段解锁侦查
-            { "Queen Bee", 44, 42, 46, 1, 1 },
+            { "Initial", 14, 1, 1, 1, 1 }, // 该阶段仅解锁突击
+            { "Eye of Cthulhu", 18, 10, 1, 1, 1 }, // 该阶段已解锁复苏
+            { "Evil Boss", 24, 13, 1, 1, 1 },
+            { "Skeletron", 28, 17, 12, 1, 1 }, // 该阶段解锁侦查
+            { "Queen Bee", 24, 13, 2, 1, 1 },
             { "Hardmode", 53, 50, 56, 69, 1 }, // 该阶段解锁轰炸
             { "Any Mechanical Boss", 61, 58, 64, 79, 1 },
             { "Plantera", 70, 67, 74, 91, 1 },
@@ -74,12 +74,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Eye of Cthulhu",                               10,      4,       1,       85,      20,      8 },
             { "Evil Boss",                                    10,      4,       1,       80,      20,      8 },
             { "Skeletron",                                    10,      4,       1,       75,      20,      8 },
-            { "Queen Bee",                                     6,      4,       1,       70,      20,      8 },
-            { "Hardmode",                                      4,      4,       2,       65,      20,      8 },
-            { "Any Mechanical Boss",                           3,      4,       2,       60,      20,      8 },
-            { "Plantera",                                      2,      4,       3,       55,      20,      8 },
-            { "Golem",                                         2,      4,       3,       50,      20,      8 },
-            { "Plaguebringer Goliath",                         2,      4,       3,       45,      17,      8 },
+            { "Queen Bee",                                    10,      4,       1,       70,      20,      8 },
+            { "Hardmode",                                      6,      4,       2,       65,      20,      8 },
+            { "Any Mechanical Boss",                           6,      4,       2,       60,      20,      8 },
+            { "Plantera",                                      3,      4,       3,       55,      20,      8 },
+            { "Golem",                                         3,      4,       3,       50,      20,      8 },
+            { "Plaguebringer Goliath",                         3,      4,       3,       45,      17,      8 },
             { "Moon Lord",                                     2,      4,       3,       40,      16,      8 },
             { "Providence",                                    2,      4,       3,       36,      16,      8 },
             { "Polterghast",                                   2,      4,       3,       30,      16,      8 },
@@ -247,34 +247,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 shotsPerSecond = 6f;
             }
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee))
-            {
-                useTime = 12;
-                useInterval = 6;
-                shotsPerSecond = 10f;
-            }
-
             if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh))
             {
                 useTime = 12;
-                useInterval = 4;
+                useInterval = 6;
                 shotsPerSecond = 15f;
             }
 
             if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss))
             {
-                useTime = 15;
-                useInterval = 3;
+                useTime = 12;
+                useInterval = 6;
                 shotsPerSecond = 20f;
             }
 
             if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
             {
-                useTime = 10;
-                useInterval = 2;
+                useTime = 12;
+                useInterval = 3;
                 shotsPerSecond = 30f;
             }
 
+            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
+            {
+                useTime = 10;
+                useInterval = 2;
+                shotsPerSecond = 10f;
+            }
             return new BFBreakthroughLeftStats(useTime, useInterval, shotsPerSecond, GetProjectileSpeedMultiplier());
         }
 
@@ -331,8 +330,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public static BFBreakthroughRightStats GetStats()
         {
             return new BFBreakthroughRightStats(
-                framesPerArrow: 60,
-                maxLoadedArrows: 2,
+                framesPerArrow: 40,
+                maxLoadedArrows: 3,
                 penetrate: 5,
                 ignorePenetrationDamageFalloff: false,
                 projectileSpeedMultiplier: 1f,
@@ -813,7 +812,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         // 侦查 Recon
         Recon_Left_Damage             = 6,   // 三连发每发伤害
-        Recon_Left_BurstCooldown      = 7,   // 三连发后等待帧数（连发间隔写死）
+        Recon_Left_BurstCooldown      = 15,   // 三连发后等待帧数（连发间隔写死）
         Recon_Left_ShotsPerBurst      = 8,   // 每次触发射出几发（默认 1）
         Recon_Right_Penetrate         = 9,   // 穿透次数（-1 = 无限）
         Recon_Right_Damage            = 10,

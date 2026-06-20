@@ -95,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
-                    Projectile.penetrate = 3;
+                    Projectile.penetrate = 2;
                     Projectile.timeLeft = 170;
                     StoredSpeed = MathHelper.Clamp(StoredSpeed, 12f, 20f);
                     Projectile.localNPCHitCooldown = 18;
