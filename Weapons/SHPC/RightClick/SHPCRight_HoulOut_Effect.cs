@@ -296,71 +296,55 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 heatPlayer.GetDisplayedHeatLevel() >= MaxHeatStage;
             if (!displayedTopHeat && stage < MaxHeatStage)
                 return;
-            if ((Main.GameUpdateCount & 1) != 0)
+            if (!Main.rand.NextBool(3))
                 return;
 
-            Color gold = new(255, 226, 54);
-            Color paleGold = new(255, 255, 190);
-            int sparkCount = heatPlayer.IsForcedShutdownCooling() ? 5 : 3;
+            Color plagueGreen = new(60, 180, 55);
+            Color plagueLime = new(120, 215, 65);
+            Color smolderRed = new(120, 24, 16);
+            const int toxicSludgeDust = 89;
+            const int sporeColonyDust = 220;
 
-            for (int i = 0; i < sparkCount; i++)
+            Vector2 ringPos = player.Center + new Vector2(
+                Main.rand.NextFloat(-player.width * 0.46f, player.width * 0.46f),
+                Main.rand.NextFloat(-player.height * 0.54f, player.height * 0.30f));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                ringPos,
+                Vector2.Zero,
+                (Main.rand.NextBool(3) ? plagueLime : plagueGreen) * 0.62f,
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.016f,
+                Main.rand.NextFloat(0.08f, heatPlayer.IsForcedShutdownCooling() ? 0.18f : 0.15f),
+                15));
+
+            for (int i = 0; i < 4; i++)
             {
                 Vector2 bodyPoint = player.Center + new Vector2(
-                    Main.rand.NextFloat(-player.width * 0.58f, player.width * 0.58f),
-                    Main.rand.NextFloat(-player.height * 0.58f, player.height * 0.28f));
-                Vector2 velocity = new Vector2(
-                    Main.rand.NextFloat(-2.8f, 2.8f),
-                    Main.rand.NextFloat(-5.4f, -1.8f)).RotatedByRandom(0.35f);
-
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    bodyPoint,
-                    velocity,
-                    false,
-                    Main.rand.Next(14, 23),
-                    Main.rand.NextFloat(0.035f, 0.065f),
-                    Color.Lerp(gold, paleGold, Main.rand.NextFloat(0.18f, 0.72f)),
-                    new Vector2(1.45f, 0.38f),
-                    true,
-                    true,
-                    0.85f));
-            }
-
-            for (int i = 0; i < 2; i++)
-            {
-                Vector2 bodyPoint = player.Center + Main.rand.NextVector2Circular(
-                    player.width * 0.44f,
-                    player.height * 0.55f);
-                Vector2 velocity = -Vector2.UnitY.RotatedByRandom(0.75f) * Main.rand.NextFloat(1.7f, 4.4f);
-
-                SquishyLightParticle flare = new(
-                    bodyPoint,
-                    velocity,
-                    Main.rand.NextFloat(0.52f, 0.9f),
-                    Color.Lerp(gold, Color.White, Main.rand.NextFloat(0.18f, 0.5f)),
-                    Main.rand.Next(14, 24),
-                    1f,
-                    Main.rand.NextFloat(1.6f, 2.4f));
-
-                GeneralParticleHandler.SpawnParticle(flare);
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 bodyPoint = player.Center + new Vector2(
-                    Main.rand.NextFloat(-player.width * 0.5f, player.width * 0.5f),
-                    Main.rand.NextFloat(-player.height * 0.62f, player.height * 0.3f));
-                Vector2 velocity = new Vector2(
-                    Main.rand.NextFloat(-1.8f, 1.8f),
-                    Main.rand.NextFloat(-4.8f, -1.4f)).RotatedByRandom(0.55f);
+                    Main.rand.NextFloat(-player.width * 0.48f, player.width * 0.48f),
+                    Main.rand.NextFloat(-player.height * 0.56f, player.height * 0.34f));
+                bool sporeAccent = Main.rand.NextBool(30);
 
                 Dust dust = Dust.NewDustPerfect(
                     bodyPoint,
-                    Main.rand.NextBool() ? DustID.GoldFlame : DustID.YellowTorch,
-                    velocity,
+                    sporeAccent ? sporeColonyDust : toxicSludgeDust,
+                    player.velocity * 0.22f + Main.rand.NextVector2Circular(1.1f, 1.1f),
                     0,
-                    Color.Lerp(gold, paleGold, Main.rand.NextFloat(0.1f, 0.55f)),
-                    Main.rand.NextFloat(1.0f, 1.55f));
+                    default,
+                    sporeAccent ? Main.rand.NextFloat(0.9f, 1.15f) : Main.rand.NextFloat(0.28f, 0.40f));
                 dust.noGravity = true;
+            }
+
+            if (stage >= MaxHeatStage && Main.rand.NextBool(3))
+            {
+                Dust smolder = Dust.NewDustPerfect(
+                    player.Center + Main.rand.NextVector2Circular(player.width * 0.44f, player.height * 0.50f),
+                    DustID.RuneWizard,
+                    player.velocity * 0.2f + new Vector2(Main.rand.NextFloat(-0.7f, 0.7f), Main.rand.NextFloat(-1.5f, -0.3f)),
+                    120,
+                    smolderRed,
+                    Main.rand.NextFloat(0.65f, 0.95f));
+                smolder.noGravity = true;
             }
         }
 

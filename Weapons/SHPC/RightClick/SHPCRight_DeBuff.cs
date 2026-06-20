@@ -12,9 +12,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
     {
         public static int FireMode = 1;
 
-        private static readonly Color BurnOrange = new(230, 85, 20);
-        private static readonly Color BurnRed = new(175, 28, 12);
-        private static readonly Color EmberGold = new(245, 150, 25);
+        private static readonly Color PlagueGreen = new(60, 180, 55);
+        private static readonly Color PlagueLime = new(120, 215, 65);
+        private static readonly Color SmolderRed = new(120, 24, 16);
+        private const int ToxicSludgeDust = 89;
+        private const int SporeColonyDust = 220;
 
         public override void SetStaticDefaults()
         {
@@ -86,50 +88,50 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (!Main.rand.NextBool(3))
                 return;
 
-            // Core: DirectionalPulseRing in fire colors (Plague-style signature)
+            // Core: Calamity Plague-style DirectionalPulseRing.
             Vector2 ringPos = RandomBodyPoint(player, 0.45f, 0.50f);
             float endScale = stage >= 5
-                ? Main.rand.NextFloat(0.13f, 0.21f)
-                : Main.rand.NextFloat(0.08f, 0.15f);
-            Color ringColor = Main.rand.NextBool(3) ? BurnOrange : BurnRed;
+                ? Main.rand.NextFloat(0.12f, 0.19f)
+                : Main.rand.NextFloat(0.07f, 0.15f);
+            Color ringColor = Main.rand.NextBool(3) ? PlagueLime : PlagueGreen;
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 ringPos,
                 Vector2.Zero,
-                ringColor * 0.70f,
+                ringColor * 0.68f,
                 new Vector2(1f, 1f),
                 Main.rand.NextFloat(MathHelper.TwoPi),
-                0.02f,
+                0.018f,
                 endScale,
                 15));
 
-            // 4 small fire dusts per trigger (mirrors Plague's 4 ToxicSludge dusts)
+            // 4 toxic dusts per trigger, matching Plague's cadence and density.
             for (int i = 0; i < 4; i++)
             {
                 Vector2 dustPos = RandomBodyPoint(player, 0.48f, 0.52f);
-                bool isGoldAccent = Main.rand.NextBool(30); // ~3.3%, mirrors Plague's SporeColony ratio
-                int dustType = isGoldAccent ? DustID.GemTopaz : DustID.CopperCoin;
-                float dustScale = isGoldAccent
-                    ? Main.rand.NextFloat(0.7f, 1.0f)
-                    : Main.rand.NextFloat(0.28f, 0.42f);
+                bool sporeAccent = Main.rand.NextBool(30); // ~3.3%, mirrors Plague's SporeColony ratio
+                int dustType = sporeAccent ? SporeColonyDust : ToxicSludgeDust;
+                float dustScale = sporeAccent
+                    ? Main.rand.NextFloat(0.9f, 1.15f)
+                    : Main.rand.NextFloat(0.28f, 0.40f);
                 Dust dust = Dust.NewDustPerfect(
                     dustPos,
                     dustType,
-                    player.velocity + new Vector2(Main.rand.NextFloat(-2.0f, 2.0f), Main.rand.NextFloat(-2.5f, -0.5f)),
+                    player.velocity * 0.25f + Main.rand.NextVector2Circular(1.15f, 1.15f),
                     0, default, dustScale);
                 dust.noGravity = true;
             }
 
-            // Stage 5: low-frequency warm ember accent, not blinding
-            if (stage >= 5 && Main.rand.NextBool(4))
+            // Stage 5: sparse, dark heat accent with no bright sparks.
+            if (stage >= 5 && Main.rand.NextBool(3))
             {
-                PointParticle ember = new(
-                    RandomBodyPoint(player, 0.40f, 0.45f),
-                    player.velocity * 0.15f + new Vector2(Main.rand.NextFloat(-0.3f, 0.3f), Main.rand.NextFloat(-1.2f, -0.3f)),
-                    false,
-                    Main.rand.Next(8, 13),
-                    Main.rand.NextFloat(0.45f, 0.65f),
-                    Color.Lerp(BurnOrange, EmberGold, Main.rand.NextFloat()) * 0.62f);
-                GeneralParticleHandler.SpawnParticle(ember);
+                Dust smolder = Dust.NewDustPerfect(
+                    RandomBodyPoint(player, 0.44f, 0.48f),
+                    DustID.RuneWizard,
+                    player.velocity * 0.2f + new Vector2(Main.rand.NextFloat(-0.7f, 0.7f), Main.rand.NextFloat(-1.5f, -0.3f)),
+                    120,
+                    SmolderRed,
+                    Main.rand.NextFloat(0.65f, 0.95f));
+                smolder.noGravity = true;
             }
         }
 
