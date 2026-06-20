@@ -1,0 +1,44 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AegisBlade: {
+					DisplayName: Aegis Blade
+					Tooltip:
+						'''
+						[c/FFD966:Left Click] [c/DCD6C8:Hold to swing the greatsword, firing decelerating fireballs to either side of the blade that float in mid-air]
+						[c/FFD966:LMB + RMB] [c/DCD6C8:While swinging, hold right-click to raise the sword overhead; release either button to hurl it toward your cursor]
+						[c/DCD6C8:The thrown blade embeds in the ground and summons a 16-tile earth wall (60s duration, 10s in boss fights)]
+						[c/8DB8FF:Right Click] [c/DCD6C8:Raise your shield — the first 15 frames are the Perfect Parry window]
+						[c/8DB8FF:Perfect Parry] [c/DCD6C8:Absorbs all damage, grants 35 iframes and 8 energy, displays "Perfect Parry!"]
+						[c/8DB8FF:Shield Raised] [c/DCD6C8:+15 defense; releasing fires a shield phantom]
+						[c/7FE886:Rear Guard] [c/DCD6C8:Damage from behind reduced by 30%]
+						[c/7FE886:Aegis] [c/DCD6C8:Gain 6–15 bonus defense based on movement speed; maximized while standing still]
+						[c/7FE886:Bulwark] [c/DCD6C8:Without damage-over-time debuffs, contact damage reduced by 20%, doubled while stationary]
+						[c/FFD700:Legendary Skill] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
+						[c/BABABA:Hold Shift to read lore]
+						'''
+					LegendaryText:
+						'''
+						[c/FFD966:On an ancient battlefield, there was a knight clad in golden armor, wielding this blade.]
+						[c/FFD966:His shield never shattered — not because it was unbreakable,]
+						[c/FFD966:but because he could absorb every strike at the precise moment of impact, turning it into light.]
+						[c/FFD966:They say his silhouette was like the dawn itself — untouchable, impossible to overcome.]
+						[c/FFD966:And this sword was the extension of his will: the edge of a guardian.]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			AegisSwingHoldout.DisplayName: Aegis Blade Swing
+			AegisShieldHoldout.DisplayName: Aegis Shield
+			AegisFireball.DisplayName: Aegis Fireball
+			AegisShieldPhantom.DisplayName: Shield Phantom
+			AegisBladeThrown.DisplayName: Thrown Aegis Blade
+			AegisWallProjectile.DisplayName: Aegis Earth Wall
+			AegisUltimateHand.DisplayName: Golden Hand
+			AegisEnergyUI.DisplayName: Aegis Energy Bar
+		}
+	}
+}

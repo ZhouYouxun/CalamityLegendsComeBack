@@ -3,8 +3,8 @@ Mods: {
 		Items: {
 			Placeables: {
 				SHPCPlatform: {
-					DisplayName: SHPC平台
-					// Tooltip: ""
+					DisplayName: SHPP
+					Tooltip: 如此优秀的平台，能够无限的放置，这就是科技
 				}
 			}
 		}

@@ -12,9 +12,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
     {
         public static int FireMode = 1;
 
-        private static readonly Color TechBlue = new(54, 190, 255);
-        private static readonly Color TechWhite = new(235, 250, 255);
-        private static readonly Color DeepIonBlue = new(16, 82, 210);
+        private static readonly Color BurnOrange = new(230, 85, 20);
+        private static readonly Color BurnRed = new(175, 28, 12);
+        private static readonly Color EmberGold = new(245, 150, 25);
 
         public override void SetStaticDefaults()
         {
@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             else if (stage >= 5 && Main.GameUpdateCount % 5 == 0)
                 ApplyOverheatDamage(player, Main.rand.Next(1, 3));
 
-            ApplyIonizedVisual(player, stage);
+            ApplyOverheatVisual(player, stage);
         }
 
         private static void ApplyOverheatDamage(Player player, int damage)
@@ -77,21 +77,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             player.KillMe(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral($"{player.name} was burned out by SHPC overload.")), System.Math.Max(1, damage), 0);
         }
 
-        private void ApplyIonizedVisual(Player player, int stage)
+        private void ApplyOverheatVisual(Player player, int stage)
         {
             if (Main.dedServ || stage < 4)
                 return;
 
-            float spawnChance = stage >= 5 ? 0.42f : 0.24f;
-            if (Main.rand.NextFloat() > spawnChance)
+            // Frequency aligned with Calamity Plague debuff: 1/3 per frame
+            if (!Main.rand.NextBool(3))
                 return;
 
-            ApplyIonLeak(player);
+            // Core: DirectionalPulseRing in fire colors (Plague-style signature)
+            Vector2 ringPos = RandomBodyPoint(player, 0.45f, 0.50f);
+            float endScale = stage >= 5
+                ? Main.rand.NextFloat(0.13f, 0.21f)
+                : Main.rand.NextFloat(0.08f, 0.15f);
+            Color ringColor = Main.rand.NextBool(3) ? BurnOrange : BurnRed;
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                ringPos,
+                Vector2.Zero,
+                ringColor * 0.70f,
+                new Vector2(1f, 1f),
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.02f,
+                endScale,
+                15));
 
-            if (stage >= 5)
+            // 4 small fire dusts per trigger (mirrors Plague's 4 ToxicSludge dusts)
+            for (int i = 0; i < 4; i++)
             {
-                ApplyPulseHalo(player);
-                ApplyHighHeatIonArcs(player);
+                Vector2 dustPos = RandomBodyPoint(player, 0.48f, 0.52f);
+                bool isGoldAccent = Main.rand.NextBool(30); // ~3.3%, mirrors Plague's SporeColony ratio
+                int dustType = isGoldAccent ? DustID.GemTopaz : DustID.CopperCoin;
+                float dustScale = isGoldAccent
+                    ? Main.rand.NextFloat(0.7f, 1.0f)
+                    : Main.rand.NextFloat(0.28f, 0.42f);
+                Dust dust = Dust.NewDustPerfect(
+                    dustPos,
+                    dustType,
+                    player.velocity + new Vector2(Main.rand.NextFloat(-2.0f, 2.0f), Main.rand.NextFloat(-2.5f, -0.5f)),
+                    0, default, dustScale);
+                dust.noGravity = true;
+            }
+
+            // Stage 5: low-frequency warm ember accent, not blinding
+            if (stage >= 5 && Main.rand.NextBool(4))
+            {
+                PointParticle ember = new(
+                    RandomBodyPoint(player, 0.40f, 0.45f),
+                    player.velocity * 0.15f + new Vector2(Main.rand.NextFloat(-0.3f, 0.3f), Main.rand.NextFloat(-1.2f, -0.3f)),
+                    false,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.45f, 0.65f),
+                    Color.Lerp(BurnOrange, EmberGold, Main.rand.NextFloat()) * 0.62f);
+                GeneralParticleHandler.SpawnParticle(ember);
             }
         }
 
@@ -100,114 +138,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             return player.Center + new Vector2(
                 Main.rand.NextFloat(-player.width * widthScale, player.width * widthScale),
                 Main.rand.NextFloat(-player.height * heightScale, player.height * heightScale));
-        }
-
-        private void ApplyIonLeak(Player player)
-        {
-            Vector2 position = RandomBodyPoint(player, 0.42f, 0.48f);
-            Vector2 drift = new(Main.rand.NextFloat(-0.35f, 0.35f), Main.rand.NextFloat(-1.6f, -0.35f));
-            Color color = Color.Lerp(TechBlue, TechWhite, Main.rand.NextFloat(0.18f, 0.72f));
-
-            if (Main.rand.NextBool(2))
-            {
-                SquishyLightParticle mote = new(
-                    position,
-                    drift.RotatedByRandom(0.25f),
-                    Main.rand.NextFloat(0.16f, 0.28f),
-                    color * 0.62f,
-                    Main.rand.Next(9, 15),
-                    1f,
-                    Main.rand.NextFloat(0.36f, 0.58f));
-                GeneralParticleHandler.SpawnParticle(mote);
-            }
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    position,
-                    Main.rand.NextBool(3) ? DustID.IceTorch : DustID.Electric,
-                    drift.RotatedByRandom(0.55f) * Main.rand.NextFloat(0.55f, 1.35f),
-                    0,
-                    color,
-                    Main.rand.NextFloat(0.55f, 0.92f));
-                dust.noGravity = true;
-            }
-
-            if (Main.rand.NextBool(5))
-            {
-                PointParticle spark = new(
-                    position,
-                    drift * 0.45f,
-                    false,
-                    Main.rand.Next(7, 11),
-                    Main.rand.NextFloat(0.55f, 0.82f),
-                    TechWhite * 0.7f);
-                GeneralParticleHandler.SpawnParticle(spark);
-            }
-        }
-
-        private void ApplyPulseHalo(Player player)
-        {
-            if (Main.GameUpdateCount % 10 != 0 || !Main.rand.NextBool(2))
-                return;
-
-            Vector2 center = player.Center + Main.rand.NextVector2Circular(player.width * 0.14f, player.height * 0.18f);
-            Color ringColor = Color.Lerp(TechBlue, TechWhite, Main.rand.NextFloat(0.25f, 0.58f)) * 0.36f;
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                center,
-                Vector2.Zero,
-                ringColor,
-                new Vector2(0.5f, 1.65f),
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                0.04f,
-                0.18f,
-                13));
-        }
-
-        private void ApplyHighHeatIonArcs(Player player)
-        {
-            Vector2 center = player.Center;
-            Vector2 source = RandomBodyPoint(player, 0.58f, 0.62f);
-            Color arcColor = Main.rand.NextBool(4) ? TechWhite : Color.Lerp(DeepIonBlue, TechBlue, Main.rand.NextFloat(0.35f, 0.9f));
-
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 tangent = Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.8f, 2.2f);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    source,
-                    tangent + player.velocity * 0.12f,
-                    false,
-                    Main.rand.Next(6, 10),
-                    Main.rand.NextFloat(0.12f, 0.24f),
-                    arcColor));
-            }
-
-            if (Main.rand.NextBool(3))
-            {
-                GlowOrbParticle core = new(
-                    center + Main.rand.NextVector2Circular(player.width * 0.18f, player.height * 0.22f),
-                    Main.rand.NextVector2Circular(0.18f, 0.18f) + new Vector2(0f, Main.rand.NextFloat(-0.45f, -0.05f)),
-                    false,
-                    Main.rand.Next(7, 11),
-                    Main.rand.NextFloat(0.2f, 0.34f),
-                    Color.Lerp(TechBlue, TechWhite, Main.rand.NextFloat(0.25f, 0.72f)) * 0.55f,
-                    true,
-                    false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(core);
-            }
-
-            if (Main.rand.NextBool(3))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    source,
-                    Main.rand.NextBool() ? DustID.Electric : DustID.BlueTorch,
-                    (source - center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.7f) * Main.rand.NextFloat(0.8f, 1.9f),
-                    0,
-                    arcColor,
-                    Main.rand.NextFloat(0.78f, 1.15f));
-                dust.noGravity = true;
-            }
         }
     }
 }

@@ -1,0 +1,44 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AegisBlade: {
+					DisplayName: 庇护之刃
+					Tooltip:
+						'''
+						[c/FFD966:左键] [c/DCD6C8:持续挥舞大剑，挥舞时向刀锋两侧喷射减速火球，最终停留在空中]
+						[c/FFD966:左键+右键] [c/DCD6C8:挥舞中同时按住右键，剑缓慢举至头顶；松开任意键将剑投出]
+						[c/DCD6C8:投出后落地插地，召唤16格高的土墙（持续60秒，BOSS战10秒）]
+						[c/8DB8FF:右键] [c/DCD6C8:举起盾牌——举起前15帧为完美格挡窗口]
+						[c/8DB8FF:完美格挡] [c/DCD6C8:格挡全部伤害，获得35无敌帧与8点能量，显示"完美格挡！"]
+						[c/8DB8FF:盾完全举起] [c/DCD6C8:+15防御；松开右键弹出盾牌幻影]
+						[c/7FE886:后方防护] [c/DCD6C8:来自玩家背后的伤害降低30%]
+						[c/7FE886:埃癸斯] [c/DCD6C8:根据移动速度获得6~15点额外防御；静止时达到上限]
+						[c/7FE886:壁垒] [c/DCD6C8:无持续伤害减益时，接触类伤害降低20%，静止时效果翻倍]
+						[c/FFD700:传奇技能] [c/DCD6C8:能量满后按下传奇技能键，金色神手降临并赋予10秒完全无敌]
+						[c/BABABA:按住Shift键以读取记录]
+						'''
+					LegendaryText:
+						'''
+						[c/FFD966:在远古的战场上，曾有一位骑士，身披金甲，手持此刃。]
+						[c/FFD966:他的盾牌从未破裂，不是因为它无坚不摧，]
+						[c/FFD966:而是因为他总能在攻击落下的瞬间，以光芒将其完全吸收。]
+						[c/FFD966:传说他的身影如同黎明本身——不可触及，难以逾越。]
+						[c/FFD966:而这把剑，正是他意志的延伸：护卫者的锋芒。]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			AegisSwingHoldout.DisplayName: 庇护之刃挥舞
+			AegisShieldHoldout.DisplayName: 庇护盾牌
+			AegisFireball.DisplayName: 庇护火球
+			AegisShieldPhantom.DisplayName: 盾牌幻影
+			AegisBladeThrown.DisplayName: 投掷庇护之刃
+			AegisWallProjectile.DisplayName: 庇护土墙
+			AegisUltimateHand.DisplayName: 金色神手
+			AegisEnergyUI.DisplayName: 庇护能量条
+		}
+	}
+}

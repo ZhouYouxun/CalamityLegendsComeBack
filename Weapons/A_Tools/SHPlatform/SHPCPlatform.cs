@@ -31,8 +31,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform
             CreateRecipe()
                 .AddIngredient<DubiousPlating>(10)
                 .AddIngredient<MysteriousCircuitry>(10)
-                .AddIngredient(ItemID.SoulofLight, 5)
-                .AddIngredient(ItemID.SoulofNight, 5)
                 .Register();
         }
     }
