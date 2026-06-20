@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
@@ -68,6 +69,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform.Tiles
         public override void NumDust(int i, int j, bool fail, ref int num)
         {
             num = fail ? 1 : 3;
+        }
+
+        public override IEnumerable<Item> GetItemDrops(int i, int j)
+        {
+            // 不返回任何 Item，也就是不掉落任何东西
+            yield break;
         }
     }
 }
