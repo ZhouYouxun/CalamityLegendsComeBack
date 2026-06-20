@@ -1,0 +1,33 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				StructureExtractor: {
+					DisplayName: 建筑物提取器
+					Tooltip: 手持后按住左键框选区域，松开后确认导出为灾厄 .csch 结构文件。
+				}
+			}
+		}
+
+		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: 建筑物提取矩阵
+
+		TheSpecialText: {
+			StructureExtractorSelectionLabel: "{0}x{1} | 起点 {2}, {3} | {4} tiles"
+			StructureExtractorConfirmTitle: 确认导出建筑物选区
+			StructureExtractorConfirmBody:
+				'''
+				左上角: {0}, {1}
+				尺寸: {2} x {3}
+				总 tile 数: {4}
+				保存目录: {5}
+				'''
+			StructureExtractorCancel: 否定
+			StructureExtractorConfirm: 确定导出
+			StructureExtractorCanceled: 已拒绝本次建筑物提取。
+			StructureExtractorExportSaved: 建筑物结构文件已保存到: {0}
+			StructureExtractorExportDetails: 选区信息: 左上角 {0}, {1}; 尺寸 {2}x{3}; 共 {4} 个 tile。
+			StructureExtractorExportFailed: 建筑物导出失败: {0}
+			StructureExtractorExportError: 建筑物导出异常: {0}
+		}
+	}
+}

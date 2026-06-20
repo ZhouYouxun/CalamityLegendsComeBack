@@ -119,6 +119,11 @@ Mods: {
 						[c/66E6FF:Wait, loose, and let the doctrine answer.]
 						'''
 				}
+
+				AegisBlade: {
+					DisplayName: Aegis Blade
+					Tooltip: ""
+				}
 			}
 
 			BFSpareQuiver: {
@@ -341,8 +346,23 @@ Mods: {
 			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 			SHPC.StellarVortexShard.DisplayName: Stellar Vortex Shard
 			PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
+
+			PristineFury: {
+				PFBrimstoneElemental_StarBolt.DisplayName: P F Brimstone Elemental_ Star Bolt
+				PFEmpress_ScatterBolt.DisplayName: P F Empress_ Scatter Bolt
+				PFSkeletronWhiteBurst.DisplayName: P F Skeletron White Burst
+			}
+
 			CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
 			CtrlChipReticle.DisplayName: Ctrl Chip Reticle
+			AegisBladeThrown.DisplayName: Aegis Blade Thrown
+			AegisEnergyUI.DisplayName: Aegis Energy U I
+			AegisFireball.DisplayName: Aegis Fireball
+			AegisShieldHoldout.DisplayName: Aegis Shield Holdout
+			AegisShieldPhantom.DisplayName: Aegis Shield Phantom
+			AegisSwingHoldout.DisplayName: Aegis Swing Holdout
+			AegisUltimateHand.DisplayName: Aegis Ultimate Hand
+			AegisWallProjectile.DisplayName: Aegis Wall Projectile
 		}
 
 		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
