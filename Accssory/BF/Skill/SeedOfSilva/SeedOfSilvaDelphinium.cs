@@ -31,16 +31,21 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 return;
 
             int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.28f));
-            Vector2 velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 24f;
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center,
-                velocity.RotatedByRandom(0.12f),
-                ModContent.ProjectileType<SeedOfSilvaDelphiniumArc>(),
-                damage,
-                0.5f,
-                Projectile.owner,
-                target.whoAmI);
+            Vector2 baseDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            for (int i = 0; i < 3; i++)
+            {
+                float spreadAngle = MathHelper.TwoPi * i / 3f;
+                Vector2 velocity = baseDir.RotatedBy(spreadAngle) * 9f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<SeedOfSilvaDelphiniumArc>(),
+                    damage,
+                    0.5f,
+                    Projectile.owner,
+                    target.whoAmI);
+            }
         }
     }
 }

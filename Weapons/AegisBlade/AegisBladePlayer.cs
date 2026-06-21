@@ -1,7 +1,10 @@
 using System;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,10 +16,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public float AegisEnergy = 0f;
         private bool energyWasReady = false;
 
-        // ── 盾牌状态（由 AegisShieldHoldout 写入） ───────────────────────
-        public bool ShieldRaising = false;      // 举盾前15帧 = 完美格挡窗口
-        public bool ShieldRaised = false;       // 盾已完全举起
-        public bool WasHurtDuringRaise = false; // 由 ModifyHurt 设置，供 holdout 读取
+        // ── 盾牌状态（由 AegisShieldHoldout 每帧写入） ────────────────────
+        public bool ShieldRaising    = false;  // Phase 0：举盾过渡 = 完美格挡窗口
+        public bool ShieldRaised     = false;  // Phase 1+：盾已举起
+        public bool ShieldCharging   = false;  // Phase 2：正在蓄力
+        public bool ShieldFullyCharged = false; // Phase 3：蓄力完成，等待指令
+
+        // 供 AegisShieldHoldout 写入，消费后清零
+        public bool WasHurtDuringRaise = false;
         public bool PerfectParryJustTriggered = false;
 
         // ── 完美格挡后的最高防御计时器 ───────────────────────────────────
@@ -27,20 +34,30 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         // ── 终结技状态 ────────────────────────────────────────────────────
         public bool UltimateActive = false;
-        public int UltimateTimer = 0;
+        public int  UltimateTimer  = 0;
+
+        // ── 坚毅（Tenacity）── ────────────────────────────────────────────
+        private int tenacityImmunityTimer = 0;  // 3秒免死窗口
+        private int tenacityCooldown      = 0;  // 60秒冷却
 
         // ── 内部 ──────────────────────────────────────────────────────────
         private int pendingIFrames = 0;
         private readonly BalanceAegisBlade balance = new();
+
+        private static readonly Color GoldColor   = new(255, 200, 60);
+        private static readonly Color GoldOutline = new(255, 235, 140);
 
         // ── 速度检测 ──────────────────────────────────────────────────────
         public bool IsStationary => Player.velocity.Length() < 0.5f;
 
         public override void ResetEffects()
         {
-            ShieldRaising = false;
-            ShieldRaised = false;
-            IsSwinging = false;
+            ShieldRaising    = false;
+            ShieldRaised     = false;
+            ShieldCharging   = false;
+            ShieldFullyCharged = false;
+            IsSwinging       = false;
+            // WasHurtDuringRaise 由 ModifyHurt 写入、由 holdout 消费，不在此处清零
         }
 
         public override void PostUpdate()
@@ -53,8 +70,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
             PerfectParryJustTriggered = false;
 
-            if (PerfectParryDefenseTimer > 0)
-                PerfectParryDefenseTimer--;
+            if (PerfectParryDefenseTimer > 0) PerfectParryDefenseTimer--;
+            if (tenacityImmunityTimer  > 0) tenacityImmunityTimer--;
+            if (tenacityCooldown       > 0) tenacityCooldown--;
 
             UpdateEnergy();
             UpdateUltimate();
@@ -62,12 +80,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         private void UpdateEnergy()
         {
-            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>())
-                return;
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>()) return;
 
             float regenRate = BalanceAegisBlade.EnergyRegenPerSecond / 60f;
-            if (IsStationary)
-                regenRate *= BalanceAegisBlade.EnergyRegenMultiplierStationary;
+            if (IsStationary) regenRate *= BalanceAegisBlade.EnergyRegenMultiplierStationary;
 
             AegisEnergy = Math.Min(AegisEnergy + regenRate, BalanceAegisBlade.EnergyMax);
 
@@ -77,89 +93,156 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         private void UpdateUltimate()
         {
-            if (!UltimateActive)
-                return;
+            if (!UltimateActive) return;
 
             UltimateTimer--;
+            // 70%移动速度减少
             Player.moveSpeed *= (1f - BalanceAegisBlade.UltimateSpeedReduction);
-
-            // 持续无敌帧（每帧刷新）
+            Player.maxRunSpeed *= (1f - BalanceAegisBlade.UltimateSpeedReduction);
+            // 每帧持续无敌
             Player.GiveUniversalIFrames(2, false);
 
-            if (UltimateTimer <= 0)
-                UltimateActive = false;
+            if (UltimateTimer <= 0) UltimateActive = false;
         }
 
         public override void PostUpdateEquips()
         {
-            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>())
-                return;
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>()) return;
 
-            // 埃癸斯被动：根据速度给防御
+            // ── 埃癸斯被动：根据速度提供防御 ────────────────────────────
             int aegisDefense;
             if (PerfectParryDefenseTimer > 0)
             {
+                // 完美格挡后8秒：最高防御
                 aegisDefense = balance.GetAegisMaxDefense();
             }
             else
             {
-                float speed = Player.velocity.Length();
+                float speed  = Player.velocity.Length();
                 int reduction = (int)(speed / BalanceAegisBlade.AegisSpeedPerDefenseLoss);
-                aegisDefense = Math.Clamp(balance.GetAegisMaxDefense() - reduction, BalanceAegisBlade.AegisMinDefense, balance.GetAegisMaxDefense());
+                aegisDefense = Math.Clamp(
+                    balance.GetAegisMaxDefense() - reduction,
+                    BalanceAegisBlade.AegisMinDefense,
+                    balance.GetAegisMaxDefense());
             }
             Player.statDefense += aegisDefense;
 
-            // 举盾防御加成：逐渐增加到 ShieldMaxDefenseBonus
-            if (ShieldRaised)
+            // 举盾防御加成
+            if (ShieldRaised || ShieldCharging || ShieldFullyCharged)
                 Player.statDefense += BalanceAegisBlade.ShieldMaxDefenseBonus;
+
+            // ── 壁垒被动：防御损伤-50%（CalamityMod defenseDamageRatio） ──
+            if (!HasDamageDebuff())
+                Player.Calamity().defenseDamageRatio *= (1.0 - BalanceAegisBlade.BulwarkDefenseDamageReduction);
+
+            // ── 埃癸斯被动：完美格挡后8秒无视五毒 ───────────────────────
+            if (PerfectParryDefenseTimer > 0)
+                ApplyFivePoisonsImmunity();
+        }
+
+        private void ApplyFivePoisonsImmunity()
+        {
+            // 原版毒类减益
+            Player.buffImmune[BuffID.Poisoned]        = true;
+            Player.buffImmune[BuffID.Venom]           = true;
+            Player.buffImmune[BuffID.OnFire]          = true;
+            Player.buffImmune[BuffID.OnFire3]         = true;  // Hellfire
+            Player.buffImmune[BuffID.CursedInferno]   = true;
+            Player.buffImmune[BuffID.Ichor]           = true;
+            Player.buffImmune[BuffID.Frostburn]       = true;
+            Player.buffImmune[BuffID.ShadowFlame]     = true;
+            Player.buffImmune[BuffID.BrokenArmor]     = true;
         }
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
         {
-            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>())
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>()) return;
+
+            // ── 坚毅免死3秒窗口：吸收所有伤害 ───────────────────────────
+            if (tenacityImmunityTimer > 0)
+            {
+                modifiers.SourceDamage *= 0f;
+                modifiers.Knockback    *= 0f;
                 return;
+            }
 
             // ── 完美格挡（举盾前15帧内受到伤害） ────────────────────────
-            if (ShieldRaising)
+            if (ShieldRaising && !WasHurtDuringRaise)
             {
-                // 触发完美格挡
-                WasHurtDuringRaise = true;
+                WasHurtDuringRaise        = true;
                 PerfectParryJustTriggered = true;
-                PerfectParryDefenseTimer = BalanceAegisBlade.PerfectParryDefenseDuration;
-                AegisEnergy = Math.Min(AegisEnergy + BalanceAegisBlade.PerfectParryEnergyGain, BalanceAegisBlade.EnergyMax);
+                PerfectParryDefenseTimer  = BalanceAegisBlade.PerfectParryDefenseDuration;
+                AegisEnergy = Math.Min(
+                    AegisEnergy + BalanceAegisBlade.PerfectParryEnergyGain,
+                    BalanceAegisBlade.EnergyMax);
                 pendingIFrames = Math.Max(pendingIFrames, BalanceAegisBlade.ParryIFrames);
 
                 // 格挡掉全部伤害
                 modifiers.SourceDamage *= 0f;
-                modifiers.Knockback *= 0f;
+                modifiers.Knockback    *= 0f;
                 return;
             }
 
-            // ── 后方防护被动（未举盾时，后方伤害 -30%） ──────────────────
-            if (!ShieldRaised && !ShieldRaising)
-            {
-                bool isFromBehind = Player.direction == modifiers.HitDirection;
-                if (isFromBehind)
-                    modifiers.SourceDamage *= (1f - BalanceAegisBlade.RearDamageReduction);
-            }
-
-            // ── 壁垒被动（无伤害性减益时，接触伤害 -20%，静止翻倍） ──────
+            // ── 壁垒被动：无伤害性减益时接触伤害 -20%（静止翻倍） ────────
             if (!HasDamageDebuff())
             {
                 float contactReduction = BalanceAegisBlade.BulwarkContactReduction;
-                if (IsStationary)
-                    contactReduction *= BalanceAegisBlade.BulwarkStationaryMultiplier;
+                if (IsStationary) contactReduction *= BalanceAegisBlade.BulwarkStationaryMultiplier;
                 modifiers.SourceDamage *= (1f - contactReduction);
             }
         }
 
         public override void PostHurt(Player.HurtInfo info)
         {
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>()) return;
+
+            // 应用挂起的无敌帧
             if (pendingIFrames > 0)
             {
                 Player.GiveUniversalIFrames(pendingIFrames, false);
                 pendingIFrames = 0;
             }
+
+            // 终结技能量：挨打得8能量（完美格挡时已在ModifyHurt中给过）
+            if (!PerfectParryJustTriggered)
+            {
+                AegisEnergy = Math.Min(
+                    AegisEnergy + BalanceAegisBlade.EnergyOnBeingHitOrParry,
+                    BalanceAegisBlade.EnergyMax);
+            }
+        }
+
+        public override bool PreKill(double damage, int hitDirection, bool pvp,
+            ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
+        {
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>()) return true;
+            if (tenacityCooldown > 0) return true;
+
+            // 坚毅：保留1点生命，3秒内不会死亡
+            Player.statLife        = 1;
+            tenacityImmunityTimer  = BalanceAegisBlade.TenacityImmunityDuration;
+            tenacityCooldown       = BalanceAegisBlade.TenacityCooldownDuration;
+            Player.GiveUniversalIFrames(BalanceAegisBlade.TenacityImmunityDuration, false);
+
+            if (!Main.dedServ)
+            {
+                SoundEngine.PlaySound(SoundID.Item67 with { Volume = 1.1f, Pitch = -0.5f }, Player.Center);
+                for (int i = 0; i < 28; i++)
+                {
+                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(6f, 18f);
+                    Dust d = Dust.NewDustPerfect(Player.Center, DustID.GoldFlame, vel, 0, GoldOutline, 2.0f);
+                    d.noGravity = true;
+                }
+                GeneralParticleHandler.SpawnParticle(
+                    new DirectionalPulseRing(Player.Center, Vector2.Zero, GoldColor, Vector2.One, 0f, 0.05f, 2.0f, 24));
+                CombatText.NewText(
+                    new Rectangle((int)Player.Center.X, (int)Player.Center.Y - 52, 1, 1),
+                    GoldOutline, "坚毅！", true);
+            }
+
+            playSound = false;
+            genGore   = false;
+            return false; // 阻止死亡
         }
 
         public override void PreUpdateMovement()
@@ -171,14 +254,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             foreach (Projectile proj in Main.ActiveProjectiles)
             {
                 if (!proj.active || proj.type != wallType) continue;
+                // 只对已完全升起的土墙做碰撞
+                if (proj.ai[1] < 1f) continue;
 
-                float wallX    = proj.Center.X;
-                float wallTop  = proj.Center.Y - halfH;
-                float wallBot  = proj.Center.Y + halfH;
-                float wallLeft = wallX - halfW;
-                float wallRight= wallX + halfW;
+                float wallX     = proj.Center.X;
+                float wallTop   = proj.Center.Y - halfH;
+                float wallBot   = proj.Center.Y + halfH;
+                float wallLeft  = wallX - halfW;
+                float wallRight = wallX + halfW;
 
-                // 玩家是否在墙体垂直范围内
                 if (Player.position.Y + Player.height <= wallTop) continue;
                 if (Player.position.Y >= wallBot) continue;
 
@@ -187,48 +271,35 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                 float nextLeft    = playerLeft  + Player.velocity.X;
                 float nextRight   = playerRight + Player.velocity.X;
 
-                // 玩家在墙左侧，向右移动将穿墙 → 截断
                 if (playerRight <= wallLeft && nextRight > wallLeft)
                     Player.velocity.X = wallLeft - playerRight;
-
-                // 玩家在墙右侧，向左移动将穿墙 → 截断
                 else if (playerLeft >= wallRight && nextLeft < wallRight)
                     Player.velocity.X = wallRight - playerLeft;
-
-                // 玩家已陷入墙中 → 推出最近一侧
                 else if (playerRight > wallLeft && playerLeft < wallRight)
                 {
-                    float distL = System.Math.Abs(playerLeft - wallLeft);
-                    float distR = System.Math.Abs(playerRight - wallRight);
-                    if (distL < distR)
-                        Player.position.X = wallLeft - Player.width;
-                    else
-                        Player.position.X = wallRight;
+                    float distL = Math.Abs(playerLeft - wallLeft);
+                    float distR = Math.Abs(playerRight - wallRight);
+                    if (distL < distR) Player.position.X = wallLeft - Player.width;
+                    else               Player.position.X = wallRight;
                     Player.velocity.X = 0f;
                 }
             }
-        }
-
-        public void GainEnergyOnHit()
-        {
-            AegisEnergy = Math.Min(AegisEnergy + BalanceAegisBlade.PerfectParryEnergyGain, BalanceAegisBlade.EnergyMax);
         }
 
         public bool CanActivateUltimate => AegisEnergy >= BalanceAegisBlade.EnergyMax && !UltimateActive;
 
         public void ActivateUltimate()
         {
-            AegisEnergy = 0f;
+            AegisEnergy   = 0f;
             UltimateActive = true;
-            UltimateTimer = BalanceAegisBlade.UltimateDuration;
+            UltimateTimer  = BalanceAegisBlade.UltimateDuration;
+            energyWasReady = false;
         }
 
-        // 检测是否带有伤害性减益（简化实现：检测常见DoT）
         private bool HasDamageDebuff()
         {
             return Player.onFire || Player.onFire2 || Player.poisoned || Player.venom ||
-                   Player.burned || Player.suffocating || Player.electrified ||
-                   Player.onFrostBurn || Player.shadowDodge;
+                   Player.onFrostBurn || Player.suffocating || Player.electrified;
         }
     }
 }

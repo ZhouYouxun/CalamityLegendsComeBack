@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
             if (mandrakeSporeCooldown <= 0)
             {
-                mandrakeSporeCooldown = 42;
+                mandrakeSporeCooldown = 17;
                 int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.16f));
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 4.2f);
                 int spore = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, velocity, Main.rand.NextBool() ? ProjectileID.SporeTrap : ProjectileID.SporeTrap2, damage, 0.2f, Projectile.owner);
@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
             if (mandrakeDartCooldown <= 0)
             {
-                mandrakeDartCooldown = 128;
+                mandrakeDartCooldown = 51;
                 int damage = System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.34f));
                 for (int i = 0; i < 2; i++)
                 {

@@ -526,29 +526,42 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 ? Color.White
                 : Color.Lerp(themeColor, Color.Lerp(themeColor, Color.White, 0.5f), Main.rand.NextFloat(0.2f, 0.75f));
 
-            Particle spark = new SparkParticle(
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                 spawnPosition,
                 pullVelocity,
                 false,
-                Main.rand.Next(13, 24),
-                Main.rand.NextFloat(0.55f, 1.05f) * (0.75f + chargeRatio * 0.55f),
-                particleColor);
+                Main.rand.Next(16, 28),
+                Main.rand.NextFloat(0.32f, 0.68f) * (0.75f + chargeRatio * 0.55f),
+                particleColor,
+                true,
+                false,
+                true));
 
-            GeneralParticleHandler.SpawnParticle(spark);
+            if (Main.rand.NextFloat() < 0.55f + chargeRatio * 0.35f)
+            {
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    spawnPosition + Main.rand.NextVector2Circular(4f, 4f),
+                    pullVelocity * 0.55f,
+                    false,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.42f, 0.85f) * (0.7f + chargeRatio * 0.45f),
+                    Main.rand.NextBool(3) ? Color.White : particleColor,
+                    true));
+            }
 
             if (chargeTimer > 300f)
             {
                 for (int i = 0; i < 2; i++)
                 {
                     Vector2 extraVel = Main.rand.NextVector2Circular(5f, 5f) - direction * Main.rand.NextFloat(1f, 4f);
-                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                         Projectile.Center + Main.rand.NextVector2Circular(24f, 24f),
                         extraVel,
                         false,
-                        Main.rand.Next(16, 28),
-                        Main.rand.NextFloat(0.8f, 1.4f),
-                        Color.Lerp(themeColor, Color.White, Main.rand.NextFloat(0.3f, 0.9f))
-                    ));
+                        Main.rand.Next(14, 22),
+                        Main.rand.NextFloat(0.45f, 0.85f),
+                        Color.Lerp(themeColor, Color.White, Main.rand.NextFloat(0.3f, 0.9f)),
+                        true, false, true));
                 }
             }
 
@@ -951,6 +964,80 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 Projectile.scale * 0.45f,
                 SpriteEffects.None,
                 0);
+
+            // === Providence / Wrath-of-Gods orbital effects (8-weapon inspired) ===
+            Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D halfStar  = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D fullStar  = ModContent.Request<Texture2D>("CalamityMod/Particles/FullStar").Value;
+            Texture2D smear     = ModContent.Request<Texture2D>("CalamityMod/Particles/ForwardSmear").Value;
+
+            float chargeLevel = Projectile.ai[1];
+            float visualScale = chargeLevel == 1f ? 0.55f : (chargeLevel == 3f ? 1.45f : 1.0f);
+            float pulse       = 0.82f + 0.18f * (float)Math.Sin(Timer * 0.19f);
+
+            Color gold = new Color(255, 200, 100) with { A = 0 };
+            Color holy = new Color(255, 240, 180) with { A = 0 };
+            Color wht  = Color.White with { A = 0 };
+
+            // [Stratus Sphere] 四层同心光晕
+            float[] bloomLayers = { 0.62f, 0.40f, 0.25f, 0.13f };
+            for (int i = 0; i < bloomLayers.Length; i++)
+            {
+                Color bc = (i % 2 == 0 ? gold : holy) * (opacity * (0.92f - i * 0.17f));
+                Main.EntitySpriteDraw(bloom, drawPosition, null, bc, 0f, bloom.Size() * 0.5f, bloomLayers[i] * visualScale * pulse, SpriteEffects.None, 0);
+            }
+            Main.EntitySpriteDraw(bloom, drawPosition, null, wht * (0.65f * opacity), 0f, bloom.Size() * 0.5f, 0.09f * visualScale, SpriteEffects.None, 0);
+
+            // [Warloks' Moon Fist] 脉冲环
+            float moonPulse = 0.78f + 0.22f * (float)Math.Sin(Timer * 0.22f);
+            Main.EntitySpriteDraw(bloomRing, drawPosition, null, gold * (0.72f * opacity * moonPulse), Timer * 0.04f, bloomRing.Size() * 0.5f, new Vector2(0.44f, 0.44f) * visualScale * moonPulse, SpriteEffects.None, 0);
+
+            // [Crescent Moon] 非对称压缩环
+            Main.EntitySpriteDraw(bloomRing, drawPosition, null, holy * (0.50f * opacity), Projectile.rotation + Timer * 0.038f, bloomRing.Size() * 0.5f, new Vector2(0.30f, 0.62f) * visualScale, SpriteEffects.None, 0);
+
+            // [Sirius] 4条向外发散的明亮星芒
+            for (int i = 0; i < 4; i++)
+            {
+                float starAngle = Projectile.rotation + MathHelper.PiOver2 * i + Timer * 0.055f;
+                Main.EntitySpriteDraw(fullStar, drawPosition, null, wht * (0.55f * opacity * pulse), starAngle, fullStar.Size() * 0.5f, new Vector2(0.04f, 0.58f) * visualScale, SpriteEffects.None, 0);
+            }
+
+            // [Alpha Draconis] 4条曲线羽毛拖尾
+            for (int i = 0; i < 4; i++)
+            {
+                float featherAngle = Projectile.rotation + MathHelper.PiOver2 * i + Timer * 0.068f;
+                Vector2 featherOff = featherAngle.ToRotationVector2() * visualScale * 10f;
+                Main.EntitySpriteDraw(smear, drawPosition - featherOff, null, gold * (0.44f * opacity), featherAngle - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), new Vector2(0.009f, 0.14f * visualScale), SpriteEffects.None, 0);
+            }
+
+            // [Galileo Gladius] 3个轨道迷你光球
+            for (int i = 0; i < 3; i++)
+            {
+                float orbitAngle = MathHelper.TwoPi * i / 3f + Timer * 0.13f;
+                Vector2 orbitPos = drawPosition + orbitAngle.ToRotationVector2() * visualScale * 26f;
+                Main.EntitySpriteDraw(bloom, orbitPos, null, gold * (0.75f * opacity), 0f, bloom.Size() * 0.5f, visualScale * 0.10f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(halfStar, orbitPos, null, wht * (0.55f * opacity), orbitAngle + Timer * 0.09f, halfStar.Size() * 0.5f, new Vector2(0.05f, 0.20f), SpriteEffects.None, 0);
+            }
+
+            // [Vega] 6颗闪烁小星，距离各异
+            for (int i = 0; i < 6; i++)
+            {
+                float tinyAngle  = MathHelper.TwoPi * i / 6f + Timer * (i % 2 == 0 ? 0.16f : -0.11f);
+                float tinyRadius = visualScale * (20f + i * 4.5f);
+                Vector2 tinyPos  = drawPosition + tinyAngle.ToRotationVector2() * tinyRadius;
+                float twinkle    = 0.55f + 0.45f * (float)Math.Sin(Timer * 0.30f + i * 1.2f);
+                Main.EntitySpriteDraw(halfStar, tinyPos, null, holy * (0.40f * opacity * twinkle), tinyAngle, halfStar.Size() * 0.5f, new Vector2(0.04f, 0.15f), SpriteEffects.None, 0);
+            }
+
+            // [Halley's Inferno] 彗星金光叠加在拖尾上
+            for (int i = 0; i < Projectile.oldPos.Length; i += 2)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                float trailComp    = i / (float)Projectile.oldPos.Length;
+                Vector2 oldDrawPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(bloom, oldDrawPos, null, gold * (0.28f * (1f - trailComp) * opacity), 0f, bloom.Size() * 0.5f, visualScale * 0.28f * (1f - trailComp), SpriteEffects.None, 0);
+            }
 
             PFLeftEffectRules.EndAdditive();
             return false;

@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
         private const float TargetRange = 2200f;
 
         private const int PortalReadyDelay = FireInterval * 2;
-        private const float PortalInitialSpeed = 11.5f;
+        private const float PortalInitialSpeed = 34.5f;
         private const float PortalSlowdown = 0.875f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
@@ -106,12 +106,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
             for (int i = 0; i < ShotCount; i++)
             {
-                float angle = baseAngle + goldenAngle * i + (i - ShotCount / 2f) * 0.065f;
+                float angle = baseAngle + goldenAngle * i + (i - ShotCount / 2f) * 0.065f + Main.rand.NextFloat(-0.36f, 0.36f);
                 Vector2 outward = angle.ToRotationVector2();
                 portalOffsets[i] = Vector2.Zero;
-                portalVelocities[i] = outward * PortalInitialSpeed * (0.88f + i % 3 * 0.045f);
-                portalRotations[i] = angle + MathHelper.PiOver2;
-                portalScales[i] = 0.72f + i % 3 * 0.055f;
+                portalVelocities[i] = outward * PortalInitialSpeed * Main.rand.NextFloat(0.62f, 1.38f);
+                portalRotations[i] = angle + MathHelper.PiOver2 + Main.rand.NextFloat(-0.32f, 0.32f);
+                portalScales[i] = Main.rand.NextFloat(0.62f, 0.92f);
             }
 
             portalsInitialized = true;

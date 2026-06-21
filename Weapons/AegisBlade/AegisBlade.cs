@@ -22,29 +22,30 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         public override void SetDefaults()
         {
-            Item.width = 78;
+            Item.width  = 78;
             Item.height = 78;
             Item.damage = BalanceAegisBlade.GetInitialLeftClickDamage();
-            Item.DamageType = DamageClass.MeleeNoSpeed;
-            Item.noMelee = true;
+            Item.DamageType  = DamageClass.MeleeNoSpeed;
+            Item.noMelee     = true;
             Item.noUseGraphic = true;
-            Item.knockBack = 8f;
-            Item.channel = true;
-            Item.useStyle = ItemUseStyleID.Shoot;
+            Item.knockBack   = 8f;
+            Item.channel     = true;
+            Item.useStyle    = ItemUseStyleID.Shoot;
             Item.useAnimation = 28;
-            Item.useTime = 28;
-            Item.autoReuse = true;
-            Item.shoot = SwingHoldoutType;
-            Item.shootSpeed = 0f;
-            Item.UseSound = null;
-            Item.value = Item.sellPrice(0, 20);
-            Item.rare = ItemRarityID.Red;
+            Item.useTime      = 28;
+            Item.autoReuse    = true;
+            Item.shoot        = SwingHoldoutType;
+            Item.shootSpeed   = 0f;
+            Item.UseSound     = null;
+            Item.value        = Item.sellPrice(0, 20);
+            Item.rare         = ItemRarityID.Red;
         }
 
         public override bool CanUseItem(Player player)
         {
-            AegisBladePlayer bladePlayer = player.GetModPlayer<AegisBladePlayer>();
-            if (bladePlayer.ShieldRaising || bladePlayer.ShieldRaised)
+            AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
+            // 举盾中（含蓄力状态）不允许触发左键挥舞
+            if (bp.ShieldRaising || bp.ShieldRaised || bp.ShieldCharging || bp.ShieldFullyCharged)
                 return false;
             if (player.ownedProjectileCounts[SwingHoldoutType] > 0)
                 return false;
@@ -53,14 +54,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         public override bool CanShoot(Player player)
         {
-            AegisBladePlayer bladePlayer = player.GetModPlayer<AegisBladePlayer>();
-            return !bladePlayer.ShieldRaising && !bladePlayer.ShieldRaised &&
+            AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
+            return !bp.ShieldRaising && !bp.ShieldRaised &&
+                   !bp.ShieldCharging && !bp.ShieldFullyCharged &&
                    player.ownedProjectileCounts[SwingHoldoutType] == 0;
         }
 
-        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
+        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source,
+            Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            Vector2 aimDir = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            Vector2 aimDir = (GetMouseWorld(player) - player.MountedCenter)
+                             .SafeNormalize(Vector2.UnitX * player.direction);
             Projectile.NewProjectile(source, player.MountedCenter, aimDir,
                 SwingHoldoutType, damage, knockback, player.whoAmI);
             return false;
@@ -69,9 +73,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public override void HoldItem(Player player)
         {
             player.Calamity().mouseWorldListener = true;
-            player.Calamity().rightClickListener = true;  // 启用 CalamityMod 的右键长按追踪
+            player.Calamity().rightClickListener = true;
 
-            // 能量条 UI 只在本地玩家侧生成
+            // 能量条UI
             if (Main.myPlayer == player.whoAmI &&
                 player.ownedProjectileCounts[EnergyUIType] == 0)
             {
@@ -79,26 +83,28 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                     EnergyUIType, 0, 0f, player.whoAmI);
             }
 
-            if (Main.myPlayer != player.whoAmI)
-                return;
+            if (Main.myPlayer != player.whoAmI) return;
 
-            AegisBladePlayer bladePlayer = player.GetModPlayer<AegisBladePlayer>();
+            AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
 
-            // ── 右键举盾（SHPC 模式：不走 AltFunctionUse/Shoot，直接在 HoldItem 检测） ──
-            if (CanStartShieldHoldout(player, bladePlayer))
+            // ── 右键举盾（在挥剑中不允许起手） ──────────────────────────
+            if (CanStartShieldHoldout(player, bp))
             {
-                int shieldDamage = (int)player.GetTotalDamage(DamageClass.Melee).ApplyTo(balance.GetShieldPhantomDamage());
-                Vector2 aimDir = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+                int shieldDamage = (int)player.GetTotalDamage(DamageClass.Melee)
+                                         .ApplyTo(balance.GetShieldPhantomDamage());
+                Vector2 aimDir = (GetMouseWorld(player) - player.MountedCenter)
+                                 .SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(Item.GetSource_FromThis(), player.MountedCenter, aimDir,
                     ShieldHoldoutType, shieldDamage, Item.knockBack, player.whoAmI);
             }
 
-            // ── 终结技激活 ─────────────────────────────────────────────────
+            // ── 终结技激活 ───────────────────────────────────────────────
             if (KeybindSystem.LegendarySkill.JustPressed &&
-                bladePlayer.CanActivateUltimate &&
+                bp.CanActivateUltimate &&
                 player.ownedProjectileCounts[UltimateHandType] == 0)
             {
-                Vector2 spawnOffset = new Vector2(Main.rand.NextFloat(-1f, 1f), -1f).SafeNormalize(Vector2.UnitY) * 450f;
+                Vector2 spawnOffset = new Vector2(Main.rand.NextFloat(-1f, 1f), -1f)
+                                      .SafeNormalize(Vector2.UnitY) * 450f;
                 Projectile.NewProjectile(Item.GetSource_FromThis(),
                     player.Center + spawnOffset, Vector2.Zero,
                     UltimateHandType, 0, 0f, player.whoAmI);
@@ -106,10 +112,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             }
         }
 
-        private bool CanStartShieldHoldout(Player player, AegisBladePlayer bladePlayer)
+        private bool CanStartShieldHoldout(Player player, AegisBladePlayer bp)
         {
-            return player.Calamity().mouseRight           // 右键确实被按住（CalamityMod 长按追踪）
-                   && !bladePlayer.IsSwinging             // 挥剑中的剑盾联动由 AegisSwingHoldout 内部处理
+            return player.Calamity().mouseRight
+                   && !bp.IsSwinging
                    && player.ownedProjectileCounts[ShieldHoldoutType] == 0
                    && !player.noItems && !player.CCed
                    && !Main.mapFullscreen && !Main.blockMouse && !player.mouseInterface;
@@ -117,7 +123,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            // 同步 Item.damage 到当前进度阶段的基础伤害
             damage.Base += balance.GetLeftClickBaseDamage() - Item.damage;
         }
 

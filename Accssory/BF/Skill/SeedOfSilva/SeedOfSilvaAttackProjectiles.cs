@@ -16,11 +16,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private ref float TargetIndex => ref Projectile.ai[0];
         private ref float Timer => ref Projectile.localAI[0];
 
+        private const int HomingDelay = 12;
+        private const float HomingInertia = 22f;
+        private const float MaxSpeed = 22f;
+
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 18;
+            ProjectileID.Sets.TrailCacheLength[Type] = 20;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -31,8 +35,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 96;
-            Projectile.extraUpdates = 2;
+            Projectile.timeLeft = 130;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
@@ -42,18 +45,36 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public override void AI()
         {
             Timer++;
-            NPC target = GetTarget();
-            if (target != null)
+            HomeTowardTarget();
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Lighting.AddLight(Projectile.Center, new Vector3(0.04f, 0.22f, 0.56f));
+        }
+
+        private void HomeTowardTarget()
+        {
+            if (Timer <= HomingDelay)
             {
-                Vector2 aimPoint = target.Center + target.velocity * 0.18f;
-                Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-                Vector2 desired = (aimPoint - Projectile.Center).SafeNormalize(currentDirection) * 26f;
-                float curve = (float)System.Math.Sin(Timer * 0.18f + Projectile.identity * 0.3f) * 0.045f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity.RotatedBy(curve), desired, 0.34f);
+                Projectile.velocity *= 0.997f;
+                return;
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.42f, 0.14f));
+            NPC target = GetTarget();
+            if (target == null)
+            {
+                Projectile.velocity *= 0.993f;
+                return;
+            }
+
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 30f, Timer, true);
+            float closePressure = Utils.GetLerpValue(350f, 70f, Projectile.Distance(target.Center), true);
+            float pull = MathHelper.Lerp(0.3f, 1f, System.Math.Max(warmup, closePressure * 0.75f));
+
+            Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY))
+                * MathHelper.Lerp(9f, MaxSpeed, pull);
+            Projectile.velocity = (Projectile.velocity * HomingInertia + desired) / (HomingInertia + 1f);
+
+            if (Projectile.velocity.LengthSquared() > MaxSpeed * MaxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * MaxSpeed;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -71,7 +92,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override bool PreDraw(ref Color lightColor)
         {
-            DrawTrail(new Color(64, 255, 118), new Color(220, 255, 190));
+            DrawScoutTrail(new Color(70, 155, 255), new Color(200, 238, 255));
             return false;
         }
 
@@ -83,22 +104,23 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             return null;
         }
 
-        private void DrawTrail(Color mainColor, Color accentColor)
+        private void DrawScoutTrail(Color mainColor, Color accentColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 Color trailColor = Color.Lerp(mainColor, accentColor, completion);
-                Main.EntitySpriteDraw(bloom, drawPosition, null, trailColor * (0.18f * completion), 0f, bloom.Size() * 0.5f, 0.025f + completion * 0.024f, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(spark, drawPosition, null, trailColor * (0.34f * completion), Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.032f, 0.15f * completion), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, trailColor * (0.16f * completion), 0f, bloom.Size() * 0.5f, 0.022f + completion * 0.022f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(spark, drawPosition, null, trailColor * (0.32f * completion), Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.028f, 0.13f * completion), SpriteEffects.None, 0);
             }
 
             Vector2 center = Projectile.Center - Main.screenPosition;
-            Main.EntitySpriteDraw(bloom, center, null, accentColor * 0.38f, 0f, bloom.Size() * 0.5f, 0.043f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(spark, center, null, Color.White * 0.62f, Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.046f, 0.18f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center, null, accentColor * 0.44f, 0f, bloom.Size() * 0.5f, 0.048f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(spark, center, null, new Color(220, 248, 255) * 0.68f, Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.052f, 0.21f), SpriteEffects.None, 0);
         }
     }
 
@@ -265,7 +287,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
             Vector2 center = Projectile.Center - Main.screenPosition;
             Main.EntitySpriteDraw(bloom, center, null, new Color(160, 82, 210, 0) * 0.2f, 0f, bloom.Size() * 0.5f, 0.04f, SpriteEffects.None, 0);
-            DrawOutline(texture, center, origin, Projectile.rotation, Projectile.scale, new Color(35, 18, 46) * 0.78f);
+            DrawOutline(texture, center, origin, Projectile.rotation, Projectile.scale, new Color(178, 92, 220) * 0.72f);
             Main.EntitySpriteDraw(texture, center, null, Color.Lerp(lightColor, Color.White, 0.25f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }

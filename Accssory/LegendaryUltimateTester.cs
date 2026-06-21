@@ -1,7 +1,10 @@
 using System;
 using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder;
+using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
+using Terraria.Audio;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityLegendsComeBack.Weapons.CosmicDischarge;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
@@ -58,6 +61,7 @@ namespace CalamityLegendsComeBack.Accssory
 
             ChargeSHPC();
             ChargeBlossomFlux();
+            ChargeBlossomFluxPassive();
             ChargeBrinyBaron();
             ChargeBrinyBaronSuperDashCooldown();
             ChargeVesuvius();
@@ -80,6 +84,20 @@ namespace CalamityLegendsComeBack.Accssory
             BFEXPlayer exPlayer = Player.GetModPlayer<BFEXPlayer>();
             exPlayer.EXValue = Math.Min(BFEXPlayer.EXMax, exPlayer.EXValue + FramesPerTick(BFEXPlayer.EXMax));
             SetCooldownProgress(BFEXCooldown.ID, BFEXPlayer.EXMax, exPlayer.EXValue);
+        }
+
+        private void ChargeBlossomFluxPassive()
+        {
+            BFPassivePlayer passivePlayer = Player.GetModPlayer<BFPassivePlayer>();
+            if (passivePlayer.FinalStandActive || !passivePlayer.PassiveUnlocked)
+                return;
+
+            int max = BFPassivePlayer.PassiveCooldownFrames;
+            int previousTimer = passivePlayer.PassiveCooldownTimer;
+            passivePlayer.PassiveCooldownTimer = Math.Min(max, passivePlayer.PassiveCooldownTimer + FramesPerTick(max));
+
+            if (previousTimer < max && passivePlayer.PassiveCooldownTimer >= max && Player.whoAmI == Main.myPlayer && Player.active && !Player.dead)
+                SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerBuffSpawn, Player.Center);
         }
 
         private void ChargeBrinyBaron()

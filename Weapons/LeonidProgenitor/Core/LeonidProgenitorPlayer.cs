@@ -18,6 +18,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public float TitaniumShieldCharge;
         public int TitaniumStompersTimer;
 
+        public int UltimateEnergy;
+        public int ultimateEnergyTimer;
+        private bool wasUltimateReady;
+
+        public bool IsHoldingLeonid => Player.HeldItem != null && !Player.HeldItem.IsAir && Player.HeldItem.type == ModContent.ItemType<LeonidProgenitor>();
+
         public override void ResetEffects()
         {
         }
@@ -27,10 +33,35 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             PalladiumHealCooldown = 0;
             TitaniumShieldCharge = 0f;
             TitaniumStompersTimer = 0;
+            UltimateEnergy = 0;
+            ultimateEnergyTimer = 0;
+            wasUltimateReady = false;
         }
 
         public override void PostUpdate()
         {
+            if (IsHoldingLeonid)
+            {
+                Player.gravControl = true;
+                Player.slowFall = true;
+                Player.buffImmune[BuffID.VortexDebuff] = true;
+                if (ModContent.TryFind<ModBuff>("CalamityMod", "Warped", out var warped))
+                    Player.buffImmune[warped.Type] = true;
+                if (ModContent.TryFind<ModBuff>("CalamityMod", "DoGExtremeGravity", out var dogGrav))
+                    Player.buffImmune[dogGrav.Type] = true;
+
+                ultimateEnergyTimer++;
+                if (ultimateEnergyTimer >= 60)
+                {
+                    ultimateEnergyTimer = 0;
+                    AddUltimateEnergy(1);
+                }
+            }
+            else
+            {
+                ultimateEnergyTimer = 0;
+            }
+
             if (PalladiumHealCooldown > 0)
                 PalladiumHealCooldown--;
 
@@ -141,6 +172,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             }
 
             SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.6f, Pitch = 0.28f }, Player.Center);
+        }
+
+        public void AddUltimateEnergy(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            UltimateEnergy = Math.Clamp(UltimateEnergy + amount, 0, 100);
+            
+            // Ultimate is ready if energy is 100 AND player stealth is at 100%.
+            bool ready = UltimateEnergy >= 100 && Player.Calamity().rogueStealth >= Player.Calamity().rogueStealthMax * 0.999f;
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, ready);
         }
     }
 }

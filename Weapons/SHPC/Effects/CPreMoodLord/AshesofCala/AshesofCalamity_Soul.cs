@@ -170,7 +170,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                     velocity,
                     "CalamityMod/Particles/VerticalSmear",
                     false,
-                    Main.rand.Next(10, 15),
+                    Main.rand.Next(3, 8),
                     Main.rand.NextFloat(0.6f, 1.2f),
                     Color.Lerp(orange, red, Main.rand.NextFloat(0.15f, 0.65f)),
                     new Vector2(0.18f, 0.86f),

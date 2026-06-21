@@ -114,9 +114,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     continue;
 
                 float distanceSquared = Vector2.DistanceSquared(projectile.Center, seedProjectile.Center);
-                if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && seed.IsBlooming && seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && distanceSquared <= 92f * 92f)
+                if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && seed.IsBlooming && seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && distanceSquared <= SeedOfSilvaSunflower.SunflowerRingRadius * SeedOfSilvaSunflower.SunflowerRingRadius)
                 {
                     sunflowerEmpowered = true;
+                    if (seed is SeedOfSilvaSunflower sunflower)
+                        sunflower.TriggerFlash();
                     if (!Main.dedServ && Main.rand.NextBool(10))
                     {
                         Dust dust = Dust.NewDustPerfect(projectile.Center, DustID.YellowTorch, Main.rand.NextVector2Circular(0.5f, 0.5f), 100, new Color(255, 238, 92), 0.82f);

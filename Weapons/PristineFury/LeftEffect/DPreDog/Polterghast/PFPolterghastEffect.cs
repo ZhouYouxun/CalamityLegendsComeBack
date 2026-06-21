@@ -8,10 +8,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal static class PFPolterghastEffect
     {
         private const int AccelerationFrames = 180;
-        private const int SlowInterval = 5;
-        private const int FastInterval = 2;
-        private const float FireSpeed = 18.8f;
-        private const float DamageMultiplier = 0.42f;
+        private const int SlowInterval = 6;
+        private const int FastInterval = 3;
+        private const float FireSpeed = 14f;
+        private const float DamageMultiplier = 0.60f;
         private const float Recoil = 1.8f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 holdout.Projectile.GetSource_FromThis(),
                 muzzle + side * laneOffset,
                 direction.RotatedBy(Main.rand.NextFloat(-spread, spread)) * FireSpeed,
-                ModContent.ProjectileType<PFPolterghast_Flame>(),
+                ModContent.ProjectileType<PFPolterghast_StarBolt>(),
                 holdout.GetScaledDamage(DamageMultiplier),
                 holdout.Projectile.knockBack,
                 holdout.Projectile.owner);

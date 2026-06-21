@@ -151,7 +151,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private bool CanTriggerFinalStand()
         {
-            return HoldingBlossomFluxNow &&
+            return Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
                    PassiveUnlocked &&
                    PassiveReady &&
                    FinalStandTimer <= 0;
@@ -166,6 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             ApplyFinalStandProtection();
 
             SpawnRecoveryField();
+            SpawnTriggerBurstFX();
 
             if (Player.whoAmI == Main.myPlayer)
             {
@@ -190,6 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
 
             finalStandBlockedHits = 0;
+            SpawnResolveSurvivalFX();
 
             if (Player.whoAmI == Main.myPlayer)
                 SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction3, Player.Center);
@@ -264,6 +266,101 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 0,
                 0f,
                 Player.whoAmI);
+        }
+
+        private void SpawnTriggerBurstFX()
+        {
+            if (Main.dedServ)
+                return;
+
+            Color coreColor = new Color(110, 255, 150);
+            Color accentColor = new Color(180, 255, 210);
+            Vector2 center = Player.Center;
+
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.18f), 1.5f, 22));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.White, 0.7f, 14));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.22f), new Vector2(1.2f, 1.2f), 0f, 0.28f, 0.038f, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, Color.Lerp(accentColor, Color.White, 0.3f), new Vector2(1.55f, 1.55f), MathHelper.PiOver4, 0.14f, 0.024f, 24));
+            GeneralParticleHandler.SpawnParticle(new BloomLineVFX(center - Vector2.UnitY * 22f, Vector2.UnitY * 55f, 1.1f, Color.Lerp(coreColor, accentColor, 0.45f), 18));
+            GeneralParticleHandler.SpawnParticle(new BloomLineVFX(center + Vector2.UnitY * 22f, -Vector2.UnitY * 55f, 1.1f, Color.Lerp(coreColor, accentColor, 0.45f), 18));
+
+            for (int i = 0; i < 22; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    center + Main.rand.NextVector2Circular(12f, 12f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.8f, 6.2f),
+                    false,
+                    Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.24f, 0.5f),
+                    Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.12f, 0.48f)),
+                    true,
+                    false,
+                    true));
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    center + Main.rand.NextVector2Circular(20f, 20f),
+                    Main.rand.NextVector2Circular(1.3f, 1.3f) + new Vector2(0f, Main.rand.NextFloat(-0.55f, 0.18f)),
+                    Color.Lerp(coreColor, Color.White, 0.22f),
+                    Color.Black,
+                    Main.rand.NextFloat(0.5f, 0.82f),
+                    Main.rand.Next(150, 210)));
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    center,
+                    Main.rand.NextBool(3) ? DustID.TerraBlade : DustID.GemEmerald,
+                    Main.rand.NextVector2CircularEdge(3.8f, 3.8f) * Main.rand.NextFloat(1.8f, 5.2f),
+                    90,
+                    Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.12f, 0.42f)),
+                    Main.rand.NextFloat(1.0f, 1.65f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void SpawnResolveSurvivalFX()
+        {
+            if (Main.dedServ)
+                return;
+
+            Color coreColor = new Color(110, 255, 150);
+            Color accentColor = new Color(180, 255, 210);
+            Vector2 center = Player.Center;
+
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.25f), 1.1f, 16));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.28f), Vector2.One, 0f, 0.22f, 0.04f, 16));
+            GeneralParticleHandler.SpawnParticle(new BloomLineVFX(center, -Vector2.UnitY * 48f, 0.92f, Color.Lerp(coreColor, accentColor, 0.52f), 14));
+            GeneralParticleHandler.SpawnParticle(new BloomLineVFX(center, Vector2.UnitY * 48f, 0.92f, Color.Lerp(coreColor, accentColor, 0.52f), 14));
+
+            for (int i = 0; i < 14; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 4.5f),
+                    false,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.2f, 0.42f),
+                    Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.15f, 0.48f)),
+                    true,
+                    false,
+                    true));
+            }
+
+            for (int i = 0; i < 12; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    center,
+                    Main.rand.NextBool(3) ? DustID.TerraBlade : DustID.GemEmerald,
+                    Main.rand.NextVector2CircularEdge(3.0f, 3.0f) * Main.rand.NextFloat(1.5f, 4.2f),
+                    90,
+                    Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.1f, 0.38f)),
+                    Main.rand.NextFloat(1.0f, 1.45f));
+                dust.noGravity = true;
+            }
         }
 
         private void EmitFinalStandVisuals()

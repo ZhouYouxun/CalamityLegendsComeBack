@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -7,15 +7,29 @@
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/74D8FF:Left Click: Throw a primary meteor that bursts on impact, then calls down one small meteor empowered by detected metal bars.]
-						[c/99CCFF:The thrown primary meteor itself never gains bar effects. Only the follow-up small meteors inherit them.]
+						[c/74D8FF:Left Click: Spawns 2 small purple-outlined comets near you that launch towards the cursor after a brief delay.]
+						[c/99CCFF:Comets bounce on reflective meteors, gaining damage, redirecting, and pushing them a short distance.]
+						[c/99CCFF:Redirects up to 7 times, then shoots towards the nearest enemy, gaining speed and +4% damage multiplier per bounce.]
+						[c/9AD8FF:Infused metal bar powers apply during small comet hits, bounces, and ultimate meteor impacts.]
 						'''
 					StealthLeftClick:
 						'''
-						[c/B7A4FF:Stealth Left: The primary meteor flies faster and ignores gravity. On hit it marks the target and repeatedly calls down empowered small meteors.]
-						[c/9AD8FF:Detection order is fixed from the last inventory slot backward, and for now it always records exactly 2 different bars.]
+						[c/B7A4FF:Stealth Left: Spawns 7 comets in the upper-diagonal of the cursor that rain down, prioritizing redirecting towards reflective meteors.]
 						'''
-					RightClick: "[c/8A8A8A:Right Click: Unused for now.]"
+					RightClick:
+						'''
+						[c/8DEBFF:Right Click: Hold to slow movement speed and charge an asteroid. Release to launch. On impact, it splits into 7 decelerating, hovering reflective comets.]
+						[c/9AD8FF:Charging pulls existing reflective comets (+4% progress each), which orbit and deal damage to enemies on their path.]
+						[c/5CD6FF:Stealth Right: Marks the cursor and fires a Lion Head that bites for massive damage and releases 14 reflective comets.]
+						'''
+					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Spawns a massive gravity field. Enemies above receive 'Gravity of Stars' (forces speed to 0 and pulls down). Spawns comets in the sky for 3 seconds that rain down sequentially. Requires 100% Ultimate Energy and Stealth.]"
+					Passives:
+						'''
+						[c/AF80FF:【Passives】]
+						[c/BFAFFF:Gravitational Control: Grants gravity control, slow fall, and vortex/extreme gravity immunity while held.]
+						[c/BFAFFF:Kinetic Cycle: Left-click comets deal 15% more damage for every 3 reflections.]
+						[c/BFAFFF:Polar Chain: Max-bounce comets orbit the player for 6 seconds, dealing 50% damage (max 6 comets).]
+						'''
 					CurrentMetals: "[c/CFEFFF:Current infused bar powers:]"
 					EmptyMetalLine: >>> <<<
 					MetalLine: >>> {0}: {1} <<<
@@ -125,6 +139,18 @@
 				Auric_Pulse.DisplayName: Auric Pulse
 				Shadowspec_Echo.DisplayName: Shadowspec Echo
 				Shadowspec_Rift.DisplayName: Shadowspec Rift
+				LeonidReflectiveMeteor.DisplayName: Reflective Meteor
+				LeonidCometLarge.DisplayName: Large Meteor
+				LeonidLionHead.DisplayName: Roaring Lion Head
+				LeonidGravityField.DisplayName: Leonid Echo Gravity Field
+				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
+			}
+		}
+
+		Buffs: {
+			LeonidGravityDebuff: {
+				DisplayName: Gravity of Stars
+				Description: The gravity field restricts you, preventing horizontal movement and pulling you down!
 			}
 		}
 	}

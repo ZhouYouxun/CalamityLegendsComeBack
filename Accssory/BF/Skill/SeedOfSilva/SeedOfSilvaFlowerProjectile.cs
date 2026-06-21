@@ -110,7 +110,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 ? Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.12f
                 : Projectile.rotation * 0.2f + Main.GlobalTimeWrappedHourly * 0.08f;
             Color drawColor = Color.Lerp(lightColor, Color.White, IsBlooming ? 0.28f : 0.18f) * Projectile.Opacity;
-            Color outlineColor = Color.Lerp(Color.Black, FlowerColor, IsBlooming ? 0.32f : 0.22f) * (0.86f * Projectile.Opacity);
+            Color outlineColor = FlowerColor * ((IsBlooming ? 0.65f : 0.42f) * Projectile.Opacity);
 
             if (IsBlooming)
                 DrawFlowerUnderGlow(center, texture, origin, rotation, drawScale);
