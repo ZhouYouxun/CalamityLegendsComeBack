@@ -11,8 +11,10 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.EXSkill;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick;
 
-namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
+namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 {
     public class GlacialEmbracePlayer : ModPlayer
     {

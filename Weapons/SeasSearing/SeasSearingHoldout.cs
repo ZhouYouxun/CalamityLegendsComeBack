@@ -13,58 +13,83 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
     internal sealed class SeasSearingHoldout : ModProjectile, ILocalizedModType
     {
-        private const int BurstShotCount = 3;
-        private const int BurstShotSpacing = 5;
+        // ── Left-click burst ─────────────────────────────────────────────────
+        private const int NormalBurstCount   = 3;
+        private const int VentBurstCount     = 4;   // enhanced burst during VentCooldown
+        private const int BurstShotSpacing   = 5;
         private const int BurstLockoutFrames = 36;
-        private const int RightChargeFrames = 34;
-        private const int RightCooldownFrames = 52;
+
+        // ── Right-click state thresholds (frames) ───────────────────────────
+        // Hold right 60 f → enters Locked; hold 90 f more → auto-Rupture.
+        // Release during Charging (≥20 f) → weak PressureBolt.
+        // Release during Locked → strong PressureBolt + VentCooldown.
+        private const int ChargeToLockedFrames  = 60;
+        private const int LockedToRuptureFrames = 90;
+        private const int VentCooldownFrames    = 80;
+        private const int AbyssalRuptureFrames  = 130;
+
+        // ── Rupture rapid-fire ───────────────────────────────────────────────
+        private const int RapidFireInterval = 10;
+
         private const float HoldoutDistance = 44f;
 
+        // ── Right-click state ────────────────────────────────────────────────
+        private enum RightState { Idle, Charging, Locked, VentCooldown, AbyssalRupture }
+
+        private RightState rightState;
+        private int        rightStateTimer;
+
+        // ── Left-click timers ────────────────────────────────────────────────
         private int burstShotsRemaining;
         private int burstShotTimer;
         private int burstLockoutTimer;
-        private int rightChargeTimer;
-        private int rightCooldownTimer;
-        private int muzzleFlashTimer;
-        private int useAnimationTimer;
-        private bool rightHeldLastFrame;
+        private int rapidFireTimer;
+
+        // ── Visual timers ────────────────────────────────────────────────────
+        private int   muzzleFlashTimer;
+        private int   useAnimationTimer;
         private float recoilOffset;
-        private float resonanceGlow;
+        private float chargeGlow;      // 0-1 charge intensity
+        private float resonanceGlow;   // post-bolt bloom
+        private float ruptureHeat;     // 0-1 orange heat for AbyssalRupture
+        private float orbitAngle;      // crown sparkle rotation
+
+        private bool rightHeldLastFrame;
 
         public new string LocalizationCategory => "Projectiles.SeasSearing";
         public override string Texture => "CalamityLegendsComeBack/Weapons/SeasSearing/NewLegendSeasSearing";
 
-        private Player Owner => Main.player[Projectile.owner];
+        private Player  Owner        => Main.player[Projectile.owner];
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Math.Max(Owner.direction, 1));
         private Vector2 GunTipPosition => Projectile.Center + AimDirection * 47f;
 
         public override void SetDefaults()
         {
-            Projectile.width = 74;
-            Projectile.height = 34;
-            Projectile.friendly = false;
-            Projectile.penetrate = -1;
+            Projectile.width      = 74;
+            Projectile.height     = 34;
+            Projectile.friendly   = false;
+            Projectile.penetrate  = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.DamageType  = DamageClass.Ranged;
             Projectile.netImportant = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
-
         public override bool? CanDamage() => false;
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Owner.noItems || Owner.CCed || Owner.HeldItem.type != ModContent.ItemType<SeasSearing>())
+            if (!Owner.active || Owner.dead || Owner.noItems || Owner.CCed ||
+                Owner.HeldItem.type != ModContent.ItemType<SeasSearing>())
             {
                 Projectile.Kill();
                 return;
             }
 
-            Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
+            Projectile.damage    = Owner.GetWeaponDamage(Owner.HeldItem);
             Projectile.knockBack = Owner.HeldItem.knockBack;
-            Projectile.timeLeft = 2;
+            Projectile.timeLeft  = 2;
 
             Owner.Calamity().mouseWorldListener = true;
             if (Main.myPlayer == Owner.whoAmI)
@@ -77,76 +102,328 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 HandleInputs();
         }
 
+        // ────────────────────────────────────────────────────────────────────
+        // INPUT HANDLING
+        // ────────────────────────────────────────────────────────────────────
+
         private void HandleInputs()
         {
-            bool validMouse = SeasSearing.CanUseWorldInput(Owner);
-            bool leftHeld = validMouse && Main.mouseLeft;
-            bool rightHeld = validMouse && (Main.mouseRight || Owner.Calamity().mouseRight);
+            bool valid     = SeasSearing.CanUseWorldInput(Owner);
+            bool leftHeld  = valid && Main.mouseLeft;
+            bool rightHeld = valid && (Main.mouseRight || Owner.Calamity().mouseRight);
 
-            if (leftHeld && !rightHeld && burstShotsRemaining <= 0 && burstLockoutTimer <= 0 && rightChargeTimer <= 0)
-                StartBurst();
-
-            if (burstShotsRemaining > 0)
-                HandleBurstShots();
-
-            HandleRightClick(rightHeld);
-            HandleUltimateInput(validMouse);
+            HandleRightStateMachine(rightHeld);
+            HandleLeftClick(leftHeld, rightHeld);
+            HandleUltimateInput(valid);
 
             rightHeldLastFrame = rightHeld;
         }
 
-        private void StartBurst()
+        // ── Right-click state machine ────────────────────────────────────────
+
+        private void HandleRightStateMachine(bool rightHeld)
         {
-            burstShotsRemaining = BurstShotCount;
-            burstShotTimer = 0;
-            burstLockoutTimer = BurstLockoutFrames;
-            useAnimationTimer = Math.Max(useAnimationTimer, BurstShotSpacing * (BurstShotCount - 1) + 8);
+            bool justPressed  =  rightHeld && !rightHeldLastFrame;
+            bool rightJustReleased = !rightHeld && rightHeldLastFrame;
+
+            switch (rightState)
+            {
+                case RightState.Idle:
+                    if (justPressed)
+                        EnterCharging();
+                    break;
+
+                case RightState.Charging:
+                    if (!rightHeld)
+                    {
+                        if (rightStateTimer >= 20)
+                            FirePressureBolt(strong: false);
+                        rightState = RightState.Idle;
+                        rightStateTimer = 0;
+                        break;
+                    }
+                    rightStateTimer++;
+                    UpdateChargeVisuals(rightStateTimer / (float)ChargeToLockedFrames);
+                    if (rightStateTimer >= ChargeToLockedFrames)
+                        EnterLocked();
+                    break;
+
+                case RightState.Locked:
+                    if (!rightHeld)
+                    {
+                        FirePressureBolt(strong: true);
+                        EnterVentCooldown();
+                        break;
+                    }
+                    rightStateTimer++;
+                    UpdateLockedVisuals();
+                    if (rightStateTimer >= LockedToRuptureFrames)
+                        TriggerAbyssalRupture();
+                    break;
+
+                case RightState.VentCooldown:
+                    rightStateTimer--;
+                    if (rightStateTimer <= 0)
+                    {
+                        rightState = RightState.Idle;
+                        rightStateTimer = 0;
+                    }
+                    // Allow chaining a new charge immediately
+                    if (justPressed)
+                        EnterCharging();
+                    break;
+
+                case RightState.AbyssalRupture:
+                    rightStateTimer--;
+                    if (rightStateTimer <= 0)
+                    {
+                        rightState = RightState.Idle;
+                        rightStateTimer = 0;
+                        ruptureHeat = 0f;
+                    }
+                    // Cannot chain right-click during active rupture
+                    break;
+            }
         }
 
-        private void HandleBurstShots()
+        private void EnterCharging()
         {
-            if (burstShotTimer > 0)
+            rightState = RightState.Charging;
+            rightStateTimer = 0;
+            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.48f, Pitch = -0.55f }, GunTipPosition);
+        }
+
+        private void EnterLocked()
+        {
+            rightState = RightState.Locked;
+            rightStateTimer = 0;
+            chargeGlow = 1f;
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.4f, Pitch = -0.35f }, GunTipPosition);
+        }
+
+        private void EnterVentCooldown()
+        {
+            rightState = RightState.VentCooldown;
+            rightStateTimer = VentCooldownFrames;
+            resonanceGlow = 1.2f;
+        }
+
+        private void TriggerAbyssalRupture()
+        {
+            FireAbyssalGeyserColumn();
+
+            int detonated = SeasSearingPollutionNPC.DetonateAll(Owner, Projectile.damage, GunTipPosition);
+            float shake = MathHelper.Clamp(4f + detonated * 0.85f, 4f, 15f);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
+            ApplyRecoil(18f);
+            TriggerMuzzleFlash(30);
+
+            SoundEngine.PlaySound(SoundID.Item14  with { Volume = 0.90f, Pitch = -0.58f }, GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item74  with { Volume = 0.65f, Pitch = -0.38f }, GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item92  with { Volume = 0.55f, Pitch = -0.5f  }, GunTipPosition);
+
+            rightState = RightState.AbyssalRupture;
+            rightStateTimer = AbyssalRuptureFrames;
+            ruptureHeat = 1f;
+
+            SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, 40, 9f, 22f, 1.6f);
+            SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 7f, 16f, 36, SeasSearingPalette.WarningOrange);
+        }
+
+        // ── Left-click ───────────────────────────────────────────────────────
+
+        private void HandleLeftClick(bool leftHeld, bool rightHeld)
+        {
+            // Blocked while charging or locked
+            if (rightHeld || rightState == RightState.Charging || rightState == RightState.Locked)
             {
-                burstShotTimer--;
+                burstShotsRemaining = 0;
+                burstShotTimer = 0;
                 return;
             }
 
-            FirePollutionRound(BurstShotCount - burstShotsRemaining);
+            // AbyssalRupture: rapid-fire TorrentShot
+            if (rightState == RightState.AbyssalRupture)
+            {
+                if (leftHeld && burstLockoutTimer <= 0)
+                {
+                    rapidFireTimer++;
+                    if (rapidFireTimer >= RapidFireInterval)
+                    {
+                        rapidFireTimer = 0;
+                        FireTorrentShot();
+                    }
+                }
+                else
+                    rapidFireTimer = 0;
+                return;
+            }
+
+            // VentCooldown: enhanced 4-round burst
+            // Idle: normal 3-round burst
+            bool enhanced  = rightState == RightState.VentCooldown;
+            int burstCount = enhanced ? VentBurstCount : NormalBurstCount;
+
+            if (leftHeld && burstShotsRemaining <= 0 && burstLockoutTimer <= 0)
+                StartBurst(burstCount);
+
+            if (burstShotsRemaining > 0)
+                HandleBurstShots(enhanced);
+        }
+
+        private void StartBurst(int count)
+        {
+            burstShotsRemaining = count;
+            burstShotTimer = 0;
+            burstLockoutTimer = BurstLockoutFrames;
+            useAnimationTimer = Math.Max(useAnimationTimer, BurstShotSpacing * (count - 1) + 8);
+        }
+
+        private void HandleBurstShots(bool enhanced)
+        {
+            if (burstShotTimer > 0) { burstShotTimer--; return; }
+
+            int burstCount = enhanced ? VentBurstCount : NormalBurstCount;
+            int index = burstCount - burstShotsRemaining;
+
+            if (enhanced)
+                FireVentShot(index);
+            else
+                FirePollutionRound(index);
+
             burstShotsRemaining--;
             burstShotTimer = BurstShotSpacing;
         }
 
-        private void HandleRightClick(bool rightHeld)
+        // ────────────────────────────────────────────────────────────────────
+        // PROJECTILE FIRE METHODS
+        // ────────────────────────────────────────────────────────────────────
+
+        private void FirePollutionRound(int burstIndex)
         {
-            if (rightCooldownTimer > 0)
-            {
-                if (!rightHeld)
-                    rightChargeTimer = 0;
+            int stage = SeasSearing.GetProgressionStage();
+            float speed = 34f + stage * 2.5f;
+            Vector2 dir = AimDirection;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(0.65f + burstIndex * 0.22f)) * speed;
 
-                return;
+            int idx = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + dir * 8f + Main.rand.NextVector2Circular(1.2f, 1.2f),
+                vel,
+                ModContent.ProjectileType<SeasSearingPollutionRound>(),
+                Projectile.damage, Projectile.knockBack, Projectile.owner,
+                burstIndex, stage);
+
+            if (Main.projectile.IndexInRange(idx))
+            {
+                Main.projectile[idx].CritChance       = Owner.GetWeaponCrit(Owner.HeldItem);
+                Main.projectile[idx].ArmorPenetration += 18;
             }
 
-            if (rightHeld)
+            ApplyRecoil(5.2f + burstIndex * 1.3f);
+            TriggerMuzzleFlash(8);
+            SpawnMuzzleBurst(dir, burstIndex, Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.3f));
+            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f);
+        }
+
+        // Enhanced left-click during VentCooldown: 4-round burst, splits into 2 orbs on hit
+        private void FireVentShot(int burstIndex)
+        {
+            int stage = SeasSearing.GetProgressionStage();
+            float speed = 38f + stage * 2.5f;
+            Vector2 dir = AimDirection;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(0.5f + burstIndex * 0.18f)) * speed;
+
+            int damage = (int)(Projectile.damage * 1.22f);
+            int idx = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + dir * 8f + Main.rand.NextVector2Circular(1.2f, 1.2f),
+                vel,
+                ModContent.ProjectileType<SeasSearingVentShot>(),
+                damage, Projectile.knockBack, Projectile.owner,
+                burstIndex, stage);
+
+            if (Main.projectile.IndexInRange(idx))
+                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+
+            ApplyRecoil(4.8f + burstIndex * 1.1f);
+            TriggerMuzzleFlash(13);
+            SpawnMuzzleBurst(dir, burstIndex, SeasSearingPalette.PressureBlue);
+            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.08f + burstIndex * 0.06f);
+
+            // Extra glowing particle puff on each vent shot
+            if (!Main.dedServ)
+                SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, 6, 3.5f, 8f, 0.9f);
+        }
+
+        // Rapid-fire pierce shots during AbyssalRupture
+        private void FireTorrentShot()
+        {
+            Vector2 dir = AimDirection;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(1.2f)) * 44f;
+
+            int damage = (int)(Projectile.damage * 0.82f);
+            int idx = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + dir * 8f,
+                vel,
+                ModContent.ProjectileType<SeasSearingTorrentShot>(),
+                damage, Projectile.knockBack * 0.5f, Projectile.owner);
+
+            if (Main.projectile.IndexInRange(idx))
+                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+
+            ApplyRecoil(3.5f);
+            TriggerMuzzleFlash(7);
+            SpawnMuzzleBurst(dir, 0, SeasSearingPalette.WarningOrange);
+            SoundEngine.PlaySound(SoundID.Item11 with { Volume = 0.52f, Pitch = 0.18f, PitchVariance = 0.07f, MaxInstances = 8 }, GunTipPosition);
+        }
+
+        // Fired on right-click release: large bolt that spawns orbital satellites on hit
+        private void FirePressureBolt(bool strong)
+        {
+            Vector2 dir   = AimDirection;
+            float speed   = strong ? 28f : 22f;
+            int damage    = strong ? (int)(Projectile.damage * 2.5f) : (int)(Projectile.damage * 1.5f);
+
+            int idx = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + dir * 14f,
+                dir * speed,
+                ModContent.ProjectileType<SeasSearingPressureBolt>(),
+                damage, 8f, Projectile.owner,
+                strong ? 1f : 0f);
+
+            if (Main.projectile.IndexInRange(idx))
+                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, strong ? 4f : 2f);
+            ApplyRecoil(strong ? 16f : 10f);
+            TriggerMuzzleFlash(strong ? 24 : 15);
+            chargeGlow = strong ? 0.85f : 0.5f;
+            resonanceGlow = Math.Max(resonanceGlow, strong ? 1.0f : 0.6f);
+
+            SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 6f, 12f, 24, SeasSearingPalette.PressureBlue);
+            SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, strong ? 22 : 12, 4f, 10f, 1.1f);
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = strong ? 0.84f : 0.60f, Pitch = strong ? -0.44f : -0.22f }, GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item36 with { Volume = strong ? 0.58f : 0.36f, Pitch = -0.3f }, GunTipPosition);
+        }
+
+        // 3 staggered geyser eruptions at cursor (AbyssalRupture trigger)
+        private void FireAbyssalGeyserColumn()
+        {
+            Vector2 target = GetMouseWorld();
+            for (int i = 0; i < 3; i++)
             {
-                if (!rightHeldLastFrame)
-                    SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.48f, Pitch = -0.55f }, GunTipPosition);
-
-                rightChargeTimer = Math.Min(RightChargeFrames, rightChargeTimer + 1);
-                resonanceGlow = Math.Max(resonanceGlow, rightChargeTimer / (float)RightChargeFrames);
-                SpawnRightChargeDust(rightChargeTimer / (float)RightChargeFrames);
-
-                if (rightChargeTimer >= RightChargeFrames)
-                {
-                    FireResonancePulse();
-                    rightChargeTimer = 0;
-                    rightCooldownTimer = RightCooldownFrames;
-                }
-
-                return;
+                float xOffset = (i - 1) * Main.rand.NextFloat(28f, 55f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    target + new Vector2(xOffset, 0f),
+                    Vector2.Zero,
+                    ModContent.ProjectileType<SeasSearingAbyssalGeyser>(),
+                    (int)(Projectile.damage * 1.85f), 7f, Projectile.owner,
+                    i * 13f);  // ai[0] = delay frames before eruption
             }
-
-            if (!rightHeld)
-                rightChargeTimer = 0;
         }
 
         private void HandleUltimateInput(bool validMouse)
@@ -183,64 +460,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.74f, Pitch = -0.42f }, GunTipPosition);
         }
 
-        private void FirePollutionRound(int burstIndex)
-        {
-            int stage = SeasSearing.GetProgressionStage();
-            float shootSpeed = 34f + stage * 2.5f;
-            int damage = Projectile.damage;
-            float knockback = Owner.HeldItem.knockBack;
-
-            Vector2 direction = AimDirection;
-            float spread = MathHelper.ToRadians(0.65f + burstIndex * 0.22f);
-            Vector2 velocity = direction.RotatedByRandom(spread) * shootSpeed;
-            int projectileIndex = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition + direction * 8f + Main.rand.NextVector2Circular(1.2f, 1.2f),
-                velocity,
-                ModContent.ProjectileType<SeasSearingPollutionRound>(),
-                damage,
-                knockback,
-                Projectile.owner,
-                burstIndex,
-                stage);
-
-            if (Main.projectile.IndexInRange(projectileIndex))
-            {
-                Projectile shot = Main.projectile[projectileIndex];
-                shot.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-                shot.ArmorPenetration += 18;
-            }
-
-            ApplyRecoil(5.2f + burstIndex * 1.3f);
-            TriggerMuzzleFlash(8);
-            SpawnMuzzleBurst(direction, burstIndex);
-            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f);
-        }
-
-        private void FireResonancePulse()
-        {
-            Vector2 direction = AimDirection;
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition + direction * 20f,
-                direction,
-                ModContent.ProjectileType<SeasSearingResonancePulse>(),
-                0,
-                0f,
-                Projectile.owner,
-                Projectile.damage);
-
-            int detonated = SeasSearingPollutionNPC.DetonateAll(Owner, Projectile.damage, GunTipPosition);
-            float shake = detonated <= 0 ? 1.8f : MathHelper.Clamp(2f + detonated * 0.7f, 2.8f, 13f);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
-            useAnimationTimer = Math.Max(useAnimationTimer, 14);
-            ApplyRecoil(12f + Math.Min(detonated, 8) * 1.4f);
-            TriggerMuzzleFlash(24);
-            resonanceGlow = 1.4f;
-
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.72f, Pitch = -0.55f }, GunTipPosition);
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.58f, Pitch = -0.3f }, GunTipPosition);
-        }
+        // ────────────────────────────────────────────────────────────────────
+        // POSE & TIMER UPDATES
+        // ────────────────────────────────────────────────────────────────────
 
         private void UpdatePose()
         {
@@ -253,47 +475,132 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.netUpdate = true;
             }
 
-            Vector2 aim = AimDirection;
-            int direction = aim.X >= 0f ? 1 : -1;
-            Projectile.spriteDirection = direction;
-            Projectile.direction = direction;
-            Projectile.rotation = aim.ToRotation();
-            Projectile.Center = armPosition + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -6f * Owner.gravDir);
+            Vector2 aim      = AimDirection;
+            int dir          = aim.X >= 0f ? 1 : -1;
+            Projectile.spriteDirection = dir;
+            Projectile.direction       = dir;
+            Projectile.rotation        = aim.ToRotation();
 
-            Owner.ChangeDir(direction);
+            // Vibration during Locked (increases as it approaches auto-rupture)
+            Vector2 vibOffset = Vector2.Zero;
+            if (rightState == RightState.Locked && !Main.dedServ)
+            {
+                float vib = rightStateTimer / (float)LockedToRuptureFrames * 2.8f;
+                vibOffset = Main.rand.NextVector2Circular(vib, vib * 0.5f);
+            }
+
+            Projectile.Center = armPosition + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -6f * Owner.gravDir) + vibOffset;
+
+            Owner.ChangeDir(dir);
             Owner.heldProj = Projectile.whoAmI;
-            Owner.itemRotation = (aim * direction).ToRotation();
+            Owner.itemRotation = (aim * dir).ToRotation();
             Owner.HeldItem.noUseGraphic = true;
-            if (useAnimationTimer > 0 || rightChargeTimer > 0)
+
+            if (useAnimationTimer > 0 || rightState == RightState.Charging || rightState == RightState.Locked)
             {
                 Owner.itemTime = Math.Max(Owner.itemTime, 2);
                 Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
             }
 
-            float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir;
-            if (Owner.gravDir == -1f)
-                armRotation += MathHelper.Pi;
+            float armRot = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir;
+            if (Owner.gravDir == -1f) armRot += MathHelper.Pi;
 
-            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
-            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.ThreeQuarters, armRotation + MathHelper.ToRadians(5f) * direction);
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRot);
+            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.ThreeQuarters, armRot + MathHelper.ToRadians(5f) * dir);
         }
 
         private void UpdateTimersAndVisuals()
         {
-            if (burstLockoutTimer > 0)
-                burstLockoutTimer--;
+            if (burstLockoutTimer > 0) burstLockoutTimer--;
+            if (muzzleFlashTimer  > 0) muzzleFlashTimer--;
+            if (useAnimationTimer > 0) useAnimationTimer--;
 
-            if (rightCooldownTimer > 0)
-                rightCooldownTimer--;
-
-            if (muzzleFlashTimer > 0)
-                muzzleFlashTimer--;
-
-            if (useAnimationTimer > 0)
-                useAnimationTimer--;
-
-            recoilOffset = MathHelper.Lerp(recoilOffset, 0f, 0.26f);
+            recoilOffset  = MathHelper.Lerp(recoilOffset, 0f, 0.26f);
             resonanceGlow = MathHelper.Clamp(resonanceGlow - 0.035f, 0f, 1.5f);
+            orbitAngle   += 0.055f;
+
+            // Rupture heat decays slowly while active, faster otherwise
+            float heatDecay = rightState == RightState.AbyssalRupture ? 0.005f : 0.04f;
+            ruptureHeat = MathHelper.Clamp(ruptureHeat - heatDecay, 0f, 1f);
+
+            // Charge glow follows state
+            switch (rightState)
+            {
+                case RightState.Charging:
+                    chargeGlow = rightStateTimer / (float)ChargeToLockedFrames;
+                    break;
+                case RightState.Locked:
+                    // Pulsing at full + slight sine
+                    chargeGlow = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f) * 0.1f;
+                    break;
+                default:
+                    chargeGlow = MathHelper.Clamp(chargeGlow - 0.03f, 0f, 1f);
+                    break;
+            }
+
+            // Passive pressure field lighting
+            if (!Main.dedServ)
+                Lighting.AddLight(Owner.Center, new Vector3(0.02f, 0.12f, 0.18f) * Owner.GetModPlayer<SeasSearingPlayer>().PressureVisualPower);
+        }
+
+        private void UpdateChargeVisuals(float charge)
+        {
+            if (Main.dedServ || Main.rand.NextFloat() > 0.42f + charge * 0.48f)
+                return;
+
+            // Dust spirals converge inward toward gun tip
+            Vector2 center = GunTipPosition + AimDirection * (12f + charge * 16f);
+            float radius   = 30f + 44f * (1f - charge);
+            float ang      = Main.GlobalTimeWrappedHourly * 5.5f + Main.rand.NextFloat(MathHelper.TwoPi);
+            Vector2 offset = ang.ToRotationVector2() * radius;
+
+            Dust dust = Dust.NewDustPerfect(
+                center + offset,
+                Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald,
+                -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2f + charge * 3f, 4f + charge * 6f),
+                100,
+                Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, charge),
+                Main.rand.NextFloat(0.55f, 0.9f) * (0.65f + charge));
+            dust.noGravity = true;
+
+            // Convergence ring pulse every 18 frames
+            if ((int)(Main.GlobalTimeWrappedHourly * 60f) % 18 == 0 && charge > 0.3f)
+                SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 2.8f, 20f + charge * 14f, 16,
+                    Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.PressureBlue, charge));
+        }
+
+        private void UpdateLockedVisuals()
+        {
+            if (Main.dedServ) return;
+
+            float progress = rightStateTimer / (float)LockedToRuptureFrames;
+
+            // Orbit sparkle crown (6 dots)
+            if (Main.GameUpdateCount % 3 == 0)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    float a = orbitAngle + MathHelper.TwoPi * (i * 3 + Main.GameUpdateCount / 3 % 3) / 6f;
+                    Vector2 pos = GunTipPosition + a.ToRotationVector2() * (22f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f) * 5f);
+                    Dust d = Dust.NewDustPerfect(pos, DustID.GemDiamond, Vector2.Zero, 100, SeasSearingPalette.RadioactiveCyan, 0.85f);
+                    d.noGravity = true;
+                }
+            }
+
+            // Convergence ring every 12 f
+            if (Main.GameUpdateCount % 12 == 0)
+                SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 3.5f, 30f, 20,
+                    Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.WarningOrange, progress));
+
+            Lighting.AddLight(GunTipPosition, (SeasSearingPalette.PressureBlue * (0.5f + progress * 0.4f)).ToVector3());
+
+            // Overcharge warning eruption at 60%+
+            if (progress > 0.6f && Main.GameUpdateCount % 7 == 0)
+            {
+                int count = (int)(5 + progress * 12f);
+                SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, count,
+                    3f + progress * 5f, 14f + progress * 22f, 0.8f + progress * 0.5f);
+            }
         }
 
         private Vector2 GetMouseWorld() => SeasSearing.GetMouseWorld(Owner);
@@ -304,110 +611,150 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Owner.velocity -= AimDirection * amount * 0.014f;
         }
 
-        private void TriggerMuzzleFlash(int frames)
+        private void TriggerMuzzleFlash(int frames) => muzzleFlashTimer = Math.Max(muzzleFlashTimer, frames);
+
+        private void SpawnMuzzleBurst(Vector2 direction, int burstIndex, Color tint)
         {
-            muzzleFlashTimer = Math.Max(muzzleFlashTimer, frames);
-        }
+            if (Main.dedServ) return;
 
-        private void SpawnMuzzleBurst(Vector2 direction, int burstIndex)
-        {
-            if (Main.dedServ)
-                return;
-
-            Color cyan = SeasSearingPalette.RadioactiveCyan;
-            Color green = SeasSearingPalette.ToxicGreen;
-
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 10; i++)
             {
-                Vector2 velocity = direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.4f, 4.8f) - direction * burstIndex * 0.2f;
-                Dust dust = Dust.NewDustPerfect(
+                Vector2 vel = direction.RotatedByRandom(0.44f) * Main.rand.NextFloat(1.5f, 5.8f)
+                            - direction * burstIndex * 0.2f;
+                Dust d = Dust.NewDustPerfect(
                     GunTipPosition + Main.rand.NextVector2Circular(3f, 3f),
                     Main.rand.NextBool(2) ? DustID.Water : DustID.GemEmerald,
-                    velocity,
-                    100,
-                    Color.Lerp(cyan, green, Main.rand.NextFloat(0.15f, 0.75f)),
-                    Main.rand.NextFloat(0.7f, 1.25f));
-                dust.noGravity = true;
+                    vel, 100,
+                    Color.Lerp(tint, SeasSearingPalette.ToxicGreen, Main.rand.NextFloat(0.1f, 0.7f)),
+                    Main.rand.NextFloat(0.75f, 1.35f));
+                d.noGravity = true;
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 Dust smoke = Dust.NewDustPerfect(
-                    GunTipPosition - direction * Main.rand.NextFloat(2f, 12f),
+                    GunTipPosition - direction * Main.rand.NextFloat(2f, 14f),
                     DustID.Smoke,
                     -direction.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.7f, 2.4f),
                     155,
-                    Color.Lerp(SeasSearingPalette.AbyssBlack, SeasSearingPalette.DeepBlue, 0.45f),
-                    Main.rand.NextFloat(0.55f, 0.9f));
+                    Color.Lerp(SeasSearingPalette.AbyssBlack, SeasSearingPalette.DeepBlue, 0.4f),
+                    Main.rand.NextFloat(0.5f, 0.9f));
                 smoke.noGravity = true;
             }
         }
 
-        private void SpawnRightChargeDust(float charge)
-        {
-            if (Main.dedServ || Main.rand.NextFloat() > 0.35f + charge * 0.55f)
-                return;
-
-            Vector2 center = GunTipPosition + AimDirection * (8f + charge * 10f);
-            Vector2 offset = Main.rand.NextVector2CircularEdge(16f + 28f * charge, 16f + 22f * charge);
-            Dust dust = Dust.NewDustPerfect(
-                center + offset,
-                Main.rand.NextBool(3) ? DustID.GemEmerald : DustID.Water,
-                -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.2f, 4.2f),
-                100,
-                Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, charge),
-                Main.rand.NextFloat(0.65f, 1.1f) * (0.7f + charge));
-            dust.noGravity = true;
-        }
+        // ────────────────────────────────────────────────────────────────────
+        // DRAWING
+        // ────────────────────────────────────────────────────────────────────
 
         public override bool PreDraw(ref Color lightColor)
         {
             DrawPressureField();
 
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Vector2 origin = texture.Size() * 0.5f;
-            SpriteEffects effects = Projectile.spriteDirection == -1 ? SpriteEffects.FlipVertically : SpriteEffects.None;
+            Vector2 drawPos   = Projectile.Center - Main.screenPosition;
+            Vector2 origin    = texture.Size() * 0.5f;
+            SpriteEffects fx  = Projectile.spriteDirection == -1 ? SpriteEffects.FlipVertically : SpriteEffects.None;
 
             float flash = muzzleFlashTimer / 24f;
-            if (resonanceGlow > 0.02f || flash > 0.02f)
-                DrawWeaponGlow(texture, drawPosition, origin, effects, flash);
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, effects, 0);
+            if (ruptureHeat > 0.05f)
+                DrawRuptureHeatOverlay(texture, drawPos, origin, fx);
+
+            if (chargeGlow > 0.02f || resonanceGlow > 0.02f || flash > 0.02f)
+                DrawWeaponGlow(texture, drawPos, origin, fx, flash);
+
+            Main.EntitySpriteDraw(texture, drawPos, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, fx, 0);
             DrawMuzzleGlow(flash);
+            DrawLockedOrbitCrown();
             return false;
         }
 
-        private void DrawWeaponGlow(Texture2D texture, Vector2 drawPosition, Vector2 origin, SpriteEffects effects, float flash)
+        private void DrawRuptureHeatOverlay(Texture2D texture, Vector2 drawPos, Vector2 origin, SpriteEffects fx)
         {
-            Color color = (Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, 0.72f) with { A = 0 }) *
-                MathHelper.Clamp(resonanceGlow * 0.45f + flash * 0.62f, 0f, 0.9f);
-            int draws = 10;
-            float radius = 2.2f + resonanceGlow * 4f + flash * 5f;
+            Color heatColor = (SeasSearingPalette.WarningOrange with { A = 0 }) * ruptureHeat * 0.5f;
+            int draws  = 8;
+            float rad  = 3f + ruptureHeat * 5.5f;
             for (int i = 0; i < draws; i++)
             {
-                float angle = MathHelper.TwoPi * i / draws + Main.GlobalTimeWrappedHourly * 1.6f;
-                Main.EntitySpriteDraw(texture, drawPosition + angle.ToRotationVector2() * radius, null, color, Projectile.rotation, origin, Projectile.scale, effects, 0);
+                float ang = MathHelper.TwoPi * i / draws + Main.GlobalTimeWrappedHourly * 2.5f;
+                Main.EntitySpriteDraw(texture, drawPos + ang.ToRotationVector2() * rad, null, heatColor, Projectile.rotation, origin, Projectile.scale, fx, 0);
+            }
+        }
+
+        private void DrawWeaponGlow(Texture2D texture, Vector2 drawPos, Vector2 origin, SpriteEffects fx, float flash)
+        {
+            Color baseGlow = rightState == RightState.AbyssalRupture
+                ? Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.WarningOrange, ruptureHeat * 0.65f)
+                : Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, 0.7f + chargeGlow * 0.3f);
+
+            float alpha = MathHelper.Clamp(chargeGlow * 0.5f + resonanceGlow * 0.45f + flash * 0.65f + ruptureHeat * 0.35f, 0f, 0.95f);
+            Color color = (baseGlow with { A = 0 }) * alpha;
+
+            int draws  = rightState == RightState.Locked ? 16 : 10;
+            float rad  = 2.2f + chargeGlow * 5.5f + resonanceGlow * 4f + flash * 5.5f;
+            for (int i = 0; i < draws; i++)
+            {
+                float ang = MathHelper.TwoPi * i / draws + Main.GlobalTimeWrappedHourly * 1.6f;
+                Main.EntitySpriteDraw(texture, drawPos + ang.ToRotationVector2() * rad, null, color, Projectile.rotation, origin, Projectile.scale, fx, 0);
             }
         }
 
         private void DrawMuzzleGlow(float flash)
         {
-            float charge = rightChargeTimer / (float)RightChargeFrames;
-            float power = Math.Max(flash, Math.Max(charge, resonanceGlow * 0.45f));
-            if (power <= 0.02f || Main.dedServ)
-                return;
+            float power = Math.Max(flash, Math.Max(chargeGlow * 0.75f, Math.Max(resonanceGlow * 0.48f, ruptureHeat * 0.65f)));
+            if (power <= 0.02f || Main.dedServ) return;
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-            Vector2 muzzle = GunTipPosition - Main.screenPosition;
-            Color color = (Color.Lerp(SeasSearingPalette.RadioactiveCyan, Color.White, 0.25f + power * 0.3f) with { A = 0 }) * power;
+            Texture2D star  = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Vector2 muzzle  = GunTipPosition - Main.screenPosition;
 
-            Main.EntitySpriteDraw(bloom, muzzle, null, color * 0.68f, Projectile.rotation, bloom.Size() * 0.5f, new Vector2(0.22f + power * 0.3f, 0.11f + power * 0.18f), SpriteEffects.None, 0);
-            for (int i = 0; i < 3; i++)
+            Color muzzleColor = rightState == RightState.AbyssalRupture
+                ? Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.WarningOrange, ruptureHeat)
+                : Color.Lerp(SeasSearingPalette.RadioactiveCyan, Color.White, 0.25f + power * 0.3f);
+
+            Color c = (muzzleColor with { A = 0 }) * power;
+
+            Main.EntitySpriteDraw(bloom, muzzle, null, c * 0.72f, Projectile.rotation, bloom.Size() * 0.5f,
+                new Vector2(0.24f + power * 0.38f, 0.12f + power * 0.24f), SpriteEffects.None, 0);
+
+            int starCount = rightState == RightState.Locked ? 5 : 3;
+            for (int i = 0; i < starCount; i++)
             {
-                float rotation = Projectile.rotation + MathHelper.TwoPi * i / 3f + Main.GlobalTimeWrappedHourly * 2f;
-                Main.EntitySpriteDraw(star, muzzle, null, color * 0.46f, rotation, star.Size() * 0.5f, new Vector2(0.12f, 0.9f + power * 1.2f), SpriteEffects.None, 0);
+                float rot = Projectile.rotation + MathHelper.TwoPi * i / starCount + Main.GlobalTimeWrappedHourly * 2.2f;
+                Main.EntitySpriteDraw(star, muzzle, null, c * 0.52f, rot, star.Size() * 0.5f,
+                    new Vector2(0.12f, 1.0f + power * 1.35f), SpriteEffects.None, 0);
+            }
+        }
+
+        // Glowing orbiting dots shown only during Locked state
+        private void DrawLockedOrbitCrown()
+        {
+            if (rightState != RightState.Locked || Main.dedServ) return;
+
+            Texture2D bloom    = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            float progress     = MathHelper.Clamp(rightStateTimer / (float)LockedToRuptureFrames, 0f, 1f);
+            int dotCount       = 6;
+            float orbitRadius  = 20f + progress * 14f;
+            Color dotColor = (Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.WarningOrange, progress) with { A = 0 })
+                             * (0.55f + progress * 0.35f);
+
+            for (int i = 0; i < dotCount; i++)
+            {
+                float ang = orbitAngle + MathHelper.TwoPi * i / dotCount;
+                Vector2 pos = GunTipPosition - Main.screenPosition + ang.ToRotationVector2() * orbitRadius;
+                float scale = 0.08f + progress * 0.06f;
+                Main.EntitySpriteDraw(bloom, pos, null, dotColor, 0f, bloom.Size() * 0.5f, scale, SpriteEffects.None, 0);
+            }
+
+            // Danger pulse ring as it approaches auto-rupture
+            if (progress > 0.7f)
+            {
+                Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+                float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (8f + progress * 12f));
+                Color warn  = (SeasSearingPalette.WarningOrange with { A = 0 }) * ((progress - 0.7f) / 0.3f * 0.7f);
+                Main.EntitySpriteDraw(ring, GunTipPosition - Main.screenPosition, null, warn, Main.GlobalTimeWrappedHourly * 3f,
+                    ring.Size() * 0.5f, (0.18f + progress * 0.24f) * pulse, SpriteEffects.None, 0);
             }
         }
 
@@ -415,23 +762,33 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             SeasSearingPlayer ssPlayer = Owner.GetModPlayer<SeasSearingPlayer>();
             float power = ssPlayer.PressureVisualPower;
-            if (power <= 0.02f || Main.dedServ)
-                return;
+            if (power <= 0.02f || Main.dedServ) return;
 
-            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D ring  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 center = Owner.Center - Main.screenPosition;
-            Color cyan = (SeasSearingPalette.RadioactiveCyan with { A = 0 }) * (0.12f + power * 0.2f);
+            Vector2 center  = Owner.Center - Main.screenPosition;
+
+            // Field color shifts with state
+            Color fieldColor = rightState == RightState.AbyssalRupture
+                ? Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.RadioactiveCyan, 1f - ruptureHeat * 0.6f)
+                : rightState == RightState.Locked
+                    ? SeasSearingPalette.PressureBlue
+                    : SeasSearingPalette.RadioactiveCyan;
+
+            Color cyan = (fieldColor with { A = 0 }) * (0.12f + power * 0.22f);
             Color deep = (SeasSearingPalette.DeepBlue with { A = 0 }) * (0.1f + power * 0.18f);
             float pulse = 0.95f + 0.05f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.5f);
 
-            Main.EntitySpriteDraw(bloom, center, null, deep * 0.55f, 0f, bloom.Size() * 0.5f, new Vector2(1.9f, 1.25f) * power * 0.72f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center, null, deep * 0.55f, 0f, bloom.Size() * 0.5f,
+                new Vector2(1.9f, 1.25f) * power * 0.72f, SpriteEffects.None, 0);
+
             for (int i = 0; i < 3; i++)
             {
-                float local = i / 3f;
+                float local    = i / 3f;
                 float rotation = Main.GlobalTimeWrappedHourly * (0.28f + local * 0.14f);
-                float scale = (1.65f + local * 0.74f + power * 0.35f) * pulse;
-                Main.EntitySpriteDraw(ring, center, null, (i == 0 ? cyan : deep) * (1f - local * 0.22f), rotation, ring.Size() * 0.5f, scale, SpriteEffects.None, 0);
+                float scale    = (1.65f + local * 0.74f + power * 0.35f) * pulse;
+                Main.EntitySpriteDraw(ring, center, null, (i == 0 ? cyan : deep) * (1f - local * 0.22f),
+                    rotation, ring.Size() * 0.5f, scale, SpriteEffects.None, 0);
             }
         }
     }

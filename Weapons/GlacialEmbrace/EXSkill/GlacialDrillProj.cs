@@ -8,8 +8,11 @@ using Terraria.ID;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.General;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.Passive;
 
-namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
+namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.EXSkill
 {
     public class GlacialDrillProj : ModProjectile
     {

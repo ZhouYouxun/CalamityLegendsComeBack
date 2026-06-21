@@ -8,8 +8,10 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.EXSkill;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.General;
 
-namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
+namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 {
     public class IceSpikeMinion : ModProjectile
     {

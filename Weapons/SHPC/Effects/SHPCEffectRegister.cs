@@ -39,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             EffectRegistry.RegisterEffect(new PurifiedGelEffect()); // 纯净凝胶
             EffectRegistry.RegisterEffect(new StormlionMandibleEffect()); // 风暴之颚
             EffectRegistry.RegisterEffect(new SulphuricScaleEffect()); // 硫磺鳞片
+            EffectRegistry.RegisterEffect(new AnodizedWulfrumMetalEffect()); // 电镀钨钢金属 45
 
             EffectRegistry.RegisterEffect(new EssenceofHavocEffect()); // 混沌精华 5
             EffectRegistry.RegisterEffect(new EssenceofSnowEffect()); // 冰川精华 6

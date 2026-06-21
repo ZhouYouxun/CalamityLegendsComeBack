@@ -7,7 +7,7 @@
 					Tooltip: "[GFB]"
 					Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
 					LeftClick: "[c/9AEAFF:Left Click: precision three-round burst. Each hit adds Abyssal Radiation Pollution.]"
-					RightClick: "[c/58FFDA:Right Click: charge a deep-sea resonance pulse that detonates every polluted enemy on the battlefield.]"
+					RightClick: "[c/58FFDA:Right Click: 3-stage Pressure Protocol. Hold to Charge → release for a Pressure Bolt that spawns homing satellites. Hold longer to Lock → release for a powerful bolt + 80-frame enhanced bursts. Hold to maximum to trigger Abyssal Rupture: 3 erupting geysers detonate all pollution, and left-click becomes a rapid-fire acid torrent for 2+ seconds.]"
 					Passive: "[c/4CD268:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
 					Ultimate: "[c/FF8A30:Press] [[c/FF8A30:{0}]] [c/FF8A30: to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"
@@ -36,6 +36,11 @@
 				SSDeathPollutionCloud.DisplayName: Death Pollution Cloud
 				SSPollutionSpike.DisplayName: Abyssal Pollution Spike
 				SSPollutionVortex.DisplayName: Abyssal Pollution Vortex
+				SeasSearingPressureBolt.DisplayName: Abyssal Pressure Bolt
+				SeasSearingSatellite.DisplayName: Pressure Satellite
+				SeasSearingAbyssalGeyser.DisplayName: Abyssal Geyser
+				SeasSearingVentShot.DisplayName: Pressure Vent Round
+				SeasSearingTorrentShot.DisplayName: Abyssal Torrent Shot
 			}
 		}
 

@@ -8,6 +8,9 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityMod;
 using CalamityMod.Items;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.General;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.Passive;
 
 namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
 {
@@ -166,28 +169,59 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             Player player = Main.LocalPlayer;
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
 
-            string modeName = modPlayer.CurrentMode switch
-            {
-                0 => "[斩击模式 - Cleave Mode]",
-                1 => "[突刺模式 - Pierce Mode]",
-                2 => "[打击模式 - Strike Mode]",
-                _ => "[未知模式]"
-            };
-
             string modeKey = KeybindSystem.LegendaryWeaponFormSwitch?.GetAssignedKeys().FirstOrDefault() ?? "LeftControl";
             string skillKey = KeybindSystem.LegendarySkill?.GetAssignedKeys().FirstOrDefault() ?? "P";
 
-            Color modeColor = modPlayer.CurrentMode switch
-            {
-                0 => Color.LimeGreen,
-                1 => Color.Cyan,
-                2 => Color.OrangeRed,
-                _ => Color.White
-            };
+            // 当前模式名
+            string modeName = this.GetLocalizedValue("ModeName" + modPlayer.CurrentMode);
 
-            tooltips.Add(new TooltipLine(Mod, "GlacialMode", $"当前战斗形态: {modeName}") { OverrideColor = modeColor });
-            tooltips.Add(new TooltipLine(Mod, "GlacialKeys", $"[按住左键] 释放特殊蓄力技能 | [按下 {modeKey}] 切换攻击形态\n[按下 {skillKey}] 释放终结技：至臻极冰之樊寒神钻 (满240能: {modPlayer.UltimateCharge}/240)") { OverrideColor = Color.LightSkyBlue });
-            tooltips.Add(new TooltipLine(Mod, "GlacialCombo", $"霜冻连击: x{modPlayer.ComboCount} (+{modPlayer.LifeRegenBonus} 回血, +{modPlayer.DefenseBonus} 防御)") { OverrideColor = Color.LightGoldenrodYellow });
+            // 组装 Intro (当前模式 + 切换提示)
+            string intro = string.Format(this.GetLocalizedValue("GE_Intro"), modeName, modeKey);
+
+            // 基础左键
+            string leftBase = this.GetLocalizedValue("GE_Left");
+
+            // 当前模式的冰刺行为
+            string leftMode = this.GetLocalizedValue("GE_Left" + modPlayer.CurrentMode);
+
+            // 当前模式的蓄力攻击
+            string charge = this.GetLocalizedValue("GE_Charge" + modPlayer.CurrentMode);
+
+            // 被动 - 霜冻节奏
+            string qte = string.Format(this.GetLocalizedValue("GE_QTE"), modeKey);
+
+            // 连击奖励 (含动态数值)
+            string combo = string.Format(this.GetLocalizedValue("GE_Combo"),
+                modPlayer.ComboCount, modPlayer.LifeRegenBonus, modPlayer.DefenseBonus);
+
+            // 冰川神性 (10+连击)
+            string divinity = this.GetLocalizedValue("GE_Divinity");
+
+            // 被动 - 极光旋律
+            string aurora = this.GetLocalizedValue("GE_AuroraMelody");
+
+            // 终结技
+            string ultimate = string.Format(this.GetLocalizedValue("GE_Ultimate"),
+                skillKey, modPlayer.UltimateCharge);
+
+            // 传奇记录
+            string legendEnd = Main.keyState.PressingShift()
+                ? this.GetLocalizedValue("LegendaryText")
+                : this.GetLocalizedValue("LegendaryHint");
+
+            string finalText =
+                intro + "\n\n" +
+                leftBase + "\n\n" +
+                leftMode + "\n\n" +
+                charge + "\n\n" +
+                qte + "\n\n" +
+                combo + "\n\n" +
+                divinity + "\n\n" +
+                aurora + "\n\n" +
+                ultimate + "\n\n" +
+                legendEnd + "\n";
+
+            tooltips.FindAndReplace("[GFB]", finalText);
         }
     }
 }

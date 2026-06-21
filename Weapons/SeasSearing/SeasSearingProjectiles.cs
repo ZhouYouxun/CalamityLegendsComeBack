@@ -1151,6 +1151,635 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         }
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // NEW: SeasSearingPressureBolt
+    // Fired on right-click release. Large, fast, pierces 3-5.
+    // On hit or timeout: bursts into 8 homing satellite orbs.
+    // ──────────────────────────────────────────────────────────────────────────
+    internal sealed class SeasSearingPressureBolt : ModProjectile, ILocalizedModType
+    {
+        private static readonly Color HeadColor = new(210, 255, 252);
+        private static readonly Color TrailColor = new(30, 100, 200);
+
+        private bool Strong => Projectile.ai[0] > 0f;
+        private bool satellitesSpawned;
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "Terraria/Images/Projectile_14";
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Terraria.ModLoader.ModContent.ProjectileType<SeasSearingPressureBolt>()] = 22;
+            ProjectileID.Sets.TrailingMode[Terraria.ModLoader.ModContent.ProjectileType<SeasSearingPressureBolt>()] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width  = 18;
+            Projectile.height = 8;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.tileCollide = true;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = 3;   // corrected to 5 on first AI tick when Strong
+            Projectile.timeLeft  = 420;
+            Projectile.extraUpdates = 2;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown  = 12;
+            Projectile.ArmorPenetration = 24;
+        }
+
+        public override void AI()
+        {
+            // Set correct penetrate from Strong flag on first tick
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                Projectile.penetrate  = Projectile.ai[0] > 0f ? 5 : 3;
+                Projectile.netUpdate  = true;
+            }
+
+            Projectile.rotation = Projectile.velocity.ToRotation();
+
+            Color glow = Strong ? SeasSearingPalette.PressureBlue : SeasSearingPalette.RadioactiveCyan;
+            Lighting.AddLight(Projectile.Center, glow.ToVector3() * 0.42f);
+
+            // Drip acid trail every 3 physics ticks
+            if (!Main.dedServ && (int)Projectile.localAI[1]++ % 3 == 0)
+            {
+                Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center - dir * Main.rand.NextFloat(4f, 16f) + Main.rand.NextVector2Circular(2f, 2f),
+                    Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald,
+                    -dir.RotatedByRandom(0.28f) * Main.rand.NextFloat(0.5f, 2.2f),
+                    110,
+                    Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.RadioactiveCyan, Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.55f, 0.95f + (Projectile.ai[0] > 0 ? 0.15f : 0f)));
+                d.noGravity = true;
+            }
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.ScalingArmorPenetration += 0.12f;
+            if (Strong)
+                modifiers.FinalDamage *= 1.18f;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, Strong ? 9 : 5);
+            target.AddBuff(BuffID.Venom, 240);
+            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 240);
+            SpawnSatellites(target.Center);
+            SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 18, 4.5f, 8f, 1.1f);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (!satellitesSpawned)
+                SpawnSatellites(Projectile.Center);
+            SeasSearingVisualUtility.SpawnAbyssDust(Projectile.Center, 12, 3.2f, 6f, 0.9f);
+            SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 3.5f, 10f, 18, SeasSearingPalette.PressureBlue);
+        }
+
+        private void SpawnSatellites(Vector2 center)
+        {
+            if (satellitesSpawned || Main.myPlayer != Projectile.owner) return;
+            satellitesSpawned = true;
+
+            int count    = Strong ? 8 : 5;
+            int satDmg   = Math.Max(1, Projectile.damage / 3);
+            for (int i = 0; i < count; i++)
+            {
+                float angle = MathHelper.TwoPi * i / count + Main.rand.NextFloat(0.2f);
+                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(3.5f, 6.5f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    center + angle.ToRotationVector2() * 18f,
+                    vel,
+                    Terraria.ModLoader.ModContent.ProjectileType<SeasSearingSatellite>(),
+                    satDmg, 1.5f, Projectile.owner);
+            }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D tex   = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = Terraria.ModLoader.ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 origin  = tex.Size() * 0.5f;
+            Vector2 bOrigin = bloom.Size() * 0.5f;
+            Color head      = Strong ? SeasSearingPalette.PressureBlue : HeadColor;
+            Color tail      = TrailColor;
+
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero) continue;
+                float t = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Color c = Color.Lerp(tail, head, t) * (0.06f + t * 0.55f);
+                c.A = 0;
+                Main.EntitySpriteDraw(bloom, pos, null, c * 0.78f, Projectile.rotation, bOrigin, new Vector2(0.18f, 0.055f) * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex,   pos, null, c,          Projectile.rotation, origin,  Projectile.scale * (0.9f + t * 0.25f), SpriteEffects.None, 0);
+            }
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, (head with { A = 0 }) * 0.7f, Projectile.rotation, bOrigin, new Vector2(0.22f, 0.06f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(tex,   Projectile.Center - Main.screenPosition, null, Color.White,                 Projectile.rotation, origin,  Projectile.scale * 1.15f, SpriteEffects.None, 0);
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // NEW: SeasSearingSatellite
+    // Small homing bubble spawned in a ring by SeasSearingPressureBolt.
+    // Spirals toward nearest enemy and deals continuous damage.
+    // ──────────────────────────────────────────────────────────────────────────
+    internal sealed class SeasSearingSatellite : ModProjectile, ILocalizedModType
+    {
+        private float orbitPhase;
+        private bool  hasTarget;
+        private int   targetWho = -1;
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width  = 10;
+            Projectile.height = 10;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate  = -1;
+            Projectile.timeLeft   = 150;
+            Projectile.usesLocalNPCImmunity  = true;
+            Projectile.localNPCHitCooldown   = 18;
+        }
+
+        public override void AI()
+        {
+            orbitPhase += 0.12f;
+
+            // Find or maintain target
+            if (Main.myPlayer == Projectile.owner)
+            {
+                if (!hasTarget || targetWho < 0 || !Main.npc.IndexInRange(targetWho) || !Main.npc[targetWho].CanBeChasedBy())
+                    FindTarget();
+            }
+
+            if (hasTarget && Main.npc.IndexInRange(targetWho) && Main.npc[targetWho].CanBeChasedBy())
+            {
+                NPC target = Main.npc[targetWho];
+                Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                // Perpendicular offset creates spiral orbit approach
+                Vector2 perpendicular = new(-toTarget.Y, toTarget.X) * (float)Math.Sin(orbitPhase) * 3.5f;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, toTarget * 10f + perpendicular, 0.14f);
+            }
+            else
+            {
+                // Drift and slow down
+                Projectile.velocity *= 0.97f;
+            }
+
+            // Speed cap
+            if (Projectile.velocity.LengthSquared() > 12f * 12f)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * 12f;
+
+            // Fade out in last 30 frames
+            float age = 1f - Projectile.timeLeft / 150f;
+            Lighting.AddLight(Projectile.Center, SeasSearingPalette.PressureBlue.ToVector3() * (0.25f - age * 0.1f));
+
+            // Trail dust
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    DustID.GemDiamond,
+                    -Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                    110,
+                    Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.RadioactiveCyan, age),
+                    Main.rand.NextFloat(0.5f, 0.85f));
+                d.noGravity = true;
+            }
+        }
+
+        private void FindTarget()
+        {
+            float bestDist = 400f * 400f;
+            int best = -1;
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC n = Main.npc[i];
+                if (!n.CanBeChasedBy()) continue;
+                float d = Vector2.DistanceSquared(Projectile.Center, n.Center);
+                if (d < bestDist) { bestDist = d; best = i; }
+            }
+            targetWho = best;
+            hasTarget = best >= 0;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, 2, 6 * 60, fromSpread: true);
+            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 120);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SeasSearingVisualUtility.SpawnAbyssDust(Projectile.Center, 8, 2.8f, 5f, 0.8f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D bloom = Terraria.ModLoader.ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            float opacity = MathHelper.Clamp(Projectile.timeLeft / 30f, 0f, 1f);
+            Color c = (SeasSearingPalette.PressureBlue with { A = 0 }) * opacity;
+            Color c2 = (SeasSearingPalette.RadioactiveCyan with { A = 0 }) * opacity * 0.55f;
+
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero) continue;
+                float t = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(bloom, pos, null, c2 * (t * 0.6f), 0f, bloom.Size() * 0.5f, 0.07f + t * 0.06f, SpriteEffects.None, 0);
+            }
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, c,  0f, bloom.Size() * 0.5f, 0.14f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, c2, 0f, bloom.Size() * 0.5f, 0.08f, SpriteEffects.None, 0);
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // NEW: SeasSearingAbyssalGeyser
+    // Delayed eruptive column at cursor position (AbyssalRupture).
+    // ai[0] = delay frames before becoming active.
+    // ──────────────────────────────────────────────────────────────────────────
+    internal sealed class SeasSearingAbyssalGeyser : ModProjectile, ILocalizedModType
+    {
+        private const int ActiveFrames = 28;
+        private bool activated;
+        private int  activeTimer;
+
+        private int DelayFrames => (int)Projectile.ai[0];
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        public override void SetDefaults()
+        {
+            Projectile.width      = 28;
+            Projectile.height     = 220;
+            Projectile.friendly   = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate  = -1;
+            Projectile.timeLeft   = 200;   // generous lifetime; delay+active always fits
+            Projectile.usesLocalNPCImmunity    = true;
+            Projectile.localNPCHitCooldown     = -1;
+        }
+
+        public override bool? CanDamage() => activated && activeTimer >= 2;
+
+        public override void AI()
+        {
+            if (!activated)
+            {
+                // localAI[1] counts UP; compare against delay threshold from ai[0]
+                float delayThresh = Projectile.ai[0];
+                float progress = delayThresh > 0f ? Projectile.localAI[1] / delayThresh : 1f;
+                Projectile.localAI[1]++;
+
+                // Warning phase: pulsing ring at base
+                Projectile.friendly = false;
+                if (!Main.dedServ && Main.GameUpdateCount % 6 == 0)
+                {
+                    SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.5f, 10f, 12,
+                        Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.WarningOrange, progress));
+                }
+
+                if (Projectile.localAI[1] >= Projectile.ai[0])
+                {
+                    activated = true;
+                    Projectile.friendly = true;
+                    SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 8f, 14f, 28, SeasSearingPalette.WarningOrange);
+                    SeasSearingVisualUtility.SpawnAbyssDust(Projectile.Center, 45, 9f, 16f, 1.5f);
+                    SeasSearingVisualUtility.ShakeAt(Projectile.Center, 5.5f, 1400f);
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.76f, Pitch = -0.42f }, Projectile.Center);
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.58f, Pitch = -0.58f }, Projectile.Center);
+                }
+                return;
+            }
+
+            activeTimer++;
+            if (activeTimer > ActiveFrames)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            float t = activeTimer / (float)ActiveFrames;
+            Lighting.AddLight(Projectile.Center, Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.RadioactiveCyan, t).ToVector3() * 0.65f);
+
+            // Geyser column particle eruption
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                float rx = Main.rand.NextFloat(-12f, 12f);
+                float ry = Main.rand.NextFloat(-100f, 10f);
+                Vector2 pos = Projectile.Center + new Vector2(rx, ry);
+                Vector2 vel = new(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-8f, -3f));
+                Color col   = Main.rand.NextBool(3)
+                    ? SeasSearingPalette.WarningOrange
+                    : Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, Main.rand.NextFloat());
+                Dust d = Dust.NewDustPerfect(pos, Main.rand.NextBool(2) ? DustID.Water : DustID.GemEmerald, vel, 110, col, Main.rand.NextFloat(0.65f, 1.25f));
+                d.noGravity = true;
+            }
+
+            // Spawn a persistent cloud at mid-life
+            if (activeTimer == ActiveFrames / 2 && Main.myPlayer == Projectile.owner)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    Terraria.ModLoader.ModContent.ProjectileType<SeasSearingFalloutCloud>(),
+                    Math.Max(1, Projectile.damage / 4),
+                    0f, Projectile.owner, 20f);
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, 12);
+            target.AddBuff(BuffID.Venom, 360);
+            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 420);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (!activated) return false;
+
+            Texture2D bloom = Terraria.ModLoader.ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring  = Terraria.ModLoader.ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            float t         = activeTimer / (float)ActiveFrames;
+            float fade      = (float)Math.Sin(t * MathHelper.Pi);
+            Vector2 center  = Projectile.Center - Main.screenPosition;
+
+            Color orange = (SeasSearingPalette.WarningOrange with { A = 0 }) * fade;
+            Color cyan   = (SeasSearingPalette.RadioactiveCyan with { A = 0 }) * fade;
+
+            // Wide horizontal burst at base
+            Main.EntitySpriteDraw(bloom, center, null, orange * 0.7f, 0f, bloom.Size() * 0.5f,
+                new Vector2(1.8f * (0.6f + t * 0.8f), 0.22f), SpriteEffects.None, 0);
+            // Tall vertical column
+            Main.EntitySpriteDraw(bloom, center, null, cyan * 0.55f, 0f, bloom.Size() * 0.5f,
+                new Vector2(0.18f, 3.8f * fade), SpriteEffects.None, 0);
+            // Rotating ring at base
+            Main.EntitySpriteDraw(ring, center, null, orange * 0.8f,
+                Main.GlobalTimeWrappedHourly * 4f, ring.Size() * 0.5f, 0.22f + t * 0.55f, SpriteEffects.None, 0);
+
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // NEW: SeasSearingVentShot
+    // Enhanced left-click during VentCooldown.
+    // Brighter trail; on hit spawns 2 diverging pressure orbs.
+    // ──────────────────────────────────────────────────────────────────────────
+    internal sealed class SeasSearingVentShot : ModProjectile, ILocalizedModType
+    {
+        private static readonly Color VentHead = new(200, 240, 255);
+        private static readonly Color VentTail = new(40, 90, 200);
+
+        private int Stage => (int)Projectile.ai[1];
+        private bool orbsSpawned;
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "Terraria/Images/Projectile_14";
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 20;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width   = 12;
+            Projectile.height  = 6;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.tileCollide = true;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate   = 4;
+            Projectile.timeLeft    = 480;
+            Projectile.extraUpdates = 4;
+            Projectile.usesLocalNPCImmunity    = true;
+            Projectile.localNPCHitCooldown     = 10;
+            Projectile.ArmorPenetration = 28;
+        }
+
+        public override void AI()
+        {
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                int stage = Stage;
+                Projectile.penetrate = stage >= 3 ? 6 : (stage >= 1 ? 5 : 4);
+                Projectile.netUpdate = true;
+            }
+
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.20f, 0.32f));
+
+            if (Projectile.localAI[1]++ < 2f) return;
+
+            if (!Main.dedServ && Main.rand.NextBool())
+            {
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(4f, 20f),
+                    DustID.GemEmerald,
+                    -Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.18f) * Main.rand.NextFloat(0.6f, 2.2f),
+                    100,
+                    Color.Lerp(VentTail, VentHead, Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.5f, 0.9f));
+                d.noGravity = true;
+            }
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            float dist = Vector2.Distance(Main.player[Projectile.owner].Center, target.Center);
+            modifiers.FinalDamage *= 1f + Utils.GetLerpValue(380f, 1050f, dist, true) * 0.30f;
+            modifiers.ScalingArmorPenetration += 0.10f;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            int stacks = hit.Crit ? 7 : 5;
+            if (Stage >= 2) stacks++;
+            if (Stage >= 3) stacks++;
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, stacks);
+            target.AddBuff(BuffID.Venom, 260);
+            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 260);
+
+            SpawnPressureOrbs(target.Center);
+            SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 20, 5f, 6f, 1.1f);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (!orbsSpawned) SpawnPressureOrbs(Projectile.Center);
+            SeasSearingVisualUtility.SpawnAbyssDust(Projectile.Center, 12, 3f, 5f, 0.8f);
+        }
+
+        private void SpawnPressureOrbs(Vector2 center)
+        {
+            if (orbsSpawned || Main.myPlayer != Projectile.owner) return;
+            orbsSpawned = true;
+
+            Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            int orbDmg  = Math.Max(1, (int)(Projectile.damage * 0.45f));
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Vector2 orbVel = dir.RotatedBy(MathHelper.ToRadians(35f * i)) * 10f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(), center, orbVel,
+                    Terraria.ModLoader.ModContent.ProjectileType<SeasSearingSatellite>(),
+                    orbDmg, 1f, Projectile.owner);
+            }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D tex   = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = Terraria.ModLoader.ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 origin  = tex.Size() * 0.5f;
+            Vector2 bOrigin = bloom.Size() * 0.5f;
+
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero) continue;
+                float t = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Color c = Color.Lerp(VentTail, VentHead, t) * (0.06f + t * 0.52f);
+                c.A = 0;
+                Main.EntitySpriteDraw(bloom, pos, null, c * 0.80f, Projectile.rotation, bOrigin, new Vector2(0.14f, 0.042f) * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex,   pos, null, c,          Projectile.rotation, origin,  Projectile.scale * (0.85f + t * 0.3f), SpriteEffects.None, 0);
+            }
+
+            Color hc = (VentHead with { A = 0 }) * 0.75f;
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, hc, Projectile.rotation, bOrigin, new Vector2(0.18f, 0.052f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(tex,   Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale * 1.12f, SpriteEffects.None, 0);
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // NEW: SeasSearingTorrentShot
+    // Rapid-fire pierce shot during AbyssalRupture.
+    // Orange-tinted; pierces all; drops acid puddles as it travels.
+    // ──────────────────────────────────────────────────────────────────────────
+    internal sealed class SeasSearingTorrentShot : ModProjectile, ILocalizedModType
+    {
+        private static readonly Color TorrentHead = new(255, 180, 60);
+        private static readonly Color TorrentTail = new(60, 160, 200);
+
+        public new string LocalizationCategory => "Projectiles.SeasSearing";
+        public override string Texture => "Terraria/Images/Projectile_14";
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 16;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
+        public override void SetDefaults()
+        {
+            Projectile.width   = 10;
+            Projectile.height  = 4;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.tileCollide = true;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate   = -1;   // pierce all
+            Projectile.timeLeft    = 380;
+            Projectile.extraUpdates = 4;
+            Projectile.usesLocalNPCImmunity    = true;
+            Projectile.localNPCHitCooldown     = 8;
+            Projectile.ArmorPenetration = 22;
+        }
+
+        public override void AI()
+        {
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, new Vector3(0.22f, 0.12f, 0.04f));
+
+            // Drop small acid puddle every 8 physics ticks
+            if (!Main.dedServ && (int)Projectile.localAI[0]++ % 8 == 0)
+            {
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(2f, 2f),
+                    DustID.GemEmerald,
+                    -Projectile.velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0.3f, 1.5f),
+                    115,
+                    Color.Lerp(TorrentTail, TorrentHead, Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.5f, 0.9f));
+                d.noGravity = true;
+            }
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.ScalingArmorPenetration += 0.18f;
+            modifiers.DefenseEffectiveness   *= 0.55f;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, 4);
+            target.AddBuff(BuffID.Venom, 200);
+            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 200);
+            SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 10, 3.5f, 5f, 0.9f);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SeasSearingVisualUtility.SpawnAbyssDust(Projectile.Center, 8, 2.5f, 4f, 0.75f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D tex   = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = Terraria.ModLoader.ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 origin  = tex.Size() * 0.5f;
+            Vector2 bOrigin = bloom.Size() * 0.5f;
+
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero) continue;
+                float t = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Color c = Color.Lerp(TorrentTail, TorrentHead, t) * (0.05f + t * 0.48f);
+                c.A = 0;
+                Main.EntitySpriteDraw(bloom, pos, null, c * 0.70f, Projectile.rotation, bOrigin, new Vector2(0.10f, 0.032f) * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex,   pos, null, c,          Projectile.rotation, origin,  Projectile.scale, SpriteEffects.None, 0);
+            }
+
+            Color hc = (TorrentHead with { A = 0 }) * 0.65f;
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, hc, Projectile.rotation, bOrigin, new Vector2(0.14f, 0.04f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(tex,   Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+            return false;
+        }
+    }
+
     internal sealed class SeasSearingFalloutRain : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.SeasSearing";

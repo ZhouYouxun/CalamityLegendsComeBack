@@ -1,7 +1,8 @@
 using Terraria;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.GlacialEmbrace.General;
 
-namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
+namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.Passive
 {
     public class GlacialEmbraceBuff : ModBuff
     {

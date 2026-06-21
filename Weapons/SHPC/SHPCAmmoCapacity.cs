@@ -49,7 +49,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             75, // EffectID 41: Pearl Shard
             100, // EffectID 42: Darksun Fragment
             1, // EffectID 43: Cynosure
-            225 // EffectID 44: Core of Calamity
+            225, // EffectID 44: Core of Calamity
+            50 // EffectID 45: Anodized Wulfrum Metal
         };
 
         public static int GetCapacity(int effectID)
