@@ -115,6 +115,33 @@ Mods: {
 						【注意：这个道具很破坏平衡，想好了再开启】
 						'''
 				}
+
+				Prime2041Summoner: {
+					DisplayName: 远古机械颅骨 (双头 AI 版)
+					Tooltip:
+						'''
+						召唤 2024 年灾厄模组旧版本的机械骷髅王 (双头大师 AI版)
+						仅在夜间可用
+						'''
+				}
+
+				Destroyer2041Summoner: {
+					// DisplayName: Ancient Mechanical Worm (2024 AI)
+					/* Tooltip:
+						'''
+						Summons the 2024 Calamity Destroyer AI variant
+						Only usable at night
+						''' */
+				}
+
+				Twins2041Summoner: {
+					// DisplayName: Ancient Mechanical Eye (2024 AI)
+					/* Tooltip:
+						'''
+						Summons the 2024 Calamity Twins AI variant
+						Only usable at night
+						''' */
+				}
 			}
 
 			LegendaryEmblem: {
@@ -211,6 +238,20 @@ Mods: {
 			LegendarySkill.DisplayName: 传奇技能
 			LegendaryWeaponFormSwitch.DisplayName: 传奇武器形态切换
 			SHPCLoadingUI.DisplayName: SHPC界面
+		}
+
+		NPCs: {
+			Prime2041.DisplayName: 机械骷髅王 Prime (2024 大师 AI版)
+			Prime2041SecondHead.DisplayName: 机械骷髅王 Prime (2024 大师 AI版) - 副头
+			Prime2041Saw.DisplayName: 机械吴克锯 (2024)
+			Prime2041Laser.DisplayName: 机械吴克激光 (2024)
+			Prime2041Vice.DisplayName: 机械吴克钳 (2024)
+			Prime2041Cannon.DisplayName: 机械吴克炮 (2024)
+			// Destroyer2041Head.DisplayName: The Destroyer (2024 Master AI)
+			// Destroyer2041Body.DisplayName: The Destroyer (2024 Master AI)
+			// Destroyer2041Tail.DisplayName: The Destroyer (2024 Master AI)
+			// Twins2041Retinazer.DisplayName: Retinazer (2024 Master AI)
+			// Twins2041Spazmatism.DisplayName: Spazmatism (2024 Master AI)
 		}
 	}
 }

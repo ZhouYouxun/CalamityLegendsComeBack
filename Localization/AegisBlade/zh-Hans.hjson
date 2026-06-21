@@ -27,6 +27,13 @@ Mods: {
 						[c/FFD966:而这把剑，正是他意志的延伸：护卫者的锋芒。]
 						'''
 				}
+
+				Summon: {
+					GlacialEmbrace: {
+						// DisplayName: Glacial Embrace
+						// Tooltip: ""
+					}
+				}
 			}
 		}
 
@@ -39,6 +46,7 @@ Mods: {
 			AegisWallProjectile.DisplayName: 庇护土墙
 			AegisUltimateHand.DisplayName: 金色神手
 			AegisEnergyUI.DisplayName: 庇护能量条
+			// LeonidUltimateUI.DisplayName: Leonid Ultimate U I
 		}
 	}
 }

@@ -110,6 +110,33 @@ Mods: {
 						[WARNING: This item severely breaks game balance. Think twice before opening!]
 						'''
 				}
+
+				Prime2041Summoner: {
+					DisplayName: Ancient Mechanical Skull (Double-Head AI)
+					Tooltip:
+						'''
+						Summons the 2024 Calamity Skeletron Prime Master AI variant
+						Only usable at night
+						'''
+				}
+
+				Destroyer2041Summoner: {
+					DisplayName: Ancient Mechanical Worm (2024 AI)
+					Tooltip:
+						'''
+						Summons the 2024 Calamity Destroyer AI variant
+						Only usable at night
+						'''
+				}
+
+				Twins2041Summoner: {
+					DisplayName: Ancient Mechanical Eye (2024 AI)
+					Tooltip:
+						'''
+						Summons the 2024 Calamity Twins AI variant
+						Only usable at night
+						'''
+				}
 			}
 
 			LegendaryEmblem: {
@@ -206,6 +233,20 @@ Mods: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
 			SHPCLoadingUI.DisplayName: SHPC Loading UI
+		}
+
+		NPCs: {
+			Prime2041.DisplayName: Skeletron Prime (2024 Master AI)
+			Prime2041SecondHead.DisplayName: Skeletron Prime (2024 Master AI) - Second Head
+			Prime2041Saw.DisplayName: Prime Saw (2024)
+			Prime2041Laser.DisplayName: Prime Laser (2024)
+			Prime2041Vice.DisplayName: Prime Vice (2024)
+			Prime2041Cannon.DisplayName: Prime Cannon (2024)
+			Destroyer2041Head.DisplayName: The Destroyer (2024 Master AI)
+			Destroyer2041Body.DisplayName: The Destroyer (2024 Master AI)
+			Destroyer2041Tail.DisplayName: The Destroyer (2024 Master AI)
+			Twins2041Retinazer.DisplayName: Retinazer (2024 Master AI)
+			Twins2041Spazmatism.DisplayName: Spazmatism (2024 Master AI)
 		}
 	}
 }

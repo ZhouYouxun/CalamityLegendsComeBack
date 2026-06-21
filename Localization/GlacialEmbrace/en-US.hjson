@@ -3,32 +3,20 @@ Mods: {
 		Items: {
 			GlacialEmbrace: {
 				DisplayName: Glacial Embrace (Remake)
-				Tooltip: "Passives: Frost Rhythm & Aurora Melody"
+				Tooltip: Passives: Frost Rhythm & Aurora Melody
 			}
 		}
+
 		Projectiles: {
-			IceBlockMinion: {
-				DisplayName: Glacial Core
-			}
-			IceSpikeMinion: {
-				DisplayName: Glacial Ice Spike
-			}
-			GlacialEmbraceChargeHoldout: {
-				DisplayName: Glacial Charge Holdout
-			}
-			IceBladeProj: {
-				DisplayName: Glacial Cleaver Blade
-			}
-			IceWedgeProj: {
-				DisplayName: Glacial Piercing Wedge
-			}
-			IcePillarProj: {
-				DisplayName: Glacial Strike Pillar
-			}
-			GlacialDrillProj: {
-				DisplayName: Glacial Diamond Drill Finisher
-			}
+			IceBlockMinion.DisplayName: Glacial Core
+			IceSpikeMinion.DisplayName: Glacial Ice Spike
+			GlacialEmbraceChargeHoldout.DisplayName: Glacial Charge Holdout
+			IceBladeProj.DisplayName: Glacial Cleaver Blade
+			IceWedgeProj.DisplayName: Glacial Piercing Wedge
+			IcePillarProj.DisplayName: Glacial Strike Pillar
+			GlacialDrillProj.DisplayName: Glacial Diamond Drill Finisher
 		}
+
 		Buffs: {
 			GlacialEmbraceBuff: {
 				DisplayName: Glacial Embrace

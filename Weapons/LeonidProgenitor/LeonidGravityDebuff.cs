@@ -7,6 +7,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     public class LeonidGravityDebuff : ModBuff
     {
+        public override string Texture => "CalamityLegendsComeBack/Weapons/GlacialEmbrace/GlacialEmbraceBuff";
+
         public override void SetStaticDefaults()
         {
             Main.buffNoTimeDisplay[Type] = false;

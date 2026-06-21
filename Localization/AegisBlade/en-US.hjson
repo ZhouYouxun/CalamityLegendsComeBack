@@ -27,6 +27,13 @@ Mods: {
 						[c/FFD966:And this sword was the extension of his will: the edge of a guardian.]
 						'''
 				}
+
+				Summon: {
+					GlacialEmbrace: {
+						DisplayName: Glacial Embrace
+						Tooltip: ""
+					}
+				}
 			}
 		}
 
@@ -39,6 +46,7 @@ Mods: {
 			AegisWallProjectile.DisplayName: Aegis Earth Wall
 			AegisUltimateHand.DisplayName: Golden Hand
 			AegisEnergyUI.DisplayName: Aegis Energy Bar
+			LeonidUltimateUI.DisplayName: Leonid Ultimate U I
 		}
 	}
 }

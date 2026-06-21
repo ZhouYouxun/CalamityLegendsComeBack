@@ -12,10 +12,7 @@ Mods: {
 						[c/99CCFF:偏转最多7次后弹射向最近敌怪。每次偏转/弹射增加速度与4%倍率。]
 						[c/9AD8FF:注入的金属锭之力会在左键陨星命中、弹射以及终结技等过程中生效。]
 						'''
-					StealthLeftClick:
-						'''
-						[c/B7A4FF:潜伏左键：在鼠标斜上方生成7颗狮源陨星朝斜下方落下，若附近有反射陨星则优先偏转。]
-						'''
+					StealthLeftClick: "[c/B7A4FF:潜伏左键：在鼠标斜上方生成7颗狮源陨星朝斜下方落下，若附近有反射陨星则优先偏转。]"
 					RightClick:
 						'''
 						[c/8DEBFF:右键：长按略微降低移速并于身前蓄力小行星，松开推向鼠标，碰撞释放7颗逐渐减速并悬停的反射陨星。]
@@ -144,6 +141,7 @@ Mods: {
 				LeonidLionHead.DisplayName: 狮头虚影
 				LeonidGravityField.DisplayName: 狮子座回响重力场
 				LeonidUltimateUI.DisplayName: 终结能量条
+				// LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
 			}
 		}
 

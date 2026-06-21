@@ -12,10 +12,7 @@ Mods: {
 						[c/99CCFF:Redirects up to 7 times, then shoots towards the nearest enemy, gaining speed and +4% damage multiplier per bounce.]
 						[c/9AD8FF:Infused metal bar powers apply during small comet hits, bounces, and ultimate meteor impacts.]
 						'''
-					StealthLeftClick:
-						'''
-						[c/B7A4FF:Stealth Left: Spawns 7 comets in the upper-diagonal of the cursor that rain down, prioritizing redirecting towards reflective meteors.]
-						'''
+					StealthLeftClick: "[c/B7A4FF:Stealth Left: Spawns 7 comets in the upper-diagonal of the cursor that rain down, prioritizing redirecting towards reflective meteors.]"
 					RightClick:
 						'''
 						[c/8DEBFF:Right Click: Hold to slow movement speed and charge an asteroid. Release to launch. On impact, it splits into 7 decelerating, hovering reflective comets.]
@@ -144,6 +141,7 @@ Mods: {
 				LeonidLionHead.DisplayName: Roaring Lion Head
 				LeonidGravityField.DisplayName: Leonid Echo Gravity Field
 				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
+				LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
 			}
 		}
 
