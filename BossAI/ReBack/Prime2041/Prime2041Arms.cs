@@ -1409,7 +1409,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
                                 damage = (int)(damage * secondMechMultiplier);
                         }
 
-                        float rocketSpeed = 10f;
+                        float rocketSpeed = 10f; 
                         Vector2 cannonSpreadTargetDist = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * rocketSpeed;
                         int numProj = bossRush ? 5 : 3;
                         float rotation = MathHelper.ToRadians(bossRush ? 15 : 9);
