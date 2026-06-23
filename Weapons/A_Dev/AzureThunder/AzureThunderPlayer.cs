@@ -42,7 +42,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         // holdingAzureThunder 每帧重置，只有物品 HoldItem 会重新置 true。
         private bool holdingAzureThunder;
+        private bool dashHeavyStrikeReady;
         private bool wasUltimateReady;
+        private int retainedComboIndex;
+        private int retainedComboTimer;
         private int autoGroundSwordTimer = AutoGroundSwordInterval;
         private int ultimateAutoGainTimer;
 
@@ -114,6 +117,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Player.body = harmonyBodySlot;
             if (harmonyLegsSlot >= 0)
                 Player.legs = harmonyLegsSlot;
+
+            for (int i = 0; i < Player.hideVisibleAccessory.Length; i++)
+                Player.hideVisibleAccessory[i] = true;
+
+            Player.wings = 0;
+            Player.cWings = 0;
         }
 
         public override void UpdateDead()
@@ -126,6 +135,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             ActiveHarmonyDuration = 0;
             autoGroundSwordTimer = AutoGroundSwordInterval;
             ultimateAutoGainTimer = 0;
+            dashHeavyStrikeReady = false;
+            retainedComboIndex = 0;
+            retainedComboTimer = 0;
         }
 
         public override void PostUpdate()
@@ -138,6 +150,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             // 右键冷却每帧递减。
             if (RightClickCooldown > 0)
                 RightClickCooldown--;
+            if (retainedComboTimer > 0)
+                retainedComboTimer--;
 
             if (HarmonyActive)
             {
@@ -175,10 +189,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             {
                 // 切走武器时保留充能/能量，但重置自动地剑节奏。
                 autoGroundSwordTimer = AutoGroundSwordInterval;
+                dashHeavyStrikeReady = false;
             }
             else
             {
                 autoGroundSwordTimer = AutoGroundSwordInterval;
+                dashHeavyStrikeReady = false;
             }
 
             if (HoldingAzureThunder)
@@ -188,6 +204,37 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public void SetHoldingAzureThunder()
         {
             holdingAzureThunder = true;
+        }
+
+        public void ArmDashHeavyStrike()
+        {
+            dashHeavyStrikeReady = true;
+        }
+
+        public bool ConsumeDashHeavyStrike()
+        {
+            if (!dashHeavyStrikeReady)
+                return false;
+
+            dashHeavyStrikeReady = false;
+            return true;
+        }
+
+        public void RetainLeftCombo(int nextComboIndex)
+        {
+            retainedComboIndex = Utils.Clamp(nextComboIndex, 0, 3);
+            retainedComboTimer = 90;
+        }
+
+        public bool TryConsumeRetainedLeftCombo(out int comboIndex)
+        {
+            comboIndex = 0;
+            if (retainedComboTimer <= 0)
+                return false;
+
+            comboIndex = retainedComboIndex;
+            retainedComboTimer = 0;
+            return true;
         }
 
         public bool TrySpendMana(int manaCost = LeftAttackManaCost)
@@ -300,6 +347,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // 启动终极：清能量、记录持续时间、加 Buff 并创建时间条。
             UltimateEnergy = 0;
+            ThunderCharge = 0;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
             ultimateAutoGainTimer = 0;
             ActiveHarmonyDuration = AzureThunderAccessoryPlayer.GetHarmonyDuration(Player);
@@ -570,6 +618,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 ApplyProjectileGrowth(Main.projectile[sword]);
         }
 
+        public static void MakeRoomForGroundSwords(Player player, int desiredCount)
+        {
+            int overflow = CountOwnedGroundSwords(player) + desiredCount - AzureThunderGroundSword.MaxGroundSwords;
+            if (overflow <= 0)
+                return;
+
+            int groundType = ModContent.ProjectileType<AzureThunderGroundSword>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (overflow <= 0)
+                    break;
+
+                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == groundType)
+                {
+                    projectile.Kill();
+                    overflow--;
+                }
+            }
+        }
+
         public static void ApplyProjectileGrowth(Projectile projectile)
         {
             // 邪恶二阶后所有青霆子弹获得护甲穿透成长。
@@ -616,7 +684,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             bool speedLines = false,
             bool normalVisualIntensity = false,
             bool oneThirdVisualIntensity = false,
-            float lightningScale = 1f)
+            float lightningScale = 1f,
+            int additionalFlags = 0)
         {
             // 竖直雷通过目标点向上偏移生成，再朝落点移动。
             Vector2 targetPosition = target?.Center ?? impactPosition;
@@ -649,6 +718,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 flags |= AzureThunderFlatLightning.NormalVisualIntensityFlag;
             if (oneThirdVisualIntensity)
                 flags |= AzureThunderFlatLightning.OneThirdVisualIntensityFlag;
+            flags |= additionalFlags;
 
             SpawnDirectionalLightning(
                 source,
@@ -781,36 +851,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private void SpawnHarmonyPlayerParticles()
         {
             // 终极状态下围绕玩家生成绿色上升粒子；服务端不做视觉。
-            if (Main.dedServ || !HarmonyActive || Main.rand.NextBool(2))
+            if (Main.dedServ || !HarmonyActive || !Main.rand.NextBool(18))
                 return;
 
-            Vector2 auraPoint = Player.Center + Main.rand.NextVector2Circular(Player.width * 0.75f, Player.height * 0.85f);
-            Vector2 upwardDrift = -Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(1.4f, 4.2f);
-            Color green = new(80, 255, 130);
-            Color paleGreen = new(210, 255, 210);
-
-            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                auraPoint,
-                upwardDrift,
-                false,
-                Main.rand.Next(14, 22),
-                Main.rand.NextFloat(0.028f, 0.048f),
-                Color.Lerp(green, paleGreen, Main.rand.NextFloat(0.15f, 0.55f)),
-                new Vector2(1.5f, 0.42f),
-                true,
-                true,
-                0.85f));
-
-            if (Main.rand.NextBool(3))
-            {
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    Player.Center + Main.rand.NextVector2Circular(28f, 36f),
-                    upwardDrift * 0.7f,
-                    false,
-                    Main.rand.Next(16, 26),
-                    Main.rand.NextFloat(0.45f, 0.85f),
-                    Main.rand.NextBool() ? green : paleGreen));
-            }
+            Vector2 haloCenter = Player.Center - Vector2.UnitY * (Player.height * 0.88f);
+            Color haloColor = Color.Lerp(AzureThunderColors.Azure, new Color(110, 255, 140), 0.55f);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                haloCenter,
+                Vector2.Zero,
+                haloColor,
+                Vector2.One * 0.7f,
+                0f,
+                0.025f,
+                0.78f,
+                24));
         }
     }
 

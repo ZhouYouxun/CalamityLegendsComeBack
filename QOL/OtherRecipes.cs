@@ -1,11 +1,37 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using System.Collections.Generic;
 
 namespace CalamityLegendsComeBack.QOL
 {
     public class OtherRecipes : ModSystem
     {
+        private const string AnyHammerRecipeGroup = "CalamityLegendsComeBack:AnyHammer";
+
+        public override void AddRecipeGroups()
+        {
+            List<int> hammers = new();
+            foreach (string hammerName in new[]
+            {
+                "WoodenHammer", "CopperHammer", "TinHammer", "IronHammer", "LeadHammer",
+                "SilverHammer", "TungstenHammer", "GoldHammer", "PlatinumHammer",
+                "CactusHammer", "BorealWoodHammer", "PalmWoodHammer", "RichMahoganyHammer",
+                "EbonwoodHammer", "ShadewoodHammer", "PearlwoodHammer", "CandyCaneHammer",
+                "SpookyWoodHammer", "PumpkinHammer", "TheBreaker", "Pwnhammer",
+                "ChlorophyteWarhammer", "SpectreHamaxe", "ShroomiteHamaxe", "TheAxe"
+            })
+            {
+                int hammerType = ItemID.Search.GetId(hammerName);
+                if (hammerType > 0)
+                    hammers.Add(hammerType);
+            }
+
+            RecipeGroup.RegisterGroup(AnyHammerRecipeGroup, new RecipeGroup(
+                () => "任何锤子",
+                hammers.ToArray()));
+        }
+
         public override void AddRecipes()
         {
             if (CalamityLegendsComeBackConfig.Instance?.AllowOtherRecipes != true)
@@ -41,7 +67,55 @@ namespace CalamityLegendsComeBack.QOL
                     bobbitHookRecipe.AddIngredient(ItemID.LunarHook);
                     bobbitHookRecipe.Register();
                 }
+
+                // Depth Crusher: 10 Abyss Gravel + 10 Silver/Tungsten Bars + any hammer.
+                if (calamity.TryFind<ModItem>("DepthCrusher", out ModItem depthCrusher) &&
+                    calamity.TryFind<ModItem>("AbyssGravel", out ModItem abyssGravel))
+                {
+                    RegisterDepthCrusherRecipe(depthCrusher.Type, abyssGravel.Type, ItemID.SilverBar);
+                    RegisterDepthCrusherRecipe(depthCrusher.Type, abyssGravel.Type, ItemID.TungstenBar);
+                }
+
+                // Calamari's Lament: Black Ink + 10 Planty Mush + 10 Ruinous Soul + Terrarium.
+                if (calamity.TryFind<ModItem>("CalamarisLament", out ModItem calamarisLament) &&
+                    calamity.TryFind<ModItem>("PlantyMush", out ModItem plantyMush) &&
+                    calamity.TryFind<ModItem>("RuinousSoul", out ModItem lamentRuinousSoul))
+                {
+                    Recipe calamarisLamentRecipe = Recipe.Create(calamarisLament.Type);
+                    calamarisLamentRecipe.AddIngredient(ItemID.BlackInk);
+                    calamarisLamentRecipe.AddIngredient(plantyMush.Type, 10);
+                    calamarisLamentRecipe.AddIngredient(lamentRuinousSoul.Type, 10);
+                    calamarisLamentRecipe.AddIngredient(ItemID.Terrarium);
+                    calamarisLamentRecipe.Register();
+                }
+
+                RegisterReaperWeaponRecipe(calamity, "SoulEdge");
+                RegisterReaperWeaponRecipe(calamity, "DeepSeaDumbbell");
             }
+        }
+
+        private static void RegisterReaperWeaponRecipe(Mod calamity, string weaponName)
+        {
+            if (!calamity.TryFind<ModItem>(weaponName, out ModItem weapon) ||
+                !calamity.TryFind<ModItem>("ReaperTooth", out ModItem reaperTooth) ||
+                !calamity.TryFind<ModItem>("RuinousSoul", out ModItem ruinousSoul))
+            {
+                return;
+            }
+
+            Recipe recipe = Recipe.Create(weapon.Type);
+            recipe.AddIngredient(reaperTooth.Type, 5);
+            recipe.AddIngredient(ruinousSoul.Type, 5);
+            recipe.Register();
+        }
+
+        private static void RegisterDepthCrusherRecipe(int depthCrusherType, int abyssGravelType, int barType)
+        {
+            Recipe recipe = Recipe.Create(depthCrusherType);
+            recipe.AddIngredient(abyssGravelType, 10);
+            recipe.AddIngredient(barType, 10);
+            recipe.AddRecipeGroup(AnyHammerRecipeGroup);
+            recipe.Register();
         }
     }
 }

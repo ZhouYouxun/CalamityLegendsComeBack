@@ -4,8 +4,6 @@ Mods: {
 			Weapons: {
 				Summon: {
 					GlacialEmbrace: {
-						DisplayName: Glacial Embrace — Legend Reborn
-						Tooltip: "[GFB]"
 						ModeName0: Cleave Mode
 						ModeName1: Pierce Mode
 						ModeName2: Strike Mode
@@ -86,6 +84,7 @@ Mods: {
 				}
 			}
 		}
+
 		Projectiles: {
 			IceBlockMinion.DisplayName: Glacial Core
 			IceSpikeMinion.DisplayName: Glacial Ice Spike
@@ -95,12 +94,14 @@ Mods: {
 			IcePillarProj.DisplayName: Glacial Strike Pillar
 			GlacialDrillProj.DisplayName: Glacial Diamond Drill Finisher
 		}
+
 		Buffs: {
 			GlacialEmbraceBuff: {
 				DisplayName: Glacial Embrace
 				Description: An ancient glacier coils around you, granting the guardian's embrace of absolute cold.
 			}
 		}
+
 		Cooldowns.GlacialEmbrace_Ultimate: Glacial Energy
 	}
 }

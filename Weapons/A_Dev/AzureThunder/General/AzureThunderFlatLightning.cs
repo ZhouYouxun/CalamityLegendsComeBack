@@ -44,6 +44,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         // 天理真和期间只压低粒子强度，不影响雷击碰撞和覆盖范围。
         public const int OneThirdVisualIntensityFlag = 512;
 
+        // 冲刺饰品专用短时减益和后期落雷减益。
+        public const int VermillionFluxFlag = 1024;
+        public const int AuricRebukeFlag = 2048;
+        public const int ShortElectrifiedFlag = 4096;
+        public const int ShortStaticDischargeFlag = 8192;
+
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -59,6 +65,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool SpeedLines => (Flags & SpeedLineFlag) != 0;
         private bool NormalVisualIntensity => (Flags & NormalVisualIntensityFlag) != 0;
         private bool OneThirdVisualIntensity => (Flags & OneThirdVisualIntensityFlag) != 0;
+        private bool ApplyVermillionFlux => (Flags & VermillionFluxFlag) != 0;
+        private bool ApplyAuricRebuke => (Flags & AuricRebukeFlag) != 0;
+        private bool ShortElectrified => (Flags & ShortElectrifiedFlag) != 0;
+        private bool ShortStaticDischarge => (Flags & ShortStaticDischargeFlag) != 0;
         private float RequestedScale => MathHelper.Clamp(Projectile.ai[1] <= 0f ? 1f : Math.Abs(Projectile.ai[1]), 0.1f, 3f);
         private float VisualIntensityMultiplier => OneThirdVisualIntensity ? 0.33f : 1f;
         private float VisualScale => NormalVisualIntensity ? 1f : RequestedScale * VisualIntensityMultiplier;
@@ -181,8 +191,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 thunderPlayer.TryGainThunderChargeFromTarget(target);
 
             // 基础电击可被 NoBaseElectricDebuffFlag 关闭，供终极右键精确控制 debuff。
-            if (ApplyBaseElectricDebuff)
-                target.AddBuff(BuffID.Electrified, 300);
+            if (thunderPlayer.HarmonyActive && ApplyBaseElectricDebuff)
+                target.AddBuff(BuffID.Electrified, ShortElectrified ? 60 : 300);
 
             // 饰品联动统一在命中点触发。
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
@@ -215,17 +225,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 }
             }
 
-            if (ApplyStaticDischarge)
+            if (ApplyStaticDischarge && thunderPlayer.HarmonyActive)
             {
                 // 终极状态下静电标志升级为 ApplyUltimateDot。
-                if (thunderPlayer.HarmonyActive)
+                if (!ShortStaticDischarge)
                     AzureThunderPlayer.ApplyUltimateDot(target, 180);
                 else
-                    target.AddBuff(ModContent.BuffType<StaticDischarge>(), 180);
+                    target.AddBuff(ModContent.BuffType<StaticDischarge>(), ShortStaticDischarge ? 60 : 180);
             }
 
-            if (ApplyCrumbling)
+            if (thunderPlayer.HarmonyActive && ApplyCrumbling)
                 target.AddBuff(ModContent.BuffType<CalamityMod.Buffs.StatDebuffs.Crumbling>(), 180);
+            if (thunderPlayer.HarmonyActive && ApplyVermillionFlux)
+                target.AddBuff(ModContent.BuffType<VermillionFlux>(), 60);
+            if (thunderPlayer.HarmonyActive && ApplyAuricRebuke)
+                target.AddBuff(ModContent.BuffType<AuricRebuke>(), 180);
 
             // ai[2] 存放本次命中奖励的终极能量。
             if (Projectile.ai[2] > 0f)

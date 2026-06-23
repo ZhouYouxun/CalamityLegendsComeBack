@@ -23,7 +23,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
         // ── 箭袋强化字段（每帧由 EquipQuiver 写入，ResetEffects 清零）──
         public float ChargeMultiplier = 1f;           // 所有战术右键蓄力时间乘数
-        public int BreakthroughExtraLoads;            // 突击右键额外最大装填数
         public int RecoveryExtraFlashes;              // 复苏右键额外治疗闪光数
         public int ReconExtraMarkFrames;              // 侦察右键额外标记持续帧数
         public bool BombardExplosionBonus;            // 歼灭右键爆炸范围提升（同调/主宰）
@@ -49,7 +48,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             ArrowConversionEquipped = false;
 
             ChargeMultiplier = 1f;
-            BreakthroughExtraLoads = 0;
             RecoveryExtraFlashes = 0;
             ReconExtraMarkFrames = 0;
             BombardExplosionBonus = false;
@@ -100,7 +98,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 _ => 1f
             };
 
-            BreakthroughExtraLoads = tier switch { 1 => 1, 2 => 2, 3 => 4, 4 => 6, _ => 0 };
             RecoveryExtraFlashes   = tier switch { 1 => 1, 2 => 2, 3 => 3, 4 => 4, _ => 0 };
             ReconExtraMarkFrames   = tier switch { 1 => 100, 2 => 300, 3 => 600, 4 => 900, _ => 0 };
 

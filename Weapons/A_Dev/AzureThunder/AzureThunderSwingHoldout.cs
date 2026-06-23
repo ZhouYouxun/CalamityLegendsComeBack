@@ -91,6 +91,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Owner.direction = lockedAimDirection.X >= 0f ? 1 : -1;
             FlipAsSword = Owner.direction == -1;
             Projectile.ai[1] = -1f;
+
+            if (ThunderPlayer.ConsumeDashHeavyStrike())
+                comboIndex = 3;
+            else if (ThunderPlayer.TryConsumeRetainedLeftCombo(out int retainedComboIndex))
+                comboIndex = retainedComboIndex;
         }
 
         public override void AI()
@@ -282,6 +287,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             stageTimer++;
 
+            if (HarmonyActive)
+            {
+                RunHarmonyCastingStage();
+                return;
+            }
+
             if (stageTimer < SwingImpactFrame)
             {
                 // 前摇期持续跟随鼠标修正方向，直到进入挥砍命中帧。
@@ -334,12 +345,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 0.2f);
 
             // 终极状态和普通状态使用完全不同的派生弹幕表。
-            if (HarmonyActive)
-                RunHarmonyStage();
-            else
-                RunNormalStage();
+            RunNormalStage();
 
             SpawnSwingParticles(swingProgress);
+
+            if (stageTimer >= stageDuration)
+                EndStage();
+        }
+
+        private void RunHarmonyCastingStage()
+        {
+            CanHit = false;
+            fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.4f);
+            UpdateLockedAimFromMouse();
+            Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.16f);
+            RotationOffset = MathHelper.Lerp(RotationOffset, 0f, 0.28f);
+            RunHarmonyStage();
 
             if (stageTimer >= stageDuration)
                 EndStage();
@@ -451,6 +472,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (releaseRequested || releaseFinalStarted)
             {
+                if (!HarmonyActive)
+                    ThunderPlayer.RetainLeftCombo(comboIndex % 4);
+
                 Projectile.Kill();
                 return;
             }
@@ -715,15 +739,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // holdout 本体命中始终附加基础电击，终极期间额外升级为终极 DoT。
-            target.AddBuff(BuffID.Electrified, 180);
             if (HarmonyActive)
+            {
                 AzureThunderPlayer.ApplyUltimateDot(target, 180);
-
-            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+                AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (HarmonyActive)
+                return false;
+
             // 非强制绘制且物品动画结束时不绘制 holdout。
             if (!DrawUnconditionally && Owner.itemAnimation <= 0)
                 return false;

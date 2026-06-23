@@ -138,10 +138,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             bool harmony = thunderPlayer.HarmonyActive;
             int consumedCharge = thunderPlayer.ConsumeThunderCharge();
             thunderPlayer.RestoreManaFromConsumedCharge(consumedCharge);
+            if (harmony)
+                AzureThunderPlayer.MakeRoomForGroundSwords(player, 3);
+
             int existingGroundSwords = AzureThunderPlayer.CountOwnedGroundSwords(player);
 
             // 天理真和期间仍沿用右键造剑逻辑，只改变后续雷击表现和范围。
-            int spawnCount = consumedCharge + (existingGroundSwords < 3 ? 1 : 0);
+            int spawnCount = harmony ? 3 : consumedCharge + (existingGroundSwords < 3 ? 1 : 0);
             spawnCount = Utils.Clamp(spawnCount, 0, AzureThunderGroundSword.MaxGroundSwords - existingGroundSwords);
 
             for (int i = 0; i < spawnCount; i++)

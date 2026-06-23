@@ -33,4 +33,15 @@ namespace CalamityLegendsComeBack.Accssory.TS
             Main.buffNoSave[Type] = true;
         }
     }
+
+    internal sealed class AzureThunderQingTingDebuff : ModBuff
+    {
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/ATallbuff";
+
+        public override void SetStaticDefaults()
+        {
+            Main.debuff[Type] = true;
+            Main.buffNoSave[Type] = true;
+        }
+    }
 }

@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Vector2 baseDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 3; i++)
             {
-                float spreadAngle = MathHelper.TwoPi * i / 3f;
+                float spreadAngle = (i - 1f) * 0.36f;
                 Vector2 velocity = baseDir.RotatedBy(spreadAngle) * 9f;
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),

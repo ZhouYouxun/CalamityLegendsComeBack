@@ -83,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             Player owner = Main.player[Projectile.owner];
             Vector2 matrixCenter = owner.Center - Main.screenPosition + new Vector2(-CenterLeftOffset, owner.gfxOffY - 8f);
-            int swordCount = AzureThunderPlayer.CountOwnedGroundSwords(owner);
+            int swordCount = AzureThunderPlayer.CountOwnedAzureThunderSwords(owner);
             float opacity = Projectile.Opacity;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5.6f);
 

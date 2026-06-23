@@ -277,11 +277,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // 地剑命中统一附加电击和饰品联动；俯冲命中额外施加终极 DoT。
-            target.AddBuff(BuffID.Electrified, 240);
-            AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            bool harmonyActive = Main.player[Projectile.owner].HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>());
+            if (harmonyActive)
+            {
+                target.AddBuff(BuffID.Electrified, 240);
+                AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            }
             if (Diving)
                 AzureThunderSounds.PlaySwordHit(target.Center);
-            if (Diving)
+            if (Diving && harmonyActive)
                 AzureThunderPlayer.ApplyUltimateDot(target, 180);
         }
 

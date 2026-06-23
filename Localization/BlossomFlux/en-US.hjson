@@ -129,8 +129,9 @@ Mods: {
 				Tooltip:
 					'''
 					+8% ranged damage, +4 defense
-					All BlossomFlux right-click charge times x0.90
-					Breakthrough right-click maximum load +1, Recovery healing flashes +1, Reconnaissance right-click mark duration slightly increased.
+					All BlossomFlux right-click charge times reduced by 10%
+					Recovery: right-click healing flashes +1.
+					Reconnaissance: right-click mark duration slightly increased.
 					'''
 			}
 
@@ -139,8 +140,10 @@ Mods: {
 				Tooltip:
 					'''
 					+11% ranged damage, +6% ranged critical strike chance
-					All BlossomFlux right-click charge times x0.80
-					Breakthrough right-click maximum load +2, Recovery healing flashes +2, Reconnaissance right-click mark duration increased, Bombardment right-click explosion radius increased.
+					All BlossomFlux right-click charge times reduced by 20%
+					Recovery: right-click healing flashes +2.
+					Reconnaissance: right-click mark duration increased.
+					Bombardment: right-click explosion radius increased.
 					'''
 			}
 
@@ -149,8 +152,11 @@ Mods: {
 				Tooltip:
 					'''
 					+14% ranged damage, +12 ranged armor penetration
-					All BlossomFlux right-click charge times x0.65
-					Breakthrough right-click maximum load +4, Recovery healing flashes +3, Reconnaissance right-click mark duration greatly increased, Bombardment right-click barrage damage increased, Plague unlocks the first set of advanced debuffs.
+					All BlossomFlux right-click charge times reduced by 35%
+					Recovery: right-click healing flashes +3.
+					Reconnaissance: right-click mark duration greatly increased.
+					Bombardment: right-click barrage damage increased.
+					Plague: unlocks the first set of advanced debuffs.
 					'''
 			}
 
@@ -159,8 +165,11 @@ Mods: {
 				Tooltip:
 					'''
 					+18% ranged damage, +8% ranged critical strike chance
-					All BlossomFlux right-click charge times x0.50
-					Breakthrough right-click maximum load +6, Recovery healing flashes +4, Reconnaissance right-click mark duration reaches its maximum, Bombardment right-click barrage damage and radius increased, Plague unlocks all advanced debuffs.
+					All BlossomFlux right-click charge times reduced by 50%
+					Recovery: right-click healing flashes +4.
+					Reconnaissance: right-click mark duration reaches its maximum.
+					Bombardment: right-click barrage damage and radius increased.
+					Plague: unlocks all advanced debuffs.
 					'''
 			}
 

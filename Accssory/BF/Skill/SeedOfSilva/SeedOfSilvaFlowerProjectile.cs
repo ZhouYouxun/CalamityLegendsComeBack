@@ -110,7 +110,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 ? Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.12f
                 : Projectile.rotation * 0.2f + Main.GlobalTimeWrappedHourly * 0.08f;
             Color drawColor = Color.Lerp(lightColor, Color.White, IsBlooming ? 0.28f : 0.18f) * Projectile.Opacity;
-            Color outlineColor = FlowerColor * ((IsBlooming ? 0.65f : 0.42f) * Projectile.Opacity);
+            Color outlineColor = FlowerColor * ((IsBlooming ? 0.88f : 0.62f) * Projectile.Opacity);
 
             if (IsBlooming)
                 DrawFlowerUnderGlow(center, texture, origin, rotation, drawScale);
@@ -208,24 +208,42 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Color seedColor = Color.Lerp(new Color(88, 144, 84), FlowerColor, 0.34f) * Projectile.Opacity;
 
             Main.EntitySpriteDraw(bloom, center, null, seedColor * 0.28f, 0f, bloom.Size() * 0.5f, 0.085f * pulse, SpriteEffects.None, 0);
+
+            // magic_03 has an opaque black background; Additive makes black pixels invisible
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(magic, center, null, Color.Lerp(seedColor, FlowerAccentColor, 0.25f) * 0.34f, -Main.GlobalTimeWrappedHourly * 0.24f, magic.Size() * 0.5f, 0.054f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
         private void DrawFlowerUnderGlow(Vector2 center, Texture2D texture, Vector2 origin, float rotation, float scale)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float pulse = 0.92f + 0.08f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 2.4f + Projectile.identity);
+
+            // Additive: dark pixels in the texture become invisible, only bright parts glow with the theme color
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(bloom, center, null, FlowerColor * (0.22f * Projectile.Opacity), 0f, bloom.Size() * 0.5f, 0.13f * pulse, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, center, null, FlowerColor * (0.26f * Projectile.Opacity), rotation, origin, scale * 1.08f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
         private static void DrawOutline(Texture2D texture, Vector2 center, Vector2 origin, float rotation, float scale, Color color)
         {
+            // Additive blend: black/dark pixels in the texture contribute nothing, only bright regions
+            // show as the theme color — prevents the "black outline" artifact from dark edge pixels
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             for (int i = 0; i < 8; i++)
             {
                 Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * OutlineRadius;
                 Main.EntitySpriteDraw(texture, center + offset, null, color, rotation, origin, scale, SpriteEffects.None, 0);
             }
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
         private static int GetSeedContactDamage(Player owner, bool holdingBlossomFlux)

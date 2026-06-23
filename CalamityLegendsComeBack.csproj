@@ -14,6 +14,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Accssory\SHPC\Skill\FlyChip\" />
+	  <Folder Include="Accssory\TS\General\" />
 	  <Folder Include="Accssory\YC\" />
 	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Accssory\VV\" />

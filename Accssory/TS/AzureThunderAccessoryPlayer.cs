@@ -44,22 +44,24 @@ namespace CalamityLegendsComeBack.Accssory.TS
             {
                 Player.statManaMax2 += 50;
                 Player.manaCost -= 0.15f;
+                Player.GetDamage(DamageClass.Magic) += 0.09f;
+                Player.GetCritChance(DamageClass.Magic) += 9f;
             }
 
             if (QianDingWanDingEquipped)
             {
-                Player.statManaMax2 += 100;
-                Player.manaCost -= 0.15f;
+                Player.statManaMax2 += 120;
+                Player.manaCost -= 0.20f;
             }
 
             if (FengYunZhiBianEquipped)
             {
                 if (holdingAzureThunder)
-                    Player.GetDamage(DamageClass.Magic) += 0.15f;
+                    Player.GetDamage(DamageClass.Magic) += 0.18f;
 
                 if (holdingAzureThunder && Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()))
                 {
-                    Player.GetDamage(DamageClass.Magic) += 0.09f;
+                    Player.GetDamage(DamageClass.Magic) *= 1.09f;
                     Player.GetArmorPenetration(DamageClass.Magic) += 36f;
                 }
             }
@@ -69,10 +71,10 @@ namespace CalamityLegendsComeBack.Accssory.TS
 
         public void OnConsumeThunderCharge(int consumedCharge, bool harmonyActive, int activeSwordCount, NPC lockedTarget)
         {
-            if (consumedCharge <= 0)
+            if (consumedCharge <= 0 && !harmonyActive)
                 return;
 
-            if (GuZhouEquipped)
+            if (GuZhouEquipped && consumedCharge > 0)
             {
                 guZhouConsumedCharge = consumedCharge;
                 guZhouDamageTimer = 20 * 60;
@@ -94,8 +96,9 @@ namespace CalamityLegendsComeBack.Accssory.TS
                 return;
 
             Player owner = Main.player[projectile.owner];
-            if (owner.GetModPlayer<AzureThunderAccessoryPlayer>().FengYunZhiBianEquipped)
-                target.AddBuff(ModContent.BuffType<StaticDischarge>(), 90);
+            if (owner.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()) &&
+                owner.GetModPlayer<AzureThunderAccessoryPlayer>().FengYunZhiBianEquipped)
+                target.AddBuff(ModContent.BuffType<AzureThunderQingTingDebuff>(), 120);
         }
 
         public static float GetGroundSwordEffectRadius(Player player)

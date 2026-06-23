@@ -57,6 +57,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
                 return false;
 
             bool rightClick = player.altFunctionUse == 2;
+            if (!rightClick && player.GetModPlayer<YharimsCrystalStatePlayer>().LeftClickCooldown > 0)
+                return false;
+
             if (rightClick)
             {
                 if (player.GetModPlayer<YharimsCrystalStatePlayer>().RightClickCooldown > 0)

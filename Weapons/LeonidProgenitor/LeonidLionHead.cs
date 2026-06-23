@@ -178,7 +178,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             float rotation = Projectile.rotation;
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, rotation, origin, Projectile.scale, effects, 0f);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), rotation, glow.Size() * 0.5f, Projectile.scale, effects, 0f);
+            Color glowColor = Color.White * (1f - Projectile.alpha / 255f);
+            glowColor.A = 0;
+            Main.EntitySpriteDraw(glow, drawPosition, null, glowColor, rotation, glow.Size() * 0.5f, Projectile.scale, effects, 0f);
 
             return false;
         }

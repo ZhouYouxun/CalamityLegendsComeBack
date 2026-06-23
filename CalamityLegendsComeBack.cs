@@ -44,7 +44,25 @@ namespace CalamityLegendsComeBack
                 return;
 
             GamePacketType packetType = (GamePacketType)reader.ReadByte();
-            TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
+
+            switch (packetType)
+            {
+                case GamePacketType.PlayerLockerRequestInventory:
+                    Weapons.A_Tools.PlayerLockerPackets.HandleInventoryRequest(reader, whoAmI);
+                    break;
+                case GamePacketType.PlayerLockerInventoryData:
+                    Weapons.A_Tools.PlayerLockerPackets.HandleInventoryData(reader);
+                    break;
+                case GamePacketType.PlayerLockerStealItem:
+                    Weapons.A_Tools.PlayerLockerPackets.HandleStealItem(reader, whoAmI);
+                    break;
+                case GamePacketType.PlayerLockerClearSlot:
+                    Weapons.A_Tools.PlayerLockerPackets.HandleClearSlot(reader);
+                    break;
+                default:
+                    TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
+                    break;
+            }
         }
     }
 

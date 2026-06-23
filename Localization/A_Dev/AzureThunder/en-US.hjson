@@ -60,6 +60,7 @@ Mods: {
 					'''
 					+50 maximum mana
 					-15% mana cost
+					+9% magic damage and magic critical strike chance
 					When SunderBlade's right click consumes Breath of Transformation, each active SunderBlade sword grants +2% magic damage for 5 seconds
 					During Empyrean of Truth, each sword instead grants +3% magic damage for 15 seconds
 					This damage bonus is recalculated and its duration reset the next time Breath of Transformation is consumed
@@ -70,8 +71,8 @@ Mods: {
 				DisplayName: Absolute Composure
 				Tooltip:
 					'''
-					+100 maximum mana
-					-15% mana cost
+					+120 maximum mana
+					-20% mana cost
 					Increases SunderBlade sword effect radius from 50 tiles to 75 tiles
 					Up to 3 SunderBlade swords orbit the player on an elliptical path and act as mobile turrets
 					SunderBlade right-click lightning grants 7 ultimate energy on hit instead of 6
@@ -83,10 +84,20 @@ Mods: {
 				DisplayName: Storm of Transform
 				Tooltip:
 					'''
-					SunderBlade damage +15%
-					SunderBlade attacks inflict Static Discharge for 1.5 seconds
+					SunderBlade damage +18%
+					SunderBlade attacks inflict Azure Thunder for 2 seconds
 					Empyrean of Truth duration increases from 25 seconds to 30 seconds
-					During Empyrean of Truth, gain an additional +9% magic damage and 36 magic armor penetration
+					During Empyrean of Truth, magic damage is multiplied by 1.09 and gain 36 magic armor penetration
+					'''
+			}
+
+			QingDianFa: {
+				DisplayName: Azure Lightning Arts
+				Tooltip:
+					'''
+					+15% movement and jump speed
+					Double-tap a direction to become lightning and dash through enemies without taking damage.
+					While holding SunderBlade, dashing strikes a nearby enemy with lightning. This effect has a 12-second cooldown.
 					'''
 			}
 
@@ -94,11 +105,31 @@ Mods: {
 				DisplayName: Jolting Arts
 				Tooltip:
 					'''
-					Double-tap a horizontal direction to become lightning and dash; dash direction follows your current velocity vector
-					Briefly grants invincibility during the dash and leaves modest momentum in the same direction
-					If the Calamity dash hotkey is bound, the bound single-sword dash takes priority
-					While holding SunderBlade, dash distance +30% and dash cooldown -30%
-					While holding SunderBlade, dashing releases up to 3 lightning bolts based on nearby SunderBlade swords, with a 15-second cooldown
+					+15% flight time; +24% movement and jump speed
+					Double-tap a direction to become lightning and dash through enemies without taking damage.
+					While holding SunderBlade, dashing releases up to 3 lightning strikes based on nearby SunderBlade swords. This effect has a 9-second cooldown.
+					'''
+			}
+
+			QingTingJue: {
+				DisplayName: Azure Thunder Formula
+				Tooltip:
+					'''
+					+25% flight time; +27% movement and jump speed
+					Double-tap a direction to become lightning and dash through enemies without taking damage.
+					While holding SunderBlade, dashing calls lightning along its path based on nearby SunderBlade swords.
+					The next SunderBlade attack becomes a heavy strike. This effect has a 9-second cooldown.
+					'''
+			}
+
+			WanJunFengLei: {
+				DisplayName: Myriad Thunderstorms
+				Tooltip:
+					'''
+					+50% flight time; +36% movement and jump speed
+					Double-tap a direction to become lightning and dash through enemies without taking damage.
+					While holding SunderBlade, dashing calls lightning along its path based on nearby SunderBlade swords.
+					The next SunderBlade attack becomes a heavy strike. This effect has a 9-second cooldown.
 					'''
 			}
 		}
@@ -123,6 +154,11 @@ Mods: {
 				DisplayName: Long Barge Lock
 				Description: Movement speed reduced by 15%
 			}
+
+			AzureThunderQingTingDebuff: {
+				DisplayName: Azure Thunder
+				Description: Entangled by SunderBlade lightning
+			}
 		}
 
 		Projectiles: {
@@ -142,7 +178,7 @@ Mods: {
 		Cooldowns: {
 			AzureThunder_ThunderCharge: Breath of Transformation
 			AzureThunder_Ultimate: Empyrean of Truth
-			JoltingArts_Lightning: Jolting Arts Lightning
+			AzureThunderDash_Lightning: Azure Thunder Arts Lightning
 		}
 	}
 }

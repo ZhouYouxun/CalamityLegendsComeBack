@@ -146,7 +146,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // 飞剑命中附加基础电击，并触发饰品联动。
-            target.AddBuff(BuffID.Electrified, 180);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderSounds.PlaySwordHit(target.Center);
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);

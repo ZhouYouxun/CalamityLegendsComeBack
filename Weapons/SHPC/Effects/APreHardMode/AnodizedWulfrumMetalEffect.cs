@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Magic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -21,68 +22,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public override float GlowScaleFactor => 0f;
         public override float GlowIntensityFactor => 0f;
 
-        private static int _blunderbussType = -1;
-        private static int BlunderbussType
-        {
-            get
-            {
-                if (_blunderbussType < 0)
-                    _blunderbussType = ModContent.Find<ModItem>("CalamityMod/WulfrumBlunderbuss").Item.shoot;
-                return _blunderbussType;
-            }
-        }
-
-        // 夺舍：取消即死，让 SHPC 弹幕正常飞行
+        // The source orb exists for one tick only: it is the muzzle-side burst point,
+        // never a projectile that travels or falls through the world.
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.penetrate = 1;
-            projectile.timeLeft = 90;
-            projectile.tileCollide = true;
+            projectile.timeLeft = 1;
+            projectile.tileCollide = false;
         }
 
-        // 特技：飞行时拖曳 Wulfrum 电弧粒子
         public override void AI(Projectile projectile, Player owner)
         {
-            if (Main.rand.NextBool(3))
-            {
-                Dust spark = Dust.NewDustPerfect(
-                    projectile.Center + Main.rand.NextVector2Circular(3f, 3f),
-                    DustID.Electric,
-                    -projectile.velocity * 0.15f + Main.rand.NextVector2Circular(1f, 1f),
-                    0,
-                    new Color(190, 255, 60),
-                    Main.rand.NextFloat(0.4f, 0.8f)
-                );
-                spark.noGravity = true;
-            }
         }
 
-        // 夺舍：绘制猎枪霰弹纹理，抹掉 SHPC 球体外观
-        public override void PostDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
-        {
-            int type = BlunderbussType;
-            if (type <= 0)
-                return;
-
-            ModProjectile modProj = ProjectileLoader.GetProjectile(type);
-            if (modProj == null)
-                return;
-
-            Texture2D tex = ModContent.Request<Texture2D>(modProj.Texture).Value;
-            spriteBatch.Draw(
-                tex,
-                projectile.Center - Main.screenPosition,
-                null,
-                Color.White,
-                projectile.velocity.ToRotation(),
-                tex.Size() / 2f,
-                1f,
-                SpriteEffects.None,
-                0f
-            );
-        }
-
-        // 夺舍：收缩碰撞箱到霰弹大小
         public override void ModifyDamageHitbox(Projectile projectile, Player owner, ref Rectangle hitbox)
         {
             int size = 8;
@@ -94,32 +45,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             );
         }
 
-        // 随机散射 7-10 发，每发独立随机角度
+        // A direct burst of 7-10 forward-facing WulfrumProsthesis-style shards.
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            int pelletCount = Main.rand.Next(7, 11);
+            int shardCount = Main.rand.Next(7, 11);
             Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
             float speed = projectile.velocity.Length();
             float halfSpread = MathHelper.ToRadians(2.5f);
 
-            for (int i = 0; i < pelletCount; i++)
+            for (int i = 0; i < shardCount; i++)
             {
                 float angle = Main.rand.NextFloat(-halfSpread, halfSpread);
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center,
                     direction.RotatedBy(angle) * speed,
-                    BlunderbussType,
+                    ModContent.ProjectileType<AnodizedWulfrumShard>(),
                     projectile.damage,
                     projectile.knockBack,
                     projectile.owner
                 );
             }
 
-            // 特技：散射时电光爆发
             for (int i = 0; i < 14; i++)
             {
                 Dust spark = Dust.NewDustPerfect(
@@ -146,6 +96,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 true
             );
             GeneralParticleHandler.SpawnParticle(flash);
+        }
+    }
+
+    // Inherits WulfrumBolt so the original trail, homing, launch particles,
+    // slowdown, hit particles, and hit sound stay intact. Only a small head is added.
+    public class AnodizedWulfrumShard : WulfrumBolt
+    {
+        public override bool PreDraw(ref Color lightColor)
+        {
+            base.PreDraw(ref lightColor);
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPosition = Projectile.Center + direction * 4f - Main.screenPosition;
+
+            Main.spriteBatch.Draw(
+                bloom,
+                drawPosition,
+                null,
+                new Color(115, 255, 235) * 0.7f,
+                0f,
+                bloom.Size() / 2f,
+                0.085f,
+                SpriteEffects.None,
+                0f
+            );
+
+            return false;
         }
     }
 }

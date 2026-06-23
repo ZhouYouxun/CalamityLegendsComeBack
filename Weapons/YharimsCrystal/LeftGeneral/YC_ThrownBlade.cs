@@ -96,20 +96,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             Projectile.localAI[0]++;
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, -Vector2.UnitY * 32f, 0.12f);
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(135f);
+            // 旋转+90度
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(225f);
             Projectile.Opacity = Utils.GetLerpValue(0f, 10f, Projectile.localAI[0], true);
-            Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * 0.8f);
+            Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * 1.1f);
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
+            if (!Main.dedServ)
             {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
-                    DustID.GoldFlame,
-                    Vector2.UnitY.RotatedByRandom(0.35f) * Main.rand.NextFloat(2.5f, 6f),
-                    0,
-                    Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88),
-                    Main.rand.NextFloat(0.9f, 1.35f));
-                dust.noGravity = true;
+                // 三板斧：大量上升粒子轨迹
+                int particleCount = Main.rand.Next(3, 6);
+                for (int i = 0; i < particleCount; i++)
+                {
+                    Dust dust = Dust.NewDustPerfect(
+                        Projectile.Center + Main.rand.NextVector2Circular(22f, 22f),
+                        DustID.GoldFlame,
+                        Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(2f, 8f),
+                        0,
+                        Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88),
+                        Main.rand.NextFloat(1.0f, 1.6f));
+                    dust.noGravity = true;
+                }
+
+                // 橙金光晕跟随
+                if ((int)Projectile.localAI[0] % 4 == 0)
+                    Lighting.AddLight(Projectile.Center + Main.rand.NextVector2Circular(24f, 24f), new Vector3(0.9f, 0.55f, 0.05f) * 0.5f);
             }
 
             if (Projectile.localAI[0] < 34f)
@@ -139,6 +149,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             {
                 YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[wave], YCWeaponForm.Blade);
                 Main.projectile[wave].CritChance = Projectile.CritChance;
+            }
+
+            // 三板斧：天降时强烈屏幕震动
+            Player owner = Main.player[Projectile.owner];
+            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 6f);
+
+            // 三板斧：召唤时大爆炸粒子效果
+            if (!Main.dedServ)
+            {
+                for (int i = 0; i < 40; i++)
+                {
+                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 22f);
+                    Dust d = Dust.NewDustPerfect(focus + Main.rand.NextVector2Circular(28f, 28f), DustID.GoldFlame, vel, 0,
+                        Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(1.0f, 1.8f));
+                    d.noGravity = true;
+                }
             }
 
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.9f, Pitch = -0.22f }, focus);

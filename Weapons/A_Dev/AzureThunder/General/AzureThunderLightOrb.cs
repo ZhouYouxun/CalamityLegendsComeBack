@@ -205,8 +205,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             int damageDone)
         {
             // 命中附加电击、触发饰品联动，并播放短促电击音。
-            target.AddBuff(BuffID.Electrified, 180);
-
             AzureThunderAccessoryPlayer
                 .ApplyAzureThunderAccessoryOnHit(
                     Projectile,

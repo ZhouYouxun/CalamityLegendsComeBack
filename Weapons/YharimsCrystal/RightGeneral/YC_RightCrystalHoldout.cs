@@ -159,6 +159,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 }
             }
 
+            // 右键holdout结束后短暂阻止左键holdout生成，防止autoReuse立刻切回左键形态
+            if (Projectile.owner == Main.myPlayer)
+            {
+                YharimsCrystalStatePlayer state = Main.player[Projectile.owner].GetModPlayer<YharimsCrystalStatePlayer>();
+                state.LeftClickCooldown = Math.Max(state.LeftClickCooldown, 20);
+            }
+
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.42f, Pitch = -0.15f }, Projectile.Center);
         }
 

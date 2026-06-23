@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
@@ -52,12 +53,43 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform.Tiles
         {
             base.FloorVisuals(player);
 
-            if (Main.dedServ || player.velocity.Y != 0f || player.velocity.X > -0.25f && player.velocity.X < 0.25f || !Main.rand.NextBool(12))
+            if (Main.dedServ || player.whoAmI != Main.myPlayer || player.velocity.Y != 0f || Math.Abs(player.velocity.X) < 0.25f || !Main.rand.NextBool(15))
                 return;
 
-            Vector2 dustPosition = player.Bottom + new Vector2(Main.rand.NextFloat(-player.width * 0.35f, player.width * 0.35f), -4f);
-            Dust dust = Dust.NewDustDirect(dustPosition, 2, 2, DustID.Electric, player.velocity.X * -0.04f, -0.25f, 180, new Color(86, 196, 255), 0.45f);
-            dust.noGravity = true;
+            SpawnMatrixPulse(player);
+        }
+
+        private static void SpawnMatrixPulse(Player player)
+        {
+            int direction = Math.Sign(player.velocity.X);
+            int tileY = (int)(player.Bottom.Y / 16f);
+            int tileX = (int)(player.Center.X / 16f);
+            Color dataColor = Color.Lerp(new Color(78, 255, 196), new Color(86, 196, 255), Main.rand.NextFloat());
+
+            // A small packet races along connected platform segments instead of filling the screen with particles.
+            for (int offset = 0; offset <= 4; offset++)
+            {
+                int pulseX = tileX + direction * offset;
+                Tile tile = Framing.GetTileSafely(pulseX, tileY);
+                if (!tile.HasTile || tile.TileType != ModContent.TileType<SHPPPlatformTile>())
+                    break;
+
+                Vector2 packetPosition = new Vector2(pulseX * 16f + 8f, tileY * 16f + 5f);
+                Dust packet = Dust.NewDustPerfect(packetPosition, DustID.Electric, new Vector2(direction * (0.35f + offset * 0.08f), -0.06f), 145, dataColor, 0.32f);
+                packet.noGravity = true;
+                packet.fadeIn = 0.55f;
+
+                if (offset == 0 || Main.rand.NextBool(3))
+                {
+                    Vector2 bitPosition = packetPosition + new Vector2(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-7f, -2f));
+                    Dust bit = Dust.NewDustPerfect(bitPosition, DustID.GemEmerald, new Vector2(direction * 0.12f, -Main.rand.NextFloat(0.12f, 0.3f)), 120, dataColor, 0.26f);
+                    bit.noGravity = true;
+                }
+            }
+
+            Vector2 codePosition = player.Bottom + new Vector2(Main.rand.NextFloat(-player.width * 0.25f, player.width * 0.25f), -5f);
+            Dust code = Dust.NewDustPerfect(codePosition, DustID.Electric, new Vector2(-direction * 0.1f, -0.42f), 170, dataColor, 0.38f);
+            code.noGravity = true;
         }
 
         public override bool CreateDust(int i, int j, ref int type)

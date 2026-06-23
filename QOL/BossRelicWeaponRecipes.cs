@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using System.Collections.Generic;
 
@@ -40,6 +41,23 @@ namespace CalamityLegendsComeBack.QOL
             { "YharonRelic", new[] { "ChickenCannon", "DragonRage", "DragonsBreath", "PhoenixFlameBarrage", "TheBurningSky", "TheFinalDawn", "Wrathwing", "YharimsCrystal", "YharonsKindleStaff" } }
         };
 
+        private static readonly Dictionary<string, string[]> VanillaRelicToWeapons = new()
+        {
+            { "KingSlimeRelic", new[] { "SlimeStaff" } },
+            { "EyeofCthulhuRelic", new[] { "ShieldofCthulhu" } },
+            { "BrainofCthulhuRelic", new[] { "TheRottedFork" } },
+            { "QueenBeeRelic", new[] { "BeeGun", "TheBeesKnees", "BeeKeeper", "Beenade" } },
+            { "SkeletronRelic", new[] { "BookofSkulls", "BoneGlove", "SkeletronHand" } },
+            { "WallofFleshRelic", new[] { "BreakerBlade", "ClockworkAssaultRifle", "LaserRifle", "FireWhip", "Pwnhammer" } },
+            { "QueenSlimeRelic", new[] { "QueenSlimeMinionStaff" } },
+            { "PlanteraRelic", new[] { "GrenadeLauncher", "VenusMagnum", "NettleBurst", "LeafBlower", "FlowerPow", "WaspGun", "Seedler", "TheAxe", "PygmyStaff" } },
+            { "GolemRelic", new[] { "Picksaw", "PossessedHatchet", "StaffofEarth", "HeatRay", "GolemFist", "Stynger" } },
+            { "DukeFishronRelic", new[] { "BubbleGun", "Flairon", "RazorbladeTyphoon", "TempestStaff", "Tsunami" } },
+            { "EmpressOfLightRelic", new[] { "Nightglow", "Starlight", "Kaleidoscope", "Eventide", "RainbowCursor", "Terraprisma" } },
+            { "DeerclopsRelic", new[] { "WeatherPain", "HoundiusShootius", "LucyTheAxe" } },
+            { "MoonLordRelic", new[] { "Meowmere", "StarWrath", "Terrarian", "SDMG", "LastPrism", "LunarFlareBook", "RainbowCrystalStaff", "LunarPortalStaff", "CelebrationMk2", "MoonlordTurretStaff" } }
+        };
+
         public override void AddRecipes()
         {
             if (CalamityLegendsComeBackConfig.Instance?.AllowBossRelicWeaponRecipes != true)
@@ -62,6 +80,24 @@ namespace CalamityLegendsComeBack.QOL
                     // 1 Relic -> 1 Weapon (无任何工作站，空手合成)
                     Recipe recipe = Recipe.Create(weaponItem.Type);
                     recipe.AddIngredient(relicItem.Type, 1);
+                    recipe.Register();
+                }
+            }
+
+            foreach (var kvp in VanillaRelicToWeapons)
+            {
+                int relicType = ItemID.Search.GetId(kvp.Key);
+                if (relicType <= 0)
+                    continue;
+
+                foreach (string weaponName in kvp.Value)
+                {
+                    int weaponType = ItemID.Search.GetId(weaponName);
+                    if (weaponType <= 0)
+                        continue;
+
+                    Recipe recipe = Recipe.Create(weaponType);
+                    recipe.AddIngredient(relicType);
                     recipe.Register();
                 }
             }

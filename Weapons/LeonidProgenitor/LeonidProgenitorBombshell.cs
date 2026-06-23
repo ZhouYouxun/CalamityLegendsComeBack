@@ -154,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawBloom(Projectile.Center, (StealthVariant ? new Color(112, 230, 255) : new Color(82, 192, 255)) * 0.35f, StealthVariant ? 0.42f : 0.28f);
             return false;
         }

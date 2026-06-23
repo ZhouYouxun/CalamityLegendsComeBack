@@ -4,8 +4,6 @@ Mods: {
 			Weapons: {
 				Summon: {
 					GlacialEmbrace: {
-						DisplayName: 冰霜之拥 — 传奇重塑
-						Tooltip: "[GFB]"
 						ModeName0: 斩击模式
 						ModeName1: 突刺模式
 						ModeName2: 打击模式
@@ -86,6 +84,7 @@ Mods: {
 				}
 			}
 		}
+
 		Projectiles: {
 			IceBlockMinion.DisplayName: 极寒冰核
 			IceSpikeMinion.DisplayName: 樊寒冰刺
@@ -95,12 +94,14 @@ Mods: {
 			IcePillarProj.DisplayName: 冰岩重崩柱
 			GlacialDrillProj.DisplayName: 至臻极冰之樊寒神钻
 		}
+
 		Buffs: {
 			GlacialEmbraceBuff: {
 				DisplayName: 冰霜之拥
 				Description: 远古冰川盘绕在你的身侧，赋予你极寒之拥的守护。
 			}
 		}
+
 		Cooldowns.GlacialEmbrace_Ultimate: 极冰能量
 	}
 }

@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         // Dragon mouth position: gun tip + one extra step forward.
         private const float GunTipForwardOffset = 22f;
-        private const float DragonMouthForwardOffsetFromGunTip = 8f;
+        private const float DragonMouthForwardOffsetFromGunTip = -8f;
 
         internal static Vector2 GetDragonMouthPosition(Vector2 projectileCenter, Vector2 aimDirection) =>
             projectileCenter + aimDirection * (GunTipForwardOffset + DragonMouthForwardOffsetFromGunTip);

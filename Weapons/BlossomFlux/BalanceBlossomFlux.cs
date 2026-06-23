@@ -10,23 +10,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         // Stage, Breakthrough damage, Recovery damage, Recon damage, Bombard damage, Plague damage.
         internal static readonly object[,] MainDamageTable =
         {
+            //                                              Breakthrough  Recovery  Recon  Bombard  Plague
             // 分别代表：突击，复苏，侦查，轰炸，瘟疫，五大形态的伤害
-            { "Initial", 14, 1, 1, 1, 1 }, // 该阶段仅解锁突击
-            { "Eye of Cthulhu", 18, 10, 1, 1, 1 }, // 该阶段已解锁复苏
-            { "Evil Boss", 24, 13, 1, 1, 1 },
-            { "Skeletron", 28, 17, 12, 1, 1 }, // 该阶段解锁侦查
-            { "Queen Bee", 24, 13, 2, 1, 1 },
-            { "Hardmode", 53, 50, 56, 69, 1 }, // 该阶段解锁轰炸
-            { "Any Mechanical Boss", 61, 58, 64, 79, 1 },
-            { "Plantera", 70, 67, 74, 91, 1 },
-            { "Golem", 77, 73, 81, 100, 46 }, // 该阶段才能解锁瘟疫
-            { "Plaguebringer Goliath", 84, 80, 88, 109, 50 },
-            { "Moon Lord", 91, 86, 96, 118, 55 },
-            { "Providence", 126, 120, 132, 164, 76 },
-            { "Polterghast", 160, 152, 168, 208, 96 },
-            { "Devourer of Gods", 195, 185, 205, 254, 117 },
-            { "Yharon", 220, 209, 231, 286, 132 },
-            { "Exo Mechs and Supreme Calamitas", 300, 285, 315, 390, 180 }
+            { "Initial",                                      14,       1,       1,       1,       1 }, // 该阶段仅解锁突击
+            { "Eye of Cthulhu",                               20,       9,       1,       1,       1 }, // 该阶段已解锁复苏
+            { "Evil Boss",                                    20,       9,       1,       1,       1 },
+            { "Skeletron",                                    28,      11,      14,       1,       1 }, // 该阶段解锁侦查
+            { "Queen Bee",                                    24,      10,       5,       1,       1 },
+            { "Hardmode",                                     22,      13,      10,      14,       1 }, // 该阶段解锁轰炸
+            { "Any Mechanical Boss",                          26,      15,      14,      19,       1 },
+            { "Plantera",                                     28,      21,      18,      24,       1 },
+            { "Golem",                                        28,      21,      18,      24,      21 }, // 该阶段才能解锁瘟疫
+            { "Plaguebringer Goliath",                        32,      27,      22,      30,      27 },
+            { "Moon Lord",                                    40,      36,      30,      35,      36 },
+            { "Providence",                                   44,      48,      37,      40,      48 },
+            { "Polterghast",                                  49,      56,      43,      46,      56 },
+            { "Devourer of Gods",                             55,      70,      50,      53,      70 },
+            { "Yharon",                                       64,      88,      60,      62,      88 },
+            { "Exo Mechs and Supreme Calamitas",               77,     109,      69,      75,     109 }
         };
 
         internal int GetLeftClickBaseDamage(BlossomFluxChloroplastPresetType preset) => BFBalanceTable.Get(GetLeftDamageStat(preset));

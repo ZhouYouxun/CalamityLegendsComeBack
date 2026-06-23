@@ -119,9 +119,14 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     sunflowerEmpowered = true;
                     if (seed is SeedOfSilvaSunflower sunflower)
                         sunflower.TriggerFlash();
-                    if (!Main.dedServ && Main.rand.NextBool(10))
+                    if (!Main.dedServ && Main.rand.NextBool(3))
                     {
-                        Dust dust = Dust.NewDustPerfect(projectile.Center, DustID.YellowTorch, Main.rand.NextVector2Circular(0.5f, 0.5f), 100, new Color(255, 238, 92), 0.82f);
+                        Vector2 perpDir = projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
+                        Dust dust = Dust.NewDustPerfect(
+                            projectile.Center + perpDir * Main.rand.NextFloat(-5f, 5f),
+                            DustID.YellowTorch,
+                            perpDir * Main.rand.NextFloat(-2.8f, 2.8f) + Main.rand.NextVector2Circular(0.6f, 0.6f),
+                            60, new Color(255, 248, 130), Main.rand.NextFloat(1.0f, 1.3f));
                         dust.noGravity = true;
                     }
                 }

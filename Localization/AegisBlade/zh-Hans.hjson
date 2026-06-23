@@ -30,7 +30,7 @@ Mods: {
 
 				Summon: {
 					GlacialEmbrace: {
-						DisplayName: 冰霜之拥 · 传奇归来
+						DisplayName: 冰霜之拥 — 传奇重塑
 						Tooltip: "[GFB]"
 					}
 				}
