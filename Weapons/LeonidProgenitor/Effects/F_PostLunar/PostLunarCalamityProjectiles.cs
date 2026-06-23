@@ -1,4 +1,4 @@
-﻿using CalamityMod;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
@@ -169,15 +169,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 
         public override bool? CanDamage() => Projectile.localAI[0] > (CrownVariant ? 16f : 6f);
 
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            if (!CrownVariant)
+                Projectile.penetrate = 1;
+        }
+
         public override void AI()
         {
-            if (Projectile.localAI[2] == 0f)
-            {
-                Projectile.localAI[2] = 1f;
-                if (!CrownVariant)
-                    Projectile.penetrate = 1;
-            }
-
             Projectile.localAI[0]++;
             NPC target = GetTarget();
             if (CrownVariant && target != null && Projectile.localAI[0] < 24f)
@@ -275,15 +274,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 
         public override bool? CanDamage() => StrongRift && Projectile.localAI[0] > 16f;
 
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            if (!StrongRift)
+                Projectile.timeLeft = System.Math.Min(Projectile.timeLeft, 56);
+        }
+
         public override void AI()
         {
-            if (Projectile.localAI[2] == 0f)
-            {
-                Projectile.localAI[2] = 1f;
-                if (!StrongRift)
-                    Projectile.timeLeft = System.Math.Min(Projectile.timeLeft, 56);
-            }
-
             Projectile.localAI[0]++;
             Projectile.rotation += StrongRift ? 0.1f : 0.065f;
             Projectile.scale = MathHelper.Lerp(0.2f, StrongRift ? 1.2f : 0.85f, Utils.GetLerpValue(0f, 20f, Projectile.localAI[0], true)) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
@@ -627,18 +625,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 
         public override bool? CanDamage() => Projectile.localAI[0] > 12f;
 
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            if (!Aggressive)
+            {
+                Projectile.penetrate = 1;
+                Projectile.timeLeft = System.Math.Min(Projectile.timeLeft, 88);
+            }
+        }
+
         public override void AI()
         {
-            if (Projectile.localAI[2] == 0f)
-            {
-                Projectile.localAI[2] = 1f;
-                if (!Aggressive)
-                {
-                    Projectile.penetrate = 1;
-                    Projectile.timeLeft = System.Math.Min(Projectile.timeLeft, 88);
-                }
-            }
-
             Projectile.localAI[0]++;
             NPC target = GetTarget();
             if (target != null && Aggressive && Projectile.localAI[0] < 22f)

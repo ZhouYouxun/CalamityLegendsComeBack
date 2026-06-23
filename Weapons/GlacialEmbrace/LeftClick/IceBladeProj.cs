@@ -20,6 +20,12 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
         private const int PrepareDelay = 10; // 蓄力准备延迟
         private const int SpinDuration = 30; // 旋转持续帧数
 
+        // =========================================================================
+        // 自定义设置：在此处调整冰刀旋转圈数 (例如 2f 代表两圈，3f 代表三圈)
+        // =========================================================================
+        private const float SpinRotations = 2f;
+        // =========================================================================
+
         public override void SetDefaults()
         {
             Projectile.width = 160;
@@ -71,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             }
             else
             {
-                // 2. 旋转爆发期：以极快速度围绕玩家旋转两周 (720度 / 30帧 = 24度每帧)
+                // 2. 旋转爆发期：以极快速度围绕玩家旋转两周或三周
                 if (attackTimer == PrepareDelay)
                 {
                     // 挥击音效
@@ -82,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 }
 
                 float progress = (float)(attackTimer - PrepareDelay) / SpinDuration;
-                float angle = progress * MathHelper.TwoPi * 2f; // 旋转两周
+                float angle = progress * MathHelper.TwoPi * SpinRotations; // 使用自定义的旋转圈数
                 Projectile.rotation = rotationOffset + angle;
                 
                 // 沿刀刃长度产生密集的极光与矩阵粒子

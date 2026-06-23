@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private LeonidMetalEffect[] activeEffects = System.Array.Empty<LeonidMetalEffect>();
         private bool initialized;
+        private Vector2 playerOffset;
 
         public int PrimaryEffectID => (int)Projectile.ai[0];
         public int SecondaryEffectID => (int)Projectile.ai[1];
@@ -72,6 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             MeteorColor = LeonidVisualUtils.GetMeteorColor(PrimaryEffectID, SecondaryEffectID);
             activeEffects = LeonidMetalEffectRegistry.ResolveEffects(PrimaryEffectID, SecondaryEffectID);
             Projectile.DamageType = Owner.HeldItem.DamageType;
+            playerOffset = Projectile.Center - Owner.Center;
 
             if ((SpawnFlags & SilverSplitFlag) != 0)
                 SetFlag("silver_split");
@@ -99,12 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 if ((SpawnFlags & GravityFieldFlag) != 0)
                 {
                     // Gravity field meteor: stay stationary at spawn position
-                    if (Projectile.localAI[2] == 0f && Projectile.localAI[3] == 0f)
-                    {
-                        Projectile.localAI[2] = Projectile.Center.X;
-                        Projectile.localAI[3] = Projectile.Center.Y;
-                    }
-                    Projectile.Center = new Vector2(Projectile.localAI[2], Projectile.localAI[3]);
+                    Projectile.Center = InitialCenter;
 
                     if (Projectile.localAI[1] <= 0f)
                     {
@@ -116,24 +113,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 else
                 {
                     // Player-held meteor: follow player relative offset
-                    if (Projectile.localAI[2] == 0f && Projectile.localAI[3] == 0f)
-                    {
-                        Vector2 relOffset = Projectile.Center - Owner.Center;
-                        Projectile.localAI[2] = relOffset.X;
-                        Projectile.localAI[3] = relOffset.Y;
-                    }
-
-                    Vector2 currentOffset = new Vector2(Projectile.localAI[2], Projectile.localAI[3]);
+                    Vector2 currentOffset = playerOffset;
                     currentOffset.Y += (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6f) * 4f;
                     Projectile.Center = Owner.Center + currentOffset;
 
                     if (Projectile.localAI[1] <= 0f)
-                      {
-                          Vector2 targetVelocity = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitY) * 14f;
-                          Projectile.velocity = targetVelocity;
-                          Projectile.netUpdate = true;
-                          SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.5f, Pitch = 0.2f }, Projectile.Center);
-                      }
+                    {
+                        Vector2 targetVelocity = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitY) * 14f;
+                        Projectile.velocity = targetVelocity;
+                        Projectile.netUpdate = true;
+                        SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.5f, Pitch = 0.2f }, Projectile.Center);
+                    }
                 }
 
                 Projectile.friendly = false;

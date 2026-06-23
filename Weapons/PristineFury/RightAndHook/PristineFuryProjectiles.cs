@@ -1155,15 +1155,31 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 int beam = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, beamDir, ModContent.ProjectileType<PristineFuryLilyMainBeam>(), mainBeamDamage, Projectile.knockBack * 0.55f, Projectile.owner);
                 PFLeftEffectRules.ApplyTheme(beam, mark);
 
-                // Wavelet 参数大幅增强：更大振幅、更快速度、更多数量
-                int waveletCount = chargeLevel >= 3f ? Main.rand.Next(5, 9) : Main.rand.Next(3, 6);
-                for (int j = 0; j < waveletCount; j++)
+                if (chargeLevel < 3f)
                 {
-                    float spread = Main.rand.NextFloat(-0.52f, 0.52f);
-                    Vector2 wDir = beamDir.RotatedBy(spread);
-                    float freq = Main.rand.NextFloat(0.09f, 0.16f);
-                    float wAmp = Main.rand.NextFloat(48f, 88f); // 原 9~15，现大幅增加
-                    int wavelet = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, wDir * Main.rand.NextFloat(13f, 20f), ModContent.ProjectileType<PristineFuryLilyWavelet>(), waveletDamage, Projectile.knockBack * 0.25f, Projectile.owner, freq, wAmp);
+                    int waveletCount = Main.rand.Next(3, 6);
+                    for (int j = 0; j < waveletCount; j++)
+                    {
+                        float spread = Main.rand.NextFloat(-0.52f, 0.52f);
+                        Vector2 wDir = beamDir.RotatedBy(spread);
+                        float freq = Main.rand.NextFloat(0.09f, 0.16f);
+                        float wAmp = Main.rand.NextFloat(48f, 88f);
+                        int wavelet = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, wDir * Main.rand.NextFloat(13f, 20f), ModContent.ProjectileType<PristineFuryLilyWavelet>(), waveletDamage, Projectile.knockBack * 0.25f, Projectile.owner, freq, wAmp);
+                        PFLeftEffectRules.ApplyTheme(wavelet, mark);
+                    }
+                }
+            }
+
+            if (chargeLevel >= 3f)
+            {
+                int totalWavelets = Main.rand.Next(35, 42);
+                for (int j = 0; j < totalWavelets; j++)
+                {
+                    float angle = MathHelper.TwoPi * j / totalWavelets + Main.rand.NextFloat(-0.08f, 0.08f);
+                    Vector2 wDir = angle.ToRotationVector2();
+                    float freq = Main.rand.NextFloat(0.07f, 0.14f);
+                    float wAmp = Main.rand.NextFloat(55f, 95f);
+                    int wavelet = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, wDir * Main.rand.NextFloat(16f, 24f), ModContent.ProjectileType<PristineFuryLilyWavelet>(), waveletDamage, Projectile.knockBack * 0.25f, Projectile.owner, freq, wAmp);
                     PFLeftEffectRules.ApplyTheme(wavelet, mark);
                 }
             }
@@ -1525,7 +1541,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
     {
         private static readonly Color LilyRed    = new(255, 54, 42);
         private static readonly Color LilyOrange = new(255, 126, 42);
-        private const int Lifetime = 110;
+        private const int Lifetime = 360;
+        private const int HomingDelay = 240; // 120 game frames = 2 seconds (extraUpdates=1 → 2 AI calls/frame)
+        private const float HomingRange = 1400f;
+        private const float MaxHomingSpeed = 22f;
+        private const float HomingInertia = 18f;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -1563,12 +1583,31 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 BaseSpeed = Math.Max(Projectile.velocity.Length(), 8f);
             }
 
-            float frequency    = Projectile.ai[0] > 0f ? Projectile.ai[0] : 0.12f;
-            float waveAmplitude = Projectile.ai[1] > 0f ? Projectile.ai[1] : 60f;
-            Vector2 baseDir = BaseAngle.ToRotationVector2();
-            Vector2 perpDir = baseDir.RotatedBy(MathHelper.PiOver2);
-            float waveVelocity = waveAmplitude * (float)Math.Cos(frequency * Timer);
-            Projectile.velocity = baseDir * BaseSpeed + perpDir * waveVelocity;
+            if (Timer <= HomingDelay)
+            {
+                float frequency    = Projectile.ai[0] > 0f ? Projectile.ai[0] : 0.12f;
+                float waveAmplitude = Projectile.ai[1] > 0f ? Projectile.ai[1] : 60f;
+                Vector2 baseDir = BaseAngle.ToRotationVector2();
+                Vector2 perpDir = baseDir.RotatedBy(MathHelper.PiOver2);
+                float waveVelocity = waveAmplitude * (float)Math.Cos(frequency * Timer);
+                Projectile.velocity = baseDir * BaseSpeed + perpDir * waveVelocity;
+            }
+            else
+            {
+                NPC homingTarget = PristineFuryTargeting.FindTarget(Projectile.Center, HomingRange, Main.player[Projectile.owner]);
+                if (homingTarget != null)
+                {
+                    Vector2 toTarget = Projectile.SafeDirectionTo(homingTarget.Center);
+                    float speed = Math.Min(Projectile.velocity.Length() + 0.5f, MaxHomingSpeed);
+                    Projectile.velocity = (Projectile.velocity * HomingInertia + toTarget * speed) / (HomingInertia + 1f);
+                    if (Projectile.velocity.Length() > MaxHomingSpeed)
+                        Projectile.velocity = Projectile.velocity.SafeNormalize(toTarget) * MaxHomingSpeed;
+                }
+                else
+                {
+                    Projectile.velocity *= 0.97f;
+                }
+            }
             Projectile.rotation = Projectile.velocity.ToRotation();
 
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, LilyOrange);

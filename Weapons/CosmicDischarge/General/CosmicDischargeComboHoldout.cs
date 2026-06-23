@@ -225,10 +225,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2.One,
                     direction.ToRotation(),
                     0.03f,
-                    0.2f,
+                    0.2f * 0.3f,
                     15));
-                CosmicDischargeCommon.SpawnDoGSparkBurst(Owner.MountedCenter, 8, 2.4f, 7f, 0.58f, -direction * 1.1f);
-                CosmicDischargeCommon.SpawnDoGRiftCracks(Owner.MountedCenter, 2, 3f, 7f, 0.4f);
+                CosmicDischargeCommon.SpawnDoGSparkBurst(Owner.MountedCenter, 8, 2.4f, 7f, 0.58f * 0.3f, -direction * 1.1f);
+                CosmicDischargeCommon.SpawnDoGRiftCracks(Owner.MountedCenter, 2, 3f, 7f, 0.4f * 0.3f);
             }
         }
 
@@ -265,7 +265,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextVector2Circular(1.8f, 1.8f),
                     100,
                     CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.8f, 1.25f));
+                    Main.rand.NextFloat(0.8f, 1.25f) * 0.3f);
                 dust.noGravity = true;
             }
         }
@@ -313,7 +313,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 direction.ToRotation(),
                 0.035f,
-                0.22f * intensity,
+                0.22f * intensity * 0.3f,
                 14));
 
             for (int i = 0; i < 6 + (int)(intensity * 8f); i++)
@@ -324,11 +324,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     velocity,
                     false,
                     Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.42f, 0.82f),
+                    Main.rand.NextFloat(0.42f, 0.82f) * 0.3f,
                     CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RandomDoGColor()) * 0.75f));
             }
 
-            CosmicDischargeCommon.SpawnDoGRiftCracks(center, intensity > 1f ? 5 : 3, 3f, 8f + intensity * 2f, 0.45f * intensity);
+            CosmicDischargeCommon.SpawnDoGRiftCracks(center, intensity > 1f ? 5 : 3, 3f, 8f + intensity * 2f, 0.45f * intensity * 0.3f);
         }
 
 
@@ -371,7 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(0.35f, 2.4f),
                     120,
                     CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.85f, 1.32f));
+                    Main.rand.NextFloat(0.85f, 1.32f) * 0.3f);
                 dust.noGravity = true;
             }
         }
@@ -603,7 +603,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                 target.Center,
                                 Vector2.Zero,
                                 CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGWhiteColor) * 0.45f,
-                                0.5f,
+                                0.5f * 0.3f,
                                 15
                             ));
                         }
@@ -643,7 +643,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             Vector2.Zero,
                             CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
                             0.04f,
-                            1.4f,
+                            1.4f * 0.3f,
                             22
                         ));
 
@@ -655,7 +655,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                 sparkVel,
                                 false,
                                 Main.rand.Next(16, 28),
-                                Main.rand.NextFloat(0.7f, 1.1f),
+                                Main.rand.NextFloat(0.7f, 1.1f) * 0.3f,
                                 CosmicDischargeCommon.RandomDoGColor()
                             ));
                         }

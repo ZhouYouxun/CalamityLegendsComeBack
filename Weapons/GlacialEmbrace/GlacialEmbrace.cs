@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -118,6 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
                 if (Main.projectile.IndexInRange(spike))
                 {
                     Main.projectile[spike].originalDamage = Item.damage;
+                    Main.projectile[spike].minionSlots = (modPlayer.CurrentMode == 0) ? 0.5f : 1.0f;
                 }
 
                 // 重新排布环绕角度
@@ -130,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
         public static void RearrangeSpikes(Player player)
         {
             int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
-            int spikeCount = 0;
+            var circlingSpikes = new List<Projectile>();
             
             foreach (Projectile pro in Main.ActiveProjectiles)
             {
@@ -139,27 +141,41 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
                     var modProj = pro.ModProjectile as IceSpikeMinion;
                     if (modProj != null && modProj.IsCirclingPlayer())
                     {
-                        spikeCount++;
+                        circlingSpikes.Add(pro);
                     }
                 }
             }
 
-            if (spikeCount == 0) return;
+            int count = circlingSpikes.Count;
+            if (count == 0) return;
 
-            float angleVariance = MathHelper.TwoPi / spikeCount;
-            float angle = 0f;
-
-            foreach (Projectile pro in Main.ActiveProjectiles)
+            var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
+            if (modPlayer.CurrentMode == 0)
             {
-                if (pro.type == spikeType && pro.owner == player.whoAmI)
+                // 斩击模式：冰刺分裂成两个对立的冰刺
+                float angleVariance = MathHelper.TwoPi / count;
+                float angle = 0f;
+                for (int i = 0; i < count; i++)
                 {
-                    var modProj = pro.ModProjectile as IceSpikeMinion;
-                    if (modProj != null && modProj.IsCirclingPlayer())
-                    {
-                        pro.ai[0] = angle;
-                        pro.netUpdate = true;
-                        angle += angleVariance;
-                    }
+                    Projectile pro = circlingSpikes[i];
+                    pro.ai[0] = angle;
+                    pro.ai[1] = (i % 2 == 0) ? 0f : 1f; // 0 = inner (small), 1 = outer (large)
+                    pro.netUpdate = true;
+                    angle += angleVariance;
+                }
+            }
+            else
+            {
+                // 突刺/打击模式：均等排布
+                float angleVariance = MathHelper.TwoPi / count;
+                float angle = 0f;
+                for (int i = 0; i < count; i++)
+                {
+                    Projectile pro = circlingSpikes[i];
+                    pro.ai[0] = angle;
+                    pro.ai[1] = 0f; // 重置为默认
+                    pro.netUpdate = true;
+                    angle += angleVariance;
                 }
             }
         }
@@ -172,55 +188,57 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             string modeKey = KeybindSystem.LegendaryWeaponFormSwitch?.GetAssignedKeys().FirstOrDefault() ?? "LeftControl";
             string skillKey = KeybindSystem.LegendarySkill?.GetAssignedKeys().FirstOrDefault() ?? "P";
 
-            // 当前模式名
             string modeName = this.GetLocalizedValue("ModeName" + modPlayer.CurrentMode);
 
-            // 组装 Intro (当前模式 + 切换提示)
-            string intro = string.Format(this.GetLocalizedValue("GE_Intro"), modeName, modeKey);
+            string intro = string.Format(this.GetLocalizedValue("GE_Intro"), modeName);
+            string leftClick = this.GetLocalizedValue("GE_LeftClick");
+            string spikeMode = this.GetLocalizedValue("GE_SpikeMode" + modPlayer.CurrentMode);
 
-            // 基础左键
-            string leftBase = this.GetLocalizedValue("GE_Left");
+            string specialIntro = this.GetLocalizedValue("GE_SpecialIntro");
+            string specialMode = this.GetLocalizedValue("GE_SpecialMode" + modPlayer.CurrentMode);
 
-            // 当前模式的冰刺行为
-            string leftMode = this.GetLocalizedValue("GE_Left" + modPlayer.CurrentMode);
-
-            // 当前模式的蓄力攻击
-            string charge = this.GetLocalizedValue("GE_Charge" + modPlayer.CurrentMode);
-
-            // 被动 - 霜冻节奏
-            string qte = string.Format(this.GetLocalizedValue("GE_QTE"), modeKey);
-
-            // 连击奖励 (含动态数值)
-            string combo = string.Format(this.GetLocalizedValue("GE_Combo"),
+            string passiveRhythm = string.Format(this.GetLocalizedValue("GE_PassiveRhythm"), modeKey);
+            string passiveCombo = string.Format(this.GetLocalizedValue("GE_PassiveCombo"),
                 modPlayer.ComboCount, modPlayer.LifeRegenBonus, modPlayer.DefenseBonus);
+            string passiveDivinity = this.GetLocalizedValue("GE_PassiveDivinity");
+            string passiveAurora = this.GetLocalizedValue("GE_PassiveAurora");
 
-            // 冰川神性 (10+连击)
-            string divinity = this.GetLocalizedValue("GE_Divinity");
+            string ultimate = string.Format(this.GetLocalizedValue("GE_Ultimate"), skillKey, modPlayer.UltimateCharge);
 
-            // 被动 - 极光旋律
-            string aurora = this.GetLocalizedValue("GE_AuroraMelody");
-
-            // 终结技
-            string ultimate = string.Format(this.GetLocalizedValue("GE_Ultimate"),
-                skillKey, modPlayer.UltimateCharge);
-
-            // 传奇记录
-            string legendEnd = Main.keyState.PressingShift()
+            string lore = Main.keyState.PressingShift()
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
 
-            string finalText =
-                intro + "\n\n" +
-                leftBase + "\n\n" +
-                leftMode + "\n\n" +
-                charge + "\n\n" +
-                qte + "\n\n" +
-                combo + "\n\n" +
-                divinity + "\n\n" +
-                aurora + "\n\n" +
-                ultimate + "\n\n" +
-                legendEnd + "\n";
+            var components = new List<string> {
+                intro,
+                leftClick,
+                spikeMode,
+                specialIntro,
+                specialMode,
+                passiveRhythm,
+                passiveCombo,
+                passiveDivinity,
+                passiveAurora,
+                ultimate,
+                lore
+            };
 
+            var allLines = new List<string>();
+            foreach (var comp in components)
+            {
+                if (string.IsNullOrEmpty(comp)) continue;
+                var split = comp.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in split)
+                {
+                    string trimmed = line.Trim();
+                    if (!string.IsNullOrEmpty(trimmed))
+                    {
+                        allLines.Add(trimmed);
+                    }
+                }
+            }
+
+            string finalText = string.Join("\n", allLines);
             tooltips.FindAndReplace("[GFB]", finalText);
         }
     }

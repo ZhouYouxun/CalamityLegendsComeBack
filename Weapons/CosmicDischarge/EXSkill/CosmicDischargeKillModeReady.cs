@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < 12; i++)
             {
                 Vector2 velocity = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * Main.rand.NextFloat(3f, 6.5f);
-                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.DoGSpecialColor, Main.rand.NextFloat(1.1f, 1.45f));
+                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.DoGSpecialColor, Main.rand.NextFloat(1.1f, 1.45f) * 0.3f);
                 dust.noGravity = true;
             }
         }
@@ -74,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     aimDirection.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.4f, 1.5f),
                     120,
                     CosmicDischargeCommon.DoGSpecialColor,
-                    Main.rand.NextFloat(1.15f, 1.55f));
+                    Main.rand.NextFloat(1.15f, 1.55f) * 0.3f);
                 dust.noGravity = true;
             }
 
@@ -85,7 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2.Zero,
                     CosmicDischargeCommon.DoGSpecialColor,
                     CosmicDischargeCommon.DoGFuchsiaColor,
-                    Main.rand.NextFloat(1.2f, 1.8f),
+                    Main.rand.NextFloat(1.2f, 1.8f) * 0.3f,
                     14,
                     Main.rand.NextFloat(-0.04f, 0.04f),
                     1.6f));

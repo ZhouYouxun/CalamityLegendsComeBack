@@ -61,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     direction.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.4f, 1.25f),
                     120,
                     CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.9f, 1.25f));
+                    Main.rand.NextFloat(0.9f, 1.25f) * 0.3f);
                 dust.noGravity = true;
 
                 if (Main.rand.NextBool(3))
@@ -71,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         -direction * Main.rand.NextFloat(2.5f, 6.5f),
                         false,
                         Main.rand.Next(12, 18),
-                        Main.rand.NextFloat(0.34f, 0.62f),
+                        Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
                         CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.65f));
                 }
             }
@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 direction.ToRotation(),
                 0.035f,
-                0.22f,
+                0.22f * 0.3f,
                 14));
 
             for (int i = 0; i < 10; i++)
@@ -133,7 +133,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     velocity,
                     false,
                     Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.34f, 0.62f),
+                    Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
                     CosmicDischargeCommon.RandomDoGColor()));
             }
         }

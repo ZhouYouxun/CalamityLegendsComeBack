@@ -27,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private float endAngle       = 0f;
         private Vector2 lockedMouseDir = Vector2.UnitX;
         private float scale          = 1f;
+        private float fadeIn         = 0f;
 
         private const int   SwingDuration          = 26;
         private static readonly float SwingArc     = MathHelper.ToRadians(220f);
@@ -119,6 +120,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 fireballSpawned = true;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.8f, Pitch = Main.rand.NextFloat(-0.1f, 0.2f) }, Owner.Center);
             }
+
+            bool hitWindow = progress >= 0.25f && progress <= 0.85f;
+            fadeIn = MathHelper.Lerp(fadeIn, hitWindow ? 1f : 0f, hitWindow ? 0.3f : 0.35f);
 
             EmitSwingTrail(progress);
 
@@ -217,13 +221,20 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ) return false;
 
             Texture2D tex      = ModContent.Request<Texture2D>(Texture).Value;
-            bool facingLeft    = Owner.direction == -1;
             Vector2 origin     = new Vector2(0f, tex.Height);
-            SpriteEffects fx   = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            float drawRotation = facingLeft
-                ? (currentAngle - MathHelper.Pi - MathHelper.PiOver4)
-                : (currentAngle + MathHelper.PiOver4);
+            float drawRotation = currentAngle + MathHelper.PiOver4;
             Vector2 drawPos    = Owner.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+
+            // 挥砍弧光 smear
+            if (fadeIn > 0.01f)
+            {
+                Texture2D swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
+                float swipeDir   = Math.Sign(endAngle - startAngle);
+                float smearRot   = drawRotation + MathHelper.PiOver2 * swipeDir;
+                Main.EntitySpriteDraw(swoosh, drawPos, null,
+                    TrailColor with { A = 0 } * fadeIn * 0.38f,
+                    smearRot, swoosh.Size() * 0.5f, scale * 0.72f, SpriteEffects.None, 0);
+            }
 
             // 刀尖光晕
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
@@ -234,7 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 0f, bloom.Size() * 0.5f, scale * 0.6f, SpriteEffects.None, 0);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
-            Main.EntitySpriteDraw(tex, drawPos, null, lightColor, drawRotation, origin, scale, fx, 0);
+            Main.EntitySpriteDraw(tex, drawPos, null, lightColor, drawRotation, origin, scale, SpriteEffects.None, 0);
             return false;
         }
     }

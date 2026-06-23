@@ -77,22 +77,19 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         {
             modPlayer.QteActive = false;
 
-            // 蓄力不足判定失败
-            if (Projectile.ai[0] < 30)
+            bool perfect = false;
+            if (Projectile.ai[0] >= 30)
             {
-                modPlayer.TriggerQteFail();
-                return;
-            }
-
-            // 卡点检查：甜区在 35 至 45 帧之间
-            bool perfect = Projectile.ai[0] >= 35 && Projectile.ai[0] <= 45;
-            if (perfect)
-            {
-                modPlayer.TriggerQteSuccess();
-            }
-            else
-            {
-                modPlayer.TriggerQteFail();
+                // 只有在进行了实质性蓄力（大于等于30帧）时，才触发 QTE 判定
+                perfect = Projectile.ai[0] >= 35 && Projectile.ai[0] <= 45;
+                if (perfect)
+                {
+                    modPlayer.TriggerQteSuccess();
+                }
+                else
+                {
+                    modPlayer.TriggerQteFail();
+                }
             }
 
             // 根据不同模式，生成对应的特殊攻击弹幕

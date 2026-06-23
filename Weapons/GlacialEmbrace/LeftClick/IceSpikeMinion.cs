@@ -17,19 +17,13 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
     {
         public override string Texture => "CalamityMod/Items/Weapons/Summon/GlacialEmbrace"; // 复用原版贴图
 
-        // 斩击模式变量
-        private float outerAngleOffset = 0f;
-        private List<int> innerSlashHitNPCs = new List<int>();
-        private List<int> outerSlashHitNPCs = new List<int>();
-        private float innerPrevAngle = 0f;
-        private float outerPrevAngle = 0f;
-
-        // 突刺模式变量
+        // 突刺模式与运行状态变量
         public bool embedded = false;
         public int embedNPCIndex = -1;
         public Vector2 embedOffset = Vector2.Zero;
         public int existTimer = 0;
         public bool flying = false;
+        public bool isThrusting = false; // 是否处于触发后的贯穿推射状态
         public int pierceTimer = 0;
 
         // 打击模式与休眠变量
@@ -59,6 +53,10 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Projectile.tileCollide = false;
             Projectile.minion = true;
             Projectile.DamageType = DamageClass.Summon;
+            
+            // 启用局部无敌帧机制
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 90;
         }
 
         // 辅助方法：判断是否正在环绕玩家（非发射、非钉入、非终结技组装）
@@ -140,36 +138,27 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Projectile.timeLeft = 2;
             Projectile.friendly = true;
 
+            // 区分大（外环）与小（内环）冰刺
+            bool isOuter = Projectile.ai[1] == 1f;
+
             // 冰刺旋转角速度
             float speedMult = modPlayer.GlacialDivinityTimer > 0 ? 1.1f : 1.0f;
-            float innerSpeed = MathHelper.ToRadians(4f * speedMult);
-            float outerSpeed = MathHelper.ToRadians(2.8f * speedMult);
+            float angularSpeed = MathHelper.ToRadians((isOuter ? 2.8f : 4f) * speedMult);
 
-            // 更新内、外冰刺旋转角
-            Projectile.ai[0] -= innerSpeed;
-            outerAngleOffset -= outerSpeed;
+            // 更新旋转角
+            Projectile.ai[0] -= angularSpeed;
+            float angle = Projectile.ai[0];
 
-            float innerAngle = Projectile.ai[0];
-            float outerAngle = Projectile.ai[0] + MathHelper.Pi + outerAngleOffset;
+            // 更新核心弹幕的物理坐标
+            float radius = isOuter ? 140f : 90f;
+            Projectile.Center = player.Center + angle.ToRotationVector2() * radius + Vector2.UnitY * player.gfxOffY;
+            Projectile.rotation = angle + MathHelper.PiOver2;
 
-            // 检测角度绕行是否完成一周以清空碰撞列表
-            if (Math.Abs(innerAngle - innerPrevAngle) >= MathHelper.TwoPi)
-            {
-                innerSlashHitNPCs.Clear();
-                innerPrevAngle = innerAngle;
-            }
-            if (Math.Abs(outerAngle - outerPrevAngle) >= MathHelper.TwoPi)
-            {
-                outerSlashHitNPCs.Clear();
-                outerPrevAngle = outerAngle;
-            }
-
-            // 更新核心弹幕的物理坐标为内侧小冰刺坐标
-            Projectile.Center = player.Center + innerAngle.ToRotationVector2() * 90f + Vector2.UnitY * player.gfxOffY;
-            Projectile.rotation = innerAngle + MathHelper.PiOver2;
+            // 动态调整对应的无敌帧周期（每个旋转周期只能命中一次）
+            Projectile.localNPCHitCooldown = isOuter ? 128 : 90;
         }
 
-        // 重写碰撞函数：支持大小冰晶独立检测
+        // 重写碰撞函数：使用独立的小范围圆形碰撞检测以更加契合旋转轨迹
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             Player player = Main.player[Projectile.owner];
@@ -177,19 +166,10 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 
             if (modPlayer.CurrentMode == 0 && IsCirclingPlayer())
             {
-                // 检测小冰刺碰撞 (半径 90f)
-                float innerAngle = Projectile.ai[0];
-                Vector2 innerPos = player.Center + innerAngle.ToRotationVector2() * 90f;
-                Rectangle innerHitbox = new Rectangle((int)innerPos.X - 16, (int)innerPos.Y - 16, 32, 32);
-                if (innerHitbox.Intersects(targetHitbox)) return true;
-
-                // 检测大冰刺碰撞 (半径 140f)
-                float outerAngle = Projectile.ai[0] + MathHelper.Pi + outerAngleOffset;
-                Vector2 outerPos = player.Center + outerAngle.ToRotationVector2() * 140f;
-                Rectangle outerHitbox = new Rectangle((int)outerPos.X - 24, (int)outerPos.Y - 24, 48, 48);
-                if (outerHitbox.Intersects(targetHitbox)) return true;
-
-                return false;
+                bool isOuter = Projectile.ai[1] == 1f;
+                float radius = isOuter ? 24f : 16f;
+                Vector2 targetCenter = targetHitbox.Center.ToVector2();
+                return Vector2.Distance(Projectile.Center, targetCenter) <= radius + targetHitbox.Width * 0.5f;
             }
 
             return base.Colliding(projHitbox, targetHitbox);
@@ -202,39 +182,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 
             if (modPlayer.CurrentMode == 0 && IsCirclingPlayer())
             {
-                // 斩击模式下限制：每个周期每个冰晶对每个敌怪只能造成一次伤害
-                float innerAngle = Projectile.ai[0];
-                Vector2 innerPos = player.Center + innerAngle.ToRotationVector2() * 90f;
-                Rectangle innerHitbox = new Rectangle((int)innerPos.X - 16, (int)innerPos.Y - 16, 32, 32);
-
-                float outerAngle = Projectile.ai[0] + MathHelper.Pi + outerAngleOffset;
-                Vector2 outerPos = player.Center + outerAngle.ToRotationVector2() * 140f;
-                Rectangle outerHitbox = new Rectangle((int)outerPos.X - 24, (int)outerPos.Y - 24, 48, 48);
-
-                bool innerHit = innerHitbox.Intersects(target.getRect());
-                bool outerHit = outerHitbox.Intersects(target.getRect());
-
-                bool hitAllowed = false;
-
-                if (innerHit && !innerSlashHitNPCs.Contains(target.whoAmI))
-                {
-                    innerSlashHitNPCs.Add(target.whoAmI);
-                    hitAllowed = true;
-                    // 小冰晶伤害微降
-                    modifiers.SourceDamage *= 0.85f;
-                }
-                if (outerHit && !outerSlashHitNPCs.Contains(target.whoAmI))
-                {
-                    outerSlashHitNPCs.Add(target.whoAmI);
-                    hitAllowed = true;
-                    // 大冰晶伤害提升
-                    modifiers.SourceDamage *= 1.35f;
-                }
-
-                if (!hitAllowed)
-                {
-                    modifiers.SourceDamage *= 0f; // 已经hit过，取消本次伤害
-                }
+                bool isOuter = Projectile.ai[1] == 1f;
+                modifiers.SourceDamage *= isOuter ? 1.35f : 0.85f;
             }
         }
         #endregion
@@ -289,12 +238,14 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 
                 // 寻找前方可锁定的敌人，若存在一段时间且距离合适，自动飞出刺向敌人
                 existTimer++;
-                if (existTimer >= 180) // 存在 3 秒后寻找目标飞出
+                int threshold = modPlayer.GlacialDivinityTimer > 0 ? 162 : 180;
+                if (existTimer >= threshold) // 存在 3 秒后（冰川神性时缩短10%）寻找目标飞出
                 {
                     NPC target = CalamityUtils.MinionHoming(Projectile.Center, 800f, player);
                     if (target != null)
                     {
                         flying = true;
+                        isThrusting = false; // 初始飞行是用于钉入的
                         existTimer = 0;
                         pierceTimer = 0;
                         Projectile.velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 16f;
@@ -310,6 +261,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             if (!embedded) return;
             embedded = false;
             flying = true;
+            isThrusting = true; // 设为贯穿状态，命中时不重复钉入
             pierceTimer = 0;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
@@ -330,7 +282,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             // 给敌人上冻伤 Debuff
             target.AddBuff(BuffID.Frostburn2, 300);
 
-            if (modPlayer.CurrentMode == 1 && flying && !embedded)
+            // 只有初始自动飞出的冰刺，在命中时才钉入敌人
+            if (modPlayer.CurrentMode == 1 && flying && !embedded && !isThrusting)
             {
                 // 检查已钉在该目标身上的冰刺总数
                 int embeddedCount = 0;
@@ -535,21 +488,16 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             float time = Main.GlobalTimeWrappedHourly;
             Vector2 drawCenter = Projectile.Center - Main.screenPosition;
 
-            // 1. 斩击模式双重冰刺绘制
+            // 1. 斩击模式冰刺绘制
             if (modPlayer.CurrentMode == 0 && IsCirclingPlayer())
             {
-                // 绘制内侧小冰晶 (ai[0])
-                float innerAngle = Projectile.ai[0];
-                Vector2 innerPos = Main.player[Projectile.owner].Center + innerAngle.ToRotationVector2() * 90f + Vector2.UnitY * Main.player[Projectile.owner].gfxOffY - Main.screenPosition;
-                Color innerCol = new Color(130, 230, 255) * 0.9f;
-                Main.spriteBatch.Draw(texture, innerPos, null, innerCol, innerAngle + MathHelper.PiOver2, texture.Size() * 0.5f, 0.8f, SpriteEffects.None, 0f);
+                bool isOuter = Projectile.ai[1] == 1f;
+                float scale = isOuter ? 1.3f : 0.8f;
+                Color drawCol = isOuter 
+                    ? Color.Lerp(new Color(0, 180, 255), Color.White, 0.3f + 0.3f * MathF.Sin(time * 6f)) * 0.95f
+                    : new Color(130, 230, 255) * 0.9f;
 
-                // 绘制外侧大冰晶 (ai[0] + Pi + offset)
-                float outerAngle = Projectile.ai[0] + MathHelper.Pi + outerAngleOffset;
-                Vector2 outerPos = Main.player[Projectile.owner].Center + outerAngle.ToRotationVector2() * 140f + Vector2.UnitY * Main.player[Projectile.owner].gfxOffY - Main.screenPosition;
-                Color outerCol = Color.Lerp(new Color(0, 180, 255), Color.White, 0.3f + 0.3f * MathF.Sin(time * 6f)) * 0.95f;
-                Main.spriteBatch.Draw(texture, outerPos, null, outerCol, outerAngle + MathHelper.PiOver2, texture.Size() * 0.5f, 1.3f, SpriteEffects.None, 0f);
-
+                Main.spriteBatch.Draw(texture, drawCenter, null, drawCol, Projectile.rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
                 return false;
             }
 

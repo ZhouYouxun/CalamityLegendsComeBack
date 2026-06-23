@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             particleVel,
                             false,
                             Main.rand.Next(12, 22),
-                            Main.rand.NextFloat(0.45f, 0.82f),
+                            Main.rand.NextFloat(0.45f, 0.82f) * 0.3f,
                             CosmicDischargeCommon.RandomDoGColor()
                         ));
                     }

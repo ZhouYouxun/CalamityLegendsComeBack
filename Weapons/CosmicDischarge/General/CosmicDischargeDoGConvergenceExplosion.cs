@@ -57,9 +57,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 {
                     CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 8, 4, 48f, 30f);
                     CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGWhiteColor, 0.3f, 2.4f, "CalamityMod/Particles/PlasmaExplosion", 20);
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGCyanColor, new Vector2(1.1f, 0.75f), 0f, 0.25f, 1.55f, 20));
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGFuchsiaColor, new Vector2(0.75f, 1.1f), MathHelper.PiOver4, 0.25f, 1.35f, 18));
-                    GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, 1.8f, 20));
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGCyanColor, new Vector2(1.1f, 0.75f), 0f, 0.25f * 0.3f, 1.55f * 0.3f, 20));
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGFuchsiaColor, new Vector2(0.75f, 1.1f), MathHelper.PiOver4, 0.25f * 0.3f, 1.35f * 0.3f, 18));
+                    GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, 1.8f * 0.3f, 20));
                 }
             }
 
@@ -71,14 +71,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Projectile.Center + direction * Main.rand.NextFloat(60f, Radius),
                     direction * 0.4f,
                     14,
-                    0.07f,
+                    0.07f * 0.3f,
                     0.9f,
                     Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor));
                 GeneralParticleHandler.SpawnParticle(new NanoParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.7f, Radius * 0.7f),
                     Main.rand.NextVector2Circular(2f, 2f),
                     CosmicDischargeCommon.DoGSpecialColor,
-                    0.35f,
+                    0.35f * 0.3f,
                     18,
                     emitsLight: true));
             }

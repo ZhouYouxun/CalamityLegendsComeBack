@@ -6,317 +6,86 @@ Mods: {
 					GlacialEmbrace: {
 						DisplayName: Glacial Embrace — Legend Reborn
 						Tooltip: "[GFB]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_Intro — Top mode display + base hint
-						// ═══════════════════════════════════════════════════════════
+						ModeName0: Cleave Mode
+						ModeName1: Pierce Mode
+						ModeName2: Strike Mode
 						GE_Intro:
 							'''
 							[c/7BC8E5:Current combat form: {0}]
 							[c/A0D8EF:Summon-class legendary weapon — 48 base damage, 10 mana cost]
-							[c/A0D8EF:Left click: summon Glacial Ice Spikes to orbit and guard; when minion slots are full, hold to charge a special attack.]
-							[c/A0D8EF:First use automatically summons a Glacial Core (0 minion slots) as an auxiliary core.]
+							[c/A0D8EF:First use automatically summons a Glacial Core (0 slots) to anchor the spike system.]
 							[c/A0D8EF:All hits inflict Frostburn II (5 seconds).]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ModeName0/1/2 — Mode names (for C# GetLocalizedValue)
-						// ═══════════════════════════════════════════════════════════
-						GE_ModeName0: Cleave Mode
-						GE_ModeName1: Pierce Mode
-						GE_ModeName2: Strike Mode
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_LeftClickFlow — Left-click summoning flow overview
-						// ═══════════════════════════════════════════════════════════
-						GE_LeftClickFlow:
-							'''
-							[c/A0D8EF:◆ Left Click — Summoning Flow]
-							[c/A0D8EF:Step 1: if no Glacial Core exists, summon one first (0 minion slots) as the spike system anchor.]
-							[c/A0D8EF:Step 2: if minion slots are not full, summon a Glacial Ice Spike to orbit the player. Behavior varies by form.]
-							[c/A0D8EF:Step 3: if minion slots are full, spawn the charge holdout and begin charging a special attack.]
-							[c/A0D8EF:Strike Mode exception: if spikes are aligned, left-click directly triggers the smash collision.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ModeLeft0 — Cleave Mode: Spike behavior
-						// ═══════════════════════════════════════════════════════════
-						GE_ModeLeft0:
+						GE_LeftClick: "[c/A0D8EF:◆ Left Click: summon Glacial Core first if absent; then Ice Spikes until full; release/charge special attack when full.]"
+						GE_SpikeMode0:
 							'''
 							[c/90FFB0:◈ Cleave Mode — Spike Behavior]
-							[c/90FFB0:Minion slot cost reduced to 0.5, allowing double the number of spikes.]
-							[c/90FFB0:Each spike splits into an inner crystal and an outer crystal, forming a dual-layer orbiting guard:]
-							[c/90FFB0:  · Inner crystal: 90px orbit radius, 4°/frame rotation, damage ×0.85]
-							[c/90FFB0:  · Outer crystal: 140px orbit radius, 2.8°/frame rotation, damage ×1.35]
-							[c/90FFB0:Each crystal can only hit the same enemy once per full rotation cycle to prevent duplicate damage.]
-							[c/90FFB0:Best suited for wide-area coverage and sustained suppression.]
+							[c/90FFB0:  · Spikes occupy 0.5 slots. Each spike splits into opposite inner and outer crystal parts.]
+							[c/90FFB0:  · Inner crystal: 90px orbit, speed 4°/frame, 0.85x damage, 90-frame NPC immunity.]
+							[c/90FFB0:  · Outer crystal: 140px orbit, speed 2.8°/frame, 1.35x damage, 128-frame NPC immunity.]
+							[c/90FFB0:Each crystal hits the same target once per rotation cycle. Inner and outer spikes have separate immunity.]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ModeLeft1 — Pierce Mode: Spike behavior
-						// ═══════════════════════════════════════════════════════════
-						GE_ModeLeft1:
+						GE_SpikeMode1:
 							'''
 							[c/80EFFF:◈ Pierce Mode — Spike Behavior]
-							[c/80EFFF:Minion slot cost 1.0, orbits at 90px radius around the player.]
-							[c/80EFFF:After orbiting for 3 seconds, auto-targets enemies within 800px and launches at speed 16.]
-							[c/80EFFF:Embeds into enemies (max 6 per enemy); excess spikes shatter on impact.]
-							[c/80EFFF:Detonation methods:]
-							[c/80EFFF:  · Whip hit on target: detonates 1 random embedded spike]
-							[c/80EFFF:  · Glacial Piercing Wedge hit on target: detonates ALL embedded spikes]
-							[c/80EFFF:Detonated spikes un-embed and pierce through at speed 18, dealing secondary damage.]
-							[c/80EFFF:Best suited for single-target burst output; synergizes excellently with whip weapons.]
+							[c/80EFFF:  · Spikes occupy 1.0 slot, 90px orbit. Automatically flies out after 3s to homing-hit and embed (max 6 per enemy).]
+							[c/80EFFF:  · Whip hit detonates 1 random embedded spike; special attack hit detonates all embedded spikes.]
+							[c/80EFFF:  · Detonated spikes thrust in their embed direction to pierce and deal secondary damage to a short line of enemies.]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ModeLeft2 — Strike Mode: Spike behavior
-						// ═══════════════════════════════════════════════════════════
-						GE_ModeLeft2:
+						GE_SpikeMode2:
 							'''
 							[c/FF8B60:◈ Strike Mode — Spike Behavior]
-							[c/FF8B60:Minion slot cost 1.0, spikes orbit with tips facing inward.]
-							[c/FF8B60:After a 6s cooldown, all active spikes align toward the cursor in two flanking rows.]
-							[c/FF8B60:Left-click while aligned: triggers smash collision —]
-							[c/FF8B60:  · Spikes rush inward from both flanks, converging at the center point]
-							[c/FF8B60:  · Collision creates a solar whip explosion, damage multiplier ×2.2]
-							[c/FF8B60:  · After collision, spikes enter 4s hibernation and cannot act]
-							[c/FF8B60:6s cooldown between alignments.]
-							[c/FF8B60:Best suited for precise battlefield control; especially effective against large targets.]
+							[c/FF8B60:  · Spikes occupy 1.0 slot, tips inward. After 6s, all spikes align towards the cursor.]
+							[c/FF8B60:  · Left click while aligned: triggers a collision smash, spikes converge to deal 2.2x AoE damage, then hibernate for 4s.]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_Charge — Charge attack overview (when minion slots full)
-						// ═══════════════════════════════════════════════════════════
-						GE_Charge:
+						GE_SpecialIntro: "[c/A0D8EF:◆ Special Attack (Left click / hold when minion slots are full)]"
+						GE_SpecialMode0:
 							'''
-							[c/A0D8EF:◆ Charge Attack (hold left-click when minion slots are full)]
-							[c/A0D8EF:Charge duration: 45 frames (approx. 0.75s), QTE sweet spot at frames 35–45.]
-							[c/A0D8EF:Perfect timing release: damage multiplier ×1.5.]
-							[c/A0D8EF:All charge projectile hits trigger OnSpecialHitNPC(), granting +4 ultimate energy each.]
-							[c/A0D8EF:Charge release also triggers a Frost Rhythm QTE check.]
+							[c/90FFB0:Cleave Special → Glacial Cleaver Blade (IceBladeProj)]
+							[c/90FFB0:  · Condenses at cursor when held. Upon release, spins around the player for 2 rotations after a short delay.]
+							[c/90FFB0:  · 8-frame NPC hit cooldown for fast multi-hits.]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ChargeSlash — Cleave Mode charge projectile
-						// ═══════════════════════════════════════════════════════════
-						GE_ChargeSlash:
+						GE_SpecialMode1:
 							'''
-							[c/90FFB0:Cleave Charge → Glacial Cleaver Blade (IceBladeProj)]
-							[c/90FFB0:Spawns a massive 160×160 spinning ice blade.]
-							[c/90FFB0:Completes 2 full rotations in 30 frames, covering an enormous area.]
-							[c/90FFB0:NPC immunity is only 8 frames, allowing multiple hits in rapid succession.]
+							[c/80EFFF:Pierce Special → Glacial Piercing Wedge (IceWedgeProj)]
+							[c/80EFFF:  · Fires a mild-homing crystal wedge towards cursor that shatters on hit, detonating ALL embedded spikes on that target.]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ChargePierce — Pierce Mode charge projectile
-						// ═══════════════════════════════════════════════════════════
-						GE_ChargePierce:
+						GE_SpecialMode2:
 							'''
-							[c/80EFFF:Pierce Charge → Glacial Piercing Wedge (IceWedgeProj)]
-							[c/80EFFF:A piercing projectile with mild homing capability.]
-							[c/80EFFF:On hit, detonates ALL embedded Glacial Ice Spikes on the target.]
-							[c/80EFFF:Synergizes perfectly with Pierce Mode's embedding mechanic for chain detonations.]
+							[c/FF8B60:Strike Special → Glacial Strike Pillar (IcePillarProj)]
+							[c/FF8B60:  · Drops a heavy gravity-affected ice pillar that explodes in a wide area.]
+							[c/FF8B60:  · Deals strong knockback that forces boss knockback, and detonates all spikes.]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ChargeStrike — Strike Mode charge projectile
-						// ═══════════════════════════════════════════════════════════
-						GE_ChargeStrike:
-							'''
-							[c/FF8B60:Strike Charge → Glacial Strike Pillar (IcePillarProj)]
-							[c/FF8B60:A massive gravity-affected ice pillar that plummets from above.]
-							[c/FF8B60:On hit, FORCES boss knockback: knockback velocity = direction × 3.5.]
-							[c/FF8B60:Detonates all non-hibernating Glacial Ice Spikes on the field.]
-							[c/FF8B60:Creates a 1.5× damage AoE explosion at the point of impact.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_PassiveFrostRhythm — Passive 1: Frost Rhythm (QTE)
-						// ═══════════════════════════════════════════════════════════
-						GE_PassiveFrostRhythm:
-							'''
-							[c/B0E0FF:◇ Passive — Frost Rhythm (QTE Timing System)]
-							[c/B0E0FF:Switching combat forms triggers a rhythm QTE:]
-							[c/B0E0FF:  · 40-frame timing window, sweet spot at 70%–90% progress]
-							[c/B0E0FF:  · Press the switch key again within the sweet spot to succeed]
-							[c/B0E0FF:Charge release also triggers a QTE: sweet spot at frames 35–45.]
-							[c/B0E0FF:Success: combo count +1 (max 20).]
-							[c/B0E0FF:Failure or timeout: combo count resets to 0, Glacial Divinity expires immediately.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ComboBonus — Combo bonus details
-						// ═══════════════════════════════════════════════════════════
-						GE_ComboBonus:
-							'''
-							[c/B0E0FF:Combo bonus breakdown:]
-							[c/B0E0FF:  · Life regen + combo÷2 (max +10 regen/sec)]
-							[c/B0E0FF:  · Defense + (combo÷4)×8 (max +40 defense)]
-							[c/B0E0FF:  · Every 5 combos: restores 60 frames of wing flight time]
-							[c/B0E0FF:  · Combo ≥10: triggers Glacial Divinity buff, lasts 5 seconds]
-							[c/B0E0FF:Glacial Divinity: all spike rotation speeds ×1.1, enhanced visual glow effects.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_PassiveAurora — Passive 2: Aurora Melody
-						// ═══════════════════════════════════════════════════════════
-						GE_PassiveAurora:
-							'''
-							[c/C8A0FF:◇ Passive — Aurora Melody]
-							[c/C8A0FF:Triggered when special projectiles (charge or ultimate) hit enemies within 0.75s (45 frames) of each other.]
-							[c/C8A0FF:Grants the Aurora Melody buff for 5 seconds:]
-							[c/C8A0FF:  · Defense +10]
-							[c/C8A0FF:  · All incoming damage reduced by 15% (applied before defense calculation)]
-							[c/C8A0FF:Repeated triggers refresh the duration.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_Ultimate — Ultimate: Glacial Diamond Drill
-						// ═══════════════════════════════════════════════════════════
+						GE_PassiveRhythm: "[c/B0E0FF:◇ Frost Rhythm: switch forms or release a charge (35-45 frames) to trigger QTE. Press {0} at 70-90% sweet spot: combo +1 (max 20). Failure resets combo.]"
+						GE_PassiveCombo: "[c/B0E0FF:  · Combo: {0}. Every 2 combo: +1 life regen/s (current: +{1}); every 4 combo: +8 defense (current: +{2}); every 5 combo: restores 60 wing time.]"
+						GE_PassiveDivinity: "[c/B0E0FF:  · Glacial Divinity: 10+ combo increases spike speed by 1.1x (faster rotation/fly-out). Lasts until fail or 5s.]"
+						GE_PassiveAurora: "[c/C8A0FF:◇ Aurora Melody: special hits within 45 frames grant 5s of Aurora grace (+10 defense, 15% pre-defense damage reduction).]"
 						GE_Ultimate:
 							'''
-							[c/A0F0FF:★ Ultimate — Glacial Diamond Drill Finisher]
-							[c/A0F0FF:At 240 energy, press] [[c/A0F0FF:{1}]] [c/A0F0FF:to activate.]
-							[c/A0F0FF:Charge source: +4 energy per special projectile hit (60 hits to fill).]
-							[c/A0F0FF:Base damage: weapon damage × 2.5 = 120.]
+							[c/A0F0FF:★ Ultimate — Glacial Diamond Drill]
+							[c/A0F0FF:  · Special hits grant +4 energy. Press {0} at 240 energy to release (current: {1}/240).]
+							[c/A0F0FF:  · Assembly (1.5s): Spikes x3 (max 30, i.e., 10 slot cap) gather in 3 layers (9-12-9) with a rotating star flash.]
+							[c/A0F0FF:  · Launch (3s): Click left-click to launch towards cursor. Deals high-frequency hits; player is slowed and invulnerable.]
+							[c/A0F0FF:  · Shatter: explodes after 3s for 6x damage, clearing all spikes and buffs.]
+							[c/A0F0FF:  · Over-slot bonus: each slot above 10 increases drill damage by 3% (shatter by 18%).]
 							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_UltimateDetail — Ultimate phase details
-						// ═══════════════════════════════════════════════════════════
-						GE_UltimateDetail:
-							'''
-							[c/A0F0FF:Ultimate phase breakdown:]
-							[c/A0F0FF:  ① Assembly (1.5s)]
-							[c/A0F0FF:    All spikes on the field are killed and reborn as drill components.]
-							[c/A0F0FF:    Up to 30 spikes assemble in 3 layers around the player.]
-							[c/A0F0FF:  ② Flash (0.33s)]
-							[c/A0F0FF:    Cross-star burst visual effect, heralding the drill's descent.]
-							[c/A0F0FF:  ③ Launch (3s)]
-							[c/A0F0FF:    Speed 12 toward cursor direction.]
-							[c/A0F0FF:    NPC immunity is only 3 frames, enabling rapid multi-hit.]
-							[c/A0F0FF:    Player is immobilized and fully immune to damage during launch.]
-							[c/A0F0FF:  ④ Shatter]
-							[c/A0F0FF:    Deals 6.0× drill damage as an AoE explosion.]
-							[c/A0F0FF:    Screen shake intensity 10.0; resets all buffs and combo count.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_UltimateBonus — Over-slot bonus
-						// ═══════════════════════════════════════════════════════════
-						GE_UltimateBonus: "[c/A0F0FF:Over-slot bonus: +3% ultimate damage for each minion slot beyond 10.]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_FormSwitchHint — Form switch keybind hint
-						// ═══════════════════════════════════════════════════════════
-						GE_FormSwitchHint: "[c/F7D87C:Press] [[c/F7D87C:{0}]] [c/F7D87C:to switch combat forms and trigger a Frost Rhythm timing check.]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_SkillHint — Ultimate keybind hint
-						// ═══════════════════════════════════════════════════════════
-						GE_SkillHint: "[c/F7D87C:When energy is full, press] [[c/F7D87C:{1}]] [c/F7D87C:to unleash the Glacial Diamond Drill Finisher.]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_StateReset — State reset explanation
-						// ═══════════════════════════════════════════════════════════
-						GE_StateReset:
-							'''
-							[c/A0D8EF:State reset rules:]
-							[c/A0D8EF:  · Switching weapons: combo count resets, QTE interrupted, passive buffs expire]
-							[c/A0D8EF:  · Glacial Divinity expires along with combo reset]
-							[c/A0D8EF:  · Aurora Melody timer cleared]
-							[c/A0D8EF:  · Strike Mode alignment state and cooldown cleared]
-							[c/A0D8EF:  · Ultimate energy is fully preserved when switching weapons]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_Debuff — Debuff information
-						// ═══════════════════════════════════════════════════════════
-						GE_Debuff: "[c/A0D8EF:Debuff: all hits inflict Frostburn II, lasting 5 seconds.]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_CoreMinion — Core minion description
-						// ═══════════════════════════════════════════════════════════
-						GE_CoreMinion:
-							'''
-							[c/A0D8EF:◆ Glacial Core (IceBlockMinion)]
-							[c/A0D8EF:An auxiliary core that occupies 0 minion slots, automatically summoned on first weapon use.]
-							[c/A0D8EF:Serves as the anchor point for the ice spike system; persists while the weapon is held.]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ModeOverview — Three-form quick reference
-						// ═══════════════════════════════════════════════════════════
-						GE_ModeOverview:
-							'''
-							[c/F7D87C:Three-form quick reference:]
-							[c/90FFB0:  · Cleave Mode: half-slot double spikes, inner/outer rotation, wide-area sustained suppression]
-							[c/80EFFF:  · Pierce Mode: launch-embed, whip-detonate, single-target burst output]
-							[c/FF8B60:  · Strike Mode: aligned collision, solar whip explosion, precision rhythm control]
-							'''
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_UltimateActiveText — Ultimate activation text
-						// ═══════════════════════════════════════════════════════════
-						GE_UltimateActiveText: Glacial convergence — Diamond Drill descends!
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_DivinityName — Glacial Divinity buff name
-						// ═══════════════════════════════════════════════════════════
-						GE_DivinityName: Glacial Divinity
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_AuroraMelodyName — Aurora Melody buff name
-						// ═══════════════════════════════════════════════════════════
-						GE_AuroraMelodyName: Aurora Melody
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_ComboDisplay — Combo display text
-						// ═══════════════════════════════════════════════════════════
-						GE_ComboDisplay: "[c/B0E0FF:Frost Combo: ×{0} (+{1} regen, +{2} defense)]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_UltimateChargeDisplay — Energy display
-						// ═══════════════════════════════════════════════════════════
-						GE_UltimateChargeDisplay: "[c/A0F0FF:Glacial Energy: {0}/240]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_QteSuccess / GE_QteFail — QTE result text
-						// ═══════════════════════════════════════════════════════════
-						GE_QteSuccess: "Perfect! Combo: {0}"
-						GE_QteFail: "Miss!"
-
-						// ═══════════════════════════════════════════════════════════
-						//  GE_StrikeAlignReady — Strike alignment ready prompt
-						// ═══════════════════════════════════════════════════════════
-						GE_StrikeAlignReady: "[c/FF8B60:Spikes aligned — left-click to trigger smash collision!]"
-
-						// ═══════════════════════════════════════════════════════════
-						//  LegendaryHint / LegendaryText
-						// ═══════════════════════════════════════════════════════════
 						LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 						LegendaryText:
 							'''
-							[c/B0D8FF:At first it was merely an ice crystal shard forgotten in the permafrost,]
-							[c/B0D8FF:spinning alone in an abyss untouched for a thousand years.]
+							[c/B0D8FF:At first it was merely an ice crystal shard forgotten in the permafrost, spinning alone in an abyss untouched for a thousand years.]
 							[c/B0D8FF:It knew nothing of warmth, nor any sound beyond silence.]
-							[c/80C8FF:Then someone tried to tame it, weaving the cold into orbiting guardians,]
-							[c/80C8FF:only to discover that frost has its own rhythm and will.]
+							[c/80C8FF:Then someone tried to tame it, weaving the cold into orbiting guardians, only to discover that frost has its own rhythm and will.]
 							[c/80C8FF:Every rotation was an unfinished melody; every fracture, an unvoiced sigh.]
-							[c/A0B0FF:And so the cleave split the stagnant air, the pierce threaded through frozen time,]
-							[c/A0B0FF:and the strike shattered what was never meant to break.]
+							[c/A0B0FF:And so the cleave split the stagnant air, the pierce threaded through frozen time, and the strike shattered what was never meant to break.]
 							[c/A0B0FF:Three stances are not a choice — they are the breathing of the ice itself.]
-							[c/C0A0FF:Learn to listen to its beat, to step in rhythm with each frozen cadence —]
-							[c/C0A0FF:that is the only key to commanding absolute cold.]
-							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens from its ancient seal,]
-							[c/E0C0FF:forging every spike into one aurora lance that pierces the starlit sky,]
-							[c/E0C0FF:ending this battlefield of ice and fire with the will of absolute zero.]
+							[c/C0A0FF:Learn to listen to its beat, to step in rhythm with each frozen cadence — that is the only key to commanding absolute cold.]
+							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens from its ancient seal, forging every spike into one starlit aurora lance.]
+							[c/E0C0FF:Ending this battlefield of ice and fire with the will of absolute zero.]
 							'''
 					}
 				}
 			}
 		}
-
 		Projectiles: {
 			IceBlockMinion.DisplayName: Glacial Core
 			IceSpikeMinion.DisplayName: Glacial Ice Spike
@@ -326,16 +95,12 @@ Mods: {
 			IcePillarProj.DisplayName: Glacial Strike Pillar
 			GlacialDrillProj.DisplayName: Glacial Diamond Drill Finisher
 		}
-
 		Buffs: {
 			GlacialEmbraceBuff: {
 				DisplayName: Glacial Embrace
 				Description: An ancient glacier coils around you, granting the guardian's embrace of absolute cold.
 			}
 		}
-
-		Cooldowns: {
-			GlacialEmbrace_Ultimate: Glacial Energy
-		}
+		Cooldowns.GlacialEmbrace_Ultimate: Glacial Energy
 	}
 }

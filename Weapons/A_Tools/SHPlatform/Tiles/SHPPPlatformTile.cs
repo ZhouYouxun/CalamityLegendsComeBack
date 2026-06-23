@@ -9,9 +9,9 @@ using Terraria.ObjectData;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform.Tiles
 {
-    public class SHPCPlatformTile : ModTile
+    public class SHPPPlatformTile : ModTile
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/SHPlatform/SHPCPlatformPlace";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/SHPlatform/SHPPPlatformPlace";
 
         public override void SetStaticDefaults()
         {

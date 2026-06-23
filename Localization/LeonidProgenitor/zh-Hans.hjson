@@ -141,7 +141,7 @@ Mods: {
 				LeonidLionHead.DisplayName: 狮头虚影
 				LeonidGravityField.DisplayName: 狮子座回响重力场
 				LeonidUltimateUI.DisplayName: 终结能量条
-				// LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
+				LeonidRightClickHoldout.DisplayName: 流星右键手持弹幕
 			}
 		}
 

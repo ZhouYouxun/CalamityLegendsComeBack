@@ -51,13 +51,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 0f,
                 0.04f,
-                0.3f,
+                0.3f * 0.3f,
                 18));
 
             for (int i = 0; i < 18; i++)
             {
                 Vector2 velocity = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * Main.rand.NextFloat(4f, 10f);
-                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.RandomDoGColor(), Main.rand.NextFloat(1.15f, 1.7f));
+                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.RandomDoGColor(), Main.rand.NextFloat(1.15f, 1.7f) * 0.3f);
                 dust.noGravity = true;
             }
         }
@@ -97,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         slashDirection.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 5.5f),
                         120,
                         CosmicDischargeCommon.RandomDoGColor(),
-                        Main.rand.NextFloat(1.15f, 1.8f));
+                        Main.rand.NextFloat(1.15f, 1.8f) * 0.3f);
                     dust.noGravity = true;
                 }
 
@@ -110,7 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         Vector2.One,
                         slashDirection.ToRotation(),
                         0.02f,
-                        0.12f,
+                        0.12f * 0.3f,
                         10));
                 }
             }
@@ -145,7 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 target.Center,
                 Vector2.Zero,
                 CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.4f,
-                0.55f,
+                0.55f * 0.3f,
                 24));
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
@@ -155,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 0f,
                 0.035f,
-                0.22f,
+                0.22f * 0.3f,
                 16));
 
             if (Main.myPlayer == Projectile.owner)

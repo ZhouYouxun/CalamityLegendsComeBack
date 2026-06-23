@@ -209,15 +209,18 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             CurrentMode = (CurrentMode + 1) % 3;
             SoundEngine.PlaySound(SoundID.Item22 with { Pitch = 0.3f, Volume = 0.6f }, Player.Center);
 
-            // 给附近的冰刺弹幕通知模式切换
+            // 给附近的冰刺弹幕通知模式切换，更新槽位占用，并重排角度
+            int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile p = Main.projectile[i];
-                if (p.active && p.owner == Player.whoAmI && p.type == ModContent.ProjectileType<IceSpikeMinion>())
+                if (p.active && p.owner == Player.whoAmI && p.type == spikeType)
                 {
+                    p.minionSlots = (CurrentMode == 0) ? 0.5f : 1.0f;
                     p.netUpdate = true;
                 }
             }
+            GlacialEmbrace.RearrangeSpikes(Player);
         }
 
         public void TriggerQteSuccess()

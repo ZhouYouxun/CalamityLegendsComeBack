@@ -63,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Projectile.velocity * 0.2f,
                     100,
                     CosmicDischargeCommon.RandomDoGColor(false),
-                    0.9f
+                    0.9f * 0.3f
                 );
                 d.noGravity = true;
             }
@@ -76,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     back * Main.rand.NextFloat(2f, 5f),
                     false,
                     12,
-                    Main.rand.NextFloat(0.38f, 0.7f),
+                    Main.rand.NextFloat(0.38f, 0.7f) * 0.3f,
                     CosmicDischargeCommon.ThreeColorSpark,
                     new Vector2(0.2f, 2.1f),
                     true));
@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         back.RotatedByRandom(0.5f) * Main.rand.NextFloat(2f, 6f),
                         false,
                         10,
-                        0.45f,
+                        0.45f * 0.3f,
                         CosmicDischargeCommon.DoGCyanColor,
                         new Vector2(0.1f, 3.2f),
                         true,

@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform
 {
-    public class SHPCPlatform : ModItem, ILocalizedModType
+    public class SHPPPlatform : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Placeables";
 
@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPlatform
 
         public override void SetDefaults()
         {
-            Item.DefaultToPlaceableTile(ModContent.TileType<SHPCPlatformTile>());
+            Item.DefaultToPlaceableTile(ModContent.TileType<SHPPPlatformTile>());
             Item.width = 22;
             Item.height = 16;
             Item.maxStack = 1;

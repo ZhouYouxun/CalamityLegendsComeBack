@@ -65,14 +65,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 Color outerSparkColor = CosmicDischargeCommon.RandomDoGColor();
                 float scaleBoost = MathHelper.Clamp(Time * 0.01f, 0f, 1.8f);
-                float outerSparkScale = 1.2f + scaleBoost;
+                float outerSparkScale = (1.2f + scaleBoost) * 0.3f;
                 SparkParticle spark = new(Projectile.Center, Projectile.velocity, false, 7, outerSparkScale, outerSparkColor);
                 GeneralParticleHandler.SpawnParticle(spark);
             }
 
             if (Main.rand.NextBool(4))
             {
-                Dust iceDust = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, Projectile.velocity * 0.5f, 150, CosmicDischargeCommon.RandomDoGColor(), 1.2f);
+                Dust iceDust = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, Projectile.velocity * 0.5f, 150, CosmicDischargeCommon.RandomDoGColor(), 1.2f * 0.3f);
                 iceDust.noGravity = true;
                 iceDust.velocity *= 0.3f;
                 iceDust.fadeIn = 1.5f;

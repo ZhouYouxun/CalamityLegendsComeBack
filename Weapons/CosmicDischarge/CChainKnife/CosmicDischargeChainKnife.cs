@@ -164,7 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                     vel,
                                     false,
                                     Main.rand.Next(10, 15),
-                                    Main.rand.NextFloat(0.35f, 0.55f),
+                                    Main.rand.NextFloat(0.35f, 0.55f) * 0.3f,
                                     CosmicDischargeCommon.RandomDoGColor()
                                 ));
                             }
@@ -252,7 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         target.Center,
                         Vector2.Zero,
                         CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.45f,
-                        0.5f,
+                        0.5f * 0.3f,
                         16
                     ));
                 }

@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.ignoreWater = true;
             Projectile.penetrate = 2;
             Projectile.timeLeft = 540;
-            Projectile.extraUpdates = 4;
+            Projectile.extraUpdates = 6;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
             Projectile.ArmorPenetration = 18;
@@ -50,10 +50,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             {
                 int stage = Stage;
                 Projectile.penetrate = stage >= 3 ? 4 : (stage >= 1 ? 3 : 2);
+                Projectile.localAI[1] = Main.rand.NextFloat(0.82f, 1.38f);
                 Projectile.netUpdate = true;
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.spriteDirection = Projectile.direction;
 
             int stage2 = Stage;
@@ -95,6 +96,19 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     Main.rand.NextFloat(0.45f, 0.78f + stage2 * 0.06f));
                 dust.noGravity = true;
             }
+
+            if (!Main.dedServ && Projectile.localAI[1] > 1.18f && Main.rand.NextBool(5))
+            {
+                Color sparkColor = stage2 >= 3 ? SeasSearingPalette.BiohazardLime : CoreColor;
+                Dust spark = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(3.5f, 3.5f),
+                    DustID.GemDiamond,
+                    Main.rand.NextVector2Circular(0.6f, 0.6f),
+                    90,
+                    sparkColor,
+                    Main.rand.NextFloat(0.5f, 0.88f));
+                spark.noGravity = true;
+            }
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -103,6 +117,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float precisionBonus = 1f + Utils.GetLerpValue(380f, 1050f, distance, true) * 0.28f;
             modifiers.FinalDamage *= precisionBonus;
             modifiers.ScalingArmorPenetration += 0.08f;
+            if (Projectile.localAI[1] > 1.2f)
+                modifiers.FinalDamage *= 1f + (Projectile.localAI[1] - 1.2f) * 0.55f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -133,6 +149,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 bloomOrigin = bloom.Size() * 0.5f;
+            float velRot = Projectile.velocity.ToRotation();
+            float rawBoost = Projectile.localAI[1];
+            float boost = rawBoost > 0f ? MathHelper.Clamp(rawBoost, 0.82f, 1.38f) : 1f;
 
             int stage = Stage;
             Color headColor = stage >= 3 ? SeasSearingPalette.BiohazardLime : CoreColor;
@@ -147,14 +166,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Color color = Color.Lerp(tailColor, headColor, completion) * (0.08f + completion * 0.42f);
+                Color color = Color.Lerp(tailColor, headColor, completion) * (0.08f + completion * 0.42f * boost);
                 color.A = 0;
 
-                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, Projectile.rotation, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, velRot, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(texture, drawPosition, null, color, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, (headColor with { A = 0 }) * 0.6f, Projectile.rotation, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, (headColor with { A = 0 }) * (0.6f * boost), velRot, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
@@ -1230,7 +1249,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, Strong ? 9 : 5);
             target.AddBuff(BuffID.Venom, 240);
-            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 240);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 240);
             SpawnSatellites(target.Center);
             SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 18, 4.5f, 8f, 1.1f);
         }
@@ -1338,7 +1357,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 NPC target = Main.npc[targetWho];
                 Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
                 // Perpendicular offset creates spiral orbit approach
-                Vector2 perpendicular = new(-toTarget.Y, toTarget.X) * (float)Math.Sin(orbitPhase) * 3.5f;
+                Vector2 perpendicular = new Vector2(-toTarget.Y, toTarget.X) * (float)Math.Sin(orbitPhase) * 3.5f;
                 Projectile.velocity = Vector2.Lerp(Projectile.velocity, toTarget * 10f + perpendicular, 0.14f);
             }
             else
@@ -1387,7 +1406,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, 2, 6 * 60, fromSpread: true);
-            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 120);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 120);
         }
 
         public override void OnKill(int timeLeft)
@@ -1518,7 +1537,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, 12);
             target.AddBuff(BuffID.Venom, 360);
-            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 420);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 420);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1580,7 +1599,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.ignoreWater = true;
             Projectile.penetrate   = 4;
             Projectile.timeLeft    = 480;
-            Projectile.extraUpdates = 4;
+            Projectile.extraUpdates = 6;
             Projectile.usesLocalNPCImmunity    = true;
             Projectile.localNPCHitCooldown     = 10;
             Projectile.ArmorPenetration = 28;
@@ -1628,7 +1647,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (Stage >= 3) stacks++;
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, stacks);
             target.AddBuff(BuffID.Venom, 260);
-            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 260);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 260);
 
             SpawnPressureOrbs(target.Center);
             SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 20, 5f, 6f, 1.1f);
@@ -1711,7 +1730,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.ignoreWater = true;
             Projectile.penetrate   = -1;   // pierce all
             Projectile.timeLeft    = 380;
-            Projectile.extraUpdates = 4;
+            Projectile.extraUpdates = 6;
             Projectile.usesLocalNPCImmunity    = true;
             Projectile.localNPCHitCooldown     = 8;
             Projectile.ArmorPenetration = 22;
@@ -1746,7 +1765,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, 4);
             target.AddBuff(BuffID.Venom, 200);
-            target.AddBuff(Terraria.ModLoader.ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.Irradiated>(), 200);
+            target.AddBuff(ModContent.BuffType<Irradiated>(), 200);
             SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 10, 3.5f, 5f, 0.9f);
         }
 

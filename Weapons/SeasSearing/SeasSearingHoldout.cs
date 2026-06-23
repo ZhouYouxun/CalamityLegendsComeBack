@@ -302,7 +302,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FirePollutionRound(int burstIndex)
         {
             int stage = SeasSearing.GetProgressionStage();
-            float speed = 34f + stage * 2.5f;
+            float speed = 24f + stage * 2f;
             Vector2 dir = AimDirection;
             Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(0.65f + burstIndex * 0.22f)) * speed;
 
@@ -330,7 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireVentShot(int burstIndex)
         {
             int stage = SeasSearing.GetProgressionStage();
-            float speed = 38f + stage * 2.5f;
+            float speed = 28f + stage * 2f;
             Vector2 dir = AimDirection;
             Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(0.5f + burstIndex * 0.18f)) * speed;
 
@@ -360,7 +360,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireTorrentShot()
         {
             Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(1.2f)) * 44f;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(1.2f)) * 32f;
 
             int damage = (int)(Projectile.damage * 0.82f);
             int idx = Projectile.NewProjectile(

@@ -69,19 +69,19 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextVector2Circular(1.4f, 1.4f),                  // 速度：向随机方向漂移，最大1.4像素/帧
                     false,                                                        // 不受重力影响
                     12,                                                           // 持续时间：12帧
-                    Main.rand.NextFloat(0.05f, 0.1f),                            // 大小：0.05~0.1（很小的发光方块）【调大这里让方块变大】
+                    Main.rand.NextFloat(0.05f, 0.1f) * 0.3f,                      // 大小：0.05~0.1 * 0.3f
                     CosmicDischargeCommon.ThreeColorSpark,                        // 颜色：青/洋红/爱丽丝蓝三色随机
                     rotation: Main.rand.NextFloat(0.05f, 0.12f)));               // 旋转速度：0.05~0.12弧度/帧
 
                 // 电弧火花：弹幕飞行时向后飞散的电弧粒子
                 GeneralParticleHandler.SpawnParticle(new ElectricSpark(
                     Projectile.Center + Main.rand.NextVector2Circular(12f, 12f), // 位置：弹幕中心周围±12像素随机偏移
-                    Projectile.velocity.RotatedByRandom(0.7f) * -0.35f,         // 速度：沿弹幕方向反向飞散，角度随机偏差±0.7弧度，速度0.35【调大-0.35让飞散更快】
+                    Projectile.velocity.RotatedByRandom(0.7f) * -0.35f,         // 速度：沿弹幕方向反向飞散，速度0.35
                     CosmicDischargeCommon.DoGCyanColor,                           // 颜色1（内层）：青色
                     CosmicDischargeCommon.DoGFuchsiaColor,                        // 颜色2（外层）：洋红色
-                    0.45f,                                                         // 大小：0.45【调大让电弧变粗】
+                    0.45f * 0.3f,                                                 // 大小：0.45 * 0.3f
                     10,                                                            // 持续时间：10帧
-                    MathHelper.PiOver4,                                            // 形状角度：45度（电弧倾斜方向）
+                    MathHelper.PiOver4,                                            // 形状角度：45度
                     5f));                                                           // 亮度：5.0【调大让电弧更亮】
             }
         }
@@ -158,17 +158,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GeneralParticleHandler.SpawnParticle(new PulseRing(
                 Projectile.Center,
                 Vector2.Zero,                                                               // 速度：静止不动，只是扩散
-                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.58f, // 颜色：青/洋红循环，透明度0.58【调小0.58减弱光圈亮度】
-                0.05f,                                                                       // 初始半径比例（从很小开始扩散）
-                1.2f,                                                                        // 最大半径比例（扩散到贴图1.2倍大小）【调小1.2减小冲击波范围】
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.58f, // 颜色：青/洋红循环，透明度0.58
+                0.05f * 0.3f,                                                                // 初始半径比例
+                1.2f * 0.3f,                                                                 // 最大半径比例 (1.2 * 0.3f)
                 18));                                                                        // 持续时间：18帧
 
             // 强烈光晕：爆炸中心的白热化光球
             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                 Projectile.Center,
                 Vector2.Zero,
-                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.42f, // 颜色：洋红，透明度0.42【调小0.42减弱中心光球】
-                0.5f,                                                                               // 大小：0.5（中等光球）【调小0.5缩小光球】
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.42f, // 颜色：洋红
+                0.5f * 0.3f,                                                                        // 大小：0.5 * 0.3f
                 16));                                                                               // 持续时间：16帧
 
             // 详细爆炸效果1：横向拉伸的青色爆炸云
@@ -176,21 +176,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Projectile.Center,
                 Vector2.Zero,
                 CosmicDischargeCommon.DoGCyanColor,          // 颜色：青色
-                new Vector2(1.2f, 0.8f),                     // 拉伸比例：宽1.2、高0.8（横向椭圆形）【改1.2/0.8调整爆炸云形状】
-                0f,                                           // 旋转角度：0度（不旋转）
-                0.15f,                                        // 初始大小：0.15（从较小开始）
-                0.95f,                                        // 最终大小：0.95【调小0.95缩小爆炸云】
+                new Vector2(1.2f, 0.8f),                     // 拉伸比例
+                0f,                                           // 旋转角度
+                0.15f * 0.3f,                                 // 初始大小
+                0.95f * 0.3f,                                 // 最终大小
                 16));                                         // 持续时间：16帧
 
             // 详细爆炸效果2：纵向拉伸的洋红色爆炸云，与第一个错开60度
             GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
                 Projectile.Center,
                 Vector2.Zero,
-                CosmicDischargeCommon.DoGFuchsiaColor * 0.8f, // 颜色：洋红，亮度0.8（稍暗）
-                new Vector2(0.8f, 1.25f),                      // 拉伸比例：宽0.8、高1.25（纵向椭圆形）【改0.8/1.25调整形状】
-                MathHelper.Pi / 3f,                            // 旋转角度：60度（与第一层错开，产生叠加感）
-                0.12f,                                          // 初始大小：0.12
-                0.78f,                                          // 最终大小：0.78（比第一层略小）
+                CosmicDischargeCommon.DoGFuchsiaColor * 0.8f, // 颜色：洋红
+                new Vector2(0.8f, 1.25f),                      // 拉伸比例
+                MathHelper.Pi / 3f,                            // 旋转角度
+                0.12f * 0.3f,                                   // 初始大小
+                0.78f * 0.3f,                                   // 最终大小
                 14));                                           // 持续时间：14帧
 
             // 裂隙裂缝线：从爆炸中心向外射出的裂纹弹幕
@@ -202,18 +202,18 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 6, 3, 38f, 25f);
 
             // 发光火花：12个向四周等间距飞散的细长光条
-            for (int i = 0; i < 12; i++) // 12个火花，均匀分布一圈【调小12减少火花数量】
+            for (int i = 0; i < 12; i++) // 12个火花，均匀分布一圈
             {
-                Vector2 velocity = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * Main.rand.NextFloat(2.4f, 6.2f); // 速度：向外扩散2.4~6.2格/帧【调小范围减弱散开力度】
+                Vector2 velocity = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * Main.rand.NextFloat(2.4f, 6.2f); // 速度：向外扩散2.4~6.2格/帧
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(8f, 8f), // 位置：中心±8像素随机偏移
                     velocity,
-                    true,                                    // 受重力影响（会向下弧形落）
+                    true,                                    // 受重力影响
                     Main.rand.Next(12, 20),                  // 持续时间：12~20帧
-                    Main.rand.NextFloat(0.55f, 0.95f),       // 大小：0.55~0.95【调小这个范围让火花变细】
+                    Main.rand.NextFloat(0.55f, 0.95f) * 0.05f, // 大小：缩放到5%大小 (0.05f)
                     CosmicDischargeCommon.ThreeColorSpark,    // 颜色：三色随机
-                    new Vector2(0.25f, 1.7f),                // 形状拉伸：宽0.25、高1.7（细长光条）【调大0.25让火花变宽，调小1.7让火花变短】
-                    true));                                   // 发光：开启额外亮度加成
+                    new Vector2(0.25f, 1.7f),                // 形状拉伸：宽0.25、高1.7
+                    true));                                   // 发光
             }
         }
 

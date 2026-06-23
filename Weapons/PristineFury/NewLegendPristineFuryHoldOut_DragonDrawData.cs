@@ -29,6 +29,24 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal static string DragonEyeBloomTexturePath() => "CalamityMod/Particles/BloomCircle";
         internal static string DragonEyeHalfStarTexturePath() => "CalamityMod/Particles/HalfStar";
 
+        // Dragon mouth visual textures.
+        internal static string DragonMouthChargeBloomTexturePath() => "CalamityMod/Particles/BloomCircle";
+        internal static string DragonMouthChargeSmearTexturePath() => "CalamityMod/Particles/ForwardSmear";
+        internal static string DragonMouthChargeRingTexturePath() => "CalamityMod/Particles/BloomRing";
+        internal static string DragonMouthMagicTexturePath() => "CalamityLegendsComeBack/Texture/KsTexture/magic_03";
+        internal static string DragonMouthSmokeTexturePath() => "CalamityLegendsComeBack/Texture/KsTexture/smoke_04";
+
+        // Forward travel distances for charge visual anchors.
+        internal const float FakeCalamityChargeForwardTravelFromMouth = 6f;
+        internal const float RightArcNovaChargeForwardTravelFromMouth = 5f;
+
+        // Dragon mouth position: gun tip + one extra step forward.
+        private const float GunTipForwardOffset = 22f;
+        private const float DragonMouthForwardOffsetFromGunTip = 8f;
+
+        internal static Vector2 GetDragonMouthPosition(Vector2 projectileCenter, Vector2 aimDirection) =>
+            projectileCenter + aimDirection * (GunTipForwardOffset + DragonMouthForwardOffsetFromGunTip);
+
         private static float GetSourceFloat(string memberName, float fallback) =>
             RuntimeBalanceData.GetSourceFloatReturn(SourceFile, memberName, fallback);
 

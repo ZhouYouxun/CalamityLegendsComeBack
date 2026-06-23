@@ -2,8 +2,8 @@ Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Placeables: {
-				SHPCPlatform: {
-					DisplayName: SHPC Platform
+				SHPPPlatform: {
+					DisplayName: SHPP Platform
 					Tooltip: ""
 				}
 			}
