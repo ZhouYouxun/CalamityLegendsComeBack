@@ -22,8 +22,7 @@ namespace CalamityLegendsComeBack.QOL
                 "ChlorophyteWarhammer", "SpectreHamaxe", "ShroomiteHamaxe", "TheAxe"
             })
             {
-                int hammerType = ItemID.Search.GetId(hammerName);
-                if (hammerType > 0)
+                if (ItemID.Search.TryGetId(hammerName, out int hammerType))
                     hammers.Add(hammerType);
             }
 

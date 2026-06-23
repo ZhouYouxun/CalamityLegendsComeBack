@@ -86,14 +86,12 @@ namespace CalamityLegendsComeBack.QOL
 
             foreach (var kvp in VanillaRelicToWeapons)
             {
-                int relicType = ItemID.Search.GetId(kvp.Key);
-                if (relicType <= 0)
+                if (!ItemID.Search.TryGetId(kvp.Key, out int relicType))
                     continue;
 
                 foreach (string weaponName in kvp.Value)
                 {
-                    int weaponType = ItemID.Search.GetId(weaponName);
-                    if (weaponType <= 0)
+                    if (!ItemID.Search.TryGetId(weaponName, out int weaponType))
                         continue;
 
                     Recipe recipe = Recipe.Create(weaponType);
