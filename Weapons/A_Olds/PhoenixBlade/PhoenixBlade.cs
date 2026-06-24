@@ -9,6 +9,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.PhoenixBlade
     public class PhoenixBlade : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Olds/PhoenixBlade/凤凰之刃";
 
         public override void SetDefaults()
         {

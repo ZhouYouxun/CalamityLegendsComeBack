@@ -13,10 +13,6 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			PhoenixBlade: {
-				PhoenixBladeHoldout.DisplayName: 凤凰刃
-			}
-		}
+		Projectiles.PhoenixBlade.PhoenixBladeHoldout.DisplayName: 凤凰刃
 	}
 }

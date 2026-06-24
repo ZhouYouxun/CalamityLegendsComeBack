@@ -7,6 +7,11 @@ Mods: {
 						DisplayName: 神噬裂宙弹刃
 						Tooltip: ""
 					}
+
+					DiseasedPike: {
+						// DisplayName: Diseased Pike
+						// Tooltip: ""
+					}
 				}
 
 				NewLegendCosmicDischarge: {
@@ -87,6 +92,7 @@ Mods: {
 				CosmicDischargeHookLimb.DisplayName: 裂隙钩肢
 				CosmicDischargeKillModeReady.DisplayName: 吞噬蓄势
 				CosmicDischargeKillModeSlash.DisplayName: 吞噬斩击
+				// DiseasedPikeProj.DisplayName: Diseased Pike Proj
 			}
 		}
 

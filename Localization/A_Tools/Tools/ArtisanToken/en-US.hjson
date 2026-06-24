@@ -14,13 +14,7 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			A_Dev: {
-				ArtisanTokenPanel: {
-					DisplayName: Artisan Token Panel
-				}
-			}
-		}
+		Projectiles.A_Dev.ArtisanTokenPanel.DisplayName: Artisan Token Panel
 
 		TheSpecialText: {
 			ArtisanTokenTitle: Artisan Token — Select Modifier

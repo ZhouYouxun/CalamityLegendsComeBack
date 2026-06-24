@@ -13,12 +13,6 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			A_Tools: {
-				MagnetBombProj: {
-					DisplayName: 磁吸炸弹
-				}
-			}
-		}
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: 磁吸炸弹
 	}
 }

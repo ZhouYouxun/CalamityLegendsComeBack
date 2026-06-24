@@ -15,22 +15,13 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			A_Dev: {
-				ExtraBackpackPanel: {
-					DisplayName: 额外背包
-				}
-			}
-		}
+		Projectiles.A_Dev.ExtraBackpackPanel.DisplayName: 额外背包
 
 		Keybinds: {
 			ExtraBackpack: {
-				DisplayName: 额外背包
 			}
 		}
 
-		TheSpecialText: {
-			ExtraBackpackTitle: 额外背包 [10×10]
-		}
+		TheSpecialText.ExtraBackpackTitle: 额外背包 [10×10]
 	}
 }

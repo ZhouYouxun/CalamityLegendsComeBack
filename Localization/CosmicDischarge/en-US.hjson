@@ -7,6 +7,11 @@ Mods: {
 						DisplayName: God-Rift Cosmic Discharge
 						Tooltip: ""
 					}
+
+					DiseasedPike: {
+						DisplayName: Diseased Pike
+						Tooltip: ""
+					}
 				}
 
 				NewLegendCosmicDischarge: {
@@ -87,6 +92,7 @@ Mods: {
 				CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
 				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+				DiseasedPikeProj.DisplayName: Diseased Pike Proj
 			}
 		}
 

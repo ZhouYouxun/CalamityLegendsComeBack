@@ -14,13 +14,7 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			A_Dev: {
-				ArtisanTokenPanel: {
-					DisplayName: 工匠令牌面板
-				}
-			}
-		}
+		Projectiles.A_Dev.ArtisanTokenPanel.DisplayName: 工匠令牌面板
 
 		TheSpecialText: {
 			ArtisanTokenTitle: 工匠令牌 — 选择词缀

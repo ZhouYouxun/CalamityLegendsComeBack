@@ -13,12 +13,6 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			A_Tools: {
-				MagnetBombProj: {
-					DisplayName: Magnet Bomb
-				}
-			}
-		}
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Magnet Bomb
 	}
 }

@@ -11,6 +11,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.DiseasedPike
     public class DiseasedPike : BaseSwordHoldoutItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons.Melee";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Olds/DiseasedPike/瘟疫长枪";
 
         public override int ProjectileType => ModContent.ProjectileType<DiseasedPikeProj>();
 
