@@ -18,7 +18,7 @@ Mods: {
 		TheSpecialText: {
 			PlayerSaddleNoTarget: 附近没有找到可以骑乘的玩家。
 			PlayerSaddleOccupied: 该玩家已有骑手。
-			PlayerSaddleMounted: {0} 骑上了 {1}！
+			PlayerSaddleMounted: "{0} 骑上了 {1}！"
 		}
 	}
 }

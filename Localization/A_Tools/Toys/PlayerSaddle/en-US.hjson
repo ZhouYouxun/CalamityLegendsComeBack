@@ -18,7 +18,7 @@ Mods: {
 		TheSpecialText: {
 			PlayerSaddleNoTarget: No nearby player found to mount.
 			PlayerSaddleOccupied: That player already has a rider.
-			PlayerSaddleMounted: {0} is now riding {1}!
+			PlayerSaddleMounted: "{0} is now riding {1}!"
 		}
 	}
 }

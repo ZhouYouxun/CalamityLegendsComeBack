@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Olds.Lazhar
     public class LazharTargetDebuff : ModBuff
     {
         // 借用灾厄的“死亡标记”减益图标，红黑配色的骷髅锁准心，完美匹配高能锁定主题
-        public override string Texture => "CalamityMod/Buffs/StatDebuffs/MarkedForDeath";
+        public override string Texture => "CalamityMod/Buffs/StatDebuffs/MarkedforDeath";
 
         public override void SetStaticDefaults()
         {
