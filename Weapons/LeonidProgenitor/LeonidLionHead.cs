@@ -163,24 +163,24 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
             Color drawColor = new Color(200, 100, 255) * (1f - Projectile.alpha / 255f);
             Vector2 origin = texture.Size() * 0.5f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, Owner.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
 
             if (IsBiting)
             {
-                // Draw large roaring shockwave circle
                 Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-                Vector2 drawPos = Projectile.Center - Main.screenPosition;
-                Main.spriteBatch.Draw(bloom, drawPos, null, drawColor * 0.4f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.75f, SpriteEffects.None, 0f);
-                Main.spriteBatch.Draw(bloom, drawPos, null, Color.White * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, drawColor * 0.4f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.75f, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
             }
 
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
+
             SpriteEffects effects = Owner.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             float rotation = Projectile.rotation;
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, rotation, origin, Projectile.scale, effects, 0f);
-            Color glowColor = Color.White * (1f - Projectile.alpha / 255f);
-            glowColor.A = 0;
-            Main.EntitySpriteDraw(glow, drawPosition, null, glowColor, rotation, glow.Size() * 0.5f, Projectile.scale, effects, 0f);
 
             return false;
         }

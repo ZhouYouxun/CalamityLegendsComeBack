@@ -67,8 +67,8 @@ Mods: {
 						'''
 					PresetPassive0:
 						'''
-						[c/B7FFB0:Doctrine Passive - Breakthrough: grants a high-speed dash with no invincibility frames; existing dash cooldowns are halved.]
-						[c/B7FFB0:After dashing, BlossomFlux damage is increased by 20% for 0.75 seconds.]
+						[c/B7FFB0:Doctrine Passive - Breakthrough: when no other dash is available, double-tap left or right to dash at high speed.]
+						[c/B7FFB0:You pass through enemies with an impact hit and invincibility during the dash.]
 						'''
 					PresetPassive1:
 						'''

@@ -9,144 +9,141 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
-    // 蓄力完成后按左键触发：刀刃垂直插入地面，并在两侧升起伤害性土墙。
-    // 类似灾劫星史一阶段的雷霆大坐效果。
     public class AegisBladeThrown : ModProjectile
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/AegisBlade/AegisBlade";
 
-        private bool embedded   = false;
-        private bool wallSpawned = false;
-        private int  embedTimer  = 0;
+        private bool embedded;
+        private bool wallSpawned;
+        private int embedTimer;
 
-        private static readonly Color FlashColor = new(255, 220, 80, 0);
-        private static readonly Color DustColor  = new(255, 200, 60, 0);
+        private static readonly Color CoreColor = new(255, 244, 190);
+        private static readonly Color GoldColor = new(255, 196, 62);
+        private static readonly Color FireColor = new(255, 120, 38);
 
         public override void SetDefaults()
         {
-            Projectile.width  = Projectile.height = 24;
-            Projectile.friendly    = true;
-            Projectile.DamageType  = DamageClass.Melee;
+            Projectile.width = Projectile.height = 24;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Melee;
             Projectile.tileCollide = true;
-            Projectile.penetrate   = -1;
-            Projectile.timeLeft    = 180;
-            Projectile.usesLocalNPCImmunity   = true;
-            Projectile.localNPCHitCooldown    = 8;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 180;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 8;
             Projectile.ignoreWater = true;
+            Projectile.scale = 1.35f;
         }
 
         public override void AI()
         {
             if (!embedded)
             {
-                // 垂直下落，刀尖朝下
                 Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
-
-                // 轻微旋转加速感
                 Projectile.velocity.Y = System.MathF.Min(Projectile.velocity.Y + 0.8f, 30f);
+                Lighting.AddLight(Projectile.Center, GoldColor.ToVector3() * 0.65f);
 
-                // 下落轨迹粒子
                 if (!Main.dedServ && Main.rand.NextBool(2))
-                {
-                    Vector2 back = Projectile.Center - Vector2.UnitY * (-30f);
-                    GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                        back + Main.rand.NextVector2Circular(6f, 6f),
-                        Main.rand.NextVector2Circular(1f, 1f), false,
-                        Main.rand.Next(5, 10), 0.035f, FlashColor,
-                        new Vector2(0.3f, 1.5f), true, false, 0.85f));
-                }
+                    EmitFallFlame();
+                return;
             }
-            else
+
+            embedTimer++;
+            if (!wallSpawned && embedTimer == 1)
             {
-                embedTimer++;
-
-                // 插地后立即生成双侧土墙
-                if (!wallSpawned && embedTimer == 1)
-                {
-                    SpawnWalls();
-                    wallSpawned = true;
-                }
-
-                // 插地后停留短暂时间再消失
-                if (embedTimer > 40)
-                    Projectile.Kill();
+                SpawnWalls();
+                wallSpawned = true;
             }
+
+            if (embedTimer > 40)
+                Projectile.Kill();
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             embedded = true;
-            Projectile.velocity    = Vector2.Zero;
+            Projectile.velocity = Vector2.Zero;
             Projectile.tileCollide = false;
-            Projectile.timeLeft    = 60;
-
-            SoundEngine.PlaySound(SoundID.Item10 with { Volume = 1.0f, Pitch = -0.4f }, Projectile.Center);
-
-            if (!Main.dedServ)
-            {
-                // 插地爆炸尘
-                for (int i = 0; i < 22; i++)
-                {
-                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 12f);
-                    vel.Y = -System.MathF.Abs(vel.Y); // 向上喷出
-                    Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, DustColor, 1.4f);
-                    d.noGravity = true;
-                }
-                // 圆形冲击波
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    Projectile.Center, Vector2.Zero, FlashColor,
-                    new Vector2(1.4f, 0.5f), 0f, 0.07f, 1.2f, 16));
-            }
+            Projectile.timeLeft = 60;
+            SoundEngine.PlaySound(SoundID.Item10 with { Volume = 1f, Pitch = -0.38f }, Projectile.Center);
+            EmitImpact(Projectile.Center, oldVelocity.SafeNormalize(Vector2.UnitY));
             return false;
+        }
+
+        private void EmitFallFlame()
+        {
+            Vector2 position = Projectile.Center + Main.rand.NextVector2Circular(8f, 8f) + Vector2.UnitY * Main.rand.NextFloat(8f, 24f);
+            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                position, new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(1.2f, 4.8f)),
+                Color.Lerp(FireColor, GoldColor, Main.rand.NextFloat(0.25f, 0.85f)), Color.Transparent,
+                Main.rand.NextFloat(0.38f, 0.64f), Main.rand.Next(16, 25), Main.rand.NextFloat(-0.07f, 0.07f)));
+        }
+
+        private void EmitImpact(Vector2 position, Vector2 direction)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(position, Vector2.Zero,
+                CoreColor, new Vector2(1.2f, 0.78f), direction.ToRotation(), 0f, 0.88f, 22));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(position, Vector2.Zero,
+                GoldColor, new Vector2(2.1f, 0.66f), 0f, 0.08f, 1.45f, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(position, Vector2.Zero,
+                FireColor, new Vector2(1.35f, 0.46f), MathHelper.PiOver2, 0.1f, 1.2f, 18));
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = new Vector2(Main.rand.NextFloat(-6.5f, 6.5f), -Main.rand.NextFloat(2.5f, 11f));
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    position + Main.rand.NextVector2Circular(12f, 5f), velocity,
+                    Color.Lerp(FireColor, GoldColor, Main.rand.NextFloat()), Color.Transparent,
+                    Main.rand.NextFloat(0.42f, 0.82f), Main.rand.Next(18, 30), Main.rand.NextFloat(-0.08f, 0.08f)));
+            }
         }
 
         private void SpawnWalls()
         {
-            if (Main.myPlayer != Projectile.owner) return;
+            if (Main.myPlayer != Projectile.owner)
+                return;
 
-            int wallType    = ModContent.ProjectileType<AegisWallProjectile>();
-            int halfH       = AegisWallProjectile.WallHalfHeight;
-            int spread      = BalanceAegisBlade.WallSpreadPixels;
-            float riseSpeed = halfH / (float)BalanceAegisBlade.WallRiseTime;
+            int wallType = ModContent.ProjectileType<AegisWallProjectile>();
+            int halfHeight = AegisWallProjectile.WallHalfHeight;
+            int spread = BalanceAegisBlade.WallSpreadPixels;
+            float riseSpeed = halfHeight / (float)BalanceAegisBlade.WallRiseTime;
+            int wallDamage = System.Math.Max(1, (int)(Projectile.damage * 0.8f));
 
-            int wallDamage = (int)(Projectile.damage * 0.8f);
-
-            // 左墙（从插地点地面向上升起）
-            Vector2 leftSpawn = new Vector2(Projectile.Center.X - spread, Projectile.Center.Y);
             Projectile.NewProjectile(Projectile.GetSource_FromThis(),
-                leftSpawn, new Vector2(0f, -riseSpeed),
+                new Vector2(Projectile.Center.X - spread, Projectile.Center.Y), new Vector2(0f, -riseSpeed),
                 wallType, wallDamage, 4f, Projectile.owner, -1f);
-
-            // 右墙
-            Vector2 rightSpawn = new Vector2(Projectile.Center.X + spread, Projectile.Center.Y);
             Projectile.NewProjectile(Projectile.GetSource_FromThis(),
-                rightSpawn, new Vector2(0f, -riseSpeed),
+                new Vector2(Projectile.Center.X + spread, Projectile.Center.Y), new Vector2(0f, -riseSpeed),
                 wallType, wallDamage, 4f, Projectile.owner, 1f);
-
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.7f, Pitch = -0.5f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = -0.48f }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Main.dedServ) return false;
+            if (Main.dedServ)
+                return false;
 
-            Texture2D tex    = ModContent.Request<Texture2D>(Texture).Value;
-            Vector2 origin   = new Vector2(0f, tex.Height);
-            Vector2 drawPos  = Projectile.Center - Main.screenPosition;
+            Texture2D swordTexture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = new(0f, swordTexture.Height);
 
-            if (embedded)
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            float glowStrength = embedded ? System.MathF.Max(0f, 1f - embedTimer / 40f) : 0.55f;
+            for (int i = 0; i < 6; i++)
             {
-                // 插地后渐隐光晕
-                Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-                float fade = System.MathF.Max(0f, 1f - embedTimer / 40f);
-                Main.spriteBatch.SetBlendState(BlendState.Additive);
-                Main.EntitySpriteDraw(bloom, drawPos, null,
-                    FlashColor * fade * 0.6f, 0f, bloom.Size() * 0.5f, 0.6f, SpriteEffects.None, 0);
-                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+                Vector2 offset = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * 2.4f * glowStrength;
+                Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, GoldColor with { A = 0 } * glowStrength * 0.1f,
+                    Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             }
+            Main.EntitySpriteDraw(bloomTexture, drawPosition, null, CoreColor with { A = 0 } * glowStrength * 0.5f,
+                0f, bloomTexture.Size() * 0.5f, 0.55f + glowStrength * 0.25f, SpriteEffects.None);
+            Main.spriteBatch.ExitShaderRegion();
 
-            Main.EntitySpriteDraw(tex, drawPos, null, lightColor,
-                Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor,
+                Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

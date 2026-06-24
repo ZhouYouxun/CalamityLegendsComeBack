@@ -144,14 +144,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Color fieldColor = new Color(130, 80, 255) * 0.15f * progress;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
-            // Draw central gravity core
-            Main.spriteBatch.Draw(bloom, drawPos, null, fieldColor, 0f, bloom.Size() * 0.5f, 5f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(bloom, drawPos, null, Color.White * 0.05f * progress, 0f, bloom.Size() * 0.5f, 2f, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
+            Main.EntitySpriteDraw(bloom, drawPos, null, fieldColor, 0f, bloom.Size() * 0.5f, 5f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(bloom, drawPos, null, Color.White * 0.05f * progress, 0f, bloom.Size() * 0.5f, 2f, SpriteEffects.None, 0f);
 
-            // Draw accretion disk rings
-            Main.spriteBatch.Draw(ring, drawPos, null, fieldColor * 2.2f, Main.GlobalTimeWrappedHourly * 1.2f, ring.Size() * 0.5f, 7.5f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(ring, drawPos, null, fieldColor * 1.4f, -Main.GlobalTimeWrappedHourly * 0.7f, ring.Size() * 0.5f, 10f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(ring, drawPos, null, fieldColor * 0.8f, Main.GlobalTimeWrappedHourly * 0.4f, ring.Size() * 0.5f, 13f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, drawPos, null, fieldColor * 2.2f, Main.GlobalTimeWrappedHourly * 1.2f, ring.Size() * 0.5f, 7.5f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, drawPos, null, fieldColor * 1.4f, -Main.GlobalTimeWrappedHourly * 0.7f, ring.Size() * 0.5f, 10f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, drawPos, null, fieldColor * 0.8f, Main.GlobalTimeWrappedHourly * 0.4f, ring.Size() * 0.5f, 13f, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             return false;
         }

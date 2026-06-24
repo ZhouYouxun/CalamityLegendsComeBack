@@ -170,6 +170,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             
             Color drawColor = new Color(160, 120, 255) * (1f - Projectile.alpha / 255f);
             Vector2 origin = texture.Size() * 0.5f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            // The halo and glow sheet are emission textures, so never alpha-blend their black base.
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
+            Main.EntitySpriteDraw(bloom, drawPosition, null, drawColor * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             // Draw afterimages
             for (int i = 0; i < Projectile.oldPos.Length; i++)
@@ -179,17 +187,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 Main.EntitySpriteDraw(texture, oldDrawPosition, null, drawColor * completion * 0.35f, Projectile.rotation, origin, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
             }
 
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            
-            // Draw a subtle halo behind the hovering comet
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Main.spriteBatch.Draw(bloom, drawPosition, null, drawColor * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
-
             // Draw normal sprite
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
-            Color glowColor = Color.White * (1f - Projectile.alpha / 255f);
-            glowColor.A = 0;
-            Main.EntitySpriteDraw(glow, drawPosition, null, glowColor, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
 
             return false;
         }

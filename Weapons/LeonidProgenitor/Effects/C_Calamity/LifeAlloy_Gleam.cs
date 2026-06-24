@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -83,6 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             Texture2D core = ModContent.Request<Texture2D>("CalamityMod/Particles/LargeBloom").Value;
             Color color = GleamColor;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
+
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
@@ -91,6 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             }
 
             Main.EntitySpriteDraw(core, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, core.Size() * 0.5f, 0.12f, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 

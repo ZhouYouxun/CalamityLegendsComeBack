@@ -1,6 +1,8 @@
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using CalamityLegendsComeBack.Accssory.BF.Common;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.CalPlayer.Dashes;
 using CalamityMod.Cooldowns;
@@ -17,13 +19,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         public const int PassiveCooldownFrames = 180 * 60;
         public const int FinalStandDurationFrames = 5 * 60;
 
-        private bool holdingBlossomFlux;
         private int finalStandBlockedHits;
+        private BlossomFluxChloroplastPresetType finalStandPreset = BlossomFluxChloroplastPresetType.Chlo_ABreak;
 
         public int PassiveCooldownTimer;
         public int FinalStandTimer;
 
-        private bool HoldingBlossomFluxNow => holdingBlossomFlux && Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
+        // Do not depend on HoldItem's update order here. PreKill and cooldown charging both
+        // need to recognise the weapon immediately on the frame it becomes held.
+        private bool HoldingBlossomFluxNow => Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool PassiveUnlocked => Main.hardMode;
         public bool FinalStandActive => FinalStandTimer > 0;
         public int PassiveChargeFramesRequired => PassiveCooldownFrames;
@@ -39,16 +43,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             ? 1f
             : MathHelper.Clamp(PassiveCooldownTimer / (float)PassiveChargeFramesRequired, 0f, 1f);
 
-        public override void ResetEffects()
-        {
-            holdingBlossomFlux = false;
-        }
-
         public override void UpdateDead()
         {
-            holdingBlossomFlux = false;
             FinalStandTimer = 0;
             finalStandBlockedHits = 0;
+            finalStandPreset = BlossomFluxChloroplastPresetType.Chlo_ABreak;
             SyncPassiveDisplay();
         }
 
@@ -123,11 +122,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             return false;
         }
 
-        public void SetHoldingBlossomFlux()
-        {
-            holdingBlossomFlux = true;
-        }
-
         public void SyncPassiveDisplay()
         {
             if (!PassiveUnlocked && PassiveCooldownTimer <= 0 && !FinalStandActive)
@@ -159,14 +153,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private void TriggerFinalStand()
         {
+            finalStandPreset = Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
             Player.statLife = 1;
             FinalStandTimer = FinalStandDurationFrames;
             PassiveCooldownTimer = 0;
             finalStandBlockedHits = 0;
             ApplyFinalStandProtection();
 
-            SpawnRecoveryField();
-            SpawnTriggerBurstFX();
+            SpawnRecoveryField(finalStandPreset);
+            SpawnTriggerBurstFX(finalStandPreset);
 
             if (Player.whoAmI == Main.myPlayer)
             {
@@ -191,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
 
             finalStandBlockedHits = 0;
-            SpawnResolveSurvivalFX();
+            SpawnResolveSurvivalFX(finalStandPreset);
 
             if (Player.whoAmI == Main.myPlayer)
                 SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction3, Player.Center);
@@ -246,7 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             return false;
         }
 
-        private void SpawnRecoveryField()
+        private void SpawnRecoveryField(BlossomFluxChloroplastPresetType preset)
         {
             if (Main.myPlayer != Player.whoAmI)
                 return;
@@ -265,16 +260,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 fieldType,
                 0,
                 0f,
-                Player.whoAmI);
+                Player.whoAmI,
+                (float)preset);
         }
 
-        private void SpawnTriggerBurstFX()
+        private void SpawnTriggerBurstFX(BlossomFluxChloroplastPresetType preset)
         {
             if (Main.dedServ)
                 return;
 
-            Color coreColor = new Color(110, 255, 150);
-            Color accentColor = new Color(180, 255, 210);
+            Color coreColor = BFArrowCommon.GetPresetColor(preset);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(preset);
             Vector2 center = Player.Center;
 
             GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.18f), 1.5f, 22));
@@ -322,13 +318,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
         }
 
-        private void SpawnResolveSurvivalFX()
+        private void SpawnResolveSurvivalFX(BlossomFluxChloroplastPresetType preset)
         {
             if (Main.dedServ)
                 return;
 
-            Color coreColor = new Color(110, 255, 150);
-            Color accentColor = new Color(180, 255, 210);
+            Color coreColor = BFArrowCommon.GetPresetColor(preset);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(preset);
             Vector2 center = Player.Center;
 
             GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.25f), 1.1f, 16));
@@ -365,7 +361,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
 
         private void EmitFinalStandVisuals()
         {
-            Lighting.AddLight(Player.Center, new Vector3(0.12f, 0.34f, 0.16f));
+            Color coreColor = BFArrowCommon.GetPresetColor(finalStandPreset);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(finalStandPreset);
+            Lighting.AddLight(Player.Center, coreColor.ToVector3() * 0.34f);
 
             Vector2 bodyPoint = Player.Center + new Vector2(
                 Main.rand.NextFloat(-Player.width * 0.42f, Player.width * 0.42f),
@@ -381,7 +379,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                     bodyPoint,
                     riseVelocity.RotatedByRandom(0.42f),
                     Main.rand.NextFloat(0.42f, 0.7f),
-                    Color.Lerp(new Color(86, 255, 150), Color.White, Main.rand.NextFloat(0.12f, 0.3f)),
+                    Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.12f, 0.3f)),
                     Main.rand.Next(12, 20),
                     1f,
                     Main.rand.NextFloat(1.3f, 2f));
@@ -396,7 +394,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                     false,
                     Main.rand.Next(9, 14),
                     Main.rand.NextFloat(0.28f, 0.45f),
-                    Color.Lerp(new Color(72, 255, 132), Color.White, Main.rand.NextFloat(0.18f, 0.36f)),
+                    Color.Lerp(accentColor, Color.White, Main.rand.NextFloat(0.18f, 0.36f)),
                     true,
                     false,
                     true);
@@ -410,7 +408,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                     DustID.GemEmerald,
                     riseVelocity.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.45f, 1.2f),
                     100,
-                    Color.Lerp(new Color(88, 255, 164), Color.White, Main.rand.NextFloat(0.15f, 0.28f)),
+                    Color.Lerp(coreColor, accentColor, Main.rand.NextFloat(0.15f, 0.48f)),
                     Main.rand.NextFloat(0.95f, 1.35f));
                 glowDust.noGravity = true;
             }

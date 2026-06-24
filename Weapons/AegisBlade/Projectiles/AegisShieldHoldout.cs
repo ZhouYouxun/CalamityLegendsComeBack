@@ -1,75 +1,68 @@
 using System;
 using CalamityMod;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
-    // 右键举盾holdout。四个阶段：
-    // Phase 0（0-14帧）：举盾过渡 = 完美格挡窗口
-    // Phase 1（15帧+）：盾已完全举起，防御加成；松开右键释放幻影
-    // Phase 2（机械BOSS后解锁）：蓄力中，松开右键释放普通幻影
-    // Phase 3（蓄力完成）：蓄力就绪；左键=下插土墙，右键松开=强化幻影
+    // The shield sprite itself is deliberately not drawn here. AegisBladePlayer registers the supplied
+    // 40-frame sheet as a native raisable shield, which is the same rendering path used by Stygian Shield.
     public class AegisShieldHoldout : ModProjectile
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/AegisBlade/庇护盾牌";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private const int MinimumDashCharge = BalanceAegisBlade.ShieldRaiseFrames;
+        private const int ChargeStartTime = BalanceAegisBlade.ShieldRaiseFrames + BalanceAegisBlade.ChargeHoldDelay;
+        private const int FullChargeTime = ChargeStartTime + BalanceAegisBlade.ChargeDuration;
+        private const int DashDuration = BalanceAegisBlade.ShieldDashDuration;
 
         private Player Owner => Main.player[Projectile.owner];
         private AegisBladePlayer BladePlayer => Owner.GetModPlayer<AegisBladePlayer>();
+        private ref float Charge => ref Projectile.ai[0];
+        private ref float DashTime => ref Projectile.ai[1];
+        private bool IsDashing => DashDestination != Vector2.Zero;
+        private bool ChargeUnlocked => BalanceAegisBlade.ChargeUnlocked();
+        private float MaximumGuardCharge => ChargeUnlocked ? FullChargeTime : ChargeStartTime;
+        private float ChargeRatio => ChargeUnlocked
+            ? Utils.GetLerpValue(ChargeStartTime, FullChargeTime, Charge, true)
+            : 0f;
+        private float DashPower => Utils.GetLerpValue(MinimumDashCharge, FullChargeTime, Charge, true);
 
-        // Phase 枚举
-        private const int PhaseRaising      = 0;
-        private const int PhaseRaised       = 1;
-        private const int PhaseCharging     = 2;
-        private const int PhaseFullyCharged = 3;
+        private Vector2 DashDestination;
+        private float dashDistance;
+        private bool perfectParryFired;
+        private bool fullChargeFired;
+        private bool previousLeftDown;
 
-        private int   phase       = PhaseRaising;
-        private int   phaseTimer  = 0;   // 通用相位计时器
-        private int   raisedTimer = 0;   // Phase1累积时间（决定何时开始蓄力）
-        private bool  perfectParryFired = false;   // 本次举盾是否已触发完美格挡
-        private float displayScale      = 0f;
-        private float chargeGlow        = 0f;      // 蓄力光晕强度 0→1
+        private static readonly Color ShieldGold = new(255, 200, 60);
+        private static readonly Color ShieldLight = new(255, 238, 160);
+        private static readonly Color ShieldFire = new(255, 145, 55);
 
-        // Phase 3 左键检测（上一帧状态，防止持续触发）
-        private bool prevLeftDown = false;
-        // Phase 3 是否已经派出了投射物（防止双杀）
-        private bool discharged = false;
-
-        private readonly BalanceAegisBlade balance = new();
-
-        private static readonly Color GoldColor   = new(255, 200, 60);
-        private static readonly Color GoldOutline = new(255, 235, 140);
-        private static readonly Color ChargeColor = new(255, 240, 100);
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 14;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
-            Projectile.width  = Projectile.height = 70;
-            Projectile.friendly   = false;
+            Projectile.width = Projectile.height = 2;
+            Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Melee;
+            Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate  = -1;
-            Projectile.timeLeft   = 4;
+            Projectile.penetrate = -1;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
             Projectile.noEnchantmentVisuals = true;
-        }
-
-        private bool IsRightHeld()
-        {
-            if (Main.myPlayer != Projectile.owner) return true;
-            return Owner.Calamity().mouseRight
-                   && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
-        }
-
-        // 检测左键"刚刚按下"（防持续）
-        private bool IsLeftJustPressed(bool curLeft)
-        {
-            bool justPressed = curLeft && !prevLeftDown;
-            prevLeftDown = curLeft;
-            return justPressed;
+            Projectile.timeLeft = 4;
         }
 
         public override void AI()
@@ -80,378 +73,340 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
             }
 
-            Projectile.timeLeft = 4;
-            phaseTimer++;
-
-            bool curLeft = Main.mouseLeft && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
-
-            switch (phase)
+            Owner.heldProj = Projectile.whoAmI;
+            if (IsDashing)
             {
-                case PhaseRaising:      DoPhaseRaising(); break;
-                case PhaseRaised:       DoPhaseRaised(curLeft); break;
-                case PhaseCharging:     DoPhaseCharging(curLeft); break;
-                case PhaseFullyCharged: DoPhaseFullyCharged(curLeft); break;
+                DoDash();
+                return;
             }
 
-            // Phase 3以外每帧跟踪左键状态，确保进入Phase 3时"刚按下"检测正确
-            if (phase != PhaseFullyCharged)
-                prevLeftDown = curLeft;
+            Projectile.Center = Owner.MountedCenter;
+            Projectile.timeLeft = 4;
 
-            UpdateShieldPosition();
-        }
+            bool rightHeld = IsRightHeld();
+            bool leftHeld = IsLeftHeld();
+            bool leftJustPressed = leftHeld && !previousLeftDown;
+            previousLeftDown = leftHeld;
 
-        // ── Phase 0：举盾过渡，完美格挡窗口 ──────────────────────────────
-
-        private void DoPhaseRaising()
-        {
-            float raiseProg = (float)phaseTimer / BalanceAegisBlade.ShieldRaiseFrames;
-            displayScale    = MathHelper.Lerp(0.3f, 1f, CalamityUtils.SineInOutEasing(raiseProg, 1));
-
-            BladePlayer.ShieldRaising = true;
-            BladePlayer.ShieldRaised  = false;
-
-            // 检测完美格挡
-            if (!perfectParryFired && BladePlayer.WasHurtDuringRaise)
+            if (!rightHeld)
             {
-                perfectParryFired             = true;
+                TryStartDash();
+                return;
+            }
+
+            Charge = Math.Min(Charge + 1f, MaximumGuardCharge);
+            UpdateGuardState();
+            UpdateFacing();
+
+            if (BladePlayer.WasHurtDuringRaise && !perfectParryFired)
+            {
                 BladePlayer.WasHurtDuringRaise = false;
+                perfectParryFired = true;
                 OnPerfectParry();
             }
 
-            // 举盾期间松开右键：取消
-            if (!IsRightHeld())
+            if (ChargeUnlocked && !fullChargeFired && Charge >= FullChargeTime)
             {
-                Projectile.Kill();
-                return;
+                fullChargeFired = true;
+                OnFullCharge();
             }
 
-            if (phaseTimer >= BalanceAegisBlade.ShieldRaiseFrames)
+            // Fully charged guard retains the existing sword-plunge / earth-wall action.
+            if (ChargeUnlocked && leftJustPressed && Charge >= FullChargeTime && Main.myPlayer == Projectile.owner)
             {
-                phase      = PhaseRaised;
-                phaseTimer = 0;
-                raisedTimer = 0;
-            }
-        }
-
-        // ── Phase 1：盾已举起 ────────────────────────────────────────────
-
-        private void DoPhaseRaised(bool curLeft)
-        {
-            displayScale = MathHelper.Lerp(displayScale, 1f, 0.2f);
-            raisedTimer++;
-
-            BladePlayer.ShieldRaised  = true;
-            BladePlayer.ShieldRaising = false;
-
-            // 粒子点缀
-            if (!Main.dedServ && Main.rand.NextBool(5)) EmitIdleParticle();
-
-            // 松开右键 → 普通幻影
-            if (!IsRightHeld())
-            {
-                if (Main.myPlayer == Projectile.owner && !discharged)
-                {
-                    discharged = true;
-                    ReleasePhantom(isPerfect: perfectParryFired, isCharged: false);
-                }
-                Projectile.Kill();
-                return;
-            }
-
-            // 达到蓄力延迟且已解锁蓄力 → 进入Phase 2
-            if (BalanceAegisBlade.ChargeUnlocked() && raisedTimer >= BalanceAegisBlade.ChargeHoldDelay)
-            {
-                phase      = PhaseCharging;
-                phaseTimer = 0;
-                SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.65f, Pitch = 0.1f }, Owner.Center);
-            }
-        }
-
-        // ── Phase 2：蓄力中 ──────────────────────────────────────────────
-
-        private void DoPhaseCharging(bool curLeft)
-        {
-            float chargeProg = (float)phaseTimer / BalanceAegisBlade.ChargeDuration;
-            chargeGlow       = MathHelper.Clamp(chargeGlow + 0.04f, 0f, 1f);
-
-            BladePlayer.ShieldRaised   = true;
-            BladePlayer.ShieldCharging = true;
-
-            // 蓄力粒子
-            if (!Main.dedServ && Main.rand.NextBool(2)) EmitChargeParticle(chargeProg);
-
-            // 松开右键（蓄力未完成）→ 普通幻影，取消蓄力
-            if (!IsRightHeld())
-            {
-                if (Main.myPlayer == Projectile.owner && !discharged)
-                {
-                    discharged = true;
-                    ReleasePhantom(isPerfect: perfectParryFired, isCharged: false);
-                }
-                Projectile.Kill();
-                return;
-            }
-
-            // 蓄力完成 → Phase 3
-            if (phaseTimer >= BalanceAegisBlade.ChargeDuration)
-            {
-                phase      = PhaseFullyCharged;
-                phaseTimer = 0;
-                chargeGlow = 1f;
-                SoundEngine.PlaySound(SoundID.Item67 with { Volume = 0.9f, Pitch = 0.2f }, Owner.Center);
-                OnChargeComplete();
-            }
-        }
-
-        // ── Phase 3：蓄力就绪 ────────────────────────────────────────────
-
-        private void DoPhaseFullyCharged(bool curLeft)
-        {
-            BladePlayer.ShieldRaised       = true;
-            BladePlayer.ShieldFullyCharged = true;
-
-            // 蓄力就绪光效
-            if (!Main.dedServ && Main.rand.NextBool(3)) EmitChargedIdleParticle();
-
-            // 左键刚按下 → 刀刃下插 + 土墙
-            bool leftJust = IsLeftJustPressed(curLeft);
-            if (leftJust && Main.myPlayer == Projectile.owner && !discharged)
-            {
-                discharged = true;
                 TriggerBladePlunge();
                 Projectile.Kill();
                 return;
             }
 
-            // 松开右键 → 强化幻影（蓄力总是强化）
-            if (!IsRightHeld())
+            EmitGuardFlames();
+        }
+
+        private bool IsRightHeld()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return true;
+
+            return Owner.Calamity().mouseRight && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
+        }
+
+        private bool IsLeftHeld()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return false;
+
+            return Main.mouseLeft && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
+        }
+
+        private void UpdateGuardState()
+        {
+            BladePlayer.ShieldRaising = Charge <= BalanceAegisBlade.ShieldRaiseFrames;
+            BladePlayer.ShieldRaised = Charge > BalanceAegisBlade.ShieldRaiseFrames;
+            BladePlayer.ShieldCharging = ChargeUnlocked && Charge >= ChargeStartTime && Charge < FullChargeTime;
+            BladePlayer.ShieldFullyCharged = ChargeUnlocked && Charge >= FullChargeTime;
+        }
+
+        private void UpdateFacing()
+        {
+            Vector2 aimDirection = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
+                .SafeNormalize(Vector2.UnitX * Owner.direction);
+            Owner.ChangeDir(aimDirection.X >= 0f ? 1 : -1);
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full,
+                aimDirection.ToRotation() - MathHelper.PiOver2);
+        }
+
+        private void TryStartDash()
+        {
+            if (Charge < MinimumDashCharge || Owner.noItems || Owner.CCed)
             {
-                if (Main.myPlayer == Projectile.owner && !discharged)
-                {
-                    discharged = true;
-                    ReleasePhantom(isPerfect: true, isCharged: true);
-                }
                 Projectile.Kill();
                 return;
             }
+
+            Vector2 dashDirection = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
+                .SafeNormalize(Vector2.UnitX * Owner.direction);
+            dashDistance = MathHelper.Lerp(BalanceAegisBlade.ShieldDashMinimumDistance,
+                BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
+            Vector2 intendedDestination = Projectile.Center + dashDirection * dashDistance;
+
+            if (intendedDestination.X < 660f || intendedDestination.Y < 660f ||
+                intendedDestination.X > Main.maxTilesX * 16f - 680f ||
+                intendedDestination.Y > Main.maxTilesY * 16f - 680f)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            DashDestination = intendedDestination;
+            Projectile.velocity = dashDirection * dashDistance / DashDuration;
+            float damageMultiplier = MathHelper.Lerp(1f, BalanceAegisBlade.ShieldDashMaxDamageMultiplier, DashPower);
+            if (perfectParryFired)
+                damageMultiplier *= BalanceAegisBlade.PerfectParryDashDamageMultiplier;
+            Projectile.damage = Math.Max(1, (int)(Projectile.damage * damageMultiplier));
+            Projectile.ExpandHitboxBy(BalanceAegisBlade.ShieldDashHitboxExpansion);
+            Projectile.tileCollide = true;
+            Projectile.netUpdate = true;
+
+            Owner.immune = true;
+            Owner.immuneNoBlink = true;
+            Owner.immuneTime = DashDuration;
+            for (int i = 0; i < Owner.hurtCooldowns.Length; i++)
+                Owner.hurtCooldowns[i] = Owner.immuneTime;
+
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                Projectile.oldPos[i] = Vector2.Zero;
+                Projectile.oldRot[i] = 0f;
+                Projectile.oldSpriteDirection[i] = 0;
+            }
+
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.05f, Pitch = -0.2f + DashPower * 0.22f }, Owner.Center);
+            SpawnDashFlash(Projectile.Center, dashDirection, 1f + DashPower * 0.35f);
         }
 
-        // ── 完美格挡触发 ─────────────────────────────────────────────────
+        private void DoDash()
+        {
+            DetachOwnerFromHooksAndMounts();
+
+            DashTime++;
+            Vector2 direction = Projectile.SafeDirectionTo(DashDestination);
+            Projectile.velocity = direction * dashDistance / DashDuration;
+
+            if (Vector2.Distance(Projectile.Center, DashDestination) < 6f || DashTime > DashDuration ||
+                Collision.SolidCollision(Projectile.Center, 1, 1, false))
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Owner.Center = Projectile.Center;
+            Owner.ChangeDir(direction.X >= 0f ? 1 : -1);
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full,
+                direction.ToRotation() - MathHelper.PiOver2);
+
+            if (!Main.dedServ && (int)DashTime % 2 == 0)
+                EmitDashFlames(direction);
+        }
+
+        private void DetachOwnerFromHooksAndMounts()
+        {
+            if (Owner.mount != null)
+                Owner.mount.Dismount(Owner);
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner == Owner.whoAmI && projectile.aiStyle == ProjAIStyleID.Hook)
+                    projectile.Kill();
+            }
+        }
+
+        public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
+        {
+            width = height = 32;
+            return true;
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            return CalamityUtils.CircularHitboxCollision(Owner.Center,
+                BalanceAegisBlade.ShieldDashHitRadius, targetHitbox);
+        }
+
+        public override bool? CanDamage() => IsDashing && DashTime > 0f ? null : false;
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Projectile.damage = Math.Max(1, (int)(Projectile.damage * BalanceAegisBlade.ShieldDashPiercingDamageMultiplier));
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.9f, Pitch = -0.15f }, target.Center);
+
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(target.Center, Vector2.Zero,
+                ShieldFire, new Vector2(1.15f, 0.72f), direction.ToRotation(), 0f, 0.72f, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, direction * 1.4f,
+                ShieldLight, new Vector2(1.2f, 2.6f), direction.ToRotation(), 0.08f, 0.08f, 18));
+            for (int i = 0; i < 4; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    target.Center + Main.rand.NextVector2Circular(16f, 16f),
+                    direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.6f, 5f),
+                    Color.Lerp(ShieldFire, ShieldLight, Main.rand.NextFloat()), Color.Transparent,
+                    Main.rand.NextFloat(0.42f, 0.7f), Main.rand.Next(16, 24), Main.rand.NextFloat(-0.07f, 0.07f)));
+            }
+        }
 
         private void OnPerfectParry()
         {
-            if (Main.dedServ) return;
+            SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact with { Volume = 1f, Pitch = 0.25f }, Owner.Center);
+            if (Main.dedServ)
+                return;
 
-            SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact with { Volume = 1.1f, Pitch = 0.3f }, Owner.Center);
-
-            for (int i = 0; i < 20; i++)
-            {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 14f);
-                Dust d = Dust.NewDustPerfect(Owner.Center, DustID.GoldFlame, vel, 0, GoldOutline, 1.8f);
-                d.noGravity = true;
-            }
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Owner.Center, Vector2.Zero, GoldColor, Vector2.One, 0f, 0.05f, 1.5f, 20));
-
-            // "惊人一刻！"
-            CombatText.NewText(
-                new Rectangle((int)Owner.Center.X, (int)Owner.Center.Y - 42, 1, 1),
-                GoldOutline, "惊人一刻！", true);
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Owner.Center, Vector2.Zero,
+                ShieldLight, Vector2.One, 0f, 0f, 0.65f, 18));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Owner.Center, Vector2.Zero,
+                ShieldGold, Vector2.One, 0f, 0.08f, 1.65f, 20));
         }
 
-        // ── 蓄力完成爆闪 ─────────────────────────────────────────────────
-
-        private void OnChargeComplete()
+        private void OnFullCharge()
         {
-            if (Main.dedServ) return;
+            SoundEngine.PlaySound(SoundID.Item67 with { Volume = 0.95f, Pitch = 0.12f }, Owner.Center);
+            if (Main.dedServ)
+                return;
 
-            for (int i = 0; i < 24; i++)
-            {
-                float ang = MathHelper.TwoPi * i / 24f;
-                Vector2 vel = ang.ToRotationVector2() * Main.rand.NextFloat(4f, 12f);
-                Dust d = Dust.NewDustPerfect(Owner.Center, DustID.GoldFlame, vel, 0, ChargeColor, 1.6f);
-                d.noGravity = true;
-            }
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Owner.Center, Vector2.Zero, ChargeColor, Vector2.One, 0f, 0.06f, 1.8f, 22));
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Owner.Center, Vector2.Zero,
+                ShieldLight, Vector2.One, 0f, 0f, 0.78f, 22));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Owner.Center, Vector2.Zero,
+                ShieldGold, new Vector2(1.35f, 1.35f), MathHelper.PiOver4, 0.1f, 1.9f, 24));
         }
-
-        // ── 释放幻影 ──────────────────────────────────────────────────────
-
-        private void ReleasePhantom(bool isPerfect, bool isCharged)
-        {
-            Vector2 mouse = Owner.Calamity().mouseWorld;
-            if (mouse == Vector2.Zero) mouse = Main.MouseWorld;
-            Vector2 dir = Owner.Center.DirectionTo(mouse).SafeNormalize(Vector2.UnitX * Owner.direction);
-
-            // 强化版才锁定BOSS
-            bool enhanced = isPerfect || isCharged;
-            if (enhanced)
-            {
-                NPC boss = FindNearestBoss();
-                if (boss != null)
-                    dir = Owner.Center.DirectionTo(boss.Center).SafeNormalize(dir);
-            }
-
-            int phantomDamage = balance.GetShieldPhantomDamage();
-
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(),
-                Owner.Center, dir * 18f,
-                ModContent.ProjectileType<AegisShieldPhantom>(),
-                phantomDamage, enhanced ? 8f : 6f, Projectile.owner,
-                enhanced ? 1f : 0f);
-
-            SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.9f, Pitch = enhanced ? 0.35f : 0.1f }, Owner.Center);
-        }
-
-        // ── 触发刀刃下插 ─────────────────────────────────────────────────
 
         private void TriggerBladePlunge()
         {
-            int plungeDamage = balance.GetBladePlungeDamage();
-
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(),
-                Owner.Center,
-                Vector2.UnitY * 26f,     // 垂直向下
-                ModContent.ProjectileType<AegisBladeThrown>(),
-                plungeDamage, 6f, Projectile.owner);
-
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.4f }, Owner.Center);
+            int damage = new BalanceAegisBlade().GetBladePlungeDamage();
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.Center, Vector2.UnitY * 26f,
+                ModContent.ProjectileType<AegisBladeThrown>(), damage, 6f, Projectile.owner);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
         }
 
-        private NPC FindNearestBoss()
+        private void EmitGuardFlames()
         {
-            float bestDist = 700f;
-            NPC best = null;
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (!npc.boss || !npc.CanBeChasedBy()) continue;
-                float dist = Owner.Distance(npc.Center);
-                if (dist < bestDist) { bestDist = dist; best = npc; }
-            }
-            return best;
+            if (Main.dedServ || !ChargeUnlocked || Charge < ChargeStartTime || !Main.rand.NextBool(2))
+                return;
+
+            Vector2 shieldPosition = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+            Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.7f);
+            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                shieldPosition + Main.rand.NextVector2Circular(14f, 22f), outward * Main.rand.NextFloat(0.4f, 1.9f),
+                Color.Lerp(ShieldGold, ShieldLight, ChargeRatio), Color.Transparent,
+                MathHelper.Lerp(0.28f, 0.55f, ChargeRatio), Main.rand.Next(16, 25), Main.rand.NextFloat(-0.06f, 0.06f)));
         }
 
-        // ── 粒子效果 ──────────────────────────────────────────────────────
-
-        private void EmitIdleParticle()
+        private void EmitDashFlames(Vector2 direction)
         {
-            Vector2 pos = Projectile.Center + Main.rand.NextVector2Circular(22f, 22f);
-            Vector2 vel = -Vector2.UnitY * Main.rand.NextFloat(0.5f, 1.8f);
-            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(pos, vel, false,
-                Main.rand.Next(10, 18), 0.03f, GoldColor,
-                new Vector2(1f, 0.3f), true, false, 0.7f));
+            Vector2 rear = Projectile.Center - direction * Main.rand.NextFloat(16f, 42f);
+            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                rear + Main.rand.NextVector2Circular(10f, 10f), -direction.RotatedByRandom(0.34f) * Main.rand.NextFloat(2f, 5f),
+                Color.Lerp(ShieldFire, ShieldLight, Main.rand.NextFloat(0.15f, 0.7f)), Color.Transparent,
+                Main.rand.NextFloat(0.4f, 0.68f), Main.rand.Next(18, 28), Main.rand.NextFloat(-0.08f, 0.08f)));
         }
 
-        private void EmitChargeParticle(float chargeProg)
+        private void SpawnDashFlash(Vector2 position, Vector2 direction, float strength)
         {
-            // 粒子从外向内汇聚到盾上
-            float radius = MathHelper.Lerp(120f, 30f, chargeProg);
-            Vector2 orbit = Main.rand.NextVector2CircularEdge(1f, 1f) * radius;
-            Vector2 vel   = (Projectile.Center - (Projectile.Center + orbit)).SafeNormalize(Vector2.UnitY)
-                             * Main.rand.NextFloat(5f, 12f);
-            GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                Projectile.Center + orbit, vel,
-                "CalamityMod/Particles/Sparkle", false,
-                Main.rand.Next(8, 16),
-                MathHelper.Lerp(0.6f, 1.4f, chargeProg),
-                Main.rand.NextBool(2) ? GoldOutline : GoldColor,
-                new Vector2(0.3f, 1.3f), true, true, shrinkSpeed: 0.14f));
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(position, Vector2.Zero,
+                ShieldLight, Vector2.One, direction.ToRotation(), 0f, 0.58f * strength, 18));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(position, direction * 1.8f,
+                ShieldGold, new Vector2(0.9f, 2.2f) * strength, direction.ToRotation(), 0.09f, 0.08f, 18));
         }
 
-        private void EmitChargedIdleParticle()
+        private Color TrailColorFunction(float completionRatio, Vector2 vertexPosition)
         {
-            // 蓄力完成后的脉冲粒子
-            float angle = Main.GlobalTimeWrappedHourly * 4f + Main.rand.NextFloat(MathHelper.TwoPi);
-            Vector2 pos = Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(15f, 35f);
-            Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(1.5f, 4f);
-            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(pos, vel, false,
-                Main.rand.Next(6, 14), 0.05f,
-                Main.rand.NextBool(3) ? GoldOutline : ChargeColor,
-                new Vector2(1.2f, 0.3f), true, false, 0.8f));
+            float fade = Utils.GetLerpValue(1f, 0.12f, completionRatio, true) * Projectile.Opacity;
+            return Color.Lerp(ShieldLight, ShieldFire, completionRatio) * fade;
         }
 
-        // ── 盾牌位置 ──────────────────────────────────────────────────────
-
-        private void UpdateShieldPosition()
+        private float TrailWidthFunction(float completionRatio, Vector2 vertexPosition)
         {
-            int backDir = -Owner.direction;
-            Vector2 shieldOffset = new Vector2(backDir * 20f, 0f);
-            Projectile.Center    = Owner.Center + shieldOffset;
-            Projectile.rotation  = -MathHelper.PiOver4 * Owner.direction;
-            Owner.heldProj       = Projectile.whoAmI;
+            return MathHelper.Lerp(22f, 5f, completionRatio) * (0.7f + DashPower * 0.45f);
         }
-
-        // ── 绘制 ──────────────────────────────────────────────────────────
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Main.dedServ) return false;
+            if (Main.dedServ)
+                return false;
 
-            Texture2D shieldTex = ModContent.Request<Texture2D>(Texture).Value;
-            Texture2D bloom     = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 drawPos     = Projectile.Center - Main.screenPosition;
-            float rotation      = Projectile.rotation;
-            float drawScale     = displayScale;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
 
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
-
-            // ── 完美格挡金色描边 ─────────────────────────────────────────
-            if (perfectParryFired)
+            if (IsDashing && DashTime > 0f)
             {
-                for (int i = 0; i < 8; i++)
-                {
-                    float angle  = MathHelper.TwoPi * i / 8f + Main.GlobalTimeWrappedHourly * 2.5f;
-                    Vector2 off  = angle.ToRotationVector2() * 5f;
-                    Main.EntitySpriteDraw(shieldTex, drawPos + off, null,
-                        GoldOutline with { A = 0 } * 0.55f,
-                        rotation, shieldTex.Size() * 0.5f, drawScale, SpriteEffects.None, 0);
-                }
+                GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
+                    ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+                PrimitiveRenderer.RenderTrail(Projectile.oldPos,
+                    new PrimitiveSettings(TrailWidthFunction, TrailColorFunction,
+                        (_, _) => Projectile.Size * 0.5f + Main.screenPosition,
+                        shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 12);
+
+                float dashProgress = DashTime / DashDuration;
+                Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+                Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, ShieldFire with { A = 0 } * (1f - dashProgress) * 0.8f,
+                    0f, bloom.Size() * 0.5f, 1.15f + DashPower * 0.45f, SpriteEffects.None);
+                Main.EntitySpriteDraw(ring, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress) * 0.45f,
+                    Projectile.velocity.ToRotation(), ring.Size() * 0.5f,
+                    new Vector2(0.34f, 1.55f) * (1f + DashPower * 0.3f), SpriteEffects.None);
+                Main.spriteBatch.ExitShaderRegion();
+                return false;
             }
 
-            // ── 蓄力光晕 ─────────────────────────────────────────────────
-            if (phase >= PhaseCharging)
+            // Native shield frames provide the actual silhouette. This additive layer only supplies the
+            // right-click glow, so the sheet remains crisp instead of being washed out by a second sprite.
+            float pulse = 0.22f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
+            float chargeGlow = MathHelper.Lerp(0.1f, 0.8f, ChargeRatio);
+            Vector2 shieldPosition = Owner.Center - Main.screenPosition + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (pulse + chargeGlow * 0.35f),
+                0f, bloom.Size() * 0.5f, 0.36f + chargeGlow * 0.34f, SpriteEffects.None);
+            if (perfectParryFired || Charge >= FullChargeTime)
             {
-                float pulse = chargeGlow * (0.4f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f));
-                Main.EntitySpriteDraw(bloom, drawPos, null,
-                    ChargeColor with { A = 0 } * pulse,
-                    0f, bloom.Size() * 0.5f, drawScale * (1f + chargeGlow * 0.5f), SpriteEffects.None, 0);
+                float ringPulse = 0.76f + 0.24f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f);
+                Main.EntitySpriteDraw(ring, shieldPosition, null, ShieldLight with { A = 0 } * ringPulse * 0.4f,
+                    Main.GlobalTimeWrappedHourly * 1.8f, ring.Size() * 0.5f, 0.34f + chargeGlow * 0.28f, SpriteEffects.None);
             }
-
-            // ── 基础光晕 ─────────────────────────────────────────────────
-            float baseGlow = 0.25f + 0.08f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3.5f);
-            Main.EntitySpriteDraw(bloom, drawPos, null,
-                GoldColor with { A = 0 } * baseGlow * drawScale,
-                0f, bloom.Size() * 0.5f, drawScale, SpriteEffects.None, 0);
-
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-
-            // ── 盾本体 ───────────────────────────────────────────────────
-            Main.EntitySpriteDraw(shieldTex, drawPos, null, lightColor,
-                rotation, shieldTex.Size() * 0.5f, drawScale, SpriteEffects.None, 0);
-
-            // ── 蓄力进度条（相位2/3显示） ────────────────────────────────
-            if (Main.myPlayer == Projectile.owner && phase >= PhaseCharging)
-                DrawChargeBar();
-
+            Main.spriteBatch.ExitShaderRegion();
             return false;
         }
 
-        private void DrawChargeBar()
+        public override void OnKill(int timeLeft)
         {
-            Texture2D barBG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
-            Texture2D barFG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            if (!IsDashing)
+                return;
 
-            float progress = phase == PhaseCharging
-                ? Math.Clamp((float)phaseTimer / BalanceAegisBlade.ChargeDuration, 0f, 1f)
-                : 1f;
-
-            Vector2 drawPos  = Owner.Center - Main.screenPosition + new Vector2(-barBG.Width * 0.75f, -60f);
-            Rectangle frame  = new Rectangle(0, 0, (int)(progress * barFG.Width), barFG.Height);
-            Color barColor   = phase == PhaseFullyCharged ? GoldOutline : ChargeColor;
-
-            Main.spriteBatch.Draw(barBG, drawPos, barColor * 0.9f);
-            Main.spriteBatch.Draw(barFG, drawPos, frame, barColor * 0.75f);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            SpawnDashFlash(Projectile.Center, direction, 1.15f + DashPower * 0.35f);
         }
     }
 }

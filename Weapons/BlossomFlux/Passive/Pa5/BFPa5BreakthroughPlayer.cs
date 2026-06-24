@@ -1,5 +1,5 @@
 using CalamityMod;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffects;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -13,7 +13,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
         private const int DashInputWindow = 15;
         private const int DashDuration = 14;
         private const int DashCooldown = 50;
-        private const int DamageBuffFrames = 45;
         private const float DashVelocity = 20.5f;
 
         private int leftTapTimer;
@@ -21,10 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
         private int customDashTimer;
         private int customDashCooldown;
         private int customDashDirection;
-        private int damageBuffTimer;
-        private bool wasDashingLastFrame;
-
-        public bool DamageBuffActive => damageBuffTimer > 0;
+        public bool IsCustomDashing => customDashTimer > 0;
 
         public override void UpdateDead()
         {
@@ -32,22 +28,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             rightTapTimer = 0;
             customDashTimer = 0;
             customDashCooldown = 0;
-            damageBuffTimer = 0;
-            wasDashingLastFrame = false;
         }
 
         public override void PostUpdate()
         {
-            if (damageBuffTimer > 0)
-                damageBuffTimer--;
-
             if (!BFPa5PassiveSystem.IsActive(Player, BlossomFluxChloroplastPresetType.Chlo_ABreak))
             {
                 leftTapTimer = 0;
                 rightTapTimer = 0;
                 customDashTimer = 0;
                 customDashCooldown = 0;
-                wasDashingLastFrame = false;
                 return;
             }
 
@@ -57,11 +47,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             if (Player.dashDelay > 0)
                 Player.dashDelay = System.Math.Max(0, Player.dashDelay - 1);
 
-            bool dashingNow = Player.dashDelay < 0 && Player.velocity.Length() > 4f;
-            if (dashingNow && !wasDashingLastFrame)
-                TriggerDamageBuff();
-
-            wasDashingLastFrame = dashingNow;
             HandleCustomDashInput();
         }
 
@@ -73,6 +58,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             customDashTimer--;
             Player.velocity.X = customDashDirection * DashVelocity;
             Player.maxFallSpeed = System.Math.Max(Player.maxFallSpeed, 18f);
+            Player.immuneNoBlink = true;
+            Player.GiveUniversalIFrames(2, false);
 
             if (!Main.dedServ && Main.rand.NextBool(2))
             {
@@ -81,16 +68,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
                     DustID.GrassBlades,
                     new Vector2(-customDashDirection * Main.rand.NextFloat(1.8f, 4.2f), Main.rand.NextFloat(-0.8f, 0.8f)),
                     110,
-                    new Color(142, 255, 118),
+                    Color.Lerp(BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_ABreak), Color.White, 0.22f),
                     Main.rand.NextFloat(0.8f, 1.25f));
                 dust.noGravity = true;
             }
-        }
-
-        public override void ModifyWeaponDamage(Item item, ref StatModifier damage)
-        {
-            if (DamageBuffActive && item.type == ModContent.ItemType<NewLegendBlossomFlux>())
-                damage *= 1.2f;
         }
 
         private void HandleCustomDashInput()
@@ -132,25 +113,34 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             Player.ChangeDir(direction);
             Player.velocity.X = direction * DashVelocity;
             Player.velocity.Y *= 0.82f;
-            TriggerDamageBuff();
+            Player.immuneNoBlink = true;
+            Player.GiveUniversalIFrames(2, false);
+            SpawnDashHitbox();
 
             if (Main.myPlayer == Player.whoAmI)
                 SoundEngine.PlaySound(BlossomFluxSounds.Pa5BreakthroughSound, Player.Center);
         }
 
-        private void TriggerDamageBuff()
+        private void SpawnDashHitbox()
         {
-            damageBuffTimer = DamageBuffFrames;
+            if (Main.myPlayer != Player.whoAmI)
+                return;
+
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BFPa5BreakthroughDashHitbox>(),
+                System.Math.Max(1, Player.GetWeaponDamage(Player.HeldItem)),
+                Player.GetWeaponKnockback(Player.HeldItem),
+                Player.whoAmI,
+                customDashDirection);
         }
 
         private bool HasExternalDash()
         {
-            string dashID = !string.IsNullOrEmpty(Player.Calamity().LastUsedDashID)
-                ? Player.Calamity().LastUsedDashID
-                : Player.Calamity().DashID;
-
             return Player.dashType != 0 ||
-                BrinyBaronDashPassiveEffectRegistry.FromDashID(dashID) != BrinyBaronQuickDashDevice.None;
+                !string.IsNullOrEmpty(Player.Calamity().DashID);
         }
     }
 }

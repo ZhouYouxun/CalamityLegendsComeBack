@@ -14,7 +14,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
                 return;
 
             Player.wingTimeMax = (int)(Player.wingTimeMax * 1.5f);
-            ApplyMovementDebuffImmunities();
         }
 
         public override void PostUpdateMiscEffects()
@@ -22,7 +21,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             if (!BFPa5PassiveSystem.IsActive(Player, BlossomFluxChloroplastPresetType.Chlo_CDetec))
                 return;
 
-            Player.moveSpeed = System.Math.Max(Player.moveSpeed, 1.25f);
+            // Apply a speed floor after equipment and debuffs have modified the player.
+            // This deliberately avoids a brittle per-buff allowlist: any source that would
+            // reduce movement below the normal value is neutralised, while positive bonuses stay.
+            Player.moveSpeed = System.Math.Max(Player.moveSpeed, 1f) + 0.25f;
         }
 
         public override void PostUpdateRunSpeeds()
@@ -30,29 +32,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             if (!BFPa5PassiveSystem.IsActive(Player, BlossomFluxChloroplastPresetType.Chlo_CDetec))
                 return;
 
-            Player.maxRunSpeed *= 1.25f;
-            Player.accRunSpeed *= 1.25f;
-            Player.runAcceleration *= 2f;
-            Player.runSlowdown *= 2f;
+            Player.maxRunSpeed = System.Math.Max(Player.maxRunSpeed, 3.5f) * 1.25f;
+            Player.accRunSpeed = System.Math.Max(Player.accRunSpeed, 3.5f) * 1.25f;
+            Player.runAcceleration = System.Math.Max(Player.runAcceleration, 0.08f) * 2f;
+            Player.runSlowdown = System.Math.Max(Player.runSlowdown, 0.08f) * 2f;
         }
 
         public override void PostUpdate()
         {
             if (BFPa5PassiveSystem.IsActive(Player, BlossomFluxChloroplastPresetType.Chlo_CDetec))
                 TryReleasePlatformGrapple();
-        }
-
-        private void ApplyMovementDebuffImmunities()
-        {
-            Player.buffImmune[BuffID.Slow] = true;
-            Player.buffImmune[BuffID.Chilled] = true;
-            Player.buffImmune[BuffID.Frozen] = true;
-            Player.buffImmune[BuffID.Webbed] = true;
-            Player.buffImmune[BuffID.Stoned] = true;
-            TrySetBuffImmune("WindPushed");
-            TrySetBuffImmune("VortexDebuff");
-            TrySetBuffImmune("Obstructed");
-            TrySetBuffImmune("Distorted");
         }
 
         private void TryReleasePlatformGrapple()
@@ -82,14 +71,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             return tile.HasTile && (TileID.Sets.Platforms[tile.TileType] || tile.IsHalfBlock || tile.Slope != SlopeType.Solid);
         }
 
-        private void TrySetBuffImmune(string buffName)
-        {
-            if (!ModContent.TryFind("Terraria/" + buffName, out ModBuff buff))
-                return;
-
-            if (buff.Type > 0 && buff.Type < Player.buffImmune.Length)
-                Player.buffImmune[buff.Type] = true;
-        }
     }
 
     internal sealed class BFPa5ReconGlobalProjectile : GlobalProjectile

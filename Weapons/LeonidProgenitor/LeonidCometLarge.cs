@@ -106,6 +106,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
             Color drawColor = Color.Lerp(new Color(130, 90, 255), new Color(220, 120, 255), Progress) * (1f - Projectile.alpha / 255f);
             Vector2 origin = texture.Size() * 0.5f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            // These textures contain black source pixels; keep all emitted light additive.
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
+            LeonidVisualUtils.DrawBloom(Projectile.Center, drawColor * 0.3f, Projectile.scale * 0.45f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
@@ -114,14 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 Main.EntitySpriteDraw(texture, oldDrawPosition, null, drawColor * completion * 0.3f, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             }
 
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
-            Color glowColor = Color.White * (1f - Projectile.alpha / 255f);
-            glowColor.A = 0;
-            Main.EntitySpriteDraw(glow, drawPosition, null, glowColor, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
-
-            // Large bloom glow
-            LeonidVisualUtils.DrawBloom(Projectile.Center, drawColor * 0.3f, Projectile.scale * 0.45f);
 
             return false;
         }

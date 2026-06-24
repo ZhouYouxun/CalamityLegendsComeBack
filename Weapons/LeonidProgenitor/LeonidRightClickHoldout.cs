@@ -180,9 +180,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Color coreColor = Color.Lerp(new Color(110, 80, 255), new Color(200, 130, 255), prog);
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
 
-            // Draw glowing core
-            Main.spriteBatch.Draw(bloom, drawPos, null, coreColor * 0.4f, 0f, bloom.Size() * 0.5f, size * 0.65f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(bloom, drawPos, null, Color.White * 0.3f, 0f, bloom.Size() * 0.5f, size * 0.35f, SpriteEffects.None, 0f);
+            // The charge core is a pure light effect and must not render BloomCircle's black base.
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
+            Main.EntitySpriteDraw(bloom, drawPos, null, coreColor * 0.4f, 0f, bloom.Size() * 0.5f, size * 0.65f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(bloom, drawPos, null, Color.White * 0.3f, 0f, bloom.Size() * 0.5f, size * 0.35f, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             // Orbiting stars spiraling in
             Texture2D meteorTex = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitor").Value;

@@ -12,6 +12,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 {
     public class AegisBladePlayer : ModPlayer
     {
+        private const string RaisableShieldTexture = "CalamityLegendsComeBack/Weapons/AegisBlade/\u5E87\u62A4\u76FE\u724C\u591A\u5E27\u56FE";
+        private const string RaisableShieldName = "AegisBladeRaisableShield";
+
         // ── 能量 ──────────────────────────────────────────────────────────
         public float AegisEnergy = 0f;
         private bool energyWasReady = false;
@@ -49,6 +52,34 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         // ── 速度检测 ──────────────────────────────────────────────────────
         public bool IsStationary => Player.velocity.Length() < 0.5f;
+
+        public override void Load()
+        {
+            if (!Main.dedServ)
+            {
+                EquipLoader.AddEquipTexture(Mod, RaisableShieldTexture, EquipType.Shield,
+                    name: RaisableShieldName);
+            }
+        }
+
+        public override void UpdateVisibleVanityAccessories()
+        {
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>())
+                return;
+
+            int shieldSlot = EquipLoader.GetEquipSlot(Mod, RaisableShieldName, EquipType.Shield);
+            if (shieldSlot < 0)
+                return;
+
+            Player.shield = shieldSlot;
+            Player.cShield = 0;
+        }
+
+        public override void UpdateEquips()
+        {
+            if (Player.HeldItem.type == ModContent.ItemType<AegisBlade>())
+                Player.hasRaisableShield = true;
+        }
 
         public override void ResetEffects()
         {
@@ -129,7 +160,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
             // 举盾防御加成
             if (ShieldRaised || ShieldCharging || ShieldFullyCharged)
+            {
                 Player.statDefense += BalanceAegisBlade.ShieldMaxDefenseBonus;
+                Player.noKnockback = true;
+            }
 
             // ── 壁垒被动：防御损伤-50%（CalamityMod defenseDamageRatio） ──
             if (!HasDamageDebuff())

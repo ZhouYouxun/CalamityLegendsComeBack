@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -43,7 +44,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.Shared
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Color drawColor = new Color(205, 205, 255, 0) * (1f - Projectile.alpha / 255f) * 0.75f;
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, drawColor, 0f, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
     }

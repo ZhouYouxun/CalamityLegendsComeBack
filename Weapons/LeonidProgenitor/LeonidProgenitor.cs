@@ -164,6 +164,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 }
             }
 
+            // Shoot is fully custom, so RogueWeapon's normal stealth-consumption path is
+            // bypassed. Consume once after either mouse button has produced its stealth attack.
+            if (stealthStrike)
+                player.Calamity().ConsumeStealthByAttacking();
+
             return false;
         }
 

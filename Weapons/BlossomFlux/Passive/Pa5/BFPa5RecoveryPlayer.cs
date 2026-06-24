@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
                 return;
 
             if (item.type == ItemID.Heart || item.type == ItemID.CandyApple || item.type == ItemID.CandyCane)
-                grabRange = System.Math.Max(grabRange, 520);
+                grabRange = System.Math.Max(grabRange, 960);
         }
     }
 }

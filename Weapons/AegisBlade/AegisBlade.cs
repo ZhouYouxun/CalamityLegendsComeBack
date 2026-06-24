@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             if (CanStartShieldHoldout(player, bp))
             {
                 int shieldDamage = (int)player.GetTotalDamage(DamageClass.Melee)
-                                         .ApplyTo(balance.GetShieldPhantomDamage());
+                                         .ApplyTo(balance.GetShieldBashDamage());
                 Vector2 aimDir = (GetMouseWorld(player) - player.MountedCenter)
                                  .SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(Item.GetSource_FromThis(), player.MountedCenter, aimDir,
@@ -119,6 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             return player.Calamity().mouseRight
                    && !bp.IsSwinging
                    && player.ownedProjectileCounts[ShieldHoldoutType] == 0
+                   && player.ownedProjectileCounts[SwingHoldoutType] == 0
                    && !player.noItems && !player.CCed
                    && !Main.mapFullscreen && !Main.blockMouse && !player.mouseInterface;
         }

@@ -451,15 +451,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
-            Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
             Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
             float opacity = 1f - Projectile.alpha / 255f;
             Vector2 origin = texture.Size() * 0.5f;
 
-            // Additive comet tail
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            // Round halo trail: a meteor should read as a soft, dense body rather than a sharp magic spark.
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
 
             for (int i = 1; i < Projectile.oldPos.Length; i++)
             {
@@ -468,35 +466,29 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
                 float t = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 trailPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                float trailRot = i < Projectile.oldPos.Length - 1 && Projectile.oldPos[i + 1] != Vector2.Zero
-                    ? (Projectile.oldPos[i] - Projectile.oldPos[i + 1]).ToRotation()
-                    : Projectile.rotation;
 
-                // Main elongated streak
-                Main.EntitySpriteDraw(spark, trailPos, null,
-                    Color.Lerp(MeteorColor, Color.White, t * 0.4f) * (0.55f * t * opacity),
-                    trailRot, spark.Size() * 0.5f, new Vector2(0.016f, 0.12f * t), SpriteEffects.None, 0);
+                float trailScale = 0.026f + t * 0.04f;
+                Main.EntitySpriteDraw(bloomTex, trailPos, null, MeteorColor * (0.22f * t * opacity),
+                    0f, bloomTex.Size() * 0.5f, trailScale, SpriteEffects.None, 0);
 
-                // Perpendicular shimmer
-                if (i % 2 == 0)
-                    Main.EntitySpriteDraw(spark, trailPos, null, MeteorColor * (0.2f * t * opacity),
-                        trailRot + MathHelper.PiOver2, spark.Size() * 0.5f, new Vector2(0.013f, 0.06f * t), SpriteEffects.None, 0);
-
-                // Bloom dot every 3 steps
                 if (i % 3 == 0)
-                    Main.EntitySpriteDraw(bloomTex, trailPos, null, MeteorColor * (0.14f * t * opacity),
-                        0f, bloomTex.Size() * 0.5f, 0.01f + t * 0.01f, SpriteEffects.None, 0);
+                    Main.EntitySpriteDraw(bloomTex, trailPos, null, Color.White * (0.07f * t * opacity),
+                        0f, bloomTex.Size() * 0.5f, trailScale * 0.48f, SpriteEffects.None, 0);
             }
 
-            // Head cross-spark
+            // Soft concentric halos keep the meteor's silhouette round.
             Vector2 headPos = Projectile.Center - Main.screenPosition;
-            Main.EntitySpriteDraw(spark, headPos, null, Color.White * (0.65f * opacity),
-                Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.022f, 0.22f), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(spark, headPos, null, MeteorColor * (0.45f * opacity),
-                Projectile.rotation + MathHelper.PiOver2, spark.Size() * 0.5f, new Vector2(0.022f, 0.14f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloomTex, headPos, null, MeteorColor * (0.42f * opacity),
+                0f, bloomTex.Size() * 0.5f, 0.14f * Projectile.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloomTex, headPos, null, Color.White * (0.2f * opacity),
+                0f, bloomTex.Size() * 0.5f, 0.065f * Projectile.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(glow, headPos, null, Color.White * opacity,
+                Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
 
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            for (int i = 0; i < activeEffects.Length; i++)
+                activeEffects[i].DrawInjectedEnergy(this, Owner, Main.spriteBatch);
+
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             // Afterimage texture trail
             Color outlineColor = new Color(130, 100, 255) * opacity;
@@ -519,16 +511,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
 
-            Color glowColor = Color.White * opacity;
-            glowColor.A = 0;
-            Main.EntitySpriteDraw(glow, drawPosition, null, glowColor, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
-            LeonidVisualUtils.DrawBloom(Projectile.Center, MeteorColor * 0.35f, FromStealthRain ? 0.42f : 0.3f, Projectile.rotation);
-
             for (int i = 0; i < activeEffects.Length; i++)
                 activeEffects[i].PostDraw(this, Owner, Main.spriteBatch);
-
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].DrawInjectedEnergy(this, Owner, Main.spriteBatch);
 
             return false;
         }

@@ -20,8 +20,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private static Color MainColor => BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov);
-        private static Color AccentColor => BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_BRecov);
+        private BlossomFluxChloroplastPresetType ThemePreset => (int)Projectile.ai[0] switch
+        {
+            (int)BlossomFluxChloroplastPresetType.Chlo_BRecov => BlossomFluxChloroplastPresetType.Chlo_BRecov,
+            (int)BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxChloroplastPresetType.Chlo_CDetec,
+            (int)BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxChloroplastPresetType.Chlo_DBomb,
+            (int)BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxChloroplastPresetType.Chlo_EPlague,
+            _ => BlossomFluxChloroplastPresetType.Chlo_ABreak
+        };
+
+        private Color MainColor => BFArrowCommon.GetPresetColor(ThemePreset);
+        private Color AccentColor => BFArrowCommon.GetPresetAccentColor(ThemePreset);
 
         public override void SetDefaults()
         {
@@ -67,7 +76,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                         ModContent.ProjectileType<BFPassiveRecoveryFieldWave>(),
                         0,
                         0f,
-                        Projectile.owner);
+                        Projectile.owner,
+                        (float)ThemePreset);
                 }
             }
 
@@ -320,8 +330,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private static Color MainColor => BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_BRecov);
-        private static Color AccentColor => BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_BRecov);
+        private BlossomFluxChloroplastPresetType ThemePreset => (int)Projectile.ai[0] switch
+        {
+            (int)BlossomFluxChloroplastPresetType.Chlo_BRecov => BlossomFluxChloroplastPresetType.Chlo_BRecov,
+            (int)BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxChloroplastPresetType.Chlo_CDetec,
+            (int)BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxChloroplastPresetType.Chlo_DBomb,
+            (int)BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxChloroplastPresetType.Chlo_EPlague,
+            _ => BlossomFluxChloroplastPresetType.Chlo_ABreak
+        };
+
+        private Color MainColor => BFArrowCommon.GetPresetColor(ThemePreset);
+        private Color AccentColor => BFArrowCommon.GetPresetAccentColor(ThemePreset);
 
         public override void SetDefaults()
         {

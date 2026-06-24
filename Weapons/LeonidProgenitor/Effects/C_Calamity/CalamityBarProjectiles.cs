@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -72,6 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
 
         public override bool PreDraw(ref Color lightColor)
         {
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Color color = new(150, 238, 255, 0);
@@ -84,6 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             }
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, texture.Size() * 0.5f, 0.68f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -164,6 +167,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
 
         public override bool PreDraw(ref Color lightColor)
         {
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Color color = new Color(144, 235, 255, 0) * Utils.GetLerpValue(0f, 16f, Projectile.timeLeft, true);
@@ -171,6 +175,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.18f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.55f, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, color * 0.58f, Projectile.rotation, ring.Size() * 0.5f, Projectile.scale * 0.36f, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, color * 0.36f, -Projectile.rotation * 0.8f, ring.Size() * 0.5f, Projectile.scale * 0.24f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -379,8 +384,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Color color = new(132, 255, 148, 0);
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, color * 0.26f, Projectile.rotation, bloom.Size() * 0.5f, 0.16f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, texture.Size() * 0.5f, 0.72f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -527,8 +534,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             Color orange = new Color(255, 115, 52, 0) * opacity;
             Vector2 drawPosition = Projectile.Bottom - Main.screenPosition;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(smear, drawPosition, null, orange * 0.72f, 0f, new Vector2(smear.Width * 0.5f, smear.Height), new Vector2(0.28f, 1.25f), SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, orange * 0.3f, 0f, bloom.Size() * 0.5f, new Vector2(0.32f, 1.15f), SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -602,9 +611,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.C_Calamity
             float opacity = Utils.GetLerpValue(0f, 5f, Projectile.localAI[0], true) * Utils.GetLerpValue(0f, 8f, Projectile.timeLeft, true);
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(bloom, drawPosition, null, PulseColor * 0.18f * opacity, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.5f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, drawPosition, null, PulseColor * 0.7f * opacity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.42f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, drawPosition, null, Color.White * 0.24f * opacity, -Projectile.rotation * 1.2f, texture.Size() * 0.5f, Projectile.scale * 0.22f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
     }

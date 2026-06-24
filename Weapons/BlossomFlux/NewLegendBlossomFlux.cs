@@ -51,7 +51,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 player.Calamity().rightClickListener = true;
 
             BFPassivePlayer passivePlayer = player.GetModPlayer<BFPassivePlayer>();
-            passivePlayer.SetHoldingBlossomFlux();
             passivePlayer.SyncPassiveDisplay();
             BFEXPlayer exPlayer = player.GetModPlayer<BFEXPlayer>();
             exPlayer.SetHoldingBlossomFlux();

@@ -60,6 +60,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 0f);
         }
 
+        public static void BeginAdditiveSpriteBatch()
+        {
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
+        public static void BeginAlphaBlendSpriteBatch()
+        {
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
         public static void SpawnBloomBurst(Vector2 center, Color color, float scale, int lifetime)
         {
             if (Main.dedServ)

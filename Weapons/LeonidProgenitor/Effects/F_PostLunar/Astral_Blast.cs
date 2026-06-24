@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityMod.Buffs.DamageOverTime;
 using Terraria;
 using Terraria.ID;
@@ -69,8 +70,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             float opacity = Utils.GetLerpValue(0f, 4f, Projectile.localAI[0], true) * Utils.GetLerpValue(0f, 4f, Projectile.timeLeft, true);
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(texture, drawPosition, null, core * 0.62f * opacity, RotationSeed + Projectile.localAI[0] * 0.06f, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(ring, drawPosition, null, edge * 0.55f * opacity, -RotationSeed + Projectile.localAI[0] * 0.12f, ring.Size() * 0.5f, Projectile.scale * 0.48f, SpriteEffects.None, 0f);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
     }

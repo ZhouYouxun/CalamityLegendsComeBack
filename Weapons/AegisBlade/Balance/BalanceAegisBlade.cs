@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         };
 
         // ── 盾牌幻影伤害 ──────────────────────────────────────────────────
-        private static readonly int[] DefaultShieldPhantomDamage =
+        private static readonly int[] DefaultShieldBashDamage =
         {
              28,  40,  48,  60,  70,  80,  92, 104, 116, 128, 144, 160, 172, 180,
         };
@@ -74,7 +74,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         // ── 蓄力举盾 ──────────────────────────────────────────────────────
         public const int   ChargeHoldDelay      = 45;   // Phase1中持续多少帧后开始蓄力
         public const int   ChargeDuration       = 60;   // 蓄力完成需要的帧数
-        public const float ChargePhantomKnockback = 4f; // 蓄力幻影额外击退倍率
+        // ── Shield bash ────────────────────────────────────────────────────
+        // The right-click guard releases into a Stygian-style player dash. These numbers are
+        // intentionally centralized so its travel, hitbox and damage stay in lockstep.
+        public const int   ShieldDashDuration                 = 18;
+        public const float ShieldDashMinimumDistance          = 250f;
+        public const float ShieldDashMaximumDistance          = 650f;
+        public const float ShieldDashMaxDamageMultiplier      = 3.25f;
+        public const float PerfectParryDashDamageMultiplier   = 1.35f;
+        public const float ShieldDashPiercingDamageMultiplier = 0.68f;
+        public const float ShieldDashHitRadius                = 52f;
+        public const int   ShieldDashHitboxExpansion          = 96;
 
         // ── 土墙 ──────────────────────────────────────────────────────────
         public const int   WallHeightTiles  = 16;        // 墙高（格）
@@ -110,8 +120,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public static int GetInitialLeftClickDamage()
             => DefaultLeftClickBaseDamage[0];
 
-        public int GetShieldPhantomDamage()
-            => GetValueForStage(GetShieldPhantomValues(), GetStageIndex());
+        public int GetShieldBashDamage()
+            => GetValueForStage(GetShieldBashValues(), GetStageIndex());
 
         public int GetBladePlungeDamage()
             => GetValueForStage(GetBladePlungeValues(), GetStageIndex());
@@ -156,8 +166,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         private static int[] GetLeftClickValues()
             => RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage);
 
-        private static int[] GetShieldPhantomValues()
-            => RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultShieldPhantomDamage), DefaultShieldPhantomDamage);
+        private static int[] GetShieldBashValues()
+            => RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultShieldBashDamage), DefaultShieldBashDamage);
 
         private static int[] GetBladePlungeValues()
             => RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultBladePlungeDamage), DefaultBladePlungeDamage);

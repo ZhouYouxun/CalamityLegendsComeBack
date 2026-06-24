@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
@@ -97,6 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Color orange = new Color(255, 142, 70, 0) * opacity;
             Color blue = new Color(94, 216, 255, 0) * opacity;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 Vector2 oldDraw = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -107,6 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Main.EntitySpriteDraw(bloom, drawPosition, null, orange * 0.32f, Projectile.rotation, bloom.Size() * 0.5f, 0.18f, SpriteEffects.None);
             Main.EntitySpriteDraw(star, drawPosition, null, blue * 0.62f, -Projectile.rotation, star.Size() * 0.5f, 0.34f, SpriteEffects.None);
             Main.EntitySpriteDraw(star, drawPosition, null, Color.White * 0.3f * opacity, Projectile.rotation * 1.4f, star.Size() * 0.5f, 0.22f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -212,6 +215,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Color color = new(135, 255, 88, 0);
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 Vector2 oldDraw = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -220,6 +224,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             }
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, texture.Size() * 0.5f, CrownVariant ? 0.82f : 0.65f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -320,9 +325,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Color color = new Color(82, 230, 255, 0) * opacity;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.2f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.52f, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, color * 0.72f, Projectile.rotation, ring.Size() * 0.5f, Projectile.scale * 0.44f, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, new Color(180, 120, 255, 0) * 0.48f * opacity, -Projectile.rotation * 1.4f, ring.Size() * 0.5f, Projectile.scale * 0.28f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -398,6 +405,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Color color = new(82, 230, 255, 0);
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 Vector2 oldDraw = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -406,6 +414,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             }
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, texture.Size() * 0.5f, 0.62f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -527,6 +536,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Color gold = new Color(255, 216, 84, 0) * opacity;
             Color blue = new Color(84, 226, 255, 0) * opacity;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 Vector2 oldDraw = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -536,6 +546,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 
             Main.EntitySpriteDraw(line, drawPosition, null, gold, forward.ToRotation() + MathHelper.PiOver2, new Vector2(line.Width * 0.5f, line.Height), new Vector2(0.18f, 0.82f), SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, drawPosition, null, blue * 0.28f, Projectile.rotation, bloom.Size() * 0.5f, 0.2f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -588,8 +599,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             float opacity = Utils.GetLerpValue(0f, 5f, Projectile.localAI[0], true) * Utils.GetLerpValue(0f, 6f, Projectile.timeLeft, true);
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, new Color(255, 216, 84, 0) * opacity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.45f, SpriteEffects.None);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, new Color(84, 226, 255, 0) * opacity * 0.55f, -Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.27f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
     }
@@ -688,6 +701,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Color purple = new Color(168, 90, 255, 0) * opacity;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 Vector2 oldDraw = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -697,6 +711,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
 
             Main.EntitySpriteDraw(smear, drawPosition, null, purple * 0.72f, Projectile.rotation + MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), new Vector2(0.12f, Aggressive ? 0.48f : 0.34f), SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, drawPosition, null, purple * 0.35f, Projectile.rotation, bloom.Size() * 0.5f, Aggressive ? 0.22f : 0.16f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
@@ -800,9 +815,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects.F_PostLunar
             Color black = new Color(18, 12, 24, 0) * opacity;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
+            LeonidVisualUtils.BeginAdditiveSpriteBatch();
             Main.EntitySpriteDraw(bloom, drawPosition, null, black * 0.7f, Projectile.rotation, bloom.Size() * 0.5f, Projectile.scale * 0.82f, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, purple * 0.72f, Projectile.rotation, ring.Size() * 0.5f, Projectile.scale * 0.48f, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, purple * 0.42f, -Projectile.rotation * 1.7f, ring.Size() * 0.5f, Projectile.scale * 0.3f, SpriteEffects.None);
+            LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
             return false;
         }
 
