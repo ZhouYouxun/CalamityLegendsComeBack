@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ArtisanToken: {
+					DisplayName: 工匠令牌
+					Tooltip:
+						'''
+						右键打开词缀选择菜单。
+						点击词缀后，立即为身上所有配饰敲上该词缀。
+						可在哥布林工匠处购买。
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ArtisanTokenPanel: {
+					DisplayName: 工匠令牌面板
+				}
+			}
+		}
+
+		TheSpecialText: {
+			ArtisanTokenTitle: 工匠令牌 — 选择词缀
+			ArtisanTokenApplied: 已为 {1} 件配饰敲上词缀：{0}
+		}
+	}
+}

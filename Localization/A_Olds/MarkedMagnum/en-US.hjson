@@ -1,0 +1,23 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MarkedMagnum: {
+					DisplayName: Marked Magnum
+					Tooltip:
+						'''
+						Fires a purple laser that inflicts Marked for Death
+						Enemies hit by the laser are also marked with a death crosshair
+						Friendly projectiles hitting marked enemies have a 25% chance to clone themselves into three
+						'''
+				}
+			}
+		}
+		Buffs: {
+			MarkedMagnumDebuff: {
+				DisplayName: Marked Magnum Deathmark
+				Description: Projectiles hitting this target have a 25% chance to duplicate into three
+			}
+		}
+	}
+}

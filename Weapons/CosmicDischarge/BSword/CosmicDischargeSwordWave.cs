@@ -38,7 +38,19 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Time++;
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Projectile.velocity *= 0.945f;
+
+            // Tracking: home toward nearest/marked enemy after initial frames.
+            if (Time >= 5f)
+            {
+                NPC target = FindBestTarget(900f);
+                if (target != null)
+                {
+                    Vector2 desiredVel = Projectile.SafeDirectionTo(target.Center) * 13f;
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVel, 0.12f);
+                }
+            }
+            Projectile.velocity *= 0.958f;
+
             Projectile.Opacity = Utils.GetLerpValue(0f, 4f, Time, true) * Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
             Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.48f);
 
@@ -125,17 +137,39 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 0.22f * 0.3f,
                 14));
 
-            for (int i = 0; i < 10; i++)
+            // DoG-themed hit: precise electric arcs and energy particles instead of chaotic sparks.
+            for (int i = 0; i < 5; i++)
             {
-                Vector2 velocity = direction.RotatedByRandom(0.86f) * Main.rand.NextFloat(2.4f, 8.8f);
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                    target.Center + Main.rand.NextVector2Circular(14f, 14f),
-                    velocity,
+                GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                    target.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(2f, 7f),
                     false,
-                    Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
-                    CosmicDischargeCommon.RandomDoGColor()));
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.30f, 0.55f) * 0.3f,
+                    Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
+                    new Vector2(0.08f, 3.0f),
+                    true,
+                    true));
             }
+            for (int i = 0; i < 8; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new NanoParticle(
+                    target.Center + Main.rand.NextVector2Circular(22f, 22f),
+                    Main.rand.NextVector2Circular(2.5f, 2.5f),
+                    CosmicDischargeCommon.DoGSpecialColor,
+                    Main.rand.NextFloat(0.20f, 0.36f) * 0.3f,
+                    14,
+                    emitsLight: true));
+            }
+            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                target.Center,
+                direction * Main.rand.NextFloat(1.5f, 3.5f),
+                false,
+                12,
+                Main.rand.NextFloat(0.34f, 0.58f) * 0.3f,
+                CosmicDischargeCommon.ThreeColorSpark,
+                new Vector2(0.18f, 2.6f),
+                true));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -177,6 +211,33 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             float distanceFactor = Utils.GetLerpValue(1300f, 120f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor);
+        }
+
+        private NPC FindBestTarget(float maxDistance)
+        {
+            NPC marked = null;
+            NPC normal = null;
+            float closestMarked = maxDistance;
+            float closestNormal = maxDistance;
+            int markDebuff = ModContent.BuffType<CosmicDischargeDoGMarkDebuff>();
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float dist = Projectile.Distance(npc.Center);
+                if (npc.HasBuff(markDebuff))
+                {
+                    if (dist < closestMarked) { closestMarked = dist; marked = npc; }
+                }
+                else
+                {
+                    if (dist < closestNormal) { closestNormal = dist; normal = npc; }
+                }
+            }
+            return marked ?? normal;
         }
     }
 }

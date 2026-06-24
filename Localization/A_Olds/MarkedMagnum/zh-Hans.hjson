@@ -1,0 +1,23 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MarkedMagnum: {
+					DisplayName: 死神马格南
+					Tooltip:
+						'''
+						射出一道能施加死亡标记的紫色激光
+						被激光击中的敌人会被额外施加死神标记
+						被死神标记的敌人受到伤害时，有25%概率使伤害弹幕分裂成三个
+						'''
+				}
+			}
+		}
+		Buffs: {
+			MarkedMagnumDebuff: {
+				DisplayName: 死神标记
+				Description: 该敌人受到的伤害弹幕有概率分裂成三个
+			}
+		}
+	}
+}

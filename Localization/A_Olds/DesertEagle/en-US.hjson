@@ -6,8 +6,9 @@
 					DisplayName: Magnum
 					Tooltip:
 						'''
-						Left-click alternates between scattering kinetic bullets and firing powerful life-stealing shots
-						The lowest-grade gun body split from the Desert Eagle
+						[c/D6E0EC:Left Click] Fires a four-round Magnum volley
+						[c/FF8080:Every third volley] Fires a life-stealing Magnum Life Round
+						The raw handgun core split from the Desert Eagle
 						'''
 				}
 
@@ -15,9 +16,9 @@
 					DisplayName: Lightning Eagle
 					Tooltip:
 						'''
-						Hold right-click to spin the gun at high speed, shredding enemies on contact
-						Left-click while fully charged to unleash a powerful piercing round
-						The ultimate spinning mechanism split from the Desert Eagle
+						[c/58C2FF:Right Click] Spin the gun at high speed, shredding enemies on contact
+						[c/58C2FF:Full Charge] Left-click to launch a piercing Lightning Arc Round
+						The spinning mechanism split from the Desert Eagle
 						'''
 				}
 
@@ -25,9 +26,10 @@
 					DisplayName: Elephant Hunter
 					Tooltip:
 						'''
-						Left-click alternates between scattering kinetic bullets and firing powerful life-stealing shots
-						Hold right-click to spin the gun, then left-click at full charge to unleash a powerful piercing round
-						Crafted from the Magnum and Lightning Eagle, with the complete Desert Eagle logic
+						[c/FFD16B:Left Click] Fires a four-round big-game volley
+						[c/FF8A3D:Every third volley] Fires a life-stealing Siege Round
+						[c/FFD16B:Right Click] Spin the gun; left-click at full charge to fire a Siege Round
+						Crafted from Magnum and Lightning Eagle, the complete Desert Eagle frame
 						'''
 				}
 			}

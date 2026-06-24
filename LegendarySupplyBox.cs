@@ -4,7 +4,7 @@ using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SeasSearing;
 using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook;
+using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
 using CalamityLegendsComeBack.Weapons.Vesuvius;
 using CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR;
 using CalamityMod.Rarities;

@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Weapons.A_Tools.GAMES;
+using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using CalamityMod.Items.TreasureBags.MiscGrabBags;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;

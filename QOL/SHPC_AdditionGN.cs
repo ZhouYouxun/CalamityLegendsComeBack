@@ -2,7 +2,7 @@
 using CalamityMod.Items.Materials;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.NormalNPCs;
-using CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook;
+using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
 using System;
 using System.Collections.Generic;
 using System.Linq;

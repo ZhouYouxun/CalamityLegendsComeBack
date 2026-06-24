@@ -26,41 +26,83 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.height = 220;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 58;
+            Projectile.timeLeft = 120;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 8;
+            Projectile.localNPCHitCooldown = 6;
         }
 
         public override bool ShouldUpdatePosition() => false;
 
-        public override bool? CanDamage() => Time <= 12f || Projectile.timeLeft % 7 == 0;
+        public override bool? CanDamage() => Time <= 16f || Projectile.timeLeft % 6 == 0;
 
         public override void AI()
         {
             Time++;
             if (Radius <= 0f)
-                Radius = 130f;
+                Radius = 145f;
 
             Projectile.Resize((int)(Radius * 2f), (int)(Radius * 2f));
-            Projectile.Opacity = Utils.GetLerpValue(0f, 5f, Time, true) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
-            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.55f * Projectile.Opacity);
+            // Fade in over 8 frames, fade out over last 30 frames of the 120-frame lifetime.
+            Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Time, true) * Utils.GetLerpValue(0f, 30f, Projectile.timeLeft, true);
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.72f * Projectile.Opacity);
 
             if (Time == 1f)
             {
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.48f, Pitch = 0.18f, MaxInstances = 3 }, Projectile.Center);
-                CosmicDischargeCommon.SpawnRiftCrackProjectiles(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.owner, 6, 3f, 8f, 14f, 22f);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.58f, Pitch = 0.18f, MaxInstances = 3 }, Projectile.Center);
+                CosmicDischargeCommon.SpawnRiftCrackProjectiles(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.owner, 8, 3f, 10f, 14f, 24f);
 
                 if (!Main.dedServ)
                 {
-                    CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 8, 4, 48f, 30f);
-                    CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGWhiteColor, 0.3f, 2.4f, "CalamityMod/Particles/PlasmaExplosion", 20);
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGCyanColor, new Vector2(1.1f, 0.75f), 0f, 0.25f * 0.3f, 1.55f * 0.3f, 20));
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGFuchsiaColor, new Vector2(0.75f, 1.1f), MathHelper.PiOver4, 0.25f * 0.3f, 1.35f * 0.3f, 18));
-                    GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, 1.8f * 0.3f, 20));
+                    CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 12, 6, 58f, 38f);
+                    CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGWhiteColor, 0.3f, 2.8f, "CalamityMod/Particles/PlasmaExplosion", 22);
+                    CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGCyanColor, 0.5f, 3.2f, "CalamityMod/Particles/ShineExplosion1", 24);
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGCyanColor, new Vector2(1.2f, 0.75f), 0f, 0.28f * 0.3f, 1.8f * 0.3f, 22));
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGFuchsiaColor, new Vector2(0.75f, 1.2f), MathHelper.PiOver4, 0.28f * 0.3f, 1.6f * 0.3f, 20));
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, Vector2.One, MathHelper.Pi / 3f, 0.40f * 0.3f, 1.4f * 0.3f, 18));
+                    GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, 2.4f * 0.3f, 24));
                 }
+            }
+
+            // Periodic explosion burst every 14 frames — sustained detonation feel.
+            if (!Main.dedServ && Time % 14 == 0 && Time > 1f)
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerAttack") { Volume = 0.30f, Pitch = Main.rand.NextFloat(-0.35f, 0.25f), MaxInstances = 6 }, Projectile.Center);
+
+                for (int k = 0; k < 2; k++)
+                {
+                    Vector2 offset = Main.rand.NextVector2Circular(Radius * 0.55f, Radius * 0.55f);
+                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
+                        Projectile.Center + offset,
+                        Main.rand.NextVector2Circular(0.4f, 0.4f),
+                        k == 0 ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
+                        new Vector2(Main.rand.NextFloat(0.7f, 1.15f), Main.rand.NextFloat(0.6f, 1.05f)),
+                        Main.rand.NextFloat(MathHelper.TwoPi),
+                        0.20f * 0.3f,
+                        1.5f * 0.3f,
+                        18));
+                }
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                    Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.45f, Radius * 0.45f),
+                    Vector2.Zero,
+                    CosmicDischargeCommon.DoGWhiteColor,
+                    1.1f * 0.3f,
+                    14));
+            }
+
+            // Pulse shockwave every 28 frames.
+            if (!Main.dedServ && Time % 28 == 0 && Time > 1f)
+            {
+                GeneralParticleHandler.SpawnParticle(new PulseRing(
+                    Projectile.Center,
+                    Vector2.Zero,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
+                    0.04f,
+                    Radius / 95f * 0.3f,
+                    20));
+                CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor * 0.65f, 0.18f, Radius / 50f, "CalamityMod/Particles/PlasmaExplosion", 18);
             }
 
             if (!Main.dedServ && Main.rand.NextBool(2))
@@ -81,13 +123,30 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     0.35f * 0.3f,
                     18,
                     emitsLight: true));
+
+                // Additional energy fragments flying outward.
+                if (Main.rand.NextBool(3))
+                {
+                    Vector2 fragDir = Main.rand.NextVector2CircularEdge(1f, 1f);
+                    GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                        Projectile.Center + fragDir * Main.rand.NextFloat(20f, Radius * 0.6f),
+                        fragDir * Main.rand.NextFloat(1.5f, 4f),
+                        false,
+                        Main.rand.Next(8, 14),
+                        Main.rand.NextFloat(0.28f, 0.50f) * 0.3f,
+                        Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
+                        new Vector2(0.08f, 3.0f),
+                        true,
+                        true));
+                }
             }
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             Vector2 closest = Vector2.Clamp(targetHitbox.Center.ToVector2(), targetHitbox.TopLeft(), targetHitbox.BottomRight());
-            float pulseRadius = Radius * MathHelper.Lerp(0.62f, 1f, Utils.GetLerpValue(0f, 12f, Time, true));
+            // Expand from 40% to full radius over first 18 frames for a dramatic initial shockwave.
+            float pulseRadius = Radius * MathHelper.Lerp(0.4f, 1f, Utils.GetLerpValue(0f, 18f, Time, true));
             return Vector2.DistanceSquared(closest, Projectile.Center) <= pulseRadius * pulseRadius;
         }
 

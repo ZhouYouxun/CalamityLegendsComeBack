@@ -1,7 +1,9 @@
 using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.A_Tools.GAMES;
+using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker;
+using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
+using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -48,16 +50,22 @@ namespace CalamityLegendsComeBack
             switch (packetType)
             {
                 case GamePacketType.PlayerLockerRequestInventory:
-                    Weapons.A_Tools.PlayerLockerPackets.HandleInventoryRequest(reader, whoAmI);
+                    PlayerLockerPackets.HandleInventoryRequest(reader, whoAmI);
                     break;
                 case GamePacketType.PlayerLockerInventoryData:
-                    Weapons.A_Tools.PlayerLockerPackets.HandleInventoryData(reader);
+                    PlayerLockerPackets.HandleInventoryData(reader);
                     break;
                 case GamePacketType.PlayerLockerStealItem:
-                    Weapons.A_Tools.PlayerLockerPackets.HandleStealItem(reader, whoAmI);
+                    PlayerLockerPackets.HandleStealItem(reader, whoAmI);
                     break;
                 case GamePacketType.PlayerLockerClearSlot:
-                    Weapons.A_Tools.PlayerLockerPackets.HandleClearSlot(reader);
+                    PlayerLockerPackets.HandleClearSlot(reader);
+                    break;
+                case GamePacketType.PlayerSaddleMount:
+                    PlayerSaddlePackets.HandleMount(reader, whoAmI);
+                    break;
+                case GamePacketType.PlayerSaddleDismount:
+                    PlayerSaddlePackets.HandleDismount(reader, whoAmI);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);

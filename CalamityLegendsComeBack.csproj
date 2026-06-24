@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Import tModLoader mod properties -->
 	<Import Project="..\tModLoader.targets" />
@@ -87,6 +87,12 @@
 	  <Compile Include="Weapons\A_Olds\DesertEagle\**\*.cs" />
 	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
 	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
+	  <Compile Include="Weapons\A_Olds\PhoenixBlade\**\*.cs" />
+	  <Compile Include="Weapons\A_Olds\DiseasedPike\**\*.cs" />
+	  <None Include="Weapons\A_Olds\PhoenixBlade\**\*.png" />
+	  <None Include="Weapons\A_Olds\DiseasedPike\**\*.png" />
+	  <Compile Include="Weapons\A_Olds\Lazhar\**\*.cs" />
+	  <None Include="Weapons\A_Olds\Lazhar\**\*.png" />
 	  <Content Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <AdditionalFiles Remove="Shader\**\*.zip" />
 	  <AdditionalFiles Remove="Shader\Archive\**" />
@@ -127,7 +133,6 @@
 	  <Content Include="Weapons\A_Olds\DesertEagle\猎象者.png" />
 	  <Content Include="Weapons\A_Olds\DesertEagle\闪电鹰.png" />
 	  <Content Include="Weapons\A_Olds\DesertEagle\马格南.png" />
-	  <Content Include="Weapons\A_Olds\PhoenixBlade\凤凰之刃.png" />
 	</ItemGroup>
 
 	<!-- References -->

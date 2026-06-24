@@ -22,6 +22,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public virtual int LifeRoundDamage => 1981;
         public virtual float HoldoutSpinContactDamageMultiplier => 0.31f;
         public virtual float HoldoutFullChargeRoundDamageMultiplier => 22.0f;
+        // Variant hooks: old Eagles keep their own rounds while sharing the input and holdout framework.
+        // A non-positive primary type deliberately preserves the ammo-selected projectile for the base weapon.
+        public virtual int PrimaryVolleyProjectileType => -1;
+        public virtual int LifeRoundProjectileType => ModContent.ProjectileType<DesertEagleLifeRound>();
+        public virtual int ChargedRoundProjectileType => ModContent.ProjectileType<DesertEagleHeavyRound>();
+        public virtual bool UsesSilverVolleyVisuals => true;
         public virtual string DesertEagleTextureAssetPath => TextureAssetPath;
         public virtual bool HasDesertEaglePrimaryFire => true;
         public virtual bool HasDesertEagleSpin => true;
@@ -198,7 +204,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                     source,
                     muzzlePosition,
                     muzzleDirection * 18f,
-                    ModContent.ProjectileType<DesertEagleLifeRound>(),
+                    LifeRoundProjectileType,
                     lifeRoundDamage,
                     knockback * 1.35f,
                     player.whoAmI,
@@ -224,9 +230,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 };
 
                 Vector2 shotVelocity = velocity.RotatedBy(spread + Main.rand.NextFloat(-0.025f, 0.025f)) * Main.rand.NextFloat(0.92f, 1.08f);
-                int projectileIndex = Projectile.NewProjectile(source, muzzlePosition + Main.rand.NextVector2Circular(2f, 2f), shotVelocity, type, volleyDamage, knockback, player.whoAmI);
+                int projectileType = PrimaryVolleyProjectileType > 0 ? PrimaryVolleyProjectileType : type;
+                int projectileIndex = Projectile.NewProjectile(source, muzzlePosition + Main.rand.NextVector2Circular(2f, 2f), shotVelocity, projectileType, volleyDamage, knockback, player.whoAmI);
 
-                if (Main.projectile.IndexInRange(projectileIndex))
+                if (UsesSilverVolleyVisuals && Main.projectile.IndexInRange(projectileIndex))
                     Main.projectile[projectileIndex].GetGlobalProjectile<DesertEagleSilverGlobalProjectile>().SilverMarked = true;
             }
 

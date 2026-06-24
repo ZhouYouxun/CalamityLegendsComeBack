@@ -236,6 +236,7 @@ Mods: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
 			SHPCLoadingUI.DisplayName: SHPC Loading UI
+			ExtraBackpack.DisplayName: Extra Backpack
 		}
 
 		NPCs: {

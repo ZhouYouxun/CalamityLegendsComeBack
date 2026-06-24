@@ -1,0 +1,22 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PhoenixBlade: {
+					DisplayName: Phoenix Blade
+					Tooltip:
+						'''
+						[c/FF7733:Performs a continuous circular spin attack on left click]
+						[c/FF5511:Releases a fiery explosion on enemy hits]
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			PhoenixBlade: {
+				PhoenixBladeHoldout.DisplayName: Phoenix Blade
+			}
+		}
+	}
+}

@@ -49,13 +49,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
         private void UpdateChainArcSwing()
         {
-            // Spine-of-Thanatos-style convergence: several segment chains meet at the cursor and detonate.
-            const int arcWindup = 8;
-            int arcExtendFrames = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 42 : 22;
-            int arcHoldFrames = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 26 : 16;
+            // Spine-of-Thanatos-style convergence: chains meet at cursor and detonate.
+            // Timing mirrors SpineOfThanatos: slow buildup → explosive mid-extension → fast retract.
+            const int arcWindup = 6;
+            int arcExtendFrames = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 52 : 26;
+            int arcHoldFrames = 8;
             int arcSnapEnd = arcWindup + arcExtendFrames;
             int arcHoldEnd = arcSnapEnd + arcHoldFrames;
-            int arcTotalDuration = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 80 : arcHoldEnd + 12;
+            // BiteAll retract = 92 - 66 = 26 ticks = ~13 real frames, matching SpineOfThanatos FlyBackTime.
+            int arcTotalDuration = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 92 : arcHoldEnd + 18;
 
             float maxReach = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 560f : 500f;
             bool ultActive = Owner.GetModPlayer<CosmicDischargePlayer>().UltimateFieldActive;
@@ -79,12 +81,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else if (Time <= arcSnapEnd)
             {
                 float t = (Time - arcWindup) / (float)arcExtendFrames;
-                float extend = EaseOutCubic(t);
+                // SpineOfThanatos-style: near-zero movement for first ~50% of time,
+                // then explosive acceleration peaking at ~77%, slight decel at end.
+                float extend = MathHelper.SmoothStep(0f, 1f, t * t);
                 SetBlade(direction, MathHelper.Lerp(targetReach * 0.36f, targetReach, extend), 0f, 52f);
 
                 PlayReleaseOnce(SoundID.Item71, 0.9f, 0.2f, 6.2f);
 
-                if (!impactEffectsPlayed && t >= 0.74f)
+                // Trigger impact when chains reach ~92% of their destination.
+                if (!impactEffectsPlayed && t >= 0.90f)
                 {
                     EmitAirCrack(TipPosition, direction, 1.35f);
                     if (Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll)
