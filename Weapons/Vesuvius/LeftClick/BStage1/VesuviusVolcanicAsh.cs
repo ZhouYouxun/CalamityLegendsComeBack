@@ -42,12 +42,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 Projectile.frame = Main.rand.Next(Main.projFrames[Type]);
                 Projectile.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
                 Projectile.scale = Main.rand.NextFloat(0.85f, 1.35f);
+                Projectile.localAI[1] = Main.rand.Next(5, 16); // initial turbulence timer
                 Projectile.localAI[0] = 1f;
             }
 
-            Projectile.velocity *= 0.95f;
-            Projectile.velocity.Y += 0.04f;
-            Projectile.rotation += Projectile.velocity.X * 0.03f + 0.04f;
+            // Irregular ash movement — hot updrafts and cross-winds create non-linear paths
+            if (--Projectile.localAI[1] <= 0f)
+            {
+                Projectile.localAI[1] = Main.rand.Next(8, 22);
+                Projectile.velocity += new Vector2(Main.rand.NextFloat(-1.6f, 1.6f), Main.rand.NextFloat(-0.55f, 0.18f));
+            }
+
+            Projectile.velocity *= Main.rand.NextFloat(0.91f, 0.97f); // variable drag
+            Projectile.velocity.Y += Main.rand.NextFloat(0.01f, 0.07f); // variable gravity
+            Projectile.rotation += Projectile.velocity.X * 0.03f + Main.rand.NextFloat(-0.04f, 0.08f);
             Projectile.alpha = (int)MathHelper.Lerp(0f, 210f, Utils.GetLerpValue(24f, 0f, Projectile.timeLeft, true));
             Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity * VesuviusProjectileVisuals.VisualIntensity);
 
@@ -145,11 +153,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                     SpriteEffects.None);
             }
 
+            // FireProj has a black background designed for additive blending — use A=0 trick
+            Color fireC = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, 0.22f) * (0.34f * fade * VesuviusProjectileVisuals.VisualIntensity);
             Main.EntitySpriteDraw(
                 fire,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, 0.22f) * 0.34f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(fireC.R, fireC.G, fireC.B, 0),
                 -Projectile.rotation * 0.6f,
                 fire.Size() * 0.5f,
                 Projectile.scale * 0.52f * VesuviusProjectileVisuals.VisualScale,

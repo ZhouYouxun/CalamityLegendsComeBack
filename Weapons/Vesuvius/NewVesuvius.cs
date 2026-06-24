@@ -171,8 +171,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 exText + "\n\n" +
                 this.GetLocalizedValue("Final") + "\n";
 
-            tooltips.FindAndReplace("[GFB]", finalText);
-            string legendarySection = Main.keyState.PressingShift() ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
+            bool shiftPressed = Main.keyState.PressingShift();
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", finalText);
+            string legendarySection = shiftPressed ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
             tooltips.Add(new TooltipLine(Mod, "VesuviusVolcanoLegendaryText", legendarySection));
         }
 

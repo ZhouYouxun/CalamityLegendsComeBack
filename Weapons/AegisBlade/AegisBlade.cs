@@ -130,9 +130,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            string legendarySection = Main.keyState.PressingShift()
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
+
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", this.GetLocalizedValue("FunctionalTooltip"));
+
             tooltips.Add(new TooltipLine(Mod, "AegisBladeHolyKnightLegendaryText", legendarySection));
         }
 

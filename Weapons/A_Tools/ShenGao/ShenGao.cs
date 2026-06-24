@@ -1,4 +1,5 @@
 using CalamityMod;
+using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -26,18 +27,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.ShenGao
             Item.width = 52;
             Item.height = 52;
             Item.useTime = GetUseTime();
-            Item.useAnimation = 18;
+            Item.useAnimation = GetUseTime();   // 与 useTime 一致，左右键挖掘速度相同
             Item.useStyle = ItemUseStyleID.Swing;
             Item.knockBack = 7;
             Item.value = Item.buyPrice(gold: 50);
             Item.rare = ItemRarityID.Purple;
             Item.UseSound = SoundID.Item1;
             Item.autoReuse = true;
-            Item.scale = 1.1f;
+            Item.scale = 1.43f;    // 原 1.1f 放大 30%
             Item.pick = GetPickPower();
             Item.tileBoost = GetTileBoost();
-            Item.axe = GetAxePower();
-            Item.hammer = GetHammerPower();
+            Item.axe = 0;
+            Item.hammer = 0;
             Item.useTurn = true;
         }
 
@@ -47,25 +48,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.ShenGao
 
         public override bool CanUseItem(Player player)
         {
+            int t = GetUseTime();
             if (player.altFunctionUse == 2)
             {
-                // 右键：纯锤子模式
-                Item.useTime = GetUseTime();
-                Item.useAnimation = 8;
+                // 右键：锤 + 斧
+                Item.useTime = t;
+                Item.useAnimation = t;
                 Item.damage = GetDamage();
-                Item.axe = 0;
-                Item.hammer = GetHammerPower();
                 Item.pick = 0;
+                Item.axe = GetAxePower();
+                Item.hammer = GetHammerPower();
             }
             else
             {
-                // 左键：镐 + 斧
-                Item.useTime = GetUseTime();
-                Item.useAnimation = 18;
+                // 左键：纯镐
+                Item.useTime = t;
+                Item.useAnimation = t;
                 Item.damage = GetDamage();
-                Item.axe = GetAxePower();
-                Item.hammer = 0;
                 Item.pick = GetPickPower();
+                Item.axe = 0;
+                Item.hammer = 0;
             }
             return base.CanUseItem(player);
         }
@@ -73,16 +75,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.ShenGao
         public override void HoldItem(Player player)
         {
             Color c = GetTierColor();
-            Lighting.AddLight(player.Center, new Vector3(c.R / 255f, c.G / 255f, c.B / 255f) * 0.18f);
+            Lighting.AddLight(player.Center, new Vector3(c.R / 255f, c.G / 255f, c.B / 255f) * 0.40f);
         }
 
         public override void UpdateInventory(Player player)
         {
             Item.damage = GetDamage();
-            Item.useTime = GetUseTime();
+            int t = GetUseTime();
+            Item.useTime = t;
+            Item.useAnimation = t;
             Item.pick = GetPickPower();
-            Item.axe = GetAxePower();
-            Item.hammer = GetHammerPower();
             Item.tileBoost = GetTileBoost();
         }
 
@@ -96,83 +98,90 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.ShenGao
             Color accent = GetTierAccent();
             Vector2 center = hitbox.Center.ToVector2();
 
-            // 动态光源，颜色随阶位变化
+            // 强化光源——颜色随阶位演变，照亮挥舞范围
             Color c = primary;
-            Lighting.AddLight(center, new Vector3(c.R / 255f, c.G / 255f, c.B / 255f) * 0.55f);
+            Lighting.AddLight(center, new Vector3(c.R / 255f, c.G / 255f, c.B / 255f) * 1.0f);
+            Lighting.AddLight(player.Center, new Vector3(c.R / 255f, c.G / 255f, c.B / 255f) * 0.35f);
 
-            // 挥舞弧线线条粒子——从镐尖向外弹射，视觉上像碎石火花但更精致
-            if (Main.rand.NextBool(2))
+            // 弧线线条粒子——每帧稳定生成，模拟镐凿击时的能量火花
             {
-                int count = tier >= 8 ? 2 : 1;
+                int count = tier >= 8 ? 4 : 2;
                 for (int i = 0; i < count; i++)
                 {
-                    Vector2 pos = center + Main.rand.NextVector2Circular(22f, 22f);
+                    Vector2 pos = center + Main.rand.NextVector2Circular(24f, 24f);
                     Vector2 dir = (pos - player.Center).SafeNormalize(Main.rand.NextVector2Unit());
-                    float speed = Main.rand.NextFloat(2.5f, 5.8f + tier * 0.18f);
+                    float speed = Main.rand.NextFloat(3f, 7f + tier * 0.2f);
                     GeneralParticleHandler.SpawnParticle(new LineParticle(
                         pos,
                         dir * speed,
                         false,
-                        Main.rand.Next(5, 11),
-                        Main.rand.NextFloat(0.08f, 0.20f),
+                        Main.rand.Next(6, 13),
+                        Main.rand.NextFloat(0.10f, 0.24f),
                         Main.rand.NextBool(3) ? accent : primary));
                 }
             }
 
-            // 微型辉光粒子——点缀在挥舞路径上，不密集
-            if (Main.rand.NextBool(5))
+            // 辉光粒子——每次挥舞必有 1 个，较高阶多追加一个
             {
-                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
-                    center + Main.rand.NextVector2Circular(13f, 13f),
-                    Main.rand.NextVector2Circular(0.7f, 0.7f),
-                    Main.rand.NextFloat(0.05f, 0.11f + tier * 0.003f),
-                    Color.Lerp(primary, Color.White, 0.38f),
-                    Main.rand.Next(4, 9)));
+                int bloomCount = tier >= 6 ? 2 : 1;
+                for (int i = 0; i < bloomCount; i++)
+                {
+                    GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                        center + Main.rand.NextVector2Circular(15f, 15f),
+                        Main.rand.NextVector2Circular(0.9f, 0.9f),
+                        Main.rand.NextFloat(0.08f, 0.18f + tier * 0.004f),
+                        Color.Lerp(primary, Color.White, 0.40f),
+                        Main.rand.Next(5, 10)));
+                }
             }
 
-            // 月球领主后：偶发扩散脉冲环，视觉上像宇宙涟漪
-            if (tier >= 8 && Main.rand.NextBool(12))
+            // 偶发宽脉冲环——月球领主后开始，频率随阶提升
+            if (tier >= 8 && Main.rand.NextBool(4))
             {
                 GeneralParticleHandler.SpawnParticle(new CustomPulse(
                     center,
                     Vector2.Zero,
                     primary with { A = 0 },
                     "CalamityMod/Particles/BloomRing",
-                    Vector2.One * 0.55f,
+                    Vector2.One * 0.70f,
                     Main.rand.NextFloat(MathHelper.TwoPi),
-                    0.014f,
-                    0.09f,
-                    9));
+                    0.018f,
+                    0.11f,
+                    10));
             }
 
-            // 噬神者后：虚空微辉，极稀疏的深色内爆光点
-            if (tier >= 11 && Main.rand.NextBool(16))
+            // 虚空微辉——噬神者后开始，深色内爆光点增加神秘感
+            if (tier >= 11 && Main.rand.NextBool(5))
             {
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                    center + Main.rand.NextVector2Circular(10f, 10f),
-                    Vector2.Zero,
-                    accent with { A = 0 },
-                    "CalamityMod/Particles/BloomCircle",
-                    Vector2.One * 0.14f,
-                    0f,
-                    0.40f,
-                    0.03f,
-                    7));
+                for (int i = 0; i < 2; i++)
+                {
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                        center + Main.rand.NextVector2Circular(12f, 12f),
+                        Vector2.Zero,
+                        accent with { A = 0 },
+                        "CalamityMod/Particles/BloomCircle",
+                        Vector2.One * 0.18f,
+                        0f,
+                        0.42f,
+                        0.04f,
+                        8));
+                }
             }
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            tooltips.Add(new TooltipLine(Mod, "ShenGaoHint", "左键：采掘 + 伐木    右键：锤击"));
+            tooltips.Add(new TooltipLine(Mod, "ShenGaoHint", "左键：采掘    右键：锤击 + 伐木"));
         }
 
         public override void AddRecipes()
         {
             Recipe recipe = CreateRecipe();
-            recipe.AddIngredient(ItemID.Emerald, 5);
-            recipe.AddIngredient(ItemID.Wood, 2);
-            recipe.AddTile(TileID.WorkBenches);
-            recipe.Register();
+            recipe.AddIngredient<MysteriousCircuitry>(4)
+                  .AddIngredient<DubiousPlating>(4)
+                  .AddIngredient<PlasmaDriveCore>(1)
+                  .AddTile(TileID.WorkBenches)
+                  .Register();
         }
 
         // ─── 阶位检测 ─────────────────────────────────────────────────────────────────
@@ -180,18 +189,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.ShenGao
         public static int GetTier()
         {
             if (DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas) return 13;  // 星流巨械 + 至尊女巫
-            if (DownedBossSystem.downedYharon)        return 12;  // 犽戎，龙的体现
+            if (DownedBossSystem.downedYharon)        return 12;  // 犽戎
             if (DownedBossSystem.downedDoG)           return 11;  // 噬神者
             if (DownedBossSystem.downedPolterghast)   return 10;  // 噬魂幽花
-            if (DownedBossSystem.downedProvidence)    return 9;   // 亵渎天神，普罗维登斯
+            if (DownedBossSystem.downedProvidence)    return 9;   // 普罗维登斯
             if (NPC.downedMoonlord)                   return 8;   // 月球领主
             if (NPC.downedGolemBoss)                  return 7;   // 石巨人
             if (NPC.downedPlantBoss)                  return 6;   // 世纪之花
-            if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3) return 5;  // 三王
-            if (NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3) return 4;  // 机械先锋
+            if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3) return 5;
+            if (NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3) return 4;
             if (Main.hardMode)                        return 3;   // 血肉墙
             if (DownedBossSystem.downedSlimeGod)      return 2;   // 史莱姆之神
-            if (DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator || NPC.downedBoss2) return 1;  // 腐化/猩红
+            if (DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator || NPC.downedBoss2) return 1;
             return 0;
         }
 
@@ -290,7 +299,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.ShenGao
             5 => 128,
             6 => 145,
             7 => 162,
-            _ => 500   // 月球领主及更高：毫无阻力地锤平一切
+            _ => 500
         };
 
         // ─── 特效调色板 ───────────────────────────────────────────────────────────────

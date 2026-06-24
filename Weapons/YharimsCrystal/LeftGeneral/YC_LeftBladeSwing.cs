@@ -222,8 +222,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             FlipAsSword = lockedFacing < 0;
 
             float progress = MathHelper.Clamp(loopTimer / (float)LoopSpinFrames, 0f, 1f);
-            float easedProgress = MathHelper.SmoothStep(0f, 1f, progress);
-            spinAngle = -MathHelper.TwoPi * easedProgress;
+            float ramp = MathHelper.Clamp(loopTimer / 6f, 0f, 1f);
+            spinAngle -= MathHelper.TwoPi * 4f / LoopSpinFrames * ramp;
 
             CanHit = loopTimer > 4 && loopTimer < LoopSpinFrames - 2;
             postSwing = true;

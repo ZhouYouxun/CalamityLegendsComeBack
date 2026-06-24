@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private bool chargedSoundPlayed;
         private bool heavyAttackQueued;
         private bool leftHeldLastFrame;
+        private int coordinatedCooldown;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
@@ -125,13 +126,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.8f);
                 }
 
-                EnsureLaser();
+                if (coordinatedCooldown > 0)
+                {
+                    coordinatedCooldown--;
+                    KillProjectile(laserIndex);
+                    laserIndex = -1;
+                }
+                else
+                {
+                    EnsureLaser();
+                }
             }
 
             if (HoldFrameCounter >= 120)
             {
-                // Trigger heavy command on left click, including clicks queued during deployment.
-                if (Projectile.owner == Main.myPlayer && heavyAttackQueued)
+                // Trigger heavy command on left click (rising edge), crystal stays alive.
+                if (Projectile.owner == Main.myPlayer && heavyAttackQueued && coordinatedCooldown <= 0)
                 {
                     for (int i = 0; i < Main.maxProjectiles; i++)
                     {
@@ -143,9 +153,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                         }
                     }
 
-                    Owner.GetModPlayer<YharimsCrystalStatePlayer>().RightClickCooldown = 300;
-                    Projectile.Kill();
-                    return;
+                    heavyAttackQueued = false;
+                    coordinatedCooldown = 180;
+                    Projectile.netUpdate = true;
                 }
             }
         }

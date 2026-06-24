@@ -49,7 +49,24 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
             if (target != null && Projectile.localAI[0] > 10f)
             {
                 Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center + target.velocity * 8f) * 15.5f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.075f);
+
+                // Erratic homing — variable strength creates spiral / overshoot approach
+                float homingStr = 0.048f + Main.rand.NextFloat(-0.028f, 0.05f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, homingStr);
+
+                // Occasional lateral veer — cinder catches a thermal and spirals
+                if (Main.rand.NextBool(14))
+                    Projectile.velocity += Projectile.velocity.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(0.06f, 0.24f);
+
+                float speed = Projectile.velocity.Length();
+                if (speed > 19f) Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * 19f;
+                if (speed < 5f)  Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * 5f;
+            }
+            else if (target == null && Projectile.localAI[0] > 10f)
+            {
+                // No target — drift with random thermal buffeting
+                Projectile.velocity += Main.rand.NextVector2Circular(0.45f, 0.45f);
+                Projectile.velocity *= 0.97f;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
@@ -144,6 +161,25 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
 
         public override bool PreDraw(ref Color lightColor)
         {
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+
+            // Glowing afterimage trail
+            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            {
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+                Color trailC = VesuviusProjectileVisuals.LavaOrange * (t * 0.32f * VesuviusProjectileVisuals.VisualIntensity);
+                Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, frame,
+                    trailC, Projectile.rotation, frame.Size() * 0.5f,
+                    Projectile.scale * MathHelper.Lerp(0.55f, 1f, t), SpriteEffects.None);
+            }
+
+            // Main cinder sprite
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame,
+                Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaGold, 0.55f),
+                Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
+
             return false;
         }
     }

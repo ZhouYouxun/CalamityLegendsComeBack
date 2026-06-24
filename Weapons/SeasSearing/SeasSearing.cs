@@ -110,7 +110,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             string right = this.GetLocalizedValue("RightClick");
             string passive = this.GetLocalizedValue("Passive");
             string ultimate = string.Format(this.GetLocalizedValue("Ultimate"), keyText);
-            string legendarySection = Main.keyState.PressingShift()
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
 
@@ -121,7 +122,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 passive + "\n" +
                 ultimate + "\n";
 
-            tooltips.FindAndReplace("[GFB]", finalText);
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, "SeasSearingAbyssalPollutionLegendaryText", legendarySection));
         }
 

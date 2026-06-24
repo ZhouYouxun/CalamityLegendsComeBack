@@ -34,8 +34,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Vector2 baseDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 3; i++)
             {
-                float spreadAngle = (i - 1f) * 0.36f;
-                Vector2 velocity = baseDir.RotatedBy(spreadAngle) * 9f;
+                // ai[0] = target index, ai[1] = arc index (0=centre, 1=left, 2=right)
+                // The arc rotates its own divergence in OnSpawn based on ai[1].
+                Vector2 velocity = baseDir * 9f;
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center,
@@ -44,7 +45,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                     damage,
                     0.5f,
                     Projectile.owner,
-                    target.whoAmI);
+                    target.whoAmI,
+                    i);
             }
         }
     }

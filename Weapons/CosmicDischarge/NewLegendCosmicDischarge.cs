@@ -107,11 +107,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 string.Format(this.GetLocalizedValue("CosmicDischargeUltimate"), keyText) + "\n\n" +
                 this.GetLocalizedValue("CosmicDischargePassive");
 
-            string legendarySection = Main.keyState.PressingShift()
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
 
-            tooltips.FindAndReplace("[GFB]", text);
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", text);
             tooltips.Add(new TooltipLine(Mod, "CosmicDischargeRiftVoidLegendaryText", legendarySection));
         }
 

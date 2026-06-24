@@ -154,24 +154,23 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true);
-            Main.EntitySpriteDraw(
-                texture,
-                Projectile.Center - Main.screenPosition,
-                null,
-                VesuviusProjectileVisuals.ObsidianEdge * 0.8f * fade * VesuviusProjectileVisuals.VisualIntensity,
-                Projectile.rotation,
-                texture.Size() * 0.5f,
-                new Vector2(1.56f, 0.82f) * Projectile.scale,
-                SpriteEffects.None);
-            Main.EntitySpriteDraw(
-                texture,
-                Projectile.Center - Main.screenPosition,
-                null,
-                Color.Black * fade,
-                Projectile.rotation,
-                texture.Size() * 0.5f,
-                new Vector2(1.34f, 0.66f) * Projectile.scale,
-                SpriteEffects.None);
+
+            // BlackSLASH has a black background intended for additive blending.
+            // Use A=0 so black pixels contribute nothing; bright slash lines glow additively.
+            // Outer dark halo
+            Color outerC = Color.Lerp(VesuviusProjectileVisuals.ObsidianEdge, Color.White, 0.28f) * (fade * 0.72f);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
+                new Color(outerC.R, outerC.G, outerC.B, 0),
+                Projectile.rotation, texture.Size() * 0.5f,
+                new Vector2(1.56f, 0.82f) * Projectile.scale, SpriteEffects.None);
+
+            // Inner bright slash core
+            Color innerC = Color.White * (fade * 0.42f);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
+                new Color(innerC.R, innerC.G, innerC.B, 0),
+                Projectile.rotation, texture.Size() * 0.5f,
+                new Vector2(1.05f, 0.55f) * Projectile.scale, SpriteEffects.None);
+
             return false;
         }
     }

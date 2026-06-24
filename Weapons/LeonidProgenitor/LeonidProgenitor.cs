@@ -225,7 +225,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             string lineB = BuildMetalLine(selection, 1);
             string legendaryBody = this.GetLocalizedValue("LegendaryText");
             string legendaryHint = this.GetLocalizedValue("LegendaryHint");
-            string legendarySection = Main.keyState.PressingShift() ? legendaryBody : legendaryHint;
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed ? legendaryBody : legendaryHint;
 
             string merged =
                 leftClick + "\n" +
@@ -237,7 +238,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 lineA + "\n" +
                 lineB;
 
-            tooltips.FindAndReplace("[GFB]", merged);
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", merged);
             tooltips.Add(new TooltipLine(Mod, "LeonidProgenitorMeteorRainLegendaryText", legendarySection));
         }
 

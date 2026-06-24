@@ -186,7 +186,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            string legendarySection = Main.keyState.PressingShift()
+            bool shiftPressed = Main.keyState.PressingShift();
+            string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
 
@@ -197,7 +198,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 string.Format(this.GetLocalizedValue("Finale"), keyText) + "\n\n" +
                 this.GetLocalizedValue("Passive") + "\n";
 
-            tooltips.FindAndReplace("[GFB]", finalText);
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, "MalachiteShadowPeacockLegendaryText", legendarySection));
         }
 

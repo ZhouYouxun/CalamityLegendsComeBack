@@ -183,9 +183,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             string modeInfo = this.GetLocalizedValue("PrismReworkInfo");
             string exInfo = this.GetLocalizedValue("EXInfo");
             string growth = balance.BuildProgressionSummary();
-            tooltips.FindAndReplace("[GFB]", modeInfo + "\n\n" + growth + "\n\n" + exInfo);
+            bool shiftPressed = Main.keyState.PressingShift();
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", modeInfo + "\n\n" + growth + "\n\n" + exInfo);
 
-            string legendarySection = Main.keyState.PressingShift() ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
+            string legendarySection = shiftPressed ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
             tooltips.Add(new TooltipLine(Mod, "YharimsCrystalGoldenTechLegendaryText", legendarySection));
         }
 

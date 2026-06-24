@@ -45,10 +45,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
             {
                 Projectile.scale = Projectile.ai[1] <= 0f ? 1.18f : Projectile.ai[1];
                 SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.45f, Pitch = -0.15f }, Projectile.Center);
+                Projectile.localAI[1] = Main.rand.Next(5, 16); // initial turbulence timer
                 Projectile.localAI[0] = 1f;
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            // Irregular tumbling rotation — volcanic bombs don't spin cleanly
+            float spinDir = Math.Sign(Projectile.velocity.X != 0f ? Projectile.velocity.X : 1f);
+            Projectile.rotation += Main.rand.NextFloat(0.06f, 0.15f) * spinDir;
+
             Projectile.frameCounter++;
             Projectile.frame = Projectile.frameCounter / 4 % Main.projFrames[Type];
             Lighting.AddLight(Projectile.Center, 0.25f, 0.2f, 0.01f);
@@ -65,8 +69,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 fire.velocity *= 0f;
             }
 
-            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + 0.13f, -16f, 18f);
-            Projectile.velocity *= 0.992f;
+            // Turbulence events: cross-wind kicks at irregular intervals
+            if (--Projectile.localAI[1] <= 0f)
+            {
+                Projectile.localAI[1] = Main.rand.Next(7, 20);
+                Projectile.velocity.X += Main.rand.NextFloat(-1.1f, 1.1f);
+            }
+
+            // Variable gravity: volcanic gas pockets create irregular lift
+            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + Main.rand.NextFloat(0.08f, 0.19f), -16f, 18f);
+            Projectile.velocity.X *= Main.rand.NextFloat(0.987f, 0.997f);
         }
 
         public override void OnKill(int timeLeft)

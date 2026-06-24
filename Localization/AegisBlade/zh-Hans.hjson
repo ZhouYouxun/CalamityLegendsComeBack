@@ -4,7 +4,8 @@ Mods: {
 			Weapons: {
 				AegisBlade: {
 					DisplayName: 庇护之刃
-					Tooltip:
+					Tooltip: "[GFB]"
+					FunctionalTooltip:
 						'''
 						[c/FFD966:左键] [c/DCD6C8:持续挥舞大剑，挥舞时向刀锋两侧喷射减速火球，最终停留在空中]
 						[c/FFD966:左键+右键] [c/DCD6C8:挥舞中同时按住右键，剑缓慢举至头顶；松开任意键将剑投出]
@@ -34,6 +35,11 @@ Mods: {
 						Tooltip: "[GFB]"
 					}
 				}
+			}
+
+			NewLegendGaelsGreatsword: {
+				// DisplayName: New Legend Gaels Greatsword
+				// Tooltip: ""
 			}
 		}
 

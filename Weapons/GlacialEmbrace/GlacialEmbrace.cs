@@ -205,7 +205,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
 
             string ultimate = string.Format(this.GetLocalizedValue("GE_Ultimate"), skillKey, modPlayer.UltimateCharge);
 
-            string lore = Main.keyState.PressingShift()
+            bool shiftPressed = Main.keyState.PressingShift();
+            string lore = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
 
@@ -238,7 +239,10 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             }
 
             string finalText = string.Join("\n", allLines);
-            tooltips.FindAndReplace("[GFB]", finalText);
+            if (shiftPressed)
+                tooltips.RemoveAll(t => t.Text == "[GFB]");
+            else
+                tooltips.FindAndReplace("[GFB]", finalText);
             tooltips.Add(new TooltipLine(Mod, "GlacialEmbraceAuroraFrostLegendaryText", lore));
         }
     }

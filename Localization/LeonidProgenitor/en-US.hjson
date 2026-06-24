@@ -36,6 +36,9 @@ Mods: {
 						[c/66E6FF:This weapon does not consume bars and does not truly reload. It simply pulls out the first two metallic echoes it finds while searching backward through your inventory.]
 						[c/66E6FF:The primary meteor is only the announcement. The real answer arrives with the meteors that fall afterward.]
 						[c/66E6FF:Every hit is another moment where the sky rifles through your backpack for you.]
+						[c/66E6FF:Its bond with metal bars isn't tool and material — more like two travelers falling side by side, just toward different ends.]
+						[c/66E6FF:Strangely, the more often a bar gets pulled in, the more its fall looks like it already knew where it was going.]
+						[c/66E6FF:Perhaps the meteor itself doesn't care about striking. It only wants you to remember that the sky always knows what you carry.]
 						'''
 					MetalName1: Copper Bar
 					MetalDesc1: Releases a small chain lightning burst on hit

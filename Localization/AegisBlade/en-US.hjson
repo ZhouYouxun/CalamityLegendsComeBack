@@ -4,7 +4,8 @@ Mods: {
 			Weapons: {
 				AegisBlade: {
 					DisplayName: Aegis Blade
-					Tooltip:
+					Tooltip: "[GFB]"
+					FunctionalTooltip:
 						'''
 						[c/FFD966:Left Click] [c/DCD6C8:Hold to swing the greatsword, firing decelerating fireballs to either side of the blade that float in mid-air]
 						[c/FFD966:LMB + RMB] [c/DCD6C8:While swinging, hold right-click to raise the sword overhead; release either button to hurl it toward your cursor]
@@ -34,6 +35,11 @@ Mods: {
 						Tooltip: ""
 					}
 				}
+			}
+
+			NewLegendGaelsGreatsword: {
+				DisplayName: New Legend Gaels Greatsword
+				Tooltip: ""
 			}
 		}
 

@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 10;
+            ProjectileID.Sets.TrailCacheLength[Type] = 14;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -80,19 +80,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
             else if (Projectile.ai[0] == StateFlight)
             {
+                Projectile.localAI[1] += 0.22f;
                 NPC target = FindNearestTarget(1200f);
                 if (target != null)
                 {
-                    Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDir * 28f, 0.15f);
-                    Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(135f);
+                    float dist = Vector2.Distance(Projectile.Center, target.Center);
+                    float closeFactor = Utils.GetLerpValue(600f, 80f, dist, true);
+                    float turnRate = MathHelper.ToRadians(MathHelper.Lerp(4.5f, 14f, closeFactor));
+                    float newAngle = Projectile.velocity.ToRotation().AngleTowards((target.Center - Projectile.Center).ToRotation(), turnRate);
+                    float speed = MathHelper.Lerp(28f, 36f, closeFactor);
+                    Projectile.velocity = newAngle.ToRotationVector2() * speed;
+                    Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(135f) + Projectile.localAI[1];
                 }
                 else
                 {
                     Projectile.velocity *= 0.98f;
-                    Projectile.rotation += 0.08f;
+                    Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(135f) + Projectile.localAI[1];
                     if (Projectile.velocity.Length() < 3f)
                         Projectile.Kill();
+                }
+
+                if (!Main.dedServ && Main.rand.NextBool(3))
+                {
+                    Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(12f, 12f), DustID.GoldFlame, Main.rand.NextVector2Circular(2f, 2f), 0, default, 1.1f);
+                    d.noGravity = true;
                 }
             }
         }
@@ -100,18 +111,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private void DoDirectedThrow()
         {
             Projectile.localAI[0]++;
+            Projectile.localAI[1] += 0.42f;
             float progress = MathHelper.Clamp(Projectile.localAI[0] / 28f, 0f, 1f);
             float easedProgress = MathHelper.SmoothStep(0f, 1f, progress);
             NPC target = GetThrowTarget();
             Vector2 targetDirection = target == null
                 ? Projectile.velocity.SafeNormalize(Vector2.UnitX)
                 : (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(0.8f, 5.2f, easedProgress));
+            float dist = target == null ? 9999f : Vector2.Distance(Projectile.Center, target.Center);
+            float closeFactor = Utils.GetLerpValue(600f, 80f, dist, true);
+            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(1.8f, 7.5f, easedProgress) + closeFactor * 5f);
             float newAngle = Projectile.velocity.ToRotation().AngleTowards(targetDirection.ToRotation(), turnRate);
-            float speed = MathHelper.Lerp(8.5f, 34f, easedProgress);
+            if (Projectile.localAI[0] < 14f)
+                newAngle += MathF.Sin(Projectile.localAI[0] * 0.65f) * 0.055f;
+            float speed = MathHelper.Lerp(16f, 38f, easedProgress);
             Projectile.velocity = newAngle.ToRotationVector2() * speed;
-            // 旋转+90度
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(225f);
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(225f) + Projectile.localAI[1];
             Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Projectile.localAI[0], true);
             Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * (0.65f + easedProgress * 0.65f));
 
@@ -257,6 +272,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 // Save a small velocity vector representing the entry offset relative to the NPC
                 Projectile.velocity = (target.Center - Projectile.Center) * 0.5f;
                 Projectile.netUpdate = true;
+
+                Player owner = Main.player[Projectile.owner];
+                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 3.5f);
+                if (!Main.dedServ)
+                {
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, new Color(255, 210, 80), Vector2.One, Projectile.rotation, 0.1f, 2.2f, 20));
+                    for (int k = 0; k < 18; k++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 16f);
+                        Dust d = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(20f, 20f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 80), Main.rand.NextFloat(1.0f, 1.7f));
+                        d.noGravity = true;
+                    }
+                }
             }
 
             // Spawn homing tracking missiles on every hit
@@ -330,7 +358,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                         continue;
                     float progress = 1f - i / (float)Projectile.oldPos.Length;
                     Vector2 oldDraw = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                    Main.EntitySpriteDraw(texture, oldDraw, null, Color.Orange * 0.15f * progress, Projectile.rotation, origin, Projectile.scale, effects, 0);
+                    Main.EntitySpriteDraw(texture, oldDraw, null, Color.Orange * 0.18f * progress, Projectile.oldRot[i], origin, Projectile.scale * progress, effects, 0);
                 }
             }
             else
