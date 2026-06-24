@@ -1,6 +1,8 @@
 using CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles;
 using CalamityMod;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -124,6 +126,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             damage.Base += balance.GetLeftClickBaseDamage() - Item.damage;
+        }
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            string legendarySection = Main.keyState.PressingShift()
+                ? this.GetLocalizedValue("LegendaryText")
+                : this.GetLocalizedValue("LegendaryHint");
+            tooltips.Add(new TooltipLine(Mod, "AegisBladeHolyKnightLegendaryText", legendarySection));
         }
 
         internal static Vector2 GetMouseWorld(Player player)

@@ -16,8 +16,8 @@ Mods: {
 						[c/7FE886:Aegis] [c/DCD6C8:Gain 6–15 bonus defense based on movement speed; maximized while standing still]
 						[c/7FE886:Bulwark] [c/DCD6C8:Without damage-over-time debuffs, contact damage reduced by 20%, doubled while stationary]
 						[c/FFD700:Legendary Skill] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
-						[c/BABABA:Hold Shift to read lore]
 						'''
+					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
 						[c/FFD966:On an ancient battlefield, there was a knight clad in golden armor, wielding this blade.]
@@ -47,6 +47,8 @@ Mods: {
 			AegisUltimateHand.DisplayName: Golden Hand
 			AegisEnergyUI.DisplayName: Aegis Energy Bar
 			LeonidUltimateUI.DisplayName: Leonid Ultimate U I
+			IceShardProj.DisplayName: Ice Shard Proj
+			Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 		}
 	}
 }

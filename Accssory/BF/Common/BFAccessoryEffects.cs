@@ -83,6 +83,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool BlossomFluxArrow;
         public BlossomFluxChloroplastPresetType Preset;
         private bool sunflowerEmpowered;
+        private bool sunflowerContactTriggered;
 
         public override void AI(Projectile projectile)
         {
@@ -114,20 +115,17 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     continue;
 
                 float distanceSquared = Vector2.DistanceSquared(projectile.Center, seedProjectile.Center);
-                if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && seed.IsBlooming && seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && distanceSquared <= SeedOfSilvaSunflower.SunflowerRingRadius * SeedOfSilvaSunflower.SunflowerRingRadius)
+                if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak &&
+                    projectile.GetGlobalProjectile<BFArrow_CDetecEffect>().BlossomFluxLeftArrow &&
+                    seed.IsBlooming &&
+                    seed.CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak &&
+                    distanceSquared <= SeedOfSilvaSunflower.SunflowerRingRadius * SeedOfSilvaSunflower.SunflowerRingRadius)
                 {
                     sunflowerEmpowered = true;
-                    if (seed is SeedOfSilvaSunflower sunflower)
-                        sunflower.TriggerFlash();
-                    if (!Main.dedServ && Main.rand.NextBool(3))
+                    if (!sunflowerContactTriggered && seed is SeedOfSilvaSunflower sunflower)
                     {
-                        Vector2 perpDir = projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
-                        Dust dust = Dust.NewDustPerfect(
-                            projectile.Center + perpDir * Main.rand.NextFloat(-5f, 5f),
-                            DustID.YellowTorch,
-                            perpDir * Main.rand.NextFloat(-2.8f, 2.8f) + Main.rand.NextVector2Circular(0.6f, 0.6f),
-                            60, new Color(255, 248, 130), Main.rand.NextFloat(1.0f, 1.3f));
-                        dust.noGravity = true;
+                        sunflowerContactTriggered = true;
+                        sunflower.TriggerAssaultImpact(projectile);
                     }
                 }
 

@@ -186,17 +186,19 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            string legendarySection = Main.keyState.PressingShift()
+                ? this.GetLocalizedValue("LegendaryText")
+                : this.GetLocalizedValue("LegendaryHint");
+
             string finalText =
                 this.GetLocalizedValue("LeftClick") + "\n\n" +
                 this.GetLocalizedValue("RightClick") + "\n\n" +
                 this.GetLocalizedValue("StealthStrike") + "\n\n" +
                 string.Format(this.GetLocalizedValue("Finale"), keyText) + "\n\n" +
-                this.GetLocalizedValue("Passive") + "\n\n" +
-                (Main.keyState.PressingShift()
-                    ? this.GetLocalizedValue("LegendaryText")
-                    : this.GetLocalizedValue("LegendaryHint")) + "\n";
+                this.GetLocalizedValue("Passive") + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, "MalachiteShadowPeacockLegendaryText", legendarySection));
         }
 
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)

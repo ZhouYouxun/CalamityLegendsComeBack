@@ -46,15 +46,15 @@ Mods: {
 						'''
 				}
 
-				Strikers1945: {
+				STG: {
 					Tooltip:
 						'''
-						手持该物品即可展开纵屏1945面板。
+						手持该物品即可展开纵屏弹幕射击面板。
 						A/D 控制左右，W/S 控制前后，飞机会自动开火。
 						击落随机来袭的敌机获得分数。命中敌机、敌弹或被敌机撞到都会损失生命。
 						敌机偶尔掉落 P 强化，提升子弹数量与散射。三条命耗尽后游戏结束，按 R 重新开始。
 						'''
-					// DisplayName: "1945"
+					DisplayName: STG
 				}
 
 				SacredThunder: {
@@ -117,30 +117,33 @@ Mods: {
 				}
 
 				Prime2041Summoner: {
-					DisplayName: 远古机械颅骨 (双头 AI 版)
+					DisplayName: 奇怪的机械骷髅头
 					Tooltip:
 						'''
-						召唤 2024 年灾厄模组旧版本的机械骷髅王 (双头大师 AI版)
+						这将召唤一个来自 2.0.4.1 版本的机械骷髅王
+						必须在大师模式召唤才有效
 						仅在夜间可用
 						'''
 				}
 
 				Destroyer2041Summoner: {
-					// DisplayName: Ancient Mechanical Worm (2024 AI)
-					/* Tooltip:
+					DisplayName: 奇怪的机械蠕虫
+					Tooltip:
 						'''
-						Summons the 2024 Calamity Destroyer AI variant
-						Only usable at night
-						''' */
+						这将召唤一个来自 2.0.4.1 版本的毁灭者
+						必须在大师模式召唤才有效
+						仅在夜间可用
+						'''
 				}
 
 				Twins2041Summoner: {
-					// DisplayName: Ancient Mechanical Eye (2024 AI)
-					/* Tooltip:
+					DisplayName: 奇怪的机械晶状体
+					Tooltip:
 						'''
-						Summons the 2024 Calamity Twins AI variant
-						Only usable at night
-						''' */
+						这将召唤一个来自 2.0.4.1 版本的双子魔眼
+						必须在大师模式召唤才有效
+						仅在夜间可用
+						'''
 				}
 			}
 
@@ -167,7 +170,7 @@ Mods: {
 				Game2048Panel.DisplayName: 2048 面板
 				SnakePanel.DisplayName: 贪吃蛇面板
 				MinesweeperPanel.DisplayName: 扫雷面板
-				Strikers1945Panel.DisplayName: 1945 战机面板
+				STGPanel.DisplayName: STG 弹幕射击面板
 				CTRLBossPanel.DisplayName: Boss进度面板
 				// DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
 				// DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
@@ -221,8 +224,8 @@ Mods: {
 			MinesweeperGameOver: 游戏结束
 			MinesweeperWin: You Win
 			MinesweeperRestart: 左键点击重新开始
-			Strikers1945GameOver: 游戏结束
-			Strikers1945Restart: 按 R 重新开始
+			STGGameOver: 游戏结束
+			STGRestart: 按 R 重新开始
 			CTRLBossDefeated: 已击杀
 			CTRLBossUndefeated: 未击杀
 			CTRLBossStatusSet: "{0} 已被调整为{1}。"

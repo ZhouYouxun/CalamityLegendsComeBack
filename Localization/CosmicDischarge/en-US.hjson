@@ -34,6 +34,13 @@ Mods: {
 						[c/FFE85A:Burst: full-screen FriendlyLaserWallBeam walls plus a DoGTeleportRift-class explosion, followed by a DoGFire-style lingering field.]
 						'''
 					CosmicDischargePassive: "[c/B8F4FF:Rift Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Rift Revival (+20% damage). Cooldown: 60 seconds.]"
+					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					LegendaryText:
+						'''
+						[c/8DEBFF:The rift does not open because you swung the blade. It opens because it was already open — waiting for something to fall through.]
+						[c/6FDFFF:Every form is a different language the Devourer uses to finish a sentence it started before the universe remembered itself.]
+						[c/B8F4FF:The seal does not protect you. It reminds the void that you are still here to be consumed later.]
+						'''
 				}
 			}
 		}

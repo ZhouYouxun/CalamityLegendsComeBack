@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Weapons.Malachite;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SeasSearing;
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook;
 using CalamityLegendsComeBack.Weapons.Vesuvius;
 using CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR;
 using CalamityMod.Rarities;
@@ -34,6 +35,7 @@ namespace CalamityLegendsComeBack
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendSHPC>()));
+            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<SHPCBook>()));
             //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBrinyBaron>()));
             //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendBlossomFlux>()));
             //itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendPristineFury>()));

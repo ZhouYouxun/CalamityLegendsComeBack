@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// </summary>
     public class CynosureChargedCell : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureChargedCell";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/注能金源珠九帧图";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private Vector2 OrbitCenter
@@ -30,6 +30,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Projectile.localAI[1] = value.X;
                 Projectile.localAI[2] = value.Y;
             }
+        }
+
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Type] = 9;
         }
 
         public override void SetDefaults()
@@ -46,6 +51,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void AI()
         {
+            if (++Projectile.frameCounter >= 4)
+            {
+                Projectile.frameCounter = 0;
+                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+            }
+
             if (Projectile.localAI[0] == 0f)
             {
                 Projectile.localAI[0] = 1f;
@@ -140,7 +151,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D circle = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
-            Vector2 texOrigin = texture.Size() * 0.5f;
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Vector2 texOrigin = frame.Size() * 0.5f;
             Vector2 circleOrigin = circle.Size() * 0.5f;
             float pulse = 1f + 0.08f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f + Projectile.identity * 1.4f);
             Color gold = new Color(255, 214, 88, 0);
@@ -158,15 +170,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             for (int i = 0; i < 10; i++)
             {
                 Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2.4f * outlinePulse);
-                Main.EntitySpriteDraw(texture, center + offset, null,
-                    (Color.White with { A = 0 }) * 0.38f,
+                Main.EntitySpriteDraw(texture, center + offset, frame,
+                    gold * 0.45f,
                     Projectile.rotation, texOrigin, Projectile.scale * 1.08f, SpriteEffects.None);
             }
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             // 实体贴图（正常混合，保证可见）
-            Main.EntitySpriteDraw(texture, center, null, Color.White, Projectile.rotation, texOrigin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, center, frame, Color.White, Projectile.rotation, texOrigin, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

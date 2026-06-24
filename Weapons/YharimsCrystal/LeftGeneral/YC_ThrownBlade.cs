@@ -1,6 +1,7 @@
 using System;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -12,6 +13,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 {
     internal sealed class YC_ThrownBlade : ModProjectile, ILocalizedModType
     {
+        private const int StateFlight = 0;
+        private const int StateStuck = 1;
+        private const int StateDirectedThrow = 2;
+
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Items/Weapons/Melee/Earth";
 
@@ -35,15 +40,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Projectile.timeLeft = 360;
         }
 
-        public override bool? CanHitNPC(NPC target) => Projectile.ai[0] == 2f ? false : null;
+        public override bool? CanHitNPC(NPC target) => Projectile.ai[0] == StateStuck ? false : null;
 
         public override void AI()
         {
-            if (Projectile.ai[0] == 2f) // Judgement ascent
+            if (Projectile.ai[0] == StateDirectedThrow)
             {
-                DoJudgementAscent();
+                DoDirectedThrow();
             }
-            else if (Projectile.ai[0] == 1f) // Stuck state
+            else if (Projectile.ai[0] == StateStuck)
             {
                 Projectile.velocity = Vector2.Zero;
                 Projectile.rotation += 0.45f;
@@ -73,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     d.noGravity = true;
                 }
             }
-            else // Flying state
+            else if (Projectile.ai[0] == StateFlight)
             {
                 NPC target = FindNearestTarget(1200f);
                 if (target != null)
@@ -92,25 +97,34 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
         }
 
-        private void DoJudgementAscent()
+        private void DoDirectedThrow()
         {
             Projectile.localAI[0]++;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, -Vector2.UnitY * 32f, 0.12f);
+            float progress = MathHelper.Clamp(Projectile.localAI[0] / 28f, 0f, 1f);
+            float easedProgress = MathHelper.SmoothStep(0f, 1f, progress);
+            NPC target = GetThrowTarget();
+            Vector2 targetDirection = target == null
+                ? Projectile.velocity.SafeNormalize(Vector2.UnitX)
+                : (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(0.8f, 5.2f, easedProgress));
+            float newAngle = Projectile.velocity.ToRotation().AngleTowards(targetDirection.ToRotation(), turnRate);
+            float speed = MathHelper.Lerp(8.5f, 34f, easedProgress);
+            Projectile.velocity = newAngle.ToRotationVector2() * speed;
             // 旋转+90度
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(225f);
-            Projectile.Opacity = Utils.GetLerpValue(0f, 10f, Projectile.localAI[0], true);
-            Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * 1.1f);
+            Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Projectile.localAI[0], true);
+            Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * (0.65f + easedProgress * 0.65f));
 
             if (!Main.dedServ)
             {
                 // 三板斧：大量上升粒子轨迹
-                int particleCount = Main.rand.Next(3, 6);
+                int particleCount = Main.rand.Next(3, 7);
                 for (int i = 0; i < particleCount; i++)
                 {
                     Dust dust = Dust.NewDustPerfect(
                         Projectile.Center + Main.rand.NextVector2Circular(22f, 22f),
                         DustID.GoldFlame,
-                        Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(2f, 8f),
+                        -Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.45f) * Main.rand.NextFloat(2f, 9f + easedProgress * 8f),
                         0,
                         Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88),
                         Main.rand.NextFloat(1.0f, 1.6f));
@@ -118,15 +132,36 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 }
 
                 // 橙金光晕跟随
-                if ((int)Projectile.localAI[0] % 4 == 0)
-                    Lighting.AddLight(Projectile.Center + Main.rand.NextVector2Circular(24f, 24f), new Vector3(0.9f, 0.55f, 0.05f) * 0.5f);
+                if ((int)Projectile.localAI[0] % 2 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                        Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
+                        -Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.32f) * Main.rand.NextFloat(2f, 6f),
+                        "CalamityMod/Particles/Sparkle",
+                        false,
+                        Main.rand.Next(10, 17),
+                        Main.rand.NextFloat(0.38f, 0.72f),
+                        Main.rand.NextBool(3) ? Color.White : new Color(255, 190, 54),
+                        new Vector2(0.22f, 0.9f),
+                        true,
+                        true,
+                        shrinkSpeed: 0.16f));
+                }
             }
 
-            if (Projectile.localAI[0] < 34f)
-                return;
+        }
 
-            SpawnSkyJudgement();
-            Projectile.Kill();
+        private NPC GetThrowTarget()
+        {
+            int targetIndex = (int)Projectile.ai[1];
+            if (targetIndex >= 0 && targetIndex < Main.maxNPCs)
+            {
+                NPC target = Main.npc[targetIndex];
+                if (target.active && target.CanBeChasedBy(Projectile))
+                    return target;
+            }
+
+            return Projectile.localAI[0] >= 8f ? FindNearestTarget(1200f) : null;
         }
 
         private void SpawnSkyJudgement()
@@ -215,9 +250,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             SoundEngine.PlaySound(SoundID.Item22 with { Volume = 0.85f, Pitch = -0.1f }, target.Center);
 
-            if (Projectile.ai[0] == 0f) // Transition to stuck state on first hit
+            if (Projectile.ai[0] != StateStuck)
             {
-                Projectile.ai[0] = 1f;
+                Projectile.ai[0] = StateStuck;
                 Projectile.ai[1] = target.whoAmI;
                 // Save a small velocity vector representing the entry offset relative to the NPC
                 Projectile.velocity = (target.Center - Projectile.Center) * 0.5f;
@@ -263,7 +298,31 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             SpriteEffects effects = SpriteEffects.None;
 
-            if (Projectile.ai[0] == 0f) // Flying state
+            if (Projectile.ai[0] == StateDirectedThrow)
+            {
+                Vector2 tailDirection = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 20f);
+
+                Main.spriteBatch.SetBlendState(BlendState.Additive);
+                for (int i = 0; i < 5; i++)
+                {
+                    float progress = i / 5f;
+                    Vector2 trailPosition = drawPos + tailDirection * (16f + i * 18f);
+                    Main.EntitySpriteDraw(
+                        bloom,
+                        trailPosition,
+                        null,
+                        Color.Lerp(new Color(255, 108, 28), Color.Gold, progress) * (0.38f - progress * 0.22f),
+                        Projectile.velocity.ToRotation(),
+                        bloom.Size() * 0.5f,
+                        (0.26f - progress * 0.1f) * pulse,
+                        SpriteEffects.None);
+                }
+                Main.EntitySpriteDraw(glow, drawPos, null, new Color(255, 223, 132, 0) * 0.72f, Projectile.rotation, origin, Projectile.scale * 1.16f, effects, 0);
+                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            }
+
+            if (Projectile.ai[0] != StateStuck)
             {
                 for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
                 {
@@ -274,7 +333,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     Main.EntitySpriteDraw(texture, oldDraw, null, Color.Orange * 0.15f * progress, Projectile.rotation, origin, Projectile.scale, effects, 0);
                 }
             }
-            else if (Projectile.ai[0] == 1f) // Stuck state
+            else
             {
                 float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 16f);
                 Main.spriteBatch.SetBlendState(BlendState.Additive);

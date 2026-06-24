@@ -53,10 +53,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override bool CanUseItem(Player player)
         {
-            if (HasActivePrimaryAttack(player))
+            bool rightClick = player.altFunctionUse == 2;
+            if (HasInputConflict(player, rightClick) || HasActivePrimaryAttack(player))
                 return false;
 
-            bool rightClick = player.altFunctionUse == 2;
             if (!rightClick && player.GetModPlayer<YharimsCrystalStatePlayer>().LeftClickCooldown > 0)
                 return false;
 
@@ -89,10 +89,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override bool CanShoot(Player player)
         {
-            if (HasActivePrimaryAttack(player))
+            bool rightClick = player.altFunctionUse == 2;
+            if (HasInputConflict(player, rightClick) || HasActivePrimaryAttack(player))
                 return false;
 
-            if (player.altFunctionUse == 2)
+            if (rightClick)
             {
                 if (player.GetModPlayer<YharimsCrystalStatePlayer>().RightClickCooldown > 0)
                     return false;
@@ -144,6 +145,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         {
             Vector2 aimDirection = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
             bool rightClick = player.altFunctionUse == 2;
+            if (HasInputConflict(player, rightClick) || HasActivePrimaryAttack(player))
+                return false;
+
             int projectileType = rightClick ? RightHoldoutType : LeftHoldoutType;
             int projectileDamage = rightClick ? GetScaledDamage(player, balance.GetRightClickBaseDamage()) : damage;
 
@@ -211,6 +215,35 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             return player.ownedProjectileCounts[LeftHoldoutType] > 0 ||
                 player.ownedProjectileCounts[RightHoldoutType] > 0 ||
                 player.ownedProjectileCounts[ThrownBladeType] > 0;
+        }
+
+        private static bool HasInputConflict(Player player, bool rightClick)
+        {
+            // The button held first owns the attack session. Combination attacks stay
+            // inside that session instead of spawning the other weapon form.
+            return rightClick ? IsPrimaryInputHeld(player) : IsAlternateInputHeld(player);
+        }
+
+        private static bool IsPrimaryInputHeld(Player player)
+        {
+            if (Main.myPlayer != player.whoAmI)
+                return player.controlUseItem;
+
+            return Main.mouseLeft &&
+                !Main.mapFullscreen &&
+                !Main.blockMouse &&
+                !player.mouseInterface;
+        }
+
+        private static bool IsAlternateInputHeld(Player player)
+        {
+            if (Main.myPlayer != player.whoAmI)
+                return player.controlUseTile;
+
+            return (Main.mouseRight || player.Calamity().mouseRight) &&
+                !Main.mapFullscreen &&
+                !Main.blockMouse &&
+                !player.mouseInterface;
         }
 
         private static void SyncCooldownDisplay(Player player, YCEXPlayer exPlayer)

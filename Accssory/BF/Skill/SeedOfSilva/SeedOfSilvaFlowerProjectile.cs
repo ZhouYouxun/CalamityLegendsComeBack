@@ -16,6 +16,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private const float OrbitRadius = 222f;
         private const float OrbitSpeed = 0.018f;
         private const float OutlineRadius = 2f;
+        private const float BlossomTransitionStep = 1f / 18f;
 
         private static readonly string[] SmallSeedTextures =
         {
@@ -28,6 +29,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public BlossomFluxChloroplastPresetType CurrentPreset => FlowerPreset;
         public int CurrentSlot => FlowerSlot;
         public bool IsBlooming { get; private set; }
+        protected float VisualBloomProgress { get; private set; }
 
         protected abstract int FlowerSlot { get; }
         protected abstract BlossomFluxChloroplastPresetType FlowerPreset { get; }
@@ -65,6 +67,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.timeLeft = 2;
             BFAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BFAccessoryPlayer>();
             IsBlooming = accessoryPlayer.HoldingBlossomFlux && accessoryPlayer.CurrentPreset == FlowerPreset;
+            VisualBloomProgress = MathHelper.Clamp(VisualBloomProgress + (IsBlooming ? BlossomTransitionStep : -BlossomTransitionStep), 0f, 1f);
             Projectile.damage = GetSeedContactDamage(owner, accessoryPlayer.HoldingBlossomFlux);
 
             float angle = Main.GameUpdateCount * OrbitSpeed + MathHelper.TwoPi * FlowerSlot / FlowerCount;
@@ -73,7 +76,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.rotation = angle + MathHelper.PiOver2;
             Projectile.scale = MathHelper.Lerp(Projectile.scale, IsBlooming ? 1f : 0.92f, 0.16f);
 
-            Lighting.AddLight(Projectile.Center, FlowerColor.ToVector3() * (IsBlooming ? 0.34f : 0.11f));
+            Lighting.AddLight(Projectile.Center, FlowerColor.ToVector3() * MathHelper.Lerp(0.11f, 0.34f, VisualBloomProgress));
 
             UpdateCommon(owner, accessoryPlayer);
             if (IsBlooming)
@@ -98,27 +101,31 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = IsBlooming
-                ? ModContent.Request<Texture2D>(FlowerTexturePath).Value
-                : ModContent.Request<Texture2D>(SmallSeedTextures[GetDormantSeedTextureIndex()]).Value;
-
+            Texture2D seedTexture = ModContent.Request<Texture2D>(SmallSeedTextures[GetDormantSeedTextureIndex()]).Value;
+            Texture2D flowerTexture = ModContent.Request<Texture2D>(FlowerTexturePath).Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
-            Vector2 origin = texture.Size() * 0.5f;
             float pulse = 0.96f + 0.04f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 3.2f + Projectile.identity);
-            float drawScale = Projectile.scale * pulse;
-            float rotation = IsBlooming
-                ? Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.12f
-                : Projectile.rotation * 0.2f + Main.GlobalTimeWrappedHourly * 0.08f;
-            Color drawColor = Color.Lerp(lightColor, Color.White, IsBlooming ? 0.28f : 0.18f) * Projectile.Opacity;
-            Color outlineColor = FlowerColor * ((IsBlooming ? 0.88f : 0.62f) * Projectile.Opacity);
+            float seedOpacity = Projectile.Opacity * (1f - VisualBloomProgress);
+            float flowerOpacity = Projectile.Opacity * VisualBloomProgress;
+            float seedScale = Projectile.scale * pulse * MathHelper.Lerp(1f, 0.76f, VisualBloomProgress);
+            float flowerScale = Projectile.scale * pulse * MathHelper.Lerp(0.28f, 1f, VisualBloomProgress);
+            float seedRotation = Projectile.rotation * 0.2f + Main.GlobalTimeWrappedHourly * 0.08f;
+            float flowerRotation = Projectile.rotation + Main.GlobalTimeWrappedHourly * 0.12f;
 
-            if (IsBlooming)
-                DrawFlowerUnderGlow(center, texture, origin, rotation, drawScale);
-            else
-                DrawDormantMagicGlow(center);
+            if (seedOpacity > 0f)
+            {
+                DrawDormantMagicGlow(center, seedOpacity);
+                DrawOutline(seedTexture, center, seedTexture.Size() * 0.5f, seedRotation, seedScale, FlowerColor * (0.62f * seedOpacity));
+                Main.EntitySpriteDraw(seedTexture, center, null, Color.Lerp(lightColor, Color.White, 0.18f) * seedOpacity, seedRotation, seedTexture.Size() * 0.5f, seedScale, SpriteEffects.None, 0);
+            }
 
-            DrawOutline(texture, center, origin, rotation, drawScale, outlineColor);
-            Main.EntitySpriteDraw(texture, center, null, drawColor, rotation, origin, drawScale, SpriteEffects.None, 0);
+            if (flowerOpacity > 0f)
+            {
+                DrawFlowerUnderGlow(center, flowerTexture, flowerTexture.Size() * 0.5f, flowerRotation, flowerScale, flowerOpacity);
+                DrawOutline(flowerTexture, center, flowerTexture.Size() * 0.5f, flowerRotation, flowerScale, FlowerColor * (0.88f * flowerOpacity));
+                Main.EntitySpriteDraw(flowerTexture, center, null, Color.Lerp(lightColor, Color.White, 0.28f) * flowerOpacity, flowerRotation, flowerTexture.Size() * 0.5f, flowerScale, SpriteEffects.None, 0);
+            }
+
             return false;
         }
 
@@ -200,33 +207,31 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             return FlowerSlot % SmallSeedTextures.Length;
         }
 
-        private void DrawDormantMagicGlow(Vector2 center)
+        private void DrawDormantMagicGlow(Vector2 center, float opacity)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
             float pulse = 0.9f + 0.1f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 2.6f + Projectile.identity);
-            Color seedColor = Color.Lerp(new Color(88, 144, 84), FlowerColor, 0.34f) * Projectile.Opacity;
+            Color seedColor = Color.Lerp(new Color(88, 144, 84), FlowerColor, 0.34f) * opacity;
 
-            Main.EntitySpriteDraw(bloom, center, null, seedColor * 0.28f, 0f, bloom.Size() * 0.5f, 0.085f * pulse, SpriteEffects.None, 0);
-
-            // magic_03 has an opaque black background; Additive makes black pixels invisible
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            // Glow assets are always additive so a dark or black source background cannot be rendered.
+            Main.EntitySpriteDraw(bloom, center, null, seedColor * 0.28f, 0f, bloom.Size() * 0.5f, 0.085f * pulse, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(magic, center, null, Color.Lerp(seedColor, FlowerAccentColor, 0.25f) * 0.34f, -Main.GlobalTimeWrappedHourly * 0.24f, magic.Size() * 0.5f, 0.054f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
-        private void DrawFlowerUnderGlow(Vector2 center, Texture2D texture, Vector2 origin, float rotation, float scale)
+        private void DrawFlowerUnderGlow(Vector2 center, Texture2D texture, Vector2 origin, float rotation, float scale, float opacity)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float pulse = 0.92f + 0.08f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 2.4f + Projectile.identity);
 
-            // Additive: dark pixels in the texture become invisible, only bright parts glow with the theme color
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-            Main.EntitySpriteDraw(bloom, center, null, FlowerColor * (0.22f * Projectile.Opacity), 0f, bloom.Size() * 0.5f, 0.13f * pulse, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(texture, center, null, FlowerColor * (0.26f * Projectile.Opacity), rotation, origin, scale * 1.08f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center, null, FlowerColor * (0.22f * opacity), 0f, bloom.Size() * 0.5f, 0.13f * pulse, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, center, null, FlowerColor * (0.26f * opacity), rotation, origin, scale * 1.08f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }

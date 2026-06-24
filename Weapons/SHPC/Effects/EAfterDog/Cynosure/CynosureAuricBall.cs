@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 {
     public class CynosureAuricBall : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureChargedCell";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/注能金源珠九帧图";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private const int Lifetime = 300;
@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void SetStaticDefaults()
         {
+            Main.projFrames[Type] = 9;
             ProjectileID.Sets.TrailCacheLength[Type] = 20;
             ProjectileID.Sets.TrailingMode[Type] = 0;
         }
@@ -51,6 +52,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void AI()
         {
+            if (Projectile.numUpdates == 0 && ++Projectile.frameCounter >= 4)
+            {
+                Projectile.frameCounter = 0;
+                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+            }
+
             if (Projectile.localAI[0] == 0f)
                 InitializeScatter();
 
@@ -197,7 +204,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Vector2 origin = texture.Size() * 0.5f;
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Vector2 origin = frame.Size() * 0.5f;
 
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
@@ -206,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Main.EntitySpriteDraw(
                     texture,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
-                    null,
+                    frame,
                     afterimageColor,
                     Projectile.rotation,
                     origin,
@@ -222,8 +230,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Main.EntitySpriteDraw(
                     texture,
                     Projectile.Center + offset - Main.screenPosition,
-                    null,
-                    (Color.White with { A = 0 }) * 0.42f,
+                    frame,
+                    (AuricBlue with { A = 0 }) * 0.48f,
                     Projectile.rotation,
                     origin,
                     Projectile.scale * 1.08f,
@@ -231,7 +239,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             }
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

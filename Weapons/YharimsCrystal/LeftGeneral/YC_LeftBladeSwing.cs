@@ -32,21 +32,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private const int LoopChargeFrames = 40;
         private const int LoopSpinFrames = 60;
         private const int LoopHoldFrames = 40;
-        private const int JudgementRaiseFrames = 60;
+        private const int ThrowWindupFrames = 30;
         private const int MaxBladeHitFireballs = 5;
         private const int StateLoopCharge = 0;
         private const int StateLoopSpin = 1;
         private const int StateLoopHold = 2;
-        private const int StateJudgementRaise = 3;
+        private const int StateThrowWindup = 3;
 
         private int leftClickState = 0;
         private int loopTimer;
-        private int chargeTimer;
         private bool chargeCompleteSoundPlayed = false;
         private bool spinStartSoundPlayed;
-        private bool judgementRequested;
+        private bool throwRequested;
         private bool releasedDuringLoopHold;
-        private int judgementTargetIndex = -1;
+        private int throwTargetIndex = -1;
         private int bladeHitFireballsThisSpin;
         private float spinAngle;
         private float chargeBorderIntensity;
@@ -82,6 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             UpdateLockedAimFromMouse();
             Projectile.ai[1] = -lockedFacing;
             SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.72f, Pitch = -0.18f }, Owner.Center);
+            StartLoopSpin();
         }
 
         public override void AI()
@@ -128,7 +128,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             {
                 if (leftClickState == StateLoopHold)
                     releasedDuringLoopHold = true;
-                else if (leftClickState != StateJudgementRaise)
+                else if (leftClickState != StateThrowWindup)
                 {
                     Projectile.Kill();
                     return;
@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
 
             if (leftHeld && IsRightHeld())
-                judgementRequested = true;
+                throwRequested = true;
 
             switch (leftClickState)
             {
@@ -149,12 +149,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 case StateLoopHold:
                     DoLoopHold();
                     break;
-                case StateJudgementRaise:
-                    DoJudgementRaise();
+                case StateThrowWindup:
+                    DoThrowWindup();
                     break;
             }
 
-            if (leftClickState != StateJudgementRaise)
+            if (leftClickState != StateThrowWindup)
                 ApplyArmRotation();
         }
 
@@ -170,15 +170,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             CanHit = false;
             postSwing = false;
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.25f);
-            bladeFade = MathHelper.Lerp(bladeFade, MathHelper.Lerp(0.35f, 1f, progress), 0.16f);
+            bladeFade = MathHelper.Lerp(bladeFade, 1.08f, 0.18f);
             chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, progress, 0.22f);
             Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.12f);
-            RotationOffset = RotationOffset.AngleLerp(MathHelper.ToRadians(112f * Projectile.ai[1]), 0.2f);
+            float windup = MathHelper.SmoothStep(0f, MathHelper.ToRadians(18f), progress) * Projectile.ai[1];
+            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) + windup;
 
             if (loopTimer == 1)
                 SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.44f, Pitch = -0.18f }, Owner.Center);
 
             EmitChargeSparks();
+            if (throwRequested)
+            {
+                StartThrowWindup();
+                return;
+            }
 
             if (loopTimer >= LoopChargeFrames)
                 StartLoopSpin();
@@ -216,8 +222,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             FlipAsSword = lockedFacing < 0;
 
             float progress = MathHelper.Clamp(loopTimer / (float)LoopSpinFrames, 0f, 1f);
-            float spinSpeed = GetSpinSpeed(progress);
-            spinAngle -= MathHelper.TwoPi * 3.45f / LoopSpinFrames * spinSpeed;
+            float easedProgress = MathHelper.SmoothStep(0f, 1f, progress);
+            spinAngle = -MathHelper.TwoPi * easedProgress;
 
             CanHit = loopTimer > 4 && loopTimer < LoopSpinFrames - 2;
             postSwing = true;
@@ -240,11 +246,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 SpawnSpinFlame();
 
             SpawnSwingParticles(new StageProfile(LoopSpinFrames, 0, 0f, 1.08f));
+            if (throwRequested && loopTimer >= 8)
+            {
+                StartThrowWindup();
+                return;
+            }
 
             if (loopTimer >= LoopSpinFrames)
             {
-                if (judgementRequested)
-                    StartJudgementRaise();
+                if (throwRequested)
+                    StartThrowWindup();
                 else
                     StartLoopHold();
             }
@@ -258,7 +269,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             postSwing = true;
             chargeBorderIntensity = Math.Max(chargeBorderIntensity, 0.45f);
             // 归一化累积旋转量，防止Lerp期间刀视觉上疯狂旋转
-            RotationOffset = MathHelper.WrapAngle(RotationOffset);
+            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]);
         }
 
         private void DoLoopHold()
@@ -272,12 +283,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             CanHit = false;
             postSwing = true;
             fadeIn = MathHelper.Lerp(fadeIn, 0.85f, 0.12f);
-            bladeFade = MathHelper.Lerp(bladeFade, MathHelper.Lerp(0.85f, 1f, progress), 0.16f);
+            bladeFade = MathHelper.Lerp(bladeFade, 1f, 0.16f);
             chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, MathHelper.Lerp(0.6f, 0.9f, progress), 0.18f);
             Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.12f);
-            float idleSwing = MathF.Sin(loopTimer * 0.18f) * MathHelper.ToRadians(7f);
+            float idleSwing = MathF.Sin(loopTimer * 0.18f) * MathHelper.ToRadians(3f) * Projectile.ai[1];
             // 归一化后用AngleLerp，避免Lerp大值引起的视觉旋转
-            RotationOffset = RotationOffset.AngleLerp(MathHelper.ToRadians(112f * Projectile.ai[1]) + idleSwing, 0.15f);
+            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) + idleSwing;
 
             EmitChargeSparks();
             if (loopTimer == LoopHoldFrames - 8 && !chargeCompleteSoundPlayed)
@@ -287,9 +298,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
 
             // 停顿期间右键可以直接丢出
-            if (judgementRequested)
+            if (throwRequested)
             {
-                StartJudgementRaise();
+                StartThrowWindup();
                 return;
             }
 
@@ -314,71 +325,57 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             releasedDuringLoopHold = false;
         }
 
-        private void StartJudgementRaise()
+        private void StartThrowWindup()
         {
-            leftClickState = StateJudgementRaise;
+            leftClickState = StateThrowWindup;
             loopTimer = 0;
-            chargeTimer = 0;
             CanHit = false;
             postSwing = true;
             fadeIn = 1f;
             bladeFade = 1f;
             chargeBorderIntensity = 1f;
             chargeCompleteSoundPlayed = false;
-            RotationOffset = MathHelper.WrapAngle(RotationOffset);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 4.5f);
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.85f, Pitch = -0.28f }, Owner.Center);
+            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.74f, Pitch = -0.18f }, Owner.Center);
         }
 
-        private void DoJudgementRaise()
+        private void DoThrowWindup()
         {
             loopTimer++;
-            chargeTimer++;
             CanHit = false;
             postSwing = true;
-            float raiseProgress = MathHelper.Clamp(loopTimer / (float)JudgementRaiseFrames, 0f, 1f);
+            UpdateLockedAimFromMouse();
+            float raiseProgress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(loopTimer / (float)ThrowWindupFrames, 0f, 1f));
             // 举刀过程刀身完全可见并增亮，体现"拿在手上蓄力"
             fadeIn = MathHelper.Lerp(fadeIn, 1.0f, 0.15f);
             bladeFade = MathHelper.Lerp(bladeFade, 1.25f + raiseProgress * 0.15f, 0.08f);
             chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, 1.4f, 0.08f);
             Owner.direction = lockedFacing;
             FlipAsSword = lockedFacing < 0;
-            Projectile.rotation = Projectile.rotation.AngleLerp(-MathHelper.PiOver2, 0.18f);
-            RotationOffset = RotationOffset.AngleLerp(0f, 0.18f);
-            ArmRotationOffset = MathHelper.ToRadians(-92f);
-            ArmRotationOffsetBack = MathHelper.ToRadians(-92f);
+            Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.16f);
+            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) - MathHelper.PiOver2 * raiseProgress * Projectile.ai[1];
+            ArmRotationOffset = MathHelper.ToRadians(-140f + 28f * raiseProgress);
+            ArmRotationOffsetBack = MathHelper.ToRadians(-140f + 28f * raiseProgress);
 
             // 蓄力阶段屏幕持续轻微震动，越到后期越强
-            if (loopTimer % 8 == 0)
-                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 1.5f + raiseProgress * 3f);
+            if (loopTimer % 5 == 0)
+                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 1.2f + raiseProgress * 4.2f);
 
-            EmitJudgementChargeEffects();
+            EmitThrowWindupEffects();
 
-            if (loopTimer >= JudgementRaiseFrames)
+            if (loopTimer >= ThrowWindupFrames)
             {
-                LaunchJudgementBlade();
+                LaunchThrownBlade();
                 Projectile.Kill();
             }
         }
 
-        private float GetSpinSpeed(float progress)
+        private bool HasValidThrowTarget()
         {
-            if (progress < 0.16f)
-            {
-                float accel = progress / 0.16f;
-                return MathHelper.SmoothStep(0.35f, 1.65f, accel);
-            }
-
-            float decay = (progress - 0.16f) / 0.84f;
-            return MathHelper.Lerp(1.65f, 0.24f, 1f - MathF.Pow(1f - decay, 2.15f));
-        }
-
-        private bool HasValidJudgementTarget()
-        {
-            if (judgementTargetIndex < 0 || judgementTargetIndex >= Main.maxNPCs)
+            if (throwTargetIndex < 0 || throwTargetIndex >= Main.maxNPCs)
                 return false;
 
-            NPC target = Main.npc[judgementTargetIndex];
+            NPC target = Main.npc[throwTargetIndex];
             return target.active && target.CanBeChasedBy(Projectile);
         }
 
@@ -415,13 +412,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             return Owner.Center + tipDirection * (240f * Projectile.scale);
         }
 
-        private void EmitJudgementChargeEffects()
+        private void EmitThrowWindupEffects()
         {
             if (Main.dedServ)
                 return;
 
-            float charge = MathHelper.Clamp(loopTimer / (float)JudgementRaiseFrames, 0f, 1f);
-            Vector2 tip = Owner.Center - Vector2.UnitY * (150f * Projectile.scale);
+            float charge = MathHelper.Clamp(loopTimer / (float)ThrowWindupFrames, 0f, 1f);
+            Vector2 tip = GetBladeTipPosition();
 
             if (loopTimer % Math.Max(2, (int)MathHelper.Lerp(7f, 2f, charge)) == 0)
             {
@@ -443,14 +440,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     shrinkSpeed: 0.18f));
             }
 
-            if (loopTimer % 15 == 0)
+            if (loopTimer % 10 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     tip,
                     Vector2.Zero,
                     Color.Lerp(BladeOrange, BladeGold, charge),
                     Vector2.One,
-                    -MathHelper.PiOver2,
+                    lockedAimDirection.ToRotation(),
                     0.06f,
                     1.2f + charge * 0.9f,
                     18));
@@ -460,16 +457,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 SoundEngine.PlaySound(SoundID.Item34 with { Volume = 0.18f + charge * 0.2f, Pitch = -0.4f + charge * 0.16f, MaxInstances = 4 }, tip);
         }
 
-        private void LaunchJudgementBlade()
+        private void LaunchThrownBlade()
         {
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            int targetIndex = HasValidJudgementTarget() ? judgementTargetIndex : -1;
+            Vector2 launchDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 launchPosition = Owner.MountedCenter + launchDirection * 44f;
+            int targetIndex = HasValidThrowTarget() ? throwTargetIndex : -1;
             int thrown = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Owner.Center - Vector2.UnitY * 72f,
-                -Vector2.UnitY * 28f,
+                launchPosition,
+                launchDirection * 8.5f,
                 ModContent.ProjectileType<YC_ThrownBlade>(),
                 (int)(Projectile.damage * 1.85f),
                 Projectile.knockBack * 1.5f,
@@ -484,18 +483,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
 
             // 三板斧：强烈屏幕震动
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 7.5f);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 8f);
+            Owner.velocity -= launchDirection * 1.25f;
 
             // 三板斧：抛出时大量粒子爆发
             if (!Main.dedServ)
             {
-                Vector2 launchPos = Owner.Center - Vector2.UnitY * 72f;
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(launchPos, Vector2.Zero, BladeGold, Vector2.One, -MathHelper.PiOver2, 0.12f, 2.4f, 22));
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(launchPos, Vector2.Zero, BladeOrange * 0.9f, "CalamityMod/Particles/BloomCircle", Vector2.One, 0f, 0.18f, 1.1f, 14, true));
-                for (int i = 0; i < 30; i++)
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(launchPosition, Vector2.Zero, BladeGold, Vector2.One, launchDirection.ToRotation(), 0.12f, 2.4f, 22));
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(launchPosition, Vector2.Zero, BladeOrange * 0.9f, "CalamityMod/Particles/BloomCircle", Vector2.One, launchDirection.ToRotation(), 0.18f, 1.1f, 14, true));
+                for (int i = 0; i < 42; i++)
                 {
-                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(6f, 18f);
-                    Dust d = Dust.NewDustPerfect(launchPos + Main.rand.NextVector2Circular(18f, 18f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BladeWhite : BladeGold, Main.rand.NextFloat(1.0f, 1.6f));
+                    Vector2 vel = launchDirection.RotatedByRandom(0.72f) * Main.rand.NextFloat(4f, 19f);
+                    Dust d = Dust.NewDustPerfect(launchPosition + Main.rand.NextVector2Circular(18f, 18f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BladeWhite : BladeGold, Main.rand.NextFloat(1.0f, 1.6f));
                     d.noGravity = true;
                 }
             }
@@ -510,9 +509,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.2f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/FinalDawnSlash") { Volume = 0.62f, Pitch = Main.rand.NextFloat(0.08f, 0.24f) }, target.Center);
 
-            judgementTargetIndex = target.whoAmI;
+            throwTargetIndex = target.whoAmI;
             if (IsRightHeld())
-                judgementRequested = true;
+                throwRequested = true;
 
             if (Projectile.owner == Main.myPlayer &&
                 leftClickState == StateLoopSpin &&

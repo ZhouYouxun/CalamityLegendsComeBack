@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Divine Pickaxe
+					Tooltip:
+						'''
+						A pickaxe that resonates with the cosmic flow of Calamity.
+						Its power grows as more world-ending threats are defeated.
+						'''
+				}
+			}
+		}
+	}
+}

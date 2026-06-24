@@ -212,7 +212,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, new Color(255, 110, 42, 0) * 0.5f, 0f, bloom.Size() * 0.5f, 0.072f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
     }
@@ -259,7 +263,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, new Color(178, 255, 68, 0) * 0.36f, 0f, bloom.Size() * 0.5f, 0.052f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
 
@@ -337,7 +345,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             }
 
             Vector2 center = Projectile.Center - Main.screenPosition;
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(bloom, center, null, new Color(160, 82, 210, 0) * 0.2f, 0f, bloom.Size() * 0.5f, 0.04f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             DrawOutline(texture, center, origin, Projectile.rotation, Projectile.scale, new Color(178, 92, 220) * 0.72f);
             Main.EntitySpriteDraw(texture, center, null, Color.Lerp(lightColor, Color.White, 0.25f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;

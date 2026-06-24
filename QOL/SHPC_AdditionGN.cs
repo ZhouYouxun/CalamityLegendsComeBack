@@ -2,6 +2,7 @@
 using CalamityMod.Items.Materials;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.NormalNPCs;
+using CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.QOL
@@ -18,6 +20,11 @@ namespace CalamityLegendsComeBack.QOL
 
         public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
         {
+            if (npc.type == NPCID.KingSlime || npc.type == NPCID.EyeofCthulhu)
+            {
+                npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<SHPCBook>()));
+            }
+
             if (CalamityLegendsComeBackConfig.Instance?.AllowMassMaterialRecipes != true)
                 return;
 

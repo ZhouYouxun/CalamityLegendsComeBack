@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
@@ -72,6 +73,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override bool CanUseItem(Player player)
             => player.ownedProjectileCounts[Item.shoot] <= 0;
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            if (!Main.keyState.PressingShift())
+                return;
+
+            tooltips.RemoveAll(line => line.Mod == "Terraria" &&
+                line.Name.StartsWith("Tooltip", StringComparison.Ordinal));
+            tooltips.Add(new TooltipLine(Mod, "AttackDetails", this.GetLocalizedValue("AttackDetails")));
+        }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source,
             Vector2 position, Vector2 velocity, int type, int damage, float knockback)

@@ -14,12 +14,11 @@ using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
 {
-    public class Strikers1945 : ModItem, ILocalizedModType
+    public class STG : ModItem, ILocalizedModType
     {
-        //public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/GAMES/1945";
         public new string LocalizationCategory => "Items.Weapons";
 
-        private static int PanelType => ModContent.ProjectileType<Strikers1945Panel>();
+        private static int PanelType => ModContent.ProjectileType<STGPanel>();
 
         public override void SetDefaults()
         {
@@ -69,7 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
                 if (!projectile.active || projectile.owner != player.whoAmI || projectile.type != PanelType)
                     continue;
 
-                if (projectile.ModProjectile is Strikers1945Panel panel)
+                if (projectile.ModProjectile is STGPanel panel)
                     panel.RequestStayOpen();
                 else
                     projectile.ai[0] = 0f;
@@ -81,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
         }
     }
 
-    internal sealed class Strikers1945Panel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
+    internal sealed class STGPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
         private const int PlayWidth = 448;
         private const int PlayHeight = 640;
@@ -154,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
                 return;
             }
 
-            if (owner.HeldItem.type != ModContent.ItemType<Strikers1945>())
+            if (owner.HeldItem.type != ModContent.ItemType<STG>())
                 FadeOut = true;
             else
                 FadeOut = false;
@@ -722,7 +721,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
             DrawBorder(panelArea, new Color(126, 136, 150) * opacity, BorderThickness);
             DrawBorder(new Rectangle(panelArea.X + 3, panelArea.Y + 3, panelArea.Width - 6, panelArea.Height - 6), new Color(38, 48, 58, 220) * opacity, 1);
 
-            DrawTextWithShadow("1945 STRIKE", new Vector2(panelArea.X + PanelPadding, panelArea.Y + 11), new Color(238, 244, 232) * opacity, 0.78f, opacity);
+            DrawTextWithShadow("STG ARCADE", new Vector2(panelArea.X + PanelPadding, panelArea.Y + 11), new Color(238, 244, 232) * opacity, 0.78f, opacity);
             string scoreText = $"SCORE {score:000000}";
             Vector2 scoreSize = FontAssets.MouseText.Value.MeasureString(scoreText) * 0.56f;
             DrawTextWithShadow(scoreText, new Vector2(playArea.Right - scoreSize.X, panelArea.Y + 17), new Color(255, 226, 130) * opacity, 0.56f, opacity);
@@ -903,8 +902,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.GAMES
             DrawRectangle(overlay, new Color(5, 7, 10, 228) * opacity);
             DrawBorder(overlay, new Color(226, 78, 78) * opacity, 2);
 
-            string title = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.Strikers1945GameOver");
-            string restart = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.Strikers1945Restart");
+            string title = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.STGGameOver");
+            string restart = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.STGRestart");
             DrawCenteredText(title, new Rectangle(overlay.X, overlay.Y + 25, overlay.Width, 30), new Color(255, 220, 210), 0.78f, opacity);
             DrawCenteredText(restart, new Rectangle(overlay.X, overlay.Y + 67, overlay.Width, 26), new Color(214, 232, 238), 0.52f, opacity);
         }

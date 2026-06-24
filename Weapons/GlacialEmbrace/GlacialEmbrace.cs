@@ -220,7 +220,6 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
                 passiveDivinity,
                 passiveAurora,
                 ultimate,
-                lore
             };
 
             var allLines = new List<string>();
@@ -240,6 +239,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
 
             string finalText = string.Join("\n", allLines);
             tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, "GlacialEmbraceAuroraFrostLegendaryText", lore));
         }
     }
 }

@@ -73,7 +73,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (IsBlooming)
+            if (VisualBloomProgress > 0f)
                 DrawSlowAura();
 
             return base.PreDraw(ref lightColor);
@@ -84,7 +84,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
             float pulse = 0.92f + 0.08f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 3.1f + Projectile.identity);
-            Color aura = new Color(135, 230, 72, 0) * 0.18f;
+            Color aura = new Color(135, 230, 72, 0) * (0.18f * VisualBloomProgress);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(
                 bloom,
                 center,
@@ -92,9 +94,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 aura,
                 0f,
                 bloom.Size() * 0.5f,
-                230f / bloom.Width * 2f * pulse,
+                230f / bloom.Width * 2f * pulse * MathHelper.Lerp(0.35f, 1f, VisualBloomProgress),
                 SpriteEffects.None,
                 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
     }
 }

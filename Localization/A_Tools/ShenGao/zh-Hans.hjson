@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: 神镐
+					Tooltip:
+						'''
+						与灾厄的宇宙脉动共鸣的镐。
+						每当更强大的威胁被消灭，它的力量便随之上升。
+						'''
+				}
+			}
+		}
+	}
+}

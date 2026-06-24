@@ -71,7 +71,7 @@ Mods: {
 				}
 
 				SHPCBook: {
-					DisplayName: SHPC材料手册
+					DisplayName: SHPC图鉴光盘
 					Tooltip: 左键打开 SHPC 材料索引，右键打开右键热量系统索引。
 				}
 			}
@@ -96,7 +96,7 @@ Mods: {
 			}
 
 			CommandAscend: {
-				DisplayName: 迫击改装套件
+				DisplayName: 枪身改造部件-迫击
 				Tooltip:
 					'''
 					手持SHPC时右键改为迫击炮模式
@@ -105,7 +105,7 @@ Mods: {
 			}
 
 			MilitaryCaller: {
-				DisplayName: 军用呼叫器
+				DisplayName: 枪身改造部件-炮台
 				Tooltip:
 					'''
 					手持SHPC时右键改为军用呼叫器模式
@@ -175,7 +175,7 @@ Mods: {
 			}
 
 			ProjectilePossessionModule: {
-				DisplayName: 弹幕吸收模块
+				DisplayName: 枪身改造部件-夺舍
 				Tooltip:
 					'''
 					手持SHPC时右键改为吸收模式

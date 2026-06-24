@@ -1,9 +1,11 @@
 using System.IO;
 using CalamityMod;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -159,7 +161,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             Item.UseSound = SoundID.Item44;
         }
 
-        public override bool CanUseItem(Player player) => !Main.dayTime && !ExistingBossActive;
+        public override bool CanUseItem(Player player) => Main.masterMode && !Main.dayTime && !ExistingBossActive;
 
         public override bool? UseItem(Player player)
         {
@@ -168,6 +170,39 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
 
             SoundEngine.PlaySound(SoundID.Roar, player.Center);
             return true;
+        }
+
+        public override void AddRecipes()
+        {
+            AddVanillaRecipes();
+            Recipe.Create(Type)
+                .AddIngredient(VanillaItemType)
+                .AddTile(TileID.WorkBenches)
+                .Register();
+        }
+
+        protected abstract void AddVanillaRecipes();
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DrawRedOutline(spriteBatch, TextureAssets.Item[Type].Value, position, origin, 0f, scale);
+            return true;
+        }
+
+        public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+        {
+            DrawRedOutline(spriteBatch, TextureAssets.Item[Type].Value, Item.Center - Main.screenPosition, TextureAssets.Item[Type].Size() * 0.5f, rotation, scale);
+            return true;
+        }
+
+        private static void DrawRedOutline(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Vector2 origin, float rotation, float scale)
+        {
+            Color outlineColor = Color.Red * 0.58f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 1.5f * scale;
+                spriteBatch.Draw(texture, position + offset, null, outlineColor, rotation, origin, scale, SpriteEffects.None, 0f);
+            }
         }
     }
 }

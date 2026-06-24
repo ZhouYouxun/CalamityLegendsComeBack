@@ -171,7 +171,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         {
             BlossomFluxChloroplastPresetType preset = Preset;
             Vector2 impactPosition = GetImpactPosition(target);
-            SpawnLeafImpactFX(impactPosition, preset, 1.05f);
+            SpawnLeafImpactFX(Projectile, impactPosition, preset, 1.05f);
 
             switch (preset)
             {
@@ -220,7 +220,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             if (Preset == BlossomFluxChloroplastPresetType.Chlo_DBomb)
-                SpawnLeafImpactFX(Projectile.Center, Preset, 0.72f);
+                SpawnLeafImpactFX(Projectile, Projectile.Center, Preset, 0.72f);
             else
                 SpawnLeafVanishFX(Projectile.Center, Preset, 0.72f);
 
@@ -347,7 +347,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                     enhanced ? 1f : 0f);
             }
 
-            SpawnLeafImpactFX(center, BlossomFluxChloroplastPresetType.Chlo_DBomb, markedTarget ? 1.8f : 1.35f);
+            SpawnLeafImpactFX(Projectile, center, BlossomFluxChloroplastPresetType.Chlo_DBomb, markedTarget ? 1.8f : 1.35f);
         }
 
         private void UpdateReconHoming()
@@ -572,9 +572,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             GeneralParticleHandler.SpawnParticle(trail);
         }
 
-        private void SpawnLeafImpactFX(Vector2 center, BlossomFluxChloroplastPresetType preset, float intensity)
+        internal static void SpawnLeafImpactFX(Projectile projectile, Vector2 center, BlossomFluxChloroplastPresetType preset, float intensity)
         {
-            BFArrowCommon.EmitPresetBurst(Projectile, preset, (int)(8 * intensity), 0.8f, 3.2f, 0.72f, 1.12f);
+            BFArrowCommon.EmitPresetBurst(projectile, preset, (int)(8 * intensity), 0.8f, 3.2f, 0.72f, 1.12f);
 
             if (Main.dedServ)
                 return;
@@ -591,10 +591,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center,
-                Projectile.velocity.SafeNormalize(Vector2.UnitX) * 0.6f,
+                projectile.velocity.SafeNormalize(Vector2.UnitX) * 0.6f,
                 Color.Lerp(mainColor, accentColor, 0.35f),
                 new Vector2(0.72f, 1.55f),
-                Projectile.velocity.ToRotation(),
+                projectile.velocity.ToRotation(),
                 0.12f * intensity,
                 0.032f,
                 11));

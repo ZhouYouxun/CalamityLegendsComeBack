@@ -235,10 +235,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 passives + "\n\n" +
                 currentMetalHeader + "\n" +
                 lineA + "\n" +
-                lineB + "\n\n" +
-                legendarySection;
+                lineB;
 
             tooltips.FindAndReplace("[GFB]", merged);
+            tooltips.Add(new TooltipLine(Mod, "LeonidProgenitorMeteorRainLegendaryText", legendarySection));
         }
 
         public override void PostDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)

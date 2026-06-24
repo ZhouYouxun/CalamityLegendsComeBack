@@ -28,5 +28,21 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             Main.npc[npc2].netUpdate = true;
             Twins2041State.spazmatism = npc2;
         }
+
+        protected override void AddVanillaRecipes()
+        {
+            RegisterRecipe(ItemID.IronBar);
+            RegisterRecipe(ItemID.LeadBar);
+        }
+
+        private void RegisterRecipe(int barType)
+        {
+            Recipe.Create(Type)
+                .AddIngredient(ItemID.Lens, 3)
+                .AddIngredient(barType, 5)
+                .AddIngredient(ItemID.SoulofLight, 7)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
+        }
     }
 }

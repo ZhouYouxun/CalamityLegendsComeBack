@@ -37,7 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
             Item.shoot = PanelType;
             Item.shootSpeed = 0f;
             Item.UseSound = null;
-            Item.value = 0;
+            Item.damage = 10000;
+            Item.DamageType = DamageClass.Generic;
+            Item.value = Item.sellPrice(gold: 25);
             Item.rare = ItemRarityID.Cyan;
             Item.Calamity().devItem = true;
         }
@@ -103,6 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
         private const int SlotGap = 6;
         private const int PanelPadding = 15;
         private const int DetailGap = 9;
+        private const int DetailHeight = SlotHeight * 2;
         private const int BorderThickness = 3;
         private const float MaxIconDrawSize = 42f;
 
@@ -124,6 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
         }
 
         private static int PanelWidth => PanelPadding * 2 + Columns * SlotWidth + (Columns - 1) * SlotGap;
+        private static int DetailWidth => Math.Min(SlotWidth * 2, Math.Max(SlotWidth, Main.screenWidth - PanelWidth - DetailGap - 24));
         private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
 
         public override void SetStaticDefaults()
@@ -331,7 +335,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
         private static Vector2 GetClampedPanelTopLeft(Vector2 desiredTopLeft, int panelHeight)
         {
             const float screenMargin = 12f;
-            int totalWidth = PanelWidth + DetailGap + SlotWidth;
+            int totalWidth = PanelWidth + DetailGap + DetailWidth;
             float maxX = Math.Max(screenMargin, Main.screenWidth - totalWidth - screenMargin);
             float maxY = Math.Max(screenMargin, Main.screenHeight - panelHeight - screenMargin);
 
@@ -357,7 +361,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
 
         private static Rectangle GetDetailArea(Rectangle panelArea, Rectangle selectedSlotArea)
         {
-            return new Rectangle(panelArea.Right + DetailGap, selectedSlotArea.Y, SlotWidth, SlotHeight);
+            int minY = panelArea.Top;
+            int maxY = Math.Max(minY, panelArea.Bottom - DetailHeight);
+            int y = Math.Clamp(selectedSlotArea.Center.Y - DetailHeight / 2, minY, maxY);
+            return new Rectangle(panelArea.Right + DetailGap, y, DetailWidth, DetailHeight);
         }
 
         private static void DrawPanel(Rectangle panelArea, float opacity)
@@ -427,8 +434,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.SHPCBook
             DrawRectangle(detailArea, backColor * (opacity * 0.96f));
             DrawBorder(detailArea, borderColor * opacity, 2);
 
-            Rectangle textArea = new(detailArea.X + 6, detailArea.Y + 4, detailArea.Width - 12, detailArea.Height - 8);
-            DrawFitText(GetAmmoEffectText(entry.EffectID), textArea, Color.White, 0.62f, 0.4f, opacity);
+            Rectangle textArea = new(detailArea.X + 12, detailArea.Y + 8, detailArea.Width - 24, detailArea.Height - 16);
+            DrawFitText(GetAmmoEffectText(entry.EffectID), textArea, Color.White, 1.24f, 0.8f, opacity);
         }
 
         private static void DrawAmmoIcon(SHPCBookEntry entry, Vector2 iconCenter, bool hovered, bool selected, int clickTimer, float opacity)

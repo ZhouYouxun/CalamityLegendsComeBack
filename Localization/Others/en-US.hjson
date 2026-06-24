@@ -45,7 +45,7 @@ Mods: {
 						'''
 				}
 
-				Strikers1945: {
+				STG: {
 					Tooltip:
 						'''
 						Hold this item to unfold a vertical retro shooter panel.
@@ -53,7 +53,7 @@ Mods: {
 						Destroy randomly incoming enemy aircraft to score. Enemy planes, enemy bullets, and collisions cost one life.
 						Enemies sometimes drop P upgrades that add extra shots and spread. Lose all three lives and it is game over. Press R to restart.
 						'''
-					DisplayName: "1945"
+					DisplayName: STG
 				}
 
 				SacredThunder: {
@@ -112,28 +112,31 @@ Mods: {
 				}
 
 				Prime2041Summoner: {
-					DisplayName: Ancient Mechanical Skull (Double-Head AI)
+					DisplayName: Strange Mechanical Skull
 					Tooltip:
 						'''
-						Summons the 2024 Calamity Skeletron Prime Master AI variant
+						Summons a Skeletron Prime from version 2.0.4.1
+						Only works when summoned in Master Mode
 						Only usable at night
 						'''
 				}
 
 				Destroyer2041Summoner: {
-					DisplayName: Ancient Mechanical Worm (2024 AI)
+					DisplayName: Strange Mechanical Worm
 					Tooltip:
 						'''
-						Summons the 2024 Calamity Destroyer AI variant
+						Summons a Destroyer from version 2.0.4.1
+						Only works when summoned in Master Mode
 						Only usable at night
 						'''
 				}
 
 				Twins2041Summoner: {
-					DisplayName: Ancient Mechanical Eye (2024 AI)
+					DisplayName: Strange Mechanical Lens
 					Tooltip:
 						'''
-						Summons the 2024 Calamity Twins AI variant
+						Summons the Twins from version 2.0.4.1
+						Only works when summoned in Master Mode
 						Only usable at night
 						'''
 				}
@@ -162,7 +165,7 @@ Mods: {
 				Game2048Panel.DisplayName: 2048 Board
 				SnakePanel.DisplayName: Snake Board
 				MinesweeperPanel.DisplayName: Minesweeper Board
-				Strikers1945Panel.DisplayName: 1945 Striker Board
+				STGPanel.DisplayName: STG Shooter Board
 				CTRLBossPanel.DisplayName: Boss Progress Panel
 				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
 				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
@@ -216,8 +219,8 @@ Mods: {
 			MinesweeperGameOver: GAME OVER
 			MinesweeperWin: You Win
 			MinesweeperRestart: Left-click to restart
-			Strikers1945GameOver: GAME OVER
-			Strikers1945Restart: Press R to restart
+			STGGameOver: GAME OVER
+			STGRestart: Press R to restart
 			CTRLBossDefeated: defeated
 			CTRLBossUndefeated: undefeated
 			CTRLBossStatusSet: "{0} has been set to {1}."

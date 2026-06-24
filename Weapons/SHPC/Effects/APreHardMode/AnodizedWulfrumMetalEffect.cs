@@ -111,16 +111,49 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center + direction * 4f - Main.screenPosition;
 
+            // BloomCircle has a black source background, so it must use additive blending.
+            // This follows WulfrumBolt's own primitive-drawing setup.
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Immediate,
+                BlendState.Additive,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix
+            );
             Main.spriteBatch.Draw(
                 bloom,
                 drawPosition,
                 null,
-                new Color(115, 255, 235) * 0.7f,
+                new Color(70, 215, 255) * 0.62f,
                 0f,
                 bloom.Size() / 2f,
-                0.085f,
+                0.125f,
                 SpriteEffects.None,
                 0f
+            );
+            Main.spriteBatch.Draw(
+                bloom,
+                drawPosition,
+                null,
+                Color.White * 0.85f,
+                0f,
+                bloom.Size() / 2f,
+                0.045f,
+                SpriteEffects.None,
+                0f
+            );
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                Main.DefaultSamplerState,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix
             );
 
             return false;

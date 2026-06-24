@@ -6,13 +6,24 @@ Mods: {
 					DisplayName: Hyperdimensional Matrix Core
 					Tooltip:
 						'''
-						[c/7EB8FF:Summons a Matrix Core; its damage increases with your minion slots]
+						[c/7EB8FF:Summons a Matrix Core; every minion slot it consumes grants 25% damage to all attacks]
 						[c/FF9040:Always locks onto the nearest enemy]
-						[c/FFEC40:Data Matrix · Geometric Projection · Geometric Satellite · Fluid Aggregation · Spatial Warp · Hyperdimensional Inscription]
 						[c/5880C0:Fortifies your body · reduces incoming damage · regenerates life · boosts movement speed · reduces aggro · extends flight time]
-						[c/FF3030:Overclocks all modules when health is critical; its passive data field continuously damages all nearby enemies]
-						[c/AA88FF:Non-homing projectiles deal double damage]
+						[c/FF3030:Overclocks all attack modules when health is critical]
+						[c/AA88FF:The Matrix Core completely occupies your minion slots]
 						[c/787888:"It is a pleasure working with you, two-dimensional organism."]
+						[c/9DA8B8:Hold Shift to view attack modes]
+						'''
+					AttackDetails:
+						'''
+						[c/7EB8FF:Data Matrix: Unfolds a data panel and launches tracking data lances at the target.]
+						[c/FF9040:Geometry Burst: Forms a geometric body, then erupts with sharp shards from its vertices.]
+						[c/FFEC40:Five-Element Orbiting Orbs: Five elemental energy orbs orbit and scorch the target.]
+						[c/5880C0:Fusion Explosion: Gathers energy before detonating it at the target.]
+						[c/AA88FF:Space Warp: Continuously warps and damages large enemies.]
+						[c/9DA8B8:Heptagram Inscription: Inscribes a seven-pointed sigil that fires shards and a tracking data lance.]
+						[c/FF3030:Persistent Data Field: Continuously erodes enemies that approach the core.]
+						[c/FFFFFF:Compile Storm: Activates all major attacks at once, then detonates a data singularity.]
 						'''
 				}
 			}

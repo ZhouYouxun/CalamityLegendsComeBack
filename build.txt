@@ -1,10 +1,10 @@
-displayName = CalamityLegendsComeBack
-author = 南鸢北笙&VectorChaos&剃刀刃台风
-version = 0.0.7
+displayName = CalamityLegendsComeBack [灾厄-传奇]
+author = 犽戎&剃刀刃台风
+version = 1.0.0
 hideCode = false
 hideResources = false
 includeSource = true
 modReferences = CalamityMod, VeluriyamLib
 sortAfter = CalamityMod
 homepage = https://github.com/ZhouYouxun/CalamityLegendsComeBack
-buildIgnore = *.zip, icon_small.png, Weapons/YharimsCrystal/Abandoned/*
+buildIgnore = *.zip*

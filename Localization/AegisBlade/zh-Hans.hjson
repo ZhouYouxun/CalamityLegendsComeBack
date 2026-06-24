@@ -16,8 +16,8 @@ Mods: {
 						[c/7FE886:埃癸斯] [c/DCD6C8:根据移动速度获得6~15点额外防御；静止时达到上限]
 						[c/7FE886:壁垒] [c/DCD6C8:无持续伤害减益时，接触类伤害降低20%，静止时效果翻倍]
 						[c/FFD700:传奇技能] [c/DCD6C8:能量满后按下传奇技能键，金色神手降临并赋予10秒完全无敌]
-						[c/BABABA:按住Shift键以读取记录]
 						'''
+					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
 					LegendaryText:
 						'''
 						[c/FFD966:在远古的战场上，曾有一位骑士，身披金甲，手持此刃。]
@@ -47,6 +47,8 @@ Mods: {
 			AegisUltimateHand.DisplayName: 金色神手
 			AegisEnergyUI.DisplayName: 庇护能量条
 			// LeonidUltimateUI.DisplayName: Leonid Ultimate U I
+			// IceShardProj.DisplayName: Ice Shard Proj
+			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 		}
 	}
 }

@@ -26,6 +26,7 @@
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Olds\MarniteBayonet\" />
 	  <Folder Include="Weapons\A_Tools\CTRLBoss\" />
+	  <Folder Include="Weapons\A_Tools\ShenGao\" />
 	  <Folder Include="Weapons\A_Upgrade\DragoonDrizzlefish\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BlossomFlux\Hold\" />

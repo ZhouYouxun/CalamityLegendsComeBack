@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private int shardIndex = -1;
         private bool chargedSoundPlayed;
         private bool heavyAttackQueued;
+        private bool leftHeldLastFrame;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
@@ -45,8 +46,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             EmitChargeFX();
             MaintainEmpoweredShard();
 
-            if (Projectile.owner == Main.myPlayer && WantsHeavyAttack())
-                heavyAttackQueued = true;
+            if (Projectile.owner == Main.myPlayer)
+            {
+                bool leftHeld = WantsHeavyAttack();
+                if (leftHeld && !leftHeldLastFrame)
+                {
+                    heavyAttackQueued = true;
+                    Projectile.netUpdate = true;
+                }
+                leftHeldLastFrame = leftHeld;
+            }
 
             // Spawn drones one by one at frames 10, 20, 30, 40, 50, 60
             if (Projectile.owner == Main.myPlayer)
@@ -171,17 +180,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         protected override bool IsRightHeld()
         {
-            // After all drones are deployed, left click also keeps the holdout alive
-            // so the player can release right click and press left click without the holdout dying first.
-            if (HoldFrameCounter >= 120 &&
-                Main.mouseLeft &&
+            return (Main.mouseRight || Owner.Calamity().mouseRight) &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
-                !Owner.mouseInterface)
-            {
-                return true;
-            }
-            return base.IsRightHeld();
+                !Owner.mouseInterface;
         }
 
         private bool WantsHeavyAttack()

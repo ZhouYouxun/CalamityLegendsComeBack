@@ -37,6 +37,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 {
     public class NewLegendSHPC : ModItem, ILocalizedModType
     {
+        private const string MagazineIconTooltipLineName = "SHPCMagazineIconStrip";
+
         #region ===== 基础信息与运行时状态 =====
 
         #region ===== 资源与本地化 =====
@@ -1427,16 +1429,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     string compactLoadingKeyText = GetSHPCLoadingUIKeyText(isChinese);
                     string compactAmmoEffectText = BuildCurrentAmmoEffectTooltipText();
 
-                    string compactText =
+                    string compactPrefix =
                         this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n') + "\n" +
                         string.Format(this.GetLocalizedValue("SHPC_LoadingUIHint"), compactLoadingKeyText).TrimEnd('\r', '\n') + "\n" +
-                        compactAmmoEffectText + "\n" +
+                        compactAmmoEffectText;
+
+                    string compactSuffix =
                         string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), compactFormKeyText).TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue($"SHPC_RightIntro{compactState + 1}").TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n') + "\n";
 
-                    tooltips.FindAndReplace("[GFB]", compactText);
+                    int placeholderIndex = tooltips.FindIndex(line => line.Text == "[GFB]");
+                    if (placeholderIndex >= 0)
+                    {
+                        tooltips[placeholderIndex].Text = compactPrefix;
+                        tooltips.Insert(placeholderIndex + 1, new TooltipLine(Mod, MagazineIconTooltipLineName, new string(' ', 96) + "\n "));
+                        tooltips.Insert(placeholderIndex + 2, new TooltipLine(Mod, "SHPCCompactTooltipRemainder", compactSuffix));
+                    }
                 }
                 else
                 {
@@ -1477,6 +1487,98 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
 
             tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName, legendarySection));
+        }
+
+        public override bool PreDrawTooltipLine(DrawableTooltipLine line, ref int yOffset)
+        {
+            if (line.Mod != Mod.Name || line.Name != MagazineIconTooltipLineName)
+                return true;
+
+            DrawMagazineIconTooltipLine(line);
+            return false;
+        }
+
+        private void DrawMagazineIconTooltipLine(DrawableTooltipLine line)
+        {
+            Player player = Main.LocalPlayer;
+            int slotCount = GetActiveMagazineCount(player);
+            float uiScale = line.BaseScale.X;
+            int iconSize = Math.Max(18, (int)(22f * uiScale));
+            int slotWidth = Math.Max(58, (int)(72f * uiScale));
+            int slotHeight = iconSize + Math.Max(13, (int)(14f * uiScale)) + 7;
+            int gap = Math.Max(7, (int)(10f * uiScale));
+            int y = (int)line.Y + 1;
+            int x = (int)line.X + 10;
+
+            for (int i = 0; i < slotCount; i++)
+            {
+                SHPCMagazineSlot slot = GetMagazineSlot(i, player);
+                Rectangle box = new(x + i * (slotWidth + gap), y, slotWidth, slotHeight);
+                Color frameColor = slot.Selected ? new Color(255, 221, 90) : new Color(126, 150, 176);
+
+                DrawTooltipRectangle(box, new Color(11, 16, 24, 220));
+                DrawTooltipBorder(box, frameColor, 1);
+
+                if (slot.IsConfigured)
+                {
+                    Texture2D texture = SHPCAmmoSelectionPanel.TryGetAmmoTexture(slot.EffectID, slot.AmmoType);
+                    if (texture != null)
+                    {
+                        Rectangle source = SHPCAmmoSelectionPanel.GetCurrentFrame(texture, SHPCAmmoSelectionPanel.GetFrameCount(slot.EffectID));
+                        Vector2 sourceSize = source.Size();
+                        float textureScale = Math.Min((iconSize - 4f) / Math.Max(1f, sourceSize.X), (iconSize - 4f) / Math.Max(1f, sourceSize.Y));
+                        Vector2 iconPosition = new(box.Center.X, box.Y + 3 + iconSize * 0.5f);
+                        Main.EntitySpriteDraw(texture, iconPosition, source, Color.White, 0f, sourceSize * 0.5f, textureScale, SpriteEffects.None, 0f);
+                    }
+                }
+
+                string materialName = slot.IsConfigured ? Lang.GetItemNameValue(slot.AmmoType) : "-";
+                DrawTooltipItemName(materialName, box, uiScale);
+
+                if (slot.Selected)
+                {
+                    DrawTooltipTriangle(new Point(box.Left - 6, box.Y + iconSize / 2 + 3), true, new Color(255, 221, 76));
+                    DrawTooltipTriangle(new Point(box.Right + 6, box.Y + iconSize / 2 + 3), false, new Color(255, 221, 76));
+                }
+            }
+        }
+
+        private static void DrawTooltipItemName(string text, Rectangle box, float uiScale)
+        {
+            const float baseScale = 0.42f;
+            float scale = baseScale * uiScale;
+            string displayText = text;
+            float maxWidth = box.Width - 6f;
+            while (displayText.Length > 1 && FontAssets.MouseText.Value.MeasureString(displayText).X * scale > maxWidth)
+                displayText = displayText[..^1];
+
+            if (displayText != text)
+                displayText += "…";
+
+            Vector2 size = FontAssets.MouseText.Value.MeasureString(displayText) * scale;
+            Vector2 position = new(box.Center.X - size.X * 0.5f, box.Bottom - size.Y - 2f);
+            CalamityUtils.DrawBorderStringEightWay(Main.spriteBatch, FontAssets.MouseText.Value, displayText, position, Color.White, Color.Black, scale);
+        }
+
+        private static void DrawTooltipTriangle(Point center, bool pointRight, Color color)
+        {
+            const int halfHeight = 4;
+            for (int column = 0; column <= halfHeight; column++)
+            {
+                int height = (halfHeight - column) * 2 + 1;
+                int x = pointRight ? center.X - halfHeight + column : center.X + halfHeight - column;
+                DrawTooltipRectangle(new Rectangle(x, center.Y - height / 2, 1, height), color);
+            }
+        }
+
+        private static void DrawTooltipRectangle(Rectangle rectangle, Color color) => Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, rectangle, color);
+
+        private static void DrawTooltipBorder(Rectangle rectangle, Color color, int thickness)
+        {
+            DrawTooltipRectangle(new Rectangle(rectangle.X, rectangle.Y, rectangle.Width, thickness), color);
+            DrawTooltipRectangle(new Rectangle(rectangle.X, rectangle.Bottom - thickness, rectangle.Width, thickness), color);
+            DrawTooltipRectangle(new Rectangle(rectangle.X, rectangle.Y, thickness, rectangle.Height), color);
+            DrawTooltipRectangle(new Rectangle(rectangle.Right - thickness, rectangle.Y, thickness, rectangle.Height), color);
         }
 
         private string GetSHPCLoadingUIKeyText(bool isChinese)

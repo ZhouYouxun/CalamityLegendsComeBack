@@ -71,7 +71,7 @@ Mods: {
 				}
 
 				SHPCBook: {
-					DisplayName: SHPC Material Manual
+					DisplayName: SHPC Codex Disc
 					Tooltip: Left click opens the SHPC material index. Right click opens the right-click heat system index.
 				}
 			}
@@ -96,12 +96,12 @@ Mods: {
 			}
 
 			CommandAscend: {
-				DisplayName: Mortar Transceiver
+				DisplayName: Gun Body Upgrade - Mortar
 				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
 			}
 
 			MilitaryCaller: {
-				DisplayName: Military Caller
+				DisplayName: Gun Body Upgrade - Turret
 				Tooltip:
 					'''
 					While holding SHPC, right click switches to Military Caller mode
@@ -167,7 +167,7 @@ Mods: {
 			}
 
 			ProjectilePossessionModule: {
-				DisplayName: Vacuum Cleaner
+				DisplayName: Gun Body Upgrade - Possession
 				Tooltip:
 					'''
 					While holding SHPC, right click switches to projectile possession mode

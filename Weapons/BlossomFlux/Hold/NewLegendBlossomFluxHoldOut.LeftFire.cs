@@ -415,8 +415,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 : ModContent.ProjectileType<BFLeftPlagueReaper>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 origin = GunTipPosition;
-            float speedMultiplier = GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_EPlague);
-            float shotSpeed = Math.Max(speed, BFAccessories.BlightSpewerQuiverEquipped ? 7f : 12.5f) * (BFAccessories.BlightSpewerQuiverEquipped ? 0.62f : 0.92f) * speedMultiplier;
+            float shotSpeed = Math.Max(speed, BFAccessories.BlightSpewerQuiverEquipped ? 7f : 12.5f) * (BFAccessories.BlightSpewerQuiverEquipped ? 0.62f : 0.92f);
             Vector2 shootVelocity = baseDirection.RotatedBy(Main.rand.NextFloat(-0.05f, 0.05f)) * shotSpeed;
             Vector2 spawnPosition = origin + baseDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-4f, 4f);
 
@@ -506,8 +505,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Vector2 finalVelocity = velocity;
             if (preset == BlossomFluxChloroplastPresetType.Chlo_ABreak && !convertToLeaf)
                 finalVelocity *= 0.7f;
-
-            finalVelocity *= GetAccessoryArrowSpeedMultiplier(preset, convertToLeaf);
 
             int projectileIndex = Projectile.NewProjectile(source, spawnPosition, finalVelocity, finalProjectileType, damage, knockback, Owner.whoAmI, ai0);
             if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))

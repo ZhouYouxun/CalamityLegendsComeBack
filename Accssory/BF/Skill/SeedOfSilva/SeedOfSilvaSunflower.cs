@@ -1,8 +1,10 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -36,6 +38,26 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             flashTimer = System.Math.Max(flashTimer, 14);
         }
 
+        public void TriggerAssaultImpact(Projectile triggeringProjectile)
+        {
+            if (Main.dedServ)
+                return;
+
+            TriggerFlash();
+            BFLeafProj.SpawnLeafImpactFX(
+                triggeringProjectile,
+                Projectile.Center,
+                BlossomFluxChloroplastPresetType.Chlo_ABreak,
+                1.15f);
+
+            if (triggeringProjectile.owner == Main.myPlayer)
+            {
+                SoundEngine.PlaySound(
+                    BlossomFluxSounds.LeftBreakthroughProjKill with { Volume = 0.38f, Pitch = 0.12f },
+                    Projectile.Center);
+            }
+        }
+
         protected override void UpdateCommon(Player owner, BFAccessoryPlayer accessoryPlayer)
         {
             if (flashTimer > 0)
@@ -44,7 +66,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (IsBlooming)
+            if (VisualBloomProgress > 0f)
                 DrawBloomRing();
 
             return base.PreDraw(ref lightColor);
@@ -57,7 +79,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
             float timePulse = 0.93f + 0.07f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 2.6f + Projectile.identity);
             float flashIntensity = flashTimer > 0 ? Utils.GetLerpValue(0f, 14f, flashTimer, true) : 0f;
-            float ringRadius = SunflowerRingRadius * timePulse;
+            float visualOpacity = Projectile.Opacity * VisualBloomProgress;
+            float ringRadius = SunflowerRingRadius * timePulse * MathHelper.Lerp(0.35f, 1f, VisualBloomProgress);
 
             Color ringColor = FlowerColor with { A = 0 };
             Color accentColor = FlowerAccentColor with { A = 0 };
@@ -69,7 +92,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             int segments = 32;
             float segScale = ringRadius * MathHelper.TwoPi / (segments * bloom.Width) * 2.2f;
             float baseAlpha = 0.52f + flashIntensity * 0.55f;
-            Color segColor = Color.Lerp(ringColor, accentColor, 0.28f + flashIntensity * 0.45f) * (baseAlpha * Projectile.Opacity);
+            Color segColor = Color.Lerp(ringColor, accentColor, 0.28f + flashIntensity * 0.45f) * (baseAlpha * visualOpacity);
 
             for (int i = 0; i < segments; i++)
             {
@@ -81,7 +104,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             // Inner brighter accent ring at 82% radius
             float innerRadius = ringRadius * 0.82f;
             float innerSegScale = innerRadius * MathHelper.TwoPi / (segments * bloom.Width) * 1.5f;
-            Color innerColor = Color.Lerp(ringColor, Color.White, 0.2f) with { A = 0 } * (0.28f * Projectile.Opacity);
+            Color innerColor = Color.Lerp(ringColor, Color.White, 0.2f) with { A = 0 } * (0.28f * visualOpacity);
             for (int i = 0; i < segments; i++)
             {
                 float angle = MathHelper.TwoPi * i / segments + 0.05f;
@@ -89,10 +112,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 Main.EntitySpriteDraw(bloom, pos, null, innerColor, 0f, bloom.Size() * 0.5f, innerSegScale, SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(bloom, center, null, ringColor * (0.18f * Projectile.Opacity * timePulse), 0f, bloom.Size() * 0.5f, 0.24f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, center, null, ringColor * (0.18f * visualOpacity * timePulse), 0f, bloom.Size() * 0.5f, 0.24f, SpriteEffects.None, 0);
 
             if (flashIntensity > 0f)
-                Main.EntitySpriteDraw(bloom, center, null, accentColor * (flashIntensity * 0.58f * Projectile.Opacity), 0f, bloom.Size() * 0.5f, 0.36f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, center, null, accentColor * (flashIntensity * 0.58f * visualOpacity), 0f, bloom.Size() * 0.5f, 0.36f, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);

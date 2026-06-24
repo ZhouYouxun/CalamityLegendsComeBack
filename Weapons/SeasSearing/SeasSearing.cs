@@ -119,10 +119,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 left + "\n" +
                 right + "\n" +
                 passive + "\n" +
-                ultimate + "\n\n" +
-                legendarySection + "\n";
+                ultimate + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, "SeasSearingAbyssalPollutionLegendaryText", legendarySection));
         }
 
         public override void AddRecipes()

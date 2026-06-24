@@ -1,103 +1,159 @@
+[h1]Calamity Legends Come Back[/h1]
 
+[h2]灾厄：传奇归来[/h2]
 
+[quote]传奇不该在流程中被遗忘，也不该只是一串更大的数字。[/quote]
 
+这是一个面向 Calamity Mod 的传奇武器重制模组。
 
-请输入文本
-请输入文本
-请输入文本
-请输入文本
+我们将早期版本中淡出流程的传奇武器重新带回游戏，并赋予它们应有的身份：一把能够陪伴玩家走过漫长旅途、不断改变玩法的武器。
 
-在发布之前，请务必检查这些事：
-是否有删除多余的残余文件
-是否有删除ilspy文件夹
-是否把所有传奇武器的本地化和来源写的好
-封面是否做好
+[code]Legendary Weapon = Progression + New Mechanics + New Ways to Fight[/code]
 
-请输入文本
-请输入文本
-请输入文本
-请输入文本
-请输入文本
+[hr][/hr]
 
+[h2]不只是数值成长[/h2]
 
+这不是把旧武器套进模板、再在每个阶段增加一组伤害数字。
 
+[strike]单纯的数值堆叠[/strike] [b]机制与战斗方式的成长[/b]
 
+随着游戏进度推进，传奇武器不仅会获得更高的伤害，也会逐步解锁新的攻击形态、技能机制与战斗逻辑。每次成长都应当带来新的选择、节奏或操作，而不只是让同一种攻击打得更痛。
 
+[list]
+[*][b]恢复传奇身份：[/b]重制并回归早期版本的传奇武器体验。
+[*][b]非数值提升：[/b]流程推进会带来新的攻击方式与技能，而非只提升面板。
+[*][b]持续的新鲜感：[/b]同一把武器在不同阶段拥有不同的战斗体验。
+[*][b]全流程定位：[/b]目标是让传奇武器能够跨越多个阶段，而不是很快被替换。
+[*][b]表现力重制：[/b]弹幕、特效、贴图与命中反馈都会围绕“传奇”重新塑造。
+[/list]
 
+[spoiler][i]有些成长不会直接写在伤害数字上，而会在你真正把武器拿起来使用时显现。[/i][/spoiler]
 
+[h2]战斗方式[/h2]
 
+不同传奇武器会拥有各自的机制与输入设计。根据武器特性，战斗可包含：
 
+[olist]
+[*]左键主攻击与连段
+[*]右键独立技能或形态
+[*]左、右键组合操作
+[*]冲刺键与特殊技能键互动
+[*]随流程解锁的攻击形态与资源循环
+[/olist]
 
+[h3]成长理念[/h3]
 
+[table equalcells=1]
+[tr][th]流程阶段[/th][th]成长内容[/th][th]玩家感受[/th][/tr]
+[tr][td]早期[/td][td]明确武器核心与基础操作[/td][td]易于上手，建立战斗节奏[/td][/tr]
+[tr][td]中期[/td][td]扩展攻击形态、技能与资源交互[/td][td]开始拥有更多战术选择[/td][/tr]
+[tr][td]后期[/td][td]深化机制组合与完整战斗体系[/td][td]武器成为成熟而独特的玩法[/td][/tr]
+[/table]
 
-[h1]欢迎游玩 Calamity Legends Come Back（灾厄：传奇归来）！[/h1]
+[hr][/hr]
 
-[h1]Mod介绍[/h1]
+[h2]当前开发内容[/h2]
 
-本MOD旨在重构并回归早期版本中被移除的“传奇武器”系统。
+本模组仍在持续开发。以下传奇武器或配套内容已加入、正在重做，或处于后续开发计划中；具体完成度请以游戏内版本为准：
 
-在过去的版本中，传奇武器拥有独特的成长机制——
-它们不会随着流程被淘汰，而是伴随玩家的进度不断增强，使其能够贯穿整个游戏流程。
+[list]
+[*]SHPC
+[*]Blossom Flux
+[*]Yharim's Crystal
+[*]Briny Baron
+[*]Vesuvius
+[*]Pristine Fury
+[*]Malachite
+[/list]
 
-然而，由于平衡性问题，这一系统被移除，传奇武器也逐渐失去了原本的意义。
+[u]当前重点[/u]是让每一把完成的传奇武器都先拥有明确、完整、可反复游玩的成长体验，再继续扩展阵容。
 
-本Mod将这些武器重新带回游戏，但不再采用简单的数值成长方式。
+[h2]依赖与反馈[/h2]
 
-取而代之的是：随着游戏进度推进，逐步解锁全新的攻击方式、技能机制与战斗逻辑。
+需要：[b]Calamity Mod[/b] 与 [b]VeluriyamLib[/b]。
 
-每一个阶段，都不仅仅是变强，而是带来一种“全新的使用体验”。
+模组仍会继续调整平衡、特效与机制。欢迎在创意工坊评论区反馈体验、问题与建议。
 
-—— 传奇，不该只是数值的堆叠 ——
+[url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]Source Code / 项目源码[/url]
 
+[hr][/hr]
 
-[h1]核心特色[/h1]
+[h1]English Version[/h1]
 
-• 传奇武器重制 —— 全部武器为完整重做，而非复刻  
-• 贴图重制 —— 部分武器老旧的贴图可能将会被重绘
-• 机制成长系统 —— 解锁技能，而非单纯数值提升  
-• 多操作体系 —— 左键 / 右键 / 左键+右键 / 右键+左键 / 冲刺键 / 特殊技能键构成立体战斗  
-• 全流程适配 —— 一把武器贯穿整个游戏阶段，能够应对所有可能的威胁
-• 持续新鲜感 —— 每个阶段都拥有新的玩法变化，确保武器攻击方式不是一成不变
+[h2]Calamity Legends Come Back[/h2]
 
+[quote]Legends should not be forgotten during progression, nor reduced to larger numbers.[/quote]
 
-[h1]当前版本内容[/h1]
+Calamity Legends Come Back is a legendary-weapon rework mod for Calamity Mod.
 
-第1把：✔ 传奇武器：SHPC（完全重制）
+It brings back legendary weapons that faded from earlier versions and restores their intended identity: weapons that can accompany a player through a long journey while continually changing how they play.
 
-SHPC是一把围绕“能量与物质转化”构建的复合型武器系统：
+[code]Legendary Weapon = Progression + New Mechanics + New Ways to Fight[/code]
 
-• 支持多种材料作为弹药来源  
-• 每种材料对应独立行为与特效  
-• 左键：主武器系统（弹药驱动 + 成长曲线）  
-• 右键：独立技能系统（随阶段逐步解锁）  
-• 完整成长体系覆盖整个游戏流程  
+[hr][/hr]
 
-随着进度推进，SHPC将不断解锁新的攻击形态与战斗方式，
-从单一武器逐步演化为完整的战斗系统。
+[h2]More Than Numerical Scaling[/h2]
 
+This is not a template that merely increases a weapon's damage at each stage.
 
-[h1]开发计划[/h1]
+[strike]Numbers alone[/strike] [b]New mechanics and new combat expression[/b]
 
-后续将逐步重制并加入全部传奇武器（预计共12把）。
+As progression advances, legendary weapons gain damage [i]and[/i] unlock new attack forms, abilities, and combat logic. Each upgrade is meant to create a new choice, rhythm, or input pattern instead of simply making the same attack hit harder.
 
+[list]
+[*][b]Legendary identity restored:[/b] Earlier legendary weapon experiences are rebuilt and returned.
+[*][b]Non-numerical upgrades:[/b] Progress unlocks new attacks and abilities, not only better stats.
+[*][b]Lasting freshness:[/b] The same weapon plays differently across stages of progression.
+[*][b]Progression-spanning design:[/b] Legendary weapons are intended to remain meaningful across multiple stages.
+[*][b]Presentation rebuilt:[/b] Projectiles, effects, textures, and combat feedback are remade around the idea of a legend.
+[/list]
 
-[h1]关于Mod[/h1]
+[spoiler][i]Some upgrades are not visible in the damage number. They reveal themselves when you put the weapon to use.[/i][/spoiler]
 
-本Mod仍在持续开发中，平衡性尚未完全稳定。
+[h2]How You Fight[/h2]
 
-本Mod更侧重玩法设计与表现力，而非严格数值平衡。
+Each legendary weapon has its own mechanics and input design. Depending on the weapon, combat can include:
 
-如发现问题或有改进建议，欢迎反馈。
+[olist]
+[*]Primary attacks and attack chains
+[*]Independent right-click abilities or forms
+[*]Left- and right-click combinations
+[*]Dash-key and special-skill-key interactions
+[*]Attack forms and resource loops unlocked by progression
+[/olist]
 
+[h3]Growth Philosophy[/h3]
 
-[h1]反馈与建议[/h1]
+[table equalcells=1]
+[tr][th]Progression Stage[/th][th]What Grows[/th][th]How It Feels[/th][/tr]
+[tr][td]Early[/td][td]Clear core identity and foundational inputs[/td][td]Accessible and rhythm-building[/td][/tr]
+[tr][td]Midgame[/td][td]Expanded attack forms, abilities, and resource interactions[/td][td]More tactical choices[/td][/tr]
+[tr][td]Late game[/td][td]Deeper mechanic combinations and a complete combat system[/td][td]A mature, distinct playstyle[/td][/tr]
+[/table]
 
-欢迎在评论区提出建议与反馈。
+[hr][/hr]
 
+[h2]Current Development[/h2]
 
-[h1]致谢[/h1]
+The mod is under active development. The following legendary weapons or supporting content have been added, are being reworked, or are planned for future development. Please treat the in-game build as the source of truth for completion status:
 
-感谢所有参与测试与提出建议的玩家。
+[list]
+[*]SHPC
+[*]Blossom Flux
+[*]Yharim's Crystal
+[*]Briny Baron
+[*]Vesuvius
+[*]Pristine Fury
+[*]Malachite
+[/list]
 
+[u]Current priority:[/u] make every completed legendary weapon feel coherent, complete, and replayable before expanding the roster further.
 
-————————————————————————————————
+[h2]Requirements and Feedback[/h2]
+
+Requires [b]Calamity Mod[/b] and [b]VeluriyamLib[/b].
+
+Balance, visual effects, and mechanics will continue to evolve. Feedback, bug reports, and gameplay impressions are welcome in the Workshop comments.
+
+[url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]Source Code / Project Repository[/url]
