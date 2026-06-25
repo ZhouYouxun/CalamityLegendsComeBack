@@ -103,8 +103,9 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
                 Projectile.NewProjectile(source, player.Center, Vector2.Zero, ModContent.ProjectileType<IceBlockMinion>(), damage, knockback, player.whoAmI);
             }
 
-            // 4. 判定是否达到仆从上限
-            if (occupiedSlots >= player.maxMinions)
+            // 4. 判定是否达到仆从上限。斩击形态一次召唤一对 0.5 栏位大小冰钉。
+            float summonCost = 1f;
+            if (occupiedSlots + summonCost > player.maxMinions + 0.001f)
             {
                 // 已达上限，开始左键蓄力特殊攻击
                 if (player.ownedProjectileCounts[ModContent.ProjectileType<GlacialEmbraceChargeHoldout>()] == 0)
@@ -114,12 +115,15 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             }
             else
             {
-                // 未达上限，召唤正常的围绕冰刺弹幕
-                int spike = Projectile.NewProjectile(source, player.ClampedMouseWorld(), Vector2.Zero, ModContent.ProjectileType<IceSpikeMinion>(), damage, knockback, player.whoAmI);
-                if (Main.projectile.IndexInRange(spike))
+                float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+                if (modPlayer.CurrentMode == 0)
                 {
-                    Main.projectile[spike].originalDamage = Item.damage;
-                    Main.projectile[spike].minionSlots = (modPlayer.CurrentMode == 0) ? 0.5f : 1.0f;
+                    SpawnSpike(source, player, damage, knockback, baseAngle, 0f, 0.5f);
+                    SpawnSpike(source, player, damage, knockback, baseAngle + MathHelper.Pi, 1f, 0.5f);
+                }
+                else
+                {
+                    SpawnSpike(source, player, damage, knockback, baseAngle, 0f, 1f);
                 }
 
                 // 重新排布环绕角度
@@ -127,6 +131,88 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             }
 
             return false;
+        }
+
+        private void SpawnSpike(EntitySource_ItemUse_WithAmmo source, Player player, int damage, float knockback, float angle, float slashRole, float slots)
+        {
+            int spike = Projectile.NewProjectile(source, player.ClampedMouseWorld(), Vector2.Zero,
+                ModContent.ProjectileType<IceSpikeMinion>(), damage, knockback, player.whoAmI, angle, slashRole);
+            if (Main.projectile.IndexInRange(spike))
+            {
+                Main.projectile[spike].originalDamage = Item.damage;
+                Main.projectile[spike].minionSlots = slots;
+            }
+        }
+
+        public static void SyncSpikesForMode(Player player)
+        {
+            int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
+            var spikes = new List<Projectile>();
+            foreach (Projectile pro in Main.ActiveProjectiles)
+            {
+                if (pro.active && pro.type == spikeType && pro.owner == player.whoAmI)
+                    spikes.Add(pro);
+            }
+
+            var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
+            if (modPlayer.CurrentMode == 0)
+            {
+                var baseSpikes = new List<Projectile>();
+                foreach (Projectile pro in spikes)
+                {
+                    if (pro.ModProjectile is not IceSpikeMinion spike)
+                        continue;
+
+                    spike.ResetForModeChange(0);
+                    pro.minionSlots = 0.5f;
+                    if (!spike.IsLargeSlashSpike)
+                        baseSpikes.Add(pro);
+                }
+
+                float occupiedSlots = 0f;
+                foreach (Projectile pro in Main.ActiveProjectiles)
+                {
+                    if (pro.active && pro.minion && pro.owner == player.whoAmI)
+                        occupiedSlots += pro.minionSlots;
+                }
+
+                var source = player.GetSource_FromThis();
+                foreach (Projectile pro in baseSpikes)
+                {
+                    if (occupiedSlots + 0.5f > player.maxMinions + 0.001f)
+                        break;
+
+                    int twin = Projectile.NewProjectile(source, pro.Center, Vector2.Zero, spikeType,
+                        pro.damage, pro.knockBack, player.whoAmI, pro.ai[0] + MathHelper.Pi, 1f);
+                    if (Main.projectile.IndexInRange(twin))
+                    {
+                        Main.projectile[twin].originalDamage = pro.originalDamage;
+                        Main.projectile[twin].minionSlots = 0.5f;
+                        occupiedSlots += 0.5f;
+                    }
+                }
+            }
+            else
+            {
+                foreach (Projectile pro in spikes)
+                {
+                    if (pro.ModProjectile is not IceSpikeMinion spike)
+                        continue;
+
+                    if (spike.IsLargeSlashSpike && pro.minionSlots <= 0.5f)
+                    {
+                        pro.Kill();
+                        continue;
+                    }
+
+                    spike.ResetForModeChange(modPlayer.CurrentMode);
+                    pro.ai[1] = 0f;
+                    pro.minionSlots = 1f;
+                    pro.netUpdate = true;
+                }
+            }
+
+            RearrangeSpikes(player);
         }
 
         public static void RearrangeSpikes(Player player)
@@ -152,16 +238,20 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
             if (modPlayer.CurrentMode == 0)
             {
-                // 斩击模式：冰刺分裂成两个对立的冰刺
-                float angleVariance = MathHelper.TwoPi / count;
-                float angle = 0f;
+                // 斩击模式：每个逻辑冰钉拆成一小一大两个对置轨道。
+                int pairCount = Math.Max(1, (count + 1) / 2);
                 for (int i = 0; i < count; i++)
                 {
                     Projectile pro = circlingSpikes[i];
-                    pro.ai[0] = angle;
-                    pro.ai[1] = (i % 2 == 0) ? 0f : 1f; // 0 = inner (small), 1 = outer (large)
+                    bool large = i % 2 == 1;
+                    int pairIndex = i / 2;
+                    float baseAngle = MathHelper.Pi * pairIndex / pairCount;
+                    pro.ai[0] = baseAngle + (large ? MathHelper.Pi : 0f);
+                    pro.ai[1] = large ? 1f : 0f;
+                    pro.minionSlots = 0.5f;
+                    if (pro.ModProjectile is IceSpikeMinion spike)
+                        spike.SetSpikeIndex(i);
                     pro.netUpdate = true;
-                    angle += angleVariance;
                 }
             }
             else
@@ -174,6 +264,9 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
                     Projectile pro = circlingSpikes[i];
                     pro.ai[0] = angle;
                     pro.ai[1] = 0f; // 重置为默认
+                    pro.minionSlots = 1f;
+                    if (pro.ModProjectile is IceSpikeMinion spike)
+                        spike.SetSpikeIndex(i);
                     pro.netUpdate = true;
                     angle += angleVariance;
                 }

@@ -72,9 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                     var spike = p.ModProjectile as IceSpikeMinion;
                     if (spike != null && spike.embedded && spike.embedNPCIndex == target.whoAmI)
                     {
-                        // 贯穿方向为钉入偏移矢量的朝向
-                        Vector2 thrustDir = spike.embedOffset.SafeNormalize(Vector2.UnitY);
-                        spike.PierceThrust(thrustDir);
+                        spike.PierceThrust(Vector2.Zero);
                     }
                 }
             }

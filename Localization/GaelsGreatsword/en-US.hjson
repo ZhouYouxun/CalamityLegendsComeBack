@@ -1,0 +1,45 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendGaelsGreatsword: {
+					DisplayName: Gael's Greatsword
+					Tooltip: "[GFB]"
+					FunctionalTooltip:
+						'''
+						[c/FFD966:Left Click] [c/DCD6C8:Custom greatsword swings slightly faster than Aegis Blade; later progression allows more frequent true-melee repeat hits]
+						[c/8DB8FF:Right Click] [c/DCD6C8:Sacrificial Plunge: leap toward the cursor for heavy damage; for 45 frames after use, your next left click becomes a horizontal cleave]
+						[c/7B5CFF:Dark Soul] [c/DCD6C8:Before Hardmode, steadily restores Calamity Rage and grants slow fall; boss progression upgrades it into short flight]
+						[c/A01A2A:Blood and Fire] [c/DCD6C8:At 50% life or lower, or at 75% Rage or higher, gain Dark Blood; left-click hit windows consume life for increased damage]
+						[c/A01A2A:Dark Blood] [c/DCD6C8:Lasts 3 seconds after leaving its trigger threshold]
+						[c/7B5CFF:Dark Humanity] [c/DCD6C8:At 50% life or lower, gain Rage and greatly increased melee speed; after Hardmode, this is Gael's only Rage source]
+						[c/FFD700:Finisher] [c/DCD6C8:After the Wall of Flesh, no Legendary Emblem is required; press the Calamity Rage key {0} to spin the cloak and release homing blood skulls]
+						'''
+					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					LegendaryText:
+						'''
+						[c/8B6CFF:A slave knight was not born great.]
+						[c/8B6CFF:Only an old greatsword, a ruined cloak, and the will to walk to the end of the world.]
+						[c/8B6CFF:Here, that end is set after the Wall of Flesh — because Terraria once ended there too.]
+						[c/A01A2A:Blood and fire do not make him noble. They only keep him moving.]
+						'''
+					FinisherLocked: Gael reaches the end of the world only after the Wall of Flesh
+				}
+			}
+		}
+
+		Projectiles: {
+			GaelGreatswordSwingHoldout.DisplayName: Gael Greatsword Swing
+			GaelGreatswordPlungeHoldout.DisplayName: Sacrificial Plunge
+			GaelGreatswordCapeFinisher.DisplayName: Dark Soul Cloak
+			GaelGreatswordDarkSoul.DisplayName: Blood Skull
+		}
+
+		Buffs: {
+			GaelGreatswordBlackBlood: {
+				DisplayName: Dark Blood
+				Description: Left-click attacks spend life for increased damage
+			}
+		}
+	}
+}

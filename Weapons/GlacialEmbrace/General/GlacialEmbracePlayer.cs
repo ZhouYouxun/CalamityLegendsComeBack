@@ -21,6 +21,9 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         // 核心被动与增益状态
         public bool GlacialEmbraceMinion = false;
         public int CurrentMode = 0; // 0 = 斩击 (Slash), 1 = 突刺 (Pierce), 2 = 打击 (Strike)
+        public int ModeTimer = 0;
+        public const int ModeDuration = 600; // 10 秒自动轮换到下一组攻击方式
+        public int FramesUntilModeSwitch => Math.Max(0, ModeDuration - ModeTimer);
         public int UltimateCharge = 0; // 充能上限 240
         public const int MaxUltimateCharge = 240;
 
@@ -79,16 +82,23 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
         public override void PreUpdate()
         {
-            if (Player.HeldItem.type != ModContent.ItemType<GlacialEmbrace>())
+            bool holdingWeapon = Player.HeldItem.type == ModContent.ItemType<GlacialEmbrace>();
+            if (!GlacialEmbraceMinion)
             {
-                // 未持有此武器时，清空相关临时 Buff 状态，但不立即清空 UltimateCharge 以免切武器丢物
                 ComboCount = 0;
                 QteActive = false;
                 AuroraMelodyTimer = 0;
                 GlacialDivinityTimer = 0;
                 StrikeAligned = false;
                 StrikeAlignCooldown = 0;
+                ModeTimer = 0;
                 return;
+            }
+
+            if (!holdingWeapon)
+            {
+                ComboCount = 0;
+                QteActive = false;
             }
 
             // 动态调整形态导致的召唤物栏位超出限制强制执行清理
@@ -97,6 +107,15 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             // 被动计时器更新
             if (AuroraMelodyTimer > 0) AuroraMelodyTimer--;
             if (GlacialDivinityTimer > 0) GlacialDivinityTimer--;
+
+            // 召唤物攻击方式自动轮换。蓄力特殊攻击期间暂停，避免刚松手就切组。
+            bool chargingSpecial = Player.ownedProjectileCounts[ModContent.ProjectileType<GlacialEmbraceChargeHoldout>()] > 0;
+            if (!chargingSpecial)
+            {
+                ModeTimer++;
+                if (ModeTimer >= ModeDuration)
+                    AdvanceMode(false);
+            }
 
             // 打击形态对齐计时器更新
             if (CurrentMode == 2 && GlacialEmbraceMinion)
@@ -131,13 +150,13 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             }
 
             // 检测模式切换按键
-            if (KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed == true)
+            if (holdingWeapon && KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed == true)
             {
                 HandleModeSwitchKey();
             }
 
             // 检测终结技释放按键
-            if (KeybindSystem.LegendarySkill?.JustPressed == true && UltimateCharge >= MaxUltimateCharge)
+            if (holdingWeapon && KeybindSystem.LegendarySkill?.JustPressed == true && UltimateCharge >= MaxUltimateCharge)
             {
                 TriggerUltimateAbility();
             }
@@ -205,22 +224,18 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
                 QteType = 0;
             }
 
-            // 切换模式并播放音效
-            CurrentMode = (CurrentMode + 1) % 3;
-            SoundEngine.PlaySound(SoundID.Item22 with { Pitch = 0.3f, Volume = 0.6f }, Player.Center);
+            AdvanceMode(true);
+        }
 
-            // 给附近的冰刺弹幕通知模式切换，更新槽位占用，并重排角度
-            int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile p = Main.projectile[i];
-                if (p.active && p.owner == Player.whoAmI && p.type == spikeType)
-                {
-                    p.minionSlots = (CurrentMode == 0) ? 0.5f : 1.0f;
-                    p.netUpdate = true;
-                }
-            }
-            GlacialEmbrace.RearrangeSpikes(Player);
+        private void AdvanceMode(bool manual)
+        {
+            CurrentMode = (CurrentMode + 1) % 3;
+            ModeTimer = 0;
+            StrikeAligned = false;
+            StrikeAlignCooldown = CurrentMode == 2 ? 120 : 0;
+
+            GlacialEmbrace.SyncSpikesForMode(Player);
+            SoundEngine.PlaySound(SoundID.Item22 with { Pitch = manual ? 0.35f : 0.05f, Volume = manual ? 0.65f : 0.45f }, Player.Center);
         }
 
         public void TriggerQteSuccess()
@@ -307,8 +322,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             var targets = candidates.OrderBy(x => rand.Next()).Take(count);
             foreach (var spike in targets)
             {
-                Vector2 thrustDir = spike.embedOffset.SafeNormalize(Vector2.UnitY);
-                spike.PierceThrust(thrustDir);
+                spike.PierceThrust(Vector2.Zero);
             }
         }
 

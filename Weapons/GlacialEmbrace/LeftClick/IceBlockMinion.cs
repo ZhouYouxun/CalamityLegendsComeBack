@@ -174,6 +174,22 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 string chargeText = $"{modPlayer.UltimateCharge} / {GlacialEmbracePlayer.MaxUltimateCharge}";
                 Utils.DrawBorderStringFourWay(Main.spriteBatch, FontAssets.MouseText.Value, chargeText, headPos.X - 25, headPos.Y - 18, Color.Cyan, Color.Black, Vector2.Zero, 0.75f);
 
+                // 1.25. 绘制当前攻击组与自动切换倒计时
+                string[] modeNames = ["斩击", "突刺", "打击"];
+                Color[] modeColors = [new Color(80, 220, 255), new Color(150, 235, 255), new Color(255, 190, 120)];
+                int nextMode = (modPlayer.CurrentMode + 1) % 3;
+                float modeProgress = MathHelper.Clamp((float)modPlayer.ModeTimer / GlacialEmbracePlayer.ModeDuration, 0f, 1f);
+                int modeSeconds = Math.Max(0, (int)Math.Ceiling(modPlayer.FramesUntilModeSwitch / 60f));
+                Vector2 modeBarPos = barPos + new Vector2(0f, 18f);
+
+                Main.spriteBatch.Draw(barBG, modeBarPos, new Color(35, 45, 65) * 0.9f);
+                Rectangle modeFrame = new Rectangle(0, 0, (int)(modeProgress * barFG.Width), barFG.Height);
+                Main.spriteBatch.Draw(barFG, modeBarPos, modeFrame, modeColors[modPlayer.CurrentMode] * 0.9f);
+
+                string modeText = $"{modeNames[modPlayer.CurrentMode]} > {modeNames[nextMode]}  {modeSeconds}s";
+                Utils.DrawBorderStringFourWay(Main.spriteBatch, FontAssets.MouseText.Value, modeText,
+                    headPos.X - 39, headPos.Y + 1, modeColors[modPlayer.CurrentMode], Color.Black, Vector2.Zero, 0.72f);
+
                 // 1.5. 如果是打击模式对齐状态且冷却完毕，绘制“对齐指示线”
                 if (modPlayer.CurrentMode == 2 && modPlayer.StrikeAligned)
                 {

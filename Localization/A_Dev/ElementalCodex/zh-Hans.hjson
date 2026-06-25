@@ -1,0 +1,99 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Accessories: {
+				ElementalCodex: {
+					DisplayName: 元素法典
+					Tooltip:
+						'''
+						拥有魔力花与魔力磁铁的效果，魔法伤害提高 8%
+						命中敌人时为登记过的魔法武器附加元素；两种元素相遇会触发反应
+						[c/9DA8B8:装备后，登记武器的提示栏会显示元素类型；按住 Shift 查看规则]
+						'''
+					ShiftDetails:
+						'''
+						[c/9FD8FF:规则] 第一个元素会在敌人身上保留一段时间；第二个不同元素命中时，两者抵消并触发反应，随后进入随流程缩短的全局反应冷却。
+						[c/FF6A3C:火]+[c/62B8FF:水] 蒸汽爆发：对触发目标造成后手武器面板 4 倍的单次伤害。
+						[c/FF6A3C:火]+[c/A6F0FF:冰] 熔融冲击：造成 0.5 倍伤害，并在 3 秒内每 0.2 秒造成后手面板 1/5 伤害。
+						[c/FF6A3C:火]+[c/C27CFF:雷] 超载：10 格范围爆炸，造成后手面板 5 倍伤害并强击退。
+						[c/FF6A3C:火]+[c/7EEA78:自然] 灼烧：持续灼烧，伤害取决于后手武器面板。
+						[c/FF6A3C:火]+[c/606060:疾病] 瘫痪：短时间内敌人无法对玩家造成伤害。
+						[c/62B8FF:水]+[c/A6F0FF:冰] 冻结：定身 1.5 秒；冻结期间敌人无敌。
+						[c/62B8FF:水]+[c/C27CFF:雷] 感电：持续被闪电击中，并有小概率传给附近敌人。
+						[c/62B8FF:水]+[c/7EEA78:自然] 生长：6 秒内敌人移速在原本和 60% 之间随机波动。
+						[c/62B8FF:水]+[c/606060:疾病] 凋零：5 秒内每秒损失 1% 最大生命值。
+						[c/A6F0FF:冰]+[c/C27CFF:雷] 冷凝：造成最大生命百分比伤害，但敌人加速 20%。
+						[c/A6F0FF:冰]+[c/7EEA78:自然] 冷藏：永久提高敌人价值，使其死亡后掉落更多钱币。
+						[c/A6F0FF:冰]+[c/606060:疾病] 腐冻：大概率造成 8 倍伤害，小概率反而治疗敌人。
+						[c/C27CFF:雷]+[c/7EEA78:自然] 繁茂：玩家弹幕会自动追踪该敌人。
+						[c/C27CFF:雷]+[c/606060:疾病] 控制：强制玩家攻击该敌人，并提升对它的伤害。
+						[c/7EEA78:自然]+[c/606060:疾病] 中合：大幅延长反应冷却，但临时提高玩家伤害。
+						'''
+				}
+			}
+		}
+
+		Buffs: {
+			ElementalFireDebuff: {
+				DisplayName: 火元素
+				Description: 红色光线外溢，持续灼烧敌人
+			}
+
+			ElementalWaterDebuff: {
+				DisplayName: 水元素
+				Description: 蓝色光线扩散，削弱敌人防御
+			}
+
+			ElementalIceDebuff: {
+				DisplayName: 冰元素
+				Description: 浅蓝光线横移，偶尔拖慢敌人
+			}
+
+			ElementalLightningDebuff: {
+				DisplayName: 雷元素
+				Description: 紫色光线上下游走，削弱敌人攻击
+			}
+
+			ElementalNatureDebuff: {
+				DisplayName: 自然元素
+				Description: 绿色弯曲光线扰动，提高敌人钱币价值
+			}
+
+			ElementalDiseaseDebuff: {
+				DisplayName: 疾病元素
+				Description: 黑色随机光线侵蚀，降低敌人伤害减免
+			}
+		}
+
+		ElementalCodex: {
+			WeaponTooltip: "[元素法典] {0} / {1}：{2}"
+
+			Elements: {
+				Fire: 火
+				Water: 水
+				Ice: 冰
+				Lightning: 雷
+				Nature: 自然
+				Disease: 疾病
+			}
+
+			Reactions: {
+				SteamBurst: 蒸汽爆发
+				MeltingImpact: 熔融冲击
+				Overload: 超载
+				Scorch: 灼烧
+				Paralysis: 瘫痪
+				Freeze: 冻结
+				Electrified: 感电
+				Growth: 生长
+				Wither: 凋零
+				Condensation: 冷凝
+				ColdStorage: 冷藏
+				CorruptFreeze: 腐冻
+				Flourish: 繁茂
+				Control: 控制
+				Neutralization: 中合
+			}
+		}
+	}
+}

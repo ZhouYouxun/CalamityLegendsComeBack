@@ -1,0 +1,45 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendGaelsGreatsword: {
+					DisplayName: 盖尔大剑
+					Tooltip: "[GFB]"
+					FunctionalTooltip:
+						'''
+						[c/FFD966:左键] [c/DCD6C8:略快于雄伟之护的自定义大剑挥舞；进度越高，真近战重复命中越频繁]
+						[c/8DB8FF:右键] [c/DCD6C8:舍身斩：朝鼠标方向跳劈，造成高额伤害；使用后45帧内，下一次左键变为横斩]
+						[c/7B5CFF:黑暗灵魂] [c/DCD6C8:肉前固定恢复灾厄怒气并获得缓落；随Boss进度强化为短程飞行]
+						[c/A01A2A:融于血与火] [c/DCD6C8:生命不高于50%或怒气达到75%以上时获得黑暗之血；左键进伤害窗口会消耗生命并提高伤害]
+						[c/A01A2A:黑暗之血] [c/DCD6C8:离开触发阈值后仍持续3秒]
+						[c/7B5CFF:黑暗人性] [c/DCD6C8:生命不高于50%时获得怒气并大幅提高近战攻速；这是肉后唯一的怒气来源]
+						[c/FFD700:终结技] [c/DCD6C8:击败肉山后，无需传奇饰章；按灾厄怒气键 {0} 旋转斗篷并释放大量追踪血骷髅]
+						'''
+					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
+					LegendaryText:
+						'''
+						[c/8B6CFF:奴隶骑士并非生来伟大。]
+						[c/8B6CFF:一柄破旧大剑、一身残破斗篷，以及走到世界尽头的执念。]
+						[c/8B6CFF:在这个世界里，尽头被定在肉山之后——因为最初的泰拉瑞亚，也曾在那里收束。]
+						[c/A01A2A:血与火不会让他高贵，只会让他继续向前。]
+						'''
+					FinisherLocked: 肉山之后，盖尔才抵达世界的尽头
+				}
+			}
+		}
+
+		Projectiles: {
+			GaelGreatswordSwingHoldout.DisplayName: 盖尔大剑挥舞
+			GaelGreatswordPlungeHoldout.DisplayName: 舍身斩
+			GaelGreatswordCapeFinisher.DisplayName: 黑暗灵魂斗篷
+			GaelGreatswordDarkSoul.DisplayName: 血骷髅
+		}
+
+		Buffs: {
+			GaelGreatswordBlackBlood: {
+				DisplayName: 黑暗之血
+				Description: 左键攻击会消耗生命并换取更高伤害
+			}
+		}
+	}
+}

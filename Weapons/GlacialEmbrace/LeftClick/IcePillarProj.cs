@@ -58,14 +58,14 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             modPlayer.UltimateCharge = Math.Min(GlacialEmbracePlayer.MaxUltimateCharge, modPlayer.UltimateCharge + 4);
             modPlayer.OnSpecialHitNPC();
 
-            // 1. 强制击退判定
-            // 如果目标是 Boss 且不是肉山或仆从，实施强行击退 (给一个冲量)
-            if (target.boss && target.type != NPCID.WallofFlesh && target.type != NPCID.WallofFleshEye)
+            // 1. 强制击退判定：普通敌人强击退，Boss 弱击退；肉山和 Boss 仆从不处理。
+            bool wallOfFlesh = target.type == NPCID.WallofFlesh || target.type == NPCID.WallofFleshEye;
+            bool bossServant = target.realLife >= 0 && !target.boss;
+            if (!wallOfFlesh && !bossServant)
             {
-                Vector2 pushVel = Projectile.velocity.SafeNormalize(Vector2.UnitX) * 3.5f;
-                target.velocity = pushVel;
-                // 用CombatText提示
-                CombatText.NewText(target.getRect(), Color.OrangeRed, "BOSS KNOCKBACK!", true);
+                float pushStrength = target.boss ? 3.2f : 10.5f;
+                Vector2 pushVel = Projectile.velocity.SafeNormalize(Vector2.UnitX) * pushStrength;
+                target.velocity += pushVel;
             }
 
             // 2. 引爆玩家所有冰刺的冲击波并进入休眠
@@ -78,9 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                     var spike = p.ModProjectile as IceSpikeMinion;
                     if (spike != null && !spike.hibernating)
                     {
-                        // 强制调用它的碰撞引爆逻辑并进入休眠
-                        spike.AlignForStrike(Vector2.Zero, Vector2.Zero, 0, 1); // 重置对齐
-                        spike.ExecuteSmash(); // 启动碰撞
+                        spike.ForceShockwaveAndHibernate(player);
                     }
                 }
             }

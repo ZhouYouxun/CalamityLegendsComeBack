@@ -99,7 +99,12 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
             if (modPlayer.CurrentMode == 0) // 斩击形态：冰刀
             {
-                Projectile.NewProjectile(source, player.Center, Vector2.Zero, ModContent.ProjectileType<IceBladeProj>(), damage, player.HeldItem.knockBack, player.whoAmI);
+                Vector2 mouseOffset = player.Calamity().mouseWorld - player.Center;
+                Vector2 bladeDir = mouseOffset.SafeNormalize(Vector2.UnitX * player.direction);
+                float bladeRadius = MathHelper.Clamp(mouseOffset.Length(), 100f, 260f);
+                Projectile.NewProjectile(source, player.Center + bladeDir * bladeRadius, Vector2.Zero,
+                    ModContent.ProjectileType<IceBladeProj>(), damage, player.HeldItem.knockBack, player.whoAmI,
+                    bladeDir.ToRotation(), bladeRadius);
             }
             else if (modPlayer.CurrentMode == 1) // 突刺形态：冰楔
             {
