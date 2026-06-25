@@ -8,6 +8,16 @@
 					Label: Allow Bulk Material Crafting
 					Tooltip: If enabled, many materials can be copied or crafted in a simpler way.
 				}
+
+				AllowBossRelicWeaponRecipes: {
+					Label: Allow Boss Relic Weapon Recipes
+					Tooltip: If enabled, some boss relics can be crafted into their related weapon drops.
+				}
+
+				AllowOtherRecipes: {
+					Label: Allow Extra QOL Recipes
+					Tooltip: If enabled, adds extra recipes that smooth out progression.
+				}
 			}
 
 			CLCBClientConfig: {

@@ -17,5 +17,13 @@ namespace CalamityLegendsComeBack
         [DefaultValue(true)]
         [ReloadRequired]
         public bool AllowMassMaterialRecipes;
+
+        [DefaultValue(true)]
+        [ReloadRequired]
+        public bool AllowBossRelicWeaponRecipes;
+
+        [DefaultValue(true)]
+        [ReloadRequired]
+        public bool AllowOtherRecipes;
     }
 }

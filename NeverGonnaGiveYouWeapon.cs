@@ -1,6 +1,4 @@
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
-using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
 using CalamityMod.Items.TreasureBags.MiscGrabBags;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
@@ -19,8 +17,7 @@ namespace CalamityLegendsComeBack
         {
             if (item.type == ModContent.ItemType<StarterBag>())
             {
-                itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NewLegendSHPC>()));
-                itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<SHPCBook>()));
+                itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<LegendarySupplyBox>()));
                 itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<LegendaryCodex>()));
                 itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<RetroGameConsoleSupplyBox>()));
             }

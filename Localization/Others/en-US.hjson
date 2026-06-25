@@ -80,6 +80,11 @@ Mods: {
 			}
 
 			Consumables: {
+				LegendarySupplyBox: {
+					DisplayName: Legendary Supply Box
+					Tooltip: Right click to claim the current legendary weapon and its guide disc.
+				}
+
 				RetroGameConsoleSupplyBox: {
 					DisplayName: Retro Game Console Supply Box
 					Tooltip: Right click to claim the currently available retro game consoles.

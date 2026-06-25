@@ -1,159 +1,57 @@
-[h1]Calamity Legends Come Back[/h1]
+[h1]Calamity Legends Come Back [灾厄-传奇][/h1]
 
-[h2]灾厄：传奇归来[/h2]
+这是一个给 Calamity Mod 做“传奇武器回归与重制”的模组。
 
-[quote]传奇不该在流程中被遗忘，也不该只是一串更大的数字。[/quote]
+本模组会围绕每一把传奇武器进行重置、改造和可玩性开发。
+重点不是把一个攻击模板复制几遍，再随着流程改伤害数字。
+我们希望传奇武器的玩法会逐步推进，新的阶段真的带来新的操作、机制和战斗节奏。
 
-这是一个面向 Calamity Mod 的传奇武器重制模组。
+当前 1.0 ~ 1.x 版本会专注于 SHPC 的 bug 修复。
+SHPC 现在有材料装填、不同弹药效果、右键热量激光、配饰强化和大招超级激光。
 
-我们将早期版本中淡出流程的传奇武器重新带回游戏，并赋予它们应有的身份：一把能够陪伴玩家走过漫长旅途、不断改变玩法的武器。
+模组里也会有一些重要的 QOL 内容。
+比如部分让人血压上来的物品补配方、一些流程体验调整。
+以及现在版本里的传奇补给包、复古游戏机包、高维矩阵核心、SHPP 平台、神镐、隔音耳罩和少量调试工具。
 
-[code]Legendary Weapon = Progression + New Mechanics + New Ways to Fight[/code]
+整体观感会尽量贴合灾厄模组。
+特效、节奏和表现力会往灾厄本体的方向靠，目标是让东西看起来别太突兀
+最好像是本来就该在这个世界里。
 
-[hr][/hr]
+[h1]需要前置[/h1]
+Calamity Mod
+VeluriyamLib
 
-[h2]不只是数值成长[/h2]
+[h1]反馈与建议[/h1]
+反馈、报错、平衡建议都欢迎。
+如果哪里玩起来怪，直接说就行。这个模组还会继续长。
 
-这不是把旧武器套进模板、再在每个阶段增加一组伤害数字。
+[h1]源码[/h1]
+[url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]点击以跳转[/url]
 
-[strike]单纯的数值堆叠[/strike] [b]机制与战斗方式的成长[/b]
-
-随着游戏进度推进，传奇武器不仅会获得更高的伤害，也会逐步解锁新的攻击形态、技能机制与战斗逻辑。每次成长都应当带来新的选择、节奏或操作，而不只是让同一种攻击打得更痛。
-
-[list]
-[*][b]恢复传奇身份：[/b]重制并回归早期版本的传奇武器体验。
-[*][b]非数值提升：[/b]流程推进会带来新的攻击方式与技能，而非只提升面板。
-[*][b]持续的新鲜感：[/b]同一把武器在不同阶段拥有不同的战斗体验。
-[*][b]全流程定位：[/b]目标是让传奇武器能够跨越多个阶段，而不是很快被替换。
-[*][b]表现力重制：[/b]弹幕、特效、贴图与命中反馈都会围绕“传奇”重新塑造。
-[/list]
-
-[spoiler][i]有些成长不会直接写在伤害数字上，而会在你真正把武器拿起来使用时显现。[/i][/spoiler]
-
-[h2]战斗方式[/h2]
-
-不同传奇武器会拥有各自的机制与输入设计。根据武器特性，战斗可包含：
-
-[olist]
-[*]左键主攻击与连段
-[*]右键独立技能或形态
-[*]左、右键组合操作
-[*]冲刺键与特殊技能键互动
-[*]随流程解锁的攻击形态与资源循环
-[/olist]
-
-[h3]成长理念[/h3]
-
-[table equalcells=1]
-[tr][th]流程阶段[/th][th]成长内容[/th][th]玩家感受[/th][/tr]
-[tr][td]早期[/td][td]明确武器核心与基础操作[/td][td]易于上手，建立战斗节奏[/td][/tr]
-[tr][td]中期[/td][td]扩展攻击形态、技能与资源交互[/td][td]开始拥有更多战术选择[/td][/tr]
-[tr][td]后期[/td][td]深化机制组合与完整战斗体系[/td][td]武器成为成熟而独特的玩法[/td][/tr]
-[/table]
-
-[hr][/hr]
-
-[h2]当前开发内容[/h2]
-
-本模组仍在持续开发。以下传奇武器或配套内容已加入、正在重做，或处于后续开发计划中；具体完成度请以游戏内版本为准：
-
-[list]
-[*]SHPC
-[*]Blossom Flux
-[*]Yharim's Crystal
-[*]Briny Baron
-[*]Vesuvius
-[*]Pristine Fury
-[*]Malachite
-[/list]
-
-[u]当前重点[/u]是让每一把完成的传奇武器都先拥有明确、完整、可反复游玩的成长体验，再继续扩展阵容。
-
-[h2]依赖与反馈[/h2]
-
-需要：[b]Calamity Mod[/b] 与 [b]VeluriyamLib[/b]。
-
-模组仍会继续调整平衡、特效与机制。欢迎在创意工坊评论区反馈体验、问题与建议。
-
-[url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]Source Code / 项目源码[/url]
-
-[hr][/hr]
+--------------------------------------------------
 
 [h1]English Version[/h1]
 
-[h2]Calamity Legends Come Back[/h2]
+Calamity Legends Come Back is an unofficial legendary-weapon rework mod for Calamity Mod.
 
-[quote]Legends should not be forgotten during progression, nor reduced to larger numbers.[/quote]
+This mod aims to rebuild, reshape, and expand the playability of every legendary weapon.
+The important part is progression in gameplay, not copying one attack template and changing the damage number at each stage. A legendary weapon should gain new inputs, mechanics, and combat rhythm as it grows.
 
-Calamity Legends Come Back is a legendary-weapon rework mod for Calamity Mod.
+Version 1.0 ~ 1.x focuses on SHPC bug fixes.
+SHPC currently has material loading, different ammo effects, right-click heat lasers, accessory upgrades, and a final super-laser ultimate.
 
-It brings back legendary weapons that faded from earlier versions and restores their intended identity: weapons that can accompany a player through a long journey while continually changing how they play.
+The mod will also include some important QOL content.
+For example, extra recipes for items that can be annoying to obtain, and progression comfort changes.
+Current extras also include the Legendary Supply Box, retro game console pack, Hyperdimensional Matrix Core, SHPP platform, ShenGao pickaxe, Soundproof Earmuffs, and a few debug tools.
 
-[code]Legendary Weapon = Progression + New Mechanics + New Ways to Fight[/code]
+The overall presentation will try to stay close to Calamity Mod.
+Effects, pacing, and visual style will lean toward Calamity itself. The goal is to keep new content from feeling too out of place,
+ideally as if it belonged in this world from the start.
 
-[hr][/hr]
+[h1]Requirements[/h1]
+Calamity Mod
+VeluriyamLib
 
-[h2]More Than Numerical Scaling[/h2]
-
-This is not a template that merely increases a weapon's damage at each stage.
-
-[strike]Numbers alone[/strike] [b]New mechanics and new combat expression[/b]
-
-As progression advances, legendary weapons gain damage [i]and[/i] unlock new attack forms, abilities, and combat logic. Each upgrade is meant to create a new choice, rhythm, or input pattern instead of simply making the same attack hit harder.
-
-[list]
-[*][b]Legendary identity restored:[/b] Earlier legendary weapon experiences are rebuilt and returned.
-[*][b]Non-numerical upgrades:[/b] Progress unlocks new attacks and abilities, not only better stats.
-[*][b]Lasting freshness:[/b] The same weapon plays differently across stages of progression.
-[*][b]Progression-spanning design:[/b] Legendary weapons are intended to remain meaningful across multiple stages.
-[*][b]Presentation rebuilt:[/b] Projectiles, effects, textures, and combat feedback are remade around the idea of a legend.
-[/list]
-
-[spoiler][i]Some upgrades are not visible in the damage number. They reveal themselves when you put the weapon to use.[/i][/spoiler]
-
-[h2]How You Fight[/h2]
-
-Each legendary weapon has its own mechanics and input design. Depending on the weapon, combat can include:
-
-[olist]
-[*]Primary attacks and attack chains
-[*]Independent right-click abilities or forms
-[*]Left- and right-click combinations
-[*]Dash-key and special-skill-key interactions
-[*]Attack forms and resource loops unlocked by progression
-[/olist]
-
-[h3]Growth Philosophy[/h3]
-
-[table equalcells=1]
-[tr][th]Progression Stage[/th][th]What Grows[/th][th]How It Feels[/th][/tr]
-[tr][td]Early[/td][td]Clear core identity and foundational inputs[/td][td]Accessible and rhythm-building[/td][/tr]
-[tr][td]Midgame[/td][td]Expanded attack forms, abilities, and resource interactions[/td][td]More tactical choices[/td][/tr]
-[tr][td]Late game[/td][td]Deeper mechanic combinations and a complete combat system[/td][td]A mature, distinct playstyle[/td][/tr]
-[/table]
-
-[hr][/hr]
-
-[h2]Current Development[/h2]
-
-The mod is under active development. The following legendary weapons or supporting content have been added, are being reworked, or are planned for future development. Please treat the in-game build as the source of truth for completion status:
-
-[list]
-[*]SHPC
-[*]Blossom Flux
-[*]Yharim's Crystal
-[*]Briny Baron
-[*]Vesuvius
-[*]Pristine Fury
-[*]Malachite
-[/list]
-
-[u]Current priority:[/u] make every completed legendary weapon feel coherent, complete, and replayable before expanding the roster further.
-
-[h2]Requirements and Feedback[/h2]
-
-Requires [b]Calamity Mod[/b] and [b]VeluriyamLib[/b].
-
-Balance, visual effects, and mechanics will continue to evolve. Feedback, bug reports, and gameplay impressions are welcome in the Workshop comments.
-
-[url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]Source Code / Project Repository[/url]
+[h1]Feedback[/h1]
+Feedback and bug reports are welcome.
+If something feels weird, please say it plainly. The mod is still growing.

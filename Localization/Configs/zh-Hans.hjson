@@ -8,6 +8,16 @@
 					Label: 允许大量材料可制作
 					Tooltip: 开启后可以允许大量材料以较简单的方式进行复制或制作
 				}
+
+				AllowBossRelicWeaponRecipes: {
+					Label: 允许 Boss 遗物兑换武器
+					Tooltip: 开启后，可以用部分 Boss 遗物制作对应掉落武器。
+				}
+
+				AllowOtherRecipes: {
+					Label: 允许额外 QOL 配方
+					Tooltip: 开启后，会加入部分改善流程体验的额外配方。
+				}
 			}
 
 			CLCBClientConfig: {

@@ -81,6 +81,11 @@ Mods: {
 			}
 
 			Consumables: {
+				LegendarySupplyBox: {
+					DisplayName: 传奇补给包
+					Tooltip: 右键打开，领取当前版本的传奇武器和配套图鉴。
+				}
+
 				RetroGameConsoleSupplyBox: {
 					DisplayName: 复古游戏机补给包
 					Tooltip: 右键打开，领取目前已经准备好的复古游戏机。
