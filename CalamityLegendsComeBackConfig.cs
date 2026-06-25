@@ -14,22 +14,8 @@ namespace CalamityLegendsComeBack
             Instance = this;
         }
 
-        [DefaultValue(false)]
-        public bool AllowWheelSlowdown;
-
         [DefaultValue(true)]
         [ReloadRequired]
         public bool AllowMassMaterialRecipes;
-
-        [DefaultValue(true)]
-        [ReloadRequired]
-        public bool AllowBossRelicWeaponRecipes;
-
-        [DefaultValue(true)]
-        [ReloadRequired]
-        public bool AllowOtherRecipes;
-
-        [DefaultValue(false)]
-        public bool GiveQuickStartBoxOnSpawn;
     }
 }

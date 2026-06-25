@@ -4,29 +4,9 @@
 			CalamityLegendsComeBackConfig: {
 				DisplayName: Calamity Legends Come Back Settings
 
-				AllowWheelSlowdown: {
-					Label: Allow Wheel Slowdown
-					Tooltip: If enabled, some legendary weapons will slow the game speed by 50% while their wheels are open in single player.
-				}
-
 				AllowMassMaterialRecipes: {
 					Label: Allow Bulk Material Crafting
 					Tooltip: If enabled, many materials can be copied or crafted in a simpler way.
-				}
-
-				AllowBossRelicWeaponRecipes: {
-					Label: Allow Boss Relic Weapon Conversion
-					Tooltip: If enabled, boss relics can be handcrafted directly into their corresponding boss drop weapons.
-				}
-
-				AllowOtherRecipes: {
-					Label: Allow Other Recipes
-					Tooltip: If enabled, allows crafting some vanilla or extra other items with simple recipes (such as Nature's Gift).
-				}
-
-				GiveQuickStartBoxOnSpawn: {
-					Label: Give Quick Start Supply Box On Spawn
-					Tooltip: If enabled, new players will automatically receive a [Quick Start Supply Box] upon spawning. (WARNING: This severely ruins game balance!)
 				}
 			}
 

@@ -56,18 +56,6 @@ Mods: {
 					DisplayName: STG
 				}
 
-				SacredThunder: {
-					DisplayName: Sacred Thunder
-					Tooltip: "[GFB]"
-					LegendaryText:
-						'''
-						Throws a holy thunder disk that strikes up to five times before returning
-						Stealth strike: the disk stops in the air for 15 seconds, escalating its borrowed lightning and holy beams before detonating
-						[c/FFE85A:"But I think it is pretty sacred."]
-						[c/6FDFFF:"Sacred? More like thunder."]
-						'''
-				}
-
 				LegendaryCodex: {
 					DisplayName: Legendary Codex
 					Tooltip: Left click to open the legendary weapon codex.
@@ -92,53 +80,9 @@ Mods: {
 			}
 
 			Consumables: {
-				LegendarySupplyBox: {
-					DisplayName: Legendary Supply Box
-					Tooltip: Right click to claim the currently available legendary weapons.
-				}
-
 				RetroGameConsoleSupplyBox: {
 					DisplayName: Retro Game Console Supply Box
 					Tooltip: Right click to claim the currently available retro game consoles.
-				}
-
-				QuickStartBox: {
-					DisplayName: Quick Start Supply Box
-					Tooltip:
-						'''
-						Right click to open. Grants strong early-game equipment, potions, and bulk resources.
-						[WARNING: This item severely breaks game balance. Think twice before opening!]
-						'''
-				}
-
-				Prime2041Summoner: {
-					DisplayName: Strange Mechanical Skull
-					Tooltip:
-						'''
-						Summons a Skeletron Prime from version 2.0.4.1
-						Only works when summoned in Master Mode
-						Only usable at night
-						'''
-				}
-
-				Destroyer2041Summoner: {
-					DisplayName: Strange Mechanical Worm
-					Tooltip:
-						'''
-						Summons a Destroyer from version 2.0.4.1
-						Only works when summoned in Master Mode
-						Only usable at night
-						'''
-				}
-
-				Twins2041Summoner: {
-					DisplayName: Strange Mechanical Lens
-					Tooltip:
-						'''
-						Summons the Twins from version 2.0.4.1
-						Only works when summoned in Master Mode
-						Only usable at night
-						'''
 				}
 			}
 
@@ -146,16 +90,6 @@ Mods: {
 				DisplayName: Legendary Emblem
 				Tooltip: Permanently unlocks every legendary weapon ultimate for this character
 				AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
-			}
-
-			LegendaryUltimateTester: {
-				DisplayName: Legendary Ultimate Tester
-				Tooltip: Test accessory: legendary weapon ultimates fully recharge in 1 second
-			}
-
-			TestWeapon: {
-				DisplayName: Test Weapon
-				Tooltip: ""
 			}
 		}
 
@@ -167,12 +101,8 @@ Mods: {
 				MinesweeperPanel.DisplayName: Minesweeper Board
 				STGPanel.DisplayName: STG Shooter Board
 				CTRLBossPanel.DisplayName: Boss Progress Panel
-				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
 			}
 
-			SacredThunder.SacredThunderPROJ.DisplayName: Sacred Thunder
-			TestWeaponProj.DisplayName: Test Weapon Proj
 			TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
 			TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
 			TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
@@ -236,21 +166,6 @@ Mods: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
 			SHPCLoadingUI.DisplayName: SHPC Loading UI
-			ExtraBackpack.DisplayName: Extra Backpack
-		}
-
-		NPCs: {
-			Prime2041.DisplayName: Skeletron Prime (2024 Master AI)
-			Prime2041SecondHead.DisplayName: Skeletron Prime (2024 Master AI) - Second Head
-			Prime2041Saw.DisplayName: Prime Saw (2024)
-			Prime2041Laser.DisplayName: Prime Laser (2024)
-			Prime2041Vice.DisplayName: Prime Vice (2024)
-			Prime2041Cannon.DisplayName: Prime Cannon (2024)
-			Destroyer2041Head.DisplayName: The Destroyer (2024 Master AI)
-			Destroyer2041Body.DisplayName: The Destroyer (2024 Master AI)
-			Destroyer2041Tail.DisplayName: The Destroyer (2024 Master AI)
-			Twins2041Retinazer.DisplayName: Retinazer (2024 Master AI)
-			Twins2041Spazmatism.DisplayName: Spazmatism (2024 Master AI)
 		}
 	}
 }

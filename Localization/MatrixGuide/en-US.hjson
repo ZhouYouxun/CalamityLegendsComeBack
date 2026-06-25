@@ -12,9 +12,9 @@
 		UI: {
 			GuideTitle: CALAMITY LEGENDS MATRIX
 			GuideSubtitle: Return of Legends information terminal
-			GuideBody: Calamity Legends Come Back focuses on rebuilding and expanding legendary Calamity weapon experiences. Current systems include reworked legendary weapons, EX skills, accessory support, visual effects, debug tools, retro game panels, and local experiments that can be studied directly from the source files.
+			GuideBody: Calamity Legends Come Back 1.0 focuses on SHPC, its accessory systems, matrix tools, visual effects, debug tools, retro game panels, and local experiments that can be studied directly from the source files.
 			BossListTitle: Current learning targets
-			BossList: SHPC material and heat systems, Briny Baron tide techniques, Pristine Fury effects, Yharim's Crystal attacks, Vesuvius, Blossom Flux, Malachite, MK14 EBR, and the teaching projectile examples.
+			BossList: SHPC material and heat systems, Hyperdimensional Matrix Core, SHPP platform, ShenGao, soundproof tools, debug panels, retro game panels, and the teaching projectile examples.
 			CloseHint: Use the tablet again or click outside this panel to close.
 		}
 	}

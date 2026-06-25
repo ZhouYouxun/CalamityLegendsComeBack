@@ -1,8 +1,6 @@
 using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker;
-using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using Microsoft.Xna.Framework;
 using System;
@@ -12,8 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
-using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -22,20 +18,6 @@ namespace CalamityLegendsComeBack
 	// Please read https://github.com/tModLoader/tModLoader/wiki/Basic-tModLoader-Modding-Guide#mod-skeleton-contents for more information about the various files in a mod.
 	public class CalamityLegendsComeBack : Mod
 	{
-        internal const string AzureThunderGreenUltimateFilterKey = "CalamityLegendsComeBack:AzureThunderGreenUltimateFilter";
-
-        public override void Load()
-        {
-            if (Main.dedServ)
-                return;
-
-            Filters.Scene[AzureThunderGreenUltimateFilterKey] = new Filter(
-                new ScreenShaderData("FilterMiniTower")
-                    .UseColor(0.55f, 1f, 0.65f)
-                    .UseOpacity(0f),
-                EffectPriority.Medium);
-        }
-
         public override void Unload()
         {
         }
@@ -46,31 +28,7 @@ namespace CalamityLegendsComeBack
                 return;
 
             GamePacketType packetType = (GamePacketType)reader.ReadByte();
-
-            switch (packetType)
-            {
-                case GamePacketType.PlayerLockerRequestInventory:
-                    PlayerLockerPackets.HandleInventoryRequest(reader, whoAmI);
-                    break;
-                case GamePacketType.PlayerLockerInventoryData:
-                    PlayerLockerPackets.HandleInventoryData(reader);
-                    break;
-                case GamePacketType.PlayerLockerStealItem:
-                    PlayerLockerPackets.HandleStealItem(reader, whoAmI);
-                    break;
-                case GamePacketType.PlayerLockerClearSlot:
-                    PlayerLockerPackets.HandleClearSlot(reader);
-                    break;
-                case GamePacketType.PlayerSaddleMount:
-                    PlayerSaddlePackets.HandleMount(reader, whoAmI);
-                    break;
-                case GamePacketType.PlayerSaddleDismount:
-                    PlayerSaddlePackets.HandleDismount(reader, whoAmI);
-                    break;
-                default:
-                    TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
-                    break;
-            }
+            TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
         }
     }
 

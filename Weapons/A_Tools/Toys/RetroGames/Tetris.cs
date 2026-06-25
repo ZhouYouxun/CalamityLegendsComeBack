@@ -25,13 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames
         TetrisInviteSent = 5,
         TetrisStartSession = 6,
         TetrisInput = 7,
-        TetrisSnapshot = 8,
-        PlayerLockerRequestInventory = 9,
-        PlayerLockerInventoryData = 10,
-        PlayerLockerStealItem = 11,
-        PlayerLockerClearSlot = 12,
-        PlayerSaddleMount = 13,
-        PlayerSaddleDismount = 14
+        TetrisSnapshot = 8
     }
 
     internal enum TetrisInputCommand : byte

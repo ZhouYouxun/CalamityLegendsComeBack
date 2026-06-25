@@ -395,6 +395,7 @@ Mods: {
 				PlagueCell_Fog.DisplayName: 瘟疫细胞毒雾
 				PlagueCell_Nuke.DisplayName: 瘟疫细胞核爆
 				SHPC_ChargeSpiralInv.DisplayName: SHPC蓄能螺旋视觉体
+				// StellarVortexShard.DisplayName: Stellar Vortex Shard
 			}
 
 			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面

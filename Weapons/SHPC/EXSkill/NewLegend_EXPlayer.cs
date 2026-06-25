@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         // 是否已满
         public bool EXFull => EXValue >= GetCurrentEXMax(Player);
         public int EXDisplayValue => Utils.Clamp(EXValue / GetFramesPerDisplayUnit(Player), 0, EXDisplayMax);
-        public bool EXUnlocked => NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3 || Player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryUltimateTesterPlayer>().Equipped;
+        public bool EXUnlocked => NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3;
 
         public static int GetCurrentEXMax(Player player)
         {

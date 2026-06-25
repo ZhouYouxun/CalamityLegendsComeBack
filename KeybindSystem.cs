@@ -14,14 +14,12 @@ namespace CalamityLegendsComeBack
         public static ModKeybind LegendarySkill { get; private set; }
         public static ModKeybind LegendaryWeaponFormSwitch { get; private set; }
         public static ModKeybind SHPCLoadingUI { get; private set; }
-        public static ModKeybind ExtraBackpack { get; private set; }
 
         public override void Load()
         {
             LegendarySkill = KeybindLoader.RegisterKeybind(Mod, "LegendarySkill", "P");
             LegendaryWeaponFormSwitch = KeybindLoader.RegisterKeybind(Mod, "LegendaryWeaponFormSwitch", "LeftControl");
             SHPCLoadingUI = KeybindLoader.RegisterKeybind(Mod, "SHPCLoadingUI", "None");
-            ExtraBackpack = KeybindLoader.RegisterKeybind(Mod, "ExtraBackpack", "B");
         }
 
         public override void Unload()
@@ -29,7 +27,6 @@ namespace CalamityLegendsComeBack
             LegendarySkill = null;
             LegendaryWeaponFormSwitch = null;
             SHPCLoadingUI = null;
-            ExtraBackpack = null;
         }
     }
 }

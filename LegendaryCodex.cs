@@ -12,11 +12,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
 using CalamityLegendsComeBack.Systems;
-using CalamityLegendsComeBack.Weapons.BlossomFlux;
-using CalamityLegendsComeBack.Weapons.BrinyBaron;
-using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Weapons.Vesuvius;
 
 namespace CalamityLegendsComeBack
 {
@@ -67,10 +63,6 @@ namespace CalamityLegendsComeBack
         private static readonly LegendaryEntry[] Entries =
         {
             new("SHPC", () => ModContent.ItemType<NewLegendSHPC>(), true),
-            new("BlossomFlux", () => ModContent.ItemType<NewLegendBlossomFlux>(), false),
-            new("BrinyBaron", () => ModContent.ItemType<NewLegendBrinyBaron>(), false),
-            new("PristineFury", () => ModContent.ItemType<NewLegendPristineFury>(), false),
-            new("Vesuvius", () => ModContent.ItemType<NewVesuvius>(), false),
         };
 
         private Vector2 panelTopLeft;
@@ -82,7 +74,7 @@ namespace CalamityLegendsComeBack
         private int lastHoveredControl = -1;
 
         public new string LocalizationCategory => "Projectiles";
-        public override string Texture => "CalamityLegendsComeBack/LegendarySupplyBox";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private bool FadeOut
         {

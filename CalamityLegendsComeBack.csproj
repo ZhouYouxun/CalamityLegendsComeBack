@@ -7,93 +7,14 @@
 	<PropertyGroup>
 		
 	</PropertyGroup>
+
 	<ItemGroup>
 	  <Reference Include="CalamityMod">
 	    <HintPath>..\..\ModReader\CalamityMod\CalamityMod.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+
 	<ItemGroup>
-	  <Folder Include="Accssory\SHPC\Skill\FlyChip\" />
-	  <Folder Include="Accssory\TS\General\" />
-	  <Folder Include="Accssory\YC\" />
-	  <Folder Include="Accssory\CD\" />
-	  <Folder Include="Accssory\VV\" />
-	  <Folder Include="BossAI\ReBack\Prime2041\" />
-	  <Folder Include="Sound\SHPC\" />
-	  <Folder Include="Sound\YC\" />
-	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
-	  <Folder Include="Weapons\A_Dev\MK14EBR\M14\" />
-	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
-	  <Folder Include="Weapons\A_Olds\MarniteBayonet\" />
-	  <Folder Include="Weapons\A_Tools\CTRLBoss\" />
-	  <Folder Include="Weapons\A_Tools\ShenGao\" />
-	  <Folder Include="Weapons\A_Upgrade\DragoonDrizzlefish\" />
-	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
-	  <Folder Include="Weapons\BlossomFlux\Hold\" />
-	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
-	  <Folder Include="Weapons\PristineFury\EXSkill\" />
-	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />
-	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\ApolloArtemis\" />
-	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Thanatos\" />
-	  <Folder Include="Z_TeachingProjectile\" />
-	</ItemGroup>
-	<ItemGroup>
-	  <AdditionalFiles Remove="Weapons\A_Dev\Miao\**" />
-	  <AdditionalFiles Remove="Weapons\A_Olds\**" />
-	  <AdditionalFiles Remove="Weapons\BlossomFlux\BFUI\**" />
-	  <AdditionalFiles Remove="Weapons\BlossomFlux\特效总和参考\**" />
-	  <AdditionalFiles Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
-	  <AdditionalFiles Remove="Weapons\YharimsCrystal\Lazer\**" />
-	  <Compile Remove="Weapons\A_Dev\Miao\**" />
-	  <Compile Remove="Weapons\A_Olds\**" />
-	  <Compile Remove="Weapons\BlossomFlux\BFUI\**" />
-	  <Compile Remove="Weapons\BlossomFlux\特效总和参考\**" />
-	  <Compile Remove="Weapons\BrinyBaron\CommonAttack\参考文献\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\1 “突破”特效参考\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\4 轰炸特效参考\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\5 “散播”特效参考\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\所有箭矢的特效【重点参考这里】\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\右键的单次参考特效\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\参考一下ClockworkBow\**\*.cs" />
-	  <Compile Remove="Weapons\BlossomFlux\参考文献看这个\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\Lazer\**" />
-	  <EmbeddedResource Remove="Weapons\A_Dev\Miao\**" />
-	  <EmbeddedResource Remove="Weapons\A_Olds\**" />
-	  <EmbeddedResource Remove="Weapons\BlossomFlux\BFUI\**" />
-	  <EmbeddedResource Remove="Weapons\BlossomFlux\特效总和参考\**" />
-	  <EmbeddedResource Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
-	  <EmbeddedResource Remove="Weapons\YharimsCrystal\Lazer\**" />
-	  <None Remove="Weapons\A_Dev\Miao\**" />
-	  <None Remove="Weapons\A_Olds\**" />
-	  <None Remove="Weapons\BlossomFlux\BFUI\**" />
-	  <None Remove="Weapons\BlossomFlux\特效总和参考\**" />
-	  <None Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
-	  <None Remove="Weapons\YharimsCrystal\Lazer\**" />
-	  <Compile Remove="Weapons\BlossomFlux\SpecialArrow\SHPCKPROJ.cs" />
-	  <Compile Remove="Weapons\BrinyBaron\参考文献\**\*.cs" />
-	  <Compile Remove="Weapons\LeonidProgenitor\他重做前长这样\**\*.cs" />
-	  <Compile Remove="Weapons\LeonidProgenitor\参考文献包括\**\*.cs" />
-	  <Compile Remove="Weapons\SHPC\Effects\DPreDog\SZPC\TwistingNether的参考文献\**\*.cs" />
-	  <Compile Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\参考文献\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\YCLeft\火箭弹的特效参考\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\维修战舰参考\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\重做前的效果\**\*.cs" />
-	  <Compile Remove="Weapons\YharimsCrystal\Abandoned\**\*.cs" />
-	  <Compile Remove="Weapons\PristineFury\别人重做前的版本，先看\**\*.cs" />
-	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
-	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
-	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
-	  <Compile Include="Weapons\A_Olds\DesertEagle\**\*.cs" />
-	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
-	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
-	  <Compile Include="Weapons\A_Olds\PhoenixBlade\**\*.cs" />
-	  <Compile Include="Weapons\A_Olds\DiseasedPike\**\*.cs" />
-	  <None Include="Weapons\A_Olds\PhoenixBlade\**\*.png" />
-	  <None Include="Weapons\A_Olds\DiseasedPike\**\*.png" />
-	  <Compile Include="Weapons\A_Olds\Lazhar\**\*.cs" />
-	  <None Include="Weapons\A_Olds\Lazhar\**\*.png" />
-	  <Content Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <AdditionalFiles Remove="Shader\**\*.zip" />
 	  <AdditionalFiles Remove="Shader\Archive\**" />
 	  <AdditionalFiles Remove="Shader\Docs\**" />
@@ -126,13 +47,6 @@
 	  <None Remove="Shader\XNBcoder\*.txt" />
 	  <None Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <None Remove="Shader\XNBcoder\logfile.txt" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Content Include="Weapons\A_Olds\AstralBlade\幻星刀.png" />
-	  <Content Include="Weapons\A_Olds\ChargedDartBlaster\蓄能飞镖发射器.png" />
-	  <Content Include="Weapons\A_Olds\DesertEagle\猎象者.png" />
-	  <Content Include="Weapons\A_Olds\DesertEagle\闪电鹰.png" />
-	  <Content Include="Weapons\A_Olds\DesertEagle\马格南.png" />
 	</ItemGroup>
 
 	<!-- References -->
