@@ -132,13 +132,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
-                    dartDirection * Main.rand.NextFloat(45f, 54f),
+                    dartDirection * Main.rand.NextFloat(45f, 54f) * 1.3f,
                     ModContent.ProjectileType<MalachiteFinaleDart>(),
                     Math.Max(1, (int)(Projectile.damage * 0.74f)),
                     Projectile.knockBack,
                     Projectile.owner,
                     delay,
-                    i % 3);
+                    i,
+                    target?.whoAmI ?? -1);
 
                 if (i < petals.Count)
                 {
@@ -626,13 +627,17 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
     public class MalachiteFinaleDart : ModProjectile, ILocalizedModType
     {
+        private const int FinalePetalCount = 23;
+        private const float HomingRange = 500f * 16f;
+
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
 
         public override string LocalizationCategory => "Projectiles.Malachite";
 
         private ref float Timer => ref Projectile.localAI[0];
         private int Delay => Math.Max(0, (int)Projectile.ai[0]);
-        private int Variant => Utils.Clamp((int)Projectile.ai[1], 0, 2);
+        private int PetalIndex => Utils.Clamp((int)Projectile.ai[1], 0, FinalePetalCount - 1);
+        private int Variant => PetalIndex % 3;
         private bool Launched => Timer > Delay;
 
         public override void SetStaticDefaults()
@@ -643,8 +648,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
         public override void SetDefaults()
         {
-            Projectile.width = 24;
-            Projectile.height = 24;
+            Projectile.width = 18;
+            Projectile.height = 18;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.tileCollide = false;
@@ -677,15 +682,32 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
             if (Timer == Delay + 1f)
             {
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SwooshMid") { Volume = 0.28f, Pitch = 0.28f, MaxInstances = 8 }, Projectile.Center);
-                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.25f, Pitch = 0.46f, MaxInstances = 8 }, Projectile.Center);
+                SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.42f, Pitch = 0.38f, MaxInstances = 8 }, Projectile.Center);
+                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.18f, Pitch = 0.52f, MaxInstances = 8 }, Projectile.Center);
+                if (PetalIndex == 0 || PetalIndex == FinalePetalCount - 1)
+                    ApplyLocalScreenShake(Projectile.Center, 5.4f);
+
                 Projectile.netUpdate = true;
             }
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            NPC target = GetHomingTarget();
+            if (target != null)
+            {
+                Projectile.ai[2] = target.whoAmI;
+                Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(direction);
+                float speed = MathHelper.Clamp(Projectile.velocity.Length() * 1.012f, 58f, 82f);
+                direction = Vector2.Lerp(direction, desiredDirection, 0.34f).SafeNormalize(desiredDirection);
+                Projectile.velocity = direction * speed;
+            }
+            else
+            {
+                Projectile.velocity *= 1.002f;
+            }
+
+            direction = Projectile.velocity.SafeNormalize(direction);
             Projectile.rotation = direction.ToRotation() + MathHelper.PiOver2;
-            Projectile.velocity *= 1.002f;
-            Projectile.scale = MathHelper.Lerp(Projectile.scale, 1.08f, 0.08f);
+            Projectile.scale = MathHelper.Lerp(Projectile.scale, 0.7f, 0.14f);
             Lighting.AddLight(Projectile.Center, 0.12f, 0.36f, 0.08f);
             SpawnFlightVisuals(direction);
         }
@@ -693,29 +715,19 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
         private void SpawnFlightVisuals(Vector2 direction)
         {
             if (Main.rand.NextBool(2))
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center - direction * Main.rand.NextFloat(6f, 16f) + Main.rand.NextVector2Circular(5f, 5f),
-                    Main.rand.NextBool(30) ? DustID.Terra : DustID.GreenTorch,
-                    -direction * Main.rand.NextFloat(0.5f, 1.8f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
-                    120,
-                    default,
-                    Main.rand.NextBool(30) ? Main.rand.NextFloat(0.85f, 1.05f) : Main.rand.NextFloat(0.32f, 0.48f));
-                dust.noGravity = true;
-            }
-
-            if (Timer % 8f != 0f)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center,
-                Vector2.Zero,
-                (Main.rand.NextBool(3) ? Color.LimeGreen : Color.Green) * 0.35f,
-                Vector2.One,
-                Projectile.rotation,
-                Main.rand.NextFloat(0.04f, 0.08f),
-                0f,
-                15));
+            Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
+            Vector2 position =
+                Projectile.Center -
+                direction * Main.rand.NextFloat(10f, 24f) +
+                side * Main.rand.NextFloat(-4f, 4f);
+            Vector2 velocity = -direction * Main.rand.NextFloat(1.8f, 3.4f) + side * Main.rand.NextFloat(-0.25f, 0.25f);
+            Color color = Color.Lerp(new Color(70, 255, 125), Color.White, Main.rand.NextFloat(0.08f, 0.24f)) * 0.72f;
+            Particle line = Main.rand.NextBool()
+                ? new LineParticle(position, velocity * 0.45f, false, Main.rand.Next(7, 11), Main.rand.NextFloat(0.28f, 0.42f), color)
+                : new AltSparkParticle(position, velocity, false, Main.rand.Next(7, 10), Main.rand.NextFloat(0.24f, 0.36f), color);
+            GeneralParticleHandler.SpawnParticle(line);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -744,7 +756,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - direction * 18f, Projectile.Center + direction * 42f, 18f, ref collisionPoint);
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - direction * 14f, Projectile.Center + direction * 34f, 13f, ref collisionPoint);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -761,18 +773,53 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 return false;
             }
 
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Projectile.type], lightColor, 1);
-
             Vector2 origin = texture.Size() * 0.5f;
-            Color glowColor = new Color(95, 255, 125, 0) * 0.46f;
-            for (int i = 0; i < 6; i++)
+            Color outlineColor = new Color(70, 255, 125, 0) * 0.58f;
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * 3.4f;
-                Main.EntitySpriteDraw(texture, drawPosition + offset, null, glowColor, Projectile.rotation, origin, Projectile.scale * 0.82f, SpriteEffects.None);
+                Vector2 offset = (MathHelper.PiOver2 * i).ToRotationVector2() * 2.2f;
+                Main.EntitySpriteDraw(texture, drawPosition + offset, null, outlineColor, Projectile.rotation, origin, Projectile.scale * 1.04f, SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, Color.White, 0.54f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(lightColor, Color.White, 0.38f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
+        }
+
+        private NPC GetHomingTarget()
+        {
+            int targetIndex = (int)Projectile.ai[2];
+            if (Main.npc.IndexInRange(targetIndex))
+            {
+                NPC target = Main.npc[targetIndex];
+                if (target.active && target.CanBeChasedBy(Projectile))
+                    return target;
+            }
+
+            NPC bestTarget = null;
+            float bestDistance = HomingRange;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Vector2.Distance(Projectile.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
+        }
+
+        private static void ApplyLocalScreenShake(Vector2 center, float power)
+        {
+            if (Main.dedServ)
+                return;
+
+            float distanceFactor = Utils.GetLerpValue(1600f, 120f, Vector2.Distance(Main.LocalPlayer.Center, center), true);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor);
         }
 
         private Texture2D GetPetalTexture()

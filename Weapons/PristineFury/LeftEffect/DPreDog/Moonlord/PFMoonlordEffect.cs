@@ -57,9 +57,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Vector2 direction = holdout.AimDirection;
             const int flareCount = 3;
+            float warmup = MathHelper.Clamp(holdout.LeftChargeTimer / (float)WarmupFrames, 0f, 1f);
+            float maxScatter = MathHelper.Lerp(MathHelper.ToRadians(24f), MathHelper.ToRadians(4f), warmup);
+
             for (int i = 0; i < flareCount; i++)
             {
-                float spread = MathHelper.Lerp(-0.12f, 0.12f, flareCount == 1 ? 0.5f : i / (float)(flareCount - 1));
+                float spread = Main.rand.NextFloat(-maxScatter, maxScatter);
                 int projectileIndex = Projectile.NewProjectile(
                     holdout.Projectile.GetSource_FromThis(),
                     holdout.GunTipPosition + direction * 15f,
@@ -98,6 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 2.8f);
             holdout.Owner.Calamity().GeneralScreenShakePower = Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 12f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/SubsumingVortexExplosion") { Volume = 0.82f, Pitch = -0.15f }, holdout.GunTipPosition);
+            holdout.LeftBurstIndex = 0;
         }
     }
 }

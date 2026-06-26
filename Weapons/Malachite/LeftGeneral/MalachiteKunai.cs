@@ -39,7 +39,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
     public class MalachiteKunai : ModProjectile, ILocalizedModType
     {
-        private const int PeacockCount = 23;
         private const int FrenzyCount = 3;
         private const int StagedNormalLaunchDelay = 10;
         private const float StoredLifeRefresh = 2f;
@@ -181,7 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static bool HasStoredKunai(Player player) => CountStoredKunai(player) > 0;
 
-        public static bool HasFullStoredPeacockFan(Player player) => CountStoredPeacockKunai(player) >= PeacockCount;
+        public static bool HasFullStoredPeacockFan(Player player) => CountStoredPeacockKunai(player) >= MalachiteBalance.StealthKunaiCount;
 
         public static int CountStoredKunai(Player player)
         {
@@ -267,13 +266,24 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static bool TryThrowStoredKunai(Player player, Vector2 mouseWorld, int damage = -1, float knockback = 0f)
         {
-            Projectile selected = FindNextStoredKunai(player, MalachiteKunaiMode.StoredPeacock);
-            if (selected == null)
+            int throwCount = Math.Max(1, MalachiteBalance.StoredPeacockKunaiPerLeftClick);
+            bool firedAny = false;
+
+            for (int i = 0; i < throwCount; i++)
+            {
+                Projectile selected = FindNextStoredKunai(player, MalachiteKunaiMode.StoredPeacock);
+                if (selected == null)
+                    break;
+
+                Vector2 direction = (mouseWorld - selected.Center).SafeNormalize(Vector2.UnitX * player.direction);
+                RefreshStoredKunaiStats(selected, damage, knockback);
+                FireKunai(selected, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true, stealthStrike: selected.Calamity().stealthStrike);
+                firedAny = true;
+            }
+
+            if (!firedAny)
                 return false;
 
-            Vector2 direction = (mouseWorld - selected.Center).SafeNormalize(Vector2.UnitX * player.direction);
-            RefreshStoredKunaiStats(selected, damage, knockback);
-            FireKunai(selected, direction, MalachiteKunaiMode.FiredPeacock, leftThrow: true, stealthStrike: selected.Calamity().stealthStrike);
             if (CountStoredKunai(player) <= 0)
                 player.GetModPlayer<MalachitePlayer>().StartDepletionBurst();
 
@@ -326,7 +336,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             float knockback,
             Vector2 mouseWorld,
             int count,
-            bool depletionBurst)
+            bool depletionBurst,
+            int launchDelayFrames = 0)
         {
             count = Utils.Clamp(count, 1, MalachiteBalance.DepletionBurstKunaiCount);
             Vector2 aimDirection = (mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
@@ -356,6 +367,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 projectile.tileCollide = false;
                 projectile.extraUpdates = 0;
                 projectile.penetrate = 1;
+                projectile.localAI[0] = -Math.Max(0, launchDelayFrames);
                 projectile.localAI[1] = depletionBurst ? 2f : 0f;
                 projectile.netUpdate = true;
             }
@@ -373,9 +385,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
         public static void SpawnPeacockFan(Player player, IEntitySource source, int damage, float knockback)
         {
-            for (int i = 0; i < PeacockCount; i++)
+            int count = MalachiteBalance.StealthKunaiCount;
+            bool aceUnlocked = MalachiteBalance.StealthAceKunaiUnlocked;
+
+            for (int i = 0; i < count; i++)
             {
-                bool ace = i == PeacockCount / 2;
+                bool ace = aceUnlocked && i == count / 2;
                 Projectile projectile = Projectile.NewProjectileDirect(
                     source,
                     player.Center,
@@ -543,7 +558,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Projectile.tileCollide = false;
             Projectile.extraUpdates = 0;
 
-            float progress = PeacockCount <= 1 ? 0.5f : SlotIndex / (float)(PeacockCount - 1);
+            int total = Math.Max(1, MalachiteBalance.StealthKunaiCount);
+            int slot = Utils.Clamp(SlotIndex, 0, total - 1);
+            float progress = total <= 1 ? 0.5f : slot / (float)(total - 1);
             float open = GetStoredOpenInterpolant();
             float spread = MathHelper.Lerp(-1.92f, 1.92f, progress) * open;
             float crown = MathF.Sin(progress * MathHelper.Pi);

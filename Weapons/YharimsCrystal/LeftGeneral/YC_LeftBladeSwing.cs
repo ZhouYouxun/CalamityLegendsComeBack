@@ -29,9 +29,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private static readonly Color BladeOrange = new(255, 111, 34);
         private static readonly Color BladeWhite = new(255, 246, 196);
 
-        private const int LoopChargeFrames = 40;
-        private const int LoopSpinFrames = 60;
-        private const int LoopHoldFrames = 40;
+        private const int LoopChargeFrames = 12;
+        private const int LoopSpinFrames = 36;
+        private const int LoopHoldFrames = 18;
         private const int ThrowWindupFrames = 30;
         private const int MaxBladeHitFireballs = 5;
         private const int StateLoopCharge = 0;
@@ -222,8 +222,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             FlipAsSword = lockedFacing < 0;
 
             float progress = MathHelper.Clamp(loopTimer / (float)LoopSpinFrames, 0f, 1f);
-            float ramp = MathHelper.Clamp(loopTimer / 6f, 0f, 1f);
-            spinAngle -= MathHelper.TwoPi * 4f / LoopSpinFrames * ramp;
+            float easedSpin = progress * progress * (3f - 2f * progress);
+            spinAngle = -MathHelper.TwoPi * 1.08f * easedSpin;
 
             CanHit = loopTimer > 4 && loopTimer < LoopSpinFrames - 2;
             postSwing = true;
@@ -239,10 +239,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 spinStartSoundPlayed = true;
             }
 
-            if (loopTimer % 12 == 0)
+            if (loopTimer % 9 == 0)
                 Projectile.ResetLocalNPCHitImmunity();
 
-            if (loopTimer % 5 == 0 && Projectile.owner == Main.myPlayer && YC_EssenceFlame.CanSpawnMoreFor(Owner))
+            if (loopTimer % 7 == 0 && Projectile.owner == Main.myPlayer && YC_EssenceFlame.CanSpawnMoreFor(Owner))
                 SpawnSpinFlame();
 
             SpawnSwingParticles(new StageProfile(LoopSpinFrames, 0, 0f, 1.08f));

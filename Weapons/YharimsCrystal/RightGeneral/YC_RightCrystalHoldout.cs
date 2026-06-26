@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private bool heavyAttackQueued;
         private bool leftHeldLastFrame;
         private int coordinatedCooldown;
+        private int rightInputGraceFrames;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
@@ -58,13 +59,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 leftHeldLastFrame = leftHeld;
             }
 
-            // Spawn drones one by one at frames 10, 20, 30, 40, 50, 60
+            // Spawn two wing drones one by one; the right-click session owns them.
             if (Projectile.owner == Main.myPlayer)
             {
-                if (HoldFrameCounter == 10 || HoldFrameCounter == 20 || HoldFrameCounter == 30 ||
-                    HoldFrameCounter == 40 || HoldFrameCounter == 50 || HoldFrameCounter == 60)
+                if (HoldFrameCounter == 10 || HoldFrameCounter == 22)
                 {
-                    int slot = (int)(HoldFrameCounter / 10) - 1;
+                    int slot = HoldFrameCounter == 10 ? 0 : 1;
                     int drone = Projectile.NewProjectile(
                         Projectile.GetSource_FromThis(),
                         Projectile.Center,
@@ -190,10 +190,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         protected override bool IsRightHeld()
         {
-            return (Main.mouseRight || Owner.Calamity().mouseRight) &&
+            bool rightHeld = (Main.mouseRight || Owner.Calamity().mouseRight || Owner.controlUseTile) &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
                 !Owner.mouseInterface;
+
+            if (rightHeld)
+            {
+                rightInputGraceFrames = 18;
+                return true;
+            }
+
+            if (WantsHeavyAttack())
+            {
+                rightInputGraceFrames = Math.Max(rightInputGraceFrames, 12);
+                return true;
+            }
+
+            if (rightInputGraceFrames > 0)
+            {
+                rightInputGraceFrames--;
+                return true;
+            }
+
+            return false;
         }
 
         private bool WantsHeavyAttack()

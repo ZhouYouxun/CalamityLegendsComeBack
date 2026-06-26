@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Polterghast",                                  49,      56,      43,      46,      56 },
             { "Devourer of Gods",                             55,      70,      50,      53,      70 },
             { "Yharon",                                       64,      88,      60,      62,      88 },
-            { "Exo Mechs and Supreme Calamitas",               77,     109,      69,      75,     109 }
+            { "Exo Mechs and Supreme Calamitas",               77,     109,     69,      75,     109 }
         };
 
         internal int GetLeftClickBaseDamage(BlossomFluxChloroplastPresetType preset) => BFBalanceTable.Get(GetLeftDamageStat(preset));

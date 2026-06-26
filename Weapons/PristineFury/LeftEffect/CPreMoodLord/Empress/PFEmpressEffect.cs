@@ -24,13 +24,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             NPC target = FindTarget(holdout);
-            if (target == null)
-            {
-                KillExistingStream(holdout);
-                return;
-            }
-
             Vector2 muzzle = holdout.GunTipPosition + holdout.AimDirection * 16f;
+            Vector2 beamDirection = target == null
+                ? holdout.AimDirection.SafeNormalize(Vector2.UnitX)
+                : GetLimitedTargetDirection(holdout.AimDirection, muzzle, target.Center);
             int streamType = ModContent.ProjectileType<PFEmpressRainbowFireStream>();
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
@@ -38,7 +35,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     continue;
 
                 projectile.Center = muzzle;
-                projectile.ai[1] = target.whoAmI;
+                projectile.velocity = beamDirection;
+                projectile.ai[1] = target?.whoAmI ?? -1;
                 projectile.timeLeft = 2;
                 projectile.netUpdate = true;
                 PFLeftEffectRules.ApplyTheme(projectile.whoAmI, holdout.CurrentMark);
@@ -49,13 +47,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             int stream = Projectile.NewProjectile(
                 holdout.Projectile.GetSource_FromThis(),
                 muzzle,
-                GetLimitedTargetDirection(holdout.AimDirection, muzzle, target.Center),
+                beamDirection,
                 streamType,
                 holdout.GetScaledDamage(0.58f),
                 holdout.Projectile.knockBack * 0.45f,
                 holdout.Projectile.owner,
                 holdout.Projectile.whoAmI,
-                target.whoAmI);
+                target?.whoAmI ?? -1);
             PFLeftEffectRules.ApplyTheme(stream, holdout.CurrentMark);
             EmitHoldEffects(holdout, muzzle, true);
         }
@@ -129,12 +127,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         private const float StreamLength = 1100f;
 
         public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/PristineFury/LeftEffect/CPreMoodLord/Empress/PFEmpressRainbowFireStream";
 
         private int HoldoutIndex => (int)Projectile.ai[0];
         private int TargetIndex => (int)Projectile.ai[1];
         private ref float Timer => ref Projectile.localAI[0];
+        private ref float Heat => ref Projectile.localAI[1];
         private float Ramp => MathHelper.Clamp(Timer / RampFrames, 0f, 1f);
+        private float HeatRamp => MathHelper.Clamp(Heat / 180f, 0f, 1f);
         private Vector2 BeamEnd => Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitX) * StreamLength;
 
         public override void SetDefaults()
@@ -161,9 +161,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             }
 
             Timer++;
+            Heat = Math.Max(0f, Heat - 0.16f);
             Vector2 muzzle = holdout.GunTipPosition + holdout.AimDirection * 16f;
             Projectile.Center = muzzle;
-            Projectile.velocity = PFEmpressEffect.GetLimitedTargetDirection(holdout.AimDirection, muzzle, target.Center);
+            Projectile.velocity = target == null
+                ? holdout.AimDirection.SafeNormalize(Vector2.UnitX)
+                : PFEmpressEffect.GetLimitedTargetDirection(holdout.AimDirection, muzzle, target.Center);
             Projectile.timeLeft = 2;
             Projectile.rotation = Projectile.velocity.ToRotation();
 
@@ -183,11 +186,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (!Main.projectile.IndexInRange(HoldoutIndex) || !Main.projectile[HoldoutIndex].active || Main.projectile[HoldoutIndex].ModProjectile is not NewLegendPristineFuryHoldOut foundHoldout || foundHoldout.CurrentMark != PristineFuryMark.Empress)
                 return false;
 
-            if (!Main.npc.IndexInRange(TargetIndex) || !Main.npc[TargetIndex].active || !Main.npc[TargetIndex].CanBeChasedBy())
-                return false;
-
             holdout = foundHoldout;
-            target = Main.npc[TargetIndex];
+            if (Main.npc.IndexInRange(TargetIndex) && Main.npc[TargetIndex].active && Main.npc[TargetIndex].CanBeChasedBy())
+                target = Main.npc[TargetIndex];
+
             return true;
         }
 
@@ -196,19 +198,21 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (Main.dedServ || Projectile.owner != Main.myPlayer)
                 return;
 
-            if (Timer % 4 != 0)
+            int interval = Math.Max(2, (int)MathF.Round(MathHelper.Lerp(4f, 2f, HeatRamp)));
+            if ((int)Timer % interval != 0)
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             int boltType = ModContent.ProjectileType<PFEmpress_ScatterBolt>();
-            int boltDamage = Math.Max(1, (int)(Projectile.damage * 0.22f));
+            int boltDamage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.20f, 0.32f, HeatRamp)));
+            int boltCount = 3 + (int)MathF.Round(HeatRamp * 3f);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < boltCount; i++)
             {
                 float boltHue = (Main.GlobalTimeWrappedHourly * 0.24f + i * 0.26f + Main.rand.NextFloat(0.08f)) % 1f;
                 float t = Main.rand.NextFloat(0.08f, 0.88f);
                 Vector2 boltSpawn = Vector2.Lerp(Projectile.Center, BeamEnd, t);
-                Vector2 boltVel = direction.RotatedByRandom(MathHelper.Pi / 3.2f) * Main.rand.NextFloat(11f, 19f);
+                Vector2 boltVel = direction.RotatedByRandom(MathHelper.Lerp(MathHelper.Pi / 3.4f, MathHelper.Pi / 2.2f, HeatRamp)) * Main.rand.NextFloat(11f, MathHelper.Lerp(19f, 25f, HeatRamp));
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     boltSpawn,
@@ -227,7 +231,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            for (int i = 0; i < 4; i++)
+            int particleCount = 4 + (int)MathF.Round(HeatRamp * 4f);
+            for (int i = 0; i < particleCount; i++)
             {
                 float completion = Main.rand.NextFloat();
                 Vector2 point = Vector2.Lerp(Projectile.Center, end, completion) + Main.rand.NextVector2Circular(10f, 10f);
@@ -257,15 +262,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                     Color.Lerp(GetStreamColor(0.92f), Color.White, 0.28f + Ramp * 0.38f)));
             }
 
-            if (Timer % 8f == 0f)
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(end, Vector2.Zero, GetStreamColor(Main.rand.NextFloat()) * 0.72f, Vector2.One, 0f, 0.04f, MathHelper.Lerp(0.18f, 0.45f, Ramp), 10));
+            int pulseInterval = Math.Max(4, (int)MathF.Round(MathHelper.Lerp(8f, 4f, HeatRamp)));
+            if ((int)Timer % pulseInterval == 0)
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(end, Vector2.Zero, GetStreamColor(Main.rand.NextFloat()) * 0.72f, Vector2.One, 0f, 0.04f, MathHelper.Lerp(0.18f, 0.56f, Math.Max(Ramp, HeatRamp)), 10));
         }
 
         private Color GetStreamColor(float completion)
         {
             float hue = (Main.GlobalTimeWrappedHourly * 0.28f + completion * 0.62f + Ramp * 0.08f) % 1f;
             Color rainbow = Main.hslToRgb(hue, 0.92f, MathHelper.Lerp(0.46f, 0.65f, Ramp));
-            return Color.Lerp(rainbow, Color.White, Ramp * 0.32f);
+            Color hot = Color.Lerp(Color.Gold, Color.DeepPink, 0.35f + 0.35f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f + completion));
+            return Color.Lerp(Color.Lerp(rainbow, Color.White, Ramp * 0.26f), hot, HeatRamp * 0.58f);
         }
 
         public override bool? CanHitNPC(NPC target) => null;
@@ -279,14 +286,34 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.SourceDamage *= MathHelper.Lerp(1f, 1.5f, Ramp);
+            modifiers.SourceDamage *= MathHelper.Lerp(1f, 1.5f + HeatRamp * 0.25f, Ramp);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Heat = Math.Min(180f, Heat + 12f);
+
+            if (Main.dedServ)
+                return;
+
+            Color color = GetStreamColor(Main.rand.NextFloat());
+            for (int i = 0; i < 3 + (int)(HeatRamp * 5f); i++)
+            {
+                Dust d = Dust.NewDustPerfect(
+                    target.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    DustID.RainbowMk2,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, 4.8f),
+                    0,
+                    color,
+                    Main.rand.NextFloat(0.7f, 1.15f));
+                d.noGravity = true;
+                d.color = color;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (!Main.npc.IndexInRange(TargetIndex) || !Main.npc[TargetIndex].active)
-                return false;
-
+            Texture2D beamTexture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 start = Projectile.Center - Main.screenPosition;
@@ -301,6 +328,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             float coreW = MathHelper.Lerp(0.3f, 0.55f, Ramp) * pulse;
 
             PFLeftEffectRules.BeginAdditive();
+
+            Utils.LaserLineFraming laserFraming = new(DelegateMethods.RainbowLaserDraw);
+            for (int i = 0; i < 3; i++)
+            {
+                float layer = i / 2f;
+                Color beamColor = (Color.Lerp(GetStreamColor(layer), Color.White, 0.18f + i * 0.18f) with { A = 0 }) * MathHelper.Lerp(0.56f, 0.96f, Ramp);
+                DelegateMethods.c_1 = beamColor * (1f + HeatRamp * 0.35f);
+                DelegateMethods.f_1 = 1f;
+                Vector2 scaleVec = Vector2.One * MathHelper.Lerp(0.44f - i * 0.08f, 0.92f - i * 0.12f, Ramp) * pulse * (1f + HeatRamp * 0.18f);
+                Utils.DrawLaser(Main.spriteBatch, beamTexture, start, end, scaleVec, laserFraming);
+            }
 
             // 外层宽彩虹光晕：5条横向偏移
             for (int i = 0; i < 5; i++)

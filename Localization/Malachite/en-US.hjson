@@ -5,42 +5,102 @@
 				Malachite: {
 					DisplayName: Peacock Plume
 					Tooltip: "[GFB]"
-					LeftClick:
+					LeftClick0:
 						'''
-						[c/7DFF9A:Left: Throw a peacock kunai.]
-						[c/7DFF9A:Stored stealth kunai fire first, one by one.]
-						[c/7DFF9A:Ignores gravity with Clear Breeze Kunai; later tiers add shots.]
+						[c/7DFF9A:Left: throw one peacock kunai.]
+						[c/7DFF9A:Hits leave short parallel green cuts.]
 						'''
-					RightClick:
+					LeftClick1:
 						'''
-						[c/80FFC8:Right: Store right feathers behind you.]
-						[c/80FFC8:Right click pours all stored feathers out.]
-						[c/80FFC8:Normal right feathers do not explode or gain stealth power.]
+						[c/7DFF9A:Left: kunai are no longer pulled by gravity.]
+						[c/7DFF9A:Stored stealth kunai still fire first.]
 						'''
-					StealthStrike:
+					LeftClick2:
 						'''
-						[c/B5FF74:Stealth left: Store 23 malachite darts.]
-						[c/B5FF74:Stealth right: Fire every stored right feather.]
-						[c/B5FF74:Stealth right feathers explode and gain power.]
+						[c/7DFF9A:Left: throw two kunai per attack.]
+						[c/7DFF9A:Stored stealth fan shots also fire two at a time.]
+						'''
+					LeftClick3:
+						'''
+						[c/7DFF9A:Left: every 9th attack triggers a double scatter.]
+						[c/7DFF9A:The scatter releases 5×2 kunai.]
+						'''
+					LeftClick4:
+						'''
+						[c/7DFF9A:Left: throw three kunai per attack.]
+						[c/7DFF9A:The 9th-attack scatter upgrades to 7×2.]
+						'''
+					RightClick0:
+						'''
+						[c/6D6D6D:Right: hidden until King Slime is defeated.]
+						[c/6D6D6D:The real move stays concealed before then.]
+						'''
+					RightClick1:
+						'''
+						[c/80FFC8:Right: store and pour out right feathers.]
+						[c/80FFC8:Stealth right feathers burst on hit.]
+						'''
+					RightClick2:
+						'''
+						[c/80FFC8:Right: releasing feathers grants 3s of agility.]
+						[c/80FFC8:Move speed and jump power rise by 15%.]
+						'''
+					RightClick3:
+						'''
+						[c/80FFC8:Right: triggering an attack empowers left for 1s.]
+						[c/80FFC8:Left-click attack speed is doubled.]
+						'''
+					RightClick4:
+						'''
+						[c/80FFC8:Right: triggering an attack empowers left for 1s.]
+						[c/80FFC8:Stealth right attacks cost no stealth.]
+						'''
+					StealthStrike0:
+						'''
+						[c/B5FF74:Stealth attack: create 15 hidden darts.]
+						[c/B5FF74:Left and right share this stealth fan.]
+						'''
+					StealthStrike1:
+						'''
+						[c/B5FF74:Stealth attack: dart count rises to 17.]
+						[c/B5FF74:The center ace kunai now appears.]
+						'''
+					StealthStrike2:
+						'''
+						[c/B5FF74:Stealth attack: dart count rises to 19.]
+						[c/B5FF74:The ace remains at the center of the fan.]
+						'''
+					StealthStrike3:
+						'''
+						[c/B5FF74:Stealth attack: dart count rises to 21.]
+						[c/B5FF74:Right bursts now feed left-click haste.]
+						'''
+					StealthStrike4:
+						'''
+						[c/B5FF74:Stealth attack: dart count rises to 23.]
+						[c/B5FF74:The peacock fan is fully unfolded.]
 						'''
 					Finale:
 						'''
 						[c/D6FF9A:Finale: At full stealth and off cooldown, press] [[c/D6FF9A:{0}]] [c/D6FF9A:.]
-						[c/D6FF9A:Spotlights mark you and nearby enemies.]
-						[c/D6FF9A:23 petals turn into blades and split by distance.]
+						[c/D6FF9A:Charges in 30s; stealth attacks advance it by 5s.]
+						[c/D6FF9A:Petals turn into swift homing kunai.]
 						'''
 					Passive:
 						'''
 						[c/9AFFC8:Passive while held:]
-						[c/9AFFC8:Into Shadow: stealth attacks consume only half of your stealth and instantly restore 15 stealth points; while above 50% stealth, also gain 15% movement speed.]
+						[c/9AFFC8:Into Shadow: stealth attacks spend only half stealth.]
+						[c/9AFFC8:They immediately restore 15 stealth points.]
+						[c/9AFFC8:Above half stealth, gain 15% movement speed.]
 						'''
 					LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
 					LegendaryText:
 						'''
-						[c/7DFF9A:When the plume opens, it is not the blade that moves, but the time left to its target.]
-						[c/80FFC8:The frenzied kunai obey the fan only until they are awakened.]
-						[c/B5FF74:The peacock spread waits in shadow, each blade watching for the first wrong step.]
-						[c/D6FF9A:Once the spotlight falls, one cut is enough; the blasts finish the curtain call.]
+						[c/B5FF74:It is not a plume, but a set of blades waiting for wind.]
+						[c/7DFF9A:The first kunai is quiet; the rest become the fan.]
+						[c/80FFC8:The calmer the right feathers, the cleaner the green line.]
+						[c/D6FF9A:When petals fall, the target is already pinned by light.]
+						[c/BABABA:A true Peacock Plume never lingers after the cut.]
 						'''
 				}
 			}

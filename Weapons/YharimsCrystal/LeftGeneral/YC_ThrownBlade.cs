@@ -40,7 +40,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Projectile.timeLeft = 360;
         }
 
-        public override bool? CanHitNPC(NPC target) => Projectile.ai[0] == StateStuck ? false : null;
+        public override bool? CanHitNPC(NPC target)
+        {
+            if (Projectile.ai[0] == StateStuck)
+                return false;
+
+            if (Projectile.ai[0] == StateDirectedThrow && Projectile.localAI[0] <= 48f)
+                return false;
+
+            return null;
+        }
 
         public override void AI()
         {
@@ -111,8 +120,35 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private void DoDirectedThrow()
         {
             Projectile.localAI[0]++;
-            Projectile.localAI[1] += 0.42f;
-            float progress = MathHelper.Clamp(Projectile.localAI[0] / 28f, 0f, 1f);
+            Projectile.localAI[1] += 0.32f;
+            if (Projectile.localAI[0] <= 34f)
+            {
+                float driftProgress = MathHelper.Clamp(Projectile.localAI[0] / 34f, 0f, 1f);
+                Vector2 driftDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, driftDirection * MathHelper.Lerp(7.5f, 2.6f, driftProgress), 0.1f);
+                Projectile.rotation += 0.52f;
+                Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Projectile.localAI[0], true);
+                Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.62f, 0.12f) * 0.55f);
+                EmitDirectedThrowChargeFX(driftProgress, charging: false);
+                return;
+            }
+
+            if (Projectile.localAI[0] <= 48f)
+            {
+                float holdProgress = MathHelper.Clamp((Projectile.localAI[0] - 34f) / 14f, 0f, 1f);
+                Projectile.velocity *= 0.76f;
+                Projectile.rotation += 0.36f + holdProgress * 0.16f;
+                Projectile.Opacity = 1f;
+                Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * (0.75f + holdProgress * 0.65f));
+                EmitDirectedThrowChargeFX(holdProgress, charging: true);
+
+                if (Projectile.localAI[0] == 42f)
+                    SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.62f, Pitch = -0.32f }, Projectile.Center);
+
+                return;
+            }
+
+            float progress = MathHelper.Clamp((Projectile.localAI[0] - 48f) / 18f, 0f, 1f);
             float easedProgress = MathHelper.SmoothStep(0f, 1f, progress);
             NPC target = GetThrowTarget();
             Vector2 targetDirection = target == null
@@ -120,14 +156,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 : (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
             float dist = target == null ? 9999f : Vector2.Distance(Projectile.Center, target.Center);
             float closeFactor = Utils.GetLerpValue(600f, 80f, dist, true);
-            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(1.8f, 7.5f, easedProgress) + closeFactor * 5f);
+            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(12f, 28f, easedProgress) + closeFactor * 10f);
             float newAngle = Projectile.velocity.ToRotation().AngleTowards(targetDirection.ToRotation(), turnRate);
-            if (Projectile.localAI[0] < 14f)
-                newAngle += MathF.Sin(Projectile.localAI[0] * 0.65f) * 0.055f;
-            float speed = MathHelper.Lerp(16f, 38f, easedProgress);
+            float speed = MathHelper.Lerp(42f, 58f, easedProgress);
             Projectile.velocity = newAngle.ToRotationVector2() * speed;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.ToRadians(225f) + Projectile.localAI[1];
-            Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Projectile.localAI[0], true);
+            Projectile.Opacity = 1f;
             Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.72f, 0.18f) * (0.65f + easedProgress * 0.65f));
 
             if (!Main.dedServ)
@@ -164,6 +198,34 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 }
             }
 
+        }
+
+        private void EmitDirectedThrowChargeFX(float progress, bool charging)
+        {
+            if (Main.dedServ)
+                return;
+
+            int interval = charging ? 2 : 4;
+            if ((int)Projectile.localAI[0] % interval != 0)
+                return;
+
+            Color color = Main.rand.NextBool(3) ? Color.White : Color.Lerp(new Color(255, 100, 28), new Color(255, 220, 88), progress);
+            Vector2 radial = Main.rand.NextVector2CircularEdge(1f, 1f);
+            Vector2 position = Projectile.Center + radial * Main.rand.NextFloat(charging ? 42f : 24f, charging ? 96f : 62f);
+            Vector2 velocity = (Projectile.Center - position).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(charging ? 4f : 1.6f, charging ? 10f : 4.5f);
+
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                position,
+                velocity,
+                "CalamityMod/Particles/Sparkle",
+                false,
+                Main.rand.Next(charging ? 12 : 10, charging ? 20 : 16),
+                Main.rand.NextFloat(0.36f, charging ? 0.92f : 0.62f),
+                color,
+                new Vector2(0.22f, charging ? 1.2f : 0.8f),
+                true,
+                true,
+                shrinkSpeed: 0.16f));
         }
 
         private NPC GetThrowTarget()
@@ -265,6 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             SoundEngine.PlaySound(SoundID.Item22 with { Volume = 0.85f, Pitch = -0.1f }, target.Center);
 
+            bool directedImpact = Projectile.ai[0] == StateDirectedThrow;
             if (Projectile.ai[0] != StateStuck)
             {
                 Projectile.ai[0] = StateStuck;
@@ -286,6 +349,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     }
                 }
             }
+
+            if (directedImpact)
+                SpawnSkyJudgement();
 
             // Spawn homing tracking missiles on every hit
             if (Projectile.owner == Main.myPlayer)

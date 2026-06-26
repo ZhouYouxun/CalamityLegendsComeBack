@@ -68,6 +68,19 @@ namespace CalamityLegendsComeBack.Systems
             return TryParseFloatCell(cells[columnIndex], out float value) ? value : fallback;
         }
 
+        public static bool GetSourceTableBool(string sourceRelativePath, string fieldName, int rowIndex, int columnIndex, bool fallback)
+        {
+            string row = GetSourceTableRow(sourceRelativePath, fieldName, rowIndex);
+            if (row == null)
+                return fallback;
+
+            List<string> cells = SplitTopLevelCells(row);
+            if (columnIndex < 0 || columnIndex >= cells.Count)
+                return fallback;
+
+            return TryParseBoolCell(cells[columnIndex], out bool value) ? value : fallback;
+        }
+
         public static float GetSourceFloatTableColumn(string sourceRelativePath, string fieldName, int rowIndex, int columnIndex, float fallback)
         {
             return GetSourceTableFloat(sourceRelativePath, fieldName, rowIndex, columnIndex, fallback);
@@ -315,6 +328,25 @@ namespace CalamityLegendsComeBack.Systems
                 return float.TryParse(match.Value.TrimEnd('f', 'F'), NumberStyles.Float, CultureInfo.InvariantCulture, out value);
 
             value = 0f;
+            return false;
+        }
+
+        private static bool TryParseBoolCell(string cell, out bool value)
+        {
+            string cleaned = StripComments(cell).Trim();
+            if (cleaned.StartsWith("true", StringComparison.OrdinalIgnoreCase))
+            {
+                value = true;
+                return true;
+            }
+
+            if (cleaned.StartsWith("false", StringComparison.OrdinalIgnoreCase))
+            {
+                value = false;
+                return true;
+            }
+
+            value = false;
             return false;
         }
 

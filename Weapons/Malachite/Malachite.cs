@@ -64,6 +64,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (player.altFunctionUse == 2)
             {
+                if (!MalachiteBalance.RightClickUnlocked)
+                    return false;
+
                 if (MalachiteRightFeather.CountStoredRightFeathers(player) <= 0)
                     return false;
 
@@ -95,6 +98,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             float speed = MalachiteBalance.LeftClickUseSpeedMultiplier;
             if (MalachiteKunai.CountStoredPeacockKunai(player) > 0)
                 speed *= 2f;
+            if (player.GetModPlayer<MalachitePlayer>().LeftClickHasteActive)
+                speed *= 2f;
 
             return speed;
         }
@@ -113,8 +118,13 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 {
                     if (MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthStrike))
                     {
+                        if (MalachiteBalance.RightClickMoveBoostUnlocked)
+                            malachitePlayer.TriggerRightClickBoost();
+                        if (MalachiteBalance.RightClickLeftHasteUnlocked)
+                            malachitePlayer.TriggerLeftClickHaste();
+
                         if (stealthStrike)
-                            malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
+                            HandleStealthAttackCost(malachitePlayer, calamity, rightClick: true);
 
                         SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, player.Center);
                         SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, player.Center);
@@ -129,14 +139,33 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 MalachiteKunai.FireStoredPeacockKunaiAsLeftThrows(player, mouseWorld, damage, knockback);
                 MalachiteKunai.SpawnPeacockFan(player, source, damage, knockback);
                 MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthEnhanced: true);
-                malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
+                HandleStealthAttackCost(malachitePlayer, calamity, rightClick: false);
                 SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.85f, Pitch = 0.08f }, player.Center);
                 return false;
             }
 
+            bool scatterBurst = malachitePlayer.ConsumeLeftClickForScatterBurst();
             if (MalachiteKunai.TryThrowStoredKunai(player, mouseWorld, damage, knockback))
             {
+                if (scatterBurst)
+                    SpawnLeftClickScatterBurst(player, source, mouseWorld, damage, knockback);
+
                 SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.78f, Pitch = 0.22f }, player.Center);
+                return false;
+            }
+
+            if (scatterBurst)
+            {
+                SpawnLeftClickScatterBurst(player, source, mouseWorld, damage, knockback);
+                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.78f, Pitch = 0.18f }, player.Center);
+                return false;
+            }
+
+            int kunaiCount = MalachiteBalance.NormalLeftClickKunaiCount;
+            if (kunaiCount > 1)
+            {
+                MalachiteKunai.SpawnNormalLeftClickVolley(player, source, damage, knockback, mouseWorld, kunaiCount, depletionBurst: false);
+                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.78f, Pitch = 0.14f }, player.Center);
                 return false;
             }
 
@@ -192,10 +221,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 : this.GetLocalizedValue("LegendaryHint");
 
             string finalText =
-                this.GetLocalizedValue("LeftClick") + "\n\n" +
-                this.GetLocalizedValue("RightClick") + "\n\n" +
-                this.GetLocalizedValue("StealthStrike") + "\n\n" +
-                string.Format(this.GetLocalizedValue("Finale"), keyText) + "\n\n" +
+                this.GetLocalizedValue($"LeftClick{MalachiteBalance.GetLeftClickTooltipTier()}") + "\n" +
+                this.GetLocalizedValue($"RightClick{MalachiteBalance.GetRightClickTooltipTier()}") + "\n" +
+                this.GetLocalizedValue($"StealthStrike{MalachiteBalance.GetStealthTooltipTier()}") + "\n" +
+                string.Format(this.GetLocalizedValue("Finale"), keyText) + "\n" +
                 this.GetLocalizedValue("Passive") + "\n";
 
             if (shiftPressed)
@@ -270,6 +299,39 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 cooldown.timeLeft = MalachiteEXCooldown.CooldownFrames;
             else
                 player.AddCooldown(MalachiteEXCooldown.ID, MalachiteEXCooldown.CooldownFrames);
+        }
+
+        private static void HandleStealthAttackCost(MalachitePlayer malachitePlayer, CalamityPlayer calamity, bool rightClick)
+        {
+            if (rightClick && MalachiteBalance.RightClickConsumesNoStealth)
+            {
+                malachitePlayer.AdvanceFinaleCooldownFromStealthAttack();
+                return;
+            }
+
+            malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
+        }
+
+        private static void SpawnLeftClickScatterBurst(
+            Player player,
+            IEntitySource source,
+            Vector2 mouseWorld,
+            int damage,
+            float knockback)
+        {
+            int count = MalachiteBalance.LeftClickScatterKunaiPerWave;
+            for (int wave = 0; wave < MalachiteBalance.LeftClickScatterWaveCount; wave++)
+            {
+                MalachiteKunai.SpawnNormalLeftClickVolley(
+                    player,
+                    source,
+                    damage,
+                    knockback,
+                    mouseWorld,
+                    count,
+                    depletionBurst: false,
+                    launchDelayFrames: wave * 7);
+            }
         }
 
         private static Vector2 GetMouseWorld(Player player)

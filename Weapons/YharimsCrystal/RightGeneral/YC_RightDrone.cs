@@ -19,12 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private static readonly Vector2[] RearOffsets =
         {
-            new(-24f, 16f),
-            new(-48f, -12f),
-            new(-72f, -36f),
-            new(24f, 16f),
-            new(48f, -12f),
-            new(72f, -36f)
+            new(-48f, -20f),
+            new(48f, -20f)
         };
 
         public int SlotIndex => (int)Projectile.ai[0];

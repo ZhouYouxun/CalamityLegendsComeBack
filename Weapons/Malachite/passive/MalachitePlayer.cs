@@ -1,10 +1,13 @@
 using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityLegendsComeBack.Accssory.MC.PeacockBox;
 using CalamityLegendsComeBack.Accssory.MC.PeacockScroll;
+using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
 using CalamityMod;
 using CalamityMod.CalPlayer;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -21,8 +24,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private bool wasHoldingMalachite;
         private int depletionBurstTimer;
         private int rightFeatherGenerationTimer;
+        private int rightClickBoostTimer;
+        private int leftClickHasteTimer;
+        private int leftClickScatterCounter;
 
         public bool DepletionBurstActive => depletionBurstTimer > 0;
+        public bool LeftClickHasteActive => leftClickHasteTimer > 0;
 
         public override void ResetEffects()
         {
@@ -35,6 +42,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             wasHoldingMalachite = false;
             depletionBurstTimer = 0;
             rightFeatherGenerationTimer = 0;
+            rightClickBoostTimer = 0;
+            leftClickHasteTimer = 0;
+            leftClickScatterCounter = 0;
         }
 
         public override void PostUpdateEquips()
@@ -49,6 +59,13 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             if (depletionBurstTimer > 0)
                 depletionBurstTimer--;
+            if (leftClickHasteTimer > 0)
+                leftClickHasteTimer--;
+            if (rightClickBoostTimer > 0)
+            {
+                rightClickBoostTimer--;
+                ApplyRightClickBoost();
+            }
 
             TryGenerateRightFeather();
 
@@ -94,11 +111,45 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             float bonusRestore = previousStealth * Player.GetModPlayer<MCGeneralPlayer>().StealthRestoreOnStealthStrike;
             calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + previousStealth * 0.5f + bonusRestore, 0f, calamity.rogueStealthMax);
             AddStealthPoints(15f);
+            AdvanceFinaleCooldownFromStealthAttack();
         }
 
         public void StartDepletionBurst()
         {
             depletionBurstTimer = DepletionBurstFrames;
+        }
+
+        public void TriggerRightClickBoost()
+        {
+            rightClickBoostTimer = Math.Max(rightClickBoostTimer, MalachiteBalance.RightClickBoostFrames);
+        }
+
+        public void TriggerLeftClickHaste()
+        {
+            if (MalachiteBalance.RightClickLeftHasteUnlocked)
+                leftClickHasteTimer = Math.Max(leftClickHasteTimer, MalachiteBalance.LeftClickHasteFrames);
+        }
+
+        public bool ConsumeLeftClickForScatterBurst()
+        {
+            if (!MalachiteBalance.LeftClickScatterUnlocked)
+            {
+                leftClickScatterCounter = 0;
+                return false;
+            }
+
+            leftClickScatterCounter++;
+            if (leftClickScatterCounter < MalachiteBalance.LeftClickScatterInterval)
+                return false;
+
+            leftClickScatterCounter = 0;
+            return true;
+        }
+
+        public void AdvanceFinaleCooldownFromStealthAttack()
+        {
+            if (Player.Calamity().cooldowns.TryGetValue(MalachiteEXCooldown.ID, out var cooldown))
+                cooldown.timeLeft = Math.Max(0, cooldown.timeLeft - MalachiteBalance.FinaleStealthAttackAdvanceFrames);
         }
 
         private void ApplyShadowStepBonuses()
@@ -112,10 +163,47 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Player.runAcceleration *= 1.08f;
         }
 
+        private void ApplyRightClickBoost()
+        {
+            Player.moveSpeed += 0.15f;
+            Player.maxRunSpeed += 0.9f;
+            Player.jumpSpeedBoost += 1.15f;
+            Player.runAcceleration *= 1.12f;
+            SpawnRightClickBoostLines();
+        }
+
+        private void SpawnRightClickBoostLines()
+        {
+            if (Main.dedServ || !Main.rand.NextBool(4))
+                return;
+
+            Vector2 forward = Player.velocity.SafeNormalize(Vector2.UnitX * Player.direction);
+            Vector2 backward = -forward;
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 position =
+                Player.Center +
+                backward * Main.rand.NextFloat(12f, 34f) +
+                side * Main.rand.NextFloat(-12f, 12f) +
+                Main.rand.NextVector2Circular(2f, 5f);
+            Vector2 velocity = backward * Main.rand.NextFloat(2.2f, 4.4f) + Player.velocity * 0.12f;
+            Color color = Color.Lerp(new Color(70, 255, 135), Color.White, Main.rand.NextFloat(0.08f, 0.22f)) * 0.76f;
+
+            Particle line = Main.rand.NextBool()
+                ? new LineParticle(position, velocity * 0.42f, false, Main.rand.Next(7, 11), Main.rand.NextFloat(0.34f, 0.48f), color)
+                : new AltSparkParticle(position, velocity, false, Main.rand.Next(7, 10), Main.rand.NextFloat(0.28f, 0.42f), color);
+            GeneralParticleHandler.SpawnParticle(line);
+        }
+
         private void TryGenerateRightFeather()
         {
             if (Player.whoAmI != Main.myPlayer || Player.dead)
                 return;
+
+            if (!MalachiteBalance.RightClickUnlocked)
+            {
+                rightFeatherGenerationTimer = 0;
+                return;
+            }
 
             bool peacockBoxEquipped = Player.GetModPlayer<PeacockBoxPlayer>().PeacockBoxEquipped;
             bool peacockScrollEquipped = Player.GetModPlayer<PeacockScrollPlayer>().PeacockScrollEquipped;
@@ -244,6 +332,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
 
             int rightFeathersCount = MalachiteRightFeather.CountStoredRightFeathers(Player);
+            if (!MalachiteBalance.RightClickUnlocked)
+                return;
+
             if (rightFeathersCount >= 1)
             {
                 CalamityPlayer calamity = Player.Calamity();
@@ -255,9 +346,17 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
                 if (MalachiteRightFeather.ReleaseStoredRightFeathers(Player, source, mouseWorld, damage, knockback, stealthStrike))
                 {
+                    if (MalachiteBalance.RightClickMoveBoostUnlocked)
+                        TriggerRightClickBoost();
+                    if (MalachiteBalance.RightClickLeftHasteUnlocked)
+                        TriggerLeftClickHaste();
+
                     if (stealthStrike)
                     {
-                        ConsumeHalfStealthAndRestore(calamity);
+                        if (MalachiteBalance.RightClickConsumesNoStealth)
+                            AdvanceFinaleCooldownFromStealthAttack();
+                        else
+                            ConsumeHalfStealthAndRestore(calamity);
                     }
                     SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, Player.Center);
                     SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, Player.Center);

@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -106,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private bool IsHoming => Timer > 42f;
+        private bool IsHoming => Timer >= 25f;
 
         public override void SetDefaults()
         {
@@ -124,13 +125,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
         public override void AI()
         {
-            Timer++;
+            Timer += 1f / Projectile.MaxUpdates;
 
-            if (!IsHoming)
+            if (Timer < 20f)
             {
                 // 胡乱飞行阶段：随机扰动 + 轻微减速
                 Projectile.velocity += Main.rand.NextVector2Circular(0.55f, 0.55f);
                 Projectile.velocity *= 0.972f;
+            }
+            else if (!IsHoming)
+            {
+                Projectile.velocity *= 0.982f;
             }
             else
             {
@@ -142,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             Lighting.AddLight(Projectile.Center, Color.White.ToVector3() * 0.22f);
 
             if (!Main.dedServ && Projectile.numUpdates == 0)
-                EmitWhiteDust();
+                EmitWhiteTrail();
         }
 
         private void StrongHome()
@@ -151,14 +156,34 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             if (target == null)
                 return;
 
-            float trackPower = Utils.GetLerpValue(42f, 85f, Timer, true);
-            float speed = MathHelper.Lerp(5f, 17f, trackPower);
+            float trackPower = Utils.GetLerpValue(25f, 85f, Timer, true);
+            float speed = MathHelper.Lerp(6f, 19f, trackPower);
             Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, 0.10f + trackPower * 0.16f);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, 0.08f + trackPower * 0.20f);
         }
 
-        private void EmitWhiteDust()
+        private void EmitWhiteTrail()
         {
+            if (((int)Timer & 1) == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center,
+                    -Projectile.velocity.SafeNormalize(Vector2.UnitX) * 0.18f,
+                    false,
+                    8,
+                    0.34f,
+                    Color.White));
+
+                GeneralParticleHandler.SpawnParticle(new BloomParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(2f, 2f),
+                    Vector2.Zero,
+                    Color.White * 0.55f,
+                    0.18f,
+                    0.24f,
+                    7,
+                    false));
+            }
+
             for (int i = 0; i < 2; i++)
             {
                 Dust d = Dust.NewDustPerfect(
@@ -197,6 +222,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 d.noGravity = true;
             }
         }
+
+        public override bool? CanDamage() => Timer < 20f ? false : null;
 
         public override bool PreDraw(ref Color lightColor) => false;
     }

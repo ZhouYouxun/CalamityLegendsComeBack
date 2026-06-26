@@ -27,15 +27,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         private static readonly int[] DefaultLeftClickBaseDamage =
         {
             InitialLeftClickBaseDamage, // Stage 0: Initial
-            44,  // Stage 1: Desert Scourge
-            58,  // Stage 2: Evil Boss T1
-            88,  // Stage 3: Wall of Flesh
-            126, // Stage 4: Brimstone Elemental
-            190, // Stage 5: Golem
-            250, // Stage 6: Empress of Light
-            360, // Stage 7: Moon Lord
-            485, // Stage 8: Providence
-            720  // Stage 9: Yharon
+            44,                         // Stage 1: Desert Scourge
+            58,                         // Stage 2: Evil Boss T1
+            88,                         // Stage 3: Wall of Flesh
+            126,                        // Stage 4: Brimstone Elemental
+            190,                        // Stage 5: Golem
+            250,                        // Stage 6: Empress of Light
+            360,                        // Stage 7: Moon Lord
+            485,                        // Stage 8: Providence
+            720                         // Stage 9: Yharon
         };
 
         private static readonly int[] DefaultRightClickBaseDamage =
@@ -50,6 +50,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             470, // Stage 7: Moon Lord
             640, // Stage 8: Providence
             940  // Stage 9: Yharon
+        };
+
+        private static readonly object[,] DefaultProgressionUnlocks =
+        {
+            //                               Left behavior / projectile notes                         Right behavior / projectile notes
+            { "Initial",                    "Blade loop, directed throw, EssenceFlame support",        "Cell laser, 2 drones, drone splinters" },
+            { "Desert Scourge",             "Fire debuff upgrades to OnFire3",                         "Same projectile set, higher damage" },
+            { "Evil Boss T1",               "Blade scale and recovery improve",                        "Same projectile set, higher damage" },
+            { "Wall of Flesh",              "Directed throw keeps no-gravity charge dash",             "Classic sustained laser visual" },
+            { "Brimstone Elemental",        "Burning shards release brimstone missiles",               "Classic laser, larger blade scale" },
+            { "Golem",                      "Recovery improves and blade grows",                       "Right charge time is halved" },
+            { "Empress of Light",           "Burning shards release rainbow bolts",                    "Same laser set, higher damage" },
+            { "Moon Lord",                  "Blade grows again",                                       "Moon Lord beam visual" },
+            { "Providence",                 "Low-life recovery improves",                              "Providence holy-ray beam visual" },
+            { "Yharon",                     "Ultimate empowers the current weapon form",               "Yharon tornado beam visual" }
         };
 
         public int GetCompletedStageIndex()
@@ -174,26 +189,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public string BuildProgressionSummary()
         {
             List<string> parts = new();
+            int stage = GetCompletedStageIndex();
+            parts.Add($"Growth: stage {stage}/{DefaultProgressionUnlocks.GetLength(0) - 1}; blade scale {GetLeftBladeScale():0.00}.");
 
-            parts.Add("成长链: 荒灾/邪恶T1/血肉墙/硫磺火/石巨人/光女/月亮领主/亵渎/犽戎。");
-            parts.Add($"剑形态: 初始大小 {BaseLeftBladeScale:0.00}，当前 {GetLeftBladeScale():0.00}。");
-
-            if (DownedEvilTier1)
-                parts.Add("邪恶T1: 地狱之刃回复提升，压力木巨刃大小 +15%。");
-            if (DownedWallOfFlesh)
-                parts.Add("血肉墙: 右键从细胞式短激光升级为传统持续激光。");
-            if (DownedBrimstoneElemental)
-                parts.Add("硫磺火: 压力木巨刃大小 +10%，燃火碎片死亡时释放左旋硫火飞弹。");
-            if (DownedGolem)
-                parts.Add("石巨人: 右键蓄力时长减半，回复提升，剑形态大小 +10%。");
-            if (DownedEmpress)
-                parts.Add("光女: 燃火碎片死亡时追加 7 个七彩矢，剑形态大小 +10%。");
-            if (DownedMoonLord)
-                parts.Add("月亮领主: 右键激光改为月总式大光束视觉，剑形态大小 +10%。");
-            if (DownedProvidence)
-                parts.Add("亵渎: 低血量回复进一步提升，右键激光改为亵渎新星式视觉，剑形态大小 +10%。");
-            if (DownedYharon)
-                parts.Add("犽戎: 右键激光改为细化的焚天龙卷视觉，大招使用后强化当前主武器 8 秒。");
+            for (int i = 0; i <= stage && i < DefaultProgressionUnlocks.GetLength(0); i++)
+                parts.Add($"{DefaultProgressionUnlocks[i, 0]}: L - {DefaultProgressionUnlocks[i, 1]}; R - {DefaultProgressionUnlocks[i, 2]}.");
 
             return string.Join("\n", parts);
         }

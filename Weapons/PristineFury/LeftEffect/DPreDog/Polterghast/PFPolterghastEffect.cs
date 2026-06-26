@@ -8,11 +8,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal static class PFPolterghastEffect
     {
         private const int AccelerationFrames = 180;
-        private const int SlowInterval = 6;
-        private const int FastInterval = 3;
-        private const float FireSpeed = 14f;
+        private const int SlowInterval = 10;
+        private const int FastInterval = 6;
         private const float DamageMultiplier = 0.60f;
-        private const float Recoil = 1.8f;
+        private const float Recoil = 3.4f;
 
         internal static void Update(NewLegendPristineFuryHoldOut holdout, bool held, bool justPressed, bool justReleased)
         {
@@ -37,21 +36,32 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
         {
             Vector2 direction = holdout.AimDirection;
             float progress = holdout.LeftChargeTimer / (float)AccelerationFrames;
-            float spread = MathHelper.Lerp(MathHelper.ToRadians(2.4f), MathHelper.ToRadians(0.35f), progress);
+            float spread = MathHelper.Lerp(MathHelper.ToRadians(38f), MathHelper.ToRadians(22f), progress);
             Vector2 muzzle = holdout.GunTipPosition + direction * 18f;
             Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
-            float laneOffset = ((holdout.LeftBurstIndex & 1) == 0 ? -1f : 1f) * MathHelper.Lerp(2.6f, 1f, progress);
+            int shotCount = Main.rand.Next(3, 5);
 
-            int projectileIndex = Projectile.NewProjectile(
-                holdout.Projectile.GetSource_FromThis(),
-                muzzle + side * laneOffset,
-                direction.RotatedBy(Main.rand.NextFloat(-spread, spread)) * FireSpeed,
-                ModContent.ProjectileType<PFPolterghast_StarBolt>(),
-                holdout.GetScaledDamage(DamageMultiplier),
-                holdout.Projectile.knockBack,
-                holdout.Projectile.owner);
-            PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
-            holdout.LeftBurstIndex++;
+            // Polterghast mark visuals must reference Alpha Draconis, Galileo Gladius,
+            // Halley's Inferno, Vega, and Crescent Moon: same source family, different shape.
+            for (int i = 0; i < shotCount; i++)
+            {
+                float laneOffset = Main.rand.NextFloat(-18f, 18f) + ((holdout.LeftBurstIndex & 1) == 0 ? -1f : 1f) * Main.rand.NextFloat(2f, 8f);
+                float speed = Main.rand.NextFloat(9f, 24f);
+                float homingDelay = Main.rand.NextFloat(10f, 44f);
+
+                int projectileIndex = Projectile.NewProjectile(
+                    holdout.Projectile.GetSource_FromThis(),
+                    muzzle + side * laneOffset + Main.rand.NextVector2Circular(5f, 5f),
+                    direction.RotatedBy(Main.rand.NextFloat(-spread, spread)) * speed,
+                    ModContent.ProjectileType<PFPolterghast_StarBolt>(),
+                    holdout.GetScaledDamage(DamageMultiplier),
+                    holdout.Projectile.knockBack,
+                    holdout.Projectile.owner,
+                    homingDelay,
+                    holdout.LeftBurstIndex + Main.rand.NextFloat(1000f));
+                PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
+                holdout.LeftBurstIndex++;
+            }
 
             if (holdout.LeftBurstIndex % 3 == 0)
             {
@@ -60,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             holdout.ApplyRecoil(Recoil);
             holdout.TriggerMuzzleFlash(7);
-            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.48f);
+            holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 0.72f);
         }
     }
 }
