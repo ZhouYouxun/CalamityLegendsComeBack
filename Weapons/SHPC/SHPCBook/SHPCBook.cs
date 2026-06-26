@@ -58,11 +58,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
             int panelType = player.altFunctionUse == 2 ? RightPanelType : PanelType;
-            if (TryCloseExistingPanel(player))
-            {
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);
+            if (TryKeepOrReplaceExistingPanel(player, panelType))
                 return false;
-            }
 
             Projectile.NewProjectile(
                 source,
@@ -78,22 +75,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             return false;
         }
 
-        private static bool TryCloseExistingPanel(Player player)
+        private static bool TryKeepOrReplaceExistingPanel(Player player, int requestedPanelType)
         {
+            bool requestedPanelAlreadyOpen = false;
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
                 if (!projectile.active || projectile.owner != player.whoAmI || (projectile.type != PanelType && projectile.type != RightPanelType))
                     continue;
 
-                if (projectile.type == PanelType)
-                    SHPCBookPanel.RequestClose(projectile);
-                else
-                    SHPCBookRightPanel.RequestClose(projectile);
-                return true;
+                if (projectile.type == requestedPanelType)
+                {
+                    requestedPanelAlreadyOpen = true;
+                    continue;
+                }
+
+                projectile.Kill();
             }
 
-            return false;
+            return requestedPanelAlreadyOpen;
         }
     }
 
@@ -106,7 +106,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int PanelPadding = 15;
         private const int DetailGap = 9;
         private const int DetailHeight = SlotHeight * 2;
+        private const int HeaderHeight = 30;
+        private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
+        private const int ScreenMargin = 12;
         private const float MaxIconDrawSize = 42f;
 
         private static SHPCBookEntry[] cachedEntries;
@@ -116,6 +119,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private bool[] hoveredLastFrame = Array.Empty<bool>();
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private bool draggingPanel;
+        private Vector2 dragOffset;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.A_Dev";
@@ -160,7 +165,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             }
 
             if (owner.HeldItem.type != ModContent.ItemType<SHPCBook>())
+            {
                 FadeOut = true;
+                draggingPanel = false;
+            }
 
             SHPCBookEntry[] entries = GetEntries();
             int panelHeight = GetPanelHeight(entries.Length);
@@ -169,6 +177,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen, panelHeight);
                 panelPositionInitialized = true;
             }
+            else if (Main.myPlayer == Projectile.owner)
+                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelHeight);
 
             Vector2 panelCenter = panelTopLeft + new Vector2(PanelWidth, panelHeight) * 0.5f;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
@@ -193,18 +203,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
             int panelHeight = GetPanelHeight(entries.Length);
             Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, panelHeight);
-            bool mouseOverPanel = panelArea.Intersects(MouseRectangle);
             bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
-            bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
+            Rectangle detailArea = default;
+            bool hasDetail = selectedIndex >= 0 && selectedIndex < entries.Length;
+            if (hasDetail)
+                detailArea = GetDetailArea(panelArea, GetSlotArea(selectedIndex, panelHeight, entries.Length));
+
+            Rectangle closeButtonArea = GetCloseButtonArea(panelArea);
+            int hoveredSlotIndex = GetHoveredSlotIndex(entries.Length, panelHeight);
+            bool closeHovered = closeButtonArea.Intersects(MouseRectangle);
+            bool mouseOverDetail = hasDetail && detailArea.Intersects(MouseRectangle);
+            bool mouseOverUi = panelArea.Intersects(MouseRectangle) || mouseOverDetail;
+            bool readyForInput = !FadeOut && Projectile.Opacity >= 0.95f;
             int clickedIndex = -1;
 
+            if (readyForInput && closeHovered && leftClickPressed)
+            {
+                FadeOut = true;
+                draggingPanel = false;
+                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
+            }
+            else
+            {
+                bool canStartDrag = mouseOverUi && !closeHovered && hoveredSlotIndex < 0;
+                UpdateDragging(canStartDrag, panelHeight, readyForInput);
+            }
+
+            if (draggingPanel)
+            {
+                panelArea = new Rectangle((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, panelHeight);
+                if (hasDetail)
+                    detailArea = GetDetailArea(panelArea, GetSlotArea(selectedIndex, panelHeight, entries.Length));
+
+                closeButtonArea = GetCloseButtonArea(panelArea);
+                closeHovered = closeButtonArea.Intersects(MouseRectangle);
+                mouseOverDetail = hasDetail && detailArea.Intersects(MouseRectangle);
+                mouseOverUi = true;
+            }
+
             DrawPanel(panelArea, Projectile.Opacity);
+            DrawCloseButton(closeButtonArea, closeHovered, Projectile.Opacity);
 
             if (entries.Length == 0)
             {
                 DrawFitText(
                     Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.SHPCBookNoRecords"),
-                    new Rectangle(panelArea.X + 16, panelArea.Y + 16, panelArea.Width - 32, panelArea.Height - 32),
+                    new Rectangle(panelArea.X + 16, panelArea.Y + PanelPadding + HeaderHeight, panelArea.Width - 32, panelArea.Height - PanelPadding - HeaderHeight - 16),
                     new Color(190, 210, 232),
                     0.8f,
                     0.5f,
@@ -214,19 +258,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             for (int i = 0; i < entries.Length; i++)
             {
                 SHPCBookEntry entry = entries[i];
-                Rectangle slotArea = GetSlotArea(i);
-                bool hovered = slotArea.Intersects(MouseRectangle);
+                Rectangle slotArea = GetSlotArea(i, panelHeight, entries.Length);
+                bool hovered = !draggingPanel && slotArea.Intersects(MouseRectangle);
                 bool selected = i == selectedIndex;
 
                 if (hovered)
                 {
-                    mouseOverPanel = true;
+                    mouseOverUi = true;
                     Main.hoverItemName = GetHoverText(entry);
 
                     if (!hoveredLastFrame[i] && Projectile.Opacity >= 0.95f)
                         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
 
-                    if (leftClickPressed && Projectile.Opacity >= 0.95f)
+                    if (leftClickPressed && readyForInput)
                         clickedIndex = i;
                 }
 
@@ -246,25 +290,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
             if (selectedIndex >= 0 && selectedIndex < entries.Length)
             {
-                Rectangle selectedSlotArea = GetSlotArea(selectedIndex);
-                Rectangle detailArea = GetDetailArea(panelArea, selectedSlotArea);
-                bool mouseOverDetail = detailArea.Intersects(MouseRectangle);
+                Rectangle selectedSlotArea = GetSlotArea(selectedIndex, panelHeight, entries.Length);
+                detailArea = GetDetailArea(panelArea, selectedSlotArea);
+                mouseOverDetail = detailArea.Intersects(MouseRectangle);
 
                 DrawDetailBox(entries[selectedIndex], detailArea, Projectile.Opacity);
                 if (mouseOverDetail)
                 {
-                    mouseOverPanel = true;
+                    mouseOverUi = true;
                     Main.hoverItemName = GetHoverText(entries[selectedIndex]);
                 }
             }
 
-            if (clickedIndex < 0 && !FadeOut && Projectile.Opacity >= 0.95f && (rightClickPressed || leftClickPressed))
-            {
-                FadeOut = true;
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
-            }
-
-            if (mouseOverPanel)
+            if (mouseOverUi || draggingPanel)
             {
                 Main.blockMouse = true;
                 owner.mouseInterface = true;
@@ -276,9 +314,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         public static void RequestClose(Projectile projectile)
         {
             if (projectile.ModProjectile is SHPCBookPanel panel)
+            {
                 panel.FadeOut = true;
+                panel.draggingPanel = false;
+            }
             else
                 projectile.ai[0] = 1f;
+        }
+
+        private void UpdateDragging(bool canStartDrag, int panelHeight, bool readyForInput)
+        {
+            if (draggingPanel)
+            {
+                if (!Main.mouseLeft || FadeOut)
+                {
+                    draggingPanel = false;
+                    return;
+                }
+
+                panelTopLeft = GetClampedPanelTopLeft(Main.MouseScreen - dragOffset, panelHeight);
+                return;
+            }
+
+            if (!readyForInput || !canStartDrag || !Main.mouseLeft || !Main.mouseLeftRelease)
+                return;
+
+            draggingPanel = true;
+            dragOffset = Main.MouseScreen - panelTopLeft;
+            panelTopLeft = GetClampedPanelTopLeft(Main.MouseScreen - dragOffset, panelHeight);
+        }
+
+        private static Rectangle GetCloseButtonArea(Rectangle panelArea)
+        {
+            return new Rectangle(
+                panelArea.Right - CloseButtonSize - 8,
+                panelArea.Y + 8,
+                CloseButtonSize,
+                CloseButtonSize);
         }
 
         private static SHPCBookEntry[] GetEntries()
@@ -329,19 +401,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private static int GetPanelHeight(int entryCount)
         {
             int rows = GetRowCount(entryCount);
-            return PanelPadding * 2 + rows * SlotHeight + (rows - 1) * SlotGap;
+            int minimumHeight = PanelPadding * 2 + HeaderHeight + rows * SlotHeight;
+            int naturalHeight = minimumHeight + (rows - 1) * SlotGap;
+            int availableHeight = Main.screenHeight - ScreenMargin * 2;
+            if (availableHeight <= minimumHeight)
+                return minimumHeight;
+
+            return Math.Max(naturalHeight, availableHeight);
         }
 
         private static Vector2 GetClampedPanelTopLeft(Vector2 desiredTopLeft, int panelHeight)
         {
-            const float screenMargin = 12f;
             int totalWidth = PanelWidth + DetailGap + DetailWidth;
-            float maxX = Math.Max(screenMargin, Main.screenWidth - totalWidth - screenMargin);
-            float maxY = Math.Max(screenMargin, Main.screenHeight - panelHeight - screenMargin);
+            float maxX = Math.Max(ScreenMargin, Main.screenWidth - totalWidth - ScreenMargin);
+            float maxY = Math.Max(ScreenMargin, Main.screenHeight - panelHeight - ScreenMargin);
 
             return new Vector2(
-                MathHelper.Clamp(desiredTopLeft.X, screenMargin, maxX),
-                MathHelper.Clamp(desiredTopLeft.Y, screenMargin, maxY));
+                MathHelper.Clamp(desiredTopLeft.X, ScreenMargin, maxX),
+                MathHelper.Clamp(desiredTopLeft.Y, ScreenMargin, maxY));
         }
 
         private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter, int panelHeight)
@@ -349,12 +426,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             return GetClampedPanelTopLeft(desiredCenter - new Vector2(PanelWidth, panelHeight) * 0.5f, panelHeight);
         }
 
-        private Rectangle GetSlotArea(int index)
+        private int GetHoveredSlotIndex(int entryCount, int panelHeight)
+        {
+            for (int i = 0; i < entryCount; i++)
+            {
+                if (GetSlotArea(i, panelHeight, entryCount).Intersects(MouseRectangle))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        private static int GetDynamicRowGap(int entryCount, int panelHeight)
+        {
+            int rows = GetRowCount(entryCount);
+            if (rows <= 1)
+                return SlotGap;
+
+            int availableGapHeight = panelHeight - PanelPadding * 2 - HeaderHeight - rows * SlotHeight;
+            return Math.Max(0, availableGapHeight / (rows - 1));
+        }
+
+        private Rectangle GetSlotArea(int index, int panelHeight, int entryCount)
         {
             int column = index % Columns;
             int row = index / Columns;
             int x = (int)panelTopLeft.X + PanelPadding + column * (SlotWidth + SlotGap);
-            int y = (int)panelTopLeft.Y + PanelPadding + row * (SlotHeight + SlotGap);
+            int y = (int)panelTopLeft.Y + PanelPadding + HeaderHeight + row * (SlotHeight + GetDynamicRowGap(entryCount, panelHeight));
 
             return new Rectangle(x, y, SlotWidth, SlotHeight);
         }
@@ -379,6 +477,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelArea.Height - BorderThickness * 2);
 
             DrawBorder(innerArea, new Color(31, 41, 58, 210) * opacity, 1);
+            DrawRectangle(
+                new Rectangle(panelArea.X + BorderThickness, panelArea.Y + PanelPadding + HeaderHeight - 7, panelArea.Width - BorderThickness * 2, 1),
+                new Color(94, 110, 132, 148) * opacity);
+        }
+
+        private static void DrawCloseButton(Rectangle area, bool hovered, float opacity)
+        {
+            Color fill = hovered ? new Color(84, 46, 54) : new Color(34, 30, 38);
+            Color border = hovered ? new Color(255, 166, 178) : new Color(148, 104, 116);
+            DrawRectangle(area, fill * (opacity * 0.92f));
+            DrawBorder(area, border * opacity, hovered ? 2 : 1);
+            DrawFitText("X", area, hovered ? Color.White : new Color(238, 190, 198), 0.72f, 0.44f, opacity);
         }
 
         private static void DrawBookSlot(SHPCBookEntry entry, Rectangle slotArea, bool hovered, bool selected, int clickTimer, float opacity)
@@ -558,7 +668,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int PanelPadding = 15;
         private const int RowHeight = 87;
         private const int RowGap = 8;
+        private const int HeaderHeight = 30;
+        private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
+        private const int ScreenMargin = 12;
         private const float NumberIconSize = 51f;
         private const float BossIconSize = 45f;
 
@@ -575,6 +688,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private readonly bool[] hoveredLastFrame = new bool[HeatEntries.Length];
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private bool draggingPanel;
+        private Vector2 dragOffset;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.A_Dev";
@@ -585,7 +700,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             set => Projectile.ai[0] = value ? 1f : 0f;
         }
 
-        private static int PanelHeight => PanelPadding * 2 + HeatEntries.Length * RowHeight + (HeatEntries.Length - 1) * RowGap;
+        private static int MinimumPanelHeight => PanelPadding * 2 + HeaderHeight + HeatEntries.Length * RowHeight;
+        private static int NaturalPanelHeight => MinimumPanelHeight + (HeatEntries.Length - 1) * RowGap;
+        private static int PanelHeight
+        {
+            get
+            {
+                int availableHeight = Main.screenHeight - ScreenMargin * 2;
+                if (availableHeight <= MinimumPanelHeight)
+                    return MinimumPanelHeight;
+
+                return Math.Max(NaturalPanelHeight, availableHeight);
+            }
+        }
         private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
 
         public override void SetStaticDefaults()
@@ -617,13 +744,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             }
 
             if (owner.HeldItem.type != ModContent.ItemType<SHPCBook>())
+            {
                 FadeOut = true;
+                draggingPanel = false;
+            }
 
             if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
             {
                 panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen);
                 panelPositionInitialized = true;
             }
+            else if (Main.myPlayer == Projectile.owner)
+                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft);
 
             Vector2 panelCenter = panelTopLeft + new Vector2(PanelWidth, PanelHeight) * 0.5f;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
@@ -641,17 +773,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
             Player owner = Main.player[Projectile.owner];
             Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, PanelHeight);
+            bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
+            Rectangle closeButtonArea = GetCloseButtonArea(panelArea);
+            bool closeHovered = closeButtonArea.Intersects(MouseRectangle);
             bool mouseOverPanel = panelArea.Intersects(MouseRectangle);
-            bool closePressed = (Main.mouseLeft && Main.mouseLeftRelease) || (Main.mouseRight && Main.mouseRightRelease);
+            bool readyForInput = !FadeOut && Projectile.Opacity >= 0.95f;
             int maxHeat = new BalanceSHPC().GetRightClickMaxHeatLevel();
 
+            if (readyForInput && closeHovered && leftClickPressed)
+            {
+                FadeOut = true;
+                draggingPanel = false;
+                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
+            }
+            else
+                UpdateDragging(mouseOverPanel && !closeHovered, readyForInput);
+
+            if (draggingPanel)
+            {
+                panelArea = new Rectangle((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, PanelHeight);
+                closeButtonArea = GetCloseButtonArea(panelArea);
+                closeHovered = closeButtonArea.Intersects(MouseRectangle);
+                mouseOverPanel = true;
+            }
+
             DrawPanel(panelArea, Projectile.Opacity);
+            DrawCloseButton(closeButtonArea, closeHovered, Projectile.Opacity);
 
             for (int i = 0; i < HeatEntries.Length; i++)
             {
                 RightHeatEntry entry = HeatEntries[i];
                 Rectangle rowArea = GetRowArea(i);
-                bool hovered = rowArea.Intersects(MouseRectangle);
+                bool hovered = !draggingPanel && rowArea.Intersects(MouseRectangle);
                 bool unlocked = entry.Level <= maxHeat;
 
                 if (hovered)
@@ -669,13 +822,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                     clickFeedbackTimers[i]--;
             }
 
-            if (!mouseOverPanel && !FadeOut && Projectile.Opacity >= 0.95f && closePressed)
-            {
-                FadeOut = true;
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
-            }
-
-            if (mouseOverPanel)
+            if (mouseOverPanel || draggingPanel)
             {
                 Main.blockMouse = true;
                 owner.mouseInterface = true;
@@ -687,28 +834,74 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         public static void RequestClose(Projectile projectile)
         {
             if (projectile.ModProjectile is SHPCBookRightPanel panel)
+            {
                 panel.FadeOut = true;
+                panel.draggingPanel = false;
+            }
             else
                 projectile.ai[0] = 1f;
         }
 
+        private void UpdateDragging(bool canStartDrag, bool readyForInput)
+        {
+            if (draggingPanel)
+            {
+                if (!Main.mouseLeft || FadeOut)
+                {
+                    draggingPanel = false;
+                    return;
+                }
+
+                panelTopLeft = GetClampedPanelTopLeft(Main.MouseScreen - dragOffset);
+                return;
+            }
+
+            if (!readyForInput || !canStartDrag || !Main.mouseLeft || !Main.mouseLeftRelease)
+                return;
+
+            draggingPanel = true;
+            dragOffset = Main.MouseScreen - panelTopLeft;
+            panelTopLeft = GetClampedPanelTopLeft(Main.MouseScreen - dragOffset);
+        }
+
         private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter)
         {
-            const float screenMargin = 12f;
-            Vector2 desiredTopLeft = desiredCenter - new Vector2(PanelWidth, PanelHeight) * 0.5f;
-            float maxX = Math.Max(screenMargin, Main.screenWidth - PanelWidth - screenMargin);
-            float maxY = Math.Max(screenMargin, Main.screenHeight - PanelHeight - screenMargin);
+            return GetClampedPanelTopLeft(desiredCenter - new Vector2(PanelWidth, PanelHeight) * 0.5f);
+        }
+
+        private static Vector2 GetClampedPanelTopLeft(Vector2 desiredTopLeft)
+        {
+            float maxX = Math.Max(ScreenMargin, Main.screenWidth - PanelWidth - ScreenMargin);
+            float maxY = Math.Max(ScreenMargin, Main.screenHeight - PanelHeight - ScreenMargin);
 
             return new Vector2(
-                MathHelper.Clamp(desiredTopLeft.X, screenMargin, maxX),
-                MathHelper.Clamp(desiredTopLeft.Y, screenMargin, maxY));
+                MathHelper.Clamp(desiredTopLeft.X, ScreenMargin, maxX),
+                MathHelper.Clamp(desiredTopLeft.Y, ScreenMargin, maxY));
+        }
+
+        private static Rectangle GetCloseButtonArea(Rectangle panelArea)
+        {
+            return new Rectangle(
+                panelArea.Right - CloseButtonSize - 8,
+                panelArea.Y + 8,
+                CloseButtonSize,
+                CloseButtonSize);
+        }
+
+        private static int GetDynamicRowGap()
+        {
+            if (HeatEntries.Length <= 1)
+                return RowGap;
+
+            int availableGapHeight = PanelHeight - PanelPadding * 2 - HeaderHeight - HeatEntries.Length * RowHeight;
+            return Math.Max(0, availableGapHeight / (HeatEntries.Length - 1));
         }
 
         private Rectangle GetRowArea(int index)
         {
             return new Rectangle(
                 (int)panelTopLeft.X + PanelPadding,
-                (int)panelTopLeft.Y + PanelPadding + index * (RowHeight + RowGap),
+                (int)panelTopLeft.Y + PanelPadding + HeaderHeight + index * (RowHeight + GetDynamicRowGap()),
                 PanelWidth - PanelPadding * 2,
                 RowHeight);
         }
@@ -725,6 +918,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelArea.Height - BorderThickness * 2);
 
             DrawBorder(innerArea, new Color(31, 41, 58, 210) * opacity, 1);
+            DrawRectangle(
+                new Rectangle(panelArea.X + BorderThickness, panelArea.Y + PanelPadding + HeaderHeight - 7, panelArea.Width - BorderThickness * 2, 1),
+                new Color(94, 110, 132, 148) * opacity);
+        }
+
+        private static void DrawCloseButton(Rectangle area, bool hovered, float opacity)
+        {
+            Color fill = hovered ? new Color(84, 46, 54) : new Color(34, 30, 38);
+            Color border = hovered ? new Color(255, 166, 178) : new Color(148, 104, 116);
+            DrawRectangle(area, fill * (opacity * 0.92f));
+            DrawBorder(area, border * opacity, hovered ? 2 : 1);
+            DrawFitText("X", area, hovered ? Color.White : new Color(238, 190, 198), 0.72f, 0.44f, opacity);
         }
 
         private static void DrawHeatRow(RightHeatEntry entry, Rectangle rowArea, bool unlocked, bool hovered, int clickTimer, float opacity)
