@@ -59,10 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         {
             int panelType = player.altFunctionUse == 2 ? RightPanelType : PanelType;
             if (TryCloseExistingPanel(player))
-            {
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);
                 return false;
-            }
 
             Projectile.NewProjectile(
                 source,
@@ -80,6 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
         private static bool TryCloseExistingPanel(Player player)
         {
+            bool closedAnyPanel = false;
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
@@ -90,10 +88,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                     SHPCBookPanel.RequestClose(projectile);
                 else
                     SHPCBookRightPanel.RequestClose(projectile);
-                return true;
+
+                closedAnyPanel = true;
             }
 
-            return false;
+            if (closedAnyPanel)
+                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);
+
+            return closedAnyPanel;
         }
     }
 
@@ -106,7 +108,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int PanelPadding = 15;
         private const int DetailGap = 9;
         private const int DetailHeight = SlotHeight * 2;
+        private const int HeaderHeight = 30;
+        private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
+        private const int ScreenMargin = 12;
         private const float MaxIconDrawSize = 42f;
 
         private static SHPCBookEntry[] cachedEntries;
@@ -116,6 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private bool[] hoveredLastFrame = Array.Empty<bool>();
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private int openedSelectedItem = -1;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.A_Dev";
@@ -126,8 +132,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             set => Projectile.ai[0] = value ? 1f : 0f;
         }
 
-        private static int PanelWidth => PanelPadding * 2 + Columns * SlotWidth + (Columns - 1) * SlotGap;
-        private static int DetailWidth => Math.Min(SlotWidth * 2, Math.Max(SlotWidth, Main.screenWidth - PanelWidth - DetailGap - 24));
+        private static int BasePanelWidth => PanelPadding * 2 + Columns * SlotWidth + (Columns - 1) * SlotGap;
+        private static int BaseDetailWidth => SlotWidth * 2;
         private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
 
         public override void SetStaticDefaults()
@@ -137,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
         public override void SetDefaults()
         {
-            Projectile.width = PanelWidth;
+            Projectile.width = BasePanelWidth;
             Projectile.height = 560;
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
@@ -163,14 +169,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 FadeOut = true;
 
             SHPCBookEntry[] entries = GetEntries();
-            int panelHeight = GetPanelHeight(entries.Length);
-            if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
+            if (Main.myPlayer == Projectile.owner)
             {
-                panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen, panelHeight);
-                panelPositionInitialized = true;
+                if (openedSelectedItem < 0)
+                    openedSelectedItem = owner.selectedItem;
+                else if (owner.selectedItem != openedSelectedItem)
+                    FadeOut = true;
             }
 
-            Vector2 panelCenter = panelTopLeft + new Vector2(PanelWidth, panelHeight) * 0.5f;
+            float layoutScale = GetLayoutScale(entries.Length);
+            int panelWidth = GetPanelWidth(layoutScale);
+            int panelHeight = GetPanelHeight(entries.Length, layoutScale);
+            int detailWidth = GetDetailWidth(layoutScale, panelWidth);
+            if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
+            {
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen, panelWidth, panelHeight, detailWidth, layoutScale);
+                panelPositionInitialized = true;
+            }
+            else if (Main.myPlayer == Projectile.owner)
+                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelWidth, panelHeight, detailWidth, layoutScale);
+
+            Vector2 panelCenter = panelTopLeft + new Vector2(panelWidth, panelHeight) * 0.5f;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
@@ -191,46 +210,67 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             if (selectedIndex >= entries.Length)
                 selectedIndex = -1;
 
-            int panelHeight = GetPanelHeight(entries.Length);
-            Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, panelHeight);
-            bool mouseOverPanel = panelArea.Intersects(MouseRectangle);
+            float layoutScale = GetLayoutScale(entries.Length);
+            int panelWidth = GetPanelWidth(layoutScale);
+            int panelHeight = GetPanelHeight(entries.Length, layoutScale);
+            int detailWidth = GetDetailWidth(layoutScale, panelWidth);
+            Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, panelWidth, panelHeight);
             bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
             bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
+            bool closePressed = leftClickPressed || rightClickPressed;
+            Rectangle detailArea = default;
+            bool hasDetail = selectedIndex >= 0 && selectedIndex < entries.Length;
+            if (hasDetail)
+                detailArea = GetDetailArea(panelArea, GetSlotArea(selectedIndex, layoutScale), detailWidth, layoutScale);
+
+            Rectangle closeButtonArea = GetCloseButtonArea(panelArea, layoutScale);
+            bool closeHovered = closeButtonArea.Intersects(MouseRectangle);
+            bool mouseOverDetail = hasDetail && detailArea.Intersects(MouseRectangle);
+            bool mouseOverUi = panelArea.Intersects(MouseRectangle) || mouseOverDetail;
+            bool readyForInput = !FadeOut && Projectile.Opacity >= 0.95f;
             int clickedIndex = -1;
 
-            DrawPanel(panelArea, Projectile.Opacity);
+            if (readyForInput && closeHovered && closePressed)
+                CloseWithSound(owner);
+
+            DrawPanel(panelArea, Projectile.Opacity, layoutScale);
+            DrawCloseButton(closeButtonArea, closeHovered, Projectile.Opacity, layoutScale);
 
             if (entries.Length == 0)
             {
                 DrawFitText(
                     Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.SHPCBookNoRecords"),
-                    new Rectangle(panelArea.X + 16, panelArea.Y + 16, panelArea.Width - 32, panelArea.Height - 32),
+                    new Rectangle(
+                        panelArea.X + ScaleOffset(16, layoutScale),
+                        panelArea.Y + ScaleOffset(PanelPadding + HeaderHeight, layoutScale),
+                        panelArea.Width - ScaleOffset(32, layoutScale),
+                        panelArea.Height - ScaleOffset(PanelPadding + HeaderHeight + 16, layoutScale)),
                     new Color(190, 210, 232),
-                    0.8f,
-                    0.5f,
+                    0.8f * layoutScale,
+                    0.5f * layoutScale,
                     Projectile.Opacity);
             }
 
             for (int i = 0; i < entries.Length; i++)
             {
                 SHPCBookEntry entry = entries[i];
-                Rectangle slotArea = GetSlotArea(i);
+                Rectangle slotArea = GetSlotArea(i, layoutScale);
                 bool hovered = slotArea.Intersects(MouseRectangle);
                 bool selected = i == selectedIndex;
 
                 if (hovered)
                 {
-                    mouseOverPanel = true;
+                    mouseOverUi = true;
                     Main.hoverItemName = GetHoverText(entry);
 
                     if (!hoveredLastFrame[i] && Projectile.Opacity >= 0.95f)
                         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
 
-                    if (leftClickPressed && Projectile.Opacity >= 0.95f)
+                    if (leftClickPressed && readyForInput)
                         clickedIndex = i;
                 }
 
-                DrawBookSlot(entry, slotArea, hovered, selected, clickFeedbackTimers[i], Projectile.Opacity);
+                DrawBookSlot(entry, slotArea, hovered, selected, clickFeedbackTimers[i], Projectile.Opacity, layoutScale);
 
                 hoveredLastFrame[i] = hovered;
                 if (clickFeedbackTimers[i] > 0)
@@ -246,25 +286,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
             if (selectedIndex >= 0 && selectedIndex < entries.Length)
             {
-                Rectangle selectedSlotArea = GetSlotArea(selectedIndex);
-                Rectangle detailArea = GetDetailArea(panelArea, selectedSlotArea);
-                bool mouseOverDetail = detailArea.Intersects(MouseRectangle);
+                Rectangle selectedSlotArea = GetSlotArea(selectedIndex, layoutScale);
+                detailArea = GetDetailArea(panelArea, selectedSlotArea, detailWidth, layoutScale);
+                mouseOverDetail = detailArea.Intersects(MouseRectangle);
 
-                DrawDetailBox(entries[selectedIndex], detailArea, Projectile.Opacity);
+                DrawDetailBox(entries[selectedIndex], detailArea, Projectile.Opacity, layoutScale);
                 if (mouseOverDetail)
                 {
-                    mouseOverPanel = true;
+                    mouseOverUi = true;
                     Main.hoverItemName = GetHoverText(entries[selectedIndex]);
                 }
             }
 
-            if (clickedIndex < 0 && !FadeOut && Projectile.Opacity >= 0.95f && (rightClickPressed || leftClickPressed))
-            {
-                FadeOut = true;
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
-            }
+            if (!mouseOverUi && readyForInput && closePressed)
+                CloseWithSound(owner);
 
-            if (mouseOverPanel)
+            if (mouseOverUi)
             {
                 Main.blockMouse = true;
                 owner.mouseInterface = true;
@@ -279,6 +316,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panel.FadeOut = true;
             else
                 projectile.ai[0] = 1f;
+        }
+
+        private void CloseWithSound(Player owner)
+        {
+            FadeOut = true;
+            SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
+        }
+
+        private static Rectangle GetCloseButtonArea(Rectangle panelArea, float scale)
+        {
+            int inset = ScaleOffset(8, scale);
+            int size = ScaleLength(CloseButtonSize, scale);
+            return new Rectangle(
+                panelArea.Right - size - inset,
+                panelArea.Y + inset,
+                size,
+                size);
         }
 
         private static SHPCBookEntry[] GetEntries()
@@ -326,62 +380,119 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             return Math.Max(1, (entryCount + Columns - 1) / Columns);
         }
 
-        private static int GetPanelHeight(int entryCount)
+        private static int GetBasePanelHeight(int entryCount)
         {
             int rows = GetRowCount(entryCount);
-            return PanelPadding * 2 + rows * SlotHeight + (rows - 1) * SlotGap;
+            return PanelPadding * 2 + HeaderHeight + rows * SlotHeight + Math.Max(0, rows - 1) * SlotGap;
         }
 
-        private static Vector2 GetClampedPanelTopLeft(Vector2 desiredTopLeft, int panelHeight)
+        private static float GetLayoutScale(int entryCount)
         {
-            const float screenMargin = 12f;
-            int totalWidth = PanelWidth + DetailGap + DetailWidth;
-            float maxX = Math.Max(screenMargin, Main.screenWidth - totalWidth - screenMargin);
-            float maxY = Math.Max(screenMargin, Main.screenHeight - panelHeight - screenMargin);
+            int basePanelHeight = GetBasePanelHeight(entryCount);
+            int baseTotalWidth = BasePanelWidth + DetailGap + BaseDetailWidth;
+            float heightScale = Main.screenHeight / Math.Max(1f, basePanelHeight);
+            float widthScale = (Main.screenWidth - ScreenMargin * 2f) / Math.Max(1f, baseTotalWidth);
+            return Math.Max(0.2f, Math.Min(heightScale, widthScale));
+        }
+
+        private static int GetPanelWidth(float scale)
+        {
+            return ScaleLength(BasePanelWidth, scale);
+        }
+
+        private static int GetPanelHeight(int entryCount, float scale)
+        {
+            return ScaleLength(GetBasePanelHeight(entryCount), scale);
+        }
+
+        private static int GetDetailWidth(float scale, int panelWidth)
+        {
+            int requestedWidth = ScaleLength(BaseDetailWidth, scale);
+            int minimumWidth = ScaleLength(SlotWidth, scale);
+            int maximumWidth = Math.Max(
+                minimumWidth,
+                Main.screenWidth - ScreenMargin * 2 - panelWidth - ScaleLength(DetailGap, scale));
+
+            return Math.Clamp(requestedWidth, minimumWidth, maximumWidth);
+        }
+
+        private static Vector2 GetClampedPanelTopLeft(Vector2 desiredTopLeft, int panelWidth, int panelHeight, int detailWidth, float scale)
+        {
+            int totalWidth = panelWidth + ScaleLength(DetailGap, scale) + detailWidth;
+            float maxX = Math.Max(ScreenMargin, Main.screenWidth - totalWidth - ScreenMargin);
+            float maxY = Math.Max(0f, Main.screenHeight - panelHeight);
 
             return new Vector2(
-                MathHelper.Clamp(desiredTopLeft.X, screenMargin, maxX),
-                MathHelper.Clamp(desiredTopLeft.Y, screenMargin, maxY));
+                MathHelper.Clamp(desiredTopLeft.X, ScreenMargin, maxX),
+                MathHelper.Clamp(desiredTopLeft.Y, 0f, maxY));
         }
 
-        private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter, int panelHeight)
+        private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter, int panelWidth, int panelHeight, int detailWidth, float scale)
         {
-            return GetClampedPanelTopLeft(desiredCenter - new Vector2(PanelWidth, panelHeight) * 0.5f, panelHeight);
+            return GetClampedPanelTopLeft(desiredCenter - new Vector2(panelWidth, panelHeight) * 0.5f, panelWidth, panelHeight, detailWidth, scale);
         }
 
-        private Rectangle GetSlotArea(int index)
+        private Rectangle GetSlotArea(int index, float scale)
         {
             int column = index % Columns;
             int row = index / Columns;
-            int x = (int)panelTopLeft.X + PanelPadding + column * (SlotWidth + SlotGap);
-            int y = (int)panelTopLeft.Y + PanelPadding + row * (SlotHeight + SlotGap);
+            int x = (int)panelTopLeft.X + ScaleOffset(PanelPadding + column * (SlotWidth + SlotGap), scale);
+            int y = (int)panelTopLeft.Y + ScaleOffset(PanelPadding + HeaderHeight + row * (SlotHeight + SlotGap), scale);
 
-            return new Rectangle(x, y, SlotWidth, SlotHeight);
+            return new Rectangle(x, y, ScaleLength(SlotWidth, scale), ScaleLength(SlotHeight, scale));
         }
 
-        private static Rectangle GetDetailArea(Rectangle panelArea, Rectangle selectedSlotArea)
+        private static Rectangle GetDetailArea(Rectangle panelArea, Rectangle selectedSlotArea, int detailWidth, float scale)
         {
+            int detailGap = ScaleLength(DetailGap, scale);
+            int detailHeight = ScaleLength(DetailHeight, scale);
             int minY = panelArea.Top;
-            int maxY = Math.Max(minY, panelArea.Bottom - DetailHeight);
-            int y = Math.Clamp(selectedSlotArea.Center.Y - DetailHeight / 2, minY, maxY);
-            return new Rectangle(panelArea.Right + DetailGap, y, DetailWidth, DetailHeight);
+            int maxY = Math.Max(minY, panelArea.Bottom - detailHeight);
+            int y = Math.Clamp(selectedSlotArea.Center.Y - detailHeight / 2, minY, maxY);
+            return new Rectangle(panelArea.Right + detailGap, y, detailWidth, detailHeight);
         }
 
-        private static void DrawPanel(Rectangle panelArea, float opacity)
+        private static int ScaleLength(int value, float scale)
+        {
+            return Math.Max(1, (int)MathF.Round(value * scale));
+        }
+
+        private static int ScaleOffset(int value, float scale)
+        {
+            return (int)MathF.Round(value * scale);
+        }
+
+        private static void DrawPanel(Rectangle panelArea, float opacity, float scale)
         {
             DrawRectangle(panelArea, new Color(12, 14, 20, 232) * opacity);
-            DrawBorder(panelArea, new Color(94, 110, 132) * opacity, BorderThickness);
+            DrawBorder(panelArea, new Color(94, 110, 132) * opacity, ScaleLength(BorderThickness, scale));
 
             Rectangle innerArea = new(
-                panelArea.X + BorderThickness,
-                panelArea.Y + BorderThickness,
-                panelArea.Width - BorderThickness * 2,
-                panelArea.Height - BorderThickness * 2);
+                panelArea.X + ScaleLength(BorderThickness, scale),
+                panelArea.Y + ScaleLength(BorderThickness, scale),
+                panelArea.Width - ScaleLength(BorderThickness, scale) * 2,
+                panelArea.Height - ScaleLength(BorderThickness, scale) * 2);
 
             DrawBorder(innerArea, new Color(31, 41, 58, 210) * opacity, 1);
+            DrawRectangle(
+                new Rectangle(
+                    panelArea.X + ScaleLength(BorderThickness, scale),
+                    panelArea.Y + ScaleOffset(PanelPadding + HeaderHeight - 7, scale),
+                    panelArea.Width - ScaleLength(BorderThickness, scale) * 2,
+                    ScaleLength(1, scale)),
+                new Color(94, 110, 132, 148) * opacity);
         }
 
-        private static void DrawBookSlot(SHPCBookEntry entry, Rectangle slotArea, bool hovered, bool selected, int clickTimer, float opacity)
+        private static void DrawCloseButton(Rectangle area, bool hovered, float opacity, float scale)
+        {
+            Color fill = hovered ? new Color(84, 46, 54) : new Color(34, 30, 38);
+            Color border = hovered ? new Color(255, 166, 178) : new Color(148, 104, 116);
+            DrawRectangle(area, fill * (opacity * 0.92f));
+            DrawBorder(area, border * opacity, ScaleLength(hovered ? 2 : 1, scale));
+            DrawFitText("X", area, hovered ? Color.White : new Color(238, 190, 198), 0.72f * scale, 0.44f * scale, opacity);
+        }
+
+        private static void DrawBookSlot(SHPCBookEntry entry, Rectangle slotArea, bool hovered, bool selected, int clickTimer, float opacity, float scale)
         {
             Color effectColor = SHPCAmmoSelectionPanel.GetEffectColor(entry.EffectID);
             Color slotBack = Color.Lerp(new Color(24, 28, 36), effectColor, selected ? 0.24f : 0.12f);
@@ -400,19 +511,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             }
 
             DrawRectangle(slotArea, slotBack * (opacity * 0.94f));
-            DrawBorder(slotArea, slotBorder * opacity, selected ? 2 : 1);
+            DrawBorder(slotArea, slotBorder * opacity, ScaleLength(selected ? 2 : 1, scale));
 
-            Rectangle iconFrame = new(slotArea.X + 4, slotArea.Y + 4, 30, 30);
+            Rectangle iconFrame = new(
+                slotArea.X + ScaleOffset(4, scale),
+                slotArea.Y + ScaleOffset(4, scale),
+                ScaleLength(30, scale),
+                ScaleLength(30, scale));
             DrawRectangle(iconFrame, Color.Lerp(new Color(10, 12, 18), effectColor, 0.08f) * (opacity * 0.82f));
             DrawBorder(iconFrame, slotBorder * (opacity * 0.62f), 1);
-            DrawAmmoIcon(entry, iconFrame.Center.ToVector2(), hovered, selected, clickTimer, opacity);
+            DrawAmmoIcon(entry, iconFrame.Center.ToVector2(), hovered, selected, clickTimer, opacity, scale);
 
             string itemName = Lang.GetItemNameValue(entry.AmmoType);
-            Rectangle nameArea = new(slotArea.X + 40, slotArea.Y + 3, slotArea.Width - 44, 17);
-            DrawFitText(itemName, nameArea, Color.White, 0.62f, 0.42f, opacity);
+            Rectangle nameArea = new(
+                slotArea.X + ScaleOffset(40, scale),
+                slotArea.Y + ScaleOffset(3, scale),
+                slotArea.Width - ScaleOffset(44, scale),
+                ScaleLength(17, scale));
+            DrawFitText(itemName, nameArea, Color.White, 0.62f * scale, 0.42f * scale, opacity);
 
-            Rectangle idArea = new(slotArea.X + 40, slotArea.Y + 20, slotArea.Width - 44, 14);
-            DrawFitText(GetSlotStatsText(entry.EffectID), idArea, new Color(190, 218, 255), 0.52f, 0.38f, opacity);
+            Rectangle idArea = new(
+                slotArea.X + ScaleOffset(40, scale),
+                slotArea.Y + ScaleOffset(20, scale),
+                slotArea.Width - ScaleOffset(44, scale),
+                ScaleLength(14, scale));
+            DrawFitText(GetSlotStatsText(entry.EffectID), idArea, new Color(190, 218, 255), 0.52f * scale, 0.38f * scale, opacity);
         }
 
         private static string GetSlotStatsText(int effectID)
@@ -425,20 +548,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             return $"#{capacity} / {multiplierText}x";
         }
 
-        private static void DrawDetailBox(SHPCBookEntry entry, Rectangle detailArea, float opacity)
+        private static void DrawDetailBox(SHPCBookEntry entry, Rectangle detailArea, float opacity, float scale)
         {
             Color effectColor = SHPCAmmoSelectionPanel.GetEffectColor(entry.EffectID);
             Color backColor = Color.Lerp(new Color(18, 22, 30), effectColor, 0.18f);
             Color borderColor = Color.Lerp(effectColor, Color.White, 0.28f);
 
             DrawRectangle(detailArea, backColor * (opacity * 0.96f));
-            DrawBorder(detailArea, borderColor * opacity, 2);
+            DrawBorder(detailArea, borderColor * opacity, ScaleLength(2, scale));
 
-            Rectangle textArea = new(detailArea.X + 12, detailArea.Y + 8, detailArea.Width - 24, detailArea.Height - 16);
-            DrawFitText(GetAmmoEffectText(entry.EffectID), textArea, Color.White, 1.24f, 0.8f, opacity);
+            Rectangle textArea = new(
+                detailArea.X + ScaleOffset(12, scale),
+                detailArea.Y + ScaleOffset(8, scale),
+                detailArea.Width - ScaleOffset(24, scale),
+                detailArea.Height - ScaleOffset(16, scale));
+            DrawFitText(GetAmmoEffectText(entry.EffectID), textArea, Color.White, 1.24f * scale, 0.8f * scale, opacity);
         }
 
-        private static void DrawAmmoIcon(SHPCBookEntry entry, Vector2 iconCenter, bool hovered, bool selected, int clickTimer, float opacity)
+        private static void DrawAmmoIcon(SHPCBookEntry entry, Vector2 iconCenter, bool hovered, bool selected, int clickTimer, float opacity, float scale)
         {
             Texture2D texture = SHPCAmmoSelectionPanel.TryGetAmmoTexture(entry.EffectID, entry.AmmoType);
             if (texture == null)
@@ -446,7 +573,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
             Rectangle source = SHPCAmmoSelectionPanel.GetCurrentFrame(texture, SHPCAmmoSelectionPanel.GetFrameCount(entry.EffectID));
             Vector2 sourceSize = source.Size();
-            float fitScale = Math.Min(MaxIconDrawSize / Math.Max(1f, sourceSize.X), MaxIconDrawSize / Math.Max(1f, sourceSize.Y));
+            float fitScale = Math.Min(MaxIconDrawSize * scale / Math.Max(1f, sourceSize.X), MaxIconDrawSize * scale / Math.Max(1f, sourceSize.Y));
             float hoverScale = hovered ? 1.08f : 1f;
             float selectedScale = selected ? 1.04f : 1f;
             float clickScale = clickTimer > 0 ? 1.08f : 1f;
@@ -554,11 +681,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
     internal sealed class SHPCBookRightPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
-        private const int PanelWidth = 822;
+        private const int BasePanelWidth = 822;
         private const int PanelPadding = 15;
         private const int RowHeight = 87;
         private const int RowGap = 8;
+        private const int HeaderHeight = 30;
+        private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
+        private const int ScreenMargin = 12;
         private const float NumberIconSize = 51f;
         private const float BossIconSize = 45f;
 
@@ -575,6 +705,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private readonly bool[] hoveredLastFrame = new bool[HeatEntries.Length];
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private int openedSelectedItem = -1;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.A_Dev";
@@ -585,7 +716,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             set => Projectile.ai[0] = value ? 1f : 0f;
         }
 
-        private static int PanelHeight => PanelPadding * 2 + HeatEntries.Length * RowHeight + (HeatEntries.Length - 1) * RowGap;
         private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
 
         public override void SetStaticDefaults()
@@ -595,8 +725,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
         public override void SetDefaults()
         {
-            Projectile.width = PanelWidth;
-            Projectile.height = PanelHeight;
+            Projectile.width = BasePanelWidth;
+            Projectile.height = GetBasePanelHeight();
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
@@ -619,13 +749,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             if (owner.HeldItem.type != ModContent.ItemType<SHPCBook>())
                 FadeOut = true;
 
-            if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
+            if (Main.myPlayer == Projectile.owner)
             {
-                panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen);
-                panelPositionInitialized = true;
+                if (openedSelectedItem < 0)
+                    openedSelectedItem = owner.selectedItem;
+                else if (owner.selectedItem != openedSelectedItem)
+                    FadeOut = true;
             }
 
-            Vector2 panelCenter = panelTopLeft + new Vector2(PanelWidth, PanelHeight) * 0.5f;
+            float layoutScale = GetLayoutScale();
+            int panelWidth = GetPanelWidth(layoutScale);
+            int panelHeight = GetPanelHeight(layoutScale);
+            if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
+            {
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(Main.MouseScreen, panelWidth, panelHeight);
+                panelPositionInitialized = true;
+            }
+            else if (Main.myPlayer == Projectile.owner)
+                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelWidth, panelHeight);
+
+            Vector2 panelCenter = panelTopLeft + new Vector2(panelWidth, panelHeight) * 0.5f;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
@@ -640,17 +783,29 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 return false;
 
             Player owner = Main.player[Projectile.owner];
-            Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelWidth, PanelHeight);
+            float layoutScale = GetLayoutScale();
+            int panelWidth = GetPanelWidth(layoutScale);
+            int panelHeight = GetPanelHeight(layoutScale);
+            Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, panelWidth, panelHeight);
+            bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
+            bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
+            bool closePressed = leftClickPressed || rightClickPressed;
+            Rectangle closeButtonArea = GetCloseButtonArea(panelArea, layoutScale);
+            bool closeHovered = closeButtonArea.Intersects(MouseRectangle);
             bool mouseOverPanel = panelArea.Intersects(MouseRectangle);
-            bool closePressed = (Main.mouseLeft && Main.mouseLeftRelease) || (Main.mouseRight && Main.mouseRightRelease);
+            bool readyForInput = !FadeOut && Projectile.Opacity >= 0.95f;
             int maxHeat = new BalanceSHPC().GetRightClickMaxHeatLevel();
 
-            DrawPanel(panelArea, Projectile.Opacity);
+            if (readyForInput && closeHovered && closePressed)
+                CloseWithSound(owner);
+
+            DrawPanel(panelArea, Projectile.Opacity, layoutScale);
+            DrawCloseButton(closeButtonArea, closeHovered, Projectile.Opacity, layoutScale);
 
             for (int i = 0; i < HeatEntries.Length; i++)
             {
                 RightHeatEntry entry = HeatEntries[i];
-                Rectangle rowArea = GetRowArea(i);
+                Rectangle rowArea = GetRowArea(i, layoutScale);
                 bool hovered = rowArea.Intersects(MouseRectangle);
                 bool unlocked = entry.Level <= maxHeat;
 
@@ -663,17 +818,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                         SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.16f }, owner.Center);
                 }
 
-                DrawHeatRow(entry, rowArea, unlocked, hovered, clickFeedbackTimers[i], Projectile.Opacity);
+                DrawHeatRow(entry, rowArea, unlocked, hovered, clickFeedbackTimers[i], Projectile.Opacity, layoutScale);
                 hoveredLastFrame[i] = hovered;
                 if (clickFeedbackTimers[i] > 0)
                     clickFeedbackTimers[i]--;
             }
 
-            if (!mouseOverPanel && !FadeOut && Projectile.Opacity >= 0.95f && closePressed)
-            {
-                FadeOut = true;
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
-            }
+            if (!mouseOverPanel && readyForInput && closePressed)
+                CloseWithSound(owner);
 
             if (mouseOverPanel)
             {
@@ -692,42 +844,110 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 projectile.ai[0] = 1f;
         }
 
-        private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter)
+        private void CloseWithSound(Player owner)
         {
-            const float screenMargin = 12f;
-            Vector2 desiredTopLeft = desiredCenter - new Vector2(PanelWidth, PanelHeight) * 0.5f;
-            float maxX = Math.Max(screenMargin, Main.screenWidth - PanelWidth - screenMargin);
-            float maxY = Math.Max(screenMargin, Main.screenHeight - PanelHeight - screenMargin);
+            FadeOut = true;
+            SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, owner.Center);
+        }
+
+        private static int GetBasePanelHeight()
+        {
+            return PanelPadding * 2 + HeaderHeight + HeatEntries.Length * RowHeight + Math.Max(0, HeatEntries.Length - 1) * RowGap;
+        }
+
+        private static float GetLayoutScale()
+        {
+            float heightScale = Main.screenHeight / Math.Max(1f, GetBasePanelHeight());
+            float widthScale = (Main.screenWidth - ScreenMargin * 2f) / Math.Max(1f, BasePanelWidth);
+            return Math.Max(0.2f, Math.Min(heightScale, widthScale));
+        }
+
+        private static int GetPanelWidth(float scale)
+        {
+            return ScaleLength(BasePanelWidth, scale);
+        }
+
+        private static int GetPanelHeight(float scale)
+        {
+            return ScaleLength(GetBasePanelHeight(), scale);
+        }
+
+        private static Vector2 GetClampedPanelTopLeftFromCenter(Vector2 desiredCenter, int panelWidth, int panelHeight)
+        {
+            return GetClampedPanelTopLeft(desiredCenter - new Vector2(panelWidth, panelHeight) * 0.5f, panelWidth, panelHeight);
+        }
+
+        private static Vector2 GetClampedPanelTopLeft(Vector2 desiredTopLeft, int panelWidth, int panelHeight)
+        {
+            float maxX = Math.Max(ScreenMargin, Main.screenWidth - panelWidth - ScreenMargin);
+            float maxY = Math.Max(0f, Main.screenHeight - panelHeight);
 
             return new Vector2(
-                MathHelper.Clamp(desiredTopLeft.X, screenMargin, maxX),
-                MathHelper.Clamp(desiredTopLeft.Y, screenMargin, maxY));
+                MathHelper.Clamp(desiredTopLeft.X, ScreenMargin, maxX),
+                MathHelper.Clamp(desiredTopLeft.Y, 0f, maxY));
         }
 
-        private Rectangle GetRowArea(int index)
+        private static Rectangle GetCloseButtonArea(Rectangle panelArea, float scale)
+        {
+            int inset = ScaleOffset(8, scale);
+            int size = ScaleLength(CloseButtonSize, scale);
+            return new Rectangle(
+                panelArea.Right - size - inset,
+                panelArea.Y + inset,
+                size,
+                size);
+        }
+
+        private Rectangle GetRowArea(int index, float scale)
         {
             return new Rectangle(
-                (int)panelTopLeft.X + PanelPadding,
-                (int)panelTopLeft.Y + PanelPadding + index * (RowHeight + RowGap),
-                PanelWidth - PanelPadding * 2,
-                RowHeight);
+                (int)panelTopLeft.X + ScaleOffset(PanelPadding, scale),
+                (int)panelTopLeft.Y + ScaleOffset(PanelPadding + HeaderHeight + index * (RowHeight + RowGap), scale),
+                ScaleLength(BasePanelWidth - PanelPadding * 2, scale),
+                ScaleLength(RowHeight, scale));
         }
 
-        private static void DrawPanel(Rectangle panelArea, float opacity)
+        private static int ScaleLength(int value, float scale)
+        {
+            return Math.Max(1, (int)MathF.Round(value * scale));
+        }
+
+        private static int ScaleOffset(int value, float scale)
+        {
+            return (int)MathF.Round(value * scale);
+        }
+
+        private static void DrawPanel(Rectangle panelArea, float opacity, float scale)
         {
             DrawRectangle(panelArea, new Color(12, 14, 20, 232) * opacity);
-            DrawBorder(panelArea, new Color(94, 110, 132) * opacity, BorderThickness);
+            DrawBorder(panelArea, new Color(94, 110, 132) * opacity, ScaleLength(BorderThickness, scale));
 
             Rectangle innerArea = new(
-                panelArea.X + BorderThickness,
-                panelArea.Y + BorderThickness,
-                panelArea.Width - BorderThickness * 2,
-                panelArea.Height - BorderThickness * 2);
+                panelArea.X + ScaleLength(BorderThickness, scale),
+                panelArea.Y + ScaleLength(BorderThickness, scale),
+                panelArea.Width - ScaleLength(BorderThickness, scale) * 2,
+                panelArea.Height - ScaleLength(BorderThickness, scale) * 2);
 
             DrawBorder(innerArea, new Color(31, 41, 58, 210) * opacity, 1);
+            DrawRectangle(
+                new Rectangle(
+                    panelArea.X + ScaleLength(BorderThickness, scale),
+                    panelArea.Y + ScaleOffset(PanelPadding + HeaderHeight - 7, scale),
+                    panelArea.Width - ScaleLength(BorderThickness, scale) * 2,
+                    ScaleLength(1, scale)),
+                new Color(94, 110, 132, 148) * opacity);
         }
 
-        private static void DrawHeatRow(RightHeatEntry entry, Rectangle rowArea, bool unlocked, bool hovered, int clickTimer, float opacity)
+        private static void DrawCloseButton(Rectangle area, bool hovered, float opacity, float scale)
+        {
+            Color fill = hovered ? new Color(84, 46, 54) : new Color(34, 30, 38);
+            Color border = hovered ? new Color(255, 166, 178) : new Color(148, 104, 116);
+            DrawRectangle(area, fill * (opacity * 0.92f));
+            DrawBorder(area, border * opacity, ScaleLength(hovered ? 2 : 1, scale));
+            DrawFitText("X", area, hovered ? Color.White : new Color(238, 190, 198), 0.72f * scale, 0.44f * scale, opacity);
+        }
+
+        private static void DrawHeatRow(RightHeatEntry entry, Rectangle rowArea, bool unlocked, bool hovered, int clickTimer, float opacity, float scale)
         {
             Color heatColor = GetHeatColor(entry.Level);
             Color muted = new(126, 130, 140);
@@ -748,35 +968,47 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             }
 
             DrawRectangle(rowArea, slotBack * (opacity * 0.94f));
-            DrawBorder(rowArea, slotBorder * opacity, unlocked ? 2 : 1);
+            DrawBorder(rowArea, slotBorder * opacity, ScaleLength(unlocked ? 2 : 1, scale));
 
-            Rectangle numberFrame = new(rowArea.X + 9, rowArea.Y + 12, 63, 63);
+            Rectangle numberFrame = new(
+                rowArea.X + ScaleOffset(9, scale),
+                rowArea.Y + ScaleOffset(12, scale),
+                ScaleLength(63, scale),
+                ScaleLength(63, scale));
             DrawRectangle(numberFrame, Color.Lerp(new Color(10, 12, 18), rowColor, 0.08f) * (opacity * 0.82f));
             DrawBorder(numberFrame, slotBorder * (opacity * 0.62f), 1);
-            DrawItemIcon(entry.NumberItemID, numberFrame.Center.ToVector2(), NumberIconSize, unlocked ? Color.White : Color.Gray, opacity);
+            DrawItemIcon(entry.NumberItemID, numberFrame.Center.ToVector2(), NumberIconSize * scale, unlocked ? Color.White : Color.Gray, opacity);
 
             string description = GetHeatDescription(entry.Level);
-            Rectangle descriptionArea = new(rowArea.X + 84, rowArea.Y + 8, rowArea.Width - 189, 72);
-            DrawWrappedFitText(description, descriptionArea, unlocked ? Color.White : new Color(170, 174, 184), 0.73f, 0.49f, opacity);
+            Rectangle descriptionArea = new(
+                rowArea.X + ScaleOffset(84, scale),
+                rowArea.Y + ScaleOffset(8, scale),
+                rowArea.Width - ScaleOffset(189, scale),
+                ScaleLength(72, scale));
+            DrawWrappedFitText(description, descriptionArea, unlocked ? Color.White : new Color(170, 174, 184), 0.73f * scale, 0.49f * scale, opacity);
 
-            Rectangle unlockFrame = new(rowArea.Right - 87, rowArea.Y + 12, 63, 63);
+            Rectangle unlockFrame = new(
+                rowArea.Right - ScaleOffset(87, scale),
+                rowArea.Y + ScaleOffset(12, scale),
+                ScaleLength(63, scale),
+                ScaleLength(63, scale));
             DrawRectangle(unlockFrame, Color.Lerp(new Color(10, 12, 18), rowColor, unlocked ? 0.12f : 0.04f) * (opacity * 0.82f));
             DrawBorder(unlockFrame, slotBorder * (opacity * 0.62f), 1);
-            DrawUnlockIcon(entry, unlockFrame, unlocked, opacity);
+            DrawUnlockIcon(entry, unlockFrame, unlocked, opacity, scale);
         }
 
-        private static void DrawUnlockIcon(RightHeatEntry entry, Rectangle frame, bool unlocked, float opacity)
+        private static void DrawUnlockIcon(RightHeatEntry entry, Rectangle frame, bool unlocked, float opacity, float scale)
         {
             Texture2D icon = TryGetUnlockTexture(entry);
             if (icon == null)
             {
-                DrawFitText(entry.Level == 1 ? "OK" : "?", frame, unlocked ? Color.White : Color.Gray, 0.62f, 0.42f, opacity);
+                DrawFitText(entry.Level == 1 ? "OK" : "?", frame, unlocked ? Color.White : Color.Gray, 0.62f * scale, 0.42f * scale, opacity);
                 return;
             }
 
             Rectangle source = icon.Frame();
             Vector2 sourceSize = source.Size();
-            float fitScale = Math.Min(BossIconSize / Math.Max(1f, sourceSize.X), BossIconSize / Math.Max(1f, sourceSize.Y));
+            float fitScale = Math.Min(BossIconSize * scale / Math.Max(1f, sourceSize.X), BossIconSize * scale / Math.Max(1f, sourceSize.Y));
             Color color = unlocked ? Color.White : Color.Gray;
             Main.EntitySpriteDraw(icon, frame.Center.ToVector2(), source, color * opacity, 0f, sourceSize * 0.5f, fitScale, SpriteEffects.None, 0f);
         }
