@@ -21,9 +21,15 @@ SHPC 现在有材料装填、不同弹药效果、右键热量激光、配饰强
 Calamity Mod
 VeluriyamLib
 
+[h1]作者[/h1]
+主创：犽戎
+代码：剃刀刃台风
+贴图：小小、古圣金源、混沌
+
 [h1]反馈与建议[/h1]
 反馈、报错、平衡建议都欢迎。
 如果哪里玩起来怪，直接说就行。这个模组还会继续长。
+可以加入 QQ 群、在创意工坊下方评论，或者直接加好友私信。
 
 [h1]源码[/h1]
 [url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]点击以跳转[/url]
@@ -52,6 +58,15 @@ ideally as if it belonged in this world from the start.
 Calamity Mod
 VeluriyamLib
 
+[h1]Credits[/h1]
+Lead Creator: 犽戎
+Code: 剃刀刃台风
+Sprites: 小小, 古圣金源, 混沌
+
 [h1]Feedback[/h1]
-Feedback and bug reports are welcome.
+Feedback, bug reports, and balance suggestions are welcome.
 If something feels weird, please say it plainly. The mod is still growing.
+You can join the QQ group, comment under the Steam Workshop page, or add me as a friend and send a private message directly.
+
+[h1]Source[/h1]
+[url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]Click to open[/url]
