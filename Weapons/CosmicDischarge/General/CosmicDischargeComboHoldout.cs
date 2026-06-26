@@ -225,7 +225,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2.One,
                     direction.ToRotation(),
                     0.03f,
-                    0.2f * 0.3f,
+                    0.2f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                     15));
                 CosmicDischargeCommon.SpawnDoGSparkBurst(Owner.MountedCenter, 8, 2.4f, 7f, 0.58f * 0.3f, -direction * 1.1f);
                 CosmicDischargeCommon.SpawnDoGRiftCracks(Owner.MountedCenter, 2, 3f, 7f, 0.4f * 0.3f);
@@ -313,7 +313,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 direction.ToRotation(),
                 0.035f,
-                0.22f * intensity * 0.3f,
+                0.22f * intensity * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                 14));
 
             for (int i = 0; i < 6 + (int)(intensity * 8f); i++)
@@ -643,7 +643,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             Vector2.Zero,
                             CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
                             0.04f,
-                            1.4f * 0.3f,
+                            1.4f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                             22
                         ));
 
@@ -814,7 +814,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (isSword)
             {
                 pointsHistory.Clear();
-                DrawSwordSmear();
             }
             else
             {

@@ -13,40 +13,31 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 {
     public class IceBladeProj : ModProjectile
     {
-        public override string Texture => "CalamityLegendsComeBack/Texture/KsTexture/slash_01"; // 使用弧形斜斩贴图
+        public override string Texture => "CalamityMod/Items/Weapons/Magic/ChronomancersScythe";
 
         private float rotationOffset = 0f;
         private int attackTimer = 0;
-        private const int PrepareDelay = 10; // 蓄力准备延迟
-        private const int SpinDuration = 30; // 旋转持续帧数
+        private const int PrepareDelay = 10;
+        private const int SpinDuration = 30;
 
-        // =========================================================================
-        // 自定义设置：在此处调整冰刀旋转圈数 (例如 2f 代表两圈，3f 代表三圈)
-        // =========================================================================
+        // 旋转圈数，可调整（2圈或3圈）
         private const float SpinRotations = 2f;
-        // =========================================================================
 
         public override void SetDefaults()
         {
-            Projectile.width = 160;
-            Projectile.height = 160;
+            Projectile.width = 120;
+            Projectile.height = 120;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
             Projectile.timeLeft = PrepareDelay + SpinDuration;
             Projectile.DamageType = DamageClass.Summon;
-            
-            // 启用静态无敌帧，以防多次撞击重叠
             Projectile.usesIDStaticNPCImmunity = true;
             Projectile.idStaticNPCHitCooldown = 8;
         }
 
-        public override bool? CanDamage()
-        {
-            // 在准备蓄力期不造成伤害
-            return attackTimer >= PrepareDelay ? null : false;
-        }
+        public override bool? CanDamage() => attackTimer >= PrepareDelay ? null : false;
 
         public override void AI()
         {
@@ -65,13 +56,13 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             attackTimer++;
             if (attackTimer < PrepareDelay)
             {
-                // 1. 准备期：冰刀停在松手时的鼠标半径上颤抖蓄能
+                // 准备期：在鼠标方位颤抖蓄能
                 float jitter = MathF.Sin(Main.GlobalTimeWrappedHourly * 42f) * MathHelper.ToRadians(2.5f);
                 float prepareAngle = rotationOffset + jitter;
                 Projectile.Center = player.Center + prepareAngle.ToRotationVector2() * bladeRadius;
-                Projectile.rotation = prepareAngle + MathHelper.PiOver2;
-                
-                // 粒子蓄能
+                // 贴图倾斜45°，旋转时加 PiOver4 补偿
+                Projectile.rotation = prepareAngle + MathHelper.PiOver2 + MathHelper.PiOver4;
+
                 if (Main.rand.NextBool(3))
                 {
                     Dust d = Dust.NewDustDirect(Projectile.Center, 0, 0, DustID.Ice);
@@ -81,30 +72,26 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             }
             else
             {
-                // 2. 旋转爆发期：以极快速度围绕玩家旋转两周或三周
                 if (attackTimer == PrepareDelay)
                 {
-                    // 挥击音效
                     SoundEngine.PlaySound(SoundID.Item71 with { Pitch = -0.1f, Volume = 1f }, Projectile.Center);
-                    
-                    // 增加轻微屏幕震动
                     player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, 2.2f);
                 }
 
                 float progress = (float)(attackTimer - PrepareDelay) / SpinDuration;
-                float angle = progress * MathHelper.TwoPi * SpinRotations; // 使用自定义的旋转圈数
+                float angle = progress * MathHelper.TwoPi * SpinRotations;
                 float spinAngle = rotationOffset + angle;
                 Projectile.Center = player.Center + spinAngle.ToRotationVector2() * bladeRadius;
-                Projectile.rotation = spinAngle + MathHelper.PiOver2;
-                
-                // 沿刀刃长度产生密集的极光与矩阵粒子
+                Projectile.rotation = spinAngle + MathHelper.PiOver2 + MathHelper.PiOver4;
+
                 for (int i = 0; i < 4; i++)
                 {
                     float dist = 20f + i * 25f;
-                    Vector2 pos = Projectile.Center + Projectile.rotation.ToRotationVector2() * dist;
+                    Vector2 pos = Projectile.Center + (Projectile.rotation - MathHelper.PiOver4).ToRotationVector2() * dist;
                     int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Electric;
                     Dust dDust = Dust.NewDustDirect(pos, 0, 0, dType);
-                    dDust.velocity = Projectile.rotation.ToRotationVector2().RotatedBy(MathHelper.PiOver2) * (3f + i);
+                    dDust.velocity = (Projectile.rotation - MathHelper.PiOver4).ToRotationVector2()
+                        .RotatedBy(MathHelper.PiOver2) * (3f + i);
                     dDust.scale = 1.0f + Main.rand.NextFloat(0.6f);
                     dDust.noGravity = true;
                 }
@@ -114,28 +101,41 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Frostburn2, 300);
-            
-            // 每次成功劈砍命中，会为玩家的终结技充能槽增加 4 点能量
             Player player = Main.player[Projectile.owner];
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
             modPlayer.UltimateCharge = Math.Min(GlacialEmbracePlayer.MaxUltimateCharge, modPlayer.UltimateCharge + 4);
             modPlayer.OnSpecialHitNPC();
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            for (int i = 0; i < 18; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 18f;
+                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(2f, 5f);
+                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Ice;
+                Dust d = Dust.NewDustDirect(Projectile.Center, 0, 0, dType, vel.X, vel.Y);
+                d.scale = Main.rand.NextFloat(1f, 1.8f);
+                d.noGravity = true;
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D slashTex = TextureAssets.Projectile[Type].Value;
+            Texture2D tex = TextureAssets.Projectile[Type].Value;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float time = Main.GlobalTimeWrappedHourly;
 
-            // 绘制极光绚丽的环形刀芒
-            Color slashCol = Color.Lerp(new Color(0, 195, 255, 0), new Color(150, 50, 255, 0), 0.5f + 0.5f * MathF.Sin(time * 8f));
-            float opacity = attackTimer < PrepareDelay ? 0.35f : 0.9f;
-            float scale = attackTimer < PrepareDelay ? 0.85f : 1.2f;
-            
-            // 双向发光叠加
-            Main.spriteBatch.Draw(slashTex, drawPos, null, slashCol * opacity, Projectile.rotation, slashTex.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(slashTex, drawPos, null, Color.White * 0.35f * opacity, Projectile.rotation, slashTex.Size() * 0.5f, scale * 0.85f, SpriteEffects.None, 0f);
+            Color col = Color.Lerp(new Color(0, 195, 255, 0), new Color(100, 40, 255, 0),
+                0.5f + 0.5f * MathF.Sin(time * 8f));
+            float opacity = attackTimer < PrepareDelay ? 0.4f : 0.92f;
+            float scale = attackTimer < PrepareDelay ? 0.7f : 1.05f;
+
+            // 发光叠加
+            Main.spriteBatch.Draw(tex, drawPos, null, col * opacity,
+                Projectile.rotation, tex.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(tex, drawPos, null, Color.White * 0.3f * opacity,
+                Projectile.rotation, tex.Size() * 0.5f, scale * 0.82f, SpriteEffects.None, 0f);
 
             return false;
         }

@@ -29,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private const int ChainTailStartY = 114;
         private const int ChainTailHeight = 84;
         private const float ChainBodyStartOffset = 30f;
+        public const float ShockwaveFinalScaleMultiplier = 0.3f;
         public static readonly Color DoGCyanColor = Color.Cyan;
         public static readonly Color DoGFuchsiaColor = Color.Fuchsia;
         public static readonly Color DoGPurpleColor = new(136, 26, 186);
@@ -173,7 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GeneralParticleHandler.SpawnParticle(new SemiCircularSmearVFX(
                 Vector2.Lerp(handle, tip, 0.58f),
                 DoGSpecialColor * 0.7f,
-                whipAngle,
+                whipAngle + MathHelper.PiOver2,
                 MathHelper.Clamp(whipLength / 80f, 0.8f, 7.2f),
                 new Vector2(1f, 1.3f)));
 
@@ -197,7 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
                 Vector2.Lerp(handle, tip, 0.58f),
                 DoGCyanColor * 0.6f,
-                whipAngle + MathHelper.Pi,
+                whipAngle + MathHelper.Pi + MathHelper.PiOver2,
                 MathHelper.Clamp(whipLength / 70f, 0.8f, 7.6f)));
 
             if ((int)Main.GameUpdateCount % 3 == 0)
@@ -275,47 +276,20 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return;
 
             Color mainColor = secondSwing ? DoGFuchsiaColor : DoGCyanColor;
+            Vector2 bladeCenter = Vector2.Lerp(bladeMidpoint, bladeTip, 0.45f);
+            float bladeDiskAngle = swingAngle + MathHelper.PiOver2 + (secondSwing ? MathHelper.Pi : 0f);
             GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
-                bladeTip,
-                mainColor * 0.5f,
-                secondSwing ? swingAngle + MathHelper.Pi : swingAngle,
-                4.8f));
+                bladeCenter,
+                mainColor * 0.62f,
+                bladeDiskAngle,
+                4.6f));
 
-            if (secondSwing)
-            {
-                if (Main.rand.NextBool(3))
-                    GeneralParticleHandler.SpawnParticle(new FancyStars(
-                        bladeTip + Main.rand.NextVector2Circular(10f, 10f),
-                        Main.rand.NextFloat(MathHelper.TwoPi),
-                        Main.rand.NextFloat(0.3f, 0.6f) * 0.3f,
-                        Main.rand.NextVector2Circular(3f, 3f),
-                        Main.rand.NextFloat(0.05f, 0.1f),
-                        15,
-                        Main.rand.NextBool() ? DoGFuchsiaColor : DoGSpecialColor));
-                return;
-            }
-
-            if ((int)Main.GameUpdateCount % 2 == 0)
-            {
-                GeneralParticleHandler.SpawnParticle(new GenericSparkle(
-                    bladeMidpoint + Main.rand.NextVector2Circular(5f, 5f),
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    DoGCyanColor,
-                    DoGWhiteColor,
-                    0.3f * 0.3f,
-                    12,
-                    1.5f,
-                    0.8f));
-                GeneralParticleHandler.SpawnParticle(new GenericSparkle(
-                    bladeTip + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextVector2Circular(3f, 3f),
-                    DoGWhiteColor,
-                    DoGCyanColor,
-                    0.4f * 0.3f,
-                    10,
-                    2f,
-                    1.2f));
-            }
+            GeneralParticleHandler.SpawnParticle(new SemiCircularSmearVFX(
+                bladeCenter,
+                DoGSpecialColor * 0.45f,
+                bladeDiskAngle,
+                3.6f,
+                new Vector2(1f, 1.2f)));
         }
 
         public static void SpawnSwordSwingFlare(Vector2 bladeTip)
@@ -449,7 +423,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             GeneralParticleHandler.SpawnParticle(new FlameExplosion(target.Center, Vector2.Zero, DoGCyanColor, new Vector2(1.4f, 0.7f), Main.rand.NextFloat(MathHelper.TwoPi), 0.1f * 0.3f, 0.7f * 0.3f, 14, 0.8f));
             GeneralParticleHandler.SpawnParticle(new FlameExplosion(target.Center, Vector2.Zero, DoGFuchsiaColor * 0.8f, new Vector2(0.7f, 1.3f), Main.rand.NextFloat(MathHelper.TwoPi), 0.08f * 0.3f, 0.55f * 0.3f, 12, 0.7f));
-            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(target.Center, Vector2.Zero, DoGSpecialColor, Vector2.One, 0f, 0.04f, 0.45f * 0.3f, 14));
+            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(target.Center, Vector2.Zero, DoGSpecialColor, Vector2.One, 0f, 0.04f, 0.45f * 0.3f * ShockwaveFinalScaleMultiplier, 14));
         }
 
         public static void SpawnWhipUnderHit(NPC target, float whipAngle)
@@ -469,7 +443,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < 6; i++)
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(target.Center + Main.rand.NextVector2Circular(10f, 10f), Main.rand.NextVector2Circular(6f, 6f), true, 12, 0.12f * 0.3f, DoGCyanColor));
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, DoGCyanColor, new Vector2(1.5f, 0.6f), whipAngle, 0.04f, 0.5f * 0.3f, 15));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, DoGCyanColor, new Vector2(1.5f, 0.6f), whipAngle, 0.04f, 0.5f * 0.3f * ShockwaveFinalScaleMultiplier, 15));
         }
 
         public static void SpawnWhipThrustHit(Player player, NPC target, Vector2 thrustDirection)
@@ -525,7 +499,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             for (int i = 0; i < 6; i++)
                 GeneralParticleHandler.SpawnParticle(new CritSpark(target.Center + Main.rand.NextVector2Circular(15f, 15f), Main.rand.NextVector2Circular(5f, 5f), DoGFuchsiaColor, DoGWhiteColor, 0.5f * 0.3f, 20, 1.5f, 1.2f, 0.006f));
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, DoGFuchsiaColor, new Vector2(1.8f, 0.5f), swingDirection.ToRotation(), 0.04f, 0.5f * 0.3f, 14));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, DoGFuchsiaColor, new Vector2(1.8f, 0.5f), swingDirection.ToRotation(), 0.04f, 0.5f * 0.3f * ShockwaveFinalScaleMultiplier, 14));
         }
 
         public static void SpawnSwordFinisherCharge(Player player, float time)
@@ -557,8 +531,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             SpawnCustomPulse(player.Center, DoGWhiteColor * 0.8f, 0.3f, 2.5f, "CalamityMod/Particles/ShineExplosion1", 20);
             SpawnCustomPulse(player.Center, DoGCyanColor * 0.7f, 0.5f, 3f, "CalamityMod/Particles/PlasmaExplosion", 22);
             SpawnCustomPulse(player.Center, DoGFuchsiaColor * 0.6f, 0.7f, 3.5f, "CalamityMod/Particles/ShineExplosion2", 24);
-            GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.04f, 0.6f * 0.3f, 16));
-            GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.06f, 0.9f * 0.3f, 20));
+            GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.04f, 0.6f * 0.3f * ShockwaveFinalScaleMultiplier, 16));
+            GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.06f, 0.9f * 0.3f * ShockwaveFinalScaleMultiplier, 20));
             GeneralParticleHandler.SpawnParticle(new StrongBloom(player.Center, Vector2.Zero, DoGWhiteColor, 1.5f * 0.3f, 18));
         }
 
@@ -765,8 +739,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (time % 10f == 0f)
             {
-                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.05f, 0.8f * 0.3f, 30));
-                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.07f, 1.1f * 0.3f, 35));
+                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.05f, 0.8f * 0.3f * ShockwaveFinalScaleMultiplier, 30));
+                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.07f, 1.1f * 0.3f * ShockwaveFinalScaleMultiplier, 35));
             }
 
             if (time % 15f == 0f)
@@ -811,7 +785,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 StarsmokeMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(80f, 80f), Main.rand.NextVector2Circular(5f, 5f), 40f * 0.3f, 40, new Vector2(0.8f, 1.2f), 0.15f, 0.5f);
 
             for (int i = 0; i < 3; i++)
-                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, ThreeColorSpark, Vector2.One, 0f, 0.05f + i * 0.03f, (1.5f + i * 0.5f) * 0.3f, 30 + i * 5));
+                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, ThreeColorSpark, Vector2.One, 0f, 0.05f + i * 0.03f, (1.5f + i * 0.5f) * 0.3f * ShockwaveFinalScaleMultiplier, 30 + i * 5));
 
             GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGSpecialColor, 0f, 1.5f * 0.3f, Vector2.One, starAmount: 16, spinSpeed: 0.05f));
             GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGCyanColor, MathHelper.PiOver4, 1.2f * 0.3f, Vector2.One, starAmount: 12, spinSpeed: -0.04f));
@@ -829,7 +803,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 GeneralParticleHandler.SpawnParticle(new NanoParticle(center + Main.rand.NextVector2Circular(radius, radius), Main.rand.NextVector2Circular(2f, 2f), DoGSpecialColor, 0.4f * 0.3f, 20, emitsLight: true));
 
             if (time % 10f == 0f)
-                GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGSpecialColor, Vector2.One, 0f, 0.03f, (radius / 50f) * 0.3f, 20));
+                GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGSpecialColor, Vector2.One, 0f, 0.03f, (radius / 50f) * 0.3f * ShockwaveFinalScaleMultiplier, 20));
 
             if (time % 15f == 0f)
                 GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGSpecialColor, 0f, 0.8f * 0.3f, Vector2.One, starAmount: 8, spinSpeed: 0.02f));
@@ -848,7 +822,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 originalScale * 0.3f,
-                finalScale * 0.3f,
+                finalScale * 0.3f * ShockwaveFinalScaleMultiplier,
                 lifeTime));
         }
 
@@ -912,8 +886,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(center + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextVector2Circular(8f, 8f), true, 14, 0.8f * 0.3f, mainColor, new Vector2(0.3f, 1.6f), true));
             for (int i = 0; i < 4; i++)
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(center, Main.rand.NextVector2Circular(5f, 5f), true, 12, 0.15f * 0.3f, DoGWhiteColor));
-            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.05f, 0.5f * 0.3f, 12));
-            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.08f, 0.8f * 0.3f, 15));
+            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.05f, 0.5f * 0.3f * ShockwaveFinalScaleMultiplier, 12));
+            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.08f, 0.8f * 0.3f * ShockwaveFinalScaleMultiplier, 15));
             GeneralParticleHandler.SpawnParticle(new FlameExplosion(center, Vector2.Zero, DoGCyanColor, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f * 0.3f, 0.7f * 0.3f, 12, 0.7f));
             GeneralParticleHandler.SpawnParticle(new FlameExplosion(center, Vector2.Zero, DoGFuchsiaColor, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.08f * 0.3f, 0.6f * 0.3f, 10, 0.6f));
         }
@@ -1024,7 +998,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 direction.ToRotation(),
                 0.04f,
-                (heavy ? 0.32f : 0.19f) * 0.3f,
+                (heavy ? 0.32f : 0.19f) * 0.3f * ShockwaveFinalScaleMultiplier,
                 heavy ? 18 : 12));
             SpawnDoGSparkBurst(center, heavy ? 22 : 12, 3f, heavy ? 13f : 8f, heavy ? 0.72f : 0.5f, direction * 1.2f);
             if (heavy || tip)

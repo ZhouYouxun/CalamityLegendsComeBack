@@ -229,34 +229,64 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                     }
                 }
 
-                // 2. 绘制 QTE 节奏环或卡点指示线（如果激活）
+                // 2. 绘制右键 QTE 节奏条（独立于左键蓄力条）
                 if (modPlayer.QteActive)
                 {
                     float qteProgress = (float)modPlayer.QteTimer / modPlayer.QteMax;
-                    Vector2 qtePos = player.Center - Main.screenPosition + new Vector2(0f, -110f);
+                    // QTE条位于蓄力条下方，与其错开
+                    Vector2 qtePos = player.Center - Main.screenPosition + new Vector2(0f, -55f);
 
-                    // 画一条细长的横向卡点条
                     int barWidth = 100;
                     int barHeight = 8;
                     Rectangle bgRect = new Rectangle((int)(qtePos.X - barWidth * 0.5f), (int)qtePos.Y, barWidth, barHeight);
-                    
-                    // 绘制灰色底板
-                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, bgRect, new Color(40, 40, 40, 200));
 
-                    // 绘制甜点区 (Sweet Spot)：在 70% 至 90% 处，呈现亮绿色霓虹高亮
-                    int sweetStart = (int)(barWidth * 0.7f);
-                    int sweetWidth = (int)(barWidth * 0.2f);
-                    Rectangle sweetRect = new Rectangle((int)(bgRect.X + sweetStart), (int)qtePos.Y, sweetWidth, barHeight);
-                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, sweetRect, Color.LimeGreen * 0.7f);
+                    // 底板（深紫色区分左键条）
+                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, bgRect, new Color(30, 20, 55, 210));
 
-                    // 绘制白色游游标指针
-                    int cursorX = (int)(bgRect.X + qteProgress * barWidth);
-                    Rectangle cursorRect = new Rectangle(cursorX - 2, (int)qtePos.Y - 2, 4, barHeight + 4);
-                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, cursorRect, Color.White);
+                    // 甜点区（70%~90% = QteSuccessMin~QteSuccessMax / QteMax）
+                    float sweetFrac0 = (float)GlacialEmbracePlayer.QteSuccessMin / modPlayer.QteMax;
+                    float sweetFrac1 = (float)GlacialEmbracePlayer.QteSuccessMax / modPlayer.QteMax;
+                    int sweetStart = (int)(barWidth * sweetFrac0);
+                    int sweetWidth = (int)(barWidth * (sweetFrac1 - sweetFrac0));
+                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value,
+                        new Rectangle(bgRect.X + sweetStart, (int)qtePos.Y, sweetWidth, barHeight),
+                        new Color(0, 230, 100, 180));
 
-                    // 显示提示文字
-                    string hintText = modPlayer.QteType == 0 ? "Switch Mode!" : "Release!";
-                    Utils.DrawBorderStringFourWay(Main.spriteBatch, FontAssets.MouseText.Value, hintText, qtePos.X - 35, qtePos.Y - 20, Color.Yellow, Color.Black, Vector2.Zero, 0.75f);
+                    // 填充进度（紫色）
+                    int fillW = (int)(qteProgress * barWidth);
+                    if (fillW > 0)
+                        Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value,
+                            new Rectangle(bgRect.X, (int)qtePos.Y, fillW, barHeight),
+                            new Color(180, 80, 255) * 0.85f);
+
+                    // 游标
+                    int cursorX = bgRect.X + fillW;
+                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value,
+                        new Rectangle(cursorX - 2, (int)qtePos.Y - 2, 3, barHeight + 4), Color.White);
+
+                    // 提示文字
+                    bool inSweet = qteProgress >= sweetFrac0 && qteProgress <= sweetFrac1;
+                    string hintText = inSweet ? "RELEASE!" : "RMB";
+                    Color hintCol = inSweet ? new Color(0, 255, 160) : new Color(200, 150, 255);
+                    Utils.DrawBorderStringFourWay(Main.spriteBatch, FontAssets.MouseText.Value, hintText,
+                        qtePos.X - 20, qtePos.Y - 16, hintCol, Color.Black, Vector2.Zero, 0.72f);
+                }
+
+                // 3. 形态切换闪光（模式刚切换后 30 帧）
+                if (modPlayer.IsModeFlashing)
+                {
+                    float flashT = modPlayer.ModeFlashProgress;
+                    Color[] modeFlashColors = [
+                        new Color(0, 200, 255, 0),
+                        new Color(80, 230, 255, 0),
+                        new Color(255, 160, 60, 0)
+                    ];
+                    Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                    Color flashCol = modeFlashColors[modPlayer.CurrentMode] * flashT * 0.6f;
+                    Vector2 flashPos = player.Center - Main.screenPosition;
+                    float flashScale = (1f - flashT) * 1.5f + 0.3f;
+                    Main.spriteBatch.Draw(bloomTex, flashPos, null, flashCol, 0f,
+                        bloomTex.Size() * 0.5f, flashScale, SpriteEffects.None, 0f);
                 }
             }
 

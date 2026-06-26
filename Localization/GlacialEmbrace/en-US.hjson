@@ -9,75 +9,94 @@ Mods: {
 						ModeName2: Strike Mode
 						GE_Intro:
 							'''
-							[c/7BC8E5:Current combat form: {0}]
-							[c/A0D8EF:Summon-class legendary weapon — 48 base damage, 10 mana cost]
-							[c/A0D8EF:First use automatically summons a Glacial Core (0 slots) to anchor the spike system.]
-							[c/A0D8EF:All hits inflict Frostburn II (5 seconds).]
+							[c/7BC8E5:Current form: {0} (auto-rotates every 5 seconds)]
+							[c/A0D8EF:Summon legendary weapon — 48 base damage, 10 mana]
+							[c/A0D8EF:First use summons a Glacial Core (0 slots) as anchor]
+							[c/A0D8EF:All hits inflict Frostburn II (5 seconds)]
 							'''
-						GE_LeftClick: "[c/A0D8EF:◆ Left Click: summon Glacial Core first if absent; then Ice Spikes until full; release/charge special attack when full.]"
+						GE_LeftClick:
+							'''
+							[c/A0D8EF:◆ Left Click: summon Glacial Core first if absent]
+							[c/A0D8EF:  Then click to summon orbiting Ice Spikes]
+							[c/A0D8EF:  Hold when full to charge, release for special attack]
+							'''
 						GE_SpikeMode0:
 							'''
-							[c/90FFB0:◈ Cleave Mode — Spike Behavior]
-							[c/90FFB0:  · Spikes occupy 0.5 slots. Each spike splits into opposite inner and outer crystal parts.]
-							[c/90FFB0:  · Inner crystal: 90px orbit, speed 4°/frame, 0.85x damage, 90-frame NPC immunity.]
-							[c/90FFB0:  · Outer crystal: 140px orbit, speed 2.8°/frame, 1.35x damage, 128-frame NPC immunity.]
-							[c/90FFB0:Each crystal hits the same target once per rotation cycle. Inner and outer spikes have separate immunity.]
+							[c/90FFB0:◈ Cleave — each spike splits into paired inner/outer crystals]
+							[c/90FFB0:  Inner: 90px orbit, 4°/frame, 0.85x damage]
+							[c/90FFB0:  Outer: 140px orbit, 2.8°/frame, 1.35x damage]
+							[c/90FFB0:  Different angular speeds; independent NPC immunity]
 							'''
 						GE_SpikeMode1:
 							'''
-							[c/80EFFF:◈ Pierce Mode — Spike Behavior]
-							[c/80EFFF:  · Spikes occupy 1.0 slot, 90px orbit. Automatically flies out after 3s to homing-hit and embed (max 6 per enemy).]
-							[c/80EFFF:  · Whip hit detonates 1 random embedded spike; special attack hit detonates all embedded spikes.]
-							[c/80EFFF:  · Detonated spikes thrust in their embed direction to pierce and deal secondary damage to a short line of enemies.]
+							[c/80EFFF:◈ Pierce — spikes orbit ~3s then fly out to embed]
+							[c/80EFFF:  Max 6 spikes per enemy; reduces orbit count while out]
+							[c/80EFFF:  Whip hit detonates 1 random embedded spike]
+							[c/80EFFF:  Detonated spikes pierce a short line of enemies]
 							'''
 						GE_SpikeMode2:
 							'''
-							[c/FF8B60:◈ Strike Mode — Spike Behavior]
-							[c/FF8B60:  · Spikes occupy 1.0 slot, tips inward. After 6s, all spikes align towards the cursor.]
-							[c/FF8B60:  · Left click while aligned: triggers a collision smash, spikes converge to deal 2.2x AoE damage, then hibernate for 4s.]
+							[c/FF8B60:◈ Strike — spikes face inward; auto-align after 6s cooldown]
+							[c/FF8B60:  Left click when aligned: spikes collide and shockwave]
+							[c/FF8B60:  2.2x collision damage; all spikes hibernate for 4s]
 							'''
-						GE_SpecialIntro: "[c/A0D8EF:◆ Special Attack (Left click / hold when minion slots are full)]"
+						GE_SpecialIntro: "[c/A0D8EF:◆ Special Attack (hold Left Click when minion slots are full)]"
 						GE_SpecialMode0:
 							'''
-							[c/90FFB0:Cleave Special → Glacial Cleaver Blade (IceBladeProj)]
-							[c/90FFB0:  · Condenses at cursor when held. Upon release, spins around the player for 2 rotations after a short delay.]
-							[c/90FFB0:  · 8-frame NPC hit cooldown for fast multi-hits.]
+							[c/90FFB0:Cleave Special: condense ice blade at cursor position]
+							[c/90FFB0:  Release to spin 2 rotations around player after delay]
+							[c/90FFB0:  Multi-hit with 8-frame NPC immunity per hit]
 							'''
 						GE_SpecialMode1:
 							'''
-							[c/80EFFF:Pierce Special → Glacial Piercing Wedge (IceWedgeProj)]
-							[c/80EFFF:  · Fires a mild-homing crystal wedge towards cursor that shatters on hit, detonating ALL embedded spikes on that target.]
+							[c/80EFFF:Pierce Special: fire a homing ice wedge toward cursor]
+							[c/80EFFF:  Shatters on hit; detonates ALL embedded spikes on target]
 							'''
 						GE_SpecialMode2:
 							'''
-							[c/FF8B60:Strike Special → Glacial Strike Pillar (IcePillarProj)]
-							[c/FF8B60:  · Drops a heavy gravity-affected ice pillar that explodes in a wide area.]
-							[c/FF8B60:  · Deals strong knockback that forces boss knockback, and detonates all spikes.]
+							[c/FF8B60:Strike Special: launch a heavy gravity-affected ice pillar]
+							[c/FF8B60:  Wide explosion on hit; force-knockbacks bosses]
+							[c/FF8B60:  Detonates all spikes into shockwaves; spikes hibernate]
 							'''
-						GE_PassiveRhythm: "[c/B0E0FF:◇ Frost Rhythm: switch forms or release a charge (35-45 frames) to trigger QTE. Press {0} at 70-90% sweet spot: combo +1 (max 20). Failure resets combo.]"
-						GE_PassiveCombo: "[c/B0E0FF:  · Combo: {0}. Every 2 combo: +1 life regen/s (current: +{1}); every 4 combo: +8 defense (current: +{2}); every 5 combo: restores 60 wing time.]"
-						GE_PassiveDivinity: "[c/B0E0FF:  · Glacial Divinity: 10+ combo increases spike speed by 1.1x (faster rotation/fly-out). Lasts until fail or 5s.]"
-						GE_PassiveAurora: "[c/C8A0FF:◇ Aurora Melody: special hits within 45 frames grant 5s of Aurora grace (+10 defense, 15% pre-defense damage reduction).]"
+						GE_PassiveRhythm:
+							'''
+							[c/B0E0FF:◇ Frost Rhythm: hold Right Click to start rhythm QTE bar]
+							[c/B0E0FF:  Release in the green sweet-spot zone: combo +1 (max 20)]
+							[c/B0E0FF:  Outside sweet spot or timeout: combo resets to 0]
+							'''
+						GE_PassiveCombo: "[c/B0E0FF:  Combo: {0} (+{1} life regen/s, +{2} defense)]"
+						GE_PassiveDivinity: "[c/B0E0FF:  At 10 combo: spike speed +10% for 5s (Glacial Divinity)]"
+						GE_PassiveAurora:
+							'''
+							[c/C8A0FF:◇ Aurora Melody: special hits within 0.75s of each other]
+							[c/C8A0FF:  Grant 5s Aurora Grace (+10 defense, 15% pre-DR reduction)]
+							'''
 						GE_Ultimate:
 							'''
-							[c/A0F0FF:★ Ultimate — Glacial Diamond Drill]
-							[c/A0F0FF:  · Special hits grant +4 energy. Press {0} at 240 energy to release (current: {1}/240).]
-							[c/A0F0FF:  · Assembly (1.5s): Spikes x3 (max 30, i.e., 10 slot cap) gather in 3 layers (9-12-9) with a rotating star flash.]
-							[c/A0F0FF:  · Launch (3s): Click left-click to launch towards cursor. Deals high-frequency hits; player is slowed and invulnerable.]
-							[c/A0F0FF:  · Shatter: explodes after 3s for 6x damage, clearing all spikes and buffs.]
-							[c/A0F0FF:  · Over-slot bonus: each slot above 10 increases drill damage by 3% (shatter by 18%).]
+							[c/A0F0FF:★ Ultimate — Glacial Diamond Drill (press {0} to release)]
+							[c/A0F0FF:  Special hits give +4 energy. Current: {1}/240]
+							[c/A0F0FF:  On release: spikes triple into 3-layer drill (max 30)]
+							[c/A0F0FF:  Left click to launch; high-freq hits; player is invulnerable]
+							[c/A0F0FF:  Shatters after 3s for 6x area damage; clears all spikes]
 							'''
 						LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 						LegendaryText:
 							'''
-							[c/B0D8FF:At first it was merely an ice crystal shard forgotten in the permafrost, spinning alone in an abyss untouched for a thousand years.]
+							[c/B0D8FF:At first it was merely an ice crystal shard forgotten in the permafrost,]
+							[c/B0D8FF:spinning alone in an abyss untouched for a thousand years.]
 							[c/B0D8FF:It knew nothing of warmth, nor any sound beyond silence.]
-							[c/80C8FF:Then someone tried to tame it, weaving the cold into orbiting guardians, only to discover that frost has its own rhythm and will.]
-							[c/80C8FF:Every rotation was an unfinished melody; every fracture, an unvoiced sigh.]
-							[c/A0B0FF:And so the cleave split the stagnant air, the pierce threaded through frozen time, and the strike shattered what was never meant to break.]
+							[c/80C8FF:Then someone tried to tame it, weaving the cold into orbiting guardians,]
+							[c/80C8FF:only to discover that frost has its own rhythm and will.]
+							[c/80C8FF:Every rotation was an unfinished melody;]
+							[c/80C8FF:every fracture, an unvoiced sigh.]
+							[c/A0B0FF:And so the cleave split the stagnant air,]
+							[c/A0B0FF:the pierce threaded through frozen time,]
+							[c/A0B0FF:and the strike shattered what was never meant to break.]
 							[c/A0B0FF:Three stances are not a choice — they are the breathing of the ice itself.]
-							[c/C0A0FF:Learn to listen to its beat, to step in rhythm with each frozen cadence — that is the only key to commanding absolute cold.]
-							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens from its ancient seal, forging every spike into one starlit aurora lance.]
+							[c/C0A0FF:Learn to listen to its beat, step in rhythm with each frozen cadence —]
+							[c/C0A0FF:that is the only key to commanding absolute cold.]
+							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens,]
+							[c/E0C0FF:forging every spike into one starlit aurora lance.]
 							[c/E0C0FF:Ending this battlefield of ice and fire with the will of absolute zero.]
 							'''
 					}
@@ -92,7 +111,7 @@ Mods: {
 			IceBladeProj.DisplayName: Glacial Cleaver Blade
 			IceWedgeProj.DisplayName: Glacial Piercing Wedge
 			IcePillarProj.DisplayName: Glacial Strike Pillar
-			GlacialDrillProj.DisplayName: Glacial Diamond Drill Finisher
+			GlacialDrillProj.DisplayName: Glacial Diamond Drill
 		}
 
 		Buffs: {

@@ -160,7 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.Zero,                                                               // 速度：静止不动，只是扩散
                 CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.58f, // 颜色：青/洋红循环，透明度0.58
                 0.05f * 0.3f,                                                                // 初始半径比例
-                1.2f * 0.3f,                                                                 // 最大半径比例 (1.2 * 0.3f)
+                1.2f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,            // 最大半径比例 (1.2 * 0.3f)
                 18));                                                                        // 持续时间：18帧
 
             // 强烈光晕：爆炸中心的白热化光球

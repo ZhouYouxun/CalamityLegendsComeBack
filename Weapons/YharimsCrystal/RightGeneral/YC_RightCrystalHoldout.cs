@@ -129,8 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 if (coordinatedCooldown > 0)
                 {
                     coordinatedCooldown--;
-                    KillProjectile(laserIndex);
-                    laserIndex = -1;
+                    EnsureLaser();
                 }
                 else
                 {
@@ -154,7 +153,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     }
 
                     heavyAttackQueued = false;
-                    coordinatedCooldown = 180;
+                    coordinatedCooldown = 20;
                     Projectile.netUpdate = true;
                 }
             }

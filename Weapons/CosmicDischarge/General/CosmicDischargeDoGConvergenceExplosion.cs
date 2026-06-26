@@ -100,7 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2.Zero,
                     CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
                     0.04f,
-                    Radius / 95f * 0.3f,
+                    Radius / 95f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                     20));
                 CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor * 0.65f, 0.18f, Radius / 50f, "CalamityMod/Particles/PlasmaExplosion", 18);
             }

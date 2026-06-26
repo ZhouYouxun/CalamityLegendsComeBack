@@ -398,7 +398,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 BFAccessoryPlayer acc = Owner.GetModPlayer<BFAccessoryPlayer>();
                 float explosionSize = stats.ExplosionSize + (acc.BombardExplosionBonus ? 60f : 0f);
                 float rainMult = acc.BombardRainDamageBonus ? 1.5f : stats.SkyRainMultiplier;
-                bombardArrow.ConfigureBombardTarget(bombardTarget, explosionSize, rainMult);
+                bombardArrow.ConfigureBombardTarget(bombardTarget, explosionSize, rainMult, stats.WaveCount);
             }
 
             Main.projectile[projectileIndex].netUpdate = true;

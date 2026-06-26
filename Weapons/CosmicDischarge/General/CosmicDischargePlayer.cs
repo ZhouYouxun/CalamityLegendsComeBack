@@ -120,7 +120,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             Vector2.Zero,
                             CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.42f,
                             0.035f,
-                            0.75f,
+                            0.75f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                             20
                         ));
                     }
@@ -231,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Vector2.Zero,
                     ringColor,
                     0.05f,
-                    0.85f,
+                    0.85f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                     15));
 
                 for (int i = 0; i < 20; i++)

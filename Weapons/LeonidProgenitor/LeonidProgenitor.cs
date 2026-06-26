@@ -209,7 +209,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.85f, Pitch = -0.2f }, player.Center);
                     calamityPlayer.GeneralScreenShakePower = Math.Max(calamityPlayer.GeneralScreenShakePower, 12f);
 
-                    CombatText.NewText(player.getRect(), new Color(180, 150, 255), "狮子座回响 / Leonid Echo!", true, true);
+                    CombatText.NewText(player.getRect(), LeonidVisualUtils.GetReadyGold(), "狮子座回响 / Leonid Echo!", true, true);
                 }
             }
         }
@@ -263,7 +263,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             int effectID = selection[index].Entry.EffectID;
             string metalName = this.GetLocalizedValue($"MetalName{effectID}");
             string metalDesc = this.GetLocalizedValue($"MetalDesc{effectID}");
-            return string.Format(this.GetLocalizedValue("MetalLine"), metalName, metalDesc);
+            string metalIcon = $"[i:{selection[index].Entry.ItemType}]";
+            return string.Format(this.GetLocalizedValue("MetalLine"), metalIcon, metalName, metalDesc);
         }
     }
 }

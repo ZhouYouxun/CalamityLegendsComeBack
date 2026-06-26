@@ -44,14 +44,19 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Time++;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.32f);
+            float homingProgress = Utils.GetLerpValue(4f, 54f, Time, true);
 
             if (Time >= 4f)
             {
                 NPC target = FindBestTarget(980f);
                 if (target != null)
                 {
-                    Vector2 desiredVel = Projectile.SafeDirectionTo(target.Center) * 18.5f;
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVel, 0.18f);
+                    float currentSpeed = Projectile.velocity.Length();
+                    float baseSpeed = MathHelper.Clamp(currentSpeed, 10f, 18f);
+                    float targetSpeed = MathHelper.Lerp(baseSpeed, 23f, homingProgress);
+                    float turnRate = MathHelper.Lerp(0.055f, 0.24f, homingProgress);
+                    Vector2 desiredVel = Projectile.SafeDirectionTo(target.Center) * targetSpeed;
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVel, turnRate);
                 }
             }
 
@@ -70,16 +75,30 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (!Main.dedServ)
             {
-                Vector2 back = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                    back * Main.rand.NextFloat(2f, 5f),
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.38f, 0.7f) * 0.3f,
-                    CosmicDischargeCommon.ThreeColorSpark,
-                    new Vector2(0.2f, 2.1f),
-                    true));
+                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Vector2 back = -direction;
+
+                if (Main.rand.NextBool(2))
+                {
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(12f, 8f),
+                        back * Main.rand.NextFloat(2.5f, 6.5f),
+                        false,
+                        Main.rand.Next(12, 18),
+                        Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
+                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.65f));
+                }
+
+                if (Main.rand.NextBool(2))
+                {
+                    GeneralParticleHandler.SpawnParticle(new NanoParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                        Main.rand.NextVector2Circular(1.5f, 1.5f) + back * Main.rand.NextFloat(0.5f, 1.6f),
+                        CosmicDischargeCommon.DoGSpecialColor,
+                        Main.rand.NextFloat(0.16f, 0.30f) * 0.3f,
+                        12,
+                        emitsLight: true));
+                }
 
                 if (Main.rand.NextBool(4))
                     GeneralParticleHandler.SpawnParticle(new BoltParticle(
@@ -98,8 +117,51 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             CosmicDischargeCommon.ApplyDoGDebuffs(target, 180);
-            if (!Main.dedServ)
-                CosmicDischargeCommon.SpawnDoGImpact(target.Center, Projectile.velocity, false, false);
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/LanceofDestinyStrong")
+            {
+                Volume = 0.34f,
+                Pitch = 0.28f,
+                MaxInstances = 5
+            }, target.Center);
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                target.Center,
+                direction,
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.3f,
+                Vector2.One,
+                direction.ToRotation(),
+                0.032f,
+                0.16f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
+                12));
+
+            for (int i = 0; i < 4; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                    target.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    direction.RotatedByRandom(0.6f) * Main.rand.NextFloat(2f, 6f),
+                    false,
+                    Main.rand.Next(9, 14),
+                    Main.rand.NextFloat(0.26f, 0.48f) * 0.3f,
+                    Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
+                    new Vector2(0.08f, 2.7f),
+                    true,
+                    true));
+            }
+
+            for (int i = 0; i < 7; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new NanoParticle(
+                    target.Center + Main.rand.NextVector2Circular(18f, 18f),
+                    Main.rand.NextVector2Circular(2.2f, 2.2f),
+                    CosmicDischargeCommon.DoGSpecialColor,
+                    Main.rand.NextFloat(0.18f, 0.32f) * 0.3f,
+                    13,
+                    emitsLight: true));
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)

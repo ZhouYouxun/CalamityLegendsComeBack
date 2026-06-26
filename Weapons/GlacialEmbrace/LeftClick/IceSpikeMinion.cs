@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 {
     public class IceSpikeMinion : ModProjectile
     {
-        public override string Texture => "CalamityMod/Items/Weapons/Summon/GlacialEmbrace";
+        public override string Texture => "CalamityMod/Projectiles/Summon/GlacialEmbracePointyThing";
 
         public bool embedded;
         public int embedNPCIndex = -1;
@@ -57,8 +57,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 
         public override void SetDefaults()
         {
-            Projectile.width = 24;
-            Projectile.height = 48;
+            Projectile.width = 28;
+            Projectile.height = 60;
             Projectile.netImportant = true;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;

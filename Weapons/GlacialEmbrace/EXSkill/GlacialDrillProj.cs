@@ -300,7 +300,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.EXSkill
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D spikeTex = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Summon/GlacialEmbrace").Value;
+            Texture2D spikeTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Summon/GlacialEmbracePointyThing").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_01").Value;
             Texture2D twirl = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/twirl_02").Value;

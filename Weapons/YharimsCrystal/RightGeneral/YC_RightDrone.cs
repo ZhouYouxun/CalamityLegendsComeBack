@@ -28,6 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public bool HeavyCommanded => Projectile.ai[2] == 1f;
 
         private ref float Timer => ref Projectile.localAI[0];
+        private ref float ShutdownTimer => ref Projectile.localAI[1];
         private bool positionInitialized;
         private int shootTimer;
 
@@ -56,13 +57,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 return;
             }
 
-            if (HeavyCommanded)
-            {
-                Projectile.timeLeft = 2;
-                TriggerHeavyAttack();
-                return;
-            }
-
             if (!TryGetHoldout(out Projectile holdoutProj, out YC_RightCrystalHoldout holdout))
             {
                 Projectile.Kill();
@@ -72,6 +66,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.timeLeft = 2;
             Projectile.damage = holdoutProj.damage;
             Timer++;
+            if (HeavyCommanded)
+                TriggerHeavyAttack();
+
+            bool shutDown = ShutdownTimer > 0f;
+            if (shutDown)
+                ShutdownTimer--;
 
             // Movement logic
             Vector2 desiredCenter = Vector2.Zero;
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
                 // Fire small tracking splinters
                 shootTimer++;
-                if (shootTimer >= 30)
+                if (!shutDown && shootTimer >= 30)
                 {
                     shootTimer = 0;
                     if (Projectile.owner == Main.myPlayer)
@@ -123,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 }
 
                 // Deal damage with thin laser line
-                if (Timer % 8 == 0 && Projectile.owner == Main.myPlayer)
+                if (!shutDown && Timer % 8 == 0 && Projectile.owner == Main.myPlayer)
                 {
                     Vector2 laserDir = (Projectile.rotation - MathHelper.PiOver2).ToRotationVector2();
                     Vector2 endPoint = Projectile.Center + laserDir * 1200f;
@@ -158,6 +158,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private void TriggerHeavyAttack()
         {
+            Projectile.ai[2] = 0f;
+            ShutdownTimer = 20f;
+            shootTimer = -20;
+
             if (Projectile.owner == Main.myPlayer && YC_EssenceFlame.CanSpawnMoreFor(Main.player[Projectile.owner]))
             {
                 // Shoot a heavy tracking missile towards the cursor
@@ -192,8 +196,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     d.noGravity = true;
                 }
             }
-
-            Projectile.Kill();
         }
 
         private bool TryGetHoldout(out Projectile holdoutProj, out YC_RightCrystalHoldout holdout)

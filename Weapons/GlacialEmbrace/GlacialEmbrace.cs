@@ -47,13 +47,14 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             Item.rare = ItemRarityID.Pink;
         }
 
-        public override bool AltFunctionUse(Player player)
-        {
-            return false;
-        }
+        public override bool AltFunctionUse(Player player) => true;
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
+            // 右键：QTE由Player.PreUpdate处理，此处不射击
+            if (player.altFunctionUse == 2)
+                return false;
+
             // 确保 Buff 在使用时处于激活状态
             player.AddBuff(Item.buffType, 2);
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
@@ -278,7 +279,6 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             Player player = Main.LocalPlayer;
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
 
-            string modeKey = KeybindSystem.LegendaryWeaponFormSwitch?.GetAssignedKeys().FirstOrDefault() ?? "LeftControl";
             string skillKey = KeybindSystem.LegendarySkill?.GetAssignedKeys().FirstOrDefault() ?? "P";
 
             string modeName = this.GetLocalizedValue("ModeName" + modPlayer.CurrentMode);
@@ -290,7 +290,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             string specialIntro = this.GetLocalizedValue("GE_SpecialIntro");
             string specialMode = this.GetLocalizedValue("GE_SpecialMode" + modPlayer.CurrentMode);
 
-            string passiveRhythm = string.Format(this.GetLocalizedValue("GE_PassiveRhythm"), modeKey);
+            string passiveRhythm = this.GetLocalizedValue("GE_PassiveRhythm");
             string passiveCombo = string.Format(this.GetLocalizedValue("GE_PassiveCombo"),
                 modPlayer.ComboCount, modPlayer.LifeRegenBonus, modPlayer.DefenseBonus);
             string passiveDivinity = this.GetLocalizedValue("GE_PassiveDivinity");

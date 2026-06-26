@@ -29,7 +29,7 @@ Mods: {
 						'''
 					CurrentMetals: "[c/CFEFFF:Current infused bar powers:]"
 					EmptyMetalLine: >>> <<<
-					MetalLine: >>> {0}: {1} <<<
+					MetalLine: >>> {0} {1}: {2} <<<
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
@@ -107,6 +107,11 @@ Mods: {
 					MetalName33: Life Alloy
 					MetalDesc33: Strengthens homing, emits tri-color reconstruction pulses, and bursts into Life Alloy gleams on hit
 				}
+
+				LPBook: {
+					DisplayName: Leonid Matrix Codex
+					Tooltip: Opens the Leonid metal matrix and displays every bar infusion effect.
+				}
 			}
 		}
 
@@ -145,6 +150,7 @@ Mods: {
 				LeonidGravityField.DisplayName: Leonid Echo Gravity Field
 				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
 				LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
+				LPBookPanel.DisplayName: Leonid Metal Matrix Panel
 			}
 		}
 
@@ -153,6 +159,11 @@ Mods: {
 				DisplayName: Gravity of Stars
 				Description: The gravity field restricts you, preventing horizontal movement and pulling you down!
 			}
+		}
+
+		TheSpecialText: {
+			LPBookNoRecords: No Leonid metal infusion records are registered.
+			LPBookMissingEffect: No effect record
 		}
 	}
 }

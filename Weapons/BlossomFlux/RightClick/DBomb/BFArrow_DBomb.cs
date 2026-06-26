@@ -22,7 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private const float FlightState = 0f;
         private const float AttachedNpcState = 1f;
         private const float GroundAnchorState = 2f;
-        private const int BombardDuration = 40; // 8 波 × 5 帧/波
+        private const int DefaultBombardWaveCount = 8;
+        private const int FramesPerBombardWave = 5;
         private const float MortarGravity = 0.28f;
         private const float MortarFallGravityMultiplier = 2.5f;
         private const float MinMortarApexHeight = 620f;
@@ -32,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private const float ReturnSpeedMultiplier = 0.7f;
 
         private int rainCounter;
+        private int bombardWaveCount = DefaultBombardWaveCount;
         private int storedRainDamage = 1;
         private int storedAmmoType = ProjectileID.WoodenArrowFriendly;
         private float storedAmmoSpeed = 14f;
@@ -58,6 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private bool InFlight => State == FlightState;
         private bool AttachedToNpc => State == AttachedNpcState;
         private bool AnchoredToGround => State == GroundAnchorState;
+        private int BombardDuration => Math.Max(1, bombardWaveCount) * FramesPerBombardWave;
         private static Color HighlightColor => Color.Lerp(Color.Goldenrod, Color.Khaki, 0.5f);
 
         public override void SetStaticDefaults()
@@ -93,11 +96,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             return new Vector2(horizontalSpeed, -verticalSpeed);
         }
 
-        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f, float rainMultiplier = 1f)
+        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f, float rainMultiplier = 1f, int waveCount = DefaultBombardWaveCount)
         {
             targetPoint = bombardTarget;
             explosionSize = MathHelper.Clamp(strikeExplosionSize, 96f, 720f);
             skyRainMultiplier = MathHelper.Clamp(rainMultiplier, 1f, 3f);
+            bombardWaveCount = Utils.Clamp(waveCount, 1, 30);
             float desiredSpeed = Projectile.velocity.Length();
             if (desiredSpeed <= 0.01f)
                 desiredSpeed = 18f;
@@ -131,6 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             writer.Write(storedAmmoKnockback);
             writer.Write(explosionSize);
             writer.Write(skyRainMultiplier);
+            writer.Write(bombardWaveCount);
             writer.Write(ReturnDelayTimer);
             writer.Write(passedBombardTarget);
             writer.Write(pendingBombardTeleport);
@@ -151,6 +156,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             storedAmmoKnockback = reader.ReadSingle();
             explosionSize = reader.ReadSingle();
             skyRainMultiplier = reader.ReadSingle();
+            bombardWaveCount = reader.ReadInt32();
             ReturnDelayTimer = reader.ReadSingle();
             passedBombardTarget = reader.ReadBoolean();
             pendingBombardTeleport = reader.ReadBoolean();

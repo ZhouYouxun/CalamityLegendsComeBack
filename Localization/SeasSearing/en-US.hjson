@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -6,7 +6,30 @@
 					DisplayName: Sea's Searing - Return of Legends
 					Tooltip: "[GFB]"
 					Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
-					LeftClick: "[c/9AEAFF:Left Click: precision three-round burst. Each hit adds Abyssal Radiation Pollution.]"
+					LeftClick_Stage0: "[c/9AEAFF:Left Click: single precise shot. Each hit applies Abyssal Radiation Pollution.]"
+					LeftClick_Stage1: "[c/9AEAFF:Left Click: 2-round burst. Each hit applies Abyssal Radiation Pollution.]"
+					LeftClick_Stage2:
+						'''
+						[c/9AEAFF:Left Click: 2-round burst. Each hit applies Abyssal Radiation Pollution.]
+						[c/4CD268:Each bullet impact scatters 2–4 Pollution Bubbles on contact.]
+						'''
+					LeftClick_Stage3:
+						'''
+						[c/9AEAFF:Left Click: 3-round burst. Each hit applies Pollution and scatters Pollution Bubbles.]
+						[c/58FFDA:After the burst: fires a Skyfin Torpedo + Pollution Rocket.]
+						'''
+					LeftClick_Stage4:
+						'''
+						[c/9AEAFF:Left Click: 4-round burst. Each hit scatters Pollution Bubbles.]
+						[c/58FFDA:After the burst: fires a Skyfin Torpedo + Pollution Rocket.]
+						[c/FF8A30:Last bullet in burst triggers a Nukesplosion, dealing 2× bullet damage with independent iframes.]
+						'''
+					LeftClick_Stage5:
+						'''
+						[c/9AEAFF:Left Click: 4-round burst. Each shot simultaneously launches a Skyfin Torpedo.]
+						[c/FF8A30:The 4th torpedo is replaced by a Seeking Missile — 2× damage, 200×200 explosion, and spike barrage.]
+						[c/FF8A30:Last bullet in burst triggers a Nukesplosion.]
+						'''
 					RightClick:
 						'''
 						[c/58FFDA:Right Click · 3-stage Pressure Protocol: Hold to Charge → release for a Pressure Bolt that spawns homing satellites.]
@@ -46,6 +69,13 @@
 				SeasSearingAbyssalGeyser.DisplayName: Abyssal Geyser
 				SeasSearingVentShot.DisplayName: Pressure Vent Round
 				SeasSearingTorrentShot.DisplayName: Abyssal Torrent Shot
+				SkyfinTorpedo.DisplayName: Skyfin Torpedo
+				SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
+				SeasSearingPollutionBubble.DisplayName: Abyssal Pollution Bubble
+				SeasSearingPollutionRocket.DisplayName: Abyssal Pollution Rocket
+				SeasSearingMissile.DisplayName: Abyssal Seeking Missile
+				SeasSearingMissileExplosion.DisplayName: Abyssal Missile Detonation
+				SeasSearingNukesplosion.DisplayName: Abyssal Nukesplosion
 			}
 		}
 

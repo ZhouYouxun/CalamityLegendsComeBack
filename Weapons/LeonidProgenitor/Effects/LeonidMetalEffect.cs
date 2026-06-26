@@ -191,9 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
 
         private Color GetEnergyColor(LeonidCometSmall meteor)
         {
-            LeonidMetalEntry entry = LeonidMetalRegistry.GetByEffectID(EffectID);
-            Color color = entry?.ThemeColor ?? meteor.MeteorColor;
-            return Color.Lerp(color, meteor.MeteorColor, 0.35f);
+            return LeonidVisualUtils.GetMetalEnergyColor(EffectID, meteor.MeteorColor);
         }
 
         private int ResolveEnergyDustID()

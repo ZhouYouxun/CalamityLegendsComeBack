@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int GetBombardAdjustedLeftFireDelay()
         {
-            int baseDelay = Math.Max(1, BFBombardLeftBalance.GetStats().FireInterval / 2);
+            int baseDelay = Math.Max(1, BFBombardLeftBalance.GetStats().FireInterval);
             int passiveReduction = Owner.GetModPlayer<BFPa5BombardPlayer>().FireDelayReduction;
             return Math.Max(1, baseDelay - passiveReduction);
         }
@@ -341,13 +341,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             else
                 SoundEngine.PlaySound(BlossomFluxSounds.LeftBombardFire2, Owner.Center);
 
-            for (int i = 0; i < 3; i++)
+            int arrowCount = Main.rand.Next(stats.MinArrowCount, stats.MaxArrowCount + 1);
+            for (int i = 0; i < arrowCount; i++)
             {
                 realPlayerPos = new Vector2(
                     Owner.position.X + Owner.width * 0.5f + Main.rand.Next(201) * -Owner.direction + Main.mouseX + Main.screenPosition.X - Owner.position.X,
                     Owner.MountedCenter.Y - 600f);
                 realPlayerPos.X = (realPlayerPos.X + Owner.Center.X) / 2f + Main.rand.Next(-200, 201);
-                realPlayerPos.Y -= 100f * i;
+                realPlayerPos.Y -= 80f * i;
 
                 mouseXDist = Main.mouseX + Main.screenPosition.X - realPlayerPos.X;
                 mouseYDist = Main.mouseY + Main.screenPosition.Y - realPlayerPos.Y;
@@ -364,8 +365,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
                 float speedX = mouseXDist + Main.rand.Next(-120, 121) * 0.01f;
                 float speedY = mouseYDist + Main.rand.Next(-120, 121) * 0.01f;
-                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * 0.9f), projectileType, damage, knockback, stats);
-                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * 0.8f), projectileType, damage, knockback, stats);
+                float progress = arrowCount <= 1 ? 0f : i / (arrowCount - 1f);
+                float fallSpeedScale = MathHelper.Lerp(0.9f, 0.78f, progress);
+                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * fallSpeedScale), projectileType, damage, knockback, stats);
             }
 
             SpawnSHPCLeftMuzzleParticles(GetCurrentMouseWorld(), Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);

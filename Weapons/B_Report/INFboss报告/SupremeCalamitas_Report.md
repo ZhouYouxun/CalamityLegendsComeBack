@@ -1,0 +1,249 @@
+# 至尊灾厄 (Supreme Calamitas) - Infernum Mode 深度分析报告
+
+## 一、基本信息 (Basic Information)
+- **模组内部ID**: `SupremeCalamitas`
+- **重写的NPC目标**: `ModContent.NPCType<SepulcherHead>()`, `ModContent.NPCType<SupremeCataclysm>()`, `ModContent.NPCType<SCalBoss>()`, `Unknown`, `ModContent.NPCType<SoulSeekerSupreme>()`, `ModContent.NPCType<SupremeCatastrophe>()`, `ModContent.NPCType<SepulcherBody>()`
+- **关联源文件**:
+  - `AcceleratingDarkMagicFlame.cs`
+  - `BrimstoneBarrageOld.cs`
+  - `BrimstoneDemonSummonExplosion.cs`
+  - `BrimstoneFlameOrb.cs`
+  - `BrimstoneFlamePillar.cs`
+  - `BrimstoneFlamePillarTelegraph.cs`
+  - `BrimstoneJewelProj.cs`
+  - `BrimstoneLaserbeam.cs`
+  - `CatastropheSlash.cs`
+  - `CondemnationArrowSCal.cs`
+  - `CondemnationProj.cs`
+  - `DemonicBomb.cs`
+  - `DemonicExplosion.cs`
+  - `DemonicTelegraphLine.cs`
+  - `FlameOverloadBeam.cs`
+  - `HeresyProjSCal.cs`
+  - `InfernumBrimstoneGigablast.cs`
+  - `LostSoulProj.cs`
+  - `RedirectingDarkSoul.cs`
+  - `RedirectingHellfireSCal.cs`
+  - `RedirectingLostSoulProj.cs`
+  - `RitualBrimstoneHeart.cs`
+  - `SepulcherBone.cs`
+  - `SepulcherHeadBehaviorOverride.cs`
+  - `SepulcherSegmentBehaviorOverrides.cs`
+  - `SepulcherSoulBomb.cs`
+  - `ShadowBolt.cs`
+  - `ShadowDemon.cs`
+  - `ShadowFlameBlast.cs`
+  - `ShadowGigablast.cs`
+  - `ShadowSpark.cs`
+  - `SoulSeekerSupremeBehaviorOverride.cs`
+  - `SuicideBomberDemonExplosion.cs`
+  - `SuicideBomberDemonHostile.cs`
+  - `SuicideBomberRitual.cs`
+  - `SupremeCalamitasBehaviorOverride.cs`
+  - `SupremeCalamitasBehaviorOverride.Music.cs`
+  - `SupremeCalamitasBrotherPortal.cs`
+  - `SupremeCataclysmBehaviorOverride.cs`
+  - `SupremeCataclysmFistOld.cs`
+  - `SupremeCatastropheBehaviorOverride.cs`
+  - `VigilanceProj.cs`
+  - `CalamitasCutsceneProj.cs`
+  - `SCalSymbol.cs`
+
+## 二、血量阶段与触发阈值 (Life Phases & Thresholds)
+- `Phase2LifeRatio: 0.75f`
+- `Phase Ratio Array: Phase2LifeRatio, Phase3LifeRatio, Phase4LifeRatio`
+- `Phase4LifeRatio: 0.25f`
+- `Phase3LifeRatio: 0.45f`
+
+## 三、攻击模式与AI状态 (Attack Patterns & AI States)
+### 状态机/枚举: `SepulcherAttackType`
+- `AttackDelay`
+- `ErraticCharges`
+- `PerpendicularBoneCharges`
+- `SoulBombBursts`
+### 状态机/枚举: `SCalAttackType`
+- `HorizontalDarkSoulRelease`
+- `CondemnationFanBurst`
+- `ExplosiveCharges`
+- `HellblastBarrage`
+- `BecomeBerserk`
+- `SummonSuicideBomberDemons`
+- `BrimstoneJewelBeam`
+- `DarkMagicBombWalls`
+- `FireLaserSpin`
+- `SummonSepulcher`
+- `SummonBrothers`
+- `SummonSeekers`
+- `PhaseTransition`
+- `DesperationPhase`
+- `// Shadow demon attacks.
+            SummonShadowDemon`
+- `ShadowDemon_ReleaseExplodingShadowBlasts`
+- `ShadowDemon_ShadowGigablastsAndCharges`
+### 状态机/枚举: `SCalBrotherAttackType`
+- `AttackDelay`
+- `SinusoidalBobbing`
+- `ProjectileShooting`
+- `Hyperdashes`
+
+### AI行为核心逻辑与注释摘录 (Core AI Logic & Comments)
+- **源码注释**: *Clients will miss the take damage check in AttackDelay, so ensure that they get updated.*
+- **源码注释**: *Do not take damage.*
+- **源码注释**: *Charge towards the target.*
+- **源码注释**: *Hover into position for the charge.*
+- **源码注释**: *Charge and release bones perpendicular to the direction Sepulcher is going.*
+
+## 四、Boss弹幕分析 (Projectiles)
+- **弹幕类名/类型**: `SupremeCataclysmFistOld`
+  - *实现细节*: `SupremeCataclysmFistOld.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `RedirectingDarkSoul`
+  - *实现细节*: `RedirectingDarkSoul.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `AcceleratingDarkMagicFlame`
+  - *实现细节*: `AcceleratingDarkMagicFlame.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `ShadowFlameBlast`
+  - *实现细节*: `ShadowFlameBlast.cs` (常规渲染)
+- **弹幕类名/类型**: `DemonicTelegraphLine`
+  - *实现细节*: `DemonicTelegraphLine.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `BrimstoneLaserbeam`
+  - *实现细节*: `BrimstoneLaserbeam.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `CatastropheSlash`
+  - *实现细节*: `CatastropheSlash.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `FlameOverloadBeam`
+  - *实现细节*: `FlameOverloadBeam.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `ShadowGigablast`
+  - *实现细节*: `ShadowGigablast.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `CondemnationArrowSCal`
+  - *实现细节*: `CondemnationArrowSCal.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `RedirectingHellfireSCal`
+  - *实现细节*: `RedirectingHellfireSCal.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `SuicideBomberRitual`
+  - *实现细节*: `SuicideBomberRitual.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `CondemnationProj`
+  - *实现细节*: `CondemnationProj.cs` (常规渲染)
+- **弹幕类名/类型**: `BrimstoneFlameOrb`
+  - *实现细节*: `BrimstoneFlameOrb.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `BrimstoneDemonSummonExplosion`
+  - *实现细节*: `BrimstoneDemonSummonExplosion.cs` (常规渲染)
+- **弹幕类名/类型**: `HeresyProjSCal`
+  - *实现细节*: `HeresyProjSCal.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `DemonicBomb`
+  - *实现细节*: `DemonicBomb.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `RancorFog`
+- **弹幕类名/类型**: `SuicideBomberDemonHostile`
+  - *实现细节*: `SuicideBomberDemonHostile.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `CalamitasCutsceneProj`
+- **弹幕类名/类型**: `SuicideBomberDemonExplosion`
+  - *实现细节*: `SuicideBomberDemonExplosion.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `RitualBrimstoneHeart`
+  - *实现细节*: `RitualBrimstoneHeart.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `BrimstoneJewelProj`
+  - *实现细节*: `BrimstoneJewelProj.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `SepulcherBone`
+  - *实现细节*: `SepulcherBone.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `SCalSymbol`
+- **弹幕类名/类型**: `ShadowSpark`
+  - *实现细节*: `ShadowSpark.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `ShadowBolt`
+  - *实现细节*: `ShadowBolt.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `LostSoulProj`
+  - *实现细节*: `LostSoulProj.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `RedirectingLostSoulProj`
+  - *实现细节*: `RedirectingLostSoulProj.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `BrimstoneFlamePillarTelegraph`
+  - *实现细节*: `BrimstoneFlamePillarTelegraph.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `InfernumBrimstoneGigablast`
+  - *实现细节*: `InfernumBrimstoneGigablast.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `DemonicExplosion`
+  - *实现细节*: `DemonicExplosion.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `VigilanceProj`
+  - *实现细节*: `VigilanceProj.cs` (常规渲染)
+- **弹幕类名/类型**: `SupremeCalamitasBrotherPortal`
+  - *实现细节*: `SupremeCalamitasBrotherPortal.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `BrimstoneBarrageOld`
+  - *实现细节*: `BrimstoneBarrageOld.cs` (支持自定义渲染 (PreDraw/PostDraw))
+- **弹幕类名/类型**: `BrimstoneFlamePillar`
+  - *实现细节*: `BrimstoneFlamePillar.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+- **弹幕类名/类型**: `SepulcherSoulBomb`
+  - *实现细节*: `SepulcherSoulBomb.cs` (支持自定义渲染 (PreDraw/PostDraw) ＋ 含有自定义Shader/拖尾特效 (Shader/Trail))
+
+## 五、特色机制与专有系统 (Unique Mechanics & Systems)
+- **特色系统**: 包含专属场地/竞技场锁定或地形修改逻辑 (Arena Lock/Terrain modification)
+- **特色系统**: 支持宠物小红帽 (Hat Girl) 战斗提示或对话 (Pet Dialogue Support)
+- **特色系统**: 有专属的背景音乐(BGM)或场景音效控制 (Custom Music / Scene Effect)
+
+## 六、特效与着色器分析 (Visual Effects & Shaders)
+### 着色器 (Shaders) & 绘制机制:
+- 着色器引用: `Shader/Overlay reference in BrimstoneFlamePillar.cs`
+- 着色器引用: `RayDrawer ??= new(PrimitiveWidthFunction, PrimitiveColorFunction, specialShader: InfernumEffectsRegistry.PrismaticRayVer`
+- Custom rendering found in LostSoulProj.cs
+- Custom rendering found in ShadowDemon.cs
+- Custom rendering found in RedirectingDarkSoul.cs
+- 着色器引用: `InfernumEffectsRegistry.FlameVertexShader.TrySetParameter("globalTime", Main.GlobalTimeWrappedHourly);`
+- 着色器引用: `InfernumEffectsRegistry.FireVertexShader.UseSaturation(0.45f);`
+- Custom rendering found in BrimstoneBarrageOld.cs
+- Custom rendering found in InfernumBrimstoneGigablast.cs
+- Custom rendering found in SupremeCatastropheBehaviorOverride.cs
+- Custom rendering found in ShadowBolt.cs
+- Custom rendering found in BrimstoneFlamePillarTelegraph.cs
+- Custom rendering found in RedirectingHellfireSCal.cs
+- 着色器引用: `PrimitiveRenderer.RenderCircle(Projectile.Center, new(_ => Radius, _ => Color.White, Shader: InfernumEffectsRegistry.Rea`
+- 着色器引用: `Shader/Overlay reference in SupremeCalamitasBehaviorOverride.cs`
+- Custom rendering found in SepulcherBone.cs
+- Custom rendering found in SupremeCalamitasBrotherPortal.cs
+- 着色器引用: `InfernumEffectsRegistry.DarkFlamePillarVertexShader.UseSaturation(1.4f);`
+- Custom rendering found in RedirectingLostSoulProj.cs
+- Custom rendering found in DemonicBomb.cs
+- Custom rendering found in ShadowGigablast.cs
+- Custom rendering found in ShadowSpark.cs
+- Custom rendering found in CondemnationArrowSCal.cs
+- Custom rendering found in BrimstoneLaserbeam.cs
+- Custom rendering found in SepulcherHeadBehaviorOverride.cs
+- 着色器引用: `Shader/Overlay reference in SupremeCalamitasBrotherPortal.cs`
+- 着色器引用: `InfernumEffectsRegistry.FlameVertexShader.TrySetParameter("uSaturation", 1f);`
+- 着色器引用: `var tear = InfernumEffectsRegistry.RealityTearVertexShader;`
+- Custom rendering found in CalamitasCutsceneProj.cs
+- Custom rendering found in FlameOverloadBeam.cs
+- Custom rendering found in RitualBrimstoneHeart.cs
+- Custom rendering found in SupremeCataclysmFistOld.cs
+- Custom rendering found in SuicideBomberDemonExplosion.cs
+- 着色器引用: `Shader/Overlay reference in RitualBrimstoneHeart.cs`
+- Custom rendering found in CatastropheSlash.cs
+- 着色器引用: `PrimitiveRenderer.RenderTrail(basePoints, new(PrimitiveWidthFunction, PrimitiveColorFunction, null, true, false, Infernu`
+- Custom rendering found in BrimstoneJewelProj.cs
+- 着色器引用: `Shader/Overlay reference in DemonicExplosion.cs`
+- 着色器引用: `Shader/Overlay reference in FlameOverloadBeam.cs`
+- 着色器引用: `InfernumEffectsRegistry.PrismaticRayVertexShader.UseOpacity(0.05f);`
+- 着色器引用: `InfernumEffectsRegistry.DarkFlamePillarVertexShader.SetShaderTexture(InfernumTextureRegistry.StreakFaded);`
+- Custom rendering found in SoulSeekerSupremeBehaviorOverride.cs
+- 着色器引用: `Shader/Overlay reference in SuicideBomberDemonHostile.cs`
+- Custom rendering found in HeresyProjSCal.cs
+- Custom rendering found in SCalSymbol.cs
+- 着色器引用: `FireDrawer ??= new PrimitiveTrailCopy(OrbWidthFunction, OrbColorFunction, null, true, InfernumEffectsRegistry.PrismaticR`
+- Custom rendering found in SupremeCalamitasBehaviorOverride.cs
+- Custom rendering found in DemonicTelegraphLine.cs
+- 着色器引用: `Shader/Overlay reference in BrimstoneFlameOrb.cs`
+- 着色器引用: `Shader/Overlay reference in SepulcherSoulBomb.cs`
+- 着色器引用: `InfernumEffectsRegistry.FlameVertexShader.SetTexture(InfernumTextureRegistry.BlurryPerlinNoise, 1);`
+- Custom rendering found in SuicideBomberDemonHostile.cs
+- Custom rendering found in AcceleratingDarkMagicFlame.cs
+- 着色器引用: `InfernumEffectsRegistry.PrismaticRayVertexShader.UseImage1("Images/Misc/Perlin");`
+- Custom rendering found in DemonicExplosion.cs
+- Custom rendering found in BrimstoneFlameOrb.cs
+- 着色器引用: `InfernumEffectsRegistry.FireVertexShader.UseImage1("Images/Misc/Perlin");`
+- Custom rendering found in SuicideBomberRitual.cs
+- Custom rendering found in SepulcherSoulBomb.cs
+- Custom rendering found in SupremeCataclysmBehaviorOverride.cs
+- Custom rendering found in BrimstoneFlamePillar.cs
+- 着色器引用: `FireDrawer ??= new PrimitiveTrailCopy(WidthFunction, ColorFunction, null, true, InfernumEffectsRegistry.DarkFlamePillarV`
+- 着色器引用: `FireDrawer ??= new PrimitiveTrailCopy(SunWidthFunction, SunColorFunction, null, true, InfernumEffectsRegistry.FireVertex`
+- 着色器引用: `InfernumEffectsRegistry.PrismaticRayVertexShader.SetShaderTexture(InfernumTextureRegistry.CultistRayMap);`
+- 着色器引用: `Shader/Overlay reference in BrimstoneLaserbeam.cs`
+
+### 屏幕特效 (Screen Effects):
+- Screen shake/effects found in SupremeCalamitasBehaviorOverride.cs
+- Screen shake/effects found in DemonicBomb.cs
+- 屏幕震动/音效触发: `npc.DeathSound = SepulcherHead.DeathSound;`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(SCalNPC.BrimstoneBigShotSound, target.Center);`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(SoundID.DD2_SkeletonSummoned with { Volume = 3f }, target.Center);`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(SoundID.NPCHit2, npc.Center);`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(ScorchedEarth.RocketShoot, npc.Center);`

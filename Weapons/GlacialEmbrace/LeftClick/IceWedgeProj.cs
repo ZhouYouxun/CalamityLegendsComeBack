@@ -13,12 +13,12 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 {
     public class IceWedgeProj : ModProjectile
     {
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Items/Weapons/Melee/Avalanche";
 
         public override void SetDefaults()
         {
-            Projectile.width = 16;
-            Projectile.height = 16;
+            Projectile.width = 32;
+            Projectile.height = 32;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 
         public override void AI()
         {
-            // 稍许寻敌自动微调追踪
+            // 轻微寻敌追踪
             NPC target = CalamityUtils.MinionHoming(Projectile.Center, 500f, Main.player[Projectile.owner]);
             if (target != null)
             {
@@ -37,17 +37,18 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 Projectile.velocity = (Projectile.velocity * 15f + targetDir * 14f) / 16f;
             }
 
-            // 粒子尾迹
-            for (int i = 0; i < 2; i++)
+            // 贴图倾斜45°，旋转补偿 PiOver4
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4;
+
+            // 冰霜尾迹
+            for (int i = 0; i < 3; i++)
             {
-                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Electric;
+                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Ice;
                 Dust d = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, dType);
-                d.velocity = -Projectile.velocity * 0.3f;
-                d.scale = Main.rand.NextFloat(0.9f, 1.4f);
+                d.velocity = -Projectile.velocity * Main.rand.NextFloat(0.15f, 0.35f);
+                d.scale = Main.rand.NextFloat(0.8f, 1.3f);
                 d.noGravity = true;
             }
-
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -55,14 +56,11 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Player player = Main.player[Projectile.owner];
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
 
-            // 给敌人上冻伤 Debuff
             target.AddBuff(BuffID.Frostburn2, 300);
-
-            // 增加 4 点终结技充能
             modPlayer.UltimateCharge = Math.Min(GlacialEmbracePlayer.MaxUltimateCharge, modPlayer.UltimateCharge + 4);
             modPlayer.OnSpecialHitNPC();
 
-            // 寻找所有钉在该敌人身上的冰刺，激活它们进行全贯穿打击！
+            // 引爆该敌人身上所有嵌入冰刺
             int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
@@ -71,37 +69,40 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 {
                     var spike = p.ModProjectile as IceSpikeMinion;
                     if (spike != null && spike.embedded && spike.embedNPCIndex == target.whoAmI)
-                    {
                         spike.PierceThrust(Vector2.Zero);
-                    }
                 }
             }
 
-            SoundEngine.PlaySound(SoundID.Item27 with { Pitch = 0.5f, Volume = 0.8f }, Projectile.Center); // 冰块碎裂声
+            SoundEngine.PlaySound(SoundID.Item27 with { Pitch = 0.5f, Volume = 0.8f }, Projectile.Center);
         }
 
         public override void OnKill(int timeLeft)
         {
-            // 碎裂粒子
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 22; i++)
             {
-                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Electric;
+                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Ice;
                 Dust d = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, dType);
-                d.velocity = Main.rand.NextVector2Circular(5f, 5f);
-                d.scale = Main.rand.NextFloat(1.1f, 1.7f);
+                d.velocity = Main.rand.NextVector2Circular(6f, 6f);
+                d.scale = Main.rand.NextFloat(1.0f, 1.8f);
                 d.noGravity = true;
             }
+            SoundEngine.PlaySound(SoundID.Item27 with { Pitch = 0.3f, Volume = 0.6f }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            // 绘制水晶冰楔
-            Texture2D crystalTex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/spark_03").Value;
+            Texture2D tex = TextureAssets.Projectile[Type].Value;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Color drawCol = Color.Lerp(Color.Cyan, Color.White, 0.4f);
+            float time = Main.GlobalTimeWrappedHourly;
 
-            // 水平拉伸使之呈现长楔状
-            Main.spriteBatch.Draw(crystalTex, drawPos, null, drawCol, Projectile.rotation - MathHelper.PiOver2, crystalTex.Size() * 0.5f, new Vector2(1.2f, 0.5f), SpriteEffects.None, 0f);
+            Color col = Color.Lerp(new Color(80, 210, 255), Color.White, 0.3f + 0.2f * MathF.Sin(time * 6f));
+
+            Main.spriteBatch.Draw(tex, drawPos, null, col * 0.95f,
+                Projectile.rotation, tex.Size() * 0.5f, 0.9f, SpriteEffects.None, 0f);
+            // 内层高光
+            Main.spriteBatch.Draw(tex, drawPos, null, Color.White * 0.3f,
+                Projectile.rotation, tex.Size() * 0.5f, 0.7f, SpriteEffects.None, 0f);
+
             return false;
         }
     }

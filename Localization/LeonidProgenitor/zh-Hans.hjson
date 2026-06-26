@@ -29,7 +29,7 @@ Mods: {
 						'''
 					CurrentMetals: "[c/CFEFFF:当前注入的锭之力：]"
 					EmptyMetalLine: >>> <<<
-					MetalLine: >>> {0}：{1} <<<
+					MetalLine: >>> {0} {1}：{2} <<<
 					LegendaryHint: "[c/BABABA:按住 Shift 读取传奇记录]"
 					LegendaryText:
 						'''
@@ -107,6 +107,11 @@ Mods: {
 					MetalName33: 生命合金
 					MetalDesc33: 追踪强化，周期三色重构脉冲，命中爆发并放出生命合金光芒
 				}
+
+				LPBook: {
+					DisplayName: 狮源金属矩阵图鉴
+					Tooltip: 打开狮源金属矩阵，显示每一种金属锭的注入效果。
+				}
 			}
 		}
 
@@ -145,6 +150,7 @@ Mods: {
 				LeonidGravityField.DisplayName: 狮子座回响重力场
 				LeonidUltimateUI.DisplayName: 终结能量条
 				LeonidRightClickHoldout.DisplayName: 流星右键手持弹幕
+				LPBookPanel.DisplayName: 狮源金属矩阵面板
 			}
 		}
 
@@ -153,6 +159,11 @@ Mods: {
 				DisplayName: 群星重力
 				Description: 重力场限制了你，无法横向移动，并受到极强向下牵引！
 			}
+		}
+
+		TheSpecialText: {
+			LPBookNoRecords: 暂无已注册的狮源金属注入记录。
+			LPBookMissingEffect: 暂无效果记录
 		}
 	}
 }

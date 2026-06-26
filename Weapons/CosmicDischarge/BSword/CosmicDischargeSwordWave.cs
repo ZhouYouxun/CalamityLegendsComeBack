@@ -134,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 direction.ToRotation(),
                 0.035f,
-                0.22f * 0.3f,
+                0.22f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                 14));
 
             // DoG-themed hit: precise electric arcs and energy particles instead of chaotic sparks.

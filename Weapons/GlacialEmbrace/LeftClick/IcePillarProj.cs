@@ -13,35 +13,35 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 {
     public class IcePillarProj : ModProjectile
     {
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Items/Weapons/Rogue/Icebreaker";
 
         public override void SetDefaults()
         {
-            Projectile.width = 30;
-            Projectile.height = 30;
+            Projectile.width = 36;
+            Projectile.height = 36;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 100;
+            Projectile.timeLeft = 120;
             Projectile.DamageType = DamageClass.Summon;
         }
 
         public override void AI()
         {
-            // 冰柱受重力微调下坠，表现出厚重感
-            Projectile.velocity.Y += 0.15f;
-            
-            // 冰柱旋转朝向移动速度方向
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // 轻微重力下坠
+            Projectile.velocity.Y += 0.12f;
 
-            // 掉落大量冰尘与科技矩阵火花
-            for (int i = 0; i < 2; i++)
+            // 贴图倾斜45°，旋转补偿 PiOver4
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4;
+
+            // 拖尾粒子
+            for (int i = 0; i < 3; i++)
             {
-                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Electric;
+                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Ice;
                 Dust d = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, dType);
-                d.velocity = -Projectile.velocity * 0.25f;
-                d.scale = Main.rand.NextFloat(1.1f, 1.7f);
+                d.velocity = -Projectile.velocity * Main.rand.NextFloat(0.2f, 0.4f);
+                d.scale = Main.rand.NextFloat(1.0f, 1.6f);
                 d.noGravity = true;
             }
         }
@@ -51,24 +51,20 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Player player = Main.player[Projectile.owner];
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
 
-            // 造成冻伤
             target.AddBuff(BuffID.Frostburn2, 300);
-
-            // 充能 +4
             modPlayer.UltimateCharge = Math.Min(GlacialEmbracePlayer.MaxUltimateCharge, modPlayer.UltimateCharge + 4);
             modPlayer.OnSpecialHitNPC();
 
-            // 1. 强制击退判定：普通敌人强击退，Boss 弱击退；肉山和 Boss 仆从不处理。
+            // 强制击退（Boss较弱，血肉墙和Boss仆从跳过）
             bool wallOfFlesh = target.type == NPCID.WallofFlesh || target.type == NPCID.WallofFleshEye;
             bool bossServant = target.realLife >= 0 && !target.boss;
             if (!wallOfFlesh && !bossServant)
             {
                 float pushStrength = target.boss ? 3.2f : 10.5f;
-                Vector2 pushVel = Projectile.velocity.SafeNormalize(Vector2.UnitX) * pushStrength;
-                target.velocity += pushVel;
+                target.velocity += Projectile.velocity.SafeNormalize(Vector2.UnitX) * pushStrength;
             }
 
-            // 2. 引爆玩家所有冰刺的冲击波并进入休眠
+            // 引爆所有冰刺产生冲击波并休眠
             int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
@@ -77,15 +73,15 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 {
                     var spike = p.ModProjectile as IceSpikeMinion;
                     if (spike != null && !spike.hibernating)
-                    {
                         spike.ForceShockwaveAndHibernate(player);
-                    }
                 }
             }
 
-            // 3. 产生范围爆炸伤害
+            // 大范围爆炸
             var source = player.GetSource_ItemUse(player.HeldItem);
-            int expl = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, ProjectileID.SolarWhipSwordExplosion, (int)(Projectile.damage * 1.5f), 8f, player.whoAmI);
+            int expl = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero,
+                ProjectileID.SolarWhipSwordExplosion,
+                (int)(Projectile.damage * 1.5f), 8f, player.whoAmI);
             if (Main.projectile.IndexInRange(expl))
             {
                 Main.projectile[expl].friendly = true;
@@ -93,18 +89,15 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 Main.projectile[expl].DamageType = DamageClass.Summon;
             }
 
-            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.2f }, Projectile.Center); // 巨大爆破声
-            
-            // 增加屏幕震动
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.2f }, Projectile.Center);
             player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, 4.5f);
         }
 
         public override void OnKill(int timeLeft)
         {
-            // 冰尘与科技矩阵爆发
             for (int i = 0; i < 35; i++)
             {
-                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Electric;
+                int dType = Main.rand.NextBool(2) ? DustID.Frost : DustID.Ice;
                 Dust d = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, dType);
                 d.velocity = Main.rand.NextVector2Circular(8f, 8f);
                 d.scale = Main.rand.NextFloat(1.3f, 2.4f);
@@ -114,13 +107,19 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
 
         public override bool PreDraw(ref Color lightColor)
         {
-            // 绘制巨大的厚重冰柱 (冰花贴图进行拉伸)
-            Texture2D pillarTex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/spark_03").Value;
+            Texture2D tex = TextureAssets.Projectile[Type].Value;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Color drawCol = Color.Lerp(Color.Cyan, Color.LightSkyBlue, 0.3f);
+            float time = Main.GlobalTimeWrappedHourly;
 
-            // 纵向拉伸成粗大冰柱 shape
-            Main.spriteBatch.Draw(pillarTex, drawPos, null, drawCol * 0.95f, Projectile.rotation - MathHelper.PiOver2, pillarTex.Size() * 0.5f, new Vector2(2.2f, 1.1f), SpriteEffects.None, 0f);
+            Color col = Color.Lerp(new Color(100, 220, 255), Color.White, 0.25f + 0.15f * MathF.Sin(time * 5f));
+
+            // 主贴图
+            Main.spriteBatch.Draw(tex, drawPos, null, col * 0.95f,
+                Projectile.rotation, tex.Size() * 0.5f, 1.1f, SpriteEffects.None, 0f);
+            // 内层高光
+            Main.spriteBatch.Draw(tex, drawPos, null, Color.White * 0.35f,
+                Projectile.rotation, tex.Size() * 0.5f, 0.85f, SpriteEffects.None, 0f);
+
             return false;
         }
     }

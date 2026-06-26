@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 0f,
                 0.04f,
-                0.3f * 0.3f,
+                0.3f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                 18));
 
             for (int i = 0; i < 18; i++)
@@ -110,7 +110,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         Vector2.One,
                         slashDirection.ToRotation(),
                         0.02f,
-                        0.12f * 0.3f,
+                        0.12f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                         10));
                 }
             }
@@ -155,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 0f,
                 0.035f,
-                0.22f * 0.3f,
+                0.22f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
                 16));
 
             if (Main.myPlayer == Projectile.owner)

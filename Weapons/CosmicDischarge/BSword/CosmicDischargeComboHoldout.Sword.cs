@@ -59,9 +59,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 SetBlade(angle.ToRotationVector2(), SwordReach, 0f, MathHelper.Lerp(30f, 18f, recover));
             }
 
-            if (!second && Time == 15f)
-                CosmicDischargeCommon.SpawnSwordSwingFlare(TipPosition);
-
             if (Time > SwordSwingWindup && Time <= strikeEnd)
             {
                 float previousTime = Math.Max(SwordSwingWindup, Time - 1f);

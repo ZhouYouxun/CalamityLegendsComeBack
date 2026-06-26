@@ -9,24 +9,42 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 {
     public static class LeonidVisualUtils
     {
+        public static readonly Color StratusBlue = new(82, 216, 255);
+        public static readonly Color DeepStratusBlue = new(18, 42, 168);
+        public static readonly Color MoonViolet = new(172, 150, 255);
+        public static readonly Color MoonWhite = new(224, 240, 255);
+        public static readonly Color StarGold = new(255, 226, 104);
+
         public static Color GetMeteorColor(int primaryEffectID, int secondaryEffectID)
         {
-            Color fallbackA = new(68, 206, 255);
-            Color fallbackB = new(216, 104, 255);
+            float phase = Main.GlobalTimeWrappedHourly * 2.2f + primaryEffectID * 0.17f + secondaryEffectID * 0.31f;
+            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(phase);
+            Color skyBody = Color.Lerp(StratusBlue, MoonViolet, pulse * 0.7f);
+            Color brightBody = Color.Lerp(skyBody, MoonWhite, 0.18f + 0.12f * pulse);
+            return Color.Lerp(brightBody, StarGold, 0.05f + 0.04f * (1f - pulse));
+        }
 
-            LeonidMetalEntry primary = LeonidMetalRegistry.GetByEffectID(primaryEffectID);
-            LeonidMetalEntry secondary = LeonidMetalRegistry.GetByEffectID(secondaryEffectID);
+        public static Color GetMetalEnergyColor(int effectID, Color meteorColor, float metalWeight = 0.82f)
+        {
+            LeonidMetalEntry entry = LeonidMetalRegistry.GetByEffectID(effectID);
+            if (entry == null)
+                return meteorColor;
 
-            if (primary != null && secondary != null)
-                return Color.Lerp(primary.ThemeColor, secondary.ThemeColor, 0.5f);
+            return Color.Lerp(meteorColor, entry.ThemeColor, MathHelper.Clamp(metalWeight, 0f, 1f));
+        }
 
-            if (primary != null)
-                return primary.ThemeColor;
+        public static Color GetCelestialColor(float progress = 0f, float phaseOffset = 0f)
+        {
+            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 3f + phaseOffset);
+            Color baseColor = Color.Lerp(DeepStratusBlue, StratusBlue, 0.65f + 0.2f * pulse);
+            Color violetEdge = Color.Lerp(baseColor, MoonViolet, MathHelper.Clamp(progress, 0f, 1f) * 0.58f);
+            return Color.Lerp(violetEdge, MoonWhite, 0.12f + 0.1f * pulse);
+        }
 
-            if (secondary != null)
-                return secondary.ThemeColor;
-
-            return Color.Lerp(fallbackA, fallbackB, 0.5f + 0.5f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 2.2f));
+        public static Color GetReadyGold(float phaseOffset = 0f)
+        {
+            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 6f + phaseOffset);
+            return Color.Lerp(StarGold, MoonWhite, 0.24f + 0.2f * pulse);
         }
 
         public static void SpawnDustBurst(Vector2 center, Color color, int count, float speed, float scale)
@@ -44,6 +62,21 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             }
         }
 
+        public static void SpawnStratusDust(Vector2 center, Vector2 direction, float scale = 1f, int alpha = 100)
+        {
+            Color color = Color.Lerp(StratusBlue, MoonWhite, Main.rand.NextFloat(0.28f));
+            Vector2 velocity = -direction.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.15f, 0.75f) + Main.rand.NextVector2Circular(0.75f, 0.75f);
+            Dust dust = Dust.NewDustPerfect(
+                center,
+                Main.rand.NextBool(3) ? DustID.Electric : DustID.TintableDustLighted,
+                velocity,
+                alpha,
+                color,
+                Main.rand.NextFloat(0.65f, 1.15f) * scale);
+            dust.noGravity = true;
+            dust.fadeIn = Main.rand.NextFloat(0.08f, 0.26f);
+        }
+
         public static void DrawBloom(Vector2 drawPosition, Color color, float scale, float rotation = 0f)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
@@ -55,6 +88,57 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 color,
                 rotation,
                 bloom.Size() * 0.5f,
+                scale,
+                SpriteEffects.None,
+                0f);
+        }
+
+        public static void DrawCelestialHead(Vector2 worldPosition, Color color, float opacity, float scale, float rotation = 0f)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
+            Vector2 drawPosition = worldPosition - Main.screenPosition;
+
+            color.A = 0;
+            Color white = MoonWhite * opacity;
+            white.A = 0;
+
+            Main.EntitySpriteDraw(bloom, drawPosition, null, color * (0.42f * opacity), 0f, bloom.Size() * 0.5f, 0.16f * scale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(ring, drawPosition, null, color * (0.52f * opacity), -rotation * 0.7f, ring.Size() * 0.5f, 0.115f * scale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(sparkle, drawPosition, null, white * 0.44f, rotation, sparkle.Size() * 0.5f, 0.36f * scale, SpriteEffects.None, 0f);
+        }
+
+        public static void DrawGlowBlade(Vector2 worldPosition, Vector2 direction, Color color, float opacity, float lengthScale, float widthScale)
+        {
+            Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowBlade").Value;
+            Vector2 drawPosition = worldPosition - Main.screenPosition;
+            Vector2 origin = new(blade.Width * 0.5f, blade.Height);
+            color.A = 0;
+
+            Main.EntitySpriteDraw(
+                blade,
+                drawPosition,
+                null,
+                color * opacity,
+                direction.SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2,
+                origin,
+                new Vector2(widthScale, lengthScale),
+                SpriteEffects.None,
+                0f);
+        }
+
+        public static void DrawSparkle(Vector2 worldPosition, Color color, float opacity, float scale, float rotation)
+        {
+            Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
+            color.A = 0;
+            Main.EntitySpriteDraw(
+                sparkle,
+                worldPosition - Main.screenPosition,
+                null,
+                color * opacity,
+                rotation,
+                sparkle.Size() * 0.5f,
                 scale,
                 SpriteEffects.None,
                 0f);
@@ -79,6 +163,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 
             color.A = 0;
             GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, color, scale, lifetime));
+        }
+
+        public static void SpawnCelestialPulse(Vector2 center, Vector2 direction, Color color, float scale, int lifetime = 20)
+        {
+            if (Main.dedServ)
+                return;
+
+            direction = direction.SafeNormalize(Vector2.UnitY);
+            color.A = 0;
+            GeneralParticleHandler.SpawnParticle(new BloomParticle(center, Vector2.Zero, color, 0.24f * scale, 0.36f * scale, 2, false));
+            GeneralParticleHandler.SpawnParticle(new SparkParticle(center, direction * 0.01f, false, lifetime, 0.82f * scale, Color.Lerp(color, MoonWhite, 0.35f)));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, direction * 0.55f, color, new Vector2(0.72f, 2.1f) * scale, direction.ToRotation(), 0.16f, 0.026f, lifetime));
         }
     }
 }

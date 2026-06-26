@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private static readonly Color BladeWhite = new(255, 246, 196);
 
         private const int LoopChargeFrames = 12;
-        private const int LoopSpinFrames = 36;
+        private const int LoopSpinFrames = 42;
         private const int LoopHoldFrames = 18;
         private const int ThrowWindupFrames = 30;
         private const int MaxBladeHitFireballs = 5;
@@ -221,19 +221,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Owner.direction = lockedFacing;
             FlipAsSword = lockedFacing < 0;
 
-            float progress = MathHelper.Clamp(loopTimer / (float)LoopSpinFrames, 0f, 1f);
-            float easedSpin = progress * progress * (3f - 2f * progress);
-            spinAngle = -MathHelper.TwoPi * 1.08f * easedSpin;
+            float time = loopTimer - LoopSpinFrames / 8f;
+            float timeMax = LoopSpinFrames - LoopSpinFrames / 8f;
+            float progress = MathHelper.Clamp(time / timeMax, 0f, 1f);
+            float easedSpin = CalamityUtils.ExpInOutEasing(progress, 1);
+            spinAngle = MathHelper.ToRadians(MathHelper.Lerp(-45f, 405f, easedSpin)) * -Projectile.ai[1] * Owner.direction;
 
-            CanHit = loopTimer > 4 && loopTimer < LoopSpinFrames - 2;
+            CanHit = progress > 0.25f && progress < 0.85f;
             postSwing = true;
             fadeIn = MathHelper.Lerp(fadeIn, 1f, 0.24f);
             bladeFade = MathHelper.Lerp(bladeFade, 1f, 0.28f);
             chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, MathHelper.Lerp(1f, 0.35f, progress), 0.2f);
             Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.06f);
-            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) + spinAngle * Projectile.ai[1];
+            RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(112f * Projectile.ai[1]) + spinAngle, 0.2f);
 
-            if (!spinStartSoundPlayed && loopTimer >= 6)
+            if (!spinStartSoundPlayed && progress >= 0.3f)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HellkiteSwing", 2) { Volume = 0.82f, Pitch = -0.08f }, Projectile.Center);
                 spinStartSoundPlayed = true;
