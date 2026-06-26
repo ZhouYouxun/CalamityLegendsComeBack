@@ -149,17 +149,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             int fireballType = ModContent.ProjectileType<AegisFireball>();
             int damage = Math.Max(1, (int)(Projectile.damage * 0.6f));
-            float speed = 14f;
-            float[] spread = BalanceAegisBlade.FourFireballsUnlocked()
-                ? new[] { -0.58f, -0.2f, 0.2f, 0.58f }
-                : new[] { -0.38f, 0.38f };
 
-            Vector2 bladeDirection = currentAngle.ToRotationVector2();
-            Vector2 spawnPosition = Owner.MountedCenter + bladeDirection * BladeReach * scale;
-            foreach (float angleOffset in spread)
+            // 4颗光球，以鼠标方向为中心，各自随机角度偏移(±5°)和速度(0.9~1.25)
+            Vector2 mouseDir = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
+                .SafeNormalize(Vector2.UnitX * Owner.direction);
+
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 velocity = bladeDirection.RotatedBy(angleOffset).SafeNormalize(bladeDirection) * speed;
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), spawnPosition + velocity * 0.55f,
+                float speed       = Main.rand.NextFloat(0.9f, 1.25f);
+                float angleOffset = Main.rand.NextFloat(-MathHelper.ToRadians(5f), MathHelper.ToRadians(5f));
+                Vector2 velocity  = mouseDir.RotatedBy(angleOffset) * speed;
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter,
                     velocity, fireballType, damage, 2f, Projectile.owner);
             }
         }
@@ -175,7 +175,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             float collisionPoint = 0f;
             Vector2 bladeTip = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale;
             return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(),
-                Owner.MountedCenter, bladeTip, 24f * scale, ref collisionPoint) ? null : false;
+                Owner.MountedCenter, bladeTip, 40f * scale, ref collisionPoint) ? null : false;
         }
 
         private void TrackBladeTrail(bool hitWindow)
@@ -189,7 +189,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             slashOpacity = MathHelper.Lerp(slashOpacity, 1f, 0.42f);
-            Vector2 tipOffset = currentAngle.ToRotationVector2() * BladeReach * scale;
+            // 刀光显示在剑身50%处（非剑尖）
+            Vector2 tipOffset = currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f;
             Array.Copy(bladeTipHistory, 0, bladeTipHistory, 1, bladeTipHistory.Length - 1);
             bladeTipHistory[0] = tipOffset;
             if (bladeTipHistoryLength < bladeTipHistory.Length)
@@ -263,7 +264,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             {
                 Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
                 float swipeDirection = Math.Sign(endAngle - startAngle);
-                Main.EntitySpriteDraw(swooshTexture, drawPosition, null, BladeGold with { A = 0 } * slashOpacity * 0.46f,
+                // 刀光（swoosh和bloom）放在剑身50%处，与刀光trail保持一致
+                Vector2 bladeMidOffset = currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f;
+                Vector2 swooshCenter   = drawPosition + bladeMidOffset;
+                Main.EntitySpriteDraw(swooshTexture, swooshCenter, null, BladeGold with { A = 0 } * slashOpacity * 0.46f,
                     drawRotation + MathHelper.PiOver2 * swipeDirection, swooshTexture.Size() * 0.5f,
                     scale * 0.8f, SpriteEffects.None);
 
@@ -274,8 +278,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                         drawRotation, origin, scale, SpriteEffects.None);
                 }
 
-                Vector2 bladeTip = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale - Main.screenPosition;
-                Main.EntitySpriteDraw(bloomTexture, bladeTip, null, BladeLight with { A = 0 } * slashOpacity * 0.52f,
+                Vector2 bladeMid = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(bloomTexture, bladeMid, null, BladeLight with { A = 0 } * slashOpacity * 0.52f,
                     0f, bloomTexture.Size() * 0.5f, scale * 0.5f, SpriteEffects.None);
                 Main.spriteBatch.ExitShaderRegion();
             }

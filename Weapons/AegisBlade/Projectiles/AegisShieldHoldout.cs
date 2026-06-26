@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int ChargeStartTime = BalanceAegisBlade.ShieldRaiseFrames + BalanceAegisBlade.ChargeHoldDelay;
         private const int FullChargeTime = ChargeStartTime + BalanceAegisBlade.ChargeDuration;
         private const int DashDuration = BalanceAegisBlade.ShieldDashDuration;
+        private const int BashDamageFrames = 15;
 
         private Player Owner => Main.player[Projectile.owner];
         private AegisBladePlayer BladePlayer => Owner.GetModPlayer<AegisBladePlayer>();
@@ -35,6 +36,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             : 0f;
         private float DashPower => Utils.GetLerpValue(MinimumDashCharge, FullChargeTime, Charge, true);
 
+        // DashDestination stores the bash direction (unit vector) once bashing starts.
+        // Non-zero = in bash mode. Not synced over network (owner-driven).
         private Vector2 DashDestination;
         private float dashDistance;
         private bool perfectParryFired;
@@ -111,7 +114,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 OnFullCharge();
             }
 
-            // Fully charged guard retains the existing sword-plunge / earth-wall action.
             if (ChargeUnlocked && leftJustPressed && Charge >= FullChargeTime && Main.myPlayer == Projectile.owner)
             {
                 TriggerBladePlunge();
@@ -155,6 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 aimDirection.ToRotation() - MathHelper.PiOver2);
         }
 
+        // ── 盾牌猛击：给予33%蓄力速度的冲刺力，然后交由物理自然减速 ──────
         private void TryStartDash()
         {
             if (Charge < MinimumDashCharge || Owner.noItems || Owner.CCed)
@@ -167,29 +170,23 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 .SafeNormalize(Vector2.UnitX * Owner.direction);
             dashDistance = MathHelper.Lerp(BalanceAegisBlade.ShieldDashMinimumDistance,
                 BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
-            Vector2 intendedDestination = Projectile.Center + dashDirection * dashDistance;
 
-            if (intendedDestination.X < 660f || intendedDestination.Y < 660f ||
-                intendedDestination.X > Main.maxTilesX * 16f - 680f ||
-                intendedDestination.Y > Main.maxTilesY * 16f - 680f)
-            {
-                Projectile.Kill();
-                return;
-            }
+            // 速度 = 原冲刺速度的33%，不强制停止，交由物理减速
+            Owner.velocity = dashDirection * dashDistance / DashDuration * 0.33f;
 
-            DashDestination = intendedDestination;
-            Projectile.velocity = dashDirection * dashDistance / DashDuration;
+            // DashDestination 存储方向单位向量（非零即代表处于冲刺中）
+            DashDestination = dashDirection;
+
             float damageMultiplier = MathHelper.Lerp(1f, BalanceAegisBlade.ShieldDashMaxDamageMultiplier, DashPower);
             if (perfectParryFired)
                 damageMultiplier *= BalanceAegisBlade.PerfectParryDashDamageMultiplier;
             Projectile.damage = Math.Max(1, (int)(Projectile.damage * damageMultiplier));
             Projectile.ExpandHitboxBy(BalanceAegisBlade.ShieldDashHitboxExpansion);
-            Projectile.tileCollide = true;
             Projectile.netUpdate = true;
 
             Owner.immune = true;
             Owner.immuneNoBlink = true;
-            Owner.immuneTime = DashDuration;
+            Owner.immuneTime = BashDamageFrames;
             for (int i = 0; i < Owner.hurtCooldowns.Length; i++)
                 Owner.hurtCooldowns[i] = Owner.immuneTime;
 
@@ -201,43 +198,26 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.05f, Pitch = -0.2f + DashPower * 0.22f }, Owner.Center);
-            SpawnDashFlash(Projectile.Center, dashDirection, 1f + DashPower * 0.35f);
+            SpawnDashFlash(Owner.Center, dashDirection, 1f + DashPower * 0.35f);
         }
 
+        // 猛击持续：跟随玩家，给予短暂伤害窗口后消亡。不强制移动，物理自然减速。
         private void DoDash()
         {
-            DetachOwnerFromHooksAndMounts();
-
             DashTime++;
-            Vector2 direction = Projectile.SafeDirectionTo(DashDestination);
-            Projectile.velocity = direction * dashDistance / DashDuration;
+            Projectile.Center = Owner.MountedCenter;
+            Projectile.timeLeft = 4;
 
-            if (Vector2.Distance(Projectile.Center, DashDestination) < 6f || DashTime > DashDuration ||
-                Collision.SolidCollision(Projectile.Center, 1, 1, false))
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            Owner.Center = Projectile.Center;
+            Vector2 direction = DashDestination;  // 已是单位方向向量
             Owner.ChangeDir(direction.X >= 0f ? 1 : -1);
             Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full,
                 direction.ToRotation() - MathHelper.PiOver2);
 
             if (!Main.dedServ && (int)DashTime % 2 == 0)
                 EmitDashFlames(direction);
-        }
 
-        private void DetachOwnerFromHooksAndMounts()
-        {
-            if (Owner.mount != null)
-                Owner.mount.Dismount(Owner);
-
-            foreach (Projectile projectile in Main.ActiveProjectiles)
-            {
-                if (projectile.owner == Owner.whoAmI && projectile.aiStyle == ProjAIStyleID.Hook)
-                    projectile.Kill();
-            }
+            if (DashTime >= BashDamageFrames)
+                Projectile.Kill();
         }
 
         public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
@@ -262,7 +242,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return;
 
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 direction = DashDestination != Vector2.Zero
+                ? DashDestination
+                : Owner.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             GeneralParticleHandler.SpawnParticle(new DetailedExplosion(target.Center, Vector2.Zero,
                 ShieldFire, new Vector2(1.15f, 0.72f), direction.ToRotation(), 0f, 0.72f, 20));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, direction * 1.4f,
@@ -309,17 +291,38 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
         }
 
+        // 举盾全程均发射小粒子（盾牌小，效果适当缩小）。蓄力阶段粒子变强。
         private void EmitGuardFlames()
         {
-            if (Main.dedServ || !ChargeUnlocked || Charge < ChargeStartTime || !Main.rand.NextBool(2))
+            if (Main.dedServ || !Main.rand.NextBool(2))
                 return;
 
             Vector2 shieldPosition = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
-            Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.7f);
-            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                shieldPosition + Main.rand.NextVector2Circular(14f, 22f), outward * Main.rand.NextFloat(0.4f, 1.9f),
-                Color.Lerp(ShieldGold, ShieldLight, ChargeRatio), Color.Transparent,
-                MathHelper.Lerp(0.28f, 0.55f, ChargeRatio), Main.rand.Next(16, 25), Main.rand.NextFloat(-0.06f, 0.06f)));
+
+            if (!ChargeUnlocked || Charge < ChargeStartTime)
+            {
+                // 举盾普通阶段：微弱稀疏粒子
+                if (!Main.rand.NextBool(3))
+                    return;
+
+                float holdRatio = MathHelper.Clamp(Charge / ChargeStartTime, 0f, 1f);
+                Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.55f);
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    shieldPosition + Main.rand.NextVector2Circular(8f, 12f),
+                    outward * Main.rand.NextFloat(0.15f, 0.65f),
+                    Color.Lerp(ShieldGold, ShieldLight, Main.rand.NextFloat()), Color.Transparent,
+                    MathHelper.Lerp(0.12f, 0.22f, holdRatio), Main.rand.Next(10, 18), Main.rand.NextFloat(-0.05f, 0.05f)));
+            }
+            else
+            {
+                // 蓄力阶段：火焰粒子（略缩小以适应小盾牌）
+                Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.7f);
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    shieldPosition + Main.rand.NextVector2Circular(10f, 16f),
+                    outward * Main.rand.NextFloat(0.3f, 1.5f),
+                    Color.Lerp(ShieldGold, ShieldLight, ChargeRatio), Color.Transparent,
+                    MathHelper.Lerp(0.18f, 0.38f, ChargeRatio), Main.rand.Next(12, 20), Main.rand.NextFloat(-0.05f, 0.05f)));
+            }
         }
 
         private void EmitDashFlames(Vector2 direction)
@@ -353,6 +356,26 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             return MathHelper.Lerp(22f, 5f, completionRatio) * (0.7f + DashPower * 0.45f);
         }
 
+        // 头顶蓄力条（独立于大招能量条，大招显示在左上角CooldownHandler）
+        private void DrawChargeBar()
+        {
+            if (Main.myPlayer != Projectile.owner) return;
+
+            Texture2D barBG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
+            Texture2D barFG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+
+            float progress = Math.Clamp(Charge / MaximumGuardCharge, 0f, 1f);
+            Color col = Color.Lerp(ShieldLight, ShieldGold, ChargeRatio);
+            float pulseAlpha = 0.75f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 6f);
+
+            // -70f：与大招能量条（左上角CooldownHandler）位置不同，此条显示在玩家头顶
+            Vector2 barPos = Owner.Center - Main.screenPosition + new Vector2(-barBG.Width * 0.75f, -70f);
+            Rectangle frame = new Rectangle(0, 0, (int)(progress * barFG.Width), barFG.Height);
+
+            Main.spriteBatch.Draw(barBG, barPos, col * 0.9f);
+            Main.spriteBatch.Draw(barFG, barPos, frame, col * pulseAlpha);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             if (Main.dedServ)
@@ -376,27 +399,40 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Main.EntitySpriteDraw(bloom, drawPosition, null, ShieldFire with { A = 0 } * (1f - dashProgress) * 0.8f,
                     0f, bloom.Size() * 0.5f, 1.15f + DashPower * 0.45f, SpriteEffects.None);
                 Main.EntitySpriteDraw(ring, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress) * 0.45f,
-                    Projectile.velocity.ToRotation(), ring.Size() * 0.5f,
+                    DashDestination.ToRotation(), ring.Size() * 0.5f,
                     new Vector2(0.34f, 1.55f) * (1f + DashPower * 0.3f), SpriteEffects.None);
                 Main.spriteBatch.ExitShaderRegion();
                 return false;
             }
 
-            // Native shield frames provide the actual silhouette. This additive layer only supplies the
-            // right-click glow, so the sheet remains crisp instead of being washed out by a second sprite.
+            // 盾牌举起全程均有随蓄力增强的包边光晕（缩小以适应小盾）
+            float chargeProgress = Charge / MaximumGuardCharge;
             float pulse = 0.22f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
-            float chargeGlow = MathHelper.Lerp(0.1f, 0.8f, ChargeRatio);
+            float chargeGlow = MathHelper.Lerp(0.04f, 0.72f, chargeProgress);
             Vector2 shieldPosition = Owner.Center - Main.screenPosition + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-            Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (pulse + chargeGlow * 0.35f),
-                0f, bloom.Size() * 0.5f, 0.36f + chargeGlow * 0.34f, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (pulse + chargeGlow * 0.32f),
+                0f, bloom.Size() * 0.5f, 0.22f + chargeGlow * 0.28f, SpriteEffects.None);
+
             if (perfectParryFired || Charge >= FullChargeTime)
             {
                 float ringPulse = 0.76f + 0.24f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f);
                 Main.EntitySpriteDraw(ring, shieldPosition, null, ShieldLight with { A = 0 } * ringPulse * 0.4f,
-                    Main.GlobalTimeWrappedHourly * 1.8f, ring.Size() * 0.5f, 0.34f + chargeGlow * 0.28f, SpriteEffects.None);
+                    Main.GlobalTimeWrappedHourly * 1.8f, ring.Size() * 0.5f, 0.24f + chargeGlow * 0.22f, SpriteEffects.None);
             }
+
+            // 蓄力阶段：额外旋转光圈（较小）
+            if (BladePlayer.ShieldCharging || BladePlayer.ShieldFullyCharged)
+            {
+                Main.EntitySpriteDraw(ring, shieldPosition, null, ShieldGold with { A = 0 } * ChargeRatio * 0.28f,
+                    -Main.GlobalTimeWrappedHourly * 2.4f, ring.Size() * 0.5f,
+                    0.16f + ChargeRatio * 0.12f, SpriteEffects.None);
+            }
+
             Main.spriteBatch.ExitShaderRegion();
+
+            DrawChargeBar();
             return false;
         }
 
@@ -405,8 +441,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (!IsDashing)
                 return;
 
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
-            SpawnDashFlash(Projectile.Center, direction, 1.15f + DashPower * 0.35f);
+            Vector2 direction = DashDestination != Vector2.Zero
+                ? DashDestination
+                : Owner.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            SpawnDashFlash(Owner.Center, direction, 1.15f + DashPower * 0.35f);
         }
     }
 }

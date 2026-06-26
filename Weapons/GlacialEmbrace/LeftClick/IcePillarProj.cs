@@ -32,8 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             // 轻微重力下坠
             Projectile.velocity.Y += 0.12f;
 
-            // 贴图倾斜45°，旋转补偿 PiOver4
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // 拖尾粒子
             for (int i = 0; i < 3; i++)
@@ -111,13 +110,11 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float time = Main.GlobalTimeWrappedHourly;
 
-            Color col = Color.Lerp(new Color(100, 220, 255), Color.White, 0.25f + 0.15f * MathF.Sin(time * 5f));
+            Color col = Color.Lerp(new Color(100, 220, 255, 0), new Color(255, 255, 255, 0), 0.25f + 0.15f * MathF.Sin(time * 5f));
 
-            // 主贴图
             Main.spriteBatch.Draw(tex, drawPos, null, col * 0.95f,
                 Projectile.rotation, tex.Size() * 0.5f, 1.1f, SpriteEffects.None, 0f);
-            // 内层高光
-            Main.spriteBatch.Draw(tex, drawPos, null, Color.White * 0.35f,
+            Main.spriteBatch.Draw(tex, drawPos, null, new Color(255, 255, 255, 0) * 0.35f,
                 Projectile.rotation, tex.Size() * 0.5f, 0.85f, SpriteEffects.None, 0f);
 
             return false;

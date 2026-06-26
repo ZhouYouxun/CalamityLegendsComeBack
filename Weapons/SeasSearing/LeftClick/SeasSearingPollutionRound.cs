@@ -1,4 +1,4 @@
-using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -134,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             target.AddBuff(ModContent.BuffType<Irradiated>(), 240);
             SpawnImpact(target.Center, true);
 
-            if (!Main.IsServer && Main.myPlayer == Projectile.owner)
+            if (Main.netMode != NetmodeID.Server && Main.myPlayer == Projectile.owner)
             {
                 // Stage 2+: spawn 2-4 pollution bubbles
                 if (stage >= 2)

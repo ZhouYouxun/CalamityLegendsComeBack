@@ -140,6 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         {
             target.AddBuff(ModContent.BuffType<HolyFlames>(), 120);
             Player owner = Main.player[Projectile.owner];
+            owner.GetModPlayer<PristineFuryPassivePlayer>().TryRestoreTailFlightTime();
             if (IsNineTailsMode(owner))
             {
                 // Nine tails actively advance purification progress on hit.

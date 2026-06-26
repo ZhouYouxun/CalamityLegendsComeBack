@@ -1,8 +1,10 @@
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.PF
@@ -96,6 +98,24 @@ namespace CalamityLegendsComeBack.Accssory.PF
             CombatText.NewText(npc.Hitbox, levelColor, $"纯化 Lv{PurificationLevel}", dramatic: false);
             npc.AddBuff(ModContent.BuffType<HolyFlames>(), 180 + PurificationLevel * 60);
 
+            // CritSpark burst on level-up
+            int burstCount = 4 + PurificationLevel * 2;
+            for (int k = 0; k < burstCount; k++)
+            {
+                Vector2 pos = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.4f, npc.height * 0.4f);
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(2f, 5f + PurificationLevel);
+                Particle spark = new CritSpark(pos, vel,
+                    Color.Lerp(levelColor, Color.Gold, 0.4f), Color.White,
+                    0.9f + PurificationLevel * 0.1f, 18 + PurificationLevel * 3);
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            // Spinning square flash on level-up
+            int squareCount = Math.Min(PurificationLevel, 3);
+            for (int k = 0; k < squareCount; k++)
+                SpawnSquareEffect(npc);
+
             // Lv4+: check for explosion accessory effects.
             if (PurificationLevel >= 4)
                 TrySpawnPurificationCombustion(npc, false);
@@ -117,6 +137,114 @@ namespace CalamityLegendsComeBack.Accssory.PF
             {
                 periodicEffectTimer = 0;
                 TrySpawnPurificationCombustion(npc, true);
+                if (!Main.dedServ)
+                {
+                    int sqCount = PurificationLevel switch { 6 => 3, 5 => 2, _ => 1 };
+                    for (int k = 0; k < sqCount; k++)
+                        SpawnSquareEffect(npc);
+                }
+            }
+        }
+
+        // Continuous on-screen visual effects based on purification level, called each draw frame.
+        public override void DrawEffects(NPC npc, ref Color drawColor)
+        {
+            if (PurificationLevel <= 0) return;
+
+            Color levelColor = GetLevelColor(PurificationLevel);
+
+            // How often to fire the main CritSpark: 1/N chance per frame
+            int sparkChance = PurificationLevel switch
+            {
+                1 => 14,
+                2 => 9,
+                3 => 5,
+                4 => 3,
+                5 => 2,
+                _ => 1   // Lv6: every frame
+            };
+
+            // Main CritSpark (Holy Flames style)
+            if (Main.rand.NextBool(sparkChance))
+            {
+                Vector2 pos = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.45f, npc.height * 0.45f);
+                Vector2 vel = new Vector2(0f, Main.rand.NextBool(4) ? -5f : -9f)
+                    .RotatedByRandom(MathHelper.ToRadians(25f)) * Main.rand.NextFloat(0.1f, 1.9f)
+                    + npc.velocity * 0.25f;
+                float scale = 0.7f + PurificationLevel * 0.12f;
+                Particle spark = new CritSpark(pos, vel,
+                    Color.Lerp(levelColor, Color.Gold, 0.35f),
+                    Color.White, scale, 12 + PurificationLevel * 2);
+                GeneralParticleHandler.SpawnParticle(spark);
+            }
+
+            // GemTopaz dust from Lv2
+            if (PurificationLevel >= 2 && Main.rand.NextBool(sparkChance))
+            {
+                Dust d = Dust.NewDustDirect(npc.position - new Vector2(2f, 2f), npc.width + 4, npc.height + 4, DustID.GemTopaz);
+                d.velocity = npc.velocity + new Vector2(0f, Main.rand.NextFloat(-5f, -1f));
+                d.noGravity = true;
+                d.alpha = 235;
+                d.scale = Main.rand.NextFloat(0.7f, 1.2f) * (1f + PurificationLevel * 0.06f);
+            }
+
+            // Extra scattered CritSparks from Lv4
+            if (PurificationLevel >= 4 && Main.rand.NextBool(4))
+            {
+                Vector2 pos2 = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.4f, npc.height * 0.4f);
+                Vector2 vel2 = Main.rand.NextVector2Circular(3.5f, 5f) - Vector2.UnitY * 1.8f;
+                Particle spark2 = new CritSpark(pos2, vel2, levelColor,
+                    Color.Lerp(levelColor, Color.White, 0.5f),
+                    0.5f + PurificationLevel * 0.07f, 8 + PurificationLevel);
+                GeneralParticleHandler.SpawnParticle(spark2);
+            }
+
+            // Occasional shrinking glowing square (Nidhogg-style) from Lv3
+            int squareChance = PurificationLevel switch
+            {
+                6 => 18,
+                5 => 28,
+                4 => 45,
+                3 => 70,
+                _ => 0
+            };
+            if (squareChance > 0 && Main.rand.NextBool(squareChance))
+                SpawnSquareEffect(npc);
+
+            // Ambient light from Lv2
+            if (PurificationLevel >= 2)
+            {
+                float intensity = 0.07f + PurificationLevel * 0.03f;
+                Lighting.AddLight(npc.Center,
+                    levelColor.R / 255f * intensity,
+                    levelColor.G / 255f * intensity,
+                    levelColor.B / 255f * intensity);
+            }
+        }
+
+        private void SpawnSquareEffect(NPC npc)
+        {
+            Color levelColor = GetLevelColor(PurificationLevel);
+            int count = PurificationLevel >= 5 ? 2 : 1;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 pos = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.35f, npc.height * 0.35f);
+                float scale = Main.rand.NextFloat(0.25f, 0.6f) * (1f + PurificationLevel * 0.1f);
+                float spinSpeed = Main.rand.NextFloat(0.05f, 0.16f) * (Main.rand.NextBool() ? 1f : -1f);
+                Vector2 vel = Main.rand.NextVector2Circular(1.2f, 1.8f) - Vector2.UnitY * 0.8f;
+                Particle sq = new CustomSpark(
+                    pos, vel,
+                    "CalamityMod/Particles/GlowSquareParticle",
+                    false,
+                    35 + PurificationLevel * 6,
+                    scale,
+                    levelColor,
+                    Vector2.One,
+                    true,
+                    true,
+                    MathHelper.PiOver4,
+                    spin: spinSpeed);
+                GeneralParticleHandler.SpawnParticle(sq);
             }
         }
 

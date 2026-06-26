@@ -102,9 +102,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
             string text =
-                this.GetLocalizedValue("CosmicDischargeLeft") + "\n\n" +
-                this.GetLocalizedValue("CosmicDischargeRight") + "\n\n" +
-                string.Format(this.GetLocalizedValue("CosmicDischargeUltimate"), keyText) + "\n\n" +
+                this.GetLocalizedValue("CosmicDischargeLeft") + "\n" +
+                this.GetLocalizedValue("CosmicDischargeRight") + "\n" +
+                string.Format(this.GetLocalizedValue("CosmicDischargeUltimate"), keyText) + "\n" +
                 this.GetLocalizedValue("CosmicDischargePassive");
 
             bool shiftPressed = Main.keyState.PressingShift();

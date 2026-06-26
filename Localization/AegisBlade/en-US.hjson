@@ -55,5 +55,9 @@ Mods: {
 			IceShardProj.DisplayName: Ice Shard Proj
 			Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 		}
+
+		Cooldowns: {
+			AegisEX: Aegis Energy
+		}
 	}
 }

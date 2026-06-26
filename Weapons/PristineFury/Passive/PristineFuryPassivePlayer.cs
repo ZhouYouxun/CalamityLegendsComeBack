@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Accssory.PF;
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -9,7 +10,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
     {
         private const int DefaultTentacleCount = 3;
         private const int NineTailsCount = 9;
+        private const int TailFlightRestoreCooldown = 5;
+        private const float TailFlightRestoreRatio = 0.05f;
         private bool holdingPristineFury;
+        private int tailFlightRestoreCooldown;
 
         public override void ResetEffects()
         {
@@ -19,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         public override void UpdateDead()
         {
             holdingPristineFury = false;
+            tailFlightRestoreCooldown = 0;
         }
 
         public void SetHoldingPristineFury()
@@ -28,6 +33,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
         public override void PostUpdate()
         {
+            if (tailFlightRestoreCooldown > 0)
+                tailFlightRestoreCooldown--;
+
             if (!holdingPristineFury || Player.HeldItem.type != ModContent.ItemType<NewLegendPristineFury>())
                 return;
 
@@ -35,6 +43,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                 return;
 
             EnsureTentacles();
+        }
+
+        internal void TryRestoreTailFlightTime()
+        {
+            if (Player.whoAmI != Main.myPlayer || tailFlightRestoreCooldown > 0 || Player.wingTimeMax <= 0)
+                return;
+
+            Player.wingTime = Math.Min(Player.wingTimeMax, Player.wingTime + Player.wingTimeMax * TailFlightRestoreRatio);
+            tailFlightRestoreCooldown = TailFlightRestoreCooldown;
         }
 
         private void EnsureTentacles()

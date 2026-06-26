@@ -45,6 +45,9 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public BBRightClickMode RightClickMode { get; private set; }
         public float AdrenalineDamageBonus => adrenalineStacks * 0.018f;
         public float AdrenalineAttackSpeedBonus => adrenalineStacks * 0.014f;
+        public int AdrenalineStacks => adrenalineStacks;
+        public float AdrenalineStackCompletion => adrenalineStacks / 18f;
+        public float AdrenalineTimerCompletion => adrenalineTimer / 210f;
 
         public int BonusTideMax => (OffshoreWindTurbineEquipped ? OffshoreWindTurbineTideBonus : 0) + BottleTideCapBonus;
 

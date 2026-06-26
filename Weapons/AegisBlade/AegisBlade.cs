@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.AegisBlade.EXSkill;
 using CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -19,7 +20,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         private static int SwingHoldoutType  => ModContent.ProjectileType<AegisSwingHoldout>();
         private static int ShieldHoldoutType => ModContent.ProjectileType<AegisShieldHoldout>();
-        private static int EnergyUIType      => ModContent.ProjectileType<AegisEnergyUI>();
         private static int UltimateHandType  => ModContent.ProjectileType<AegisUltimateHand>();
 
         public override void SetDefaults()
@@ -77,12 +77,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             player.Calamity().mouseWorldListener = true;
             player.Calamity().rightClickListener = true;
 
-            // 能量条UI
-            if (Main.myPlayer == player.whoAmI &&
-                player.ownedProjectileCounts[EnergyUIType] == 0)
+            // 大招能量显示：同步到CalamityMod CooldownHandler（左上角技能图标）
+            if (Main.myPlayer == player.whoAmI)
             {
-                Projectile.NewProjectile(Item.GetSource_FromThis(), player.Center, Vector2.Zero,
-                    EnergyUIType, 0, 0f, player.whoAmI);
+                AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
+                if (player.Calamity().cooldowns.TryGetValue(AegisEXCooldown.ID, out var exCooldown))
+                    exCooldown.timeLeft = (int)bp.AegisEnergy;
+                else
+                    player.AddCooldown(AegisEXCooldown.ID, (int)BalanceAegisBlade.EnergyMax).timeLeft = (int)bp.AegisEnergy;
             }
 
             if (Main.myPlayer != player.whoAmI) return;

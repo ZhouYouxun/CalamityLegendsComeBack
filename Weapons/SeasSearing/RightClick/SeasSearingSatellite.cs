@@ -1,4 +1,4 @@
-using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -52,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             {
                 NPC     target   = Main.npc[targetWho];
                 Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
-                Vector2 perp     = new(-toTarget.Y, toTarget.X) * (float)Math.Sin(orbitPhase) * 3.5f;
+                Vector2 perp     = new Vector2(-toTarget.Y, toTarget.X) * (float)Math.Sin(orbitPhase) * 3.5f;
                 Projectile.velocity = Vector2.Lerp(Projectile.velocity, toTarget * 10f + perp, 0.14f);
             }
             else

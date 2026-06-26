@@ -86,6 +86,7 @@ Mods: {
 						'''
 						[c/FF7733:Passive: three fire tails fight behind the player.]
 						[c/FF7733:They inherit weapon damage and strike rapidly with a short per-target cooldown.]
+						[c/FF7733:Tail hits restore a small amount of wing flight time.]
 						'''
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"

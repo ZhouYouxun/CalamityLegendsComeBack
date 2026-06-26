@@ -173,6 +173,14 @@ Mods: {
 				AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			}
+
+			SeasSearingMissile.DisplayName: Seas Searing Missile
+			SeasSearingMissileExplosion.DisplayName: Seas Searing Missile Explosion
+			SeasSearingNukesplosion.DisplayName: Seas Searing Nukesplosion
+			SeasSearingPollutionBubble.DisplayName: Seas Searing Pollution Bubble
+			SeasSearingPollutionRocket.DisplayName: Seas Searing Pollution Rocket
+			SkyfinTorpedo.DisplayName: Skyfin Torpedo
+			SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
 		}
 
 		Cooldowns: {

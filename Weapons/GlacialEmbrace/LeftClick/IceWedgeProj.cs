@@ -37,8 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 Projectile.velocity = (Projectile.velocity * 15f + targetDir * 14f) / 16f;
             }
 
-            // 贴图倾斜45°，旋转补偿 PiOver4
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // 冰霜尾迹
             for (int i = 0; i < 3; i++)
@@ -95,12 +94,11 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float time = Main.GlobalTimeWrappedHourly;
 
-            Color col = Color.Lerp(new Color(80, 210, 255), Color.White, 0.3f + 0.2f * MathF.Sin(time * 6f));
+            Color col = Color.Lerp(new Color(80, 210, 255, 0), new Color(255, 255, 255, 0), 0.3f + 0.2f * MathF.Sin(time * 6f));
 
             Main.spriteBatch.Draw(tex, drawPos, null, col * 0.95f,
                 Projectile.rotation, tex.Size() * 0.5f, 0.9f, SpriteEffects.None, 0f);
-            // 内层高光
-            Main.spriteBatch.Draw(tex, drawPos, null, Color.White * 0.3f,
+            Main.spriteBatch.Draw(tex, drawPos, null, new Color(255, 255, 255, 0) * 0.3f,
                 Projectile.rotation, tex.Size() * 0.5f, 0.7f, SpriteEffects.None, 0f);
 
             return false;
