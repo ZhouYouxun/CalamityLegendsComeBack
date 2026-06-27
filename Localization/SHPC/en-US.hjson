@@ -8,7 +8,7 @@ Mods: {
 					SHPC_LoadingUIHint: "[c/66CCFF:Open inventory and press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Load specific materials to change attack effects.]"
 					SHPC_CurrentAmmoEffect: "[c/66CCFF:Current loaded effect: {0}]"
 					SHPC_DefaultAmmoEffect: No special material loaded; fires default white orbs that deal area damage.
-					SHPC_Passive: "[c/B8FF9E:Passive: increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
+					SHPC_Passive: "[c/B8FF9E:Passive (Extra Preparation): increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
 					SHPC_RightIntro1:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
@@ -178,6 +178,18 @@ Mods: {
 					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
 					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
 					Some persistent beams and blacklisted projectiles are ignored
+					'''
+			}
+
+			KarasawaModule: {
+				DisplayName: Karasawa Module
+				Tooltip:
+					'''
+					While holding SHPC, right click switches to Karasawa charge-cannon mode
+					Hold right click to charge, then release a defense-piercing hypervelocity energy cannon; releasing too early triggers a failure cooldown
+					KARASAWA cannon... what an excellent weapon...
+					Unfortunately, it has gathered dust in storage for far too long
+					No matter what, it must see the light of day again
 					'''
 			}
 
@@ -352,6 +364,8 @@ Mods: {
 				MilitaryTurretDropPod.DisplayName: Military Turret Drop Pod
 				MilitaryFriendlyTurret.DisplayName: Friendly Tech Turret
 				MilitaryTurretSelfDestruct.DisplayName: Military Turret Self-Destruct
+				KarasawaHoldout.DisplayName: SHPC Karasawa Charge Cannon
+				KarasawaBurst.DisplayName: Karasawa Super Cannon
 				DarksunFragmentBlackSun.DisplayName: Eclipsed Black Sun
 				DarksunFragmentEclipseBolt.DisplayName: Eclipsed Solar Bolt
 				DarksunFragmentBlackSunExplosion.DisplayName: Eclipsed Black Sun Burst
@@ -389,7 +403,6 @@ Mods: {
 				PlagueCell_Fog.DisplayName: Plague Cell_ Fog
 				PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
 				SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
-				StellarVortexShard.DisplayName: Stellar Vortex Shard
 			}
 
 			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
@@ -406,5 +419,7 @@ Mods: {
 			SHPC_BarrierDurability: Matrix Charging Barrier Durability
 			SHPC_BarrierRecharge: Matrix Charging Barrier Recharge
 		}
+
+		Conditions.HoldingSHPC: While holding SHPC
 	}
 }

@@ -1,7 +1,8 @@
-﻿using CalamityMod.Items.Accessories;
+using CalamityMod.Items.Accessories;
 using CalamityMod.Items.Materials;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.NormalNPCs;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.QOL
@@ -20,7 +22,7 @@ namespace CalamityLegendsComeBack.QOL
 
         public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
         {
-            if (npc.type == NPCID.KingSlime || npc.type == NPCID.EyeofCthulhu)
+            if (npc.type == NPCID.KingSlime)
             {
                 npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<SHPCBook>()));
             }
@@ -36,6 +38,15 @@ namespace CalamityLegendsComeBack.QOL
 
         }
 
+        public override void ModifyShop(NPCShop shop)
+        {
+            if (shop.NpcType != NPCID.Merchant)
+                return;
+
+            shop.Add<SHPCBook>(new Condition(
+                Language.GetOrRegister("Mods.CalamityLegendsComeBack.Conditions.HoldingSHPC", () => "While holding SHPC"),
+                () => Main.LocalPlayer.HeldItem.type == ModContent.ItemType<NewLegendSHPC>()));
+        }
 
     }
 }

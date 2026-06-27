@@ -142,7 +142,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public const int NormalHeatDecayTime = 90;
         public const int ManualCoolingExtraLockout = 30;
 
-        public int GetCompletedStageIndex()
+        public static int GetCompletedStageIndex()
         {
             bool[] clearedStages =
             {
@@ -342,11 +342,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 1级: 15秒；2级: 每级7.5秒；3级: 每级5秒；4级: 每级3.75秒；5级: 每级3秒。
         private static readonly int[] HeatFillTimesByProgressState =
         {
-            900,
-            450,
             300,
-            225,
-            180
+            300,
+            300,
+            300,
+            300
         };
 
         private static readonly int[] RightClickMaxHeatLevelsByProgressState =
