@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
-    // 终结技：神手从天而降，蓄力后握住玩家，赋予10秒无敌+70%减速。
+    // 终结技：神手沿玩家相对坐标下降，蓄力后握住玩家，赋予10秒无敌+70%减速。
     // 贴图待补充；目前以粒子光效占位。
     public class AegisUltimateHand : ModProjectile
     {
@@ -22,14 +22,13 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int StateChargeUp = 1;
         private const int StateGripping = 2;
 
-        private const int ApproachTime = 55;
+        private const int ApproachTime = 76;
         private const int ChargeUpTime = 28;
 
         private ref float State  => ref Projectile.ai[0];
         private ref float Timer  => ref Projectile.ai[1];
 
-        // 神手初始位置（OnSpawn时确定，不再移动初始坐标）
-        private Vector2 spawnPos;
+        private float relativeYOffset = -520f;
         private bool initialized = false;
 
         private static readonly Color HandGold  = new(255, 220, 80);
@@ -57,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             if (!initialized)
             {
-                spawnPos    = Projectile.Center;
+                relativeYOffset = MathHelper.Clamp(Projectile.Center.Y - Owner.Center.Y, -680f, -260f);
                 initialized = true;
             }
 
@@ -75,18 +74,13 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private void DoApproach()
         {
-            float progress = Timer / ApproachTime;
-            float lerpFactor = CalamityUtils.EaseInOutExp(progress, 3f, 3f) * 0.16f;
-            Projectile.Center = Vector2.Lerp(Projectile.Center, Owner.Center, lerpFactor);
+            float progress = MathHelper.Clamp(Timer / ApproachTime, 0f, 1f);
+            float eased = MathHelper.SmoothStep(0f, 1f, progress);
+            relativeYOffset = MathHelper.Lerp(relativeYOffset, MathHelper.Lerp(-520f, 0f, eased), 0.18f);
+            Projectile.Center = Owner.Center + new Vector2(0f, relativeYOffset);
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
-            {
-                Vector2 vel = Main.rand.NextVector2Circular(2f, 2f);
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(24f, 24f), vel, false,
-                    Main.rand.Next(8, 16), 0.055f, HandGold,
-                    new Vector2(1.3f, 0.3f), true, false, 0.85f));
-            }
+            if (!Main.dedServ)
+                EmitConvergingSpiral(Owner.Center, progress, false);
 
             if (Timer >= ApproachTime)
             {
@@ -100,24 +94,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private void DoChargeUp()
         {
-            float shake = 5f * (1f - Timer / ChargeUpTime);
-            Projectile.Center = Owner.Center + Main.rand.NextVector2Circular(shake, shake);
+            Projectile.Center = Owner.Center;
 
-            if (!Main.dedServ && Timer % 2 == 0)
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    float orbit = Main.rand.NextFloat(40f, 100f);
-                    Vector2 orbitVec = Main.rand.NextVector2CircularEdge(1f, 1f) * orbit;
-                    Vector2 vel = (Projectile.Center - (Projectile.Center + orbitVec))
-                                   .SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(5f, 11f);
-                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                        Projectile.Center + orbitVec, vel,
-                        "CalamityMod/Particles/Sparkle", false,
-                        Main.rand.Next(10, 20), Main.rand.NextFloat(0.8f, 1.5f),
-                        HandGold, new Vector2(0.3f, 1.5f), true, true, shrinkSpeed: 0.14f));
-                }
-            }
+            if (!Main.dedServ)
+                EmitConvergingSpiral(Owner.Center, MathHelper.Clamp(Timer / ChargeUpTime, 0f, 1f), true);
 
             if (Timer >= ChargeUpTime)
             {
@@ -151,17 +131,40 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             // 持续罩住特效
             if (!Main.dedServ && Main.rand.NextBool(4))
-            {
-                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                Vector2 pos = Owner.Center + angle.ToRotationVector2() * Main.rand.NextFloat(30f, 60f);
-                Vector2 vel = (Owner.Center - pos).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1f, 3f);
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(pos, vel, false,
-                    Main.rand.Next(8, 16), 0.04f, HandGold,
-                    new Vector2(1.1f, 0.3f), true, false, 0.8f));
-            }
+                EmitGripFilaments();
 
             if (!Owner.GetModPlayer<AegisBladePlayer>().UltimateActive)
                 Projectile.Kill();
+        }
+
+        private void EmitConvergingSpiral(Vector2 center, float progress, bool tight)
+        {
+            int count = tight ? 5 : 3;
+            float baseRadius = tight ? MathHelper.Lerp(96f, 18f, progress) : MathHelper.Lerp(170f, 38f, progress);
+            float spin = Main.GlobalTimeWrappedHourly * (tight ? 5.8f : 3.6f);
+            for (int i = 0; i < count; i++)
+            {
+                float t = (Timer * 0.11f + i / (float)count) % 1f;
+                float angle = spin + MathHelper.TwoPi * i / count + t * MathHelper.TwoPi * 1.618f;
+                float radius = baseRadius * (1f - t * 0.55f);
+                Vector2 offset = angle.ToRotationVector2() * radius;
+                Vector2 tangent = offset.SafeNormalize(Vector2.UnitY).RotatedBy(MathHelper.PiOver2);
+                Vector2 velocity = -offset.SafeNormalize(Vector2.UnitY) * MathHelper.Lerp(1.4f, tight ? 7.5f : 5.2f, progress) + tangent * (tight ? 1.2f : 0.7f);
+                Dust dust = Dust.NewDustPerfect(center + offset, DustID.GoldFlame, velocity, 0, HandGold, tight ? 1.25f : 1f);
+                dust.noGravity = true;
+                dust.fadeIn = 0.8f + progress * 0.5f;
+            }
+        }
+
+        private void EmitGripFilaments()
+        {
+            float angle = Main.GlobalTimeWrappedHourly * 4.2f + Main.rand.NextFloat(MathHelper.TwoPi);
+            float radius = Main.rand.NextFloat(28f, 62f);
+            Vector2 offset = angle.ToRotationVector2() * radius;
+            Vector2 velocity = -offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.4f, 3.6f);
+            Dust dust = Dust.NewDustPerfect(Owner.Center + offset, DustID.GoldFlame, velocity, 0, Main.rand.NextBool(3) ? HandWhite : HandGold, Main.rand.NextFloat(0.8f, 1.35f));
+            dust.noGravity = true;
+            dust.fadeIn = 0.9f;
         }
 
         // ── 绘制：光效占位（贴图待替换） ────────────────────────────────

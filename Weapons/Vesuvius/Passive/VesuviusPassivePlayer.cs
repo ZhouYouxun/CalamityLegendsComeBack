@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -68,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
                 return;
 
             ashTimer++;
-            if (ashTimer < 14)
+            if (ashTimer < 6)
                 return;
 
             ashTimer = 0;
@@ -76,17 +75,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             if (Player.HeldItem?.ModItem is NewVesuvius)
                 damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * 0.12f));
 
-            Vector2 spawnPosition = Player.Center + new Vector2(Main.rand.NextFloat(-210f, 210f), Main.rand.NextFloat(-220f, -120f));
-            Vector2 velocity = new Vector2(-Player.direction * Main.rand.NextFloat(0.55f, 1.35f), Main.rand.NextFloat(0.75f, 1.55f));
-            Projectile.NewProjectile(
-                Player.GetSource_FromThis(),
-                spawnPosition,
-                velocity,
-                ModContent.ProjectileType<VesuviusAshFall>(),
-                damage,
-                0f,
-                Player.whoAmI,
-                -Player.direction);
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 spawnPosition = Player.Center + new Vector2(Main.rand.NextFloat(-520f, 520f), Main.rand.NextFloat(-260f, -100f));
+                Vector2 velocity = new Vector2(-Player.direction * Main.rand.NextFloat(0.55f, 1.35f), Main.rand.NextFloat(0.75f, 1.55f));
+                Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    ModContent.ProjectileType<VesuviusAshFall>(),
+                    damage,
+                    0f,
+                    Player.whoAmI,
+                    -Player.direction);
+            }
         }
 
         private void TrackLanding(bool active)
@@ -155,19 +157,35 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
         {
             Projectile.localAI[0]++;
             Projectile.velocity.X += Projectile.ai[0] * 0.012f;
-            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + 0.012f, 0.35f, 2.2f);
+            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + 0.04f, 0.8f, 5.5f);
             Projectile.rotation += Projectile.velocity.X * 0.02f + 0.025f;
             Projectile.alpha = (int)MathHelper.Lerp(0f, 220f, Utils.GetLerpValue(42f, 0f, Projectile.timeLeft, true));
 
-            if (!Main.dedServ && Main.rand.NextBool(3))
+            if (!Main.dedServ && Main.rand.NextBool(2))
             {
-                Particle ash = new SquareAshParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    Projectile.velocity * 0.15f + Main.rand.NextVector2Circular(0.25f, 0.25f),
-                    Main.rand.Next(32, 54),
-                    Main.rand.NextFloat(0.36f, 0.74f),
-                    Color.Lerp(Color.DimGray, Color.OrangeRed, 0.15f));
-                GeneralParticleHandler.SpawnParticle(ash);
+                Particle smoke = new HeavySmokeParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
+                    Projectile.velocity * Main.rand.NextFloat(0.04f, 0.18f) + Main.rand.NextVector2Circular(0.12f, 0.12f),
+                    Color.Lerp(new Color(58, 50, 44), new Color(92, 76, 60), Main.rand.NextFloat()),
+                    Main.rand.Next(12, 24),
+                    Main.rand.NextFloat(0.06f, 0.14f),
+                    0.52f,
+                    Main.rand.NextFloat(-0.04f, 0.04f),
+                    false,
+                    required: false);
+                GeneralParticleHandler.SpawnParticle(smoke);
+
+                if (Main.rand.NextBool(3))
+                {
+                    Dust d = Dust.NewDustPerfect(
+                        Projectile.Center + Main.rand.NextVector2Circular(3f, 3f),
+                        DustID.Smoke,
+                        Projectile.velocity * 0.08f + Main.rand.NextVector2Circular(0.18f, 0.18f),
+                        175,
+                        Color.Lerp(new Color(54, 46, 38), new Color(78, 64, 50), Main.rand.NextFloat()),
+                        Main.rand.NextFloat(0.14f, 0.32f));
+                    d.noGravity = true;
+                }
             }
         }
 
@@ -176,21 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             target.AddBuff(BuffID.OnFire3, 120);
         }
 
-        public override bool PreDraw(ref Color lightColor)
-        {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Color color = Color.Lerp(Color.DarkGray, Color.OrangeRed, 0.18f) * Projectile.Opacity;
-            Main.EntitySpriteDraw(
-                pixel,
-                Projectile.Center - Main.screenPosition,
-                new Rectangle(0, 0, 1, 1),
-                color,
-                Projectile.rotation,
-                new Vector2(0.5f),
-                new Vector2(8f, 8f) * Projectile.scale,
-                SpriteEffects.None);
-            return false;
-        }
+        public override bool PreDraw(ref Color lightColor) => false;
     }
 
     public class VesuviusLandingQuake : ModProjectile, ILocalizedModType

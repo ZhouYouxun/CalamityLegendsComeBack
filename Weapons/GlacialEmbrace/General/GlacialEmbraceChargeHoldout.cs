@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
         private const int MaxCharge = 45;
         private const int PerfectMin = 30; // 蓄力30帧以上为完美释放
+        private const int ReleaseCooldown = 15;
 
         public override void SetDefaults()
         {
@@ -65,7 +66,10 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         private void ReleaseChargedAttack(Player player, GlacialEmbracePlayer modPlayer)
         {
             bool perfect = Projectile.ai[0] >= PerfectMin;
-            int damage = (int)(player.HeldItem.damage * (perfect ? 1.5f : 1.0f));
+            float chargeRatio = MathHelper.Clamp(Projectile.ai[0] / PerfectMin, 0f, 1f);
+            float releasePower = MathHelper.Lerp(0.10f, 1f, chargeRatio);
+            int damage = Math.Max(1, (int)(player.HeldItem.damage * releasePower));
+            modPlayer.LeftSpecialCooldown = ReleaseCooldown;
 
             if (perfect)
                 SoundEngine.PlaySound(SoundID.Item30 with { Pitch = 0.6f, Volume = 0.85f }, player.Center);
@@ -93,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
                 default:
                     Projectile.NewProjectile(source, player.Center, targetDir * 12f,
                         ModContent.ProjectileType<IcePillarProj>(),
-                        (int)(damage * 1.8f), player.HeldItem.knockBack * 1.8f, player.whoAmI);
+                        damage, player.HeldItem.knockBack * 1.8f, player.whoAmI);
                     break;
             }
         }

@@ -109,7 +109,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             if (occupiedSlots + summonCost > player.maxMinions + 0.001f)
             {
                 // 已达上限，开始左键蓄力特殊攻击
-                if (player.ownedProjectileCounts[ModContent.ProjectileType<GlacialEmbraceChargeHoldout>()] == 0)
+                if (modPlayer.LeftSpecialCooldown <= 0 &&
+                    player.ownedProjectileCounts[ModContent.ProjectileType<GlacialEmbraceChargeHoldout>()] == 0)
                 {
                     Projectile.NewProjectile(source, player.Center, Vector2.Zero, ModContent.ProjectileType<GlacialEmbraceChargeHoldout>(), damage, knockback, player.whoAmI);
                 }

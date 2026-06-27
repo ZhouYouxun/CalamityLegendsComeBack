@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 {
     internal static class VesuviusProjectileVisuals
     {
-        internal const float VisualIntensity = 0.3f;
+        internal const float VisualIntensity = 0.55f;
         internal const float VisualScale = 0.72f;
 
         internal static readonly Color LavaOrange = new(255, 88, 24);

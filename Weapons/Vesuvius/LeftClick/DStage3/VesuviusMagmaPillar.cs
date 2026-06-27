@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Rectangle frame = new(frameX * Projectile.width, frameY * Projectile.height, Projectile.width, Projectile.height);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White, Projectile.rotation, Projectile.Size / 2f, 1f, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, new Color(255, 255, 255, 0), Projectile.rotation, Projectile.Size / 2f, 1f, SpriteEffects.None);
             return false;
         }
     }

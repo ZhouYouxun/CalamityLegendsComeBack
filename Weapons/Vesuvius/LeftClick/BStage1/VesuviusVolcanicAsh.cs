@@ -132,10 +132,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.Lerp(Color.Black, VesuviusProjectileVisuals.AshGray, 0.55f) * 0.28f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                (Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, 0.35f) with { A = 0 }) * 0.22f * fade,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                Projectile.scale * 0.38f * VesuviusProjectileVisuals.VisualScale,
+                Projectile.scale * 0.42f * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
             for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
@@ -169,7 +169,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 texture,
                 Projectile.Center - Main.screenPosition,
                 frame,
-                Color.Lerp(Color.DimGray, VesuviusProjectileVisuals.LavaOrange, 0.2f) * fade,
+                Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaOrange, 0.55f) * fade,
                 Projectile.rotation,
                 frame.Size() * 0.5f,
                 Projectile.scale * 1.08f,

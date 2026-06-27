@@ -48,6 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private int throwTargetIndex = -1;
         private int bladeHitFireballsThisSpin;
         private float spinAngle;
+        private float throwStartRotationOffset;
         private float chargeBorderIntensity;
 
         private int currentStage;
@@ -194,7 +195,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             leftClickState = StateLoopSpin;
             loopTimer = 0;
-            spinAngle = 0f;
+            spinAngle = MathHelper.WrapAngle(spinAngle);
             spinStartSoundPlayed = false;
             chargeCompleteSoundPlayed = false;
             releasedDuringLoopHold = false;
@@ -221,21 +222,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Owner.direction = lockedFacing;
             FlipAsSword = lockedFacing < 0;
 
-            float time = loopTimer - LoopSpinFrames / 8f;
-            float timeMax = LoopSpinFrames - LoopSpinFrames / 8f;
-            float progress = MathHelper.Clamp(time / timeMax, 0f, 1f);
-            float easedSpin = CalamityUtils.ExpInOutEasing(progress, 1);
-            spinAngle = MathHelper.ToRadians(MathHelper.Lerp(-45f, 405f, easedSpin)) * -Projectile.ai[1] * Owner.direction;
+            float progress = MathHelper.Clamp(loopTimer / (float)LoopSpinFrames, 0f, 1f);
+            float speedEnvelope = 0.5f - MathF.Cos(progress * MathHelper.TwoPi) * 0.5f;
+            float degreesPerFrame = MathHelper.Lerp(5.2f, 15.8f, speedEnvelope);
+            spinAngle += MathHelper.ToRadians(degreesPerFrame) * -Projectile.ai[1] * Owner.direction;
 
-            CanHit = progress > 0.25f && progress < 0.85f;
+            CanHit = progress > 0.18f && progress < 0.88f;
             postSwing = true;
             fadeIn = MathHelper.Lerp(fadeIn, 1f, 0.24f);
             bladeFade = MathHelper.Lerp(bladeFade, 1f, 0.28f);
             chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, MathHelper.Lerp(1f, 0.35f, progress), 0.2f);
             Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.06f);
-            RotationOffset = MathHelper.Lerp(RotationOffset, MathHelper.ToRadians(112f * Projectile.ai[1]) + spinAngle, 0.2f);
+            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) + spinAngle;
 
-            if (!spinStartSoundPlayed && progress >= 0.3f)
+            if (!spinStartSoundPlayed && progress >= 0.22f)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/HellkiteSwing", 2) { Volume = 0.82f, Pitch = -0.08f }, Projectile.Center);
                 spinStartSoundPlayed = true;
@@ -259,7 +259,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 if (throwRequested)
                     StartThrowWindup();
                 else
-                    StartLoopHold();
+                {
+                    Projectile.ResetLocalNPCHitImmunity();
+                    StartLoopSpin();
+                }
             }
         }
 
@@ -337,7 +340,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             bladeFade = 1f;
             chargeBorderIntensity = 1f;
             chargeCompleteSoundPlayed = false;
-            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]);
+            float baseOffset = MathHelper.ToRadians(112f * Projectile.ai[1]);
+            throwStartRotationOffset = baseOffset + MathHelper.WrapAngle(RotationOffset - baseOffset);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.74f, Pitch = -0.18f }, Owner.Center);
         }
 
@@ -355,7 +359,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Owner.direction = lockedFacing;
             FlipAsSword = lockedFacing < 0;
             Projectile.rotation = Projectile.rotation.AngleLerp(GetAimRotation(), 0.16f);
-            RotationOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) - MathHelper.PiOver2 * raiseProgress * Projectile.ai[1];
+            float raisedOffset = MathHelper.ToRadians(112f * Projectile.ai[1]) - MathHelper.PiOver2 * Projectile.ai[1];
+            RotationOffset = MathHelper.Lerp(throwStartRotationOffset, raisedOffset, raiseProgress);
             ArmRotationOffset = MathHelper.ToRadians(-140f + 28f * raiseProgress);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f + 28f * raiseProgress);
 

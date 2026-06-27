@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int SwingDuration = 26;
         private const float FireballSpawnProgress = 0.65f;
         private const float SwordVisualScale = 1.55f;
-        private const float BladeReach = 128f;
+        private const float BladeReach = 192f;
         private const int BladeTrailHistoryFrames = 16;
 
         private Player Owner => Main.player[Projectile.owner];
@@ -150,14 +150,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             int fireballType = ModContent.ProjectileType<AegisFireball>();
             int damage = Math.Max(1, (int)(Projectile.damage * 0.6f));
 
-            // 4颗光球，以鼠标方向为中心，各自随机角度偏移(±5°)和速度(0.9~1.25)
+            // Four orbs leave as a wide fan. The old 0.9-1.25 speed read as drifting sparks.
             Vector2 mouseDir = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
                 .SafeNormalize(Vector2.UnitX * Owner.direction);
 
             for (int i = 0; i < 4; i++)
             {
-                float speed       = Main.rand.NextFloat(0.9f, 1.25f);
-                float angleOffset = Main.rand.NextFloat(-MathHelper.ToRadians(5f), MathHelper.ToRadians(5f));
+                float centeredIndex = i - 1.5f;
+                float speed       = Main.rand.NextFloat(5.4f, 7.5f);
+                float angleOffset = MathHelper.ToRadians(centeredIndex * 15f + Main.rand.NextFloat(-3f, 3f));
                 Vector2 velocity  = mouseDir.RotatedBy(angleOffset) * speed;
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter,
                     velocity, fireballType, damage, 2f, Projectile.owner);
@@ -172,10 +173,34 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
+            Vector2 direction = currentAngle.ToRotationVector2();
+            float swipeDirection = Math.Sign(endAngle - startAngle);
+            if (swipeDirection == 0f)
+                swipeDirection = 1f;
+
+            if (CheckBladeLine(targetHitbox, direction, 66f * scale, BladeReach * scale + 36f * scale))
+                return null;
+
+            Vector2 trailingDirection = (currentAngle - swipeDirection * 0.26f).ToRotationVector2();
+            if (CheckBladeLine(targetHitbox, trailingDirection, 54f * scale, BladeReach * scale + 20f * scale))
+                return null;
+
+            Vector2 leadingDirection = (currentAngle + swipeDirection * 0.14f).ToRotationVector2();
+            return CheckBladeLine(targetHitbox, leadingDirection, 46f * scale, BladeReach * scale) ? null : false;
+        }
+
+        private bool CheckBladeLine(Rectangle targetHitbox, Vector2 direction, float width, float reach)
+        {
             float collisionPoint = 0f;
-            Vector2 bladeTip = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale;
-            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(),
-                Owner.MountedCenter, bladeTip, 40f * scale, ref collisionPoint) ? null : false;
+            Vector2 start = Owner.MountedCenter + direction * 20f * scale;
+            Vector2 end = Owner.MountedCenter + direction * reach;
+            return Collision.CheckAABBvLineCollision(
+                targetHitbox.TopLeft(),
+                targetHitbox.Size(),
+                start,
+                end,
+                width,
+                ref collisionPoint);
         }
 
         private void TrackBladeTrail(bool hitWindow)

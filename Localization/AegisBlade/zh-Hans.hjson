@@ -56,8 +56,6 @@ Mods: {
 			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 		}
 
-		Cooldowns: {
-			AegisEX: 庇护能量
-		}
+		Cooldowns.AegisEX: 庇护能量
 	}
 }

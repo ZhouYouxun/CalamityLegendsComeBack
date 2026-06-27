@@ -117,7 +117,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             float fade = Projectile.Opacity;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.8f + Projectile.identity);
             Vector2 baseScale = new(Projectile.width / (float)smoke.Width, Projectile.height / (float)smoke.Height);
-            Color smokeColor = Color.Lerp(VesuviusProjectileVisuals.RavagerSmoke, new Color(128, 118, 74), 0.4f) with { A = 0 };
+            Color smokeColor = Color.Lerp(VesuviusProjectileVisuals.RavagerSmoke, new Color(128, 118, 74), 0.4f);
             Color sulfurColor = new Color(190, 170, 82, 0);
 
             for (int i = 0; i < 3; i++)

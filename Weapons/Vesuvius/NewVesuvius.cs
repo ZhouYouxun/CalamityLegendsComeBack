@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Item.shoot = ModContent.ProjectileType<VesuviusFaultJavelin>();
                 Item.shootSpeed = 25f;
                 Item.UseSound = SoundID.Item1 with { Volume = 0.78f, Pitch = -0.22f };
-                return player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusFaultJavelin>()] < 3;
+                return player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusFaultJavelin>()] < 1;
             }
 
             Item.useTime = 30;
@@ -164,11 +164,11 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 : this.GetLocalizedValue("EXDisabledHint");
 
             string finalText =
-                this.GetLocalizedValue("LeftClick") + "\n\n" +
-                this.GetLocalizedValue($"ChargeStage{VesuviusProgression.GetMaxStage()}") + "\n\n" +
-                this.GetLocalizedValue("RightClick") + "\n\n" +
-                this.GetLocalizedValue("Passive") + "\n\n" +
-                exText + "\n\n" +
+                this.GetLocalizedValue("LeftClick").TrimEnd('\n') + "\n" +
+                this.GetLocalizedValue($"ChargeStage{VesuviusProgression.GetMaxStage()}") + "\n" +
+                this.GetLocalizedValue("RightClick").TrimEnd('\n') + "\n" +
+                this.GetLocalizedValue("Passive").TrimEnd('\n') + "\n" +
+                exText.TrimEnd('\n') + "\n" +
                 this.GetLocalizedValue("Final") + "\n";
 
             bool shiftPressed = Main.keyState.PressingShift();

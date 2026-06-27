@@ -17,6 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone";
 
+        private const int ShutdownFrames = 120;
+
         private static readonly Vector2[] RearOffsets =
         {
             new(-48f, -20f),
@@ -77,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Vector2 desiredCenter = Vector2.Zero;
             if (holdoutProj.localAI[0] < 120) // Stage 1: Spiral Orbit
             {
-                float phase = holdoutProj.localAI[0] * 0.08f + SlotIndex * MathHelper.TwoPi / 6f;
+                float phase = holdoutProj.localAI[0] * 0.08f + SlotIndex * MathHelper.Pi;
                 float radius = MathHelper.Lerp(180f, 70f, MathHelper.Clamp(holdoutProj.localAI[0] / 120f, 0f, 1f));
                 desiredCenter = owner.MountedCenter + phase.ToRotationVector2() * radius;
 
@@ -99,12 +101,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
                 // Fire small tracking splinters
                 shootTimer++;
-                if (!shutDown && shootTimer >= 30)
+                if (!shutDown && shootTimer >= 26)
                 {
                     shootTimer = 0;
                     if (Projectile.owner == Main.myPlayer)
                     {
-                        Vector2 splinterVel = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.2f) * 9f;
+                        Vector2 splinterVel = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.16f) * 14f;
                         int splinter = Projectile.NewProjectile(
                             Projectile.GetSource_FromThis(),
                             Projectile.Center,
@@ -159,29 +161,50 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private void TriggerHeavyAttack()
         {
             Projectile.ai[2] = 0f;
-            ShutdownTimer = 20f;
-            shootTimer = -20;
+            ShutdownTimer = ShutdownFrames;
+            shootTimer = -ShutdownFrames;
 
-            if (Projectile.owner == Main.myPlayer && YC_EssenceFlame.CanSpawnMoreFor(Main.player[Projectile.owner]))
+            if (Projectile.owner == Main.myPlayer)
             {
-                // Shoot a heavy tracking missile towards the cursor
+                // Shoot a heavy tracking missile towards the cursor.
                 Vector2 targetDir = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX);
-                int bolt = Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    targetDir * 16f,
-                    ModContent.ProjectileType<YC_EssenceFlame>(),
-                    (int)(Projectile.damage * 2.2f),
-                    Projectile.knockBack * 1.5f,
-                    Projectile.owner,
-                    -1f, // target finder
-                    0f);
-                if (Main.projectile.IndexInRange(bolt))
+                if (YC_EssenceFlame.CanSpawnMoreFor(Main.player[Projectile.owner]))
                 {
-                    // Mark as heavy bolt
-                    Main.projectile[bolt].scale = 1.6f;
-                    Main.projectile[bolt].extraUpdates = 3;
-                    YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[bolt], YCWeaponForm.Crystal);
+                    int bolt = Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        targetDir * 20f,
+                        ModContent.ProjectileType<YC_EssenceFlame>(),
+                        (int)(Projectile.damage * 2.2f),
+                        Projectile.knockBack * 1.5f,
+                        Projectile.owner,
+                        -1f, // target finder
+                        0f);
+                    if (Main.projectile.IndexInRange(bolt))
+                    {
+                        // Mark as heavy bolt
+                        Main.projectile[bolt].scale = 1.6f;
+                        Main.projectile[bolt].extraUpdates = 3;
+                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[bolt], YCWeaponForm.Crystal);
+                    }
+                }
+
+                for (int i = 0; i < 4; i++)
+                {
+                    float spread = MathHelper.ToRadians((i - 1.5f) * 5.5f);
+                    int splinter = Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center + targetDir.RotatedBy(MathHelper.PiOver2) * (i - 1.5f) * 5f,
+                        targetDir.RotatedBy(spread) * (18f + i * 1.3f),
+                        ModContent.ProjectileType<YC_BurningShardSplinter>(),
+                        (int)(Projectile.damage * 0.55f),
+                        Projectile.knockBack * 0.35f,
+                        Projectile.owner);
+                    if (Main.projectile.IndexInRange(splinter))
+                    {
+                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[splinter], YCWeaponForm.Crystal);
+                        Main.projectile[splinter].CritChance = Projectile.CritChance;
+                    }
                 }
             }
 

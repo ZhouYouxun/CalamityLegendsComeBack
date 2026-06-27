@@ -12,7 +12,7 @@ Mods: {
 							[c/7BC8E5:Current form: {0} (auto-rotates every 5 seconds)]
 							[c/A0D8EF:Summon legendary weapon — 48 base damage, 10 mana]
 							[c/A0D8EF:First use summons a Glacial Core (0 slots) as anchor]
-							[c/A0D8EF:All hits inflict Frostburn II (5 seconds)]
+							[c/A0D8EF:Full slots: hold for a special attack; release enforces a 15-frame cooldown]
 							'''
 						GE_LeftClick:
 							'''
@@ -22,25 +22,23 @@ Mods: {
 							'''
 						GE_SpikeMode0:
 							'''
-							[c/90FFB0:◈ Cleave — each spike splits into paired inner/outer crystals]
-							[c/90FFB0:  Inner: 90px orbit, 4°/frame, 0.85x damage]
-							[c/90FFB0:  Outer: 140px orbit, 2.8°/frame, 1.35x damage]
-							[c/90FFB0:  Different angular speeds; independent NPC immunity]
+							[c/90FFB0:◈ Cleave — paired inner/outer crystals orbit and periodically rush out]
+							[c/90FFB0:  Inner spikes cut faster; outer spikes hit heavier]
+							[c/90FFB0:  Both can leave orbit to slash through targets]
 							'''
 						GE_SpikeMode1:
 							'''
-							[c/80EFFF:◈ Pierce — spikes orbit ~3s then fly out to embed]
+							[c/80EFFF:◈ Pierce — spikes orbit briefly, then fly out faster to embed]
 							[c/80EFFF:  Max 6 spikes per enemy; reduces orbit count while out]
-							[c/80EFFF:  Whip hit detonates 1 random embedded spike]
-							[c/80EFFF:  Detonated spikes pierce a short line of enemies]
+							[c/80EFFF:  Whip hits command embedded or idle spikes into a frenzy thrust]
 							'''
 						GE_SpikeMode2:
 							'''
-							[c/FF8B60:◈ Strike — spikes face inward; auto-align after 6s cooldown]
+							[c/FF8B60:◈ Strike — spikes ram targets on their own while waiting]
 							[c/FF8B60:  Left click when aligned: spikes collide and shockwave]
-							[c/FF8B60:  2.2x collision damage; all spikes hibernate for 4s]
+							[c/FF8B60:  Collision hibernates spikes for 4s]
 							'''
-						GE_SpecialIntro: "[c/A0D8EF:◆ Special Attack (hold Left Click when minion slots are full)]"
+						GE_SpecialIntro: "[c/A0D8EF:◆ Special Attack (hold Left Click when minion slots are full; non-perfect releases scale from 10% to 100% damage)]"
 						GE_SpecialMode0:
 							'''
 							[c/90FFB0:Cleave Special: condense ice blade at cursor position]
@@ -62,7 +60,7 @@ Mods: {
 							'''
 							[c/B0E0FF:◇ Frost Rhythm: hold Right Click to start rhythm QTE bar]
 							[c/B0E0FF:  Release in the green sweet-spot zone: combo +1 (max 20)]
-							[c/B0E0FF:  Outside sweet spot or timeout: combo resets to 0]
+							[c/B0E0FF:  Whip hits command all spikes into a short coordinated frenzy]
 							'''
 						GE_PassiveCombo: "[c/B0E0FF:  Combo: {0} (+{1} life regen/s, +{2} defense)]"
 						GE_PassiveDivinity: "[c/B0E0FF:  At 10 combo: spike speed +10% for 5s (Glacial Divinity)]"

@@ -10,22 +10,22 @@ Mods: {
 						GE_Intro:
 							'''
 							[c/7BC8E5:当前战斗形态：{0}，每五秒自动循环切换到下一形态]
-							[c/A0D8EF:左键先召冰核，再召冰钉；满仆从后长按蓄力特攻]
+							[c/A0D8EF:左键先召冰核，再召冰钉；满仆从后长按蓄力特攻，释放后15帧冷却]
 							'''
 						GE_LeftClick:
 							'''
-							[c/90FFB0:斩击形态：冰钉分内外双环旋斩，小钉更快大钉更重]
-							[c/80EFFF:突刺形态：冰钉绕行后自动射出，命中敌人后嵌入体内]
-							[c/FF8B60:打击形态：冰钉对齐鼠标方向，左键合拢撞击后进入休眠]
+							[c/90FFB0:斩击形态：冰钉分内外双环旋斩，并周期性飞出切穿目标]
+							[c/80EFFF:突刺形态：冰钉更快射出，命中敌人后嵌入体内]
+							[c/FF8B60:打击形态：冰钉平时会主动冲撞；对齐后左键合拢撞击并休眠]
 							'''
 						GE_SpikeMode0: ""
 						GE_SpikeMode1: ""
 						GE_SpikeMode2: ""
-						GE_SpecialIntro: "[c/A0D8EF:蓄力特攻变为冰刀、冰楔或冰柱，连中触发极光护身]"
+						GE_SpecialIntro: "[c/A0D8EF:蓄力特攻变为冰刀、冰楔或冰柱；非完美释放仅10%起，线性提升到100%]"
 						GE_SpecialMode0: ""
 						GE_SpecialMode1: ""
 						GE_SpecialMode2: ""
-						GE_PassiveRhythm: "[c/B0E0FF:右键开启节奏条，绿区松开叠连击；连击加回复防御]"
+						GE_PassiveRhythm: "[c/B0E0FF:右键开启节奏条，绿区松开叠连击；鞭击命中会命令冰钉协同突袭]"
 						GE_PassiveCombo: "[c/B0E0FF:当前连击{0}层：每秒持续回复+{1}且防御+{2}，十层后冰钉加速]"
 						GE_PassiveDivinity: ""
 						GE_PassiveAurora: ""

@@ -86,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
 
         public override LocalizedText DisplayName => Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.Vesuvius_EX");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuvius";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDown";
         public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOutline";
         public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOverlay";
 

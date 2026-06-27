@@ -14,6 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 {
     internal sealed class YC_RightCrystalHoldout : YC_BaseHoldout
     {
+        private const int CoordinatedShutdownFrames = 120;
+
         private readonly BalanceYharimsCrystal balance = new();
         private int manaDrainTimer;
         private int laserIndex = -1;
@@ -153,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     }
 
                     heavyAttackQueued = false;
-                    coordinatedCooldown = 20;
+                    coordinatedCooldown = CoordinatedShutdownFrames;
                     Projectile.netUpdate = true;
                 }
             }

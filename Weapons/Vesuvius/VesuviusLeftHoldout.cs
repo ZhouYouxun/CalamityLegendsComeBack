@@ -567,8 +567,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             Color burstColor = VesuviusProgression.GetStageColor(stage);
-            GeneralParticleHandler.SpawnParticle(new PulseRing(GunTip, Vector2.Zero, burstColor, 0.08f, 2.4f + stage * 0.38f, 22));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Vector2.Zero, burstColor * 0.8f, "CalamityMod/Particles/ShatteredExplosion", Vector2.One, Main.rand.NextFloat(-0.4f, 0.4f), 0.1f, 0.45f + stage * 0.08f, 18));
+            GeneralParticleHandler.SpawnParticle(new PulseRing(GunTip, Vector2.Zero, burstColor, 0.08f, 1.2f + stage * 0.19f, 22));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Vector2.Zero, burstColor * 0.8f, "CalamityMod/Particles/ShatteredExplosion", Vector2.One, Main.rand.NextFloat(-0.4f, 0.4f), 0.1f, 0.225f + stage * 0.04f, 18));
             SoundEngine.PlaySound(
                 stage >= VesuviusProgression.GetMaxStage()
                     ? HeliumReadySound with { Volume = 0.95f, Pitch = -0.08f + stage * 0.025f }
@@ -788,7 +788,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             float distanceFactor = Utils.GetLerpValue(1800f, 240f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor * 0.7f);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power * distanceFactor * 0.67f);
         }
 
         public override void OnKill(int timeLeft)

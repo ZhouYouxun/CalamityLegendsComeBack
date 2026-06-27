@@ -77,10 +77,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             player.Calamity().mouseWorldListener = true;
             player.Calamity().rightClickListener = true;
 
+            AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
+
             // 大招能量显示：同步到CalamityMod CooldownHandler（左上角技能图标）
             if (Main.myPlayer == player.whoAmI)
             {
-                AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
                 if (player.Calamity().cooldowns.TryGetValue(AegisEXCooldown.ID, out var exCooldown))
                     exCooldown.timeLeft = (int)bp.AegisEnergy;
                 else
@@ -88,8 +89,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             }
 
             if (Main.myPlayer != player.whoAmI) return;
-
-            AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
 
             // ── 右键举盾（在挥剑中不允许起手） ──────────────────────────
             if (CanStartShieldHoldout(player, bp))
@@ -107,10 +106,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                 bp.CanActivateUltimate &&
                 player.ownedProjectileCounts[UltimateHandType] == 0)
             {
-                Vector2 spawnOffset = new Vector2(Main.rand.NextFloat(-1f, 1f), -1f)
-                                      .SafeNormalize(Vector2.UnitY) * 450f;
                 Projectile.NewProjectile(Item.GetSource_FromThis(),
-                    player.Center + spawnOffset, Vector2.Zero,
+                    player.Center + new Vector2(0f, -520f), Vector2.Zero,
                     UltimateHandType, 0, 0f, player.whoAmI);
                 SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.85f, Pitch = -0.4f }, player.Center);
             }

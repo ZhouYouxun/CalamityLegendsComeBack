@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Timer++;
             if (!Stopped)
             {
-                Projectile.velocity *= 1f - DecelerationRate;
+                Projectile.velocity *= MathHelper.Max(0.99f, 1f - DecelerationRate);
                 if (Projectile.velocity.Length() < StopThreshold)
                 {
                     Projectile.velocity    = Vector2.Zero;

@@ -37,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         // 打击形态对齐
         public int StrikeAlignCooldown = 0;
         public bool StrikeAligned = false;
+        public int LeftSpecialCooldown = 0;
 
         // 极光旋律 & 冰川神性
         public int AuroraMelodyTimer = 0;
@@ -86,6 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
                 GlacialDivinityTimer = 0;
                 StrikeAligned = false;
                 StrikeAlignCooldown = 0;
+                LeftSpecialCooldown = 0;
                 ModeTimer = 0;
                 modeFlashTimer = 0;
                 return;
@@ -101,6 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
             if (AuroraMelodyTimer > 0) AuroraMelodyTimer--;
             if (GlacialDivinityTimer > 0) GlacialDivinityTimer--;
+            if (LeftSpecialCooldown > 0) LeftSpecialCooldown--;
             if (modeFlashTimer > 0) modeFlashTimer--;
 
             // 形态自动切换（蓄力攻击期间暂停）
@@ -182,7 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
                 if (p.active && p.type == spikeType && p.owner == Player.whoAmI)
                 {
                     var modProj = p.ModProjectile as IceSpikeMinion;
-                    if (modProj != null && !modProj.hibernating && !modProj.smashing)
+                    if (modProj != null && !modProj.hibernating && !modProj.smashing && modProj.IsCirclingPlayer())
                         activeSpikes.Add(p);
                 }
             }
@@ -269,8 +272,31 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
         public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (proj.owner == Player.whoAmI && ProjectileID.Sets.IsAWhip[proj.type])
-                TriggerEmbeddedSpikePierce(target, 1);
+            if (GlacialEmbraceMinion && proj.owner == Player.whoAmI && ProjectileID.Sets.IsAWhip[proj.type])
+                TriggerWhipFrenzy(target);
+        }
+
+        private void TriggerWhipFrenzy(NPC target)
+        {
+            ComboCount = Math.Min(20, ComboCount + 1);
+            AuroraMelodyTimer = Math.Max(AuroraMelodyTimer, 180);
+            GlacialDivinityTimer = Math.Max(GlacialDivinityTimer, 180);
+            UltimateCharge = Math.Min(MaxUltimateCharge, UltimateCharge + 3);
+
+            int spikeType = ModContent.ProjectileType<IceSpikeMinion>();
+            int commanded = 0;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (p.active && p.type == spikeType && p.owner == Player.whoAmI && p.ModProjectile is IceSpikeMinion spike)
+                {
+                    spike.CommandWhipFrenzy(target, CurrentMode);
+                    commanded++;
+                }
+            }
+
+            if (commanded > 0)
+                SoundEngine.PlaySound(SoundID.Item30 with { Pitch = 0.35f, Volume = 0.62f }, target.Center);
         }
 
         public void TriggerEmbeddedSpikePierce(NPC target, int count)
