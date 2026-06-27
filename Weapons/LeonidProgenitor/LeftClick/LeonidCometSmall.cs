@@ -488,10 +488,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             for (int i = 0; i < activeEffects.Length; i++)
                 activeEffects[i].DrawInjectedEnergy(this, Owner, Main.spriteBatch);
 
+            // Additive night-sky glow ring
+            float nsOpacity = (1f - Projectile.alpha / 255f) * 0.44f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.6f;
+                Main.EntitySpriteDraw(texture.Value, headPos + off, null,
+                    LeonidVisualUtils.NightSkyBlue with { A = 0 } * nsOpacity,
+                    Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            }
+
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             // Afterimage texture trail
-            Color outlineColor = LeonidVisualUtils.MoonViolet * opacity;
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 Vector2 oldDrawPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -502,11 +511,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Color drawColor = Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.12f) * opacity;
 
-            // Outline
+            // Night-sky blue outline
+            Color outlineColor = LeonidVisualUtils.NightSkyBlue * opacity;
             for (int i = 0; i < 8; i++)
             {
-                Vector2 offset = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 1.8f;
-                Main.EntitySpriteDraw(texture, drawPosition + offset, null, outlineColor * 0.55f, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+                Vector2 offset = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.2f;
+                Main.EntitySpriteDraw(texture, drawPosition + offset, null, outlineColor * 0.72f, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             }
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);

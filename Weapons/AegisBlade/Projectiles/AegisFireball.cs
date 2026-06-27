@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
     {
         public override string Texture => "CalamityMod/ExtraTextures/TinyGreyscaleCircle";
 
-        private const float VelocityRetention = 0.985f;
+        private const float VelocityRetention = 0.99f;
         private const int   MaxLifetime      = 240;
         private const float VisualScale      = 0.55f;
 

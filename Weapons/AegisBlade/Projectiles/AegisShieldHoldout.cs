@@ -43,6 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private bool perfectParryFired;
         private bool fullChargeFired;
         private bool previousLeftDown;
+        private bool shieldRaisedFired;
 
         private static readonly Color ShieldGold = new(255, 200, 60);
         private static readonly Color ShieldLight = new(255, 238, 160);
@@ -100,6 +101,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Charge = Math.Min(Charge + 1f, MaximumGuardCharge);
             UpdateGuardState();
             UpdateFacing();
+
+            if (!shieldRaisedFired && BladePlayer.ShieldRaised)
+            {
+                shieldRaisedFired = true;
+                OnShieldRaised();
+            }
 
             if (BladePlayer.WasHurtDuringRaise && !perfectParryFired)
             {
@@ -271,6 +278,19 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 ShieldGold, Vector2.One, 0f, 0.08f, 1.65f, 20));
         }
 
+        private void OnShieldRaised()
+        {
+            SoundEngine.PlaySound(SoundID.Item68 with { Volume = 0.65f, Pitch = 0.12f }, Owner.Center);
+            if (Main.dedServ)
+                return;
+
+            Vector2 shieldPos = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(shieldPos, Vector2.Zero,
+                ShieldLight, Vector2.One, 0f, 0f, 0.44f, 15));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(shieldPos, Vector2.Zero,
+                ShieldGold, Vector2.One, 0f, 0.06f, 1.1f, 16));
+        }
+
         private void OnFullCharge()
         {
             SoundEngine.PlaySound(SoundID.Item67 with { Volume = 0.95f, Pitch = 0.12f }, Owner.Center);
@@ -293,7 +313,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
         }
 
-        // 举盾全程均发射小粒子（盾牌小，效果适当缩小）。蓄力阶段粒子变强。
         private void EmitGuardFlames()
         {
             if (Main.dedServ || !Main.rand.NextBool(2))
@@ -301,9 +320,20 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             Vector2 shieldPosition = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
 
-            if (!ChargeUnlocked || Charge < ChargeStartTime)
+            if (BladePlayer.ShieldRaising)
             {
-                // 举盾普通阶段：微弱稀疏粒子
+                // 举盾动画阶段：随进度增强的金色粒子
+                float raiseRatio = MathHelper.Clamp(Charge / BalanceAegisBlade.ShieldRaiseFrames, 0f, 1f);
+                Vector2 outward = new Vector2(Owner.direction, -0.6f).RotatedByRandom(0.65f);
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    shieldPosition + Main.rand.NextVector2Circular(10f, 14f),
+                    outward * Main.rand.NextFloat(0.5f, 1.6f) * (0.5f + raiseRatio),
+                    Color.Lerp(ShieldGold, ShieldLight, Main.rand.NextFloat()), Color.Transparent,
+                    MathHelper.Lerp(0.16f, 0.28f, raiseRatio), Main.rand.Next(12, 20), Main.rand.NextFloat(-0.05f, 0.05f)));
+            }
+            else if (!ChargeUnlocked || Charge < ChargeStartTime)
+            {
+                // 举盾持续阶段：微弱稀疏粒子
                 if (!Main.rand.NextBool(3))
                     return;
 
@@ -317,7 +347,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
             else
             {
-                // 蓄力阶段：火焰粒子（略缩小以适应小盾牌）
+                // 蓄力阶段：火焰粒子
                 Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.7f);
                 GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
                     shieldPosition + Main.rand.NextVector2Circular(10f, 16f),
@@ -441,7 +471,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public override void OnKill(int timeLeft)
         {
             if (!IsDashing)
+            {
+                // 放下盾牌：极小的消散粒子（质感"很低"）
+                if (!Main.dedServ && shieldRaisedFired)
+                {
+                    Vector2 shieldPos = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+                    GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                        shieldPos, new Vector2(Owner.direction * 0.6f, -0.4f),
+                        ShieldGold, Color.Transparent, 0.10f, 12, 0f));
+                }
                 return;
+            }
 
             Vector2 direction = DashDestination != Vector2.Zero
                 ? DashDestination

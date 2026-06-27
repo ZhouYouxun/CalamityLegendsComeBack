@@ -116,6 +116,15 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, drawColor, 1f - Projectile.alpha / 255f, Projectile.scale * 1.28f, Projectile.rotation);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawBloom(Projectile.Center, drawColor * 0.3f, Projectile.scale * 0.45f);
+            // Night-sky blue outline glow
+            float nsOp = (1f - Projectile.alpha / 255f) * 0.48f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.8f * Projectile.scale;
+                Main.EntitySpriteDraw(texture, drawPosition + off, null,
+                    LeonidVisualUtils.NightSkyBlue with { A = 0 } * nsOp,
+                    Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            }
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             for (int i = 0; i < Projectile.oldPos.Length; i++)

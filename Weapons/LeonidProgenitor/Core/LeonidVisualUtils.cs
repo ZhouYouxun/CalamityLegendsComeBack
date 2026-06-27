@@ -14,6 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public static readonly Color MoonViolet = new(172, 150, 255);
         public static readonly Color MoonWhite = new(224, 240, 255);
         public static readonly Color StarGold = new(255, 226, 104);
+        public static readonly Color NightSkyBlue = new(12, 38, 128);
 
         public static Color GetMeteorColor(int primaryEffectID, int secondaryEffectID)
         {

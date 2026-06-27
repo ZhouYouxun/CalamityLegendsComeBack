@@ -93,6 +93,22 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             else
                 Projectile.velocity *= 1.003f;
 
+            // Extra night-sky blue micro-sparks for richer flight trail
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    DustID.TintableDustLighted,
+                    -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.18f) + Main.rand.NextVector2Circular(0.55f, 0.55f),
+                    120,
+                    Color.Lerp(LeonidVisualUtils.NightSkyBlue, LeonidVisualUtils.MoonWhite, Main.rand.NextFloat(0.15f, 0.38f)),
+                    Main.rand.NextFloat(0.65f, 1.05f));
+                d.noGravity = true;
+                d.fadeIn = Main.rand.NextFloat(0.06f, 0.22f);
+            }
+            if (!Main.dedServ && (int)(240f - Projectile.timeLeft) % 3 == 0)
+                LeonidVisualUtils.SpawnStratusDust(Projectile.Center, Projectile.velocity, Main.rand.NextFloat(0.6f, 0.95f), 120);
+
             if (HasMetal(LeonidMetalID.Chlorophyte))
                 ApplyChlorophyteHoming();
 
@@ -150,6 +166,15 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.DrawGlowBlade(Projectile.Center - direction * 8f, direction, drawColor, StealthVariant ? 0.5f : 0.32f, StealthVariant ? 0.13f : 0.09f, StealthVariant ? 0.032f : 0.024f);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, drawColor, StealthVariant ? 0.82f : 0.58f, StealthVariant ? 1.06f : 0.84f, Projectile.rotation);
+            // Night-sky blue outline glow
+            float nightOpacity = (1f - Projectile.alpha / 255f) * 0.52f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.4f;
+                Main.EntitySpriteDraw(texture, drawPosition + off, null,
+                    LeonidVisualUtils.NightSkyBlue with { A = 0 } * nightOpacity,
+                    Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
+            }
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             for (int i = 0; i < Projectile.oldPos.Length; i++)
@@ -166,6 +191,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private void DoThrowAnticipation()
         {
+            bool firstFrame = Projectile.localAI[0] == 0f;
             Projectile.localAI[0]++;
             Owner.ChangeDir(System.Math.Sign(Main.MouseWorld.X - Owner.Center.X));
 
@@ -179,6 +205,25 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.spriteDirection = Owner.direction;
             Projectile.Center = Owner.MountedCenter + Vector2.UnitY.RotatedBy(armRotation * Owner.gravDir) * -34f * Owner.gravDir + new Vector2(Owner.direction * 8f, -6f);
             Projectile.rotation = armRotation + (Owner.direction == 1 ? MathHelper.PiOver4 : MathHelper.Pi * 0.75f);
+
+            if (firstFrame && !Main.dedServ)
+                SpawnAppearEffect();
+        }
+
+        private void SpawnAppearEffect()
+        {
+            LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, LeonidVisualUtils.NightSkyBlue * 0.38f, 0.26f, 8);
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 6f + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 vel = angle.ToRotationVector2() * Main.rand.NextFloat(1.2f, 2.8f);
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    DustID.TintableDustLighted, vel, 100,
+                    Color.Lerp(LeonidVisualUtils.NightSkyBlue, LeonidVisualUtils.MoonWhite, 0.3f),
+                    Main.rand.NextFloat(0.75f, 1.1f));
+                d.noGravity = true;
+            }
         }
 
         private void SpawnImpactBurst()

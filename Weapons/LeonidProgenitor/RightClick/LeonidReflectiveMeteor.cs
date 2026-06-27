@@ -181,6 +181,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Main.EntitySpriteDraw(bloom, drawPosition, null, drawColor * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawSparkle(Projectile.Center, LeonidVisualUtils.MoonWhite, 0.28f * opacity, 0.28f * Projectile.scale, Projectile.rotation);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * opacity, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
+            // Night-sky blue additive glow outline
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.2f;
+                Main.EntitySpriteDraw(texture, drawPosition + off, null,
+                    LeonidVisualUtils.NightSkyBlue with { A = 0 } * opacity * 0.5f,
+                    Projectile.rotation, origin, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
+            }
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
             // Draw afterimages

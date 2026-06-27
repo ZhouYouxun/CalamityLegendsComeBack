@@ -104,9 +104,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Owner.direction = swingDirection;
 
             float baseAngle = lockedMouseDirection.ToRotation();
-            int parity = swingCount % 2 == 0 ? 1 : -1;
-            startAngle = baseAngle + MathHelper.ToRadians(-110f * swingDirection * parity);
-            endAngle = baseAngle + MathHelper.ToRadians(-110f * swingDirection * -parity);
+            startAngle = baseAngle + MathHelper.ToRadians(-110f * swingDirection);
+            endAngle   = baseAngle + MathHelper.ToRadians( 110f * swingDirection);
             currentAngle = startAngle;
         }
 
@@ -158,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             {
                 float centeredIndex = i - 1.5f;
                 float speed       = Main.rand.NextFloat(10.8f, 15f);
-                float angleOffset = MathHelper.ToRadians(centeredIndex * 15f + Main.rand.NextFloat(-3f, 3f));
+                float angleOffset = MathHelper.ToRadians(centeredIndex * (5f / 3f) + Main.rand.NextFloat(-0.4f, 0.4f));
                 Vector2 velocity  = mouseDir.RotatedBy(angleOffset) * speed;
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter,
                     velocity, fireballType, damage, 2f, Projectile.owner);
@@ -299,17 +298,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             {
                 Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
                 float swipeDirection = Math.Sign(endAngle - startAngle);
-                // 刀光（swoosh和bloom）放在剑身50%处，与刀光trail保持一致
-                Vector2 bladeMidOffset = currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f;
-                Vector2 swooshCenter   = drawPosition + bladeMidOffset;
-                Main.EntitySpriteDraw(swooshTexture, swooshCenter, null, BladeGold with { A = 0 } * slashOpacity * 0.46f,
-                    drawRotation + MathHelper.PiOver2 * swipeDirection, swooshTexture.Size() * 0.5f,
-                    scale * 0.8f, SpriteEffects.None);
 
-                for (int i = 0; i < 12; i++)
+                // BB-style disc swoosh centered on player
+                Main.EntitySpriteDraw(swooshTexture, drawPosition, null, BladeGold with { A = 0 } * slashOpacity * 0.52f,
+                    drawRotation + MathHelper.PiOver2 * swipeDirection, swooshTexture.Size() * 0.5f,
+                    scale * 1.15f, SpriteEffects.None);
+
+                // Ghost glow rings (BB-style, 16 offsets)
+                for (int i = 0; i < 16; i++)
                 {
-                    Vector2 offset = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * 3.4f * slashOpacity;
-                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, BladeGold with { A = 0 } * slashOpacity * 0.08f,
+                    Vector2 offset = (MathHelper.TwoPi * i / 16f).ToRotationVector2() * 4.5f * slashOpacity;
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, BladeGold with { A = 0 } * slashOpacity * 0.09f,
                         drawRotation, origin, scale, SpriteEffects.None);
                 }
 
