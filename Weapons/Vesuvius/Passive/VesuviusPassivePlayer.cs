@@ -248,25 +248,151 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             if (Main.dedServ)
                 return;
 
-            int count = (int)MathHelper.Clamp(Radius / 9f, 14f, 42f);
-            for (int i = 0; i < count; i++)
-            {
-                float offset = MathHelper.Lerp(-Radius, Radius, i / (float)Math.Max(1, count - 1));
-                Vector2 position = Projectile.Center + Vector2.UnitX * offset + new Vector2(Main.rand.NextFloat(-4f, 4f), Main.rand.NextFloat(-6f, 6f));
-                Dust dust = Dust.NewDustPerfect(position, Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke, new Vector2(Math.Sign(offset) * Main.rand.NextFloat(1f, 4f), -Main.rand.NextFloat(2f, 7f)), 120, Color.Lerp(Color.Gray, Color.OrangeRed, 0.28f), Main.rand.NextFloat(0.9f, 1.8f));
-                dust.noGravity = Main.rand.NextBool(2);
+            float fallSpeed = Projectile.ai[1];
 
-                if (i % 4 == 0)
-                    RancorLavaMetaball.SpawnParticle(position, Main.rand.NextFloat(24f, 48f));
-            }
-
-            GeneralParticleHandler.SpawnParticle(new PulseRing(
+            // 1. Spawn flat transparent shockwaves as CustomPulse particles
+            // Foggy circle center shockwave
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
                 Vector2.Zero,
-                new Color(255, 110, 35) * 0.75f,
-                0.12f,
-                Radius / 70f,
-                24));
+                new Color(255, 90, 20) * 0.7f,
+                "CalamityMod/Particles/HighResFoggyCircleHardEdge",
+                new Vector2(1f, 0.15f),
+                0f,
+                0.02f,
+                Radius * 2.2f / 2048f,
+                22,
+                true
+            ));
+
+            // Hollow circle ring shockwave
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(255, 140, 30) * 0.8f,
+                "CalamityMod/Particles/HighResHollowCircleHardEdge",
+                new Vector2(1f, 0.12f),
+                0f,
+                0.01f,
+                Radius * 2.4f / 2048f,
+                26,
+                true
+            ));
+
+            // Central bloom flash
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(255, 60, 10) * 0.5f,
+                "CalamityMod/Particles/BloomCircle",
+                new Vector2(1f, 0.25f),
+                0f,
+                0.05f,
+                Radius * 1.5f / 128f,
+                18,
+                true
+            ));
+
+            // 2. Spawn upward radiating burst particles (semi-circular)
+            int sparkCount = (int)MathHelper.Clamp(Radius * 0.16f, 16f, 50f);
+            for (int i = 0; i < sparkCount; i++)
+            {
+                float angle = Main.rand.NextFloat(-MathHelper.Pi, 0f);
+                Vector2 direction = angle.ToRotationVector2();
+                float speed = Main.rand.NextFloat(3f, 15f) * (0.6f + fallSpeed * 0.04f);
+                Vector2 velocity = direction * speed;
+
+                if (Main.rand.NextBool())
+                {
+                    Color sparkColor = Color.Lerp(new Color(255, 110, 24), new Color(255, 192, 72), Main.rand.NextFloat());
+                    Color bloomColor = new Color(255, 50, 10) * 0.5f;
+                    float scale = Main.rand.NextFloat(0.9f, 1.5f);
+                    int lifetime = Main.rand.Next(15, 26);
+                    GeneralParticleHandler.SpawnParticle(new CritSpark(
+                        Projectile.Center + Main.rand.NextVector2Circular(16f, 4f),
+                        velocity,
+                        sparkColor,
+                        bloomColor,
+                        scale,
+                        lifetime));
+                }
+                else
+                {
+                    Color sparkColor = Color.Lerp(new Color(255, 150, 30), new Color(255, 220, 60), Main.rand.NextFloat());
+                    float scale = Main.rand.NextFloat(0.8f, 1.4f);
+                    int lifetime = Main.rand.Next(12, 22);
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(16f, 4f),
+                        velocity,
+                        false,
+                        lifetime,
+                        scale,
+                        sparkColor));
+                }
+            }
+
+            // 3. Spawn upward radiating ash and scoria smoke (semi-circular)
+            int smokeCount = (int)MathHelper.Clamp(Radius * 0.08f, 8f, 22f);
+            for (int i = 0; i < smokeCount; i++)
+            {
+                float angle = Main.rand.NextFloat(-MathHelper.Pi * 0.85f, -MathHelper.Pi * 0.15f);
+                Vector2 direction = angle.ToRotationVector2();
+                float speed = Main.rand.NextFloat(2f, 7f) * (0.6f + fallSpeed * 0.04f);
+                Vector2 velocity = direction * speed;
+
+                Color smokeColor = Color.Lerp(new Color(74, 48, 40), new Color(88, 84, 80), Main.rand.NextFloat());
+                float scale = Main.rand.NextFloat(0.6f, 1.2f);
+                int lifetime = Main.rand.Next(20, 42);
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(24f, 6f),
+                    velocity,
+                    smokeColor,
+                    lifetime,
+                    scale,
+                    0.65f,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    true,
+                    required: false));
+            }
+
+            // 4. Spawn upward radiating glow orbs
+            int orbCount = (int)MathHelper.Clamp(Radius * 0.04f, 4f, 12f);
+            for (int i = 0; i < orbCount; i++)
+            {
+                float angle = Main.rand.NextFloat(-MathHelper.Pi, 0f);
+                Vector2 direction = angle.ToRotationVector2();
+                float speed = Main.rand.NextFloat(2.5f, 9f) * (0.6f + fallSpeed * 0.04f);
+                Vector2 velocity = direction * speed;
+
+                Color orbColor = Color.Lerp(new Color(255, 88, 24), new Color(255, 242, 190), Main.rand.NextFloat(0f, 0.7f));
+                float scale = Main.rand.NextFloat(0.35f, 0.75f);
+                int lifetime = Main.rand.Next(14, 28);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(12f, 4f),
+                    velocity,
+                    false,
+                    lifetime,
+                    scale,
+                    orbColor));
+            }
+
+            // 5. Spawn some localized ground-based debris/dust (no metaballs)
+            int dustCount = (int)MathHelper.Clamp(Radius * 0.12f, 12f, 36f);
+            for (int i = 0; i < dustCount; i++)
+            {
+                float offset = MathHelper.Lerp(-Radius, Radius, i / (float)Math.Max(1, dustCount - 1));
+                Vector2 position = Projectile.Center + Vector2.UnitX * offset + new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-4f, 4f));
+                
+                // Ground smoke/rock dust
+                Dust dust = Dust.NewDustPerfect(
+                    position, 
+                    Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke, 
+                    new Vector2(Math.Sign(offset) * Main.rand.NextFloat(0.5f, 3f), -Main.rand.NextFloat(1.5f, 5f)), 
+                    110, 
+                    Color.Lerp(Color.DarkGray, Color.OrangeRed, 0.2f), 
+                    Main.rand.NextFloat(0.8f, 1.6f));
+                dust.noGravity = Main.rand.NextBool();
+            }
         }
 
         private void ApplyScreenShake(float fallSpeed)
@@ -279,21 +405,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shake * distanceFactor);
         }
 
-        public override bool PreDraw(ref Color lightColor)
-        {
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            float progress = 1f - Projectile.timeLeft / 28f;
-            float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true);
-            Main.EntitySpriteDraw(
-                bloom,
-                Projectile.Center - Main.screenPosition,
-                null,
-                new Color(255, 100, 35, 0) * 0.18f * fade,
-                0f,
-                bloom.Size() * 0.5f,
-                new Vector2(Radius / bloom.Width, Radius * 0.22f / bloom.Height) * (0.8f + progress * 0.6f),
-                SpriteEffects.None);
-            return false;
-        }
+        public override bool PreDraw(ref Color lightColor) => false;
     }
 }

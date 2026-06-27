@@ -8,7 +8,7 @@ Mods: {
 					SHPC_LoadingUIHint: "[c/66CCFF:打开背包并按下] [[c/66CCFF:{0}]] [c/66CCFF:打开装填UI，将特定材料装填进去，可以改变攻击效果]"
 					SHPC_CurrentAmmoEffect: "[c/66CCFF:当前装填效果：{0}]"
 					SHPC_DefaultAmmoEffect: 未装填特定材料，默认发射白色光球，造成范围伤害
-					SHPC_Passive: "[c/B8FF9E:被动能力：手持即可增加最大魔力值和魔力药水恢复量，降低魔力病的持续时间]"
+					SHPC_Passive: "[c/B8FF9E:被动（额外准备）：手持即可增加最大魔力值和魔力药水恢复量，降低魔力病的持续时间]"
 					SHPC_RightIntro1:
 						'''
 						[c/FFB347:右键进行激光扫射，扫射会积攒热量，热量满后武器会过热停机，停止攻击后热量会散失]
@@ -187,6 +187,18 @@ Mods: {
 					'''
 			}
 
+			KarasawaModule: {
+				DisplayName: 卡拉萨瓦模块
+				Tooltip:
+					'''
+					手持SHPC时右键改为卡拉萨瓦蓄力炮模式
+					按住右键持续蓄力，松开后发射一发无视防御并补偿伤害减免的超高速能量炮；蓄力不足会进入失败冷却
+					卡拉萨瓦巨炮。。。多么优秀的武器。。。
+					只可惜他在仓库里积了太久的灰
+					无论如何，他必须重见天日
+					'''
+			}
+
 			WastelandEnergyCore: {
 				DisplayName: 废土级能源核心
 				Tooltip:
@@ -358,6 +370,8 @@ Mods: {
 				MilitaryTurretDropPod.DisplayName: 军用炮台空投舱
 				MilitaryFriendlyTurret.DisplayName: 友军科技炮台
 				MilitaryTurretSelfDestruct.DisplayName: 军用炮台自毁爆炸
+				KarasawaHoldout.DisplayName: SHPC卡拉萨瓦蓄力炮
+				KarasawaBurst.DisplayName: 卡拉萨瓦超能炮
 				DarksunFragmentBlackSun.DisplayName: 黑蚀之日
 				DarksunFragmentEclipseBolt.DisplayName: 日蚀小弹幕
 				DarksunFragmentBlackSunExplosion.DisplayName: 黑日爆炸
@@ -411,5 +425,7 @@ Mods: {
 			SHPC_BarrierDurability: 矩阵充能屏障耐久
 			SHPC_BarrierRecharge: 矩阵充能屏障充能
 		}
+
+		Conditions.HoldingSHPC: 手持SHPC时
 	}
 }

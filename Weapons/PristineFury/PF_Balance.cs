@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public static float GetRightOverheatContactDamageMultiplier() =>
             GetRightClickDamageMultiplier(RightClickOverheatContactIndex);
 
-        private static int GetCompletedStageIndex()
+        internal static int GetCompletedStageIndex()
         {
             bool[] clearedStages =
             {
@@ -135,10 +135,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             int stageIndex = 0;
             for (int i = 0; i < clearedStages.Length; i++)
             {
-                if (!clearedStages[i])
-                    break;
-
-                stageIndex = i + 1;
+                if (clearedStages[i])
+                    stageIndex = i + 1;
             }
 
             return stageIndex;

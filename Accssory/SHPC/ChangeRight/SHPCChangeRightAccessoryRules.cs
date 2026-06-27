@@ -12,7 +12,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight
         {
             return itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend.CommandAscend>() ||
                    itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller.MilitaryCaller>() ||
-                   itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule.ProjectilePossessionModule>();
+                   itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule.ProjectilePossessionModule>() ||
+                   itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule.KarasawaModule>();
         }
 
         public static bool CanEquipWith(Item equippedItem, Item incomingItem)

@@ -65,20 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Math.Max(Owner.direction, 1));
 
-        private Vector2 GunTipPosition
-        {
-            get
-            {
-                float length = Weapon?.Barrel switch
-                {
-                    MK14Barrel.SniperHeavy => 88f,
-                    MK14Barrel.CQBShort => 66f,
-                    _ => 78f
-                };
-
-                return Projectile.Center + AimDirection * length;
-            }
-        }
+        private Vector2 GunTipPosition => Projectile.Center;
 
         public override void SetDefaults()
         {

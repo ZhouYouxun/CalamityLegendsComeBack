@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
 using CalamityMod;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Magic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -15,16 +16,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
     internal sealed class YC_RightCrystalHoldout : YC_BaseHoldout
     {
         private const int CoordinatedShutdownFrames = 120;
+        private const float OmicronFireRate = 15f;
+        private const float OmicronStarterWindup = 60f;
 
         private readonly BalanceYharimsCrystal balance = new();
-        private int manaDrainTimer;
-        private int laserIndex = -1;
         private int shardIndex = -1;
-        private bool chargedSoundPlayed;
         private bool heavyAttackQueued;
         private bool leftHeldLastFrame;
         private int coordinatedCooldown;
         private int rightInputGraceFrames;
+        private float shootingTimer;
+        private float postFireCooldown;
+        private float maxFireRateShots;
+        private float windup = OmicronStarterWindup;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
@@ -46,7 +50,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 ? item.GetScaledDamage(Owner, balance.GetRightClickBaseDamage())
                 : Projectile.damage;
 
-            DrainManaOrKill();
             EmitChargeFX();
             MaintainEmpoweredShard();
 
@@ -61,12 +64,64 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 leftHeldLastFrame = leftHeld;
             }
 
-            // Spawn two wing drones one by one; the right-click session owns them.
+            if (postFireCooldown > 0f)
+                PostFiringCooldown();
+
+            if (Projectile.owner == Main.myPlayer && heavyAttackQueued && postFireCooldown <= 0f && coordinatedCooldown <= 0)
+            {
+                if (Owner.CheckMana(Owner.HeldItem, (int)(Owner.HeldItem.mana * Owner.manaCost) * 13, true))
+                {
+                    postFireCooldown = 100f;
+                    ShootOmicronStyle(true);
+                    CommandDrones();
+                    shootingTimer = 0f;
+                    coordinatedCooldown = CoordinatedShutdownFrames;
+                    Projectile.netUpdate = true;
+                }
+                else
+                {
+                    SoundEngine.PlaySound(SoundID.MaxMana with { Pitch = -0.5f }, Projectile.Center);
+                    shootingTimer = 0f;
+                }
+
+                heavyAttackQueued = false;
+            }
+            else if (shootingTimer >= OmicronFireRate && postFireCooldown <= 0f)
+            {
+                if (Owner.CheckMana(Owner.HeldItem, -1, true))
+                {
+                    maxFireRateShots++;
+                    if (maxFireRateShots == 5f)
+                    {
+                        windup = OmicronStarterWindup;
+                        maxFireRateShots = 1f;
+                    }
+
+                    ShootOmicronStyle(false);
+                    shootingTimer = 0f;
+
+                    if (windup > 10f && maxFireRateShots > 0f)
+                        windup -= 12f;
+                    else
+                        windup = 10f;
+                }
+                else
+                {
+                    SoundEngine.PlaySound(SoundID.MaxMana with { Pitch = -0.5f }, Owner.Center);
+                    Projectile.Kill();
+                    return;
+                }
+            }
+
+            shootingTimer++;
+            if (coordinatedCooldown > 0)
+                coordinatedCooldown--;
+
             if (Projectile.owner == Main.myPlayer)
             {
-                if (HoldFrameCounter == 10 || HoldFrameCounter == 22)
+                if (HoldFrameCounter == 1 || HoldFrameCounter == 13)
                 {
-                    int slot = HoldFrameCounter == 10 ? 0 : 1;
+                    int slot = HoldFrameCounter == 1 ? 0 : 1;
                     int drone = Projectile.NewProjectile(
                         Projectile.GetSource_FromThis(),
                         Projectile.Center,
@@ -85,85 +140,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     SoundEngine.PlaySound(SoundID.Item76 with { Volume = 0.35f, Pitch = 0.2f }, Projectile.Center);
                 }
             }
-
-            // Laser convergence explosion at frame 120
-            if (HoldFrameCounter == 120)
-            {
-                Vector2 convergencePoint = Owner.MountedCenter + ForwardDirection * 240f;
-                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.75f, Pitch = -0.1f }, convergencePoint);
-
-                if (!Main.dedServ)
-                {
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(convergencePoint, Vector2.Zero, Color.Orange * 0.8f, "CalamityMod/Particles/FlameExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.08f, 0.95f, 22, true));
-                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(convergencePoint, Vector2.Zero, Color.Gold, Vector2.One, ForwardDirection.ToRotation(), 0.16f, 2.1f, 22));
-                    for (int i = 0; i < 24; i++)
-                    {
-                        Dust d = Dust.NewDustPerfect(convergencePoint, DustID.GoldFlame, Main.rand.NextVector2Circular(8f, 8f), 0, default, 1.4f);
-                        d.noGravity = true;
-                    }
-                }
-
-                if (Projectile.owner == Main.myPlayer)
-                {
-                    for (int i = 0; i < Main.maxNPCs; i++)
-                    {
-                        NPC npc = Main.npc[i];
-                        if (npc.active && !npc.friendly && npc.chaseable && !npc.dontTakeDamage)
-                        {
-                            if (Vector2.Distance(npc.Center, convergencePoint) < 120f)
-                            {
-                                npc.SimpleStrikeNPC((int)(Projectile.damage * 1.5f), Projectile.direction, true, Projectile.knockBack, DamageClass.Magic);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (Charged)
-            {
-                if (!chargedSoundPlayed)
-                {
-                    chargedSoundPlayed = true;
-                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.62f, Pitch = -0.18f }, Projectile.Center);
-                    Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.8f);
-                }
-
-                if (coordinatedCooldown > 0)
-                {
-                    coordinatedCooldown--;
-                    EnsureLaser();
-                }
-                else
-                {
-                    EnsureLaser();
-                }
-            }
-
-            if (HoldFrameCounter >= 120)
-            {
-                // Trigger heavy command on left click (rising edge), crystal stays alive.
-                if (Projectile.owner == Main.myPlayer && heavyAttackQueued && coordinatedCooldown <= 0)
-                {
-                    for (int i = 0; i < Main.maxProjectiles; i++)
-                    {
-                        Projectile other = Main.projectile[i];
-                        if (other.active && other.owner == Projectile.owner && other.type == ModContent.ProjectileType<YC_RightDrone>() && (int)other.ai[1] == Projectile.whoAmI)
-                        {
-                            other.ai[2] = 1f; // Command heavy attack
-                            other.netUpdate = true;
-                        }
-                    }
-
-                    heavyAttackQueued = false;
-                    coordinatedCooldown = CoordinatedShutdownFrames;
-                    Projectile.netUpdate = true;
-                }
-            }
         }
 
         public override void OnKill(int timeLeft)
         {
-            KillProjectile(laserIndex);
             KillProjectile(shardIndex);
 
             // Kill all associated drones
@@ -172,9 +152,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Projectile other = Main.projectile[i];
                 if (other.active && other.owner == Projectile.owner && other.type == ModContent.ProjectileType<YC_RightDrone>() && (int)other.ai[1] == Projectile.whoAmI)
                 {
-                    if (other.ai[2] == 1f)
-                        continue;
-
                     other.Kill();
                 }
             }
@@ -225,6 +202,113 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 !Owner.mouseInterface;
         }
 
+        private void ShootOmicronStyle(bool yBeam)
+        {
+            Vector2 shootDirection = ForwardDirection;
+            Vector2 firingVelocity = shootDirection * 10f;
+
+            if (yBeam)
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/OmicronBeam") { Volume = 0.9f }, Projectile.Center);
+
+                if (!Main.dedServ)
+                {
+                    for (int k = 0; k < 6; k++)
+                    {
+                        Particle pulse = new GlowSparkParticle(Muzzle, shootDirection * 28f, false, 8, 0.087f,
+                            Color.MediumVioletRed, new Vector2(2.3f, 0.9f), true);
+                        GeneralParticleHandler.SpawnParticle(pulse);
+                    }
+                }
+
+                Owner.SetScreenshake(6.5f);
+                if (Main.myPlayer == Projectile.owner)
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle, firingVelocity,
+                        ModContent.ProjectileType<OmicronBeam>(), Projectile.damage * 32,
+                        Projectile.knockBack, Projectile.owner);
+            }
+            else
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot")
+                { Volume = 0.2f, Pitch = 0.9f }, Projectile.Center);
+
+                if (Main.myPlayer == Projectile.owner)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        Vector2 shotVelocity = (shootDirection * 10f).RotatedBy((0.035f * (i + 1)) * Utils.GetLerpValue(0f, 55f, windup, true));
+                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle, shotVelocity * (1f - i * 0.1f),
+                            ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
+                    }
+                    for (int i = 0; i < 5; i++)
+                    {
+                        Vector2 shotVelocity = (shootDirection * 10f).RotatedBy((-0.035f * (i + 1)) * Utils.GetLerpValue(0f, 55f, windup, true));
+                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle, shotVelocity * (1f - i * 0.1f),
+                            ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
+                    }
+                }
+
+                if (!Main.dedServ)
+                {
+                    Particle pulse = new GlowSparkParticle(Muzzle, shootDirection * 18f, false, 6, 0.057f,
+                        Color.MediumVioletRed, new Vector2(1.7f, 0.8f), true);
+                    GeneralParticleHandler.SpawnParticle(pulse);
+                }
+            }
+
+            if (Main.dedServ)
+                return;
+
+            for (int k = 0; k < 10; k++)
+            {
+                Vector2 shootVel = (shootDirection * 15f).RotatedByRandom(0.5f) * Main.rand.NextFloat(0.1f, 1.8f);
+                Dust dust = Dust.NewDustPerfect(Muzzle, Main.rand.NextBool(4) ? 267 : 66, shootVel);
+                dust.scale = Main.rand.NextFloat(1.15f, 1.45f);
+                dust.noGravity = true;
+                dust.color = Main.rand.NextBool() ? Color.Lerp(Color.MediumVioletRed, Color.White, 0.5f) : Color.MediumVioletRed;
+            }
+        }
+
+        private void CommandDrones()
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile other = Main.projectile[i];
+                if (other.active &&
+                    other.owner == Projectile.owner &&
+                    other.type == ModContent.ProjectileType<YC_RightDrone>() &&
+                    (int)other.ai[1] == Projectile.whoAmI)
+                {
+                    other.ai[2] = 1f;
+                    other.netUpdate = true;
+                }
+            }
+        }
+
+        private void PostFiringCooldown()
+        {
+            Owner.channel = true;
+            if (Main.dedServ || !Main.rand.NextBool())
+            {
+                shootingTimer = 0f;
+                postFireCooldown--;
+                return;
+            }
+
+            Vector2 smokeVel = new Vector2(0f, -8f) * Main.rand.NextFloat(0.1f, 1.1f);
+            GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(Muzzle, smokeVel, Color.MediumVioletRed,
+                Main.rand.Next(30, 51), Main.rand.NextFloat(0.1f, 0.4f), 0.5f,
+                Main.rand.NextFloat(-0.2f, 0.2f), Main.rand.NextBool(), required: true));
+
+            Dust dust = Dust.NewDustPerfect(Muzzle, DustID.SteampunkSteam, smokeVel.RotatedByRandom(0.1f), 80,
+                default, Main.rand.NextFloat(0.2f, 0.8f));
+            dust.noGravity = false;
+            dust.color = Color.MediumVioletRed;
+
+            shootingTimer = 0f;
+            postFireCooldown--;
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             base.PreDraw(ref lightColor);
@@ -244,31 +328,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White with { A = 0 } * (0.08f + charge * 0.28f), Projectile.rotation, bloom.Size() * 0.5f, (0.04f + charge * 0.08f) * pulse, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, gold * charge * 0.58f, Main.GlobalTimeWrappedHourly * 1.7f, ring.Size() * 0.5f, (0.12f + charge * 0.22f) * pulse, SpriteEffects.None);
             return false;
-        }
-
-        private void EnsureLaser()
-        {
-            if (Projectile.owner != Main.myPlayer)
-                return;
-
-            if (IsProjectileActive(laserIndex, ModContent.ProjectileType<YC_RightScorchingLaser>()))
-                return;
-
-            laserIndex = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Muzzle,
-                ForwardDirection,
-                ModContent.ProjectileType<YC_RightScorchingLaser>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner,
-                Projectile.whoAmI);
-
-            if (Main.projectile.IndexInRange(laserIndex))
-            {
-                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
-                Main.projectile[laserIndex].CritChance = Projectile.CritChance;
-            }
         }
 
         private void MaintainEmpoweredShard()
@@ -302,23 +361,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shardIndex], YCWeaponForm.Crystal);
                 Main.projectile[shardIndex].CritChance = Projectile.CritChance;
             }
-        }
-
-        private void DrainManaOrKill()
-        {
-            if (Projectile.owner != Main.myPlayer)
-                return;
-
-            manaDrainTimer++;
-            if (manaDrainTimer < 12)
-                return;
-
-            manaDrainTimer = 0;
-            if (Owner.CheckMana(Owner.HeldItem, -1, true))
-                return;
-
-            SoundEngine.PlaySound(SoundID.MaxMana with { Pitch = -0.45f }, Owner.Center);
-            Projectile.Kill();
         }
 
         private void EmitChargeFX()

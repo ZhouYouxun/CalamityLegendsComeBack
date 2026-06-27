@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int SwingDuration = 26;
         private const float FireballSpawnProgress = 0.65f;
         private const float SwordVisualScale = 1.55f;
-        private const float BladeReach = 192f;
+        private const float BladeReach = 104f;
         private const int BladeTrailHistoryFrames = 16;
 
         private Player Owner => Main.player[Projectile.owner];
@@ -157,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             for (int i = 0; i < 4; i++)
             {
                 float centeredIndex = i - 1.5f;
-                float speed       = Main.rand.NextFloat(5.4f, 7.5f);
+                float speed       = Main.rand.NextFloat(10.8f, 15f);
                 float angleOffset = MathHelper.ToRadians(centeredIndex * 15f + Main.rand.NextFloat(-3f, 3f));
                 Vector2 velocity  = mouseDir.RotatedBy(angleOffset) * speed;
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter,
@@ -178,21 +178,21 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (swipeDirection == 0f)
                 swipeDirection = 1f;
 
-            if (CheckBladeLine(targetHitbox, direction, 66f * scale, BladeReach * scale + 36f * scale))
+            if (CheckBladeLine(targetHitbox, direction, 42f * scale, BladeReach * scale))
                 return null;
 
             Vector2 trailingDirection = (currentAngle - swipeDirection * 0.26f).ToRotationVector2();
-            if (CheckBladeLine(targetHitbox, trailingDirection, 54f * scale, BladeReach * scale + 20f * scale))
+            if (CheckBladeLine(targetHitbox, trailingDirection, 34f * scale, BladeReach * scale * 0.96f))
                 return null;
 
             Vector2 leadingDirection = (currentAngle + swipeDirection * 0.14f).ToRotationVector2();
-            return CheckBladeLine(targetHitbox, leadingDirection, 46f * scale, BladeReach * scale) ? null : false;
+            return CheckBladeLine(targetHitbox, leadingDirection, 30f * scale, BladeReach * scale * 0.92f) ? null : false;
         }
 
         private bool CheckBladeLine(Rectangle targetHitbox, Vector2 direction, float width, float reach)
         {
             float collisionPoint = 0f;
-            Vector2 start = Owner.MountedCenter + direction * 20f * scale;
+            Vector2 start = Owner.MountedCenter + direction * 8f * scale;
             Vector2 end = Owner.MountedCenter + direction * reach;
             return Collision.CheckAABBvLineCollision(
                 targetHitbox.TopLeft(),
@@ -201,6 +201,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 end,
                 width,
                 ref collisionPoint);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                ModContent.ProjectileType<AegisSparkExplosion>(), Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                Projectile.knockBack * 0.35f, Projectile.owner);
         }
 
         private void TrackBladeTrail(bool hitWindow)

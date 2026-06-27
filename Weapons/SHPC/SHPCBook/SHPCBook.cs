@@ -38,8 +38,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             Item.shoot = PanelType;
             Item.shootSpeed = 0f;
             Item.UseSound = null;
-            Item.damage = 10000;
-            Item.DamageType = DamageClass.Generic;
             Item.value = Item.sellPrice(gold: 25);
             Item.rare = ItemRarityID.Cyan;
         }

@@ -103,7 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
 
             QueueCurrentBurst();
             TryFireQueuedPulse();
-            burstCooldown = BalancePeaShooter.BaseBurstInterval;
+            burstCooldown = BalancePeaShooter.BaseBurstInterval * 2;
         }
 
         private void HandleAdrenalineStorm()
@@ -119,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             }
 
             FireAdrenalineStormVolley();
-            adrenalineFireTimer = BalancePeaShooter.AdrenalineStormFireInterval - 1;
+            adrenalineFireTimer = BalancePeaShooter.AdrenalineStormFireInterval * 2 - 1;
         }
 
         private void QueueCurrentBurst()
@@ -166,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
 
             FireRandomPeaPulse();
             queuedPulseCount--;
-            queuedPulseTimer = BalancePeaShooter.BurstShotSpacing;
+            queuedPulseTimer = BalancePeaShooter.BurstShotSpacing * 2;
         }
 
         private void FireRandomPeaPulse()

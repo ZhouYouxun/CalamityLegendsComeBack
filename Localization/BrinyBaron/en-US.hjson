@@ -69,8 +69,8 @@ Mods: {
 					PassiveDevice_AsgardsValor: "[c/99CCFF:Asgard's Valor is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
 					PassiveDevice_ElysianAegis: "[c/99CCFF:Elysian Aegis is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
 					PassiveDevice_AsgardianAegis: "[c/99CCFF:Asgardian Aegis is fitted; while shield rushing, it releases one tidal blade to each velocity-side every 7 frames.]"
-					Dash4_Unlock: "[c/66FFAA:Unlocked: EX Skill「Oceanic Execution」]"
-					Dash4_Lock: "[c/FFB347:EX Skill「Oceanic Execution」locked (Equip Legendary Emblem to unlock)]"
+					Dash4_Unlock: "[c/66FFAA:Unlocked: EX Skill「Tidal Jail Execution」]"
+					Dash4_Lock: "[c/FFB347:EX Skill「Tidal Jail Execution」locked (Equip Legendary Emblem to unlock)]"
 					BB_Final: "[c/9FD8A2:At full tide, press the Legendary Skill key to mark prey; left click confirms the execution.]"
 					LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
 					LegendaryText:
@@ -250,7 +250,7 @@ Mods: {
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Shield-Surge Cleave
-				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Final Tide Execution
+				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Tidal Jail Execution
 				BBSD_Star.DisplayName: Final Tide Star
 				BBSD_Final_INV.DisplayName: Final Tide Brand
 				SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
@@ -267,7 +267,7 @@ Mods: {
 
 		Cooldowns: {
 			BrinyBaron_Tide: Briny Baron Tide
-			BrinyBaron_SuperDash: Briny Baron Finisher
+			BrinyBaron_SuperDash: Tidal Jail Execution
 		}
 	}
 }

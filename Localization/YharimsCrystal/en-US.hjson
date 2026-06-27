@@ -17,9 +17,9 @@ Mods: {
 					SwitchInfo: "[c/B5E7FF:Switch] [c/DCD6C8:right click the left side of the player to cycle backward, or the right side to cycle forward.]"
 					FocusInfo: "[c/F8E28A:Focus] [c/DCD6C8:only works while the Helix Prism is firing, and converges with acceleration instead of snapping.]"
 					PrismReworkInfo: "[c/F8E28A:Left Click] [c/DCD6C8:hold to deploy six inertial prisms; their helper beams converge into a continuous destruction ray fired from the crystal.]"
-					RightCommandInfo: "[c/73DFFF:Right Array] [c/DCD6C8:deploy two golden crystal drones; left click while firing commands Omicron-style heavy bolts and a rapid barrage, then both drones shut down for 2 seconds.]"
+					RightCommandInfo: "[c/73DFFF:Right Array] [c/DCD6C8:deploy two golden crystal drones; the crystal fires Omicron-style shots, and left click commands an Omicron beam plus drone grenades before a 2-second shutdown.]"
 					ResetInfo: "[c/FF7A45:Reset] [c/DCD6C8:releasing left click, dying, or running out of mana clears the entire sequence.]"
-					EXInfo: "[c/F6D06B:Legendary Skill] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
+					EXInfo: "[c/F6D06B:Legendary Skill (Laser Storm)] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
 						'''
@@ -181,6 +181,6 @@ Mods: {
 			}
 		}
 
-		Cooldowns.YC_EX: Crystal EX Cooldown
+		Cooldowns.YC_EX: Laser Storm Cooldown
 	}
 }

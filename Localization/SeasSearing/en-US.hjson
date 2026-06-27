@@ -37,7 +37,7 @@ Mods: {
 						[c/58FFDA:Hold to maximum to trigger Abyssal Rupture: 3 geysers detonate all pollution; left-click becomes rapid-fire acid torrent for 2+ seconds.]
 						'''
 					Passive: "[c/4CD268:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
-					Ultimate: "[c/FF8A30:Press] [[c/FF8A30:{0}]] [c/FF8A30: to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
+					Ultimate: "[c/FF8A30:Ultimate (Air-to-Ground Nuclear Missile): Press] [[c/FF8A30:{0}]] [c/FF8A30: to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"
 					LegendaryText:
 						'''
@@ -58,7 +58,7 @@ Mods: {
 				SeasSearingFalloutCloud.DisplayName: Abyssal Fallout Cloud
 				SeasSearingDesignatorBeam.DisplayName: Thermonuclear Designator
 				SeasSearingNukeMarker.DisplayName: Thermonuclear Strike Marker
-				SeasSearingThermonuclearWarhead.DisplayName: Abyssal Thermonuclear Warhead
+				SeasSearingThermonuclearWarhead.DisplayName: Air-to-Ground Nuclear Missile
 				SeasSearingNuclearDetonation.DisplayName: Deep-Sea Nuclear Disaster
 				SeasSearingFalloutRain.DisplayName: Radioactive Abyssal Rain
 				SSDeathPollutionCloud.DisplayName: Death Pollution Cloud

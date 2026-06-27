@@ -36,7 +36,6 @@
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\ApolloArtemis\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Thanatos\" />
-	  <Folder Include="Z_TeachingProjectile\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <AdditionalFiles Remove="Weapons\A_Dev\Miao\**" />

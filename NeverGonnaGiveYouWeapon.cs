@@ -17,7 +17,6 @@ namespace CalamityLegendsComeBack
         {
             if (item.type == ModContent.ItemType<StarterBag>())
             {
-                itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<LegendarySupplyBox>()));
                 itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<RetroGameConsoleSupplyBox>()));
             }
         }

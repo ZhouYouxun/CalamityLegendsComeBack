@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ParticleLabDebugItem: {
+					DisplayName: Particle Lab
+					Tooltip: Right click opens the particle matrix. Left click releases the selected single particle effect.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ParticleLabProjectile.DisplayName: Particle Lab Test Projectile
+				ParticleLabPanel.DisplayName: Particle Lab Matrix
+			}
+		}
+	}
+}

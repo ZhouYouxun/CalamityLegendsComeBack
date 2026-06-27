@@ -393,28 +393,28 @@ Mods: {
 			}
 
 			CosmicDischargeChainKnifeBuff: {
-				DisplayName: Cosmic Discharge Chain Knife Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeChainKnifeBuff.Description
+				DisplayName: Chain Blade Mode
+				Description: Movement speed and armor penetration increased.
 			}
 
 			CosmicDischargeSwordBuff: {
-				DisplayName: Cosmic Discharge Sword Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeSwordBuff.Description
+				DisplayName: Sword Mode
+				Description: Critical strike chance and damage increased.
 			}
 
 			CosmicDischargeWhipBuff: {
-				DisplayName: Cosmic Discharge Whip Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.CosmicDischargeWhipBuff.Description
+				DisplayName: Whip Mode
+				Description: Attack speed and knockback increased.
 			}
 
 			YharonSoulFragment_Buff: {
-				DisplayName: Yharon Soul Fragment_ Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+				DisplayName: Dragonfire
+				Description: Burning in dragon soulfire.
 			}
 
 			SHPCRight_DeBuff: {
-				DisplayName: S H P C Right_ De Buff
-				Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+				DisplayName: SHPC Heat Mode
+				Description: At heat levels IV–V, life regeneration is suppressed and life slowly drains.
 			}
 		}
 	}

@@ -28,7 +28,7 @@ Mods: {
 					EXHint:
 						'''
 						[c/FFD86B:While held, Vesuvius charges ultimate energy up to 60.]
-						[c/FFD86B:At full energy, press] [[c/FFD86B:{0}]] [c/FFD86B: to raise the staff overhead and charge Supervolcanic Eruption.]
+						[c/FFD86B:At full energy, press] [[c/FFD86B:{0}]] [c/FFD86B: to raise the staff overhead and charge Volcanic Eruption.]
 						[c/FFD86B:After the ready sound, left click to unleash five seconds of ash, magma, meteors, fireballs, and obsidian shards.]
 						'''
 					EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
@@ -65,13 +65,13 @@ Mods: {
 				VesuviusSubductionZone.DisplayName: Subduction Zone
 				VesuviusAshFall.DisplayName: Volcanic Ash
 				VesuviusLandingQuake.DisplayName: Landing Quake
-				VesuviusEXWeapon.DisplayName: Supervolcanic Eruption
+				VesuviusEXWeapon.DisplayName: Volcanic Eruption
 				VesuviusVolcanicGasCloud.DisplayName: Vesuvius Volcanic Gas Cloud
 			}
 
 			PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion
 		}
 
-		Cooldowns.Vesuvius_EX: Vesuvius Ultimate
+		Cooldowns.Vesuvius_EX: Volcanic Eruption
 	}
 }

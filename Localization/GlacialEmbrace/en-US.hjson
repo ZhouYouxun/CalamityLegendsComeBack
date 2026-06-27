@@ -58,7 +58,7 @@ Mods: {
 							'''
 						GE_PassiveRhythm:
 							'''
-							[c/B0E0FF:◇ Frost Rhythm: hold Right Click to start rhythm QTE bar]
+							[c/B0E0FF:◇ Rift Archiving: hold Right Click to start rhythm QTE bar]
 							[c/B0E0FF:  Release in the green sweet-spot zone: combo +1 (max 20)]
 							[c/B0E0FF:  Whip hits command all spikes into a short coordinated frenzy]
 							'''
@@ -71,7 +71,7 @@ Mods: {
 							'''
 						GE_Ultimate:
 							'''
-							[c/A0F0FF:★ Ultimate — Glacial Diamond Drill (press {0} to release)]
+							[c/A0F0FF:★ Ultimate — Dimensional Compression (press {0} to release)]
 							[c/A0F0FF:  Special hits give +4 energy. Current: {1}/240]
 							[c/A0F0FF:  On release: spikes triple into 3-layer drill (max 30)]
 							[c/A0F0FF:  Left click to launch; high-freq hits; player is invulnerable]
@@ -109,7 +109,7 @@ Mods: {
 			IceBladeProj.DisplayName: Glacial Cleaver Blade
 			IceWedgeProj.DisplayName: Glacial Piercing Wedge
 			IcePillarProj.DisplayName: Glacial Strike Pillar
-			GlacialDrillProj.DisplayName: Glacial Diamond Drill
+			GlacialDrillProj.DisplayName: Dimensional Compression
 		}
 
 		Buffs: {
@@ -119,6 +119,6 @@ Mods: {
 			}
 		}
 
-		Cooldowns.GlacialEmbrace_Ultimate: Glacial Energy
+		Cooldowns.GlacialEmbrace_Ultimate: Dimensional Compression
 	}
 }

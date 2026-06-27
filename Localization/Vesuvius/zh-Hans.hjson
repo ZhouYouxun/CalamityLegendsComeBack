@@ -28,7 +28,7 @@ Mods: {
 					EXHint:
 						'''
 						[c/FFD86B:手持维苏维阿斯时会积蓄终极能量，最高60点。]
-						[c/FFD86B:能量满后按] [[c/FFD86B:{0}]] [c/FFD86B:将法杖举过头顶并开始蓄力大招。]
+						[c/FFD86B:能量满后按] [[c/FFD86B:{0}]] [c/FFD86B:将法杖举过头顶并开始蓄力大招【火山喷发】。]
 						[c/FFD86B:准备音效响起后，点击左键释放5秒的火山灰、岩浆、陨石、火焰弹和黑曜石碎片。]
 						'''
 					EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招被禁用。]"
@@ -65,13 +65,13 @@ Mods: {
 				VesuviusSubductionZone.DisplayName: 俯冲带
 				VesuviusAshFall.DisplayName: 火山灰
 				VesuviusLandingQuake.DisplayName: 地震落地
-				VesuviusEXWeapon.DisplayName: 超级火山喷发
+				VesuviusEXWeapon.DisplayName: 火山喷发
 				VesuviusVolcanicGasCloud.DisplayName: 火山气云
 			}
 
 			// PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion
 		}
 
-		Cooldowns.Vesuvius_EX: 维苏维阿斯终极能量
+		Cooldowns.Vesuvius_EX: 火山喷发
 	}
 }

@@ -184,7 +184,6 @@ Projectiles: {
 	// NightmareFuel_Scythe.DisplayName: Nightmare Fuel_ Scythe
 	// NewSHPS.DisplayName: New S H P S
 	// BossSoulofMight_Ball.DisplayName: Boss Soulof Might_ Ball
-	// TeachingProjectile.DisplayName: Teaching Projectile
 	// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
 	// AshesofAnn_SuperEXP.DisplayName: Ashesof Ann_ Super E X P
 	// BrinyBaron_EXP.DisplayName: Briny Baron_ E X P

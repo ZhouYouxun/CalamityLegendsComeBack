@@ -44,6 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private const float StoredLifeRefresh = 2f;
         private const float StagedNormalLaunchSpeed = 44f;
         private const float PeacockHomingTurnRate = MathHelper.Pi / 60f;
+        private const int StoredPeacockOpenFrames = 12;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
 
@@ -561,12 +562,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             int total = Math.Max(1, MalachiteBalance.StealthKunaiCount);
             int slot = Utils.Clamp(SlotIndex, 0, total - 1);
             float progress = total <= 1 ? 0.5f : slot / (float)(total - 1);
-            float open = GetStoredOpenInterpolant();
-            float spread = MathHelper.Lerp(-1.92f, 1.92f, progress) * open;
+            float open = GetStoredPeacockOpenInterpolant();
+            float spread = MathHelper.Lerp(-1.92f, 1.92f, progress);
             float crown = MathF.Sin(progress * MathHelper.Pi);
             Vector2 behind = new Vector2(-owner.direction, -0.2f).SafeNormalize(Vector2.UnitX * -owner.direction);
-            Vector2 offset = behind.RotatedBy(spread * owner.direction) * MathHelper.Lerp(12f, 76f + crown * 36f, open);
-            offset.Y -= MathHelper.Lerp(0f, 18f + crown * 18f, open);
+            Vector2 stackOffset = behind * 112f - Vector2.UnitY * 36f;
+            Vector2 targetOffset = behind.RotatedBy(spread * owner.direction) * (76f + crown * 36f);
+            targetOffset.Y -= 18f + crown * 18f;
+            Vector2 offset = Vector2.Lerp(stackOffset, targetOffset, open);
 
             Projectile.Center = Vector2.Lerp(Projectile.Center, owner.MountedCenter + offset, 0.32f);
             Projectile.rotation = offset.ToRotation() + MathHelper.PiOver2;
@@ -578,6 +581,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         {
             float open = Utils.GetLerpValue(0f, 18f, Projectile.localAI[0], true);
             return open * open * (3f - 2f * open);
+        }
+
+        private float GetStoredPeacockOpenInterpolant()
+        {
+            float open = Utils.GetLerpValue(1f, StoredPeacockOpenFrames + 1f, Projectile.localAI[0], true);
+            return 1f - MathF.Pow(1f - open, 3f);
         }
 
         private void SpawnStoredRevealDust(Player owner, float open)
@@ -1021,6 +1030,24 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (owner.GetModPlayer<PeacockDartPlayer>().PeacockDartEquipped)
                 modifiers.SourceDamage *= 1.3f;
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            if (IsStored || Mode == MalachiteKunaiMode.StuckToNPC)
+                return false;
+
+            float collisionPoint = 0f;
+            Vector2 start = Projectile.Center - Projectile.velocity;
+            Vector2 end = Projectile.Center;
+            float width = 18f * Projectile.scale;
+
+            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), start, end, width, ref collisionPoint))
+            {
+                return true;
+            }
+
+            return null;
         }
 
         public override void OnKill(int timeLeft)

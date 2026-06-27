@@ -39,8 +39,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             if (!embedded)
             {
-                Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
-                Projectile.velocity.Y = System.MathF.Min(Projectile.velocity.Y + 0.8f, 30f);
+                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+                Projectile.velocity.Y = System.MathF.Min(Projectile.velocity.Y + 0.34f, 22f);
                 Lighting.AddLight(Projectile.Center, GoldColor.ToVector3() * 0.65f);
 
                 if (!Main.dedServ && Main.rand.NextBool(2))
@@ -65,9 +65,19 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Projectile.velocity = Vector2.Zero;
             Projectile.tileCollide = false;
             Projectile.timeLeft = 60;
+            Projectile.rotation = SnapEmbeddedRotation(oldVelocity);
             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 1f, Pitch = -0.38f }, Projectile.Center);
             EmitImpact(Projectile.Center, oldVelocity.SafeNormalize(Vector2.UnitY));
             return false;
+        }
+
+        private static float SnapEmbeddedRotation(Vector2 impactVelocity)
+        {
+            bool horizontal = System.Math.Abs(impactVelocity.X) >= System.Math.Abs(impactVelocity.Y);
+            float axisRotation = horizontal
+                ? (impactVelocity.X >= 0f ? 0f : MathHelper.Pi)
+                : (impactVelocity.Y >= 0f ? MathHelper.PiOver2 : -MathHelper.PiOver2);
+            return axisRotation + MathHelper.PiOver4;
         }
 
         private void EmitFallFlame()
@@ -106,18 +116,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
 
             int wallType = ModContent.ProjectileType<AegisWallProjectile>();
-            int halfHeight = AegisWallProjectile.WallHalfHeight;
-            int spread = BalanceAegisBlade.WallSpreadPixels;
-            float riseSpeed = halfHeight / (float)BalanceAegisBlade.WallRiseTime;
+            float riseSpeed = AegisWallProjectile.WallHalfHeight / (float)BalanceAegisBlade.WallRiseTime;
             int wallDamage = System.Math.Max(1, (int)(Projectile.damage * 0.8f));
 
             Projectile.NewProjectile(Projectile.GetSource_FromThis(),
-                new Vector2(Projectile.Center.X - spread, Projectile.Center.Y), new Vector2(0f, -riseSpeed),
-                wallType, wallDamage, 4f, Projectile.owner, -1f);
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(),
-                new Vector2(Projectile.Center.X + spread, Projectile.Center.Y), new Vector2(0f, -riseSpeed),
-                wallType, wallDamage, 4f, Projectile.owner, 1f);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.72f, Pitch = -0.48f }, Projectile.Center);
+                new Vector2(Projectile.Center.X, Projectile.Center.Y), new Vector2(0f, -riseSpeed),
+                wallType, wallDamage, 4f, Projectile.owner);
         }
 
         public override bool PreDraw(ref Color lightColor)

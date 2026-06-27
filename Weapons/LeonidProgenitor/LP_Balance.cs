@@ -66,10 +66,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             int stageIndex = 0;
             for (int i = 0; i < clearedStages.Length; i++)
             {
-                if (!clearedStages[i])
-                    break;
-
-                stageIndex = i + 1;
+                if (clearedStages[i])
+                    stageIndex = i + 1;
             }
 
             return stageIndex;

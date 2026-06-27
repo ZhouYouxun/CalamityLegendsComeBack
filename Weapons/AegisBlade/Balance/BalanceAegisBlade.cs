@@ -87,8 +87,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public const int   ShieldDashHitboxExpansion          = 96;
 
         // ── 土墙 ──────────────────────────────────────────────────────────
-        public const int   WallHeightTiles  = 16;        // 墙高（格）
-        public const int   WallWidthTiles   = 2;         // 墙宽（格）
+        public const int   WallHeightTiles  = 10;        // 墙高（格）
+        public const int   WallWidthTiles   = 3;         // 墙宽（格）
         public const int   WallDuration     = 60 * 60;   // 普通时60秒
         public const int   WallDurationBoss = 10 * 60;   // BOSS战10秒
         public const int   WallRiseTime     = 24;        // 土墙升起帧数
@@ -106,11 +106,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         /// <summary>打败任意机械BOSS后解锁右键蓄力</summary>
         public static bool ChargeUnlocked()
-            => Main.hardMode && (NPC.downedMechBoss1 || NPC.downedMechBoss2 || NPC.downedMechBoss3);
+            => GetStageIndex() >= 5;
 
         /// <summary>打败世纪之花后解锁4火球</summary>
         public static bool FourFireballsUnlocked()
-            => NPC.downedPlantBoss;
+            => GetStageIndex() >= 6;
 
         // ── 公共接口 ──────────────────────────────────────────────────────
 
@@ -129,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public int GetAegisMaxDefense()
             => GetValueForStage(GetAegisMaxDefenseValues(), GetStageIndex());
 
-        public int GetStageIndex()
+        public static int GetStageIndex()
         {
             bool[] cleared =
             {

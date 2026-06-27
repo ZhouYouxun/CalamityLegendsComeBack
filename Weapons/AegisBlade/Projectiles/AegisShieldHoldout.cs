@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 OnFullCharge();
             }
 
-            if (ChargeUnlocked && leftJustPressed && Charge >= FullChargeTime && Main.myPlayer == Projectile.owner)
+            if (leftJustPressed && Main.myPlayer == Projectile.owner)
             {
                 TriggerBladePlunge();
                 Projectile.Kill();
@@ -286,7 +286,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private void TriggerBladePlunge()
         {
             int damage = new BalanceAegisBlade().GetBladePlungeDamage();
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.Center, Vector2.UnitY * 26f,
+            Vector2 throwDirection = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
+                .SafeNormalize(Vector2.UnitX * Owner.direction);
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter, throwDirection * 18f,
                 ModContent.ProjectileType<AegisBladeThrown>(), damage, 6f, Projectile.owner);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
         }

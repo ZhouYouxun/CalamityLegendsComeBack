@@ -249,7 +249,7 @@ Mods: {
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 刃岚突进
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 回旋裂斩
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 盾潮连斩
-				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 终潮处刑
+				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 潮狱处刑
 				BBSD_Star.DisplayName: 终潮星刃
 				BBSD_Final_INV.DisplayName: 终潮刻印
 				SurgeChainWaterBurst.DisplayName: 电涌水爆
@@ -266,7 +266,7 @@ Mods: {
 
 		Cooldowns: {
 			BrinyBaron_Tide: 海爵潮汐
-			BrinyBaron_SuperDash: 海爵终潮处刑
+			BrinyBaron_SuperDash: 海爵潮狱处刑
 		}
 	}
 }

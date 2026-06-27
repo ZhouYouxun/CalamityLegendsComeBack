@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
-    // A fast-growing radiant barricade. It damages during the rise, then becomes a player-only solid wall.
+    // A fast-growing compact dirt barricade. It damages during the rise, then becomes a player-only solid wall.
     public class AegisWallProjectile : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -18,15 +18,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public static readonly int WallHalfWidth = BalanceAegisBlade.WallWidthTiles * 16 / 2;
         public static readonly int WallHalfHeight = BalanceAegisBlade.WallHeightTiles * 16 / 2;
 
-        private ref float Side => ref Projectile.ai[0];
         private ref float Phase => ref Projectile.ai[1];
         private ref float RiseTimer => ref Projectile.localAI[0];
         private ref float SolidTimer => ref Projectile.localAI[1];
         private bool solidifyEffectFired;
 
-        private static readonly Color OuterGold = new(220, 138, 38);
-        private static readonly Color CoreGold = new(255, 208, 84);
-        private static readonly Color CoreWhite = new(255, 246, 194);
+        private static readonly Color OuterGold = new(142, 96, 44);
+        private static readonly Color CoreGold = new(206, 154, 72);
+        private static readonly Color CoreWhite = new(238, 214, 142);
 
         public override void SetDefaults()
         {
@@ -50,8 +49,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             {
                 RiseTimer++;
                 Lighting.AddLight(Projectile.Center, CoreGold.ToVector3() * 0.4f);
+                if (RiseTimer == 1f || RiseTimer % 5f == 0f)
+                    SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.46f, Pitch = -0.34f, MaxInstances = 4 }, Projectile.Center);
                 if (!Main.dedServ && Main.rand.NextBool(2))
-                    EmitRisingFlame();
+                    EmitRisingDirt();
 
                 if (RiseTimer < BalanceAegisBlade.WallRiseTime)
                     return;
@@ -59,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Phase = 1f;
                 Projectile.velocity = Vector2.Zero;
                 Projectile.friendly = false;
-                SoundEngine.PlaySound(SoundID.Tink with { Volume = 0.72f, Pitch = -0.5f }, Projectile.Center);
+                SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.72f, Pitch = -0.35f }, Projectile.Center);
                 EmitSolidifyBurst();
                 return;
             }
@@ -73,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             if (!Main.dedServ && Main.rand.NextBool(4))
-                EmitSolidFlame();
+                EmitSolidDirt();
         }
 
         private static int GetSolidDuration()
@@ -86,21 +87,27 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             return BalanceAegisBlade.WallDuration;
         }
 
-        private void EmitRisingFlame()
+        private void EmitRisingDirt()
         {
             float bottomY = Projectile.Center.Y + WallHalfHeight;
-            Vector2 position = new(Projectile.Center.X + Side * Main.rand.NextFloat(0f, WallHalfWidth), bottomY);
-            Vector2 velocity = new(Side * Main.rand.NextFloat(0.4f, 2.5f), -Main.rand.NextFloat(2.5f, 7.5f));
+            Vector2 position = new(Projectile.Center.X + Main.rand.NextFloat(-WallHalfWidth, WallHalfWidth), bottomY);
+            Vector2 velocity = new(Main.rand.NextFloat(-1.8f, 1.8f), -Main.rand.NextFloat(2.5f, 7.5f));
+            Dust dust = Dust.NewDustPerfect(position, DustID.Dirt, velocity * 0.65f, 0, OuterGold, Main.rand.NextFloat(0.9f, 1.35f));
+            dust.noGravity = Main.rand.NextBool(4);
             GeneralParticleHandler.SpawnParticle(new MediumMistParticle(position, velocity,
                 Color.Lerp(OuterGold, CoreGold, Main.rand.NextFloat()), Color.Transparent,
                 Main.rand.NextFloat(0.36f, 0.68f), Main.rand.Next(18, 28), Main.rand.NextFloat(-0.05f, 0.05f)));
         }
 
-        private void EmitSolidFlame()
+        private void EmitSolidDirt()
         {
             float height = Main.rand.NextFloat(-WallHalfHeight, WallHalfHeight);
             float side = Main.rand.NextBool() ? -WallHalfWidth : WallHalfWidth;
             Vector2 position = Projectile.Center + new Vector2(side, height);
+            Dust dust = Dust.NewDustPerfect(position, DustID.Dirt,
+                new Vector2(Math.Sign(side) * Main.rand.NextFloat(0.3f, 1.2f), -Main.rand.NextFloat(0.1f, 0.9f)),
+                0, OuterGold, Main.rand.NextFloat(0.65f, 1.05f));
+            dust.noGravity = Main.rand.NextBool(5);
             GeneralParticleHandler.SpawnParticle(new MediumMistParticle(position,
                 new Vector2(Math.Sign(side) * Main.rand.NextFloat(0.4f, 1.5f), -Main.rand.NextFloat(0.2f, 1.8f)),
                 Color.Lerp(OuterGold, CoreWhite, Main.rand.NextFloat(0.15f, 0.65f)), Color.Transparent,

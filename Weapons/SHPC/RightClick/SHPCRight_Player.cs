@@ -1,6 +1,7 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
@@ -118,7 +119,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         public bool ShouldSuppressHeatUI()
         {
             return Player.GetModPlayer<CommandAscendPlayer>().CommandAscendEquipped ||
-                Player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped;
+                Player.GetModPlayer<MilitaryCallerPlayer>().MilitaryCallerEquipped ||
+                Player.GetModPlayer<KarasawaModulePlayer>().KarasawaModuleEquipped;
         }
 
         public float GetDetachedHeatProgress()

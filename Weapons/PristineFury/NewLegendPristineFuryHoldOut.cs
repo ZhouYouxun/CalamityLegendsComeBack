@@ -370,12 +370,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         private int GetMaxRightChargeFrames()
         {
-            if (!Main.hardMode)
-                return 119;
-            if (!NPC.downedPlantBoss)
-                return 179;
-            if (!NPC.downedMoonlord)
-                return 299;
+            int stage = PF_Balance.GetCompletedStageIndex();
+            if (stage < 6)  return 119;   // pre-hardMode (index 6)
+            if (stage < 10) return 179;   // pre-Plantera (index 10)
+            if (stage < 14) return 299;   // pre-Moon Lord (index 14)
             return 600;
         }
 

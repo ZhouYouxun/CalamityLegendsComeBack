@@ -181,6 +181,7 @@ Mods: {
 			SeasSearingPollutionRocket.DisplayName: Seas Searing Pollution Rocket
 			SkyfinTorpedo.DisplayName: Skyfin Torpedo
 			SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
+			AegisSparkExplosion.DisplayName: Aegis Spark Explosion
 		}
 
 		Cooldowns: {

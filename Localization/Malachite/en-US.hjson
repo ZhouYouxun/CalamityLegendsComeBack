@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -82,7 +82,7 @@
 						'''
 					Finale:
 						'''
-						[c/D6FF9A:Finale: At full stealth and off cooldown, press] [[c/D6FF9A:{0}]] [c/D6FF9A:.]
+						[c/D6FF9A:Ultimate (Plume Lightshow): At full stealth and off cooldown, press] [[c/D6FF9A:{0}]] [c/D6FF9A:.]
 						[c/D6FF9A:Charges in 30s; stealth attacks advance it by 5s.]
 						[c/D6FF9A:Petals turn into swift homing kunai.]
 						'''
@@ -208,7 +208,7 @@
 				MalachiteRightFeatherExplosion.DisplayName: Malachite Feather Blast
 				MalachiteRightNovaShard.DisplayName: Malachite Nova
 				MalachiteGrazeSlashVisual.DisplayName: Nimble Graze Slash
-				MalachiteFinaleController.DisplayName: Peacock Finale
+				MalachiteFinaleController.DisplayName: Plume Lightshow
 				MalachiteFinaleSlash.DisplayName: Peacock Slash
 				MalachiteFinaleHitSlash.DisplayName: Peacock Execution Slash
 				MalachiteFinaleDart.DisplayName: Peacock Finale Dart
@@ -217,6 +217,6 @@
 			}
 		}
 
-		Cooldowns.Malachite_EX: Peacock Finale Cooldown
+		Cooldowns.Malachite_EX: Plume Lightshow Cooldown
 	}
 }

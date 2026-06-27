@@ -16,7 +16,7 @@ Mods: {
 						[c/8DB8FF:举盾] [c/DCD6C8:+20防御并免疫击退]
 						[c/7FE886:埃癸斯] [c/DCD6C8:根据移动速度获得6~15点额外防御；静止时达到上限]
 						[c/7FE886:壁垒] [c/DCD6C8:无持续伤害减益时，接触类伤害降低20%，静止时效果翻倍]
-						[c/FFD700:传奇技能] [c/DCD6C8:能量满后按下传奇技能键，金色神手降临并赋予10秒完全无敌]
+						[c/FFD700:传奇技能（金手）] [c/DCD6C8:能量满后按下传奇技能键，金手降临并赋予10秒完全无敌]
 						'''
 					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
 					LegendaryText:
@@ -49,13 +49,13 @@ Mods: {
 			AegisFireball.DisplayName: 庇护火球
 			AegisBladeThrown.DisplayName: 投掷庇护之刃
 			AegisWallProjectile.DisplayName: 庇护土墙
-			AegisUltimateHand.DisplayName: 金色神手
+			AegisUltimateHand.DisplayName: 金手
 			AegisEnergyUI.DisplayName: 庇护能量条
 			// LeonidUltimateUI.DisplayName: Leonid Ultimate U I
 			// IceShardProj.DisplayName: Ice Shard Proj
 			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 		}
 
-		Cooldowns.AegisEX: 庇护能量
+		Cooldowns.AegisEX: 金手
 	}
 }

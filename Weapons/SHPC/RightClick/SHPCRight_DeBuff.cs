@@ -85,74 +85,79 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (Main.dedServ || stage < 4)
                 return;
 
-            // Frequency aligned with Calamity's Brimstone/Demonic fire debuffs.
-            if (!Main.rand.NextBool(3))
-                return;
+            // Adapted from Calamity's Brimstone Flames (main dust + spread dusts) and
+            // Demonic Flames (VelChangingSpark) and Dragonfire (SparkParticle + SmallSmokeParticle).
+            // Reference baseline: Brimstone Flames at ~1.33 particles/frame.
+            // Stage IV target: 1.5× reference = ~2.0/frame.
+            // Stage V  target: 2.0× reference = ~2.67/frame.
 
-            Vector2 mainPos = RandomBodyPoint(player, 0.48f, 0.54f);
-            Dust brimstone = Dust.NewDustPerfect(
-                mainPos,
-                (int)CalamityDusts.Brimstone,
-                player.velocity + new Vector2(0f, Main.rand.NextFloat(-4.5f, -2.2f)).RotatedByRandom(0.24f),
-                90,
-                Color.Lerp(BrimstoneDark, BrimstoneRed, Main.rand.NextFloat(0.35f, 0.85f)),
-                Main.rand.NextFloat(stage >= 5 ? 1.15f : 0.95f, stage >= 5 ? 1.55f : 1.30f));
-            brimstone.noGravity = true;
-
-            int ashCount = stage >= 5 ? 3 : 2;
-            for (int i = 0; i < ashCount; i++)
+            // Core burst — 1/2 chance per frame: 1 upward dust + 2 spread dusts + 1 VelChangingSpark = 4 items.
+            // 0.5 × 4 = 2.0/frame — meets the Stage IV cap and forms the base for Stage V.
+            if (Main.rand.NextBool(2))
             {
-                Dust ash = Dust.NewDustPerfect(
-                    RandomBodyPoint(player, 0.50f, 0.56f),
+                // Main upward dust (Brimstone Flames primary, upward drift)
+                Dust mainDust = Dust.NewDustPerfect(
+                    RandomBodyPoint(player, 0.30f, 0.40f),
                     Main.rand.NextBool(3) ? DustID.RuneWizard : (int)CalamityDusts.Brimstone,
-                    player.velocity + new Vector2(Main.rand.NextFloat(-2.2f, 2.2f), Main.rand.NextFloat(-3.4f, -0.8f)),
-                    110,
-                    Main.rand.NextBool() ? BrimstoneRed : BrimstoneDark,
-                    Main.rand.NextFloat(0.72f, 1.18f));
-                ash.noGravity = true;
-            }
+                    player.velocity + new Vector2(0f, Main.rand.NextFloat(-5f, -3f)).RotatedByRandom(0.18f),
+                    90,
+                    Color.Lerp(BrimstoneDark, BrimstoneRed, Main.rand.NextFloat(0.4f, 0.9f)),
+                    1.6f);
+                mainDust.noGravity = true;
 
-            if (Main.rand.NextBool(stage >= 5 ? 2 : 4))
-            {
-                Vector2 sparkVel = new(Main.rand.NextFloat(-player.width / 8f, player.width / 8f), Main.rand.NextFloat(-player.height / 18f, -player.height / 24f));
-                Particle demonicSpark = new VelChangingSpark(
-                    player.Center + new Vector2(Main.rand.NextFloat(-10f, 10f), player.height * 0.35f) + sparkVel * 0.5f,
+                // Two spread dusts (Brimstone Flames secondary, horizontal scatter)
+                for (int i = 0; i < 2; i++)
+                {
+                    Dust secDust = Dust.NewDustPerfect(
+                        player.Center + new Vector2(Main.rand.NextFloat(-10f, 10f), player.height * 0.1f),
+                        (int)CalamityDusts.Brimstone,
+                        player.velocity + new Vector2(Main.rand.NextFloat(-4f, 4f), Main.rand.NextFloat(-3f, -1f)),
+                        110,
+                        Main.rand.NextBool() ? BrimstoneRed : BrimstoneDark,
+                        1.4f);
+                    secDust.noGravity = true;
+                }
+
+                // VelChangingSpark (Demonic Flames style — velocity-accelerating bloom spark)
+                Vector2 sparkVel = new(
+                    Main.rand.NextFloat(-player.width / 8f, player.width / 8f),
+                    Main.rand.NextFloat(-player.height / 18f, -player.height / 24f));
+                GeneralParticleHandler.SpawnParticle(new VelChangingSpark(
+                    player.Center + new Vector2(Main.rand.NextFloat(-10f, 10f), player.height * 0.25f) + sparkVel * 0.5f,
                     sparkVel + player.velocity,
                     new Vector2(-sparkVel.X * 0.5f, sparkVel.Y * 2f) * 2.4f,
                     "CalamityMod/Particles/SmallBloom",
                     Main.rand.Next(13, 19),
-                    Main.rand.NextFloat(0.045f, stage >= 5 ? 0.085f : 0.068f),
+                    Main.rand.NextFloat(0.045f, stage >= 5 ? 0.082f : 0.065f),
                     Color.Lerp(DemonicViolet, BrimstoneRed, Main.rand.NextFloat(0.2f, 0.55f)) * 0.55f,
                     new Vector2(0.56f, 1.05f),
-                    true,
-                    false,
-                    0,
-                    false,
-                    0.35f,
-                    0.08f);
-                GeneralParticleHandler.SpawnParticle(demonicSpark);
+                    true, false, 0, false,
+                    0.35f, 0.08f));
             }
 
-            if (stage >= 5 && Main.rand.NextBool(3))
+            // Stage V extras — two independent 1/3 rolls add 0.33 + 0.33 = 0.67/frame → total 2.67/frame.
+            if (stage >= 5)
             {
-                Particle smoke = new SmallSmokeParticle(
-                    RandomBodyPoint(player, 0.46f, 0.52f),
-                    player.velocity * 0.2f - Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(1.2f, 3.4f),
-                    SmokeGray,
-                    Color.Lerp(Color.Black, SmokeGray, 0.35f),
-                    Main.rand.NextFloat(0.36f, 0.78f),
-                    0.42f,
-                    Main.rand.NextFloat(-0.04f, 0.04f));
-                GeneralParticleHandler.SpawnParticle(smoke);
+                // SparkParticle (Dragonfire style — ember spark drifting upward)
+                if (Main.rand.NextBool(3))
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        RandomBodyPoint(player, 0.42f, 0.46f),
+                        player.velocity * 0.15f - Vector2.UnitY.RotatedByRandom(0.32f) * Main.rand.NextFloat(1.5f, 3.5f),
+                        false,
+                        Main.rand.Next(8, 12),
+                        Main.rand.NextFloat(0.22f, 0.38f),
+                        Color.Lerp(DragonEmber, BrimstoneRed, Main.rand.NextFloat(0.2f, 0.7f)) * 0.65f));
 
-                Particle ember = new SparkParticle(
-                    RandomBodyPoint(player, 0.42f, 0.46f),
-                    player.velocity * 0.15f - Vector2.UnitY.RotatedByRandom(0.32f) * Main.rand.NextFloat(1.2f, 3.0f),
-                    false,
-                    Main.rand.Next(8, 12),
-                    Main.rand.NextFloat(0.18f, 0.32f),
-                    Color.Lerp(DragonEmber, BrimstoneRed, Main.rand.NextFloat(0.2f, 0.7f)) * 0.58f);
-                GeneralParticleHandler.SpawnParticle(ember);
+                // SmallSmokeParticle (Dragonfire style — thick rising smoke)
+                if (Main.rand.NextBool(3))
+                    GeneralParticleHandler.SpawnParticle(new SmallSmokeParticle(
+                        RandomBodyPoint(player, 0.46f, 0.52f),
+                        player.velocity * 0.2f - Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(1.2f, 3.4f),
+                        SmokeGray,
+                        Color.Lerp(Color.Black, SmokeGray, 0.35f),
+                        Main.rand.NextFloat(0.36f, 0.78f),
+                        0.42f,
+                        Main.rand.NextFloat(-0.04f, 0.04f)));
             }
         }
 

@@ -25,11 +25,15 @@ Mods: {
 						GE_SpecialMode0: ""
 						GE_SpecialMode1: ""
 						GE_SpecialMode2: ""
-						GE_PassiveRhythm: "[c/B0E0FF:右键开启节奏条，绿区松开叠连击；鞭击命中会命令冰钉协同突袭]"
+						GE_PassiveRhythm: "[c/B0E0FF:◇ 裂隙封存：右键开启节奏条，绿区松开叠连击；鞭击命中会命令冰钉协同突袭]"
 						GE_PassiveCombo: "[c/B0E0FF:当前连击{0}层：每秒持续回复+{1}且防御+{2}，十层后冰钉加速]"
 						GE_PassiveDivinity: ""
 						GE_PassiveAurora: ""
-						GE_Ultimate: "[c/A0F0FF:特殊攻击和冰钉命中都会充能，满{1}/240按{0}释放神钻终结]"
+						GE_Ultimate:
+							'''
+							[c/A0F0FF:★ 大招 — 维度压缩 (满{1}/240后按{0}释放)]
+							[c/A0F0FF:特殊攻击和冰钉命中都会充能，释放时所有冰钉会聚成神钻向前贯穿，在此期间玩家处于无敌状态]
+							'''
 						LegendaryHint: "[c/BABABA:按住 Shift 键即可阅读冰霜之拥的完整传奇文本与背景]"
 						LegendaryText:
 							'''
@@ -54,7 +58,7 @@ Mods: {
 			IceBladeProj.DisplayName: 极寒裂空斩刃
 			IceWedgeProj.DisplayName: 冰楔穿甲
 			IcePillarProj.DisplayName: 冰岩重崩柱
-			GlacialDrillProj.DisplayName: 至臻极冰之樊寒神钻
+			GlacialDrillProj.DisplayName: 维度压缩
 		}
 
 		Buffs: {
@@ -64,6 +68,6 @@ Mods: {
 			}
 		}
 
-		Cooldowns.GlacialEmbrace_Ultimate: 极冰能量
+		Cooldowns.GlacialEmbrace_Ultimate: 维度压缩
 	}
 }

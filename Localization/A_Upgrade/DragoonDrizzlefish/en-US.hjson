@@ -1,0 +1,49 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewDragoonDrizzlefish: {
+					DisplayName: Banquet Dragoon Drizzlefish
+					Tooltip:
+						'''
+						Fires brimstone fishflames; every few shots launches a larger splitting fireball
+						<right> feeds the little one the first edible item found from the front of your inventory
+						Different meals reshape this same fireball family's movement, splitting, hit effects, and burns
+						Repeated feeding raises fullness; overfeeding makes the flames unstable
+						[c/9DA8B8:Hold Shift to view the full menu]
+						'''
+					MealDetails:
+						'''
+						[c/FFE09A:Feeding rule] Right-click consumes the first feedable item found from the front of your inventory. Put the food you want earlier in the inventory to choose the meal. Favorited items are ignored.
+						[c/9DA8B8:No meal swaps the weapon to an unrelated projectile; every meal only rewrites the current small fireball, large fireball, and split flame logic.]
+						[c/8FD8FF:Gel] Basic fuel; slightly improves fireball damage for a short time.
+						[c/FFE09A:Staples / bread / ordinary food] Stable meal; slightly faster firing, lower spread, and smoother large-fireball cadence.
+						[c/FF7A42:Meat] Heavy meal; larger flames with higher damage and knockback, but a slower firing rhythm.
+						[c/FF9A54:Delicious Meat] Stronger meat meal; heavier single shots for hard targets.
+						[c/55D2FF:Fish / seafood] Hunting meal; fireballs lightly home and splash small flames on hit.
+						[c/6FE8FF:Hadal Stew] Stronger seafood meal; greater tracking range and more shots before digestion.
+						[c/74F074:Fruit / plants] Lingering meal; hits extend brimstone burns and scatter green embers.
+						[c/FF96EB:Sweets] Sugar rush; faster fire rate, more large fireballs, and extra small fireballs.
+						[c/FF78F0:Blasphemous Donut] Stronger sweet meal; a sharper sugar burst with more extra fireballs.
+						[c/FF4614:Spicy / brimstone / lava food] High-heat meal; longer burns and more splitting flames.
+						[c/FF5A22:Lava Chicken Broth] Stronger spicy meal; more damage, burn time, and splitting pressure.
+						[c/BE78FF:Drinks / alcohol] Tipsy meal; faster but wider fire, wobbling trajectories, and occasional stray sparks.
+						[c/AFFF46:Weird / mushroom food] Hallucination meal; wavy fireballs and strange-angle flame splashes.
+						[c/B6FF50:Odd Mushroom] Stronger weird meal; stronger waves and more frequent random splashes.
+						[c/FFFF78:The Sandwich] Stomachache meal; every shot randomly digests into another menu style and immediately overfeeds it.
+						[c/CFA6FF:Quality Slop] Digests into one random ordinary meal.
+						[c/FF6A6A:Overfed] Repeated feeding triggers overfeeding: fireballs lose a little damage but split more, spread wider, and wobble harder.
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			DragoonDrizzlefish: {
+				FoodDrizzlefishFireball.DisplayName: Banquet Fishflame
+				FoodDrizzlefishFire.DisplayName: Banquet Greater Fishflame
+				FoodDrizzlefishFireSplit.DisplayName: Banquet Split Flame
+			}
+		}
+	}
+}

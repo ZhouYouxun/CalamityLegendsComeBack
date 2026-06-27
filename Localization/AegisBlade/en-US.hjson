@@ -16,7 +16,7 @@ Mods: {
 						[c/8DB8FF:Shield Raised] [c/DCD6C8:+20 defense and knockback immunity]
 						[c/7FE886:Aegis] [c/DCD6C8:Gain 6–15 bonus defense based on movement speed; maximized while standing still]
 						[c/7FE886:Bulwark] [c/DCD6C8:Without damage-over-time debuffs, contact damage reduced by 20%, doubled while stationary]
-						[c/FFD700:Legendary Skill] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
+						[c/FFD700:Legendary Skill (Golden Hand)] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
 						'''
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
@@ -56,6 +56,6 @@ Mods: {
 			Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 		}
 
-		Cooldowns.AegisEX: Aegis Energy
+		Cooldowns.AegisEX: Golden Hand
 	}
 }
