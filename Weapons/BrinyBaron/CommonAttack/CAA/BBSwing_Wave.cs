@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int tornadoCooldown = 0;
 
         private int SpawnStage => Utils.Clamp((int)Projectile.ai[1], 0, 3);
-        private bool IsAegisBlade => Main.player[Projectile.owner].HeldItem.type == ModContent.ItemType<CalamityLegendsComeBack.Weapons.AegisBlade.AegisBlade>();
+        private bool IsAegisBlade => Main.player[Projectile.owner].HeldItem.type == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.AegisBlade.AegisBlade>();
         private float StageScale => Projectile.ai[0] > 0f ? Projectile.ai[0] : DefaultFinalWaveScale;
         private float StageIntensity => 1f + SpawnStage * 0.26f;
         private bool SlowdownBoostApplied

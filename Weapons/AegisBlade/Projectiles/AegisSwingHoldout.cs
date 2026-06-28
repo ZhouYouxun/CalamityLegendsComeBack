@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                             Projectile.GetSource_FromThis(),
                             Owner.MountedCenter + shootDir * 44f * scale,
                             shootDir * 14f,
-                            ModContent.ProjectileType<CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BBSwing_Wave>(),
+                            ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BBSwing_Wave>(),
                             waveDamage,
                             Projectile.knockBack * 0.5f,
                             Projectile.owner,
@@ -471,7 +471,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             // Draw bright yellow outline continuously during swing
-            CalamityLegendsComeBack.Weapons.Visuals.HoldoutOutlineHelper.DrawSolidOutline(
+            global::CalamityLegendsComeBack.Weapons.Visuals.HoldoutOutlineHelper.DrawSolidOutline(
                 swordTexture,
                 drawPosition,
                 drawRotation,

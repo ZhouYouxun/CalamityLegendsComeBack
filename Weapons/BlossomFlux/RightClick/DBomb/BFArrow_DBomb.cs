@@ -1,9 +1,12 @@
 using System;
 using System.IO;
+using System.Linq;
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
 using CalamityMod;
+using CalamityMod.Enums;
+using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.Melee;
 using Microsoft.Xna.Framework;
@@ -11,13 +14,14 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 {
     // D tactical right-click arrow: mortar trajectory with a bombard anchor on impact.
-    internal class BFArrow_DBomb : ModProjectile
+    internal class BFArrow_DBomb : ModProjectile, IPixelatedPrimitiveRenderer
     {
         private const float FlightState = 0f;
         private const float AttachedNpcState = 1f;
@@ -51,6 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/RightClick/DBomb/BFArrow_DBomb";
+        public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
 
         private ref float State => ref Projectile.ai[0];
         private ref float AttachedNpcIndex => ref Projectile.ai[1];
@@ -65,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 16;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
@@ -104,14 +109,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             bombardWaveCount = Utils.Clamp(waveCount, 1, 30);
             float desiredSpeed = Projectile.velocity.Length();
             if (desiredSpeed <= 0.01f)
-                desiredSpeed = 18f * 0.8f;
+                desiredSpeed = 18f;
 
             Player owner = Main.player[Projectile.owner];
             float gravDir = owner.active ? owner.gravDir : 1f;
             Vector2 fallStart = bombardTarget - Vector2.UnitY * 980f * gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
             Vector2 fallDirection = (bombardTarget - fallStart).SafeNormalize(Vector2.UnitY * gravDir);
             bombardFallStart = fallStart;
-            delayedReturnVelocity = fallDirection * Math.Max(42f * 0.8f, desiredSpeed * 2.2f);
+            delayedReturnVelocity = fallDirection * Math.Max(42f, desiredSpeed * 2.2f);
             pendingBombardTeleport = true;
             ReturnDelayTimer = ReturnDelayFrames * (Projectile.extraUpdates + 1);
             FlightTimer = 0f;
@@ -262,6 +267,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (rumble > 0f)
                 Projectile.Center += Main.rand.NextVector2Circular(rumble, rumble);
 
+            if (InFlight)
+            {
+                Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                DrawArrowHelix(Projectile.Center - Main.screenPosition, forward);
+            }
+
             BFArrowCommon.DrawPresetArrow(
                 Projectile,
                 lightColor,
@@ -274,6 +285,109 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             return false;
         }
 
+        // ─── 双层拖尾（橙火风格，仅飞行阶段）────────────────────────────────
+        private Vector2[] BuildTrailPoints()
+        {
+            Vector2[] pts = Projectile.oldPos
+                .Where(p => p != Vector2.Zero)
+                .Select(p => p + Projectile.Size * 0.5f)
+                .ToArray();
+            if (pts.Length == 0)
+                return new[] { Projectile.Center - Projectile.velocity, Projectile.Center };
+            if (pts[0] != Projectile.Center)
+                pts = new[] { Projectile.Center }.Concat(pts).ToArray();
+            return pts;
+        }
+
+        private float OuterWidthFunc(float t, Vector2 _)
+        {
+            float max = Projectile.scale * 22f;
+            return t < 0.16f
+                ? MathF.Sin(t / 0.16f * MathHelper.PiOver2) * max
+                : Utils.Remap(t, 0.16f, 1f, max, 0f);
+        }
+
+        private Color OuterColorFunc(float t, Vector2 _)
+        {
+            Color c = Color.Lerp(new Color(255, 175, 35), new Color(160, 55, 10), t * 0.65f) * Projectile.Opacity;
+            c = Color.Lerp(c, Color.Transparent, Utils.GetLerpValue(0.70f, 1f, t, true));
+            c.A = 0;
+            return c;
+        }
+
+        private float CoreWidthFunc(float t, Vector2 _)
+        {
+            float max = Projectile.scale * 11f;
+            return t < 0.16f
+                ? MathF.Sin(t / 0.16f * MathHelper.PiOver2) * max
+                : Utils.Remap(t, 0.16f, 1f, max, 0f);
+        }
+
+        private Color CoreColorFunc(float t, Vector2 _)
+        {
+            Color c = Color.Lerp(Color.White, new Color(255, 225, 110), t * 0.5f) * Projectile.Opacity;
+            c = Color.Lerp(c, Color.Transparent, Utils.GetLerpValue(0.72f, 1f, t, true));
+            c.A = 0;
+            return c;
+        }
+
+        public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
+        {
+            if (!InFlight) return;
+
+            Vector2[] pts = BuildTrailPoints();
+            if (pts.Length < 2) return;
+
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+            PrimitiveRenderer.RenderTrail(pts,
+                new PrimitiveSettings(OuterWidthFunc, OuterColorFunc, (_, _) => Vector2.Zero, true, true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                pts.Length * 2);
+
+            Vector2[] core = pts.Take(Math.Min(9, pts.Length)).ToArray();
+            if (core.Length < 2) return;
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+            PrimitiveRenderer.RenderTrail(core,
+                new PrimitiveSettings(CoreWidthFunc, CoreColorFunc, (_, _) => Vector2.Zero, true, true,
+                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                core.Length * 2);
+        }
+
+        // ─── 三股炮弹螺旋（橙/金/琥珀，宽展散开）─────────────────────────────
+        private void DrawArrowHelix(Vector2 drawPos, Vector2 forward)
+        {
+            Texture2D tex = ModContent.Request<Texture2D>("CalamityMod/Particles/WaterFlavored").Value;
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            float time = Main.GlobalTimeWrappedHourly * 3.8f + Projectile.identity * 0.29f;
+            const int len = 10;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Color[] strandColors = { mainColor, HighlightColor, accentColor };
+            for (int strand = 0; strand < 3; strand++)
+            {
+                float strandOff = strand * MathHelper.TwoPi / 3f;
+                Color sc = strandColors[strand];
+                for (int i = 0; i < len; i++)
+                {
+                    float t = i / (float)(len - 1);
+                    float angle = time + strandOff - t * 2.8f;
+                    float radius = MathHelper.Lerp(18f, 5f, t);
+                    Vector2 off = right.RotatedBy(angle) * radius - forward * MathHelper.Lerp(2f, 44f, t);
+                    float opacity = MathHelper.Lerp(0.52f, 0.04f, t) * Projectile.Opacity;
+                    Main.EntitySpriteDraw(tex, drawPos + off, null, sc with { A = 0 } * opacity,
+                        forward.ToRotation() - MathHelper.PiOver2, tex.Size() * 0.5f,
+                        new Vector2(0.22f, MathHelper.Lerp(0.92f, 0.32f, t)) * Projectile.scale,
+                        SpriteEffects.None, 0);
+                }
+            }
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+        }
+
+        // ─── 原有逻辑（保留）──────────────────────────────────────────────────
         private void UpdateMortarFlight()
         {
             FlightTimer++;
@@ -326,7 +440,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             targetPoint = owner.Calamity().mouseWorld == Vector2.Zero ? Main.MouseWorld : owner.Calamity().mouseWorld;
             bombardFallStart = targetPoint - Vector2.UnitY * 980f * owner.gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
             Vector2 fallDirection = (targetPoint - bombardFallStart).SafeNormalize(Vector2.UnitY * owner.gravDir);
-            float desiredSpeed = Math.Max(42f * 0.8f, storedAmmoSpeed * 0.8f * 2.2f);
+            float desiredSpeed = Math.Max(42f, storedAmmoSpeed * 2.2f);
             delayedReturnVelocity = fallDirection * desiredSpeed;
 
             if (Projectile.owner == Main.myPlayer)
@@ -396,11 +510,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 return;
             }
 
-            float speed = Math.Max(Projectile.velocity.Length(), 32f * 0.8f);
+            float speed = Math.Max(Projectile.velocity.Length(), 32f);
             Vector2 desiredVelocity = toTarget / distance * speed;
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.22f);
 
-            if (distance < Math.Max(42f * 0.8f, speed * 1.15f))
+            if (distance < Math.Max(42f, speed * 1.15f))
             {
                 Projectile.velocity = desiredVelocity;
                 passedBombardTarget = true;
@@ -461,22 +575,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 GlowSparkParticle spark = new(
                     Projectile.Center + Projectile.velocity * Main.rand.NextFloat(-2f, -1f),
                     -Projectile.velocity * 0.3f,
-                    false,
-                    5,
-                    0.06f,
+                    false, 5, 0.06f,
                     Color.Lerp(HighlightColor, mainColor, 0.35f) * 0.68f,
-                    new Vector2(1f, 0.3f),
-                    true,
-                    false,
-                    1.5f);
+                    new Vector2(1f, 0.3f), true, false, 1.5f);
                 GeneralParticleHandler.SpawnParticle(spark);
 
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + normal * Main.rand.NextFloat(-10f, 10f),
                     -Projectile.velocity.RotatedByRandom(0.28f) * Main.rand.NextFloat(0.14f, 0.28f),
-                    false,
-                    Main.rand.Next(9, 14),
-                    Main.rand.NextFloat(0.22f, 0.44f),
+                    false, Main.rand.Next(9, 14), Main.rand.NextFloat(0.22f, 0.44f),
                     Main.rand.NextBool() ? HighlightColor : Color.Lerp(Color.Black, HighlightColor, 0.45f)));
             }
             else
@@ -491,19 +598,55 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 dust.noGravity = true;
             }
 
-            if ((int)FlightTimer % 6 != 0)
-                return;
+            if ((int)FlightTimer % 6 == 0)
+            {
+                DirectionalPulseRing pulse = new(
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 8f,
+                    Projectile.velocity * 0.05f,
+                    HighlightColor * 0.46f,
+                    new Vector2(0.86f, 2.3f),
+                    Projectile.velocity.ToRotation(),
+                    0.18f, 0.038f, 10);
+                GeneralParticleHandler.SpawnParticle(pulse);
+            }
 
-            DirectionalPulseRing pulse = new(
-                Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 8f,
-                Projectile.velocity * 0.05f,
-                HighlightColor * 0.46f,
-                new Vector2(0.86f, 2.3f),
-                Projectile.velocity.ToRotation(),
-                0.18f,
-                0.038f,
-                10);
-            GeneralParticleHandler.SpawnParticle(pulse);
+            // 新增：六臂火星环 + SparkParticle 拖火
+            EmitBombardSpiralFX(direction, normal, mainColor);
+        }
+
+        // 六臂 GlowOrb 旋转火星环 + SparkParticle 落火拖尾
+        private void EmitBombardSpiralFX(Vector2 direction, Vector2 normal, Color mainColor)
+        {
+            float time = Main.GlobalTimeWrappedHourly * 5.4f + Projectile.identity * 0.38f;
+
+            for (int i = 0; i < 6; i++)
+            {
+                float orbAngle = time + i * MathHelper.TwoPi / 6f;
+                float radius = 13f + 4f * (float)Math.Sin(time * 1.8f + i * 0.72f);
+                Vector2 orbOff = orbAngle.ToRotationVector2() * radius;
+                Vector2 orbVel = -direction * Main.rand.NextFloat(0.3f, 0.8f) + orbOff.SafeNormalize(normal) * Main.rand.NextFloat(0.3f, 0.7f);
+
+                if (Main.rand.NextBool(3))
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + orbOff - direction * Main.rand.NextFloat(1f, 6f),
+                        orbVel, false, 6,
+                        Main.rand.NextFloat(0.22f, 0.38f),
+                        Color.Lerp(HighlightColor, mainColor, Main.rand.NextFloat(0.2f, 0.65f)),
+                        true, false, true));
+                }
+            }
+
+            if ((int)FlightTimer % 3 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + normal * Main.rand.NextFloat(-8f, 8f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.12f, 0.24f) + normal * Main.rand.NextFloat(-0.4f, 0.4f),
+                    false,
+                    Main.rand.Next(16, 26),
+                    Main.rand.NextFloat(0.40f, 0.64f),
+                    Color.Lerp(mainColor, HighlightColor, Main.rand.NextFloat(0.25f, 0.65f))));
+            }
         }
 
         private void EmitBombardAnchorFX(Vector2 center)
@@ -526,13 +669,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             GlowOrbParticle ember = new(
                 center + Main.rand.NextVector2Circular(16f, 16f),
                 Main.rand.NextVector2Circular(0.45f, 0.45f),
-                false,
-                12,
+                false, 12,
                 Main.rand.NextFloat(0.18f, 0.28f),
                 Color.Lerp(HighlightColor, mainColor, Main.rand.NextFloat(0.2f, 0.65f)),
-                true,
-                false,
-                true);
+                true, false, true);
             GeneralParticleHandler.SpawnParticle(ember);
         }
 
@@ -556,8 +696,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
                 int projectileIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    velocity,
+                    spawnPosition, velocity,
                     ModContent.ProjectileType<BFLeafProj>(),
                     Math.Max(1, (int)(storedRainDamage * 0.42f)),
                     storedAmmoKnockback,
@@ -582,8 +721,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             int projectileIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                spawnPosition,
-                velocity,
+                spawnPosition, velocity,
                 GetRandomSwordsplosionProjectileType(),
                 storedRainDamage,
                 storedAmmoKnockback,
@@ -625,41 +763,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Color flashColor = Color.Lerp(mainColor, HighlightColor, 0.45f);
 
             CustomPulse outerBlast = new(
-                center,
-                Vector2.Zero,
-                Color.Orange,
+                center, Vector2.Zero, Color.Orange,
                 "CalamityMod/Particles/SoftRoundExplosion",
-                Vector2.One,
-                Main.rand.NextFloat(-0.2f, 0.2f),
-                0f,
-                0.34f * intensity,
-                16);
+                Vector2.One, Main.rand.NextFloat(-0.2f, 0.2f), 0f, 0.34f * intensity, 16);
             GeneralParticleHandler.SpawnParticle(outerBlast);
 
-            StrongBloom bloom = new(center, Vector2.Zero, flashColor, 1.18f * intensity, 20);
-            GeneralParticleHandler.SpawnParticle(bloom);
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, flashColor, 1.18f * intensity, 20));
 
-            DirectionalPulseRing pulse = new(
-                center,
-                Vector2.Zero,
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center, Vector2.Zero,
                 Color.Lerp(HighlightColor, Color.White, 0.18f),
-                new Vector2(1.55f, 2.3f),
-                Main.rand.NextFloat(-0.3f, 0.3f),
-                0.24f * intensity,
-                0.045f,
-                15);
-            GeneralParticleHandler.SpawnParticle(pulse);
+                new Vector2(1.55f, 2.3f), Main.rand.NextFloat(-0.3f, 0.3f),
+                0.24f * intensity, 0.045f, 15));
 
-            DirectionalPulseRing crossPulse = new(
-                center,
-                Vector2.Zero,
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center, Vector2.Zero,
                 Color.Lerp(flashColor, Color.White, 0.12f),
-                new Vector2(1.15f, 3.4f),
-                Main.rand.NextFloat(-0.15f, 0.15f),
-                0.2f * intensity,
-                0.036f,
-                18);
-            GeneralParticleHandler.SpawnParticle(crossPulse);
+                new Vector2(1.15f, 3.4f), Main.rand.NextFloat(-0.15f, 0.15f),
+                0.2f * intensity, 0.036f, 18));
 
             for (int i = 0; i < 10; i++)
             {
@@ -682,30 +803,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
             Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
 
-            DirectionalPulseRing pulse = new(
-                center,
-                Vector2.Zero,
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center, Vector2.Zero,
                 Color.Lerp(HighlightColor, accentColor, 0.35f),
-                new Vector2(1.75f, 1.75f),
-                0f,
-                0.17f * intensity,
-                0.032f,
-                13);
-            GeneralParticleHandler.SpawnParticle(pulse);
+                new Vector2(1.75f, 1.75f), 0f,
+                0.17f * intensity, 0.032f, 13));
 
             for (int i = 0; i < 4; i++)
             {
-                GlowOrbParticle ember = new(
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     center + Main.rand.NextVector2Circular(18f, 18f),
                     Main.rand.NextVector2Circular(0.65f, 0.65f),
-                    false,
-                    12,
+                    false, 12,
                     Main.rand.NextFloat(0.26f, 0.42f) * intensity,
                     Color.Lerp(mainColor, HighlightColor, Main.rand.NextFloat(0.25f, 0.65f)),
-                    true,
-                    false,
-                    true);
-                GeneralParticleHandler.SpawnParticle(ember);
+                    true, false, true));
             }
         }
 
@@ -722,50 +834,27 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.Additive,
-                SamplerState.PointClamp,
-                DepthStencilState.None,
-                Main.Rasterizer,
-                null,
-                Main.GameViewMatrix.TransformationMatrix);
+                SpriteSortMode.Deferred, BlendState.Additive,
+                SamplerState.PointClamp, DepthStencilState.None,
+                Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             for (int i = 0; i < 10; i++)
             {
                 float angle = MathHelper.TwoPi * i / 10f;
                 Vector2 offset = angle.ToRotationVector2() * outlineDistance;
-                Main.EntitySpriteDraw(
-                    texture,
-                    drawPosition + offset,
-                    null,
-                    outlineColor,
-                    Projectile.rotation,
-                    origin,
-                    Projectile.scale * (1.02f + 0.05f * pulse),
-                    SpriteEffects.None,
-                    0);
+                Main.EntitySpriteDraw(texture, drawPosition + offset, null, outlineColor,
+                    Projectile.rotation, origin, Projectile.scale * (1.02f + 0.05f * pulse), SpriteEffects.None, 0);
             }
 
-            Main.EntitySpriteDraw(
-                texture,
-                drawPosition,
-                null,
+            Main.EntitySpriteDraw(texture, drawPosition, null,
                 Color.Lerp(Color.Goldenrod, Color.White, 0.28f) * (0.16f + impactFlash * 0.2f),
-                Projectile.rotation,
-                origin,
-                Projectile.scale * (1.06f + 0.04f * pulse),
-                SpriteEffects.None,
-                0);
+                Projectile.rotation, origin, Projectile.scale * (1.06f + 0.04f * pulse), SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                SamplerState.PointClamp,
-                DepthStencilState.None,
-                Main.Rasterizer,
-                null,
-                Main.GameViewMatrix.TransformationMatrix);
+                SpriteSortMode.Deferred, BlendState.AlphaBlend,
+                SamplerState.PointClamp, DepthStencilState.None,
+                Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
         private float GetRumbleStrength()
@@ -789,4 +878,3 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         }
     }
 }
-

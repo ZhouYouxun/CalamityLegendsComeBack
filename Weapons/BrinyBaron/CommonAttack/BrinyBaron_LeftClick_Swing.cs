@@ -1245,6 +1245,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 }
             }
 
+            if (rightSpinActive && RightSpinChargeRatio >= 1f)
+                DrawMaxRightSpinWeaponAfterimages(texture.Value, drawPosition, origin, bladeScale, effects, r);
+
             Main.EntitySpriteDraw(
                 texture.Value,
                 drawPosition,
@@ -1262,6 +1265,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             }
 
             return false;
+        }
+
+        private void DrawMaxRightSpinWeaponAfterimages(Texture2D texture, Vector2 drawPosition, Vector2 origin, Vector2 bladeScale, SpriteEffects effects, float rotationOffset)
+        {
+            float opacity = MathHelper.Clamp(0.52f + rightSpinOverEmpowerment * 0.012f, 0.52f, 0.82f) * fadeIn;
+            for (int i = 0; i < 20; i++)
+            {
+                float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 22f + i * 0.7f);
+                Vector2 ringOffset = (MathHelper.TwoPi * i / 20f).ToRotationVector2() * 1.2f;
+                Vector2 jitterOffset = Main.rand.NextVector2Circular(2.4f, 2.4f);
+                Color auraColor = Color.Lerp(Color.DeepSkyBlue, Color.White, pulse) with { A = 0 };
+
+                Main.EntitySpriteDraw(
+                    texture,
+                    drawPosition + ringOffset + jitterOffset,
+                    texture.Frame(1, FrameCount, 0, Frame),
+                    auraColor * 0.16f * opacity,
+                    Projectile.rotation + RotationOffset + rotationOffset,
+                    origin,
+                    bladeScale,
+                    effects);
+            }
         }
 
         // abb abc 杩炴嫑妯℃澘锛歐ave, Shuriken, Shuriken, Wave, Shuriken, Tornado

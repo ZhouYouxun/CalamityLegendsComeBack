@@ -1,7 +1,12 @@
 using Terraria;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule;
+using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip;
 using CalamityLegendsComeBack.Weapons;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret;
 namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 {
     internal class NewLegend_EXPlayer : ModPlayer
@@ -83,7 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private void ApplyFastChipRightClickCharge()
         {
             if (!Player.GetModPlayer<FastChipPlayer>().FastChipEquipped ||
-                Player.ownedProjectileCounts[ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.SHPC.RightClick.SHPCRight_HoulOut>()] <= 0)
+                !HasActiveSHPCRightClickHoldout())
             {
                 fastChipRightClickChargeTimer = 0;
                 return;
@@ -95,6 +100,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             fastChipRightClickChargeTimer = 0;
             EXValue += GetBaseFramesPerDisplayUnit();
+        }
+
+        private bool HasActiveSHPCRightClickHoldout()
+        {
+            return Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0 ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] > 0 ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<MilitaryCaller_HoldOut>()] > 0 ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<ProjectilePossessionHoldout>()] > 0 ||
+                Player.ownedProjectileCounts[ModContent.ProjectileType<KarasawaHoldout>()] > 0;
         }
     }
 }

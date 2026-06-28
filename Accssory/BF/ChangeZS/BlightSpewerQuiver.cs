@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.ChangeZS
 {
+    [Autoload(false)]
     public sealed class BlightSpewerQuiver : ModItem
     {
         public override string Texture => "CalamityMod/Items/Weapons/Ranged/BlightSpewer";

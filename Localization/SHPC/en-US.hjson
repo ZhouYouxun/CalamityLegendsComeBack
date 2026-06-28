@@ -80,8 +80,8 @@ Mods: {
 				DisplayName: Fast Chip
 				Tooltip:
 					'''
-					Left-click energy orbs grant double ultimate charge
-					Right-click laser barrage grants 1 ultimate charge per second
+					After SHPC's ultimate is unlocked, left-click energy orbs grant double ultimate charge
+					After SHPC's ultimate is unlocked, active SHPC right-click modes grant 1 ultimate charge per second
 					Life regeneration is halved; during right-click barrage, each heat level reduces life regeneration by another 2 HP/s
 					'''
 			}
@@ -148,8 +148,8 @@ Mods: {
 				DisplayName: Heat Sensor
 				Tooltip:
 					'''
-					SHPC right-click barrage generates 25% more heat and natural heat dissipation is reduced by 33%
-					Heat-level right-click damage scaling is raised to 7.5% per level
+					SHPC's standard heat-barrage right click generates 25% more heat and natural heat dissipation is reduced by 33%
+					Standard heat-barrage damage scaling is raised from 5% to 7.5% per heat level
 					Forced shutdown vents a wider searing smoke field that repeatedly damages nearby enemies
 					At full Heat V, continued fire constantly vents damaging smoke around the player
 					Forced shutdown cooling runs faster, halving the downtime

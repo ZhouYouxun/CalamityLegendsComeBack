@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.ChangeZS
 {
+    [Autoload(false)]
     public sealed class SwordsplosionQuiver : ModItem
     {
         public override string Texture => "CalamityMod/Items/Weapons/Melee/Swordsplosion";

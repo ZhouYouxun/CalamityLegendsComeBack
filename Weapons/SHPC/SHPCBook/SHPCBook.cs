@@ -110,6 +110,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
         private const int ScreenMargin = 12;
+        private const float SafeScreenFill = 0.82f;
+        private const float ReferenceGameZoom = 1f;
         private const float MaxIconDrawSize = 42f;
 
         private static SHPCBookEntry[] cachedEntries;
@@ -388,9 +390,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         {
             int basePanelHeight = GetBasePanelHeight(entryCount);
             int baseTotalWidth = BasePanelWidth + DetailGap + BaseDetailWidth;
-            float heightScale = Main.screenHeight / Math.Max(1f, basePanelHeight);
-            float widthScale = (Main.screenWidth - ScreenMargin * 2f) / Math.Max(1f, baseTotalWidth);
-            return Math.Max(0.2f, Math.Min(heightScale, widthScale));
+            float gameZoom = GetGameZoom();
+            float zoomCompensation = ReferenceGameZoom / gameZoom;
+            float safeHeightScale = Main.screenHeight * SafeScreenFill / Math.Max(1f, basePanelHeight * gameZoom);
+            float safeWidthScale = (Main.screenWidth - ScreenMargin * 2f) * SafeScreenFill / Math.Max(1f, baseTotalWidth * gameZoom);
+            float targetScale = zoomCompensation;
+            float safeScale = Math.Min(safeHeightScale, safeWidthScale);
+            return safeScale <= 0.2f ? Math.Max(0.05f, safeScale) : MathHelper.Clamp(targetScale, 0.2f, safeScale);
+        }
+
+        private static float GetGameZoom()
+        {
+            Vector2 zoom = Main.GameViewMatrix.Zoom;
+            return MathHelper.Clamp(Math.Max(zoom.X, zoom.Y), 0.25f, 4f);
         }
 
         private static int GetPanelWidth(float scale)
@@ -687,6 +699,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
         private const int ScreenMargin = 12;
+        private const float SafeScreenFill = 0.82f;
+        private const float ReferenceGameZoom = 1f;
         private const float NumberIconSize = 51f;
         private const float BossIconSize = 45f;
 
@@ -855,9 +869,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
         private static float GetLayoutScale()
         {
-            float heightScale = Main.screenHeight / Math.Max(1f, GetBasePanelHeight());
-            float widthScale = (Main.screenWidth - ScreenMargin * 2f) / Math.Max(1f, BasePanelWidth);
-            return Math.Max(0.2f, Math.Min(heightScale, widthScale));
+            float gameZoom = GetGameZoom();
+            float zoomCompensation = ReferenceGameZoom / gameZoom;
+            float safeHeightScale = Main.screenHeight * SafeScreenFill / Math.Max(1f, GetBasePanelHeight() * gameZoom);
+            float safeWidthScale = (Main.screenWidth - ScreenMargin * 2f) * SafeScreenFill / Math.Max(1f, BasePanelWidth * gameZoom);
+            float targetScale = zoomCompensation;
+            float safeScale = Math.Min(safeHeightScale, safeWidthScale);
+            return safeScale <= 0.2f ? Math.Max(0.05f, safeScale) : MathHelper.Clamp(targetScale, 0.2f, safeScale);
+        }
+
+        private static float GetGameZoom()
+        {
+            Vector2 zoom = Main.GameViewMatrix.Zoom;
+            return MathHelper.Clamp(Math.Max(zoom.X, zoom.Y), 0.25f, 4f);
         }
 
         private static int GetPanelWidth(float scale)

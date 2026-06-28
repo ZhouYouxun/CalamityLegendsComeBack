@@ -1,7 +1,9 @@
+using CalamityLegendsComeBack.Accssory;
 using CalamityMod.Items.Accessories;
 using CalamityMod.Items.Materials;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.NormalNPCs;
+using CalamityMod;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
 using System;
@@ -25,6 +27,13 @@ namespace CalamityLegendsComeBack.QOL
             if (npc.type == NPCID.KingSlime)
             {
                 npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<SHPCBook>()));
+            }
+
+            if (npc.type == NPCID.WallofFlesh)
+            {
+                LeadingConditionRule firstWallKill = new(DropHelper.If(() => !Main.hardMode, desc: DropHelper.FirstKillText));
+                firstWallKill.Add(DropHelper.PerPlayer(ModContent.ItemType<LegendaryEmblem>()), hideLootReport: true);
+                npcLoot.Add(firstWallKill);
             }
 
             if (CalamityLegendsComeBackConfig.Instance?.AllowMassMaterialRecipes != true)
