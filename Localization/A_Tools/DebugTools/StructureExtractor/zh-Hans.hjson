@@ -35,6 +35,7 @@ Mods: {
 			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
 			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+			// SHPC.StellarVortexShard.DisplayName: Stellar Vortex Shard
 		}
 
 		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
