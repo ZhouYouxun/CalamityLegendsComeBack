@@ -10,11 +10,11 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityIUMWMode.Content.Items.SumBoss
+namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.SumBoss
 {
     public class BossSummonerItem : ModItem
     {
-        public override string Texture => "CalamityIUMWMode/Assets/UI/IUMWIcon";
+        public override string Texture => "CalamityLegendsComeBack/Assets/UI/IUMWIcon";
 
         public override void SetDefaults()
         {

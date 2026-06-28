@@ -16,6 +16,10 @@
 			BossListTitle: Current learning targets
 			BossList: SHPC material and heat systems, Briny Baron tide techniques, Pristine Fury effects, Yharim's Crystal attacks, Vesuvius, Blossom Flux, Malachite, MK14 EBR, and single-effect examples in Particle Lab.
 			CloseHint: Use the tablet again or click outside this panel to close.
+			ModeEnabled: Matrix guide mode enabled.
+			ModeDisabled: Matrix guide mode disabled.
+			StatusOn: Matrix guide mode: enabled
+			StatusOff: Matrix guide mode: disabled
 		}
 	}
 }

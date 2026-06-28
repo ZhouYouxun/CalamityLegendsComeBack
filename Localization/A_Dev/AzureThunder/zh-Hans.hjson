@@ -133,6 +133,11 @@ Mods: {
 					冲刺同时也会使青霆剑的下一次攻击变为重击。该效果有9秒冷却。
 					'''
 			}
+
+			BossSummonerItem: {
+				// DisplayName: Boss Summoner Item
+				// Tooltip: ""
+			}
 		}
 
 		Buffs: {
@@ -183,6 +188,7 @@ Mods: {
 			// SkyfinTorpedo.DisplayName: Skyfin Torpedo
 			// SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
 			// AegisSparkExplosion.DisplayName: Aegis Spark Explosion
+			// BossSummonerPanel.DisplayName: Boss Summoner Panel
 		}
 
 		Cooldowns: {

@@ -1,5 +1,4 @@
-using CalamityIUMWMode.Content.Projectiles;
-using CalamityIUMWMode.Core.Systems;
+using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
 using Terraria.Audio;
 using Terraria;
@@ -8,11 +7,11 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
-namespace CalamityIUMWMode.Content.Items
+namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools
 {
     public class IUMWMatrixTablet : ModItem
     {
-        public override string Texture => "CalamityIUMWMode/Assets/UI/IUMWIcon";
+        public override string Texture => "CalamityLegendsComeBack/Assets/UI/IUMWIcon";
 
         public override void SetDefaults()
         {
@@ -49,7 +48,7 @@ namespace CalamityIUMWMode.Content.Items
             bool nextState = !IUMWWorldSystem.IUMWModeEnabled;
             IUMWWorldSystem.SetModeEnabled(nextState);
 
-            string textKey = nextState ? "Mods.CalamityIUMWMode.UI.ModeEnabled" : "Mods.CalamityIUMWMode.UI.ModeDisabled";
+            string textKey = nextState ? "Mods.CalamityLegendsComeBack.UI.ModeEnabled" : "Mods.CalamityLegendsComeBack.UI.ModeDisabled";
             Color textColor = nextState ? new Color(88, 255, 211) : new Color(180, 190, 190);
             Main.NewText(Language.GetTextValue(textKey), textColor);
             SoundEngine.PlaySound((nextState ? SoundID.Item4 : SoundID.MenuClose) with { Volume = 0.65f, Pitch = nextState ? 0.16f : -0.05f }, player.Center);
@@ -61,7 +60,7 @@ namespace CalamityIUMWMode.Content.Items
 
         public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
         {
-            string statusKey = IUMWWorldSystem.IUMWModeEnabled ? "Mods.CalamityIUMWMode.UI.StatusOn" : "Mods.CalamityIUMWMode.UI.StatusOff";
+            string statusKey = IUMWWorldSystem.IUMWModeEnabled ? "Mods.CalamityLegendsComeBack.UI.StatusOn" : "Mods.CalamityLegendsComeBack.UI.StatusOff";
             tooltips.Add(new TooltipLine(Mod, "IUMWStatus", Language.GetTextValue(statusKey))
             {
                 OverrideColor = IUMWWorldSystem.IUMWModeEnabled ? new Color(88, 255, 211) : new Color(180, 190, 190)

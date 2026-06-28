@@ -16,6 +16,10 @@
 			BossListTitle: 当前可学习内容
 			BossList: SHPC 材料与热量系统、海爵潮汐招式、纯元怒焰特效、亚利姆水晶攻击、维苏威、繁花流明、孔雀翎、MK14 EBR，以及粒子实验室中的单体特效示例。
 			CloseHint: 再次使用终端，或点击面板外关闭。
+			ModeEnabled: 矩阵说明模式已启用。
+			ModeDisabled: 矩阵说明模式已关闭。
+			StatusOn: 矩阵说明模式：已启用
+			StatusOff: 矩阵说明模式：已关闭
 		}
 	}
 }
