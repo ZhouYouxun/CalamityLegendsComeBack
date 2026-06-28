@@ -493,7 +493,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             for (int i = 0; i < 8; i++)
             {
                 Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.6f;
-                Main.EntitySpriteDraw(texture.Value, headPos + off, null,
+                Main.EntitySpriteDraw(texture, headPos + off, null,
                     LeonidVisualUtils.NightSkyBlue with { A = 0 } * nsOpacity,
                     Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             }
