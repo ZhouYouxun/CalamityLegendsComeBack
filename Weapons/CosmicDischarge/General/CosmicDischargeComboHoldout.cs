@@ -2,7 +2,7 @@ using System;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
-using CalamityMod.Projectiles.BaseProjectiles;
+using CalamityLegendsComeBack.Weapons.CosmicDischarge.General;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;

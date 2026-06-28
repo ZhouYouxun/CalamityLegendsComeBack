@@ -5,7 +5,7 @@ using Terraria;
 using Terraria.Enums;
 using Terraria.ModLoader;
 
-namespace CalamityMod.Projectiles.BaseProjectiles
+namespace CalamityLegendsComeBack.Weapons.CosmicDischarge.General
 {
     public abstract class BaseFlailProjectile : ModProjectile
     {

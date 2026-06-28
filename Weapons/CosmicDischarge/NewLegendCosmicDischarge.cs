@@ -101,11 +101,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string ultimateText = legendaryEmblemEquipped
+                ? string.Format(this.GetLocalizedValue("CosmicDischargeUltimate"), keyText)
+                : this.GetLocalizedValue("CosmicDischargeUltimateLocked");
             string text =
                 this.GetLocalizedValue("CosmicDischargeLeft") + "\n" +
                 this.GetLocalizedValue("CosmicDischargeRight") + "\n" +
-                string.Format(this.GetLocalizedValue("CosmicDischargeUltimate"), keyText) + "\n" +
-                this.GetLocalizedValue("CosmicDischargePassive");
+                this.GetLocalizedValue("CosmicDischargePassive") + "\n" +
+                ultimateText;
 
             bool shiftPressed = Main.keyState.PressingShift();
             string legendarySection = shiftPressed

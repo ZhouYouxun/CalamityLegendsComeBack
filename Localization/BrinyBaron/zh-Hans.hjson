@@ -60,7 +60,7 @@ Mods: {
 					Dash2_Lock: "[c/DDA0FF:暂未解锁，需击败血肉之墙]"
 					Dash3_Unlock: "[c/66FFAA:已解锁：快刀斩]"
 					Dash3_Lock: "[c/99CCFF:暂未解锁，需击败血肉之墙]"
-					BB_Passive: "[c/9AEF9E:突进强化读取当前盾牌设备。状态：{0}；背包右键切换。]"
+					BB_Passive: "[c/9AEF9E:被动【快刀斩】突进强化读取当前盾牌设备。状态：{0}；背包右键切换。]"
 					PassiveStateOn: "[c/7BFFB7:开启]"
 					PassiveStateOff: "[c/F0D070:关闭]"
 					PassiveDevice_None: "[c/7F8FA6:当前未读取到盾冲设备。]"
@@ -69,9 +69,9 @@ Mods: {
 					PassiveDevice_AsgardsValor: "[c/99CCFF:当前佩戴阿斯加德英勇；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
 					PassiveDevice_ElysianAegis: "[c/99CCFF:当前佩戴极乐之庇护；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
 					PassiveDevice_AsgardianAegis: "[c/99CCFF:当前佩戴阿斯加德之庇护；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
-					Dash4_Unlock: "[c/66FFAA:已解锁：大招「潮狱处刑」]"
-					Dash4_Lock: "[c/FFB347:大招「潮狱处刑」未解锁（需佩戴黄金饰章解锁）]"
-					BB_Final: "[c/9FD8A2:满潮且大招就绪时，按传奇技能键标记猎物；左键确认处刑。]"
+					Dash4_Unlock: "[c/66FFAA:已解锁：大招【潮狱处刑】]"
+					Dash4_Lock: "[c/FFB347:大招【潮狱处刑】当前大招未解锁。]"
+					BB_Final: "[c/9FD8A2:大招【潮狱处刑】满潮且大招就绪时，按传奇技能键标记猎物；左键确认处刑。]"
 					LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
 					LegendaryText:
 						'''

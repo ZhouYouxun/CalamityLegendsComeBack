@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -6,7 +6,6 @@
 					DisplayName: MK14EBR-缄花
 					Tooltip: "[GFB]"
 					MK14_Intro: "[c/85D7FF:聆听传统主义的轰鸣]"
-					MK14_Stage: "[c/B6E7FF:当前流程：{0}]"
 					MK14_Ammo: "[c/F7D87C:发射玩家的子弹；火枪子弹会转化为 M61 穿甲弹。]"
 					MK14_RightClick: "[c/F7D87C:右键打开或关闭改枪界面。]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"

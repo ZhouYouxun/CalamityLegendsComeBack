@@ -48,6 +48,12 @@ Mods: {
 			AegisShieldHoldout.DisplayName: Aegis Shield
 			AegisFireball.DisplayName: Aegis Fireball
 			AegisBladeThrown.DisplayName: Thrown Aegis Blade
+
+			AegisBlade: {
+				AegisBorrowedLazharLaser.DisplayName: Aegis Borrowed Lazhar Laser
+				AegisBorrowedOrbitalStrike.DisplayName: Aegis Borrowed Orbital Strike
+			}
+
 			AegisWallProjectile.DisplayName: Aegis Earth Wall
 			AegisUltimateHand.DisplayName: Golden Hand
 			AegisEnergyUI.DisplayName: Aegis Energy Bar

@@ -92,7 +92,7 @@ Mods: {
 						'''
 					BF_Passive:
 						'''
-						[c/9AEF9E:被动 - 终末防线：手持时抵消一次致命伤害。]
+						[c/9AEF9E:被动【终末防线】手持时抵消一次致命伤害。]
 						[c/9AEF9E:触发后获得短暂无敌与治疗。当前：{0}]
 						'''
 					PassiveStateReady: "[c/7BFFB7:已就绪]"
@@ -101,10 +101,10 @@ Mods: {
 					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
 					BF_EXHint:
 						'''
-						[c/8EF5A8:大招：手持开火与右键攻击会积蓄森绿能量。]
+						[c/8EF5A8:大招【森绿能量】手持开火与右键攻击会积蓄森绿能量。]
 						[c/8EF5A8:充满后按下] [[c/8EF5A8:{0}]] [c/8EF5A8:释放森绿箭幕。]
 						'''
-					BF_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
+					BF_EXDisabledHint: "[c/9A9A9A:大招【森绿能量】当前大招未解锁。]"
 					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手切换。]"
 					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"

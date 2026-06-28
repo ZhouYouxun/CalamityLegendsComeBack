@@ -15,6 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 {
     internal sealed class YC_RightCrystalHoldout : YC_BaseHoldout
     {
+        private static readonly Color HoldoutGold = new(255, 218, 88);
+        private static readonly Color HoldoutOrange = new(255, 104, 36);
+
         private const int CoordinatedShutdownFrames = 120;
         private const float OmicronFireRate = 15f;
         private const float OmicronStarterWindup = 60f;
@@ -216,16 +219,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     for (int k = 0; k < 6; k++)
                     {
                         Particle pulse = new GlowSparkParticle(Muzzle, shootDirection * 28f, false, 8, 0.087f,
-                            Color.MediumVioletRed, new Vector2(2.3f, 0.9f), true);
+                            HoldoutGold, new Vector2(2.3f, 0.9f), true);
                         GeneralParticleHandler.SpawnParticle(pulse);
                     }
                 }
 
                 Owner.SetScreenshake(6.5f);
                 if (Main.myPlayer == Projectile.owner)
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle, firingVelocity,
-                        ModContent.ProjectileType<OmicronBeam>(), Projectile.damage * 32,
-                        Projectile.knockBack, Projectile.owner);
+                {
+                    int laserIndex = Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Muzzle,
+                        firingVelocity,
+                        ModContent.ProjectileType<YC_RightScorchingLaser>(),
+                        Projectile.damage * 4,
+                        Projectile.knockBack,
+                        Projectile.owner,
+                        -1f); // ai[0] = -1 for standalone mode
+
+                    if (Main.projectile.IndexInRange(laserIndex))
+                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
+                }
             }
             else
             {
@@ -234,24 +248,24 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
                 if (Main.myPlayer == Projectile.owner)
                 {
-                    for (int i = 0; i < 5; i++)
+                    float spreadFactor = Utils.GetLerpValue(0f, 55f, windup, true);
+                    for (int i = 0; i < 3; i++)
                     {
-                        Vector2 shotVelocity = (shootDirection * 10f).RotatedBy((0.035f * (i + 1)) * Utils.GetLerpValue(0f, 55f, windup, true));
-                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle, shotVelocity * (1f - i * 0.1f),
-                            ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
-                    }
-                    for (int i = 0; i < 5; i++)
-                    {
-                        Vector2 shotVelocity = (shootDirection * 10f).RotatedBy((-0.035f * (i + 1)) * Utils.GetLerpValue(0f, 55f, windup, true));
-                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle, shotVelocity * (1f - i * 0.1f),
-                            ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
+                        float spread = (0.04f * (i + 1)) * spreadFactor;
+                        float speed = 13f * (1f - i * 0.05f);
+                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle,
+                            (shootDirection * speed).RotatedBy(spread),
+                            ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle,
+                            (shootDirection * speed).RotatedBy(-spread),
+                            ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
                     }
                 }
 
                 if (!Main.dedServ)
                 {
                     Particle pulse = new GlowSparkParticle(Muzzle, shootDirection * 18f, false, 6, 0.057f,
-                        Color.MediumVioletRed, new Vector2(1.7f, 0.8f), true);
+                        HoldoutGold, new Vector2(1.7f, 0.8f), true);
                     GeneralParticleHandler.SpawnParticle(pulse);
                 }
             }
@@ -262,10 +276,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             for (int k = 0; k < 10; k++)
             {
                 Vector2 shootVel = (shootDirection * 15f).RotatedByRandom(0.5f) * Main.rand.NextFloat(0.1f, 1.8f);
-                Dust dust = Dust.NewDustPerfect(Muzzle, Main.rand.NextBool(4) ? 267 : 66, shootVel);
+                Dust dust = Dust.NewDustPerfect(Muzzle, Main.rand.NextBool(4) ? 267 : DustID.GoldFlame, shootVel);
                 dust.scale = Main.rand.NextFloat(1.15f, 1.45f);
                 dust.noGravity = true;
-                dust.color = Main.rand.NextBool() ? Color.Lerp(Color.MediumVioletRed, Color.White, 0.5f) : Color.MediumVioletRed;
+                dust.color = Main.rand.NextBool() ? Color.Lerp(HoldoutGold, Color.White, 0.45f) : HoldoutOrange;
             }
         }
 
@@ -296,14 +310,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
 
             Vector2 smokeVel = new Vector2(0f, -8f) * Main.rand.NextFloat(0.1f, 1.1f);
-            GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(Muzzle, smokeVel, Color.MediumVioletRed,
+            GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(Muzzle, smokeVel, Color.Lerp(HoldoutOrange, HoldoutGold, 0.4f),
                 Main.rand.Next(30, 51), Main.rand.NextFloat(0.1f, 0.4f), 0.5f,
                 Main.rand.NextFloat(-0.2f, 0.2f), Main.rand.NextBool(), required: true));
 
             Dust dust = Dust.NewDustPerfect(Muzzle, DustID.SteampunkSteam, smokeVel.RotatedByRandom(0.1f), 80,
                 default, Main.rand.NextFloat(0.2f, 0.8f));
             dust.noGravity = false;
-            dust.color = Color.MediumVioletRed;
+            dust.color = HoldoutGold;
 
             shootingTimer = 0f;
             postFireCooldown--;

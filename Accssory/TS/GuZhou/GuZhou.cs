@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
     internal sealed class GuZhou : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/GuZhou/GuZhou";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/图片放这里/孤舟";
 
         public override void SetDefaults()
         {

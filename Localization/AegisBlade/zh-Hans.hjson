@@ -14,9 +14,9 @@ Mods: {
 						[c/DCD6C8:掩体持续60秒，BOSS战中持续10秒]
 						[c/8DB8FF:完美格挡] [c/DCD6C8:吸收全部伤害，获得35无敌帧与8点能量；随后的盾牌猛击额外强化]
 						[c/8DB8FF:举盾] [c/DCD6C8:+20防御并免疫击退]
-						[c/7FE886:埃癸斯] [c/DCD6C8:根据移动速度获得6~15点额外防御；静止时达到上限]
-						[c/7FE886:壁垒] [c/DCD6C8:无持续伤害减益时，接触类伤害降低20%，静止时效果翻倍]
-						[c/FFD700:传奇技能（金手）] [c/DCD6C8:能量满后按下传奇技能键，金手降临并赋予10秒完全无敌]
+						[c/7FE886:被动【埃癸斯】] [c/DCD6C8:根据移动速度获得6~15点额外防御；静止时达到上限]
+						[c/7FE886:被动【壁垒】] [c/DCD6C8:无持续伤害减益时，接触类伤害降低20%，静止时效果翻倍]
+						[c/FFD700:大招【金手】] [c/DCD6C8:能量满后按下传奇技能键，金手降临并赋予10秒完全无敌]
 						'''
 					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
 					LegendaryText:
@@ -48,6 +48,12 @@ Mods: {
 			AegisShieldHoldout.DisplayName: 庇护盾牌
 			AegisFireball.DisplayName: 庇护火球
 			AegisBladeThrown.DisplayName: 投掷庇护之刃
+
+			AegisBlade: {
+				// AegisBorrowedLazharLaser.DisplayName: Aegis Borrowed Lazhar Laser
+				// AegisBorrowedOrbitalStrike.DisplayName: Aegis Borrowed Orbital Strike
+			}
+
 			AegisWallProjectile.DisplayName: 庇护土墙
 			AegisUltimateHand.DisplayName: 金手
 			AegisEnergyUI.DisplayName: 庇护能量条

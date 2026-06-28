@@ -104,14 +104,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             bombardWaveCount = Utils.Clamp(waveCount, 1, 30);
             float desiredSpeed = Projectile.velocity.Length();
             if (desiredSpeed <= 0.01f)
-                desiredSpeed = 18f;
+                desiredSpeed = 18f * 0.8f;
 
             Player owner = Main.player[Projectile.owner];
             float gravDir = owner.active ? owner.gravDir : 1f;
             Vector2 fallStart = bombardTarget - Vector2.UnitY * 980f * gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
             Vector2 fallDirection = (bombardTarget - fallStart).SafeNormalize(Vector2.UnitY * gravDir);
             bombardFallStart = fallStart;
-            delayedReturnVelocity = fallDirection * Math.Max(42f, desiredSpeed * 2.2f);
+            delayedReturnVelocity = fallDirection * Math.Max(42f * 0.8f, desiredSpeed * 2.2f);
             pendingBombardTeleport = true;
             ReturnDelayTimer = ReturnDelayFrames * (Projectile.extraUpdates + 1);
             FlightTimer = 0f;
@@ -326,7 +326,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             targetPoint = owner.Calamity().mouseWorld == Vector2.Zero ? Main.MouseWorld : owner.Calamity().mouseWorld;
             bombardFallStart = targetPoint - Vector2.UnitY * 980f * owner.gravDir + new Vector2(Main.rand.NextFloat(-84f, 84f), 0f);
             Vector2 fallDirection = (targetPoint - bombardFallStart).SafeNormalize(Vector2.UnitY * owner.gravDir);
-            float desiredSpeed = Math.Max(42f, storedAmmoSpeed * 2.2f);
+            float desiredSpeed = Math.Max(42f * 0.8f, storedAmmoSpeed * 0.8f * 2.2f);
             delayedReturnVelocity = fallDirection * desiredSpeed;
 
             if (Projectile.owner == Main.myPlayer)
@@ -396,11 +396,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 return;
             }
 
-            float speed = Math.Max(Projectile.velocity.Length(), 32f);
+            float speed = Math.Max(Projectile.velocity.Length(), 32f * 0.8f);
             Vector2 desiredVelocity = toTarget / distance * speed;
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.22f);
 
-            if (distance < Math.Max(42f, speed * 1.15f))
+            if (distance < Math.Max(42f * 0.8f, speed * 1.15f))
             {
                 Projectile.velocity = desiredVelocity;
                 passedBombardTarget = true;
@@ -430,8 +430,31 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 return;
 
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             Player owner = Main.player[Projectile.owner];
             float ownerDistance = owner.active ? Vector2.Distance(owner.Center, Projectile.Center) : 0f;
+
+            int smokeCount = Main.rand.Next(2, 4);
+            float spiralPhase = FlightTimer * 0.22f + Projectile.identity * 0.37f;
+            for (int i = 0; i < smokeCount; i++)
+            {
+                float fan = Main.rand.NextFloat(-0.75f, 0.75f);
+                float spiral = (float)Math.Sin(spiralPhase + i * 1.7f) * Main.rand.NextFloat(0.4f, 1.25f);
+                Vector2 smokeVelocity =
+                    -direction.RotatedBy(fan) * Main.rand.NextFloat(0.55f, 2.1f) +
+                    normal * spiral +
+                    Main.rand.NextVector2Circular(0.75f, 0.75f);
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    Projectile.Center - direction * Main.rand.NextFloat(2f, 18f) + normal * Main.rand.NextFloat(-12f, 12f),
+                    smokeVelocity,
+                    Color.Lerp(Color.Black, mainColor, Main.rand.NextFloat(0.06f, 0.18f)),
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.18f, 0.34f),
+                    Main.rand.NextFloat(0.45f, 0.62f),
+                    Main.rand.NextFloat(-0.16f, 0.16f),
+                    true));
+            }
 
             if ((int)FlightTimer % 2 == 0 && ownerDistance < 1400f)
             {
@@ -447,6 +470,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     false,
                     1.5f);
                 GeneralParticleHandler.SpawnParticle(spark);
+
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + normal * Main.rand.NextFloat(-10f, 10f),
+                    -Projectile.velocity.RotatedByRandom(0.28f) * Main.rand.NextFloat(0.14f, 0.28f),
+                    false,
+                    Main.rand.Next(9, 14),
+                    Main.rand.NextFloat(0.22f, 0.44f),
+                    Main.rand.NextBool() ? HighlightColor : Color.Lerp(Color.Black, HighlightColor, 0.45f)));
             }
             else
             {

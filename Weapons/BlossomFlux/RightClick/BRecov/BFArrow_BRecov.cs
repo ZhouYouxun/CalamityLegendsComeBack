@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
     internal class BFArrow_BRecov : ModProjectile
     {
         private const int LifetimeFrames = 14;
-        private const float MaxFlightSpeed = 26.5f;
+        private const float MaxFlightSpeed = 26.5f * 0.8f;
 
         private bool releasedRecoveryOrb;
 

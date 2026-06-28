@@ -387,10 +387,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState, passiveDevice);
 
             bool exUnlocked = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
-            string dash4 = exUnlocked
-                ? this.GetLocalizedValue("Dash4_Unlock")
+            string final = exUnlocked
+                ? this.GetLocalizedValue("BB_Final")
                 : this.GetLocalizedValue("Dash4_Lock");
-            string final = this.GetLocalizedValue("BB_Final");
 
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             string shiftHint = this.GetLocalizedValue("LegendaryHint");
@@ -408,7 +407,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                    rightSection.TrimEnd('\r', '\n') + "\n" +
                    tide.TrimEnd('\r', '\n') + "\n" +
                    passive.TrimEnd('\r', '\n') + "\n" +
-                   dash4.TrimEnd('\r', '\n') + "\n" +
                    final.TrimEnd('\r', '\n') + "\n";
 
                 tooltips.FindAndReplace("[GFB]", finalText);

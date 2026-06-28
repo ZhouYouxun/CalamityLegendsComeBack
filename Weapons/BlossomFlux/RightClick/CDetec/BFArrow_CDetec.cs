@@ -4,6 +4,7 @@ using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
@@ -203,13 +204,54 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
             Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
 
-            GeneralParticleHandler.SpawnParticle(new CritSpark(
-                Projectile.Center + normal * Main.rand.NextFloat(-7f, 7f),
-                direction * Main.rand.NextFloat(1.8f, 3.8f),
-                Color.White,
-                accentColor,
-                0.58f,
-                9));
+            // Left-click elements: CritSpark and SquishyLightParticle
+            // We'll create a dual-helix of CritSpark and an expanding/contracting central core of SquishyLightParticle.
+            float phase = FlightTimer * 0.22f + Projectile.identity * 0.73f;
+            float pulseRadius = 14f + 8f * (float)Math.Sin(FlightTimer * 0.08f); // radar pulse radius
+
+            for (int strand = 0; strand < 2; strand++)
+            {
+                float strandPhase = phase + strand * MathHelper.Pi;
+                Vector2 spiralOffset = normal * (float)Math.Sin(strandPhase) * pulseRadius + direction * (float)Math.Cos(strandPhase) * 6f;
+                Vector2 position = Projectile.Center - direction * 8f + spiralOffset;
+                Vector2 velocity = -Projectile.velocity * 0.04f + normal * (float)Math.Cos(strandPhase) * 0.9f;
+
+                Color sparkPrimary = strand == 0 ? mainColor : accentColor;
+                Color sparkAccent = Color.Lerp(sparkPrimary, Color.White, 0.4f);
+
+                // Spawn CritSpark in helix
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    position,
+                    velocity,
+                    sparkPrimary,
+                    sparkAccent,
+                    Main.rand.NextFloat(0.38f, 0.52f),
+                    Main.rand.Next(10, 16)));
+
+                // Spawn trailing SquishyLightParticle inside the helix
+                Vector2 corePosition = Projectile.Center - direction * (12f + strand * 8f) + normal * (float)Math.Sin(strandPhase) * (pulseRadius * 0.4f);
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    corePosition,
+                    -Projectile.velocity * 0.02f,
+                    Main.rand.NextFloat(0.12f, 0.22f),
+                    Color.Lerp(mainColor, Color.White, 0.3f),
+                    Main.rand.Next(12, 18)));
+            }
+
+            if ((int)FlightTimer % 2 == 0)
+            {
+                // Scanner pulse ring
+                DirectionalPulseRing pulse = new(
+                    Projectile.Center - direction * 6f,
+                    Projectile.velocity * 0.02f,
+                    Color.Lerp(mainColor, Color.White, 0.25f),
+                    new Vector2(0.32f, 0.88f),
+                    direction.ToRotation(),
+                    0.08f,
+                    0.03f,
+                    9);
+                GeneralParticleHandler.SpawnParticle(pulse);
+            }
         }
 
         private void SpawnPenetrationImpactFX(Vector2 center, float intensity)
@@ -248,13 +290,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 sparkVel *= Main.rand.NextFloat(0.1f, 1.9f) * intensity;
 
                 Color primary = Main.rand.NextBool() ? Color.Cyan : Color.Turquoise;
-                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                GeneralParticleHandler.SpawnParticle(new GlowSquareParticle(
                     center + Main.rand.NextVector2Circular(10f, 10f),
                     sparkVel,
+                    false,
+                    Main.rand.Next(11, 17),
+                    Main.rand.NextFloat(0.05f, 0.09f) * intensity,
                     primary,
-                    Color.PaleTurquoise,
-                    Main.rand.NextFloat(0.55f, 0.85f) * intensity,
-                    Main.rand.Next(11, 17)));
+                    true,
+                    Main.rand.NextFloat(-0.16f, 0.16f)));
             }
         }
 

@@ -180,14 +180,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
             }
 
             launched = true;
-            float multiplier = MathF.Pow(MathHelper.Clamp(Charge - 200f, 100f, 250f) * 0.01f, 2f);
-            if (multiplier >= 6.25f)
-                multiplier = 8.125f;
-
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 spawnPosition = GunTipPosition - direction * 20f;
             Vector2 velocity = direction * 5f;
-            int damage = Math.Max(1, (int)(Projectile.damage / 6.25f * multiplier));
+            float multiplier = MathHelper.Clamp(MathHelper.Lerp(1f, 25f, ReleaseRatio), 1f, 25f);
+            int damage = Math.Max(1, (int)(Projectile.damage * multiplier));
 
             if (Main.myPlayer == Projectile.owner)
             {

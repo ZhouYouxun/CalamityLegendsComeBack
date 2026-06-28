@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         {
             string modeInfo = this.GetLocalizedValue("PrismReworkInfo");
             string exInfo = this.GetLocalizedValue("EXInfo");
-            string growth = balance.BuildProgressionSummary();
+            string growth = balance.BuildProgressionSummary(key => this.GetLocalizedValue(key));
             bool shiftPressed = Main.keyState.PressingShift();
             if (shiftPressed)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");

@@ -27,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private int HoldoutIndex => (int)Projectile.ai[0];
+        private bool IsStandalone => HoldoutIndex < 0;
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BeamLength => ref Projectile.localAI[1];
         private YCRightLaserVisualTier Tier => balance.GetRightLaserTier();
@@ -56,11 +57,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             YharimsCrystalHellBladeGlobalProjectile.Mark(Projectile, YCWeaponForm.Crystal);
+            if (IsStandalone)
+            {
+                Projectile.timeLeft = 48;
+                return;
+            }
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/PlasmaBolt") { Volume = 0.42f, Pitch = -0.15f, MaxInstances = 4 }, Projectile.Center);
         }
 
         public override void AI()
         {
+            if (IsStandalone)
+            {
+                Timer++;
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Projectile.rotation = Projectile.velocity.ToRotation();
+                Projectile.scale = GetBeamScale();
+                UpdateBeamLength();
+                EmitBeamFX();
+                CastBeamLight();
+                // timeLeft decrements naturally — no refresh
+                return;
+            }
+
             if (!TryGetHoldout(out Projectile holdoutProjectile, out YC_RightCrystalHoldout holdout))
             {
                 Projectile.Kill();
@@ -361,7 +380,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private float LaserOpacity()
         {
-            return Utils.GetLerpValue(0f, 12f, Timer, true);
+            float fadeIn = Utils.GetLerpValue(0f, 12f, Timer, true);
+            if (IsStandalone)
+                return fadeIn * Utils.GetLerpValue(0f, 14f, Projectile.timeLeft, true);
+            return fadeIn;
         }
 
         private float YharonWidthFunction(float completionRatio, Vector2 vertexPosition)

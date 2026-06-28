@@ -219,13 +219,17 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
                 : this.GetLocalizedValue("LegendaryHint");
+            bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string finaleText = legendaryEmblemEquipped
+                ? string.Format(this.GetLocalizedValue("Finale"), keyText)
+                : this.GetLocalizedValue("FinaleLocked");
 
             string finalText =
                 this.GetLocalizedValue($"LeftClick{MalachiteBalance.GetLeftClickTooltipTier()}") + "\n" +
                 this.GetLocalizedValue($"RightClick{MalachiteBalance.GetRightClickTooltipTier()}") + "\n" +
                 this.GetLocalizedValue($"StealthStrike{MalachiteBalance.GetStealthTooltipTier()}") + "\n" +
-                string.Format(this.GetLocalizedValue("Finale"), keyText) + "\n" +
-                this.GetLocalizedValue("Passive") + "\n";
+                this.GetLocalizedValue("Passive") + "\n" +
+                finaleText + "\n";
 
             if (shiftPressed)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");

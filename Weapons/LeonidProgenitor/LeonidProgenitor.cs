@@ -184,6 +184,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 Projectile.NewProjectile(Item.GetSource_FromThis(), player.Center, Vector2.Zero, uiType, 0, 0f, player.whoAmI);
             }
 
+            // Sync Ultimate energy to CalamityMod's cooldown UI
+            if (Main.myPlayer == player.whoAmI)
+            {
+                var modPlayer = player.GetModPlayer<LeonidProgenitorPlayer>();
+                if (player.Calamity().cooldowns.TryGetValue(LeonidEXCooldown.ID, out var exCooldown))
+                    exCooldown.timeLeft = modPlayer.UltimateEnergy;
+                else
+                    player.AddCooldown(LeonidEXCooldown.ID, 100).timeLeft = modPlayer.UltimateEnergy;
+            }
+
             // Ultimate Trigger check
             if (Main.myPlayer == player.whoAmI)
             {

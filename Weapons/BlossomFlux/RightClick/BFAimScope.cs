@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -120,7 +121,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 if (Charge < MaxChargeOrTargetRotation)
                     playedReadySound = false;
 
-                if (ChargePercent == 1f && Charge % 2 == 0)
+                bool suppressReadyCritSpark =
+                    Owner.GetModPlayer<BFRightUIPlayer>().CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_EPlague;
+                if (!suppressReadyCritSpark && ChargePercent == 1f && Charge % 2 == 0)
                 {
                     Vector2 sparkVelocity = scopeDirection.RotatedBy(Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)) * 6f;
                     CritSpark spark = new CritSpark(sparkOrigin, sparkVelocity + Owner.velocity, scopeAccentColor, scopeMainColor, 1f, 16);

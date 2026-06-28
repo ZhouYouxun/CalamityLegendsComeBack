@@ -165,5 +165,7 @@ Mods: {
 			LPBookNoRecords: No Leonid metal infusion records are registered.
 			LPBookMissingEffect: No effect record
 		}
+
+		Cooldowns.LeonidEX: Leonid Ultimate Energy
 	}
 }

@@ -12,9 +12,10 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.SumBoss
 {
-    public class BossSummonerItem : ModItem
+    public class BossSummonerItem : ModItem, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Assets/UI/IUMWIcon";
+        public new string LocalizationCategory => "Items.Weapons";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
 
         public override void SetDefaults()
         {

@@ -221,7 +221,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int FireSpecialArrow(float chargeCompletion, int projectileType, float baseSpeed, float damageMultiplier)
         {
-            float speed = MathHelper.Lerp(baseSpeed * 0.76f, baseSpeed * 1.22f, chargeCompletion) * GetAccessoryArrowSpeedMultiplier(CurrentPreset);
+            float speed = MathHelper.Lerp(baseSpeed * 0.76f, baseSpeed * 1.22f, chargeCompletion) * GetAccessoryArrowSpeedMultiplier(CurrentPreset) * 0.8f;
             int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * MathHelper.Lerp(0.8f, 1.35f, chargeCompletion) * damageMultiplier);
             float knockback = Projectile.knockBack * MathHelper.Lerp(0.85f, 1.15f, chargeCompletion);
 
@@ -254,7 +254,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 Vector2 treeOffset = GetRecoveryTreeOffset(i, flashCount, upward, side);
                 Vector2 spawnPosition = Owner.Center + treeOffset;
                 Vector2 velocityDirection = Vector2.Lerp(upward, treeOffset.SafeNormalize(upward), 0.34f + progress * 0.2f).SafeNormalize(upward);
-                Vector2 velocity = velocityDirection * MathHelper.Lerp(2.2f, 3.8f, progress) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_BRecov, convertedLeafArrow: true);
+                Vector2 velocity = velocityDirection * MathHelper.Lerp(2.2f, 3.8f, progress) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_BRecov, convertedLeafArrow: true) * 0.8f;
 
                 BFArrow_BRecovTransfer.Spawn(
                     Projectile.GetSource_FromThis(),
@@ -306,7 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             BFBreakthroughRightStats stats = BFBreakthroughRightBalance.GetStats();
             int arrowCount = Math.Max(1, breakthroughLoadedArrows);
-            float speed = 21.6f * 1.22f * stats.ProjectileSpeedMultiplier * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_ABreak);
+            float speed = 21.6f * 1.22f * stats.ProjectileSpeedMultiplier * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_ABreak) * 0.8f;
             int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * 1.35f * 1.12f);
             damage = (int)(damage * (1f + arrowCount * stats.DamagePerChargeStack));
             float knockback = Projectile.knockBack * 1.15f;
@@ -355,7 +355,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             {
                 breakthroughQueuedShotCount = 0;
 
-
                 breakthroughQueuedShotIndex = 0;
                 breakthroughQueuedShotTimer = 0;
                 return;
@@ -376,7 +375,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private void FireBombardSpecialArrow(float chargeCompletion, int projectileType, float baseSpeed, float damageMultiplier)
         {
             BFBombardRightStats stats = BFBombardRightBalance.GetStats();
-            float speed = MathHelper.Lerp(baseSpeed * 1.52f, baseSpeed * 2.24f, chargeCompletion) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            float speed = MathHelper.Lerp(baseSpeed * 1.52f, baseSpeed * 2.24f, chargeCompletion) * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_DBomb) * 0.8f;
             int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * MathHelper.Lerp(0.8f, 1.35f, chargeCompletion) * damageMultiplier);
             float knockback = Projectile.knockBack * MathHelper.Lerp(0.85f, 1.15f, chargeCompletion);
             Vector2 bombardTarget = GetBombardReticleCenter();

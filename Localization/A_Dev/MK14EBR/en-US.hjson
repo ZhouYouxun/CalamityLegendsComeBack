@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -6,7 +6,6 @@
 					DisplayName: MK14EBR-缄花
 					Tooltip: "[GFB]"
 					MK14_Intro: "[c/85D7FF:A fully automatic legendary marksman rifle. Default spread linearly rises from 1 degree to 5 degrees during sustained fire.]"
-					MK14_Stage: "[c/B6E7FF:Current stage: {0}]"
 					MK14_Ammo: "[c/F7D87C:Fires the player's bullets; Musket Balls become M61 armor-piercing rounds.]"
 					MK14_RightClick: "[c/F7D87C:Right click opens or closes the modification panel.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the full legendary record]"

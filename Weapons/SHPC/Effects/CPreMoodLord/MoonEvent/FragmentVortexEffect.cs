@@ -38,7 +38,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
         }
 
         private int fireTimer;
-        private float spiralAngle;
         private int shardTimer;
 
         // ================= AI =================

@@ -126,8 +126,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string intro = this.GetLocalizedValue("MK14_Intro");
-            string stageName = BalanceMK14EBR.GetLocalizedStageName(balance.GetCompletedStageIndex());
-            string stage = string.Format(this.GetLocalizedValue("MK14_Stage"), stageName);
             string right = this.GetLocalizedValue("MK14_RightClick");
             string ammo = this.GetLocalizedValue("MK14_Ammo");
             string loadout = BuildLoadoutTooltip();
@@ -137,10 +135,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
             string finalText =
                 intro + "\n" +
-                stage + "\n\n" +
                 ammo + "\n" +
-                right + "\n\n" +
-                loadout + "\n\n" +
+                right + "\n" +
+                loadout + "\n" +
                 legendarySection + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);

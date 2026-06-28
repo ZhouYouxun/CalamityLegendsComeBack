@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				BossSummonerItem: {
+					DisplayName: 全息召唤器
+					Tooltip: 右键打开全息召唤矩阵。
+				}
+			}
+		}
+	}
+}

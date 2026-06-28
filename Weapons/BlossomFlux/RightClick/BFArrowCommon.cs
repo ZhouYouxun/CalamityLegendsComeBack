@@ -3,6 +3,7 @@ using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -151,14 +152,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
                 case BlossomFluxChloroplastPresetType.Chlo_CDetec:
                 {
-                    CritSpark reconSpark = new(
-                        projectile.Center + normal * Main.rand.NextFloat(-4f, 4f),
-                        direction.RotatedByRandom(0.16f) * Main.rand.NextFloat(1.4f, 2.4f),
-                        Color.White,
-                        accentColor,
-                        0.62f * intensity,
-                        12);
-                    GeneralParticleHandler.SpawnParticle(reconSpark);
+                    float phase = Main.GlobalTimeWrappedHourly * 18f + projectile.identity * 0.41f;
+                    float side = (float)Math.Sin(phase) * 5f;
+                    TechyHoloysquareParticle scanSquare = new(
+                        projectile.Center + normal * side - direction * Main.rand.NextFloat(2f, 8f),
+                        -projectile.velocity * 0.045f + normal * (float)Math.Cos(phase) * 0.35f,
+                        Main.rand.NextFloat(0.08f, 0.16f) * intensity,
+                        Color.Lerp(accentColor, Color.White, 0.28f),
+                        Main.rand.Next(10, 15),
+                        0.78f);
+                    GeneralParticleHandler.SpawnParticle(scanSquare);
                     break;
                 }
 

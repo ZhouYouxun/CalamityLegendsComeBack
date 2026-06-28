@@ -17,8 +17,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 {
     internal sealed class YC_RightDrone : ModProjectile, ILocalizedModType
     {
+        private static readonly Color DroneGold = new(255, 218, 88);
+        private static readonly Color DroneOrange = new(255, 104, 36);
+
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
-        public override string Texture => "CalamityMod/Projectiles/Magic/OmicronWingman";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone";
 
         private const int ShutdownFrames = 120;
         private const float FiringTime = 10f;
@@ -86,7 +89,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             Projectile.timeLeft = 2;
             Projectile.damage = hasHoldout ? holdoutProj.damage : Owner.GetWeaponDamage(Owner.HeldItem);
-            Lighting.AddLight(Projectile.Center, Color.MediumVioletRed.ToVector3() * 0.2f);
+            Lighting.AddLight(Projectile.Center, DroneGold.ToVector3() * 0.22f);
 
             if (HeavyCommanded)
                 TriggerHeavyAttack();
@@ -176,12 +179,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
                 if (Main.myPlayer == Projectile.owner)
                 {
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), tipPosition, firingVelocity,
-                        ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), tipPosition, firingVelocity.RotatedBy(-0.05f) * 0.85f,
-                        ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), tipPosition, firingVelocity.RotatedBy(0.05f) * 0.85f,
-                        ModContent.ProjectileType<WingmanShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 0f, 2f);
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), tipPosition, shootDirection * 14f,
+                        ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), tipPosition, shootDirection * 13f,
+                        ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
                 }
             }
 
@@ -190,16 +191,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             for (int k = 0; k < 6; k++)
             {
-                Vector2 shootVel = (shootDirection * 10f).RotatedByRandom(0.5f) * Main.rand.NextFloat(0.1f, 1.8f);
-                Dust dust = Dust.NewDustPerfect(tipPosition, Main.rand.NextBool(4) ? 264 : 66, shootVel);
-                dust.scale = Main.rand.NextFloat(1.15f, 1.45f);
+                Vector2 shootVel = (shootDirection * 10f).RotatedByRandom(0.4f) * Main.rand.NextFloat(0.1f, 1.6f);
+                Dust dust = Dust.NewDustPerfect(tipPosition, Main.rand.NextBool(4) ? 264 : DustID.GoldFlame, shootVel);
+                dust.scale = Main.rand.NextFloat(1.1f, 1.4f);
                 dust.noGravity = true;
-                dust.color = Main.rand.NextBool() ? Color.Lerp(Color.MediumVioletRed, Color.White, 0.5f) : Color.MediumVioletRed;
+                dust.color = Main.rand.NextBool() ? Color.Lerp(DroneGold, Color.White, 0.45f) : DroneOrange;
             }
 
             GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(tipPosition - shootDirection * 14f,
                 shootDirection * 20f, false, Main.rand.Next(7, 12), 0.035f,
-                Color.MediumVioletRed, new Vector2(1.5f, 0.9f), true));
+                DroneGold, new Vector2(1.5f, 0.9f), true));
 
             OffsetLength -= isGrenade ? 27f : 5f;
         }
@@ -213,14 +214,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (!Main.dedServ && Main.rand.NextBool())
             {
                 Vector2 smokeVel = new Vector2(0f, -8f) * Main.rand.NextFloat(0.1f, 1.1f);
-                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(tipPosition, smokeVel, Color.MediumVioletRed,
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(tipPosition, smokeVel, Color.Lerp(DroneOrange, DroneGold, 0.45f),
                     Main.rand.Next(30, 51), Main.rand.NextFloat(0.1f, 0.4f), 0.5f,
                     Main.rand.NextFloat(-0.2f, 0.2f), Main.rand.NextBool(), required: true));
 
                 Dust dust = Dust.NewDustPerfect(tipPosition, DustID.SteampunkSteam, smokeVel.RotatedByRandom(0.1f),
                     80, default, Main.rand.NextFloat(0.2f, 0.8f));
                 dust.noGravity = false;
-                dust.color = Color.MediumVioletRed;
+                dust.color = DroneGold;
             }
 
             ShootingTimer = 0f;
@@ -255,9 +256,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (time <= 0)
                 return false;
 
-            Texture2D texture = SlotIndex == 0
-                ? ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/OmicronWingman").Value
-                : ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/OmicronWingmanAlt").Value;
+            Texture2D texture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
             Color drawColor = Projectile.GetAlpha(lightColor);
@@ -267,8 +267,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (Projectile.spriteDirection == -1 ? movingUp : !movingUp)
                 flipSprite |= SpriteEffects.FlipVertically;
 
+            // Soft gold ambient glow behind the drone
+            Main.EntitySpriteDraw(bloom, drawPosition, null, DroneGold with { A = 0 } * 0.18f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.72f, SpriteEffects.None);
+
+            // Gold afterimage trail
             CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type],
-                Color.Lerp(Color.MediumVioletRed, Color.White, 0.5f) * 0.2f, 1, texture);
+                Color.Lerp(DroneOrange, DroneGold, 0.5f) with { A = 0 } * 0.18f, 1, texture);
+
+            // Gold border outline (pulsing)
+            float pulse = 0.82f + 0.18f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
+            Color borderColor = DroneGold with { A = 0 };
+            float borderRadius = 3.2f * pulse;
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 6f;
+                Vector2 offset = angle.ToRotationVector2() * borderRadius;
+                Main.EntitySpriteDraw(texture, drawPosition + offset, null, borderColor * 0.38f, drawRotation, rotationPoint, Projectile.scale, flipSprite);
+            }
+
+            // Main body
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, drawRotation, rotationPoint,
                 Projectile.scale, flipSprite);
 

@@ -198,15 +198,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().Count > 0
                 ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
                 : "Unbound";
+            bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string ultimateText = legendaryEmblemEquipped
+                ? string.Format(this.GetLocalizedValue("AzureThunderUltimate"), keyText)
+                : this.GetLocalizedValue("AzureThunderUltimateLocked");
 
             // [GFB] 是本武器本地化文本里的占位符，这里按当前进度拼成完整说明。
             string text =
                 this.GetLocalizedValue("AzureThunderLeft") + "\n\n" +
                 this.GetLocalizedValue("AzureThunderRight") + "\n\n" +
-                string.Format(this.GetLocalizedValue("AzureThunderUltimate"), keyText) + "\n\n" +
                 this.GetLocalizedValue(GetHeavenEarthTooltipKey()) + "\n" +
                 this.GetLocalizedValue(GetHeavensWardTooltipKey()) + "\n" +
                 this.GetLocalizedValue(GetFourSymbolsTooltipKey()) + "\n\n" +
+                ultimateText + "\n\n" +
                 this.GetLocalizedValue("AzureThunderThunderCharge") + "\n" +
                 this.GetLocalizedValue("AzureThunderDot") + "\n\n" +
                 this.GetLocalizedValue("AzureThunderFinal");

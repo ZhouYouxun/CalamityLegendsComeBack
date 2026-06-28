@@ -8,7 +8,7 @@ Mods: {
 					SHPC_LoadingUIHint: "[c/66CCFF:打开背包并按下] [[c/66CCFF:{0}]] [c/66CCFF:打开装填UI，将特定材料装填进去，可以改变攻击效果]"
 					SHPC_CurrentAmmoEffect: "[c/66CCFF:当前装填效果：{0}]"
 					SHPC_DefaultAmmoEffect: 未装填特定材料，默认发射白色光球，造成范围伤害
-					SHPC_Passive: "[c/B8FF9E:被动（额外准备）：手持即可增加最大魔力值和魔力药水恢复量，降低魔力病的持续时间]"
+					SHPC_Passive: "[c/B8FF9E:被动【额外准备】手持即可增加最大魔力值和魔力药水恢复量，降低魔力病的持续时间]"
 					SHPC_RightIntro1:
 						'''
 						[c/FFB347:右键进行激光扫射，扫射会积攒热量，热量满后武器会过热停机，停止攻击后热量会散失]
@@ -47,11 +47,11 @@ Mods: {
 					SHPC_Final: "[c/99B3FF:系统仍在演化。此前的缺陷尚未完全修正，但其潜力仍然存在。或许有一天，它能够得到真正的验证。]"
 					SHPC_EXHint:
 						'''
-						[c/66CCFF:大招（超级激光）：身边有敌人时，每次左键发射会积蓄1点终极能量，最高储存60点。]
+						[c/66CCFF:大招【超级激光】身边有敌人时，每次左键发射会积蓄1点终极能量，最高储存60点。]
 						[c/66CCFF:当能量完全充盈后，按下] [[c/66CCFF:{0}]] [c/66CCFF:即可启动终极模式。]
 						[c/66CCFF:经过短暂蓄力，释放一道短暂但足以贯穿一切的超巨型激光。]
 						'''
-					SHPC_EXDisabledHint: "[c/9A9A9A:当前未佩戴黄金饰章，大招将被禁用。]"
+					SHPC_EXDisabledHint: "[c/9A9A9A:大招【超级激光】当前大招未解锁。]"
 					SHPC_AmmoWheelHint: "[c/F7D87C:关闭背包按下] [[c/F7D87C:{0}]] [c/F7D87C:打开切换轮盘，可以切换装填的弹药]"
 					Tooltip: "[GFB]"
 					TooltipGFB: 终于来到这里了吗？这个陌生又熟悉的世界。

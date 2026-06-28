@@ -18,10 +18,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public override string Texture => "CalamityLegendsComeBack/Weapons/AegisBlade/AegisBlade";
 
         private const int SwingDuration = 26;
-        private const float FireballSpawnProgress = 0.65f;
+        private const float FireballSpawnProgress = 0.3f;
         private const float SwordVisualScale = 1.55f;
         private const float BladeReach = 104f;
         private const int BladeTrailHistoryFrames = 16;
+        private const float FirstSwingStartOffsetDegrees = -20f;
+        private const float FirstSwingSlowPointDegrees = 80f;
+        private const float SwingLoopEndOffsetDegrees = 135f;
+        private const float LoopSweepDegrees = 1080f;
+        private const float FirstSwingSlowPointProgress = 0.26f;
 
         private Player Owner => Main.player[Projectile.owner];
         private readonly Vector2[] bladeTipHistory = new Vector2[BladeTrailHistoryFrames];
@@ -32,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private bool fireballSpawned;
         private float currentAngle;
         private float startAngle;
+        private float slowPointAngle;
         private float endAngle;
         private Vector2 lockedMouseDirection = Vector2.UnitX;
         private float scale = 1f;
@@ -98,14 +104,27 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             fireballSpawned = false;
             lockedMouseDirection = GetMouseDirection();
 
-            swingDirection = -Math.Sign(Owner.Center.X - AegisBlade.GetMouseWorld(Owner).X);
-            if (swingDirection == 0)
-                swingDirection = Owner.direction;
+            if (swingCount == 0)
+            {
+                swingDirection = -Math.Sign(Owner.Center.X - AegisBlade.GetMouseWorld(Owner).X);
+                if (swingDirection == 0)
+                    swingDirection = Owner.direction;
+            }
             Owner.direction = swingDirection;
 
             float baseAngle = lockedMouseDirection.ToRotation();
-            startAngle = baseAngle + MathHelper.ToRadians(-110f * swingDirection);
-            endAngle   = baseAngle + MathHelper.ToRadians( 110f * swingDirection);
+            if (swingCount == 0)
+            {
+                startAngle = baseAngle + MathHelper.ToRadians(FirstSwingStartOffsetDegrees * swingDirection);
+                slowPointAngle = baseAngle + MathHelper.ToRadians(FirstSwingSlowPointDegrees * swingDirection);
+                endAngle = baseAngle + MathHelper.ToRadians((LoopSweepDegrees + SwingLoopEndOffsetDegrees) * swingDirection);
+                currentAngle = startAngle;
+                return;
+            }
+
+            startAngle = currentAngle;
+            slowPointAngle = startAngle;
+            endAngle = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
             currentAngle = startAngle;
         }
 
@@ -114,13 +133,13 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (stateTimer == 0)
                 StartSwing();
 
-            stateTimer++;
-            float progress = stateTimer / (float)SwingDuration;
-            currentAngle = MathHelper.Lerp(startAngle, endAngle, CalamityUtils.EaseInOutExp(progress, 5f, 2f));
+            float progress = GetCurrentSwingProgress();
+            currentAngle = EvaluateSwingAngle(progress);
 
             if (!fireballSpawned && progress >= FireballSpawnProgress && Main.myPlayer == Projectile.owner)
             {
                 SpawnFireballs();
+                SpawnBorrowedLazharShots();
                 fireballSpawned = true;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.82f, Pitch = Main.rand.NextFloat(-0.12f, 0.16f) }, Owner.Center);
             }
@@ -129,8 +148,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             TrackBladeTrail(hitWindow);
             EmitSwingTrail(hitWindow);
 
-            if (stateTimer < SwingDuration)
+            if (progress < 1f)
+            {
+                stateTimer++;
                 return;
+            }
 
             if (IsLeftHeld())
             {
@@ -142,6 +164,28 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             Projectile.Kill();
+        }
+
+        private float GetCurrentSwingProgress()
+        {
+            return MathHelper.Clamp(stateTimer / (float)SwingDuration, 0f, 1f);
+        }
+
+        private float EvaluateSwingAngle(float progress)
+        {
+            if (swingCount == 0 && progress < FirstSwingSlowPointProgress)
+            {
+                float localProgress = MathHelper.Clamp(progress / FirstSwingSlowPointProgress, 0f, 1f);
+                float eased = 1f - MathF.Pow(1f - localProgress, 3f);
+                return MathHelper.Lerp(startAngle, slowPointAngle, eased);
+            }
+
+            float spinProgress = swingCount == 0
+                ? MathHelper.Clamp((progress - FirstSwingSlowPointProgress) / (1f - FirstSwingSlowPointProgress), 0f, 1f)
+                : progress;
+            float easedSpin = spinProgress * spinProgress * (3f - 2f * spinProgress);
+            float spinStart = swingCount == 0 ? slowPointAngle : startAngle;
+            return MathHelper.Lerp(spinStart, endAngle, easedSpin);
         }
 
         private void SpawnFireballs()
@@ -164,9 +208,79 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
         }
 
+        private void SpawnBorrowedLazharShots()
+        {
+            Vector2 shootDirection = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 normal = shootDirection.RotatedBy(MathHelper.PiOver2);
+            int laserType = ModContent.ProjectileType<AegisBorrowedLazharLaser>();
+            int orbitalType = ModContent.ProjectileType<AegisBorrowedOrbitalStrike>();
+            int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.42f));
+            int orbitalDamage = Math.Max(1, (int)(Projectile.damage * 0.52f));
+
+            for (int i = 0; i < 4; i++)
+            {
+                float offset = (i - 1.5f) * 18f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + shootDirection * 44f + normal * offset,
+                    shootDirection * 30f,
+                    laserType,
+                    laserDamage,
+                    Projectile.knockBack * 0.35f,
+                    Projectile.owner);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                int targetIndex = FindOrbitalTargetIndex();
+                Vector2 destination = targetIndex >= 0
+                    ? Main.npc[targetIndex].Center + Main.rand.NextVector2Circular(42f, 34f)
+                    : Owner.Center + Main.rand.NextVector2Circular(900f, 520f);
+
+                Vector2 spawnPosition = new(
+                    destination.X,
+                    destination.Y - Main.rand.NextFloat(940f, 1220f));
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    Vector2.UnitY * Main.rand.NextFloat(34f, 42f),
+                    orbitalType,
+                    orbitalDamage,
+                    Projectile.knockBack * 0.55f,
+                    Projectile.owner,
+                    targetIndex,
+                    destination.X,
+                    destination.Y);
+            }
+        }
+
+        private int FindOrbitalTargetIndex()
+        {
+            const float range = 100f * 16f;
+            int bestIndex = -1;
+            float bestDistance = range;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.active || npc.friendly || npc.dontTakeDamage || npc.life <= 0 || !npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Vector2.Distance(Owner.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestIndex = i;
+            }
+
+            return bestIndex;
+        }
+
         public override bool? CanDamage()
         {
-            float progress = stateTimer / (float)SwingDuration;
+            float progress = GetCurrentSwingProgress();
             return progress >= 0.23f && progress <= 0.87f ? null : false;
         }
 

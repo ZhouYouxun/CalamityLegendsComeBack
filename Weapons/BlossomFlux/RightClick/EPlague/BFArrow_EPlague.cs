@@ -459,6 +459,48 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
             float intensity = leftSpore ? 1.25f : 0.88f;
 
+            Color staticPlague = new(124, 255, 44);
+            Color acidMist = new(136, 211, 113, 127);
+            Vector2 gasSpawnPosition = Projectile.Center - direction * Main.rand.NextFloat(6f, 20f) + Main.rand.NextVector2Circular(9f, 9f);
+            Vector2 gasVelocity = -Projectile.velocity.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.18f, 0.56f) + normal * Main.rand.NextFloat(-0.7f, 0.7f);
+            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                gasSpawnPosition,
+                gasVelocity,
+                Color.Lerp(acidMist, mainColor, 0.35f),
+                Color.Lerp(Color.Black, staticPlague, 0.18f),
+                Main.rand.NextFloat(0.34f, 0.72f) * intensity,
+                Main.rand.Next(58, 92),
+                Main.rand.NextFloat(0.006f, 0.018f)));
+
+            if (Projectile.FinalExtraUpdate() && (int)FlightTimer % 3 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    Projectile.Center - direction * 10f + normal * Main.rand.NextFloat(-5f, 5f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.22f, 0.42f),
+                    false,
+                    Main.rand.Next(7, 11),
+                    Main.rand.NextFloat(0.055f, 0.1f) * intensity,
+                    Color.Lerp(Color.SeaGreen, Color.PaleGreen, 0.35f) * 0.78f,
+                    new Vector2(0.28f, 1.15f),
+                    false,
+                    false,
+                    0.75f));
+            }
+
+            if (Projectile.FinalExtraUpdate() && (int)FlightTimer % 8 == 0)
+            {
+                DirectionalPulseRing pulse = new(
+                    Projectile.Center - direction * 14f + normal * Main.rand.NextFloat(-12f, 12f),
+                    -Projectile.velocity * 0.08f,
+                    Main.rand.NextBool(3) ? mainColor : staticPlague,
+                    new Vector2(0.42f, 0.78f),
+                    direction.ToRotation(),
+                    0.09f * intensity,
+                    0.022f,
+                    14);
+                GeneralParticleHandler.SpawnParticle(pulse);
+            }
+
             if (Main.rand.NextBool(leftSpore ? 2 : 3))
             {
                 Vector2 placement = Projectile.Center - direction * Main.rand.NextFloat(2f, 14f) + normal * Main.rand.NextFloat(-9f, 9f);

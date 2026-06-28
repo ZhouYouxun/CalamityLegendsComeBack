@@ -35,11 +35,11 @@ Mods: {
 						'''
 					CosmicDischargeUltimate:
 						'''
-						[c/FFE85A:维度压缩：能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，进行60帧裂隙蓄力。]
+						[c/FFE85A:大招【维度压缩】能量达到120后按] [[c/FFE85A:{0}]] [c/FFE85A:，进行60帧裂隙蓄力。]
 						[c/FFE85A:爆发：全屏神明激光墙与大型裂隙爆炸；随后留下持续灼焰场域。]
 						'''
-					CosmicDischargePassive: “[c/B8F4FF:裂隙封存：] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分会被削减至上限。触发时获得5秒”裂隙复苏”（伤害+20%），冷却60秒。]”
-					LegendaryHint: “[c/BABABA:按住Shift键以读取记录]”
+					CosmicDischargePassive: "[c/B8F4FF:被动【裂隙封存】] [c/DCD6C8:手持时，单次伤害超过最大生命值20%的部分会被削减至上限。触发时获得5秒“裂隙复苏”（伤害+20%），冷却60秒。]"
+					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
 					LegendaryText:
 						'''
 						[c/8DEBFF:裂隙的开启并非源于你的挥斩，而是因为它早已敞开——只是在等待某个东西坠落其中。]

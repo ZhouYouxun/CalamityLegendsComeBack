@@ -93,14 +93,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (Projectile.velocity.LengthSquared() < 0.01f)
             {
                 Projectile.velocity = FromChargedRelease
-                    ? (-Vector2.UnitY * Owner.gravDir).RotatedByRandom(0.86f) * Main.rand.NextFloat(2.4f, 5.4f)
+                    ? (-Vector2.UnitY * Owner.gravDir).RotatedByRandom(0.86f) * Main.rand.NextFloat(2.4f, 5.4f) * 0.8f
                     : Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 5.6f);
             }
 
             if (FromChargedRelease)
             {
                 Vector2 upward = -Vector2.UnitY * Owner.gravDir;
-                Projectile.velocity += upward * Main.rand.NextFloat(1.2f, 2.8f);
+                Projectile.velocity += upward * Main.rand.NextFloat(1.2f, 2.8f) * 0.8f;
                 Projectile.scale = Main.rand.NextFloat(1.04f, 1.18f);
             }
             else
@@ -383,8 +383,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Vector2 targetCenter = target.Center + target.velocity * 4f;
             Vector2 playerVector = targetCenter - Projectile.Center;
             float targetDistance = playerVector.Length();
-            float baseSpeed = target.lifeMagnet ? 10.2f : 8.8f;
-            float homeSpeed = MathHelper.Lerp(baseSpeed, baseSpeed + 3.2f, Utils.GetLerpValue(260f, 28f, targetDistance, true));
+            float baseSpeed = (target.lifeMagnet ? 10.2f : 8.8f) * 0.8f;
+            float homeSpeed = MathHelper.Lerp(baseSpeed, baseSpeed + 3.2f * 0.8f, Utils.GetLerpValue(260f, 28f, targetDistance, true));
             float steering = MathHelper.Lerp(0.18f, 0.42f, Utils.GetLerpValue(220f, 24f, targetDistance, true));
             Vector2 desiredVelocity = playerVector.SafeNormalize(Vector2.UnitY) * homeSpeed;
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, steering);

@@ -34,11 +34,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             Item.damage = 0;
             Item.knockBack = 0f;
             Item.DamageType = DamageClass.Generic;
-            Item.useTime = 14;
-            Item.useAnimation = 14;
+            Item.useTime = 5;
+            Item.useAnimation = 5;
             Item.useStyle = ItemUseStyleID.Swing;
             Item.noMelee = true;
-            Item.autoReuse = false;
+            Item.autoReuse = true;
+            Item.reuseDelay = 0;
             Item.shoot = TestProjectileType;
             Item.shootSpeed = 13f;
             Item.UseSound = SoundID.Item8;
@@ -65,7 +66,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             }
 
             int effectIndex = player.GetModPlayer<ParticleLabPlayer>().SelectedEffectIndex;
-            Projectile.NewProjectile(source, position, velocity, TestProjectileType, 0, 0f, player.whoAmI, effectIndex);
+            float speed = Math.Max(velocity.Length(), Item.shootSpeed);
+            const int burstCount = 10;
+            for (int i = 0; i < burstCount; i++)
+            {
+                Vector2 burstVelocity = (MathHelper.TwoPi * i / burstCount).ToRotationVector2() * speed;
+                Projectile.NewProjectile(source, player.MountedCenter, burstVelocity, TestProjectileType, 0, 0f, player.whoAmI, effectIndex);
+            }
             return false;
         }
 
@@ -1643,7 +1650,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.hide = true;
             Projectile.Opacity = 0f;
         }
 

@@ -1435,6 +1435,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     string compactFormKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
                     string compactLoadingKeyText = GetSHPCLoadingUIKeyText(isChinese);
                     string compactAmmoEffectText = BuildCurrentAmmoEffectTooltipText();
+                    string compactUltimateKeyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
+                    bool compactLegendaryEmblemEquipped = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+                    string compactExHint = compactLegendaryEmblemEquipped
+                        ? string.Format(this.GetLocalizedValue("SHPC_EXHint"), compactUltimateKeyText)
+                        : this.GetLocalizedValue("SHPC_EXDisabledHint");
 
                     string compactPrefix =
                         this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n') + "\n" +
@@ -1445,6 +1450,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), compactFormKeyText).TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue($"SHPC_RightIntro{compactState + 1}").TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
+                        compactExHint.TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n') + "\n";
 
                     int placeholderIndex = tooltips.FindIndex(line => line.Text == "[GFB]");

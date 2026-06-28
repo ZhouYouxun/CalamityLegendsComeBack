@@ -61,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             };
         }
 
-        private void SpawnSHPCLeftMuzzleParticles(Vector2 center, Vector2 velocity, BlossomFluxChloroplastPresetType preset, float intensity)
+        private void SpawnSHPCLeftMuzzleParticles(Vector2 center, Vector2 velocity, BlossomFluxChloroplastPresetType preset, float intensity, bool includeBreakthroughCritSpark = true)
         {
             if (Main.dedServ)
                 return;
@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             switch (preset)
             {
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
-                    SpawnBreakthroughMuzzle(muzzle, direction, right, themeColor, accentColor, ci);
+                    SpawnBreakthroughMuzzle(muzzle, direction, right, themeColor, accentColor, ci, includeBreakthroughCritSpark);
                     break;
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
                     SpawnRecoveryMuzzle(muzzle, direction, themeColor, accentColor, ci);
@@ -93,13 +93,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     SpawnPlagueMuzzle(muzzle, direction, themeColor, accentColor, ci);
                     break;
                 default:
-                    SpawnBreakthroughMuzzle(muzzle, direction, right, themeColor, accentColor, ci);
+                    SpawnBreakthroughMuzzle(muzzle, direction, right, themeColor, accentColor, ci, includeBreakthroughCritSpark);
                     break;
             }
         }
 
         // 突击：叶片飞溅 — 高速 SparkParticle 正向爆出 + 侧向 CritSpark
-        private static void SpawnBreakthroughMuzzle(Vector2 muzzle, Vector2 dir, Vector2 right, Color theme, Color accent, float i)
+        private static void SpawnBreakthroughMuzzle(Vector2 muzzle, Vector2 dir, Vector2 right, Color theme, Color accent, float i, bool includeCritSpark)
         {
             for (int k = 0; k < 6; k++)
             {
@@ -111,15 +111,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     Main.rand.NextFloat(0.5f, 0.9f) * i,
                     Main.rand.NextBool() ? theme : Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.3f, 0.7f))));
             }
-            for (int k = 0; k < 3; k++)
+            if (includeCritSpark)
             {
-                GeneralParticleHandler.SpawnParticle(new CritSpark(
-                    muzzle + Main.rand.NextVector2Circular(6f, 6f),
-                    right * Main.rand.NextFloat(-8f, 8f) + dir * Main.rand.NextFloat(1f, 3f),
-                    theme,
-                    Color.Lerp(accent, Color.White, 0.5f),
-                    Main.rand.NextFloat(0.35f, 0.6f) * i,
-                    Main.rand.Next(8, 14)));
+                for (int k = 0; k < 3; k++)
+                {
+                    GeneralParticleHandler.SpawnParticle(new CritSpark(
+                        muzzle + Main.rand.NextVector2Circular(6f, 6f),
+                        right * Main.rand.NextFloat(-8f, 8f) + dir * Main.rand.NextFloat(1f, 3f),
+                        theme,
+                        Color.Lerp(accent, Color.White, 0.5f),
+                        Main.rand.NextFloat(0.35f, 0.6f) * i,
+                        Main.rand.Next(8, 14)));
+                }
             }
             for (int k = 0; k < 5; k++)
             {

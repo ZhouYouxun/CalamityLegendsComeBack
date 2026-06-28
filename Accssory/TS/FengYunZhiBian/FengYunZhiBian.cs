@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
     internal sealed class FengYunZhiBian : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/FengYunZhiBian/FengYunZhiBian";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/图片放这里/风云之变";
 
         public override void SetDefaults()
         {

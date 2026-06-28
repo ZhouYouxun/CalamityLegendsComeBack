@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
     internal sealed class QianDingWanDing : ModItem
     {
         public new string LocalizationCategory => "Items";
-        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/QianDingWanDing/QianDingWanDing";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/TS/图片放这里/千定万定";
 
         public override void SetDefaults()
         {

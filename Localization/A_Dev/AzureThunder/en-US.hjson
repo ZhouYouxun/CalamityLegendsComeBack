@@ -132,11 +132,6 @@ Mods: {
 					The next SunderBlade attack becomes a heavy strike. This effect has a 9-second cooldown.
 					'''
 			}
-
-			BossSummonerItem: {
-				DisplayName: Boss Summoner Item
-				Tooltip: ""
-			}
 		}
 
 		Buffs: {
