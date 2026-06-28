@@ -32,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int tornadoCooldown = 0;
 
         private int SpawnStage => Utils.Clamp((int)Projectile.ai[1], 0, 3);
+        private bool IsAegisBlade => Main.player[Projectile.owner].HeldItem.type == ModContent.ItemType<CalamityLegendsComeBack.Weapons.AegisBlade.AegisBlade>();
         private float StageScale => Projectile.ai[0] > 0f ? Projectile.ai[0] : DefaultFinalWaveScale;
         private float StageIntensity => 1f + SpawnStage * 0.26f;
         private bool SlowdownBoostApplied
@@ -83,7 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.velocity *= 1f - velocityLoss;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             Projectile.Opacity = Utils.GetLerpValue(0f, 16f, lifeTimer, true) * Utils.GetLerpValue(0f, 34f, Projectile.timeLeft, true);
-            Lighting.AddLight(Projectile.Center, new Vector3(0.08f, 0.34f, 0.52f) * (1f + SpawnStage * 0.12f));
+            Vector3 lightColor = IsAegisBlade ? new Vector3(0.52f, 0.34f, 0.08f) : new Vector3(0.08f, 0.34f, 0.52f);
+            Lighting.AddLight(Projectile.Center, lightColor * (1f + SpawnStage * 0.12f));
 
             SpawnFlightEffects(Projectile, lifeTimer, SpawnStage, StageIntensity, initialSpeed);
             TrySpawnTrackingBubbles();
@@ -154,7 +156,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Texture2D texture = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture).Value;
             Vector2 origin = texture.Size() * 0.5f;
 
-            Color[] palette =
+            Color[] palette = IsAegisBlade ? new Color[]
+            {
+                new Color(255, 242, 185),
+                new Color(255, 205, 80),
+                new Color(255, 145, 52),
+                new Color(180, 60, 10)
+            } : new Color[]
             {
                 new Color(220, 250, 255),
                 new Color(115, 215, 255),
@@ -277,6 +285,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void TrySpawnTrackingBubbles()
         {
+            if (IsAegisBlade)
+                return;
+
             if (Projectile.numUpdates != 0 || Main.myPlayer != Projectile.owner)
                 return;
 

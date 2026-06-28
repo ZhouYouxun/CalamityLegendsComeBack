@@ -29,6 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float FirstSwingSlowPointProgress = 0.26f;
 
         private Player Owner => Main.player[Projectile.owner];
+        private float lastAngle { get => Projectile.localAI[0]; set => Projectile.localAI[0] = value; }
+        private float angleSwept { get => Projectile.localAI[1]; set => Projectile.localAI[1] = value; }
         private readonly Vector2[] bladeTipHistory = new Vector2[BladeTrailHistoryFrames];
         private int bladeTipHistoryLength;
         private int swingCount;
@@ -119,13 +121,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 slowPointAngle = baseAngle + MathHelper.ToRadians(FirstSwingSlowPointDegrees * swingDirection);
                 endAngle = baseAngle + MathHelper.ToRadians((LoopSweepDegrees + SwingLoopEndOffsetDegrees) * swingDirection);
                 currentAngle = startAngle;
-                return;
+            }
+            else
+            {
+                startAngle = currentAngle;
+                slowPointAngle = startAngle;
+                endAngle = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
+                currentAngle = startAngle;
             }
 
-            startAngle = currentAngle;
-            slowPointAngle = startAngle;
-            endAngle = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
-            currentAngle = startAngle;
+            lastAngle = currentAngle;
+            angleSwept = 0f;
         }
 
         private void DoSwing()
@@ -135,6 +141,38 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             float progress = GetCurrentSwingProgress();
             currentAngle = EvaluateSwingAngle(progress);
+
+            if (stateTimer > 0)
+            {
+                float angleDiff = Math.Abs(MathHelper.WrapAngle(currentAngle - lastAngle));
+                angleSwept += angleDiff;
+                lastAngle = currentAngle;
+
+                if (angleSwept >= MathHelper.TwoPi / 3f)
+                {
+                    angleSwept -= MathHelper.TwoPi / 3f;
+                    if (Main.myPlayer == Projectile.owner)
+                    {
+                        Vector2 shootDir = currentAngle.ToRotationVector2();
+                        int waveDamage = Math.Max(1, (int)(Projectile.damage * 0.6f));
+                        int waveProj = Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            Owner.MountedCenter + shootDir * 44f * scale,
+                            shootDir * 14f,
+                            ModContent.ProjectileType<CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BBSwing_Wave>(),
+                            waveDamage,
+                            Projectile.knockBack * 0.5f,
+                            Projectile.owner,
+                            1.1f * scale, // scale
+                            2f  // stage
+                        );
+                        if (waveProj != Main.maxProjectiles)
+                        {
+                            Main.projectile[waveProj].localAI[0] = -1f; // Disable water bubbles
+                        }
+                    }
+                }
+            }
 
             if (!fireballSpawned && progress >= FireballSpawnProgress && Main.myPlayer == Projectile.owner)
             {
@@ -432,8 +470,22 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Main.spriteBatch.ExitShaderRegion();
             }
 
+            // Draw bright yellow outline continuously during swing
+            CalamityLegendsComeBack.Weapons.Visuals.HoldoutOutlineHelper.DrawSolidOutline(
+                swordTexture,
+                drawPosition,
+                drawRotation,
+                origin,
+                new Vector2(scale),
+                SpriteEffects.None,
+                Color.Yellow,
+                3.5f, // radius
+                1.0f, // opacity
+                Main.GlobalTimeWrappedHourly
+            );
+
             Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor, drawRotation, origin, scale, SpriteEffects.None);
-            DrawBladeTrail();
+            // DrawBladeTrail(); // Temporarily disabled as per user request
             return false;
         }
     }
