@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
 {
     public sealed class ShaderTestItem : ModItem, ILocalizedModType
     {
-        public const string DemoTexture = "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public const string DemoTexture = "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/ShaderLab/ShaderTestItem";
 
         private static int PanelType => ModContent.ProjectileType<ShaderTestPanel>();
         private static int TestProjectileType => ModContent.ProjectileType<ShaderTestProjectile>();

@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.AutoLighting
     public class AutoLighting : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/AutoLighting/AutoLighting";
 
         public override void SetDefaults()
         {

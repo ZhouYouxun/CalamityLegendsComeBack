@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.SumBoss
     public class BossSummonerItem : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/SumBoss/BossSummonerItem";
 
         public override void SetDefaults()
         {

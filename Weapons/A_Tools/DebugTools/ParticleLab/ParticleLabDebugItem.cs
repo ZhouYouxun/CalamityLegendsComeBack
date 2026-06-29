@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 {
     public sealed class ParticleLabDebugItem : ModItem, ILocalizedModType
     {
-        public const string DemoTexture = "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public const string DemoTexture = "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/ParticleLab/ParticleLabDebugItem";
 
         private static int PanelType => ModContent.ProjectileType<ParticleLabPanel>();
         private static int TestProjectileType => ModContent.ProjectileType<ParticleLabProjectile>();

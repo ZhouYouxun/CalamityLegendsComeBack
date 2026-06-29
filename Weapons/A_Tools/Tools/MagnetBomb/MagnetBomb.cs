@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.MagnetBomb
     public class MagnetBombItem : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/MagnetBomb/MagnetBombItem";
 
         private static int BombType => ModContent.ProjectileType<MagnetBombProj>();
 
@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.MagnetBomb
     public class MagnetBombProj : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Tools";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/MagnetBomb/MagnetBombItem";
 
         private bool isStuck;
 

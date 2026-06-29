@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
     public class ArtisanToken : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/ArtisanToken/ArtisanToken";
 
         private static int PanelType => ModContent.ProjectileType<ArtisanTokenPanel>();
 
