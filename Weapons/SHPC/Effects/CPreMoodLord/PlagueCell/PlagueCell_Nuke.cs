@@ -17,9 +17,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/Ranged/HiveNuke";
 
-        private const float InitialSpeed = 14f;
-        private const float SpeedAcceleration = 0.18f;
-        private const float MaxSpeed = 42f;
+        private const float InitialSpeed = 28f;
+        private const float SpeedAcceleration = 0.36f;
+        private const float MaxSpeed = 84f;
 
         private ref float CurrentSpeed => ref Projectile.localAI[0];
         private ref float ConfirmedImpact => ref Projectile.localAI[1];
@@ -67,18 +67,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                 Projectile.Kill();
             }
 
-            if (Main.rand.NextBool(2))
+            bool isBig = Projectile.ai[1] != 0f;
+            if (isBig || Main.rand.NextBool(2))
             {
                 Color smokeColor = Color.Lerp(Color.Black, Color.Lime, 0.25f);
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                    Projectile.Center - Projectile.velocity * 2f,
-                    -Projectile.velocity * Main.rand.NextFloat(0.12f, 0.38f),
-                    smokeColor * 0.58f,
-                    11,
-                    Main.rand.NextFloat(0.36f, 0.58f),
-                    0.21f,
+                    Projectile.Center - Projectile.velocity * (isBig ? 2.8f : 2f),
+                    -Projectile.velocity * Main.rand.NextFloat(isBig ? 0.18f : 0.12f, isBig ? 0.54f : 0.38f),
+                    smokeColor * (isBig ? 0.82f : 0.58f),
+                    isBig ? 15 : 11,
+                    Main.rand.NextFloat(isBig ? 0.54f : 0.36f, isBig ? 0.92f : 0.58f),
+                    isBig ? 0.28f : 0.21f,
                     Main.rand.NextFloat(-0.2f, 0.2f),
                     false));
+            }
+
+            if (isBig && !Main.dedServ)
+            {
+                Vector2 back = -Projectile.velocity.SafeNormalize(Vector2.UnitY);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    back.RotatedByRandom(0.32f) * Main.rand.NextFloat(3.2f, 7.8f),
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.8f, 1.35f),
+                    Main.rand.NextBool(3) ? Color.White : Color.LimeGreen));
+
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(8f, 22f),
+                    Main.rand.NextBool() ? DustID.GemEmerald : DustID.GreenTorch,
+                    back.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.2f, 4.2f),
+                    60,
+                    Color.Lerp(Color.LimeGreen, Color.White, Main.rand.NextFloat(0.1f, 0.35f)),
+                    Main.rand.NextFloat(1.0f, 1.65f));
+                dust.noGravity = true;
             }
 
             Lighting.AddLight(Projectile.Center, new Vector3(0.18f, 0.7f, 0.08f));
@@ -107,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
             exploded = true;
             bool isBig = Projectile.ai[1] != 0f;
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/TheHiveNuke") { Volume = isBig ? 0.86f : 0.55f }, Projectile.Center);
-            SpawnNukeExplosionEffects();
+            SpawnNukeExplosionEffects(isBig);
 
             int oldWidth = Projectile.width;
             int oldHeight = Projectile.height;
@@ -189,12 +211,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
             }
         }
 
-        private void SpawnNukeExplosionEffects()
+        private void SpawnNukeExplosionEffects(bool isBig)
         {
             Vector2 center = Projectile.Center;
             Color plagueGreen = new(74, 255, 92);
             Color deepGreen = new(12, 92, 24);
             Color toxicYellow = new(190, 255, 70);
+            float effectScale = isBig ? 1f : 0.72f;
+            float countScale = isBig ? 1f : 0.72f;
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,
@@ -204,8 +228,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 0.18f,
-                2.4f,
-                24));
+                2.4f * effectScale,
+                isBig ? 24 : 18));
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center,
@@ -214,8 +238,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                 Vector2.One,
                 0f,
                 0.18f,
-                5.2f,
-                28));
+                5.2f * effectScale,
+                isBig ? 28 : 21));
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center,
@@ -224,46 +248,46 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
                 new Vector2(1.15f, 1.15f),
                 0f,
                 0.1f,
-                3.6f,
-                22));
+                3.6f * effectScale,
+                isBig ? 22 : 16));
 
-            for (int i = 0; i < 46; i++)
+            for (int i = 0; i < (int)(46 * countScale); i++)
             {
                 Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
                 Vector2 velocity = direction * Main.rand.NextFloat(3.5f, 18f);
                 Dust dust = Dust.NewDustPerfect(
-                    center + direction * Main.rand.NextFloat(6f, 28f),
+                    center + direction * Main.rand.NextFloat(6f, 28f) * effectScale,
                     Main.rand.NextBool(3) ? DustID.GemEmerald : DustID.GreenTorch,
                     velocity,
                     Main.rand.Next(40, 130),
                     Main.rand.NextBool(4) ? toxicYellow : plagueGreen,
-                    Main.rand.NextFloat(1.15f, 2.25f));
+                    Main.rand.NextFloat(1.15f, 2.25f) * effectScale);
                 dust.noGravity = true;
             }
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < (int)(18 * countScale); i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 8.4f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 8.4f) * effectScale;
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                    center + Main.rand.NextVector2Circular(22f, 22f),
+                    center + Main.rand.NextVector2Circular(22f, 22f) * effectScale,
                     velocity,
                     Color.Lerp(deepGreen, Color.Black, Main.rand.NextFloat(0.25f, 0.55f)) * 0.82f,
-                    Main.rand.Next(30, 50),
-                    Main.rand.NextFloat(0.72f, 1.45f),
+                    Main.rand.Next(isBig ? 30 : 22, isBig ? 50 : 38),
+                    Main.rand.NextFloat(0.72f, 1.45f) * effectScale,
                     0.42f,
                     Main.rand.NextFloat(-0.08f, 0.08f),
                     false));
             }
 
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < (int)(14 * countScale); i++)
             {
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 19f);
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 19f) * effectScale;
                 GeneralParticleHandler.SpawnParticle(new SparkParticle(
                     center,
                     velocity,
                     false,
-                    Main.rand.Next(16, 26),
-                    Main.rand.NextFloat(1.1f, 1.9f),
+                    Main.rand.Next(isBig ? 16 : 12, isBig ? 26 : 20),
+                    Main.rand.NextFloat(1.1f, 1.9f) * effectScale,
                     Main.rand.NextBool(3) ? toxicYellow : plagueGreen));
             }
         }

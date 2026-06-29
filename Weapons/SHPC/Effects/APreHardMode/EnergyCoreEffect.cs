@@ -15,6 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 {
     public class EnergyCoreEffect : DefaultEffect
     {
+        private const int ExplosionFlightTime = 10 * 60;
+        private const int MaxBouncesBeforeTileExplosion = 5;
+
         public override int EffectID => 1;
 
         public override int AmmoType => ModContent.ItemType<EnergyCore>();
@@ -25,8 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
         public override void SetDefaults(Projectile projectile)
         {
-            projectile.penetrate = -1;
-            projectile.timeLeft = 720;
+            projectile.penetrate = 1;
+            projectile.timeLeft = ExplosionFlightTime + 120;
             projectile.usesLocalNPCImmunity = true;
             projectile.localNPCHitCooldown = 20;
         }
@@ -46,16 +49,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
             // 累计飞行时间
             projectile.localAI[2] += 1f;
 
-            int bounceCount = (int)projectile.localAI[0];
             int timeFlown = (int)projectile.localAI[2];
-            bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
 
-            // 飞行达到4秒（240帧）或弹射达到5次后，开始准备下一次撞击爆炸：
-            // 将生存时间不断设为2，穿透次数设为1
-            if (isReady)
+            // Flight timeout is one of the three explicit explosion triggers.
+            if (timeFlown >= ExplosionFlightTime)
             {
-                projectile.timeLeft = 2;
-                projectile.penetrate = 1;
+                projectile.localAI[1] = 1f;
+                projectile.Kill();
+                return;
             }
 
             // ===== 模拟重力 =====
@@ -87,10 +88,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
         public override bool OnTileCollide(Projectile projectile, Player owner, Vector2 oldVelocity)
         {
             int bounceCount = (int)projectile.localAI[0];
-            int timeFlown = (int)projectile.localAI[2];
-            bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
 
-            if (isReady)
+            if (bounceCount >= MaxBouncesBeforeTileExplosion)
             {
                 projectile.localAI[1] = 1f;
                 return true;
@@ -107,22 +106,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects
 
             Terraria.Audio.SoundEngine.PlaySound(SoundID.Item110, projectile.Center);
 
-            projectile.timeLeft -= 25;
 
             return false; // 不销毁
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            int bounceCount = (int)projectile.localAI[0];
-            int timeFlown = (int)projectile.localAI[2];
-            bool isReady = (timeFlown >= 240) || (bounceCount >= 5);
-
-            if (isReady)
-            {
-                projectile.localAI[1] = 1f;
-                projectile.Kill();
-            }
+            projectile.localAI[1] = 1f;
+            projectile.Kill();
         }
 
 		// 死亡时炸出6个电火花（仅在碰撞触发的死亡时爆炸，自然到期不炸）

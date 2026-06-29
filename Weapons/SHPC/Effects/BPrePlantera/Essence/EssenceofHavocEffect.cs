@@ -129,15 +129,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
             {
                 foreach (float speed in speeds)
                 {
-                    Projectile.NewProjectile(
-                        projectile.GetSource_FromThis(),
-                        projectile.Center,
-                        dir * speed,
-                        ModContent.ProjectileType<EssenceofHavoc_INV>(),
-                        (int)(projectile.damage * (movingDownward ? 0.9f : 0.5f)),
-                        projectile.knockBack,
-                        projectile.owner
-                    );
+                    for (int burst = -1; burst <= 1; burst++)
+                    {
+                        Vector2 burstDirection = dir.RotatedBy(MathHelper.ToRadians(7f * burst));
+                        Projectile.NewProjectile(
+                            projectile.GetSource_FromThis(),
+                            projectile.Center,
+                            burstDirection * speed,
+                            ModContent.ProjectileType<EssenceofHavoc_INV>(),
+                            (int)(projectile.damage * (movingDownward ? 0.9f : 0.5f)),
+                            projectile.knockBack,
+                            projectile.owner
+                        );
+                    }
                 }
             }
 

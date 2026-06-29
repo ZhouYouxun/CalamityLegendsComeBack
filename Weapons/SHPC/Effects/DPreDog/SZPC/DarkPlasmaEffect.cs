@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
         private const float TrinaryOrbitRadius = TrinaryHeight * 2f / 3f;
         private const float OrbReleaseIntervalMultiplier = 2f;
         private const float MultiStarExplosionDamagePerBlackHole = 2.5f;
-        private static readonly float MultiStarAngularVelocity = MathHelper.ToRadians(42f);
+        private const float MultiStarAngularVelocity = 1.7f / 60f;
 
         public override int EffectID => 32;
 

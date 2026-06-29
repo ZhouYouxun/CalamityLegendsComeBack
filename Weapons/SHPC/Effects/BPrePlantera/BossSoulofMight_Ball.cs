@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public const float InitialSpeed = 68f;
         public const float SlowdownSpeed = 2f;
         public const int SlowdownTime = 175;
-        public static readonly float SlowdownFactor = (float)Math.Pow(SlowdownSpeed / InitialSpeed, 1f / SlowdownTime);
+        public static readonly float SlowdownFactor = 0.99f;
 
         // 使用 ai[0] 来记录时间
         public ref float Time => ref Projectile.ai[0];
@@ -47,8 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             // 逐渐消失的光效
             float endFade = Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
-            Color coreBlue = new Color(255, 80, 55);
-            Color deepBlue = new Color(160, 28, 18);
+            Color coreBlue = new Color(120, 190, 255);
+            Color deepBlue = new Color(30, 70, 210);
             Color mainColor = coreBlue * Projectile.Opacity * endFade * 0.92f;
             mainColor.A = (byte)(255 - Projectile.alpha);
 
@@ -99,13 +99,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             // 保持弹幕旋转（对于倾斜走向的弹幕而言）
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
-            // Lighting - 添加深橙色光源，光照强度为 0.55
-            Lighting.AddLight(Projectile.Center, new Color(255, 60, 40).ToVector3() * 0.35f);
+            // Lighting - blue Soul of Might glow.
+            Lighting.AddLight(Projectile.Center, new Color(80, 150, 255).ToVector3() * 0.55f);
 
-            // 弹幕保持直线运动并逐渐加速
-            //Projectile.velocity *= 1.01f;
-
-            // Very rapidly slow down and fade out, transforming into light.
+            // Keep the scattered orb moving forward while slowly decelerating into light.
             if (Time <= SlowdownTime)
             {
                 Projectile.Opacity = (float)Math.Pow(1f - Time / SlowdownTime, 2D);
@@ -116,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 {
                     Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 45f;
                     Dust light = Dust.NewDustPerfect(dustSpawnPosition, DustID.RainbowMk2);
-                    light.color = Color.Lerp(new Color(180, 28, 18), new Color(255, 110, 80), Main.rand.NextFloat(0.35f, 0.9f));
+                    light.color = Color.Lerp(new Color(50, 95, 255), Color.White, Main.rand.NextFloat(0.35f, 0.9f));
                     light.velocity = Main.rand.NextVector2Circular(10f, 10f);
                     light.scale = MathHelper.Lerp(0.92f, 0.52f, Projectile.Opacity) * Main.rand.NextFloat(0.7f, 1f);
                     light.noGravity = true;
@@ -138,6 +135,26 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
         public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.DD2_DefenseTowerSpawn with { Volume = 0.55f }, Projectile.Center);
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int explosion = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BossSoulofMight_EXP>(),
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner);
+
+            if (Main.projectile.IndexInRange(explosion))
+            {
+                Projectile exp = Main.projectile[explosion];
+                exp.Resize(500, 500);
+                exp.Center = Projectile.Center;
+                exp.DamageType = DamageClass.Magic;
+                exp.netUpdate = true;
+            }
         }
     }
 }

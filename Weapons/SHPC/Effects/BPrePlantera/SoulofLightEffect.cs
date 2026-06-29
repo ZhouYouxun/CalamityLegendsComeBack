@@ -86,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitY);
             float baseRotation = forward.ToRotation() - MathHelper.PiOver2;
 
-            float outerRadius = 54f;
+            float outerRadius = 74f;
             Vector2[] outerPoints = new Vector2[5];
 
             // ===== 先求正五边形5个外点 =====
@@ -100,14 +100,35 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             int[] starOrder = { 0, 2, 4, 1, 3, 0 };
 
             // ===== 1. 中心核心闪光 =====
-            for (int i = 0; i < 8; i++)
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.Lerp(StartColor, Color.White, 0.55f),
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                baseRotation,
+                0.34f,
+                2.05f,
+                24));
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                Color.Lerp(ThemeColor, Color.White, 0.4f),
+                Vector2.One,
+                baseRotation,
+                0.16f,
+                2.95f,
+                26));
+
+            for (int i = 0; i < 14; i++)
             {
                 SquishyLightParticle core = new(
-                    center + Main.rand.NextVector2Circular(6f, 6f),
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    Main.rand.NextFloat(0.75f, 1.05f),
-                    Color.Lerp(ThemeColor, StartColor, Main.rand.NextFloat(0.25f, 0.8f)),
-                    Main.rand.Next(20, 28)
+                    center + Main.rand.NextVector2Circular(9f, 9f),
+                    Main.rand.NextVector2Circular(3.2f, 3.2f),
+                    Main.rand.NextFloat(0.95f, 1.45f),
+                    Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.35f, 0.9f)),
+                    Main.rand.Next(24, 34)
                 );
                 GeneralParticleHandler.SpawnParticle(core);
             }
@@ -118,9 +139,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 start = outerPoints[starOrder[seg]];
                 Vector2 end = outerPoints[starOrder[seg + 1]];
 
-                for (int j = 0; j < 8; j++)
+                for (int j = 0; j < 13; j++)
                 {
-                    float t = j / 7f;
+                    float t = j / 12f;
                     Vector2 pos = Vector2.Lerp(start, end, t);
 
                     // 从中心指向当前点，作为"向外绽放"的主方向
@@ -129,18 +150,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                     // 轻微切线扰动，让它不像死板几何线
                     Vector2 tangent = outward.RotatedBy(MathHelper.Pi / 2f);
                     Vector2 velocity =
-                        outward * Main.rand.NextFloat(2.4f, 5.2f) +
-                        tangent * Main.rand.NextFloat(-0.9f, 0.9f);
+                        outward * Main.rand.NextFloat(3.2f, 7.2f) +
+                        tangent * Main.rand.NextFloat(-1.25f, 1.25f);
 
-                    float scale = MathHelper.Lerp(0.9f, 0.42f, t);
-                    Color color = Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat(0.25f, 0.7f));
+                    float scale = MathHelper.Lerp(1.16f, 0.5f, t);
+                    Color color = Color.Lerp(Color.White, ThemeColor, Main.rand.NextFloat(0.15f, 0.55f));
 
                     SquishyLightParticle starLine = new(
                         pos,
                         velocity,
                         scale,
                         color,
-                        Main.rand.Next(18, 26)
+                        Main.rand.Next(22, 31)
                     );
                     GeneralParticleHandler.SpawnParticle(starLine);
                 }
@@ -151,14 +172,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             {
                 Vector2 tipDir = (outerPoints[i] - center).SafeNormalize(Vector2.UnitY);
 
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < 6; j++)
                 {
                     SquishyLightParticle tipFlash = new(
-                        outerPoints[i] + Main.rand.NextVector2Circular(4f, 4f),
-                        tipDir * Main.rand.NextFloat(3.5f, 6.5f),
-                        Main.rand.NextFloat(0.7f, 1.0f),
-                        Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.1f, 0.3f)),
-                        Main.rand.Next(18, 24)
+                        outerPoints[i] + Main.rand.NextVector2Circular(6f, 6f),
+                        tipDir * Main.rand.NextFloat(4.6f, 9.2f),
+                        Main.rand.NextFloat(0.85f, 1.32f),
+                        Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat(0.35f, 0.75f)),
+                        Main.rand.Next(20, 30)
                     );
                     GeneralParticleHandler.SpawnParticle(tipFlash);
                 }
@@ -171,36 +192,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 end = outerPoints[starOrder[seg + 1]];
                 Vector2 lineDir = (end - start).SafeNormalize(Vector2.UnitX);
 
-                for (int j = 0; j < 6; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    float t = j / 5f;
+                    float t = j / 9f;
                     Vector2 pos = Vector2.Lerp(start, end, t);
 
                     Particle spark = new SparkParticle(
                         pos,
-                        lineDir.RotatedByRandom(0.35f) * Main.rand.NextFloat(2.5f, 4.8f),
+                        lineDir.RotatedByRandom(0.28f) * Main.rand.NextFloat(3.4f, 6.8f),
                         false,
-                        Main.rand.Next(16, 24),
-                        Main.rand.NextFloat(0.65f, 0.95f),
-                        Color.Lerp(EndColor, ThemeColor, Main.rand.NextFloat(0.3f, 0.8f))
+                        Main.rand.Next(18, 28),
+                        Main.rand.NextFloat(0.82f, 1.25f),
+                        Color.Lerp(Color.White, ThemeColor, Main.rand.NextFloat(0.12f, 0.55f))
                     );
                     GeneralParticleHandler.SpawnParticle(spark);
                 }
             }
 
             // ===== 5. 中心再补一点十字式星爆，让收尾更亮 =====
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 20; i++)
             {
-                float angle = baseRotation + MathHelper.TwoPi * i / 10f;
+                float angle = baseRotation + MathHelper.TwoPi * i / 20f;
                 Vector2 dir = angle.ToRotationVector2();
 
                 Particle spark = new SparkParticle(
                     center,
-                    dir * Main.rand.NextFloat(2.8f, 5.2f),
+                    dir * Main.rand.NextFloat(4.2f, 8.8f),
                     false,
-                    Main.rand.Next(14, 22),
-                    Main.rand.NextFloat(0.7f, 1.0f),
-                    Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.15f, 0.35f))
+                    Main.rand.Next(18, 29),
+                    Main.rand.NextFloat(0.9f, 1.38f),
+                    Color.Lerp(StartColor, Color.White, Main.rand.NextFloat(0.35f, 0.85f))
                 );
                 GeneralParticleHandler.SpawnParticle(spark);
             }

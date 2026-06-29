@@ -98,15 +98,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             }
 
             // 前、左、右、后四枚分裂弹。颜色编号通过 ai[0] 同步给所有客户端。
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float[] splitRotations = { 0f, -MathHelper.PiOver2, MathHelper.PiOver2, MathHelper.Pi };
-            for (int i = 0; i < splitRotations.Length; i++)
+            Vector2[] splitOffsets =
             {
-                Vector2 direction = forward.RotatedBy(splitRotations[i]);
+                new(10f, 0f),
+                new(0f, 16f),
+                new(-10f, 0f),
+                new(0f, -16f)
+            };
+            float returnSpeed = Math.Max(1f, Projectile.velocity.Length() * 2f);
+            for (int i = 0; i < splitOffsets.Length; i++)
+            {
+                Vector2 offset = splitOffsets[i];
+                Vector2 direction = (-offset).SafeNormalize(Vector2.UnitX);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center + direction * 20f,
-                    direction * 11.5f,
+                    Projectile.Center + offset,
+                    direction * returnSpeed,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
                     Math.Max(1, (int)(Projectile.damage * 0.9)),
                     Projectile.knockBack * 0.72f,

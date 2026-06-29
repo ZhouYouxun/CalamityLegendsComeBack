@@ -27,11 +27,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
     /// </summary>
     internal sealed class CoreOfCalamitySplitOrb : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private const int ActivationDelay = 12;
-        private const int HomingDelay = 40;
-        private const float LeftTurnPerUpdate = -MathHelper.Pi / 36f;
-        private const float MaxSpeed = 20.1f;
-        private const float HomingTurnSpeed = 0.110f;
         private static readonly Color[] Palette =
         {
             new(24, 62, 188),
@@ -63,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
             Projectile.extraUpdates = 1;
-            Projectile.timeLeft = 450;
+            Projectile.timeLeft = 48;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -75,30 +70,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             if (Projectile.localAI[1] == 0f)
                 Projectile.localAI[1] = 120f + Projectile.ai[0] * 90f;
 
-            // 固定左转始终存在；开始追踪后，再在此基础上向最近敌人转向。
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), MaxSpeed, 0.045f);
-            float updateScale = 1f / (Projectile.extraUpdates + 1f);
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(LeftTurnPerUpdate * updateScale);
-            if (Timer >= HomingDelay)
-            {
-                NPC target = Projectile.Center.ClosestNPCAt(1350f);
-                if (target is not null)
-                {
-                    float desiredRotation = (target.Center - Projectile.Center).ToRotation();
-                    float homingProgress = MathHelper.Clamp((Timer - HomingDelay) / 220f, 0f, 1f);
-                    float homingTurn = MathHelper.Lerp(HomingTurnSpeed, MathHelper.Pi / 3f, homingProgress) * updateScale;
-                    direction = direction.ToRotation().AngleTowards(desiredRotation, homingTurn).ToRotationVector2();
-                }
-            }
-
-            Projectile.velocity = direction * speed;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Projectile.rotation = direction.ToRotation();
             Lighting.AddLight(Projectile.Center, OrbColor.ToVector3() * 0.58f);
             SpawnFlightEffects(direction);
             SpawnHyperiusFlightEffects(direction);
         }
 
-        public override bool? CanDamage() => Timer >= ActivationDelay;
+        public override bool? CanDamage() => null;
 
         public override void OnKill(int timeLeft)
         {
