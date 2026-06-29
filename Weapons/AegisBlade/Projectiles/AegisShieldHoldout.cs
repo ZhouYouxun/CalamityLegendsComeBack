@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -465,6 +466,50 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Main.spriteBatch.ExitShaderRegion();
 
             DrawChargeBar();
+
+            // Telegraph arrow (SpreadTelegraph shader + V-lines, same visual as StygianShield)
+            if (Charge >= MinimumDashCharge)
+            {
+                Texture2D arrowTex = ModContent.Request<Texture2D>(Texture).Value;
+                Effect arrowEffect = Filters.Scene["CalamityMod:SpreadTelegraph"].GetShader().Shader;
+                arrowEffect.Parameters["centerOpacity"].SetValue(1f);
+                arrowEffect.Parameters["mainOpacity"].SetValue(1f);
+                arrowEffect.Parameters["edgeBlendLength"].SetValue(0.07f);
+                arrowEffect.Parameters["edgeBlendStrength"].SetValue(8f);
+
+                Vector2 mouseWorld = AegisBlade.GetMouseWorld(Owner);
+                Vector2 dashDir = Projectile.SafeDirectionTo(mouseWorld);
+                float dashDist = MathHelper.Lerp(BalanceAegisBlade.ShieldDashMinimumDistance, BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
+                Vector2 dashVec = dashDir * dashDist;
+                Vector2 destination = Projectile.Center + dashVec;
+
+                bool oob = destination.X < 660f || destination.Y < 660f ||
+                           destination.X > Main.maxTilesX * 16f - 680f || destination.Y > Main.maxTilesY * 16f - 680f;
+                Color telegraphColor = oob ? Color.Red : Color.White;
+
+                arrowEffect.Parameters["centerOpacity"].SetValue(0.6f);
+                arrowEffect.Parameters["halfSpreadAngle"].SetValue(MathHelper.ToRadians(64f));
+                arrowEffect.Parameters["edgeColor"].SetValue(telegraphColor.ToVector3());
+                arrowEffect.Parameters["centerColor"].SetValue(telegraphColor.ToVector3());
+
+                Main.spriteBatch.EnterShaderRegion(BlendState.Additive, arrowEffect);
+                Main.EntitySpriteDraw(arrowTex, destination - Main.screenPosition, null, Color.White,
+                    dashDir.ToRotation() - MathHelper.Pi, arrowTex.Size() / 2f, 135f, SpriteEffects.None);
+                Main.spriteBatch.ExitShaderRegion();
+
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    Vector2 sideOrigin = Projectile.Center + dashDir.RotatedBy(90f * i) * 60f;
+                    Vector2 convergence = Projectile.Center + dashVec * 0.1f;
+                    Vector2 sideLineStart = sideOrigin + dashVec * 0.1f;
+                    Vector2 sideLineEnd = sideOrigin + dashVec;
+                    Color lineColor = telegraphColor * 0.3f;
+                    Main.spriteBatch.DrawLineBetter(sideLineStart, convergence, lineColor, 2f);
+                    Main.spriteBatch.DrawLineBetter(sideLineStart, sideLineEnd, lineColor, 4f);
+                    Main.spriteBatch.DrawLineBetter(sideLineEnd, destination, lineColor, 2f);
+                }
+            }
+
             return false;
         }
 

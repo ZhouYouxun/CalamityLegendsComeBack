@@ -1,20 +1,5 @@
 Mods: {
 	CalamityLegendsComeBack: {
-		Items: {
-			Weapons: {
-				ExtraBackpackItem: {
-					DisplayName: 额外背包
-					Tooltip:
-						'''
-						拥有10×10共100格额外存储空间。
-						左键点击打开背包界面，可拖动位置。
-						按下快捷键 [ExtraBackpack] 可随时开关背包。
-						在物品栏中鼠标中键也可打开。
-						'''
-				}
-			}
-		}
-
 		Projectiles.A_Dev.ExtraBackpackPanel.DisplayName: 额外背包
 
 		Keybinds: {
@@ -22,6 +7,6 @@ Mods: {
 			}
 		}
 
-		TheSpecialText.ExtraBackpackTitle: 额外背包 [10×10]
+		TheSpecialText.ExtraBackpackTitle: 额外背包 [20x10]
 	}
 }

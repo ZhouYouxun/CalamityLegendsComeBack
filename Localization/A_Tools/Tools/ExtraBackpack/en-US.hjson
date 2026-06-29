@@ -1,20 +1,5 @@
 Mods: {
 	CalamityLegendsComeBack: {
-		Items: {
-			Weapons: {
-				ExtraBackpackItem: {
-					DisplayName: Extra Backpack
-					Tooltip:
-						'''
-						Provides 100 extra inventory slots (10×10 grid).
-						Left-click to open the draggable backpack interface.
-						Press [ExtraBackpack] to toggle it at any time.
-						Middle-click the item in your inventory to open it.
-						'''
-				}
-			}
-		}
-
 		Projectiles.A_Dev.ExtraBackpackPanel.DisplayName: Extra Backpack
 
 		Keybinds: {
@@ -22,6 +7,6 @@ Mods: {
 			}
 		}
 
-		TheSpecialText.ExtraBackpackTitle: Extra Backpack [10×10]
+		TheSpecialText.ExtraBackpackTitle: Extra Backpack [20x10]
 	}
 }

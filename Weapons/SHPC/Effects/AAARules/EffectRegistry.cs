@@ -50,6 +50,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             return AmmoToEffectID.ContainsKey(ammoType);
         }
 
+        public static bool IsRegisteredEffect(int effectID)
+        {
+            return EffectsByID.ContainsKey(effectID);
+        }
+
+        public static bool IsRegisteredAmmoEffectPair(int ammoType, int effectID)
+        {
+            return AmmoToEffectID.TryGetValue(ammoType, out int registeredEffectID) &&
+                registeredEffectID == effectID;
+        }
+
         public static IEnumerable<RulesOfEffect> GetRegisteredEffects()
         {
             return EffectsByID.Values;

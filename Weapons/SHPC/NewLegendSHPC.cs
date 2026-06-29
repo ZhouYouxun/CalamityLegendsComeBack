@@ -164,6 +164,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             selectedMagazineIndex = Utils.Clamp(selectedMagazineIndex, 0, activeCount - 1);
         }
 
+        private static bool IsValidAmmoEffectPair(int ammoType, int effectID)
+        {
+            return ammoType > ItemID.None &&
+                effectID > 0 &&
+                EffectRegistry.IsRegisteredAmmoEffectPair(ammoType, effectID);
+        }
+
+        private void SanitizeMagazineSlot(int index)
+        {
+            index = Utils.Clamp(index, 0, MagazineCount - 1);
+
+            int ammoType = magazineAmmoTypes[index];
+            int effectID = magazineEffectIDs[index];
+            bool empty = ammoType <= ItemID.None && effectID <= 0 && magazineEffectPowers[index] <= 0 && magazineReserve[index] <= 0;
+            if (empty)
+            {
+                ClearMagazine(index);
+                return;
+            }
+
+            if (!IsValidAmmoEffectPair(ammoType, effectID))
+            {
+                ClearMagazine(index);
+                return;
+            }
+
+            magazineEffectPowers[index] = Math.Max(0, magazineEffectPowers[index]);
+            magazineReserve[index] = Utils.Clamp(magazineReserve[index], 0, MaxReservePerSlot);
+        }
+
+        private void SanitizeAllMagazineSlots()
+        {
+            selectedMagazineIndex = Utils.Clamp(selectedMagazineIndex, 0, MagazineCount - 1);
+            for (int i = 0; i < MagazineCount; i++)
+                SanitizeMagazineSlot(i);
+        }
+
         // 后坐力动画计数
         public int recoilProgress = 0;
         #endregion
@@ -320,6 +357,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public SHPCMagazineSlot GetMagazineSlot(int index)
         {
             index = Utils.Clamp(index, 0, MagazineCount - 1);
+            SanitizeMagazineSlot(index);
             return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], magazineReserve[index], index == CurrentMagazineIndex);
         }
 
@@ -327,6 +365,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ClampSelectedMagazineToActiveCount(player);
             index = Utils.Clamp(index, 0, GetActiveMagazineCount(player) - 1);
+            SanitizeMagazineSlot(index);
             return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], magazineReserve[index], index == CurrentMagazineIndex);
         }
 
@@ -356,8 +395,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private bool IsMagazineConfigured(int index)
         {
-            return magazineAmmoTypes[index] > ItemID.None &&
-                   magazineEffectIDs[index] > 0;
+            SanitizeMagazineSlot(index);
+            return IsValidAmmoEffectPair(magazineAmmoTypes[index], magazineEffectIDs[index]);
         }
 
         /// <summary>
@@ -584,9 +623,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public void DirectLoadMagazine(int slotIndex, int ammoType, int effectID, int capacity)
         {
             slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
+            if (!IsValidAmmoEffectPair(ammoType, effectID))
+            {
+                ClearMagazine(slotIndex);
+                return;
+            }
+
             magazineAmmoTypes[slotIndex] = ammoType;
             magazineEffectIDs[slotIndex] = effectID;
-            magazineEffectPowers[slotIndex] = capacity;
+            magazineEffectPowers[slotIndex] = Math.Max(0, capacity);
         }
 
         /// <summary>
@@ -595,11 +640,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public void AddToReserve(int slotIndex, int ammoType, int effectID, int count)
         {
             slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
+            if (!IsValidAmmoEffectPair(ammoType, effectID) || count <= 0)
+                return;
+
+            SanitizeMagazineSlot(slotIndex);
             if (!IsMagazineConfigured(slotIndex))
             {
                 magazineAmmoTypes[slotIndex] = ammoType;
                 magazineEffectIDs[slotIndex] = effectID;
             }
+            else if (magazineAmmoTypes[slotIndex] != ammoType || magazineEffectIDs[slotIndex] != effectID)
+                return;
+
             magazineReserve[slotIndex] = Math.Min(MaxReservePerSlot, magazineReserve[slotIndex] + count);
         }
 
@@ -607,7 +659,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public void SetReserve(int slotIndex, int count)
         {
             slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
-            magazineReserve[slotIndex] = Math.Max(0, count);
+            SanitizeMagazineSlot(slotIndex);
+            if (!IsMagazineConfigured(slotIndex))
+                return;
+
+            magazineReserve[slotIndex] = Utils.Clamp(count, 0, MaxReservePerSlot);
         }
 
         private void TryReturnStoredAmmo(Player player)
@@ -624,13 +680,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private void TryReturnMagazineAmmo(Player player, int index)
         {
             index = Utils.Clamp(index, 0, MagazineCount - 1);
+            SanitizeMagazineSlot(index);
             int effectID = magazineEffectIDs[index];
             int ammoType = magazineAmmoTypes[index];
             int power = magazineEffectPowers[index];
             int reserve = magazineReserve[index];
 
-            if (effectID <= 0 || ammoType <= ItemID.None)
+            if (!IsValidAmmoEffectPair(ammoType, effectID))
+            {
+                ClearMagazine(index);
                 return;
+            }
 
             // 外置弹药库：全部直接返还（稳定数量）
             if (reserve > 0)
@@ -678,6 +738,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 获取当前灌注弹药显示名，用于 Tooltip / UI
         public string GetCurrentAmmoDisplayName()
         {
+            SanitizeMagazineSlot(CurrentMagazineIndex);
             if (storedAmmoType <= ItemID.None)
                 return "None";
 
@@ -1716,6 +1777,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (clone is NewLegendSHPC newItem && item.ModItem is NewLegendSHPC oldItem)
             {
+                oldItem.SanitizeAllMagazineSlots();
                 newItem.selectedMagazineIndex = oldItem.CurrentMagazineIndex;
                 for (int i = 0; i < MagazineCount; i++)
                 {
@@ -1724,6 +1786,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     newItem.magazineEffectIDs[i] = oldItem.magazineEffectIDs[i];
                     newItem.magazineReserve[i] = oldItem.magazineReserve[i];
                 }
+                newItem.SanitizeAllMagazineSlots();
             }
 
             return clone;
@@ -1731,6 +1794,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void SaveData(TagCompound tag)
         {
+            SanitizeAllMagazineSlots();
             tag["selectedMagazineIndex"] = CurrentMagazineIndex;
             for (int i = 0; i < MagazineCount; i++)
             {

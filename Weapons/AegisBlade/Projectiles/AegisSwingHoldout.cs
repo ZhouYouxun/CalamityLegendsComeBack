@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/AegisBlade/AegisBlade";
 
-        private const int SwingDuration = 26;
+        private const int SwingDuration = 52;
         private const float FireballSpawnProgress = 0.3f;
         private const float SwordVisualScale = 1.55f;
         private const float BladeReach = 104f;
@@ -37,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private int stateTimer;
         private int swingDirection = 1;
         private bool fireballSpawned;
+        private bool waveSpawned;
         private float currentAngle;
         private float startAngle;
         private float slowPointAngle;
@@ -148,12 +149,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 angleSwept += angleDiff;
                 lastAngle = currentAngle;
 
-                if (angleSwept >= MathHelper.TwoPi / 3f)
+                if (!waveSpawned && angleSwept >= MathHelper.TwoPi)
                 {
-                    angleSwept -= MathHelper.TwoPi / 3f;
+                    waveSpawned = true;
                     if (Main.myPlayer == Projectile.owner)
                     {
-                        Vector2 shootDir = currentAngle.ToRotationVector2();
+                        Vector2 shootDir = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
                         int waveDamage = Math.Max(1, (int)(Projectile.damage * 0.6f));
                         int waveProj = Projectile.NewProjectile(
                             Projectile.GetSource_FromThis(),

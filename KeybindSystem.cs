@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack
             LegendarySkill = KeybindLoader.RegisterKeybind(Mod, "LegendarySkill", "P");
             LegendaryWeaponFormSwitch = KeybindLoader.RegisterKeybind(Mod, "LegendaryWeaponFormSwitch", "LeftControl");
             SHPCLoadingUI = KeybindLoader.RegisterKeybind(Mod, "SHPCLoadingUI", "None");
-            ExtraBackpack = KeybindLoader.RegisterKeybind(Mod, "ExtraBackpack", "B");
+            ExtraBackpack = KeybindLoader.RegisterKeybind(Mod, "ExtraBackpack", "P");
         }
 
         public override void Unload()

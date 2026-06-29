@@ -18,68 +18,10 @@ using CalamityLegendsComeBack.Systems;
 namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ExtraBackpack
 {
     // ── Item ─────────────────────────────────────────────────────────────────
-    public class ExtraBackpackItem : ModItem, ILocalizedModType
-    {
-        public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
-
-        private static int PanelType => ModContent.ProjectileType<ExtraBackpackPanel>();
-
-        public override void SetDefaults()
-        {
-            Item.width = 34;
-            Item.height = 34;
-            Item.useTime = 14;
-            Item.useAnimation = 14;
-            Item.useStyle = ItemUseStyleID.HoldUp;
-            Item.noMelee = true;
-            Item.autoReuse = false;
-            Item.shoot = PanelType;
-            Item.shootSpeed = 0f;
-            Item.UseSound = null;
-            Item.value = Item.sellPrice(gold: 5);
-            Item.rare = ItemRarityID.Lime;
-            Item.maxStack = 1;
-        }
-
-        public override bool CanRightClick() => true;
-        public override bool ConsumeItem(Player player) => false;
-
-        public override void RightClick(Player player) => TogglePanel(player);
-
-        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
-        {
-            TogglePanel(player);
-            return false;
-        }
-
-        private static void TogglePanel(Player player)
-        {
-            if (Main.myPlayer != player.whoAmI) return;
-            int panelType = PanelType;
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile proj = Main.projectile[i];
-                if (!proj.active || proj.owner != player.whoAmI || proj.type != panelType) continue;
-                ExtraBackpackPanel.RequestClose(proj);
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.6f, Pitch = 0.05f }, player.Center);
-                return;
-            }
-            Projectile.NewProjectile(player.GetSource_Misc("ExtraBackpack"), player.Center, Vector2.Zero,
-                panelType, 0, 0f, player.whoAmI);
-            SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.7f, Pitch = 0.1f }, player.Center);
-        }
-
-        public override bool CanUseItem(Player player)
-        {
-            return !Main.mapFullscreen && !Main.drawingPlayerChat && !Main.gameMenu;
-        }
-    }
-
     // ── ModPlayer (storage) ───────────────────────────────────────────────────
     public class ExtraBackpackPlayer : ModPlayer
     {
-        public const int SlotCount = 100;
+        public const int SlotCount = 200;
         public Item[] backpackContents = new Item[SlotCount];
 
         public override void Initialize()
@@ -113,15 +55,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ExtraBackpack
             // Keybind toggle
             if (global::CalamityLegendsComeBack.KeybindSystem.ExtraBackpack?.JustPressed == true)
             {
-                bool hasInInventory = false;
-                for (int i = 0; i < Player.inventory.Length; i++)
-                {
-                    if (Player.inventory[i].type == ModContent.ItemType<ExtraBackpackItem>())
-                    { hasInInventory = true; break; }
-                }
-                if (!hasInInventory && Player.HeldItem.type != ModContent.ItemType<ExtraBackpackItem>())
-                    return;
-
                 int panelType = ModContent.ProjectileType<ExtraBackpackPanel>();
                 for (int i = 0; i < Main.maxProjectiles; i++)
                 {
@@ -139,36 +72,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ExtraBackpack
     }
 
     // ── ModSystem: middle-click detection ────────────────────────────────────
-    public class ExtraBackpackMiddleClickSystem : ModSystem
-    {
-        public override void PostUpdateInput()
-        {
-            if (Main.dedServ || !Main.playerInventory) return;
-            if (!Main.mouseMiddle || !Main.mouseMiddleRelease) return;
-
-            // If the hovered item in inventory is our backpack, toggle the panel
-            if (Main.HoverItem.type != ModContent.ItemType<ExtraBackpackItem>()) return;
-
-            Player player = Main.LocalPlayer;
-            int panelType = ModContent.ProjectileType<ExtraBackpackPanel>();
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile proj = Main.projectile[i];
-                if (!proj.active || proj.owner != Main.myPlayer || proj.type != panelType) continue;
-                ExtraBackpackPanel.RequestClose(proj);
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.6f, Pitch = 0.05f }, player.Center);
-                return;
-            }
-            Projectile.NewProjectile(player.GetSource_Misc("ExtraBackpack"), player.Center, Vector2.Zero,
-                panelType, 0, 0f, Main.myPlayer);
-            SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.7f, Pitch = 0.1f }, player.Center);
-        }
-    }
-
     // ── Panel projectile ──────────────────────────────────────────────────────
     internal sealed class ExtraBackpackPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
-        private const int Cols = 10;
+        private const int Cols = 20;
         private const int Rows = 10;
         private const int SlotSize = 44;
         private const int SlotGap = 4;

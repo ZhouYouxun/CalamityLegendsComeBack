@@ -223,7 +223,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
             int projectileIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                GunTipPosition + Main.rand.NextVector2Circular(1.5f, 1.5f),
+                Owner.MountedCenter + Main.rand.NextVector2Circular(1.5f, 1.5f),
                 velocity,
                 projectileType,
                 damage,

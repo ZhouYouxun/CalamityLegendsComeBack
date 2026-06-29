@@ -121,6 +121,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private bool[] hoveredLastFrame = Array.Empty<bool>();
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private int lastPanelWidth;
+        private int lastPanelHeight;
         private int openedSelectedItem = -1;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -187,9 +189,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelPositionInitialized = true;
             }
             else if (Main.myPlayer == Projectile.owner)
-                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelWidth, panelHeight, detailWidth, layoutScale);
+            {
+                int previousPanelWidth = lastPanelWidth > 0 ? lastPanelWidth : panelWidth;
+                int previousPanelHeight = lastPanelHeight > 0 ? lastPanelHeight : panelHeight;
+                Vector2 anchoredCenter = panelTopLeft + new Vector2(previousPanelWidth, previousPanelHeight) * 0.5f;
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(anchoredCenter, panelWidth, panelHeight, detailWidth, layoutScale);
+            }
 
             Vector2 panelCenter = panelTopLeft + new Vector2(panelWidth, panelHeight) * 0.5f;
+            lastPanelWidth = panelWidth;
+            lastPanelHeight = panelHeight;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
@@ -717,6 +726,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private readonly bool[] hoveredLastFrame = new bool[HeatEntries.Length];
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private int lastPanelWidth;
+        private int lastPanelHeight;
         private int openedSelectedItem = -1;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -778,9 +789,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelPositionInitialized = true;
             }
             else if (Main.myPlayer == Projectile.owner)
-                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelWidth, panelHeight);
+            {
+                int previousPanelWidth = lastPanelWidth > 0 ? lastPanelWidth : panelWidth;
+                int previousPanelHeight = lastPanelHeight > 0 ? lastPanelHeight : panelHeight;
+                Vector2 anchoredCenter = panelTopLeft + new Vector2(previousPanelWidth, previousPanelHeight) * 0.5f;
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(anchoredCenter, panelWidth, panelHeight);
+            }
 
             Vector2 panelCenter = panelTopLeft + new Vector2(panelWidth, panelHeight) * 0.5f;
+            lastPanelWidth = panelWidth;
+            lastPanelHeight = panelHeight;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
