@@ -106,7 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.06f, // EffectID 12: Soul of Fright / 恐惧之魂
             1.08f, // EffectID 13: Soul of Might / 力量之魂
             0.80f, // EffectID 14: Soul of Sight / 视域之魂
-            1.05f, // EffectID 15: Living Shard / 生命碎片
+            1.45f, // EffectID 15: Living Shard / 生命碎片
             0f, // EffectID 16: Unused gap / 未使用空位
             1.02f, // EffectID 17: Depth Cells / 深渊细胞
             1.40f, // EffectID 18: Plague Cell Canister / 瘟疫细胞罐

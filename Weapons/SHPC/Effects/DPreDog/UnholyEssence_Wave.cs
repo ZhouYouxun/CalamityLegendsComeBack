@@ -174,7 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
         {
             lifeTimer++;
 
-            Projectile.velocity *= 0.98f;
+            Projectile.velocity *= 1.03f;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
@@ -190,7 +190,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     if (frameTimer % 3 == 0)
                         ReleaseTrailingNovas(forward, right);
 
-                    if (frameTimer % 2 == 0)
+                    if (frameTimer % 3 == 0)
                         ReleaseTrailingSHPE();
                 }
             }
@@ -351,7 +351,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 pos,
                 Vector2.Zero,
                 ModContent.ProjectileType<FuckYou>(),
-                (int)(Projectile.damage * 0.85f),
+                (int)(Projectile.damage * 0.75f),
                 Projectile.knockBack,
                 Projectile.owner
             );
@@ -393,7 +393,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 Projectile.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<NewLegendSHPE>(),
-                (int)(Projectile.damage * 0.85f),
+                (int)(Projectile.damage * 0.75f),
                 Projectile.knockBack,
                 Projectile.owner);
 
