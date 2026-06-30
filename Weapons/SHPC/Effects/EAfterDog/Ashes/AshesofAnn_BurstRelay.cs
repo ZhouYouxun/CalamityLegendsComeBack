@@ -15,11 +15,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
     internal sealed class AshesofAnn_BurstRelay : ModProjectile, ILocalizedModType
     {
-        private const int ShotCount = 17;
+        private const int ShotCount = 18;
         private const int WarmupFrames = 6;
         private const int FireInterval = 1;
         private const float HomingAcquireRange = 200f * 16f;
-        private const float PiercingShotChance = 0.4f;
         private const float MinMuzzleDistance = 42f;
         private const float MaxMuzzleDistance = 92f;
 
@@ -130,7 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            bool piercingShot = Main.rand.NextFloat() < PiercingShotChance;
+            bool piercingShot = shotIndex % 3 == 2;
             NPC target = piercingShot ? null : FindTarget(HomingAcquireRange);
             float shotCompletion = shotIndex / (float)(ShotCount - 1);
             float weave = (float)Math.Sin(shotIndex * 2.399963f) * MathHelper.Lerp(0.48f, 0.1f, shotCompletion);
@@ -144,7 +143,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             }
 
             Vector2 spawnPosition = Projectile.Center + forward * 20f + normal * (float)Math.Sin(shotIndex * 1.618034f) * 24f;
-            float speed = MathHelper.Lerp(13.5f, 18.8f, shotCompletion) + Main.rand.NextFloat(-0.35f, 0.35f);
+            float speed = piercingShot
+                ? MathHelper.Lerp(6.4f, 8.4f, shotCompletion) + Main.rand.NextFloat(-0.25f, 0.25f)
+                : MathHelper.Lerp(13.5f, 18.8f, shotCompletion) + Main.rand.NextFloat(-0.35f, 0.35f);
             int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.75f, 0.9f, shotCompletion)));
             if (shotIndex == ShotCount - 1)
                 damage = Math.Max(1, (int)(Projectile.damage * 1.13f));

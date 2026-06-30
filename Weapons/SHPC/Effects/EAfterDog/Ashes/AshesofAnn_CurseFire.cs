@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
     {
         private const float BaseSpeed = 16.2f;
         private const float HomingRange = 200f * 16f;
-        private const int TotalRelayShots = 17;
+        private const int TotalRelayShots = 18;
         private const float VisualEffectScale = 0.7f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
@@ -85,6 +85,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             if (IsPiercingShot)
             {
                 Projectile.penetrate = -1;
+                Projectile.extraUpdates = 0;
+                Projectile.timeLeft = 310;
                 Projectile.localNPCHitCooldown = 6;
             }
         }
@@ -124,8 +126,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private void UpdatePiercingFlight(Vector2 direction)
         {
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed * MathHelper.Lerp(1.18f, 1.42f, ShotCompletion), 0.045f);
-            float curve = (float)Math.Sin((Timer + ShotIndex * 17f) * 0.045f) * 0.004f;
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed * MathHelper.Lerp(0.42f, 0.58f, ShotCompletion), 0.045f);
+            float curve = (float)Math.Sin((Timer + ShotIndex * 17f) * 0.11f) * 0.018f;
+            curve += (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.037f) * 0.006f;
             Projectile.velocity = direction.RotatedBy(curve) * speed;
         }
 
@@ -238,25 +241,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            Vector2 center = Projectile.Center - direction * Main.rand.NextFloat(2f, 12f) + normal * Main.rand.NextFloat(-4.5f, 4.5f);
             Color mainColor = MainColor;
 
-            if ((int)Timer % 2 == 0 && PassVisualBudget(2, 0))
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    center,
-                    Projectile.velocity * 0.02f,
-                    "CalamityMod/Particles/VerticalSmear",
-                    false,
-                    Main.rand.Next(13, 18),
-                    Main.rand.NextFloat(1.45f, 2.15f),
-                    mainColor,
-                    new Vector2(0.2f, 1f),
-                    true,
-                    true,
-                    shrinkSpeed: 0.82f,
-                    glowOpacity: 0.45f));
-            }
+            if (IsPiercingShot || PassVisualBudget(2, 0))
+                SpawnBladeDisc(direction, normal, mainColor);
 
             if ((int)Timer % 3 == 0 && PassVisualBudget(3, 2))
             {
@@ -287,6 +275,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             }
 
             SpawnDenseMetaballs(direction, normal, homingActive);
+        }
+
+        private void SpawnBladeDisc(Vector2 direction, Vector2 normal, Color mainColor)
+        {
+            int bladeCount = IsPiercingShot ? 7 : 4;
+            int lifetime = IsPiercingShot ? Main.rand.Next(14, 22) : 1;
+            float discRotation = direction.ToRotation() + Timer * (IsPiercingShot ? 0.20f : 0.36f) + Projectile.ai[2] * 0.41f;
+            float scale = Projectile.scale * (IsPiercingShot ? Main.rand.NextFloat(1.65f, 2.5f) : Main.rand.NextFloat(1.2f, 1.65f));
+            Color edgeColor = Color.Lerp(mainColor, SecondaryColor, 0.42f);
+
+            for (int i = 0; i < bladeCount; i++)
+            {
+                float rotation = discRotation + MathHelper.TwoPi * i / bladeCount;
+                Vector2 bladeDirection = rotation.ToRotationVector2();
+                Vector2 center = Projectile.Center
+                    - direction * Main.rand.NextFloat(0f, IsPiercingShot ? 10f : 5f)
+                    + normal * Main.rand.NextFloat(-4.5f, 4.5f);
+
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    center,
+                    Projectile.velocity * 0.012f + bladeDirection * Main.rand.NextFloat(0.08f, IsPiercingShot ? 0.46f : 0.18f),
+                    "CalamityMod/Particles/VerticalSmearRagged",
+                    false,
+                    lifetime,
+                    scale,
+                    i % 3 == 0 ? CoreColor : Color.Lerp(mainColor, edgeColor, Main.rand.NextFloat(0.18f, 0.72f)),
+                    new Vector2(IsPiercingShot ? 0.26f : 0.19f, IsPiercingShot ? 1.18f : 0.82f),
+                    true,
+                    true,
+                    extraRotation: rotation,
+                    shrinkSpeed: IsPiercingShot ? 0.12f : 0.82f,
+                    glowOpacity: IsPiercingShot ? 0.74f : 0.52f,
+                    spin: IsPiercingShot ? Main.rand.NextFloat(-0.055f, 0.055f) : 0f));
+            }
         }
 
         private void SpawnDenseMetaballs(Vector2 direction, Vector2 normal, bool homingActive)

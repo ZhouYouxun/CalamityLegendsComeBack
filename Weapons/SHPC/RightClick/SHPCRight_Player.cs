@@ -25,6 +25,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private readonly BalanceSHPC balance = new();
         private int forcedShutdownCoolingDuration;
 
+        private int GetHeatFillTime(int heatStage, int maxHeatStage)
+        {
+            int defaultFillTime = balance.GetHeatFillTime(heatStage, maxHeatStage);
+            return Player.GetModPlayer<HeatModulePlayer>().GetHeatFillTime(defaultFillTime);
+        }
+
         public override void PostUpdate()
         {
             if (AttackLockoutTimer > 0)
@@ -63,8 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
 
             float heatUnits = GetTotalHeatUnits();
-            float dissipationMultiplier = Player.GetModPlayer<HeatModulePlayer>().HeatDissipationMultiplier;
-            heatUnits -= dissipationMultiplier / BalanceSHPC.NormalHeatDecayTime;
+            heatUnits -= 1f / BalanceSHPC.NormalHeatDecayTime;
             ApplyHeatUnits(heatUnits);
         }
 
@@ -72,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             HeatStage = Utils.Clamp(heatStage, 0, maxHeatStage);
             HeatMaxStage = Utils.Clamp(maxHeatStage, 1, balance.GetRightClickMaxHeatLevel());
-            int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
+            int fillTime = GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
             HeatProgressTimer = HeatStage >= HeatMaxStage
                 ? fillTime
                 : Utils.Clamp(heatProgressTimer, 0, fillTime);
@@ -130,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             if (HeatProgressTimer > 0)
             {
-                int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
+                int fillTime = GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
                 return Utils.Clamp(HeatProgressTimer / (float)fillTime, 0f, 1f);
             }
 
@@ -189,7 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (HeatStage >= HeatMaxStage)
                 return HeatMaxStage;
 
-            int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
+            int fillTime = GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
             float progress = fillTime > 0 ? HeatProgressTimer / (float)fillTime : 0f;
             return System.Math.Max(0f, HeatStage + Utils.Clamp(progress, 0f, 1f));
         }
@@ -207,13 +212,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatUnits >= HeatMaxStage)
             {
                 HeatStage = HeatMaxStage;
-                HeatProgressTimer = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
+                HeatProgressTimer = GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
                 return;
             }
 
             HeatStage = Utils.Clamp((int)System.MathF.Floor(heatUnits), 0, HeatMaxStage);
             float fractionalHeat = heatUnits - HeatStage;
-            int fillTime = balance.GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
+            int fillTime = GetHeatFillTime(Utils.Clamp(HeatStage, 0, 4), HeatMaxStage);
             HeatProgressTimer = Utils.Clamp((int)System.MathF.Round(fractionalHeat * fillTime), 0, fillTime);
         }
 
