@@ -87,6 +87,9 @@ Mods: {
 						[c/FF7733:Passive: three fire tails fight behind the player.]
 						[c/FF7733:They inherit weapon damage and strike rapidly with a short per-target cooldown.]
 						[c/FF7733:Tail hits restore a small amount of wing flight time.]
+						[c/BB55FF:Passive: a holy crystal hovers above the player's head while holding Pristine Fury.]
+						[c/BB55FF:Left Click: crystal fires rapid homing shards toward the nearest enemy.]
+						[c/BB55FF:Right Click (charging): crystal unleashes two slowly rotating scissor lasers.]
 						'''
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
@@ -191,6 +194,9 @@ Mods: {
 				PFExoThanatosBeamStart.DisplayName: P F Exo Thanatos Beam
 				PFExoThanatosSideLaser.DisplayName: P F Exo Thanatos Side Laser
 				PristineFuryPassiveTentacle.DisplayName: Pristine Fury Passive Tentacle
+				PristineFuryCrystal.DisplayName: Pristine Fury Holy Crystal
+				PristineFuryCrystalShard.DisplayName: Pristine Fury Holy Crystal Shard
+				PristineFuryCrystalLaser.DisplayName: Pristine Fury Holy Crystal Scissor Laser
 				PristineFuryRightNovaChargeOrb.DisplayName: Pristine Fury Right Nova Charge Orb
 				PristineFuryRightNovaFireball.DisplayName: Pristine Fury Fireball
 				PristineFuryHomingStar.DisplayName: Pristine Fury Homing Star

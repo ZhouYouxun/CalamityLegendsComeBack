@@ -42,6 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Item.UseSound     = null;
             Item.shoot        = HoldoutType;
             Item.shootSpeed   = 34f;
+            Item.useAmmo      = AmmoID.Bullet;   // 允许读取子弹信息（CanShoot=false 阻止自动消耗）
             Item.value        = CalamityGlobalItem.RarityTurquoiseBuyPrice;
             Item.rare         = ModContent.RarityType<Turquoise>();
         }

@@ -129,6 +129,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (stage >= 2) stackAmount += 1;
             if (stage >= 3) stackAmount += 1;
 
+            // 普通弹幕击中也积累玩家辐射
+            if (Main.myPlayer == Projectile.owner)
+                Main.player[Projectile.owner].GetModPlayer<SeasSearingPlayer>().OnHitWithSeasSearing();
+
             target.GetGlobalNPC<SeasSearingPollutionNPC>().ApplyPollution(target, Projectile.owner, stackAmount);
             target.AddBuff(BuffID.Venom, 240);
             target.AddBuff(ModContent.BuffType<Irradiated>(), 240);

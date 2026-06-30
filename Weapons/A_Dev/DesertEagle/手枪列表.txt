@@ -1,0 +1,19 @@
+| 中文名 | 内部英文名 |
+|---|---|
+| 神枪手柯尔特 | `CrackshotColt` (`Crackshot Colt`) |
+| 真菌枪 | `Fungicide` (`Fungicide`) |
+| 凤凰爆破枪【原版】 | `PhoenixBlaster` (`Phoenix Blaster`, 原版 `ItemID.PhoenixBlaster`) |
+| 迈达斯统帅 | `MidasPrime` (`Midas Prime`) |
+| 熔渣马格南 | `SlagMagnum` (`Slag Magnum`) |
+| 叶针枪 | `Needler` (`Needler`) |
+| 霜炎爆破枪 | `ThermoclineBlaster` (`Thermocline Blaster`) |
+| 地狱降临 | `Hellborn` (`Hellborn`) |
+| 九头蛇 | `Hydra` (`Hydra`) |
+| 白羊座41 | `Arietes41` (`Arietes 41`) |
+| 地狱风暴 | `Helstorm` (`Helstorm`) |
+| 疫病污染者 | `PestilentDefiler` (`Pestilent Defiler`) |
+| 幻星冲击炮 | `AstralBlaster` (`Astral Blaster`) |
+| 新星炮 | `StellarCannon` (`Stellar Cannon`) |
+| 雷空猎影 | `PridefulHuntersPlanarRipper` (`Prideful Hunter's Planar Ripper`) |
+| 黄金之鹰 | `GoldenEagle` (`Golden Eagle`) |
+| 极魂符枪 | `AcesHigh` (`Ace's High`) |

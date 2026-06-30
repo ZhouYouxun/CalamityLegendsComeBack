@@ -87,6 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            bool piercingShot = shotIndex % 3 == 2;
 
             // 保留“正前方附近”的扇形偏移。
             // 第一发偏移最大，后面的偏移逐渐收束，让弹幕看起来像往前方喷射，而不是锁定敌人。
@@ -97,18 +98,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             // 保留发射点的左右错位，让它不是从同一个点挤出来。
             float sideOffset = (float)Math.Sin(shotIndex * 2.41f) * 18f;
             Vector2 spawnPosition = Projectile.Center + forward * 18f + normal * sideOffset;
+            float speed = piercingShot
+                ? MathHelper.Lerp(5.4f, 7.2f, shotIndex / (float)(ShotCount - 1))
+                : Main.rand.NextFloat(13.5f, 16.5f);
 
             int damage = Math.Max(1, (int)(Projectile.damage * 0.77f));
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnPosition,
-                direction * Main.rand.NextFloat(13.5f, 16.5f),
+                direction * speed,
                 ModContent.ProjectileType<AshesofCalamity_Soul>(),
                 damage,
                 Projectile.knockBack,
                 Projectile.owner,
-                -1f,
+                piercingShot ? 1f : 0f,
                 shotIndex);
 
             SoundEngine.PlaySound(SoundID.Item73, spawnPosition);

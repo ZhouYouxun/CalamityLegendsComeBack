@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
@@ -188,7 +189,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // 最后一段左键雷可读取目标身上的电系 debuff 并转化为充能层数。
             if (GainCharge)
+            {
+                if (Main.myPlayer == Projectile.owner)
+                    owner.GetModPlayer<ZhuangFangYiPetPlayer>().QueueStrongAttackCandidate(target);
+
                 thunderPlayer.TryGainThunderChargeFromTarget(target);
+            }
 
             // 基础电击可被 NoBaseElectricDebuffFlag 关闭，供终极右键精确控制 debuff。
             if (thunderPlayer.HarmonyActive && ApplyBaseElectricDebuff)

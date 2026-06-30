@@ -298,6 +298,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void FirePollutionRound(int burstIndex, int stage)
         {
+            // 检查是否持有特殊子弹（非火枪弹且非无子弹）
+            if (TryFireWithSpecialAmmo(burstIndex, stage))
+                return;
+
+            // 无子弹或火枪弹 → 使用标准辐射弹幕
             float   speed = 24f + Math.Clamp(stage, 0, 5) * 2f;
             Vector2 dir   = AimDirection;
             Vector2 vel   = dir.RotatedByRandom(MathHelper.ToRadians(0.65f + burstIndex * 0.22f)) * speed;
@@ -320,6 +325,69 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             TriggerMuzzleFlash(8);
             SpawnMuzzleBurst(dir, burstIndex, Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.3f));
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f);
+        }
+
+        // 尝试使用背包中的特殊子弹开火，返回 true 表示已处理（跳过默认弹幕）
+        private bool TryFireWithSpecialAmmo(int burstIndex, int stage)
+        {
+            if (Main.myPlayer != Projectile.owner) return false;
+
+            // 扫描背包找到第一个非火枪弹的子弹类型
+            for (int i = 0; i < 58; i++)
+            {
+                Item ammoItem = Owner.inventory[i];
+                if (ammoItem.IsAir || ammoItem.ammo != AmmoID.Bullet) continue;
+                if (ammoItem.type == ItemID.MusketBall) continue; // 火枪弹 → 默认弹幕
+
+                // 找到特殊子弹，消耗一发并发射（附加辐射特效）
+                if (!Owner.PickAmmo(Owner.HeldItem, out int projType, out float speed, out _, out _, out int usedAmmoId))
+                    return false;
+                if (usedAmmoId == ItemID.MusketBall) return false;
+
+                Vector2 dir = AimDirection;
+                Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(0.5f + burstIndex * 0.15f)) * speed;
+
+                int idx = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    GunTipPosition + dir * 8f,
+                    vel,
+                    projType,
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner);
+
+                if (Main.projectile.IndexInRange(idx))
+                {
+                    Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+                    // 标记为辐射子弹（用于击中时添加特效）
+                    Main.projectile[idx].localAI[2] = 1f;
+                }
+
+                SpawnRadiationBulletAura(dir, burstIndex);
+                ApplyRecoil(4.8f + burstIndex * 1.2f);
+                TriggerMuzzleFlash(12);
+                SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f - 0.1f);
+                return true;
+            }
+            return false;
+        }
+
+        // 辐射子弹的专属发射特效（辐射光环）
+        private void SpawnRadiationBulletAura(Vector2 direction, int burstIndex)
+        {
+            if (Main.dedServ) return;
+            Color radColor = Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.BiohazardLime, 0.5f);
+            for (int i = 0; i < 8; i++)
+            {
+                float ang = MathHelper.TwoPi * i / 8f;
+                Vector2 vel = direction.RotatedBy(ang * 0.35f + Main.rand.NextFloat(-0.2f, 0.2f)) * Main.rand.NextFloat(1.5f, 4.5f);
+                Dust d = Dust.NewDustPerfect(
+                    GunTipPosition + Main.rand.NextVector2Circular(3f, 3f),
+                    DustID.GemEmerald, vel, 120,
+                    Color.Lerp(radColor, Color.White, Main.rand.NextFloat(0.1f, 0.4f)),
+                    Main.rand.NextFloat(0.65f, 1.1f));
+                d.noGravity = true;
+            }
         }
 
         private void FireVentShot(int burstIndex)

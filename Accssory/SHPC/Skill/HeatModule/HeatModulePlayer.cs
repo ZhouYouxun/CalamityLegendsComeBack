@@ -4,10 +4,17 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule
 {
     public sealed class HeatModulePlayer : ModPlayer
     {
+        public const int HeatFillTimeWithModule = 3 * 60;
+
         public bool HeatModuleEquipped;
 
-        public float HeatGenerationMultiplier => HeatModuleEquipped ? 1.25f : 1f;
-        public float HeatDissipationMultiplier => HeatModuleEquipped ? 0.67f : 1f;
+        public float HeatGenerationMultiplier => 1f;
+        public float HeatDissipationMultiplier => 1f;
+
+        public int GetHeatFillTime(int defaultFillTime)
+        {
+            return HeatModuleEquipped ? HeatFillTimeWithModule : defaultFillTime;
+        }
 
         public float GetHeatDamageMultiplier(int heatStage)
         {

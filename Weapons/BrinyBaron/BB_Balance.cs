@@ -7,6 +7,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
     internal static class BB_Balance
     {
         private const string SourceFile = "Weapons/BrinyBaron/BB_Balance.cs";
+        // 左键挥舞核心碰撞箱大小：这是调节它的核心碰撞箱大小。
+        public const float LeftClickCoreHitboxSize = 146f;
+        // 左键挥舞核心碰撞箱前推距离：这是调节它的核心碰撞箱位置。
+        public const float LeftClickCoreHitboxOutset = LeftClickCoreHitboxSize * 0.85f;
+
         private const int DamageColumn = 1;
         private const int ScaleColumn = 2;
 

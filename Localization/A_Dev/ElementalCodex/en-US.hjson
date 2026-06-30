@@ -63,6 +63,11 @@ Mods: {
 				DisplayName: Disease Element
 				Description: Black random rays corrode the enemy, reducing damage mitigation
 			}
+
+			SeasSearingPlayerRadiationBuff: {
+				DisplayName: Seas Searing Player Radiation Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.SeasSearingPlayerRadiationBuff.Description
+			}
 		}
 
 		ElementalCodex: {

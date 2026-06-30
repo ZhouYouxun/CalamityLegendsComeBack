@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -275,6 +276,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             target.AddBuff(BuffID.Electrified, 240);
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderPlayer.ApplyUltimateDot(target, 240);
+            if (Main.myPlayer == Projectile.owner)
+                Main.player[Projectile.owner].GetModPlayer<ZhuangFangYiPetPlayer>().QueueStrongAttackCandidate(target);
 
             // 下坠过程中穿透数用完时提前在目标处爆开。
             if (dashing && !exploding && Projectile.numHits >= 5)

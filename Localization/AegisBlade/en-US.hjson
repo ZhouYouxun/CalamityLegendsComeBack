@@ -7,7 +7,7 @@ Mods: {
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''
-						[c/FFD966:Left Click] [c/DCD6C8:Hold to swing the greatsword; its tip launches a fan of Aegis flames that slow down and linger in mid-air]
+						[c/FFD966:Left Click] [c/DCD6C8:Hold to swing the greatsword; while it spins, golden tracking souls continuously scatter around you]
 						[c/8DB8FF:Right Click] [c/DCD6C8:Raise the 40-frame Aegis shield — the first 15 frames are the Perfect Parry window, then it can be charged]
 						[c/8DB8FF:Shield Bash] [c/DCD6C8:Release right-click to dash toward the cursor and ram enemies with the shield; longer charge means more distance and damage]
 						[c/8DB8FF:Full Charge] [c/DCD6C8:Unlocked after any Mechanical Boss; left-click to hurl down the Aegis Blade and raise 16-tile rapid barricades on both sides]

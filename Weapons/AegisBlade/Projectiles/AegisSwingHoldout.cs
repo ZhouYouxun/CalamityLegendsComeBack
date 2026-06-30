@@ -22,29 +22,27 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float SwordVisualScale = 1.55f;
         private const float BladeReach = 104f;
         private const int BladeTrailHistoryFrames = 16;
-        private const float FirstSwingStartOffsetDegrees = -20f;
-        private const float FirstSwingSlowPointDegrees = 80f;
-        private const float SwingLoopEndOffsetDegrees = 135f;
-        private const float LoopSweepDegrees = 1080f;
-        private const float FirstSwingSlowPointProgress = 0.26f;
+        private const int TrackingSoulInterval = 4;
+        private const int TrackingSoulBurstCount = 2;
+        private const float TrackingSoulSpeed = 30f * 0.67f;
+        private const float LoopSweepDegrees = 1080f;   // 每次挥动 3 圈，线性匀速
 
         private Player Owner => Main.player[Projectile.owner];
-        private float lastAngle { get => Projectile.localAI[0]; set => Projectile.localAI[0] = value; }
-        private float angleSwept { get => Projectile.localAI[1]; set => Projectile.localAI[1] = value; }
         private readonly Vector2[] bladeTipHistory = new Vector2[BladeTrailHistoryFrames];
         private int bladeTipHistoryLength;
         private int swingCount;
         private int stateTimer;
         private int swingDirection = 1;
         private bool fireballSpawned;
-        private bool waveSpawned;
         private float currentAngle;
         private float startAngle;
-        private float slowPointAngle;
         private float endAngle;
         private Vector2 lockedMouseDirection = Vector2.UnitX;
         private float scale = 1f;
         private float slashOpacity;
+        private float outlineBaseOpacity;
+        private float outlinePulseOpacity;
+        private float discRingOpacity;   // 刀盘环形光圈强度
 
         private static readonly Color BladeGold = new(255, 205, 80);
         private static readonly Color BladeLight = new(255, 242, 185);
@@ -112,27 +110,13 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 swingDirection = -Math.Sign(Owner.Center.X - AegisBlade.GetMouseWorld(Owner).X);
                 if (swingDirection == 0)
                     swingDirection = Owner.direction;
+                // 第一圈从瞄准方向直接起步，无初始偏移
+                currentAngle = lockedMouseDirection.ToRotation();
             }
             Owner.direction = swingDirection;
 
-            float baseAngle = lockedMouseDirection.ToRotation();
-            if (swingCount == 0)
-            {
-                startAngle = baseAngle + MathHelper.ToRadians(FirstSwingStartOffsetDegrees * swingDirection);
-                slowPointAngle = baseAngle + MathHelper.ToRadians(FirstSwingSlowPointDegrees * swingDirection);
-                endAngle = baseAngle + MathHelper.ToRadians((LoopSweepDegrees + SwingLoopEndOffsetDegrees) * swingDirection);
-                currentAngle = startAngle;
-            }
-            else
-            {
-                startAngle = currentAngle;
-                slowPointAngle = startAngle;
-                endAngle = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
-                currentAngle = startAngle;
-            }
-
-            lastAngle = currentAngle;
-            angleSwept = 0f;
+            startAngle = currentAngle;
+            endAngle   = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
         }
 
         private void DoSwing()
@@ -143,42 +127,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             float progress = GetCurrentSwingProgress();
             currentAngle = EvaluateSwingAngle(progress);
 
-            if (stateTimer > 0)
-            {
-                float angleDiff = Math.Abs(MathHelper.WrapAngle(currentAngle - lastAngle));
-                angleSwept += angleDiff;
-                lastAngle = currentAngle;
+            // 每帧跟刀尖方向实时更新玩家朝向（仿 BB ApplyRightSpinHeldPose）
+            Owner.direction = MathF.Cos(currentAngle) >= 0f ? 1 : -1;
 
-                if (!waveSpawned && angleSwept >= MathHelper.TwoPi)
-                {
-                    waveSpawned = true;
-                    if (Main.myPlayer == Projectile.owner)
-                    {
-                        Vector2 shootDir = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-                        int waveDamage = Math.Max(1, (int)(Projectile.damage * 0.6f));
-                        int waveProj = Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            Owner.MountedCenter + shootDir * 44f * scale,
-                            shootDir * 14f,
-                            ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BBSwing_Wave>(),
-                            waveDamage,
-                            Projectile.knockBack * 0.5f,
-                            Projectile.owner,
-                            1.1f * scale, // scale
-                            2f  // stage
-                        );
-                        if (waveProj != Main.maxProjectiles)
-                        {
-                            Main.projectile[waveProj].localAI[0] = -1f; // Disable water bubbles
-                        }
-                    }
-                }
-            }
+            if (Main.myPlayer == Projectile.owner && stateTimer % TrackingSoulInterval == 0)
+                SpawnTrackingSouls();
 
             if (!fireballSpawned && progress >= FireballSpawnProgress && Main.myPlayer == Projectile.owner)
             {
                 SpawnFireballs();
-                SpawnBorrowedLazharShots();
+                SpawnOrbitalStrikes();
                 fireballSpawned = true;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.82f, Pitch = Main.rand.NextFloat(-0.12f, 0.16f) }, Owner.Center);
             }
@@ -212,19 +170,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private float EvaluateSwingAngle(float progress)
         {
-            if (swingCount == 0 && progress < FirstSwingSlowPointProgress)
-            {
-                float localProgress = MathHelper.Clamp(progress / FirstSwingSlowPointProgress, 0f, 1f);
-                float eased = 1f - MathF.Pow(1f - localProgress, 3f);
-                return MathHelper.Lerp(startAngle, slowPointAngle, eased);
-            }
-
-            float spinProgress = swingCount == 0
-                ? MathHelper.Clamp((progress - FirstSwingSlowPointProgress) / (1f - FirstSwingSlowPointProgress), 0f, 1f)
-                : progress;
-            float easedSpin = spinProgress * spinProgress * (3f - 2f * spinProgress);
-            float spinStart = swingCount == 0 ? slowPointAngle : startAngle;
-            return MathHelper.Lerp(spinStart, endAngle, easedSpin);
+            // 线性匀速旋转，消除循环之间的加减速停顿感
+            return startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection) * progress;
         }
 
         private void SpawnFireballs()
@@ -247,27 +194,29 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
         }
 
-        private void SpawnBorrowedLazharShots()
+        private void SpawnTrackingSouls()
         {
-            Vector2 shootDirection = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            Vector2 normal = shootDirection.RotatedBy(MathHelper.PiOver2);
             int laserType = ModContent.ProjectileType<AegisBorrowedLazharLaser>();
-            int orbitalType = ModContent.ProjectileType<AegisBorrowedOrbitalStrike>();
             int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.42f));
-            int orbitalDamage = Math.Max(1, (int)(Projectile.damage * 0.52f));
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < TrackingSoulBurstCount; i++)
             {
-                float offset = (i - 1.5f) * 18f;
+                Vector2 shootDirection = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Owner.MountedCenter + shootDirection * 44f + normal * offset,
-                    shootDirection * 30f,
+                    Owner.MountedCenter + shootDirection * 44f * scale,
+                    shootDirection * TrackingSoulSpeed,
                     laserType,
                     laserDamage,
                     Projectile.knockBack * 0.35f,
                     Projectile.owner);
             }
+        }
+
+        private void SpawnOrbitalStrikes()
+        {
+            int orbitalType = ModContent.ProjectileType<AegisBorrowedOrbitalStrike>();
+            int orbitalDamage = Math.Max(1, (int)(Projectile.damage * 0.52f));
 
             for (int i = 0; i < 4; i++)
             {
@@ -323,36 +272,31 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             return progress >= 0.23f && progress <= 0.87f ? null : false;
         }
 
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        public override void ModifyDamageHitbox(ref Rectangle hitbox)
         {
-            Vector2 direction = currentAngle.ToRotationVector2();
-            float swipeDirection = Math.Sign(endAngle - startAngle);
-            if (swipeDirection == 0f)
-                swipeDirection = 1f;
-
-            if (CheckBladeLine(targetHitbox, direction, 42f * scale, BladeReach * scale))
-                return null;
-
-            Vector2 trailingDirection = (currentAngle - swipeDirection * 0.26f).ToRotationVector2();
-            if (CheckBladeLine(targetHitbox, trailingDirection, 34f * scale, BladeReach * scale * 0.96f))
-                return null;
-
-            Vector2 leadingDirection = (currentAngle + swipeDirection * 0.14f).ToRotationVector2();
-            return CheckBladeLine(targetHitbox, leadingDirection, 30f * scale, BladeReach * scale * 0.92f) ? null : false;
+            hitbox = GetSwingDamageHitbox();
         }
 
-        private bool CheckBladeLine(Rectangle targetHitbox, Vector2 direction, float width, float reach)
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            Vector2 start = Owner.MountedCenter + direction * 8f * scale;
-            Vector2 end = Owner.MountedCenter + direction * reach;
-            return Collision.CheckAABBvLineCollision(
+            Rectangle swingHitbox = GetSwingDamageHitbox();
+            return Collision.CheckAABBvAABBCollision(
                 targetHitbox.TopLeft(),
                 targetHitbox.Size(),
-                start,
-                end,
-                width,
-                ref collisionPoint);
+                swingHitbox.TopLeft(),
+                swingHitbox.Size()) ? null : false;
+        }
+
+        private Rectangle GetSwingDamageHitbox()
+        {
+            Vector2 direction = currentAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            float hitboxSize = BalanceAegisBlade.LeftClickCoreHitboxSize * scale;
+            Vector2 center = Owner.MountedCenter + direction * BalanceAegisBlade.LeftClickCoreHitboxOutset * scale;
+            return new Rectangle(
+                (int)(center.X - hitboxSize * 0.5f),
+                (int)(center.Y - hitboxSize * 0.5f),
+                (int)hitboxSize,
+                (int)hitboxSize);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -369,13 +313,20 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             if (!hitWindow)
             {
-                slashOpacity = MathHelper.Lerp(slashOpacity, 0f, 0.25f);
+                slashOpacity    = MathHelper.Lerp(slashOpacity,    0f, 0.25f);
+                discRingOpacity = MathHelper.Lerp(discRingOpacity, 0f, 0.18f);
+                outlineBaseOpacity = MathHelper.Lerp(outlineBaseOpacity, 0f, 0.12f);
+                outlinePulseOpacity = MathHelper.Lerp(outlinePulseOpacity, 0f, 0.32f);
                 if (slashOpacity < 0.01f)
                     bladeTipHistoryLength = 0;
                 return;
             }
 
-            slashOpacity = MathHelper.Lerp(slashOpacity, 1f, 0.42f);
+            slashOpacity    = MathHelper.Lerp(slashOpacity,    1f, 0.42f);
+            discRingOpacity = MathHelper.Lerp(discRingOpacity, 1f, 0.22f);
+            outlineBaseOpacity = MathHelper.Clamp(outlineBaseOpacity + 0.018f, 0f, 0.58f);
+            float pulseDrop = MathHelper.Lerp(0.09f, 0.24f, outlinePulseOpacity * outlinePulseOpacity);
+            outlinePulseOpacity = MathHelper.Max(0f, outlinePulseOpacity - pulseDrop);
             // 刀光显示在剑身50%处（非剑尖）
             Vector2 tipOffset = currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f;
             Array.Copy(bladeTipHistory, 0, bladeTipHistory, 1, bladeTipHistory.Length - 1);
@@ -389,14 +340,19 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ || !hitWindow)
                 return;
 
-            Vector2 direction = currentAngle.ToRotationVector2();
-            Vector2 perpendicular = direction.RotatedBy(MathHelper.PiOver2 * Math.Sign(endAngle - startAngle));
-            for (int i = 0; i < 2; i++)
+            float bladeRadius = BladeReach * scale;
+            // 沿刀轨道均匀分布 3 个粒子（仿 BB SpawnRightSpinParticles）
+            float ringPhase = stateTimer * 0.38f * swingDirection;
+            for (int i = 0; i < 7; i++)
             {
-                Vector2 position = Owner.MountedCenter + direction * Main.rand.NextFloat(48f, BladeReach) * scale;
-                Vector2 velocity = perpendicular * Main.rand.NextFloat(1.5f, 4.2f);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(position, velocity, false,
-                    Main.rand.Next(10, 16), Main.rand.NextFloat(0.35f, 0.62f),
+                float angle = ringPhase + MathHelper.TwoPi * i / 7f + Main.rand.NextFloat(-0.22f, 0.22f);
+                Vector2 orbitDir = angle.ToRotationVector2();
+                Vector2 pos = Owner.MountedCenter + orbitDir * Main.rand.NextFloat(bladeRadius * 0.42f, bladeRadius * 1.22f);
+                Vector2 tangent = orbitDir.RotatedBy(MathHelper.PiOver2 * swingDirection);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    pos,
+                    tangent * Main.rand.NextFloat(1.2f, 4.2f) + orbitDir * Main.rand.NextFloat(-0.25f, 0.9f),
+                    false, Main.rand.Next(9, 19), Main.rand.NextFloat(0.28f, 0.72f),
                     Main.rand.NextBool(3) ? BladeLight : BladeGold));
             }
         }
@@ -440,54 +396,139 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return false;
 
-            Texture2D swordTexture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D swordTexture  = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D swooshTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
-            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 origin = new(0f, swordTexture.Height);
-            float drawRotation = currentAngle + MathHelper.PiOver4;
+            Texture2D bloomTexture  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ringTexture   = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
+            Vector2 origin       = new(0f, swordTexture.Height);
+            float drawRotation   = currentAngle + MathHelper.PiOver4;
             Vector2 drawPosition = Owner.MountedCenter - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+            float swipeDir       = Math.Sign(endAngle - startAngle);
+            if (swipeDir == 0f) swipeDir = 1f;
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            DrawAegisSpinDisc(swordTexture, swooshTexture, ringTexture, drawPosition, origin, swipeDir);
+
+            // ── 刀盘底层辉光环 ───────────────────────────────────────────
+            if (discRingOpacity > 0.01f)
+            {
+                // 外环辉光（固定尺寸，覆盖轨道半径）
+                Main.EntitySpriteDraw(ringTexture, drawPosition, null,
+                    BladeGold with { A = 0 } * discRingOpacity * 0.45f,
+                    Main.GlobalTimeWrappedHourly * swipeDir * 0.85f,
+                    ringTexture.Size() * 0.5f, scale * 2.4f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(ringTexture, drawPosition, null,
+                    BladeLight with { A = 0 } * discRingOpacity * 0.28f,
+                    Main.GlobalTimeWrappedHourly * swipeDir * -1.1f,
+                    ringTexture.Size() * 0.5f, scale * 1.8f, SpriteEffects.None, 0);
+
+                // ── 20 个武器残影均匀布满一圈（仿 BB DrawMaxRightSpinWeaponAfterimages）──
+                float ghostOpacity = MathHelper.Clamp(0.52f + discRingOpacity * 0.28f, 0.52f, 0.8f) * discRingOpacity;
+                for (int i = 0; i < 20; i++)
+                {
+                    float ghostAngle = MathHelper.TwoPi * i / 20f + currentAngle;
+                    float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 22f + i * 0.7f);
+                    Vector2 jitter = Main.rand.NextVector2Circular(2.4f, 2.4f);
+                    Color ghostColor = Color.Lerp(BladeGold, BladeLight, pulse) with { A = 0 };
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + jitter, null,
+                        ghostColor * 0.16f * ghostOpacity,
+                        ghostAngle + MathHelper.PiOver4,
+                        origin, scale, SpriteEffects.None, 0);
+                }
+            }
+
+            // ── 挥舞扫弧残影 ─────────────────────────────────────────────
+            float outlineOpacity = MathHelper.Clamp(outlineBaseOpacity + MathF.Pow(outlinePulseOpacity, 1.8f), 0f, 1f);
+            if (outlineOpacity > 0.01f)
+            {
+                int outlineCopies = outlinePulseOpacity > 0.01f ? 16 : 8;
+                float outlineRadius = MathHelper.Lerp(4.5f, 8f, outlinePulseOpacity) * scale;
+                for (int i = 0; i < outlineCopies; i++)
+                {
+                    Vector2 outlineOffset = (MathHelper.TwoPi * i / outlineCopies).ToRotationVector2() * outlineRadius;
+                    Color outlineColor = Color.Lerp(BladeGold, BladeLight, 0.35f + 0.45f * outlinePulseOpacity) with { A = 0 };
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + outlineOffset, null,
+                        outlineColor * outlineOpacity * 0.32f,
+                        drawRotation, origin, scale, SpriteEffects.None, 0);
+                }
+            }
 
             if (slashOpacity > 0.01f)
             {
-                Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-                float swipeDirection = Math.Sign(endAngle - startAngle);
-
-                // BB-style disc swoosh centered on player
-                Main.EntitySpriteDraw(swooshTexture, drawPosition, null, BladeGold with { A = 0 } * slashOpacity * 0.52f,
-                    drawRotation + MathHelper.PiOver2 * swipeDirection, swooshTexture.Size() * 0.5f,
-                    scale * 1.15f, SpriteEffects.None);
-
-                // Ghost glow rings (BB-style, 16 offsets)
-                for (int i = 0; i < 16; i++)
-                {
-                    Vector2 offset = (MathHelper.TwoPi * i / 16f).ToRotationVector2() * 4.5f * slashOpacity;
-                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, BladeGold with { A = 0 } * slashOpacity * 0.09f,
-                        drawRotation, origin, scale, SpriteEffects.None);
-                }
+                Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
+                    BladeGold with { A = 0 } * slashOpacity * 0.52f,
+                    drawRotation + MathHelper.PiOver2 * swipeDir,
+                    swooshTexture.Size() * 0.5f, scale * 1.15f, SpriteEffects.None, 0);
 
                 Vector2 bladeMid = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(bloomTexture, bladeMid, null, BladeLight with { A = 0 } * slashOpacity * 0.52f,
-                    0f, bloomTexture.Size() * 0.5f, scale * 0.5f, SpriteEffects.None);
-                Main.spriteBatch.ExitShaderRegion();
+                Main.EntitySpriteDraw(bloomTexture, bladeMid, null,
+                    BladeLight with { A = 0 } * slashOpacity * 0.52f,
+                    0f, bloomTexture.Size() * 0.5f, scale * 0.5f, SpriteEffects.None, 0);
             }
 
-            // Draw bright yellow outline continuously during swing
-            global::CalamityLegendsComeBack.Weapons.Visuals.HoldoutOutlineHelper.DrawSolidOutline(
-                swordTexture,
-                drawPosition,
-                drawRotation,
-                origin,
-                new Vector2(scale),
-                SpriteEffects.None,
-                Color.Yellow,
-                3.5f, // radius
-                1.0f, // opacity
-                Main.GlobalTimeWrappedHourly
-            );
+            for (int i = 0; i < 20; i++)
+            {
+                Vector2 glowOffset = (MathHelper.TwoPi * i / 20f).ToRotationVector2() * 4f;
+                Main.EntitySpriteDraw(swordTexture, drawPosition + glowOffset, null,
+                    BladeGold with { A = 0 } * 0.18f,
+                    drawRotation, origin, scale, SpriteEffects.None);
+            }
+
+            Main.spriteBatch.ExitShaderRegion();
 
             Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor, drawRotation, origin, scale, SpriteEffects.None);
-            // DrawBladeTrail(); // Temporarily disabled as per user request
             return false;
+        }
+
+        private void DrawAegisSpinDisc(Texture2D swordTexture, Texture2D swooshTexture, Texture2D ringTexture, Vector2 drawPosition, Vector2 origin, float swipeDir)
+        {
+            float discOpacity = MathHelper.Clamp(0.68f + discRingOpacity * 0.22f, 0.68f, 0.92f);
+            float spin = Main.GlobalTimeWrappedHourly * swipeDir * 5.8f;
+
+            Main.EntitySpriteDraw(ringTexture, drawPosition, null,
+                BladeGold with { A = 0 } * discOpacity * 0.62f,
+                spin * 0.28f,
+                ringTexture.Size() * 0.5f,
+                scale * 2.9f,
+                SpriteEffects.None,
+                0);
+
+            Main.EntitySpriteDraw(ringTexture, drawPosition, null,
+                BladeLight with { A = 0 } * discOpacity * 0.42f,
+                -spin * 0.34f,
+                ringTexture.Size() * 0.5f,
+                scale * 2.15f,
+                SpriteEffects.None,
+                0);
+
+            for (int i = 0; i < 4; i++)
+            {
+                float rotation = spin + MathHelper.TwoPi * i / 4f;
+                Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
+                    BladeGold with { A = 0 } * discOpacity * 0.38f,
+                    rotation,
+                    swooshTexture.Size() * 0.5f,
+                    scale * 1.55f,
+                    SpriteEffects.None,
+                    0);
+            }
+
+            for (int i = 0; i < 32; i++)
+            {
+                float progress = i / 32f;
+                float ghostAngle = currentAngle + MathHelper.TwoPi * progress + spin * 0.18f;
+                float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 24f + i * 0.72f);
+                Vector2 jitter = Main.rand.NextVector2Circular(2.8f, 2.8f);
+                Color ghostColor = Color.Lerp(BladeGold, BladeLight, pulse) with { A = 0 };
+
+                Main.EntitySpriteDraw(swordTexture, drawPosition + jitter, null,
+                    ghostColor * discOpacity * 0.24f,
+                    ghostAngle + MathHelper.PiOver4,
+                    origin,
+                    scale,
+                    SpriteEffects.None,
+                    0);
+            }
         }
     }
 }

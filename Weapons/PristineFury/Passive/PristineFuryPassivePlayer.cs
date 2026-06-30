@@ -43,6 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                 return;
 
             EnsureTentacles();
+            EnsureCrystal();
         }
 
         internal void TryRestoreTailFlightTime()
@@ -52,6 +53,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             Player.wingTime = Math.Min(Player.wingTimeMax, Player.wingTime + Player.wingTimeMax * TailFlightRestoreRatio);
             tailFlightRestoreCooldown = TailFlightRestoreCooldown;
+        }
+
+        private void EnsureCrystal()
+        {
+            int crystalType = ModContent.ProjectileType<PristineFuryCrystal>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile proj = Main.projectile[i];
+                if (proj.active && proj.owner == Player.whoAmI && proj.type == crystalType)
+                    return;
+            }
+
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center + new Vector2(0f, -300f * Player.gravDir),
+                Vector2.Zero,
+                crystalType,
+                Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * 2.0f)),
+                5f,
+                Player.whoAmI);
         }
 
         private void EnsureTentacles()

@@ -148,7 +148,7 @@ Mods: {
 				DisplayName: Heat Sensor
 				Tooltip:
 					'''
-					SHPC's standard heat-barrage right click generates 25% more heat and natural heat dissipation is reduced by 33%
+					While equipped, each standard SHPC heat-barrage level fills in only 3 seconds
 					Standard heat-barrage damage scaling is raised from 5% to 7.5% per heat level
 					Forced shutdown vents a wider searing smoke field that repeatedly damages nearby enemies
 					At full Heat V, continued fire constantly vents damaging smoke around the player
@@ -274,7 +274,7 @@ Mods: {
 			SHPCAmmo16: !!!
 			SHPCAmmo17: Depth Cells fires a Viperfish that falls from above and bursts.
 			SHPCAmmo18: Plague Cell Canister fires a marking ray and calls plague missiles.
-			SHPCAmmo19: Ashes of Calamity pours out a large number of red souls that track enemies at high speed.
+			SHPCAmmo19: Ashes of Calamity pours out red souls; some slowly weave forward and pierce enemies endlessly.
 			SHPCAmmo20: !!!
 			SHPCAmmo21: Solar Fragment summons multiple piercing solar lances from the sky at the blast point.
 			SHPCAmmo22: Vortex Fragment releases homing missiles during flight to escort it.

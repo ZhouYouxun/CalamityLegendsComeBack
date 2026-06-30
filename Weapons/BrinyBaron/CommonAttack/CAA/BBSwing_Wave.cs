@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector3 lightColor = IsAegisBlade ? new Vector3(0.52f, 0.34f, 0.08f) : new Vector3(0.08f, 0.34f, 0.52f);
             Lighting.AddLight(Projectile.Center, lightColor * (1f + SpawnStage * 0.12f));
 
-            SpawnFlightEffects(Projectile, lifeTimer, SpawnStage, StageIntensity, initialSpeed);
+            SpawnFlightEffects(Projectile, lifeTimer, SpawnStage, StageIntensity, initialSpeed, IsAegisBlade);
             TrySpawnTrackingBubbles();
         }
 
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.netUpdate = true;
             }
 
-            SpawnHitEffects(Projectile, target.Center, SpawnStage, StageIntensity);
+            SpawnHitEffects(Projectile, target.Center, SpawnStage, StageIntensity, IsAegisBlade);
 
             // Stage 4/5 (SpawnStage == 3) summons a tornado on hit with 5 frames cooldown
             if (SpawnStage == 3 && tornadoCooldown <= 0)
@@ -144,7 +144,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnKill(int timeLeft)
         {
-            SpawnDissolveEffects(Projectile, SpawnStage, StageIntensity);
+            SpawnDissolveEffects(Projectile, SpawnStage, StageIntensity, IsAegisBlade);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -250,14 +250,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             return baseLoss * (SlowdownBoostApplied ? HitVelocityLossMultiplier : 1f);
         }
 
-        private static void SpawnDissolveEffects(Projectile projectile, int spawnStage, float stageIntensity)
+        private static void SpawnDissolveEffects(Projectile projectile, int spawnStage, float stageIntensity, bool isAegisBlade)
         {
             if (Main.dedServ)
                 return;
 
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Color coreColor = Color.Lerp(new Color(92, 210, 255), Color.White, 0.35f);
+            Color coreColor = isAegisBlade
+                ? Color.Lerp(new Color(255, 205, 80), Color.White, 0.35f)
+                : Color.Lerp(new Color(92, 210, 255), Color.White, 0.35f);
             int sparkCount = 8 + spawnStage * 2;
             for (int i = 0; i < sparkCount; i++)
             {
@@ -323,7 +325,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.owner);
         }
 
-        private static void SpawnFlightEffects(Projectile projectile, int lifeTimer, int spawnStage, float stageIntensity, float initialSpeed)
+        private static void SpawnFlightEffects(Projectile projectile, int lifeTimer, int spawnStage, float stageIntensity, float initialSpeed, bool isAegisBlade)
         {
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
@@ -384,10 +386,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                     Dust wakeDust = Dust.NewDustPerfect(
                         dustPos,
-                        Main.rand.NextBool(4) ? DustID.Frost : DustID.Water,
+                        isAegisBlade ? (Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch) : (Main.rand.NextBool(4) ? DustID.Frost : DustID.Water),
                         dustVelocity,
                         0,
-                        Color.Lerp(new Color(105, 205, 255), new Color(215, 248, 255), Main.rand.NextFloat(0.15f, 0.9f)),
+                        isAegisBlade
+                            ? Color.Lerp(new Color(255, 180, 54), new Color(255, 248, 200), Main.rand.NextFloat(0.15f, 0.9f))
+                            : Color.Lerp(new Color(105, 205, 255), new Color(215, 248, 255), Main.rand.NextFloat(0.15f, 0.9f)),
                         MathHelper.Lerp(0.88f, 1.25f, speedRatio) * Main.rand.NextFloat(0.92f, 1.12f));
                     wakeDust.noGravity = true;
                 }
@@ -413,7 +417,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     false,
                     Main.rand.Next(10, 16),
                     MathHelper.Lerp(0.35f, 0.62f, 1f - speedRatio),
-                    Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
+                    isAegisBlade
+                        ? Color.Lerp(new Color(255, 150, 48), new Color(255, 245, 190), 1f - speedRatio)
+                        : Color.Lerp(new Color(80, 170, 255), new Color(220, 250, 255), 1f - speedRatio),
                     true,
                     false,
                     true);
@@ -450,12 +456,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         false,
                         Main.rand.Next(9, 14),
                         Main.rand.NextFloat(0.22f, 0.42f) * (1f + spawnStage * 0.08f),
-                        Color.Lerp(new Color(95, 205, 255), Color.White, 0.2f + Math.Abs(curve) * 0.25f)));
+                        isAegisBlade
+                            ? Color.Lerp(new Color(255, 190, 68), Color.White, 0.2f + Math.Abs(curve) * 0.25f)
+                            : Color.Lerp(new Color(95, 205, 255), Color.White, 0.2f + Math.Abs(curve) * 0.25f)));
                 }
             }
         }
 
-        private static void SpawnHitEffects(Projectile projectile, Vector2 hitCenter, int spawnStage, float stageIntensity)
+        private static void SpawnHitEffects(Projectile projectile, Vector2 hitCenter, int spawnStage, float stageIntensity, bool isAegisBlade)
         {
             Vector2 pos = hitCenter;
             float radius = projectile.width * 0.4f;
@@ -465,7 +473,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 0.08f + spawnStage * 0.012f,
                 18 + spawnStage * 2,
                 0.9f + spawnStage * 0.08f,
-                Color.Lerp(new Color(115, 220, 255), Color.White, 0.32f)));
+                isAegisBlade
+                    ? Color.Lerp(new Color(255, 205, 80), Color.White, 0.32f)
+                    : Color.Lerp(new Color(115, 220, 255), Color.White, 0.32f)));
 
             for (int i = 0; i < 4 + spawnStage * 2; i++)
             {
@@ -474,10 +484,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                 Dust impactDust = Dust.NewDustPerfect(
                     spawnPos,
-                    Main.rand.NextBool() ? DustID.Frost : DustID.Water,
+                    isAegisBlade ? (Main.rand.NextBool(3) ? DustID.GoldFlame : DustID.YellowTorch) : (Main.rand.NextBool() ? DustID.Frost : DustID.Water),
                     velocity,
                     0,
-                    Color.Lerp(new Color(95, 195, 255), Color.White, Main.rand.NextFloat(0.25f, 0.8f)),
+                    isAegisBlade
+                        ? Color.Lerp(new Color(255, 175, 52), Color.White, Main.rand.NextFloat(0.25f, 0.8f))
+                        : Color.Lerp(new Color(95, 195, 255), Color.White, Main.rand.NextFloat(0.25f, 0.8f)),
                     Main.rand.NextFloat(0.95f, 1.25f) * stageIntensity);
                 impactDust.noGravity = true;
             }

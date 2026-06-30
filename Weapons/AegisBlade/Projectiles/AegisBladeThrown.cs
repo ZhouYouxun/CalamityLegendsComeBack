@@ -119,6 +119,20 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             float riseSpeed = AegisWallProjectile.WallHalfHeight / (float)BalanceAegisBlade.WallRiseTime;
             int wallDamage = System.Math.Max(1, (int)(Projectile.damage * 0.8f));
 
+            // 速凝掩体最多同时存在 2 个，超出时先清除剩余时间最少（最老）的
+            int wallCount = 0;
+            int oldestIdx = -1;
+            int minTimeLeft = int.MaxValue;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (!p.active || p.type != wallType || p.owner != Projectile.owner) continue;
+                wallCount++;
+                if (p.timeLeft < minTimeLeft) { minTimeLeft = p.timeLeft; oldestIdx = i; }
+            }
+            if (wallCount >= 2 && oldestIdx >= 0)
+                Main.projectile[oldestIdx].Kill();
+
             Projectile.NewProjectile(Projectile.GetSource_FromThis(),
                 new Vector2(Projectile.Center.X, Projectile.Center.Y), new Vector2(0f, -riseSpeed),
                 wallType, wallDamage, 4f, Projectile.owner);

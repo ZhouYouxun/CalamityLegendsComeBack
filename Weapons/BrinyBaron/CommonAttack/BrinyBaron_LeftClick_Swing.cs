@@ -24,8 +24,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
         public override int AssignedItemID => ModContent.ItemType<NewLegendBrinyBaron>();
         public override Vector2 SpriteOrigin => new(0f, 102f);
-        public override float HitboxOutset => BaseHitboxOutset * ActiveHitboxScale;
-        public override Vector2 HitboxSize => BaseHitboxSize * ActiveHitboxScale;
+        public override float HitboxOutset => BB_Balance.LeftClickCoreHitboxOutset;
+        public override Vector2 HitboxSize => new(BB_Balance.LeftClickCoreHitboxSize, BB_Balance.LeftClickCoreHitboxSize);
         public override float HitboxRotationOffset => MathHelper.ToRadians(-45f);
 
         private const float BaseHitboxOutset = 90f;
@@ -973,16 +973,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            Vector2 bladeStart = Owner.MountedCenter;
-            Vector2 bladeEnd = GetBladeTip();
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(
+            Rectangle swingHitbox = GetSwingDamageHitbox();
+            return Collision.CheckAABBvAABBCollision(
                 targetHitbox.TopLeft(),
                 targetHitbox.Size(),
-                bladeStart,
-                bladeEnd,
-                38f * Projectile.scale,
-                ref collisionPoint);
+                swingHitbox.TopLeft(),
+                swingHitbox.Size()) ? null : false;
+        }
+
+        private Rectangle GetSwingDamageHitbox()
+        {
+            Vector2 slashDirection = SlashAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            float hitboxSize = BB_Balance.LeftClickCoreHitboxSize * Projectile.scale;
+            Vector2 center = Owner.MountedCenter + slashDirection * BB_Balance.LeftClickCoreHitboxOutset * Projectile.scale;
+            return new Rectangle(
+                (int)(center.X - hitboxSize * 0.5f),
+                (int)(center.Y - hitboxSize * 0.5f),
+                (int)hitboxSize,
+                (int)hitboxSize);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)

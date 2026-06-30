@@ -1,0 +1,21 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Buffs: {
+			ZhuangFangYiPetBuff: {
+				DisplayName: Yi
+				Description: Zhuang Fangyi will fight for you. She looks a little dazed...
+			}
+		}
+
+		Projectiles: {
+			AzureThunder: {
+				ZhuangFangYiPetProjectile.DisplayName: Zhuang Fangyi
+				ZhuangFangYiConvergenceController.DisplayName: Fangyi Thunder Convergence
+				ZhuangFangYiConvergenceBlock.DisplayName: Fangyi Thunder Block
+				ZhuangFangYiLightningExplosion.DisplayName: Fangyi Lightning Burst
+				ZhuangFangYiSquareShockwave.DisplayName: Fangyi Square Shockwave
+				ZhuangFangYiWeakLightning.DisplayName: Fangyi Weak Lightning
+			}
+		}
+	}
+}

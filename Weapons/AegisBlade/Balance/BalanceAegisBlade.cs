@@ -8,6 +8,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
     {
         private const string SourceFile = "Weapons/AegisBlade/Balance/BalanceAegisBlade.cs";
 
+        // 左键挥舞核心碰撞箱大小：这是调节它的核心碰撞箱大小。
+        public const float LeftClickCoreHitboxSize = 146f;
+        // 左键挥舞核心碰撞箱前推距离：这是调节它的核心碰撞箱位置。
+        public const float LeftClickCoreHitboxOutset = LeftClickCoreHitboxSize * 0.85f;
+
         public static readonly string[] StageNames =
         {
             "Initial",

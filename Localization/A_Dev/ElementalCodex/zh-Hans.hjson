@@ -63,6 +63,11 @@ Mods: {
 				DisplayName: 疾病元素
 				Description: 黑色随机光线侵蚀，降低敌人伤害减免
 			}
+
+			SeasSearingPlayerRadiationBuff: {
+				// DisplayName: Seas Searing Player Radiation Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.SeasSearingPlayerRadiationBuff.Description
+			}
 		}
 
 		ElementalCodex: {

@@ -297,6 +297,14 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
             string passiveDivinity = this.GetLocalizedValue("GE_PassiveDivinity");
             string passiveAurora = this.GetLocalizedValue("GE_PassiveAurora");
 
+            int sealedCount = 0;
+            foreach (var kvp in modPlayer.SealStates)
+                if (kvp.Value.Sealed) sealedCount++;
+            string passiveSeal = this.GetLocalizedValue("GE_PassiveSeal");
+            string passiveSealInfo = string.Format(this.GetLocalizedValue("GE_PassiveSealInfo"),
+                sealedCount,
+                modPlayer.ResonanceEchoTimer > 0 ? "ACTIVE" : "--");
+
             string ultimate = string.Format(this.GetLocalizedValue("GE_Ultimate"), skillKey, modPlayer.UltimateCharge);
 
             bool shiftPressed = Main.keyState.PressingShift();
@@ -314,6 +322,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace
                 passiveCombo,
                 passiveDivinity,
                 passiveAurora,
+                passiveSeal,
+                passiveSealInfo,
                 ultimate,
             };
 

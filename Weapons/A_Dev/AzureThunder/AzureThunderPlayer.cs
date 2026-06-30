@@ -1,6 +1,7 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Weapons;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
@@ -345,15 +346,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (UltimateEnergy < UltimateEnergyMax)
                 return;
 
-            // 启动终极：清能量、记录持续时间、加 Buff 并创建时间条。
+            int harmonyDuration = AzureThunderAccessoryPlayer.GetHarmonyDuration(Player);
+            if (!Player.GetModPlayer<ZhuangFangYiPetPlayer>().TryStartHarmonyTransform(harmonyDuration))
+                return;
+
+            // 启动终极演出：清能量，但真正的 Buff 等小庄变身动画播完后再给予。
             UltimateEnergy = 0;
             ThunderCharge = 0;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, false);
             ultimateAutoGainTimer = 0;
-            ActiveHarmonyDuration = AzureThunderAccessoryPlayer.GetHarmonyDuration(Player);
+            ActiveHarmonyDuration = harmonyDuration;
+        }
+
+        public void StartHarmonyFromPet(int duration)
+        {
+            ActiveHarmonyDuration = Math.Max(1, duration);
             Player.AddBuff(ModContent.BuffType<AzureThunderHarmonyBuff>(), ActiveHarmonyDuration);
             EnsureHarmonyBar();
-
             // 启动爆发粒子和提示音。
             for (int i = 0; i < 36; i++)
             {

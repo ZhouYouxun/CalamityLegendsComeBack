@@ -1,7 +1,10 @@
 using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using System;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -184,7 +187,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             drawColor = Color.Lerp(drawColor, pollColor, 0.18f + intensity * 0.34f);
             Lighting.AddLight(npc.Center, pollColor.ToVector3() * (0.12f + intensity * 0.42f));
 
-            if (Main.dedServ || Main.rand.NextFloat() > 0.08f + intensity * 0.18f) return;
+            if (Main.dedServ) return;
+
+            DrawRadiationSigns(npc, grade);
+
+            if (Main.rand.NextFloat() > 0.08f + intensity * 0.18f) return;
 
             int dustType = grade >= 4 ? DustID.Vortex : (grade >= 3 ? 89 : (Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald));
             Dust dust = Dust.NewDustPerfect(
@@ -195,6 +202,32 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Color.Lerp(pollColor, SeasSearingPalette.RadioactiveCyan, Main.rand.NextFloat(0.15f, 0.55f)),
                 Main.rand.NextFloat(0.55f, 1.05f + grade * 0.06f));
             dust.noGravity = true;
+        }
+
+        private static void DrawRadiationSigns(NPC npc, int grade)
+        {
+            if (grade <= 0) return;
+
+            Asset<Texture2D> iconAsset = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/Myown/IonizingRadiation");
+            if (!iconAsset.IsLoaded) return;
+            Texture2D icon = iconAsset.Value;
+
+            const float iconScale = 0.03f;   // 贴图 ~1000px，3% ≈ 30px
+            const float spacing   = 36f;    // 图标宽 30px + 6px 间隙
+            int   count           = grade;        // 几级显示几个标志
+            float totalWidth      = (count - 1) * spacing;
+            float startX          = npc.Center.X - totalWidth * 0.5f;
+            float topY            = npc.Top.Y - 18f - Main.screenPosition.Y;
+
+            float bob = MathF.Sin(Main.GlobalTimeWrappedHourly * 3.5f) * 2f;
+            Color iconColor = Color.Lerp(SeasSearingPalette.RadioactiveCyan, Color.White, 0.25f) with { A = 220 };
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 drawPos = new(startX + i * spacing - Main.screenPosition.X, topY + bob);
+                Main.EntitySpriteDraw(icon, drawPos, null, iconColor, 0f,
+                    icon.Size() * 0.5f, iconScale, SpriteEffects.None, 0);
+            }
         }
 
         private void ApplyDirect(NPC npc, int owner, int amount, int duration, bool fromSpread)

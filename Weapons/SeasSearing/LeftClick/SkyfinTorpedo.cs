@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.rotation = Projectile.velocity.ToRotation();
 
             NPC target = FindTarget();
             if (target != null)

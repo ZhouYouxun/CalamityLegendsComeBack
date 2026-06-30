@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
+        private const float MinimumHomingSpeed = 26f * 0.67f;
         private int timer;
 
         public override void SetStaticDefaults()
@@ -50,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             timer++;
             Projectile.alpha = Math.Max(0, Projectile.alpha - 35);
 
-            float currentSpeed = Math.Max(Projectile.velocity.Length(), 26f);
+            float currentSpeed = Math.Max(Projectile.velocity.Length(), MinimumHomingSpeed);
             NPC target = FindTargetInFront(950f, MathHelper.ToRadians(58f));
             if (target != null)
             {

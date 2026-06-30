@@ -87,6 +87,9 @@ Mods: {
 						[c/FF7733:被动【烈焰之尾】三条火尾在玩家身后作战。]
 						[c/FF7733:火尾继承武器伤害，并以短命中冷却高速攻击。]
 						[c/FF7733:火尾命中敌人时会回复少量翅膀飞行时间。]
+						[c/BB55FF:被动【亵渎水晶】手持纯元时，一枚神圣水晶悬浮于头顶。]
+						[c/BB55FF:左键射击时：每 16 帧水晶同时射出 5 枚彩虹碎片，80° 扇形展开后全部收束追踪同一目标。]
+						[c/BB55FF:右键蓄力时：水晶持续释放两道缓缓交叉旋转的剪刀激光。]
 						'''
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
@@ -191,6 +194,9 @@ Mods: {
 				PFExoThanatosBeamStart.DisplayName: EXO塔纳托斯灭绝光束
 				PFExoThanatosSideLaser.DisplayName: EXO塔纳托斯侧向激光
 				PristineFuryPassiveTentacle.DisplayName: 纯净怒火被动触手
+				PristineFuryCrystal.DisplayName: 纯元天神水晶
+				PristineFuryCrystalShard.DisplayName: 纯元天神水晶碎片
+				PristineFuryCrystalLaser.DisplayName: 纯元天神水晶剪刀激光
 				PristineFuryRightNovaChargeOrb.DisplayName: 纯净怒火右键新星蓄力球
 				PristineFuryRightNovaFireball.DisplayName: 纯净怒火右键新星火球
 				PristineFuryHomingStar.DisplayName: 纯元追踪星弹

@@ -855,6 +855,10 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                     multiplier *= 1.25f;
                 modifiers.SourceDamage *= multiplier;
             }
+
+            // 共鸣余波：封印爆发后 3 秒内所有冰刺伤害 +15%
+            if (modPlayer.ResonanceEchoTimer > 0)
+                modifiers.SourceDamage *= 1.15f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -865,6 +869,9 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             var modPlayer = player.GetModPlayer<GlacialEmbracePlayer>();
             int chargeGain = isThrusting || activeAttacking ? 2 : 1;
             modPlayer.UltimateCharge = Math.Min(GlacialEmbracePlayer.MaxUltimateCharge, modPlayer.UltimateCharge + chargeGain);
+
+            // 三相封印：记录命中模式印记
+            modPlayer.ApplyFrostMark(target, modPlayer.CurrentMode);
 
             if (modPlayer.CurrentMode == 1 && flying && !isThrusting)
             {

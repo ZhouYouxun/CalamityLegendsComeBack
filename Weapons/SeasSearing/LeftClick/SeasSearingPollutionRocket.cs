@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
@@ -19,7 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.TrailCacheLength[Type] = TrailLength;
-            ProjectileID.Sets.TrailingMode[Type]     = 0;
+            ProjectileID.Sets.TrailingMode[Type]     = 2;
         }
 
         public override void SetDefaults()
@@ -64,35 +63,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (Main.myPlayer == Projectile.owner)
                 SeasSearingVisualUtility.SpawnAbyssDust(target.Center, 8, 2.2f, 16f);
-        }
-
-        public override bool PreDraw(ref Color lightColor)
-        {
-            Texture2D tex     = ModContent.Request<Texture2D>(Texture).Value;
-            Vector2   origin  = tex.Size() * 0.5f;
-            Color     baseColor = SeasSearingPalette.ToxicGreen;
-            baseColor.A         = 0;
-
-            for (int i = 1; i < TrailLength; i++)
-            {
-                if (Projectile.oldPos[i] == Vector2.Zero) continue;
-                float t     = 1f - (float)i / TrailLength;
-                float alpha = MathHelper.Clamp(t * t, 0f, 0.6f);
-                Color trailColor = Color.Lerp(SeasSearingPalette.BiohazardLime, SeasSearingPalette.ToxicGreen, t) * alpha;
-                trailColor.A = 0;
-                Main.EntitySpriteDraw(tex,
-                    Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
-                    null, trailColor, Projectile.oldRot[i],
-                    origin, Projectile.scale * MathHelper.Lerp(0.35f, 0.85f, t), SpriteEffects.None, 0);
-            }
-
-            Color mainColor = SeasSearingPalette.BiohazardLime;
-            mainColor.A     = 0;
-            Main.EntitySpriteDraw(tex,
-                Projectile.Center - Main.screenPosition,
-                null, mainColor, Projectile.rotation, origin,
-                Projectile.scale, SpriteEffects.None, 0);
-            return false;
         }
 
         public override void OnKill(int timeLeft)

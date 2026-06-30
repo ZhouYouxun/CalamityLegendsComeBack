@@ -12,15 +12,30 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const float BasePressureRadius     = 430f;
         private const float MaxPressureRadiusBonus = 170f;
 
+        // 每级辐射需要的击中次数（累计）
+        private static readonly int[] RadiationThresholds = { 15, 40, 80, 140 };
+        private const int RadiationBuffDuration = 10 * 60; // 10秒内不攻击才会失效
+
         public bool  HoldingSeasSearing  { get; private set; }
         public int   UltimateCooldown    { get; private set; }
         public float PressureVisualPower { get; private set; }
 
-        public override void ResetEffects() => HoldingSeasSearing = false;
+        // 玩家辐射系统（4级正面效果）
+        public bool HasRadiationBuff    { get; set; }
+        public int  RadiationLevel      { get; private set; }   // 0-4
+        public int  RadiationAccumulator { get; private set; }  // 击中计数器
+
+        public override void ResetEffects()
+        {
+            HoldingSeasSearing = false;
+            HasRadiationBuff   = false;
+        }
 
         public override void PostUpdate()
         {
             if (UltimateCooldown > 0) UltimateCooldown--;
+
+            UpdateRadiationBuff();
 
             if (!HoldingSeasSearing)
             {
@@ -34,6 +49,71 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             ApplyPressureField(pollutionFactor);
             EmitPressureAtmosphere(pollutionFactor);
+        }
+
+        // 玩家击中敌人时调用，增加辐射积累
+        public void OnHitWithSeasSearing()
+        {
+            if (!HoldingSeasSearing) return;
+            RadiationAccumulator++;
+            int newLevel = 0;
+            for (int i = RadiationThresholds.Length - 1; i >= 0; i--)
+                if (RadiationAccumulator >= RadiationThresholds[i]) { newLevel = i + 1; break; }
+            RadiationLevel = newLevel;
+            if (RadiationLevel > 0)
+                Player.AddBuff(ModContent.BuffType<SeasSearingPlayerRadiationBuff>(), RadiationBuffDuration);
+        }
+
+        private void UpdateRadiationBuff()
+        {
+            // 未持有武器时不能获得新积累，但积累值保留（buff也保留）
+            // 持有时buff被 HasRadiationBuff=true 一直维持
+            if (HasRadiationBuff && HoldingSeasSearing && RadiationLevel > 0)
+                Player.AddBuff(ModContent.BuffType<SeasSearingPlayerRadiationBuff>(), 2);
+
+            // 没有buff时重置等级和积累（玩家主动取消buff后生效）
+            if (!HasRadiationBuff && RadiationLevel > 0)
+            {
+                if (Player.FindBuffIndex(ModContent.BuffType<SeasSearingPlayerRadiationBuff>()) < 0)
+                {
+                    RadiationLevel       = 0;
+                    RadiationAccumulator = 0;
+                }
+            }
+
+            ApplyRadiationEffects();
+        }
+
+        private void ApplyRadiationEffects()
+        {
+            if (!HasRadiationBuff || RadiationLevel <= 0) return;
+
+            // 每级辐射带来的正面效果
+            // Level 1: 轻微伤害加成
+            // Level 2: 额外穿透
+            // Level 3: 移动速度和辐射范围
+            // Level 4: 最强效果
+            switch (RadiationLevel)
+            {
+                case 1:
+                    Player.GetDamage(DamageClass.Ranged) += 0.08f;
+                    break;
+                case 2:
+                    Player.GetDamage(DamageClass.Ranged) += 0.16f;
+                    Player.GetArmorPenetration(DamageClass.Ranged) += 8;
+                    break;
+                case 3:
+                    Player.GetDamage(DamageClass.Ranged) += 0.26f;
+                    Player.GetArmorPenetration(DamageClass.Ranged) += 16;
+                    Player.moveSpeed += 0.12f;
+                    break;
+                case 4:
+                    Player.GetDamage(DamageClass.Ranged) += 0.38f;
+                    Player.GetArmorPenetration(DamageClass.Ranged) += 26;
+                    Player.moveSpeed += 0.20f;
+                    Player.GetCritChance(DamageClass.Ranged) += 10f;
+                    break;
+            }
         }
 
         public void SetHoldingSeasSearing() => HoldingSeasSearing = true;

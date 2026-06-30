@@ -1,4 +1,7 @@
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle;
+using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick;
+using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules;
+using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot;
 using CalamityMod;
 using CalamityMod.Items.Materials;
 using CalamityMod.Items.Weapons.Ranged;
@@ -53,8 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             Item.height = 46;
             Item.damage = LifeRoundDamage;
             Item.DamageType = DamageClass.Ranged;
-            Item.useTime = 9;
-            Item.useAnimation = 9;
+            Item.useTime = 12;
+            Item.useAnimation = 12;
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
             Item.knockBack = 3f;
@@ -72,36 +75,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override bool CanUseItem(Player player)
         {
-            DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
-
             if (player.altFunctionUse == 2)
                 return false;
 
             if (!HasDesertEaglePrimaryFire)
                 return false;
 
-            Item.damage = eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage;
-
             if (player.ownedProjectileCounts[HoldoutType] > 0)
                 return false;
 
-            if (!eaglePlayer.CanUsePrimaryFire())
-                return false;
-
-            if (eaglePlayer.PendingLifeRound)
-            {
-                Item.useTime = 16;
-                Item.useAnimation = 16;
-                Item.UseSound = null;
-                Item.shootSpeed = 18f;
-            }
-            else
-            {
-                Item.useTime = 9;
-                Item.useAnimation = 9;
-                Item.UseSound = null;
-                Item.shootSpeed = 16f;
-            }
+            // 300 RPM 恒定射速
+            Item.damage = LifeRoundDamage;
+            Item.useTime = 12;
+            Item.useAnimation = 12;
+            Item.UseSound = null;
+            Item.shootSpeed = 18f;
 
             return base.CanUseItem(player);
         }
@@ -109,9 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public override void HoldItem(Player player)
         {
             DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
-            Item.damage = HasDesertEaglePrimaryFire
-                ? eaglePlayer.PendingLifeRound ? LifeRoundDamage : SilverVolleyDamage
-                : LifeRoundDamage;
+            Item.damage = LifeRoundDamage;
 
             if (!HasDesertEagleSpin)
             {
@@ -190,55 +176,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             if (!HasDesertEaglePrimaryFire)
                 return false;
 
-            DesertEaglePlayer eaglePlayer = player.GetModPlayer<DesertEaglePlayer>();
+            DesertEagleSlotPlayer slotPlayer = player.GetModPlayer<DesertEagleSlotPlayer>();
+            DEBulletRule rule = DEBulletRegistry.GetRule(slotPlayer.SlottedGunType);
+
             Vector2 muzzleDirection = velocity.SafeNormalize(Vector2.UnitX * player.direction);
             Vector2 muzzlePosition = player.MountedCenter + muzzleDirection * 24f;
 
-            if (eaglePlayer.PendingLifeRound)
-            {
-                SoundEngine.PlaySound(DeltaForceDesertEagleUnsuppressedSound with { Volume = 1f, Pitch = -0.05f }, player.Center);
-                DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 1.15f);
-                int lifeRoundDamage = GetConfiguredWeaponDamage(player, LifeRoundDamage);
+            SoundEngine.PlaySound(DeltaForceDesertEagleUnsuppressedSound with { Volume = 1f, PitchVariance = 0.03f }, player.Center);
+            DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 1f);
 
-                Projectile.NewProjectile(
-                    source,
-                    muzzlePosition,
-                    muzzleDirection * 18f,
-                    LifeRoundProjectileType,
-                    lifeRoundDamage,
-                    knockback * 1.35f,
-                    player.whoAmI,
-                    0f,
-                    1.4f);
+            float shotExtra = rule.GetShotExtra(slotPlayer);
+            int bulletDamage = (int)(GetConfiguredWeaponDamage(player, LifeRoundDamage) * rule.DamageMultiplier);
 
-                eaglePlayer.ConsumeLifeRound();
-                return false;
-            }
+            int projectileIndex = Projectile.NewProjectile(
+                source,
+                muzzlePosition,
+                muzzleDirection * 18f,
+                ModContent.ProjectileType<DELeftBullet>(),
+                bulletDamage,
+                knockback,
+                player.whoAmI,
+                slotPlayer.SlottedGunType,
+                shotExtra);
+            if (Main.projectile.IndexInRange(projectileIndex))
+                Main.projectile[projectileIndex].GetGlobalProjectile<DesertEagleSilverGlobalProjectile>().SilverMarked = true;
 
-            SoundEngine.PlaySound(DeltaForceDesertEagleUnsuppressedSound with { Volume = 0.95f, PitchVariance = 0.04f }, player.Center);
-            DesertEagleSilverGlobalProjectile.SpawnSilverMuzzleFlash(muzzlePosition, muzzleDirection, 0.85f);
-            int volleyDamage = GetConfiguredWeaponDamage(player, SilverVolleyDamage);
-
-            for (int shot = 0; shot < 4; shot++)
-            {
-                float spread = shot switch
-                {
-                    0 => -0.08f,
-                    1 => -0.025f,
-                    2 => 0.025f,
-                    _ => 0.08f
-                };
-
-                Vector2 shotVelocity = velocity.RotatedBy(spread + Main.rand.NextFloat(-0.025f, 0.025f)) * Main.rand.NextFloat(0.92f, 1.08f);
-                int projectileType = PrimaryVolleyProjectileType > 0 ? PrimaryVolleyProjectileType : type;
-                int projectileIndex = Projectile.NewProjectile(source, muzzlePosition + Main.rand.NextVector2Circular(2f, 2f), shotVelocity, projectileType, volleyDamage, knockback, player.whoAmI);
-
-                if (UsesSilverVolleyVisuals && Main.projectile.IndexInRange(projectileIndex))
-                    Main.projectile[projectileIndex].GetGlobalProjectile<DesertEagleSilverGlobalProjectile>().SilverMarked = true;
-            }
-
-            player.velocity -= muzzleDirection * 0.55f;
-            eaglePlayer.RegisterSilverVolley();
+            player.velocity -= muzzleDirection * 0.3f;
             return false;
         }
 

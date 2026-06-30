@@ -69,6 +69,13 @@ Mods: {
 							[c/C8A0FF:◇ Aurora Melody: special hits within 0.75s of each other]
 							[c/C8A0FF:  Grant 5s Aurora Grace (+10 defense, 15% pre-DR reduction)]
 							'''
+						GE_PassiveSeal:
+							'''
+							[c/00C8FF:◇ Tri-Phase Seal: ice spike hits leave mode marks (Rift 6s / Pierce 8s / Strike 10s, max 3 each)]
+							[c/00C8FF:  All 3 types on one foe → SEALED: 3s countdown then CRYOBURST (3x+ dmg, cascades to nearby foes, max 3 chains)]
+							[c/00C8FF:  Glacial Divinity active: burst ×1.5 and leaves a 2s Afterglow zone; QTE Perfect = early detonation]
+							'''
+						GE_PassiveSealInfo: "[c/FFE050:  Sealed foes: {0}  Resonance Echo (+15% dmg / +8 def): {1}]"
 						GE_Ultimate:
 							'''
 							[c/A0F0FF:★ Ultimate — Dimensional Compression (press {0} to release)]
@@ -110,6 +117,8 @@ Mods: {
 			IceWedgeProj.DisplayName: Glacial Piercing Wedge
 			IcePillarProj.DisplayName: Glacial Strike Pillar
 			GlacialDrillProj.DisplayName: Dimensional Compression
+			FrostSealDetonation.DisplayName: Frost Seal Detonation
+			FrostSealAfterglow.DisplayName: Frost Seal Afterglow
 		}
 
 		Buffs: {

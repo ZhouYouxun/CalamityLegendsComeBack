@@ -112,7 +112,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         // ===== 每阶段升级所需时间 =====
         private int GetStageUpTime()
         {
-            return balance.GetHeatFillTime(stage, MaxHeatStage);
+            return GetStageUpTime(stage, MaxHeatStage);
+        }
+
+        private int GetStageUpTime(int completedHeatLevel)
+        {
+            return GetStageUpTime(completedHeatLevel, MaxHeatStage);
+        }
+
+        private int GetStageUpTime(int completedHeatLevel, int maxHeatStage)
+        {
+            int defaultFillTime = balance.GetHeatFillTime(completedHeatLevel, maxHeatStage);
+            if (!Main.player.IndexInRange(Projectile.owner))
+                return defaultFillTime;
+
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active)
+                return defaultFillTime;
+
+            return owner.GetModPlayer<HeatModulePlayer>().GetHeatFillTime(defaultFillTime);
         }
 
         #endregion
@@ -158,7 +176,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             spawnDelay = owner.GetModPlayer<SHPCEnergyCorePlayer>().GetRightClickStartupFrames(spawnDelay);
             SHPCRight_Player heatPlayer = owner.GetModPlayer<SHPCRight_Player>();
             stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-            stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
+            stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, GetStageUpTime(stage));
             heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
         }
         // ===== 根据进度初始化规�?=====
@@ -240,7 +258,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (forcedShutdownCooling)
             {
                 stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, GetStageUpTime(stage));
                 frameCounter = 0;
             }
 
@@ -298,7 +316,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatPlayer.IsForcedShutdownCooling())
             {
                 stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, GetStageUpTime(stage));
             }
 
             #endregion
@@ -350,7 +368,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             if (heatPlayer.IsForcedShutdownCooling())
             {
                 stage = Utils.Clamp(heatPlayer.HeatStage, 0, MaxHeatStage);
-                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, balance.GetHeatFillTime(stage, MaxHeatStage));
+                stageTimer = Utils.Clamp(heatPlayer.HeatProgressTimer, 0, GetStageUpTime(stage));
             }
             else if (!stageFilledThisFrame)
                 heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
@@ -473,7 +491,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 InitializeProgressRules();
 
             stage = Utils.Clamp(stage, 0, MaxHeatStage);
-            int fillTime = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4), MaxHeatStage);
+            int fillTime = GetStageUpTime(Utils.Clamp(stage, 0, 4));
             stageTimer = stage >= MaxHeatStage
                 ? fillTime
                 : Utils.Clamp(stageTimer, 0, fillTime);
@@ -502,7 +520,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         {
             PlayForcedShutdownSound();
             stage = MaxHeatStage;
-            stageTimer = balance.GetHeatFillTime(Utils.Clamp(stage, 0, 4), MaxHeatStage);
+            stageTimer = GetStageUpTime(Utils.Clamp(stage, 0, 4));
             overheatTimer = 0;
             bool heatModuleEquipped = player.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped;
             int shutdownTime = balance.GetForcedShutdownTime(player);
@@ -955,7 +973,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             int maxHeatStage = MaxHeatStage > 0 ? MaxHeatStage : balance.GetRightClickMaxHeatLevel();
             maxHeatStage = Utils.Clamp(maxHeatStage, 1, balance.GetRightClickMaxHeatLevel());
             int safeStage = Utils.Clamp(stage, 0, maxHeatStage);
-            int fillTime = balance.GetHeatFillTime(Utils.Clamp(safeStage, 0, 4), maxHeatStage);
+            int fillTime = GetStageUpTime(Utils.Clamp(safeStage, 0, 4), maxHeatStage);
             int safeTimer = Utils.Clamp(stageTimer, 0, fillTime);
 
             heatPlayer.SyncHeatFromHoldout(safeStage, safeTimer, maxHeatStage);
