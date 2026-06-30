@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
 
             bool isBig = Projectile.ai[1] != 0f;
             Vector2 spawnPos = target.Center + new Vector2(Main.rand.NextFloat(-16f, 16f) * 16f, -36f * 16f);
-            Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 18f;
+            Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 36f;
 
             int projID = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

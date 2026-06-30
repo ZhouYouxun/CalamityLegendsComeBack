@@ -39,12 +39,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.penetrate = 17;
+            Projectile.penetrate = -1;
             Projectile.timeLeft = 100;
             Projectile.extraUpdates = 4;
             Projectile.Opacity = 1f;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 5;
+            Projectile.localNPCHitCooldown = 1;
         }
 
         public override bool? CanCutTiles() => false;
@@ -170,7 +170,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             if (Main.dedServ)
                 return;
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 GeneralParticleHandler.SpawnParticle(new CustomPulse(
                     target.Center,
@@ -185,7 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     true));
             }
 
-            for (int i = 0; i < 48; i++)
+            for (int i = 0; i < 32; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     target.Center,
@@ -197,7 +197,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                 dust.noGravity = true;
             }
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 7; i++)
             {
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
                     target.Center + Main.rand.NextVector2Circular(18f, 18f),

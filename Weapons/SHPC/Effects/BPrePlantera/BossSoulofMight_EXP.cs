@@ -23,11 +23,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.DamageType = DamageClass.Melee;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 60;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 15;
+            Projectile.localNPCHitCooldown = 8;
         }
 
         public override void AI()
@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Lighting.AddLight(Projectile.Center, 0.45f * lightFactor, 0.7f * lightFactor, 1.9f * lightFactor);
 
             // ===== 2. 生命周期控制 =====
-            float spawnCount = 25f;
+            float spawnCount = 42f;
 
             if (Projectile.ai[0] > 180f)
                 spawnCount -= (Projectile.ai[0] - 180f) / 2f;
@@ -48,10 +48,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 return;
             }
 
-            spawnCount *= 0.7f;
+            spawnCount *= 1.15f;
 
-            // ❗ 粒子量减少X0%
-            spawnCount *= 0.5f;
+            // Strong sustained lightning burst.
+            spawnCount *= 1.2f;
 
             Projectile.ai[0] += 4f;
 
@@ -69,13 +69,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 dir = angle.ToRotationVector2();
 
                 // ===== 半径（保持原本范围，但带一点波动）=====
-                float radius = Main.rand.NextFloat(12f, 36f);
+                float radius = Main.rand.NextFloat(18f, 56f);
 
                 // ===== 速度（保持原有强度）=====
                 Vector2 velocity = dir * radius;
 
                 // ===== 粒子类型（不变）=====
-                int dustType = Main.rand.NextBool()
+                int dustType = Main.rand.NextBool(3)
                     ? DustID.UltraBrightTorch
                     : DustID.Electric;
 
@@ -94,12 +94,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Dust dust = Main.dust[dustIndex];
                 dust.noGravity = true;
                 dust.color = Main.rand.NextBool(3)
-                    ? new Color(36, 78, 190)
-                    : new Color(88, 150, 255);
-                dust.scale *= 0.58f;
+                    ? new Color(70, 130, 255)
+                    : new Color(170, 220, 255);
+                dust.scale *= Main.rand.NextFloat(0.82f, 1.22f);
 
                 // ===== 中心轻微扩散（保持原感觉，但更干净）=====
-                dust.position += Main.rand.NextVector2Circular(10f, 10f);
+                dust.position += Main.rand.NextVector2Circular(18f, 18f);
+            }
+
+            if (Projectile.ai[0] % 12f == 0f)
+            {
+                for (int i = 0; i < 18; i++)
+                {
+                    Vector2 velocity = (MathHelper.TwoPi * i / 18f + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2() * Main.rand.NextFloat(10f, 38f);
+                    Dust arcDust = Dust.NewDustPerfect(
+                        Projectile.Center + Main.rand.NextVector2Circular(24f, 24f),
+                        DustID.Electric,
+                        velocity,
+                        70,
+                        Main.rand.NextBool() ? Color.White : new Color(90, 170, 255),
+                        Main.rand.NextFloat(1.05f, 1.7f));
+                    arcDust.noGravity = true;
+                }
             }
         }
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

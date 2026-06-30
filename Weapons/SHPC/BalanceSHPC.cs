@@ -208,7 +208,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetDefaultOrbExplosionSize()
         {
-            return GetValueForStage(GetDefaultOrbExplosionSizeValues(), GetCompletedStageIndex());
+            return GetDefaultLeftClickExplosionRadius();
+        }
+
+        public int GetDefaultLeftClickExplosionRadius()
+        {
+            return GetValueForStage(GetDefaultLeftClickExplosionRadiusValues(), GetCompletedStageIndex());
         }
 
         public int GetRightClickBaseDamage()
@@ -320,7 +325,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             1.65f
         };
 
-        private static readonly int[] DefaultDefaultOrbExplosionSizes =
+        private static readonly int[] DefaultLeftClickExplosionRadii =
         {
             112,
             112,
@@ -419,8 +424,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private static float[] GetDefaultOrbDamageMultiplierValues() =>
             RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(DefaultDefaultOrbDamageMultipliers), DefaultDefaultOrbDamageMultipliers);
 
-        private static int[] GetDefaultOrbExplosionSizeValues() =>
-            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultDefaultOrbExplosionSizes), DefaultDefaultOrbExplosionSizes);
+        private static int[] GetDefaultLeftClickExplosionRadiusValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickExplosionRadii), DefaultLeftClickExplosionRadii);
 
         private static int[] GetHeatFillTimesByProgressStateValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(HeatFillTimesByProgressState), HeatFillTimesByProgressState);

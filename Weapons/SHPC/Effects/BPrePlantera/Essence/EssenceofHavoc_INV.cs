@@ -1,9 +1,5 @@
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -36,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera.Essence
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // 冰冻效果（强化控制）
+            // 鍐板喕鏁堟灉锛堝己鍖栨帶鍒讹級
             target.AddBuff(BuffID.OnFire3, 180);
         }
     }

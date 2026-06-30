@@ -563,7 +563,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     laneDirection * Main.rand.NextFloat(
                         MathHelper.Lerp(10.5f, 12.5f, heatInterpolant),
                         MathHelper.Lerp(14.5f, 18f, heatInterpolant)),
-                    "CalamityLegendsComeBack/Texture/Myown/GlowBlade",
+                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
                     false,
                     8 + (int)(heatInterpolant * 3f),
                     MathHelper.Lerp(0.05f, 0.075f, heatInterpolant) * centerWeight,
@@ -589,7 +589,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                             MathHelper.Lerp(9.2f, 11.5f, heatInterpolant),
                             MathHelper.Lerp(13f, 16.5f, heatInterpolant))
                         + laneRight * side * 0.18f,
-                        "CalamityLegendsComeBack/Texture/Myown/GlowBlade",
+                        "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
                         false,
                         7 + (int)(heatInterpolant * 2f),
                         MathHelper.Lerp(0.036f, 0.052f, heatInterpolant) * centerWeight,

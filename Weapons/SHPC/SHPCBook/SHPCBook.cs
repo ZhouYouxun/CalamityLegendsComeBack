@@ -110,6 +110,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
         private const int ScreenMargin = 12;
+        private const float SafeScreenFill = 0.82f;
+        private const float ReferenceGameZoom = 1f;
         private const float MaxIconDrawSize = 42f;
 
         private static SHPCBookEntry[] cachedEntries;
@@ -119,6 +121,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private bool[] hoveredLastFrame = Array.Empty<bool>();
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private int lastPanelWidth;
+        private int lastPanelHeight;
         private int openedSelectedItem = -1;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -185,9 +189,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelPositionInitialized = true;
             }
             else if (Main.myPlayer == Projectile.owner)
-                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelWidth, panelHeight, detailWidth, layoutScale);
+            {
+                int previousPanelWidth = lastPanelWidth > 0 ? lastPanelWidth : panelWidth;
+                int previousPanelHeight = lastPanelHeight > 0 ? lastPanelHeight : panelHeight;
+                Vector2 anchoredCenter = panelTopLeft + new Vector2(previousPanelWidth, previousPanelHeight) * 0.5f;
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(anchoredCenter, panelWidth, panelHeight, detailWidth, layoutScale);
+            }
 
             Vector2 panelCenter = panelTopLeft + new Vector2(panelWidth, panelHeight) * 0.5f;
+            lastPanelWidth = panelWidth;
+            lastPanelHeight = panelHeight;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
@@ -388,9 +399,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         {
             int basePanelHeight = GetBasePanelHeight(entryCount);
             int baseTotalWidth = BasePanelWidth + DetailGap + BaseDetailWidth;
-            float heightScale = Main.screenHeight / Math.Max(1f, basePanelHeight);
-            float widthScale = (Main.screenWidth - ScreenMargin * 2f) / Math.Max(1f, baseTotalWidth);
-            return Math.Max(0.2f, Math.Min(heightScale, widthScale));
+            float gameZoom = GetGameZoom();
+            float zoomCompensation = ReferenceGameZoom / gameZoom;
+            float safeHeightScale = Main.screenHeight * SafeScreenFill / Math.Max(1f, basePanelHeight * gameZoom);
+            float safeWidthScale = (Main.screenWidth - ScreenMargin * 2f) * SafeScreenFill / Math.Max(1f, baseTotalWidth * gameZoom);
+            float targetScale = zoomCompensation;
+            float safeScale = Math.Min(safeHeightScale, safeWidthScale);
+            return safeScale <= 0.2f ? Math.Max(0.05f, safeScale) : MathHelper.Clamp(targetScale, 0.2f, safeScale);
+        }
+
+        private static float GetGameZoom()
+        {
+            Vector2 zoom = Main.GameViewMatrix.Zoom;
+            return MathHelper.Clamp(Math.Max(zoom.X, zoom.Y), 0.25f, 4f);
         }
 
         private static int GetPanelWidth(float scale)
@@ -687,6 +708,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private const int CloseButtonSize = 22;
         private const int BorderThickness = 3;
         private const int ScreenMargin = 12;
+        private const float SafeScreenFill = 0.82f;
+        private const float ReferenceGameZoom = 1f;
         private const float NumberIconSize = 51f;
         private const float BossIconSize = 45f;
 
@@ -703,6 +726,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
         private readonly bool[] hoveredLastFrame = new bool[HeatEntries.Length];
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private int lastPanelWidth;
+        private int lastPanelHeight;
         private int openedSelectedItem = -1;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -764,9 +789,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
                 panelPositionInitialized = true;
             }
             else if (Main.myPlayer == Projectile.owner)
-                panelTopLeft = GetClampedPanelTopLeft(panelTopLeft, panelWidth, panelHeight);
+            {
+                int previousPanelWidth = lastPanelWidth > 0 ? lastPanelWidth : panelWidth;
+                int previousPanelHeight = lastPanelHeight > 0 ? lastPanelHeight : panelHeight;
+                Vector2 anchoredCenter = panelTopLeft + new Vector2(previousPanelWidth, previousPanelHeight) * 0.5f;
+                panelTopLeft = GetClampedPanelTopLeftFromCenter(anchoredCenter, panelWidth, panelHeight);
+            }
 
             Vector2 panelCenter = panelTopLeft + new Vector2(panelWidth, panelHeight) * 0.5f;
+            lastPanelWidth = panelWidth;
+            lastPanelHeight = panelHeight;
             Projectile.Center = Main.myPlayer == Projectile.owner ? Main.screenPosition + panelCenter : owner.Center;
             Projectile.timeLeft = 2;
             Projectile.Opacity = MathHelper.Clamp(Projectile.Opacity + (FadeOut ? -0.14f : 0.18f), 0f, 1f);
@@ -855,9 +887,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
 
         private static float GetLayoutScale()
         {
-            float heightScale = Main.screenHeight / Math.Max(1f, GetBasePanelHeight());
-            float widthScale = (Main.screenWidth - ScreenMargin * 2f) / Math.Max(1f, BasePanelWidth);
-            return Math.Max(0.2f, Math.Min(heightScale, widthScale));
+            float gameZoom = GetGameZoom();
+            float zoomCompensation = ReferenceGameZoom / gameZoom;
+            float safeHeightScale = Main.screenHeight * SafeScreenFill / Math.Max(1f, GetBasePanelHeight() * gameZoom);
+            float safeWidthScale = (Main.screenWidth - ScreenMargin * 2f) * SafeScreenFill / Math.Max(1f, BasePanelWidth * gameZoom);
+            float targetScale = zoomCompensation;
+            float safeScale = Math.Min(safeHeightScale, safeWidthScale);
+            return safeScale <= 0.2f ? Math.Max(0.05f, safeScale) : MathHelper.Clamp(targetScale, 0.2f, safeScale);
+        }
+
+        private static float GetGameZoom()
+        {
+            Vector2 zoom = Main.GameViewMatrix.Zoom;
+            return MathHelper.Clamp(Math.Max(zoom.X, zoom.Y), 0.25f, 4f);
         }
 
         private static int GetPanelWidth(float scale)

@@ -115,7 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (CurrentEffect.EnableProximityExplosion)
             {
                 float explodeRange = CurrentEffect.EffectID == -1
-                    ? new BalanceSHPC().GetDefaultOrbExplosionSize() * 1.15f
+                    ? new BalanceSHPC().GetDefaultLeftClickExplosionRadius() * 1.15f
                     : 250f;
 
                 foreach (NPC npc in Main.ActiveNPCs)
@@ -286,8 +286,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (Projectile.owner == Main.myPlayer && ExplosionPulseFactor > 0f)
             {
                 // ===== 爆炸核心参数 =====
-                float startSize = 0.07f * ExplosionPulseFactor;
-                float endSize = 0.33f * ExplosionPulseFactor;
+                float defaultExplosionVisualScale = CurrentEffect.EffectID == -1
+                    ? new BalanceSHPC().GetDefaultLeftClickExplosionRadius() / 112f
+                    : 1f;
+                float startSize = 0.07f * ExplosionPulseFactor * defaultExplosionVisualScale;
+                float endSize = 0.33f * ExplosionPulseFactor * defaultExplosionVisualScale;
                 float num2 = Projectile.scale;
 
                 Color color = ThemeColor;

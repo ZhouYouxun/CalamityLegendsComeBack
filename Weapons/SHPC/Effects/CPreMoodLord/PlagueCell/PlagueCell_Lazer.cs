@@ -17,8 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.PlagueCell
         private const float BeamWidth = 24f;
         private const float MinMuzzleDistance = 42f;
         private const float MaxMuzzleDistance = 92f;
-        private const int MaxHits = 3;
-        private const int DamageChannelCloseHits = 3;
+        private const int MaxHits = 4;
+        private const int DamageChannelCloseHits = 4;
         private static readonly Color OuterColor = new(255, 24, 16);
         private static readonly Color InnerColor = Color.White;
 
