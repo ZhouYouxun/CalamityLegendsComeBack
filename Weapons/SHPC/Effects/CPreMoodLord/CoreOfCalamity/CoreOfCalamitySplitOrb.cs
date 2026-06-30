@@ -27,6 +27,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
     /// </summary>
     internal sealed class CoreOfCalamitySplitOrb : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
+        private const int ActivationDelay = 10;
+
         private static readonly Color[] Palette =
         {
             new(24, 62, 188),
@@ -77,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             SpawnHyperiusFlightEffects(direction);
         }
 
-        public override bool? CanDamage() => null;
+        public override bool? CanDamage() => Timer >= ActivationDelay ? null : false;
 
         public override void OnKill(int timeLeft)
         {

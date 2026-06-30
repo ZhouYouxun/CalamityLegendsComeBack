@@ -98,12 +98,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             }
 
             // 前、左、右、后四枚分裂弹。颜色编号通过 ai[0] 同步给所有客户端。
+            const float splitSpawnRadius = 15f * 16f;
             Vector2[] splitOffsets =
             {
-                new(10f, 0f),
-                new(0f, 16f),
-                new(-10f, 0f),
-                new(0f, -16f)
+                new(splitSpawnRadius, 0f),
+                new(0f, splitSpawnRadius),
+                new(-splitSpawnRadius, 0f),
+                new(0f, -splitSpawnRadius)
             };
             float returnSpeed = Math.Max(1f, Projectile.velocity.Length() * 2f);
             for (int i = 0; i < splitOffsets.Length; i++)
