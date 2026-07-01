@@ -295,14 +295,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void ReleaseBrimstoneMissiles()
         {
-            int count = 10;
+            int count = Main.rand.Next(7, 14);
             for (int i = 0; i < count; i++)
             {
-                float angle = MathHelper.TwoPi * i / count;
-                Vector2 velocity = angle.ToRotationVector2().RotatedBy(-0.22f) * 7.8f;
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(6.4f, 10.6f);
                 int missile = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center,
+                    Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
                     velocity,
                     ModContent.ProjectileType<YC_BrimstoneWheelMissile>(),
                     Math.Max(1, (int)(Projectile.damage * 0.44f)),
@@ -385,6 +384,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
     {
         private static readonly Color TrailGold = new(255, 218, 92);
         private static readonly Color TrailRed = new(255, 72, 38);
+        private const float HomingRange = 1350f;
+        private const float MaxSpeed = 18.5f;
+        private const int HomingDelay = 8;
+        private const float FreeFlightDamping = 0.998f;
+        private const float NoTargetDamping = 0.994f;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -419,11 +423,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override void AI()
         {
             Timer++;
+            HomeTowardTarget();
             Projectile.rotation = Projectile.velocity.ToRotation();
-            if (Timer > 10f)
-                HomeTowardTarget();
-
-            Projectile.velocity *= 0.993f;
             Lighting.AddLight(Projectile.Center, Color.Lerp(TrailRed, TrailGold, 0.45f).ToVector3() * 0.38f);
 
             if (!Main.dedServ && Main.rand.NextBool(2))
@@ -453,15 +454,44 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void HomeTowardTarget()
         {
-            NPC target = Projectile.Center.ClosestNPCAt(1050f);
-            if (target is null)
+            if (Timer <= HomingDelay)
+            {
+                FreeDrift(FreeFlightDamping);
                 return;
+            }
 
-            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            NPC target = Projectile.Center.ClosestNPCAt(HomingRange);
+            if (target is null)
+            {
+                FreeDrift(NoTargetDamping);
+                return;
+            }
+
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            if (currentSpeed < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 5f;
+
+            Vector2 currentDirection = currentVelocity.SafeNormalize(Vector2.UnitX);
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
-            float speed = MathHelper.Clamp(Projectile.velocity.Length() + 0.08f, 7f, 15f);
-            float turn = MathHelper.Lerp(MathHelper.ToRadians(3f), MathHelper.ToRadians(16f), Utils.GetLerpValue(10f, 42f, Timer, true));
-            Projectile.velocity = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), turn).ToRotationVector2() * speed;
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 28f, Timer, true);
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pull = MathHelper.Max(warmup, closePressure * 0.85f);
+            float inertia = MathHelper.Lerp(18f, 7.5f, pull);
+            float targetSpeed = MathHelper.Lerp(11f, MaxSpeed, pull);
+
+            Projectile.velocity = (currentVelocity * inertia + desiredDirection * targetSpeed) / (inertia + 1f);
+            float sideSway = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.1f) * MathHelper.Lerp(0.012f, 0.003f, pull);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxSpeed;
+        }
+
+        private void FreeDrift(float damping)
+        {
+            float wander = (float)Math.Sin((Timer + Projectile.identity * 7f) * 0.09f) * 0.005f;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
         private float PrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
@@ -489,6 +519,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override string Texture => "CalamityMod/Projectiles/Boss/BrimstoneBarrage";
 
         private ref float Timer => ref Projectile.localAI[0];
+        private bool exploding;
 
         public override void SetStaticDefaults()
         {
@@ -504,7 +535,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
-            Projectile.tileCollide = false;
+            Projectile.tileCollide = true;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 150;
         }
@@ -524,15 +555,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
             }
 
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(-0.045f);
-            if (Timer > 28f)
-            {
-                NPC target = Projectile.Center.ClosestNPCAt(1200f);
-                if (target != null)
-                    direction = direction.ToRotation().AngleTowards((target.Center - Projectile.Center).ToRotation(), MathHelper.ToRadians(10f)).ToRotationVector2();
-            }
-
-            Projectile.velocity = direction * MathHelper.Clamp(Projectile.velocity.Length() + 0.12f, 7f, 18f);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, BrimColor.ToVector3() * 0.42f);
             EmitBrimstoneDust(direction);
@@ -541,6 +564,41 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<CalamityMod.Buffs.DamageOverTime.BrimstoneFlames>(), 300);
+            if (!exploding)
+                Projectile.Kill();
+        }
+
+        public override bool OnTileCollide(Vector2 oldVelocity) => true;
+
+        public override void OnKill(int timeLeft)
+        {
+            if (timeLeft <= 0)
+                return;
+
+            Vector2 center = Projectile.Center;
+            exploding = true;
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int oldWidth = Projectile.width;
+                int oldHeight = Projectile.height;
+                Projectile.Resize(86, 86);
+                Projectile.Center = center;
+                Projectile.Damage();
+                Projectile.Resize(oldWidth, oldHeight);
+                Projectile.Center = center;
+            }
+
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.34f, Pitch = 0.1f }, center);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, BrimColor * 0.65f, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.08f, 0.58f, 14, true));
+
+            for (int i = 0; i < 16; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(center + Main.rand.NextVector2Circular(8f, 8f), ModContent.DustType<SquashDust>(), Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 7.6f), 0, BrimColor * Main.rand.NextFloat(0.45f, 0.85f), Main.rand.NextFloat(0.9f, 1.35f));
+                dust.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -568,6 +626,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override string Texture => "CalamityLegendsComeBack/Texture/Calamity/RangePROJ/UltimaBolt";
 
         private ref float Timer => ref Projectile.localAI[0];
+        private const int LeftTurnFrames = 42;
+        private const int RightTurnFrames = 42;
+        private const float HomingRange = 1650f;
+        private const float MaxSpeed = 21f;
 
         public override void SetStaticDefaults()
         {
@@ -581,9 +643,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 2;
-            Projectile.timeLeft = 150;
+            Projectile.timeLeft = 210;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
+            Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 12;
         }
@@ -596,13 +659,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override void AI()
         {
             Timer++;
+            RunCurvedHoming();
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            NPC target = Projectile.Center.ClosestNPCAt(1300f);
-            if (target != null)
-            {
-                Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation().AngleTowards(desired.ToRotation(), MathHelper.ToRadians(7f)).ToRotationVector2() * MathHelper.Clamp(Projectile.velocity.Length() + 0.08f, 9f, 17f);
-            }
 
             Lighting.AddLight(Projectile.Center, Main.DiscoColor.ToVector3() * 0.44f);
             if (!Main.dedServ && Main.rand.NextBool(4))
@@ -620,6 +678,37 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(new BalanceYharimsCrystal().GetFireDebuffType(), 240);
+        }
+
+        private void RunCurvedHoming()
+        {
+            if (Timer <= LeftTurnFrames)
+            {
+                Projectile.velocity = Projectile.velocity.RotatedBy(-0.035f);
+                return;
+            }
+
+            if (Timer <= LeftTurnFrames + RightTurnFrames)
+            {
+                Projectile.velocity = Projectile.velocity.RotatedBy(0.041f);
+                return;
+            }
+
+            NPC target = Projectile.Center.ClosestNPCAt(HomingRange);
+            if (target == null)
+            {
+                Projectile.velocity *= 0.998f;
+                return;
+            }
+
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
+            float warmup = Utils.GetLerpValue(LeftTurnFrames + RightTurnFrames, LeftTurnFrames + RightTurnFrames + 36f, Timer, true);
+            float closePressure = Utils.GetLerpValue(420f, 80f, Projectile.Distance(target.Center), true);
+            float turn = MathHelper.Lerp(MathHelper.ToRadians(10f), MathHelper.ToRadians(24f), MathHelper.Max(warmup, closePressure));
+            float speed = MathHelper.Clamp(Projectile.velocity.Length() + 0.16f, 10f, MaxSpeed);
+
+            Projectile.velocity = currentDirection.ToRotation().AngleTowards(desired.ToRotation(), turn).ToRotationVector2() * speed;
         }
 
         public override bool PreDraw(ref Color lightColor)

@@ -39,6 +39,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             }
 
             Player player = Main.LocalPlayer;
+            DesertEagleSlotPlayer slotPlayer = player.GetModPlayer<DesertEagleSlotPlayer>();
+
+            if (Main.gamePaused)
+            {
+                CloseSlotUI(player, slotPlayer, false);
+                prevMouseMiddle = Main.mouseMiddle;
+                return;
+            }
 
             // 背包关闭时不处理
             if (!Main.playerInventory)
@@ -47,7 +55,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
                 return;
             }
 
-            DesertEagleSlotPlayer slotPlayer = player.GetModPlayer<DesertEagleSlotPlayer>();
             int deType = ModContent.ItemType<DesertEagle>();
 
             bool keyBound = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().Any();
@@ -62,10 +69,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
                 }
             }
 
-            // ── 已绑定：按下按键且背包中有 DE ─────────────────────────
+            // ── 已绑定：按下按键且悬停在 DE 上 ─────────────────────────
             if (keyBound && KeybindSystem.SHPCLoadingUI.JustPressed)
             {
-                if (HasDEInInventory(player, deType))
+                if (Main.HoverItem?.type == deType)
                 {
                     ToggleSlotUI(player, slotPlayer);
                 }
@@ -78,19 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
         {
             if (slotPlayer.SlotUIOpen)
             {
-                // UI 已开启：让它自己在下一帧关闭（SlotUIOpen 由 UI 弹幕每帧维持）
-                // 不做任何事，UI 弹幕的关闭逻辑由它自身的 AI 处理
-                SoundEngine.PlaySound(SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }, player.Center);
-                // 找到并杀死 UI 弹幕
-                for (int i = 0; i < Main.maxProjectiles; i++)
-                {
-                    Projectile p = Main.projectile[i];
-                    if (p.active && p.owner == player.whoAmI && p.ModProjectile is DesertEagleSlotUI)
-                    {
-                        p.Kill();
-                        break;
-                    }
-                }
+                CloseSlotUI(player, slotPlayer, true);
             }
             else
             {
@@ -105,14 +100,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             }
         }
 
-        private static bool HasDEInInventory(Player player, int deType)
+        private static void CloseSlotUI(Player player, DesertEagleSlotPlayer slotPlayer, bool playSound)
         {
-            for (int i = 0; i < 58; i++)
+            bool closed = false;
+            for (int i = 0; i < Main.maxProjectiles; i++)
             {
-                if (player.inventory[i].type == deType)
-                    return true;
+                Projectile p = Main.projectile[i];
+                if (p.active && p.owner == player.whoAmI && p.ModProjectile is DesertEagleSlotUI)
+                {
+                    p.Kill();
+                    closed = true;
+                }
             }
-            return false;
+
+            if (closed || slotPlayer.SlotUIOpen)
+            {
+                slotPlayer.SlotUIOpen = false;
+                if (playSound)
+                    SoundEngine.PlaySound(SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }, player.Center);
+            }
         }
     }
 }

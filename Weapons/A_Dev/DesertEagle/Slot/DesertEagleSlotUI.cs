@@ -174,7 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
         // ── 绘制 ─────────────────────────────────────────────────
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Projectile.owner != Main.myPlayer || Main.dedServ)
+            if (Projectile.owner != Main.myPlayer || Main.dedServ || Main.gamePaused)
                 return false;
 
             SpriteBatch sb = Main.spriteBatch;
