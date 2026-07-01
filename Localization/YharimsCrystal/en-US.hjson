@@ -17,11 +17,11 @@ Mods: {
 					SwitchInfo: "[c/B5E7FF:Switch] [c/DCD6C8:right click the left side of the player to cycle backward, or the right side to cycle forward.]"
 					FocusInfo: "[c/F8E28A:Focus] [c/DCD6C8:only works while the Helix Prism is firing, and converges with acceleration instead of snapping.]"
 					PrismReworkInfo: "[c/F8E28A:Left Click] [c/DCD6C8:hold to deploy six inertial prisms; their helper beams converge into a continuous destruction ray fired from the crystal.]"
-					RightCommandInfo: "[c/73DFFF:Right Array] [c/DCD6C8:deploy two golden crystal drones; the crystal fires Omicron-style shots, and left click commands an Omicron beam plus drone grenades before a 2-second shutdown.]"
+					RightCommandInfo: "[c/73DFFF:Right Array] [c/DCD6C8:deploy six golden drones into an air-defense battery: the front pair fire tracking rockets, the mid pair sustain a piercing barrage, and the rear pair snap off instant gold lasers, while the crystal itself keeps firing its main beam; left click commands the whole battery to volley twin gold bombs before a 2-second shutdown.]"
 					ResetInfo: "[c/FF7A45:Reset] [c/DCD6C8:releasing left click, dying, or running out of mana clears the entire sequence.]"
 					EXInfo: "[c/F6D06B:Legendary Skill (Laser Storm)] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
 					Growth_Header: Growth: stage {0}/{1}; blade scale {2}.
-					Growth_Stage0: Initial: L - Blade loop, directed throw, EssenceFlame support; R - Cell laser, 2 drones, drone splinters.
+					Growth_Stage0: Initial: L - Spin slash, charged throw, EssenceFlame support; R - continuous main beam, 6-drone air-defense battery (tracking rockets / piercing barrage / instant lasers).
 					Growth_Stage1: Desert Scourge: L - Fire debuff upgrades to OnFire3; R - Same projectile set, higher damage.
 					Growth_Stage2: Evil Boss T1: L - Blade scale and recovery improve; R - Same projectile set, higher damage.
 					Growth_Stage3: Wall of Flesh: L - Directed throw keeps no-gravity charge dash; R - Classic sustained laser visual.
@@ -190,6 +190,9 @@ Mods: {
 				YC_ThrownBlade.DisplayName: Y C_ Thrown Blade
 				YC_RightDrone.DisplayName: Y C_ Right Drone
 				YC_DroneShot.DisplayName: Y C_ Drone Shot
+				YC_DroneZapBeam.DisplayName: Y C_ Drone Zap Beam
+				YC_GoldBomb.DisplayName: Y C_ Gold Bomb
+				YC_TrackingRocket.DisplayName: Y C_ Tracking Rocket
 			}
 		}
 

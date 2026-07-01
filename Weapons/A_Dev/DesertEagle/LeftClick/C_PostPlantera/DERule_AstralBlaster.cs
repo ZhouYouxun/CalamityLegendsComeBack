@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules;

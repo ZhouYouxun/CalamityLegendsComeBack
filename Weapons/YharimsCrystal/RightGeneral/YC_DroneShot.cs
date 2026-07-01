@@ -1,5 +1,4 @@
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
-using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -46,20 +45,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(new BalanceYharimsCrystal().GetFireDebuffType(), 120);
-        }
-
-        public override void OnKill(int timeLeft)
-        {
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                Projectile.Center,
-                Projectile.velocity * 0.15f,
-                false, 8, 0.06f,
-                ShotGold,
-                new Vector2(1.3f, 1.3f),
-                true));
         }
 
         public override bool PreDraw(ref Color lightColor)

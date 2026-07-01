@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             Projectile.NewProjectile(
                 Player.GetSource_FromThis(),
-                Player.Center + new Vector2(0f, -300f * Player.gravDir),
+                Player.Center + new Vector2(0f, -PristineFuryCrystal.HoverHeight * Player.gravDir),
                 Vector2.Zero,
                 crystalType,
                 Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * 2.0f)),

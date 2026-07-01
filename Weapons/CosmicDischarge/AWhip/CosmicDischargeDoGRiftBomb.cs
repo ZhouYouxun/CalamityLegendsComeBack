@@ -73,16 +73,18 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     CosmicDischargeCommon.ThreeColorSpark,                        // 颜色：青/洋红/爱丽丝蓝三色随机
                     rotation: Main.rand.NextFloat(0.05f, 0.12f)));               // 旋转速度：0.05~0.12弧度/帧
 
-                // 电弧火花：弹幕飞行时向后飞散的电弧粒子
-                GeneralParticleHandler.SpawnParticle(new ElectricSpark(
-                    Projectile.Center + Main.rand.NextVector2Circular(12f, 12f), // 位置：弹幕中心周围±12像素随机偏移
-                    Projectile.velocity.RotatedByRandom(0.7f) * -0.35f,         // 速度：沿弹幕方向反向飞散，速度0.35
-                    CosmicDischargeCommon.DoGCyanColor,                           // 颜色1（内层）：青色
-                    CosmicDischargeCommon.DoGFuchsiaColor,                        // 颜色2（外层）：洋红色
-                    0.45f * 0.3f,                                                 // 大小：0.45 * 0.3f
-                    10,                                                            // 持续时间：10帧
-                    MathHelper.PiOver4,                                            // 形状角度：45度
-                    5f));                                                           // 亮度：5.0【调大让电弧更亮】
+                // 光点尾迹：透明且会转向的弹幕不使用 Spark 类特效。
+                Vector2 back = Projectile.velocity.SafeNormalize(Vector2.UnitX) * -1f;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    back * Main.rand.NextFloat(0.25f, 0.75f) + Main.rand.NextVector2Circular(0.25f, 0.25f),
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.08f, 0.14f),
+                    CosmicDischargeCommon.ThreeColorSpark,
+                    true,
+                    false,
+                    true));
             }
         }
 
@@ -212,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.Next(12, 20),                  // 持续时间：12~20帧
                     Main.rand.NextFloat(0.55f, 0.95f) * 0.05f, // 大小：缩放到5%大小 (0.05f)
                     CosmicDischargeCommon.ThreeColorSpark,    // 颜色：三色随机
-                    new Vector2(0.25f, 1.7f),                // 形状拉伸：宽0.25、高1.7
+                    new Vector2(0.1f, 0.5f),                // 形状拉伸：宽0.1、高0.5
                     true));                                   // 发光
             }
         }

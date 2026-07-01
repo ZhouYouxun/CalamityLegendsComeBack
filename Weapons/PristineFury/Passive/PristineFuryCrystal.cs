@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         public new string LocalizationCategory => "Projectiles.PristineFury";
         public override string Texture => "CalamityMod/Projectiles/Boss/ProvidenceCrystal";
 
-        private const float HoverHeight = 300f;
+        internal const float HoverHeight = 90f;
         private const float DrawScale = 0.45f;
         private const int ShardFireInterval = 16;   // 5枚一组，每16帧一次
         private const int ShardBurstCount = 5;

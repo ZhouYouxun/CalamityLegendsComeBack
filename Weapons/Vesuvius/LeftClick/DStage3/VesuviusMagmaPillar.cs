@@ -157,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaOrange with { A = 0 } * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(VesuviusProjectileVisuals.LavaOrange.R, VesuviusProjectileVisuals.LavaOrange.G, VesuviusProjectileVisuals.LavaOrange.B, 0) * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
                 new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f) * VesuviusProjectileVisuals.VisualScale,

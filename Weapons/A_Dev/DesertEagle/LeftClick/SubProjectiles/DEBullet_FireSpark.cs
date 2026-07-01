@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -12,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.SubProject
     public class DEBullet_FireSpark : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Dev";
-        public override string Texture => "CalamityMod/Projectiles/Ranged/HellbornBullet";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/HellbornProj";
 
         private static readonly Color FireOrange = new(255, 100, 20);
         private static readonly Color FireRed = new(255, 30, 10);

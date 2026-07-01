@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -33,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
         public override void Initialize()
         {
             SlottedGun = new Item();
-            SlottedGun.SetDefaults(0);   // Air
+            SlottedGun.SetDefaults(ItemID.None);   // Air
         }
 
         public override void ResetEffects()
@@ -57,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             else
             {
                 SlottedGun = new Item();
-                SlottedGun.SetDefaults(0);
+                SlottedGun.SetDefaults(ItemID.None);
             }
         }
     }

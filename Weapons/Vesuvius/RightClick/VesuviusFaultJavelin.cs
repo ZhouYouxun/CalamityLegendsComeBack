@@ -20,7 +20,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         // Throw the staff itself — use the weapon's own texture
         public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuvius";
 
-        private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 1f, 5f);
+        private const int FlightState = 0;
+        private const int NpcStickState = 1;
+        private const int TileStickState = 2;
+        private const float VisualRotationOffset = MathHelper.PiOver4;
+
+        private int Stage => (int)MathHelper.Clamp(Projectile.ai[2] <= 0f ? 1f : Projectile.ai[2], 1f, 5f);
+        private bool Embedded => Projectile.ai[0] == NpcStickState || Projectile.ai[0] == TileStickState;
 
         public override void SetStaticDefaults()
         {
@@ -45,9 +51,32 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         public override void AI()
         {
-            // Staff spins as it tumbles through the air
-            Projectile.rotation += 0.28f * (float)Math.Sign(Projectile.velocity.X != 0f ? Projectile.velocity.X : 1f);
+            // Keep the actual throw angle — the staff flies true, it does not tumble or spin
+            if (Projectile.ai[0] == FlightState)
+                UpdateFlightRotation();
+
+            if (Projectile.ai[0] == NpcStickState)
+            {
+                RunNpcStickyAI(15);
+                if (!Projectile.active)
+                    return;
+            }
+
+            if (Embedded)
+            {
+                Projectile.tileCollide = false;
+                if (Projectile.ai[0] == TileStickState)
+                    Projectile.velocity *= 0f;
+            }
+
             Lighting.AddLight(Projectile.Center, 0.65f, 0.18f, 0.04f);
+
+            if (Embedded)
+            {
+                if (!Main.dedServ && Main.rand.NextBool(3))
+                    VesuviusVolcanicVisuals.SpawnVentMix(Projectile.Center + Main.rand.NextVector2Circular(12f, 10f), 0.55f + Stage * 0.06f, Stage >= 3);
+                return;
+            }
 
             if (Projectile.localAI[0]++ < 5f)
                 Projectile.tileCollide = false;
@@ -95,9 +124,19 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
+            ApplyFlightRotation(oldVelocity);
+            Projectile.ai[0] = TileStickState;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.tileCollide = false;
+            Projectile.timeLeft = 240;
+            Projectile.netUpdate = true;
             SpawnFaultCore(oldVelocity);
-            Projectile.Kill();
             return false;
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            StickToNPC(target, 15);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -105,9 +144,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             target.AddBuff(BuffID.OnFire3, 240);
             SpawnSmallImpact(target.Center);
 
-            if (Stage >= 5 && Projectile.ai[1] == 0f && Projectile.owner == Main.myPlayer)
+            if (Stage >= 5 && Projectile.localAI[2] == 0f && Projectile.owner == Main.myPlayer)
             {
-                Projectile.ai[1] = 1f;
+                Projectile.localAI[2] = 1f;
                 Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX * Math.Sign(target.Center.X - Main.player[Projectile.owner].Center.X));
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -118,8 +157,106 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     Projectile.knockBack,
                     Projectile.owner,
                     direction.X >= 0f ? 1f : -1f);
-                Projectile.Kill();
             }
+        }
+
+        private void UpdateFlightRotation()
+        {
+            ApplyFlightRotation(Projectile.velocity);
+        }
+
+        private void ApplyFlightRotation(Vector2 velocity)
+        {
+            if (velocity.LengthSquared() <= 0.001f)
+                return;
+
+            int direction = velocity.X > 0.001f ? 1 : velocity.X < -0.001f ? -1 : Projectile.direction;
+            if (direction == 0)
+                direction = 1;
+
+            Projectile.spriteDirection = Projectile.direction = direction;
+            Projectile.rotation = velocity.ToRotation() +
+                (Projectile.spriteDirection == 1 ? 0f : MathHelper.Pi) +
+                Projectile.spriteDirection * VisualRotationOffset;
+        }
+
+        private void StickToNPC(NPC target, int maxStick)
+        {
+            if (Projectile.owner != Main.myPlayer || target == null || !target.active || target.dontTakeDamage)
+                return;
+
+            if (target.reflectsProjectiles && Projectile.CanBeReflected())
+            {
+                target.ReflectProjectile(Projectile);
+                return;
+            }
+
+            Projectile.ai[0] = NpcStickState;
+            Projectile.ai[1] = target.whoAmI;
+            Projectile.velocity = target.Center - Projectile.Center;
+            Projectile.localAI[0] = 0f;
+            Projectile.tileCollide = false;
+            Projectile.timeLeft = 900;
+            Projectile.netUpdate = true;
+            CullOldStuckJavelins(target.whoAmI, maxStick);
+        }
+
+        private void RunNpcStickyAI(int seconds)
+        {
+            Projectile.tileCollide = false;
+            Projectile.localAI[0]++;
+
+            int npcIndex = (int)Projectile.ai[1];
+            if (npcIndex < 0 || npcIndex >= Main.maxNPCs)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            NPC npc = Main.npc[npcIndex];
+            if (!npc.active || npc.dontTakeDamage || Projectile.localAI[0] >= 60f * seconds)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.Center = npc.Center - Projectile.velocity * 2f;
+            Projectile.gfxOffY = npc.gfxOffY;
+            if (Projectile.localAI[0] % 30f == 0f)
+                npc.HitEffect(0, 1.0);
+        }
+
+        private void CullOldStuckJavelins(int npcIndex, int maxStick)
+        {
+            Point[] stuckProjectiles = new Point[maxStick];
+            int stuckCount = 0;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (i != Projectile.whoAmI &&
+                    projectile.active &&
+                    projectile.owner == Projectile.owner &&
+                    projectile.type == Projectile.type &&
+                    projectile.ai[0] == NpcStickState &&
+                    projectile.ai[1] == npcIndex)
+                {
+                    stuckProjectiles[stuckCount++] = new Point(i, projectile.timeLeft);
+                    if (stuckCount >= stuckProjectiles.Length)
+                        break;
+                }
+            }
+
+            if (stuckCount < stuckProjectiles.Length)
+                return;
+
+            int oldest = 0;
+            for (int i = 1; i < stuckProjectiles.Length; i++)
+            {
+                if (stuckProjectiles[i].Y < stuckProjectiles[oldest].Y)
+                    oldest = i;
+            }
+
+            Main.projectile[stuckProjectiles[oldest].X].Kill();
         }
 
         private void SpawnFaultCore(Vector2 oldVelocity)
@@ -165,14 +302,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
 
             // Spinning fire trail — staff tumbles through the air leaving molten streaks
-            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            for (int i = Embedded ? 0 : Projectile.oldPos.Length - 1; i >= 1; i--)
             {
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 Color trailC = VesuviusProjectileVisuals.LavaOrange * (t * 0.42f);
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, null,
-                    new Color(trailC.R, trailC.G, trailC.B, 0),
-                    Projectile.rotation - t * 0.5f, texture.Size() * 0.5f,
+                    VesuviusProjectileVisuals.AdditiveColor(trailC),
+                    Projectile.oldRot[i], texture.Size() * 0.5f,
                     MathHelper.Lerp(0.6f, 1f, t) * Projectile.scale, SpriteEffects.None);
             }
 
@@ -183,7 +320,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             // Additive glow overlay
             Color glowC = VesuviusProjectileVisuals.LavaGold * 0.75f;
             Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null,
-                new Color(glowC.R, glowC.G, glowC.B, 0),
+                VesuviusProjectileVisuals.AdditiveColor(glowC),
                 Projectile.rotation, glow.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
 
             return false;
@@ -193,8 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
     public class VesuviusFaultCore : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Vesuvius";
-        // Show the embedded weapon staff
-        public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuvius";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 1f, 5f);
 
@@ -441,29 +577,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             return bestTarget;
         }
 
-        public override bool PreDraw(ref Color lightColor)
-        {
-            Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
-
-            // Staff embedded in ground — sticks up at a slight lean based on impact angle
-            float impactAngle = Projectile.ai[1];
-            float displayAngle = -MathHelper.PiOver2 + (float)Math.Sin(impactAngle) * 0.22f + MathHelper.ToRadians(45f);
-            float stageIntensity = 0.75f + Stage * 0.1f;
-            float pulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5.5f + Projectile.identity * 0.82f);
-
-            // Draw with bottom-heavy origin so part appears embedded in ground
-            Vector2 origin = new Vector2(texture.Width * 0.5f, texture.Height * 0.8f);
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
-
-            Main.EntitySpriteDraw(texture, drawPos, null, lightColor * stageIntensity, displayAngle, origin, 1.12f, SpriteEffects.None);
-
-            // Pulsing glow (additive)
-            Color glowC = VesuviusProjectileVisuals.LavaGold * (pulse * stageIntensity);
-            Main.EntitySpriteDraw(glow, drawPos, null, new Color(glowC.R, glowC.G, glowC.B, 0), displayAngle, origin, 1.12f, SpriteEffects.None);
-
-            return false;
-        }
+        public override bool PreDraw(ref Color lightColor) => false;
     }
 
     public class VesuviusFaultFireball : ModProjectile, ILocalizedModType

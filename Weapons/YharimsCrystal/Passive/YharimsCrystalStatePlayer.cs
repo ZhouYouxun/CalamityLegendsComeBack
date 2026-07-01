@@ -16,9 +16,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
 
         public int RightClickCooldown;
         public int LeftClickCooldown;
+        public int AuricJudgementCharges;
 
         public bool BladeEmpowered => BladeEmpowerTimer > 0;
         public bool CrystalEmpowered => CrystalEmpowerTimer > 0;
+        public bool HasAuricJudgement => AuricJudgementCharges > 0;
 
         public override void PostUpdate()
         {
@@ -43,6 +45,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
                 BladeEmpowerTimer = System.Math.Max(BladeEmpowerTimer, frames);
             else
                 CrystalEmpowerTimer = System.Math.Max(CrystalEmpowerTimer, frames);
+        }
+
+        public void GrantAuricJudgementChain(int charges)
+        {
+            AuricJudgementCharges = System.Math.Max(AuricJudgementCharges, charges);
+        }
+
+        public bool TryConsumeAuricJudgement()
+        {
+            if (AuricJudgementCharges <= 0)
+                return false;
+
+            AuricJudgementCharges--;
+            return true;
         }
     }
 }

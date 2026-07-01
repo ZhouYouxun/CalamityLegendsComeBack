@@ -17,13 +17,13 @@ Mods: {
 					SwitchInfo: "[c/B5E7FF:切换] [c/DCD6C8:右键玩家左半边切换到上一个形态，右键玩家右半边切换到下一个形态。]"
 					FocusInfo: "[c/F8E28A:聚焦] [c/DCD6C8:只在螺旋棱镜左键开火时生效，光束会逐渐加速收束，而不是瞬间贴到同一点。]"
 					PrismReworkInfo: "[c/F8E28A:左键] [c/DCD6C8:按住后部署六枚带惯性的棱镜；它们的辅助光束会逐渐汇聚成由本体发射的持续破坏死光。]"
-					RightCommandInfo: "[c/73DFFF:右键阵列] [c/DCD6C8:部署两台金色水晶无人机；水晶本体发射奥密克戎式弹幕，开火时点左键会释放奥密克戎光束与无人机榴弹，随后宕机2秒。]"
+					RightCommandInfo: "[c/73DFFF:右键阵列] [c/DCD6C8:部署六台金色无人机组成防空阵列：前列发射追踪火箭，中列持续扫射穿透弹幕，后列释放瞬发金色镭射；水晶本体持续输出主激光，开火时点左键会令全阵列齐射双联金色炸弹，随后宕机2秒。]"
 					ResetInfo: "[c/FF7A45:重置] [c/DCD6C8:松开左键、死亡或魔力耗尽都会清空整个展开进度。]"
 					EXInfo: "[c/F6D06B:大招【激光风暴】] [c/DCD6C8:召唤12艘金色激光舰进入轨道；准备完成后点击左键齐射。]"
 					Growth_Header: 成长：阶段 {0}/{1}；刃鳞 {2}。
-					Growth_Stage0: 初始：左 - 刃环、定向投掷、精华火焰辅助；右 - 细胞激光、2架无人机、无人机分裂弹。
-					Growth_Stage1: 荒漠虐神：左 - 火焰减益升级为 OnFire3；右 - 相同弹幕组合，伤害提升。
-					Growth_Stage2: 邪恶BOSS一阶：左 - 刃鳞与恢复能力提升；右 - 相同弹幕组合，伤害提升。
+					Growth_Stage0: 初始：左 - 旋转斩击、蓄力投掷、精华火焰辅助；右 - 主激光持续输出、6台无人机防空阵列（追踪火箭/穿透弹幕/瞬发镭射）。
+					Growth_Stage1: 荒漠虐神：左 - 火焰减益升级为 OnFire3；右 - 相同阵列组合，伤害提升。
+					Growth_Stage2: 邪恶BOSS一阶：左 - 刃鳞与恢复能力提升；右 - 相同阵列组合，伤害提升。
 					Growth_Stage3: 血肉之墙：左 - 定向投掷保留无重力蓄力冲刺；右 - 经典持续激光外观。
 					Growth_Stage4: 硫磺火焰之灵：左 - 燃烧碎片释放硫磺导弹；右 - 经典激光、更大刃鳞。
 					Growth_Stage5: 石巨人：左 - 恢复能力提升、刃身成长；右 - 右键蓄力时间减半。
@@ -190,6 +190,9 @@ Mods: {
 				YC_ThrownBlade.DisplayName: 投掷水晶刃
 				YC_RightDrone.DisplayName: 亚利姆水晶右键无人机
 				// YC_DroneShot.DisplayName: Y C_ Drone Shot
+				// YC_DroneZapBeam.DisplayName: Y C_ Drone Zap Beam
+				// YC_GoldBomb.DisplayName: Y C_ Gold Bomb
+				// YC_TrackingRocket.DisplayName: Y C_ Tracking Rocket
 			}
 		}
 

@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.SubProject
     public class DEBullet_ShrapnelShard : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Dev";
-        public override string Texture => "CalamityMod/Projectiles/Ranged/SlagBlast";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/SlagRound";
 
         private static readonly Color SlagOrange = new(210, 120, 30);
 

@@ -53,8 +53,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 Projectile.velocity += new Vector2(Main.rand.NextFloat(-1.6f, 1.6f), Main.rand.NextFloat(-0.55f, 0.18f));
             }
 
-            Projectile.velocity *= Main.rand.NextFloat(0.91f, 0.97f); // variable drag
-            Projectile.velocity.Y += Main.rand.NextFloat(0.01f, 0.07f); // variable gravity
+            Projectile.velocity *= Main.rand.NextFloat(0.91f, 0.97f); // heavy drag — light ash bleeds momentum fast
+            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + Main.rand.NextFloat(0.008f, 0.045f), -3f, 2.1f); // gentle drift-fall, low terminal speed
             Projectile.rotation += Projectile.velocity.X * 0.03f + Main.rand.NextFloat(-0.04f, 0.08f);
             Projectile.alpha = (int)MathHelper.Lerp(0f, 210f, Utils.GetLerpValue(24f, 0f, Projectile.timeLeft, true));
             Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity * VesuviusProjectileVisuals.VisualIntensity);
@@ -132,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                (Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, 0.35f) with { A = 0 }) * 0.22f * fade,
+                VesuviusProjectileVisuals.AdditiveColor(Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, 0.35f)) * 0.22f * fade,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
                 Projectile.scale * 0.42f * VesuviusProjectileVisuals.VisualScale,

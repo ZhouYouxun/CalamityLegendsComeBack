@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -13,7 +14,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.SubProject
     public class DEBullet_PestSplit : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Dev";
-        public override string Texture => "CalamityMod/Projectiles/Ranged/SlagBlast";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/SlagRound";
 
         private static readonly Color PestGreen = new(60, 220, 40);
         private static readonly Color PestDark = new(20, 140, 10);

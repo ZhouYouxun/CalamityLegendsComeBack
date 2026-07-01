@@ -195,6 +195,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 if (releaseStage >= 3)
                     FirePyroclasticCollapses();
 
+                if (releaseStage >= 3)
+                    FireThermalCore();
+
                 if (releaseStage >= 4)
                     FireHomingCinders();
 
@@ -340,6 +343,25 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             }
         }
 
+        private void FireThermalCore()
+        {
+            // Straight, fast, and heavy — deliberately the odd one out among the arcing/homing shots
+            if (releaseTimer < 14 || releaseTimer > 80 || releaseTimer % 30 != 14)
+                return;
+
+            Vector2 velocity = Direction * 33f;
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTip + Direction * 10f,
+                velocity,
+                ModContent.ProjectileType<VesuviusThermalCore>(),
+                Math.Max(1, (int)(Projectile.damage * 0.95f)),
+                Projectile.knockBack * 1.2f,
+                Projectile.owner);
+
+            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.55f, Pitch = -0.3f }, GunTip);
+        }
+
         private void FireHomingCinders()
         {
             if (releaseTimer > 92 || releaseTimer % 5 != 1)
@@ -397,7 +419,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         {
             for (int i = 0; i < 3; i++)
             {
-                Vector2 velocity = Direction.RotatedBy(MathHelper.ToRadians(-14f + i * 14f)) * 21f;
+                Vector2 velocity = Direction.RotatedBy(MathHelper.ToRadians(-14f + i * 14f)) * 34f;
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     GunTip + Direction * 18f,
@@ -840,7 +862,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             float coreScale = (0.32f + stageForDraw * 0.075f + chargeIntensity * 0.36f) * fullChargeBonus;
             float rotationTime = Main.GlobalTimeWrappedHourly;
-            Color additiveStageColor = stageColor with { A = 0 };
+            Color additiveStageColor = new Color(stageColor.R, stageColor.G, stageColor.B, 0);
 
             Main.EntitySpriteDraw(
                 smokeyHalo,
@@ -855,7 +877,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             for (int i = 0; i < 3; i++)
             {
                 float noiseRotation = Projectile.rotation * (i % 2 == 0 ? 1f : -1f) + rotationTime * (1.15f + i * 0.33f);
-                Color noiseColor = Color.Lerp(additiveStageColor, Color.OrangeRed with { A = 0 }, 0.25f + i * 0.18f) * (0.16f + chargeIntensity * 0.18f) * (1f - i * 0.18f);
+                Color noiseColor = Color.Lerp(additiveStageColor, VesuviusProjectileVisuals.AdditiveColor(Color.OrangeRed), 0.25f + i * 0.18f) * (0.16f + chargeIntensity * 0.18f) * (1f - i * 0.18f);
                 Main.EntitySpriteDraw(
                     sunNoise,
                     tipScreen,
@@ -881,7 +903,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 bloom,
                 tipScreen,
                 null,
-                stageColor with { A = 0 } * (0.34f + pulse * 0.16f) * (0.35f + chargeIntensity) * fullChargeBonus,
+                VesuviusProjectileVisuals.AdditiveColor(stageColor) * (0.34f + pulse * 0.16f) * (0.35f + chargeIntensity) * fullChargeBonus,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
                 (0.42f + stageForDraw * 0.08f + pulse * 0.08f) * (0.75f + chargeIntensity) * fullChargeBonus,
@@ -891,7 +913,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 bloom,
                 tipScreen,
                 null,
-                Color.White with { A = 0 } * chargeIntensity * 0.58f,
+                VesuviusProjectileVisuals.AdditiveColor(Color.White) * chargeIntensity * 0.58f,
                 -Projectile.rotation,
                 bloom.Size() * 0.5f,
                 (0.19f + pulse * 0.04f) * (0.8f + chargeIntensity) * fullChargeBonus,
@@ -921,7 +943,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 plasmaCore,
                 tipScreen,
                 null,
-                Color.Lerp(additiveStageColor, Color.White with { A = 0 }, chargeIntensity * 0.24f) * (0.28f + chargeIntensity * 0.38f),
+                Color.Lerp(additiveStageColor, VesuviusProjectileVisuals.AdditiveColor(Color.White), chargeIntensity * 0.24f) * (0.28f + chargeIntensity * 0.38f),
                 rotationTime * 1.25f,
                 plasmaCore.Size() * 0.5f,
                 (0.09f + chargeIntensity * 0.14f) * fullChargeBonus,
@@ -933,7 +955,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     lightFlash,
                     tipScreen,
                     null,
-                    Color.White with { A = 0 } * (chargeIntensity * 0.32f),
+                    VesuviusProjectileVisuals.AdditiveColor(Color.White) * (chargeIntensity * 0.32f),
                     Projectile.rotation,
                     lightFlash.Size() * 0.5f,
                     new Vector2(0.28f + stageForDraw * 0.03f, 0.11f + chargeIntensity * 0.08f) * fullChargeBonus,
@@ -942,7 +964,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, staffRotation, origin, Projectile.scale, effects);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.72f + pulse * 0.28f), staffRotation, origin, Projectile.scale, effects);
+            Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0) * (0.72f + pulse * 0.28f), staffRotation, origin, Projectile.scale, effects);
 
             if (chargeIntensity > 0.03f)
             {

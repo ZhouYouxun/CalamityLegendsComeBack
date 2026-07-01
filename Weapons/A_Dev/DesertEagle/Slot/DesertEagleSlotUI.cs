@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
     public class DesertEagleSlotUI : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Dev";
-        public override string Texture => "Terraria/Images/UI/Inventory_Back";
+        public override string Texture => "CalamityLegendsComeBack/MainMenu/Backgrounds/BlankPixel";
 
         // ── 面板常量 ─────────────────────────────────────────────
         private const int PanelW = 200;
@@ -148,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
                 // 取出格子
                 Main.mouseItem = slottedGun.Clone();
                 slotPlayer.SlottedGun.TurnToAir();
-                slotPlayer.SlottedGun.SetDefaults(0);
+                slotPlayer.SlottedGun.SetDefaults(ItemID.None);
                 SoundEngine.PlaySound(SoundID.Grab, Main.LocalPlayer.Center);
                 ResetRuleCounters(slotPlayer);
             }

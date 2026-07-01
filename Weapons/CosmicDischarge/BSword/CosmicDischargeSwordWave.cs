@@ -86,6 +86,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
                         CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.65f));
                 }
+
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(22f, 10f),
+                    -direction * Main.rand.NextFloat(0.4f, 1.1f) + Main.rand.NextVector2Circular(0.18f, 0.18f),
+                    false,
+                    12,
+                    Main.rand.NextFloat(0.08f, 0.15f),
+                    CosmicDischargeCommon.ThreeColorSpark,
+                    true,
+                    false,
+                    true));
             }
         }
 
@@ -168,7 +179,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 12,
                 Main.rand.NextFloat(0.34f, 0.58f) * 0.3f,
                 CosmicDischargeCommon.ThreeColorSpark,
-                new Vector2(0.18f, 2.6f),
+                new Vector2(0.1f, 0.5f),
                 true));
         }
 

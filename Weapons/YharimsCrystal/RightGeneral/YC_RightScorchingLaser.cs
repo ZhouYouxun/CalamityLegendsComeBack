@@ -75,6 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Projectile.scale = GetBeamScale();
                 UpdateBeamLength();
                 EmitBeamFX();
+                EmitBeamStreamFX();
                 CastBeamLight();
                 // timeLeft decrements naturally — no refresh
                 return;
@@ -99,6 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             UpdateBeamLength();
             EmitBeamFX();
+            EmitBeamStreamFX();
             CastBeamLight();
         }
 
@@ -249,6 +251,42 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Main.rand.NextFloat(0.72f, 1.2f),
                 color,
                 true));
+        }
+
+        private void EmitBeamStreamFX()
+        {
+            // Streams a dense field of gold/red sparks back along the beam toward the crystal,
+            // mirroring the blade's flame-vent look but threaded along the laser's full length.
+            if (Main.dedServ || Projectile.velocity == Vector2.Zero || BeamLength <= 0f)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float halfWidth = GetCollisionWidth() * 0.45f;
+            int streamCount = (int)MathHelper.Clamp(BeamLength / 90f, 2f, 14f);
+
+            for (int i = 0; i < streamCount; i++)
+            {
+                if (!Main.rand.NextBool(2))
+                    continue;
+
+                float along = Main.rand.NextFloat(BeamLength);
+                Vector2 perpendicular = direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-halfWidth, halfWidth);
+                Vector2 position = Projectile.Center + direction * along + perpendicular;
+                Vector2 velocity = -direction * Main.rand.NextFloat(22f, 46f) + direction.RotatedByRandom(0.3f) * Main.rand.NextFloat(-2f, 2f);
+                Color color = Main.rand.NextBool(3) ? Color.White : Color.Lerp(LaserRed, LaserGold, Main.rand.NextFloat(0.2f, 0.9f));
+
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                    position,
+                    velocity,
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.045f, 0.085f) * Projectile.scale,
+                    color,
+                    new Vector2(2.6f, 0.32f),
+                    true,
+                    false,
+                    0.7f));
+            }
         }
 
         private bool DrawCellLaser()

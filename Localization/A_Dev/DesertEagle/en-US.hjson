@@ -19,27 +19,17 @@ Mods: {
 
 		Projectiles: {
 			A_Dev: {
-				DELeftBullet: {
-					DisplayName: Desert Eagle Shot
-				}
-				DEBullet_FungiSpore: {
-					DisplayName: Fungal Spore
-				}
-				DEBullet_ShrapnelShard: {
-					DisplayName: Shrapnel Shard
-				}
-				DEBullet_FireSpark: {
-					DisplayName: Fire Spark
-				}
-				DEBullet_PestSplit: {
-					DisplayName: Plague Round
-				}
-				DEBullet_CardSplit: {
-					DisplayName: Card Fragment
-				}
-				DesertEagleSlotUI: {
-					DisplayName: Chamber Slot UI
-				}
+				DELeftBullet.DisplayName: Desert Eagle Shot
+				DEBullet_FungiSpore.DisplayName: Fungal Spore
+				DEBullet_ShrapnelShard.DisplayName: Shrapnel Shard
+				DEBullet_FireSpark.DisplayName: Fire Spark
+				DEBullet_PestSplit.DisplayName: Plague Round
+				DEBullet_CardSplit.DisplayName: Card Fragment
+				DEBullet_CardHeart.DisplayName: Heart Card
+				DEBullet_CardClub.DisplayName: Club Card
+				DEBullet_CardDiamond.DisplayName: Diamond Card
+				DEBullet_CardSpade.DisplayName: Spade Card
+				DesertEagleSlotUI.DisplayName: Chamber Slot UI
 			}
 		}
 	}

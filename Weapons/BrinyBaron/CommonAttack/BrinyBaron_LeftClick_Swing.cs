@@ -31,6 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float BaseHitboxOutset = 90f;
         private static readonly Vector2 BaseHitboxSize = new(132f, 132f);
         private const float SwooshRadiusCorrection = 0.575f;
+        private const float RightSpinSwooshScaleMultiplier = 1.42f;
         private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
         private int ComboLength => CurrentGrowthStage switch
         {
@@ -84,6 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private float SlashAngle => FinalRotation + MathHelper.ToRadians(-45f);
         private float RightSpinChargeRatio => MathHelper.Clamp(rightSpinEmpowerment / RightSpinMaxEmpowerment, 0f, 1f);
         private float ActiveHitboxScale => Projectile.scale;
+        private float RightSpinBladeReach => (BaseHitboxOutset + BaseHitboxSize.X * 0.38f) * Projectile.scale;
 
         public override void SetDefaults()
         {
@@ -758,16 +760,43 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 slashDirection = rightSpinDirectionVector.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
             float ringPhase = rightSpinTimer * 0.18f * rightSpinOrbitDirection;
+            float bladeReach = RightSpinBladeReach;
 
             for (int i = 0; i < 3; i++)
             {
                 float angle = ringPhase + MathHelper.TwoPi * i / 3f + Main.rand.NextFloat(-0.16f, 0.16f);
                 Vector2 orbitDirection = angle.ToRotationVector2();
-                Vector2 spawnPosition = Owner.Center + orbitDirection * Main.rand.NextFloat(72f, 142f) * MathHelper.Lerp(0.75f, 1.15f, RightSpinChargeRatio);
+                Vector2 spawnPosition = Owner.Center + orbitDirection * Main.rand.NextFloat(bladeReach * 0.54f, bladeReach * 1.03f);
                 Vector2 velocity = tangentDirection * Main.rand.NextFloat(0.6f, 1.6f + RightSpinChargeRatio) + orbitDirection * Main.rand.NextFloat(0.2f, 0.9f);
 
-                Dust dust = Dust.NewDustPerfect(spawnPosition, Main.rand.NextBool() ? DustID.Water : DustID.Frost, velocity, 100, new Color(90, 205, 255), Main.rand.NextFloat(0.75f, 1.1f));
+                Dust dust = Dust.NewDustPerfect(spawnPosition, Main.rand.NextBool() ? DustID.Water : DustID.Frost, velocity, 100, new Color(90, 205, 255), Main.rand.NextFloat(0.85f, 1.22f) * MathHelper.Lerp(0.9f, 1.16f, RightSpinChargeRatio));
                 dust.noGravity = true;
+            }
+
+            if (Main.dedServ || rightSpinTimer % 2 != 0)
+                return;
+
+            int orbCount = RightSpinChargeRatio >= 0.6f ? 2 : 1;
+            for (int i = 0; i < orbCount; i++)
+            {
+                float angle = ringPhase + Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 orbitDirection = angle.ToRotationVector2();
+                Vector2 spawnPosition = Owner.Center + orbitDirection * Main.rand.NextFloat(bladeReach * 0.62f, bladeReach * 1.08f);
+                Vector2 velocity =
+                    tangentDirection * Main.rand.NextFloat(0.2f, 0.7f + RightSpinChargeRatio * 0.45f) -
+                    orbitDirection * Main.rand.NextFloat(0.05f, 0.35f);
+                Color color = Color.Lerp(new Color(80, 185, 255), new Color(220, 250, 255), Main.rand.NextFloat(0.2f, 0.65f));
+
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    spawnPosition,
+                    velocity,
+                    false,
+                    Main.rand.Next(12, 19),
+                    Main.rand.NextFloat(0.34f, 0.58f) * MathHelper.Lerp(0.85f, 1.2f, RightSpinChargeRatio),
+                    color,
+                    true,
+                    false,
+                    true));
             }
         }
 
@@ -1209,14 +1238,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             if (CanHit || postSwing)
             {
+                Vector2 swooshDrawPosition = rightSpinActive ? Owner.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY) : drawPosition;
                 Main.EntitySpriteDraw(
                     swoosh.Value,
-                    drawPosition,
+                    swooshDrawPosition,
                     null,
                     Color.DeepSkyBlue with { A = 0 } * fadeIn * 0.42f,
-                    (FinalRotation + MathHelper.ToRadians(45f)) + MathHelper.ToRadians(Projectile.ai[1] == 1f ? -90f : 90f) * -Owner.direction,
+                    GetSwooshRotation(),
                     swoosh.Size() * 0.5f,
-                    Projectile.scale * SwooshRadiusCorrection,
+                    GetSwooshScale(),
                     SpriteEffects.None);
             }
 
@@ -1299,6 +1329,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         // abb abc 杩炴嫑妯℃澘锛歐ave, Shuriken, Shuriken, Wave, Shuriken, Tornado
         // 鎵€鏈夋敾鍑婚棿闅斿钩绛夊寲锛屼笉鍐嶆湁蹇參涔嬪垎
+        private float GetSwooshRotation()
+        {
+            if (rightSpinActive)
+                return rightSpinDirectionVector.ToRotation() + MathHelper.PiOver2 * rightSpinOrbitDirection;
+
+            return (FinalRotation + MathHelper.ToRadians(45f)) + MathHelper.ToRadians(Projectile.ai[1] == 1f ? -90f : 90f) * -Owner.direction;
+        }
+
+        private float GetSwooshScale()
+        {
+            float scale = Projectile.scale * SwooshRadiusCorrection;
+            if (rightSpinActive)
+                scale *= RightSpinSwooshScaleMultiplier;
+
+            return scale;
+        }
+
         private StageProfile GetStageProfile(int stage)
         {
             int growthStage = CurrentGrowthStage;

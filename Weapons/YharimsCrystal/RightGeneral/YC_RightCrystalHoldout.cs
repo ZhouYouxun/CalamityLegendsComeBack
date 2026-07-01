@@ -19,8 +19,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private static readonly Color HoldoutOrange = new(255, 104, 36);
 
         private const int CoordinatedShutdownFrames = 120;
-        private const float OmicronFireRate = 15f;
-        private const float OmicronStarterWindup = 60f;
+        private const float MainBatteryFireRate = 15f;
+        private const float MainBatteryStarterWindup = 60f;
+        private static readonly int[] DroneDeploySchedule = { 1, 4, 7, 10, 13, 16 };
 
         private readonly BalanceYharimsCrystal balance = new();
         private int shardIndex = -1;
@@ -31,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private float shootingTimer;
         private float postFireCooldown;
         private float maxFireRateShots;
-        private float windup = OmicronStarterWindup;
+        private float windup = MainBatteryStarterWindup;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
@@ -75,7 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 if (Owner.CheckMana(Owner.HeldItem, (int)(Owner.HeldItem.mana * Owner.manaCost) * 13, true))
                 {
                     postFireCooldown = 100f;
-                    ShootOmicronStyle(true);
+                    FireMainBattery(true);
                     CommandDrones();
                     shootingTimer = 0f;
                     coordinatedCooldown = CoordinatedShutdownFrames;
@@ -89,18 +90,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
                 heavyAttackQueued = false;
             }
-            else if (shootingTimer >= OmicronFireRate && postFireCooldown <= 0f)
+            else if (shootingTimer >= MainBatteryFireRate && postFireCooldown <= 0f)
             {
                 if (Owner.CheckMana(Owner.HeldItem, -1, true))
                 {
                     maxFireRateShots++;
                     if (maxFireRateShots == 5f)
                     {
-                        windup = OmicronStarterWindup;
+                        windup = MainBatteryStarterWindup;
                         maxFireRateShots = 1f;
                     }
 
-                    ShootOmicronStyle(false);
+                    FireMainBattery(false);
                     shootingTimer = 0f;
 
                     if (windup > 10f && maxFireRateShots > 0f)
@@ -122,9 +123,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             if (Projectile.owner == Main.myPlayer)
             {
-                if (HoldFrameCounter == 1 || HoldFrameCounter == 13)
+                for (int slot = 0; slot < DroneDeploySchedule.Length; slot++)
                 {
-                    int slot = HoldFrameCounter == 1 ? 0 : 1;
+                    if (HoldFrameCounter != DroneDeploySchedule[slot])
+                        continue;
+
                     int drone = Projectile.NewProjectile(
                         Projectile.GetSource_FromThis(),
                         Projectile.Center,
@@ -205,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 !Owner.mouseInterface;
         }
 
-        private void ShootOmicronStyle(bool yBeam)
+        private void FireMainBattery(bool yBeam)
         {
             Vector2 shootDirection = ForwardDirection;
             Vector2 firingVelocity = shootDirection * 10f;

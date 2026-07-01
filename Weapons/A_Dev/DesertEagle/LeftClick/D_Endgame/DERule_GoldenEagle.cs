@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules;
 using Microsoft.Xna.Framework;

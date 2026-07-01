@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules;
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot;
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;

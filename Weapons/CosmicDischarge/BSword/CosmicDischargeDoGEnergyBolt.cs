@@ -100,6 +100,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         emitsLight: true));
                 }
 
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
+                    back * Main.rand.NextFloat(0.25f, 0.9f) + Main.rand.NextVector2Circular(0.12f, 0.12f),
+                    false,
+                    10,
+                    Main.rand.NextFloat(0.07f, 0.13f),
+                    CosmicDischargeCommon.ThreeColorSpark,
+                    true,
+                    false,
+                    true));
+
                 if (Main.rand.NextBool(4))
                     GeneralParticleHandler.SpawnParticle(new BoltParticle(
                         Projectile.Center,

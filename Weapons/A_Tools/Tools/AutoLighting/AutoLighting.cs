@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.AutoLighting
             for (int i = 0; i < 50; i++)
             {
                 Item inv = Player.inventory[i];
-                if (inv.IsAir || inv.createTile < 0 || inv.stack <= 0) continue;
+                if (inv.IsAir || inv.createTile < TileID.Dirt || inv.stack <= 0) continue;
                 if (TileID.Sets.Torch[inv.createTile])
                 {
                     torchSlot = i;

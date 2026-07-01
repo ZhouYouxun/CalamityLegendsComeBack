@@ -96,6 +96,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     VesuviusProgression.GetRightDamage(damage),
                     knockback,
                     player.whoAmI,
+                    0f,
+                    0f,
                     VesuviusProgression.GetMaxStage());
 
                 player.GetModPlayer<VesuviusEXPlayer>().GainEX(1);

@@ -30,9 +30,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
             Projectile.hostile = false;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.penetrate = 10;
-            Projectile.timeLeft = 180;
-            Projectile.extraUpdates = 1;
+            // No gravity — a weightless void-forged splinter that punches through exactly 2 targets before shattering
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 120;
+            Projectile.extraUpdates = 2;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 6;
@@ -41,7 +42,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Projectile.velocity.Y += 0.015f;
             Lighting.AddLight(Projectile.Center, 0.03f * VesuviusProjectileVisuals.VisualIntensity, 0.03f * VesuviusProjectileVisuals.VisualIntensity, 0.035f * VesuviusProjectileVisuals.VisualIntensity);
 
             VesuviusProjectileVisuals.SpawnObsidianTrail(Projectile, 1f);
@@ -231,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.ObsidianEdge * 0.24f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(VesuviusProjectileVisuals.ObsidianEdge.R, VesuviusProjectileVisuals.ObsidianEdge.G, VesuviusProjectileVisuals.ObsidianEdge.B, 0) * 0.24f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
                 (0.55f + expand * 1.25f) * VesuviusProjectileVisuals.VisualScale,

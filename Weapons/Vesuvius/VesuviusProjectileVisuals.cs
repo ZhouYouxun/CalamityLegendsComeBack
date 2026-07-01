@@ -20,6 +20,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         internal static readonly Color ObsidianBlack = new(4, 4, 5);
         internal static readonly Color ObsidianEdge = new(38, 38, 42);
 
+        internal static Color AdditiveColor(Color color) => new(color.R, color.G, color.B, 0);
+
         internal static void SpawnMoltenMeteorTrail(Projectile projectile, float intensity, bool heavySmoke)
         {
             if (Main.dedServ)

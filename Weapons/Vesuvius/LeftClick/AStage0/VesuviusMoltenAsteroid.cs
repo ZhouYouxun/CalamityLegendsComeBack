@@ -158,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
                 glow,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.White * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(255, 255, 255, 0) * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 glow.Size() * 0.5f,
                 Projectile.scale,

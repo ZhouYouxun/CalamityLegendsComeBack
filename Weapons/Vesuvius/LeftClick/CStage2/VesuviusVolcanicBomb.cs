@@ -76,8 +76,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 Projectile.velocity.X += Main.rand.NextFloat(-1.1f, 1.1f);
             }
 
-            // Variable gravity: volcanic gas pockets create irregular lift
-            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + Main.rand.NextFloat(0.08f, 0.19f), -16f, 18f);
+            // Heavy volcanic mass — falls hard and fast, clearly heavier than the drifting ash
+            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + Main.rand.NextFloat(0.14f, 0.28f), -16f, 24f);
             Projectile.velocity.X *= Main.rand.NextFloat(0.987f, 0.997f);
         }
 
@@ -210,7 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaGold with { A = 0 } * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(VesuviusProjectileVisuals.LavaGold.R, VesuviusProjectileVisuals.LavaGold.G, VesuviusProjectileVisuals.LavaGold.B, 0) * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
                 poolScale * new Vector2(0.82f, 0.42f) * VesuviusProjectileVisuals.VisualScale,

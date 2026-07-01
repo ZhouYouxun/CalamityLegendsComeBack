@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (!Main.dedServ && Main.rand.NextBool(3))
             {
                 Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center, 89,
+                    Projectile.Center, DustID.GemEmerald,
                     -Projectile.velocity * 0.1f + Main.rand.NextVector2Circular(0.5f, 0.5f),
                     120, spikeColor, Main.rand.NextFloat(0.45f, 0.8f));
                 dust.noGravity = true;

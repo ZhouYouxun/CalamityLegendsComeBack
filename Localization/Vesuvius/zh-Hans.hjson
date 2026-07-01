@@ -67,6 +67,8 @@ Mods: {
 				VesuviusLandingQuake.DisplayName: 地震落地
 				VesuviusEXWeapon.DisplayName: 火山喷发
 				VesuviusVolcanicGasCloud.DisplayName: 火山气云
+				// VesuviusThermalCore.DisplayName: Vesuvius Thermal Core
+				// VesuviusThermalCoreBlast.DisplayName: Vesuvius Thermal Core Blast
 			}
 
 			// PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion

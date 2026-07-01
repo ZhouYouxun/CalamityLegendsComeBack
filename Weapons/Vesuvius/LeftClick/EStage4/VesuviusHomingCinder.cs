@@ -50,8 +50,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
             {
                 Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center + target.velocity * 8f) * 15.5f;
 
-                // Erratic homing — variable strength creates spiral / overshoot approach
-                float homingStr = 0.048f + Main.rand.NextFloat(-0.028f, 0.05f);
+                // The longer the lock lasts, the harder it turns and the faster it flies — a cinder catching fire
+                float trackTime = Utils.GetLerpValue(10f, 90f, Projectile.localAI[0], true);
+                float maxSpeed = MathHelper.Lerp(15.5f, 24f, trackTime);
+                float homingStr = MathHelper.Lerp(0.045f, 0.095f, trackTime) + Main.rand.NextFloat(-0.02f, 0.03f);
                 Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, homingStr);
 
                 // Occasional lateral veer — cinder catches a thermal and spirals
@@ -59,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
                     Projectile.velocity += Projectile.velocity.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(0.06f, 0.24f);
 
                 float speed = Projectile.velocity.Length();
-                if (speed > 19f) Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * 19f;
+                if (speed > maxSpeed) Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * maxSpeed;
                 if (speed < 5f)  Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * 5f;
             }
             else if (target == null && Projectile.localAI[0] > 10f)

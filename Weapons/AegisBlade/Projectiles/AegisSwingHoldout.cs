@@ -455,10 +455,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             if (slashOpacity > 0.01f)
             {
+                Color swooshGold = Color.Lerp(BladeGold, BladeLight, 0.28f);
                 Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
-                    BladeGold with { A = 0 } * slashOpacity * 0.52f,
+                    swooshGold * slashOpacity * 0.85f,
                     drawRotation + MathHelper.PiOver2 * swipeDir,
-                    swooshTexture.Size() * 0.5f, scale * 1.15f, SpriteEffects.None, 0);
+                    swooshTexture.Size() * 0.5f, scale * 1.55f, SpriteEffects.None, 0);
+
+                Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
+                    BladeLight * slashOpacity * 0.38f,
+                    drawRotation + MathHelper.PiOver2 * swipeDir + 0.16f * swipeDir,
+                    swooshTexture.Size() * 0.5f, scale * 1.18f, SpriteEffects.None, 0);
 
                 Vector2 bladeMid = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f - Main.screenPosition;
                 Main.EntitySpriteDraw(bloomTexture, bladeMid, null,
@@ -504,11 +510,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             for (int i = 0; i < 4; i++)
             {
                 float rotation = spin + MathHelper.TwoPi * i / 4f;
+                Color smearColor = Color.Lerp(BladeGold, BladeLight, i % 2 == 0 ? 0.2f : 0.55f);
                 Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
-                    BladeGold with { A = 0 } * discOpacity * 0.38f,
+                    smearColor * discOpacity * 0.72f,
                     rotation,
                     swooshTexture.Size() * 0.5f,
-                    scale * 1.55f,
+                    scale * 1.9f,
                     SpriteEffects.None,
                     0);
             }
