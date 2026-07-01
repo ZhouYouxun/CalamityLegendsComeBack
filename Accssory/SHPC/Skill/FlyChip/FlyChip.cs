@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
@@ -18,17 +19,21 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.FlyChip
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            // 飞行时间 +300%（总量变为原来4倍）
-            player.wingTimeMax += player.wingTimeMax * 3;
-
-            // 加速度 +70%
+            // 加速度 +70%（0.7倍），恒定生效
             player.runAcceleration *= 1.7f;
 
-            // 移动速度 +25%
-            player.moveSpeed += 0.25f;
+            // 移动速度 +10%，恒定生效
+            player.moveSpeed += 0.10f;
 
-            // 跳跃速度 +25%（基础跳跃速度约5，25%≈1.25）
-            player.jumpSpeedBoost += 1.25f;
+            // 跳跃速度 +10%（基础跳跃速度约5，10%≈0.5），恒定生效
+            player.jumpSpeedBoost += 0.5f;
+
+            // 飞行时间 +70%，仅在手持SHPC时生效
+            bool holdingSHPC = player.HeldItem != null &&
+                               !player.HeldItem.IsAir &&
+                               player.HeldItem.ModItem is NewLegendSHPC;
+            if (holdingSHPC)
+                player.wingTimeMax += (int)(player.wingTimeMax * 0.7f);
         }
 
         public override void AddRecipes()

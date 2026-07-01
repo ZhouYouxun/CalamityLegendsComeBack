@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.DiffuChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FlyChip;
+using CalamityLegendsComeBack.Weapons.SHPC;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -33,13 +34,19 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
             CtrlChipPlayer ctrlPlayer = player.GetModPlayer<CtrlChipPlayer>();
             ctrlPlayer.CtrlChipEquipped = true;
             ctrlPlayer.CtrlChipVisualsHidden = hideVisual;
-            player.GetCritChance(DamageClass.Generic) += 8f;
+            player.GetCritChance(DamageClass.Generic) += 7f;
 
-            // 飞升芯片
-            player.wingTimeMax += player.wingTimeMax * 3;
+            // 飞升芯片：加速度/移速/跳跃恒定生效
             player.runAcceleration *= 1.7f;
-            player.moveSpeed += 0.25f;
-            player.jumpSpeedBoost += 1.25f;
+            player.moveSpeed += 0.10f;
+            player.jumpSpeedBoost += 0.5f;
+
+            // 飞升芯片：飞行时间仅在手持SHPC时生效
+            bool holdingSHPC = player.HeldItem != null &&
+                               !player.HeldItem.IsAir &&
+                               player.HeldItem.ModItem is NewLegendSHPC;
+            if (holdingSHPC)
+                player.wingTimeMax += (int)(player.wingTimeMax * 0.7f);
         }
 
         public override void AddRecipes()

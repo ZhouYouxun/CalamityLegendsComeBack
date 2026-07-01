@@ -39,6 +39,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 开关 =====
         public static void Open(int who)
         {
+            if (Main.gamePaused)
+                return;
+
             IsOpen = true;
             ownerWhoAmI = who;
             Main.playerInventory = true;
@@ -76,13 +79,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 所有输入检测已迁移至 Draw()，以兼容自动暂停模式（gamePaused 时 PostUpdateEverything 可能被跳过）
         #endregion
 
-        private static bool HasSHPCInInventory(Player player)
-        {
-            for (int i = 0; i < 58; i++)
-                if (player.inventory[i].ModItem is NewLegendSHPC) return true;
-            return false;
-        }
-
         private static NewLegendSHPC FindWeapon(Player player)
         {
             for (int i = 0; i < 58; i++)
@@ -94,6 +90,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 绘制主入口 =====
         private static void Draw(SpriteBatch sb)
         {
+            if (Main.gamePaused)
+            {
+                if (IsOpen)
+                    Close();
+
+                prevMouseMiddle = Main.mouseMiddle;
+                return;
+            }
+
             // ---- 开关触发检测（在 Draw 内执行，自动暂停时依然有效）----
             if (Main.netMode != NetmodeID.Server && Main.myPlayer >= 0)
             {
@@ -130,7 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     // 绑定按键触发
                     if (keyBound && KeybindSystem.SHPCLoadingUI.JustPressed)
                     {
-                        if (HasSHPCInInventory(localPlayer))
+                        if (Main.HoverItem.ModItem is NewLegendSHPC)
                         {
                             bool wasOpen = IsOpen;
                             Toggle(localPlayer.whoAmI);

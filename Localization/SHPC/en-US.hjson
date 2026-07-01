@@ -78,11 +78,12 @@ Mods: {
 
 			FastChip: {
 				DisplayName: Fast Chip
-				Tooltip:
+				Tooltip: "[GFB]"
+				TooltipLocked: "[c/9A9A9A:Unlock the ultimate to reveal this tooltip]"
+				TooltipUnlocked:
 					'''
-					Left-click energy orbs grant double ultimate charge
-					Right-click laser barrage grants 1 ultimate charge per second
-					Life regeneration is halved; during right-click barrage, each heat level reduces life regeneration by another 2 HP/s
+					Left-click energy orbs grant double ultimate charge; right-click laser barrage also grants charge
+					Halves life regeneration; regen drops even further during right-click barrage
 					'''
 			}
 
@@ -90,14 +91,20 @@ Mods: {
 				DisplayName: Diffusion Chip
 				Tooltip:
 					'''
-					+7% magic damage and magic critical strike chance
-					SHPC empowered left-click attacks have a tighter spread, improving non-homing ammo accuracy
+					Increases magic damage and magic critical strike chance by 7% each
+					The heat-barrage's empowered attack gains a tighter, more focused spread
 					'''
 			}
 
 			CommandAscend: {
 				DisplayName: Gun Body Upgrade - Mortar
-				Tooltip: While holding SHPC, right click switches to a mortar holdout that automatically charges and fires weakly guided bombardment shells
+				Tooltip:
+					'''
+					While holding SHPC, right click switches to mortar mode
+					Fires a mortar shell at enemies
+					Causes a violent explosion and calls down a rain of lasers
+					"Cover never crossed their mind"
+					'''
 			}
 
 			MilitaryCaller: {
@@ -129,9 +136,10 @@ Mods: {
 				DisplayName: Control Chip
 				Tooltip:
 					'''
-					Gives SHPC right click automatic lock-on
-					Provides 8% increased critical strike chance
-					Right-click laser projectiles will weakly home in on the targeting reticle if it is within 180 degrees in front (turns up to 1 degree per frame)
+					Increases critical strike chance by 7%
+					A targeting reticle appears while holding SHPC
+					The reticle can latch onto, track, and auto-aim at targets
+					Hiding the accessory's visuals also hides the reticle
 					'''
 			}
 
@@ -139,8 +147,9 @@ Mods: {
 				DisplayName: Ascension Chip
 				Tooltip:
 					'''
-					Flight time increased by 300%
-					Acceleration increased by 70%, movement speed and jump speed increased by 25%
+					While holding SHPC
+					Flight time increased by 70%
+					Movement speed and jump speed increased by 10%, acceleration increased by 0.7x
 					'''
 			}
 
@@ -160,14 +169,14 @@ Mods: {
 				DisplayName: AIOC
 				Tooltip:
 					'''
-					Simultaneously activates all effects of Diffusion Chip, Fast Chip, Control Chip, and Ascension Chip
-					Inherits Fast Chip's charge benefits, but not its life regeneration penalties
-					Hiding visuals conceals the targeting reticle while preserving all effects
+					Has all the effects of all 4 chips
+					No longer inherits any chip's drawbacks
+					"Hello, World"
 					'''
 			}
 
 			ProjectilePossessionModule: {
-				DisplayName: Gun Body Upgrade - Possession
+				DisplayName: Gun Body Upgrade - Absorption
 				Tooltip:
 					'''
 					While holding SHPC, right click switches to projectile possession mode
@@ -178,6 +187,7 @@ Mods: {
 					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
 					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
 					Some persistent beams and blacklisted projectiles are ignored
+					"Sprite, DMG, SPD, Size, I-Frames, Yoink!"
 					'''
 			}
 

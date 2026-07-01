@@ -34,13 +34,13 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient<MysteriousCircuitry>(12)
-                .AddIngredient<DubiousPlating>(20)
-                .AddIngredient<Karasawa>()
-                .AddIngredient<ExoPrism>(5)
-                .AddTile<DraedonsForge>()
-                .Register();
+            //CreateRecipe()
+            //    .AddIngredient<MysteriousCircuitry>(12)
+            //    .AddIngredient<DubiousPlating>(20)
+            //    .AddIngredient<Karasawa>()
+            //    .AddIngredient<ExoPrism>(5)
+            //    .AddTile<DraedonsForge>()
+            //    .Register();
         }
     }
 }
