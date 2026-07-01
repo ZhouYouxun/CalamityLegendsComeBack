@@ -29,6 +29,12 @@ Mods: {
 				DEBullet_CardClub.DisplayName: Club Card
 				DEBullet_CardDiamond.DisplayName: Diamond Card
 				DEBullet_CardSpade.DisplayName: Spade Card
+				DEBullet_AreaBurst.DisplayName: Desert Eagle Burst
+				DEBullet_ThermalZone.DisplayName: Icefire Field
+				DEBullet_PestilentCloud.DisplayName: Pestilent Cloud
+				DEBullet_HydraSnake.DisplayName: Hydra Snake Round
+				DEBullet_NeedleSpike.DisplayName: Needle Spike
+				DEBullet_StellarStar.DisplayName: Stellar Star
 				DesertEagleSlotUI.DisplayName: Chamber Slot UI
 			}
 		}

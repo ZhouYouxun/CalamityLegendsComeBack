@@ -91,6 +91,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             Item.UseSound = null;
             Item.shootSpeed = 18f;
 
+            if (player.GetModPlayer<DesertEaglePlayer>().HellbornOverdriveActive)
+            {
+                Item.useTime = 5;
+                Item.useAnimation = 5;
+                Item.shootSpeed = 22f;
+            }
+
             return base.CanUseItem(player);
         }
 

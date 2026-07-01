@@ -25,9 +25,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CosmicDischarge_Ultimate");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderCharge";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderChargeDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/EXSkill/ThunderChargeOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldownOverlay";
 
         public override Color OutlineColor => new(18, 44, 72);
         public override Color CooldownStartColor => Color.Lerp(CosmicDischargeCommon.DoGPurpleColor, CosmicDischargeCommon.DoGFuchsiaColor, AdjustedCompletion);

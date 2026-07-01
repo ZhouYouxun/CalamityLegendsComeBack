@@ -36,6 +36,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules
 
             // ── D 组：终局 ──────────────────────────────────────
             DEBulletRegistry.Register(new DERule_GoldenEagle());
+            DEBulletRegistry.Register(new DERule_PearlGod());
             DEBulletRegistry.Register(new DERule_StellarCannon());
             DEBulletRegistry.Register(new DERule_PridefulHuntersPlanarRipper());
             DEBulletRegistry.Register(new DERule_AcesHigh());

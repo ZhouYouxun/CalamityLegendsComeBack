@@ -27,10 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.EXSkill
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.AegisEX");
 
-        // Placeholder: reuse SHPC textures until AegisBlade-specific icons are created
-        public override string Texture        => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/SHPC/EXSkill/EXCoolDownOverlay";
+        public override string Texture        => "CalamityLegendsComeBack/Weapons/AegisBlade/EXSkill/AegisEXCooldown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/AegisBlade/EXSkill/AegisEXCooldownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/AegisBlade/EXSkill/AegisEXCooldownOverlay";
 
         public override Color OutlineColor => new Color(180, 150, 30);
 

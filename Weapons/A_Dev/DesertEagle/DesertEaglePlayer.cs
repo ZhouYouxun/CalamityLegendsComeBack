@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         private bool chargeReadyLastFrame;
         private bool trackingRightPress;
         private ulong lastRightClickFrame;
+        private int hellbornOverdriveTime;
 
         public bool HoldingDesertEagle { get; private set; }
         public float ChargeBarProgress => chargeBarProgress;
@@ -31,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public bool LongHoldReachedThisFrame { get; private set; }
         public bool LongHoldReleasedThisFrame { get; private set; }
         public bool LongHoldActive => trackingRightPress && rightPressFrames > RightHoldThresholdFrames;
+        public bool HellbornOverdriveActive => hellbornOverdriveTime > 0;
 
         public override void ResetEffects()
         {
@@ -47,6 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void PostUpdate()
         {
+            if (hellbornOverdriveTime > 0)
+                hellbornOverdriveTime--;
+
             if (!HoldingDesertEagle && chargeBarOpacity > 0f)
             {
                 chargeBarProgress = Math.Max(0f, chargeBarProgress - 1f / BarDropFrames);
@@ -67,6 +72,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public void SetHoldingDesertEagle()
         {
             HoldingDesertEagle = true;
+        }
+
+        public void ActivateHellbornOverdrive(int frames)
+        {
+            hellbornOverdriveTime = Math.Max(hellbornOverdriveTime, frames);
         }
 
         public void UpdateChargeBar(bool active, float progress)

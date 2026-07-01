@@ -29,6 +29,12 @@ Mods: {
 				DEBullet_CardClub.DisplayName: 梅花牌
 				DEBullet_CardDiamond.DisplayName: 方块牌
 				DEBullet_CardSpade.DisplayName: 黑桃牌
+				DEBullet_AreaBurst.DisplayName: 沙漠之鹰冲击
+				DEBullet_ThermalZone.DisplayName: 冰火领域
+				DEBullet_PestilentCloud.DisplayName: 疫病污染云
+				DEBullet_HydraSnake.DisplayName: 九头蛇蛇弹
+				DEBullet_NeedleSpike.DisplayName: 叶针尖刺
+				DEBullet_StellarStar.DisplayName: 新星星体
 				DesertEagleSlotUI.DisplayName: 弹仓格子槽
 			}
 		}

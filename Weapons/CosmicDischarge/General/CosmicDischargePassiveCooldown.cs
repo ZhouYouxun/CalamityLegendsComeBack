@@ -25,9 +25,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override LocalizedText DisplayName =>
             Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CosmicDischarge_RiftSeal");
 
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldown";
-        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOutline";
-        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/BrinyBaron/TideValue/BBTideValueCooldownOverlay";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldown";
+        public override string OutlineTexture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldownOutline";
+        public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldownOverlay";
 
         public override Color OutlineColor => new(22, 48, 70);
         public override Color CooldownStartColor => CosmicDischargeCommon.DoGPurpleColor;

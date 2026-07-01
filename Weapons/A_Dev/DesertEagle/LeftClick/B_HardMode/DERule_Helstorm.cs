@@ -1,103 +1,74 @@
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules;
-using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.SubProjectiles;
-using CalamityMod;
-using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.B_HardMode
 {
-    /// <summary>
-    /// 地狱风暴：橙红色燃烧弹，命中时生成 2 颗追踪火星子弹（50% 伤害），施加地狱烈焰。
-    /// </summary>
     public class DERule_Helstorm : DEBulletRule
     {
-        private static readonly Color HelOrange = new(255, 110, 20);
-        private static readonly Color HelRed = new(255, 40, 10);
+        private static readonly Color Ember = new(255, 86, 32);
 
         public override int GunItemType =>
             ModContent.ItemType<CalamityMod.Items.Weapons.Ranged.Helstorm>();
 
+        public override int Penetrate => -1;
+        public override int ExtraUpdates => 0;
+        public override float SpeedMultiplier => 0.42f;
+        public override float DamageMultiplier => 0.42f;
+
         public override void SetDefaults(Projectile projectile)
         {
-            projectile.light = 0.5f;
+            projectile.width = 54;
+            projectile.height = 54;
+            projectile.timeLeft = 72;
+            projectile.tileCollide = false;
+            projectile.usesLocalNPCImmunity = true;
+            projectile.localNPCHitCooldown = 8;
+            projectile.light = 0.85f;
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
-            projectile.rotation = projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
+            projectile.localAI[0]++;
+            projectile.rotation += 0.52f * (projectile.velocity.X >= 0f ? 1f : -1f);
+            projectile.velocity *= 0.992f;
+            DEBulletUtils.SimpleHoming(projectile, 420f, 0.035f, MathHelper.Clamp(projectile.velocity.Length() + 0.05f, 7f, 13f));
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 3; i++)
             {
-                Dust dust = Dust.NewDustPerfect(projectile.Center - forward * 4f,
-                    i == 0 ? DustID.Torch : DustID.OrangeTorch,
-                    -forward * 0.55f + Main.rand.NextVector2Circular(0.4f, 0.4f),
-                    120, i == 0 ? HelOrange : HelRed, Main.rand.NextFloat(0.9f, 1.2f));
+                Vector2 offset = (projectile.rotation + i * MathHelper.TwoPi / 3f).ToRotationVector2() * 24f;
+                Dust dust = Dust.NewDustPerfect(projectile.Center + offset, DustID.Torch, offset.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * 2.2f, 100, Ember, 1f);
                 dust.noGravity = true;
             }
 
-            if (!Main.dedServ && Main.rand.NextBool(5))
-            {
-                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                    projectile.Center, -forward * 0.07f,
-                    HelOrange * 0.4f, 12, Main.rand.NextFloat(0.3f, 0.5f), 0.5f,
-                    Main.rand.NextFloat(-0.025f, 0.025f)));
-            }
-
-            Lighting.AddLight(projectile.Center, HelOrange.R / 255f * 0.6f, HelOrange.G / 255f * 0.35f, 0f);
+            Lighting.AddLight(projectile.Center, Ember.ToVector3() * 0.65f);
         }
 
         public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire3, 360);
-            SpawnFireSparks(projectile);
-            SpawnHelstormImpact(projectile.Center);
         }
 
-        private static void SpawnFireSparks(Projectile source)
+        public override bool PreDraw(Projectile projectile, Player owner, ref Color lightColor)
         {
-            int sparkDmg = (int)(source.damage * 0.5f);
-            float baseAngle = source.velocity.ToRotation();
+            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[ProjectileID.SolarWhipSwordExplosion].Value;
+            Rectangle frame = texture.Frame();
+            Vector2 origin = frame.Size() * 0.5f;
+            Color color = Ember * 0.72f;
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 4; i++)
             {
-                float angle = baseAngle + MathHelper.ToRadians(i == 0 ? -25f : 25f);
-                Vector2 vel = angle.ToRotationVector2() * 9f;
-                Projectile.NewProjectile(
-                    source.GetSource_FromAI(),
-                    source.Center + vel * 0.5f, vel,
-                    ModContent.ProjectileType<DEBullet_FireSpark>(),
-                    sparkDmg, source.knockBack * 0.4f, source.owner);
+                float rotation = projectile.rotation + MathHelper.PiOver2 * i;
+                Main.EntitySpriteDraw(texture, projectile.Center - Main.screenPosition, frame, color, rotation, origin, 0.42f, SpriteEffects.None, 0);
             }
+
+            return false;
         }
 
-        private static void SpawnHelstormImpact(Vector2 pos)
-        {
-            if (!Main.dedServ)
-            {
-                GeneralParticleHandler.SpawnParticle(new StrongBloom(pos, Vector2.Zero, HelOrange, 0.9f, 20));
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(pos, Vector2.Zero, HelRed * 0.7f,
-                    "CalamityMod/Particles/HighResFoggyCircleHardEdge", Vector2.One, 0f, 0f, 0.07f, 18, true, 0.75f));
-                for (int i = 0; i < 3; i++)
-                {
-                    GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(pos,
-                        Main.rand.NextVector2Circular(2.5f, 2.5f),
-                        Color.Lerp(HelOrange, HelRed, Main.rand.NextFloat()) * 0.5f,
-                        16, Main.rand.NextFloat(0.4f, 0.6f), 0.5f, Main.rand.NextFloat(-0.025f, 0.025f)));
-                }
-            }
-            for (int i = 0; i < 18; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(pos, DustID.Torch,
-                    Main.rand.NextVector2Circular(8f, 8f), 110, HelOrange, 1.15f);
-                dust.noGravity = true;
-            }
-        }
-
-        public override string TooltipEffectEN => "Incendiary bolt; spawns 2 homing fire sparks on hit (50% damage) + Hellfire";
-        public override string TooltipEffectZH => "燃烧弹，命中时生成2颗追踪火星（50%伤害），施加地狱烈焰";
+        public override string TooltipEffectEN => "Launches a spinning circular hell saw that grinds through enemies";
+        public override string TooltipEffectZH => "发射圆形地狱弹幕锯，持续切割敌人";
     }
 }
